@@ -175,7 +175,7 @@ describe("CloudImport", () => {
     fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
     await waitFor(() => expect(actions.revokeMigrationTokenAction).toHaveBeenCalled());
     // The just-revoked token is masked locally until the server catches up.
-    expect(screen.getByText("Token status none")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Token status none")).toBeInTheDocument());
 
     // A new active token minted elsewhere arrives via router.refresh: the mask clears.
     view.rerender(

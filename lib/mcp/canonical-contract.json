@@ -5134,5 +5134,476 @@
     "execution": {
       "taskSupport": "forbidden"
     }
+  },
+  {
+    "name": "get_project_context",
+    "title": "Get project context",
+    "description": "Read the saved business, audience, products, goals and agent rules for this project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "The public project ID. Project membership and token scopes are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_project_context",
+    "title": "Update project context",
+    "description": "Replace all five context fields. Requires project write scope and a member role.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "The public project ID. Project membership and token scopes are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "business": {
+          "type": "string",
+          "maxLength": 4000,
+          "description": "Project guidance for the agent, up to 4000 characters."
+        },
+        "audience": {
+          "type": "string",
+          "maxLength": 4000,
+          "description": "Project guidance for the agent, up to 4000 characters."
+        },
+        "products": {
+          "type": "string",
+          "maxLength": 4000,
+          "description": "Project guidance for the agent, up to 4000 characters."
+        },
+        "goals": {
+          "type": "string",
+          "maxLength": 4000,
+          "description": "Project guidance for the agent, up to 4000 characters."
+        },
+        "agent_rules": {
+          "type": "string",
+          "maxLength": 4000,
+          "description": "Project guidance for the agent, up to 4000 characters."
+        },
+        "idempotency_key": {
+          "description": "Optional stable retry key, forwarded as the REST Idempotency-Key header.",
+          "type": "string"
+        }
+      },
+      "required": ["project_id", "business", "audience", "products", "goals", "agent_rules"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_agent_reports",
+    "title": "List agent reports",
+    "description": "Read saved project analyses. Results are restricted to the project and its members.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "The public project ID. Project membership and token scopes are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "kind": {
+          "description": "Analysis category, such as ai_visibility or site_audit.",
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+        },
+        "limit": {
+          "description": "Page size, at most 100.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "description": "Opaque next-page cursor from the previous response.",
+          "type": "string"
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_agent_report",
+    "title": "Create agent report",
+    "description": "Save an agent analysis with provenance. Its deep link inherits existing project access controls. Producer kinds site_audit, ai_visibility and prompt_explorer are reserved and rejected here.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "The public project ID. Project membership and token scopes are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "kind": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "description": "External analysis kind; site_audit, ai_visibility and prompt_explorer are reserved."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "description": "Human-readable report title."
+        },
+        "body": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {},
+          "description": "Structured analysis. Maximum 256 KiB; untrusted text is rendered safely."
+        },
+        "provenance": {
+          "description": "Source attribution and limitations. Maximum 32 KiB.",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        "idempotency_key": {
+          "description": "Optional stable retry key, forwarded as the REST Idempotency-Key header.",
+          "type": "string"
+        }
+      },
+      "required": ["project_id", "kind", "title", "body"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_agent_report",
+    "title": "Get agent report",
+    "description": "Read one saved analysis. A report ID never grants access to another project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "The public project ID. Project membership and token scopes are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "report_id": {
+          "description": "The public report ID, scoped to this project.",
+          "type": "string",
+          "pattern": "^agr_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "report_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "analyze_ai_visibility",
+    "title": "Analyze AI visibility",
+    "description": "Inspect provider-observed ChatGPT or Google AI Overview mentions and citations. This is a limited provider dataset, not all user conversations. Requires BYOK or deployment credits, an explicit cost cap, and project write scope.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "The public project ID. Project membership and token scopes are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "brand": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Brand name to inspect."
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "description": "Public hostname to inspect, without a scheme or path."
+        },
+        "max_cost_cents": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Maximum accepted provider cost in cents. Estimates and cache reads do not spend credits."
+        },
+        "estimate_only": {
+          "default": false,
+          "description": "Return the cost estimate without paid provider I/O.",
+          "type": "boolean"
+        },
+        "fresh": {
+          "default": false,
+          "description": "Bypass the stored result and issue a new paid request when admitted.",
+          "type": "boolean"
+        },
+        "target_type": {
+          "default": "domain",
+          "description": "Match a brand name or a domain.",
+          "type": "string",
+          "enum": ["brand", "domain"]
+        },
+        "platform": {
+          "default": "chat_gpt",
+          "description": "Provider observed dataset: ChatGPT or Google AI Overview.",
+          "type": "string",
+          "enum": ["chat_gpt", "google"]
+        },
+        "location_code": {
+          "default": 2840,
+          "description": "Provider location code.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "language_code": {
+          "default": "en",
+          "description": "Dataset language.",
+          "type": "string",
+          "pattern": "^[a-z]{2}(?:-[A-Z]{2})?$"
+        },
+        "limit": {
+          "default": 10,
+          "description": "Maximum mention rows.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "idempotency_key": {
+          "description": "Optional stable retry key, forwarded as the REST Idempotency-Key header.",
+          "type": "string"
+        }
+      },
+      "required": ["project_id", "brand", "domain", "max_cost_cents"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "compare_ai_prompts",
+    "title": "Compare AI prompts",
+    "description": "Run the same synthetic prompt against supported models and compare answers, brand mentions and returned citations. These tests are not observed ChatGPT/AIO visibility. Requires an explicit cost cap and project write scope.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "The public project ID. Project membership and token scopes are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "brand": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Brand name to inspect."
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63,
+          "description": "Public hostname to inspect, without a scheme or path."
+        },
+        "max_cost_cents": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Maximum accepted provider cost in cents. Estimates and cache reads do not spend credits."
+        },
+        "estimate_only": {
+          "default": false,
+          "description": "Return the cost estimate without paid provider I/O.",
+          "type": "boolean"
+        },
+        "fresh": {
+          "default": false,
+          "description": "Bypass the stored result and issue a new paid request when admitted.",
+          "type": "boolean"
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "The same synthetic test prompt for each selected model. Maximum 2000 UTF-8 bytes."
+        },
+        "models": {
+          "uniqueItems": true,
+          "description": "Bounded, supported non-reasoning models; web search is disabled in this first version.",
+          "minItems": 1,
+          "maxItems": 2,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["gpt-4.1-mini", "gpt-4.1-nano"]
+          }
+        },
+        "idempotency_key": {
+          "description": "Optional stable retry key, forwarded as the REST Idempotency-Key header.",
+          "type": "string"
+        }
+      },
+      "required": ["project_id", "brand", "domain", "max_cost_cents", "prompt"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "run_site_audit",
+    "title": "Run site audit",
+    "description": "Crawl the project domain only, with SSRF protection, at most 15 pages and a 15-second total deadline. Save page signals and URL issues as a report. No paid provider request or Lighthouse.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "The public project ID. Project membership and token scopes are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "max_pages": {
+          "default": 10,
+          "description": "Maximum pages in this bounded crawl.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 15
+        },
+        "idempotency_key": {
+          "description": "Optional stable retry key, forwarded as the REST Idempotency-Key header.",
+          "type": "string"
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_site_audits",
+    "title": "List site audits",
+    "description": "Read the saved bounded crawl history for this project.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "The public project ID. Project membership and token scopes are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_site_audit",
+    "title": "Get site audit",
+    "description": "Read saved page signals and issues for one project crawl.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "The public project ID. Project membership and token scopes are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "report_id": {
+          "description": "The public report ID, scoped to this project.",
+          "type": "string",
+          "pattern": "^agr_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "report_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
   }
 ]

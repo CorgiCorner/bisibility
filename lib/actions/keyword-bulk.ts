@@ -2,8 +2,8 @@
 
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { deleteKeywordTargets } from "@/lib/keywords/delete";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
-import { cancelRunItemsForKeywordDeletion } from "@/lib/rank-check/runs/cancel";
 import {
   bulkKeywordFrequencySchema,
   bulkKeywordIdsSchema,
@@ -26,16 +26,9 @@ export async function bulkDeleteKeywords(input: unknown) {
   const data = parseActionInput(bulkKeywordIdsSchema, input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "delete", data.projectId, { type: "keyword" });
-  const keywords = await prisma.keyword.findMany({
-    select: { id: true, publicId: true, text: true },
-    where: keywordIdsWhere(project.id, data.keywordIds),
-  });
-
-  await prisma.$transaction(async (tx) => {
-    const keywordIds = keywords.map((keyword) => keyword.id);
-    await cancelRunItemsForKeywordDeletion(tx, keywordIds);
-    await tx.keyword.deleteMany({ where: { id: { in: keywordIds } } });
-  });
+  const keywords = await prisma.$transaction((tx) =>
+    deleteKeywordTargets(tx, project.id, data.keywordIds),
+  );
   await writeAudit({
     action: "keyword.bulk_delete",
     actorId: actor.id,

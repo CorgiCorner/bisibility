@@ -105,6 +105,26 @@ domain is found, so actual SerpApi searches per check are often fewer than
 value for the selected depth. Turn the setting off when complete full-depth
 competitor snapshots matter more than provider cost.
 
+### Extend a recent SERP snapshot
+
+On a keyword's **SERP snapshot**, choose **Fetch next 10 results** to request the
+next page with the same keyword, country, language, device, and connected SerpApi
+account. Confirm the positions and estimated usage, up to one search. This is
+available for 15 minutes from the original fetch, up to position 100 or the end
+of the results. Extending does not restart that window.
+
+Google can change results between requests. Additional rows appear under
+**Results added after the check**, with their actual fetch time. Repeated URLs
+are skipped, retaining the earlier row and position. Distinct pages on the same
+domain remain separate, and gaps in position numbers are preserved. The original
+rank, history chart, and comparisons are unchanged. This is a continuation of a
+recent search, not a reconstruction of unrequested historical results.
+
+Use **Refresh snapshot** to reload stored results without spending a provider
+search. If a fetch cannot be confirmed, it is not automatically retried. Earlier
+results remain available. Expired checks, checks without saved continuation
+details, and other providers require a new, deeper **Run check** instead.
+
 ## SERP fallback order
 
 The integrations page shows one dedicated order for SERP providers. Active

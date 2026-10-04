@@ -149,7 +149,7 @@ async function persistOccurrence(
   return prisma.$transaction(async (tx) => {
     await lockProjectForProviderMutation(tx, schedule.projectId);
     const current = await tx.checkSchedule.findFirst({
-      where: { id: schedule.id, archivedAt: null, enabled: true },
+      where: { id: schedule.id, archivedAt: null, enabled: true, keywords: { some: {} } },
       select: { id: true },
     });
     if (!current) return null;
@@ -192,6 +192,7 @@ async function persistOccurrence(
 }
 
 async function planSchedule(schedule: PlannerSchedule, now: Date) {
+  if (schedule.keywords.length === 0) return { blocked: 0, planned: 0 };
   const effective = {
     ...schedule,
     timezone: schedule.timezone ?? schedule.project.defaults?.timezone ?? "UTC",

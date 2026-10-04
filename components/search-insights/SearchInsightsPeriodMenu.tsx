@@ -17,6 +17,7 @@ import { SearchInsightsMenu, SearchInsightsMenuOption } from "./SearchInsightsMe
 import {
   periodOptions,
   periodTooltipLines,
+  periodTriggerDates,
   periodTriggerLabel,
   periodTriggerName,
 } from "./search-insights-workspace-model";
@@ -50,6 +51,7 @@ export function SearchInsightsPeriodMenu({
     onPeriodChange(id);
   }
 
+  const dates = periodTriggerDates(window, display);
   const trigger = (
     <Button
       aria-expanded={Boolean(anchorEl)}
@@ -62,9 +64,14 @@ export function SearchInsightsPeriodMenu({
       variant="secondary"
     >
       <span className="flex items-center gap-2 whitespace-nowrap">
-        <span className="font-sans tabular-nums text-ui-caption">
-          {periodTriggerLabel(period, window, display, t)}
+        <span className="font-sans tabular-nums text-ui-caption font-semibold">
+          {periodTriggerLabel(period, t)}
         </span>
+        {dates ? (
+          <span className="font-sans tabular-nums text-ui-micro font-normal text-fg-muted">
+            {dates}
+          </span>
+        ) : null}
         <CaretDown aria-hidden className="shrink-0 text-fg-muted" size={11} weight="regular" />
       </span>
     </Button>

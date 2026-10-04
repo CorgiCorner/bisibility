@@ -1,4 +1,8 @@
-import { isPublicIdOfType, type PublicIdForPrefix, type PublicIdPrefix } from "@/lib/db/public-id";
+import {
+  isPublicIdOfType,
+  type PublicIdForPrefix,
+  type PublicIdPrefix,
+} from "@/lib/db/public-id-resources";
 import { ApiInputError } from "./errors";
 
 function label(prefix: PublicIdPrefix) {
@@ -50,6 +54,7 @@ export function requireApiPathPublicIds(path: string[]) {
   const [first, second, third, fourth, fifth] = path;
   if (first === "projects" && second) {
     requireApiPublicId(second, "prj");
+    if (third === "agent-reports" || third === "site-audits") requirePathId(path, 3, "agr");
     if (third === "webhooks") requirePathId(path, 3, "we");
     if (third === "saved-keywords") requirePathId(path, 3, "svkw");
     if (third === "saved-views") requirePathId(path, 3, "viw");

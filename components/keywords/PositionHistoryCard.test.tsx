@@ -107,7 +107,11 @@ describe("PositionHistoryCard", () => {
         ],
       }),
     );
-    expect(screen.queryByText(/^Latest #/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^#/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Check scope")).toHaveTextContent("United States");
+    expect(screen.getByLabelText("Check scope")).toHaveTextContent("Desktop");
+    expect(screen.getByLabelText("Latest check")).toHaveTextContent("Not ranked");
+    expect(screen.getByText("Recorded position")).toBeInTheDocument();
   });
 
   it("shows a discontinuity marker only when the visible history crosses a contract boundary", () => {
@@ -125,7 +129,7 @@ describe("PositionHistoryCard", () => {
       screen.getByText("Checks with different depths or ranking methods are shown separately."),
     ).toBeInTheDocument();
     expect(screen.getByText("Google rank over time, closer to #1 is better")).toBeInTheDocument();
-    expect(screen.getByText(/^Latest #3/)).toBeInTheDocument();
+    expect(screen.getByText(/^#3/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("radio", { name: "7 days" }));
     expect(
@@ -168,7 +172,7 @@ describe("PositionHistoryCard", () => {
       />,
     );
 
-    expect(screen.getByText(/^Latest #3 · Jul 19/)).toBeInTheDocument();
+    expect(screen.getByText(/^#3 · Jul 19/)).toBeInTheDocument();
   });
 
   it("uses the project calendar day instead of the client UTC day for the range and Today", () => {

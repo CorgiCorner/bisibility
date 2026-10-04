@@ -1,3 +1,7 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import messages from "@/messages/core/en/project-search-insights.json";
+import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, within } from "storybook/test";
 import { storyBandList, storyOverlapList, storyQueryDetail } from "./drawer-story-fixtures";
@@ -6,11 +10,17 @@ import { DrawerBandRows, DrawerOverlapRows, DrawerSliceRows } from "./SearchInsi
 const meta = {
   decorators: [
     (Story) => (
-      <div className="min-h-screen bg-bg p-6 text-fg">
-        <div className="max-w-xl">
-          <Story />
+      <FeatureMessagesProvider
+        locale="en"
+        timeZone="UTC"
+        messages={mergeMessageCatalogs(sharedMessages, messages)}
+      >
+        <div className="min-h-screen bg-bg p-6 text-fg">
+          <div className="max-w-xl">
+            <Story />
+          </div>
         </div>
-      </div>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen" },
@@ -72,6 +82,7 @@ export const PageSliceWithoutMetrics: Story = {
     />
   ),
   play: async ({ canvasElement }) => {
+    assertRoundedBorder(canvasElement, "Your page ranking for it");
     assertSliceHeaders(canvasElement, "Your page ranking for it", ["Page", "Clicks", "Avg pos"]);
   },
 };
@@ -95,9 +106,20 @@ export const QuerySlice: Story = {
     />
   ),
   play: async ({ canvasElement }) => {
+    assertRoundedBorder(canvasElement, "Queries landing here");
     assertSliceHeaders(canvasElement, "Queries landing here", ["Query", "Clicks", "Avg pos"]);
   },
 };
+
+function assertRoundedBorder(canvasElement: HTMLElement, label: string) {
+  const table = within(canvasElement).getByRole("table", { name: label });
+  const frame = table.parentElement as HTMLElement;
+  expect(parseFloat(getComputedStyle(frame).borderTopWidth)).toBe(0);
+  expect(parseFloat(getComputedStyle(table).borderTopLeftRadius)).toBe(
+    parseFloat(getComputedStyle(frame).borderTopLeftRadius),
+  );
+  expect(parseFloat(getComputedStyle(table).borderTopWidth)).toBe(1);
+}
 
 export const PositionBand: Story = {
   render: () => (
@@ -108,6 +130,7 @@ export const PositionBand: Story = {
       seen={new Set()}
     />
   ),
+  play: ({ canvasElement }) => assertRoundedBorder(canvasElement, "Positions 4 to 20"),
 };
 
 export const Overlap: Story = {
@@ -119,4 +142,5 @@ export const Overlap: Story = {
       seen={new Set()}
     />
   ),
+  play: ({ canvasElement }) => assertRoundedBorder(canvasElement, "Most clicks first"),
 };

@@ -55,7 +55,7 @@ does not.
 - **Write a [feature request][request-form].** An implementation-ready
   request is the strongest signal you can send; accepted requests are labeled
   `feature:accepted` and may receive changelog credit when they materially
-  shape what ships. See [CONTRIBUTING.md](CONTRIBUTING.md#feature-requests)
+  shape what ships. See [CONTRIBUTING.md](.github/CONTRIBUTING.md#feature-requests)
   for what makes a request implementation-ready.
 - **Start an [idea discussion][discussions]** when the proposal is not fully
   formed yet. Good discussions graduate into feature requests.

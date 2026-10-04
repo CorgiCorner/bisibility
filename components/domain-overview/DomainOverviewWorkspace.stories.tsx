@@ -1,4 +1,5 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
+import { DateDisplayProvider } from "@/components/dates/DateFormatProvider";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { domainOverviewFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import type {
@@ -109,11 +110,13 @@ const meta = {
         messages={domainOverviewFeatureTestMessages}
         timeZone="UTC"
       >
-        <SessionSpendProvider>
-          <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
-            <Story />
-          </div>
-        </SessionSpendProvider>
+        <DateDisplayProvider>
+          <SessionSpendProvider>
+            <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
+              <Story />
+            </div>
+          </SessionSpendProvider>
+        </DateDisplayProvider>
       </FeatureMessagesProvider>
     ),
   ],

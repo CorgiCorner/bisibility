@@ -1,6 +1,6 @@
 "use client";
 
-import { Modal } from "@/components/ui/Modal";
+import { Modal, type ModalSize } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useRef, useState } from "react";
@@ -16,13 +16,18 @@ export type ConfirmModalProps = {
   onConfirm: () => Promise<void> | void;
   onUndo?: () => Promise<void> | void;
   busy?: boolean;
+  confirmationDisabled?: boolean;
+  children?: ReactNode;
   failureDetail?: ReactNode;
   showConfirmationToast?: boolean;
   typeWord?: string;
+  size?: ModalSize;
 };
 
 export function ConfirmModal({
   busy = false,
+  children,
+  confirmationDisabled = false,
   failureDetail,
   kind,
   onClose,
@@ -30,6 +35,7 @@ export function ConfirmModal({
   onUndo,
   open,
   showConfirmationToast = true,
+  size = "sm",
   typeWord,
 }: Readonly<ConfirmModalProps>) {
   const t = useTranslations("shared.controls.confirmation");
@@ -47,7 +53,7 @@ export function ConfirmModal({
   const expectedWord = typeWord ?? config.typeWord ?? "";
   const needsType = Boolean(config.requireType);
   const isBusy = busy || pending;
-  const disabled = isBusy || (needsType && typed !== expectedWord);
+  const disabled = confirmationDisabled || isBusy || (needsType && typed !== expectedWord);
 
   function handleClose() {
     if (busy || pendingRef.current) return;
@@ -110,7 +116,7 @@ export function ConfirmModal({
       onPrimaryAction={handleConfirm}
       open={open}
       primaryActionDisabled={disabled}
-      size="sm"
+      size={size}
       title={title}
     >
       <div className="flex items-center gap-3">
@@ -121,6 +127,7 @@ export function ConfirmModal({
         </span>
         <p className="m-0 text-[13.5px] leading-[1.55] text-fg-muted">{body}</p>
       </div>
+      {children}
       {needsType ? (
         <div className="mt-4">
           <label className="mb-[7px] block text-[12px] text-fg-muted" htmlFor="confirm-type-word">

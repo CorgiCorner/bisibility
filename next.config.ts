@@ -70,6 +70,8 @@ const nextConfig: NextConfig = {
     return config;
   },
   outputFileTracingIncludes: {
+    "/CLA.md": ["./.github/CLA.md"],
+    "/CONTRIBUTING.md": ["./.github/CONTRIBUTING.md"],
     // Middleware and instrumentation entry names have no leading slash.
     "**/*": [
       "./lib/serp/generated/shared-location-catalog.json.gz",

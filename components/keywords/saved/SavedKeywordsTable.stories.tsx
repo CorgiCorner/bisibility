@@ -1,6 +1,9 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { projectRankTrackerFeatureTestMessages } from "@/i18n/test-support/render-with-feature-messages";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect } from "storybook/test";
 import { SavedKeywordsTable } from "./SavedKeywordsTable";
 
 const costContext: ProjectCostContext = {
@@ -54,9 +57,15 @@ const meta = {
   component: SavedKeywordsTable,
   decorators: [
     (Story) => (
-      <div className="min-h-screen bg-bg p-6 text-fg">
-        <Story />
-      </div>
+      <FeatureMessagesProvider
+        locale="en"
+        messages={projectRankTrackerFeatureTestMessages}
+        timeZone="UTC"
+      >
+        <div className="min-h-screen bg-bg p-6 text-fg">
+          <Story />
+        </div>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
@@ -67,6 +76,29 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Populated: Story = {
+  loaders: [
+    () => {
+      // Old saved layouts must be clamped to the new content minimum.
+      localStorage.setItem(
+        "bv:data-table:saved-keywords-table:v1",
+        JSON.stringify({ columnSizing: { intent: 84 }, columnVisibility: {} }),
+      );
+      return {};
+    },
+  ],
+  play: async ({ canvasElement }) => {
+    await document.fonts.ready;
+    const cells = canvasElement.querySelectorAll('[role="cell"][data-column-id="intent"]');
+    expect(cells.length).toBeGreaterThan(0);
+    for (const cell of cells) {
+      const badge = cell.querySelector("span[title]") as HTMLElement;
+      const box = cell.getBoundingClientRect();
+      const ink = badge.getBoundingClientRect();
+      const style = getComputedStyle(cell);
+      expect(ink.right).toBeLessThanOrEqual(box.right - parseFloat(style.paddingRight));
+      expect(ink.left).toBeGreaterThanOrEqual(box.left + parseFloat(style.paddingLeft));
+    }
+  },
   args: {
     addKeywordsAction: async () => ({ created: 0, keywords: [] }),
     canCreateKeyword: true,

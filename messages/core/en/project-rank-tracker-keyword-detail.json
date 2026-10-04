@@ -70,7 +70,12 @@
         "metricsUnsupported": "Search volume and difficulty are unavailable for this tracking location. Rank tracking is unaffected.",
         "searchVolume": "Search volume",
         "difficultyMetric": "difficulty",
-        "metricListSeparator": " and "
+        "metricListSeparator": " and ",
+        "searchMetrics": "Search metrics",
+        "metricsForMarket": "For {market}",
+        "checkedDepth": "Checked top {depth, number}",
+        "connectedSchedule": "Schedule for this market and device",
+        "schedulesAllTargets": "Across all markets and devices"
       },
       "actions": {
         "moreActions": "More keyword actions",
@@ -86,7 +91,11 @@
         "depthMenu": "Check depth",
         "changeDefault": "Change default",
         "connectProvider": "Connect a provider",
-        "shallowVisibility": "A shallow check can miss rankings beyond the selected depth."
+        "shallowVisibility": "A shallow check can miss rankings beyond the selected depth.",
+        "refreshData": "Refresh data",
+        "refreshingData": "Refreshing...",
+        "refreshDataHint": "Update displayed results without starting another check.",
+        "checking": "Checking..."
       },
       "edit": {
         "details": "Details",
@@ -172,7 +181,7 @@
         "ctr": "CTR",
         "averagePosition": "Avg. position",
         "gscPositionNote": "GSC position is an average across real impressions and may differ from the latest rank check.",
-        "awaitingSync": "Awaiting first traffic sync.",
+        "awaitingSync": "No Search Console data for this keyword yet.",
         "reportingLag": "Search Console data arrives with an approximately {days, number}-day reporting lag.",
         "connectDescription": "Connect Search Console to see clicks, impressions and CTR for this keyword.",
         "connect": "Connect Search Console",
@@ -186,7 +195,25 @@
         "duration": "Duration",
         "scrollDepth": "Scroll depth",
         "seconds": "{seconds, number}s",
-        "minutesSeconds": "{minutes, number}m {seconds, number}s"
+        "minutesSeconds": "{minutes, number}m {seconds, number}s",
+        "landingEmpty": "No stored page data for {path}. Fetch analytics to check the connected sources.",
+        "landingNeedsUrl": "Set a target URL or complete a rank check that finds a ranking URL to match landing-page analytics.",
+        "dataThrough": "Data through {date}",
+        "sync": {
+          "title": "Analytics",
+          "scope": "Project data · all countries and devices",
+          "action": "Fetch analytics",
+          "pending": "Fetching analytics…",
+          "hint": "Fetches reports from this project’s connected analytics sources. Provider reporting delays still apply.",
+          "updated": "Analytics refreshed. Available results are shown below.",
+          "empty": "Reports fetched. No matching query or page data was returned for the tracked keywords.",
+          "partial": "Some sources refreshed, but others could not finish. Available results are shown below. Check Integrations for details.",
+          "failed": "Analytics could not be fetched. Try again or check the connection in Integrations.",
+          "reconnect": "An analytics source needs to be reconnected in Integrations.",
+          "rateLimited": "The analytics provider’s request limit was reached. Try again later.",
+          "unavailable": "No connected source was available to fetch analytics. Check Integrations.",
+          "integrations": "Manage integrations"
+        }
       },
       "position": {
         "title": "Position history",
@@ -198,7 +225,7 @@
         "range": "Position history range",
         "rangeDays": "{count, number} days",
         "markets": "{count, plural, one {# market} other {# markets}}",
-        "latest": "Latest #{position, number} · {date}",
+        "latest": "#{position, number} · {date}",
         "latestUnavailable": "Latest unavailable",
         "noChecks": "No checks in the last {days, number} days.",
         "notEnough": "Not enough history to chart yet.",
@@ -225,7 +252,10 @@
         "comparedMarkets": "Compared markets",
         "noVolumeDifficulty": " / no volume/KD",
         "moreMarkets": "+{count, number} more markets - filter in the grid to compare them",
-        "degradedMarker": "Checked at country level - the provider had no handle for this city. Position measured for {country}, not {requested}."
+        "degradedMarker": "Checked at country level - the provider had no handle for this city. Position measured for {country}, not {requested}.",
+        "latestCheck": "Latest check",
+        "recordedPosition": "Recorded position",
+        "unrankedGaps": "Checks without a ranking are shown as gaps."
       },
       "rankingUrl": {
         "title": "Ranking URL history",
@@ -315,7 +345,10 @@
         "competitorDescription": "Positions from the same saved search results. Missing domains may be outside the retrieved portion.",
         "competitorPositions": "Competitor positions",
         "features": {
-          "ads": { "label": "Ads", "description": "Sponsored placements on the results page." },
+          "ads": {
+            "label": "Ads",
+            "description": "Sponsored placements on the results page."
+          },
           "aiOverview": {
             "label": "AI overview",
             "description": "An AI-generated summary shown above organic results."
@@ -344,7 +377,10 @@
             "label": "Local pack",
             "description": "A map-based local business results block."
           },
-          "news": { "label": "News", "description": "A news results block on the results page." },
+          "news": {
+            "label": "News",
+            "description": "A news results block on the results page."
+          },
           "peopleAlsoAsk": {
             "label": "People also ask",
             "description": "Expandable questions related to the query."
@@ -369,7 +405,38 @@
             "label": "Top stories",
             "description": "A news headlines block on the results page."
           },
-          "video": { "label": "Video", "description": "A video results block on the results page." }
+          "video": {
+            "label": "Video",
+            "description": "A video results block on the results page."
+          }
+        },
+        "extension": {
+          "title": "Extend this snapshot",
+          "action": "Fetch next 10 results",
+          "confirmTitle": "Extend SERP snapshot",
+          "cancel": "Cancel",
+          "confirm": "Confirm and fetch",
+          "pending": "Fetching results…",
+          "rangeLabel": "Additional positions",
+          "range": "#{start, number} to #{end, number}",
+          "costLabel": "Estimated provider usage",
+          "cost": "Up to 1 search",
+          "window": "Available until {time}, within 15 minutes of the original fetch.",
+          "timing": "Additional results are fetched now and attached to this check with their own timestamp. Historical rank and check comparisons stay unchanged.",
+          "duplicates": "Results can move between pages. Repeated URLs are skipped automatically, keeping the earlier result and its position. Different pages from the same domain remain separate; positions are never renumbered.",
+          "unsupported": "This provider cannot extend a saved snapshot. Use Run check above to collect a deeper snapshot.",
+          "legacy": "This check has no saved continuation details. Use Run check above to collect a deeper snapshot.",
+          "expired": "The 15-minute extension window has closed. Use Run check above to collect fresh results.",
+          "complete": "No more pages are available, or this snapshot has reached the top 100.",
+          "running": "An extension is already being fetched. Refresh data to see its result.",
+          "failed": "The extension could not be confirmed. Earlier results are safe. Refresh data to check its status or use Run check for fresh results.",
+          "disconnected": "Reconnect this snapshot’s SerpApi integration before extending it.",
+          "unavailable": "This snapshot changed. Refresh data before continuing.",
+          "addedTitle": "Results added after the check",
+          "page": "Positions {start, number} to {end, number} · fetched {time}",
+          "added": "{count, number} added · {duplicates, number} duplicates skipped",
+          "emptyPage": "This page returned no new unique results.",
+          "refresh": "Refresh snapshot"
         }
       },
       "comparison": {
@@ -468,6 +535,11 @@
           "ranked": "Ranked",
           "running": "Check in progress"
         }
+      },
+      "context": {
+        "label": "Check scope",
+        "desktop": "Desktop",
+        "mobile": "Mobile"
       }
     }
   }

@@ -1,4 +1,6 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { ThemeRoot } from "@/components/ui/ThemeRoot";
+import scheduleMessages from "@/messages/core/en/project-runs-schedules.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { ScheduleEditorMembers } from "./ScheduleEditorMembers";
 
@@ -7,6 +9,11 @@ const meta = {
   component: ScheduleEditorMembers,
   parameters: { chromatic: { viewports: [375, 768, 1024] }, layout: "fullscreen" },
   decorators: [
+    (Story) => (
+      <FeatureMessagesProvider locale="en" messages={scheduleMessages} timeZone="UTC">
+        <Story />
+      </FeatureMessagesProvider>
+    ),
     (Story) => (
       <ThemeRoot className="min-h-screen bg-bg p-5 text-fg" data-theme="light">
         <div className="mx-auto max-w-[1180px]">
@@ -46,6 +53,11 @@ export const Empty: Story = {
 export const ThemeDark: Story = {
   name: "theme-dark",
   decorators: [
+    (Story) => (
+      <FeatureMessagesProvider locale="en" messages={scheduleMessages} timeZone="UTC">
+        <Story />
+      </FeatureMessagesProvider>
+    ),
     (Story) => (
       <ThemeRoot className="min-h-screen bg-bg p-5 text-fg" data-theme="dark">
         <div className="mx-auto max-w-[1180px]">

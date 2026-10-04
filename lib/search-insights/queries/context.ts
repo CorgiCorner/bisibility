@@ -152,9 +152,7 @@ function readyImportPeriod(
     : null;
   const requested = WINDOW_PRESETS.find(({ id }) => id === raw);
   const preset =
-    requested && ready?.[requested.id]
-      ? requested
-      : [...WINDOW_PRESETS].reverse().find(({ id }) => ready?.[id]);
+    requested && ready?.[requested.id] ? requested : WINDOW_PRESETS.find(({ id }) => ready?.[id]);
   if (preset) return resolvePeriod(preset.id, comparison);
   return facts?.readyThrough.d1.current
     ? { ...FIRST_LOOK_WINDOW, comparison }

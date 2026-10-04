@@ -58,7 +58,7 @@
         "viewCheckRuns": "View check runs"
       },
       "scheduleManual": "Manual",
-      "scheduleMixed": "Mixed - {count, number}",
+      "scheduleMixed": "{count, plural, one {# schedule} other {# schedules}}",
       "toolbar": {
         "addKeyword": "Add keyword",
         "export": "Export",
@@ -251,6 +251,22 @@
       "willNeverRun": "{count, number} will never run",
       "yesterday": "yesterday",
       "yourResult": "Your result at #{position, number}"
+    },
+    "deletion": {
+      "selection": "{keywords, plural, one {# keyword} other {# keywords}} · {targets, plural, one {# market/device target} other {# market/device targets}}",
+      "targetHint": "Only these selected targets and their rank history will be deleted. Other markets and devices stay tracked.",
+      "schedules": "Effect on connected schedules",
+      "removed": "{count, plural, one {# target will be removed.} other {# targets will be removed.}}",
+      "becomesEmpty": "Becomes empty. No new checks until keywords are added.",
+      "remaining": "{count, plural, one {# target remains.} other {# targets remain.}} Its schedule settings stay unchanged.",
+      "kept": "Schedules and their settings are kept. You can add keywords again or archive an empty schedule.",
+      "noSchedules": "No schedules are connected to the selected targets.",
+      "running": "Queued checks for these targets will be cancelled. If a provider check is already running, wait for it to finish before deleting. Usage already incurred is kept.",
+      "loadFailed": "Could not load the schedule impact. Try again before deleting.",
+      "retry": "Try again",
+      "loading": "Checking connected schedules…",
+      "runningBlocked": "{count, plural, one {# target is still being checked.} other {# targets are still being checked.}} Wait for completion, then refresh this status to delete.",
+      "refresh": "Refresh status"
     }
   }
 }

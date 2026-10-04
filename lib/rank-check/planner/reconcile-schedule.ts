@@ -19,6 +19,7 @@ export async function reconcilePlannedRunsForSchedule(
 ) {
   const schedule = await database.checkSchedule.findUnique({
     select: {
+      _count: { select: { keywords: true } },
       archivedAt: true,
       cronExpression: true,
       enabled: true,
@@ -48,7 +49,7 @@ export async function reconcilePlannedRunsForSchedule(
   };
   const staleIds = runs.flatMap((run) => {
     if (run.status === "blocked" && run.items.length > 0) return [];
-    if (options.deleting) return [run.id];
+    if (options.deleting || schedule._count.keywords === 0) return [run.id];
     const key = occurrenceKey(run.selectionSpec);
     const occurrence =
       !schedule.archivedAt && schedule.enabled && key

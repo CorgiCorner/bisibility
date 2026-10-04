@@ -2,7 +2,7 @@
 
 import type { NotificationFeed } from "@/lib/queries/notifications";
 import { type OperationSnapshot, operationSnapshotSchema } from "@/lib/rank-check/runs/contract";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 export type AppRealtimeStatus = "connecting" | "live" | "live-polling" | "reconnecting" | "offline";
 
@@ -13,6 +13,7 @@ export type AppRealtimeValue = {
 };
 
 const FALLBACK_POLL_MS = 5_000;
+const RANK_DATA_REFRESH_MS = 1_000;
 const FALLBACK_ERROR_MS = 15_000;
 const FALLBACK_MAX_ERROR_MS = 30_000;
 
@@ -44,7 +45,29 @@ function operationsFromValue(value: unknown) {
   return parsed.success ? parsed.data : null;
 }
 
-export function useAppRealtimeState(projectRef: string): AppRealtimeValue {
+function rankDataSignature(operations: OperationSnapshot[]) {
+  return JSON.stringify(
+    operations
+      .filter((operation) => operation.kind === "rank_check")
+      .map((run) => [
+        run.id,
+        run.status,
+        run.counts.completed,
+        run.counts.failed,
+        run.counts.deferred,
+        run.counts.cancelled,
+        run.blockedReason,
+      ])
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
+  );
+}
+
+export function useAppRealtimeState(
+  projectRef: string,
+  onRankDataChange?: () => void,
+): AppRealtimeValue {
+  const onRankDataChangeRef = useRef(onRankDataChange);
+  onRankDataChangeRef.current = onRankDataChange;
   const [notifications, setNotifications] = useState<NotificationFeed | null>(null);
   const [operations, setOperations] = useState<OperationSnapshot[]>([]);
   const [status, setStatus] = useState<AppRealtimeStatus>("connecting");
@@ -61,6 +84,24 @@ export function useAppRealtimeState(projectRef: string): AppRealtimeValue {
     );
     let active = true;
     let currentOperations: OperationSnapshot[] = [];
+    let previousRankData: string | null = null;
+    let rankRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function applyOperations(nextOperations: OperationSnapshot[]) {
+      if (!active) return;
+      const signature = rankDataSignature(nextOperations);
+      const changed = previousRankData !== null && signature !== previousRankData;
+      previousRankData = signature;
+      currentOperations = nextOperations;
+      setOperations(nextOperations);
+      // Batch result bursts into one refresh while keeping the operation tray live.
+      if (changed && !rankRefreshTimer) {
+        rankRefreshTimer = setTimeout(() => {
+          rankRefreshTimer = null;
+          if (active) onRankDataChangeRef.current?.();
+        }, RANK_DATA_REFRESH_MS);
+      }
+    }
     let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
     let fallbackInFlight = false;
     let nextErrorDelay = FALLBACK_ERROR_MS;
@@ -96,8 +137,7 @@ export function useAppRealtimeState(projectRef: string): AppRealtimeValue {
         if (!response.ok) throw new Error("Operations fallback failed.");
         const nextOperations = operationsFromValue(await response.json());
         if (!nextOperations) throw new Error("Operations fallback returned invalid data.");
-        currentOperations = nextOperations;
-        setOperations(nextOperations);
+        applyOperations(nextOperations);
         nextErrorDelay = FALLBACK_ERROR_MS;
         scheduleFallback();
       } catch {
@@ -140,8 +180,7 @@ export function useAppRealtimeState(projectRef: string): AppRealtimeValue {
     source.addEventListener("operations", (event) => {
       const nextOperations = operationsFromValue(jsonFromEvent(event));
       if (!nextOperations) return;
-      currentOperations = nextOperations;
-      setOperations(nextOperations);
+      applyOperations(nextOperations);
       if (nextOperations.length === 0) clearFallback();
     });
 
@@ -155,6 +194,7 @@ export function useAppRealtimeState(projectRef: string): AppRealtimeValue {
 
     return () => {
       active = false;
+      if (rankRefreshTimer) clearTimeout(rankRefreshTimer);
       clearFallback();
       window.removeEventListener("focus", refreshImmediately);
       window.removeEventListener("online", refreshImmediately);

@@ -27,6 +27,22 @@ describe("public API ID boundary", () => {
     expectInvalidPublicId(() => requireApiPublicId("kw_a00000000000000000000000", "prj"));
   });
 
+  it.each(["agent-reports", "site-audits"])(
+    "validates %s member report IDs before dispatch",
+    (resource) => {
+      const project = "prj_a00000000000000000000000";
+      expect(() =>
+        requireApiPathPublicIds(["projects", project, resource, "agr_a00000000000000000000000"]),
+      ).not.toThrow();
+      for (const value of ["report_internal_1", "kw_a00000000000000000000000", "agr_invalid"]) {
+        expectInvalidPublicId(() =>
+          requireApiPathPublicIds(["projects", project, resource, value]),
+        );
+      }
+      expect(() => requireApiPathPublicIds(["projects", project, resource])).not.toThrow();
+    },
+  );
+
   it("rejects raw alert-rule target and recipient IDs", () => {
     expectInvalidPublicId(() =>
       requireApiAlertRulePublicIds({

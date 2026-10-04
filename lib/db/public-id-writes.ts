@@ -1,6 +1,7 @@
-import { makePublicId, type PublicIdPrefix, parsePublicId } from "./public-id.ts";
+import { makePublicId, type PublicIdPrefix, parsePublicId } from "./public-id-resources.ts";
 
 const prefixByModel = {
+  AgentReport: "agr",
   AlertRule: "alr",
   ApiKey: "key",
   AuditLog: "audit",
@@ -37,6 +38,7 @@ const nestedModels: Partial<
   Keyword: { rankChecks: "RankCheck", signals: "Signal", triggeredAlerts: "TriggeredAlert" },
   MigrationToken: { importJobs: "CloudImportJob" },
   Project: {
+    agentReports: "AgentReport",
     alertRules: "AlertRule",
     apiKeys: "ApiKey",
     cloudImportJobs: "CloudImportJob",

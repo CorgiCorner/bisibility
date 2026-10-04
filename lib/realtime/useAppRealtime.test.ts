@@ -1,3 +1,4 @@
+import type { RankCheckOperation } from "@/lib/rank-check/runs/contract";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAppRealtimeState } from "./useAppRealtime";
@@ -40,6 +41,34 @@ const activeOperations = [
   },
 ] as const;
 
+const rankRun: RankCheckOperation = {
+  id: "rcr_abcdefghijklmnopqrstuvwx",
+  kind: "rank_check",
+  status: "running",
+  outcome: null,
+  trigger: "manual",
+  selectionKind: "single",
+  counts: {
+    requested: 1,
+    total: 1,
+    skipped: 0,
+    completed: 0,
+    failed: 0,
+    deferred: 0,
+    cancelled: 0,
+  },
+  keywordCount: 1,
+  targetCount: 1,
+  estimatedCostCents: 0,
+  costCents: null,
+  blockedReason: null,
+  plannedFor: null,
+  nextCheckAt: null,
+  startedAt: "2026-09-27T12:00:00.000Z",
+  finishedAt: null,
+  parentRunId: null,
+};
+
 describe("useAppRealtimeState", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -54,6 +83,78 @@ describe("useAppRealtimeState", () => {
     MockEventSource.instances = [];
     vi.unstubAllGlobals();
     vi.useRealTimers();
+  });
+
+  it("refreshes persisted rank data for changed results and completion, not heartbeats", async () => {
+    const refresh = vi.fn();
+    renderHook(() => useAppRealtimeState("prj_1", refresh));
+    const source = MockEventSource.instances[0];
+    act(() => source.emit("operations", { operations: [rankRun] }));
+    expect(refresh).not.toHaveBeenCalled();
+    act(() => source.emit("operations", { operations: [{ ...rankRun, etaSeconds: 5 }] }));
+    expect(refresh).not.toHaveBeenCalled();
+    const partial = { ...rankRun, counts: { ...rankRun.counts, completed: 1 } };
+    act(() => source.emit("operations", { operations: [partial] }));
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(refresh).toHaveBeenCalledOnce();
+    act(() => source.emit("operations", { operations: [partial] }));
+    expect(refresh).toHaveBeenCalledOnce();
+    act(() => source.emit("operations", { operations: [] }));
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(refresh).toHaveBeenCalledTimes(2);
+    act(() => source.emit("operations", { operations: [] }));
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it("coalesces bursts of completed targets into one data refresh", async () => {
+    const refresh = vi.fn();
+    renderHook(() => useAppRealtimeState("prj_1", refresh));
+    const source = MockEventSource.instances[0];
+    act(() => source.emit("operations", { operations: [rankRun] }));
+    for (const completed of [1, 2, 3]) {
+      act(() =>
+        source.emit("operations", {
+          operations: [{ ...rankRun, counts: { ...rankRun.counts, completed } }],
+        }),
+      );
+    }
+    expect(refresh).not.toHaveBeenCalled();
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(refresh).toHaveBeenCalledOnce();
+  });
+
+  it("refreshes on completion through the HTTP fallback", async () => {
+    const refresh = vi.fn();
+    renderHook(() => useAppRealtimeState("prj_1", refresh));
+    const source = MockEventSource.instances[0];
+    act(() => source.emit("operations", { operations: [rankRun] }));
+    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ operations: [] })));
+    source.readyState = MockEventSource.CLOSED;
+    act(() => source.onerror?.(new Event("error")));
+    await act(async () => vi.advanceTimersByTimeAsync(6_000));
+    expect(refresh).toHaveBeenCalledOnce();
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    expect(refresh).toHaveBeenCalledOnce();
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it("does not refresh rank data for imports or callbacks from a previous project", async () => {
+    const refresh = vi.fn();
+    const { rerender } = renderHook(({ project }) => useAppRealtimeState(project, refresh), {
+      initialProps: { project: "prj_1" },
+    });
+    const firstSource = MockEventSource.instances[0];
+    act(() => firstSource.emit("operations", { operations: activeOperations }));
+    act(() => firstSource.emit("operations", { operations: [] }));
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(refresh).not.toHaveBeenCalled();
+    act(() => firstSource.emit("operations", { operations: [rankRun] }));
+    refresh.mockClear();
+    rerender({ project: "prj_2" });
+    act(() => firstSource.emit("operations", { operations: [] }));
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   function renderRealtime() {

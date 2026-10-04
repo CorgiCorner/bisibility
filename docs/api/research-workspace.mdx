@@ -1,0 +1,93 @@
+---
+title: "Research workspace"
+description: "Compare synthetic model responses, inspect observed AI datasets, audit project pages, and preserve context and analyses."
+---
+
+All operations use `/api/v1/projects/{project_id}` and the standard authenticated
+API envelope. Project access and write permissions apply to REST, the application
+and MCP. Read discovery capabilities before choosing a provider connection.
+
+## AI Visibility and Prompt Explorer
+
+AI Visibility searches provider datasets for brand or domain mentions, cited
+pages and associated prompts. Coverage depends on the selected platform, market
+and provider dataset; it does not expose users' private ChatGPT conversations.
+Prompt Explorer submits the same prompt to selected supported models. Those
+responses are synthetic tests, not observed visibility or traffic.
+
+Start with an estimate, which makes no paid provider request:
+
+```http
+POST /api/v1/projects/{project_id}/ai-visibility
+Authorization: Bearer <api_key>
+Content-Type: application/json
+
+{
+  "brand": "Example",
+  "domain": "example.com",
+  "platform": "chat_gpt",
+  "estimate_only": true,
+  "max_cost_cents": 0
+}
+```
+
+The Prompt Explorer endpoint is `POST /prompt-explorer`. Its body also requires
+`prompt`; supported `models` are `gpt-4.1-mini` and `gpt-4.1-nano`. A prompt is
+limited to 500 characters and 2000 UTF-8 bytes. Model output is bounded to 512
+tokens and web search is disabled.
+
+Paid requests require an explicit integer `max_cost_cents` between 0 and 1000.
+Inspect the estimate and provider configuration before consenting to a run.
+Existing BYOK or hosted-credit admission and receipts apply. A zero cap permits
+cache hits only. `fresh: true` bypasses cached results without bypassing admission.
+Estimates are conservative bounds; actual confirmed charges and ambiguous cost
+failures are preserved. Cached responses have a zero new charge while their
+stored result retains the historical charge. Cache scope includes the project
+and its context, and expires after twelve hours.
+
+## Project Context
+
+`GET /context` returns business, audience, products, goals and agent rules.
+`PATCH /context` requires all five fields, including empty strings when clearing
+a field. Each field is limited to 4000 characters:
+
+```json
+{
+  "business": "Independent software company",
+  "audience": "Small marketing teams",
+  "products": "Search research tools",
+  "goals": "Understand relevant discovery queries",
+  "agentRules": "Distinguish observations from synthetic tests"
+}
+```
+
+## Site Audit
+
+`POST /site-audits` accepts `{ "maxPages": 10 }`, with a maximum of 15 pages.
+The project must have a tracked domain. The crawler checks HTTP status, title,
+description, headings, indexability, links and image alt text. It respects robots
+rules and limits requests to the same origin with protected redirects and DNS.
+
+A run stops after 20 requests or 15 seconds, and responses are limited to 512 KiB.
+Results expose the stop reason and limits; a bounded sample is not a full-site
+audit. JavaScript rendering and Lighthouse are not included. Cached runs expire
+after five minutes. Rate denials return HTTP 429 and retry metadata.
+
+Read history with `GET /site-audits` and a saved result with
+`GET /site-audits/{report_id}`.
+
+## Agent Reports
+
+Use `POST /agent-reports` to preserve an external analysis with `kind`, `title`,
+`body` and optional `provenance`. Body and provenance must be JSON objects, bounded
+to 256 KiB and 32 KiB respectively. The producer kinds `ai_visibility`,
+`prompt_explorer` and `site_audit` are reserved for application-generated results.
+
+`GET /agent-reports` lists saved analyses; `GET /agent-reports/{report_id}` reads
+one report. Report IDs use the `agr_` prefix. Shared report links require existing
+project access and do not create public access grants.
+
+The corresponding MCP tools are `analyze_ai_visibility`, `compare_ai_prompts`,
+`get_project_context`, `update_project_context`, `run_site_audit`,
+`list_site_audits`, `get_site_audit`, `create_agent_report`, `list_agent_reports`
+and `get_agent_report`. Exact request and response schemas are in API Reference.

@@ -116,7 +116,8 @@
               "api/ranked-keyword-suggestions",
               "api/saved-keywords",
               "api/backlinks",
-              "api/domain-overview"
+              "api/domain-overview",
+              "api/research-workspace"
             ]
           },
           {
@@ -259,6 +260,16 @@
           {
             "group": "Research Reports",
             "pages": [
+              "GET /projects/{project_id}/context",
+              "PATCH /projects/{project_id}/context",
+              "GET /projects/{project_id}/agent-reports",
+              "POST /projects/{project_id}/agent-reports",
+              "GET /projects/{project_id}/agent-reports/{report_id}",
+              "POST /projects/{project_id}/ai-visibility",
+              "POST /projects/{project_id}/prompt-explorer",
+              "GET /projects/{project_id}/site-audits",
+              "POST /projects/{project_id}/site-audits",
+              "GET /projects/{project_id}/site-audits/{report_id}",
               "GET /projects/{project_id}/research/reports",
               "GET /projects/{project_id}/research/reports/{kind}"
             ]

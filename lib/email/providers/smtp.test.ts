@@ -51,7 +51,8 @@ describe("smtp email provider", () => {
 
     await smtpEmailProvider.send(message);
 
-    expect(createTransportMock).toHaveBeenCalledWith("smtp://mail.example.com:1025", {
+    expect(createTransportMock).toHaveBeenCalledWith({
+      url: "smtp://mail.example.com:1025",
       connectionTimeout: 10_000,
       pool: false,
       socketTimeout: 10_000,
@@ -101,5 +102,55 @@ describe("smtp email provider", () => {
     expect(error).toMatchObject({ retryAfterSeconds: null, status: 500 });
     expect(error.message).toBe("SMTP transport send failed with status 500.");
     expect(closeMock).toHaveBeenCalledOnce();
+  });
+});
+
+describe("mail transport runtime compatibility", () => {
+  afterEach(() => {
+    createTransportMock.mockClear();
+    sendMailMock.mockReset();
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it("applies the provider timeouts to the real SMTP transport without connecting", async () => {
+    const { createTransport } = await vi.importActual<typeof import("nodemailer")>("nodemailer");
+    let transportOptions: unknown;
+    createTransportMock.mockImplementationOnce((options) => {
+      const transport = createTransport(options);
+      transportOptions = transport.options;
+      return {
+        close: () => transport.close(),
+        sendMail: sendMailMock.mockResolvedValue({}),
+      };
+    });
+    vi.stubEnv("SMTP_URL", "smtp://mail.example.com:1025");
+
+    await smtpEmailProvider.send(message);
+
+    expect(transportOptions).toMatchObject({
+      connectionTimeout: 10_000,
+      host: "mail.example.com",
+      pool: false,
+      port: 1025,
+      socketTimeout: 10_000,
+    });
+  });
+
+  it("serializes the complete email with the real transport without delivering it", async () => {
+    const { createTransport } = await vi.importActual<typeof import("nodemailer")>("nodemailer");
+    const transport = createTransport({ buffer: true, newline: "unix", streamTransport: true });
+    try {
+      const result = await transport.sendMail({ ...message, replyTo: "hello@example.com" });
+      expect(result.envelope).toEqual({ from: "reports@example.com", to: ["owner@example.com"] });
+      const serialized = result.message.toString();
+      expect(serialized).toContain("Reply-To: hello@example.com");
+      expect(serialized).toContain("Subject: Weekly report");
+      expect(serialized).toContain("Content-Type: multipart/alternative");
+      expect(serialized).toContain("Report ready");
+      expect(serialized).toContain("<p>Report ready</p>");
+    } finally {
+      transport.close();
+    }
   });
 });

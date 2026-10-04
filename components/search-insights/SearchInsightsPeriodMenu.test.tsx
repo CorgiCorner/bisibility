@@ -66,13 +66,13 @@ describe("SearchInsightsPeriodMenu", () => {
     onPeriodChange.mockReset();
   });
 
-  it("labels the trigger with only the finalized window", () => {
+  it("shows the finalized day count before the date range", () => {
     renderMenu();
 
     const trigger = screen.getByRole("button", {
-      name: "Comparison window: Aug 22 - 28",
+      name: "Comparison window: 7 finalized days, Aug 22 - 28",
     });
-    expect(trigger).toHaveTextContent("Aug 22 - 28");
+    expect(trigger).toHaveTextContent("7 finalized daysAug 22 - 28");
     expect(trigger).not.toHaveTextContent("Aug 15 - 21");
     expect(trigger).toHaveAttribute("aria-haspopup", "listbox");
   });
@@ -102,12 +102,12 @@ describe("SearchInsightsPeriodMenu", () => {
     renderMenu();
 
     const trigger = screen.getByRole("button", {
-      name: "Comparison window: Aug 22 - 28",
+      name: "Comparison window: 7 finalized days, Aug 22 - 28",
     });
     await userEvent.hover(trigger);
 
     const tooltip = await screen.findByRole("tooltip");
-    expect(tooltip).toHaveTextContent("Aug 22 - 28 · 7 finalized days");
+    expect(tooltip).toHaveTextContent("7 finalized days · Aug 22 - 28");
     expect(tooltip).toHaveTextContent("compared with Aug 15 - 21");
     expect(tooltip).toHaveTextContent("Google finalizes days in Pacific time");
     expect(within(tooltip).getByTestId("period-tooltip-content")).toHaveClass(
@@ -121,13 +121,13 @@ describe("SearchInsightsPeriodMenu", () => {
   it("keeps a deliberately wide ISO tooltip independent from the chip width", async () => {
     renderMenu(importFacts, period, window, "iso");
     const trigger = screen.getByRole("button", {
-      name: "Comparison window: 2026-08-22 - 2026-08-28",
+      name: "Comparison window: 7 finalized days, 2026-08-22 - 2026-08-28",
     });
 
     await userEvent.hover(trigger);
 
     expect(await screen.findByRole("tooltip")).toHaveTextContent(
-      "2026-08-22 - 2026-08-28 · 7 finalized days",
+      "7 finalized days · 2026-08-22 - 2026-08-28",
     );
     expect(within(screen.getByRole("tooltip")).getByTestId("period-tooltip-content")).toHaveClass(
       "max-w-80",
@@ -173,9 +173,9 @@ describe("SearchInsightsPeriodMenu", () => {
     );
 
     const trigger = screen.getByRole("button", {
-      name: "Comparison window: First look, Aug 28",
+      name: "Comparison window: 1 finalized day, Aug 28",
     });
-    expect(trigger).toHaveTextContent("First look · Aug 28");
+    expect(trigger).toHaveTextContent("1 finalized dayAug 28");
     await userEvent.click(trigger);
 
     const firstLook = await screen.findByRole("option", { name: /First look/ });

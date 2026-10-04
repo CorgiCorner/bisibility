@@ -29,7 +29,7 @@ Pull requests are not on this list because this repository does not accept
 them. See [Pull Requests](#pull-requests) for why, and for where the same
 work lands instead.
 
-The [roadmap](ROADMAP.md) explains how all of this feeds into what gets built
+The [roadmap](../ROADMAP.md) explains how all of this feeds into what gets built
 next, including how reactions and engagement on existing issues are weighed
 during triage.
 
@@ -191,6 +191,15 @@ npm run temporal:worker
 ```
 
 ## Tests
+
+Vitest helpers and optional test configurations live in `tests/config/`.
+The root `vitest.config.ts` remains the default entry point.
+
+To refresh the README image, install `agent-browser` and Chromium, then run
+`npm run screenshot:dashboard` with `DATABASE_URL` pointing at a disposable
+PostgreSQL database. The generator creates an isolated schema, seeds synthetic
+developer-focused data, builds the real application, and removes the schema
+after capture. It never calls a live SEO provider.
 
 Useful focused checks:
 

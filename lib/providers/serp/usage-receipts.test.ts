@@ -41,11 +41,14 @@ describe("serpApiUsageReceipt", () => {
         { error: "Invalid API key", search_metadata: { status: "Success" } },
         { ok: true },
       ),
-    ).toMatchObject({ failed: true, quantity: 0 });
+    ).toMatchObject({ failed: true, quantity: null });
   });
 
   it("marks non-2xx transport status as failed", () => {
-    expect(serpApiUsageReceipt(null, { ok: false })).toMatchObject({ failed: true, quantity: 0 });
+    expect(serpApiUsageReceipt(null, { ok: false })).toMatchObject({
+      failed: true,
+      quantity: null,
+    });
   });
 
   it("reports unknown quantity instead of inventing zero when status metadata is absent", () => {

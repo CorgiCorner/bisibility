@@ -18,4 +18,4 @@ Describe the problem rather than sending a patch. A bug report with a minimal
 reproduction is enough to get a fix written, including for typos, dead links,
 and wrong commands.
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for why.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for why.

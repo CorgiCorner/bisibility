@@ -48,6 +48,44 @@ describe("SearchInsightsDrawer footer", () => {
 });
 
 describe("SearchInsightsDrawer title", () => {
+  it("offers Search Console for the selected property and the loaded query's actual dates", async () => {
+    renderTrackedDrawer({ property: "https://example.org/docs/" });
+    const link = await screen.findByRole("link", { name: "Open in Search Console" });
+    const url = new URL(link.getAttribute("href") as string);
+    expect(url.searchParams.get("resource_id")).toBe("https://example.org/docs/");
+    expect(url.searchParams.get("query")).toBe(`!${storyQueryDetail.query}`);
+    expect(url.searchParams.get("dates")).toBe(
+      `${storyQueryDetail.perDay[0].date.replaceAll("-", "")},${storyQueryDetail.perDay.at(-1)?.date.replaceAll("-", "")}`,
+    );
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it.each([
+    { property: undefined },
+    { property: "sc-domain:example.com", entry: { status: "loading" } as const },
+    {
+      property: "sc-domain:example.com",
+      frame: { kind: "query", query: "a different query" } as const,
+    },
+    {
+      property: "sc-domain:example.com",
+      entry: {
+        status: "ready",
+        content: { kind: "query", detail: { ...storyQueryDetail, perDay: [] } },
+      } as const,
+    },
+  ])(
+    "does not invent a Search Console scope when its query or dates are unavailable",
+    async (overrides) => {
+      renderTrackedDrawer(overrides);
+      await screen.findByRole("dialog");
+      expect(
+        screen.queryByRole("link", { name: "Open in Search Console" }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
   it("links only a query title to its exact Google search", async () => {
     renderTrackedDrawer();
 

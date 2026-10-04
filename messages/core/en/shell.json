@@ -72,7 +72,12 @@
         "rankTracker": "Rank Tracker",
         "runs": "Runs",
         "searchConsole": "Search Console",
-        "settings": "Settings"
+        "settings": "Settings",
+        "aiVisibility": "AI Visibility",
+        "promptExplorer": "Prompt Explorer",
+        "siteAudit": "Site Audit",
+        "projectContext": "Project Context",
+        "agentReports": "Agent Reports"
       },
       "menu": "Menu"
     },
@@ -208,7 +213,12 @@
         "runs": "Rank checks and Search Console imports for this project.",
         "searchConsole": "What Google reported, what it withheld, and what you keep.",
         "security": "Password, sessions and account protection.",
-        "timeline": "Project signals, page changes and notes over time."
+        "timeline": "Project signals, page changes and notes over time.",
+        "aiVisibility": "Brand mentions and citations from available provider observations.",
+        "promptExplorer": "Compare synthetic prompt tests across supported models.",
+        "siteAudit": "Crawl your project site and inspect issues by URL.",
+        "projectContext": "Business, audience, products and goals for your agents.",
+        "agentReports": "Saved analyses shared with members of this project."
       },
       "titles": {
         "account": "Account settings",
@@ -235,7 +245,12 @@
         "searchConsole": "Search Console",
         "security": "Security",
         "settings": "Settings",
-        "timeline": "Timeline"
+        "timeline": "Timeline",
+        "aiVisibility": "AI Visibility",
+        "promptExplorer": "Prompt Explorer",
+        "siteAudit": "Site Audit",
+        "projectContext": "Project Context",
+        "agentReports": "Agent Reports"
       }
     },
     "footer": {

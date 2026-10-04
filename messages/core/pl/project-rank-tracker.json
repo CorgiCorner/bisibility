@@ -58,7 +58,7 @@
         "viewCheckRuns": "Zobacz przebiegi sprawdzeń"
       },
       "scheduleManual": "Ręczny",
-      "scheduleMixed": "Mieszany – {count, number}",
+      "scheduleMixed": "{count, plural, one {# harmonogram} few {# harmonogramy} many {# harmonogramów} other {# harmonogramu}}",
       "toolbar": {
         "addKeyword": "Dodaj słowo kluczowe",
         "export": "Eksportuj",
@@ -251,6 +251,22 @@
       "willNeverRun": "{count, number} nigdy się nie wykona",
       "yesterday": "wczoraj",
       "yourResult": "Twój wynik na poz. {position, number}"
+    },
+    "deletion": {
+      "selection": "{keywords, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} · {targets, plural, one {# wariant rynku i urządzenia} few {# warianty rynku i urządzenia} many {# wariantów rynku i urządzenia} other {# wariantu rynku i urządzenia}}",
+      "targetHint": "Usunięte zostaną tylko wybrane warianty i ich historia pozycji. Pozostałe rynki i urządzenia nadal będą śledzone.",
+      "schedules": "Wpływ na powiązane harmonogramy",
+      "removed": "{count, plural, one {# wariant zostanie usunięty.} few {# warianty zostaną usunięte.} many {# wariantów zostanie usuniętych.} other {# wariantu zostanie usunięte.}}",
+      "becomesEmpty": "Pozostanie pusty. Nowe sprawdzenia ruszą po dodaniu słów kluczowych.",
+      "remaining": "{count, plural, one {Pozostanie # wariant.} few {Pozostaną # warianty.} many {Pozostanie # wariantów.} other {Pozostanie # wariantu.}} Ustawienia harmonogramu się nie zmienią.",
+      "kept": "Harmonogramy i ich ustawienia zostaną zachowane. Możesz ponownie dodać słowa kluczowe lub zarchiwizować pusty harmonogram.",
+      "noSchedules": "Wybrane warianty nie mają przypisanych harmonogramów.",
+      "running": "Oczekujące sprawdzenia tych wariantów zostaną anulowane. Jeśli sprawdzenie u dostawcy już trwa, poczekaj na jego zakończenie przed usunięciem. Wykorzystane operacje nie są zwracane.",
+      "loadFailed": "Nie udało się sprawdzić wpływu na harmonogramy. Spróbuj ponownie przed usunięciem.",
+      "retry": "Spróbuj ponownie",
+      "loading": "Sprawdzanie powiązanych harmonogramów…",
+      "runningBlocked": "{count, plural, one {# wariant jest nadal sprawdzany.} few {# warianty są nadal sprawdzane.} many {# wariantów jest nadal sprawdzanych.} other {# wariantu jest nadal sprawdzane.}} Poczekaj na zakończenie i odśwież status, aby usunąć.",
+      "refresh": "Odśwież status"
     }
   }
 }

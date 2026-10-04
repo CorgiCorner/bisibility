@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/Card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { ValueBar } from "@/components/ui/ValueBar";
 import type { DateFormat } from "@/lib/dates/format";
 import type { DomainRankMetrics } from "@/lib/providers/types";
 import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/csr/ArrowDown";
@@ -77,19 +78,16 @@ export function DomainOverviewWhatChanged({
                   {row.label}
                 </span>
                 <strong className={`${tone} font-sans tabular-nums text-[13px]`}>
-                  {row.sign}
+                  {row.value > 0 ? row.sign : ""}
                   {number.format(row.value)}
                 </strong>
               </div>
-              <div
-                aria-hidden
-                className="mt-2 hidden h-1 overflow-hidden rounded-full border border-border bg-bg-sunken xl:block"
-              >
-                <span
-                  className={`block h-full rounded-full ${row.color === "green" ? "bg-green" : "bg-red"}`}
-                  style={{ opacity: 0.55, width: `${Math.max(2, (row.value / max) * 100)}%` }}
-                />
-              </div>
+              <ValueBar
+                className="mt-2 hidden xl:block"
+                max={max}
+                tone={row.color === "green" ? "positive" : "negative"}
+                value={row.value}
+              />
             </li>
           );
         })}

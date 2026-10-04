@@ -22,7 +22,8 @@ import http from "node:http";
 import net from "node:net";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { chromium } from "@playwright/test";
+import { captureDashboard } from "./dashboard-screenshot-browser.mjs";
+import { prepareScreenshotFixtures } from "./dashboard-screenshot-fixtures.mjs";
 import {
   createScreenshotSchema,
   dropScreenshotSchema,
@@ -35,15 +36,6 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const host = "127.0.0.1";
 const outputPath = path.join(root, "public/screenshots/dashboard-overview.png");
-const demoEmail = "demo@acme.dev";
-const demoOtp = "000000";
-// 1680 rather than a laptop's 1440: the highlight grid is `auto-fit minmax(300px, 1fr)`, so at
-// 1440 its fourth card wraps to a second row and adds roughly 400px of height to the image. At
-// 1680 all four sit on one row, which keeps the capture landscape - the shape a README leads with.
-const captureWidth = 1680;
-// A ceiling, not a target. It keeps a runaway page - an unexpected seed, a broken layout - from
-// producing an image nobody can look at, while leaving room for the overview to grow.
-const maxCaptureHeight = 1800;
 
 function runCommand(command, args, env) {
   console.log(`> ${command} ${args.join(" ")}`);
@@ -163,90 +155,6 @@ async function stopChild(child) {
   });
 }
 
-async function waitForAuthResult(target, page, failurePrefix) {
-  const errorMessage = page
-    .locator("form .text-red-text")
-    .filter({ hasText: /[A-Za-z]/ })
-    .first();
-  await Promise.race([
-    target,
-    errorMessage.waitFor({ state: "visible" }).then(async () => {
-      throw new Error(`${failurePrefix}: ${await errorMessage.innerText()}`);
-    }),
-  ]);
-}
-
-async function captureDashboard(origin, browser, projectRef) {
-  const dashboardPath = `/app/${projectRef}/dashboard`;
-  const page = await browser.newPage({
-    deviceScaleFactor: 2,
-    viewport: { height: 980, width: captureWidth },
-  });
-  await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
-  await page.goto(`${origin}/login?next=${encodeURIComponent(dashboardPath)}`, {
-    waitUntil: "networkidle",
-  });
-  const email = page.locator("#login-email");
-  await email.waitFor({ state: "visible" });
-  await email.fill(demoEmail);
-  await page.getByRole("button", { name: "Send login code" }).click();
-  const firstOtpDigit = page.getByLabel("Code", { exact: true });
-  await waitForAuthResult(
-    firstOtpDigit.waitFor({ state: "visible" }),
-    page,
-    "Requesting the demo sign-in code failed",
-  );
-  await firstOtpDigit.pressSequentially(demoOtp);
-  await page.getByRole("button", { name: "Verify and continue" }).click();
-  await waitForAuthResult(
-    page.waitForURL((url) => url.pathname === dashboardPath, { timeout: 30_000 }),
-    page,
-    "Demo sign-in failed",
-  );
-
-  // A production navigation keeps the outgoing shell in the tree, hidden, while the incoming one
-  // paints, so the bare attribute matches twice and a strict locator refuses to choose. Match the
-  // visible one: it is the shell being photographed.
-  const shell = page.locator("[data-shell-root]:visible");
-  await shell.first().waitFor({ state: "visible" });
-  await page
-    .getByRole("heading", { name: "Dashboard", exact: true })
-    .waitFor({ state: "visible" });
-  await page
-    .getByRole("button", { name: "Switch project" })
-    .getByText("Demo", { exact: true })
-    .waitFor();
-  await page.getByText("20 keywords", { exact: true }).first().waitFor({ state: "visible" });
-  await page
-    .getByRole("button", { exact: true, name: "Markets" })
-    .waitFor({ state: "visible" });
-  await page.getByRole("heading", { name: "By market" }).waitFor({ state: "visible" });
-  await page
-    .getByText("3 active markets / paused markets excluded", { exact: true })
-    .waitFor({ state: "visible" });
-  await page.locator(".MuiAreaElement-root").first().waitFor({ state: "visible" });
-  await page.locator(".MuiBarElement-root").first().waitFor({ state: "visible" });
-
-  // The overview is taller than the reading viewport, and a capture that stops at 980px slices the
-  // highlight cards in half. Grow the viewport to the height the page actually needs, then let the
-  // charts settle at that size before the shutter: they are responsive, so measuring once and
-  // shooting immediately would photograph a mid-resize frame.
-  const contentHeight = await page.evaluate(() => {
-    // The whole document, not just <main>: the instance footer sits outside it, and measuring
-    // main alone sliced that strip off the bottom edge.
-    const { scrollHeight } = document.documentElement;
-    return scrollHeight > 0 ? Math.ceil(scrollHeight) : null;
-  });
-  if (!contentHeight) throw new Error("Could not measure the overview height to frame the capture.");
-  await page.setViewportSize({ height: Math.min(contentHeight, maxCaptureHeight), width: captureWidth });
-  await page.locator(".MuiAreaElement-root").first().waitFor({ state: "visible" });
-  await page.locator(".MuiBarElement-root").first().waitFor({ state: "visible" });
-
-  await page.evaluate(() => document.fonts?.ready);
-  await fs.mkdir(path.dirname(outputPath), { recursive: true });
-  await page.screenshot({ animations: "disabled", omitBackground: false, path: outputPath });
-}
-
 const bakedRuntimeEnvPath = path.join(root, "lib/deployment/runtime-env.generated.ts");
 
 /**
@@ -291,24 +199,23 @@ export async function generateDashboardScreenshot(env = process.env) {
     SITE_URL: origin,
   };
 
-  let browser;
   let child;
   let schemaCreated = false;
   try {
     await createScreenshotSchema(databaseUrl, schema);
     schemaCreated = true;
     console.log(`Created isolated screenshot schema ${schema}.`);
-    await runCommand("npx", ["prisma", "migrate", "deploy"], runtimeEnv);
+    await runCommand("npm", ["run", "db:migrate"], runtimeEnv);
     await runCommand("npm", ["run", "db:seed"], runtimeEnv);
     const projectRef = await seededDemoProjectRef(isolatedUrl);
+    await prepareScreenshotFixtures(isolatedUrl, projectRef);
     await withPreservedBakedEnv(() => runCommand("npm", ["run", "build"], runtimeEnv));
     child = startNext(port, runtimeEnv);
     await waitForHttp(`${origin}/login`, child);
-    browser = await chromium.launch();
-    await captureDashboard(origin, browser, projectRef);
+    await fs.mkdir(path.dirname(outputPath), { recursive: true });
+    await captureDashboard(origin, projectRef, outputPath);
     console.log(`Wrote ${path.relative(root, outputPath)}`);
   } finally {
-    if (browser) await browser.close();
     await stopChild(child);
     if (schemaCreated) {
       await dropScreenshotSchema(databaseUrl, schema);

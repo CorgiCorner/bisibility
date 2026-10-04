@@ -2,7 +2,7 @@ import "server-only";
 
 import type { AlertRuleView, TriggeredAlertView } from "@/lib/alerts/alert-data";
 import { prisma } from "@/lib/db/prisma";
-import { isPublicIdOfType } from "@/lib/db/public-id";
+import { isPublicIdOfType } from "@/lib/db/public-id-resources";
 import { requireApiPublicId } from "./public-id";
 
 type PublicRow = { id: string; publicId: string | null };

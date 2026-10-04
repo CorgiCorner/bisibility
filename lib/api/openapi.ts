@@ -21,6 +21,7 @@ import { projectOverviewPaths } from "./openapi-project-overview";
 import { publicPaths } from "./openapi-public";
 import { rankedKeywordSuggestionPaths } from "./openapi-ranked-keywords";
 import { researchReportsPaths, researchReportsSchemas } from "./openapi-research-reports";
+import { researchWorkspacePaths } from "./openapi-research-workspace";
 import { resourcePaths } from "./openapi-resource-paths";
 import { savedKeywordPaths } from "./openapi-saved-keywords";
 import { savedViewOperations } from "./openapi-saved-views";
@@ -134,6 +135,7 @@ export function getOpenApiDocument() {
             ref: (name) => ref(name as keyof typeof schemas),
           }),
           ...publicPaths,
+          ...researchWorkspacePaths(),
           ...locationSearchPaths({ bearer: bearerOperation, ref }),
           ...keywordResearchPaths({ bearer: bearerOperation, ref }),
           ...loopClosurePaths({ bearer: bearerOperation, ref }),

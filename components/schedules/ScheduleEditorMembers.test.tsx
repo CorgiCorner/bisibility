@@ -71,7 +71,7 @@ describe("ScheduleEditorMembers", () => {
     );
 
     expect(screen.queryByRole("table", { name: "Schedule members" })).not.toBeInTheDocument();
-    expect(screen.getByText("No keywords yet. Add some to start scheduled checks.")).toBeVisible();
+    expect(screen.getByText(/No keywords assigned.*will not plan new checks/)).toBeVisible();
     screen.getByRole("button", { name: "Add keywords" }).click();
     expect(onOpenDrawer).toHaveBeenCalledOnce();
   });

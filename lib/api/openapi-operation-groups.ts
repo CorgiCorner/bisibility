@@ -69,7 +69,23 @@ export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly s
       "loadDomainOverviewPages",
     ],
   ],
-  ["research-reports", ["listStoredResearchReports", "getStoredResearchReport"]],
+  [
+    "research-reports",
+    [
+      "listStoredResearchReports",
+      "getStoredResearchReport",
+      "getProjectContext",
+      "updateProjectContext",
+      "listAgentReports",
+      "createAgentReport",
+      "getAgentReport",
+      "analyzeAiVisibility",
+      "compareAiPrompts",
+      "runSiteAudit",
+      "listSiteAudits",
+      "getSiteAudit",
+    ],
+  ],
   [
     "analytics",
     [

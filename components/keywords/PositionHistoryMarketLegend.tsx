@@ -3,6 +3,7 @@ import { keywordMarketLabel } from "@/lib/keywords/market-position-history";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { chartColors } from "@/lib/theme/chart-colors";
 import { useTranslations } from "next-intl";
+import { positionHistoryContentInsets } from "./position-history-layout";
 
 export const marketPositionPalette = [
   chartColors.accent,
@@ -31,7 +32,7 @@ export function PositionHistoryMarketLegend({
     (point) => point.degradedToCountry,
   );
   return (
-    <>
+    <div style={positionHistoryContentInsets}>
       {degraded ? (
         <p className="m-0 mt-2 inline-flex items-center gap-2 text-[11px] text-fg-muted">
           <span
@@ -73,6 +74,6 @@ export function PositionHistoryMarketLegend({
           ) : null}
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

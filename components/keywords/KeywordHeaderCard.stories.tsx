@@ -1,4 +1,5 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import {
   RunChecksConfirmationModal,
   type RunChecksFlow,
@@ -7,6 +8,8 @@ import { KeywordHeaderCard } from "@/components/keywords/KeywordHeaderCard";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { ToastProvider } from "@/components/ui/Toast";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
+import messages from "@/messages/core/en/project-rank-tracker-keyword-detail.json";
+import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "storybook/test";
 
@@ -95,20 +98,26 @@ const meta = {
   component: KeywordHeaderCard,
   decorators: [
     (Story, context) => (
-      <SessionSpendProvider>
-        <ToastProvider>
-          <div
-            className="min-h-[260px] bg-bg p-5 text-fg"
-            data-theme={context.parameters.theme ?? "light"}
-          >
-            <Story />
-          </div>
-        </ToastProvider>
-      </SessionSpendProvider>
+      <FeatureMessagesProvider
+        locale="en"
+        messages={{ ...sharedMessages, ...messages }}
+        timeZone="UTC"
+      >
+        <SessionSpendProvider>
+          <ToastProvider>
+            <div
+              className="min-h-[260px] bg-bg p-5 text-fg"
+              data-theme={context.parameters.theme ?? "light"}
+            >
+              <Story />
+            </div>
+          </ToastProvider>
+        </SessionSpendProvider>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: {
-    chromatic: { viewports: [1280, 1440] },
+    chromatic: { viewports: [390, 1280, 1440] },
     nextjs: { appDirectory: true },
   },
 } satisfies Meta<typeof KeywordHeaderCard>;
@@ -117,6 +126,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { args: { ...actionArgs, keyword } };
+export const Viewer: Story = { args: { ...actionArgs, canUpdateKeyword: false, keyword } };
 export const RankstateRunning: Story = {
   args: { ...actionArgs, keyword, rankState: "running" },
 };

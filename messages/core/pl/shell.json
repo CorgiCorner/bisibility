@@ -72,7 +72,12 @@
         "rankTracker": "Monitor pozycji",
         "runs": "Przebiegi",
         "searchConsole": "Search Console",
-        "settings": "Ustawienia"
+        "settings": "Ustawienia",
+        "aiVisibility": "Widoczność AI",
+        "promptExplorer": "Eksplorator promptów",
+        "siteAudit": "Audyt strony",
+        "projectContext": "Kontekst projektu",
+        "agentReports": "Raporty agentów"
       },
       "menu": "Menu"
     },
@@ -208,7 +213,12 @@
         "runs": "Sprawdzenia pozycji i importy z Search Console w tym projekcie.",
         "searchConsole": "Co Google pokazało, co ukryło i co zostaje u Ciebie.",
         "security": "Hasło, sesje i ochrona konta.",
-        "timeline": "Sygnały projektu, zmiany stron i notatki w czasie."
+        "timeline": "Sygnały projektu, zmiany stron i notatki w czasie.",
+        "aiVisibility": "Wzmianki o marce i cytowania z dostępnych obserwacji dostawców.",
+        "promptExplorer": "Porównuj syntetyczne testy promptów w obsługiwanych modelach.",
+        "siteAudit": "Przeskanuj stronę projektu i sprawdź problemy według adresów URL.",
+        "projectContext": "Biznes, odbiorcy, produkty i cele dla Twoich agentów.",
+        "agentReports": "Zapisane analizy udostępnione członkom tego projektu."
       },
       "titles": {
         "account": "Ustawienia konta",
@@ -235,7 +245,12 @@
         "searchConsole": "Search Console",
         "security": "Bezpieczeństwo",
         "settings": "Ustawienia",
-        "timeline": "Oś czasu"
+        "timeline": "Oś czasu",
+        "aiVisibility": "Widoczność AI",
+        "promptExplorer": "Eksplorator promptów",
+        "siteAudit": "Audyt strony",
+        "projectContext": "Kontekst projektu",
+        "agentReports": "Raporty agentów"
       }
     },
     "footer": {

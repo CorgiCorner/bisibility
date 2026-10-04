@@ -5,6 +5,7 @@ import { addTags } from "@/lib/actions/keyword-helpers";
 import { writeAudit } from "@/lib/auth/audit";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { prisma } from "@/lib/db/prisma";
+import { deleteKeywordTargets } from "@/lib/keywords/delete";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
 import { type ApiContext, actorProjectRole, forbidden } from "./context";
 import { scheduleFromBulk } from "./keyword-utils";
@@ -45,20 +46,21 @@ export async function bulkKeywords(ctx: ApiContext) {
     return forbidden(ctx, "Your project role does not allow deleting keywords.");
   }
   const keywordIds = data.keyword_ids.map((id) => requireApiPublicId(id, "kw"));
-  const keywords = await prisma.keyword.findMany({
-    select: { id: true, publicId: true },
-    where: {
-      publicId: { in: keywordIds },
-      projectId: ctx.auth.project.id,
-    },
-  });
+  const keywords =
+    data.operation === "delete"
+      ? await prisma.$transaction((tx) => deleteKeywordTargets(tx, ctx.auth.project.id, keywordIds))
+      : await prisma.keyword.findMany({
+          select: { id: true, publicId: true },
+          where: {
+            publicId: { in: keywordIds },
+            projectId: ctx.auth.project.id,
+          },
+        });
   const map = byRequestedId(keywords);
   const foundIds = keywords.map((keyword) => keyword.id);
   const responseStatus = data.operation === "delete" ? "deleted" : "updated";
 
-  if (data.operation === "delete") {
-    await prisma.keyword.deleteMany({ where: { id: { in: foundIds } } });
-  } else if (data.operation === "set_target_url") {
+  if (data.operation === "set_target_url") {
     await prisma.keyword.updateMany({
       data: { targetUrl: data.target_url ?? null },
       where: { id: { in: foundIds } },

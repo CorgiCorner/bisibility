@@ -207,6 +207,10 @@ export async function playEmptyAndPending({ canvasElement }: StoryPlayContext) {
   const canvas = within(canvasElement);
   expect(canvas.getByText("No tracked phrases yet")).toBeVisible();
   expect(canvas.getByRole("table")).toHaveAttribute("aria-rowcount", "0");
+  const style = getComputedStyle(canvas.getByRole("table"));
+  expect(parseFloat(style.borderTopLeftRadius)).toBeGreaterThan(0);
+  expect(style.overflowX).not.toBe("visible");
+  expect(style.overflowY).not.toBe("visible");
 }
 
 export async function playPending({ canvasElement }: StoryPlayContext) {

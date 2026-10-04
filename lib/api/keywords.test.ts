@@ -65,13 +65,17 @@ describe("keyword API list filters", () => {
     vi.clearAllMocks();
     mocks.findMany.mockResolvedValue([]);
     mocks.findFirst.mockResolvedValue(null);
+    mocks.findMany.mockResolvedValue([
+      { id: "keyword_1", publicId: "kw_a00000000000000000000000" },
+    ]);
     mocks.rankCheckRunItemFindMany.mockResolvedValue([]);
     mocks.rankCheckRunItemUpdateMany.mockResolvedValue({ count: 1 });
     mocks.rankCheckRunUpdate.mockResolvedValue({});
     mocks.$transaction.mockImplementation(
       async (callback: (tx: Record<string, unknown>) => unknown) =>
         callback({
-          keyword: { delete: mocks.delete },
+          $queryRaw: vi.fn(),
+          keyword: { deleteMany: mocks.delete, findMany: mocks.findMany },
           rankCheckRun: { update: mocks.rankCheckRunUpdate },
           rankCheckRunItem: {
             findMany: mocks.rankCheckRunItemFindMany,

@@ -1,104 +1,55 @@
-import {
-  projectRankTrackerFeatureTestMessages,
-  renderWithProjectRankTrackerMessages as render,
-  renderWithFeatureMessages,
-} from "@/i18n/test-support/render-with-feature-messages";
-import { screen } from "@testing-library/react";
-import type { ReactElement } from "react";
+import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ScheduleCell, type ScheduleCellTarget } from "./ScheduleCell";
 
-const daily = { name: "Daily 06:00", publicId: "sch_daily" };
-const weekly = { name: "Weekly Mon", publicId: "sch_weekly" };
-
-function textContent(expected: string) {
-  return (_content: string, element: Element | null) => element?.textContent === expected;
-}
-
-function target(overrides: Partial<ScheduleCellTarget>): ScheduleCellTarget {
-  return {
-    device: "Desktop",
-    id: "kw_a00000000000000000000000",
-    location: "Spain / Spanish",
-    schedule: daily,
-    ...overrides,
-  };
-}
-
-function renderPolish(ui: ReactElement) {
-  const messages = structuredClone(projectRankTrackerFeatureTestMessages);
-  messages.projectRankTracker.list.scheduleManual = "Recznie";
-  messages.projectRankTracker.list.scheduleMixed = "Mieszane - {count, number}";
-  return renderWithFeatureMessages(ui, { locale: "pl", messages });
-}
-
+const target = (id: string, name: string | null, device = "Desktop"): ScheduleCellTarget => ({
+  id,
+  device,
+  location: "United States / English",
+  schedule: name ? { name, publicId: `sch_${name}` } : null,
+});
 describe("ScheduleCell", () => {
-  it("shows the target schedule name", () => {
-    render(<ScheduleCell targets={[target({})]} />);
-
-    expect(screen.getByText("Daily 06:00")).toBeVisible();
+  it("links a single connected schedule", () => {
+    render(<ScheduleCell projectRef="prj_1" targets={[target("kw_a", "Daily")]} />);
+    expect(screen.getByRole("link", { name: "Daily" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/runs/schedules/sch_Daily",
+    );
   });
-
-  it("writes Manual explicitly for an unscheduled target", () => {
-    render(<ScheduleCell targets={[target({ schedule: null })]} />);
-
+  it("identifies manual targets without inventing a schedule", () => {
+    render(<ScheduleCell projectRef="prj_1" targets={[target("kw_a", null)]} />);
     expect(screen.getByText("Manual")).toBeVisible();
+    expect(screen.queryByRole("link")).toBeNull();
   });
-
-  it("renders Mixed - N with a target schedule tooltip", () => {
+  it("counts schedules by ID, and opens scoped links with manual assignments separate", async () => {
     render(
       <ScheduleCell
+        projectRef="prj_1"
         targets={[
-          target({}),
-          target({
-            device: "Mobile",
-            id: "kw_b00000000000000000000000",
-            schedule: weekly,
-          }),
-          target({ id: "kw_c00000000000000000000000" }),
+          target("kw_a", "Daily"),
+          target("kw_b", "Weekly", "Mobile"),
+          target("kw_c", null),
         ]}
       />,
     );
-
-    const mixed = screen.getByText("Mixed - 2");
-    expect(mixed).toHaveAttribute("aria-describedby");
+    fireEvent.click(screen.getByRole("button", { name: "2 schedules" }));
     expect(
-      screen.getAllByText(textContent("Spain / Spanish / Desktop - Daily 06:00")),
-    ).toHaveLength(2);
-    expect(
-      screen.getByText(textContent("Spain / Spanish / Mobile - Weekly Mon")),
-    ).toBeInTheDocument();
+      await screen.findByRole("menuitem", { name: /Daily.*United States.*Desktop/ }),
+    ).toHaveAttribute("href", "/app/prj_1/runs/schedules/sch_Daily");
+    expect(screen.getByRole("menuitem", { name: /Weekly.*Mobile/ })).toHaveAttribute(
+      "href",
+      "/app/prj_1/runs/schedules/sch_Weekly",
+    );
+    expect(screen.getByRole("menuitem", { name: /Manual/ })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
   });
-
-  it("localizes manual and mixed facts without translating user-authored schedule names", () => {
-    const { rerender } = renderPolish(<ScheduleCell targets={[target({ schedule: null })]} />);
-
-    expect(screen.getByText("Recznie")).toBeVisible();
-    expect(screen.queryByText("Manual")).toBeNull();
-
-    rerender(<ScheduleCell targets={[target({})]} />);
-    expect(screen.getByText("Daily 06:00")).toBeVisible();
-
-    rerender(
-      <ScheduleCell
-        targets={[
-          target({}),
-          target({
-            device: "Mobile",
-            id: "kw_b00000000000000000000000",
-            schedule: weekly,
-          }),
-          target({ id: "kw_c00000000000000000000000", schedule: null }),
-        ]}
-      />,
+  it("shows one schedule alongside a manual target without counting it twice", () => {
+    render(
+      <ScheduleCell projectRef="prj_1" targets={[target("kw_a", "Daily"), target("kw_b", null)]} />,
     );
-
-    const mixed = screen.getByText("Mieszane - 3");
-    expect(mixed).toHaveAttribute("aria-describedby");
-    expect(screen.getByText(textContent("Spain / Spanish / Desktop - Daily 06:00"))).toBeVisible();
-    expect(screen.getByText(textContent("Spain / Spanish / Mobile - Weekly Mon"))).toBeVisible();
-    expect(screen.getByText(textContent("Spain / Spanish / Desktop - Recznie"))).toBeVisible();
-    expect(screen.queryByText("Mixed - 3")).toBeNull();
-    expect(screen.queryByText("Manual")).toBeNull();
+    expect(screen.getByRole("button", { name: "1 schedule" })).toBeVisible();
   });
 });

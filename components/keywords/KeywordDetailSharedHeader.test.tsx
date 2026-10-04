@@ -19,7 +19,7 @@ vi.mock("./KeywordMarketsDrawer", () => ({
 }));
 
 describe("keyword detail shared header", () => {
-  it("keeps market and device context in the app header, outside normal and pending result cards", async () => {
+  it("keeps scope switching in the app header and repeats context beside each result", async () => {
     const keyword = {
       ...keywordRows[0],
       checkSchedule: { name: "Daily 06:00", nextCheckAt: null, publicId: "sch_daily" },
@@ -87,6 +87,7 @@ describe("keyword detail shared header", () => {
     expect(screen.getAllByRole("button", { name: /United States/ })).toHaveLength(1);
     expect(screen.getAllByRole("button", { name: "change" })).toHaveLength(2);
     expect(screen.getAllByRole("button", { name: "Device scope" })).toHaveLength(1);
+    expect(screen.getAllByLabelText("Check scope")).toHaveLength(2);
     const header = within(screen.getByRole("banner"));
     expect(header.getByRole("button", { name: /United States/ })).toBeInTheDocument();
     expect(header.getByRole("button", { name: "Device scope" })).toBeInTheDocument();

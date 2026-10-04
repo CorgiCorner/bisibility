@@ -17,6 +17,7 @@ export const rankRunActionBoundaries = {
   "@/lib/actions/rank-check-run-launch": rankRunActionStub,
 } as const;
 export const keywordActionBoundaries = {
+  "@/lib/actions/keyword-delete-impact": keywordActionStub,
   "@/lib/actions/keyword-suggest": keywordSuggestionStub,
   "@/lib/actions/keyword-suggestion-sources": keywordSuggestionStub,
   "@/lib/actions/ranked-keywords": keywordSuggestionStub,
@@ -36,6 +37,7 @@ const serverActionAliases = [
   "@/app/(regional)/onboarding/actions",
   "@/lib/actions/_shared",
   "@/lib/actions/account",
+  "@/lib/actions/ai-research",
   "@/lib/actions/alert-feed",
   "@/lib/actions/alerts",
   "@/lib/actions/analytics-consent",
@@ -68,7 +70,7 @@ const serverActionAliases = [
   "@/lib/actions/workspace",
 ];
 const serverActionPattern =
-  /^@\/(?:app\/\(regional\)\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|default-project|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|rank-check-status|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
+  /^@\/(?:app\/\(regional\)\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|ai-research|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|default-project|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|rank-check-status|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
 const runtimeStubPatterns = [
   /[\\/]credential-source-actions(?:\.ts)?$/,
   /^@\/components\/shell\/keyword-search$/,

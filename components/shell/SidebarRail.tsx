@@ -188,6 +188,11 @@ export type SidebarRailGroupsProps = {
 type LocalizedNavItem = NavItem & { badgeLabel?: string };
 
 const navigationItemKeys = {
+  "AI Visibility": "items.aiVisibility",
+  "Prompt Explorer": "items.promptExplorer",
+  "Site Audit": "items.siteAudit",
+  "Project Context": "items.projectContext",
+  "Agent Reports": "items.agentReports",
   Alerts: "items.alerts",
   Backlinks: "items.backlinks",
   Competitors: "items.competitors",

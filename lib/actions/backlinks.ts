@@ -1,6 +1,7 @@
 "use server";
 
 import { analyzeBacklinks, loadMoreBacklinkRows } from "@/lib/backlinks/service";
+import { UnsupportedBacklinksTargetError } from "@/lib/backlinks/target";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
@@ -31,6 +32,15 @@ export type AnalyzeBacklinksActionInput = z.input<typeof analyzeBacklinksActionS
 export type AnalyzeBacklinksAction = typeof analyzeBacklinksAction;
 export type LoadMoreBacklinkRowsAction = typeof loadMoreBacklinkRowsAction;
 
+async function withTargetValidation<T>(run: () => Promise<T>) {
+  try {
+    return await run();
+  } catch (error) {
+    if (!(error instanceof UnsupportedBacklinksTargetError)) throw error;
+    return { ok: false as const, reason: "unsupported_target" as const, message: error.message };
+  }
+}
+
 export async function analyzeBacklinksAction(input: unknown) {
   const data = parseActionInput(analyzeBacklinksActionSchema, input);
   const actor = await getActionActor();
@@ -38,18 +48,20 @@ export async function analyzeBacklinksAction(input: unknown) {
     type: "project",
   });
 
-  return analyzeBacklinks(
-    { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
-    {
-      estimateOnly: data.estimateOnly,
-      fresh: data.fresh,
-      includeSubdomains: data.includeSubdomains,
-      maxCostCents: data.maxCostCents,
-      mode: data.mode,
-      resultLimit: data.resultLimit,
-      target: data.target,
-      targetScope: data.targetScope,
-    },
+  return withTargetValidation(() =>
+    analyzeBacklinks(
+      { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
+      {
+        estimateOnly: data.estimateOnly,
+        fresh: data.fresh,
+        includeSubdomains: data.includeSubdomains,
+        maxCostCents: data.maxCostCents,
+        mode: data.mode,
+        resultLimit: data.resultLimit,
+        target: data.target,
+        targetScope: data.targetScope,
+      },
+    ),
   );
 }
 
@@ -60,13 +72,15 @@ export async function loadMoreBacklinkRowsAction(input: unknown) {
     type: "project",
   });
 
-  return loadMoreBacklinkRows(
-    { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
-    {
-      includeSubdomains: data.includeSubdomains,
-      limit: data.limit,
-      target: data.target,
-      targetScope: data.targetScope,
-    },
+  return withTargetValidation(() =>
+    loadMoreBacklinkRows(
+      { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
+      {
+        includeSubdomains: data.includeSubdomains,
+        limit: data.limit,
+        target: data.target,
+        targetScope: data.targetScope,
+      },
+    ),
   );
 }

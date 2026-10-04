@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => {
   const createdKeywords: Array<Record<string, unknown>> = [];
   const prisma = {
     $executeRaw: vi.fn(),
+    $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
     apiKey: { create: vi.fn(), findFirst: vi.fn(), update: vi.fn() },

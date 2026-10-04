@@ -24,6 +24,7 @@ import { loopClosureRoutes } from "./routes-loop-closure";
 import { topLevelMemberRoutes } from "./routes-members";
 import { providerMemberRoutes } from "./routes-providers";
 import { researchReportsRoute } from "./routes-research-reports";
+import { researchWorkspaceRoute } from "./routes-research-workspace";
 
 function projectRoutes(ctx: ApiContext) {
   const [first, second, third] = ctx.path;
@@ -280,6 +281,7 @@ function projectMemberRoutes(ctx: ApiContext) {
 export function dispatchRoute(ctx: ApiContext) {
   requireApiPathPublicIds(ctx.path);
   return (
+    researchWorkspaceRoute(ctx) ??
     existingRoutes(ctx) ??
     loopClosureRoutes(ctx) ??
     projectCollectionRoutes(ctx) ??

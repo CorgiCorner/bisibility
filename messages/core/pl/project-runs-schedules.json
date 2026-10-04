@@ -137,7 +137,7 @@
         "jitterExact": "Brak – start dokładnie o czasie",
         "jitterFifteen": "Do 15 minut",
         "jitterSixty": "Do 60 minut",
-        "memberEmpty": "Brak słów kluczowych. Dodaj je, aby zacząć sprawdzenia według harmonogramu.",
+        "memberEmpty": "Brak przypisanych słów kluczowych. Ustawienia są zachowane, ale nowe sprawdzenia nie będą planowane do czasu dodania słów. Możesz też zarchiwizować harmonogram na liście.",
         "memberCount": "{count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}",
         "members": "Słowa kluczowe",
         "membersTable": "Słowa kluczowe w harmonogramie",
@@ -201,7 +201,9 @@
         "resume": "Wznów",
         "resumeTitle": "Wznawia działanie harmonogramu. Następny przebieg zostanie zaplanowany od teraz, bez uzupełniania zaległych.",
         "tagScope": "tag = {tag}",
-        "toggleFailed": "Nie udało się zaktualizować harmonogramu. Spróbuj ponownie."
+        "toggleFailed": "Nie udało się zaktualizować harmonogramu. Spróbuj ponownie.",
+        "empty": "Pusty · ustawienia zachowane",
+        "emptyNext": "Dodaj słowa, aby rozpocząć"
       },
       "loading": {
         "loadingRuns": "Wczytywanie przebiegów",

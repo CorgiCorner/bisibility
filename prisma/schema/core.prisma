@@ -60,6 +60,8 @@ enum ProviderAllocationUnit {
 }
 
 enum ProviderCostFeature {
+  ai_visibility
+  prompt_explorer
   backlinks
   domain_overview
   keyword_metrics
@@ -547,6 +549,8 @@ model Project {
   backlinkSnapshots                BacklinkSnapshot[]
   domainOverviewSnapshots          DomainOverviewSnapshot[]
   keywordResearchSnapshots         KeywordResearchSnapshot[]
+  context                          ProjectContext?
+  agentReports                     AgentReport[]
   pageTrafficSnapshots             PageTrafficSnapshot[]
   searchAnalyticsDaily             SearchAnalyticsDaily[]
   searchAnalyticsQueryDaily        SearchAnalyticsQueryDaily[]
@@ -2494,4 +2498,34 @@ model RoadmapFeedback {
   @@index([createdAt])
   @@index([featureId, createdAt])
   @@map("roadmap_feedback")
+}
+
+model ProjectContext {
+  projectId  String   @id
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  business   String   @default("") @db.VarChar(4000)
+  audience   String   @default("") @db.VarChar(4000)
+  products   String   @default("") @db.VarChar(4000)
+  goals      String   @default("") @db.VarChar(4000)
+  agentRules String   @default("") @db.VarChar(4000)
+  updatedAt  DateTime @updatedAt
+
+  @@map("project_contexts")
+}
+
+model AgentReport {
+  id          String   @id @default(cuid())
+  publicId    String   @unique
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kind        String   @db.VarChar(64)
+  title       String   @db.VarChar(160)
+  body        Json
+  provenance  Json
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@index([projectId, createdAt, id])
+  @@index([projectId, kind, createdAt, id])
+  @@map("agent_reports")
 }

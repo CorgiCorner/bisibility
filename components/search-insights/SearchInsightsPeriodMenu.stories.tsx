@@ -1,6 +1,11 @@
+import { DateDisplayProvider } from "@/components/dates/DateFormatProvider";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
 import { finalizedWindow } from "@/lib/search-insights/dates";
+import messages from "@/messages/core/en/project-search-insights.json";
+import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { SearchInsightsPeriodMenu } from "./SearchInsightsPeriodMenu";
 import { storyContext, storyImportFacts } from "./search-insights-story-fixtures";
 
@@ -14,9 +19,17 @@ const meta = {
   component: SearchInsightsPeriodMenu,
   decorators: [
     (Story) => (
-      <div className="bg-bg p-6 text-fg">
-        <Story />
-      </div>
+      <FeatureMessagesProvider
+        locale="en"
+        timeZone="UTC"
+        messages={mergeMessageCatalogs(sharedMessages, messages)}
+      >
+        <DateDisplayProvider>
+          <div className="bg-bg p-6 text-fg">
+            <Story />
+          </div>
+        </DateDisplayProvider>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { nextjs: { appDirectory: true } },
@@ -25,6 +38,26 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const SevenDays: Story = {
+  args: {
+    period: { comparison: "previous_period", days: 7, id: "7", label: "7 finalized days" },
+    window: finalizedWindow("2026-09-25", 7),
+  },
+  play: ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByRole("button", {
+      name: "Comparison window: 7 finalized days, Sep 19 - 25",
+    });
+    const primary = within(trigger).getByText("7 finalized days");
+    const secondary = within(trigger).getByText("Sep 19 - 25");
+    expect(primary.getBoundingClientRect().left).toBeLessThan(
+      secondary.getBoundingClientRect().left,
+    );
+    expect(primary.getBoundingClientRect().top).toBeLessThanOrEqual(
+      secondary.getBoundingClientRect().top,
+    );
+  },
+};
 
 export const TwentyEightDays: Story = {};
 

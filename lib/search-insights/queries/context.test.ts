@@ -128,11 +128,11 @@ describe("getSearchInsightsContext", () => {
       },
       status: "connected",
     });
-    expect(context.period.id).toBe("28");
+    expect(context.period.id).toBe("7");
     expect(context.period.comparison).toBe("previous_period");
     expect(context.window).toEqual({
-      current: { end: "2026-07-08", start: "2026-06-11" },
-      previous: { end: "2026-06-10", start: "2026-05-14" },
+      current: { end: "2026-07-08", start: "2026-07-02" },
+      previous: { end: "2026-07-01", start: "2026-06-25" },
     });
     expect(context.counts).toEqual({ queries: 1284 });
     expect(context.importState).toMatchObject({
@@ -157,8 +157,8 @@ describe("getSearchInsightsContext", () => {
   it.each([
     ["first day", factsWith(readiness(true)), "1", firstLookWindow],
     ["7 days", factsWith(readiness(true, true)), "7", expect.any(Object)],
-    ["28 days", factsWith(readiness(true, true, true)), "28", expect.any(Object)],
-    ["90 days", factsWith(readiness(true, true, true, true)), "90", expect.any(Object)],
+    ["28 days", factsWith(readiness(true, true, true)), "7", expect.any(Object)],
+    ["90 days", factsWith(readiness(true, true, true, true)), "7", expect.any(Object)],
     ["no days", factsWith(readiness()), "7", null],
   ])("%s selects the ready window", async (_label, facts, period, window) => {
     mocks.readImportObservability.mockResolvedValue(facts);
@@ -183,6 +183,13 @@ describe("getSearchInsightsContext", () => {
     );
   });
 
+  it.each(["28", "90"])("preserves an explicitly selected %s-day window when ready", async (id) => {
+    mocks.readImportObservability.mockResolvedValue(factsWith(readiness(true, true, true, true)));
+    const scope = await loadSearchInsightsScope("prj_1", { period: id });
+    expect(scope.period.id).toBe(id);
+    expect(daySpan(scope.window?.current as { end: string; start: string })).toBe(Number(id));
+  });
+
   it("uses the active property's configured retention and gentle request rate", async () => {
     mocks.projectDefaults.mockResolvedValue({
       searchSyncImportMonths: 12,
@@ -198,7 +205,7 @@ describe("getSearchInsightsContext", () => {
     const seven = await getSearchInsightsContext("prj_1", { period: "7" });
     expect(seven.window?.current).toEqual({ end: "2026-07-08", start: "2026-07-02" });
     const invalid = await getSearchInsightsContext("prj_1", { period: "31" });
-    expect(invalid.period.days).toBe(28);
+    expect(invalid.period.days).toBe(7);
     mocks.readImportObservability.mockResolvedValue(factsWith(readiness(true, true)));
     const unavailable28 = await loadSearchInsightsScope("prj_1", { period: "28" });
     const requestedFirstLook = await loadSearchInsightsScope("prj_1", { period: "1" });

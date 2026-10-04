@@ -43,6 +43,13 @@ describe("schedule mixed state", () => {
     expect(scheduleRowSortValue(targets.slice(0, 2))).toBe("Daily 06:00");
   });
 
+  it("does not count manual targets as connected schedules", () => {
+    expect(scheduleRowState([...targets.slice(0, 1), { id: "manual", schedule: null }])).toEqual({
+      kind: "mixed",
+      scheduleCount: 1,
+    });
+  });
+
   it("counts modal selection by distinct target IDs", () => {
     const selection = {
       targetIds: ["kw_us_desktop", "kw_us_mobile", "kw_us_mobile"],

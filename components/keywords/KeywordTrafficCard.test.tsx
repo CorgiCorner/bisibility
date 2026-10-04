@@ -116,7 +116,7 @@ describe("KeywordTrafficCard", () => {
       />,
     );
 
-    expect(screen.getByText("Awaiting first traffic sync.")).toBeInTheDocument();
+    expect(screen.getByText("No Search Console data for this keyword yet.")).toBeInTheDocument();
     expect(screen.getByText("Trailing 28 days")).toBeInTheDocument();
     expect(screen.getByText(/approximately 3-day reporting lag/)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Connect Search Console" })).toBeNull();
@@ -137,7 +137,44 @@ describe("KeywordTrafficCard", () => {
     );
 
     expect(screen.getByRole("link", { name: "Connect Search Console" })).toBeInTheDocument();
-    expect(screen.queryByText("Awaiting first traffic sync.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("No Search Console data for this keyword yet."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows page analytics without Search Console data", () => {
+    render(
+      <KeywordTrafficCard
+        projectRef="prj_1"
+        traffic={{
+          hasAnalyticsConnection: true,
+          hasSearchConsoleConnection: false,
+          pages: [{ ...page, provider: "plausible" }],
+          query: null,
+        }}
+      />,
+    );
+    expect(screen.getByText("Landing page performance")).toBeInTheDocument();
+    expect(screen.getByText("Pageviews")).toBeInTheDocument();
+    expect(screen.getByText("Plausible")).toBeInTheDocument();
+  });
+
+  it("shows a connected page source and explains the missing landing URL", () => {
+    const traffic = {
+      connectedProviders: ["plausible"],
+      pagePaths: [] as string[],
+      hasAnalyticsConnection: true,
+      hasSearchConsoleConnection: false,
+      pages: [],
+      query: null,
+    };
+    const { rerender } = render(<KeywordTrafficCard projectRef="prj_1" traffic={traffic} />);
+    expect(screen.getByText(/Set a target URL/)).toBeInTheDocument();
+    rerender(
+      <KeywordTrafficCard projectRef="prj_1" traffic={{ ...traffic, pagePaths: ["/product"] }} />,
+    );
+    expect(screen.getByText(/No stored page data for \/product/)).toBeInTheDocument();
+    expect(screen.queryByText(/Set a target URL/)).toBeNull();
   });
 
   it("labels Plausible page traffic as Pageviews and GA4 traffic as Sessions", () => {

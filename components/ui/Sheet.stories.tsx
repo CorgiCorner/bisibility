@@ -1,6 +1,7 @@
 import { Sheet } from "@/components/ui/Sheet";
 import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, within } from "storybook/test";
 
 const meta = {
   title: "UI/Sheet",
@@ -107,4 +108,27 @@ export const FiltersOpen: Story = {
     widthVariant: "filters",
   },
   render: Open.render,
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement.ownerDocument.body);
+    const heading = await page.findByRole("heading", { name: "Filters" });
+    const icon = page.getByRole("button", { name: "Close sheet" }).querySelector("svg");
+    if (!icon) throw new Error("Missing close icon");
+    await canvasElement.ownerDocument.fonts.ready;
+    const style = getComputedStyle(heading);
+    const context = canvasElement.ownerDocument.createElement("canvas").getContext("2d");
+    if (!context) throw new Error("Missing font measurement context");
+    context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const metrics = context.measureText("H");
+    const rect = heading.getBoundingClientRect();
+    const baseline =
+      rect.top +
+      (parseFloat(style.lineHeight) -
+        metrics.fontBoundingBoxAscent -
+        metrics.fontBoundingBoxDescent) /
+        2 +
+      metrics.fontBoundingBoxAscent;
+    const capCenter = baseline - metrics.actualBoundingBoxAscent / 2;
+    const iconRect = icon.getBoundingClientRect();
+    expect(Math.abs(iconRect.top + iconRect.height / 2 - capCenter)).toBeLessThan(0.5);
+  },
 };

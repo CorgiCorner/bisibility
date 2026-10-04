@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidPublicId, parsePublicId } from "./public-id";
+import { isValidPublicId, parsePublicId } from "./public-id-resources";
 import { addPublicIdsToArgs, addPublicIdsToData, withPublicIdWrites } from "./public-id-writes";
 
 function publicId(data: unknown) {
@@ -9,6 +9,7 @@ function publicId(data: unknown) {
 describe("public ID Prisma write defaults", () => {
   it("adds a strict v3 ID for every addressable model", () => {
     const models = [
+      "AgentReport",
       "AlertRule",
       "ApiKey",
       "AuditLog",
@@ -57,6 +58,31 @@ describe("public ID Prisma write defaults", () => {
     expect(parsePublicId(publicId(checkSchedules.create))?.resource).toBe("checkSchedule");
     expect(parsePublicId(publicId(members.create))?.resource).toBe("membership");
     expect(parsePublicId(publicId(tags.createMany.data[0]))?.resource).toBe("tag");
+  });
+
+  it("fills project report identities and rejects wrong report prefixes", () => {
+    const reportId = "agr_abcdefghijklmnopqrstuvwx";
+    const project = addPublicIdsToData("Project", {
+      agentReports: {
+        create: { title: "Nested analysis" },
+        createMany: { data: [{ title: "Batch analysis" }] },
+      },
+    });
+    const reports = project.agentReports as {
+      create: Record<string, unknown>;
+      createMany: { data: Record<string, unknown>[] };
+    };
+    expect(parsePublicId(publicId(reports.create))?.resource).toBe("agentReport");
+    expect(parsePublicId(publicId(reports.createMany.data[0]))?.resource).toBe("agentReport");
+    expect(publicId(addPublicIdsToData("AgentReport", { publicId: reportId }))).toBe(reportId);
+    for (const publicId of ["internal-report", "agr_legacy", "kw_abcdefghijklmnopqrstuvwx"]) {
+      expect(() => addPublicIdsToData("AgentReport", { publicId })).toThrow(
+        "AgentReport.publicId must be a strict agr_ v3 public ID.",
+      );
+    }
+    expect(() =>
+      addPublicIdsToData("Project", { agentReports: { create: { publicId: "agr_legacy" } } }),
+    ).toThrow("AgentReport.publicId");
   });
 
   it("fills create, update nested create, upsert, and createMany shapes", () => {

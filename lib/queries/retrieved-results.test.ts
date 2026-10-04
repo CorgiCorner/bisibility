@@ -458,3 +458,81 @@ describe("loadRetrievedResultsForChecks", () => {
     expect(aiOverviewState("serpapi", ["answer box"])).toBeNull();
   });
 });
+
+it("keeps late continuation rows separate from the original rank and comparison inputs", async () => {
+  const context = {
+    version: 1,
+    capturedAt: CHECKED_AT.toISOString(),
+    keyword: "sample",
+    domain: "example.com",
+    device: "desktop",
+    connectionId: "private_connection",
+    nextStart: 10,
+    ended: false,
+    location: {
+      gl: "us",
+      hl: "en",
+      primaryGeoCode: null,
+      primaryGeoName: "United States",
+      secondaryGeoName: "United States",
+    },
+  };
+  mocks.prisma.rankCheck.findMany.mockResolvedValue([
+    {
+      checkedAt: CHECKED_AT,
+      organicRanks: [{ domain: "example.com", position: 3 }],
+      position: 3,
+      provider: "serpapi",
+      publicId: "check_late",
+      requestedDepth: 10,
+      raw: {
+        organic_results: [
+          {
+            rank: 3,
+            domain: "example.com",
+            url: "https://example.com/original",
+            title: "Original",
+          },
+        ],
+        snapshotContinuation: context,
+        snapshotExtension: {
+          version: 1,
+          state: "idle",
+          nextStart: 20,
+          ended: false,
+          pages: [
+            {
+              start: 10,
+              fetchedAt: "2026-08-01T12:02:00.000Z",
+              skippedDuplicates: 2,
+              rows: [
+                { rank: 13, domain: "example.org", url: "https://example.org/late", title: "Late" },
+              ],
+            },
+          ],
+        },
+      },
+    },
+  ]);
+  const [result] = await loadRetrievedResultsForChecks({
+    checkIds: ["check_late"],
+    projectId: PROJECT_ID,
+  });
+  expect(result).toMatchObject({
+    checkedAt: CHECKED_AT.toISOString(),
+    trackedPosition: 3,
+    retrievedPositions: 3,
+    rows: [expect.objectContaining({ position: 3, title: "Original" })],
+    extension: {
+      reason: "expired",
+      pages: [
+        {
+          fetchedAt: "2026-08-01T12:02:00.000Z",
+          skippedDuplicates: 2,
+          rows: [expect.objectContaining({ position: 13, title: "Late" })],
+        },
+      ],
+    },
+  });
+  expect(JSON.stringify(result)).not.toContain("private_connection");
+});

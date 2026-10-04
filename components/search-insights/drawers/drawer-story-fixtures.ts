@@ -11,7 +11,7 @@ const WINDOW_DAYS = 28;
 function perDay(seed: number) {
   return Array.from({ length: WINDOW_DAYS }, (_, index) => ({
     clicks: Math.max(0, Math.round(seed * (0.6 + 0.4 * Math.abs(Math.sin(index + seed))))),
-    date: `2026-06-${String(11 + index).padStart(2, "0")}`,
+    date: new Date(Date.UTC(2026, 5, 11 + index)).toISOString().slice(0, 10),
   }));
 }
 

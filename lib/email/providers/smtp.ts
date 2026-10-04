@@ -40,7 +40,7 @@ async function send({ from, to, subject, html, replyTo, text }: EmailMessage) {
 
   try {
     const transport = url
-      ? createTransport(url, SMTP_TRANSPORT_OPTIONS)
+      ? createTransport({ url, ...SMTP_TRANSPORT_OPTIONS })
       : createTransport({
           auth: { pass: stored?.smtpPassword ?? "", user: stored?.smtpUsername ?? "" },
           host: stored?.smtpHost ?? "",

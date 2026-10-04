@@ -39,7 +39,10 @@ vi.mock("@/lib/auth/audit", () => ({
 vi.mock("@/lib/rank-check/dispatcher-state", () => ({
   refreshKeywordDispatchStates: mocks.refresh,
 }));
-vi.mock("@/lib/db/public-id", () => ({ makePublicId: () => `sch_${"z".repeat(24)}` }));
+vi.mock("@/lib/db/public-id", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/db/public-id")>()),
+  makePublicId: () => `sch_${"z".repeat(24)}`,
+}));
 vi.mock("../planner/reconcile-schedule", () => ({
   reconcilePlannedRunsForSchedule: mocks.reconcile,
 }));

@@ -1,4 +1,8 @@
-import { isPublicIdOfType, isValidPublicId, type PublicIdPrefix } from "@/lib/db/public-id";
+import {
+  isPublicIdOfType,
+  isValidPublicId,
+  type PublicIdPrefix,
+} from "@/lib/db/public-id-resources";
 import { z } from "zod";
 import { ApiInputError } from "./errors";
 

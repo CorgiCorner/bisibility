@@ -2,10 +2,10 @@ import { isBuiltin } from "node:module";
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
-import { testModuleCache } from "./vitest.module-cache";
-import { nodeRenderTests } from "./vitest.node-render-tests";
+import { testModuleCache } from "./tests/config/vitest.module-cache";
+import { nodeRenderTests } from "./tests/config/vitest.node-render-tests";
 
-const emptyModule = fileURLToPath(new URL("./vitest.empty.ts", import.meta.url));
+const emptyModule = fileURLToPath(new URL("./tests/config/vitest.empty.ts", import.meta.url));
 const rootDir = fileURLToPath(new URL("./", import.meta.url));
 const marketingContentDir = fileURLToPath(
   new URL("./components/marketing/content/", import.meta.url),
@@ -135,7 +135,7 @@ export default defineConfig({
             "lib/metering/**/*.integration.test.ts",
             ...domUnitTests,
           ],
-          setupFiles: ["./vitest.setup.common.ts"],
+          setupFiles: ["./tests/config/vitest.setup.common.ts"],
         },
         {
           name: "unit-dom",
@@ -152,7 +152,7 @@ export default defineConfig({
             "components/**/*.browser.test.tsx",
             ...nodeRenderTests,
           ],
-          setupFiles: ["./vitest.setup.ts"],
+          setupFiles: ["./tests/config/vitest.setup.ts"],
         },
       ].map((test) => ({
         extends: false,
@@ -221,6 +221,7 @@ export default defineConfig({
             "tests/storybook-imports.browser.test.ts",
             "tests/settings-shell-stories.browser.test.tsx",
             "tests/data-table-stories.browser.test.tsx",
+            "tests/position-history-stories.browser.test.tsx",
             "tests/ui-primitives*.browser.test.tsx",
             "components/marketing/landing/MarketingNav.browser.test.tsx",
           ],

@@ -1,5 +1,6 @@
 import * as caps from "./operation-capabilities";
 import { type OperationPolicy, policy } from "./operation-policy-helpers";
+import { researchWorkspaceOperationPolicy } from "./research-workspace-policy";
 
 export type ApiMethod = "DELETE" | "GET" | "PATCH" | "POST";
 export type ProjectAccess = "read" | "write";
@@ -12,6 +13,7 @@ export type ProjectAccess = "read" | "write";
 export type { OperationCapability } from "./operation-capabilities";
 
 export const operationPolicy = {
+  ...researchWorkspaceOperationPolicy,
   addCompetitor: policy("POST", "/projects/{project_id}/competitors", "write"),
   addKeywords: policy("POST", "/projects/{project_id}/keywords", "write"),
   analyzeBacklinks: policy("GET", "/projects/{projectId}/backlinks", "write"),

@@ -141,6 +141,8 @@ export function DataTable<TRow extends DataTableRowBase>({
       aria-rowcount={rowCount}
       className={cn(
         dataTableRootClassName,
+        // The surface drawing the border must also own its corners, even inside a clipped card.
+        bordered && "overflow-hidden rounded-card",
         // A borderless table owns its header top rule; -mt-px lays it over any rule directly above.
         !bordered && "-mt-px border-0",
         layout === "fill"

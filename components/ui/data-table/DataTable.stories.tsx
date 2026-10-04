@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { withSharedMessages } from "@/i18n/test-support/shared-messages-story-decorator";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, within } from "storybook/test";
 import { DataTableStoryHarness } from "./DataTableStoryHarness";
 import {
   clientPaginationStoryRows,
@@ -63,6 +64,23 @@ export const ServerSorting: Story = {
       showDensityMenu={false}
       sortingMode="server"
     />
+  ),
+};
+
+export const RoundedBorder: Story = {
+  play: ({ canvasElement }) => {
+    const table = within(canvasElement).getByRole("table");
+    const style = getComputedStyle(table);
+    expect(parseFloat(style.borderTopWidth)).toBe(1);
+    expect(parseFloat(style.borderTopLeftRadius)).toBeGreaterThan(0);
+    expect(style.borderTopLeftRadius).toBe(
+      getComputedStyle(within(canvasElement).getByTestId("rounded-frame")).borderTopLeftRadius,
+    );
+  },
+  render: () => (
+    <div className="overflow-hidden rounded-card" data-testid="rounded-frame">
+      <DataTableStoryHarness id="rounded-border" showColumnsMenu={false} showDensityMenu={false} />
+    </div>
   ),
 };
 

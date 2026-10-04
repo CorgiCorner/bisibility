@@ -104,20 +104,17 @@ export function propertyTip(kind: SearchInsightsProperty["kind"]) {
   return kind === "domain" ? "domain" : "url_prefix";
 }
 
-export function periodTriggerLabel(
-  period: SearchInsightsPeriod,
-  window: FinalizedWindow | null = null,
+export function periodTriggerLabel(period: SearchInsightsPeriod, t: Translate) {
+  return t("periodFinalizedDays", { days: period.days });
+}
+
+export function periodTriggerDates(
+  window: FinalizedWindow | null,
   dateDisplay: DateDisplayContext,
-  t: Translate,
 ) {
-  if (window) {
-    const current = formatDisplayDateRange(window.current.start, window.current.end, dateDisplay);
-    if (period.id === FIRST_LOOK_WINDOW.id) return `${t("firstLook")} · ${current}`;
-    return current;
-  }
-  return period.id === FIRST_LOOK_WINDOW.id
-    ? t("firstLook")
-    : t("periodFinalizedDays", { days: period.days });
+  return window
+    ? formatDisplayDateRange(window.current.start, window.current.end, dateDisplay)
+    : null;
 }
 
 export function periodTriggerName(
@@ -126,10 +123,9 @@ export function periodTriggerName(
   dateDisplay: DateDisplayContext,
   t: Translate,
 ) {
-  if (!window) return t("periodMenuLabel");
-  const current = formatDisplayDateRange(window.current.start, window.current.end, dateDisplay);
-  const label = period.id === FIRST_LOOK_WINDOW.id ? `${t("firstLook")}, ${current}` : current;
-  return `${t("periodMenuLabel")}: ${label}`;
+  const label = periodTriggerLabel(period, t);
+  const dates = periodTriggerDates(window, dateDisplay);
+  return `${t("periodMenuLabel")}: ${[label, dates].filter(Boolean).join(", ")}`;
 }
 
 export function periodTooltipLines(
@@ -139,13 +135,8 @@ export function periodTooltipLines(
   t: Translate,
 ) {
   const current = formatDisplayDateRange(window.current.start, window.current.end, dateDisplay);
-  const lines = [
-    `${current} · ${
-      period.id === FIRST_LOOK_WINDOW.id
-        ? t("firstLook")
-        : t("periodFinalizedDays", { days: period.days })
-    }`,
-  ];
+  const lines = [`${periodTriggerLabel(period, t)} · ${current}`];
+  if (period.id === FIRST_LOOK_WINDOW.id) lines.push(t("firstLook"));
   if (period.id !== FIRST_LOOK_WINDOW.id) {
     lines.push(
       t("periodComparedWith", {

@@ -37,7 +37,7 @@ export function useBacklinksEstimate(
           cached: dryRun?.cached ?? false,
           costCents: dryRun?.estimatedCostCents ?? null,
           loading: false,
-          valid: true,
+          valid: outcome.ok || outcome.reason !== "unsupported_target",
         });
       } catch {
         if (sequence !== requestSequence.current) return;

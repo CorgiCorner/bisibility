@@ -12,9 +12,11 @@ import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
 import { createKeywordAlertRule } from "@/lib/actions/alerts";
+import { extendSerpSnapshot } from "@/lib/actions/extend-snapshot";
 import { updateKeyword } from "@/lib/actions/keyword";
 import { runCheckNow } from "@/lib/actions/rankCheck";
 import { loadRetrievedResults } from "@/lib/actions/retrieved-results";
+import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { providerLabel } from "@/lib/checks/attempts";
@@ -67,6 +69,7 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
     : [];
   const role = getProjectRole(readable.actor, readable.project.id);
   const canUpdateKeyword = canProjectAction(role, "update", "keyword");
+  const canSyncTraffic = canProjectAction(role, "update", "project");
   const detailState = deriveKeywordDetailState(keyword, keyword.traffic);
   const checkProviderLabel = providerLabel(
     costContext?.providerId ?? keyword.dataProvider ?? "unknown",
@@ -79,10 +82,14 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
   );
   const retrievedResultsCard = (
     <RetrievedResultsCard
+      key={`${newestResults?.checkId}:${newestResults?.tier === "full" ? `${newestResults.extension?.reason}:${newestResults.extension?.nextStart}:${newestResults.extension?.pages.at(-1)?.fetchedAt}` : newestResults?.tier}`}
+      projectRef={publicId}
+      extendSnapshotAction={canUpdateKeyword ? extendSerpSnapshot : undefined}
       competitors={competitors}
       ownDomain={readable.project.domain ?? ""}
       entries={storedChecks}
       initialResults={newestResults}
+      keyword={keyword}
       loadResults={async (checkIds) => {
         "use server";
         return loadRetrievedResults({ checkIds, projectId: publicId });
@@ -112,6 +119,7 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
         <PageContent className="grid gap-4">
           {backLink}
           <KeywordPendingDetail
+            scheduleTargets={marketTargets}
             canUpdateKeyword={canUpdateKeyword}
             costContext={costContext}
             createKeywordAlertAction={createKeywordAlertRule}
@@ -127,12 +135,14 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
             searchConsoleConnected={keyword.traffic.hasSearchConsoleConnection}
             updateKeywordAction={updateKeyword}
           />
+          {retrievedResultsCard}
           <KeywordTrafficCard
+            canSync={canSyncTraffic}
+            syncTrafficAction={syncProjectTraffic}
             projectRef={publicId}
             traffic={keyword.traffic}
             trafficState={detailState.trafficState}
           />
-          {retrievedResultsCard}
           {keyword.rankingUrlHistory?.length ? <RankingUrlHistory keyword={keyword} /> : null}
         </PageContent>
       </KeywordManagementMessagesBoundary>
@@ -144,6 +154,7 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
       <PageContent className="grid gap-4">
         {backLink}
         <KeywordHeaderCard
+          scheduleTargets={marketTargets}
           canUpdateKeyword={canUpdateKeyword}
           costContext={costContext}
           createKeywordAlertAction={createKeywordAlertRule}
@@ -157,12 +168,14 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
           updateKeywordAction={updateKeyword}
         />
         {positionHistory}
+        {retrievedResultsCard}
         <KeywordTrafficCard
+          canSync={canSyncTraffic}
+          syncTrafficAction={syncProjectTraffic}
           projectRef={publicId}
           traffic={keyword.traffic}
           trafficState={detailState.trafficState}
         />
-        {retrievedResultsCard}
         <RankingUrlHistory keyword={keyword} />
       </PageContent>
     </KeywordManagementMessagesBoundary>

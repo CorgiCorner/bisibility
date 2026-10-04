@@ -925,10 +925,20 @@ describe("rank-check activities", () => {
   });
 
   it("does not automatically replay provider usage with unconfirmed billing", async () => {
-    mocks.runKeywordCheckWithFallback.mockRejectedValue(new ProviderUsagePersistenceError());
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(
+      new ProviderUsagePersistenceError({
+        phase: "request",
+        cause: new DOMException("private-token", "AbortError"),
+      }),
+    );
     await expect(
       runRankCheckActivity({ keywordId: "keyword_1", source: "manual" }),
-    ).rejects.toMatchObject({ nonRetryable: true, type: "provider_usage_unconfirmed" });
+    ).rejects.toMatchObject({
+      nonRetryable: true,
+      type: "provider_usage_unconfirmed",
+      details: [expect.objectContaining({ phase: "request" })],
+      cause: expect.objectContaining({ name: "ProviderUsageFailureCause" }),
+    });
   });
 
   it("maps exhausted budgets to a non-retryable Temporal failure", async () => {

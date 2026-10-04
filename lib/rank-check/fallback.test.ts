@@ -9,6 +9,7 @@ import { clearProviderRateLimitState, ProviderRateLimitedError } from "@/lib/pro
 import { dataForSeoProvider } from "@/lib/providers/serp/dataforseo";
 import { serpApiProvider } from "@/lib/providers/serp/serpapi";
 import type { SerpProvider, SerpRankResult } from "@/lib/providers/types";
+import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { getCalculatorPrefill } from "@/lib/queries/cost-calculator";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -160,6 +161,25 @@ function ranked(position: number): SerpRankResult {
 }
 
 describe("runCheckWithFallback", () => {
+  it("never invokes a backup provider after an unconfirmed paid request", async () => {
+    const uncertain = new ProviderUsagePersistenceError({ phase: "request" });
+    const primary = provider("primary", vi.fn().mockRejectedValue(uncertain));
+    const backup = provider("secondary", vi.fn().mockResolvedValue(ranked(4)));
+    await expect(
+      runCheckWithFallback({
+        keyword: KEYWORD,
+        schedule: { frequency: "manual" },
+        connections: [
+          { provider: "primary", credentials: { apiKey: "fixture-primary" } },
+          { provider: "secondary", credentials: { apiKey: "fixture-secondary" } },
+        ],
+        resolveProvider: (id) => (id === "primary" ? primary : backup),
+      }),
+    ).rejects.toBe(uncertain);
+    expect(primary.fetchRank).toHaveBeenCalledOnce();
+    expect(backup.fetchRank).not.toHaveBeenCalled();
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });

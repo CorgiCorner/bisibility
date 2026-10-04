@@ -23,10 +23,11 @@ type SchedulesTableColumnsOptions = {
   t: ReturnType<typeof useTranslations<"projectRuns.schedules">>;
 };
 
-type ScheduleState = "blocked" | "paused";
+type ScheduleState = "blocked" | "paused" | "empty";
 
 function scheduleStateMeta(t: SchedulesTableColumnsOptions["t"]) {
   return {
+    empty: { label: t("list.empty"), tone: "text-fg-muted" },
     blocked: { label: t("list.blocked"), tone: "text-fg-muted" },
     paused: { label: t("list.paused"), tone: "text-fg-muted" },
   } satisfies Record<ScheduleState, { label: string; tone: string }>;
@@ -34,6 +35,7 @@ function scheduleStateMeta(t: SchedulesTableColumnsOptions["t"]) {
 
 function stateFor(row: SchedulesTableRow): ScheduleState | null {
   if (row.archivedAt) return null;
+  if ((row.assignedKeywordCount ?? row.targetCount ?? row.keywordCount) === 0) return "empty";
   if (!row.enabled || row.frequency === "paused") return "paused";
   return row.blocked ? "blocked" : null;
 }
@@ -234,7 +236,11 @@ export function schedulesTableColumns({
         const schedule = row.original;
         return (
           <span className={`text-[11px] ${stateFor(schedule) ? "text-fg-muted" : "text-fg"}`}>
-            {!schedule.archivedAt && schedule.enabled ? (schedule.nextRunLabel ?? "-") : "-"}
+            {stateFor(schedule) === "empty"
+              ? t("list.emptyNext")
+              : !schedule.archivedAt && schedule.enabled
+                ? (schedule.nextRunLabel ?? "-")
+                : "-"}
           </span>
         );
       },

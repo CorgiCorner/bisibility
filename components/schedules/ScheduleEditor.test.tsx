@@ -304,7 +304,7 @@ describe("ScheduleEditor", () => {
     );
 
     expect(screen.getByText("0 keywords")).toBeVisible();
-    expect(screen.getByText("No keywords yet. Add some to start scheduled checks.")).toBeVisible();
+    expect(screen.getByText(/No keywords assigned.*will not plan new checks/)).toBeVisible();
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     expect(screen.getByText("Default for new keywords")).toBeVisible();
 

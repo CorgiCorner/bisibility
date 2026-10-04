@@ -17,6 +17,7 @@ function target(overrides: Partial<ScheduleCellTarget>): ScheduleCellTarget {
 const meta = {
   title: "Keywords/ScheduleCell",
   component: ScheduleCell,
+  args: { projectRef: "prj_example" },
   decorators: [
     (Story) => (
       <div className="min-h-[140px] bg-bg p-6 text-fg">

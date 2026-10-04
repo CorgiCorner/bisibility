@@ -58,7 +58,7 @@
         "viewCheckRuns": "Ver las ejecuciones"
       },
       "scheduleManual": "Manual",
-      "scheduleMixed": "Mixta: {count, number}",
+      "scheduleMixed": "{count, plural, one {# programación} other {# programaciones}}",
       "toolbar": {
         "addKeyword": "Añadir palabra clave",
         "export": "Exportar",
@@ -251,6 +251,22 @@
       "willNeverRun": "{count, number} sin ejecutar nunca",
       "yesterday": "ayer",
       "yourResult": "Tu resultado en #{position, number}"
+    },
+    "deletion": {
+      "selection": "{keywords, plural, one {# palabra clave} other {# palabras clave}} · {targets, plural, one {# variante de mercado/dispositivo} other {# variantes de mercado/dispositivo}}",
+      "targetHint": "Solo se eliminarán las variantes seleccionadas y su historial de posiciones. Los demás mercados y dispositivos seguirán activos.",
+      "schedules": "Efecto en las programaciones vinculadas",
+      "removed": "{count, plural, one {Se eliminará # variante.} other {Se eliminarán # variantes.}}",
+      "becomesEmpty": "Quedará vacía. No habrá nuevas comprobaciones hasta añadir palabras clave.",
+      "remaining": "{count, plural, one {Quedará # variante.} other {Quedarán # variantes.}} La configuración no cambiará.",
+      "kept": "Las programaciones y su configuración se conservarán. Puedes añadir palabras clave de nuevo o archivar una programación vacía.",
+      "noSchedules": "Las variantes seleccionadas no tienen programaciones vinculadas.",
+      "running": "Se cancelarán las comprobaciones en cola. Si una comprobación del proveedor ya está en curso, espera a que termine antes de eliminar. El uso ya incurrido se mantiene.",
+      "loadFailed": "No se pudo consultar el efecto en las programaciones. Inténtalo de nuevo antes de eliminar.",
+      "retry": "Reintentar",
+      "loading": "Consultando programaciones vinculadas…",
+      "runningBlocked": "{count, plural, one {# variante aún se está comprobando.} other {# variantes aún se están comprobando.}} Espera a que terminen y actualiza el estado para eliminar.",
+      "refresh": "Actualizar estado"
     }
   }
 }

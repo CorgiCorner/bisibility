@@ -1,0 +1,70 @@
+{
+  "projectSiteAudit": {
+    "heading": "Auditoría del sitio",
+    "description": "Comprueba HTTP, metadatos, encabezados, indexabilidad, enlaces y texto alternativo de imágenes de {domain}.",
+    "pageLimit": "Límite de páginas",
+    "pageLimitError": "Elige entre 1 y 15 páginas.",
+    "run": "Iniciar auditoría",
+    "running": "Rastreando sitio",
+    "cost": "Hasta 15 segundos · Sin créditos del proveedor · Resultados en caché durante 5 minutos",
+    "readOnly": "Tu rol o el modo de solo lectura impide iniciar auditorías. Los informes guardados siguen disponibles.",
+    "history": "Historial de auditorías",
+    "loadingHistory": "Cargando informe guardado...",
+    "loadingRun": "Rastreando páginas públicas y comprobando problemas de URL...",
+    "loadingPage": "Cargando auditoría del sitio...",
+    "saved": "Guardado {time}{stored}",
+    "stored": " · Resultado guardado",
+    "emptyTitle": "Encuentra problemas técnicos en tu sitio",
+    "emptyDescription": "Inicia un rastreo limitado del dominio del proyecto. Cada auditoría se guarda para que tu equipo y los agentes revisen los problemas de URL.",
+    "bullets": {
+      "0": "Estado HTTP, título y descripción meta",
+      "1": "Encabezados, directivas robots y texto alt",
+      "2": "Enlaces internos e historial de rastreo"
+    },
+    "summary": "{pages, number} páginas comprobadas · {errors, number} errores · {warnings, number} avisos · {indexable, number} indexables",
+    "partial": "Rastreo parcial: {reason}. Los resultados incluyen las páginas siguientes.",
+    "stopReasons": {
+      "finished": "finalizado",
+      "page_limit": "límite de páginas",
+      "time_limit": "límite de tiempo",
+      "request_limit": "límite de solicitudes"
+    },
+    "urlIssues": "Problemas de URL",
+    "columns": {
+      "0": "URL / título",
+      "1": "HTTP",
+      "2": "Indexable",
+      "3": "Enlaces / imágenes",
+      "4": "Problemas"
+    },
+    "noTitle": "Sin título",
+    "skipped": "Omitido",
+    "yes": "Sí",
+    "no": "No",
+    "internal": "{count, number} internos",
+    "external": "{count, number} externos",
+    "images": "{count, number} imágenes",
+    "passed": "Correcto",
+    "details": "Detalles de la página",
+    "descriptionLabel": "Descripción meta",
+    "canonicalLabel": "Canónica",
+    "robotsLabel": "Robots",
+    "missing": "No disponible",
+    "noDirective": "Sin directiva",
+    "limitations": "Solo rastreo HTTP; no incluye renderizado JavaScript ni Lighthouse. La indexabilidad usa HTTP, meta robots y X-Robots-Tag; no se verifica la canónica ni la indexación real. Solo se rastrean el origen del proyecto y las URL sin parámetros. Los enlaces y encabezados son muestras limitadas.",
+    "issues": {
+      "http_error": "HTTP {count, number}",
+      "missing_title": "Falta el título.",
+      "missing_description": "Falta la descripción meta.",
+      "h1_count": "{count, number} encabezados H1; se esperaba uno.",
+      "missing_image_alt": "{count, number} imágenes sin atributo alt.",
+      "noindex": "Las directivas robots impiden la indexación.",
+      "non_html": "La respuesta no es HTML; no se puede analizar su contenido.",
+      "robots_disallowed": "URL omitida según robots.txt.",
+      "fetch_failed": "No se pudo obtener la página dentro de los límites seguros.",
+      "broken_internal_link": "{count, number} enlaces internos muestreados devolvieron errores HTTP."
+    },
+    "errorRun": "No se pudo completar la auditoría. Inténtalo de nuevo.",
+    "errorLoad": "No se pudo cargar el informe."
+  }
+}

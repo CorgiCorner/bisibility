@@ -58,7 +58,12 @@ export type PreflightDialogProps = PreflightActions & {
   integrationsHref: string;
   leftAfterLabel?: string;
   onClose: () => void;
-  onStarted?: (result: Exclude<LaunchRankCheckRunActionResult, { status: "not_started" }>) => void;
+  onStarted?: (
+    result: Exclude<
+      LaunchRankCheckRunActionResult,
+      { status: "not_started" } | { outcome: "nothing_to_run" }
+    >,
+  ) => void;
   open: boolean;
   projectId: PreviewRankCheckRunActionInput["projectId"];
   providers: readonly PreflightProvider[];

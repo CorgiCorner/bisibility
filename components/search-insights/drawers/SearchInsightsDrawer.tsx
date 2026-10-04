@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { pageHref } from "@/lib/search-insights/queries/top-rows-model";
 import { trackedKey } from "@/lib/search-insights/queries/tracked-model";
+import { searchConsoleQueryHref } from "@/lib/search-insights/search-console-link";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { ArrowSquareOutIcon as ArrowSquareOut } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
@@ -41,6 +42,7 @@ export type SearchInsightsDrawerProps = {
   onShowAll: () => void;
   onTrack: (query: string) => void;
   open: boolean;
+  property?: string;
   seen: ReadonlySet<string>;
   /** Queries this session already added, so the footer answers before the server reloads. */
   tracked: ReadonlySet<string>;
@@ -154,6 +156,7 @@ export function SearchInsightsDrawer({
   onShowAll,
   onTrack,
   open,
+  property,
   seen,
   tracked,
 }: Readonly<SearchInsightsDrawerProps>) {
@@ -161,6 +164,15 @@ export function SearchInsightsDrawer({
   const t = useTranslations("projectSearchInsights.copy");
   const presentation = { formatNumber: format.number, t };
   const footer = footerFor({ adding, canTrack, entry, frame, onTrack, t, tracked });
+  const queryDetail =
+    entry?.status === "ready" && entry.content.kind === "query" ? entry.content.detail : null;
+  const days = queryDetail?.perDay;
+  const start = days?.[0]?.date;
+  const end = days?.at(-1)?.date;
+  const consoleHref =
+    property && frame?.kind === "query" && queryDetail?.query === frame.query && start && end
+      ? searchConsoleQueryHref(property, frame.query, { start, end })
+      : null;
 
   return (
     <AppDrawer
@@ -188,6 +200,20 @@ export function SearchInsightsDrawer({
       title={frame ? drawerTitle(frame, entry, counts, presentation) : ""}
       titleAction={frame ? querySourceAction(frame, t) : null}
     >
+      {consoleHref ? (
+        <div className="mb-4 flex min-w-0 justify-end">
+          <Button
+            endIcon={<ArrowSquareOut aria-hidden size={14} weight="regular" />}
+            href={consoleHref}
+            rel="noopener noreferrer"
+            size="sm"
+            target="_blank"
+            variant="secondary"
+          >
+            {t("openInSearchConsole")}
+          </Button>
+        </div>
+      ) : null}
       {entry?.status === "ready" ? (
         <SearchInsightsDrawerContent
           content={entry.content}

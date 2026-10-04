@@ -2,12 +2,15 @@
 
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
+import type { KeywordRow } from "@/lib/queries/keywords";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { ClockCounterClockwiseIcon as History } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
 import { useTranslations } from "next-intl";
+import { KeywordCheckScope } from "./KeywordCheckScope";
 import { RetrievedResultsPicker } from "./RetrievedResultsPicker";
 
 type Props = {
+  keyword?: Pick<KeywordRow, "location" | "device" | "engine">;
   compareFrom: string;
   current: RetrievedResults | null;
   entries: readonly StoredResultsIndexEntry[];
@@ -69,7 +72,12 @@ export function RetrievedResultsHeader(props: Readonly<Props>) {
             </h2>
             <InfoTooltip text={t("titleTip")} />
           </div>
-          <p className="m-0 mt-0.5 text-[12.5px] leading-5 text-fg-muted">{t("description")}</p>
+          {props.keyword ? (
+            <div className="mt-2">
+              <KeywordCheckScope keyword={props.keyword} />
+            </div>
+          ) : null}
+          <p className="m-0 mt-2 text-[12.5px] leading-5 text-fg-muted">{t("description")}</p>
         </div>
         <div className="inline-flex self-start rounded-control border border-border p-0.5">
           <Segment active={mode === "one"} onClick={() => props.onMode("one")}>

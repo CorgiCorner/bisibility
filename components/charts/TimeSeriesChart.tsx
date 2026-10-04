@@ -9,6 +9,7 @@ import {
   ComposedChart,
   Line,
   ResponsiveContainer,
+  Text,
   Tooltip,
   XAxis,
   YAxis,
@@ -28,6 +29,8 @@ export type TimeSeriesChartProps = {
   /** Exact calendar-day keys for locale-aware axes and tooltips. */
   dateKeys?: readonly string[];
   dateLabelStyle?: "date" | "month_year";
+  /** Align endpoint dates to the plot edges and leave room below the baseline. */
+  dateAxisLayout?: "compact" | "aligned";
   labels: readonly string[];
   series: readonly TimeSeries[];
   height: number;
@@ -57,6 +60,7 @@ const defaultMargin = { top: 12, right: 16, bottom: 0, left: 0 };
 export function TimeSeriesChart({
   dateKeys,
   dateLabelStyle = "date",
+  dateAxisLayout = "compact",
   labels,
   series,
   height,
@@ -76,6 +80,7 @@ export function TimeSeriesChart({
   children,
 }: TimeSeriesChartProps) {
   const dateDisplay = useDateDisplay();
+  const alignedDates = dateAxisLayout === "aligned";
   const labelAt = (index: number) => {
     const key = dateKeys?.[index];
     if (!key) return labels[index] ?? "";
@@ -103,8 +108,29 @@ export function TimeSeriesChart({
           scale="point"
           axisLine={false}
           tickLine={false}
-          height={28}
-          tick={axisStyle}
+          height={alignedDates ? 48 : 28}
+          tickSize={alignedDates ? 0 : 6}
+          tickMargin={alignedDates ? 20 : 2}
+          interval={alignedDates ? "preserveStartEnd" : "preserveEnd"}
+          tick={
+            alignedDates
+              ? ({ x, y, payload }) => {
+                  const first = payload.value === 0 && labels.length > 1;
+                  const last = payload.value === labels.length - 1 && labels.length > 1;
+                  return (
+                    <Text
+                      {...axisStyle}
+                      x={first || last ? payload.coordinate : x}
+                      y={y}
+                      verticalAnchor="start"
+                      textAnchor={first ? "start" : last ? "end" : "middle"}
+                    >
+                      {labelAt(Number(payload.value))}
+                    </Text>
+                  );
+                }
+              : axisStyle
+          }
           tickFormatter={(index) => labelAt(Number(index))}
           ticks={xTickIndexes}
           minTickGap={16}

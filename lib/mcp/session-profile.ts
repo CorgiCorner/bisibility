@@ -9,6 +9,10 @@ import type { McpApiAuthorization } from "./rest-call";
 // canonical toolset is active for every session.
 const ACTIVE_TOOLSETS = [
   "account",
+  "ai-research",
+  "agent-reports",
+  "project-context",
+  "site-audit",
   "alerts",
   "analytics",
   "backlinks",

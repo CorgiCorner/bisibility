@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import React from "react";
 
+export { analyzeAiResearchAction } from "./ai-research-action-stubs";
 export { competitorDetailsFormSchema } from "./competitor-action-stubs";
-export { refreshKeywordViewsAfterImport } from "./keyword-action-stubs";
+export { previewKeywordDeletion, refreshKeywordViewsAfterImport } from "./keyword-action-stubs";
 
 type LinkProps = {
   children?: ReactNode;

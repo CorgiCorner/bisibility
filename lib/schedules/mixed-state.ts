@@ -33,7 +33,8 @@ export function scheduleRowState(targets: readonly ScheduleTarget[]): ScheduleRo
     assignments.set(key, target.schedule);
   }
   if (assignments.size === 0) return { kind: "manual" };
-  if (assignments.size > 1) return { kind: "mixed", scheduleCount: assignments.size };
+  if (assignments.size > 1)
+    return { kind: "mixed", scheduleCount: [...assignments.values()].filter(Boolean).length };
   const assignment = assignments.values().next().value;
   return assignment ? { kind: "named", name: assignment.name } : { kind: "manual" };
 }

@@ -31,8 +31,8 @@ describe("window presets", () => {
     });
   });
 
-  it("defaults to the 28 day window", () => {
-    expect(WINDOW_PRESETS.some((preset) => preset.id === DEFAULT_WINDOW_ID)).toBe(true);
+  it("defaults to the freshest 7 day window", () => {
+    expect(DEFAULT_WINDOW_ID).toBe("7");
   });
 
   it("keeps one definition of the request page size", () => {

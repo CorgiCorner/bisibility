@@ -8,7 +8,7 @@ export default defineConfig({
         find: "server-only",
         replacement: fileURLToPath(new URL("./vitest.empty.ts", import.meta.url)),
       },
-      { find: /^@\//, replacement: fileURLToPath(new URL("./", import.meta.url)) },
+      { find: /^@\//, replacement: fileURLToPath(new URL("../../", import.meta.url)) },
     ],
   },
   test: {

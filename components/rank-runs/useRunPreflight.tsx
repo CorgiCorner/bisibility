@@ -11,7 +11,7 @@ import { DEFAULT_SERP_DEPTH, type SerpDepth } from "@/lib/serp/constants";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import { PreflightDialog } from "./PreflightDialog";
+import { PreflightDialog, type PreflightDialogProps } from "./PreflightDialog";
 import type { CancelOverlappingRunAction } from "./PreflightOverlapNotice";
 import type { PreflightProvider, PreflightScope } from "./preflight-presentation";
 
@@ -27,6 +27,7 @@ type PreflightRequest = {
 type ActivePreflight = PreflightRequest & { preview: RankCheckRunPreview };
 
 type UseRunPreflightOptions = {
+  onStarted?: PreflightDialogProps["onStarted"];
   projectId: string;
   providerId?: string | null;
 };
@@ -98,7 +99,11 @@ export const cancelOverlappingRunFromApp: CancelOverlappingRunAction = async (in
   if (!response.ok) throw new Error("rank_run_cancel_failed");
 };
 
-export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPreflightOptions>) {
+export function useRunPreflight({
+  projectId,
+  providerId,
+  onStarted,
+}: Readonly<UseRunPreflightOptions>) {
   const t = useTranslations("shared.rankPreflight");
   const router = useRouter();
   const [active, setActive] = useState<ActivePreflight | null>(null);
@@ -164,7 +169,10 @@ export function useRunPreflight({ projectId, providerId }: Readonly<UseRunPrefli
           integrationsHref={`/app/${projectId}/integrations`}
           launchAction={launchRankCheckRunAction}
           onClose={() => setActive(null)}
-          onStarted={() => router.refresh()}
+          onStarted={(result) => {
+            onStarted?.(result);
+            router.refresh();
+          }}
           open
           projectId={preflightProjectId(projectId)}
           previewAction={previewRankCheckRunFromApp}

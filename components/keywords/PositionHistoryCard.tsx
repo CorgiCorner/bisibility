@@ -5,7 +5,6 @@ import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Card } from "@/components/ui/Card";
 import { ChartRegion } from "@/components/ui/ChartRegion";
-import { SectionTitle } from "@/components/ui/SectionTitle";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { ZonedTime } from "@/components/ui/ZonedTime";
 import { observationSeries } from "@/lib/checks/position-observations";
@@ -25,7 +24,9 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { DegradedPositionMarkers } from "./DegradedPositionMarkers";
 import { LatestPositionAnnotation, TargetReferenceLine } from "./PositionHistoryAnnotations";
+import { PositionHistoryHeader, PositionHistoryNotes } from "./PositionHistoryHeader";
 import { marketPositionPalette, PositionHistoryMarketLegend } from "./PositionHistoryMarketLegend";
+import { positionHistoryChartLayout } from "./position-history-layout";
 import { positionHistorySeries } from "./position-history-series";
 
 export { historyAnnotationTop } from "./PositionHistoryAnnotations";
@@ -177,7 +178,7 @@ export function PositionHistoryCard({
           position: latestPosition,
         })
       : latestObservation?.position === null
-        ? notRankedTitle
+        ? `${notRankedTitle}${latestCheckedAt ? ` · ${formatDisplayDate(calendarDayKey(new Date(latestCheckedAt), timeZone), { ...dateDisplay, timeZone })}` : ""}`
         : t("latestUnavailable");
   const effectiveSchedule = resolveEffectiveSchedule(keyword.schedule);
   const nextCheckLabel: ReactNode = readOnly ? (
@@ -192,47 +193,38 @@ export function PositionHistoryCard({
 
   return (
     <Card className="rounded-card" size="lg">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <SectionTitle>{t("title")}</SectionTitle>
-          <p className="m-0 mt-0.5 text-[12px] text-fg-muted">{t("description")}</p>
-          {boundaryVisible ? (
-            <p className="mt-1 text-[11px] text-fg-muted">{t("normalization")}</p>
-          ) : null}
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          {showComparison ? (
-            <SegmentedControl
-              ariaLabel={t("scope")}
-              fitContent
-              onChange={setScope}
-              options={[
-                { label: t("thisMarket"), value: "single" },
-                { label: t("allMarkets"), value: "all" },
-              ]}
-              size="xs"
-              value={scope}
-            />
-          ) : null}
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-3 py-1 font-sans tabular-nums text-[11px] text-fg-muted">
-            <span aria-hidden className="h-2 w-2 rounded-full bg-accent-solid" />
-            {allMarkets ? t("markets", { count: markets.length }) : latestChip}
-          </span>
+      <PositionHistoryHeader
+        keyword={keyword}
+        marketLabel={allMarkets ? t("markets", { count: markets.length }) : undefined}
+        latestCheck={allMarkets ? null : latestChip}
+      >
+        {showComparison ? (
           <SegmentedControl
-            ariaLabel={t("range")}
-            className="bg-bg-elev font-sans tabular-nums"
+            ariaLabel={t("scope")}
             fitContent
-            onChange={(value) => setRange(value as RangeLabel)}
-            options={RANGES.map((option) => ({
-              label: t("rangeDays", { count: option.days }),
-              value: option.value,
-            }))}
+            onChange={setScope}
+            options={[
+              { label: t("thisMarket"), value: "single" },
+              { label: t("allMarkets"), value: "all" },
+            ]}
             size="xs"
-            value={range}
+            value={scope}
           />
-        </div>
-      </div>
-      <ChartRegion className="relative mt-3 h-[280px]" label={chartRegionLabel}>
+        ) : null}
+        <SegmentedControl
+          ariaLabel={t("range")}
+          className="bg-bg-elev font-sans tabular-nums"
+          fitContent
+          onChange={(value) => setRange(value as RangeLabel)}
+          options={RANGES.map((option) => ({
+            label: t("rangeDays", { count: option.days }),
+            value: option.value,
+          }))}
+          size="xs"
+          value={range}
+        />
+      </PositionHistoryHeader>
+      <ChartRegion className="relative mt-2 h-[280px]" label={chartRegionLabel}>
         {notEnough ? (
           <div className="grid h-full place-items-center rounded-card">
             <div className="flex flex-col items-center gap-2 rounded-card border border-border bg-bg-elev px-5 py-4 text-center">
@@ -255,7 +247,7 @@ export function PositionHistoryCard({
             reversed
             yTicks={[1, 10, 20]}
             formatValue={(value) => t("axisPosition", { position: value })}
-            margin={{ top: 18, right: 18, bottom: 0, left: 0 }}
+            {...positionHistoryChartLayout}
           >
             {!allMarkets && target !== null ? <TargetReferenceLine target={target} /> : null}
             {!allMarkets && target !== null ? (
@@ -285,6 +277,10 @@ export function PositionHistoryCard({
           </TimeSeriesChart>
         )}
       </ChartRegion>
+      <PositionHistoryNotes
+        hasGaps={positions.some((position) => position === null)}
+        boundaryVisible={boundaryVisible}
+      />
       {!notEnough ? (
         <PositionHistoryMarketLegend
           allMarkets={allMarkets}

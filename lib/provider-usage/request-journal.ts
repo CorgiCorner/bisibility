@@ -52,7 +52,7 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
             /* Keep the durable unknown row. */
           }
         }
-        throw new ProviderUsagePersistenceError({ cause });
+        throw new ProviderUsagePersistenceError({ cause, phase: "settlement", attemptId: id });
       } finally {
         inFlight.delete(id);
       }
@@ -71,7 +71,8 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
           id: { notIn: [...inFlight] },
         },
       });
-      if (unresolved) throw new ProviderUsagePersistenceError();
+      if (unresolved)
+        throw new ProviderUsagePersistenceError({ phase: "admission", attemptId: unresolved.id });
       const id = randomUUID();
       await recordProviderUsage(db, {
         ...input,
@@ -85,7 +86,11 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
       inFlight.add(id);
       return id;
     } catch (cause) {
-      throw new ProviderUsagePersistenceError({ cause });
+      throw new ProviderUsagePersistenceError({
+        cause,
+        phase: "admission",
+        attemptId: cause instanceof ProviderUsagePersistenceError ? cause.attemptId : undefined,
+      });
     }
   }
 

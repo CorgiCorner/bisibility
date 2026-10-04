@@ -72,7 +72,12 @@
         "rankTracker": "Seguimiento de posiciones",
         "runs": "Ejecuciones",
         "searchConsole": "Search Console",
-        "settings": "Ajustes"
+        "settings": "Ajustes",
+        "aiVisibility": "Visibilidad en IA",
+        "promptExplorer": "Explorador de prompts",
+        "siteAudit": "Auditoría del sitio",
+        "projectContext": "Contexto del proyecto",
+        "agentReports": "Informes de agentes"
       },
       "menu": "Menú"
     },
@@ -208,7 +213,12 @@
         "runs": "Comprobaciones de posiciones e importaciones de Search Console de este proyecto.",
         "searchConsole": "Lo que Google ha comunicado, lo que ha ocultado y lo que tú conservas.",
         "security": "Contraseña, sesiones y protección de la cuenta.",
-        "timeline": "Señales del proyecto, cambios en las páginas y notas a lo largo del tiempo."
+        "timeline": "Señales del proyecto, cambios en las páginas y notas a lo largo del tiempo.",
+        "aiVisibility": "Menciones de marca y citas en las observaciones disponibles de proveedores.",
+        "promptExplorer": "Compara pruebas sintéticas de prompts entre modelos compatibles.",
+        "siteAudit": "Rastrea el sitio del proyecto y revisa problemas por URL.",
+        "projectContext": "Negocio, público, productos y objetivos para tus agentes.",
+        "agentReports": "Análisis guardados y compartidos con los miembros de este proyecto."
       },
       "titles": {
         "account": "Ajustes de la cuenta",
@@ -235,7 +245,12 @@
         "searchConsole": "Search Console",
         "security": "Seguridad",
         "settings": "Ajustes",
-        "timeline": "Cronología"
+        "timeline": "Cronología",
+        "aiVisibility": "Visibilidad en IA",
+        "promptExplorer": "Explorador de prompts",
+        "siteAudit": "Auditoría del sitio",
+        "projectContext": "Contexto del proyecto",
+        "agentReports": "Informes de agentes"
       }
     },
     "footer": {

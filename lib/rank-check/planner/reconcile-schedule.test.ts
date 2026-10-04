@@ -2,10 +2,49 @@ import { describe, expect, it, vi } from "vitest";
 import { reconcilePlannedRunsForSchedule } from "./reconcile-schedule";
 
 describe("planned schedule reconciliation", () => {
+  it("removes empty future occurrences while preserving materialized work", async () => {
+    const database = {
+      checkSchedule: {
+        findUnique: vi.fn().mockResolvedValue({
+          _count: { keywords: 0 },
+          archivedAt: null,
+          enabled: true,
+          frequency: "daily",
+          cronExpression: null,
+          jitterMinutes: 0,
+          project: { defaults: { timezone: "UTC" } },
+          publicId: "sch_a00000000000000000000000",
+          timeOfDay: "06:00",
+          timezone: null,
+        }),
+      },
+      rankCheckRun: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: "future",
+            items: [],
+            status: "planned",
+            plannedFor: new Date("2026-09-03T06:00:00Z"),
+            selectionSpec: { occurrenceKey: "2026-09-03" },
+          },
+          { id: "accepted", items: [{ id: "item" }], status: "blocked" },
+        ]),
+        deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
+      },
+    };
+    expect(await reconcilePlannedRunsForSchedule("schedule", database as never)).toEqual({
+      deleted: 1,
+    });
+    expect(database.rankCheckRun.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["future"] }, status: { in: ["blocked", "planned"] } },
+    });
+  });
+
   it("deletes only planned runs whose cadence anchor changed", async () => {
     const database = {
       checkSchedule: {
         findUnique: vi.fn().mockResolvedValue({
+          _count: { keywords: 1 },
           cronExpression: null,
           enabled: true,
           frequency: "daily",
@@ -62,6 +101,7 @@ describe("planned schedule reconciliation", () => {
     const database = {
       checkSchedule: {
         findUnique: vi.fn().mockResolvedValue({
+          _count: { keywords: 1 },
           cronExpression: null,
           enabled: false,
           frequency: "daily",
@@ -97,6 +137,7 @@ describe("planned schedule reconciliation", () => {
     const database = {
       checkSchedule: {
         findUnique: vi.fn().mockResolvedValue({
+          _count: { keywords: 1 },
           cronExpression: null,
           enabled: true,
           frequency: "daily",
@@ -151,6 +192,7 @@ describe("planned schedule reconciliation", () => {
     const database = {
       checkSchedule: {
         findUnique: vi.fn().mockResolvedValue({
+          _count: { keywords: 1 },
           cronExpression: null,
           enabled: false,
           frequency: "daily",

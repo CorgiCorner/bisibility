@@ -11,6 +11,14 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
   launchRankCheckRunAction: vi.fn(),
 }));
+vi.mock("@/lib/actions/keyword-delete-impact", () => ({
+  previewKeywordDeletion: vi.fn(async () => ({
+    keywordCount: 1,
+    targetCount: 1,
+    runningTargetCount: 0,
+    schedules: [],
+  })),
+}));
 vi.mock("@/lib/actions/keyword-export-action", () => ({ exportKeywords: mocks.exportKeywords }));
 vi.mock("@/lib/actions/rank-check-run-launch", () => ({
   launchRankCheckRunAction: mocks.launchRankCheckRunAction,
@@ -87,7 +95,10 @@ describe("KeywordsGrid actions", () => {
       ),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-    fireEvent.click(screen.getByRole("button", { name: "Delete keywords" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Delete keyword" })).toBeEnabled(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Delete keyword" }));
 
     await waitFor(() =>
       expect(actions.bulkDeleteAction).toHaveBeenCalledWith({

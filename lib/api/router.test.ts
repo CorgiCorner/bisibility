@@ -38,6 +38,7 @@ const mocks = vi.hoisted(() => {
         create: vi.fn(),
         createMany: vi.fn(),
         delete: vi.fn(),
+        deleteMany: vi.fn(),
         findFirst: vi.fn(),
         findMany: vi.fn(),
         findUnique: vi.fn(),
@@ -1000,7 +1001,8 @@ describe("public API router", () => {
   it("deletes keywords and writes audit in one transaction", async () => {
     const keyword = keywordRow("kw_a00000000000000000000000");
     mocks.prisma.keyword.findFirst.mockResolvedValue(keyword);
-    mocks.prisma.keyword.delete.mockResolvedValue(keyword);
+    mocks.prisma.keyword.findMany.mockResolvedValue([keyword]);
+    mocks.prisma.keyword.deleteMany.mockResolvedValue({ count: 1 });
 
     const response = await call(
       authedRequest("DELETE", "/keywords/kw_a00000000000000000000000"),
@@ -1009,9 +1011,12 @@ describe("public API router", () => {
 
     expect(response.status).toBe(200);
     expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
-    expect(mocks.prisma.keyword.delete).toHaveBeenCalledWith({
-      where: { id: "keyword_kw_a00000000000000000000000" },
+    expect(mocks.prisma.keyword.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["keyword_kw_a00000000000000000000000"] } },
     });
+    expect(mocks.prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.prisma.keyword.deleteMany.mock.invocationCallOrder[0],
+    );
     expect(mocks.prisma.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         action: "keyword.delete",

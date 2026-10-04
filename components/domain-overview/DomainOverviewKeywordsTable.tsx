@@ -1,7 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { ExternalLink } from "@/components/ui/ExternalLink";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import type { RankedKeywordsPage } from "@/lib/providers/types";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
@@ -9,7 +8,9 @@ import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import { DomainOverviewRankingLink } from "./DomainOverviewRankingLink";
 import { type KeywordSort, keywordValue } from "./domain-overview-keyword-table-model";
+import { keywordTableGrid } from "./domain-overview-keyword-table-styles";
 import type { SaveDomainKeywords } from "./domain-overview-keyword-tracking";
 import {
   formatDomainCount,
@@ -110,7 +111,9 @@ export function DomainOverviewKeywordsTable({
       </header>
       <div className="max-h-[640px] overflow-auto">
         <div className="min-w-[1140px]">
-          <div className="sticky top-0 z-1 grid grid-cols-[28px_minmax(180px,1.2fr)_104px_104px_82px_62px_72px_88px_minmax(180px,1fr)_70px] items-center gap-3 border-b border-border bg-bg-sunken px-4 py-2.5">
+          <div
+            className={`sticky top-0 z-1 grid ${keywordTableGrid(readOnly)} items-center gap-3 border-b border-border bg-bg-elev px-4 py-2.5`}
+          >
             {!readOnly ? (
               <Checkbox
                 aria-label={t("selectAllKeywords")}
@@ -200,7 +203,7 @@ export function DomainOverviewKeywordsTable({
             const change = delta(row.rankAbsoluteDelta, locale);
             return (
               <div
-                className="grid min-h-[58px] grid-cols-[28px_minmax(180px,1.2fr)_104px_104px_82px_62px_72px_88px_minmax(180px,1fr)_70px] items-center gap-3 border-b border-border px-4 py-2 last:border-b-0"
+                className={`grid min-h-[58px] ${keywordTableGrid(readOnly)} items-center gap-3 border-b border-border px-4 py-2 last:border-b-0`}
                 data-testid="domain-keyword-row"
                 key={`${row.keyword}:${row.rankingUrl ?? ""}`}
               >
@@ -240,13 +243,7 @@ export function DomainOverviewKeywordsTable({
                   {row.intent?.slice(0, 4).toUpperCase() || "-"}
                 </span>
                 {row.rankingUrl ? (
-                  <ExternalLink
-                    className="min-w-0 font-sans tabular-nums text-[11.5px] text-link hover:underline"
-                    href={row.rankingUrl}
-                    title={row.rankingUrl}
-                  >
-                    <span className="truncate">{row.rankingUrl}</span>
-                  </ExternalLink>
+                  <DomainOverviewRankingLink href={row.rankingUrl} />
                 ) : (
                   <span className="text-fg-muted">-</span>
                 )}

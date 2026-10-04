@@ -8,6 +8,8 @@ import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/con
 import type { TrackedCompetitor } from "@/lib/competitors/serp-comparison";
 import { formatDisplayDate, formatDisplayDateTime } from "@/lib/dates/format";
 import { calendarDayKey } from "@/lib/keywords/position-history";
+import type { KeywordRow } from "@/lib/queries/keywords";
+import type { ExtendSnapshotAction } from "@/lib/serp/snapshot-extension";
 import { classifyActionError, presentActionError } from "@/lib/ui/action-error";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -15,9 +17,14 @@ import { RetrievedResultsCompare } from "./RetrievedResultsCompare";
 import { RetrievedResultsHeader } from "./RetrievedResultsHeader";
 import { RetrievedResultsOneCheck } from "./RetrievedResultsOneCheck";
 import { SerpCompetitorComparison } from "./SerpCompetitorComparison";
+import { SnapshotExtensionControl } from "./SnapshotExtensionControl";
+import { SnapshotExtensionResults } from "./SnapshotExtensionResults";
 
 type LoadResults = (checkIds: string[]) => Promise<RetrievedResults[]>;
 type CardProps = {
+  projectRef?: string;
+  extendSnapshotAction?: ExtendSnapshotAction;
+  keyword?: Pick<KeywordRow, "location" | "device" | "engine">;
   competitors?: readonly TrackedCompetitor[];
   ownDomain?: string;
   entries: readonly StoredResultsIndexEntry[];
@@ -29,6 +36,9 @@ type CardProps = {
 };
 
 export function RetrievedResultsCard({
+  projectRef,
+  extendSnapshotAction,
+  keyword,
   competitors = [],
   ownDomain = "",
   entries,
@@ -83,6 +93,7 @@ export function RetrievedResultsCard({
   return (
     <Card className="overflow-visible p-0" data-testid="retrieved-results-card" size="lg">
       <RetrievedResultsHeader
+        keyword={keyword}
         compareEnabled={compareEnabled}
         compareFrom={compareFrom}
         current={current}
@@ -113,6 +124,23 @@ export function RetrievedResultsCard({
             tooltip={t("countryLevelTooltip")}
           />
         </div>
+      ) : null}
+      {mode === "one" && current?.tier === "full" && current.extension && projectRef ? (
+        <SnapshotExtensionControl
+          key={current.checkId}
+          checkId={current.checkId}
+          projectRef={projectRef}
+          action={extendSnapshotAction}
+          extension={current.extension}
+          formatDateTime={format.dateTime}
+          onReload={async () => {
+            const fetched = await loadResults([current.checkId]);
+            setLoaded((cache) => ({
+              ...cache,
+              ...Object.fromEntries(fetched.map((entry) => [entry.checkId, entry])),
+            }));
+          }}
+        />
       ) : null}
       {mode === "compare" && earlier && current ? (
         <RetrievedResultsCompare
@@ -148,6 +176,13 @@ export function RetrievedResultsCard({
           rankingUrl={rankingUrl}
           results={current}
           retentionDays={retentionDays}
+        />
+      ) : null}
+      {mode === "one" && current?.tier === "full" ? (
+        <SnapshotExtensionResults
+          results={current}
+          competitors={competitors}
+          formatDateTime={format.dateTime}
         />
       ) : null}
       {error ? (

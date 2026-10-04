@@ -24,8 +24,10 @@ export type PageTrafficSnapshotLike = {
 };
 
 export type KeywordTrafficDetail = {
+  connectedProviders?: string[];
   hasAnalyticsConnection: boolean;
   hasSearchConsoleConnection?: boolean;
+  pagePaths?: string[];
   pages: PageTrafficSnapshotLike[];
   query: (KeywordTrafficSummary & { position: number; windowDays: number }) | null;
 };
@@ -65,6 +67,7 @@ async function loadProviderContext(projectId: string) {
     where: { ...providerChainWhere("analytics"), projectId },
   });
   return {
+    connectedProviders: rows.map((row) => row.provider),
     hasAnalyticsConnection: rows.length > 0,
     hasSearchConsoleConnection: rows.some((row) => row.provider === "gsc"),
     providerRanks: providerRankMap(rows),
@@ -194,8 +197,10 @@ export async function getKeywordTraffic(
     : [];
 
   return {
+    connectedProviders: providerContext.connectedProviders,
     hasAnalyticsConnection: providerContext.hasAnalyticsConnection,
     hasSearchConsoleConnection: providerContext.hasSearchConsoleConnection,
+    pagePaths: candidates,
     pages: selectNewestPagesByProvider(pages, candidates),
     query,
   };

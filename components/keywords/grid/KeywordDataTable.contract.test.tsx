@@ -69,9 +69,9 @@ describe("KeywordDataTable server contract", () => {
       expect(
         screen
           .getAllByRole("columnheader")
-          .slice(1, 6)
+          .slice(1, 7)
           .map((header) => header.dataset.columnId),
-      ).toEqual(["keyword", "position", "change", "location", "device"]);
+      ).toEqual(["keyword", "frequency", "position", "change", "location", "device"]);
     } finally {
       fireEvent(window, new StorageEvent("storage", { key, newValue: null }));
     }

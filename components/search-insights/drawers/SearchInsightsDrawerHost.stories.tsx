@@ -1,6 +1,9 @@
+import { DateDisplayProvider } from "@/components/dates/DateFormatProvider";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { ToastProvider } from "@/components/ui/Toast";
+import { searchInsightsFeatureTestMessages } from "@/i18n/test-support/render-with-feature-messages";
 import type { Meta, StoryObj } from "@storybook/react";
-import { userEvent, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import {
   storyBandList,
   storyCostContext,
@@ -62,11 +65,19 @@ const meta = {
   component: SearchInsightsDrawerHost,
   decorators: [
     (Story) => (
-      <ToastProvider>
-        <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
-          <Story />
-        </div>
-      </ToastProvider>
+      <FeatureMessagesProvider
+        locale="en"
+        messages={searchInsightsFeatureTestMessages}
+        timeZone="UTC"
+      >
+        <DateDisplayProvider>
+          <ToastProvider>
+            <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
+              <Story />
+            </div>
+          </ToastProvider>
+        </DateDisplayProvider>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
@@ -107,6 +118,10 @@ export const QueryFrame: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByText(storyQueryDetail.query));
+    const link = await within(document.body).findByRole("link", { name: "Open in Search Console" });
+    const url = new URL(link.getAttribute("href") as string);
+    expect(url.searchParams.get("resource_id")).toBe(args.property);
+    expect(url.searchParams.get("query")).toBe(`!${storyQueryDetail.query}`);
   },
 };
 

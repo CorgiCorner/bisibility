@@ -29,6 +29,7 @@ import { SparkleIcon as Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import { SquaresFourIcon as SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour";
 import { UsersThreeIcon as UsersThree } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import type { Icon } from "@phosphor-icons/react/lib";
+import { researchModuleNavEntries, researchProjectNavEntries } from "./research-nav";
 
 /**
  * One icon size for every tile in the sidebar rail. The logo mark, the workspace tile and the
@@ -129,7 +130,7 @@ export const navItemGroups = [
   },
 ] as const satisfies readonly NavItemGroupDescriptor[];
 
-type NavEntry = Omit<NavItem, "href"> & { segment: string };
+export type NavEntry = Omit<NavItem, "href"> & { segment: string };
 
 type RailNavEntry = NavEntry & { experimentalModule?: ExperimentalModuleKey };
 
@@ -218,6 +219,7 @@ const railNavEntries = [
     icon: ChartLineUp,
     badge: "beta",
   },
+  ...researchModuleNavEntries,
   { group: "project", label: "Markets", scope: "project", segment: "markets", icon: MapTrifold },
   {
     group: "project",
@@ -235,6 +237,7 @@ const railNavEntries = [
     segment: "integrations",
     icon: PuzzlePiece,
   },
+  ...researchProjectNavEntries,
   { group: "project", label: "Install", scope: "project", segment: "install", icon: Sparkle },
   { group: "project", label: "Settings", scope: "project", segment: "settings", icon: GearSix },
 ] as const satisfies readonly RailNavEntry[];

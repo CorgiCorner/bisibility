@@ -5,7 +5,7 @@ import {
   makePublicId,
   PUBLIC_ID_RESOURCE_REGISTRY,
   type PublicIdPrefix,
-} from "../../lib/db/public-id.ts";
+} from "../../lib/db/public-id-resources.ts";
 import pg from "pg";
 
 const { Client } = pg;
@@ -14,6 +14,7 @@ const databaseUrl = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DIRECT_URL or DATABASE_URL is required.");
 
 const publicIdTables = {
+  agr: "agent_reports",
   al: "triggered_alerts",
   alr: "alert_rules",
   audit: "audit_logs",

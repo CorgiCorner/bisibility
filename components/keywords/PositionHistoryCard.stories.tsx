@@ -4,25 +4,29 @@ import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/sto
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { PositionHistoryCard } from "@/components/keywords/PositionHistoryCard";
 import messages from "@/messages/core/en/project-rank-tracker-keyword-detail.json";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Decorator, Meta, StoryObj } from "@storybook/react";
+
+const withPositionMessages: Decorator = (Story, context) => (
+  <FeatureMessagesProvider
+    locale={context.parameters.locale ?? "en"}
+    messages={messages}
+    timeZone="UTC"
+  >
+    <DateDisplayProvider>
+      <KeywordDetailStoryThemes>
+        <div className="min-h-[400px] text-fg">
+          <Story />
+        </div>
+      </KeywordDetailStoryThemes>
+    </DateDisplayProvider>
+  </FeatureMessagesProvider>
+);
 
 const meta = {
   title: "Keywords/PositionHistoryCard",
   component: PositionHistoryCard,
   args: { timeZone: "Europe/Warsaw" },
-  decorators: [
-    (Story) => (
-      <FeatureMessagesProvider locale="en" messages={messages} timeZone="UTC">
-        <DateDisplayProvider>
-          <KeywordDetailStoryThemes>
-            <div className="min-h-[400px] text-fg">
-              <Story />
-            </div>
-          </KeywordDetailStoryThemes>
-        </DateDisplayProvider>
-      </FeatureMessagesProvider>
-    ),
-  ],
+  decorators: [withPositionMessages],
   parameters: { chromatic: { viewports: [390, 768, 1440] } },
 } satisfies Meta<typeof PositionHistoryCard>;
 
@@ -126,4 +130,9 @@ export const UnrankedAfterDepthChange: Story = {
       })),
     },
   },
+};
+
+export const LongerDateLabels: Story = {
+  ...UnrankedAfterDepthChange,
+  parameters: { locale: "pl" },
 };

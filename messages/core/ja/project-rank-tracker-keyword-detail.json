@@ -70,7 +70,12 @@
         "metricsUnsupported": "この追跡ロケーションでは検索ボリュームと難易度を利用できません。順位追跡には影響しません。",
         "searchVolume": "検索ボリューム",
         "difficultyMetric": "難易度",
-        "metricListSeparator": "と"
+        "metricListSeparator": "と",
+        "searchMetrics": "検索指標",
+        "metricsForMarket": "対象: {market}",
+        "checkedDepth": "上位{depth, number}件を確認",
+        "connectedSchedule": "この市場とデバイスのスケジュール",
+        "schedulesAllTargets": "すべての市場とデバイス"
       },
       "actions": {
         "moreActions": "キーワードのその他の操作",
@@ -86,7 +91,11 @@
         "depthMenu": "取得深度",
         "changeDefault": "既定値を変更",
         "connectProvider": "プロバイダーを接続",
-        "shallowVisibility": "浅いチェックでは、選択した取得深度より下の順位を取りこぼす場合があります。"
+        "shallowVisibility": "浅いチェックでは、選択した取得深度より下の順位を取りこぼす場合があります。",
+        "refreshData": "データを更新",
+        "refreshingData": "更新中...",
+        "refreshDataHint": "新しいチェックを実行せずに、表示中の結果を更新します。",
+        "checking": "チェック中..."
       },
       "edit": {
         "details": "詳細",
@@ -172,7 +181,7 @@
         "ctr": "CTR",
         "averagePosition": "平均順位",
         "gscPositionNote": "GSC の順位は実際の表示回数全体の平均であり、最新の順位チェックと異なる場合があります。",
-        "awaitingSync": "最初のトラフィック同期を待っています。",
+        "awaitingSync": "このキーワードのSearch Consoleデータはまだありません。",
         "reportingLag": "Search Console のデータは約{days, number}日遅れて届きます。",
         "connectDescription": "Search Console を接続すると、このキーワードのクリック数・表示回数・CTR を確認できます。",
         "connect": "Search Console を接続",
@@ -186,7 +195,25 @@
         "duration": "滞在時間",
         "scrollDepth": "スクロール深度",
         "seconds": "{seconds, number}秒",
-        "minutesSeconds": "{minutes, number}分{seconds, number}秒"
+        "minutesSeconds": "{minutes, number}分{seconds, number}秒",
+        "landingEmpty": "{path} の保存済みページデータはありません。分析データを取得して接続済みソースを確認してください。",
+        "landingNeedsUrl": "ランディングページの分析データを照合するには、対象URLを設定するか、掲載URLが見つかる順位チェックを実行してください。",
+        "dataThrough": "{date} までのデータ",
+        "sync": {
+          "title": "分析",
+          "scope": "プロジェクトのデータ · すべての国とデバイス",
+          "action": "分析データを取得",
+          "pending": "分析データを取得中…",
+          "hint": "このプロジェクトに接続された分析ソースからレポートを取得します。プロバイダーの報告遅延は引き続き適用されます。",
+          "updated": "分析データを更新しました。利用可能な結果は以下に表示されます。",
+          "empty": "レポートを取得しました。追跡中のキーワードに一致するクエリやページのデータは返されませんでした。",
+          "partial": "一部のソースは更新されましたが、完了できなかったソースがあります。利用可能な結果は以下に表示されます。詳細は連携で確認してください。",
+          "failed": "分析データを取得できませんでした。再試行するか、連携で接続を確認してください。",
+          "reconnect": "連携で分析ソースを再接続する必要があります。",
+          "rateLimited": "分析プロバイダーのリクエスト上限に達しました。しばらくしてから再試行してください。",
+          "unavailable": "分析データを取得できる接続済みソースがありません。連携を確認してください。",
+          "integrations": "連携を管理"
+        }
       },
       "position": {
         "title": "順位履歴",
@@ -198,7 +225,7 @@
         "range": "順位履歴の期間",
         "rangeDays": "{count, number}日間",
         "markets": "{count, plural, other {#件の市場}}",
-        "latest": "最新{position, number}位 · {date}",
+        "latest": "{position, number}位 · {date}",
         "latestUnavailable": "最新データなし",
         "noChecks": "過去{days, number}日間にチェックはありません。",
         "notEnough": "グラフを表示するにはデータが不足しています。",
@@ -225,7 +252,10 @@
         "comparedMarkets": "比較した市場",
         "noVolumeDifficulty": " / ボリューム・KD なし",
         "moreMarkets": "他{count, number}件の市場。比較するにはグリッドでフィルターしてください。",
-        "degradedMarker": "国レベルでチェックしました。プロバイダーにこの都市のハンドルがなかったためです。順位は {requested} ではなく {country} で計測されています。"
+        "degradedMarker": "国レベルでチェックしました。プロバイダーにこの都市のハンドルがなかったためです。順位は {requested} ではなく {country} で計測されています。",
+        "latestCheck": "最終チェック",
+        "recordedPosition": "記録された順位",
+        "unrankedGaps": "順位が取得されなかったチェックは空白で表示されます。"
       },
       "rankingUrl": {
         "title": "順位取得 URL の履歴",
@@ -379,6 +409,34 @@
             "label": "動画",
             "description": "検索結果ページ上の動画結果ブロックです。"
           }
+        },
+        "extension": {
+          "title": "このスナップショットを拡張",
+          "action": "次の10件を取得",
+          "confirmTitle": "SERPスナップショットを拡張",
+          "cancel": "キャンセル",
+          "confirm": "確認して取得",
+          "pending": "結果を取得中…",
+          "rangeLabel": "追加の順位",
+          "range": "#{start, number}から#{end, number}",
+          "costLabel": "プロバイダー使用量の見積もり",
+          "cost": "最大1回の検索",
+          "window": "最初の取得から15分以内、{time}まで利用できます。",
+          "timing": "追加結果は今取得され、独自の取得時刻とともにこのチェックに紐づけられます。過去の順位とチェック間の比較は変更されません。",
+          "duplicates": "結果がページ間で移動する場合があります。重複URLは自動で除外し、先に取得した結果と順位を保持します。同じドメインの異なるページは別々に表示し、順位は振り直しません。",
+          "unsupported": "このプロバイダーでは保存済みスナップショットを拡張できません。上のチェック実行ボタンから、より深い順位を取得してください。",
+          "legacy": "このチェックには継続取得情報がありません。上のチェック実行ボタンから、より深い順位を取得してください。",
+          "expired": "15分の拡張期限を過ぎました。上のボタンから新しいチェックを実行してください。",
+          "complete": "次のページがないか、上位100位に到達しています。",
+          "running": "追加結果を取得中です。データを更新して結果を確認してください。",
+          "failed": "拡張を確認できませんでした。以前の結果は保持されています。データを更新して状態を確認するか、新しいチェックを実行してください。",
+          "disconnected": "拡張するには、このスナップショットのSerpApi連携を再接続してください。",
+          "unavailable": "このスナップショットは変更されました。続行する前にデータを更新してください。",
+          "addedTitle": "チェック後に追加された結果",
+          "page": "順位{start, number}から{end, number} · 取得日時{time}",
+          "added": "{count, number}件追加 · 重複{duplicates, number}件を除外",
+          "emptyPage": "このページには新しい一意の結果がありませんでした。",
+          "refresh": "スナップショットを更新"
         }
       },
       "comparison": {
@@ -477,6 +535,11 @@
           "ranked": "順位あり",
           "running": "チェック実行中"
         }
+      },
+      "context": {
+        "label": "チェックの対象",
+        "desktop": "デスクトップ",
+        "mobile": "モバイル"
       }
     }
   }

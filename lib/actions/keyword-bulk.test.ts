@@ -8,9 +8,11 @@ const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
   prisma: {
     $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
+    checkSchedule: { findUnique: vi.fn() },
     keyword: { deleteMany: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
     project: { findFirst: vi.fn() },
-    rankCheckRun: { update: vi.fn() },
+    rankCheckRun: { update: vi.fn(), findMany: vi.fn(), deleteMany: vi.fn() },
     rankCheckRunItem: { findMany: vi.fn(), updateMany: vi.fn() },
     user: { findUnique: vi.fn() },
   },
@@ -131,6 +133,35 @@ describe("bulk target URL actions", () => {
       }),
     );
     expect(JSON.stringify(mocks.writeAudit.mock.calls[0]?.[0])).not.toContain("keyword_1");
+  });
+
+  it("cleans future occurrences after removing the last member without deleting its schedule", async () => {
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      {
+        id: "keyword_1",
+        publicId: KEYWORD_PUBLIC_ID,
+        text: "rank tracker",
+        checkScheduleId: "schedule_1",
+      },
+    ]);
+    mocks.prisma.checkSchedule.findUnique.mockResolvedValue({
+      _count: { keywords: 0 },
+      project: {},
+      enabled: true,
+    });
+    mocks.prisma.rankCheckRun.findMany.mockResolvedValue([
+      { id: "future", items: [], status: "planned" },
+    ]);
+    mocks.prisma.rankCheckRun.deleteMany.mockResolvedValue({ count: 1 });
+    await bulkDeleteKeywords({ keywordIds: [KEYWORD_PUBLIC_ID], projectId: PROJECT_PUBLIC_ID });
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalled();
+    expect(mocks.prisma.rankCheckRun.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["future"] }, status: { in: ["blocked", "planned"] } },
+    });
+    expect(mocks.prisma.keyword.deleteMany.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.prisma.checkSchedule.findUnique.mock.invocationCallOrder[0],
+    );
+    expect(JSON.stringify(mocks.writeAudit.mock.calls)).not.toContain("schedule_1");
   });
 
   it("cancels a queued active-run item before deleting its keyword", async () => {

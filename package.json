@@ -1,6 +1,6 @@
 {
   "name": "bisibility",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "private": true,
   "description": "Self-hostable open-source keyword rank tracker with keyword and backlink research, MCP, and bring-your-own providers.",
   "license": "AGPL-3.0-only",
@@ -130,7 +130,7 @@
     "release:check": "npm run release:check:ci && npm run test:storybook && npm run test:e2e && npm run smoke:app && npm run smoke:visual && npm run build && npm run build-storybook && npm run smoke:docker",
     "release:check:local": "npm run release:check && npm run sonar:check",
     "prepare": "husky",
-    "test:metering": "vitest run --config vitest.metering.config.ts"
+    "test:metering": "vitest run --config tests/config/vitest.metering.config.ts"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1092.0",
@@ -171,9 +171,10 @@
     "cron-parser": "^5.6.2",
     "exceljs": "^4.4.0",
     "geist": "^1",
-    "next": "16.3.4",
+    "next": "16.3.8",
     "next-intl": "4.14.4",
-    "nodemailer": "^9.1.1",
+    "nodemailer": "^10.0.13",
+    "parse5": "8.0.1",
     "pg": "^8.22.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
@@ -183,7 +184,7 @@
     "server-only": "0.0.1",
     "tailwind-merge": "^3.6.0",
     "tldts": "^7.4.10",
-    "undici": "^8.9.0",
+    "undici": "^8.10.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -232,11 +233,11 @@
     "@sentry/bundler-plugin-core": {
       "glob": {
         "minimatch": {
-          "brace-expansion": "5.0.9"
+          "brace-expansion": "5.0.12"
         }
       }
     },
-    "fast-uri": "3.1.6",
+    "fast-uri": "3.1.8",
     "ip-address": "10.4.0",
     "nanoid": "3.3.18",
     "sharp": "0.35.4",
@@ -246,6 +247,9 @@
     "valibot": "1.4.2",
     "better-auth": {
       "vitest": "5.0.1"
+    },
+    "jsdom": {
+      "undici": "7.29.1"
     }
   },
   "lint-staged": {

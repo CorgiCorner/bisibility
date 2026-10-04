@@ -39,10 +39,15 @@ describe("navItems", () => {
       "Domain Overview",
       "Backlinks",
       "Search Console",
+      "AI Visibility",
+      "Prompt Explorer",
+      "Site Audit",
       "Markets",
       "Alerts",
       "Runs",
       "Integrations",
+      "Project Context",
+      "Agent Reports",
       "Install",
       "Settings",
     ]);
@@ -66,16 +71,21 @@ describe("navItems", () => {
       "Domain Overview",
       "Backlinks",
       "Search Console",
+      "AI Visibility",
+      "Prompt Explorer",
+      "Site Audit",
     ]);
     expect(items.filter((item) => item.group === "project").map((item) => item.label)).toEqual([
       "Markets",
       "Alerts",
       "Runs",
       "Integrations",
+      "Project Context",
+      "Agent Reports",
       "Install",
       "Settings",
     ]);
-    expect(items).toHaveLength(13);
+    expect(items).toHaveLength(18);
     expect(new Set(items.map((item) => item.group))).toEqual(new Set([null, "modules", "project"]));
   });
 
@@ -208,6 +218,11 @@ describe("navItems", () => {
       ),
     ).toEqual({
       Dashboard: "level",
+      "AI Visibility": "own-axis",
+      "Prompt Explorer": "own-axis",
+      "Site Audit": "own-axis",
+      "Project Context": "project",
+      "Agent Reports": "project",
       Alerts: "project",
       "Rank Tracker": "market",
       Competitors: "market",

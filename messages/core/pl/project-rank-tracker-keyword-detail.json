@@ -70,7 +70,12 @@
         "metricsUnsupported": "Liczba wyszukiwań i trudność są niedostępne dla tej śledzonej lokalizacji. Nie wpływa to na monitorowanie pozycji.",
         "searchVolume": "Liczba wyszukiwań",
         "difficultyMetric": "trudność",
-        "metricListSeparator": " i "
+        "metricListSeparator": " i ",
+        "searchMetrics": "Metryki wyszukiwania",
+        "metricsForMarket": "Dla {market}",
+        "checkedDepth": "Sprawdzono top {depth, number}",
+        "connectedSchedule": "Harmonogram dla tego rynku i urządzenia",
+        "schedulesAllTargets": "Wszystkie rynki i urządzenia"
       },
       "actions": {
         "moreActions": "Więcej akcji dla słowa kluczowego",
@@ -86,7 +91,11 @@
         "depthMenu": "Głębokość sprawdzenia",
         "changeDefault": "Zmień domyślną",
         "connectProvider": "Połącz dostawcę",
-        "shallowVisibility": "Płytkie sprawdzenie może pominąć pozycje poniżej wybranej głębokości."
+        "shallowVisibility": "Płytkie sprawdzenie może pominąć pozycje poniżej wybranej głębokości.",
+        "refreshData": "Odśwież dane",
+        "refreshingData": "Odświeżanie...",
+        "refreshDataHint": "Zaktualizuj wyświetlane wyniki bez uruchamiania kolejnego sprawdzenia.",
+        "checking": "Sprawdzanie..."
       },
       "edit": {
         "details": "Szczegóły",
@@ -172,7 +181,7 @@
         "ctr": "CTR",
         "averagePosition": "Śr. poz.",
         "gscPositionNote": "Pozycja z Search Console to średnia z rzeczywistych wyświetleń i może różnić się od ostatniego sprawdzenia pozycji.",
-        "awaitingSync": "Oczekiwanie na pierwszą synchronizację danych o ruchu.",
+        "awaitingSync": "Brak danych Search Console dla tego słowa kluczowego.",
         "reportingLag": "Dane z Search Console pojawiają się z opóźnieniem około {days, number} dni.",
         "connectDescription": "Połącz Search Console, aby zobaczyć kliknięcia, wyświetlenia i CTR dla tego słowa kluczowego.",
         "connect": "Połącz Search Console",
@@ -186,7 +195,25 @@
         "duration": "Czas trwania",
         "scrollDepth": "Głębokość przewijania",
         "seconds": "{seconds, number} s",
-        "minutesSeconds": "{minutes, number} min {seconds, number} s"
+        "minutesSeconds": "{minutes, number} min {seconds, number} s",
+        "landingEmpty": "Brak zapisanych danych strony dla {path}. Pobierz dane analityczne, aby sprawdzić podłączone źródła.",
+        "landingNeedsUrl": "Ustaw docelowy URL lub wykonaj sprawdzenie pozycji, które znajdzie rankingowy URL, aby dopasować statystyki strony.",
+        "dataThrough": "Dane do {date}",
+        "sync": {
+          "title": "Analityka",
+          "scope": "Dane projektu · wszystkie kraje i urządzenia",
+          "action": "Pobierz dane analityczne",
+          "pending": "Pobieranie danych…",
+          "hint": "Pobiera raporty z podłączonych źródeł analitycznych projektu. Nadal obowiązują opóźnienia raportowania dostawców.",
+          "updated": "Dane analityczne odświeżone. Dostępne wyniki znajdują się poniżej.",
+          "empty": "Raporty pobrane. Nie zwrócono danych zapytań ani stron pasujących do śledzonych słów kluczowych.",
+          "partial": "Część źródeł została odświeżona, ale pozostałe nie ukończyły pobierania. Dostępne wyniki znajdują się poniżej. Szczegóły znajdziesz w Integracjach.",
+          "failed": "Nie udało się pobrać danych analitycznych. Spróbuj ponownie lub sprawdź połączenie w Integracjach.",
+          "reconnect": "Źródło analityczne wymaga ponownego połączenia w Integracjach.",
+          "rateLimited": "Osiągnięto limit zapytań dostawcy danych analitycznych. Spróbuj ponownie później.",
+          "unavailable": "Brak podłączonego źródła, z którego można pobrać dane analityczne. Sprawdź Integracje.",
+          "integrations": "Zarządzaj integracjami"
+        }
       },
       "position": {
         "title": "Historia pozycji",
@@ -198,7 +225,7 @@
         "range": "Okres historii pozycji",
         "rangeDays": "{count, number} dni",
         "markets": "{count, plural, one {# rynek} few {# rynki} many {# rynków} other {# rynku}}",
-        "latest": "Ostatnio poz. {position, number} · {date}",
+        "latest": "#{position, number} · {date}",
         "latestUnavailable": "Ostatnia pozycja niedostępna",
         "noChecks": "Brak sprawdzeń w ostatnich {days, number} dniach.",
         "notEnough": "Za mało historii, aby narysować wykres.",
@@ -225,7 +252,10 @@
         "comparedMarkets": "Porównywane rynki",
         "noVolumeDifficulty": " / brak wolumenu i KD",
         "moreMarkets": "+{count, number} więcej rynków – użyj filtrów w tabeli, aby je porównać",
-        "degradedMarker": "Sprawdzone na poziomie kraju – dostawca nie obsługiwał tego miasta. Pozycję zmierzono dla lokalizacji {country}, a nie {requested}."
+        "degradedMarker": "Sprawdzone na poziomie kraju – dostawca nie obsługiwał tego miasta. Pozycję zmierzono dla lokalizacji {country}, a nie {requested}.",
+        "latestCheck": "Ostatnie sprawdzenie",
+        "recordedPosition": "Zapisana pozycja",
+        "unrankedGaps": "Sprawdzenia bez pozycji są pokazane jako przerwy."
       },
       "rankingUrl": {
         "title": "Historia adresów URL w wynikach",
@@ -379,6 +409,34 @@
             "label": "Wideo",
             "description": "Blok wyników wideo na stronie wyników."
           }
+        },
+        "extension": {
+          "title": "Rozszerz ten snapshot",
+          "action": "Pobierz kolejne 10 wyników",
+          "confirmTitle": "Rozszerz snapshot SERP",
+          "cancel": "Anuluj",
+          "confirm": "Potwierdź i pobierz",
+          "pending": "Pobieranie wyników…",
+          "rangeLabel": "Dodatkowe pozycje",
+          "range": "Od #{start, number} do #{end, number}",
+          "costLabel": "Szacowane użycie dostawcy",
+          "cost": "Do 1 wyszukiwania",
+          "window": "Dostępne do {time}, przez 15 minut od pierwotnego pobrania.",
+          "timing": "Dodatkowe wyniki są pobierane teraz i dołączane do tego checka z własną datą. Historyczna pozycja i porównania checków pozostają bez zmian.",
+          "duplicates": "Wyniki mogą zmieniać strony. Powtórzone adresy pomijamy automatycznie, zachowując wcześniejszy wynik i jego pozycję. Różne strony tej samej domeny pozostają osobno. Nie zmieniamy numeracji pozycji.",
+          "unsupported": "Ten dostawca nie pozwala rozszerzyć zapisanego snapshotu. Użyj przycisku uruchomienia checka powyżej, aby pobrać więcej pozycji.",
+          "legacy": "Ten check nie ma zapisanych danych kontynuacji. Użyj przycisku uruchomienia checka powyżej, aby pobrać więcej pozycji.",
+          "expired": "Minęło 15 minut na rozszerzenie. Uruchom nowy check przyciskiem powyżej, aby pobrać aktualne wyniki.",
+          "complete": "Brak kolejnych stron lub snapshot osiągnął już top 100.",
+          "running": "Rozszerzenie jest już pobierane. Odśwież dane, aby zobaczyć wynik.",
+          "failed": "Nie udało się potwierdzić rozszerzenia. Wcześniejsze wyniki są bezpieczne. Odśwież dane, aby sprawdzić stan, lub uruchom nowy check.",
+          "disconnected": "Połącz ponownie integrację SerpApi tego snapshotu, aby go rozszerzyć.",
+          "unavailable": "Snapshot się zmienił. Odśwież dane przed kontynuowaniem.",
+          "addedTitle": "Wyniki dodane po checku",
+          "page": "Pozycje {start, number} do {end, number} · pobrano {time}",
+          "added": "Dodano: {count, number} · pominięte duplikaty: {duplicates, number}",
+          "emptyPage": "Ta strona nie zwróciła nowych unikalnych wyników.",
+          "refresh": "Odśwież snapshot"
         }
       },
       "comparison": {
@@ -477,6 +535,11 @@
           "ranked": "Ma pozycję",
           "running": "Sprawdzenie w toku"
         }
+      },
+      "context": {
+        "label": "Zakres sprawdzenia",
+        "desktop": "Komputer",
+        "mobile": "Telefon"
       }
     }
   }

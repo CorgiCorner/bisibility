@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { routerMock } from "@/tests/next-navigation";
+import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppRealtimeProvider, useAppRealtime } from "./AppRealtimeProvider";
 
@@ -45,6 +46,8 @@ describe("AppRealtimeProvider", () => {
     );
 
     expect(screen.getByText("live:1")).toBeInTheDocument();
-    expect(mocks.useAppRealtimeState).toHaveBeenCalledWith("prj_1");
+    expect(mocks.useAppRealtimeState).toHaveBeenCalledWith("prj_1", expect.any(Function));
+    act(() => mocks.useAppRealtimeState.mock.calls.at(-1)?.[1]());
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 });

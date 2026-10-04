@@ -20,6 +20,7 @@ type HeaderActionsMockProps = {
   onRunCheck: (depth: 10 | 20 | 50 | 100) => void;
   onToggleEdit: () => void;
   runPending: boolean;
+  runActive?: boolean;
 };
 
 vi.mock("@/components/ui/Card", async (importOriginal) => ({
@@ -60,13 +61,17 @@ vi.mock("./KeywordHeaderActions", () => ({
     <div>
       <output>Selected depth {props.effectiveDepth}</output>
       <button
-        disabled={props.runPending}
+        disabled={props.runPending || props.runActive}
         onClick={() => props.onRunCheck(props.effectiveDepth)}
         type="button"
       >
         Run check (Top {props.effectiveDepth})
       </button>
-      <button disabled={props.runPending} onClick={() => props.onRunCheck(20)} type="button">
+      <button
+        disabled={props.runPending || props.runActive}
+        onClick={() => props.onRunCheck(20)}
+        type="button"
+      >
         Run check (Top 20)
       </button>
       <button onClick={props.onExport} type="button">
@@ -147,7 +152,7 @@ export function resetHeaderCardMocks() {
   mocked.launchRankCheckRunAction.mockResolvedValue({
     estimatedCostCents: 2,
     keywordCount: 1,
-    publicId: "rcr_header",
+    publicId: "rcr_abcdefghijklmnopqrstuvwx",
     status: "queued",
     targetCount: 1,
   });

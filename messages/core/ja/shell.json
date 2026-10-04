@@ -72,7 +72,12 @@
         "rankTracker": "順位トラッカー",
         "runs": "実行",
         "searchConsole": "Search Console",
-        "settings": "設定"
+        "settings": "設定",
+        "aiVisibility": "AIでの可視性",
+        "promptExplorer": "プロンプト比較",
+        "siteAudit": "サイト監査",
+        "projectContext": "プロジェクトのコンテキスト",
+        "agentReports": "エージェントのレポート"
       },
       "menu": "メニュー"
     },
@@ -208,7 +213,12 @@
         "runs": "このプロジェクトの順位チェックと Search Console インポートです。",
         "searchConsole": "Google が報告したデータ、非開示のデータ、保持するデータを確認できます。",
         "security": "パスワード、セッション、アカウント保護です。",
-        "timeline": "プロジェクトのシグナル、ページの変更、メモを時系列で表示します。"
+        "timeline": "プロジェクトのシグナル、ページの変更、メモを時系列で表示します。",
+        "aiVisibility": "利用可能なプロバイダーの観測データに基づくブランドへの言及と引用。",
+        "promptExplorer": "対応モデル間で合成プロンプトテストを比較します。",
+        "siteAudit": "プロジェクトのサイトをクロールし、URLごとに問題を確認します。",
+        "projectContext": "エージェントに共有する事業、顧客、製品、目標。",
+        "agentReports": "このプロジェクトのメンバーと共有する保存済み分析。"
       },
       "titles": {
         "account": "アカウント設定",
@@ -235,7 +245,12 @@
         "searchConsole": "Search Console",
         "security": "セキュリティ",
         "settings": "設定",
-        "timeline": "タイムライン"
+        "timeline": "タイムライン",
+        "aiVisibility": "AIでの可視性",
+        "promptExplorer": "プロンプト比較",
+        "siteAudit": "サイト監査",
+        "projectContext": "プロジェクトのコンテキスト",
+        "agentReports": "エージェントのレポート"
       }
     },
     "footer": {

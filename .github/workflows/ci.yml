@@ -1,5 +1,5 @@
 # GENERATED - do not edit directly.
-# Source hash: 8dc824671ba97dc35ca78649a22032da8ba6c955903d4b16366b8ad9df30960c
+# Source hash: 1369388e7eb1be9448178588026d0f8bc78e0fd9d607d584dabc0b1ec4558946
 name: CI
 
 on:
@@ -127,7 +127,8 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Include measured setup, build, and post-job cache work with cleanup headroom.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6

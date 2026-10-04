@@ -1,6 +1,9 @@
 import { handleApiRequest } from "@/lib/api/router";
 import type { NextRequest } from "next/server";
 
+// Provider work has a 40-second aggregate budget, leaving time to settle usage and save results.
+export const maxDuration = 60;
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 

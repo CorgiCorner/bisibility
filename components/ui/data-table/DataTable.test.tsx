@@ -49,6 +49,15 @@ function renderTable(
 }
 
 describe("DataTable", () => {
+  it("owns the rounded border for standalone tables but leaves framed tables square", () => {
+    const view = renderTable();
+    expect(screen.getByRole("table")).toHaveClass("rounded-card", "border", "overflow-hidden");
+    view.unmount();
+    renderTable({ bordered: false });
+    expect(screen.getByRole("table")).not.toHaveClass("rounded-card");
+    expect(screen.getByRole("table")).toHaveClass("border-0");
+  });
+
   it("renders accessible mixed rows and toggles groups without hiding section children", () => {
     renderTable();
 

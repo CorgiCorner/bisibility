@@ -122,7 +122,13 @@ describe("BacklinksWorkspace", () => {
     vi.useFakeTimers();
     const analyzeAction = vi.fn(async (input: unknown) => {
       const target = (input as { target: string }).target;
-      if (target === "not-valid") throw new Error("unsupported target");
+      if (target === "not-valid") {
+        return {
+          ok: false as const,
+          reason: "unsupported_target" as const,
+          message: "Unsupported target.",
+        };
+      }
       return outcome(input);
     });
     renderWorkspace({ analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction });

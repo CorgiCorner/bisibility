@@ -1,4 +1,4 @@
-import type { PublicIdPrefix } from "@/lib/db/public-id";
+import type { PublicIdPrefix } from "@/lib/db/public-id-resources";
 
 const publicIdSuffixPattern = "[a-z][a-z0-9]{23}";
 

@@ -19,6 +19,8 @@ const MIN_NON_KEY_VALUE_LENGTH = 1;
 export const PROVIDER_REQUEST_SOURCES = ["app", "worker", "api", "cli", "mcp", "sdk"] as const;
 export type ProviderRequestSource = (typeof PROVIDER_REQUEST_SOURCES)[number];
 export const PROVIDER_REQUEST_FEATURES = [
+  "ai_visibility",
+  "prompt_explorer",
   "backlinks",
   "domain_overview",
   "keyword_metrics",

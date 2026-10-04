@@ -2,6 +2,7 @@ import type { ObservationRunInput } from "@/lib/observation/types";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import type { SerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
+import type { SerpSnapshotContinuation } from "@/lib/serp/snapshot-extension";
 import type { ProviderAllocationCatalog } from "./allocation-catalog";
 import type {
   AnalyticsQueryStatsInput,
@@ -81,6 +82,7 @@ export type SerpOrganicResult = {
 };
 
 export type SerpRawPayload = {
+  snapshotContinuation?: SerpSnapshotContinuation;
   normalization?: {
     anomalies: Array<{ code: string; index: number }>;
     outcome: "match" | "no_match";

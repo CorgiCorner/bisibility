@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import {
   periodOptions,
   periodTooltipLines,
+  periodTriggerDates,
   periodTriggerLabel,
   periodTriggerName,
   propertyTip,
@@ -84,7 +85,7 @@ describe("propertyTip", () => {
 });
 
 describe("period", () => {
-  it("labels the trigger with only the current window", () => {
+  it("labels the trigger with the finalized day count first", () => {
     expect(
       periodTriggerLabel(
         {
@@ -93,32 +94,14 @@ describe("period", () => {
           id: "7",
           label: "7 finalized days",
         },
-        finalizedWindow("2026-08-28", 7),
-        dateDisplay,
-        t,
-      ),
-    ).toBe("Aug 22 - 28");
-    expect(
-      periodTriggerLabel(
-        { ...previousComparison, days: 1, id: "1", label: "1 finalized day" },
-        finalizedWindow("2026-08-28", 1),
-        dateDisplay,
-        t,
-      ),
-    ).toBe("First look · Aug 28");
-    expect(
-      periodTriggerLabel(
-        {
-          ...previousComparison,
-          days: 7,
-          id: "7",
-          label: "7 finalized days",
-        },
-        null,
-        dateDisplay,
         t,
       ),
     ).toBe("7 finalized days");
+    expect(
+      periodTriggerLabel({ ...previousComparison, days: 1, id: "1", label: "1 finalized day" }, t),
+    ).toBe("1 finalized day");
+    expect(periodTriggerDates(finalizedWindow("2026-08-28", 7), dateDisplay)).toBe("Aug 22 - 28");
+    expect(periodTriggerDates(null, dateDisplay)).toBeNull();
     expect(
       periodTriggerName(
         {
@@ -131,7 +114,7 @@ describe("period", () => {
         dateDisplay,
         t,
       ),
-    ).toBe("Comparison window: Jul 2 - 8");
+    ).toBe("Comparison window: 7 finalized days, Jul 2 - 8");
     expect(
       periodTriggerName(
         { ...previousComparison, days: 1, id: "1", label: "1 finalized day" },
@@ -139,7 +122,7 @@ describe("period", () => {
         dateDisplay,
         t,
       ),
-    ).toBe("Comparison window: First look, Jul 8");
+    ).toBe("Comparison window: 1 finalized day, Jul 8");
     expect(
       periodTriggerName(
         {
@@ -152,7 +135,7 @@ describe("period", () => {
         dateDisplay,
         t,
       ),
-    ).toBe("Comparison window");
+    ).toBe("Comparison window: 7 finalized days");
   });
 
   it("moves the comparison and Pacific boundary explanation into the tooltip", () => {
@@ -169,7 +152,7 @@ describe("period", () => {
         t,
       ),
     ).toEqual([
-      "Aug 22 - 28 · 7 finalized days",
+      "7 finalized days · Aug 22 - 28",
       "compared with Aug 15 - 21",
       "Google finalizes days in Pacific time",
     ]);

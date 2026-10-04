@@ -186,6 +186,7 @@ export function SearchInsightsDrawerHost({
         onShowAll={drawers.showAll}
         onTrack={(query) => startTrack(query, "drawer")}
         open={drawers.opened}
+        property={property}
         seen={drawers.seen}
         tracked={tracked}
       />

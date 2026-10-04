@@ -1,3 +1,4 @@
+import { UnsupportedBacklinksTargetError } from "@/lib/backlinks/target";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { analyzeBacklinksAction, loadMoreBacklinkRowsAction } from "./backlinks";
@@ -141,4 +142,49 @@ describe("backlinks actions", () => {
     ).rejects.toThrow();
     expect(mocks.requireScope).not.toHaveBeenCalled();
   });
+});
+
+describe("backlinks action target failures", () => {
+  beforeEach(() => {
+    mocks.analyze.mockReset();
+    mocks.loadMore.mockReset();
+    mocks.requireScope.mockReset().mockResolvedValue(mocks.project);
+  });
+
+  it.each([analyzeBacklinksAction, loadMoreBacklinkRowsAction])(
+    "returns a serializable validation result for %s",
+    async (action) => {
+      const failure = new UnsupportedBacklinksTargetError();
+      mocks.analyze.mockRejectedValue(failure);
+      mocks.loadMore.mockRejectedValue(failure);
+      const result = await action({
+        includeSubdomains: true,
+        limit: 100,
+        projectId: "prj_1",
+        target: "localhost",
+        targetScope: "site",
+      });
+      expect(result).toEqual({ ok: false, reason: "unsupported_target", message: failure.message });
+      expect(structuredClone(result)).toEqual(result);
+      expect(mocks.requireScope).toHaveBeenCalled();
+    },
+  );
+
+  it.each([analyzeBacklinksAction, loadMoreBacklinkRowsAction])(
+    "preserves unexpected service errors for %s",
+    async (action) => {
+      const failure = new Error("unexpected persistence failure");
+      mocks.analyze.mockRejectedValue(failure);
+      mocks.loadMore.mockRejectedValue(failure);
+      await expect(
+        action({
+          includeSubdomains: true,
+          limit: 100,
+          projectId: "prj_1",
+          target: "example.com",
+          targetScope: "site",
+        }),
+      ).rejects.toBe(failure);
+    },
+  );
 });

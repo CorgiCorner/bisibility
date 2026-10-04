@@ -1,9 +1,13 @@
 "use client";
 
 import { MarketLabel } from "@/components/schedules/MarketLabel";
-import { Tooltip } from "@/components/ui/Tooltip";
+import { Menu } from "@/components/ui/Menu";
+import { MenuItem } from "@/components/ui/MenuItem";
+import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { type ScheduleReference, scheduleRowState } from "@/lib/schedules/mixed-state";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 export type ScheduleCellTarget = {
   device: string;
@@ -12,30 +16,11 @@ export type ScheduleCellTarget = {
   schedule: ScheduleReference | null;
 };
 
-type ScheduleCellProps = { targets: readonly ScheduleCellTarget[] };
+type ScheduleCellProps = { targets: readonly ScheduleCellTarget[]; projectRef?: string };
 
-function targetLabel(target: ScheduleCellTarget, manualLabel: string) {
-  return target.schedule?.name ?? manualLabel;
-}
-
-function ScheduleTooltip({
-  manualLabel,
-  targets,
-}: Readonly<ScheduleCellProps & { manualLabel: string }>) {
-  return (
-    <span className="grid gap-1 text-left">
-      {targets.map((target) => (
-        <span key={target.id}>
-          <MarketLabel device={target.device} location={target.location} /> -{" "}
-          {targetLabel(target, manualLabel)}
-        </span>
-      ))}
-    </span>
-  );
-}
-
-export function ScheduleCell({ targets }: Readonly<ScheduleCellProps>) {
+export function ScheduleCell({ targets, projectRef }: Readonly<ScheduleCellProps>) {
   const t = useTranslations("projectRankTracker.list");
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const state = scheduleRowState(targets);
   const label =
     state.kind === "manual"
@@ -43,23 +28,68 @@ export function ScheduleCell({ targets }: Readonly<ScheduleCellProps>) {
       : state.kind === "mixed"
         ? t("scheduleMixed", { count: state.scheduleCount })
         : state.name;
-  const textClassName =
-    state.kind === "manual"
-      ? "block truncate text-[12.5px] font-medium text-fg-muted"
-      : "block truncate text-[12.5px] font-medium text-fg";
-
+  const schedule = targets.find((target) => target.schedule)?.schedule;
+  const href = (id: string) =>
+    projectRef && !id.startsWith("legacy:") ? projectSchedulesPath(projectRef, id) : undefined;
+  const linkClass =
+    "text-[12.5px] font-semibold text-accent-text underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-accent-solid";
+  if (state.kind === "manual") return <span className="text-[12px] text-fg-muted">{label}</span>;
+  const scheduleHref = schedule ? href(schedule.publicId) : undefined;
+  if (state.kind === "named")
+    return scheduleHref ? (
+      <Link
+        className={`${linkClass} block truncate`}
+        href={scheduleHref}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {label}
+      </Link>
+    ) : (
+      <span className="block truncate text-[12.5px] font-medium text-fg">{label}</span>
+    );
   return (
-    <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap">
-      {state.kind === "mixed" ? (
-        <Tooltip
-          content={<ScheduleTooltip manualLabel={t("scheduleManual")} targets={targets} />}
-          semantics="description"
-        >
-          <span className={`${textClassName} cursor-help`}>{label}</span>
-        </Tooltip>
-      ) : (
-        <span className={textClassName}>{label}</span>
-      )}
-    </span>
+    <>
+      <button
+        aria-expanded={Boolean(anchor)}
+        aria-haspopup="menu"
+        className={linkClass}
+        onClick={(event) => {
+          event.stopPropagation();
+          setAnchor(event.currentTarget);
+        }}
+        type="button"
+      >
+        {label}
+      </button>
+      <Menu
+        anchorEl={anchor}
+        open={Boolean(anchor)}
+        onClose={() => setAnchor(null)}
+        contentProps={{ className: "max-w-[calc(100vw-2rem)]" }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {[...new Map(targets.map((target) => [target.id, target])).values()].map((target) => {
+          const path = target.schedule ? href(target.schedule.publicId) : undefined;
+          return (
+            <MenuItem
+              key={target.id}
+              component={path ? Link : undefined}
+              href={path}
+              disabled={!path}
+              onSelect={() => setAnchor(null)}
+            >
+              <span className="grid gap-1 whitespace-normal">
+                <span className="font-semibold">
+                  {target.schedule?.name ?? t("scheduleManual")}
+                </span>
+                <span className="text-[11px] text-fg-muted">
+                  <MarketLabel device={target.device} location={target.location} />
+                </span>
+              </span>
+            </MenuItem>
+          );
+        })}
+      </Menu>
+    </>
   );
 }

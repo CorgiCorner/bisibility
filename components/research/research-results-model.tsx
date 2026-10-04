@@ -53,7 +53,7 @@ export function IntentChip({
     return <span className="font-sans tabular-nums text-[11px] text-fg-muted">-</span>;
   return (
     <span
-      className="rounded-full border px-2 py-0.5 text-[10.5px] font-semibold"
+      className="inline-flex shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10.5px] font-semibold"
       style={{ borderColor: meta.border, color: meta.color }}
       title={label}
     >

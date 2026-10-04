@@ -1,6 +1,9 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/story-theme-preview";
 import { KeywordTrafficCard } from "@/components/keywords/KeywordTrafficCard";
+import type { ProviderTrafficSyncResult } from "@/lib/integrations/types";
 import type { KeywordTrafficDetail, PageTrafficSnapshotLike } from "@/lib/queries/keyword-traffic";
+import messages from "@/messages/core/en/project-rank-tracker-keyword-detail.json";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const query = {
@@ -47,14 +50,25 @@ const meta = {
   component: KeywordTrafficCard,
   decorators: [
     (Story) => (
-      <KeywordDetailStoryThemes>
-        <div className="min-h-[520px] text-fg">
-          <Story />
-        </div>
-      </KeywordDetailStoryThemes>
+      <FeatureMessagesProvider locale="en" timeZone="UTC" messages={messages}>
+        <KeywordDetailStoryThemes>
+          <div className="min-h-[520px] text-fg">
+            <Story />
+          </div>
+        </KeywordDetailStoryThemes>
+      </FeatureMessagesProvider>
     ),
   ],
-  parameters: { chromatic: { viewports: [390, 768, 1440] } },
+  args: {
+    canSync: true,
+    syncTrafficAction: async (): Promise<ProviderTrafficSyncResult> => ({
+      connections: 1,
+      keywordSnapshots: 0,
+      pageSnapshots: 1,
+      runs: [{ status: "succeeded_with_data" }],
+    }),
+  },
+  parameters: { nextjs: { appDirectory: true }, chromatic: { viewports: [390, 768, 1440] } },
 } satisfies Meta<typeof KeywordTrafficCard>;
 
 export default meta;
@@ -100,5 +114,54 @@ export const AwaitingFirstSync: Story = {
       query: null,
     },
     trafficState: "awaiting_sync",
+  },
+};
+
+export const PageAnalyticsOnly: Story = {
+  args: {
+    projectRef: "prj_1",
+    traffic: {
+      connectedProviders: ["plausible"],
+      hasAnalyticsConnection: true,
+      hasSearchConsoleConnection: false,
+      pages: [pages[1]],
+      query: null,
+    },
+  },
+};
+export const ConnectedWithoutData: Story = {
+  args: {
+    projectRef: "prj_1",
+    traffic: {
+      connectedProviders: ["plausible", "ga4"],
+      pagePaths: ["/features/rank-tracking"],
+      hasAnalyticsConnection: true,
+      hasSearchConsoleConnection: false,
+      pages: [],
+      query: null,
+    },
+    syncTrafficAction: async (): Promise<ProviderTrafficSyncResult> => ({
+      connections: 2,
+      keywordSnapshots: 0,
+      pageSnapshots: 0,
+      runs: [{ status: "succeeded_empty" }, { status: "succeeded_empty" }],
+    }),
+  },
+};
+export const RateLimited: Story = {
+  args: {
+    ...PageAnalyticsOnly.args,
+    syncTrafficAction: async (): Promise<ProviderTrafficSyncResult> => ({
+      connections: 0,
+      keywordSnapshots: 0,
+      pageSnapshots: 0,
+      runs: [{ status: "deferred_rate_limit" }],
+    }),
+  },
+};
+export const Pending: Story = {
+  args: {
+    ...PageAnalyticsOnly.args,
+    syncTrafficAction: () => new Promise(() => {}),
   },
 };

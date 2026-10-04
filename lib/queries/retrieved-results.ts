@@ -16,6 +16,7 @@ import {
   storedOrganicDomainRanks,
 } from "@/lib/rank-check/organic-ranks";
 import { getRankCheckRawRetentionDays } from "@/lib/rank-check/raw-retention";
+import { snapshotExtensionView } from "@/lib/serp/snapshot-extension-state";
 
 const DEFAULT_LIMIT = 90;
 
@@ -141,6 +142,7 @@ function buildFullResult(
 
   return {
     aiOverview: aiOverviewState(check.provider, features),
+    extension: snapshotExtensionView(check.provider, check.raw),
     checkId: check.publicId,
     checkedAt: check.checkedAt.toISOString(),
     features,

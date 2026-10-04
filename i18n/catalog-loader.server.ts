@@ -10,6 +10,9 @@ import { type ActiveLocale, assertActiveLocale } from "./config";
 import type { CoreMessages } from "./core-messages.generated";
 
 export const coreNamespaces = [
+  "projectAiResearch",
+  "projectSiteAudit",
+  "agentWorkspace",
   "account",
   "auth",
   "cloudImport",
@@ -52,6 +55,9 @@ export type CoreNamespace = (typeof coreNamespaces)[number];
 // Every active locale ships the same fragment file names, so the namespace registry
 // is declared once and each locale contributes only its own static import map.
 const coreNamespaceFragments = {
+  projectAiResearch: ["project-ai-research"],
+  projectSiteAudit: ["project-site-audit"],
+  agentWorkspace: ["agent-workspace"],
   account: ["account", "account-preferences"],
   auth: ["auth"],
   cloudImport: ["cloud-import"],

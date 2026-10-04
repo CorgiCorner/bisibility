@@ -2,18 +2,22 @@
 
 import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
+import type { ProviderActionHandlers } from "@/lib/integrations/types";
 import type { KeywordDetailTrafficState } from "@/lib/keyword-detail/state-model";
 import type { KeywordTrafficDetail, PageTrafficSnapshotLike } from "@/lib/queries/keyword-traffic";
 import { appPath } from "@/lib/routing/app-path";
 import { QUERY_STATS_LAG_DAYS } from "@/lib/traffic/constants";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
+import { KeywordTrafficSync } from "./KeywordTrafficSync";
 
 type QueryTraffic = NonNullable<KeywordTrafficDetail["query"]>;
 type Stat = { label: string; value: string | null };
 
 type KeywordTrafficCardProps = {
+  canSync?: boolean;
   projectRef: string;
+  syncTrafficAction?: ProviderActionHandlers["syncProjectTraffic"];
   traffic: KeywordTrafficDetail;
   trafficState?: KeywordDetailTrafficState;
 };
@@ -103,6 +107,10 @@ function SearchPerformanceCard({ query }: Readonly<{ query: QueryTraffic }>) {
       </div>
       <p className="m-0 mt-1 text-[12px] text-fg-muted">
         {t("trailingDays", { days: query.windowDays })}
+        {" · "}
+        {t("dataThrough", {
+          date: format.dateTime(query.date, { dateStyle: "medium", timeZone: "UTC" }),
+        })}
       </p>
       <StatGrid stats={stats} t={t} />
       <p className="m-0 mt-3 text-[11.5px] leading-[1.45] text-fg-muted">{t("gscPositionNote")}</p>
@@ -192,6 +200,10 @@ function LandingPagePerformanceCard({ pages }: Readonly<{ pages: PageTrafficSnap
               <span className="font-sans tabular-nums text-[11.5px] text-fg">{page.path}</span>
               <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
                 {t("lastDays", { days: page.windowDays })}
+                {" · "}
+                {t("dataThrough", {
+                  date: format.dateTime(page.date, { dateStyle: "medium", timeZone: "UTC" }),
+                })}
               </span>
             </div>
             <StatGrid stats={optionalPageStats(page, format, t)} t={t} />
@@ -209,10 +221,13 @@ function inferredTrafficState(traffic: KeywordTrafficDetail): KeywordDetailTraff
 }
 
 export function KeywordTrafficCard({
+  canSync,
   projectRef,
+  syncTrafficAction,
   traffic,
   trafficState,
 }: Readonly<KeywordTrafficCardProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.traffic");
   const state = trafficState ?? inferredTrafficState(traffic);
   const search =
     state === "awaiting_sync" || state === "not_connected" ? (
@@ -221,12 +236,43 @@ export function KeywordTrafficCard({
       <SearchPerformanceCard query={traffic.query} />
     ) : null;
 
+  const hasPageAnalytics =
+    traffic.pages.length > 0 ||
+    traffic.connectedProviders?.some((provider) => ["ga4", "plausible"].includes(provider));
+  const searchFirst = Boolean(
+    traffic.query || traffic.hasSearchConsoleConnection || !hasPageAnalytics,
+  );
   return (
     <div className="grid gap-4">
-      {search}
-      {state === "both" && traffic.pages.length ? (
+      <KeywordTrafficSync
+        canSync={canSync}
+        connected={traffic.hasAnalyticsConnection}
+        projectRef={projectRef}
+        syncAction={syncTrafficAction}
+      />
+      {searchFirst ? search : null}
+      {traffic.pages.length ? (
         <LandingPagePerformanceCard pages={traffic.pages} />
+      ) : traffic.connectedProviders?.some((provider) =>
+          ["ga4", "plausible"].includes(provider),
+        ) ? (
+        <Card className="rounded-card" size="lg">
+          <SectionTitle>{t("landingPerformance")}</SectionTitle>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {traffic.connectedProviders
+              .filter((provider) => provider !== "gsc")
+              .map((provider) => (
+                <SourceChip key={provider} provider={provider} />
+              ))}
+          </div>
+          <p className="mb-0 mt-3 text-[13px] leading-5 text-fg-muted">
+            {traffic.pagePaths?.length
+              ? t("landingEmpty", { path: traffic.pagePaths.join(", ") })
+              : t("landingNeedsUrl")}
+          </p>
+        </Card>
       ) : null}
+      {!searchFirst ? search : null}
     </div>
   );
 }

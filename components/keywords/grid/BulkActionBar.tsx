@@ -2,6 +2,7 @@
 
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import type { KeywordWorkspaceActions } from "@/components/keywords/action-utils";
+import { useKeywordDeletion } from "@/components/keywords/use-keyword-deletion";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
@@ -62,10 +63,8 @@ export function BulkActionBar({
   const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const [actionError, setActionError] = useState<string | null>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [clearTargetsOpen, setClearTargetsOpen] = useState(false);
   const [clearingTargets, setClearingTargets] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [mode, setMode] = useState<BulkMode>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleLoading, setScheduleLoading] = useState(false);
@@ -85,23 +84,11 @@ export function BulkActionBar({
     onClear();
     router.refresh();
   }
-  async function handleDelete() {
-    if (readOnly) {
-      return;
-    }
-    setActionError(null);
-    setDeleting(true);
-    try {
-      await bulkDeleteAction({ keywordIds: selectedIds, projectId });
-      setConfirmOpen(false);
-      finishAction();
-    } catch (error) {
-      setActionError(presentBulkActionError(error, sharedErrors, t("actionFailed")));
-      throw error;
-    } finally {
-      setDeleting(false);
-    }
-  }
+  const deletion = useKeywordDeletion({
+    action: bulkDeleteAction,
+    onDeleted: finishAction,
+    projectId,
+  });
   async function handleClearTargets() {
     if (readOnly) return;
     setActionError(null);
@@ -210,27 +197,19 @@ export function BulkActionBar({
         {canDeleteKeyword ? (
           <ProjectReadOnlyTooltip>
             <Button
-              disabled={readOnly || deleting}
-              onClick={() => setConfirmOpen(true)}
+              disabled={readOnly || deletion.busy}
+              onClick={() => void deletion.open(selectedIds)}
               size="xs"
               startIcon={<Trash weight="regular" size={15} />}
               style={bulkDeleteButtonStyle}
               variant="secondary"
             >
-              {deleting ? t("deleting") : t("delete")}
+              {deletion.busy ? t("deleting") : t("delete")}
             </Button>
           </ProjectReadOnlyTooltip>
         ) : null}
       </FloatingSelectionBar>
-      {hasSelection && canDeleteKeyword ? (
-        <ConfirmModal
-          busy={deleting}
-          kind="deleteBulk"
-          onClose={() => setConfirmOpen(false)}
-          onConfirm={handleDelete}
-          open={confirmOpen}
-        />
-      ) : null}
+      {canDeleteKeyword ? deletion.modal : null}
       {hasSelection && canUpdateKeyword ? (
         <ConfirmModal
           busy={clearingTargets}

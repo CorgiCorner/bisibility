@@ -63,7 +63,7 @@ export const FIRST_LOOK_WINDOW = {
 
 export const YOY_MIN_HISTORY_MONTHS = 13;
 
-export const DEFAULT_WINDOW_ID: WindowPresetId = "28";
+export const DEFAULT_WINDOW_ID: WindowPresetId = "7";
 
 export const SYNC_NOW_COOLDOWN_MS = 5 * 60 * 1_000;
 

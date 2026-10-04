@@ -6,6 +6,37 @@ import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { describe, expect, it } from "vitest";
 
 const routeCases = [
+  {
+    path: appPath("prj_1", "ai-visibility"),
+    pattern: appPath("[project]", "ai-visibility"),
+    title: "AI Visibility",
+  },
+  {
+    path: appPath("prj_1", "prompt-explorer"),
+    pattern: appPath("[project]", "prompt-explorer"),
+    title: "Prompt Explorer",
+  },
+  {
+    path: appPath("prj_1", "site-audit"),
+    pattern: appPath("[project]", "site-audit"),
+    title: "Site Audit",
+  },
+  {
+    path: appPath("prj_1", "context"),
+    pattern: appPath("[project]", "context"),
+    title: "Project Context",
+  },
+  {
+    path: appPath("prj_1", "agent-reports"),
+    pattern: appPath("[project]", "agent-reports"),
+    title: "Agent Reports",
+  },
+  {
+    path: appPath("prj_1", "agent-reports", "agr_test"),
+    pattern: appPath("[project]", "agent-reports", "[reportId]"),
+    title: "Agent Reports",
+  },
+
   { path: appRootPath(), pattern: `${appRootPath()}/`, title: "Overview" },
   { path: "/app/account", pattern: "/app/account", title: "Account settings" },
   { path: "/app/account/preferences", pattern: "/app/account/preferences", title: "Preferences" },

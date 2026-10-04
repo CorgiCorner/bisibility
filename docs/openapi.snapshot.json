@@ -9947,6 +9947,944 @@
         "tags": ["projects"]
       }
     },
+    "/projects/{project_id}/agent-reports": {
+      "get": {
+        "description": "Access follows existing project membership and token scopes.",
+        "operationId": "listAgentReports",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "description": "The public project ID. Project membership and token scopes are enforced.",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "schema": {
+              "description": "Analysis category, such as ai_visibility or site_audit.",
+              "maxLength": 64,
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "description": "Page size, at most 100.",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "description": "Opaque next-page cursor from the previous response.",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "items": {
+                        "properties": {
+                          "created_at": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "title", "kind", "created_at"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "meta": {
+                      "properties": {
+                        "next_cursor": {
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": ["next_cursor"],
+                      "type": "object"
+                    }
+                  },
+                  "required": ["data", "meta"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Project-scoped result"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project role or token scope denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project or report not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Provider unavailable or analysis cost cap exceeded"
+          },
+          "423": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project is read-only"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "List agent reports",
+        "tags": ["research-reports"]
+      },
+      "post": {
+        "description": "Save external analysis. Producer kinds site_audit, ai_visibility and prompt_explorer are reserved. Access follows existing project membership and token scopes.",
+        "operationId": "createAgentReport",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "description": "The public project ID. Project membership and token scopes are enforced.",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "body": {
+                    "additionalProperties": {},
+                    "description": "Structured analysis. Maximum 256 KiB; untrusted text is rendered safely.",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "kind": {
+                    "description": "External analysis kind; site_audit, ai_visibility and prompt_explorer are reserved.",
+                    "maxLength": 64,
+                    "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+                    "type": "string"
+                  },
+                  "provenance": {
+                    "additionalProperties": {},
+                    "description": "Source attribution and limitations. Maximum 32 KiB.",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "title": {
+                    "description": "Human-readable report title.",
+                    "maxLength": 160,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["kind", "title", "body"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "body": {
+                          "additionalProperties": true,
+                          "type": "object"
+                        },
+                        "created_at": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "string"
+                        },
+                        "kind": {
+                          "type": "string"
+                        },
+                        "provenance": {
+                          "additionalProperties": true,
+                          "type": "object"
+                        },
+                        "title": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["id", "title", "kind", "created_at", "body", "provenance"],
+                      "type": "object"
+                    }
+                  },
+                  "required": ["data"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Project-scoped result"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project role or token scope denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project or report not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Provider unavailable or analysis cost cap exceeded"
+          },
+          "423": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project is read-only"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Create agent report",
+        "tags": ["research-reports"]
+      }
+    },
+    "/projects/{project_id}/agent-reports/{report_id}": {
+      "get": {
+        "description": "Access follows existing project membership and token scopes.",
+        "operationId": "getAgentReport",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "description": "The public project ID. Project membership and token scopes are enforced.",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "description": "The public report ID, scoped to this project.",
+              "pattern": "^agr_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "body": {
+                          "additionalProperties": true,
+                          "type": "object"
+                        },
+                        "created_at": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "string"
+                        },
+                        "kind": {
+                          "type": "string"
+                        },
+                        "provenance": {
+                          "additionalProperties": true,
+                          "type": "object"
+                        },
+                        "title": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["id", "title", "kind", "created_at", "body", "provenance"],
+                      "type": "object"
+                    }
+                  },
+                  "required": ["data"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Project-scoped result"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project role or token scope denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project or report not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Provider unavailable or analysis cost cap exceeded"
+          },
+          "423": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project is read-only"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Get agent report",
+        "tags": ["research-reports"]
+      }
+    },
+    "/projects/{project_id}/ai-visibility": {
+      "post": {
+        "description": "Requires an explicit cost cap. estimate_only makes no paid request. Observed AI datasets and synthetic prompt tests remain distinct.",
+        "operationId": "analyzeAiVisibility",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "description": "The public project ID. Project membership and token scopes are enforced.",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "brand": {
+                    "description": "Brand name to inspect.",
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "domain": {
+                    "description": "Public hostname to inspect, without a scheme or path.",
+                    "maxLength": 63,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "estimate_only": {
+                    "default": false,
+                    "description": "Return the cost estimate without paid provider I/O.",
+                    "type": "boolean"
+                  },
+                  "fresh": {
+                    "default": false,
+                    "description": "Bypass the stored result and issue a new paid request when admitted.",
+                    "type": "boolean"
+                  },
+                  "language_code": {
+                    "default": "en",
+                    "description": "Dataset language.",
+                    "pattern": "^[a-z]{2}(?:-[A-Z]{2})?$",
+                    "type": "string"
+                  },
+                  "limit": {
+                    "default": 10,
+                    "description": "Maximum mention rows.",
+                    "maximum": 20,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "location_code": {
+                    "default": 2840,
+                    "description": "Provider location code.",
+                    "maximum": 9007199254740991,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "max_cost_cents": {
+                    "description": "Maximum accepted provider cost in cents. Estimates and cache reads do not spend credits.",
+                    "maximum": 1000,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "platform": {
+                    "default": "chat_gpt",
+                    "description": "Provider observed dataset: ChatGPT or Google AI Overview.",
+                    "enum": ["chat_gpt", "google"],
+                    "type": "string"
+                  },
+                  "target_type": {
+                    "default": "domain",
+                    "description": "Match a brand name or a domain.",
+                    "enum": ["brand", "domain"],
+                    "type": "string"
+                  }
+                },
+                "required": ["brand", "domain", "max_cost_cents"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "estimate": {
+                              "const": true
+                            },
+                            "estimated_cost_cents": {
+                              "type": "number"
+                            },
+                            "evidence": {
+                              "enum": ["observed_dataset", "synthetic_prompt_test"],
+                              "type": "string"
+                            },
+                            "ok": {
+                              "const": true
+                            }
+                          },
+                          "required": ["ok", "estimate", "estimated_cost_cents", "evidence"],
+                          "type": "object"
+                        },
+                        {
+                          "properties": {
+                            "cached": {
+                              "type": "boolean"
+                            },
+                            "cost_cents": {
+                              "type": "number"
+                            },
+                            "estimate": {
+                              "const": false
+                            },
+                            "ok": {
+                              "const": true
+                            },
+                            "report_id": {
+                              "type": "string"
+                            },
+                            "result": {
+                              "properties": {
+                                "cost_cents": {
+                                  "type": "number"
+                                },
+                                "cost_status": {
+                                  "enum": ["confirmed", "unknown"],
+                                  "type": "string"
+                                },
+                                "evidence": {
+                                  "enum": ["observed_dataset", "synthetic_prompt_test"],
+                                  "type": "string"
+                                },
+                                "failure": {
+                                  "type": ["string", "null"]
+                                },
+                                "fetched_at": {
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "rows": {
+                                  "items": {
+                                    "properties": {
+                                      "answer": {
+                                        "type": "string"
+                                      },
+                                      "brand_mentioned": {
+                                        "type": "boolean"
+                                      },
+                                      "citations": {
+                                        "items": {
+                                          "properties": {
+                                            "target_domain": {
+                                              "type": "boolean"
+                                            },
+                                            "title": {
+                                              "type": "string"
+                                            },
+                                            "url": {
+                                              "format": "uri",
+                                              "type": "string"
+                                            }
+                                          },
+                                          "required": ["title", "url", "target_domain"],
+                                          "type": "object"
+                                        },
+                                        "type": "array"
+                                      },
+                                      "content_truncated": {
+                                        "type": "boolean"
+                                      },
+                                      "domain_cited": {
+                                        "type": "boolean"
+                                      },
+                                      "model": {
+                                        "type": "string"
+                                      },
+                                      "observed_at": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "prompt": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "prompt",
+                                      "model",
+                                      "answer",
+                                      "observed_at",
+                                      "brand_mentioned",
+                                      "domain_cited",
+                                      "citations"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                },
+                                "total_available": {
+                                  "type": ["integer", "null"]
+                                },
+                                "truncated": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "evidence",
+                                "rows",
+                                "total_available",
+                                "truncated",
+                                "fetched_at",
+                                "cost_cents",
+                                "cost_status",
+                                "failure"
+                              ],
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "ok",
+                            "estimate",
+                            "cached",
+                            "report_id",
+                            "cost_cents",
+                            "result"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["data"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Project-scoped result"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project role or token scope denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project or report not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Provider unavailable or analysis cost cap exceeded"
+          },
+          "423": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project is read-only"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Analyze AI visibility",
+        "tags": ["research-reports"]
+      }
+    },
     "/projects/{project_id}/alert-rules": {
       "get": {
         "operationId": "listAlertRules",
@@ -11216,6 +12154,379 @@
         ],
         "summary": "Remove a project competitor",
         "tags": ["competitors"]
+      }
+    },
+    "/projects/{project_id}/context": {
+      "get": {
+        "description": "Access follows existing project membership and token scopes.",
+        "operationId": "getProjectContext",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "description": "The public project ID. Project membership and token scopes are enforced.",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "agent_rules": {
+                          "type": "string"
+                        },
+                        "audience": {
+                          "type": "string"
+                        },
+                        "business": {
+                          "type": "string"
+                        },
+                        "goals": {
+                          "type": "string"
+                        },
+                        "products": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "format": "date-time",
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": [
+                        "business",
+                        "audience",
+                        "products",
+                        "goals",
+                        "agent_rules",
+                        "updated_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": ["data"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Project-scoped result"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project role or token scope denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project or report not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Provider unavailable or analysis cost cap exceeded"
+          },
+          "423": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project is read-only"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Get project context",
+        "tags": ["research-reports"]
+      },
+      "patch": {
+        "description": "Access follows existing project membership and token scopes.",
+        "operationId": "updateProjectContext",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "description": "The public project ID. Project membership and token scopes are enforced.",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "agent_rules": {
+                    "description": "Project guidance for the agent, up to 4000 characters.",
+                    "maxLength": 4000,
+                    "type": "string"
+                  },
+                  "audience": {
+                    "description": "Project guidance for the agent, up to 4000 characters.",
+                    "maxLength": 4000,
+                    "type": "string"
+                  },
+                  "business": {
+                    "description": "Project guidance for the agent, up to 4000 characters.",
+                    "maxLength": 4000,
+                    "type": "string"
+                  },
+                  "goals": {
+                    "description": "Project guidance for the agent, up to 4000 characters.",
+                    "maxLength": 4000,
+                    "type": "string"
+                  },
+                  "products": {
+                    "description": "Project guidance for the agent, up to 4000 characters.",
+                    "maxLength": 4000,
+                    "type": "string"
+                  }
+                },
+                "required": ["business", "audience", "products", "goals", "agent_rules"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "agent_rules": {
+                          "type": "string"
+                        },
+                        "audience": {
+                          "type": "string"
+                        },
+                        "business": {
+                          "type": "string"
+                        },
+                        "goals": {
+                          "type": "string"
+                        },
+                        "products": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "format": "date-time",
+                          "type": ["string", "null"]
+                        }
+                      },
+                      "required": [
+                        "business",
+                        "audience",
+                        "products",
+                        "goals",
+                        "agent_rules",
+                        "updated_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": ["data"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Project-scoped result"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project role or token scope denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project or report not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Provider unavailable or analysis cost cap exceeded"
+          },
+          "423": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project is read-only"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Update project context",
+        "tags": ["research-reports"]
       }
     },
     "/projects/{project_id}/defaults": {
@@ -13042,6 +14353,358 @@
         ],
         "summary": "Get a numeric project overview",
         "tags": ["analytics"]
+      }
+    },
+    "/projects/{project_id}/prompt-explorer": {
+      "post": {
+        "description": "Requires an explicit cost cap. estimate_only makes no paid request. Observed AI datasets and synthetic prompt tests remain distinct.",
+        "operationId": "compareAiPrompts",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "description": "The public project ID. Project membership and token scopes are enforced.",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "brand": {
+                    "description": "Brand name to inspect.",
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "domain": {
+                    "description": "Public hostname to inspect, without a scheme or path.",
+                    "maxLength": 63,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "estimate_only": {
+                    "default": false,
+                    "description": "Return the cost estimate without paid provider I/O.",
+                    "type": "boolean"
+                  },
+                  "fresh": {
+                    "default": false,
+                    "description": "Bypass the stored result and issue a new paid request when admitted.",
+                    "type": "boolean"
+                  },
+                  "max_cost_cents": {
+                    "description": "Maximum accepted provider cost in cents. Estimates and cache reads do not spend credits.",
+                    "maximum": 1000,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "models": {
+                    "description": "Bounded, supported non-reasoning models; web search is disabled in this first version.",
+                    "items": {
+                      "enum": ["gpt-4.1-mini", "gpt-4.1-nano"],
+                      "type": "string"
+                    },
+                    "maxItems": 2,
+                    "minItems": 1,
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "prompt": {
+                    "description": "The same synthetic test prompt for each selected model. Maximum 2000 UTF-8 bytes.",
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["brand", "domain", "max_cost_cents", "prompt"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "estimate": {
+                              "const": true
+                            },
+                            "estimated_cost_cents": {
+                              "type": "number"
+                            },
+                            "evidence": {
+                              "enum": ["observed_dataset", "synthetic_prompt_test"],
+                              "type": "string"
+                            },
+                            "ok": {
+                              "const": true
+                            }
+                          },
+                          "required": ["ok", "estimate", "estimated_cost_cents", "evidence"],
+                          "type": "object"
+                        },
+                        {
+                          "properties": {
+                            "cached": {
+                              "type": "boolean"
+                            },
+                            "cost_cents": {
+                              "type": "number"
+                            },
+                            "estimate": {
+                              "const": false
+                            },
+                            "ok": {
+                              "const": true
+                            },
+                            "report_id": {
+                              "type": "string"
+                            },
+                            "result": {
+                              "properties": {
+                                "cost_cents": {
+                                  "type": "number"
+                                },
+                                "cost_status": {
+                                  "enum": ["confirmed", "unknown"],
+                                  "type": "string"
+                                },
+                                "evidence": {
+                                  "enum": ["observed_dataset", "synthetic_prompt_test"],
+                                  "type": "string"
+                                },
+                                "failure": {
+                                  "type": ["string", "null"]
+                                },
+                                "fetched_at": {
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "rows": {
+                                  "items": {
+                                    "properties": {
+                                      "answer": {
+                                        "type": "string"
+                                      },
+                                      "brand_mentioned": {
+                                        "type": "boolean"
+                                      },
+                                      "citations": {
+                                        "items": {
+                                          "properties": {
+                                            "target_domain": {
+                                              "type": "boolean"
+                                            },
+                                            "title": {
+                                              "type": "string"
+                                            },
+                                            "url": {
+                                              "format": "uri",
+                                              "type": "string"
+                                            }
+                                          },
+                                          "required": ["title", "url", "target_domain"],
+                                          "type": "object"
+                                        },
+                                        "type": "array"
+                                      },
+                                      "content_truncated": {
+                                        "type": "boolean"
+                                      },
+                                      "domain_cited": {
+                                        "type": "boolean"
+                                      },
+                                      "model": {
+                                        "type": "string"
+                                      },
+                                      "observed_at": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "prompt": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "prompt",
+                                      "model",
+                                      "answer",
+                                      "observed_at",
+                                      "brand_mentioned",
+                                      "domain_cited",
+                                      "citations"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                },
+                                "total_available": {
+                                  "type": ["integer", "null"]
+                                },
+                                "truncated": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "evidence",
+                                "rows",
+                                "total_available",
+                                "truncated",
+                                "fetched_at",
+                                "cost_cents",
+                                "cost_status",
+                                "failure"
+                              ],
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "ok",
+                            "estimate",
+                            "cached",
+                            "report_id",
+                            "cost_cents",
+                            "result"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["data"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Project-scoped result"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "402": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Deployment credits exhausted for a paid provider request"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project role or token scope denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project or report not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Provider unavailable or analysis cost cap exceeded"
+          },
+          "423": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project is read-only"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Compare AI prompts",
+        "tags": ["research-reports"]
       }
     },
     "/projects/{project_id}/provider-budgets": {
@@ -15422,6 +17085,895 @@
         ],
         "summary": "List project signals",
         "tags": ["signals"]
+      }
+    },
+    "/projects/{project_id}/site-audits": {
+      "get": {
+        "description": "Access follows existing project membership and token scopes.",
+        "operationId": "listSiteAudits",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "description": "The public project ID. Project membership and token scopes are enforced.",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "items": {
+                        "properties": {
+                          "created_at": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "title", "kind", "created_at"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": ["data"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Project-scoped result"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project role or token scope denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project or report not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Provider unavailable or analysis cost cap exceeded"
+          },
+          "423": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project is read-only"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "List site audits",
+        "tags": ["research-reports"]
+      },
+      "post": {
+        "description": "Access follows existing project membership and token scopes.",
+        "operationId": "runSiteAudit",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "description": "The public project ID. Project membership and token scopes are enforced.",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "max_pages": {
+                    "default": 10,
+                    "description": "Maximum pages in this bounded crawl.",
+                    "maximum": 15,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "cached": {
+                          "type": "boolean"
+                        },
+                        "created_at": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "string"
+                        },
+                        "result": {
+                          "properties": {
+                            "completed_at": {
+                              "format": "date-time",
+                              "type": "string"
+                            },
+                            "limitations": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "limits": {
+                              "properties": {
+                                "max_duration_ms": {
+                                  "type": "number"
+                                },
+                                "max_page_bytes": {
+                                  "type": "number"
+                                },
+                                "max_pages": {
+                                  "type": "number"
+                                },
+                                "max_requests": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "max_pages",
+                                "max_requests",
+                                "max_duration_ms",
+                                "max_page_bytes"
+                              ],
+                              "type": "object"
+                            },
+                            "pages": {
+                              "items": {
+                                "properties": {
+                                  "canonical": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "description": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "external_link_count": {
+                                    "type": "number"
+                                  },
+                                  "final_url": {
+                                    "type": "string"
+                                  },
+                                  "h1_count": {
+                                    "type": "number"
+                                  },
+                                  "headings": {
+                                    "items": {
+                                      "properties": {
+                                        "level": {
+                                          "type": "integer"
+                                        },
+                                        "text": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["level", "text"],
+                                      "type": "object"
+                                    },
+                                    "type": "array"
+                                  },
+                                  "image_count": {
+                                    "type": "number"
+                                  },
+                                  "indexable": {
+                                    "type": "boolean"
+                                  },
+                                  "internal_link_count": {
+                                    "type": "number"
+                                  },
+                                  "internal_links": {
+                                    "items": {
+                                      "type": "string"
+                                    },
+                                    "type": "array"
+                                  },
+                                  "issues": {
+                                    "items": {
+                                      "properties": {
+                                        "code": {
+                                          "type": "string"
+                                        },
+                                        "message": {
+                                          "type": "string"
+                                        },
+                                        "severity": {
+                                          "enum": ["error", "warning", "info"],
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["code", "severity", "message"],
+                                      "type": "object"
+                                    },
+                                    "type": "array"
+                                  },
+                                  "missing_alt_count": {
+                                    "type": "number"
+                                  },
+                                  "response_time_ms": {
+                                    "type": "number"
+                                  },
+                                  "robots": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "status": {
+                                    "type": ["integer", "null"]
+                                  },
+                                  "title": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "url",
+                                  "final_url",
+                                  "status",
+                                  "response_time_ms",
+                                  "title",
+                                  "description",
+                                  "canonical",
+                                  "headings",
+                                  "h1_count",
+                                  "indexable",
+                                  "robots",
+                                  "internal_link_count",
+                                  "external_link_count",
+                                  "internal_links",
+                                  "image_count",
+                                  "missing_alt_count",
+                                  "issues"
+                                ],
+                                "type": "object"
+                              },
+                              "type": "array"
+                            },
+                            "requests": {
+                              "type": "number"
+                            },
+                            "started_at": {
+                              "format": "date-time",
+                              "type": "string"
+                            },
+                            "state": {
+                              "enum": ["complete", "partial"],
+                              "type": "string"
+                            },
+                            "stop_reason": {
+                              "enum": ["finished", "page_limit", "time_limit", "request_limit"],
+                              "type": "string"
+                            },
+                            "summary": {
+                              "properties": {
+                                "errors": {
+                                  "type": "number"
+                                },
+                                "indexable": {
+                                  "type": "number"
+                                },
+                                "pages": {
+                                  "type": "number"
+                                },
+                                "warnings": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": ["pages", "errors", "warnings", "indexable"],
+                              "type": "object"
+                            },
+                            "target": {
+                              "type": "string"
+                            },
+                            "version": {
+                              "const": 1
+                            }
+                          },
+                          "required": [
+                            "version",
+                            "target",
+                            "started_at",
+                            "completed_at",
+                            "state",
+                            "stop_reason",
+                            "limits",
+                            "requests",
+                            "pages",
+                            "summary",
+                            "limitations"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": ["id", "created_at", "cached", "result"],
+                      "type": "object"
+                    }
+                  },
+                  "required": ["data"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Project-scoped result"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project role or token scope denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project or report not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Provider unavailable or analysis cost cap exceeded"
+          },
+          "423": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project is read-only"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Run site audit",
+        "tags": ["research-reports"]
+      }
+    },
+    "/projects/{project_id}/site-audits/{report_id}": {
+      "get": {
+        "description": "Access follows existing project membership and token scopes.",
+        "operationId": "getSiteAudit",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "description": "The public project ID. Project membership and token scopes are enforced.",
+              "pattern": "^prj_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "description": "The public report ID, scoped to this project.",
+              "pattern": "^agr_[a-z][a-z0-9]{23}$",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "cached": {
+                          "type": "boolean"
+                        },
+                        "created_at": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "string"
+                        },
+                        "result": {
+                          "properties": {
+                            "completed_at": {
+                              "format": "date-time",
+                              "type": "string"
+                            },
+                            "limitations": {
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "limits": {
+                              "properties": {
+                                "max_duration_ms": {
+                                  "type": "number"
+                                },
+                                "max_page_bytes": {
+                                  "type": "number"
+                                },
+                                "max_pages": {
+                                  "type": "number"
+                                },
+                                "max_requests": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "max_pages",
+                                "max_requests",
+                                "max_duration_ms",
+                                "max_page_bytes"
+                              ],
+                              "type": "object"
+                            },
+                            "pages": {
+                              "items": {
+                                "properties": {
+                                  "canonical": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "description": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "external_link_count": {
+                                    "type": "number"
+                                  },
+                                  "final_url": {
+                                    "type": "string"
+                                  },
+                                  "h1_count": {
+                                    "type": "number"
+                                  },
+                                  "headings": {
+                                    "items": {
+                                      "properties": {
+                                        "level": {
+                                          "type": "integer"
+                                        },
+                                        "text": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["level", "text"],
+                                      "type": "object"
+                                    },
+                                    "type": "array"
+                                  },
+                                  "image_count": {
+                                    "type": "number"
+                                  },
+                                  "indexable": {
+                                    "type": "boolean"
+                                  },
+                                  "internal_link_count": {
+                                    "type": "number"
+                                  },
+                                  "internal_links": {
+                                    "items": {
+                                      "type": "string"
+                                    },
+                                    "type": "array"
+                                  },
+                                  "issues": {
+                                    "items": {
+                                      "properties": {
+                                        "code": {
+                                          "type": "string"
+                                        },
+                                        "message": {
+                                          "type": "string"
+                                        },
+                                        "severity": {
+                                          "enum": ["error", "warning", "info"],
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": ["code", "severity", "message"],
+                                      "type": "object"
+                                    },
+                                    "type": "array"
+                                  },
+                                  "missing_alt_count": {
+                                    "type": "number"
+                                  },
+                                  "response_time_ms": {
+                                    "type": "number"
+                                  },
+                                  "robots": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "status": {
+                                    "type": ["integer", "null"]
+                                  },
+                                  "title": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "url",
+                                  "final_url",
+                                  "status",
+                                  "response_time_ms",
+                                  "title",
+                                  "description",
+                                  "canonical",
+                                  "headings",
+                                  "h1_count",
+                                  "indexable",
+                                  "robots",
+                                  "internal_link_count",
+                                  "external_link_count",
+                                  "internal_links",
+                                  "image_count",
+                                  "missing_alt_count",
+                                  "issues"
+                                ],
+                                "type": "object"
+                              },
+                              "type": "array"
+                            },
+                            "requests": {
+                              "type": "number"
+                            },
+                            "started_at": {
+                              "format": "date-time",
+                              "type": "string"
+                            },
+                            "state": {
+                              "enum": ["complete", "partial"],
+                              "type": "string"
+                            },
+                            "stop_reason": {
+                              "enum": ["finished", "page_limit", "time_limit", "request_limit"],
+                              "type": "string"
+                            },
+                            "summary": {
+                              "properties": {
+                                "errors": {
+                                  "type": "number"
+                                },
+                                "indexable": {
+                                  "type": "number"
+                                },
+                                "pages": {
+                                  "type": "number"
+                                },
+                                "warnings": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": ["pages", "errors", "warnings", "indexable"],
+                              "type": "object"
+                            },
+                            "target": {
+                              "type": "string"
+                            },
+                            "version": {
+                              "const": 1
+                            }
+                          },
+                          "required": [
+                            "version",
+                            "target",
+                            "started_at",
+                            "completed_at",
+                            "state",
+                            "stop_reason",
+                            "limits",
+                            "requests",
+                            "pages",
+                            "summary",
+                            "limitations"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": ["id", "created_at", "cached", "result"],
+                      "type": "object"
+                    }
+                  },
+                  "required": ["data"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Project-scoped result"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project role or token scope denied"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project or report not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Provider unavailable or analysis cost cap exceeded"
+          },
+          "423": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Project is read-only"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Rate limited"
+          }
+        },
+        "security": [
+          {
+            "ProjectApiKey": []
+          },
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Get site audit",
+        "tags": ["research-reports"]
       }
     },
     "/projects/{project_id}/sitemap-monitors": {

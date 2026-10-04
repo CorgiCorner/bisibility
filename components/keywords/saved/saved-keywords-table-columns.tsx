@@ -165,8 +165,8 @@ export function savedKeywordsTableColumns({
       header: labels.intent,
       id: "intent",
       meta: { sortable: false, title: labels.intent },
-      minSize: 84,
-      size: 84,
+      minSize: 160,
+      size: 160,
     },
     {
       accessorKey: "sourceSeed",

@@ -1,203 +1,101 @@
 # bisibility
 
-> Own your search visibility data.
+> Open-source SEO platform for developers and AI agents.
 
-bisibility is an open-source SEO platform for researching keywords, inspecting
-backlinks, and tracking Google rankings - in a PostgreSQL database you own.
-Self-host it or start with the hosted beta.
+Research keywords, inspect backlinks, and track Google rankings through a dashboard,
+REST API, or MCP. Build SEO into your own tools and agent workflows, with a
+PostgreSQL history you can query and export. Self-host it or use the hosted beta.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/CorgiCorner/bisibility/ci.yml?event=push&label=CI)](https://github.com/CorgiCorner/bisibility/actions/workflows/ci.yml?query=event%3Apush)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue.svg)](LICENSE)
 
-[Self-hosting guide](https://bisibility.com/docs/self-hosting) ·
+[Try the demo](https://demo.bisibility.com) ·
 [Documentation](https://bisibility.com/docs) ·
-[API reference][api-ref] ·
-[FAQ](https://bisibility.com/faq) ·
-[Roadmap](https://bisibility.com/roadmap)
+[Self-host](https://bisibility.com/docs/self-hosting) ·
+[Discord](https://discord.gg/HcYpvfn79w) ·
+[X](https://x.com/bisibility_com)
 
-![bisibility dashboard](public/screenshots/dashboard-overview.png)
+![bisibility dashboard with ranking trends, position distribution, and keyword activity](public/screenshots/dashboard-overview.png)
 
-*Dashboard running with demo data.*
+*Real application UI with synthetic demo data, not customer results.*
 
-bisibility is an early release: everything below can be tested today, but expect
-rough edges and breaking changes before 1.0. Please report installation problems,
-bugs, and workflow feedback through
-[GitHub Issues](https://github.com/CorgiCorner/bisibility/issues).
+## Built for code and agents
 
-## Why bisibility?
+- **API-first, not dashboard scraping.** REST API v1, OpenAPI, and MCP expose
+  authenticated operations for projects, keywords, checks, alerts, and history.
+- **Use your stack.** TypeScript, Python, and Go SDKs, a CLI, and signed outbound
+  webhooks connect SEO data to scripts, CI pipelines, and internal tools.
+- **Give agents a bounded workflow.** Discover tools, inspect stored data, estimate
+  costs, and approve paid checks explicitly. Use a personal access token or
+  project-scoped API key; hosted MCP also supports OAuth.
+- **Keep your data.** Self-hosted history lives in your PostgreSQL database.
+  Connect your own providers instead of depending on a bundled data subscription.
 
-- **Research before you track.** Explore keyword opportunities and backlink data,
-  then use the findings to decide what belongs in a tracked project.
-- **Own the history.** Positions, ranking URLs, timestamps, and per-check provider
-  cost data live in a PostgreSQL database you operate, with direct SQL access and
-  full-history export.
-- **One model instead of raw provider APIs.** Rank results from DataForSEO and
-  SerpAPI are normalized behind a single application model with per-keyword
-  schedules, alert rules, and stored SERP snapshots when you self-host.
-- **Connect the context.** Compare Share of Voice, add opt-in Search Console and
-  GA4 metrics, and line ranking movement up with deploy and CMS signals.
-- **Operate as a team.** Owner, Admin, Editor, and Viewer roles, an audit log, and
-  signed outbound webhooks.
-- **Inspect the system.** The dashboard, scheduler, provider adapters, and delivery
-  pipeline are open source under AGPL-3.0.
+| Interface | Start here |
+| --- | --- |
+| REST + OpenAPI | [API reference][api-ref] |
+| MCP + agent workflows | [Agent guide](https://bisibility.com/docs/agents) |
+| TypeScript / Python / Go | [SDKs](https://bisibility.com/docs/sdks/overview) |
+| Terminal + automation | [CLI](https://bisibility.com/docs/cli) |
+| Events | [Webhooks](https://bisibility.com/docs/api/webhooks) |
 
-bisibility stays focused on search visibility workflows. It is not a general-purpose
-technical site-audit, content-writing, or on-page optimization suite.
-
-For rank checks, connect your own DataForSEO or SerpAPI account. Self-hosted
-deployments keep provider credentials in your instance; the hosted beta stores them
-encrypted in the managed service. Billing remains directly between you and the provider.
-
-## Try the local demo
-
-The local demo is a throwaway evaluation with synthetic data and a fixed,
-intentionally insecure OTP. It is not a starting point for production. The
-default stack runs manual rank checks only; recurring schedules add the
-worker and Temporal.
-
-For prerequisites, the exact bootstrap steps, and how to stop and clean up,
-follow the [local demo quickstart](https://bisibility.com/docs/quickstart).
-To compare the demo against hosted and production deployments, see
-[deployment options](https://bisibility.com/docs/deployment-options).
-
-## Features
-
-- Keyword research: related queries, suggestions, ideas, search volume, 12-month
-  trends, CPC, competition, difficulty, and intent data
-- Backlink research: referring domains and pages, 12-month new and lost link
-  history, authority and spam metrics, and link attributes
-- Rank tracking: position history, trend charts, intended URL monitoring, and
-  Google index status
-- Competitor benchmarking with Share of Voice
-- Domain overview: estimated organic visibility, ranked keywords, and top pages
-  for any domain (requires a bring-your-own DataForSEO connection; metered). The
-  app and REST API are available. See [released client support](https://bisibility.com/docs/compatibility).
-- Manual, daily, weekly, monthly, and custom cron schedules
-- Rank alerts in-app and by email, plus weekly email digests
-- Keyword tags and saved views
-- Opt-in Search Console (queries, clicks, impressions) and GA4 (landing-page
-  sessions, engagement, key events) connections
-- A signal timeline for rank checks, deploys, CMS events, and manual notes
-- REST API v1 with OpenAPI, an MCP endpoint, signed outbound webhooks, CSV export,
-  a CLI, and TypeScript, Python, and Go SDKs
-- Owner, Admin, Editor, and Viewer team roles, with an audit log
-
-Everything above ships in the current early release; none of it is a stable 1.0
-contract yet. The hosted service is in open beta. AI Overview and LLM visibility
-tracking and hosted general availability are tracked on the
-[roadmap](https://bisibility.com/roadmap). Slack tenant delivery is available
-as an API-only preview. Workspace installation and channel management are not
-yet exposed in the dashboard.
-
-## AI agents and MCP
-
-bisibility is API-first. Agents work with the same projects, keywords, checks,
-alerts, and history that power the dashboard: the REST API, the OpenAPI schema, and
-the MCP endpoint converge on the same application model, so agent behavior does not
-rely on dashboard scraping.
-
-For example, connect Codex to a self-hosted instance with a personal access token:
+Start with a read-only API call using your [API credential](https://bisibility.com/docs/authentication):
 
 ```bash
-export BISIBILITY_TOKEN="bsb_pat_live_..."
-codex mcp add bisibility \
-  --url "https://your-host.example/api/mcp" \
-  --bearer-token-env-var BISIBILITY_TOKEN
+curl --fail-with-body "https://your-host.example/api/v1/projects" \
+  -H "Authorization: Bearer $BISIBILITY_API_KEY"
 ```
 
-Project API keys work too. Other clients use different configuration fields, but the
-HTTP connection uses the `/api/mcp` Streamable HTTP endpoint and an
-`Authorization: Bearer <token>` header. The endpoint advertises its tool inventory
-through the [MCP server card](https://bisibility.com/.well-known/mcp/server-card.json);
-tool names and schemas may change before 1.0. The built-in endpoint and the
-separately installed `@bisibility/mcp` package expose the same unprefixed
-`snake_case` tools.
+Connect an MCP client to `https://your-host.example/api/mcp`, or
+`https://bisibility.com/api/mcp` for the hosted service. Start with a read-only
+task: “Summarize ranking gains and losses from stored history; do not run paid checks.”
+See the [agent guide](https://bisibility.com/docs/agents) for authentication and
+cost-approval examples, and [client compatibility](https://bisibility.com/docs/compatibility)
+for released client coverage.
 
-See the [agent documentation](https://bisibility.com/docs/agents) for worked
-examples, cost-approval guidance, and the CLI and SDKs.
+## SEO workflows
 
-## Provider support
+- Keyword research: suggestions, search volume, trends, CPC, difficulty, and intent.
+- Backlink research: referring domains, new and lost links, and link attributes.
+- Rank tracking: ranking URLs, history, schedules, alerts, and competitor Share of Voice.
+- Domain overview: organic visibility, ranked keywords, and top pages; requires a
+  bring-your-own DataForSEO connection; metered. The app and REST API are available.
+  See [released client support](https://bisibility.com/docs/compatibility).
+- Context: opt-in Search Console and GA4 connections, plus deploy and CMS signals.
 
-| Capability | DataForSEO | SerpAPI |
-| --- | ---: | ---: |
-| Google rank checks | Available | Available |
-| Keyword research | Available | Not supported |
-| Backlink research | Available | Not supported |
-| Stored normalized SERP snapshot (self-hosted) | Available | Available |
-| Rank-check cost record | Provider reported | Configured or estimated |
+Rank checks support DataForSEO and SerpAPI; keyword, backlink, and domain research
+use DataForSEO. Provider usage is billed by your connected provider. In self-hosted
+deployments credentials stay in your instance; the hosted service stores them encrypted.
 
-## Self-hosting in production
+This is an early release, not a stable 1.0 contract. AI Overview and LLM visibility
+tracking are [roadmap items](https://bisibility.com/roadmap), not shipped features.
+Slack tenant delivery is available as an API-only preview. Workspace installation
+and channel management are not yet exposed in the dashboard.
 
-Production deployments need PostgreSQL, Valkey or another Redis-compatible endpoint,
-and a supported SERP provider account. Scheduled checks additionally require the
-Temporal worker. Read the
-[self-hosting guide](https://bisibility.com/docs/self-hosting) before serving real
-traffic.
+## Run it your way
 
-## Cost model
+- **Explore locally:** the [demo quickstart](https://bisibility.com/docs/quickstart)
+  provides synthetic data and intentionally insecure demo authentication. Not for production.
+- **Self-host:** follow the [production guide](https://bisibility.com/docs/self-hosting).
+  Run Next.js, PostgreSQL, and Valkey or another Redis-compatible service.
+  Recurring checks also need Temporal and the worker.
+- **Hosted:** [start without operating the stack](https://bisibility.com/).
+  See [deployment options](https://bisibility.com/docs/deployment-options).
 
-Self-hosted bisibility has no application subscription and no per-keyword license
-fee. You pay separately for the infrastructure you run, SERP requests made through
-your own provider account, and optional third-party services such as email delivery.
-bisibility does not resell SERP data. Completed checks store provider-reported cost
-when available and keep configured or model-based estimates separately. Use the
-[rank-tracking cost calculator](https://bisibility.com/rank-tracking-cost-calculator)
+Self-hosting has no application subscription or per-keyword license fee.
+Infrastructure and provider usage are separate costs.
+[Estimate rank-check costs](https://bisibility.com/rank-tracking-cost-calculator)
 before enabling a large schedule.
 
-## Architecture
+## Community and license
 
-- Next.js serves the dashboard and the REST API.
-- PostgreSQL is the durable source of truth.
-- Valkey ships by default; any Redis-compatible endpoint can hold shared runtime state.
-- Temporal runs recurring rank checks; manual and scheduled checks share the same
-  runner and persistence model.
-- SERP and analytics providers are pluggable adapters.
+Ask questions on [Discord](https://discord.gg/HcYpvfn79w), follow updates on
+[X](https://x.com/bisibility_com), or [report an issue](https://github.com/CorgiCorner/bisibility/issues).
+Public pull requests are not accepted; see the [contribution guide](.github/CONTRIBUTING.md)
+and [code of conduct](.github/CODE_OF_CONDUCT.md).
+Report vulnerabilities privately through the [security policy](.github/SECURITY.md).
 
-## Hosted
-
-The [hosted beta](https://bisibility.com/) runs the same core application without
-requiring you to operate PostgreSQL, Valkey, or the Temporal worker. It is free
-during the open beta and does not require a payment method; provider usage is billed
-directly to your connected provider account. Hosted pricing will be announced before
-the beta ends, and nothing will be charged without explicit confirmation.
-Self-hosting remains available without an application subscription.
-
-## Documentation
-
-- [Hosted quickstart](https://bisibility.com/docs/hosted-quickstart)
-- [Local demo quickstart](https://bisibility.com/docs/quickstart)
-- [Self-hosting guide](https://bisibility.com/docs/self-hosting)
-- [Deployment options](https://bisibility.com/docs/deployment-options)
-- [API quickstart](https://bisibility.com/docs/api/quickstart)
-- [API reference][api-ref]
-- [Versioning and support](https://bisibility.com/docs/versioning)
-- [Agent documentation](https://bisibility.com/docs/agents)
-- [FAQ](https://bisibility.com/faq)
-
-## Contributing
-
-Public issues and feature requests are welcome. This repository does not
-accept pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md) and
-[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
-
-## Security
-
-Do not report vulnerabilities through public issues. See [SECURITY.md](SECURITY.md)
-for responsible disclosure.
-
-## License
-
-The Bisibility application and repository content are licensed under
-`AGPL-3.0-only`. See [LICENSE](LICENSE).
-
-The Claude Code plugin under [`plugins/bisibility/`](plugins/bisibility/) is
-licensed separately under the [MIT License](plugins/bisibility/LICENSE). This
-exception covers that directory and all content beneath it.
-
-You may use, modify, and self-host bisibility. If you modify it and let users interact
-with that version over a network, the license requires you to offer those users the
-corresponding source code.
-
-The license text governs. This summary is not legal advice.
+The application is [AGPL-3.0-only](LICENSE). The
+[Claude Code plugin](plugins/bisibility/) is separately [MIT licensed](plugins/bisibility/LICENSE).
 
 [api-ref]: https://bisibility.com/docs/api-reference/discovery/get-api-capabilities

@@ -110,9 +110,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
-function rankCheckRaw(rank: SerpRankResult) {
+function rankCheckRaw(rank: SerpRankResult, connectionId?: string) {
   if (!isRecord(rank.raw)) return null;
   const json = structuredClone(rank.raw) as unknown;
+  if (isRecord(json) && isRecord(json.snapshotContinuation) && connectionId) {
+    json.snapshotContinuation.connectionId = connectionId;
+  }
   return isRecord(json) ? (json as Prisma.InputJsonObject) : null;
 }
 
@@ -275,7 +278,7 @@ async function runCheckScoped(input: RunCheckInput): Promise<RankCheckRunResult>
             ),
       normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
       observation: rank.observation ?? null,
-      raw: rankCheckRaw(rank),
+      raw: rankCheckRaw(rank, input.connection.id),
     },
     scheduleUpdate: {
       lastCheckedAt: checkedAt,

@@ -1,5 +1,5 @@
 import { ApiInputError } from "@/lib/api/errors";
-import { isPublicIdOfType, type PublicIdPrefix } from "@/lib/db/public-id";
+import { isPublicIdOfType, type PublicIdPrefix } from "@/lib/db/public-id-resources";
 import type { JsonObject } from "./types";
 
 const publicIdInputs = {
@@ -13,6 +13,7 @@ const publicIdInputs = {
   member_id: "mbr",
   monitor_id: "prj",
   project_id: "prj",
+  report_id: "agr",
   rule_id: "alr",
   saved_keyword_id: "svkw",
   view_id: "viw",

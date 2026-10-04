@@ -19,3 +19,12 @@ export async function exportKeywords(
 }
 
 export async function refreshKeywordViewsAfterImport(): Promise<void> {}
+
+export async function previewKeywordDeletion(input: { keywordIds: string[] }) {
+  return {
+    keywordCount: input.keywordIds.length,
+    targetCount: input.keywordIds.length,
+    runningTargetCount: 0,
+    schedules: [],
+  };
+}

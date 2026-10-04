@@ -4,6 +4,11 @@ import type { useTranslations } from "next-intl";
 type HeaderTranslations = ReturnType<typeof useTranslations<"shell.header">>;
 
 const titleKeys = {
+  "AI Visibility": "titles.aiVisibility",
+  "Prompt Explorer": "titles.promptExplorer",
+  "Site Audit": "titles.siteAudit",
+  "Project Context": "titles.projectContext",
+  "Agent Reports": "titles.agentReports",
   "Account settings": "titles.account",
   Alerts: "titles.alerts",
   "Audit log": "titles.audit",
@@ -32,6 +37,11 @@ const titleKeys = {
 } as const;
 
 const subtitleKeys = {
+  "Brand mentions and citations from available provider observations.": "subtitles.aiVisibility",
+  "Compare synthetic prompt tests across supported models.": "subtitles.promptExplorer",
+  "Crawl your project site and inspect issues by URL.": "subtitles.siteAudit",
+  "Business, audience, products and goals for your agents.": "subtitles.projectContext",
+  "Saved analyses shared with members of this project.": "subtitles.agentReports",
   "Manage your bisibility user, separate from project settings.": "subtitles.account",
   "Get notified when rankings change.": "subtitles.alerts",
   "Review project changes and security events.": "subtitles.audit",

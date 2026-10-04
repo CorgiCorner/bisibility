@@ -1,8 +1,8 @@
 import "server-only";
-
 import { randomUUID } from "node:crypto";
 import type { ProviderFeatureRate } from "@/lib/cost-estimate/provider-rates";
 import { prisma } from "@/lib/db/prisma";
+import type { ProviderCostFeature } from "@/lib/generated/prisma/client";
 import { compareAdmission } from "@/lib/metering/admission";
 import { withShadowRequest } from "@/lib/metering/shadow-context";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
@@ -55,12 +55,7 @@ async function executePaidProviderCall<
   ) => Promise<T>;
   connection: { credentialsEncrypted: string | null; id: string; provider: string };
   credential?: ProviderCredential;
-  feature:
-    | "backlinks"
-    | "domain_overview"
-    | "keyword_metrics"
-    | "keyword_research"
-    | "ranked_keywords";
+  feature: Exclude<ProviderCostFeature, "rank_check">;
   includeClickstream?: boolean;
   itemCount: number;
   projectId: string;
@@ -105,7 +100,10 @@ async function executePaidProviderCall<
   // resolve; it prices from the list rates until the rate catalog models those sub-rates.
   const context =
     (currentConnection.credentialSource === "own" ? input.rateContext : undefined) ??
-    (input.feature === "backlinks" || input.feature === "domain_overview"
+    (input.feature === "backlinks" ||
+    input.feature === "domain_overview" ||
+    input.feature === "ai_visibility" ||
+    input.feature === "prompt_explorer"
       ? LIST_PROVIDER_RATE_CONTEXT
       : await loadProviderRateContext(input.connection.id, input.feature));
   const estimatedCostCents = requiredEstimatedCostCents({

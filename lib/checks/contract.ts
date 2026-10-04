@@ -5,6 +5,7 @@
 
 import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import type { Device } from "@/lib/generated/prisma/client";
+import type { SnapshotExtensionView } from "@/lib/serp/snapshot-extension";
 
 export type RankCheckStatus = "running" | "completed" | "failed" | "deferred";
 
@@ -114,6 +115,7 @@ type RetrievedResultsBase = {
 export type RetrievedResults =
   | (RetrievedResultsBase & {
       tier: "full";
+      extension?: SnapshotExtensionView;
       requestedDepth: number | null;
       retrievedPositions: number;
       trackedPosition: number | null;

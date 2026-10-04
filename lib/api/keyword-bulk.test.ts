@@ -3,6 +3,7 @@ import type { ApiContext } from "./context";
 import { bulkKeywords } from "./keyword-bulk";
 
 const mocks = vi.hoisted(() => ({
+  items: vi.fn(),
   deleteMany: vi.fn(),
   findMany: vi.fn(),
   updateMany: vi.fn(),
@@ -18,6 +19,12 @@ vi.mock("@/lib/actions/keyword-helpers", () => ({ addTags: vi.fn() }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
+    $transaction: async (fn: (tx: object) => unknown) =>
+      fn({
+        $queryRaw: vi.fn(),
+        keyword: { findMany: mocks.findMany, deleteMany: mocks.deleteMany },
+        rankCheckRunItem: { findMany: mocks.items },
+      }),
     keyword: {
       deleteMany: mocks.deleteMany,
       findMany: mocks.findMany,
@@ -33,7 +40,7 @@ vi.mock("@/lib/rank-check/dispatcher-state", () => ({
 const keywordId = "kw_a00000000000000000000000";
 
 function context(role: "admin" | "member", body: unknown) {
-  const url = new URL("https://example.test/api/v1/keywords/bulk");
+  const url = new URL("https://example.com/api/v1/keywords/bulk");
   return {
     actor: { id: "user_1", memberships: [{ projectId: "project_1", role }] },
     actorId: "user_1",
@@ -56,6 +63,7 @@ function context(role: "admin" | "member", body: unknown) {
 describe("bulk keyword deletion role gate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.items.mockResolvedValue([]);
     mocks.findMany.mockResolvedValue([{ id: "keyword_1", publicId: keywordId }]);
     mocks.deleteMany.mockResolvedValue({ count: 1 });
   });
@@ -69,6 +77,23 @@ describe("bulk keyword deletion role gate", () => {
     await expect(response.json()).resolves.toMatchObject({ status: 403, title: "Forbidden" });
     expect(mocks.deleteMany).not.toHaveBeenCalled();
     expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
+  it("protects a check already in flight through the same lifecycle as the app", async () => {
+    mocks.items.mockResolvedValue([
+      {
+        id: "item_1",
+        keywordId: "keyword_1",
+        runId: "run_1",
+        status: "running",
+        rankCheckId: "check_1",
+        run: { publicId: "rcr_active" },
+      },
+    ]);
+    await expect(
+      bulkKeywords(context("admin", { keyword_ids: [keywordId], operation: "delete" })),
+    ).rejects.toThrow("still checking");
+    expect(mocks.deleteMany).not.toHaveBeenCalled();
   });
 
   it("lets an admin delete keywords", async () => {

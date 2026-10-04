@@ -6,6 +6,7 @@ import {
 } from "@/components/keywords/filters/FilterDrawerControls";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Sheet } from "@/components/ui/Sheet";
 import { Slider } from "@/components/ui/Slider";
 import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
@@ -62,8 +63,6 @@ function RangeFilter({
         min={0}
         onValueChange={(next) => onChange(next as [number, number])}
         style={{
-          color: "var(--accent)",
-          display: "block",
           marginLeft: 4,
           marginRight: 4,
           width: "calc(100% - 8px)",
@@ -123,9 +122,9 @@ export function BacklinksFiltersDrawer({
   const activeCount = activeBacklinksFilterCount(draft);
   const patch = (value: Partial<BacklinksFilters>) => onChange({ ...draft, ...value });
   const firstSeenOptions = [
-    { id: "any" as const, label: t("anyTime") },
-    { id: "30" as const, label: t("days30") },
-    { id: "90" as const, label: t("days90") },
+    { value: "any" as const, label: t("anyTime") },
+    { value: "30" as const, label: t("days30") },
+    { value: "90" as const, label: t("days90") },
   ];
   const linkTypeLabels: Record<BacklinksLinkType, string> = {
     dofollow: t("dofollow"),
@@ -222,24 +221,14 @@ export function BacklinksFiltersDrawer({
         />
       </FilterSection>
       <FilterSection icon={CalendarBlank} title={t("firstSeen")}>
-        <fieldset className="mt-3 flex rounded-control border-0 bg-bg-sunken p-[3px]">
-          <legend className="sr-only">{t("firstSeen")}</legend>
-          {firstSeenOptions.map((option) => (
-            <button
-              aria-pressed={draft.firstSeen === option.id}
-              className="flex-1 rounded-control px-2 py-1.5 text-[12px] font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
-              key={option.id}
-              onClick={() => patch({ firstSeen: option.id })}
-              style={{
-                backgroundColor: draft.firstSeen === option.id ? "var(--bg-elev)" : "transparent",
-                color: draft.firstSeen === option.id ? "var(--fg)" : "var(--fg-muted)",
-              }}
-              type="button"
-            >
-              {option.label}
-            </button>
-          ))}
-        </fieldset>
+        <SegmentedControl
+          ariaLabel={t("firstSeen")}
+          className="mt-3"
+          onChange={(firstSeen) => patch({ firstSeen })}
+          options={firstSeenOptions}
+          size="field"
+          value={draft.firstSeen}
+        />
       </FilterSection>
       <FilterSection icon={TextT} title={t("textMatch")}>
         <TextFilter

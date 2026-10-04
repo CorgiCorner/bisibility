@@ -1,6 +1,6 @@
 import "server-only";
-
 import { randomUUID } from "node:crypto";
+import type { ProviderCostFeature } from "@/lib/generated/prisma/client";
 import { compareAdmission } from "@/lib/metering/admission";
 import { type ProviderCredential, surfaceOf } from "@/lib/provider-usage/surface";
 import {
@@ -24,12 +24,7 @@ export async function runHostedPaidProviderCall<
   ) => Promise<T>;
   connection: { credentialsEncrypted: string | null; id: string; provider: string };
   credential?: ProviderCredential;
-  feature:
-    | "backlinks"
-    | "domain_overview"
-    | "keyword_metrics"
-    | "keyword_research"
-    | "ranked_keywords";
+  feature: Exclude<ProviderCostFeature, "rank_check">;
   itemCount: number;
   projectId: string;
   provider: SerpProvider;

@@ -97,6 +97,25 @@ function schedule(
 }
 
 describe("rank-check run planner", () => {
+  it("does not plan occurrences for an empty schedule", async () => {
+    mocks.findMany.mockResolvedValue([schedule("empty", "daily", { keywords: [] })]);
+    expect(await planRankCheckRuns({ now: new Date("2026-09-03T00:00:00Z") })).toMatchObject({
+      planned: 0,
+    });
+    expect(mocks.upsert).not.toHaveBeenCalled();
+  });
+
+  it("does not recreate an occurrence when its final member was deleted after the scan", async () => {
+    mocks.findMany.mockResolvedValue([schedule("emptied", "daily")]);
+    mocks.currentSchedule.mockImplementation(({ where }) =>
+      Promise.resolve(where.keywords ? null : { id: "emptied" }),
+    );
+    expect(await planRankCheckRuns({ now: new Date("2026-09-03T00:00:00Z") })).toMatchObject({
+      planned: 0,
+    });
+    expect(mocks.upsert).not.toHaveBeenCalled();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.existingKeys.clear();
@@ -125,7 +144,9 @@ describe("rank-check run planner", () => {
     await planRankCheckRuns({ now: new Date("2026-09-02T08:00:00.000Z") });
     expect(mocks.upsert).not.toHaveBeenCalled();
     expect(mocks.currentSchedule).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "daily", archivedAt: null, enabled: true } }),
+      expect.objectContaining({
+        where: { id: "daily", archivedAt: null, enabled: true, keywords: { some: {} } },
+      }),
     );
   });
 

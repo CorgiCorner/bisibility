@@ -56,6 +56,29 @@ function rankInput(
 }
 
 describe("serpApiProvider", () => {
+  it("keeps the original scope and next page for a short snapshot continuation", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse(searchResponse([{ link: "https://example.org/page", position: 1 }])),
+        ),
+    );
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 10 }));
+    expect(result.raw).toMatchObject({
+      snapshotContinuation: {
+        version: 1,
+        nextStart: 10,
+        ended: false,
+        keyword: "rank tracker",
+        domain: "example.com",
+        device: "desktop",
+        location: location(),
+      },
+    });
+  });
+
   it("does not charge provider-cached searches", async () => {
     vi.stubGlobal(
       "fetch",
@@ -419,7 +442,7 @@ describe("serpApiProvider", () => {
   it("rejects a matching organic item without a position", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
+      vi.fn().mockImplementation(() =>
         jsonResponse(
           searchResponse([
             {
@@ -606,7 +629,7 @@ describe("serpApiProvider", () => {
     });
   });
 
-  it("treats later pages without organic results as exhausted pagination", async () => {
+  it("rejects an unmeasured later page rather than returning a partial success", async () => {
     vi.stubGlobal(
       "fetch",
       vi
@@ -617,17 +640,21 @@ describe("serpApiProvider", () => {
         .mockResolvedValueOnce(jsonResponse({ search_metadata: {} })),
     );
 
-    // The last response carries no status metadata, so its usage stays explicitly
-    // unknown (null) instead of being counted or invented as a zero-cost success.
-    await expect(serpApiProvider.fetchRank(rankInput({ depth: 20 }))).resolves.toMatchObject({
-      billingUnits: null,
-      position: null,
-      rankingUrl: null,
+    await expect(serpApiProvider.fetchRank(rankInput({ depth: 20 }))).rejects.toMatchObject({
+      phase: "measurement",
+      name: "ProviderUsagePersistenceError",
     });
   });
 
   it("throws on a malformed response missing organic results", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ search_metadata: {} })));
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse({ search_metadata: { id: "native-malformed", status: "Success" } }),
+        ),
+    );
 
     await expect(serpApiProvider.fetchRank(rankInput())).rejects.toThrow(
       "did not include organic results",
@@ -674,15 +701,15 @@ describe("serpApiProvider", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("retries fetch rejections and maps them to a SerpApi request failure", async () => {
+  it("does not replay a search with an ambiguous transport failure", async () => {
     const fetchMock = vi.fn().mockRejectedValue(new TypeError("network down"));
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(serpApiProvider.fetchRank(rankInput())).rejects.toMatchObject({
-      message: "SerpApi request failed.",
-      name: "SerpApiError",
+      phase: "request",
+      name: "ProviderUsagePersistenceError",
     });
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("checks account balance and total capacity with the api_key query parameter", async () => {

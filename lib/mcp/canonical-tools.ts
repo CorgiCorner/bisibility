@@ -94,6 +94,16 @@ export const MCP_TOOL_NAMES = [
   "list_migration_tokens",
   "mint_migration_token",
   "revoke_migration_token",
+  "get_project_context",
+  "update_project_context",
+  "list_agent_reports",
+  "create_agent_report",
+  "get_agent_report",
+  "analyze_ai_visibility",
+  "compare_ai_prompts",
+  "run_site_audit",
+  "list_site_audits",
+  "get_site_audit",
 ] as const;
 
 // Phase C ships list_stored_reports and get_stored_report in the standalone

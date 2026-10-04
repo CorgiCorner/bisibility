@@ -1,0 +1,70 @@
+{
+  "projectSiteAudit": {
+    "heading": "Site audit",
+    "description": "Check HTTP, metadata, headings, indexability, links and image alt text for {domain}.",
+    "pageLimit": "Page limit",
+    "pageLimitError": "Choose 1 to 15 pages.",
+    "run": "Run audit",
+    "running": "Crawling site",
+    "cost": "Up to 15 seconds · No provider credits · Results cached for 5 minutes",
+    "readOnly": "Your project role or read-only mode prevents running audits. Saved reports remain available.",
+    "history": "Audit history",
+    "loadingHistory": "Loading saved report...",
+    "loadingRun": "Crawling public pages and checking URL issues...",
+    "loadingPage": "Loading site audit...",
+    "saved": "Saved {time}{stored}",
+    "stored": " · Stored result",
+    "emptyTitle": "Find technical issues on your site",
+    "emptyDescription": "Start a bounded crawl of your project domain. Each audit is saved so you and your agents can review URL issues later.",
+    "bullets": {
+      "0": "HTTP status, title and meta description",
+      "1": "Heading structure, robots directives and image alt",
+      "2": "Internal links and saved crawl history"
+    },
+    "summary": "{pages, number} pages checked · {errors, number} errors · {warnings, number} warnings · {indexable, number} indexable",
+    "partial": "Partial crawl: {reason}. Results cover the pages below.",
+    "stopReasons": {
+      "finished": "finished",
+      "page_limit": "page limit",
+      "time_limit": "time limit",
+      "request_limit": "request limit"
+    },
+    "urlIssues": "URL issues",
+    "columns": {
+      "0": "URL / title",
+      "1": "HTTP",
+      "2": "Indexable",
+      "3": "Links / images",
+      "4": "Issues"
+    },
+    "noTitle": "No title",
+    "skipped": "Skipped",
+    "yes": "Yes",
+    "no": "No",
+    "internal": "{count, number} internal",
+    "external": "{count, number} external",
+    "images": "{count, number} images",
+    "passed": "Passed",
+    "details": "Page details",
+    "descriptionLabel": "Meta description",
+    "canonicalLabel": "Canonical",
+    "robotsLabel": "Robots",
+    "missing": "Missing",
+    "noDirective": "No directive",
+    "limitations": "HTTP crawl only; JavaScript rendering and Lighthouse are not included. Indexability uses HTTP status, meta robots and X-Robots-Tag; canonical and search-engine indexing are not verified. Only the project origin and URLs without query strings are crawled. Links and headings are bounded samples.",
+    "issues": {
+      "http_error": "HTTP {count, number}",
+      "missing_title": "Title is missing.",
+      "missing_description": "Meta description is missing.",
+      "h1_count": "{count, number} H1 headings; expected one.",
+      "missing_image_alt": "{count, number} images have no alt attribute.",
+      "noindex": "Robots directives disallow indexing.",
+      "non_html": "Response is not HTML; on-page checks are unavailable.",
+      "robots_disallowed": "Crawl skipped because robots.txt disallows this URL.",
+      "fetch_failed": "Page could not be fetched within the safe crawl limits.",
+      "broken_internal_link": "{count, number} sampled internal links returned HTTP errors."
+    },
+    "errorRun": "Site audit could not be completed. Try again.",
+    "errorLoad": "Report could not be loaded."
+  }
+}

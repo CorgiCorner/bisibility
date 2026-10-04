@@ -64,7 +64,7 @@
         "defaultNotice": "This is the default schedule. New keywords will use manual checks until you choose another default.",
         "manualChecks": "Manual checks",
         "moveKeywords": "Move {count, plural, one {# keyword} other {# keywords}} to",
-        "title": "Archive \u201c{name}\u201d?"
+        "title": "Archive “{name}”?"
       },
       "archivedDetails": {
         "body": "This schedule no longer runs or accepts keywords. Restore it as paused to use it again.",
@@ -137,7 +137,7 @@
         "jitterExact": "None - start exactly on time",
         "jitterFifteen": "Up to 15 minutes",
         "jitterSixty": "Up to 60 minutes",
-        "memberEmpty": "No keywords yet. Add some to start scheduled checks.",
+        "memberEmpty": "No keywords assigned. This schedule keeps its settings but will not plan new checks until you add keywords. You can also archive it from the schedules list.",
         "memberCount": "{count, plural, one {# keyword} other {# keywords}}",
         "members": "Members",
         "membersTable": "Schedule members",
@@ -201,7 +201,9 @@
         "resume": "Resume",
         "resumeTitle": "Resumes the cadence. The next run is scheduled from now, not backfilled.",
         "tagScope": "tag = {tag}",
-        "toggleFailed": "Could not update the schedule. Please try again."
+        "toggleFailed": "Could not update the schedule. Please try again.",
+        "empty": "Empty · settings saved",
+        "emptyNext": "Add keywords to start"
       },
       "loading": {
         "loadingRuns": "Loading runs",

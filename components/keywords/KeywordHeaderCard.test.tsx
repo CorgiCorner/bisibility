@@ -114,7 +114,7 @@ describe("KeywordHeaderCard", () => {
     );
     expect(metadata).toHaveTextContent("Expected for this market: /rank-tracker");
     expect(metadata).toHaveTextContent("DataForSEO");
-    expect(metadata.querySelectorAll('[data-testid="keyword-detail-slot"]')).toHaveLength(8);
+    expect(metadata.querySelectorAll('[data-testid="keyword-detail-slot"]')).toHaveLength(3);
   });
 
   it("keeps the locale search link without duplicating the page context controls", () => {

@@ -30,8 +30,10 @@ describe("keyword traffic query", () => {
     await expect(
       getKeywordTraffic("project_1", "keyword_1", { rankingUrl: null, targetUrl: null }),
     ).resolves.toEqual({
+      connectedProviders: ["gsc"],
       hasAnalyticsConnection: true,
       hasSearchConsoleConnection: true,
+      pagePaths: [],
       pages: [],
       query: null,
     });
@@ -55,6 +57,8 @@ describe("keyword traffic query", () => {
     ).resolves.toMatchObject({
       hasAnalyticsConnection: true,
       hasSearchConsoleConnection: false,
+      connectedProviders: ["ga4"],
+      pagePaths: [],
     });
   });
 });

@@ -6,6 +6,7 @@ import { dispatchExtendedToolRoute } from "./extended-tool-routes";
 import { dispatchKeywordResearchTool } from "./keyword-research-tools";
 import { dispatchLoopClosureTool } from "./loop-closure-tools";
 import { validateMcpPublicIds } from "./public-id-input";
+import { dispatchResearchWorkspaceTool } from "./research-workspace-tools";
 import { dispatchMcpRestCall, type McpApiAuthorization, type RestCall } from "./rest-call";
 import { dispatchSessionProfile } from "./session-profile";
 import type { JsonObject } from "./types";
@@ -85,6 +86,8 @@ function dispatchToRest(name: string, input: ToolArgs): RestCall {
   validateMcpPublicIds(name, input);
   // biome-ignore format: compact dispatch keeps this registry under the file line cap.
   const directRoute = dispatchAgentToolRoute(name, input) ?? dispatchKeywordResearchTool(name, input);
+  const researchRoute = dispatchResearchWorkspaceTool(name, input);
+  if (researchRoute) return researchRoute;
   const extendedRoute = dispatchExtendedToolRoute(name, input);
   if (extendedRoute) return extendedRoute;
   if (directRoute) return directRoute;

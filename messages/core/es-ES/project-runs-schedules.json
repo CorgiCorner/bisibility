@@ -137,7 +137,7 @@
         "jitterExact": "Ninguna: empezar a la hora exacta",
         "jitterFifteen": "Hasta 15 minutos",
         "jitterSixty": "Hasta 60 minutos",
-        "memberEmpty": "Todavía no hay palabras clave. Añade alguna para empezar las comprobaciones programadas.",
+        "memberEmpty": "No hay palabras clave asignadas. La configuración se conserva, pero no se planificarán nuevas comprobaciones hasta añadir palabras clave. También puedes archivarla desde la lista.",
         "memberCount": "{count, plural, one {# palabra clave} other {# palabras clave}}",
         "members": "Miembros",
         "membersTable": "Miembros de la programación",
@@ -201,7 +201,9 @@
         "resume": "Reanudar",
         "resumeTitle": "Reanuda la cadencia. La próxima ejecución se programa a partir de ahora; no se recuperan las anteriores.",
         "tagScope": "etiqueta = {tag}",
-        "toggleFailed": "No se ha podido actualizar la programación. Inténtalo de nuevo."
+        "toggleFailed": "No se ha podido actualizar la programación. Inténtalo de nuevo.",
+        "empty": "Vacía · configuración guardada",
+        "emptyNext": "Añade palabras para empezar"
       },
       "loading": {
         "loadingRuns": "Cargando las ejecuciones",

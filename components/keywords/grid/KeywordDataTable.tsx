@@ -1,8 +1,7 @@
 "use client";
 
-import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { useKeywordDeletion } from "@/components/keywords/use-keyword-deletion";
 import { Card } from "@/components/ui/Card";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useDataTableLayout } from "@/components/ui/data-table/data-table-layout-store";
 import type { DataTableDensity, DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { FloatingSelectionBarSpacer } from "@/components/ui/FloatingSelectionBar";
@@ -27,7 +26,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
 import { BulkActionBar } from "./BulkActionBar";
-import { presentBulkActionError } from "./bulk-action-error";
 import { type KeywordColumnLabels, keywordColumns } from "./grid-columns";
 import { persistKeywordGridDensity } from "./grid-density";
 import { KeywordGridViewport } from "./KeywordGridViewport";
@@ -57,7 +55,6 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
   const columnT = useTranslations("projectRankTracker.keywordImport.management.columns");
   const marketCellsT = useTranslations("projectRankTracker.keywordImport.management.marketCells");
   const format = useFormatter();
-  const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
   const searchParams = useSearchParams();
   const layout = useDataTableLayout(KEYWORD_DATA_TABLE_ID);
@@ -68,10 +65,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
   const [density, setDensity] = useState<DataTableDensity>(initialDensity ?? "standard");
   const [selection, setSelection] = useState<ReadonlySet<string>>(() => new Set());
   const [navigationSequence, setNavigationSequence] = useState(0);
-  const [deletingKeyword, setDeletingKeyword] = useState<KeywordRow | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState<{ focusTargetUrl: boolean; row: KeywordRow } | null>(null);
-  const [rowActionError, setRowActionError] = useState<string | null>(null);
   const [navigationPending, startNavigation] = useTransition();
   const targetRows = useMemo(() => leafRows(rows), [rows]);
   const weeklySummary = useMemo(() => buildKeywordWeeklySummary(targetRows), [targetRows]);
@@ -109,11 +103,12 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
     }),
     [columnT, format, marketCellsT],
   );
+  const deletion = useKeywordDeletion({ action: bulkDeleteAction, onDeleted: () => router.refresh(), projectId });
   const columns = useMemo(
     () =>
       keywordColumns(
         {
-          onDelete: setDeletingKeyword,
+          onDelete: (row) => void deletion.open([row.id]),
           onEdit: (row) => setEditing({ focusTargetUrl: false, row }),
           onRunCheck: (row) => onRunChecks([row.id]),
           canDeleteKeyword,
@@ -123,7 +118,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
         pendingCheckIds,
         columnLabels,
       ),
-    [canDeleteKeyword, canUpdateKeyword, columnLabels, onRunChecks, pendingCheckIds, projectId],
+    [canDeleteKeyword, canUpdateKeyword, columnLabels, deletion.open, onRunChecks, pendingCheckIds, projectId],
   );
   const pagination = {
     page,
@@ -150,21 +145,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
     startNavigation(() => router.push(href));
   }
 
-  async function handleDeleteKeyword() {
-    if (!deletingKeyword) return;
-    setDeleting(true);
-    setRowActionError(null);
-    try {
-      await bulkDeleteAction({ keywordIds: [deletingKeyword.id], projectId });
-      setDeletingKeyword(null);
-      router.refresh();
-    } catch (error) {
-      setRowActionError(presentBulkActionError(error, sharedErrors, t("deleteFailed")));
-      throw error;
-    } finally {
-      setDeleting(false);
-    }
-  }
+
 
   function handlePagination(next: { page: number; pageSize: number }) {
     if (next.page === pagination.page && next.pageSize === pagination.pageSize) return;
@@ -226,11 +207,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
           scopeChip={scopeChip}
           scopeControl={scopeControl}
         />
-        {rowActionError ? (
-          <p className="m-0 border-b border-border px-4 py-2 font-sans tabular-nums text-[11.5px] text-red-text">
-            {rowActionError}
-          </p>
-        ) : null}
+
         {weeklySummary ? (
           <SummaryStrip
             className="rounded-none border-b border-border px-4"
@@ -274,13 +251,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
             updateKeywordAction={updateKeywordAction}
           />
         ) : null}
-        <ConfirmModal
-          busy={deleting}
-          kind="deleteKeyword"
-          onClose={() => setDeletingKeyword(null)}
-          onConfirm={handleDeleteKeyword}
-          open={Boolean(deletingKeyword)}
-        />
+        {canDeleteKeyword ? deletion.modal : null}
       </Card>
       <BulkActionBar
         bulkClearTargetAction={bulkClearTargetAction}

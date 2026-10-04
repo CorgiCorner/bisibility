@@ -29,6 +29,7 @@ type KeywordPendingDetailProps = KeywordDetailActions & {
   history?: ReactNode;
   costContext?: ProjectCostContext;
   keyword: KeywordRow;
+  scheduleTargets?: readonly KeywordRow[];
   pollAction?: RankCheckPollAction;
   providerConnected: boolean;
   projectId: string;
@@ -56,6 +57,7 @@ export function KeywordPendingDetail({
   canUpdateKeyword,
   costContext,
   keyword,
+  scheduleTargets,
   history,
   pollAction,
   providerConnected,
@@ -136,6 +138,8 @@ export function KeywordPendingDetail({
     <>
       <KeywordDetailHeaderChrome
         actions={actions}
+        scheduleTargets={scheduleTargets}
+        projectRef={projectId}
         keyword={keyword}
         onChangeSchedule={canUpdateKeyword ? onChangeSchedule : undefined}
         providerLabel={providerLabel ?? costContext?.providerId ?? keyword.dataProvider}

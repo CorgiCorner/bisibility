@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const body = await readFile(join(process.cwd(), "CONTRIBUTING.md"), "utf8");
+  const body = await readFile(join(process.cwd(), ".github", "CONTRIBUTING.md"), "utf8");
 
   return new Response(body.endsWith("\n") ? body : `${body}\n`, {
     headers: {

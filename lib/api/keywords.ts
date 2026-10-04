@@ -5,12 +5,12 @@ import { addTags } from "@/lib/actions/keyword-helpers";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { Device, type Prisma } from "@/lib/generated/prisma/client";
+import { deleteKeywordTargets } from "@/lib/keywords/delete";
 import {
   assertKeywordIdentityUnchanged,
   KeywordIdentityImmutableError,
 } from "@/lib/keywords/identity";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
-import { cancelRunItemsForKeywordDeletion } from "@/lib/rank-check/runs/cancel";
 import { intentSchema, topicSchema } from "@/lib/schemas/keyword";
 import { LocationInputError, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
@@ -300,8 +300,7 @@ export async function deleteKeyword(ctx: ApiContext, keywordId: string) {
   // Serialize before the deletion; the checks are cascade-deleted with the keyword.
   const resource = (await keywordResources([keyword], ctx.auth.project.publicId))[0];
   await prisma.$transaction(async (tx) => {
-    await cancelRunItemsForKeywordDeletion(tx, [keyword.id]);
-    await tx.keyword.delete({ where: { id: keyword.id } });
+    await deleteKeywordTargets(tx, ctx.auth.project.id, [keyword.publicId]);
     await writeAudit(
       {
         action: "keyword.delete",

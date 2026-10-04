@@ -61,12 +61,13 @@ export async function readProviderLookupCache<T>(key: string): Promise<T | null 
 
 export async function acquireProviderLookupLock(
   key: string,
+  ttlSeconds = LOCK_TTL_SECONDS,
 ): Promise<ProviderLookupLock | null | undefined> {
   if (!redisConfigured()) return null;
   const token = randomUUID();
   const lockKey = `${key}:lock`;
   const acquired = await redisOperation((redis) =>
-    redis.set(lockKey, token, { EX: LOCK_TTL_SECONDS, NX: true }),
+    redis.set(lockKey, token, { EX: ttlSeconds, NX: true }),
   );
   if (acquired === undefined) return undefined;
   return acquired === "OK" ? { key: lockKey, token } : null;
@@ -118,6 +119,7 @@ export async function withProviderLookupCache<T>(input: {
   key: string;
   load: () => Promise<T>;
   ttlSeconds: number;
+  lockTtlSeconds?: number;
 }): Promise<ProviderLookupCacheResult<T>> {
   let cacheAvailable = redisConfigured();
   if (!input.fresh && cacheAvailable) {
@@ -125,7 +127,9 @@ export async function withProviderLookupCache<T>(input: {
     if (cached === undefined) cacheAvailable = false;
     else if (cached) return { cached: true, status: "success", value: cached };
   }
-  const lock = cacheAvailable ? await acquireProviderLookupLock(input.key) : undefined;
+  const lock = cacheAvailable
+    ? await acquireProviderLookupLock(input.key, input.lockTtlSeconds)
+    : undefined;
   if (lock === undefined) cacheAvailable = false;
   if (cacheAvailable && lock === null) {
     const cached = await waitForProviderLookupCache<T>(input.key);

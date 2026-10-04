@@ -1,10 +1,10 @@
 import { Sparkline } from "@/components/charts/Sparkline";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
+import { keywordScheduleTarget } from "@/lib/keywords/schedule-targets";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { type ScheduleReference, scheduleRowSortValue } from "@/lib/schedules/mixed-state";
+import { scheduleRowSortValue } from "@/lib/schedules/mixed-state";
 import * as rankDepth from "@/lib/serp/rank-depth";
-import { frequencyOptions } from "@/lib/settings/options";
 import { chartColors } from "@/lib/theme/chart-colors";
 import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
@@ -23,8 +23,6 @@ import {
 import { rowActionsColumn } from "./RowActionsCell";
 import { ScheduleCell, type ScheduleCellTarget } from "./ScheduleCell";
 import { TargetRankingCell } from "./TargetRankingCell";
-
-type ScheduledKeywordRow = KeywordRow & { checkSchedule?: ScheduleReference | null };
 
 export type KeywordColumnLabels = TrafficColumnLabels & {
   change: string;
@@ -48,24 +46,9 @@ export type KeywordColumnLabels = TrafficColumnLabels & {
   volume: string;
 };
 
-function fallbackSchedule(row: KeywordRow): ScheduleReference | null {
-  if (row.schedule.frequency === "manual") return null;
-  const name = frequencyOptions.find((option) => option.value === row.schedule.frequency)?.label;
-  return name ? { name, publicId: `legacy:${row.schedule.frequency}` } : null;
-}
-
-function scheduleTarget(row: KeywordRow): ScheduleCellTarget {
-  return {
-    device: row.device,
-    id: row.id,
-    location: `${row.location.displayName} / ${row.location.languageLabel ?? row.location.hl}`,
-    schedule: (row as ScheduledKeywordRow).checkSchedule ?? fallbackSchedule(row),
-  };
-}
-
 export function scheduleTargetsForRow(row: KeywordRow): ScheduleCellTarget[] {
   const parent = marketGridParent(row);
-  return (parent?.aggregate.children ?? [row]).map(scheduleTarget);
+  return (parent?.aggregate.children ?? [row]).map(keywordScheduleTarget);
 }
 
 function DeviceCell({ row }: Readonly<{ row: KeywordRow }>) {
@@ -152,6 +135,17 @@ export function keywordColumns(
       meta: { flex: 1.55, lockVisible: true, pin: "left", title: labels.keyword },
       minSize: 160,
       size: 300,
+    },
+    {
+      accessorFn: (row) => scheduleRowSortValue(scheduleTargetsForRow(row)),
+      cell: ({ row }) => (
+        <ScheduleCell projectRef={projectRef} targets={scheduleTargetsForRow(row.original)} />
+      ),
+      header: labels.schedule,
+      id: "frequency",
+      meta: { title: labels.schedule },
+      minSize: 148,
+      size: 148,
     },
     {
       accessorFn: (row) => row.position,
@@ -249,15 +243,6 @@ export function keywordColumns(
       meta: { title: labels.lastChecked },
       minSize: 152,
       size: 152,
-    },
-    {
-      accessorFn: (row) => scheduleRowSortValue(scheduleTargetsForRow(row)),
-      cell: ({ row }) => <ScheduleCell targets={scheduleTargetsForRow(row.original)} />,
-      header: labels.schedule,
-      id: "frequency",
-      meta: { title: labels.schedule },
-      minSize: 148,
-      size: 148,
     },
     {
       accessorFn: (row) => [row.targetUrl, row.rankingUrl].filter(Boolean).join(" "),

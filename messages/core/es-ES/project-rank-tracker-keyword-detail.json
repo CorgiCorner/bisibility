@@ -70,7 +70,12 @@
         "metricsUnsupported": "El volumen de búsqueda y la dificultad no están disponibles para esta ubicación de seguimiento. El seguimiento de posiciones no se ve afectado.",
         "searchVolume": "Volumen de búsqueda",
         "difficultyMetric": "dificultad",
-        "metricListSeparator": " y "
+        "metricListSeparator": " y ",
+        "searchMetrics": "Métricas de búsqueda",
+        "metricsForMarket": "Para {market}",
+        "checkedDepth": "Top {depth, number} comprobado",
+        "connectedSchedule": "Programación para este mercado y dispositivo",
+        "schedulesAllTargets": "Todos los mercados y dispositivos"
       },
       "actions": {
         "moreActions": "Más acciones de la palabra clave",
@@ -86,7 +91,11 @@
         "depthMenu": "Profundidad de la comprobación",
         "changeDefault": "Cambiar el valor predeterminado",
         "connectProvider": "Conectar un proveedor",
-        "shallowVisibility": "Una comprobación poco profunda puede pasar por alto posiciones más allá de la profundidad seleccionada."
+        "shallowVisibility": "Una comprobación poco profunda puede pasar por alto posiciones más allá de la profundidad seleccionada.",
+        "refreshData": "Actualizar datos",
+        "refreshingData": "Actualizando...",
+        "refreshDataHint": "Actualiza los resultados mostrados sin iniciar otra comprobación.",
+        "checking": "Comprobando..."
       },
       "edit": {
         "details": "Detalles",
@@ -172,7 +181,7 @@
         "ctr": "CTR",
         "averagePosition": "Pos. media",
         "gscPositionNote": "La posición de Search Console es una media sobre impresiones reales y puede diferir de la última comprobación de posiciones.",
-        "awaitingSync": "A la espera de la primera sincronización de tráfico.",
+        "awaitingSync": "Todavía no hay datos de Search Console para esta palabra clave.",
         "reportingLag": "Los datos de Search Console llegan con un retraso aproximado de {days, number} días.",
         "connectDescription": "Conecta Search Console para ver los clics, las impresiones y el CTR de esta palabra clave.",
         "connect": "Conectar Search Console",
@@ -186,7 +195,25 @@
         "duration": "Duración",
         "scrollDepth": "Desplazamiento",
         "seconds": "{seconds, number} s",
-        "minutesSeconds": "{minutes, number} min {seconds, number} s"
+        "minutesSeconds": "{minutes, number} min {seconds, number} s",
+        "landingEmpty": "No hay datos guardados de la página {path}. Obtén datos de analítica para consultar las fuentes conectadas.",
+        "landingNeedsUrl": "Define una URL de destino o realiza una comprobación que encuentre una URL posicionada para asociar las estadísticas de la página.",
+        "dataThrough": "Datos hasta {date}",
+        "sync": {
+          "title": "Analítica",
+          "scope": "Datos del proyecto · todos los países y dispositivos",
+          "action": "Obtener analítica",
+          "pending": "Obteniendo analítica…",
+          "hint": "Obtiene informes de las fuentes de analítica conectadas al proyecto. Se siguen aplicando los retrasos de los proveedores.",
+          "updated": "Analítica actualizada. Los resultados disponibles se muestran a continuación.",
+          "empty": "Informes obtenidos. No se devolvieron datos de consultas o páginas que coincidan con las palabras clave seguidas.",
+          "partial": "Algunas fuentes se actualizaron, pero otras no pudieron terminar. Los resultados disponibles se muestran a continuación. Consulta los detalles en Integraciones.",
+          "failed": "No se pudo obtener la analítica. Inténtalo de nuevo o revisa la conexión en Integraciones.",
+          "reconnect": "Una fuente de analítica debe volver a conectarse en Integraciones.",
+          "rateLimited": "Se alcanzó el límite de solicitudes del proveedor de analítica. Inténtalo más tarde.",
+          "unavailable": "No hay ninguna fuente conectada disponible para obtener analítica. Revisa Integraciones.",
+          "integrations": "Gestionar integraciones"
+        }
       },
       "position": {
         "title": "Historial de posiciones",
@@ -198,7 +225,7 @@
         "range": "Intervalo del historial de posiciones",
         "rangeDays": "{count, number} días",
         "markets": "{count, plural, one {# mercado} other {# mercados}}",
-        "latest": "Última #{position, number} · {date}",
+        "latest": "#{position, number} · {date}",
         "latestUnavailable": "Última posición no disponible",
         "noChecks": "No hay comprobaciones en los últimos {days, number} días.",
         "notEnough": "Todavía no hay historial suficiente para dibujar el gráfico.",
@@ -225,7 +252,10 @@
         "comparedMarkets": "Mercados comparados",
         "noVolumeDifficulty": " / sin volumen ni KD",
         "moreMarkets": "+{count, number} mercados más: filtra en la tabla para compararlos",
-        "degradedMarker": "Comprobada a nivel de país: el proveedor no tenía identificador para esta ciudad. La posición se ha medido para {country}, no para {requested}."
+        "degradedMarker": "Comprobada a nivel de país: el proveedor no tenía identificador para esta ciudad. La posición se ha medido para {country}, no para {requested}.",
+        "latestCheck": "Última comprobación",
+        "recordedPosition": "Posición registrada",
+        "unrankedGaps": "Las comprobaciones sin posición se muestran como huecos."
       },
       "rankingUrl": {
         "title": "Historial de URL posicionadas",
@@ -379,6 +409,34 @@
             "label": "Vídeo",
             "description": "Un bloque de resultados de vídeos en la página de resultados."
           }
+        },
+        "extension": {
+          "title": "Ampliar esta captura",
+          "action": "Obtener 10 resultados más",
+          "confirmTitle": "Ampliar captura de SERP",
+          "cancel": "Cancelar",
+          "confirm": "Confirmar y obtener",
+          "pending": "Obteniendo resultados…",
+          "rangeLabel": "Posiciones adicionales",
+          "range": "Del #{start, number} al #{end, number}",
+          "costLabel": "Uso estimado del proveedor",
+          "cost": "Hasta 1 búsqueda",
+          "window": "Disponible hasta {time}, durante 15 minutos desde la consulta original.",
+          "timing": "Los resultados adicionales se obtienen ahora y se adjuntan a esta comprobación con su propia fecha. La posición histórica y las comparaciones no cambian.",
+          "duplicates": "Los resultados pueden cambiar de página. Las URL repetidas se omiten automáticamente, conservando el resultado anterior y su posición. Las páginas distintas del mismo dominio se mantienen separadas; las posiciones no se renumeran.",
+          "unsupported": "Este proveedor no permite ampliar una captura guardada. Usa el botón de comprobación de arriba para obtener una captura más profunda.",
+          "legacy": "Esta comprobación no tiene datos de continuación guardados. Usa el botón de comprobación de arriba para obtener más posiciones.",
+          "expired": "El plazo de 15 minutos ha terminado. Inicia otra comprobación arriba para obtener resultados actuales.",
+          "complete": "No hay más páginas o la captura ha llegado a las primeras 100 posiciones.",
+          "running": "Ya se está obteniendo una ampliación. Actualiza los datos para ver el resultado.",
+          "failed": "No se pudo confirmar la ampliación. Los resultados anteriores están a salvo. Actualiza los datos para comprobar el estado o inicia otra comprobación.",
+          "disconnected": "Vuelve a conectar la integración SerpApi de esta captura para ampliarla.",
+          "unavailable": "Esta captura ha cambiado. Actualiza los datos antes de continuar.",
+          "addedTitle": "Resultados añadidos después de la comprobación",
+          "page": "Posiciones {start, number} a {end, number} · obtenidas el {time}",
+          "added": "{count, number} añadidos · {duplicates, number} duplicados omitidos",
+          "emptyPage": "Esta página no devolvió nuevos resultados únicos.",
+          "refresh": "Actualizar captura"
         }
       },
       "comparison": {
@@ -477,6 +535,11 @@
           "ranked": "Posicionada",
           "running": "Comprobación en curso"
         }
+      },
+      "context": {
+        "label": "Ámbito de la comprobación",
+        "desktop": "Ordenador",
+        "mobile": "Móvil"
       }
     }
   }

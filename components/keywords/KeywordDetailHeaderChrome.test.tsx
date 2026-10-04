@@ -9,6 +9,30 @@ describe("KeywordDetailHeaderChrome", () => {
     vi.useRealTimers();
   });
 
+  it.each(["normal", "not_ranked", "running"] as const)(
+    "identifies the check scope in the %s result card",
+    (rankState) => {
+      render(
+        <KeywordDetailHeaderChrome
+          actions={<button type="button">Run check (Top 20)</button>}
+          keyword={{
+            ...keywordRows[0],
+            device: "mobile",
+            trackedDepth: 100,
+            location: { ...keywordRows[0].location, languageLabel: "English" },
+          }}
+          rankState={rankState}
+          timeZone="UTC"
+        />,
+      );
+      const context = screen.getByLabelText("Check scope");
+      expect(context).toHaveTextContent("United States");
+      expect(context).toHaveTextContent("English");
+      expect(context).toHaveTextContent("Mobile");
+      expect(screen.getByText("Checked top 100")).toBeInTheDocument();
+    },
+  );
+
   it("uses a compact ID, without a Keyword eyebrow, while retaining the full ID for copy", () => {
     const keyword = { ...keywordRows[0], id: "kw_3f9a2c1d7e" };
     render(<KeywordDetailHeaderChrome actions={null} keyword={keyword} timeZone="UTC" />);
@@ -18,16 +42,16 @@ describe("KeywordDetailHeaderChrome", () => {
     expect(screen.getByRole("button", { name: "Copy ID" })).toBeInTheDocument();
   });
 
-  it("renders two responsive four-up rows with Competition instead of Intent", () => {
+  it("separates check results from secondary search metrics", () => {
     render(<KeywordDetailHeaderChrome actions={null} keyword={keywordRows[0]} timeZone="UTC" />);
 
     const metadata = screen.getByLabelText("Keyword check metadata");
-    expect(metadata).toHaveClass("sm:grid-cols-2", "xl:grid-cols-4");
-    expect(metadata.querySelectorAll('[data-testid="keyword-detail-slot"]')).toHaveLength(8);
-    expect(screen.getByText("Competition", { exact: true })).toBeInTheDocument();
+    expect(metadata.querySelectorAll('[data-testid="keyword-detail-slot"]')).toHaveLength(3);
+    expect(screen.queryByText("Competition", { exact: true })).not.toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Search metrics" })).toHaveTextContent("Volume");
     expect(screen.queryByText("Intent", { exact: true })).not.toBeInTheDocument();
     expect(screen.getByTestId("keyword-detail-slot-value-position")).toHaveClass(
-      "text-[17px]",
+      "text-[24px]",
       "font-semibold",
     );
   });
@@ -56,7 +80,7 @@ describe("KeywordDetailHeaderChrome", () => {
         timeZone="UTC"
       />,
     );
-    expect(screen.getByText("Not scheduled")).toBeInTheDocument();
+    expect(screen.getByText("Schedule for this market and device")).toBeInTheDocument();
     expect(screen.getByText("Manual")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "set schedule" })).toBeInTheDocument();
   });
@@ -73,9 +97,8 @@ describe("KeywordDetailHeaderChrome", () => {
 
     const value = screen.getByTestId("keyword-detail-slot-value-position");
     expect(value).toHaveTextContent("Not ranked");
-    expect(value).toHaveClass("text-[13px]", "text-fg-muted");
-    expect(value).not.toHaveClass("text-[17px]", "font-semibold");
-    expect(screen.getByText("Not in top 50 · Tracked since 3 Sep")).toBeInTheDocument();
+    expect(value).toHaveAttribute("data-state", "textual");
+    expect(screen.getByText("Tracked since 3 Sep")).toBeInTheDocument();
   });
 
   it("uses a quiet textual position state when ranking data is unavailable", () => {
@@ -89,7 +112,7 @@ describe("KeywordDetailHeaderChrome", () => {
 
     const value = screen.getByTestId("keyword-detail-slot-value-position");
     expect(value).toHaveTextContent("No data");
-    expect(value).toHaveClass("text-[13px]", "text-fg-muted");
+    expect(value).toHaveAttribute("data-state", "textual");
   });
 
   it("keeps a single empty ranking URL message and puts View SERP in its target detail", () => {
@@ -146,7 +169,7 @@ describe("KeywordDetailHeaderChrome", () => {
       />,
     );
 
-    expect(screen.getAllByText("n/a")).toHaveLength(4);
+    expect(screen.queryByText("n/a")).not.toBeInTheDocument();
     expect(
       screen.getAllByText(
         "Search volume and difficulty are unavailable for this keyword. Rank tracking is unaffected.",

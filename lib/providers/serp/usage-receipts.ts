@@ -9,13 +9,21 @@ export function serpApiUsageReceipt(
 ): ProviderUsageReceipt {
   const status = data?.search_metadata?.status;
   const cached = status === "Cached";
-  const failed = !response.ok || Boolean(data?.error) || status === "Error";
+  const providerFailed = Boolean(data?.error) || status === "Error";
+  const failed = !response.ok || providerFailed;
   return {
     cached,
     costCents: 0,
     failed,
     providerRequestId: data?.search_metadata?.id,
-    quantity: cached || failed ? 0 : status === "Success" ? 1 : null,
+    quantity:
+      providerFailed && status === "Success"
+        ? null
+        : cached || providerFailed
+          ? 0
+          : status === "Success"
+            ? 1
+            : null,
   };
 }
 

@@ -9,6 +9,10 @@ import { ProjectDomainRequiredError } from "../projects/tracked-domain";
 import { DeploymentAdmissionExhaustedError } from "../providers/execution-extension-errors";
 import { ProviderRateLimitedError } from "../providers/rate-limit";
 import { ProviderUsagePersistenceError } from "../providers/usage";
+import {
+  providerUsageFailureDetails,
+  safeProviderUsageCause,
+} from "../providers/usage-failure-details";
 import { isBudgetExhaustedError } from "../rank-check/budget";
 import { ProviderChainError, runKeywordCheckWithFallback } from "../rank-check/fallback";
 import { RankCheckClosedBeforePersistenceError } from "../rank-check/persistence-errors";
@@ -196,6 +200,8 @@ export async function runRankCheckActivity(
         message: error.message,
         nonRetryable: true,
         type: "provider_usage_unconfirmed",
+        details: [providerUsageFailureDetails(error)],
+        cause: safeProviderUsageCause(error),
       });
     }
     if (isBudgetExhaustedError(error)) {

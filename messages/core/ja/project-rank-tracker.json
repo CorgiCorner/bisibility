@@ -58,7 +58,7 @@
         "viewCheckRuns": "チェック実行を表示"
       },
       "scheduleManual": "手動",
-      "scheduleMixed": "混在: {count, number}",
+      "scheduleMixed": "{count, plural, other {スケジュール#件}}",
       "toolbar": {
         "addKeyword": "キーワードを追加",
         "export": "エクスポート",
@@ -251,6 +251,22 @@
       "willNeverRun": "{count, number}件は実行されません",
       "yesterday": "昨日",
       "yourResult": "自サイトの結果: {position, number}位"
+    },
+    "deletion": {
+      "selection": "{keywords, plural, other {キーワード#件}} · {targets, plural, other {市場・デバイスの対象#件}}",
+      "targetHint": "選択した対象とその順位履歴のみが削除されます。他の市場やデバイスは引き続き追跡されます。",
+      "schedules": "関連スケジュールへの影響",
+      "removed": "{count, plural, other {対象#件が削除されます。}}",
+      "becomesEmpty": "対象がなくなります。キーワードを追加するまで新しいチェックは実行されません。",
+      "remaining": "{count, plural, other {対象#件が残ります。}} スケジュール設定は変更されません。",
+      "kept": "スケジュールと設定は保持されます。キーワードを再追加するか、空のスケジュールをアーカイブできます。",
+      "noSchedules": "選択した対象に関連するスケジュールはありません。",
+      "running": "キュー内のチェックはキャンセルされます。プロバイダーのチェックが進行中の場合は、完了してから削除してください。発生済みの使用量は保持されます。",
+      "loadFailed": "スケジュールへの影響を取得できませんでした。削除する前に再試行してください。",
+      "retry": "再試行",
+      "loading": "関連スケジュールを確認中…",
+      "runningBlocked": "{count, plural, other {対象#件をチェック中です。}} 完了を待ってから状態を更新して削除してください。",
+      "refresh": "状態を更新"
     }
   }
 }

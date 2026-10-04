@@ -1,0 +1,70 @@
+{
+  "projectSiteAudit": {
+    "heading": "Audyt witryny",
+    "description": "Sprawdź HTTP, metadane, nagłówki, indeksowalność, linki i tekst alternatywny obrazów dla {domain}.",
+    "pageLimit": "Limit stron",
+    "pageLimitError": "Wybierz od 1 do 15 stron.",
+    "run": "Uruchom audyt",
+    "running": "Skanowanie witryny",
+    "cost": "Do 15 sekund · Bez kredytów dostawcy · Wyniki w pamięci podręcznej przez 5 minut",
+    "readOnly": "Twoja rola lub tryb tylko do odczytu uniemożliwia uruchamianie audytów. Zapisane raporty są dostępne.",
+    "history": "Historia audytów",
+    "loadingHistory": "Ładowanie zapisanego raportu...",
+    "loadingRun": "Skanowanie publicznych stron i sprawdzanie problemów z adresami URL...",
+    "loadingPage": "Ładowanie audytu witryny...",
+    "saved": "Zapisano {time}{stored}",
+    "stored": " · Zapisany wynik",
+    "emptyTitle": "Znajdź problemy techniczne witryny",
+    "emptyDescription": "Uruchom ograniczone skanowanie domeny projektu. Każdy audyt jest zapisywany, aby zespół i agenci mogli później przejrzeć problemy z adresami URL.",
+    "bullets": {
+      "0": "Status HTTP, tytuł i opis meta",
+      "1": "Struktura nagłówków, dyrektywy robots i tekst alt",
+      "2": "Linki wewnętrzne i historia skanowania"
+    },
+    "summary": "Sprawdzono {pages, number} stron · {errors, number} błędów · {warnings, number} ostrzeżeń · {indexable, number} indeksowalnych",
+    "partial": "Częściowe skanowanie: {reason}. Wyniki obejmują poniższe strony.",
+    "stopReasons": {
+      "finished": "zakończono",
+      "page_limit": "limit stron",
+      "time_limit": "limit czasu",
+      "request_limit": "limit żądań"
+    },
+    "urlIssues": "Problemy z adresami URL",
+    "columns": {
+      "0": "URL / tytuł",
+      "1": "HTTP",
+      "2": "Indeksowalna",
+      "3": "Linki / obrazy",
+      "4": "Problemy"
+    },
+    "noTitle": "Brak tytułu",
+    "skipped": "Pominięto",
+    "yes": "Tak",
+    "no": "Nie",
+    "internal": "{count, number} wewnętrznych",
+    "external": "{count, number} zewnętrznych",
+    "images": "{count, number} obrazów",
+    "passed": "Poprawna",
+    "details": "Szczegóły strony",
+    "descriptionLabel": "Opis meta",
+    "canonicalLabel": "Adres kanoniczny",
+    "robotsLabel": "Robots",
+    "missing": "Brak",
+    "noDirective": "Brak dyrektywy",
+    "limitations": "Analiza HTTP bez renderowania JavaScript i Lighthouse. Indeksowalność wynika ze statusu HTTP, meta robots i X-Robots-Tag; adres kanoniczny i indeks wyszukiwarki nie są weryfikowane. Skanowanie obejmuje tylko domenę projektu i adresy bez parametrów zapytania. Linki i nagłówki są ograniczonymi próbkami.",
+    "issues": {
+      "http_error": "HTTP {count, number}",
+      "missing_title": "Brak tytułu.",
+      "missing_description": "Brak opisu meta.",
+      "h1_count": "Nagłówki H1: {count, number}; oczekiwany jeden.",
+      "missing_image_alt": "Obrazy bez atrybutu alt: {count, number}.",
+      "noindex": "Dyrektywy robots blokują indeksowanie.",
+      "non_html": "Odpowiedź nie zawiera HTML; analiza treści jest niedostępna.",
+      "robots_disallowed": "Adres pominięto zgodnie z robots.txt.",
+      "fetch_failed": "Nie udało się pobrać strony w granicach bezpiecznego skanowania.",
+      "broken_internal_link": "Wewnętrzne linki w próbce zwróciły błędy HTTP: {count, number}."
+    },
+    "errorRun": "Nie udało się ukończyć audytu. Spróbuj ponownie.",
+    "errorLoad": "Nie udało się wczytać raportu."
+  }
+}

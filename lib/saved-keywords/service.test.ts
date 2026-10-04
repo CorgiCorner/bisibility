@@ -15,7 +15,10 @@ vi.mock("@/lib/auth/audit", () => ({
   requiredPublicAuditId: (value: string) => value,
   writeAudit: mocks.writeAudit,
 }));
-vi.mock("@/lib/db/public-id", () => ({ makePublicId: mocks.makePublicId }));
+vi.mock("@/lib/db/public-id", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/db/public-id")>()),
+  makePublicId: mocks.makePublicId,
+}));
 vi.mock("@/lib/db/prisma", () => {
   const transaction = {
     keyword: { findMany: mocks.findManyTracked },

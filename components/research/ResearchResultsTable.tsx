@@ -209,7 +209,9 @@ export function ResearchResultsTable({
             </span>
           ) : null}
         </Button>
-        <p className="m-0 min-w-0 flex-1 text-[12px] text-fg-muted">
+        <p
+          className={`m-0 basis-auto grow text-[12px] text-fg-muted ${storedFreshness ? "shrink-0 whitespace-nowrap" : "min-w-0"}`}
+        >
           {t.rich("showing", {
             freshness: storedFreshness
               ? "none"

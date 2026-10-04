@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.28.0] - 2026-10-04
+
+### Added
+
+- Added AI visibility datasets, multi-model prompt tests, bounded site audits, shared project context and protected agent reports through the app, REST and MCP.
+
+- Keyword details can refresh connected analytics and rank data; completed checks update results, and query details link to Search Console.
+
+### Changed
+
+- Keyword details show market and device context, schedule impact and aligned analytics; recent SERP snapshots can extend results while preserving rank history.
+
+### Fixed
+
+- Fixed research and backlink controls, tables, badges and unsupported targets; Search Console now uses fresh, finalized reporting periods.
+
+- Updated security dependencies and fixed provider deadlines, retaining safe diagnostics without replaying searches whose usage is unconfirmed.
+
 ## [0.27.0] - 2026-09-27
 
 ### Added

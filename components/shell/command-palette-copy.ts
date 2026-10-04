@@ -35,6 +35,11 @@ export function commandPaletteCopy(
     },
     marketNavigation: (section, market) => t("marketNavigation", { market, section }),
     navigation: {
+      "AI Visibility": navigation("items.aiVisibility"),
+      "Prompt Explorer": navigation("items.promptExplorer"),
+      "Site Audit": navigation("items.siteAudit"),
+      "Project Context": navigation("items.projectContext"),
+      "Agent Reports": navigation("items.agentReports"),
       Alerts: navigation("items.alerts"),
       Backlinks: navigation("items.backlinks"),
       Competitors: navigation("items.competitors"),

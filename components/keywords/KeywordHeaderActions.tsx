@@ -14,6 +14,7 @@ import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react/dist/csr/DotsT
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { CheckDepthSplitButton } from "./CheckDepthSplitButton";
+import { KeywordDataRefresh } from "./KeywordDataRefresh";
 
 type KeywordHeaderActionsProps = {
   canUpdateKeyword: boolean;
@@ -25,6 +26,7 @@ type KeywordHeaderActionsProps = {
   primaryLabel?: string | ((depth: SerpDepth) => string);
   providerRate?: CostRateInfo;
   runPending: boolean;
+  runActive?: boolean;
   showCheck?: boolean;
 };
 
@@ -58,6 +60,7 @@ export function KeywordHeaderActions({
   primaryLabel,
   providerRate,
   runPending,
+  runActive = false,
   showCheck = true,
 }: Readonly<KeywordHeaderActionsProps>) {
   const t = useTranslations("projectRankTracker.keywordDetail.actions");
@@ -76,11 +79,15 @@ export function KeywordHeaderActions({
 
   return (
     <div className="flex flex-wrap justify-end gap-2">
+      <KeywordDataRefresh />
       {canUpdateKeyword && showCheck ? (
         <ProjectReadOnlyTooltip>
           <CheckDepthSplitButton
             actionLabel={
-              runCheckActionLabel(runPending, resolvedPrimaryLabel, selectedDepth) ?? t("starting")
+              runActive
+                ? t("checking")
+                : (runCheckActionLabel(runPending, resolvedPrimaryLabel, selectedDepth) ??
+                  t("starting"))
             }
             caretAriaLabel={t("chooseDepth")}
             copy={{
@@ -90,11 +97,11 @@ export function KeywordHeaderActions({
               shallowVisibility: t("shallowVisibility"),
             }}
             currentDepth={selectedDepth}
-            disabled={readOnly || runPending}
+            disabled={readOnly || runPending || runActive}
             onAction={() => onRunCheck(selectedDepth)}
             onDepthChange={(depth) => setDepthSelection({ effectiveDepth, selectedDepth: depth })}
             optionLabel={(depth) => depthOptionLabel(depth, providerRate, t, usage)}
-            spinning={runPending}
+            spinning={runPending || runActive}
           />
         </ProjectReadOnlyTooltip>
       ) : null}

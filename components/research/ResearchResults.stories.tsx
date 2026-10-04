@@ -2,6 +2,7 @@ import { type GroupedResearchRow, groupResearchRows } from "@/lib/keyword-resear
 import type { KeywordResearchSuccess } from "@/lib/keyword-research/types";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
+import { expect } from "storybook/test";
 import { ResearchResults } from "./ResearchResults";
 import { ResearchResultsTable } from "./ResearchResultsTable";
 
@@ -9,9 +10,11 @@ const meta = {
   component: ResearchResults,
   decorators: [
     (Story) => (
-      <div className="min-h-screen bg-bg p-6 text-fg">
-        <Story />
-      </div>
+      <FeatureMessagesProvider locale="en" messages={researchFeatureTestMessages} timeZone="UTC">
+        <div className="min-h-screen bg-bg p-6 text-fg">
+          <Story />
+        </div>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen" },
@@ -176,3 +179,49 @@ export const EmptyFilteredResults: Story = {
   args: CachedPartialResult.args,
   render: () => <ResearchResultsTableStory rows={[]} />,
 };
+
+export const StoredResultsToolbar: Story = {
+  args: CachedPartialResult.args,
+  render: () => (
+    <div className="max-w-[680px]">
+      <ResearchResultsTable
+        activeKeyword={null}
+        cached
+        canRemoveSaved={false}
+        deeper={null}
+        fetchedAt={result.fetchedAt}
+        fetchedCount={100}
+        filterCount={0}
+        onActiveChange={() => undefined}
+        onOpenFilters={() => undefined}
+        readOnly
+        rows={Array.from({ length: 100 }, (_, index) => ({
+          ...groupResearchRows(result.rows)[0],
+          keyword: `keyword ${index + 1}`,
+        }))}
+        seed="seo tools"
+        selectedKeywords={[]}
+        storedFreshness={{
+          fetchedAt: result.fetchedAt,
+          freshUntil: result.cachedUntil,
+          stale: false,
+        }}
+        totalCount={100}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const summary = Array.from(canvasElement.querySelectorAll("p")).find((item) =>
+      item.textContent?.startsWith("Showing"),
+    );
+    if (!summary) throw new Error("Expected the fetched keyword count");
+    const range = document.createRange();
+    range.selectNodeContents(summary);
+    const lineTops = new Set(Array.from(range.getClientRects(), (rect) => Math.round(rect.top)));
+    await expect(lineTops.size).toBe(1);
+    await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
+  },
+};
+
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { researchFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";

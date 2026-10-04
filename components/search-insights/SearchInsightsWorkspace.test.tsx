@@ -176,7 +176,7 @@ describe("SearchInsightsWorkspace", () => {
     );
     expect(labels).toEqual([
       "Search Console property",
-      "Comparison window: Jun 11 - Jul 8",
+      "Comparison window: 28 finalized days, Jun 11 - Jul 8",
       "Export CSV (1,284 rows)",
       "Refresh stored insights",
       "Sync now",
@@ -188,7 +188,7 @@ describe("SearchInsightsWorkspace", () => {
 
     expect(
       screen.getByRole("button", {
-        name: "Comparison window: Jun 11 - Jul 8",
+        name: "Comparison window: 28 finalized days, Jun 11 - Jul 8",
       }),
     ).toHaveTextContent("Jun 11 - Jul 8");
   });

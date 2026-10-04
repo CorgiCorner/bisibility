@@ -2,6 +2,9 @@ import type { CoreFragmentLoaders } from "./contract";
 
 /** One static import per pl catalog fragment, so each namespace stays a separate chunk. */
 export const coreFragments: CoreFragmentLoaders = {
+  "project-ai-research": () => import("@/messages/core/pl/project-ai-research.json"),
+  "project-site-audit": () => import("@/messages/core/pl/project-site-audit.json"),
+  "agent-workspace": () => import("@/messages/core/pl/agent-workspace.json"),
   "account-preferences": () => import("@/messages/core/pl/account-preferences.json"),
   account: () => import("@/messages/core/pl/account.json"),
   auth: () => import("@/messages/core/pl/auth.json"),

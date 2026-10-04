@@ -65,7 +65,7 @@ export function ScheduleEditorMembers({
           />
         </div>
       ) : (
-        <p className="m-0 px-4 pb-3.5 pt-1.5 text-[12px] leading-5 text-fg-muted">
+        <p className="m-0 px-4 py-4 text-[12px] leading-5 text-fg-muted">
           {t("editor.memberEmpty")}
         </p>
       )}

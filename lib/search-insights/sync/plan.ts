@@ -110,7 +110,7 @@ export function planBackfill(input: {
   };
 }
 
-// Newest first: the default 28-day view is readable long before the oldest month lands.
+// Newest first: the default 7-day view is readable long before the oldest month lands.
 export function nextPartitions(input: {
   batchSize: number;
   cursorDate: string;

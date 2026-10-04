@@ -1,5 +1,9 @@
 import { alertRuleToolSchema } from "@/lib/alerts/tool-schema";
 import type { McpToolName } from "@/lib/mcp/canonical-tools";
+import {
+  researchWorkspaceSchemas,
+  researchWorkspaceToolNames,
+} from "@/lib/mcp/research-workspace-contract";
 import { JITTER_MINUTES_MAX, JITTER_MINUTES_MIN } from "@/lib/schemas/keyword";
 import { DEFAULT_SERP_DEVICE, serpDeviceValues } from "@/lib/serp/constants";
 import { apiKeyCreateProperties } from "./api-key-contract";
@@ -67,6 +71,7 @@ const scheduleSchema = {
 } as const;
 
 export const toolInputSchemas = {
+  ...researchWorkspaceSchemas,
   addKeywords: {
     properties: {
       country: legacyMarketNameOpenApiSchema(
@@ -245,6 +250,7 @@ export const toolInputSchemas = {
 export type ToolName = keyof typeof toolInputSchemas;
 
 export const mcpToolNameByCapability: Record<ToolName, McpToolName | null> = {
+  ...researchWorkspaceToolNames,
   addCompetitor: "add_competitor",
   addKeywords: "add_keywords",
   connectProvider: "connect_provider",

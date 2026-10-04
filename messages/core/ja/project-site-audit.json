@@ -1,0 +1,70 @@
+{
+  "projectSiteAudit": {
+    "heading": "サイト監査",
+    "description": "{domain} の HTTP、メタデータ、見出し、インデックス可能性、リンク、画像の代替テキストを確認します。",
+    "pageLimit": "ページ上限",
+    "pageLimitError": "1〜15 ページを選択してください。",
+    "run": "監査を実行",
+    "running": "サイトを巡回中",
+    "cost": "最大 15 秒 · プロバイダーのクレジット不要 · 結果を 5 分間キャッシュ",
+    "readOnly": "プロジェクトの権限または読み取り専用モードにより監査を実行できません。保存済みレポートは閲覧できます。",
+    "history": "監査履歴",
+    "loadingHistory": "保存済みレポートを読み込み中...",
+    "loadingRun": "公開ページを巡回し URL の問題を確認中...",
+    "loadingPage": "サイト監査を読み込み中...",
+    "saved": "保存日時 {time}{stored}",
+    "stored": " · 保存済みの結果",
+    "emptyTitle": "サイトの技術的な問題を見つける",
+    "emptyDescription": "プロジェクトのドメインを制限付きで巡回します。各監査を保存するため、チームとエージェントが後で URL の問題を確認できます。",
+    "bullets": {
+      "0": "HTTP ステータス、タイトル、メタ説明",
+      "1": "見出し構造、robots 指示、画像の alt",
+      "2": "内部リンクと保存済み巡回履歴"
+    },
+    "summary": "確認済み {pages, number} ページ · エラー {errors, number} 件 · 警告 {warnings, number} 件 · インデックス可能 {indexable, number} 件",
+    "partial": "一部のみの巡回: {reason}。結果は以下のページが対象です。",
+    "stopReasons": {
+      "finished": "完了",
+      "page_limit": "ページ上限",
+      "time_limit": "時間上限",
+      "request_limit": "リクエスト上限"
+    },
+    "urlIssues": "URL の問題",
+    "columns": {
+      "0": "URL / タイトル",
+      "1": "HTTP",
+      "2": "インデックス可能",
+      "3": "リンク / 画像",
+      "4": "問題"
+    },
+    "noTitle": "タイトルなし",
+    "skipped": "スキップ",
+    "yes": "はい",
+    "no": "いいえ",
+    "internal": "内部 {count, number} 件",
+    "external": "外部 {count, number} 件",
+    "images": "画像 {count, number} 件",
+    "passed": "問題なし",
+    "details": "ページの詳細",
+    "descriptionLabel": "メタ説明",
+    "canonicalLabel": "正規 URL",
+    "robotsLabel": "Robots",
+    "missing": "なし",
+    "noDirective": "指示なし",
+    "limitations": "HTTP 巡回のみ。JavaScript レンダリングと Lighthouse は含まれません。インデックス可能性は HTTP、meta robots、X-Robots-Tag に基づき、正規 URL や実際の検索エンジンの登録状況は検証しません。プロジェクトと同じオリジンのクエリなし URL のみを巡回します。リンクと見出しは制限付きのサンプルです。",
+    "issues": {
+      "http_error": "HTTP {count, number}",
+      "missing_title": "タイトルがありません。",
+      "missing_description": "メタ説明がありません。",
+      "h1_count": "H1 見出しが {count, number} 件あります。1 件が推奨です。",
+      "missing_image_alt": "alt 属性のない画像が {count, number} 件あります。",
+      "noindex": "Robots の指示がインデックス登録を禁止しています。",
+      "non_html": "HTML ではないためページ内容を確認できません。",
+      "robots_disallowed": "robots.txt により巡回をスキップしました。",
+      "fetch_failed": "安全な巡回制限内でページを取得できませんでした。",
+      "broken_internal_link": "サンプル内の内部リンク {count, number} 件が HTTP エラーを返しました。"
+    },
+    "errorRun": "監査を完了できませんでした。もう一度お試しください。",
+    "errorLoad": "レポートを読み込めませんでした。"
+  }
+}

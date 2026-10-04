@@ -38,10 +38,10 @@ describe("resolvePeriod", () => {
     expect(resolvePeriod("90").days).toBe(90);
   });
 
-  it("falls back to 28 finalized days for anything else", () => {
-    expect(resolvePeriod(undefined).id).toBe("28");
-    expect(resolvePeriod("yoy").id).toBe("28");
-    expect(resolvePeriod("999").id).toBe("28");
+  it("falls back to 7 finalized days for anything else", () => {
+    expect(resolvePeriod(undefined).id).toBe("7");
+    expect(resolvePeriod("yoy").id).toBe("7");
+    expect(resolvePeriod("999").id).toBe("7");
     expect(resolvePeriod("28")).toEqual({
       comparison: "previous_period",
       days: 28,

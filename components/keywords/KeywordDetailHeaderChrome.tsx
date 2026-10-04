@@ -8,21 +8,26 @@ import type { KeywordDetailRankState } from "@/lib/keyword-detail/state-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { resolveSerpDepth } from "@/lib/serp/constants";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { KeywordCheckScope } from "./KeywordCheckScope";
+import { KeywordConnectedSchedules } from "./KeywordConnectedSchedules";
 import { KeywordDetailHeaderSlot } from "./KeywordDetailHeaderSlot";
 import { KeywordIndexStatus } from "./KeywordIndexStatus";
+import { KeywordSearchMetrics } from "./KeywordSearchMetrics";
 import {
   compactDate,
   keywordChips,
   lastCheckLabel,
   pathLabel,
 } from "./keyword-detail-header-format";
-import { keywordMetricsAvailability, metadataChipClassName } from "./keyword-header-model";
+import { metadataChipClassName } from "./keyword-header-model";
 
 type KeywordDetailHeaderChromeProps = {
   actions: ReactNode;
   keyword: KeywordRow;
+  scheduleTargets?: readonly KeywordRow[];
+  projectRef?: string;
   onChangeSchedule?: () => void;
   providerLabel?: string | null;
   rankState?: KeywordDetailRankState;
@@ -33,6 +38,8 @@ type KeywordDetailHeaderChromeProps = {
 export function KeywordDetailHeaderChrome({
   actions,
   keyword,
+  scheduleTargets,
+  projectRef,
   onChangeSchedule,
   providerLabel,
   rankState = "normal",
@@ -40,7 +47,6 @@ export function KeywordDetailHeaderChrome({
   timeZone,
 }: Readonly<KeywordDetailHeaderChromeProps>) {
   const t = useTranslations("projectRankTracker.keywordDetail");
-  const format = useFormatter();
   const locale = useLocale();
   const browserTimeZone = useBrowserTimeZone();
   const currentRankingUrl = rankState === "normal" ? keyword.rankingUrl : null;
@@ -57,21 +63,6 @@ export function KeywordDetailHeaderChrome({
     .filter(Boolean)
     .join(" ");
   const liveSerpHref = buildGoogleSerpUrl(keyword.keyword, keyword.location);
-  const schedule = keyword.checkSchedule ?? null;
-  const unavailableMetric = keywordMetricsAvailability(keyword);
-  const unavailableMetricCopy =
-    unavailableMetric?.kind === "unsupported"
-      ? t("header.metricsUnsupported")
-      : unavailableMetric?.kind === "missing"
-        ? t("header.metricsUnavailable", {
-            count: unavailableMetric.metrics.length,
-            metrics: unavailableMetric.metrics
-              .map((metric) =>
-                metric === "volume" ? t("header.searchVolume") : t("header.difficultyMetric"),
-              )
-              .join(t("header.metricListSeparator")),
-          })
-        : null;
   const previousCheck = keyword.completedComparableChecks?.at(-2);
   const projectDepth = resolveSerpDepth(keyword.trackedDepth ?? keyword.projectSerpDepth);
   const previousPositionDetail =
@@ -87,7 +78,7 @@ export function KeywordDetailHeaderChrome({
       : t("header.bestInPeriod", { position: keyword.bestPosition });
   const positionDetail =
     rankState === "not_ranked"
-      ? `${t("header.notInTop", { depth: projectDepth })} · ${t("header.trackedSince", { date: compactDate(keyword.createdAt, locale, timeZone, t) })}`
+      ? t("header.trackedSince", { date: compactDate(keyword.createdAt, locale, timeZone, t) })
       : previousCheck
         ? [previousPositionDetail, bestPositionDetail]
             .filter((detail) => detail !== null)
@@ -115,6 +106,9 @@ export function KeywordDetailHeaderChrome({
         </div>
         {actions}
       </div>
+      <div className="mt-3">
+        <KeywordCheckScope keyword={keyword} />
+      </div>
       {chips.topic || chips.intent || chips.tags.length > 0 ? (
         <div className="mt-3 flex flex-wrap items-center gap-[7px]">
           {chips.topic ? (
@@ -136,11 +130,19 @@ export function KeywordDetailHeaderChrome({
       ) : null}
       <div
         aria-label={t("header.ariaLabel")}
-        className="mt-3.5 grid grid-cols-1 gap-x-[26px] gap-y-4 sm:grid-cols-2 xl:grid-cols-4"
+        className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)]"
       >
         <KeywordDetailHeaderSlot
-          detail={positionDetail}
+          detail={
+            <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+              {keyword.hasRankData || rankState === "not_ranked" ? (
+                <span>{t("header.checkedDepth", { depth: projectDepth })}</span>
+              ) : null}
+              <span>{positionDetail}</span>
+            </div>
+          }
           label={t("header.position")}
+          prominent
           state={positionState}
         >
           {position}
@@ -179,9 +181,15 @@ export function KeywordDetailHeaderChrome({
           )}
         </KeywordDetailHeaderSlot>
         <KeywordDetailHeaderSlot
-          detail={t("header.provider", {
-            provider: providerLabel ?? keyword.dataProvider ?? t("common.unknown"),
-          })}
+          detail={
+            <span className="flex flex-wrap gap-x-2 gap-y-0.5">
+              <span>
+                {t("header.provider", {
+                  provider: providerLabel ?? keyword.dataProvider ?? t("common.unknown"),
+                })}
+              </span>
+            </span>
+          }
           label={t("header.lastCheck")}
           state="textual"
         >
@@ -189,95 +197,16 @@ export function KeywordDetailHeaderChrome({
             {lastCheckLabel(keyword.lastCheckAt, locale, timeZone, browserTimeZone, t)}
           </span>
         </KeywordDetailHeaderSlot>
-        <KeywordDetailHeaderSlot
-          detail={
-            <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-              <span>{schedule?.name ?? t("common.manual")}</span>
-              {onChangeSchedule ? (
-                <button
-                  className="p-0 font-sans tabular-nums text-[11px] font-semibold text-accent-text hover:underline"
-                  onClick={onChangeSchedule}
-                  title={t("header.scheduleHint")}
-                  type="button"
-                >
-                  {schedule ? t("header.changeSchedule") : t("header.setSchedule")}
-                </button>
-              ) : null}
-            </span>
-          }
-          label={t("header.nextCheck")}
-          state="textual"
-        >
-          <span className="font-sans tabular-nums text-[12.5px] font-semibold text-fg">
-            {schedule ? t("header.scheduled") : t("common.notScheduled")}
-          </span>
-        </KeywordDetailHeaderSlot>
-        <KeywordDetailHeaderSlot
-          detail={
-            keyword.volumeKnown === false ? t("common.notAvailable") : t("header.monthlySearches")
-          }
-          label={t("header.volume")}
-          state={keyword.volumeKnown === false ? "textual" : "numeric"}
-        >
-          <span className="font-sans tabular-nums text-[12.5px] font-semibold text-fg">
-            {keyword.volumeKnown === false
-              ? t("common.notApplicable")
-              : keyword.volume >= 1000
-                ? t("header.thousandVolumePerMonth", {
-                    value: format.number(keyword.volume / 1000, {
-                      maximumFractionDigits: keyword.volume >= 10_000 ? 0 : 1,
-                    }),
-                  })
-                : t("header.volumePerMonth", { value: format.number(keyword.volume) })}
-          </span>
-        </KeywordDetailHeaderSlot>
-        <KeywordDetailHeaderSlot
-          detail={keyword.cpcKnown === false ? t("common.notAvailable") : t("header.averageCpc")}
-          label={t("header.cpc")}
-          state={keyword.cpcKnown === false ? "textual" : "numeric"}
-        >
-          <span className="font-sans tabular-nums text-[12.5px] font-semibold text-fg">
-            {keyword.cpcKnown === false
-              ? t("common.notApplicable")
-              : format.number(Number(keyword.cpc), {
-                  currency: "USD",
-                  maximumFractionDigits: 4,
-                  style: "currency",
-                })}
-          </span>
-        </KeywordDetailHeaderSlot>
-        <KeywordDetailHeaderSlot
-          detail={
-            keyword.difficultyKnown === false
-              ? t("common.notAvailable")
-              : keyword.difficulty < 35
-                ? t("header.easy")
-                : keyword.difficulty < 65
-                  ? t("header.medium")
-                  : t("header.hard")
-          }
-          label={t("header.difficulty")}
-          state={keyword.difficultyKnown === false ? "textual" : "numeric"}
-        >
-          <span className="font-sans tabular-nums text-[12.5px] font-semibold text-fg">
-            {keyword.difficultyKnown === false ? t("common.notApplicable") : keyword.difficulty}
-          </span>
-        </KeywordDetailHeaderSlot>
-        <KeywordDetailHeaderSlot
-          detail={t("common.notAvailable")}
-          label={t("header.competition")}
-          state="textual"
-        >
-          <span className="font-sans tabular-nums text-[12.5px] font-semibold text-fg">
-            {t("common.notApplicable")}
-          </span>
-        </KeywordDetailHeaderSlot>
-        {unavailableMetricCopy ? (
-          <p className="m-0 text-[11px] text-fg-muted sm:col-span-2 xl:col-span-4">
-            {unavailableMetricCopy}
-          </p>
-        ) : null}
+        <div className="sm:col-span-2 lg:col-span-3">
+          <KeywordConnectedSchedules
+            keyword={keyword}
+            targets={scheduleTargets}
+            projectRef={projectRef}
+            onChange={onChangeSchedule}
+          />
+        </div>
       </div>
+      <KeywordSearchMetrics keyword={keyword} />
       {searchConsoleConnected ? <KeywordIndexStatus presence={keyword.urlPresence} /> : null}
     </Card>
   );

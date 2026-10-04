@@ -1,9 +1,12 @@
+import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import KeywordDetailPage from "./page";
 
 const mocks = vi.hoisted(() => ({
+  trafficProps: vi.fn(),
+  syncTraffic: vi.fn(),
   getKeywordDetail: vi.fn(),
   getKeywordCompetitors: vi.fn(),
   storedResultsIndex: vi.fn(),
@@ -44,10 +47,19 @@ vi.mock("@/components/keywords/add/KeywordManagementMessagesBoundary", async () 
   };
 });
 vi.mock("@/components/keywords/KeywordTrafficCard", () => ({
-  KeywordTrafficCard: () => <div data-testid="traffic-card" />,
+  KeywordTrafficCard: (props: unknown) => {
+    mocks.trafficProps(props);
+    return <div data-testid="traffic-card" />;
+  },
 }));
 const positionHistoryProps = vi.fn();
+const checkScope = {
+  device: "mobile",
+  engine: "Google",
+  location: { ...keywordRows[0].location, languageLabel: "English" },
+};
 const normalDetailState = {
+  ...checkScope,
   checkState: "ranked" as const,
   completedComparableChecks: [
     {
@@ -72,6 +84,7 @@ vi.mock("@/components/keywords/PositionHistoryCard", () => ({
     return <div data-testid="position-history" />;
   },
 }));
+vi.mock("@/lib/actions/traffic-sync", () => ({ syncProjectTraffic: mocks.syncTraffic }));
 vi.mock("@/lib/actions/retrieved-results", () => ({
   loadRetrievedResults: mocks.loadRetrievedResults,
 }));
@@ -126,8 +139,8 @@ const savedResults: Extract<RetrievedResults, { tier: "full" }>[] = [0, 1].map((
   rows: [
     {
       position: index + 1,
-      domain: "competitor.test",
-      url: "https://competitor.test/page",
+      domain: "competitor.example.com",
+      url: "https://competitor.example.com/page",
       title: "Provider result",
       tracked: false,
     },
@@ -233,13 +246,20 @@ describe("KeywordDetailPage", () => {
     expect(screen.queryByTestId("retrieved-results-card")).not.toBeInTheDocument();
     const pending = screen.getByTestId("pending-detail");
     const traffic = screen.getByTestId("traffic-card");
+    expect(mocks.trafficProps).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canSync: true,
+        projectRef: "prj_1",
+        syncTrafficAction: mocks.syncTraffic,
+      }),
+    );
     expect(pending.nextElementSibling).toBe(traffic);
     expect(mocks.getKeywordDetail).toHaveBeenCalledWith("prj_1", "kw_pending");
     expect(mocks.loadRankTrackerCostContext).toHaveBeenCalledWith("prj_1");
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
   });
 
-  it("uses the normal-detail composition order from the reference", async () => {
+  it("keeps the scoped SERP directly after position history and before traffic", async () => {
     mocks.storedResultsIndex.mockResolvedValue(savedEntries);
     mocks.getKeywordDetail.mockResolvedValue({
       ...normalDetailState,
@@ -268,19 +288,22 @@ describe("KeywordDetailPage", () => {
     const chart = screen.getByTestId("position-history");
     const traffic = screen.getByTestId("traffic-card");
     const history = screen.getByTestId("ranking-history");
-    // Retrieved results sits directly above the ranking URL history: both are per-check
-    // records of what Google did, and "who was around me" reads before "which of my pages".
     const retrieved = screen.getByTestId("retrieved-results-card");
     expect(header.nextElementSibling).toBe(chart);
-    expect(chart.nextElementSibling).toBe(traffic);
-    expect(traffic.nextElementSibling).toBe(retrieved);
-    expect(retrieved.nextElementSibling).toBe(history);
+    expect(chart.nextElementSibling).toBe(retrieved);
+    expect(retrieved.nextElementSibling).toBe(traffic);
+    expect(mocks.trafficProps).toHaveBeenLastCalledWith(
+      expect.objectContaining({ canSync: true, syncTrafficAction: mocks.syncTraffic }),
+    );
+    expect(traffic.nextElementSibling).toBe(history);
+    expect(screen.getByLabelText("Check scope")).toHaveTextContent("United StatesEnglishMobile");
   });
 
   it.each(["ok", "failed", "running"])(
     "keeps provider SERPs and comparison without a domain match when attempt health is %s",
     async (latestAttemptHealth) => {
       mocks.getKeywordDetail.mockResolvedValue({
+        ...checkScope,
         id: "kw_unranked",
         checkState: "not_ranked",
         hasRankData: false,
@@ -299,7 +322,7 @@ describe("KeywordDetailPage", () => {
       expect(screen.getByTestId("pending-detail")).toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Provider result" })).toHaveAttribute(
         "href",
-        "https://competitor.test/page",
+        "https://competitor.example.com/page",
       );
       expect(screen.getByRole("region", { name: "Retrieved results" })).toBeInTheDocument();
       expect(mocks.loadRetrievedResultsForChecks).toHaveBeenCalledWith({

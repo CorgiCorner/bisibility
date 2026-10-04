@@ -107,6 +107,25 @@ async function tabPastScheduleResizeControls(user: ReturnType<typeof userEvent.s
 }
 
 describe("SchedulesList", () => {
+  it("keeps an empty schedule accessible and explains why it has no next check", () => {
+    renderList({
+      schedules: [{ ...schedules[0], assignedKeywordCount: 0, keywordCount: 0, targetCount: 0 }],
+    });
+    expect(screen.getByText("Empty · settings saved")).toBeVisible();
+    expect(screen.getByText("Add keywords to start")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Daily 06:00" })).toHaveAttribute(
+      "href",
+      "/app/prj_story/runs/schedules/sch_daily",
+    );
+  });
+
+  it("does not label a schedule with inactive assigned targets as empty", () => {
+    renderList({
+      schedules: [{ ...schedules[0], assignedKeywordCount: 2, keywordCount: 0, targetCount: 0 }],
+    });
+    expect(screen.queryByText("Empty · settings saved")).toBeNull();
+  });
+
   afterEach(() => vi.useRealTimers());
 
   beforeEach(() => {

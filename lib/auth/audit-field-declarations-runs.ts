@@ -3,6 +3,13 @@ import { type AuditPayloadPolicy, auditFields as f } from "@/lib/auth/audit-payl
 type Declare = (actions: readonly string[], policy?: AuditPayloadPolicy) => void;
 
 export function registerRankCheckRunAuditDeclarations(declare: Declare) {
+  declare(["rank_check.snapshot_extend"], {
+    after: {
+      ...f.strings("keywordId", "status"),
+      ...f.numbers("start", "addedResults", "skippedDuplicates"),
+      ...f.dates("fetchedAt"),
+    },
+  });
   declare(["rank_check_run.launch"], {
     after: {
       ...f.numbers("estimatedCostCents", "keywordCount", "targetCount"),

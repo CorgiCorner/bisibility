@@ -105,7 +105,7 @@ describe("KeywordPendingDetail", () => {
     renderDetail();
 
     const header = screen.getByLabelText("Keyword check metadata");
-    expect(header).toHaveTextContent("Not scheduled");
+    expect(header).toHaveTextContent("Schedule for this market and device");
     expect(header).toHaveTextContent("Manual");
     fireEvent.click(screen.getByRole("button", { name: "set schedule" }));
 
@@ -124,7 +124,7 @@ describe("KeywordPendingDetail", () => {
     );
 
     expect(screen.getByText("Not ranked")).toBeInTheDocument();
-    expect(screen.getByText(/Not in top 20/)).toBeInTheDocument();
+    expect(screen.getByText("Checked top 20")).toBeInTheDocument();
     expect(screen.getByText("Selected depth 50")).toBeInTheDocument();
   });
   it("opens keyword details including the target URL without requiring market management actions", async () => {

@@ -1,6 +1,7 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { SerpDepth } from "@/lib/serp/constants";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordHeaderActions } from "./KeywordHeaderActions";
@@ -30,7 +31,15 @@ function renderActions(
 }
 
 describe("KeywordHeaderActions", () => {
-  it("keeps only the check and overflow controls on the visible action row", () => {
+  it("refreshes stored data without starting another check, including for viewers", () => {
+    const handlers = renderActions({ canUpdateKeyword: false }, "migration_hold");
+    fireEvent.click(screen.getByRole("button", { name: "Refresh data" }));
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
+    expect(handlers.onRunCheck).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /Run check/ })).not.toBeInTheDocument();
+  });
+
+  it("keeps refresh and check controls visible with editing and export in overflow", () => {
     const handlers = renderActions();
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 50)" }));
     expect(screen.queryByRole("button", { name: "Add alert" })).not.toBeInTheDocument();
@@ -44,6 +53,14 @@ describe("KeywordHeaderActions", () => {
     expect(handlers.onExport).toHaveBeenCalledOnce();
     expect(handlers.onToggleEdit).toHaveBeenCalledOnce();
     expect(handlers.onRunCheck).toHaveBeenCalledWith(50);
+  });
+
+  it("keeps refresh available while the accepted check is running", () => {
+    const handlers = renderActions({ runActive: true });
+    expect(screen.getByRole("button", { name: "Checking..." })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Refresh data" }));
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
+    expect(handlers.onRunCheck).not.toHaveBeenCalled();
   });
 
   it("selects a depth before running it from the primary split button", () => {

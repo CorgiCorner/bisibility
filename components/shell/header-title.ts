@@ -92,6 +92,25 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
     );
   }
 
+  const researchSections = [
+    [
+      "ai-visibility",
+      "AI Visibility",
+      "Brand mentions and citations from available provider observations.",
+    ],
+    [
+      "prompt-explorer",
+      "Prompt Explorer",
+      "Compare synthetic prompt tests across supported models.",
+    ],
+    ["site-audit", "Site Audit", "Crawl your project site and inspect issues by URL."],
+    ["context", "Project Context", "Business, audience, products and goals for your agents."],
+    ["agent-reports", "Agent Reports", "Saved analyses shared with members of this project."],
+  ] as const;
+  for (const [segment, title, subtitle] of researchSections) {
+    if (matches(sectionPath, `/${segment}`)) return sectionMeta(title, subtitle);
+  }
+
   if (matches(sectionPath, "/domain-overview")) {
     return sectionMeta("Domain Overview", "Analyze estimated organic visibility for any domain.");
   }

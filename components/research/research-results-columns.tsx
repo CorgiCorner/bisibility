@@ -129,8 +129,8 @@ export function researchResultsColumns(input: {
       header: input.messages.columns.intent,
       id: "intent",
       meta: { sortable: false, title: input.messages.columns.intent },
-      minSize: 96,
-      size: 96,
+      minSize: 160,
+      size: 160,
     },
     {
       cell: ({ row }) => (
