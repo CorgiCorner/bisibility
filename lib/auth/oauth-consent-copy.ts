@@ -26,7 +26,13 @@ export function canCreateOAuthApiTokens(scopes: readonly string[]) {
   return scopes.includes("tokens:write") || scopes.includes("admin");
 }
 
+export const READ_ONLY_OAUTH_CALLBACK_HOSTS = ["chatgpt.com", "chat.openai.com"] as const;
+
 const READ_ONLY_OAUTH_SCOPES = new Set(["openid", "profile", "email", "offline_access", "read"]);
+
+export function readOnlyOAuthScopes(requested: readonly string[]) {
+  return [...new Set(requested)].filter((scope) => READ_ONLY_OAUTH_SCOPES.has(scope));
+}
 
 export function oauthConsentScopes(
   client: OAuthConsentClient,
@@ -36,7 +42,7 @@ export function oauthConsentScopes(
   if (client.redirectUri) {
     try {
       const host = new URL(`https://${client.redirectUri}`).hostname;
-      chatGptRedirect = host === "chatgpt.com" || host === "chat.openai.com";
+      chatGptRedirect = READ_ONLY_OAUTH_CALLBACK_HOSTS.some((allowed) => host === allowed);
     } catch {
       // Unrecognized callbacks do not identify a client.
     }

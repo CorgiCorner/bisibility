@@ -155,7 +155,7 @@ describe("AnalyzeCard", () => {
 
   it("prices every billed row from the rate card so the rows reconcile with the button", () => {
     // Server side, backlinksEstimate bills summary + history (site only) +
-    // rows(resultLimit). At site scope and 100 rows that is 2 + 2 + 3 = 7 cents.
+    // rows(resultLimit). At site scope and 100 rows that is 2.4 + 2.4 + 2.76 = 7.56 cents.
     render(<AnalyzeCard {...baseProps} resultLimit={100} scope="site" />);
     fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
 
@@ -176,6 +176,6 @@ describe("AnalyzeCard", () => {
     render(<AnalyzeCard {...baseProps} resultLimit={500} scope="site" />);
     fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
     expect(screen.getByText("Link rows (500)")).toBeInTheDocument();
-    expect(screen.getByText("$0.07")).toBeInTheDocument();
+    expect(screen.getByText("$0.04")).toBeInTheDocument();
   });
 });

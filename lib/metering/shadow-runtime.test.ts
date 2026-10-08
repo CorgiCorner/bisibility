@@ -4,7 +4,11 @@ const mocks = vi.hoisted(() => ({ findUnique: vi.fn(), init: vi.fn() }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: { instanceSetting: { findUnique: mocks.findUnique } },
 }));
-vi.mock("./runtime", () => ({ meteringRuntime: mocks.init }));
+vi.mock("./runtime", () => ({
+  meteringRuntime: mocks.init,
+  meteringNamespace: () => "default",
+  meteringSchema: () => "public",
+}));
 
 import { shadowForProject } from "./shadow-runtime";
 

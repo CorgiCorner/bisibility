@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { dollarsToCents } from "@/lib/format/currency";
+import { guardConnectionFundingMutation } from "@/lib/metering/budget-mirror";
 import { initialProviderAllocation } from "@/lib/provider-allocations/initial-allocation";
 import { backfillLegacyProjectAllocationInLockedTransaction } from "@/lib/provider-allocations/legacy-backfill";
 import {
@@ -12,11 +13,7 @@ import {
 import { credentialsFromInput } from "@/lib/providers/credentials-input";
 import { decryptProviderCredentials, encryptSecret } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
-import {
-  connectProviderSchema,
-  type ProviderConnectionRefInput,
-  providerConnectionRefSchema,
-} from "@/lib/schemas/provider";
+import { connectProviderSchema, providerConnectionRefSchema } from "@/lib/schemas/provider";
 import { firstSyncIntentOnConnect } from "@/lib/traffic/first-sync-intent-state";
 import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
 import { z } from "zod";
@@ -95,6 +92,7 @@ export async function connectProviderConnection(
   const writeConnection = async (client: ProviderMutationClient) => {
     await lockProjectForProviderMutation(client, context.projectId);
     const before = await findConnection(context.projectId, item.id, client);
+    if (before) await guardConnectionFundingMutation(client, before.id);
     if (
       before?.id !== stored?.id ||
       before?.credentialsEncrypted !== stored?.credentialsEncrypted ||
@@ -271,29 +269,4 @@ export async function setProviderSettings(
   return result.connection;
 }
 
-export async function disconnectProviderConnection(
-  input: ProviderConnectionRefInput,
-  context: ProviderMutationContext,
-) {
-  const item = providerCatalogItem(input.providerId);
-  const removed = await prisma.$transaction(async (tx) => {
-    await lockProjectForProviderMutation(tx, context.projectId);
-    const before = await findConnection(context.projectId, item.id, tx);
-    if (!before) return false;
-    await tx.providerConnection.delete({ where: { id: before.id } });
-    await auditProviderMutation(
-      {
-        action: "provider.disconnect",
-        actorId: context.actorId,
-        after: { provider: item.id, status: "removed" },
-        before: auditConnection(before),
-        projectId: context.projectId,
-        targetId: requireApiPublicId(before.publicId ?? "", "conn"),
-      },
-      tx,
-    );
-    return true;
-  });
-
-  return removed ? { ok: true } : null;
-}
+export { disconnectProviderConnection } from "./provider-disconnect";

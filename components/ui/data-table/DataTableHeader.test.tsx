@@ -58,7 +58,7 @@ describe("DataTableHeader", () => {
     expect(headerRow).toHaveClass("bg-table-header-bg", "font-semibold");
     expect(pinnedHeader).toHaveStyle({ backgroundColor: "var(--bg-elev)" });
     expect(pinnedHeader).toHaveClass(
-      "group-data-[scrolled=true]/table:shadow-[1px_0_0_var(--border)]",
+      "group-data-[scrolled=true]/table:shadow-[inset_-1px_0_0_var(--border)]",
     );
   });
 

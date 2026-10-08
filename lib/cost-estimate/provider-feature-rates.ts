@@ -25,44 +25,42 @@ export type ProviderFeatureRate = {
 
 export const PROVIDER_FEATURE_RATES: ProviderFeatureRate[] = [
   {
-    checkedAt: "2026-07-22",
-    costCents: 2,
+    checkedAt: "2026-10-01",
+    costCents: 2.4,
     feature: "ranked_keywords",
     providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/apis/dataforseo-labs-api/pricing",
+    sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
   },
   // provisional - finalize via scripts/backlinks-cost-profile
   {
-    checkedAt: "2026-07-24",
-    costCents: 2,
+    checkedAt: "2026-10-01",
+    costCents: 2.4,
     feature: "backlinks_summary",
     providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/apis/backlinks-api/pricing",
+    sourceUrl: "https://dataforseo.com/pricing/backlinks/backlinks",
   },
   // provisional - finalize via scripts/backlinks-cost-profile
   {
-    checkedAt: "2026-07-24",
-    costCents: 2,
+    checkedAt: "2026-10-01",
+    costCents: 2.4,
     feature: "backlinks_history",
     providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/apis/backlinks-api/pricing",
+    sourceUrl: "https://dataforseo.com/pricing/backlinks/backlinks",
   },
-  // backlinks/live bills a per-request base plus a per-row component; a 100-row page
-  // returned task.cost 0.03 (lib/providers/serp/fixtures/backlinks/backlinks-success.json).
+  // Backlinks: $0.024 per request + $0.000036 per row (checked 2026-10-01).
   {
-    baseCostCents: 2,
-    checkedAt: "2026-09-21",
-    costCents: 3,
+    baseCostCents: 2.4,
+    checkedAt: "2026-10-01",
+    costCents: 2.76,
     feature: "backlinks_rows",
     providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/apis/backlinks-api/pricing",
-    unitCostCents: 0.01,
+    sourceUrl: "https://dataforseo.com/pricing/backlinks/backlinks",
+    unitCostCents: 0.0036,
   },
-  // domain_rank_overview/live is a flat per-request charge; measured task.cost 0.02
-  // (lib/providers/serp/fixtures/domain-overview/overview-success.json).
+  // Flat per-request figure, raised 20% per DataForSEO's July 1, 2026 Labs price update.
   {
-    checkedAt: "2026-09-21",
-    costCents: 2,
+    checkedAt: "2026-10-01",
+    costCents: 2.4,
     feature: "domain_rank_overview",
     providerId: "dataforseo",
     sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
@@ -70,23 +68,22 @@ export const PROVIDER_FEATURE_RATES: ProviderFeatureRate[] = [
   // provisional - finalize via scripts/domain-overview-cost-profile
   {
     baseCostCents: 12,
-    checkedAt: "2026-08-11",
+    checkedAt: "2026-10-01",
     costCents: 12,
     feature: "historical_rank_overview",
     providerId: "dataforseo",
     sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
     unitCostCents: 0.12,
   },
-  // relevant_pages/live bills a per-request base plus a per-row component; a 100-row page
-  // returned task.cost 0.02 (lib/providers/serp/fixtures/domain-overview/pages-success.json).
+  // Labs "all other endpoints": $0.012 per task + $0.00012 per item (checked 2026-10-01).
   {
-    baseCostCents: 1,
-    checkedAt: "2026-09-21",
-    costCents: 2,
+    baseCostCents: 1.2,
+    checkedAt: "2026-10-01",
+    costCents: 2.4,
     feature: "relevant_pages",
     providerId: "dataforseo",
     sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
-    unitCostCents: 0.01,
+    unitCostCents: 0.012,
   },
   ...(
     [
@@ -96,13 +93,13 @@ export const PROVIDER_FEATURE_RATES: ProviderFeatureRate[] = [
       "keyword_metrics",
     ] as const
   ).map((feature) => ({
-    baseCostCents: 1,
-    checkedAt: "2026-07-22",
-    costCents: 2,
+    baseCostCents: 1.2,
+    checkedAt: "2026-10-01",
+    costCents: 2.4,
     feature,
     providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/apis/dataforseo-labs-api/pricing",
-    unitCostCents: 0.01,
+    sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
+    unitCostCents: 0.012,
   })),
 ];
 

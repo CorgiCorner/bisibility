@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   connection: vi.fn(),
   startExecution: vi.fn(),
+  hostedRankEstimate: vi.fn(),
   fetchRank: vi.fn(),
   attribution: vi.fn(),
 }));
@@ -15,6 +16,7 @@ vi.mock("@/lib/operations/access-extension", () => ({
   assertOperationAccess: vi.fn(),
 }));
 vi.mock("@/lib/providers/execution-extension", () => ({
+  hostedRankCheckEstimatedCostCents: mocks.hostedRankEstimate,
   startDeploymentExecution: mocks.startExecution,
 }));
 vi.mock("@/lib/provider-usage/tag", async (importOriginal) => ({
@@ -77,6 +79,7 @@ const provider: SerpProvider = {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.attribution.mockResolvedValue(attribution);
+  mocks.hostedRankEstimate.mockReturnValue(null);
   mocks.fetchRank.mockResolvedValue({ checkedAt: new Date(), costCents: 0.2, position: 2 });
 });
 

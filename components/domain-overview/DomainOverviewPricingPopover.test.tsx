@@ -62,7 +62,7 @@ describe("DomainOverviewPricingPopover", () => {
       />,
     );
 
-    expect(screen.getByText("~$0.06")).toBeInTheDocument();
+    expect(screen.getByText("~$0.07")).toBeInTheDocument();
     expect(screen.getByText("~$0.12")).toBeInTheDocument();
     expect(screen.queryByText("enter a domain")).not.toBeInTheDocument();
   });

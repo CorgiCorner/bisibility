@@ -63,7 +63,7 @@ configured, replay works across app instances and restarts.
 
 ## Response shapes
 
-List routes return:
+Cursor-paginated list routes return:
 
 ```json
 {
@@ -72,8 +72,7 @@ List routes return:
 }
 ```
 
-Resource and mutation routes return the resource object directly. They are not
-wrapped in `data`.
+Response envelopes are endpoint-specific; consult the operation response schema.
 
 Discovery routes are mixed:
 
@@ -101,7 +100,7 @@ An unsupported declared version returns `409 Conflict` with problem type
 
 ## Pagination
 
-List routes accept:
+Cursor-paginated list routes accept:
 
 | Query | Description |
 | - | - |

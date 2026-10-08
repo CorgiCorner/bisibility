@@ -4,7 +4,10 @@ import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { type Actor, authorize } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
-import { mirrorConnectionBudgetsSafely } from "@/lib/metering/budget-mirror";
+import {
+  guardConnectionBudgetMutation,
+  mirrorConnectionBudgetsSafely,
+} from "@/lib/metering/budget-mirror";
 import type { ProviderCatalogEntry } from "@/lib/providers/types";
 import { backfillLegacyProjectAllocationInLockedTransaction } from "./legacy-backfill";
 import { lockProjectForProviderMutation } from "./project-lock";
@@ -129,6 +132,7 @@ export async function setProviderConnectionAllocation(input: {
       where: { projectId: project.id, publicId: connectionPublicId },
     });
     if (!connection) throw new Error("Provider connection not found.");
+    await guardConnectionBudgetMutation(tx, connection.id);
     validateProviderConnectionAllocations(input.catalog, connection.provider, input.allocations);
     await backfillLegacyProjectAllocationInLockedTransaction(tx, project.id, input.catalog);
     const metadata = catalogEntry(input.catalog, connection.provider).allocation;
@@ -141,8 +145,7 @@ export async function setProviderConnectionAllocation(input: {
       data: allocationUpdateData(input.allocations),
       where: { id: connection.id },
     });
-    if (process.env.METERING_SHADOW === "on")
-      await mirrorConnectionBudgetsSafely(tx, connection.id);
+    await mirrorConnectionBudgetsSafely(tx, connection.id);
     await tx.project.update({
       data: { providerAllocationsInitializedAt: new Date() },
       where: { id: project.id },

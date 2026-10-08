@@ -15,9 +15,9 @@ export const linkedinUrl = LINKEDIN_URL;
 export const siteName = "bisibility";
 
 const rootDescription =
-  "Open-source keyword rank tracking and SEO observability for developers: self-hostable rank tracking, intended URLs, signal timelines, BYO SERP providers, and REST API access.";
+  "An open-source SEO platform you can self-host or run in the cloud. Track rankings, research keywords and backlinks, and connect your own data providers.";
 const socialDescription =
-  "Open-source keyword rank tracking with SEO observability, intended URLs, signal timelines, and BYO SERP providers.";
+  "Self-host bisibility or use the cloud: rank tracking, SERP history, keyword research, backlinks and Search Console data, on your own data providers.";
 
 export const rootMetadata: Metadata = {
   ...buildPageMetadata({
@@ -59,12 +59,12 @@ export const rootMetadata: Metadata = {
 };
 
 export const homeMetadata: Metadata = buildPageMetadata({
-  title: "Open-source keyword rank tracking for developers",
+  title: "Open-source SEO platform you can self-host",
   description:
-    "Open-source keyword rank tracking and SEO observability for developers: track Google positions, intended URLs, indexing status, and SEO signals in one self-hostable dashboard.",
+    "An open-source SEO platform you can self-host or run in the cloud. Track rankings, research keywords and backlinks, and connect your own data providers.",
   path: "/",
   socialDescription:
-    "Self-host bisibility for keyword rank tracking, intended URL monitoring, indexing status, and SEO observability with BYO SERP providers.",
+    "Self-host bisibility or use the cloud: rank tracking, SERP history, keyword research, backlinks and Search Console data, on your own data providers.",
 });
 
 export const roadmapMetadata: Metadata = buildPageMetadata({
@@ -164,12 +164,12 @@ export const englishHomeJsonLdCopy: HomeJsonLdCopy = {
   featureList: [
     "Google keyword rank tracking",
     "Intended URL monitoring",
-    "SEO signal timelines",
+    "Stored SERP snapshot for every check",
     "Bring-your-own SERP provider credentials",
     "Self-hostable REST API",
   ],
   softwareDescription:
-    "Open-source, self-hostable SEO observability for developers: Google rank tracking, intended URLs, signal timelines, BYO SERP providers, and REST API access.",
+    "Open-source, self-hostable SEO platform: Google rank tracking with SERP history, keyword research, backlinks, Search Console data, an MCP server and a REST API.",
 };
 
 export function createSoftwareApplicationJsonLd(

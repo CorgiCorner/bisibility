@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@/lib/generated/prisma/client";
+import { byokTestEvidence } from "@/lib/provider-usage/byok-test-evidence";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { describe, expect, it, vi } from "vitest";
@@ -42,8 +43,25 @@ function fakeLedger(seed: LedgerRow[] = []) {
     }),
   };
   const db = {
-    $transaction: vi.fn(async (run: (tx: unknown) => Promise<unknown>) => run(db)),
-    providerCostEntry: table,
+    ...byokTestEvidence("dataforseo"),
+    $transaction: vi.fn(async (run: (tx: unknown) => Promise<unknown>) => {
+      const snapshot = structuredClone(rows);
+      const evidenceSnapshot = structuredClone(db.rows);
+      try {
+        return await run(db);
+      } catch (error) {
+        rows.splice(0, rows.length, ...snapshot);
+        db.rows.splice(0, db.rows.length, ...evidenceSnapshot);
+        throw error;
+      }
+    }),
+    providerCostEntry: {
+      ...table,
+      updateMany: vi.fn(async (args: Parameters<typeof table.update>[0]) => {
+        await table.update(args);
+        return { count: 1 };
+      }),
+    },
   };
   return { db: db as unknown as PrismaClient, rows, table };
 }

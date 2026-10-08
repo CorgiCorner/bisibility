@@ -69,3 +69,11 @@ export async function getOAuthConsentClient(
     redirectUri: verifiedRedirectLabel(requestedRedirectUri, client.redirectUris),
   };
 }
+
+/** Token verification has no redirect parameter, so every registered callback participates. */
+export async function getOAuthClientScopePolicy(clientId: string) {
+  return prisma.oauthClient.findUnique({
+    select: { name: true, redirectUris: true },
+    where: { clientId },
+  });
+}

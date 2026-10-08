@@ -18,8 +18,8 @@ export const PROVIDER_RATES: ProviderRate[] = [
     providerId: "dataforseo",
     label: "DataForSEO",
     pricingModel: "flat",
-    sourceUrl: "https://dataforseo.com/apis/serp-api/pricing",
-    checkedAt: "2026-08-10",
+    sourceUrl: "https://dataforseo.com/pricing/serp/google-organic-serp-api",
+    checkedAt: "2026-10-01",
     notes:
       "Pay-as-you-go; the first SERP page (top 10) is billed at the base rate and each additional page at 75% of it. The app records the provider-reported actual cost per check. $50 minimum account top-up.",
     options: [
@@ -54,7 +54,7 @@ export const PROVIDER_RATES: ProviderRate[] = [
     label: "SerpApi",
     pricingModel: "plan",
     sourceUrl: "https://serpapi.com/pricing",
-    checkedAt: "2026-08-10",
+    checkedAt: "2026-10-01",
     notes:
       "Subscription plans; only successful searches count; unused searches do not roll over. Enterprise tier not modeled.",
     plans: [
@@ -179,4 +179,4 @@ export function domainOverviewListEstimate(
   };
 }
 
-export const SERP_RATES_CHECKED_AT = "2026-08-10";
+export const SERP_RATES_CHECKED_AT = "2026-10-01";

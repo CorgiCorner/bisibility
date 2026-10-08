@@ -25,6 +25,14 @@ function oauthProviderOptions() {
 }
 
 describe("OAuth provider audiences", () => {
+  it("installs the consent scope guard after provider query-signature verification", () => {
+    const plugins = (auth.options as { plugins?: OauthProviderPlugin[] }).plugins ?? [];
+    const provider = plugins.findIndex((plugin) => plugin.id === "oauth-provider");
+    const guard = plugins.findIndex((plugin) => plugin.id === "oauth-consent-scope-guard");
+    expect(provider).toBeGreaterThanOrEqual(0);
+    expect(guard).toBeGreaterThan(provider);
+  });
+
   it("accepts exactly one resource, so a grant cannot be redeemed for another audience", () => {
     expect(oauthProviderOptions().validAudiences).toEqual([MCP_RESOURCE_URL]);
   });

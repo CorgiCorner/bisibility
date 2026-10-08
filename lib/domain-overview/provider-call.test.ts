@@ -57,10 +57,10 @@ describe("domain overview provider calls", () => {
   it("estimates module costs from the measured list rates", () => {
     const estimate = domainOverviewEstimate({ keywordLimit: 100, pageLimit: 100, source });
 
-    expect(estimate.overview).toBe(2);
+    expect(estimate.overview).toBe(2.4);
     expect(estimate.history).toBeCloseTo(12.12);
-    expect(estimate.keywords).toBe(2);
-    expect(estimate.pages).toBe(2);
+    expect(estimate.keywords).toBe(2.4);
+    expect(estimate.pages).toBe(2.4);
     expect(estimate.core).toBeCloseTo(estimate.overview + estimate.keywords + estimate.pages);
   });
 

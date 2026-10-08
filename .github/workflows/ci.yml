@@ -1,5 +1,5 @@
 # GENERATED - do not edit directly.
-# Source hash: 1369388e7eb1be9448178588026d0f8bc78e0fd9d607d584dabc0b1ec4558946
+# Source hash: 24f87d8d74c7558b10895e99025a3d078235849709b529e029e55625f3c1ba3e
 name: CI
 
 on:
@@ -178,6 +178,7 @@ jobs:
       - run: npm i -g npm@10.9.3
       - run: npm ci
       - run: npm run ci:postgres-migration-contract
+
 
   ci-ok:
     needs: [static, test, coverage, build, postgres-migration-contract]

@@ -132,7 +132,7 @@ const mocks = vi.hoisted(() => {
     beginJournal: vi.fn(),
     consumeProviderLimit: vi.fn(),
     deferQueuedRankCheckBatch: vi.fn(),
-    journal: { discard: vi.fn(), settle: vi.fn() },
+    journal: { discard: vi.fn(), settle: vi.fn(), transportStarted: vi.fn() },
     prisma,
     resolveProviderCredentials: vi.fn(),
     state,
@@ -256,6 +256,10 @@ describe("queued paid-call fence", () => {
     await submitQueuedRankCheckBatch("batch_1");
 
     expect(mocks.submit).toHaveBeenCalledOnce();
+    expect(mocks.journal.transportStarted).toHaveBeenCalledOnce();
+    expect(mocks.journal.transportStarted.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.submit.mock.invocationCallOrder[0] ?? 0,
+    );
     expect(mocks.consumeProviderLimit).toHaveBeenCalledOnce();
     expect(mocks.prisma.queuedRankCheckBatch.updateMany).toHaveBeenCalledWith({
       data: { state: "submitting" },
@@ -358,6 +362,7 @@ describe("queued paid-call fence", () => {
     expect(mocks.beginJournal).toHaveBeenCalledWith({
       client: mocks.prisma,
       connectionId: "connection_1",
+      credentialVersion: expect.stringMatching(/^[a-f0-9]{64}$/),
       projectId: "project_1",
       tasks: [
         expect.objectContaining({
@@ -435,28 +440,28 @@ describe("queued paid-call fence", () => {
     expect(mocks.journal.settle).not.toHaveBeenCalled();
   });
 
-  it("discards pending unknown receipts after a definite provider rejection", async () => {
+  it("retains unknown receipts when a provider rejection cannot prove the POST was uncharged", async () => {
     const { DataForSeoError } = await import("@/lib/providers/serp/dataforseo-errors");
     mocks.submit.mockRejectedValueOnce(
       new DataForSeoError("DataForSEO rejected the batch.", false, 400),
     );
 
-    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "ready" });
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "ambiguous" });
 
     expect(mocks.submit).toHaveBeenCalledOnce();
-    expect(mocks.journal.discard).toHaveBeenCalledOnce();
-    expect(mocks.state.task).toBe("provider_failed");
+    expect(mocks.journal.discard).not.toHaveBeenCalled();
+    expect(mocks.state.task).toBe("ambiguous");
   });
 
-  it("discards pending unknown receipts when the provider rate limits the POST", async () => {
+  it("retains unknown receipts when a POST throttle response has no native zero-charge proof", async () => {
     const { DataForSeoError } = await import("@/lib/providers/serp/dataforseo-errors");
     mocks.submit.mockRejectedValueOnce(new DataForSeoError("Rate limited.", true, 429));
 
     await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({
-      state: "deferred",
+      state: "ambiguous",
     });
 
-    expect(mocks.journal.discard).toHaveBeenCalledOnce();
+    expect(mocks.journal.discard).not.toHaveBeenCalled();
     expect(mocks.journal.settle).not.toHaveBeenCalled();
   });
 

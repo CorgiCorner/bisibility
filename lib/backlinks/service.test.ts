@@ -202,9 +202,9 @@ describe("backlinks analyze service", () => {
     expect(outcome).toEqual({
       cached: false,
       cachedUntil: null,
-      costCents: 7,
+      costCents: 2.4 + (2.4 + 100 * 0.0036) + 2.4,
       estimate: true,
-      estimatedCostCents: 7,
+      estimatedCostCents: 2.4 + (2.4 + 100 * 0.0036) + 2.4,
       includeSubdomains: true,
       ok: true,
       provider: "dataforseo",
@@ -225,7 +225,7 @@ describe("backlinks analyze service", () => {
       cachedUntil: expect.any(String),
       costCents: 0,
       estimate: true,
-      estimatedCostCents: 7,
+      estimatedCostCents: 2.4 + (2.4 + 100 * 0.0036) + 2.4,
       ok: true,
     });
     expect(mocks.prisma.backlinkSnapshot.findFirst).toHaveBeenCalledWith(
@@ -254,7 +254,7 @@ describe("backlinks analyze service", () => {
   it("skips history in a page-scope estimate", async () => {
     await expect(
       run({ estimateOnly: true, target: "https://acme-store.com/product", targetScope: "page" }),
-    ).resolves.toMatchObject({ estimatedCostCents: 5, targetScope: "page" });
+    ).resolves.toMatchObject({ estimatedCostCents: 5.16, targetScope: "page" });
   });
 
   it("surfaces provider status and lost date without self-diffing", async () => {
@@ -290,7 +290,7 @@ describe("backlinks analyze service", () => {
     await expect(run()).resolves.toEqual({ ok: false, reason: "budget_exhausted" });
     expect(mocks.preflightBudget).toHaveBeenCalledWith({
       connectionId: "connection_1",
-      estimatedCostCents: 7,
+      estimatedCostCents: 2.4 + (2.4 + 100 * 0.0036) + 2.4,
       estimatedUsageQuantity: 3,
       projectId: "project_1",
       provider: "dataforseo",
@@ -316,7 +316,7 @@ describe("backlinks analyze service", () => {
 
   it("enforces max cost before any paid call", async () => {
     await expect(run({ maxCostCents: 4 })).resolves.toEqual({
-      estimatedCostCents: 7,
+      estimatedCostCents: 2.4 + (2.4 + 100 * 0.0036) + 2.4,
       ok: false,
       reason: "cost_limit_exceeded",
     });
@@ -325,7 +325,7 @@ describe("backlinks analyze service", () => {
 
   it("accepts a zero max cost and rejects any paid call", async () => {
     await expect(run({ maxCostCents: 0 })).resolves.toEqual({
-      estimatedCostCents: 7,
+      estimatedCostCents: 2.4 + (2.4 + 100 * 0.0036) + 2.4,
       ok: false,
       reason: "cost_limit_exceeded",
     });

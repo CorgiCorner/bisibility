@@ -5,7 +5,6 @@ import {
   deprecatedLegacyMarketField,
   LEGACY_DEFAULT_MARKET_NAME,
   LEGACY_MARKET_INPUT_DEPRECATED_SINCE,
-  LEGACY_MARKET_INPUT_SUNSET_VERSION,
   legacyMarketDeprecationNote,
   legacyMarketFilterValues,
   legacyMarketLocationKey,
@@ -15,12 +14,6 @@ import {
   legacyMarketNameValueSchema,
   legacySerpMarketCatalog,
 } from "./legacy-market-input";
-
-function minorDistance(from: string, to: string) {
-  const [fromMajor, fromMinor] = from.split(".").map(Number);
-  const [toMajor, toMinor] = to.split(".").map(Number);
-  return toMajor === fromMajor ? toMinor - fromMinor : Number.POSITIVE_INFINITY;
-}
 
 describe("legacy market input translator", () => {
   it("translates legacy market names, cities, and languages into canonical location keys", () => {
@@ -77,12 +70,11 @@ describe("legacy market input translator", () => {
     expect(legacyMarketFilterValues("Atlantis")).toEqual(["Atlantis"]);
   });
 
-  it("documents deprecated fields with a sunset at least two minor releases away", () => {
-    expect(
-      minorDistance(LEGACY_MARKET_INPUT_DEPRECATED_SINCE, LEGACY_MARKET_INPUT_SUNSET_VERSION),
-    ).toBeGreaterThanOrEqual(2);
-    expect(legacyMarketDeprecationNote()).toContain("location_key");
-    expect(legacyMarketDeprecationNote()).toContain(LEGACY_MARKET_INPUT_SUNSET_VERSION);
+  it("documents deprecated fields without inventing a removal deadline", () => {
+    expect(LEGACY_MARKET_INPUT_DEPRECATED_SINCE).toBe("0.22.0");
+    expect(legacyMarketDeprecationNote()).toBe(
+      "Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.",
+    );
 
     const schema = legacyMarketNameOpenApiSchema("Legacy country market name.");
     expect(schema).toMatchObject({ deprecated: true, example: "United States", type: "string" });

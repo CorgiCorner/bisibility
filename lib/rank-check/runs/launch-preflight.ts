@@ -11,7 +11,10 @@ import {
 } from "@/lib/provider-usage/enforcement";
 import { type ProviderRequestSurface, surfaceOf } from "@/lib/provider-usage/surface";
 import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
-import { quoteDeploymentRankReservations } from "@/lib/providers/execution-extension";
+import {
+  hostedRankCheckEstimatedCostCents,
+  quoteDeploymentRankReservations,
+} from "@/lib/providers/execution-extension";
 import { exactExecutionEstimate } from "@/lib/providers/execution-extension-estimate";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
@@ -95,8 +98,15 @@ export function estimateRunRows(
       checkScheduleDepth: row.checkSchedule?.serpDepth,
       scheduleDepth: row.schedule?.serpDepth,
     });
+    const hostedEstimate =
+      connection.credentialSource === "hosted"
+        ? hostedRankCheckEstimatedCostCents(connection.provider, depth)
+        : null;
     return {
-      cost: estimatedRankCheckCostCents(connection.provider, depth, override, rateContext),
+      cost:
+        connection.credentialSource === "hosted" && connection.provider === "serpapi"
+          ? hostedEstimate
+          : estimatedRankCheckCostCents(connection.provider, depth, override, rateContext),
       depth,
       keywordId: row.id,
     };

@@ -100,7 +100,7 @@ module.
 
 ```sh
 cd examples/go
-go get bisibility.com/sdk-go@v0.10.0
+go get bisibility.com/sdk-go@v0.12.0
 go run ./quickstart
 go run ./error-handling
 ```

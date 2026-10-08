@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.29.0] - 2026-10-08
+
+### Added
+
+- Added durable Meter counters, source/tag budgets, operation pages and allowance alerts, plus project usage views that distinguish pending and unavailable data.
+
+- Added a bounded agent SEO audit skill with saved crawl evidence, prioritized actions and access-controlled reports with provenance.
+
+### Changed
+
+- Keep content-free proof after deletion with no automatic expiry and BYOK attribution; reconcile late receipts, uncharged duplicates and unknown measurements; update dependencies.
+
+### Fixed
+
+- Fixed audit redirects, fetches, failure measurements and coverage; duplicate research headings; pinned-table separators and singular keyword target counts.
+
+- Enforced read-only OAuth grants; fixed SDK, CLI, MCP, ChatGPT, skill-download and webhook setup guidance, plus demo return paths.
+
 ## [0.28.0] - 2026-10-04
 
 ### Added

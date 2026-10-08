@@ -21,8 +21,8 @@
       "1": "Struktura nagłówków, dyrektywy robots i tekst alt",
       "2": "Linki wewnętrzne i historia skanowania"
     },
-    "summary": "Sprawdzono {pages, number} stron · {errors, number} błędów · {warnings, number} ostrzeżeń · {indexable, number} indeksowalnych",
-    "partial": "Częściowe skanowanie: {reason}. Wyniki obejmują poniższe strony.",
+    "summary": "Pobrano {pages, number} stron · {errors, number} błędów · {warnings, number} ostrzeżeń · {indexable, number} z potwierdzoną indeksowalnością",
+    "partial": "Niepełny audyt: osiągnięto {reason}. Wyniki dotyczą tylko pobranych stron.",
     "stopReasons": {
       "finished": "zakończono",
       "page_limit": "limit stron",
@@ -65,6 +65,24 @@
       "broken_internal_link": "Wewnętrzne linki w próbce zwróciły błędy HTTP: {count, number}."
     },
     "errorRun": "Nie udało się ukończyć audytu. Spróbuj ponownie.",
-    "errorLoad": "Nie udało się wczytać raportu."
+    "errorLoad": "Nie udało się wczytać raportu.",
+    "unavailableSummary": "Pobrano {pages, number} stron · Nie pobrano {unavailable, number} · {errors, number} błędów · {warnings, number} ostrzeżeń · {indexable, number} z potwierdzoną indeksowalnością",
+    "partialUnavailable": "Niepełny audyt: nie udało się pobrać niektórych stron lub robots.txt. Dla niedostępnych stron nie wykonano pomiarów SEO.",
+    "notAssessed": "Nie oceniono",
+    "notMeasured": "Nie zmierzono",
+    "notFetched": "Nie pobrano",
+    "unknown": "Nieznana",
+    "fetchReasons": {
+      "timeout": "Upłynął limit czasu pobierania strony. Spróbuj ponownie później.",
+      "dns": "Nie udało się rozwiązać publicznej nazwy hosta. Sprawdź domenę i rekordy DNS.",
+      "tls": "Nie udało się zweryfikować bezpiecznego połączenia. Sprawdź certyfikat witryny.",
+      "network": "Połączenie ze stroną nie powiodło się. Spróbuj ponownie później.",
+      "public_network": "Adres nie przeszedł kontroli bezpieczeństwa sieci publicznej. Sprawdź, czy domena wskazuje wyłącznie adresy publiczne.",
+      "redirect": "Przekierowanie prowadzi poza origin projektu lub do zablokowanego adresu. Sprawdź domenę projektu i cel przekierowania.",
+      "redirect_limit": "Strona przekroczyła limit trzech przekierowań. Sprawdź ich łańcuch.",
+      "size_limit": "Odpowiedź przekroczyła limit 512 KiB. Nie oceniono tej strony.",
+      "request_limit": "Osiągnięto limit żądań przed pobraniem tej strony.",
+      "unknown": "Nie udało się pobrać strony. Jej status HTTP i pomiary SEO są nieznane."
+    }
   }
 }

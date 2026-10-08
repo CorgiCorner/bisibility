@@ -1,9 +1,12 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
-import { Prisma } from "@/lib/generated/prisma/client";
-import { PROVIDER_REQUEST_SOURCES } from "@/lib/provider-usage/tag";
-import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
+import { ownAdmission } from "@/lib/provider-usage/admission-extension";
+import {
+  readDeploymentMeteringEvidence,
+  readDeploymentMeteringExecutionOwner,
+} from "@/lib/providers/execution-extension";
 import { loadUsageEntry, syncUsageEntry } from "./entry-sync";
+import { entryFromHostedEvidence } from "./hosted-sync";
 import type { UsageEntry } from "./mapping";
 import type { ShadowHandoff } from "./shadow-engine";
 import { shadowForProject } from "./shadow-runtime";
@@ -88,67 +91,18 @@ async function loadHostedBatchEntry(batch: {
   projectId: string;
   connectionId: string;
 }): Promise<UsageEntry | null> {
-  const tasks = await prisma.queuedRankCheckTask.findMany({
-    where: { batchId: batch.id },
-    select: { id: true },
-  });
-  if (tasks.length === 0) return null;
-  const rows = await prisma.providerCostEntry.findMany({
-    where: {
-      correlationId: { in: tasks.map((task) => task.id) },
-      projectId: batch.projectId,
-      connectionId: batch.connectionId,
-      credentialSource: "hosted",
-    },
-    select: {
-      provider: true,
-      feature: true,
-      source: true,
-      credentialKind: true,
-      credentialId: true,
-      createdAt: true,
-      costCents: true,
-      usageQuantity: true,
-      measurementStatus: true,
-      failed: true,
-      project: { select: { ownerId: true } },
-    },
-    orderBy: { createdAt: "asc" },
-  });
-  if (rows.length === 0) return null;
-  const first = rows[0];
-  const costCents = rows.reduce((sum, row) => sum.plus(row.costCents), new Prisma.Decimal(0));
-  const usageQuantity = rows.reduce(
-    (sum, row) => (row.usageQuantity === null ? sum : sum.plus(row.usageQuantity)),
-    new Prisma.Decimal(0),
-  );
-  const measured = rows.every(
-    (row) => row.measurementStatus === "recorded" && row.usageQuantity !== null,
-  );
-  const provider = first.provider ?? "dataforseo";
-  const metadata = providerAllocationMetadata(provider);
-  return {
-    id: `queued-batch:${batch.id}`,
-    ownerId: first.project.ownerId,
-    projectId: batch.projectId,
-    connectionId: batch.connectionId,
-    provider,
-    feature: first.feature,
-    source: PROVIDER_REQUEST_SOURCES.find((source) => source === first.source) ?? "app",
-    credentialSource: "hosted",
-    correlationId: batch.id,
-    credentialKind: first.credentialKind,
-    credentialId: first.credentialId,
-    createdAt: first.createdAt,
-    costCents: costCents.toFixed(4),
-    usageQuantity: measured ? usageQuantity.toFixed(6) : null,
-    measurementStatus: measured ? "recorded" : "unknown",
-    cached: false,
-    failed: rows.some((row) => row.failed),
-    unit: metadata?.kind === "billable" ? metadata.allocationUnit : "cents",
-  };
+  if ((await readDeploymentMeteringExecutionOwner(`queued-batch:${batch.id}`)) === "meter")
+    return null;
+  const evidence = await readDeploymentMeteringEvidence(`queued-batch:${batch.id}`);
+  if (!evidence?.snapshot.namespace) return null;
+  if (
+    evidence.snapshot.projectId !== batch.projectId ||
+    evidence.snapshot.connectionId !== batch.connectionId
+  )
+    throw new Error("Retained queued metering binding is corrupt.");
+  return entryFromHostedEvidence(evidence);
 }
-async function hostedBatch(taskId: string, context: QueuedTaskContext) {
+async function hostedBatch(context: QueuedTaskContext) {
   if (!context.batch.connectionId) return;
   const entry = await loadHostedBatchEntry({
     id: context.batch.id,
@@ -156,7 +110,7 @@ async function hostedBatch(taskId: string, context: QueuedTaskContext) {
     connectionId: context.batch.connectionId,
   });
   if (!entry) return;
-  const shadow = await shadowForProject(entry.projectId);
+  const shadow = await shadowForProject(entry.projectId, entry.namespace);
   return { entry, shadow };
 }
 export async function resumeQueuedMetering(taskId: string) {
@@ -164,13 +118,14 @@ export async function resumeQueuedMetering(taskId: string) {
     const context = await load(taskId);
     if (!context) return;
     if (context.hosted) {
-      const hosted = await hostedBatch(taskId, context);
+      const hosted = await hostedBatch(context);
       await hosted?.shadow?.resume(hosted.entry, context.handoff);
       return;
     }
     const entry = await loadUsageEntry(context.operationId ?? "");
     if (!entry) return;
-    const shadow = await shadowForProject(entry.projectId);
+    if (await ownAdmission.owns(prisma, entry.id)) return;
+    const shadow = await shadowForProject(entry.projectId, entry.namespace);
     await shadow?.resume(entry, context.handoff);
   });
 }
@@ -179,7 +134,7 @@ export async function settleQueuedMetering(taskId: string) {
     const context = await load(taskId);
     if (!context) return;
     if (context.hosted) {
-      const hosted = await hostedBatch(taskId, context);
+      const hosted = await hostedBatch(context);
       await hosted?.shadow?.record(hosted.entry);
       return;
     }

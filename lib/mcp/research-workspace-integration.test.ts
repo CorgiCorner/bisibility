@@ -1,5 +1,10 @@
 import { handleApiRequest } from "@/lib/api/router";
 import { AuditRateLimitError } from "@/lib/site-audit/errors";
+import seoFixture from "@/plugins/bisibility/skills/seo-audit/references/example-report.json";
+import {
+  reportLink,
+  validateReport,
+} from "@/plugins/bisibility/skills/seo-audit/scripts/validate-report.mjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { dispatchMcpTool } from "./tools";
 import type { JsonObject } from "./types";
@@ -194,6 +199,81 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("MCP dispatch through the REST router and research handlers", () => {
+  it("completes a fixture audit through context, bounded crawl, external analysis save and readback", async () => {
+    const crawlId = seoFixture.body.coverage.crawl_id;
+    const rawCrawl = {
+      id: crawlId,
+      createdAt: stamp,
+      cached: false,
+      result: {
+        state: "partial",
+        stopReason: "page_limit",
+        startedAt: stamp,
+        completedAt: stamp,
+        limits: { maxPages: 2, maxRequests: 20, maxDurationMs: 15000, maxPageBytes: 524288 },
+        pages: [
+          {
+            url: "https://example.com/",
+            status: 200,
+            title: "Example",
+            headings: [{ level: 1, text: "Example" }],
+          },
+          { url: "https://example.com/pricing", status: 404, title: null, headings: [] },
+        ],
+        limitations: ["Fictional HTTP sample; indexing and full content are not verified."],
+      },
+    };
+    mocks.runAudit.mockResolvedValueOnce(rawCrawl);
+    mocks.readAudit.mockResolvedValueOnce(rawCrawl);
+    const context = await dispatchMcpTool(
+      "get_project_context",
+      { project_id: projectId },
+      "bsb_key_test",
+    );
+    expect(context.payload).toMatchObject({ business: "Tools", goals: "Growth" });
+    const crawl = await dispatchMcpTool(
+      "run_site_audit",
+      { project_id: projectId, max_pages: 2 },
+      "bsb_key_test",
+    );
+    expect(crawl.payload).toMatchObject({
+      data: { id: crawlId, result: { stop_reason: "page_limit" } },
+    });
+    const detail = await dispatchMcpTool(
+      "get_site_audit",
+      { project_id: projectId, report_id: crawlId },
+      "bsb_key_test",
+    );
+    expect(detail.payload).toMatchObject({
+      data: { result: { pages: [{ status: 200 }, { status: 404 }] } },
+    });
+    // The fixture is an external agent's authored analysis, not a built-in model run.
+    const payload = validateReport(structuredClone(seoFixture));
+    mocks.createReport.mockImplementationOnce(async (input) => ({
+      ...input,
+      id: reportId,
+      createdAt: stamp,
+    }));
+    const saved = await dispatchMcpTool("create_agent_report", payload, "bsb_key_test");
+    expect(saved).toMatchObject({
+      ok: true,
+      status: 201,
+      payload: { id: reportId, kind: "seo_audit" },
+    });
+    mocks.getReport.mockResolvedValueOnce({ ...payload, id: reportId, createdAt: stamp });
+    const readback = await dispatchMcpTool(
+      "get_agent_report",
+      { project_id: projectId, report_id: reportId },
+      "bsb_key_test",
+    );
+    expect(readback.payload).toMatchObject({ body: payload.body, provenance: payload.provenance });
+    expect(reportLink("https://bisibility.com", projectId, reportId)).toBe(
+      `https://bisibility.com/app/${projectId}/agent-reports/${reportId}`,
+    );
+    expect(mocks.visibility).not.toHaveBeenCalled();
+    expect(mocks.prompts).not.toHaveBeenCalled();
+    expect(mocks.fetch).not.toHaveBeenCalled();
+  });
   it.each(operations)("executes %s against its real handler", async (name, input, status) => {
     const result = await dispatchMcpTool(name, { project_id: projectId, ...input }, "bsb_key_test");
     expect(result).toMatchObject({ ok: true, status });

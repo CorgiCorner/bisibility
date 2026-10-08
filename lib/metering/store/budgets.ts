@@ -6,14 +6,15 @@ import type {
   Operation,
   Quantity,
 } from "@usagekit/core";
-import { resolveWindow } from "@usagekit/core";
+import { resolveWindow, sourcesOf } from "@usagekit/core";
+import { validateBudget } from "@usagekit/store";
 import { canonical, decode, effective, encode, plus } from "./codec";
 import { lock, Prisma, type Sql } from "./sql";
 
 export function matchingScopes(
   q: Pick<ApplicableBudgetsQuery, "scope" | "platformPools">,
 ): BudgetScope[] {
-  const { namespace, principal, connection, group, accessCredential } = q.scope;
+  const { namespace, principal, connection, group, accessCredential, tags } = q.scope;
   return [
     { kind: "principal", namespace, principal },
     { kind: "connection", namespace, connection },
@@ -26,6 +27,7 @@ export function matchingScopes(
       namespace,
       poolId,
     })),
+    ...(tags ?? []).map((tag) => ({ kind: "tag" as const, namespace, tag })),
   ];
 }
 export async function lockScopes(sql: Sql, scopes: BudgetScope[]) {
@@ -37,24 +39,36 @@ export async function currentBudgets(
   namespace: string,
   scopes?: BudgetScope[],
   surface?: string,
+  source?: ApplicableBudgetsQuery["source"],
 ) {
   const clauses = [
     Prisma.sql`b.namespace=${namespace}`,
     Prisma.sql`NOT EXISTS(SELECT 1 FROM metering_budget n WHERE n.namespace=b.namespace AND n.budget_id=b.budget_id AND n.version>b.version)`,
   ];
   if (scopes) clauses.push(Prisma.sql`b.scope_key IN (${Prisma.join(scopes.map(canonical))})`);
-  if (surface) clauses.push(Prisma.sql`b.surface IN ('any',${surface})`);
+  if (surface) {
+    const selectors = [
+      "any",
+      surface,
+      ...(source ? [source] : sourcesOf(surface as "app" | "programmatic")),
+    ];
+    clauses.push(Prisma.sql`b.surface IN (${Prisma.join(selectors)})`);
+  }
   const rows = await sql.query<{ body: unknown }>(
     Prisma.sql`SELECT b.body FROM metering_budget b WHERE ${Prisma.join(clauses, " AND ")} ORDER BY b.sequence`,
   );
-  return rows.map((r) => decode<Budget>(r.body));
+  return rows.map((r) => normalizeBudget(r.body));
+}
+function normalizeBudget(body: unknown): Budget {
+  const budget = decode<Budget>(body);
+  return { ...budget, onExceed: String(budget.onExceed) === "warn" ? "allow" : budget.onExceed };
 }
 export async function historicalBudget(sql: Sql, namespace: string, id: string, version: number) {
   const [row] = await sql.query<{ body: unknown }>(
     Prisma.sql`SELECT body FROM metering_budget WHERE namespace=${namespace} AND budget_id=${id} AND version=${version}`,
   );
   if (!row) throw new Error("Missing metering budget history");
-  return decode<Budget>(row.body);
+  return normalizeBudget(row.body);
 }
 export async function usage(sql: Sql, budget: Budget, epoch: string) {
   const [row] = await sql.query<{
@@ -126,6 +140,7 @@ export async function updateUsage(sql: Sql, before: Operation | null, after: Ope
   }
 }
 export async function saveBudget(sql: Sql, budget: Budget, fixture = false) {
+  if (!fixture) validateBudget(budget);
   await lockScopes(sql, [budget.scope]);
   await lock(sql, `metering:budget:${canonical([budget.scope.namespace, budget.id])}`);
   const [current] = await sql.query<{ version: number }>(

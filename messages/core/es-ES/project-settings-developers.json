@@ -77,7 +77,7 @@
     "webhooks": {
       "title": "Webhooks de despliegue",
       "inbound": "Entrantes: tu CI llama a bisibility después de un despliegue y esa llamada se convierte en una señal de la cronología.",
-      "outbound": "El webhook saliente es el canal de alertas de Notificaciones, no este.",
+      "outbound": "El webhook saliente es el canal de alertas de Alertas, no este.",
       "add": "Añadir hook de despliegue",
       "disabledDescription": "Desactivado: la fila y el token se conservan.",
       "sendTestDescription": "«Enviar prueba» publica una señal real y enlaza con ella.",

@@ -21,8 +21,8 @@
       "1": "見出し構造、robots 指示、画像の alt",
       "2": "内部リンクと保存済み巡回履歴"
     },
-    "summary": "確認済み {pages, number} ページ · エラー {errors, number} 件 · 警告 {warnings, number} 件 · インデックス可能 {indexable, number} 件",
-    "partial": "一部のみの巡回: {reason}。結果は以下のページが対象です。",
+    "summary": "取得したページ {pages, number} · エラー {errors, number} · 警告 {warnings, number} · インデックス可能と確認 {indexable, number}",
+    "partial": "監査は未完了です。{reason}に達しました。結果は取得したページのみを対象とします。",
     "stopReasons": {
       "finished": "完了",
       "page_limit": "ページ上限",
@@ -65,6 +65,24 @@
       "broken_internal_link": "サンプル内の内部リンク {count, number} 件が HTTP エラーを返しました。"
     },
     "errorRun": "監査を完了できませんでした。もう一度お試しください。",
-    "errorLoad": "レポートを読み込めませんでした。"
+    "errorLoad": "レポートを読み込めませんでした。",
+    "unavailableSummary": "取得したページ {pages, number} · 未取得 {unavailable, number} · エラー {errors, number} · 警告 {warnings, number} · インデックス可能と確認 {indexable, number}",
+    "partialUnavailable": "監査は未完了です。一部のページまたは robots.txt を取得できませんでした。未取得のページには SEO 測定値がありません。",
+    "notAssessed": "未評価",
+    "notMeasured": "未測定",
+    "notFetched": "未取得",
+    "unknown": "不明",
+    "fetchReasons": {
+      "timeout": "ページの取得がタイムアウトしました。後でもう一度お試しください。",
+      "dns": "公開ホスト名を解決できませんでした。ドメインと DNS レコードを確認してください。",
+      "tls": "安全な接続を検証できませんでした。サイトの証明書を確認してください。",
+      "network": "ページへの接続に失敗しました。後でもう一度お試しください。",
+      "public_network": "URL が公開ネットワークの安全性チェックを通過しませんでした。ドメインの解決先が公開アドレスのみであることを確認してください。",
+      "redirect": "リダイレクトがプロジェクトのオリジン外またはブロックされた URL に向かっています。ドメインと転送先を確認してください。",
+      "redirect_limit": "3 回のリダイレクト上限を超えました。リダイレクトの経路を確認してください。",
+      "size_limit": "応答が 512 KiB の上限を超えました。このページは評価できませんでした。",
+      "request_limit": "このページを取得する前にリクエスト上限に達しました。",
+      "unknown": "ページを取得できませんでした。HTTP ステータスと SEO 測定値は不明です。"
+    }
   }
 }

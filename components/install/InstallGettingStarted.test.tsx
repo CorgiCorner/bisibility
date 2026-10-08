@@ -46,7 +46,7 @@ describe("install getting started", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Claude" }));
     expect(screen.getByText("Read and write access")).toBeVisible();
     expect(screen.getByText("1. Open connectors")).toBeVisible();
-    expect(screen.queryByText("1. Enable developer mode")).not.toBeInTheDocument();
+    expect(screen.queryByText("1. Open Plugins")).not.toBeInTheDocument();
     const guide = screen.getByRole("link", { name: "Claude setup guide" });
     expect(new URL(guide.getAttribute("href") ?? "").pathname).toBe(
       "/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp",
@@ -56,7 +56,7 @@ describe("install getting started", () => {
       mcpUrl,
     );
     fireEvent.click(screen.getByRole("radio", { name: "ChatGPT" }));
-    expect(screen.getByText("1. Enable developer mode")).toBeVisible();
+    expect(screen.getByText("1. Open Plugins")).toBeVisible();
     expect(screen.getByText("Read-only access")).toBeVisible();
   });
 

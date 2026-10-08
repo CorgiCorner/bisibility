@@ -19,12 +19,14 @@ type Props = {
   errors: ComponentProps<typeof StepConnectProviderCredentials>["errors"];
   mode: "modal" | "step";
   onCredentialChange: () => void;
+  onDataSourceConnected?: () => void;
   onSave: () => void;
   onSelect: (providerId: OnboardingSerpProviderId) => void;
   onTest: () => void;
   providerError: string | undefined;
   providerId: OnboardingSerpProviderId;
   providerLabel: string;
+  projectId?: string;
   register: ComponentProps<typeof StepConnectProviderCredentials>["register"];
   saveDisabled: boolean;
   selectedProviderId: OnboardingSerpProviderId;
@@ -44,12 +46,14 @@ export function StepConnectProviderContent({
   errors,
   mode,
   onCredentialChange,
+  onDataSourceConnected,
   onSave,
   onSelect,
   onTest,
   providerError,
   providerId,
   providerLabel,
+  projectId,
   register,
   saveDisabled,
   selectedProviderId,
@@ -95,7 +99,9 @@ export function StepConnectProviderContent({
           <input type="hidden" {...register("providerId")} />
         </>
       }
+      onDataSourceConnected={onDataSourceConnected}
       providerError={providerError}
+      projectId={projectId}
       showHeading={mode === "step"}
     />
   );

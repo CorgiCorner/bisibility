@@ -7,12 +7,15 @@ const mocks = vi.hoisted(() => ({
   readable: vi.fn(),
   role: vi.fn(),
   settings: vi.fn(),
+  metering: vi.fn(),
 }));
 vi.mock("@/components/settings/AccountDataSourceExtension", () => ({
   renderAccountUsageBudgetExtension: mocks.budgetExtension,
 }));
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.readable }));
 vi.mock("@/lib/queries/settings", () => ({ getSettings: mocks.settings }));
+vi.mock("@/lib/metering/user-data", () => ({ getProjectMeteringUsage: mocks.metering }));
+vi.mock("./MeterUsageCard", () => ({ MeterUsageCard: () => null }));
 vi.mock("@/i18n/catalog-loader.server", () => ({ loadCoreMessages: mocks.loadCoreMessages }));
 vi.mock("@/i18n/document-locale.server", () => ({
   resolveRegionalDocumentLocale: vi.fn(async () => ({ locale: "en", timeZone: "UTC" })),
@@ -27,6 +30,7 @@ vi.mock("@/lib/actions/provider-allocation", () => ({
 vi.mock("@/components/settings/usage/ProviderUsageCard", () => ({ ProviderUsageCard: () => null }));
 
 beforeEach(() => {
+  mocks.metering.mockResolvedValue({ status: "unavailable", observed: false });
   mocks.settings.mockResolvedValue({
     project: { projectId: "project_1" },
     usage: { connections: [] },
@@ -48,6 +52,11 @@ it.each([
   });
   expect(mocks.settings).toHaveBeenCalledWith("prj_1", { dateFormat: "iso" });
   expect(mocks.readable).toHaveBeenCalledWith("prj_1");
+  expect(mocks.metering).toHaveBeenCalledWith("prj_1");
+  expect(result.props.children.props.children[1].props.data).toEqual({
+    status: "unavailable",
+    observed: false,
+  });
 });
 
 // The panel mounts its own boundary inside the document payload, and a nested provider replaces

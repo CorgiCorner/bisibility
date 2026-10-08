@@ -22,8 +22,8 @@ never the raw secret.
 for backward compatibility. `expires_in_days` accepts `30`, `90`, `365`, or
 `null` for no expiry.
 
-`revokeApiKey` accepts `key_id` with or without the `key_` prefix. The response
-is the revoked API-key resource with `revoked_at` set.
+`revokeApiKey` requires the complete typed `key_` public ID. The response is the
+revoked API-key resource with `revoked_at` set.
 
 For CI automation with a PAT, create the project key through
 `POST /projects/{project_id}/api-keys` instead of inferring the project.

@@ -136,6 +136,11 @@ export type ProviderDraft = Pick<
 >;
 export type ProviderDraftMap = Record<OnboardingSerpProviderId, ProviderDraft>;
 export type TestedCredentialKeyMap = Partial<Record<OnboardingSerpProviderId, string>>;
+export type PendingProviderCompletion = {
+  connections: ConnectedProviderMap;
+  providerId: OnboardingSerpProviderId;
+  values: OnboardingConnectProviderInput;
+};
 export function providerTestInput(
   values: OnboardingConnectProviderInput,
 ): TestProviderConnectionInput {

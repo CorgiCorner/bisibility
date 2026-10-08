@@ -13,6 +13,7 @@ import {
 } from "@/lib/auth/email-otp-two-factor";
 import { firstRunCreationState, isPendingFirstRunUser } from "@/lib/auth/first-run-context";
 import { loginCodeGuardPlugin, withOtpEmailRequest } from "@/lib/auth/login-code-guard";
+import { oauthConsentGuard } from "@/lib/auth/oauth-consent-guard";
 import {
   OAUTH_ACCESS_TOKEN_TTL_SECONDS,
   OAUTH_AUTHORIZATION_TTL_SECONDS,
@@ -308,6 +309,7 @@ export const auth = betterAuth({
       // at one entry until the provider gains per-client resource binding.
       validAudiences: [MCP_RESOURCE_URL],
     }),
+    oauthConsentGuard(),
     authAuditPlugin,
     emailOtpTwoFactorPlugin,
     loginCodeGuardPlugin({ fixedOtpEnabled: FIXED_OTP_ENABLED }),

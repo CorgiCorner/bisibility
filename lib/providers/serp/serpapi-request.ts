@@ -1,3 +1,4 @@
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import type { ProviderCredentials, SerpRankInput } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
 import type { SerpApiResponse } from "./serpapi-payload";
@@ -123,6 +124,7 @@ export async function requestJson(
         !url.startsWith(SEARCH_URL) || serpApiUsageReceipt(data, response).quantity === 0,
       );
     } catch (error) {
+      if (error instanceof DeploymentAdmissionExhaustedError) throw error;
       if (error instanceof ProviderUsagePersistenceError) throw error;
       // A transport rejection cannot prove the search was uncharged, even without a journal.
       if (url.startsWith(SEARCH_URL) && !(error instanceof SerpApiError))
@@ -155,6 +157,5 @@ export function buildSearchUrl(
   if (start > 0) {
     params.set("start", String(start));
   }
-
   return `${SEARCH_URL}?${params.toString()}`;
 }

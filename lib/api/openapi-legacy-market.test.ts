@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { getCapabilities } from "./capabilities";
-import { LEGACY_MARKET_INPUT_SUNSET_VERSION } from "./legacy-market-input";
 import { getOpenApiDocument } from "./openapi";
 import type { Parameter } from "./openapi-test-helpers";
 
@@ -25,7 +24,7 @@ describe("legacy market inputs in the OpenAPI document", () => {
       for (const field of fields) {
         expect(props[field], `${schema}.${field}`).toMatchObject({
           deprecated: true,
-          description: expect.stringContaining(LEGACY_MARKET_INPUT_SUNSET_VERSION),
+          description: expect.stringContaining("no removal version is scheduled"),
         });
       }
       expect(props.location_key, `${schema}.location_key`).toMatchObject({
@@ -61,7 +60,7 @@ describe("legacy market inputs in the OpenAPI document", () => {
     });
     expect(parameters.find((parameter) => parameter.name === "country")).toMatchObject({
       deprecated: true,
-      description: expect.stringContaining(LEGACY_MARKET_INPUT_SUNSET_VERSION),
+      description: expect.stringContaining("no removal version is scheduled"),
     });
   });
 
@@ -78,7 +77,7 @@ describe("legacy market inputs in the OpenAPI document", () => {
       expect(schema?.properties.location_key, name).toMatchObject({ type: "string" });
       expect(schema?.properties.country, name).toMatchObject({
         deprecated: true,
-        description: expect.stringContaining(LEGACY_MARKET_INPUT_SUNSET_VERSION),
+        description: expect.stringContaining("no removal version is scheduled"),
         enum: expect.arrayContaining(["United States"]),
       });
       expect(schema?.properties.country).not.toHaveProperty("default");

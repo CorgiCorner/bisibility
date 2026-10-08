@@ -4,6 +4,8 @@ import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
 import type { Budget, Measurement, Quantity, Receipt, ReserveInput } from "@usagekit/core";
 
 export type UsageEntry = {
+  namespace?: string;
+  proofVersion?: number;
   unit?: "cents" | "units";
   id: string;
   ownerId: string;
@@ -21,9 +23,20 @@ export type UsageEntry = {
   costCents: string;
   usageQuantity: string | null;
   measurementStatus: string;
+  costMeasurement?: "recorded" | "unknown";
+  quantityMeasurement?: "recorded" | "unknown";
   cached: boolean;
   failed: boolean;
   providerRequestId?: string | null;
+  creditAccountRef?: string;
+  customerPriceVersion?: string;
+  estimatedPriceCents?: string;
+  customerCents?: string | null;
+  platformPoolId?: string;
+  providerCredentialVersion?: string;
+  providerCostOwner?: string;
+  allocationTag?: string;
+  publicConnectionId?: string | null;
 };
 export function decimalQuantity(value: string, unit: string, scale: number): Quantity {
   if (!/^\d+(\.\d+)?$/.test(value)) throw new TypeError("Invalid exact metering amount");
@@ -38,22 +51,32 @@ export function reserveFromEntry(
   estimate: { cents: string; units: string },
 ): ReserveInput {
   const hosted = entry.credentialSource === "hosted";
+  if (
+    hosted &&
+    (!entry.platformPoolId || !entry.providerCredentialVersion || !entry.providerCostOwner)
+  )
+    throw new TypeError("Platform funding requires a retained account and credential version");
   return {
     operationId: entry.id,
     reservationTtlMs: 3600000,
     scope: {
-      namespace,
+      namespace: entry.namespace ?? namespace,
       principal: entry.ownerId,
       group: entry.projectId,
       connection: entry.connectionId,
+      ...(entry.providerCredentialVersion
+        ? { providerCredentialVersion: entry.providerCredentialVersion }
+        : {}),
+      ...(!hosted && entry.allocationTag ? { tags: [entry.allocationTag] } : {}),
       ...(entry.credentialKind && entry.credentialId
         ? { accessCredential: { kind: entry.credentialKind, id: entry.credentialId } }
         : {}),
     },
     fundingSource: hosted ? "platform" : "byok",
-    // No stable private pool id exists for the shared hosted key, so the pool is provider-scoped.
-    ...(hosted ? { platformPools: [`hosted:${entry.provider}`] } : {}),
-    costOwner: entry.ownerId,
+    ...(hosted && entry.platformPoolId ? { platformPools: [entry.platformPoolId] } : {}),
+    costOwner: hosted ? (entry.providerCostOwner as string) : entry.ownerId,
+    ...(entry.creditAccountRef ? { creditAccountRef: entry.creditAccountRef } : {}),
+    ...(entry.customerPriceVersion ? { customerPriceVersion: entry.customerPriceVersion } : {}),
     surface: surfaceOf(entry.source),
     source: entry.source,
     provider: entry.provider,
@@ -61,21 +84,28 @@ export function reserveFromEntry(
     estimate: [
       decimalQuantity(estimate.cents, "cents", 4),
       decimalQuantity(estimate.units, "units", 6),
+      ...(entry.estimatedPriceCents
+        ? [decimalQuantity(entry.estimatedPriceCents, "customer_cents", 4)]
+        : []),
     ],
     ...(entry.correlationId ? { correlationId: entry.correlationId } : {}),
   };
 }
 export function receiptFromEntry(entry: UsageEntry, now: Date): Receipt {
   const known = entry.measurementStatus === "recorded";
+  const knownCost = entry.costMeasurement ? entry.costMeasurement === "recorded" : known;
+  const knownQuantity = entry.quantityMeasurement
+    ? entry.quantityMeasurement === "recorded"
+    : known;
   const measurements: Measurement[] = [
-    known
+    knownCost
       ? {
           unit: "cents",
           certainty: "measured",
           quantity: decimalQuantity(entry.costCents, "cents", 4),
         }
       : { unit: "cents", certainty: "unknown", quantity: null },
-    known && entry.usageQuantity !== null
+    knownQuantity && entry.usageQuantity !== null
       ? {
           unit: "units",
           certainty: "measured",
@@ -83,20 +113,34 @@ export function receiptFromEntry(entry: UsageEntry, now: Date): Receipt {
         }
       : { unit: "units", certainty: "unknown", quantity: null },
   ];
+  if (entry.customerCents !== undefined)
+    measurements.push(
+      entry.customerCents === null
+        ? { unit: "customer_cents", certainty: "unknown", quantity: null }
+        : {
+            unit: "customer_cents",
+            certainty: "measured",
+            quantity: decimalQuantity(entry.customerCents, "customer_cents", 4),
+          },
+    );
   if (known && entry.usageQuantity === null && entry.unit !== "units") measurements.splice(1, 1);
   const content = JSON.stringify([
     entry.id,
+    entry.proofVersion,
     entry.costCents,
     entry.usageQuantity,
     entry.measurementStatus,
+    entry.costMeasurement,
+    entry.quantityMeasurement,
     entry.providerRequestId,
     entry.cached,
     entry.failed,
+    entry.customerCents,
   ]);
   return {
     id: createHash("sha256").update(content).digest("hex"),
     measurements,
-    cost: known
+    cost: knownCost
       ? {
           certainty: "measured",
           money: { units: decimalQuantity(entry.costCents, "cents", 4).value, currency: "USD" },
@@ -114,16 +158,19 @@ export function allocationBudgets(
   namespace: string,
   connection: {
     id: string;
-    unit: "cents" | "units";
+    unit: "cents" | "units" | "customer_cents";
     app: string | null;
     programmatic: string | null;
+    allocationTag?: string;
   },
   version: number,
 ): Budget[] {
   return (["app", "programmatic"] as const).map((surface) => ({
-    id: `connection:${connection.id}:${surface}`,
+    id: `${connection.allocationTag ? "own-connection" : "connection"}:${connection.id}:${surface}`,
     version,
-    scope: { kind: "connection", namespace, connection: connection.id },
+    scope: connection.allocationTag
+      ? { kind: "tag", namespace, tag: connection.allocationTag }
+      : { kind: "connection", namespace, connection: connection.id },
     surface,
     unit: connection.unit,
     limit:
@@ -132,9 +179,9 @@ export function allocationBudgets(
         : decimalQuantity(
             connection[surface],
             connection.unit,
-            connection.unit === "cents" ? 4 : 6,
+            connection.unit === "units" ? 6 : 4,
           ),
     window: { kind: "calendar_month", timezone: "UTC" },
-    onExceed: "warn",
+    onExceed: "allow",
   }));
 }

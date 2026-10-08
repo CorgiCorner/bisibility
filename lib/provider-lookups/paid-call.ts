@@ -18,7 +18,6 @@ import {
   ProviderAllocationExhaustedError,
 } from "@/lib/provider-usage/enforcement";
 import { recordProviderUsage } from "@/lib/provider-usage/recorder";
-import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
 import { type ProviderCredential, surfaceOf } from "@/lib/provider-usage/surface";
 import {
   createProviderRequestAttribution,
@@ -26,7 +25,6 @@ import {
   type ProviderRequestSource,
   type ProviderRequestTrigger,
 } from "@/lib/provider-usage/tag";
-import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
 import { chargedProviderCostCents, ProviderCallError } from "@/lib/providers/call-error";
@@ -40,6 +38,7 @@ import { ProviderLookupSignal } from "./lookup-failure";
 import { preflightProviderBudget } from "./paid-call-budget";
 import { requiredEstimatedCostCents } from "./paid-call-estimate";
 import { runHostedPaidProviderCall } from "./paid-call-hosted";
+import { createOwnPaidCallJournal } from "./paid-call-own-journal";
 
 export type { ProviderLookupFailure } from "./lookup-failure";
 export { ProviderLookupSignal } from "./lookup-failure";
@@ -65,8 +64,7 @@ async function executePaidProviderCall<
   source: ProviderRequestSource;
   trigger: ProviderRequestTrigger;
 }) {
-  // Admission precedes every new paid request: rate context, credentials, the
-  // rate limit, and the provider call itself all stay untouched on a denial.
+  // Access admission precedes provider credential and transport use.
   try {
     await assertOperationAccess(input.projectId);
   } catch (error) {
@@ -204,18 +202,12 @@ async function executePaidProviderCall<
     throw new ProviderLookupSignal({ ok: false, reason: "rate_limited", resetAt: gate.resetAt });
   }
   let result: T;
-  const allocation = providerAllocationMetadata(input.provider.id);
-  const journal =
-    allocation?.kind === "billable"
-      ? createProviderRequestJournal(prisma, {
-          attribution: usage,
-          connectionId: input.connection.id,
-          projectId: input.projectId,
-          provider: input.provider.id,
-          unit: allocation.allocationUnit,
-          estimate: { cents: estimatedCostCents.toFixed(4), units: "1" },
-        })
-      : null;
+  const journal = createOwnPaidCallJournal(prisma, {
+    attribution: usage,
+    connection: input.connection,
+    projectId: input.projectId,
+    estimatedCostCents,
+  });
   try {
     result = await input.call(
       journal ? { ...credentials, usageObserver: journal.observer } : credentials,

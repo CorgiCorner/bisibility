@@ -6,6 +6,7 @@ import {
   type ProviderRequestSurface,
   surfaceOf,
 } from "@/lib/provider-usage/surface";
+import { hostedRankCheckEstimatedCostCents } from "@/lib/providers/execution-extension";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
@@ -94,12 +95,15 @@ function estimateTargets(
       checkScheduleDepth: row.checkSchedule?.serpDepth,
       scheduleDepth: row.schedule?.serpDepth,
     });
-    const cost = estimatedRankCheckCostCents(
-      connection.provider,
-      depth,
-      connection.costPerCheckCents,
-      connection.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
-    );
+    const cost =
+      connection.credentialSource === "hosted" && connection.provider === "serpapi"
+        ? hostedRankCheckEstimatedCostCents(connection.provider, depth)
+        : estimatedRankCheckCostCents(
+            connection.provider,
+            depth,
+            connection.costPerCheckCents,
+            connection.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
+          );
     return { cost, depth };
   });
   const known = targets.flatMap(({ cost }) => (cost === null ? [] : [cost]));

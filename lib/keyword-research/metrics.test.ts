@@ -186,7 +186,7 @@ describe("keyword metrics service", () => {
     await expect(run({ estimateOnly: true })).resolves.toMatchObject({
       cachedCount: 1,
       estimate: true,
-      estimatedCostCents: 1.01,
+      estimatedCostCents: 1.212,
       fetchedCount: 0,
       fetchedCountEstimate: 1,
       rows: [],

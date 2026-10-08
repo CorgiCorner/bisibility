@@ -1,5 +1,5 @@
+import { ExploreDemo } from "@/components/auth/ExploreDemo";
 import type { Meta, StoryObj } from "@storybook/react";
-import { ExploreDemo } from "./ExploreDemo";
 
 const meta = {
   title: "Auth/ExploreDemo",
@@ -16,3 +16,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
+export const DeepLink: Story = {
+  args: { nextPath: "/app/prj_example/keyword-research?seed=ai%20tools%20directory" },
+};

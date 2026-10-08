@@ -6,22 +6,22 @@ describe("normalizedProviderUnitCostCents", () => {
   it("keeps samples from differently sized calls comparable", () => {
     const rate = keywordMetricsRate("dataforseo");
 
-    expect(normalizedProviderUnitCostCents({ costCents: 1.1, itemCount: 10, rate })).toBeCloseTo(
-      0.01,
-    );
-    expect(normalizedProviderUnitCostCents({ costCents: 11, itemCount: 1_000, rate })).toBeCloseTo(
-      0.01,
-    );
+    expect(
+      normalizedProviderUnitCostCents({ costCents: 1.2 + 10 * 0.012, itemCount: 10, rate }),
+    ).toBeCloseTo(0.012);
+    expect(
+      normalizedProviderUnitCostCents({ costCents: 1.2 + 1_000 * 0.012, itemCount: 1_000, rate }),
+    ).toBeCloseTo(0.012);
   });
 
   it("removes the clickstream multiplier before normalizing", () => {
     expect(
       normalizedProviderUnitCostCents({
-        costCents: 4,
+        costCents: (1.2 + 100 * 0.012) * 2,
         includeClickstream: true,
         itemCount: 100,
         rate: keywordMetricsRate("dataforseo"),
       }),
-    ).toBeCloseTo(0.01);
+    ).toBeCloseTo(0.012);
   });
 });

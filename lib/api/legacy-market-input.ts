@@ -7,10 +7,9 @@ import { z } from "zod";
 // reference (a canonical location key). Every handler resolves that key server-side
 // through the location service, so a name is never trusted past this module. Nothing
 // else under lib/api or lib/schemas may read the market catalog (market-catalog-guard);
-// this module and its callers go away together at the sunset release below.
+// this module and its callers must be retired together in a future compatibility change.
 
 export const LEGACY_MARKET_INPUT_DEPRECATED_SINCE = "0.22.0";
-export const LEGACY_MARKET_INPUT_SUNSET_VERSION = "0.24.0";
 export const DEFAULT_LOCATION_KEY = "US";
 export const LEGACY_DEFAULT_MARKET_NAME = "United States";
 // Freeze legacy discovery order only at the compatibility boundary.
@@ -122,7 +121,7 @@ export function legacyMarketFilterValues(value: string): string[] {
 }
 
 export function legacyMarketDeprecationNote() {
-  return `Deprecated legacy market input: send location_key instead. Accepted until Bisibility ${LEGACY_MARKET_INPUT_SUNSET_VERSION}, then removed.`;
+  return `Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.`;
 }
 
 export function primaryLocationKeyDescription(detail: string) {

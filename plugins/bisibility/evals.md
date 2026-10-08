@@ -8,9 +8,9 @@ Should trigger `bisibility:rank-tracking-report`:
 
 > Create a weekly ranking gains and losses report for my Bisibility project, using existing checks only.
 
-Must not trigger any `bisibility:*` skill:
+Must route to `bisibility:seo-audit`, not rank tracking:
 
-> Crawl example.com and audit its robots directives, canonical tags, metadata, and internal links.
+> Use Bisibility to crawl my example.com project, audit its technical SEO, save recommendations and give me the report link.
 
 ## Keyword opportunity research
 
@@ -32,6 +32,18 @@ Must not trigger any `bisibility:*` skill:
 
 > Explain the difference between HTTP 401 and 403. Do not access Bisibility.
 
+## SEO audit
+
+Should trigger only `bisibility:seo-audit`:
+
+> Audit my Bisibility example.com project, prioritize technical, content and visibility actions, save the audit and return its link. Use the bounded free crawl and existing reports; do not spend on providers.
+
+Must not trigger any `bisibility:*` skill:
+
+> Proofread this SEO audit paragraph without connecting to Bisibility.
+
+Behavioral evaluation (mock tools only): use the example report as a shape guide and supply a partial crawl, a failed page, stale rankings, an observed AI report with an unknown observation date, and a synthetic answer citing the brand. Require a saved external `seo_audit` payload with truthful uncertainty and no paid calls. Repeat with a viewer/read-only key: analysis may continue but crawl/save must be reported as blocked, without credential or project switching.
+
 ## Passing condition
 
-Each positive case invokes only its named Bisibility skill. Each negative case invokes no Bisibility skill. Record the Claude Code version, model, and result when performing a release check because model routing is probabilistic.
+Each positive case invokes only its named Bisibility skill. Each negative case invokes no Bisibility skill except the explicitly named cross-routing case. Record the Claude Code version, model, and result when performing a release check because model routing is probabilistic.

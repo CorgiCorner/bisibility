@@ -21,8 +21,8 @@
       "1": "Heading structure, robots directives and image alt",
       "2": "Internal links and saved crawl history"
     },
-    "summary": "{pages, number} pages checked · {errors, number} errors · {warnings, number} warnings · {indexable, number} indexable",
-    "partial": "Partial crawl: {reason}. Results cover the pages below.",
+    "summary": "{pages, number} pages fetched · {errors, number} errors · {warnings, number} warnings · {indexable, number} confirmed indexable",
+    "partial": "Incomplete audit: reached the {reason}. Results cover only the pages fetched.",
     "stopReasons": {
       "finished": "finished",
       "page_limit": "page limit",
@@ -65,6 +65,24 @@
       "broken_internal_link": "{count, number} sampled internal links returned HTTP errors."
     },
     "errorRun": "Site audit could not be completed. Try again.",
-    "errorLoad": "Report could not be loaded."
+    "errorLoad": "Report could not be loaded.",
+    "unavailableSummary": "{pages, number} pages fetched · {unavailable, number} not fetched · {errors, number} errors · {warnings, number} warnings · {indexable, number} confirmed indexable",
+    "partialUnavailable": "Incomplete audit: some pages or robots.txt could not be fetched. Unavailable pages have no measured SEO results.",
+    "notAssessed": "Not assessed",
+    "notMeasured": "Not measured",
+    "notFetched": "Not fetched",
+    "unknown": "Unknown",
+    "fetchReasons": {
+      "timeout": "The page request timed out. Try again later.",
+      "dns": "The public hostname could not be resolved. Check the domain and its DNS records.",
+      "tls": "The secure connection could not be verified. Check the site certificate.",
+      "network": "The connection to the page failed. Try again later.",
+      "public_network": "The URL failed the public-network safety check. Check that the domain resolves only to public addresses.",
+      "redirect": "The redirect leaves the project origin or uses a blocked URL. Check the project domain and redirect destination.",
+      "redirect_limit": "The page exceeded the three-redirect limit. Check the redirect chain.",
+      "size_limit": "The response exceeded the 512 KiB limit. This page could not be assessed.",
+      "request_limit": "The crawl reached its request limit before this page could be fetched.",
+      "unknown": "The page could not be fetched. Its HTTP status and SEO measurements are unknown."
+    }
   }
 }

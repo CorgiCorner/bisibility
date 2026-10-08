@@ -22,8 +22,8 @@
       "chatgpt": {
         "label": "ChatGPT",
         "hint": "App",
-        "note": "Settings, Apps, Advanced settings, enable developer mode, then add the URL as a custom MCP app.",
-        "caveat": "ChatGPT shows only read-only tools on individual plans; write actions such as rank checks and backlink analysis need a Business or Enterprise workspace with developer mode. Read-only tools cover stored reports and cost estimates."
+        "note": "Open ChatGPT Plugins, select +, then Add custom MCP server. Use the MCP URL and OAuth.",
+        "caveat": "Access depends on your workspace policy. This bisibility connection requests read-only access."
       },
       "claude-desktop": {
         "label": "Claude (web and desktop)",
@@ -42,7 +42,7 @@
       "description": "Using a tool that is not on the list? Paste this address into it and sign in with your bisibility account.",
       "copy": "Copy MCP URL",
       "selfHosted": "self-hosting? use your own address instead: '<your-instance>'/api/mcp",
-      "toolScope": "Tools marked read-only ({readOnly} of {total}) work in every client. Paid operations such as rank checks and backlink analysis are write tools; some agent apps show them only with a developer or write mode enabled, and some plans expose read tools only. Stored reports and cost estimates are read-only."
+      "toolScope": "{readOnly} of {total} tools are marked read-only. Clients and approved scopes can restrict tool availability. Paid operations such as rank checks and backlink analysis are write tools. Stored reports and cost estimates are read-only."
     },
     "apiKey": {
       "heading": "API key",
@@ -59,14 +59,16 @@
     "skills": {
       "heading": "Skills",
       "planned": "planned",
-      "description": "Ready-made SEO tasks your agent will be able to run for you. None are live yet, so this list is what is coming next.",
-      "footer": "the install command appears here once the first skill is ready",
+      "description": "Download available skill archives for your agent. The other tasks below are planned.",
+      "footer": "Download an archive and follow your agent client's instructions for installing skills.",
       "keyword-import": "Bulk add, dedupe",
       "provider-setup": "Connect, verify keys",
       "project-onboarding": "First project setup",
       "weekly-report": "Digest of movements",
       "keyword-clustering": "Group by intent",
-      "seo-audit": "Prioritized fixes"
+      "seo-audit": "Prioritized fixes",
+      "availableCount": "3 available",
+      "available": "available"
     },
     "chatgptIcon": {
       "copyUrl": "Copy icon URL",
@@ -79,17 +81,17 @@
     "gettingStarted": {
       "addApp": {
         "copyMcpUrl": "Copy ChatGPT MCP URL",
-        "description": "Open Plugins, select +, and add the MCP URL below. Use OAuth and sign in to bisibility. Upload the icon above if prompted.",
+        "description": "Create the plugin with the MCP URL below, select OAuth and sign in to bisibility. Install the resulting plugin.",
         "title": "2. Add bisibility"
       },
       "description": "Connect bisibility to ChatGPT.",
       "developerMode": {
-        "description": "In ChatGPT, open Settings → Security and login, then turn on Developer mode.",
-        "title": "1. Enable developer mode"
+        "description": "Open ChatGPT Plugins. Your workspace must allow custom MCP servers.",
+        "title": "1. Open Plugins"
       },
       "dismiss": "Dismiss how to start",
       "firstChat": {
-        "description": "Choose bisibility from the tools menu in a new chat. Try: \"{prompt}\"",
+        "description": "In a new chat, type @ and select bisibility. Try: \"{prompt}\"",
         "prompt": {
           "withChecks": "Which keywords lost positions this week?",
           "withoutChecks": "Which projects and keywords can I view?"
@@ -98,7 +100,7 @@
       },
       "guideLink": "ChatGPT setup guide",
       "heading": "How to start",
-      "note": "Developer mode may depend on your account or workspace settings.",
+      "note": "Your workspace administrator may need to allow custom MCP servers.",
       "show": "Show how to start",
       "clientSwitcher": "AI assistant",
       "accessTitle": "Read-only access",

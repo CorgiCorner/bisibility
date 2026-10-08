@@ -1,4 +1,5 @@
 import { isBlockedWebhookAddress } from "@/lib/alerts/webhook-target";
+import { parse } from "tldts";
 
 export function auditTarget(value: string) {
   const url = new URL(value.includes("://") ? value : `https://${value}`);
@@ -33,4 +34,18 @@ export function sameOriginAuditUrl(value: string, base: URL, origin: string): UR
   } catch {
     return null;
   }
+}
+
+export function auditRedirectUrl(value: string, base: URL, origin: string): URL | null {
+  const sameOrigin = sameOriginAuditUrl(value, base, origin);
+  if (sameOrigin) return sameOrigin;
+  const project = new URL(origin);
+  const hostname = project.hostname;
+  const domain = parse(hostname, { allowPrivateDomains: true });
+  const apex = domain.domain;
+  if (!apex || (!domain.isIcann && !domain.isPrivate)) return null;
+  if (hostname !== apex && hostname !== `www.${apex}`) return null;
+  project.hostname = hostname === apex ? `www.${apex}` : apex;
+  // Only the exact apex/www pair is eligible; scheme and port stay unchanged.
+  return sameOriginAuditUrl(value, base, project.origin);
 }

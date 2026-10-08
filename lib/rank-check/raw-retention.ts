@@ -12,6 +12,7 @@ import {
   purgeWithDurableProgress,
 } from "@/lib/rank-check/raw-retention-progress";
 import {
+  DEFAULT_CLOUD_RETENTION_DAYS,
   type PurgeRankCheckRawPayloadsInput,
   type PurgeRankCheckRawPayloadsSummary,
   RANK_CHECK_RAW_PURGE_BATCH_SIZE,
@@ -19,7 +20,6 @@ import {
 } from "@/lib/rank-check/raw-retention-types";
 import { z } from "zod";
 
-const DEFAULT_CLOUD_RETENTION_DAYS = 90;
 const retentionDaysSchema = z.coerce.number().int().min(1).max(3650);
 
 export type {

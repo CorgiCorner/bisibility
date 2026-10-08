@@ -5,8 +5,13 @@ import {
   resolveAllowedWebhookAddresses,
   type WebhookResolvedAddress,
 } from "@/lib/alerts/webhook-guard";
-import { Agent, type Dispatcher } from "undici";
-import { sameOriginAuditUrl } from "./target";
+import {
+  Agent,
+  type Dispatcher,
+  type Response as UndiciResponse,
+  fetch as undiciFetch,
+} from "undici";
+import { auditRedirectUrl } from "./target";
 
 export const MAX_PAGE_BYTES = 524_288;
 export const MAX_REQUESTS = 20;
@@ -21,7 +26,7 @@ export type CrawlBudget = {
   requests: number;
   origin: string;
   signal: AbortSignal;
-  disallowed?: (url: URL) => boolean;
+  disallowed?: (url: URL) => boolean | Promise<boolean>;
 };
 
 export class AuditRobotsDisallowedError extends Error {
@@ -53,7 +58,7 @@ function pinnedAgent(vetted: WebhookResolvedAddress[]) {
   return new Agent({ connect: { lookup: pinned } });
 }
 
-async function readBody(response: Response) {
+async function readBody(response: Response | UndiciResponse) {
   if (Number(response.headers.get("content-length")) > MAX_PAGE_BYTES) {
     await response.body?.cancel();
     throw new Error("Page exceeds the 512 KiB audit limit.");
@@ -80,12 +85,14 @@ export async function fetchAuditPage(
   url: URL,
   budget: CrawlBudget,
   transport: AuditTransport = {},
+  policy: { checkRobots?: boolean } = {},
 ) {
   const now = transport.now ?? Date.now;
   const started = now();
   let current = url;
   for (let hop = 0; hop <= 3; hop++) {
-    if (budget.disallowed?.(current)) throw new AuditRobotsDisallowedError(current.href);
+    if (policy.checkRobots !== false && (await budget.disallowed?.(current)))
+      throw new AuditRobotsDisallowedError(current.href);
     if (now() >= budget.deadline || budget.signal.aborted)
       throw new Error("Audit time limit reached.");
     if (budget.requests >= MAX_REQUESTS) throw new Error("Audit request limit reached.");
@@ -116,15 +123,18 @@ export async function fetchAuditPage(
     const dispatcher: Dispatcher = pinnedAgent(vetted);
     try {
       budget.requests++;
-      const response = await (transport.fetch ?? fetch)(current, {
+      // Node's bundled fetch and the installed Agent can use different dispatcher protocols.
+      const request = transport.fetch ?? undiciFetch;
+      const options = {
         dispatcher,
-        redirect: "manual",
+        redirect: "manual" as const,
         signal,
         headers: { "User-Agent": "BisibilitySiteAudit/1.0", Accept: "text/html,text/plain;q=0.5" },
-      } as RequestInit & { dispatcher: Dispatcher });
+      };
+      const response = await request(current, options);
       if ([301, 302, 303, 307, 308].includes(response.status)) {
         await response.body?.cancel();
-        const next = sameOriginAuditUrl(
+        const next = auditRedirectUrl(
           response.headers.get("location") ?? "",
           current,
           budget.origin,
@@ -139,7 +149,7 @@ export async function fetchAuditPage(
         html,
         url: current.href,
         status: response.status,
-        headers: response.headers,
+        headers: new Headers([...response.headers]),
         responseTimeMs: Math.max(0, now() - started),
       };
     } finally {

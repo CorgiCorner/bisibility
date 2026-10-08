@@ -61,6 +61,31 @@ function renderStep(
 }
 
 describe("StepAddKeywords", () => {
+  it("discards a cancelled market draft without changing the keywords", async () => {
+    const user = userEvent.setup();
+    const projectId = `prj_${"a".repeat(24)}`;
+    const createMarketAction = vi.fn();
+    renderStep({
+      createMarketAction,
+      defaultValues: { ...keywordDefaults("rank tracker"), projectId },
+      flowState: { projectId },
+    });
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Another market" }));
+    const customName = screen.getByLabelText("Custom name (optional)");
+    await user.click(customName);
+    await user.paste("Discarded draft");
+    expect(customName).toHaveValue("Discarded draft");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(keywordBox()).toHaveValue("rank tracker");
+    expect(createMarketAction).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Another market" }));
+    expect(screen.getByLabelText("Custom name (optional)")).toHaveValue("");
+  });
+
   it("creates a market through the shared drawer and the create action, then submits it with the keywords", async () => {
     const user = userEvent.setup();
     const projectId = `prj_${"a".repeat(24)}`;
@@ -96,17 +121,10 @@ describe("StepAddKeywords", () => {
       { withContinue: true },
     );
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Another market" }));
-    await user.type(screen.getByLabelText("Custom name (optional)"), "Discarded draft");
-    await user.click(screen.getByRole("button", { name: "Cancel" }));
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(keywordBox()).toHaveValue("rank tracker");
-    expect(createMarketAction).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: "Another market" }));
-    expect(screen.getByLabelText("Custom name (optional)")).toHaveValue("");
     await user.click(screen.getByRole("button", { name: "Country" }));
-    await user.type(screen.getByRole("textbox", { name: "Search countries" }), "Spain");
+    await user.click(screen.getByRole("textbox", { name: "Search countries" }));
+    await user.paste("Spain");
     await user.click(await screen.findByRole("menuitem", { name: "Spain" }));
     await user.click(screen.getByRole("button", { name: "Language" }));
     await user.click(screen.getByRole("menuitem", { name: "Spanish" }));

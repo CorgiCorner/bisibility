@@ -14,6 +14,7 @@ import {
   type OnboardingConnectProviderInput,
   type OnboardingSerpProviderId,
   onboardingConnectProviderSchemaForConnections,
+  type PendingProviderCompletion,
   type ProviderDraftMap,
   type ProviderTestResultMap,
   providerConnectInput,
@@ -50,11 +51,7 @@ export function StepConnectProvider({
   const t = useTranslations("onboarding.provider");
   const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
-  const pendingModalCompletion = useRef<{
-    connections: ConnectedProviderMap;
-    providerId: OnboardingSerpProviderId;
-    values: OnboardingConnectProviderInput;
-  } | null>(null);
+  const pendingModalCompletion = useRef<PendingProviderCompletion | null>(null);
   const defaults = formDefaults(defaultValues, flowState);
   const [actionError, setActionError] = useState<string | null>(null);
   const [connections, setConnections] = useState<ConnectedProviderMap>(initialConnections ?? {});
@@ -91,7 +88,7 @@ export function StepConnectProvider({
     secret: watch("secret"),
   };
   const selectedProvider =
-    providerOptions.find((provider) => provider.value === selectedProviderId) ?? providerOptions[0];
+    providerOptions.find(({ value }) => value === selectedProviderId) ?? providerOptions[0];
   const selectedProviderLabel = providerLabel(t, selectedProvider.value);
   const { testDisabled, testResult: currentTestResult } = currentProviderState(
     selectedProvider.value,
@@ -171,6 +168,15 @@ export function StepConnectProvider({
       onComplete,
       router.push,
     );
+  }
+  function completeHostedDataSource() {
+    const nextConnections = withConnectedProvider(connections, "dataforseo", undefined);
+    const nextDirtyProviders = { ...dirtyProviders, dataforseo: false };
+    setValue("providerId", "dataforseo");
+    setConnections(nextConnections);
+    setDirtyProviders(nextDirtyProviders);
+    setActionError(null);
+    updateContinueDisabled(nextConnections, nextDirtyProviders);
   }
   function handleTest() {
     handleSubmit(async (values) => {
@@ -256,12 +262,14 @@ export function StepConnectProvider({
       errors={errors}
       mode={mode}
       onCredentialChange={handleCredentialChange}
+      onDataSourceConnected={completeHostedDataSource}
       onSave={handleSave}
       onSelect={selectProvider}
       onTest={handleTest}
       providerError={errors.providerId?.message}
       providerId={selectedProvider.value}
       providerLabel={selectedProviderLabel}
+      projectId={getValues("projectId")}
       register={register}
       saveDisabled={currentTestResult?.ok !== true}
       selectedProviderId={selectedProviderId}

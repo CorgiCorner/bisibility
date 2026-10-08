@@ -131,7 +131,7 @@ describe("provider rates", () => {
       "production",
       "bigdata",
     ]);
-    expect(serpapi?.checkedAt).toBe("2026-08-10");
+    expect(serpapi?.checkedAt).toBe("2026-10-01");
   });
 
   it("pins the verified DataForSEO base and additional-page rates", () => {
@@ -144,14 +144,14 @@ describe("provider rates", () => {
       { key: "live", unitCostCents: 0.2, additionalPageCostCents: 0.15 },
     ]);
     expect(dataforseo?.notes).toContain("each additional page at 75%");
-    expect(dataforseo?.checkedAt).toBe("2026-08-10");
-    expect(SERP_RATES_CHECKED_AT).toBe("2026-08-10");
+    expect(dataforseo?.checkedAt).toBe("2026-10-01");
+    expect(SERP_RATES_CHECKED_AT).toBe("2026-10-01");
   });
 
   it("keeps ranked-keyword page pricing in the provider rate table", () => {
     expect(rankedKeywordPageRate("dataforseo")).toMatchObject({
-      checkedAt: "2026-07-22",
-      costCents: 2,
+      checkedAt: "2026-10-01",
+      costCents: 2.4,
       feature: "ranked_keywords",
       providerId: "dataforseo",
     });
@@ -161,8 +161,8 @@ describe("provider rates", () => {
 
   it("prices research sources and metrics by task plus returned item", () => {
     expect(keywordResearchRate("dataforseo", "related")).toMatchObject({
-      baseCostCents: 1,
-      unitCostCents: 0.01,
+      baseCostCents: 1.2,
+      unitCostCents: 0.012,
     });
     expect(keywordResearchRate("dataforseo", "suggestions")?.feature).toBe(
       "keyword_research_suggestions",
@@ -176,7 +176,7 @@ describe("provider rates", () => {
         false,
         LIST_PROVIDER_RATE_CONTEXT,
       ),
-    ).toBe(2);
+    ).toBe(2.4);
     expect(
       estimatedFeatureCostCents(
         keywordMetricsRate("dataforseo"),
@@ -184,7 +184,7 @@ describe("provider rates", () => {
         true,
         LIST_PROVIDER_RATE_CONTEXT,
       ),
-    ).toBe(4);
+    ).toBe(4.8);
   });
 
   it("routes feature overrides through the shared resolver", () => {
@@ -193,7 +193,7 @@ describe("provider rates", () => {
         entries: [],
         manualAmountCents: 0,
       }),
-    ).toBe(1);
+    ).toBe(1.2);
   });
 
   it.each([
@@ -214,7 +214,7 @@ describe("provider rates", () => {
     ["list", { entries: [], manualAmountCents: null }],
   ] as const)("applies item scaling uniformly to %s rates", (_source, context) => {
     expect(estimatedFeatureCostCents(keywordMetricsRate("dataforseo"), 1_000, false, context)).toBe(
-      11,
+      _source === "list" ? 13.2 : 11.2,
     );
   });
 
@@ -231,18 +231,18 @@ describe("provider rates", () => {
     };
 
     expect(estimatedFeatureCostCents(keywordMetricsRate("dataforseo"), 10, false, context)).toBe(
-      1.1,
+      1.3,
     );
     expect(estimatedFeatureCostCents(keywordMetricsRate("dataforseo"), 1_000, false, context)).toBe(
-      11,
+      11.2,
     );
   });
 
   it.each([
-    { expectedCostCents: 7, resultLimit: 100 },
-    { expectedCostCents: 9, resultLimit: 300 },
-    { expectedCostCents: 11, resultLimit: 500 },
-    { expectedCostCents: 16, resultLimit: 1_000 },
+    { expectedCostCents: 7.56, resultLimit: 100 },
+    { expectedCostCents: 8.28, resultLimit: 300 },
+    { expectedCostCents: 9, resultLimit: 500 },
+    { expectedCostCents: 10.8, resultLimit: 1_000 },
   ])(
     "estimates a domain backlinks analysis with $resultLimit rows at $expectedCostCents cents",
     ({ expectedCostCents, resultLimit }) => {
@@ -257,8 +257,8 @@ describe("provider rates", () => {
   );
 
   it.each([
-    { expectedCostCents: 3, resultLimit: 100 },
-    { expectedCostCents: 5, resultLimit: 300 },
+    { expectedCostCents: 2.76, resultLimit: 100 },
+    { expectedCostCents: 3.48, resultLimit: 300 },
   ])(
     "estimates loading $resultLimit more backlink rows at $expectedCostCents cents",
     ({ expectedCostCents, resultLimit }) => {
@@ -271,31 +271,31 @@ describe("provider rates", () => {
   it("does not apply the clickstream multiplier to backlinks features", () => {
     const rates = backlinksRates("dataforseo");
 
-    expect(backlinksCostCents(rates.summary, 0, true)).toBe(2);
-    expect(backlinksCostCents(rates.history, 0, true)).toBe(2);
-    expect(backlinksCostCents(rates.rows, 100, true)).toBe(3);
+    expect(backlinksCostCents(rates.summary, 0, true)).toBe(2.4);
+    expect(backlinksCostCents(rates.history, 0, true)).toBe(2.4);
+    expect(backlinksCostCents(rates.rows, 100, true)).toBe(2.76);
   });
 
   it("skips backlink history pricing for page scope", () => {
     const rates = backlinksRates("dataforseo");
     const costCents = backlinksCostCents(rates.summary, 0) + backlinksCostCents(rates.rows, 100);
 
-    expect(costCents).toBe(5);
+    expect(costCents).toBe(5.16);
   });
 
   it("pins the provisional domain overview feature rates", () => {
     const rates = domainOverviewRates("dataforseo");
 
     expect(rates.overview).toEqual({
-      checkedAt: "2026-09-21",
-      costCents: 2,
+      checkedAt: "2026-10-01",
+      costCents: 2.4,
       feature: "domain_rank_overview",
       providerId: "dataforseo",
       sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
     });
     expect(rates.history).toMatchObject({
       baseCostCents: 12,
-      checkedAt: "2026-08-11",
+      checkedAt: "2026-10-01",
       costCents: 12,
       feature: "historical_rank_overview",
       providerId: "dataforseo",
@@ -303,13 +303,13 @@ describe("provider rates", () => {
       unitCostCents: 0.12,
     });
     expect(rates.pages).toMatchObject({
-      baseCostCents: 1,
-      checkedAt: "2026-09-21",
-      costCents: 2,
+      baseCostCents: 1.2,
+      checkedAt: "2026-10-01",
+      costCents: 2.4,
       feature: "relevant_pages",
       providerId: "dataforseo",
       sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
-      unitCostCents: 0.01,
+      unitCostCents: 0.012,
     });
   });
 
@@ -326,19 +326,19 @@ describe("provider rates", () => {
 
     // The overview is a flat per-request charge, so the item count does not scale it.
     expect(estimatedFeatureCostCents(rates.overview, 100, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(
-      2,
+      2.4,
     );
     expect(estimatedFeatureCostCents(rates.history, 12, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(
       13.44,
     );
-    expect(estimatedFeatureCostCents(rates.pages, 100, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(2);
+    expect(estimatedFeatureCostCents(rates.pages, 100, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(
+      2.4,
+    );
   });
-
   it("exposes the default list estimate before a target-specific cache check", () => {
-    expect(domainOverviewListEstimate("dataforseo")).toEqual({ core: 6, history: 12.12 });
+    expect(domainOverviewListEstimate("dataforseo")).toEqual({ core: 3 * 2.4, history: 12.12 });
     expect(domainOverviewListEstimate("missing")).toEqual({ core: null, history: null });
   });
-
   it("keeps provider-rate verification fresh", () => {
     // Intentional CI staleness alarm: rate cards must be re-verified at least every 180 days.
     const maxAgeMs = 180 * 24 * 60 * 60 * 1000;

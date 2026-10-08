@@ -165,6 +165,56 @@
       "reconciliationStale": "Uzgadnianie zużycia jest opóźnione. Wyświetlane sumy mogą być niepełne.",
       "appBudgetHelp": "Sprawdzenia uruchamiane w aplikacji oraz automatyczne sprawdzenia z harmonogramu.",
       "apiBudgetHelp": "Wywołania API, MCP, SDK i CLI. Ten budżet chroni przed nadmiernymi wydatkami agentów."
+    },
+    "meter": {
+      "title": "Rejestr użycia",
+      "description": "Obserwacje użycia i limity tego projektu w bieżącym miesiącu UTC.",
+      "unavailable": "Rejestr użycia jest niedostępny. Bieżące użycie dostawców i salda kont są nadal dostępne powyżej.",
+      "restricted": "Szczegóły finansowe rejestru może zobaczyć tylko właściciel projektu.",
+      "walletAuthority": "Źródłem salda pozostaje konto dostawcy lub portfel kredytów konta. Te limity nie oznaczają dostępnego salda.",
+      "period": "{from} do {to} (UTC)",
+      "asOf": "Odczytano {date} (UTC). Ten czas nie potwierdza aktualności rozliczeń dostawcy.",
+      "noObservations": "Brak obserwacji w rejestrze dla tego okresu. Użycie jest niedostępne, a nie potwierdzone jako zerowe.",
+      "unresolved": "{count, plural, one {# nierozliczona operacja.} few {# nierozliczone operacje.} many {# nierozliczonych operacji.} other {# nierozliczonej operacji.}}",
+      "oldest": "Najstarsza nierozliczona operacja: {date} (UTC).",
+      "unknown": "Nieznane",
+      "connection": "Połączenie",
+      "retainedConnection": "Historyczne połączenie",
+      "byok": "Twoje konto dostawcy",
+      "platform": "Kredyty konta",
+      "providerCost": "Zaobserwowany koszt dostawcy",
+      "customerCharge": "Potwierdzone obciążenie konta",
+      "units": "Jednostki",
+      "certainty": "Potwierdzenie",
+      "unknownOperations": "Operacje o nieznanym obciążeniu",
+      "limitsTitle": "Limity projektu",
+      "limitsDescription": "To skonfigurowane limity projektu i połączeń. Zaobserwowane wartości mogą obejmować tylko część okresu. Mogą też obowiązywać limity konta, poświadczeń i wspólnych zasobów. Lista limitów nie rezerwuje zasobów.",
+      "noLimits": "Nie zwrócono limitów projektu ani połączeń.",
+      "project": "Projekt",
+      "used": "Użyte",
+      "reserved": "Zarezerwowane",
+      "remaining": "Pozostałe",
+      "limit": "Limit",
+      "unlimited": "Bez limitu",
+      "blocks": "Skonfigurowano blokowanie żądań ponad limit, gdy autoryzacja rejestru jest aktywna.",
+      "warns": "Skonfigurowano ostrzeganie ponad limit bez blokowania żądań.",
+      "hardLimit": "Limit bezwzględny: {value} {unit}.",
+      "resetsAt": "Reset: {date} (UTC).",
+      "truncated": "Widok ma ograniczony rozmiar. Niektóre połączenia, wpisy użycia lub nierozliczone operacje pominięto.",
+      "authority": {
+        "legacy": "Bieżące rozliczenia pozostają źródłem prawdy. Wpisy rejestru są dodatkowymi obserwacjami.",
+        "preparing": "Przygotowywana jest zmiana rozliczeń. Ten okres nie jest w pełni objęty nowym rejestrem.",
+        "active": "Cały okres jest objęty autoryzacją operacji rejestru. Dostawca i portfel kredytów nadal zarządzają własnymi saldami.",
+        "draining": "Wcześniejsze operacje nadal są rozliczane. Rejestr nie przedstawia pełnej sumy dla tego okresu.",
+        "mixed": "W tym okresie obowiązywały różne systemy rozliczeń. Obserwacje rejestru nie obejmują całego okresu.",
+        "unknown": "Nie udało się potwierdzić pokrycia rozliczeń tego okresu. Nie traktuj tych obserwacji jako pełnych sum."
+      },
+      "certaintyValue": {
+        "measured": "Zmierzone",
+        "estimated": "Szacowane",
+        "unknown": "Nieznane"
+      },
+      "usdAmount": "USD {value}"
     }
   }
 }

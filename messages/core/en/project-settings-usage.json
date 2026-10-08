@@ -165,6 +165,56 @@
       "reconciliationStale": "Usage reconciliation is delayed. Displayed totals may be incomplete.",
       "appBudgetHelp": "Checks you start in the app, plus automatic scheduled checks.",
       "apiBudgetHelp": "Requests from API, MCP, SDK and CLI. Set this budget to protect against runaway agents."
+    },
+    "meter": {
+      "title": "Usage ledger",
+      "description": "Project-scoped usage observations and budget constraints for the current UTC month.",
+      "unavailable": "Usage ledger is unavailable. Current provider usage and account balances remain available above.",
+      "restricted": "Only the project owner can view financial ledger details.",
+      "walletAuthority": "Your provider account or account credit wallet remains the balance authority. These limits do not represent an available balance.",
+      "period": "{from} to {to} (UTC)",
+      "asOf": "Read at {date} (UTC). This timestamp does not confirm provider billing freshness.",
+      "noObservations": "No ledger observations exist for this period. Usage is unavailable, not a confirmed zero.",
+      "unresolved": "{count, plural, one {# unresolved operation.} other {# unresolved operations.}}",
+      "oldest": "Oldest unresolved operation: {date} (UTC).",
+      "unknown": "Unknown",
+      "connection": "Connection",
+      "retainedConnection": "Retained connection",
+      "byok": "Your provider account",
+      "platform": "Account credits",
+      "providerCost": "Observed provider cost",
+      "customerCharge": "Acknowledged account charge",
+      "units": "Units",
+      "certainty": "Evidence",
+      "unknownOperations": "Operations with unknown exposure",
+      "limitsTitle": "Project constraints",
+      "limitsDescription": "These are configured project and connection limits. Observed figures may cover only part of the period. Account, credential and shared capacity limits can also apply. Listing limits does not reserve capacity.",
+      "noLimits": "No project or connection constraints were returned.",
+      "project": "Project",
+      "used": "Used",
+      "reserved": "Reserved",
+      "remaining": "Remaining",
+      "limit": "Limit",
+      "unlimited": "Unlimited",
+      "blocks": "Configured to block requests above the limit when ledger admission is active.",
+      "warns": "Configured to warn above the limit without blocking requests.",
+      "hardLimit": "Hard limit: {value} {unit}.",
+      "resetsAt": "Resets at {date} (UTC).",
+      "truncated": "This view is bounded. Some connections, usage rows or unresolved operations are omitted.",
+      "authority": {
+        "legacy": "Current accounting remains authoritative. Ledger entries are supplemental observations.",
+        "preparing": "A change in accounting is being prepared. This period is not fully covered by ledger authority.",
+        "active": "This period is fully covered by ledger admission authority. Provider billing and the credit wallet retain their own balances.",
+        "draining": "Earlier accounting operations are still being resolved. This period is not a complete ledger total.",
+        "mixed": "This period spans accounting authorities. Ledger observations do not represent the full period.",
+        "unknown": "Accounting coverage for this period could not be verified. Do not treat these observations as complete totals."
+      },
+      "certaintyValue": {
+        "measured": "Measured",
+        "estimated": "Estimated",
+        "unknown": "Unknown"
+      },
+      "usdAmount": "USD {value}"
     }
   }
 }

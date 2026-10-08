@@ -7,6 +7,8 @@ import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableColumn, DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { PillBadge } from "@/components/ui/Pill";
 import { SummaryStrip } from "@/components/ui/SummaryStrip";
+import { auditFailureReason } from "@/lib/site-audit/failure";
+import { auditCoverage, hasAuditContent } from "@/lib/site-audit/presentation";
 import type { SiteAuditIssue, SiteAuditPage, SiteAuditResult } from "@/lib/site-audit/schema";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -23,7 +25,6 @@ const plainIssueKeys = {
   noindex: "issues.noindex",
   non_html: "issues.non_html",
   robots_disallowed: "issues.robots_disallowed",
-  fetch_failed: "issues.fetch_failed",
 } as const;
 
 type AuditRow = SiteAuditPage & { id: string };
@@ -33,7 +34,10 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
   const [sorting, setSorting] = useState<DataTableSort | null>(null);
   const [selectedPage, setSelectedPage] = useState<SiteAuditPage | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const coverage = auditCoverage(result);
   function issueMessage(issue: SiteAuditIssue) {
+    if (issue.code === "fetch_failed")
+      return t(`fetchReasons.${auditFailureReason(issue.message)}`);
     if (Object.hasOwn(numericIssueKeys, issue.code)) {
       const key = numericIssueKeys[issue.code as keyof typeof numericIssueKeys];
       return t(key, { count: Number(issue.message.match(/\d+/)?.[0] ?? 0) });
@@ -58,10 +62,13 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
             {row.original.url}
           </span>
           <span className="truncate text-fg-muted" title={row.original.title ?? undefined}>
-            {row.original.title ?? t("noTitle")}
+            {hasAuditContent(row.original)
+              ? (row.original.title ?? t("noTitle"))
+              : t("notAssessed")}
           </span>
           <span className="text-[11px] text-fg-muted">
-            {row.original.responseTimeMs} ms · {row.original.h1Count} H1
+            {row.original.status === null ? t("notMeasured") : `${row.original.responseTimeMs} ms`}
+            {hasAuditContent(row.original) ? ` · ${row.original.h1Count} H1` : ""}
           </span>
         </div>
       ),
@@ -72,7 +79,9 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
       header: t("columns.1"),
       size: 85,
       minSize: 80,
-      cell: ({ row }) => <span className="font-mono">{row.original.status ?? t("skipped")}</span>,
+      cell: ({ row }) => (
+        <span className="font-mono">{row.original.status ?? t("notFetched")}</span>
+      ),
     },
     {
       id: "indexable",
@@ -80,7 +89,12 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
       header: t("columns.2"),
       size: 110,
       minSize: 100,
-      cell: ({ row }) => (row.original.indexable ? t("yes") : t("no")),
+      cell: ({ row }) =>
+        hasAuditContent(row.original)
+          ? row.original.indexable
+            ? t("yes")
+            : t("no")
+          : t("unknown"),
     },
     {
       id: "links",
@@ -88,13 +102,16 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
       header: t("columns.3"),
       size: 160,
       minSize: 150,
-      cell: ({ row }) => (
-        <div className="grid gap-0.5 text-[11px] text-fg-muted">
-          <span>{t("internal", { count: row.original.internalLinkCount })}</span>
-          <span>{t("external", { count: row.original.externalLinkCount })}</span>
-          <span>{t("images", { count: row.original.imageCount })}</span>
-        </div>
-      ),
+      cell: ({ row }) =>
+        !hasAuditContent(row.original) ? (
+          t("notAssessed")
+        ) : (
+          <div className="grid gap-0.5 text-[11px] text-fg-muted">
+            <span>{t("internal", { count: row.original.internalLinkCount })}</span>
+            <span>{t("external", { count: row.original.externalLinkCount })}</span>
+            <span>{t("images", { count: row.original.imageCount })}</span>
+          </div>
+        ),
     },
     {
       id: "issues",
@@ -137,12 +154,17 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
   return (
     <div className="grid min-w-0 gap-4">
       <SummaryStrip
-        sentence={t("summary", result.summary)}
+        sentence={t(coverage.unavailable ? "unavailableSummary" : "summary", {
+          ...result.summary,
+          ...coverage,
+        })}
         tone={result.summary.errors ? "dropped" : "steady"}
       />
       {result.state === "partial" ? (
         <p className="m-0 text-[13px] text-fg-muted" role="status">
-          {t("partial", { reason: t(`stopReasons.${result.stopReason}`) })}
+          {result.stopReason === "finished"
+            ? t("partialUnavailable")
+            : t("partial", { reason: t(`stopReasons.${result.stopReason}`) })}
         </p>
       ) : null}
       <Card className="overflow-hidden p-0">
@@ -175,19 +197,35 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
             <dl className="m-0 grid gap-3">
               <div>
                 <dt className="text-fg-muted">{t("columns.0")}</dt>
-                <dd className="m-0 break-all">{selectedPage.title ?? t("noTitle")}</dd>
+                <dd className="m-0 break-all">
+                  {hasAuditContent(selectedPage)
+                    ? (selectedPage.title ?? t("noTitle"))
+                    : t("notAssessed")}
+                </dd>
               </div>
               <div>
                 <dt className="text-fg-muted">{t("descriptionLabel")}</dt>
-                <dd className="m-0">{selectedPage.description ?? t("missing")}</dd>
+                <dd className="m-0">
+                  {hasAuditContent(selectedPage)
+                    ? (selectedPage.description ?? t("missing"))
+                    : t("notAssessed")}
+                </dd>
               </div>
               <div>
                 <dt className="text-fg-muted">{t("canonicalLabel")}</dt>
-                <dd className="m-0 break-all">{selectedPage.canonical ?? t("missing")}</dd>
+                <dd className="m-0 break-all">
+                  {hasAuditContent(selectedPage)
+                    ? (selectedPage.canonical ?? t("missing"))
+                    : t("notAssessed")}
+                </dd>
               </div>
               <div>
                 <dt className="text-fg-muted">{t("robotsLabel")}</dt>
-                <dd className="m-0">{selectedPage.robots ?? t("noDirective")}</dd>
+                <dd className="m-0">
+                  {hasAuditContent(selectedPage)
+                    ? (selectedPage.robots ?? t("noDirective"))
+                    : t("notAssessed")}
+                </dd>
               </div>
             </dl>
             {selectedPage.headings.map((heading, index) => (

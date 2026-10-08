@@ -2,6 +2,7 @@ import {
   renderWithFeatureMessages,
   researchFeatureTestMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
+import { keywordResearchRate } from "@/lib/cost-estimate/provider-rates";
 import { fireEvent, screen } from "@testing-library/react";
 import { type ReactElement, useState } from "react";
 import { describe, expect, it } from "vitest";
@@ -81,8 +82,14 @@ describe("ResearchPricingPopover", () => {
     const onCount = document.querySelector("div.divide-y")?.children.length ?? 0;
 
     expect(onCount).toBe(offCount);
+    const rate = keywordResearchRate("dataforseo", "related");
+    expect(rate).not.toBeNull();
+    const costCents = (rate?.baseCostCents ?? 0) + (rate?.unitCostCents ?? 0) * 100;
+    expect(parseFloat(offRelated.replace(/[^0-9.]/g, ""))).toBe(
+      Number((costCents / 100).toFixed(2)),
+    );
     expect(parseFloat(onRelated.replace(/[^0-9.]/g, ""))).toBe(
-      parseFloat(offRelated.replace(/[^0-9.]/g, "")) * 2,
+      Number(((costCents * 2) / 100).toFixed(2)),
     );
   });
 

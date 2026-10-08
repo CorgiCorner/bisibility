@@ -63,3 +63,42 @@ export const auditFixture: SavedSiteAudit = {
     ],
   },
 };
+
+export const failedAuditFixture: SavedSiteAudit = {
+  ...auditFixture,
+  result: {
+    ...auditFixture.result,
+    target: "https://example.com/",
+    state: "partial",
+    stopReason: "finished",
+    requests: 2,
+    summary: { pages: 1, errors: 1, warnings: 0, indexable: 0 },
+    pages: [
+      {
+        url: "https://example.com/",
+        finalUrl: "https://example.com/",
+        status: null,
+        responseTimeMs: 0,
+        title: null,
+        description: null,
+        canonical: null,
+        headings: [],
+        h1Count: 0,
+        indexable: false,
+        robots: null,
+        internalLinkCount: 0,
+        externalLinkCount: 0,
+        internalLinks: [],
+        imageCount: 0,
+        missingAltCount: 0,
+        issues: [
+          {
+            code: "fetch_failed",
+            severity: "error",
+            message: "The public hostname could not be resolved.",
+          },
+        ],
+      },
+    ],
+  },
+};

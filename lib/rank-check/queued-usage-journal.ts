@@ -1,6 +1,9 @@
 import "server-only";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
 import { recordUnchargedEvidence } from "@/lib/metering/uncharged-evidence";
+import { ownAdmission } from "@/lib/provider-usage/admission-extension";
+import { beginProviderTaskset } from "@/lib/provider-usage/batch-request-journal";
+import { discardByokEvidence } from "@/lib/provider-usage/byok-evidence";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import type { DataForSeoQueuedSubmissionResult } from "@/lib/providers/serp/dataforseo-queued";
@@ -18,17 +21,22 @@ export type QueuedTaskUsageJournal = {
   discard(): Promise<void>;
   /** Record the receipts the provider response explicitly accounts for; leave the rest unknown. */
   settle(outcome: DataForSeoQueuedSubmissionResult): Promise<void>;
+  transportStarted(): Promise<void>;
 };
 
 type JournalEntry = { id: string; observer: ProviderUsageObserver };
 
 async function discardPending(client: PrismaClient, entries: Map<string, JournalEntry>) {
   const ids = [...entries.values()].map((entry) => entry.id);
-  entries.clear();
   if (ids.length === 0) return;
-  await client.providerCostEntry.deleteMany({
-    where: { id: { in: ids }, measurementStatus: "unknown" },
+  await client.$transaction(async (tx) => {
+    await ownAdmission.cancel(tx, ids);
+    await tx.providerCostEntry.deleteMany({
+      where: { id: { in: ids }, measurementStatus: "unknown" },
+    });
+    await discardByokEvidence(tx, ids);
   });
+  entries.clear();
   for (const id of ids) await recordUnchargedEvidence(id);
 }
 
@@ -69,10 +77,22 @@ export async function beginQueuedTaskUsageJournal(input: {
   connectionId: string;
   projectId: string;
   tasks: QueuedTaskUsageInput[];
+  credentialVersion?: string | null;
 }): Promise<QueuedTaskUsageJournal> {
   const entries = new Map<string, JournalEntry>();
+  const taskset = await beginProviderTaskset(
+    input.client,
+    input.tasks.map((task) => ({
+      ...task,
+      connectionId: input.connectionId,
+      projectId: input.projectId,
+      provider: "dataforseo",
+      unit: "cents",
+      credentialVersion: input.credentialVersion,
+    })),
+  );
   try {
-    for (const task of input.tasks) {
+    for (const { input: task, id } of taskset.identities) {
       const journal = createProviderRequestJournal(input.client, {
         attribution: task.attribution,
         connectionId: input.connectionId,
@@ -83,8 +103,7 @@ export async function beginQueuedTaskUsageJournal(input: {
         queued: true,
         estimate: task.estimate,
       });
-      const id = await journal.observer.begin();
-      entries.set(task.correlationId, { id, observer: journal.observer });
+      entries.set(task.attribution.context.correlationId, { id, observer: journal.observer });
     }
   } catch (error) {
     await discardPending(input.client, entries);
@@ -93,5 +112,6 @@ export async function beginQueuedTaskUsageJournal(input: {
   return {
     discard: () => discardPending(input.client, entries),
     settle: (outcome) => settleKnown(entries, outcome),
+    transportStarted: () => ownAdmission.fence(input.client, taskset.grants),
   };
 }

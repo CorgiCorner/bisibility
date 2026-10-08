@@ -44,8 +44,8 @@ const browserTestAliases = [
     replacement: fileURLToPath(new URL("./.storybook/roadmap-action-stubs.ts", import.meta.url)),
   },
   { find: /^@\/lib\/actions\/.+/, replacement: browserStubs },
-  // Mirrors the .storybook/main.ts stub for this server-action module outside lib/actions.
-  { find: /^@\/.+\/credential-source-actions$/, replacement: browserStubs },
+  // Mirrors the .storybook/main.ts stubs for these server actions outside lib/actions.
+  { find: /^@\/.+\/(?:credential-source|credits-bonus)-actions$/, replacement: browserStubs },
   { find: "@/lib/api/ratelimit", replacement: browserStubs },
   { find: "@/lib/auth/auth", replacement: browserStubs },
   { find: "@/lib/auth/client", replacement: browserStubs },

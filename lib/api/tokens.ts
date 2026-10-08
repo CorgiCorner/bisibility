@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
+import { allowedOAuthTokenScopes } from "@/lib/auth/oauth-consent-guard";
 import { prisma } from "@/lib/db/prisma";
 import { ZodError, z } from "zod";
 import { notFound, type PersonalApiContext } from "./context";
@@ -77,7 +78,8 @@ export async function exchangeOauthToken(
       instance: init.instance,
     });
   }
-  if (!accessToken.scopes.includes(EXCHANGE_SCOPE)) {
+  const scopes = await allowedOAuthTokenScopes(accessToken.clientId, accessToken.scopes);
+  if (!scopes.includes(EXCHANGE_SCOPE)) {
     return errorResponse(
       "forbidden",
       `The OAuth access token is missing the "${EXCHANGE_SCOPE}" scope.`,

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { getCapabilities } from "@/lib/api/capabilities";
 import { protectedResourceMetadataUrl } from "@/lib/deployment/mcp-origin-contract";
+import { MARKETING_URL } from "@/lib/site/site";
 import packageJson from "@/package.json";
 import type { MetadataRoute } from "next";
 import { getSkillArchive } from "./archive";
@@ -126,7 +127,7 @@ export function createApiCatalog(origin: string) {
             type: "application/vnd.oai.openapi+json;version=3.1",
           },
         ],
-        "service-doc": [{ href: absoluteUrl(origin, "/#quickstart"), type: "text/html" }],
+        "service-doc": [{ href: `${MARKETING_URL}/features/api`, type: "text/html" }],
         status: [{ href: absoluteUrl(origin, "/api/v1/health"), type: "application/json" }],
       },
     ],

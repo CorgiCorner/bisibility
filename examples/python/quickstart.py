@@ -7,7 +7,7 @@ import time
 from bisibility import BisibilityApiError, BisibilityClient
 
 EXAMPLE_ID = "python-quickstart"
-MAX_HISTORY_ATTEMPTS = 5
+MAX_HISTORY_ATTEMPTS = 240
 
 # docs:start:method-contract
 DOCS_METHOD_CONTRACT = {
@@ -78,12 +78,11 @@ def run() -> None:
             print(f"Created keyword {keyword_id}")
 
             print("Running rank check")
-            check = client.run_rank_check(keyword_id)
-            position = check.position if check.position is not None else "none"
-            print(f"Rank check {check.id} completed with position {position}")
-
-            print("Reading rank history")
+            check = client.run_rank_check_and_wait(keyword_id)
+            print("Waiting for completed rank history")
             history_check = wait_for_rank_history(client, keyword_id, check.id)
+            position = history_check.position if history_check.position is not None else "none"
+            print(f"Rank check {history_check.id} completed with position {position}")
             print(f"History includes {history_check.id} from {history_check.checked_at}")
         finally:
             if keyword_id:

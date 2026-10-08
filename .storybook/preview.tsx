@@ -57,7 +57,7 @@ const withAppTheme: Decorator = (Story, context) => {
       >
         <TooltipProvider>
           <Story />
-          {context.viewMode === "story" ? (
+          {context.viewMode === "story" && context.parameters.themeControls !== false ? (
             <div className="fixed right-4 bottom-4 z-[1400]">
               <ThemeSegments size="sm" />
             </div>

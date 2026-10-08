@@ -21,6 +21,7 @@ is documented once under [Webhook endpoints](/api/webhooks).
 | - | - |
 | Threshold | Position crosses the configured rank. |
 | Change percent | The relative position change reaches the configured percentage. |
+| CTR drop | Search Console CTR falls by the configured percentage while average position stays stable. |
 | Position drop | A keyword loses at least the configured number of positions. |
 | Downtrend | Five complete checks with known positions form a sustained downward trend. |
 | Enters or exits top N | Position crosses a configured top-N boundary. |
@@ -63,9 +64,9 @@ self-hosted networks.
    `X-Bisibility-Signature` with the
    [copy-pasteable verifier](/api/webhooks#verify-signatures).
 
-The test is a real signed `webhook.test` envelope. Every enabled project
-endpoint receives every webhook event; endpoints are not filtered by rule or
-event name. Field-level event shapes live under
+The test sends a real signed `webhook.test` envelope to the selected endpoint.
+Every enabled project endpoint receives every webhook-channel alert; endpoints
+are not filtered by rule or event name. Field-level event shapes live under
 [Event envelopes](/api/webhooks#event-envelopes).
 
 Delivery attempts are recorded for every channel. A failed channel does not

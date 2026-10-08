@@ -5,6 +5,8 @@ import { expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   prisma: undefined as unknown as PrismaClient,
   startExecution: vi.fn(),
+  snapshot: vi.fn(),
+  evidence: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -18,6 +20,9 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 vi.mock("@/lib/providers/execution-extension", () => ({
   startDeploymentExecution: mocks.startExecution,
+  readDeploymentMeteringSnapshot: mocks.snapshot,
+  readDeploymentMeteringEvidence: mocks.evidence,
+  readDeploymentMeteringExecutionOwner: vi.fn().mockResolvedValue("legacy"),
 }));
 vi.mock("@/lib/providers/rate-limit", () => ({
   consumeProviderLimit: async () => ({ success: true as const, resetAt: new Date() }),
@@ -60,19 +65,44 @@ it("returns the hosted provider result when a shadow step throws", async () => {
     // The meter store fails its reserve, while the shadow sink stays writable: the hosted
     // provider call must still complete and the failure must land as an observation row.
     await tx.write((sql) => sql.execute(Prisma.sql`DROP TABLE metering_operation CASCADE`));
-    mocks.startExecution.mockResolvedValue({
-      credentials: { login: "hosted-login", password: "hosted-password" },
-      get started() {
-        return true;
-      },
-      get costCents() {
-        return 5;
-      },
-      get quantity() {
-        return 1;
-      },
-      async finish() {},
-    } satisfies DeploymentExecution);
+    mocks.startExecution.mockImplementation(async (input) => {
+      mocks.snapshot.mockResolvedValue({
+        schemaVersion: 1,
+        namespace: "hosted-shadow",
+        operationKey: input.operationKey,
+        ownerId: "owner_1",
+        walletId: "wallet_1",
+        projectId: "project_1",
+        connectionId: "connection_1",
+        provider: "dataforseo",
+        feature: "ranked_keywords",
+        source: "app",
+        credentialKind: null,
+        credentialId: null,
+        correlationId: "00000000-0000-4000-8000-000000000001",
+        occurredAt: "2026-09-01T00:00:00Z",
+        estimatedCostCents: "5.0000",
+        estimatedPriceCents: "6.5000",
+        estimatedQuantity: "1.000000",
+        customerPriceVersion: "price-v1",
+        platformPoolId: "account_1",
+        providerCredentialVersion: "version_1",
+        providerCostOwner: "platform",
+      });
+      return {
+        credentials: { login: "hosted-login", password: "hosted-password" },
+        get started() {
+          return true;
+        },
+        get costCents() {
+          return 5;
+        },
+        get quantity() {
+          return 1;
+        },
+        async finish() {},
+      } satisfies DeploymentExecution;
+    });
     const attribution = await createProviderRequestAttribution({
       correlationId: "00000000-0000-4000-8000-000000000001",
       feature: "ranked_keywords",

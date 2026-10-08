@@ -5,7 +5,10 @@ import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
-import { quoteDeploymentRankReservations } from "@/lib/providers/execution-extension";
+import {
+  hostedRankCheckEstimatedCostCents,
+  quoteDeploymentRankReservations,
+} from "@/lib/providers/execution-extension";
 import { exactExecutionEstimate } from "@/lib/providers/execution-extension-estimate";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import {
@@ -60,12 +63,17 @@ export async function wrapLegacyRankCheck(
             {
               keywordId: input.keywordId,
               estimatedCostCents: exactExecutionEstimate(
-                estimatedRankCheckCostCents(
-                  reservation.allocationConnection.provider,
-                  reservation.depth,
-                  null,
-                  LIST_PROVIDER_RATE_CONTEXT,
-                ),
+                reservation.allocationConnection.provider === "serpapi"
+                  ? hostedRankCheckEstimatedCostCents(
+                      reservation.allocationConnection.provider,
+                      reservation.depth,
+                    )
+                  : estimatedRankCheckCostCents(
+                      reservation.allocationConnection.provider,
+                      reservation.depth,
+                      null,
+                      LIST_PROVIDER_RATE_CONTEXT,
+                    ),
                 4,
               ),
               // Depth changes estimated cost; one rank task is one native operation.

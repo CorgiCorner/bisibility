@@ -3068,10 +3068,10 @@ export type CoreMessages = {
   readonly projectInstall: {
     readonly agents: {
       readonly chatgpt: {
-        readonly caveat: "ChatGPT shows only read-only tools on individual plans; write actions such as rank checks and backlink analysis need a Business or Enterprise workspace with developer mode. Read-only tools cover stored reports and cost estimates.";
+        readonly caveat: "Access depends on your workspace policy. This bisibility connection requests read-only access.";
         readonly hint: "App";
         readonly label: "ChatGPT";
-        readonly note: "Settings, Apps, Advanced settings, enable developer mode, then add the URL as a custom MCP app.";
+        readonly note: "Open ChatGPT Plugins, select +, then Add custom MCP server. Use the MCP URL and OAuth.";
       };
       readonly "claude-code": {
         readonly hint: "CLI";
@@ -3128,14 +3128,14 @@ export type CoreMessages = {
       readonly description: "Using a tool that is not on the list? Paste this address into it and sign in with your bisibility account.";
       readonly heading: "MCP endpoint";
       readonly selfHosted: "self-hosting? use your own address instead: '<your-instance>'/api/mcp";
-      readonly toolScope: "Tools marked read-only ({readOnly} of {total}) work in every client. Paid operations such as rank checks and backlink analysis are write tools; some agent apps show them only with a developer or write mode enabled, and some plans expose read tools only. Stored reports and cost estimates are read-only.";
+      readonly toolScope: "{readOnly} of {total} tools are marked read-only. Clients and approved scopes can restrict tool availability. Paid operations such as rank checks and backlink analysis are write tools. Stored reports and cost estimates are read-only.";
     };
     readonly gettingStarted: {
       readonly accessDescription: "This ChatGPT connection can read project and rank data. It cannot change or delete projects, manage members or create API keys.";
       readonly accessTitle: "Read-only access";
       readonly addApp: {
         readonly copyMcpUrl: "Copy ChatGPT MCP URL";
-        readonly description: "Open Plugins, select +, and add the MCP URL below. Use OAuth and sign in to bisibility. Upload the icon above if prompted.";
+        readonly description: "Create the plugin with the MCP URL below, select OAuth and sign in to bisibility. Install the resulting plugin.";
         readonly title: "2. Add bisibility";
       };
       readonly claude: {
@@ -3160,12 +3160,12 @@ export type CoreMessages = {
       readonly clientSwitcher: "AI assistant";
       readonly description: "Connect bisibility to ChatGPT.";
       readonly developerMode: {
-        readonly description: "In ChatGPT, open Settings → Security and login, then turn on Developer mode.";
-        readonly title: "1. Enable developer mode";
+        readonly description: "Open ChatGPT Plugins. Your workspace must allow custom MCP servers.";
+        readonly title: "1. Open Plugins";
       };
       readonly dismiss: "Dismiss how to start";
       readonly firstChat: {
-        readonly description: 'Choose bisibility from the tools menu in a new chat. Try: "{prompt}"';
+        readonly description: 'In a new chat, type @ and select bisibility. Try: "{prompt}"';
         readonly prompt: {
           readonly withChecks: "Which keywords lost positions this week?";
           readonly withoutChecks: "Which projects and keywords can I view?";
@@ -3174,12 +3174,14 @@ export type CoreMessages = {
       };
       readonly guideLink: "ChatGPT setup guide";
       readonly heading: "How to start";
-      readonly note: "Developer mode may depend on your account or workspace settings.";
+      readonly note: "Your workspace administrator may need to allow custom MCP servers.";
       readonly show: "Show how to start";
     };
     readonly skills: {
-      readonly description: "Ready-made SEO tasks your agent will be able to run for you. None are live yet, so this list is what is coming next.";
-      readonly footer: "the install command appears here once the first skill is ready";
+      readonly available: "available";
+      readonly availableCount: "3 available";
+      readonly description: "Download available skill archives for your agent. The other tasks below are planned.";
+      readonly footer: "Download an archive and follow your agent client's instructions for installing skills.";
       readonly heading: "Skills";
       readonly "keyword-clustering": "Group by intent";
       readonly "keyword-import": "Bulk add, dedupe";
@@ -4782,7 +4784,7 @@ export type CoreMessages = {
           readonly marketPausedDetail: "You can add and edit keywords. New rank checks will not start until you resume this market.";
           readonly marketPausedTitle: "This market is paused";
           readonly marketRunSlice: "You opened this run inside {market}. It also ran in other markets, which this page does not show.";
-          readonly matchingTargets: "{count, number} matching targets";
+          readonly matchingTargets: "{count, plural, one {# matching target} other {# matching targets}}";
           readonly minutesAgo: "{count, number}m ago";
           readonly new: "New";
           readonly noChange: "No change";
@@ -4824,11 +4826,11 @@ export type CoreMessages = {
         readonly marketCells: {
           readonly aggregateVolumeHelp: "Sum over unique market-language pairs, never devices";
           readonly awaitingFirstCheck: "Awaiting first check";
-          readonly bestPosition: "Best position across {count, number} active targets";
+          readonly bestPosition: "Best position across {count, plural, one {# active target} other {# active targets}}";
           readonly checkRunning: "Check running";
           readonly includesStaleTarget: "Includes a stale target";
           readonly latestCheckFailed: "Latest check failed";
-          readonly marketSummary: "{markets, plural, one {# market} other {# markets}} / {targets, number} active targets";
+          readonly marketSummary: "{markets, plural, one {# market} other {# markets}} / {targets, plural, one {# active target} other {# active targets}}";
           readonly mixed: "mixed";
           readonly noData: "No data";
           readonly noDifficultyData: "No difficulty data";
@@ -6651,7 +6653,7 @@ export type CoreMessages = {
       readonly lastUsedNever: "last used never";
       readonly newDescription: "The token is available one time.";
       readonly newTitle: "New deploy webhook";
-      readonly outbound: "The outbound webhook is the alert channel on Notifications, not this.";
+      readonly outbound: "The outbound webhook is the alert channel on Alerts, not this.";
       readonly revealStorage: "bisibility stores only a hash after this window closes.";
       readonly revealWarning: "Copy this token now - it will not be shown again.";
       readonly rotate: "Rotate token";
@@ -7380,6 +7382,56 @@ export type CoreMessages = {
     };
   };
   readonly projectSettingsUsage: {
+    readonly meter: {
+      readonly asOf: "Read at {date} (UTC). This timestamp does not confirm provider billing freshness.";
+      readonly authority: {
+        readonly active: "This period is fully covered by ledger admission authority. Provider billing and the credit wallet retain their own balances.";
+        readonly draining: "Earlier accounting operations are still being resolved. This period is not a complete ledger total.";
+        readonly legacy: "Current accounting remains authoritative. Ledger entries are supplemental observations.";
+        readonly mixed: "This period spans accounting authorities. Ledger observations do not represent the full period.";
+        readonly preparing: "A change in accounting is being prepared. This period is not fully covered by ledger authority.";
+        readonly unknown: "Accounting coverage for this period could not be verified. Do not treat these observations as complete totals.";
+      };
+      readonly blocks: "Configured to block requests above the limit when ledger admission is active.";
+      readonly byok: "Your provider account";
+      readonly certainty: "Evidence";
+      readonly certaintyValue: {
+        readonly estimated: "Estimated";
+        readonly measured: "Measured";
+        readonly unknown: "Unknown";
+      };
+      readonly connection: "Connection";
+      readonly customerCharge: "Acknowledged account charge";
+      readonly description: "Project-scoped usage observations and budget constraints for the current UTC month.";
+      readonly hardLimit: "Hard limit: {value} {unit}.";
+      readonly limit: "Limit";
+      readonly limitsDescription: "These are configured project and connection limits. Observed figures may cover only part of the period. Account, credential and shared capacity limits can also apply. Listing limits does not reserve capacity.";
+      readonly limitsTitle: "Project constraints";
+      readonly noLimits: "No project or connection constraints were returned.";
+      readonly noObservations: "No ledger observations exist for this period. Usage is unavailable, not a confirmed zero.";
+      readonly oldest: "Oldest unresolved operation: {date} (UTC).";
+      readonly period: "{from} to {to} (UTC)";
+      readonly platform: "Account credits";
+      readonly project: "Project";
+      readonly providerCost: "Observed provider cost";
+      readonly remaining: "Remaining";
+      readonly reserved: "Reserved";
+      readonly resetsAt: "Resets at {date} (UTC).";
+      readonly restricted: "Only the project owner can view financial ledger details.";
+      readonly retainedConnection: "Retained connection";
+      readonly title: "Usage ledger";
+      readonly truncated: "This view is bounded. Some connections, usage rows or unresolved operations are omitted.";
+      readonly unavailable: "Usage ledger is unavailable. Current provider usage and account balances remain available above.";
+      readonly units: "Units";
+      readonly unknown: "Unknown";
+      readonly unknownOperations: "Operations with unknown exposure";
+      readonly unlimited: "Unlimited";
+      readonly unresolved: "{count, plural, one {# unresolved operation.} other {# unresolved operations.}}";
+      readonly usdAmount: "USD {value}";
+      readonly used: "Used";
+      readonly walletAuthority: "Your provider account or account credit wallet remains the balance authority. These limits do not represent an available balance.";
+      readonly warns: "Configured to warn above the limit without blocking requests.";
+    };
     readonly plan: {
       readonly answered: "Thanks, your answer helps us set the price.";
       readonly benefitFour: "Provider accounts, quotas and billing stay directly with each provider.";
@@ -7570,6 +7622,18 @@ export type CoreMessages = {
     readonly errorLoad: "Report could not be loaded.";
     readonly errorRun: "Site audit could not be completed. Try again.";
     readonly external: "{count, number} external";
+    readonly fetchReasons: {
+      readonly dns: "The public hostname could not be resolved. Check the domain and its DNS records.";
+      readonly network: "The connection to the page failed. Try again later.";
+      readonly public_network: "The URL failed the public-network safety check. Check that the domain resolves only to public addresses.";
+      readonly redirect: "The redirect leaves the project origin or uses a blocked URL. Check the project domain and redirect destination.";
+      readonly redirect_limit: "The page exceeded the three-redirect limit. Check the redirect chain.";
+      readonly request_limit: "The crawl reached its request limit before this page could be fetched.";
+      readonly size_limit: "The response exceeded the 512 KiB limit. This page could not be assessed.";
+      readonly timeout: "The page request timed out. Try again later.";
+      readonly tls: "The secure connection could not be verified. Check the site certificate.";
+      readonly unknown: "The page could not be fetched. Its HTTP status and SEO measurements are unknown.";
+    };
     readonly heading: "Site audit";
     readonly history: "Audit history";
     readonly images: "{count, number} images";
@@ -7593,10 +7657,14 @@ export type CoreMessages = {
     readonly missing: "Missing";
     readonly no: "No";
     readonly noDirective: "No directive";
+    readonly notAssessed: "Not assessed";
+    readonly notFetched: "Not fetched";
     readonly noTitle: "No title";
+    readonly notMeasured: "Not measured";
     readonly pageLimit: "Page limit";
     readonly pageLimitError: "Choose 1 to 15 pages.";
-    readonly partial: "Partial crawl: {reason}. Results cover the pages below.";
+    readonly partial: "Incomplete audit: reached the {reason}. Results cover only the pages fetched.";
+    readonly partialUnavailable: "Incomplete audit: some pages or robots.txt could not be fetched. Unavailable pages have no measured SEO results.";
     readonly passed: "Passed";
     readonly readOnly: "Your project role or read-only mode prevents running audits. Saved reports remain available.";
     readonly robotsLabel: "Robots";
@@ -7611,7 +7679,9 @@ export type CoreMessages = {
       readonly time_limit: "time limit";
     };
     readonly stored: " · Stored result";
-    readonly summary: "{pages, number} pages checked · {errors, number} errors · {warnings, number} warnings · {indexable, number} indexable";
+    readonly summary: "{pages, number} pages fetched · {errors, number} errors · {warnings, number} warnings · {indexable, number} confirmed indexable";
+    readonly unavailableSummary: "{pages, number} pages fetched · {unavailable, number} not fetched · {errors, number} errors · {warnings, number} warnings · {indexable, number} confirmed indexable";
+    readonly unknown: "Unknown";
     readonly urlIssues: "URL issues";
     readonly yes: "Yes";
   };

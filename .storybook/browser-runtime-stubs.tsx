@@ -1,3 +1,4 @@
+import { usePathname as useStorybookPathname } from "@storybook/nextjs-vite/navigation.mock";
 import type { ReactNode } from "react";
 import React from "react";
 
@@ -165,7 +166,7 @@ export function useRouter() {
 }
 
 export function usePathname() {
-  return "/app/overview";
+  return useStorybookPathname() ?? "/app/overview";
 }
 
 export function useParams() {
@@ -613,6 +614,10 @@ export async function completeGooglePropertySelection(input: { property: string 
 
 export async function testConnection() {
   return { balance: 1000, message: "Preview connection OK", ok: true };
+}
+
+export async function startCreditsTrial(_input: unknown) {
+  return { status: "unavailable" as const };
 }
 
 export async function syncProjectTraffic() {

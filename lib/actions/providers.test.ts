@@ -66,6 +66,7 @@ const mocks = vi.hoisted(() => {
     revalidatePath: vi.fn(),
     readAnalyticsSurfaceFromHeaders: vi.fn(),
     readConsentFromCookies: vi.fn(),
+    readAllocationAuthority: vi.fn(),
     trackServerEvent: vi.fn(),
     updateSearchSyncSettings: vi.fn(),
     saveStoredGoogleProperty: vi.fn(),
@@ -76,6 +77,10 @@ const mocks = vi.hoisted(() => {
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/providers/execution-extension", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/providers/execution-extension")>()),
+  readDeploymentMeteringAllocationAuthority: mocks.readAllocationAuthority,
+}));
 vi.mock("@/lib/provider-allocations/legacy-backfill", () => ({
   backfillLegacyProjectAllocationInLockedTransaction:
     mocks.backfillLegacyProjectAllocationInLockedTransaction,
@@ -210,6 +215,7 @@ function nonPlainConnection(overrides: Record<string, unknown> = {}) {
 describe("provider actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.readAllocationAuthority.mockResolvedValue("legacy");
     mocks.backfillLegacyProjectAllocationInLockedTransaction.mockResolvedValue({
       internalPrimaryConnectionId: null,
       status: "already_backfilled",
@@ -988,7 +994,33 @@ describe("provider actions", () => {
     expect(mocks.prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.prisma.providerConnection.delete.mock.invocationCallOrder[0] ?? 0,
     );
+    expect(mocks.readAllocationAuthority).toHaveBeenCalledWith(
+      mocks.prisma,
+      expect.any(String),
+      "conn_2",
+    );
+    expect(mocks.readAllocationAuthority.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.prisma.providerConnection.delete.mock.invocationCallOrder[0] ?? 0,
+    );
   });
+
+  it.each([
+    ["active", "Active metering funding source cannot change before rollback"],
+    ["draining", "Metering allocation mutation awaits rollback reconciliation"],
+  ])(
+    "refuses disconnect under %s authority before deleting credentials",
+    async (state, message) => {
+      mocks.readAllocationAuthority.mockResolvedValue(state);
+      mocks.prisma.providerConnection.findUnique.mockResolvedValue(connection({ id: "conn_2" }));
+
+      await expect(
+        disconnectProvider({ projectId: "prj_a00000000000000000000000", providerId: "serpapi" }),
+      ).rejects.toThrow(message);
+
+      expect(mocks.prisma.providerConnection.delete).not.toHaveBeenCalled();
+      expect(mocks.writeAudit).not.toHaveBeenCalled();
+    },
+  );
 
   it("updates settings without promoting a nonzero priority", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(connection({ id: "conn_2" }));

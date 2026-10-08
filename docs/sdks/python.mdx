@@ -9,7 +9,7 @@ description: "Install and authenticate the Python SDK, then list projects."
 pip install bisibility
 ```
 
-The current docs-tested package is `bisibility==0.9.0`. See
+The current docs-tested package is `bisibility==0.11.1`. See
 [Versioning and support](/versioning).
 
 ## Authenticate
@@ -79,6 +79,10 @@ async with AsyncBisibilityClient(api_key=api_key, base_url=base_url) as client:
 
 Call `await client.aclose()` when lifecycle management cannot use a context
 manager.
+
+In `0.11.1`, `run_rank_check_and_wait` is an exception to async parity: it can return a queued
+run before completion. Use `await client.run_rank_check(...)` and explicitly poll rank history
+until the matching run is terminal. See [released-package exceptions](/sdks/behavior#released-package-exceptions).
 
 ## Next steps
 

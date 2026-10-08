@@ -4,7 +4,7 @@ import {
   OAUTH_REFRESH_TOKEN_TTL_SECONDS,
 } from "@/lib/auth/oauth-policy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getOAuthConsentClient } from "./oauth-consent";
+import { getOAuthClientScopePolicy, getOAuthConsentClient } from "./oauth-consent";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
@@ -73,5 +73,18 @@ describe("OAuth consent policy", () => {
     expect(OAUTH_AUTHORIZATION_TTL_SECONDS).toBe(300);
     expect(OAUTH_ACCESS_TOKEN_TTL_SECONDS).toBe(3_600);
     expect(OAUTH_REFRESH_TOKEN_TTL_SECONDS).toBe(2_592_000);
+  });
+});
+
+it("loads every authoritative registered callback for token scope policy", async () => {
+  const registered = {
+    name: "Custom",
+    redirectUris: ["https://first.example.com/callback", "https://second.example.com/callback"],
+  };
+  mocks.prisma.oauthClient.findUnique.mockResolvedValue(registered);
+  await expect(getOAuthClientScopePolicy("registered-client")).resolves.toEqual(registered);
+  expect(mocks.prisma.oauthClient.findUnique).toHaveBeenCalledWith({
+    select: { name: true, redirectUris: true },
+    where: { clientId: "registered-client" },
   });
 });

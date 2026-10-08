@@ -1,4 +1,5 @@
 import { ProviderAuthError } from "@/lib/providers/auth-error";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
 import { resolveSerpDepth } from "@/lib/serp/constants";
@@ -179,6 +180,7 @@ export async function requestEnvelope(
 
       return data;
     } catch (error) {
+      if (error instanceof DeploymentAdmissionExhaustedError) throw error;
       if (error instanceof ProviderUsagePersistenceError) throw error;
       // Timeouts (AbortError) are retried at most once so the fallback chain keeps headroom.
       const timedOut = error instanceof Error && error.name === "AbortError";

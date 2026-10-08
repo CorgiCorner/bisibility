@@ -70,7 +70,7 @@ export async function testAndSaveDataForSeo(page: Page) {
     const testButton = page.getByRole("button", { name: "Test connection", exact: true });
     try {
       await expect(testButton).toBeEnabled({ timeout: 5000 });
-      await testButton.click();
+      await testButton.click({ timeout: 5000 });
       await expect(status).toContainText("DataForSEO verified", { timeout: 10_000 });
       break;
     } catch (error) {

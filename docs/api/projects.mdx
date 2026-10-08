@@ -23,6 +23,12 @@ member, so project existence is not disclosed.
 
 Only an owner's PAT can call `deleteProject`; project API keys receive `403`.
 
+Provider accounting evidence is retained separately after project deletion so
+late receipts and duplicate requests can still be reconciled against their
+original owner. It contains identifiers, request source, timestamps, quantities
+and costs, without keywords, response content or provider secrets. This evidence
+currently has no automatic expiry; deleting a project does not erase it.
+
 Self-hosters may cap the number of projects owned by one user with
 `BISIBILITY_MAX_PROJECTS_PER_USER`. Current hosted limits live in
 [Deployment options](/deployment-options).

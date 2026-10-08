@@ -123,7 +123,7 @@ X-Bisibility-Project: prj_a00000000000000000000000
 Selection precedence is: `{project_id}` path parameter, X-Bisibility-Project header, project query parameter, then inference when the PAT owner belongs to exactly one project.
 
 If the user belongs to multiple projects and no selector is present, the API
-returns `400 Bad Request` with `projectSelectionRequired`.
+returns `400 Bad Request` with `bad_request`.
 
 ## Declaring the client source
 
@@ -137,12 +137,12 @@ Allowed values are `sdk`, `cli`, and `mcp`; any other value (or a missing
 header) counts as `api`. The header only refines usage reporting in
 **Settings > Provider usage**. It never changes authentication and never
 changes which budget applies: every bearer-authenticated request counts
-against the API, MCP and SDK budget. The SDKs and the CLI send the header
-automatically from their next release.
+against the API and agents budget. The released SDKs send the header
+automatically.
 
 ## Rate limits
 
-Every request includes rate-limit headers:
+Rate-limit headers:
 
 ```text
 RateLimit-Limit: 600

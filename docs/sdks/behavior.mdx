@@ -7,6 +7,21 @@ This page is the source of truth for behavior shared by the official TypeScript,
 SDKs. Language-specific pages document syntax and types, while the OpenAPI document defines routes,
 payloads, and response schemas.
 
+## Released-package exceptions
+
+This contract is the target for SDK implementations. The docs-tested packages currently have
+these limitations; source fixes do not change an installed package until a new release:
+
+- TypeScript `0.14.1` skips its default request timeout when given a caller cancellation signal
+  without an explicit timeout. Set an explicit timeout for that combination. Its success decoding
+  does not yet enforce every required envelope or value type.
+- Python `0.11.1` async `run_rank_check_and_wait` can return the initial queued run instead of
+  waiting. Await `run_rank_check`, then poll rank history explicitly for queued execution.
+- The TypeScript, Python and Go wait helpers can return a matching check while it is still
+  running. Poll until the matching `run_id` has a terminal status before treating it as finished.
+- Current SDK Cloud import models support schema v5. The application accepts newer migration
+  formats (v6/v7); use its migration flow and REST compatibility endpoint for those packages.
+
 ## Authentication and project selection
 
 Authenticated operations send the configured API key or personal access token as
@@ -19,7 +34,7 @@ requests whose route does not contain a project identifier.
 
 ## Public identifiers
 
-All resource identifiers at the SDK boundary use public ID v3. A public ID has one of the
+All resource identifiers at the SDK boundary use strict typed public IDs. A public ID has one of the
 registered resource prefixes, an underscore, and a lowercase 24-character CUID2 suffix:
 `prefix_[a-z][a-z0-9]{23}`. SDKs reject database primary keys, legacy formats, mixed-case values,
 and wrong resource prefixes before sending a request.

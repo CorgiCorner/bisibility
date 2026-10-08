@@ -5,6 +5,7 @@ import { lockProjectForProviderMutation } from "@/lib/provider-allocations/proje
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { surfaceOf } from "@/lib/provider-usage/surface";
 import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
+import { hostedRankCheckEstimatedCostCents } from "@/lib/providers/execution-extension";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { assertBudgetAvailable } from "./budget";
@@ -95,12 +96,15 @@ export async function assertLegacyLiveBudget(input: PreflightInput): Promise<voi
     await assertBudgetAvailable(input.projectId, input.now, {
       capCents: project.budgetCapCents,
       client: tx,
-      estimatedCostCents: estimatedRankCheckCostCents(
-        connection?.provider,
-        input.depth,
-        connection?.costPerCheckCents,
-        connection?.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
-      ),
+      estimatedCostCents:
+        connection?.credentialSource === "hosted" && connection.provider === "serpapi"
+          ? hostedRankCheckEstimatedCostCents(connection.provider, input.depth)
+          : estimatedRankCheckCostCents(
+              connection?.provider,
+              input.depth,
+              connection?.costPerCheckCents,
+              connection?.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
+            ),
       excludeRankCheckId: input.rankCheckId,
     });
   });

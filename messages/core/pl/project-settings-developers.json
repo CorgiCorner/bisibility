@@ -77,7 +77,7 @@
     "webhooks": {
       "title": "Webhooki wdrożeń",
       "inbound": "Przychodzący: Twój system CI wywołuje bisibility po wdrożeniu, a wywołanie staje się sygnałem na osi czasu.",
-      "outbound": "Webhook wychodzący to kanał alertów na stronie Powiadomienia, a nie ten.",
+      "outbound": "Webhook wychodzący to kanał alertów na stronie Alerty, a nie ten.",
       "add": "Dodaj hook wdrożenia",
       "disabledDescription": "Wyłączony: wiersz i token pozostają.",
       "sendTestDescription": "„Wyślij test” wysyła prawdziwy sygnał i podaje do niego link.",

@@ -48,10 +48,10 @@ export const AGENTS = [
 ] satisfies readonly AgentInstall[];
 
 export const SKILLS = [
-  { name: "keyword-import" },
-  { name: "provider-setup" },
-  { name: "project-onboarding" },
-  { name: "weekly-report" },
-  { name: "keyword-clustering" },
-  { name: "seo-audit" },
+  { archivePath: "/.well-known/agent-skills/keyword-import.tar.gz", name: "keyword-import" },
+  { archivePath: "/.well-known/agent-skills/provider-setup.tar.gz", name: "provider-setup" },
+  { archivePath: null, name: "project-onboarding" },
+  { archivePath: "/.well-known/agent-skills/weekly-report.tar.gz", name: "weekly-report" },
+  { archivePath: null, name: "keyword-clustering" },
+  { archivePath: null, name: "seo-audit" },
 ] as const;

@@ -2,6 +2,7 @@ import { centsToDollars } from "@/lib/format/currency";
 import { flatPerCheckCostCents } from "./estimate";
 import { DATAFORSEO_LIVE_RANK_CHECK_COST_CENTS, rateForProvider } from "./provider-rates";
 
+// Account minimum and trial credit verified 2026-10-01.
 const DATAFORSEO_MINIMUM_TOP_UP_CENTS = 5000;
 const DATAFORSEO_TRIAL_CREDIT_CENTS = 100;
 

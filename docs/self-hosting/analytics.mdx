@@ -32,6 +32,7 @@ details, passwords, API keys, and credentials are never event properties.
 | `landing_cta_submitted` | Client | The landing-page call to action is submitted. | `has_website: boolean` |
 | `landing_cost_estimate_opened` | Client | The landing-page cost estimate is opened. | None |
 | `language_switched` | Client | The marketing language switcher changes the locale. | `from`, `to`, `surface: "marketing_header" \| "marketing_mobile_menu"` |
+| `marketing_cta_clicked` | Client | A call to action on a hosted marketing feature page, the integrations page or the site menu is selected. | `page`, `cta`, `slot` |
 | `user_signed_up` | Server | A user account is created. | `method: "otp" \| "github" \| "google"` |
 | `onboarding_project_created` | Server | The onboarding project is created. | `frequency` |
 | `provider_connection_tested` | Server | A provider connection test finishes. | `provider`, `ok`, `error_category` |

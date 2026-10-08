@@ -15,9 +15,18 @@ export const decode = <T>(value: unknown): T =>
   ) as T;
 export const hash = (value: string) => createHash("sha256").update(value).digest("hex");
 export function identity(input: ReserveInput): string {
-  const { correlationId: _, parentOperationId: __, ...rest } = input;
+  const {
+    correlationId: _,
+    parentOperationId: __,
+    estimateSource: _source,
+    providerPriceVersion: _priceVersion,
+    scope,
+    ...rest
+  } = input;
+  const { tags: _tags, ...scopeIdentity } = scope;
   return canonical({
     ...rest,
+    scope: scopeIdentity,
     estimate: [...input.estimate].sort((a, b) => a.unit.localeCompare(b.unit)),
     platformPools: [...(input.platformPools ?? [])].sort(),
   });

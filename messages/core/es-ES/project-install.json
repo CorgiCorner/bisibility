@@ -22,8 +22,8 @@
       "chatgpt": {
         "label": "ChatGPT",
         "hint": "aplicación",
-        "note": "Ajustes, Aplicaciones, Ajustes avanzados, activa el modo de desarrollador y luego añade la URL como aplicación MCP personalizada.",
-        "caveat": "ChatGPT solo muestra herramientas de solo lectura en los planes individuales; las acciones de escritura, como las comprobaciones de posiciones y el análisis de backlinks, requieren un espacio de trabajo Business o Enterprise con el modo de desarrollador. Las herramientas de solo lectura cubren los informes guardados y las estimaciones de coste."
+        "note": "Abre Plugins en ChatGPT, selecciona + y Add custom MCP server. Introduce la URL MCP y elige OAuth.",
+        "caveat": "El acceso depende de las políticas del espacio de trabajo. Esta conexión de bisibility solicita acceso de solo lectura."
       },
       "claude-desktop": {
         "label": "Claude (web y escritorio)",
@@ -42,7 +42,7 @@
       "description": "¿Usas una herramienta que no está en la lista? Pega esta dirección en ella e inicia sesión con tu cuenta de bisibility.",
       "copy": "Copiar la URL de MCP",
       "selfHosted": "¿autoalojas bisibility? usa tu propia dirección: '<your-instance>'/api/mcp",
-      "toolScope": "Las herramientas marcadas como de solo lectura ({readOnly} de {total}) funcionan en todos los clientes. Las operaciones de pago, como las comprobaciones de posiciones y el análisis de backlinks, son herramientas de escritura; algunas aplicaciones de agentes solo las muestran con un modo de desarrollador o de escritura activado, y algunos planes solo ofrecen herramientas de lectura. Los informes guardados y las estimaciones de coste son de solo lectura."
+      "toolScope": "{readOnly} de {total} herramientas están marcadas como de solo lectura. Los clientes y los permisos aprobados pueden limitar su disponibilidad. Las operaciones de pago, como las comprobaciones de posición y el análisis de backlinks, son herramientas de escritura. Los informes guardados y las estimaciones de costes son de solo lectura."
     },
     "apiKey": {
       "heading": "Clave de API",
@@ -59,14 +59,16 @@
     "skills": {
       "heading": "Habilidades",
       "planned": "previsto",
-      "description": "Tareas de SEO ya preparadas que tu agente podrá ejecutar por ti. Todavía no hay ninguna disponible, así que esta lista es lo que llegará próximamente.",
-      "footer": "el comando de instalación aparecerá aquí cuando esté lista la primera habilidad",
+      "description": "Descarga los archivos de skills disponibles para tu agente. Las otras tareas están previstas.",
+      "footer": "Descarga un archivo y sigue las instrucciones de tu cliente para instalar skills.",
       "keyword-import": "Añadir en bloque y quitar duplicados",
       "provider-setup": "Conectar y verificar claves",
       "project-onboarding": "Configuración del primer proyecto",
       "weekly-report": "Resumen de movimientos",
       "keyword-clustering": "Agrupar por intención",
-      "seo-audit": "Correcciones priorizadas"
+      "seo-audit": "Correcciones priorizadas",
+      "availableCount": "3 disponibles",
+      "available": "disponibles"
     },
     "chatgptIcon": {
       "copyUrl": "Copiar la URL del icono",
@@ -79,17 +81,17 @@
     "gettingStarted": {
       "addApp": {
         "copyMcpUrl": "Copiar la URL de MCP para ChatGPT",
-        "description": "Abre Plugins, pulsa + y añade la URL de MCP de abajo. Usa OAuth e inicia sesión en bisibility. Si te lo pide, sube el icono de arriba.",
+        "description": "Crea el plugin con la URL MCP, elige OAuth e inicia sesión en bisibility. Instala el plugin creado.",
         "title": "2. Añadir bisibility"
       },
       "description": "Conecta bisibility con ChatGPT.",
       "developerMode": {
-        "description": "En ChatGPT, abre Ajustes → Seguridad e inicio de sesión y activa el modo de desarrollador.",
-        "title": "1. Activar el modo de desarrollador"
+        "description": "Abre Plugins en ChatGPT. Tu espacio de trabajo debe permitir servidores MCP personalizados.",
+        "title": "1. Abre Plugins"
       },
       "dismiss": "Ocultar «Cómo empezar»",
       "firstChat": {
-        "description": "Elige bisibility en el menú de herramientas de un chat nuevo. Prueba con: «{prompt}»",
+        "description": "En un chat nuevo, escribe @ y selecciona bisibility. Prueba: \"{prompt}\"",
         "prompt": {
           "withChecks": "¿Qué palabras clave han perdido posiciones esta semana?",
           "withoutChecks": "¿Qué proyectos y palabras clave puedo consultar?"
@@ -98,7 +100,7 @@
       },
       "guideLink": "Guía de configuración de ChatGPT",
       "heading": "Cómo empezar",
-      "note": "El modo de desarrollador puede depender de los ajustes de tu cuenta o de tu espacio de trabajo.",
+      "note": "Es posible que el administrador deba permitir servidores MCP personalizados.",
       "show": "Mostrar cómo empezar",
       "clientSwitcher": "Asistente de IA",
       "accessTitle": "Acceso de solo lectura",

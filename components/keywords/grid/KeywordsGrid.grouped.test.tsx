@@ -30,6 +30,26 @@ beforeEach(() => {
 });
 
 describe("KeywordsGrid pending state", () => {
+  it.each([0, 1, 2])("pluralizes the footer for %i matching targets", (count) => {
+    renderPendingGrid({
+      matchedTargetCount: count,
+      query: {
+        filters: emptyKeywordFilters,
+        grouped: true,
+        lens: { device: "all", locationId: null },
+        page: 1,
+        pageSize: 25,
+        savedViewId: null,
+        search: "",
+        sort: { direction: "asc", field: "position" },
+      },
+      rows: groupedPendingRows(),
+    });
+    expect(
+      screen.getByText(`${count} matching ${count === 1 ? "target" : "targets"}`),
+    ).toBeInTheDocument();
+  });
+
   it("clears explicit search and filters once while preserving the server lens and grouping", () => {
     setNavigationState({
       pathname: "/app/prj_1/rank-tracker",

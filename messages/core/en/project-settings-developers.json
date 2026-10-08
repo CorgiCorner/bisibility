@@ -77,7 +77,7 @@
     "webhooks": {
       "title": "Deploy webhooks",
       "inbound": "Inbound: your CI calls bisibility after a deploy and the call becomes a timeline signal.",
-      "outbound": "The outbound webhook is the alert channel on Notifications, not this.",
+      "outbound": "The outbound webhook is the alert channel on Alerts, not this.",
       "add": "Add deploy hook",
       "disabledDescription": "Disabled: the row and the token stay.",
       "sendTestDescription": "Send test posts a real signal and links to it.",

@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@/lib/generated/prisma/client";
+import { byokTestEvidence } from "@/lib/provider-usage/byok-test-evidence";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { type SerpRankLocation, serpRankLocation } from "@/lib/serp/location";
@@ -134,6 +135,7 @@ describe("serpApiProvider", () => {
     expect(result.billingUnits).toBe(requests);
     for (const [url] of fetchMock.mock.calls) {
       expect(new URL(String(url)).searchParams.get("nfpr")).toBe("1");
+      expect(new URL(String(url)).searchParams.get("no_cache")).toBeNull();
     }
   });
 
@@ -971,7 +973,14 @@ function createJournalLedger(seed: JournalRow[] = []) {
     }),
   };
   const db = {
-    providerCostEntry: table,
+    ...byokTestEvidence("serpapi"),
+    providerCostEntry: {
+      ...table,
+      updateMany: vi.fn(async (args: Parameters<typeof table.update>[0]) => {
+        await table.update(args);
+        return { count: 1 };
+      }),
+    },
     $transaction: vi.fn(async (run: (tx: unknown) => Promise<unknown>) => run(db)),
   };
   return { db: db as unknown as PrismaClient, rows, table };

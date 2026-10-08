@@ -21,8 +21,8 @@
       "1": "Encabezados, directivas robots y texto alt",
       "2": "Enlaces internos e historial de rastreo"
     },
-    "summary": "{pages, number} páginas comprobadas · {errors, number} errores · {warnings, number} avisos · {indexable, number} indexables",
-    "partial": "Rastreo parcial: {reason}. Los resultados incluyen las páginas siguientes.",
+    "summary": "{pages, number} páginas obtenidas · {errors, number} errores · {warnings, number} avisos · {indexable, number} con indexabilidad confirmada",
+    "partial": "Auditoría incompleta: se alcanzó el {reason}. Los resultados cubren solo las páginas obtenidas.",
     "stopReasons": {
       "finished": "finalizado",
       "page_limit": "límite de páginas",
@@ -65,6 +65,24 @@
       "broken_internal_link": "{count, number} enlaces internos muestreados devolvieron errores HTTP."
     },
     "errorRun": "No se pudo completar la auditoría. Inténtalo de nuevo.",
-    "errorLoad": "No se pudo cargar el informe."
+    "errorLoad": "No se pudo cargar el informe.",
+    "unavailableSummary": "{pages, number} páginas obtenidas · {unavailable, number} no obtenidas · {errors, number} errores · {warnings, number} avisos · {indexable, number} con indexabilidad confirmada",
+    "partialUnavailable": "Auditoría incompleta: no se pudieron obtener algunas páginas o robots.txt. Las páginas no disponibles no tienen mediciones SEO.",
+    "notAssessed": "Sin evaluar",
+    "notMeasured": "Sin medir",
+    "notFetched": "No obtenida",
+    "unknown": "Desconocida",
+    "fetchReasons": {
+      "timeout": "La solicitud de la página agotó el tiempo. Inténtalo más tarde.",
+      "dns": "No se pudo resolver el nombre público del servidor. Comprueba el dominio y sus registros DNS.",
+      "tls": "No se pudo verificar la conexión segura. Comprueba el certificado del sitio.",
+      "network": "La conexión a la página falló. Inténtalo más tarde.",
+      "public_network": "La URL no superó la comprobación de seguridad de red pública. Comprueba que el dominio solo resuelva a direcciones públicas.",
+      "redirect": "La redirección sale del origen del proyecto o usa una URL bloqueada. Comprueba el dominio y el destino.",
+      "redirect_limit": "La página superó el límite de tres redirecciones. Comprueba la cadena.",
+      "size_limit": "La respuesta superó el límite de 512 KiB. No se pudo evaluar esta página.",
+      "request_limit": "Se alcanzó el límite de solicitudes antes de obtener esta página.",
+      "unknown": "No se pudo obtener la página. Su estado HTTP y sus mediciones SEO son desconocidos."
+    }
   }
 }

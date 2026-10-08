@@ -1,4 +1,4 @@
-import type { AccessContext, Authority, Meter, Operation } from "@usagekit/core";
+import type { AccessContext, Authority, Meter, Operation, Receipt } from "@usagekit/core";
 import type { Clock } from "@usagekit/store";
 import { receiptFromEntry, reserveFromEntry, type UsageEntry } from "./mapping";
 import { readShadowDecision } from "./shadow-probe";
@@ -25,6 +25,11 @@ export type ShadowHandoffs = {
   clear(entry: UsageEntry, leaseId: string): Promise<void>;
 };
 type Estimate = { cents: string; units: string };
+export type ImportedShadowEvidenceHandler = (input: {
+  namespace: string;
+  entry: UsageEntry;
+  receipt: Receipt;
+}) => Promise<Operation>;
 export function createShadowEngine(deps: {
   meter: Meter;
   clock: Clock;
@@ -32,6 +37,7 @@ export function createShadowEngine(deps: {
   sink: (comparison: ShadowComparison) => Promise<void>;
   failure: (entry: UsageEntry, step: string) => void | Promise<void>;
   handoffs: ShadowHandoffs;
+  importedEvidence?: ImportedShadowEvidenceHandler;
 }) {
   const { meter, clock, namespace } = deps;
   const leases = new Map<string, ShadowHandoff>();
@@ -219,38 +225,41 @@ export function createShadowEngine(deps: {
         const receipt = receiptFromEntry(entry, clock.now());
         if (op.receipts.some((r) => r.id === receipt.id)) return;
         const previous = op.receipts.at(-1);
-        const priorHasEvidence =
-          previous &&
-          (previous.cost.certainty !== "unknown" ||
-            previous.measurements.some((value) => value.certainty !== "unknown"));
-        const incomingIncomplete =
-          receipt.cost.certainty === "unknown" ||
-          receipt.measurements.some((value) => value.certainty === "unknown");
-        const omitsKnownDimension = previous?.measurements.some(
-          (value) =>
-            value.certainty !== "unknown" &&
-            !receipt.measurements.some(
-              (incoming) => incoming.unit === value.unit && incoming.certainty !== "unknown",
-            ),
-        );
-        if (previous && ((priorHasEvidence && incomingIncomplete) || omitsKnownDimension)) return;
-        const authorized = await authority(entry, op);
-        const input = {
-          ...command(authorized.operation, `evidence:${receipt.id}`),
-          authority: authorized.authority,
-          receipt,
-        };
-        const result = previous
-          ? await meter.correct({
-              ...input,
-              replacesReceiptId: previous.id,
-              reason: "legacy_provider_receipt_updated",
-            })
-          : await meter.settle(input);
-        if (result.outcome !== "settled") throw new Error("Shadow settlement rejected");
+        let settled: Operation;
+        if (previous?.source === "import") {
+          if (!deps.importedEvidence)
+            throw new Error("Trusted imported shadow evidence is unavailable");
+          settled = await deps.importedEvidence({ namespace, entry, receipt });
+        } else {
+          const losesKnownCost =
+            previous?.cost.certainty !== "unknown" && receipt.cost.certainty === "unknown";
+          const omitsKnownDimension = previous?.measurements.some(
+            (value) =>
+              value.certainty !== "unknown" &&
+              !receipt.measurements.some(
+                (incoming) => incoming.unit === value.unit && incoming.certainty !== "unknown",
+              ),
+          );
+          if (previous && (losesKnownCost || omitsKnownDimension)) return;
+          const authorized = await authority(entry, op);
+          const input = {
+            ...command(authorized.operation, `evidence:${receipt.id}`),
+            authority: authorized.authority,
+            receipt,
+          };
+          const result = previous
+            ? await meter.correct({
+                ...input,
+                replacesReceiptId: previous.id,
+                reason: "legacy_provider_receipt_updated",
+              })
+            : await meter.settle(input);
+          if (result.outcome !== "settled") throw new Error("Shadow settlement rejected");
+          settled = result.operation;
+          if ("leaseId" in authorized.authority)
+            await deps.handoffs.clear(entry, authorized.authority.leaseId);
+        }
         leases.delete(entry.id);
-        if ("leaseId" in authorized.authority)
-          await deps.handoffs.clear(entry, authorized.authority.leaseId);
         await deps.sink({
           operationId: entry.id,
           projectId: entry.projectId,
@@ -258,7 +267,7 @@ export function createShadowEngine(deps: {
           funding: entry.credentialSource === "hosted" ? "platform" : "byok",
           legacy: "allowed",
           meter: "reserved",
-          settled: result.operation.state === "settled" ? "settled" : "pending",
+          settled: settled.state === "settled" ? "settled" : "pending",
           durationMs: performance.now() - started,
         });
       }),

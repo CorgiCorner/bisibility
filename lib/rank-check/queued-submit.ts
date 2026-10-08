@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { withShadowRequest } from "@/lib/metering/shadow-context";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
+import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { startQueuedDeploymentExecution } from "@/lib/providers/execution-extension";
@@ -145,6 +146,8 @@ async function submitBatch(batchId: string) {
           correlationId: task.correlationId,
           keywordId: task.keywordId,
           tag: task.tag,
+          // Hosted pricing and the retained TaskGET receipt count one native paid task.
+          meteringEstimate: { costCents: task.estimate.cents, quantity: "1.000000" },
         })),
       );
       await beginQueuedHostedShadow({ batch: claimed.batch, connectionId: connection.id, tasks });
@@ -154,11 +157,17 @@ async function submitBatch(batchId: string) {
         connectionId: connection.id,
         projectId: claimed.batch.projectId,
         tasks,
+        credentialVersion: ownCredentialVersion(
+          "dataforseo",
+          connection.id,
+          connection.credentialsEncrypted,
+        ),
       });
     }
     let result: DataForSeoQueuedSubmissionResult;
+    await execution?.transportStarted();
+    await journal?.transportStarted();
     try {
-      execution?.transportStarted();
       result = await submitDataForSeoQueuedTasks({
         credentials,
         priority: claimed.batch.priority === "normal" ? "normal" : "high",
@@ -251,15 +260,27 @@ async function submitBatch(batchId: string) {
         `DataForSEO accepted the batch but queued persistence failed: ${message}`,
       );
     }
-    if (execution) {
-      if (submissionPhase() === "not_sent") await execution.abort();
-      else
-        return markAmbiguous(
-          batchId,
-          `DataForSEO submission rejection is not proof of zero charge: ${message}`,
-        );
-    } else {
-      await journal?.discard();
+    if (submissionPhase() === "not_sent") {
+      if (execution) await execution.abort();
+      else await journal?.discard();
+    } else
+      return markAmbiguous(
+        batchId,
+        `DataForSEO submission rejection is not proof of zero charge: ${message}`,
+      );
+    if (error instanceof DeploymentAdmissionExhaustedError) {
+      await compareQueuedHostedAdmission({
+        batch: claimed.batch,
+        connectionId: connection.id,
+        reason: error.reason,
+      });
+      const progress = await deferQueuedRankCheckBatch(
+        batchId,
+        error.reason === "balance"
+          ? "credits_exhausted"
+          : `budget_exhausted:${error.surface ?? "app"}`,
+      );
+      return { state: progress.state };
     }
     if (
       submissionPhase() === "rejected" &&

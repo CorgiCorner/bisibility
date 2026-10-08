@@ -22,6 +22,7 @@ import {
   type SignInCapacityMiss,
 } from "@/lib/auth/signin-capacity-types";
 import { readDemoConfig } from "@/lib/demo/config";
+import { demoNextPath } from "@/lib/demo/demo-next-path";
 import { explicitDeploymentDataRegionLabel, isCloud } from "@/lib/deployment/deployment";
 import { legalConsentLinks } from "@/lib/deployment/legal";
 import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
@@ -95,7 +96,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
     return (
       <main className="grid min-h-dvh place-items-center bg-bg p-6 text-fg">
         <div className="w-full max-w-sm">
-          <ExploreDemo />
+          <ExploreDemo nextPath={demoNextPath(next)} />
         </div>
       </main>
     );
@@ -104,7 +105,10 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
     return (
       <main className="grid min-h-dvh place-items-center bg-bg p-6 text-fg">
         <div className="w-full max-w-sm">
-          <EditableDemoLogin ownerSignInHref={demoLoginSwitchHref(params ?? {}, true)} />
+          <EditableDemoLogin
+            nextPath={demoNextPath(next, demo.projectPublicId)}
+            ownerSignInHref={demoLoginSwitchHref(params ?? {}, true)}
+          />
         </div>
       </main>
     );

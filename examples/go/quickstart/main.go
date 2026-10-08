@@ -11,7 +11,7 @@ import (
 )
 
 const exampleID = "go-quickstart"
-const maxHistoryAttempts = 5
+const maxHistoryAttempts = 240
 
 // docs:start:method-contract
 var docsMethodContract = map[string]any{
@@ -142,13 +142,12 @@ func run() (err error) {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Rank check %s completed with position %s\n", check.ID, positionLabel(check.Position))
-
-	fmt.Println("Reading rank history")
+	fmt.Println("Waiting for completed rank history")
 	historyCheck, err := waitForRankHistory(ctx, client, keywordID, check.ID)
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Rank check %s completed with position %s\n", historyCheck.ID, positionLabel(historyCheck.Position))
 	fmt.Printf("History includes %s from %s\n", historyCheck.ID, historyCheck.CheckedAt.Format(time.RFC3339))
 
 	return nil

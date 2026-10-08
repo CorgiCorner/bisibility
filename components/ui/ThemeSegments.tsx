@@ -6,6 +6,7 @@ import {
   subscribeThemePreference,
   type ThemePreference,
 } from "@/lib/theme/browser-theme";
+import { cn } from "@/lib/ui/cn";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 import { MoonStarsIcon as MoonStars } from "@phosphor-icons/react/dist/csr/MoonStars";
 import { PaletteIcon as Palette } from "@phosphor-icons/react/dist/csr/Palette";
@@ -18,6 +19,7 @@ export type ThemeSegmentsSize = "sm" | "md";
 
 export type ThemeSegmentsProps = {
   className?: string;
+  activeClassName?: string;
   /** Server-rendered starting point; the cookie takes over once hydrated. */
   defaultPreference?: ThemePreference;
   size?: ThemeSegmentsSize;
@@ -37,6 +39,7 @@ const optionClassNameBySize: Record<ThemeSegmentsSize, string> = {
 
 export function ThemeSegments({
   className,
+  activeClassName,
   defaultPreference = "system",
   size = "sm",
 }: Readonly<ThemeSegmentsProps>) {
@@ -54,7 +57,7 @@ export function ThemeSegments({
       className={className}
       fitContent
       onChange={(value) => applyTheme(value as ThemePreference)}
-      activeClassName="bg-bg-elev"
+      activeClassName={cn("bg-bg-elev", activeClassName)}
       optionClassName={optionClassNameBySize[size]}
       options={[
         { preference: "light" as const, label: t("light"), Icon: Sun },

@@ -59,8 +59,7 @@ is approved.
 | Client | Adds the URL where | Write tools | Approval |
 |-|-|-|-|
 | Claude (web, desktop, Cowork) | Customize, Connectors, Add custom connector, then approve the sign-in | Every tool is exposed; no developer or write mode is required | Asks before each write tool the first time |
-| ChatGPT (individual plans) | Custom MCP app entry in the app's settings | Read tools only; write tools are not offered | Read and fetch tools only, so no write approval applies |
-| ChatGPT (Business or Enterprise with developer mode) | Custom MCP app; developer mode lives at Settings, Apps, Advanced settings | Custom MCP apps with write actions are a beta | The approved tool snapshot stays frozen until an admin refreshes it |
+| ChatGPT | Plugins, +, Add custom MCP server; configure OAuth and install the plugin | bisibility requests read-only access for this connection | Workspace permissions and client confirmation settings apply |
 | Claude Code | The `claude mcp add` command | Every tool is exposed | Follows the client's own tool-permission settings |
 | Codex | The `codex mcp add` command | Every tool is exposed | Follows the client's own tool-permission settings |
 | Cursor | Settings, MCP, then paste into `mcp.json` | Every tool is exposed | Follows the client's own tool-permission settings |
@@ -71,11 +70,9 @@ change data are marked read-only; clients that hide or gate write tools rely
 on that marker. Paid operations such as rank checks and backlink analysis are
 write tools; stored reports and cost estimates are read-only.
 
-Once a ChatGPT connection is approved, the client keeps a frozen snapshot of
-the tool definitions until the connector is refreshed or re-added in the
-app, so new tools appear in ChatGPT only after a refresh. Nothing in the
-OAuth flow can widen that snapshot; the consent page can only narrow the
-scopes a client asked for.
+To update ChatGPT's tool definitions, refresh the plugin from its details page. Workspace
+policies can restrict custom MCP servers. See OpenAI's [current connection guide](https://developers.openai.com/api/docs/guides/custom-mcp-server).
+The bisibility consent flow narrows ChatGPT connections to read-only access.
 
 ## Authenticate
 
@@ -101,6 +98,34 @@ export BISIBILITY_API_KEY=placeholder
 
 See [Authentication](/authentication) to choose and create a credential, select
 a project for PAT requests, and make a test request.
+
+## Run and save an SEO audit
+
+The `seo-audit` skill guides your external agent's model through collecting real MCP data, prioritizing technical, content and visibility findings, and saving a project-local AgentReport. Bisibility supplies the tools and report storage. The model in your connected client performs the analysis.
+
+Install the versioned plugin in Claude Code:
+
+```text
+/plugin marketplace add CorgiCorner/bisibility
+/plugin install bisibility
+/reload-plugins
+```
+
+Open `/mcp`, select Bisibility and sign in. Then run:
+
+```text
+/bisibility:seo-audit Audit my example.com project and save a prioritized report.
+Use the free bounded crawl and saved ranking/AI evidence. Do not spend on providers.
+Give me the report link and the first action.
+```
+
+For Codex and other Agent Skills clients, install the complete `plugins/bisibility/skills/seo-audit` directory from the [release repository](https://github.com/CorgiCorner/bisibility/tree/main/plugins/bisibility/skills/seo-audit), including its references and validation script. For Codex, place it in `~/.codex/skills/seo-audit`, connect MCP as shown above, and invoke `$seo-audit` with the same request. This plugin skill is distributed from the repository; the instance's generated tool-reference catalog is a separate discovery surface.
+
+The workflow uses `list_projects`, `get_project`, `get_project_context`, `run_site_audit`, `get_site_audit`, `list_keywords`, `list_agent_reports`, `get_agent_report` and `create_agent_report`. It requires v0.28.0 or newer with these tools visible in the client's tool snapshot. A fresh crawl and report save need write scope plus project membership that allows writes. A read-only client can analyze stored data but must report that it could not crawl or save.
+
+The crawler samples at most 15 pages in 15 seconds and does not render JavaScript or run Lighthouse. Reports retain source dates, partial crawl limits, missing data and uncertainty. Saved AI Visibility evidence is provider-observed; Prompt Explorer responses are synthetic tests and cannot establish real consumer visibility. Optional paid enrichment uses an estimate followed by explicit approval of the operation and cost cap, whether funded by your own provider key or deployment credits.
+
+The skill saves bounded JSON/text with external kind `seo_audit` and returns `/app/<project_id>/agent-reports/<report_id>` on your app origin after confirming the save. This link inherits project access and does not publish the report publicly.
 
 ## Example workflow
 

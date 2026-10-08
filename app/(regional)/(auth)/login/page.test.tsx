@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { dynamic } from "./page";
 
 const mocks = vi.hoisted(() => ({
+  exploreDemo: vi.fn(),
   getGitHubStars: vi.fn(),
   getSession: vi.fn(),
   isEmailConfigured: vi.fn(),
@@ -37,6 +38,12 @@ vi.mock("@/lib/auth/auth", () => {
 vi.mock("@/components/auth/LoginForm", () => ({
   LoginForm: (props: Record<string, unknown>) => {
     mocks.loginForm(props);
+    return null;
+  },
+}));
+vi.mock("@/components/auth/ExploreDemo", () => ({
+  ExploreDemo: (props: Record<string, unknown>) => {
+    mocks.exploreDemo(props);
     return null;
   },
 }));
@@ -117,6 +124,64 @@ afterEach(() => {
 });
 
 describe("login page runtime rendering", () => {
+  it.each([
+    [
+      "/app/prj_abcdefghijklmnopqrstuvwx/keyword-research?seed=raw%26value%3D1",
+      "/app/prj_abcdefghijklmnopqrstuvwx/keyword-research?seed=raw%26value%3D1",
+    ],
+    [
+      ["/app/prj_abcdefghijklmnopqrstuvwx/dashboard", "/app/prj_other/dashboard"],
+      "/app/prj_abcdefghijklmnopqrstuvwx/dashboard",
+    ],
+    ["/app/prj_other/dashboard", null],
+    ["/app/prj_abcdefghijklmnopqrstuvwx_suffix/dashboard", null],
+    ["/app/prj_abcdefghijklmnopqrstuvwx/../prj_other/dashboard", null],
+    ["//evil.example.com", null],
+    [undefined, null],
+  ])(
+    "forwards only this editable demo project's validated next path for %j",
+    async (next, expected) => {
+      await renderLoginPage(
+        {
+          DEMO_MODE: "editable",
+          READ_ONLY_DEMO: undefined,
+          DEMO_FIXED_OTP: undefined,
+          ALLOW_INSECURE_FIXED_OTP: undefined,
+          DEMO_USER_ID: "usr_abcdefghijklmnopqrstuvwx",
+          DEMO_OWNER_ID: "usr_zyxwvutsrqponmlkjihgfedc",
+          DEMO_PROJECT_ID: "prj_abcdefghijklmnopqrstuvwx",
+        },
+        { next },
+      );
+      expect(mocks.exploreDemo).toHaveBeenCalledExactlyOnceWith({ nextPath: expected });
+      expect(mocks.loginForm).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    [
+      "/app/prj_example/keyword-research?seed=ai%20tools%20directory",
+      "/app/prj_example/keyword-research?seed=ai%20tools%20directory",
+    ],
+    [["/app/prj_example/dashboard", "//evil.example.com"], "/app/prj_example/dashboard"],
+    ["//evil.example.com", null],
+    [undefined, null],
+  ])("passes only a validated demo next path for %j", async (next, expected) => {
+    await renderLoginPage(
+      {
+        DEMO_MODE: undefined,
+        READ_ONLY_DEMO: "1",
+        DEMO_FIXED_OTP: undefined,
+        ALLOW_INSECURE_FIXED_OTP: undefined,
+        DEMO_USER_ID: "usr_abcdefghijklmnopqrstuvwx",
+        DEMO_PROJECT_ID: "prj_abcdefghijklmnopqrstuvwx",
+      },
+      { next },
+    );
+    expect(mocks.exploreDemo).toHaveBeenCalledWith({ nextPath: expected });
+    expect(mocks.loginForm).not.toHaveBeenCalled();
+  });
+
   // Static prerendering freezes runtime auth settings, hiding demo credentials set
   // by container deployments.
   it("opts out of static prerendering", () => {
@@ -144,6 +209,32 @@ describe("login page runtime rendering", () => {
     expect(html).toContain("sig=signed-query");
     expect(html).toContain("ba_param=client_id&amp;ba_param=ba_param");
     expect(html).toContain("owner=1&amp;switch=1");
+  });
+
+  it("preserves signed OAuth parameters when switching from Owner back to Viewer", async () => {
+    const { html, props } = await renderLoginPage(
+      {
+        DEMO_MODE: "editable",
+        READ_ONLY_DEMO: undefined,
+        DEMO_USER_ID: "usr_abcdefghijklmnopqrstuvwx",
+        DEMO_OWNER_ID: "usr_zyxwvutsrqponmlkjihgfedc",
+        DEMO_PROJECT_ID: "prj_abcdefghijklmnopqrstuvwx",
+      },
+      {
+        owner: "1",
+        switch: "1",
+        client_id: "mcp-client",
+        sig: "signed-query",
+        ba_param: ["client_id", "ba_param"],
+        next: "/oauth/consent",
+      },
+    );
+    expect(props.returnTo).toBe("/oauth/consent");
+    expect(html).toContain("client_id=mcp-client");
+    expect(html).toContain("sig=signed-query");
+    expect(html).toContain("ba_param=client_id&amp;ba_param=ba_param");
+    expect(html).not.toContain("owner=1");
+    expect(html).toContain("switch=1");
   });
 
   it("removes the Compose demonstration from the left column", async () => {

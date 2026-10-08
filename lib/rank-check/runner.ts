@@ -8,10 +8,12 @@ import {
   LIST_PROVIDER_RATE_CONTEXT,
   type ResolveProviderRateInput,
 } from "@/lib/provider-rates/resolver";
+import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { consumeProviderLimit, writeCooldown } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
 import type {
@@ -186,6 +188,11 @@ async function runCheckScoped(input: RunCheckInput): Promise<RankCheckRunResult>
           provider: provider.id,
           keywordId: input.keyword.id,
           unit: allocation.allocationUnit,
+          credentialVersion: ownCredentialVersion(
+            provider.id,
+            input.connection.id,
+            input.connection.credentialsEncrypted,
+          ),
           estimate: {
             cents: (
               estimatedRankCheckCostCents(
@@ -214,6 +221,7 @@ async function runCheckScoped(input: RunCheckInput): Promise<RankCheckRunResult>
       credentials: journal ? { ...credentials, usageObserver: journal.observer } : credentials,
     });
   } catch (error) {
+    if (error instanceof DeploymentAdmissionExhaustedError) throw error;
     if (error instanceof ProviderUsagePersistenceError) throw error;
     if (execution && (!execution.started || execution.costCents === null)) {
       throw new ProviderUsagePersistenceError({ cause: error });

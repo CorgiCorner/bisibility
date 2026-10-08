@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "bisibility",
   "displayName": "Bisibility",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Connect Claude Code to Bisibility through OAuth-protected MCP and run evidence-backed SEO workflows.",
   "author": {
     "name": "CorgiCorner",

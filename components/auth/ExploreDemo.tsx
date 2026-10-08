@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/Button";
 import { authClient } from "@/lib/auth/client";
 import { signInRedirectUrl } from "@/lib/auth/sign-in-redirect";
 import { DEMO_ENTRY_CODE } from "@/lib/demo/config";
+import { demoNextPath } from "@/lib/demo/demo-next-path";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-export function ExploreDemo() {
+export function ExploreDemo({ nextPath }: { nextPath?: string | null }) {
   const t = useTranslations("auth.demo");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,9 @@ export function ExploreDemo() {
       );
       const result = response.data;
       const oauthRedirect = signInRedirectUrl(response, window.location.origin);
-      const destination = oauthRedirect ?? (result?.url?.startsWith("/app/") ? result.url : null);
+      const destination =
+        oauthRedirect ??
+        (result?.url?.startsWith("/app/") ? (demoNextPath(nextPath) ?? result.url) : null);
       if (response.error || !destination) {
         throw new Error(t("error"));
       }

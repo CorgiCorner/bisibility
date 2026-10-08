@@ -1,0 +1,30 @@
+// Content-free provider billing journal survives deletion of application records.
+model MeteringImportFamily {
+  family_id String @id
+  latest_import_id String
+  latest MeteringImport @relation("MeteringLatestImport", fields: [latest_import_id], references: [import_id], onDelete: NoAction, onUpdate: NoAction, map: "metering_import_latest_fk")
+  imports MeteringImport[] @relation("MeteringImportFamily")
+
+  @@map("metering_import_family")
+}
+
+model MeteringImport {
+  import_id String @id
+  family_id String
+  namespace String
+  principal String
+  connection String
+  provider String
+  file_hash String
+  window_from DateTime @db.Timestamptz
+  window_to DateTime @db.Timestamptz
+  recorded_at DateTime @db.Timestamptz
+  identity String
+  body Json
+  family MeteringImportFamily @relation("MeteringImportFamily", fields: [family_id], references: [family_id], onDelete: NoAction, onUpdate: NoAction)
+  latestIn MeteringImportFamily[] @relation("MeteringLatestImport")
+
+  @@unique([family_id, file_hash])
+  @@index([namespace, principal, connection, window_from, window_to], map: "metering_import_scope_window_idx")
+  @@map("metering_import")
+}

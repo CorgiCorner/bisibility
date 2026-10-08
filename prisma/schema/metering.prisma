@@ -16,6 +16,7 @@ model MeteringOperation {
   updated_at             DateTime          @db.Timestamptz
   input                  Json
   warnings               Json
+  alerts                 Json              @default("[]")
   receipts               MeteringReceipt[]
   commands               MeteringCommand[]
   events                 MeteringEvent[]
@@ -143,4 +144,66 @@ model MeteringShadow {
   @@id([namespace, operation_id])
   @@index([namespace, project_id, created_at], map: "metering_shadow_project_created")
   @@map("metering_shadow")
+}
+
+model MeteringAlert {
+  alert_key String @id
+  namespace String
+  budget_id String
+  epoch String
+  threshold String
+
+  @@unique([namespace, budget_id, epoch, threshold])
+  @@index([namespace, budget_id, epoch], map: "metering_alert_budget_idx")
+  @@map("metering_alert")
+}
+
+model MeteringRequestCommand {
+  namespace String
+  command_id String
+  identity_hash String
+
+  @@id([namespace, command_id])
+  @@map("metering_request_command")
+}
+
+model MeteringRequestCount {
+  bucket_key String @id
+  namespace String
+  day DateTime @db.Date
+  body Json
+  count Decimal @db.Decimal(38,0)
+
+  @@index([namespace, day], map: "metering_request_count_window_idx")
+  @@map("metering_request_count")
+}
+
+// Minimal BYOK accounting identity survives a business project's cascading deletion.
+model MeteringUsageEvidence {
+  id                String   @id
+  namespace         String?
+  principal         String
+  projectId         String
+  connectionId      String
+  provider          String
+  feature           String
+  source            String
+  credentialKind    String?
+  credentialId      String?
+  correlationId     String
+  unit              String
+  estimate          Json
+  createdAt         DateTime
+  updatedAt         DateTime @default(now()) @updatedAt
+  receipt           Json?
+  proofVersion      Int      @default(0)
+  receiptId         String?
+  providerRequestId String?
+  canonicalId       String?
+  discarded         Boolean  @default(false)
+  measurementStatus String   @default("unknown")
+
+  @@index([projectId, principal, createdAt], map: "metering_usage_evidence_project_principal_idx")
+  @@index([connectionId, correlationId, measurementStatus], map: "metering_usage_evidence_pending_idx")
+  @@map("metering_usage_evidence")
 }

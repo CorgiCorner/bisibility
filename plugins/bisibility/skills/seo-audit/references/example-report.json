@@ -1,0 +1,107 @@
+{
+  "project_id": "prj_a00000000000000000000000",
+  "kind": "seo_audit",
+  "title": "SEO audit: example.com - 2026-10-05 (fictional fixture)",
+  "idempotency_key": "fixture-seo-audit-1",
+  "body": {
+    "version": 1,
+    "summary": "The sampled buying page returns HTTP 404. Fix or redirect it before expanding content.",
+    "context": {
+      "goal": "Help teams evaluate the product (fixture assumption)",
+      "assumptions": ["Fictional fixture; no live customer data."]
+    },
+    "coverage": {
+      "crawl_id": "agr_b00000000000000000000000",
+      "state": "partial",
+      "stop_reason": "page_limit",
+      "limits": {
+        "max_pages": 2,
+        "max_requests": 20,
+        "max_duration_ms": 15000,
+        "max_page_bytes": 524288
+      },
+      "sampled_urls": ["https://example.com/", "https://example.com/pricing"],
+      "limitations": [
+        "Bounded HTTP sample; no JavaScript or Lighthouse.",
+        "Search-engine indexing and full content were not verified."
+      ]
+    },
+    "recommendations": [
+      {
+        "priority": 1,
+        "category": "technical",
+        "action": "Restore /pricing or redirect it to the current buying page.",
+        "urls": ["https://example.com/pricing"],
+        "evidence_ids": ["crawl-pricing"],
+        "rationale": "The sampled pricing URL returned 404; its intended role is a fixture assumption.",
+        "benefit": "Make this buying path available; traffic and revenue impact remain unknown.",
+        "effort": "Small if a replacement page exists.",
+        "confidence": "high",
+        "uncertainty": "The crawl cannot establish visitor loss or the intended replacement URL.",
+        "verification": "Fetch the corrected URL and confirm the intended content, status and internal links."
+      },
+      {
+        "priority": 2,
+        "category": "content",
+        "action": "Review the homepage headings for a clear audience and product promise.",
+        "urls": ["https://example.com/"],
+        "evidence_ids": ["crawl-home"],
+        "rationale": "The sampled title is only Example; this is a metadata signal, not proof of thin body content.",
+        "benefit": "Clarify page intent for buyers after confirming the full page.",
+        "effort": "Manual page review before editing.",
+        "confidence": "low",
+        "uncertainty": "No full body, query demand or competitor evidence was collected.",
+        "verification": "Read rendered main content and check whether it answers the target audience question."
+      }
+    ],
+    "checked": [
+      {
+        "candidate": "AI answer content",
+        "decision": "Deferred: no observed dataset. This is the strongest alternative but its impact is unverified."
+      }
+    ],
+    "visibility": {
+      "observed": "Unavailable; no recorded AI visibility report.",
+      "synthetic": "Not run; synthetic answers are not observed visibility."
+    },
+    "costs": {
+      "provider_cost_cents": 0,
+      "funding": "No paid provider calls; BYOK/credits not inspected.",
+      "paid_extensions": "Skipped; no spending approval."
+    },
+    "evidence": [
+      {
+        "id": "crawl-pricing",
+        "type": "http_crawl",
+        "source_tool": "get_site_audit",
+        "report_id": "agr_b00000000000000000000000",
+        "url": "https://example.com/pricing",
+        "observed_at": "2026-10-05T19:00:00.000Z",
+        "retrieved_at": "2026-10-05T19:00:02.000Z",
+        "fact": "Fictional fixture: pricing response status was 404."
+      },
+      {
+        "id": "crawl-home",
+        "type": "http_crawl",
+        "source_tool": "get_site_audit",
+        "report_id": "agr_b00000000000000000000000",
+        "url": "https://example.com/",
+        "observed_at": "2026-10-05T19:00:00.000Z",
+        "retrieved_at": "2026-10-05T19:00:02.000Z",
+        "fact": "Fictional fixture: homepage status 200, title Example, H1 Example."
+      }
+    ]
+  },
+  "provenance": {
+    "skill": "seo-audit",
+    "skill_version": "0.2.0",
+    "agent": "fixture-author (not a live agent run)",
+    "audited_at": "2026-10-05T19:00:02.000Z",
+    "instance": "https://bisibility.example",
+    "source_origin": "fictional_fixture",
+    "source_report_ids": ["agr_b00000000000000000000000"],
+    "limitations": [
+      "Illustrates format only; never save this fixture as an observed customer audit."
+    ]
+  }
+}

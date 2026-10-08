@@ -240,10 +240,10 @@ describe("AgentInstallList", () => {
     fireEvent.click(agentButton("ChatGPT"));
 
     const note = screen.getByText(
-      "Settings, Apps, Advanced settings, enable developer mode, then add the URL as a custom MCP app.",
+      "Open ChatGPT Plugins, select +, then Add custom MCP server. Use the MCP URL and OAuth.",
     );
     const caveat = screen.getByText(
-      "ChatGPT shows only read-only tools on individual plans; write actions such as rank checks and backlink analysis need a Business or Enterprise workspace with developer mode. Read-only tools cover stored reports and cost estimates.",
+      "Access depends on your workspace policy. This bisibility connection requests read-only access.",
     );
     expect(note).toHaveClass("text-fg-muted");
     expect(caveat.tagName).toBe("P");

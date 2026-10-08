@@ -10,6 +10,7 @@ import "./data-table-borders.browser.test";
 import "./data-table-empty.browser.test";
 import "./data-table-density-menu.browser.test";
 import "./data-table-scroll.browser.test";
+import "./data-table-columns.browser.test";
 
 const composedStories = composeStories(storyModule, preview);
 const storyEntries = Object.entries(composedStories);

@@ -40,6 +40,24 @@ describe("bounded site crawl", () => {
     expect(result.pages[0].issues.map((issue) => issue.code)).toContain("broken_internal_link");
     expect(result.pages[2].issues[0].code).toBe("robots_disallowed");
   });
+  it("preserves a safe failure category without saving raw transport secrets", async () => {
+    const request = vi.fn(async (input: URL | RequestInfo) => {
+      if (String(input).endsWith("/robots.txt")) return new Response("", { status: 404 });
+      throw new TypeError("fetch failed", {
+        cause: { code: "CERT_HAS_EXPIRED", message: "internal certificate token=secret-value" },
+      });
+    });
+    const result = await crawlSite("example.com", 10, {
+      fetch: request as typeof fetch,
+      resolveHost,
+    });
+    expect(result).toMatchObject({ state: "partial", stopReason: "finished" });
+    expect(result.pages[0]).toMatchObject({
+      status: null,
+      issues: [{ code: "fetch_failed", message: "The secure connection could not be verified." }],
+    });
+    expect(JSON.stringify(result)).not.toContain("secret-value");
+  });
   it("never fetches a robots-disallowed redirected destination", async () => {
     const request = vi.fn(async (input: URL | RequestInfo) => {
       if (String(input).endsWith("/robots.txt"))

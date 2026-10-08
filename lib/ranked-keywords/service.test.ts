@@ -317,13 +317,13 @@ describe("ranked-keyword service", () => {
     await run();
     expect(mocks.assertBudget).toHaveBeenCalledWith("project_1", expect.any(Date), {
       capCents: 5_000,
-      estimatedCostCents: 2,
+      estimatedCostCents: 2.4,
     });
   });
 
   it("refuses the paid call when the page estimate exceeds max_cost_cents", async () => {
     await expect(run({ maxCostCents: 1 })).resolves.toEqual({
-      estimatedCostCents: 2,
+      estimatedCostCents: 2.4,
       ok: false,
       reason: "cost_limit_exceeded",
     });
@@ -333,7 +333,7 @@ describe("ranked-keyword service", () => {
   });
 
   it("proceeds when the page estimate is within max_cost_cents", async () => {
-    await expect(run({ maxCostCents: 2 })).resolves.toMatchObject({ ok: true });
+    await expect(run({ maxCostCents: 2.4 })).resolves.toMatchObject({ ok: true });
     expect(mocks.fetchPage).toHaveBeenCalledOnce();
   });
 

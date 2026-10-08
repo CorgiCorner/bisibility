@@ -7,8 +7,10 @@ import { updateProviderConnectionAllocationAction } from "@/lib/actions/provider
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { getResolvedDateFormat } from "@/lib/dates/request";
+import { getProjectMeteringUsage } from "@/lib/metering/user-data";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import { getSettings } from "@/lib/queries/settings";
+import { MeterUsageCard } from "./MeterUsageCard";
 
 export async function IntegrationUsagePanel({
   projectRef,
@@ -18,10 +20,11 @@ export async function IntegrationUsagePanel({
   editBudget: boolean;
 }>) {
   const { resolved: dateFormat } = await getResolvedDateFormat();
-  const [settings, access, runtime] = await Promise.all([
+  const [settings, access, runtime, metering] = await Promise.all([
     getSettings(projectRef, { dateFormat }),
     requireReadableProject(projectRef),
     resolveRegionalDocumentLocale(),
+    getProjectMeteringUsage(projectRef),
   ]);
   // A nested boundary replaces its parent's payload, so the settings-card chrome this panel
   // renders inside has to be restated here: SettingsCard reads `projectSettingsShell.card`.
@@ -56,6 +59,7 @@ export async function IntegrationUsagePanel({
           updateProviderAllocation={updateProviderConnectionAllocationAction}
           usage={settings.usage}
         />
+        <MeterUsageCard data={metering} />
         {budgetExtension?.content}
       </div>
     </FeatureMessagesProvider>

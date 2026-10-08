@@ -8,6 +8,7 @@ import * as rankDepth from "@/lib/serp/rank-depth";
 import { chartColors } from "@/lib/theme/chart-colors";
 import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
+import { useTranslations } from "next-intl";
 import { type TrafficColumnLabels, trafficColumns } from "./grid-columns-traffic";
 import { KeywordChangeCell } from "./KeywordChangeCell";
 import type { KeywordColumnActions } from "./keyword-column-actions";
@@ -51,14 +52,16 @@ export function scheduleTargetsForRow(row: KeywordRow): ScheduleCellTarget[] {
   return (parent?.aggregate.children ?? [row]).map(keywordScheduleTarget);
 }
 
-function DeviceCell({ row }: Readonly<{ row: KeywordRow }>) {
+export function DeviceCell({ row }: Readonly<{ row: KeywordRow }>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
+  const parent = marketGridParent(row);
   const Icon = row.device.toLowerCase() === "mobile" ? DeviceMobile : Monitor;
   return (
     <span className="inline-flex max-w-full items-center gap-1 whitespace-nowrap font-sans tabular-nums text-[11px] leading-none text-fg-muted">
-      {!marketGridParent(row) ? (
-        <Icon aria-hidden className="shrink-0" size={13} weight="regular" />
-      ) : null}
-      <span className="truncate">{row.device}</span>
+      {!parent ? <Icon aria-hidden className="shrink-0" size={13} weight="regular" /> : null}
+      <span className="truncate">
+        {parent ? t("targetCount", { count: parent.aggregate.activeTargetCount }) : row.device}
+      </span>
     </span>
   );
 }

@@ -1,12 +1,16 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { Prisma } from "@/lib/generated/prisma/client";
+import { Prisma, type PrismaClient } from "@/lib/generated/prisma/client";
 import { notifyOps } from "@/lib/ops/notify";
 import { recordProviderUsage } from "@/lib/provider-usage/recorder";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import { queuedBatchAttribution } from "@/lib/rank-check/queued-attribution";
-import { pendingUnknownReceipts, settlePendingUnknownReceipt } from "./reconcile-pending";
+import {
+  pendingUnknownReceipts,
+  repairMissingByokReceipt,
+  settlePendingUnknownReceipt,
+} from "./reconcile-pending";
 
 export const PROVIDER_USAGE_RECONCILED_AT_SETTING_KEY = "provider_usage_reconciled_at";
 export const PROVIDER_USAGE_OVERDUE_THRESHOLD_MS = 15 * 60_000;
@@ -21,6 +25,7 @@ type ProviderUsageReceiptRow = {
   costCents: string | number;
   credentialId: string | null;
   credentialKind: string | null;
+  entryId: string | null;
   keywordId: string;
   projectId: string;
   provider: string;
@@ -32,6 +37,7 @@ type ProviderUsageReceiptRow = {
 };
 
 export type ProviderUsageReconcileClient = {
+  $transaction: PrismaClient["$transaction"];
   $queryRaw: Prisma.TransactionClient["$queryRaw"];
   providerCostEntry: Pick<
     Prisma.TransactionClient["providerCostEntry"],
@@ -83,6 +89,7 @@ async function missingReceipts(client: ProviderUsageReconcileClient, fetchLimit:
       -- a submission. Never the reconciliation wall clock, which would move
       -- spend into the wrong billing period.
       COALESCE(b."submittedAt", t."createdAt") AS "billingAt",
+      evidence.id AS "entryId",
       t."costCents" AS "costCents",
       b."credentialId" AS "credentialId",
       b."credentialKind" AS "credentialKind",
@@ -96,10 +103,20 @@ async function missingReceipts(client: ProviderUsageReconcileClient, fetchLimit:
       b."trigger" AS "trigger"
     FROM "queued_rank_check_tasks" t
     JOIN "queued_rank_check_batches" b ON b."id" = t."batchId"
+    LEFT JOIN LATERAL (
+      SELECT CASE WHEN count(*)=1 THEN min(u.id) ELSE NULL END AS id
+      FROM metering_usage_evidence u
+      WHERE u."connectionId"=b."connectionId" AND u."projectId"=b."projectId"
+        AND u."correlationId"=t.id AND u.provider=b.provider AND u.discarded=false
+        AND u."canonicalId" IS NULL
+        AND (u."providerRequestId" IS NULL OR u."providerRequestId"=t."providerTaskId")
+    ) evidence ON TRUE
     WHERE t."providerTaskId" IS NOT NULL
       AND t."costCents" IS NOT NULL
       AND t."providerTag" IS NOT NULL
       AND b."connectionId" IS NOT NULL
+      -- Original transport attribution, never the connection's present funding source.
+      AND t."providerTag" LIKE '%;cs=own;%'
       AND NOT EXISTS (
         SELECT 1
         FROM "provider_cost_entries" e
@@ -127,7 +144,7 @@ export async function reconcileProviderUsage(
   const hasMore = fetched.length > remaining || pending.length > limit;
   const receipts = fetched.slice(0, remaining);
   for (const receipt of receipts) {
-    const status = await recordProviderUsage(client, {
+    const input = {
       attribution: receiptAttribution(receipt),
       createdAt: receipt.billingAt,
       connectionId: receipt.connectionId,
@@ -138,7 +155,10 @@ export async function reconcileProviderUsage(
       provider: receipt.provider,
       providerRequestId: receipt.providerRequestId,
       usageQuantity: 1,
-    });
+    };
+    const status = receipt.entryId
+      ? await repairMissingByokReceipt(client, receipt.entryId, input)
+      : await recordProviderUsage(client, input);
     if (status.status !== "skipped") reconciled += 1;
   }
   const unconfirmed = await client.providerCostEntry.count({

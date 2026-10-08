@@ -5,6 +5,7 @@ import type { State } from "@usagekit/store/reference";
 import {
   currentBudgets,
   difference,
+  historicalBudget,
   lockScopes,
   matchingScopes,
   updateUsage,
@@ -22,6 +23,9 @@ export const newState = (clock: Clock): State => ({
   commands: new Map(),
   leaseKinds: new Map(),
   warnings: new Map(),
+  reserveAlerts: new Map(),
+  alerts: new Set(),
+  requestCommands: new Map(),
   cursors: new Map(),
 });
 export async function load(sql: Sql, state: State, namespace: string, id: string) {
@@ -32,6 +36,7 @@ export async function load(sql: Sql, state: State, namespace: string, id: string
   state.operations.set(k, op);
   state.identities.set(k, identity(decode<ReserveInput>(row.input)));
   state.warnings.set(k, decode(row.warnings));
+  state.reserveAlerts.set(k, decode(row.alerts));
   if (op.lease && row.lease_kind) state.leaseKinds.set(op.lease.leaseId, row.lease_kind);
 }
 export async function loadReplay(sql: Sql, state: State, input: OperationCommand) {
@@ -66,26 +71,66 @@ export async function lockAccounting(sql: Sql, state: State, input?: ReserveInpu
   if (input) {
     const scopes = matchingScopes(input);
     await lockScopes(sql, scopes);
-    state.budgets = await currentBudgets(sql, input.scope.namespace, scopes, input.surface);
+    state.budgets = await currentBudgets(
+      sql,
+      input.scope.namespace,
+      scopes,
+      input.surface,
+      input.source,
+    );
   }
   const ids = new Set(state.budgets.map((b) => canonical([b.scope.namespace, b.id])));
   for (const op of state.operations.values())
     for (const e of op.budgetEpochs) ids.add(canonical([op.scope.namespace, e.budgetId]));
   for (const id of [...ids].sort()) await lock(sql, `metering:budget:${id}`);
+  for (const op of state.operations.values())
+    for (const epoch of op.budgetEpochs)
+      if (
+        !state.budgets.some(
+          (b) =>
+            b.scope.namespace === op.scope.namespace &&
+            b.id === epoch.budgetId &&
+            b.version === epoch.budgetVersion,
+        )
+      )
+        state.budgets.push(
+          await historicalBudget(sql, op.scope.namespace, epoch.budgetId, epoch.budgetVersion),
+        );
 }
 export async function projectUsage(sql: Sql, state: State, before: Map<string, Operation>) {
   const counters = new Map<string, Awaited<ReturnType<typeof usage>>>();
   for (const budget of state.budgets) {
-    const epoch = resolveWindow(budget.window, state.clock.now()).epoch;
-    counters.set(canonical([budget.id, epoch]), await usage(sql, budget, epoch));
+    const epochs = new Set([resolveWindow(budget.window, state.clock.now()).epoch]);
+    for (const op of state.operations.values())
+      if (op.scope.namespace === budget.scope.namespace)
+        for (const epoch of op.budgetEpochs)
+          if (epoch.budgetId === budget.id && epoch.budgetVersion === budget.version)
+            epochs.add(epoch.epoch);
+    for (const epoch of epochs) {
+      counters.set(
+        canonical([budget.scope.namespace, budget.id, epoch]),
+        await usage(sql, budget, epoch),
+      );
+      if (budget.alerts?.length) {
+        const alerts = await sql.query<{
+          alert_key: string;
+        }>(Prisma.sql`SELECT alert_key FROM metering_alert
+          WHERE namespace=${budget.scope.namespace} AND budget_id=${budget.id} AND epoch=${epoch}`);
+        for (const alert of alerts) state.alerts.add(alert.alert_key);
+      }
+    }
   }
   state.readBudgetUsage = (budget: Budget, epoch: string) => {
-    const baseline = counters.get(canonical([budget.id, epoch]));
+    const baseline = counters.get(canonical([budget.scope.namespace, budget.id, epoch]));
     if (!baseline) throw new Error("Missing locked budget projection");
     let used = baseline.used,
       reserved = baseline.reserved;
     for (const [pk, op] of state.operations) {
-      if (!op.budgetEpochs.some((e) => e.budgetId === budget.id && e.epoch === epoch)) continue;
+      if (
+        op.scope.namespace !== budget.scope.namespace ||
+        !op.budgetEpochs.some((e) => e.budgetId === budget.id && e.epoch === epoch)
+      )
+        continue;
       const delta = difference(before.get(pk) ?? null, op, budget.unit);
       used = plus(used, delta.used);
       reserved = plus(reserved, delta.reserved);
@@ -103,7 +148,8 @@ export async function persist(
   for (const [pk, op] of state.operations) {
     const old = before.operations.get(pk);
     if (old && canonical(old) === canonical(op)) continue;
-    if (!old) await insert(sql, op, state.warnings.get(pk) ?? []);
+    if (!old)
+      await insert(sql, op, state.warnings.get(pk) ?? [], state.reserveAlerts.get(pk) ?? []);
     else if (
       !(await update(
         sql,
@@ -132,5 +178,11 @@ export async function persist(
       VALUES(${key(namespace, id)},${commandId},${identityBody.kind},${hash(entry.identity)},${encode(identityBody.input)}::jsonb,${encode(entry.result)}::jsonb)`);
   }
   for (const op of changed) await event(sql, op);
+  for (const value of state.alerts) {
+    if (before.alerts.has(value)) continue;
+    const [namespace, budgetId, epoch, threshold] = JSON.parse(value) as string[];
+    await sql.execute(Prisma.sql`INSERT INTO metering_alert(alert_key,namespace,budget_id,epoch,threshold)
+      VALUES(${value},${namespace},${budgetId},${epoch},${threshold})`);
+  }
 }
 export class VersionConflict extends Error {}

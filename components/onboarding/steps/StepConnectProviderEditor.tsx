@@ -10,6 +10,8 @@ type Props = {
   cards: ReactNode;
   credentials: ReactNode;
   hidden: ReactNode;
+  onDataSourceConnected?: () => void;
+  projectId?: string;
   providerError?: ReactNode;
   showHeading?: boolean;
 };
@@ -21,6 +23,8 @@ export function StepConnectProviderEditor({
   cards,
   credentials,
   hidden,
+  onDataSourceConnected,
+  projectId,
   providerError,
   showHeading = true,
 }: Readonly<Props>) {
@@ -34,7 +38,7 @@ export function StepConnectProviderEditor({
           <p className="m-0 mt-2 text-[13px] leading-relaxed text-fg-muted">{t("description")}</p>
         </div>
       ) : null}
-      <OnboardingDataSourceSlot>
+      <OnboardingDataSourceSlot onDataSourceConnected={onDataSourceConnected} projectId={projectId}>
         {cards}
         {providerError}
         {credentials}

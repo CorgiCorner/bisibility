@@ -1,6 +1,6 @@
 {
   "api_contract": "v1",
-  "verified_on": "2026-09-12",
+  "verified_on": "2026-10-07",
   "clients": {
     "application": {
       "component": "Application",
@@ -21,7 +21,7 @@
     "typescript": {
       "component": "TypeScript SDK",
       "distribution": "@bisibility/sdk",
-      "version": "0.12.0",
+      "version": "0.14.1",
       "runtime": "Node 18+",
       "artifact": "examples/ts/package.json",
       "maturity": "independently versioned"
@@ -29,15 +29,15 @@
     "python": {
       "component": "Python SDK",
       "distribution": "bisibility",
-      "version": "0.9.0",
-      "runtime": "Python 3",
+      "version": "0.11.1",
+      "runtime": "Python 3.10+",
       "artifact": "examples/python/requirements.txt",
       "maturity": "independently versioned; package metadata may mark it Alpha"
     },
     "go": {
       "component": "Go SDK",
       "distribution": "bisibility.com/sdk-go",
-      "version": "v0.10.0",
+      "version": "v0.12.0",
       "runtime": "Go 1.22+",
       "artifact": "examples/go/go.mod",
       "maturity": "independently versioned"
@@ -46,7 +46,7 @@
       "component": "CLI",
       "distribution": "@bisibility/cli",
       "version": "0.7.0",
-      "runtime": "Node 18+",
+      "runtime": "Node 22+",
       "artifact": "examples/cli/README.md",
       "maturity": "independently versioned"
     },

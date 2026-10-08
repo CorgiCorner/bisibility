@@ -1,3 +1,5 @@
+import { type AuditTransport, type CrawlBudget, fetchAuditPage } from "./fetch";
+
 function pathMatches(pattern: string, path: string) {
   const anchored = pattern.endsWith("$");
   const parts = (anchored ? pattern.slice(0, -1) : pattern).split("*");
@@ -38,4 +40,51 @@ export function robotsDisallows(text: string, pathname: string) {
     .filter((rule) => pathMatches(rule.path, pathname))
     .sort((a, b) => b.path.length - a.path.length || Number(b.allow) - Number(a.allow));
   return matching[0] ? !matching[0].allow : false;
+}
+
+export function auditRobotsPolicy(
+  target: URL,
+  budget: CrawlBudget,
+  transport: AuditTransport,
+  limitations: string[],
+) {
+  const policies = new Map<string, Promise<string>>();
+  let unavailable = false;
+  async function read(origin: string) {
+    try {
+      const fetched = await fetchAuditPage(new URL("/robots.txt", origin), budget, transport, {
+        checkRobots: false,
+      });
+      if (fetched.status !== 200 && fetched.status !== 404) {
+        limitations.push(`robots.txt returned HTTP ${fetched.status}.`);
+        if (origin !== target.origin || new URL(fetched.url).origin !== target.origin)
+          throw new Error("Canonical origin robots.txt could not be read.");
+      }
+      const text = fetched.status === 200 ? fetched.html : "";
+      const final = new URL(fetched.url);
+      if ([200, 404].includes(fetched.status) && final.pathname === "/robots.txt")
+        policies.set(final.origin, Promise.resolve(text));
+      return text;
+    } catch {
+      unavailable = true;
+      const message = "robots.txt could not be read; no additional paths were crawled.";
+      if (!limitations.includes(message)) limitations.push(message);
+      if (origin !== target.origin)
+        throw new Error("Canonical origin robots.txt could not be read.");
+      return "";
+    }
+  }
+  function load(origin: string) {
+    let policy = policies.get(origin);
+    if (!policy) {
+      policy = read(origin);
+      policies.set(origin, policy);
+    }
+    return policy;
+  }
+  return {
+    load,
+    unavailable: () => unavailable,
+    disallowed: async (url: URL) => robotsDisallows(await load(url.origin), url.pathname),
+  };
 }

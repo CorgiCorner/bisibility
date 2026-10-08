@@ -147,7 +147,7 @@ export function InstallPageContent({
           {/* nav-active is #EDEAE1, the exact value the design calls surface-hover; bg-sunken is
               a 30% alpha that composites to near-invisible on the card. */}
           <span className="ml-auto inline-flex items-center rounded-full bg-nav-active px-[9px] py-[3px] font-sans text-[10px] font-semibold text-yellow-text">
-            {t("skills.planned")}
+            {t("skills.availableCount")}
           </span>
         </div>
         <p className="m-0 mb-3 text-[12.5px] text-fg-muted">{t("skills.description")}</p>
@@ -157,10 +157,23 @@ export function InstallPageContent({
               className="flex min-h-[44px] w-full flex-col gap-0.5 border-t border-border px-2 py-[9px]"
               key={skill.name}
             >
-              <span className="truncate font-sans text-[12px] font-semibold text-fg">
-                {skill.name}
-              </span>
+              {skill.archivePath ? (
+                <a
+                  className="truncate font-sans text-[12px] font-semibold text-accent-text underline"
+                  href={skill.archivePath}
+                  download
+                >
+                  {skill.name}
+                </a>
+              ) : (
+                <span className="truncate font-sans text-[12px] font-semibold text-fg">
+                  {skill.name}
+                </span>
+              )}
               <span className="text-[11.5px] text-fg-muted">{t(`skills.${skill.name}`)}</span>
+              <span className="text-[10.5px] text-fg-muted">
+                {t(skill.archivePath ? "skills.available" : "skills.planned")}
+              </span>
             </div>
           ))}
         </div>

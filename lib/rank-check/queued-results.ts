@@ -4,6 +4,7 @@ import { resolveExpectedUrlForKeyword } from "@/lib/expected-url/keyword";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { resumeQueuedMetering, settleQueuedMetering } from "@/lib/metering/queued-context";
 import { withShadowRequest } from "@/lib/metering/shadow-context";
+import { ownAdmission } from "@/lib/provider-usage/admission-extension";
 import { chargedProviderCostCents } from "@/lib/providers/call-error";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
@@ -32,11 +33,10 @@ import {
 } from "./queued-hosted-results";
 import { deferQueuedRankCheckBatch, finalizeQueuedBatchState } from "./queued-lifecycle";
 import { authorizeQueuedRankCheckBatch } from "./queued-mode";
+import { recoverOwnQueuedResult } from "./queued-own-usage";
 import {
   assertQueuedPersistenceLease,
-  claimQueuedPersistenceLease,
   type QueuedPersistenceLease,
-  transitionQueuedPersistenceLease,
 } from "./queued-persistence-lease";
 import { dataForSeoQueuedEstimate } from "./queued-pricing";
 import { dataForSeoQueuedResponseTask, pollDataForSeoQueue } from "./queued-provider-poll";
@@ -49,28 +49,16 @@ import {
   throwIfQueuedResultAborted,
   throwIfQueuedResultDeadlineReached,
 } from "./queued-result-attempt";
+import { claimQueuedResultTask, terminalizeLease } from "./queued-result-finalization";
 import {
   reconcileTaskWithRankCheck,
   releaseAbortedLease,
   transitionLease,
 } from "./queued-results-lease";
-import { loadComparablePrevious, loadQueuedTask, type QueuedTask } from "./queued-results-load";
+import { loadComparablePrevious, type QueuedTask } from "./queued-results-load";
 import { QUEUED_DEADLINE_REASON } from "./queued-timeouts";
 import { fallbackSchedule, persistFailedRankCheck, persistRankCheck } from "./runner";
 import { computeNextCheckAt } from "./schedule";
-
-async function claimTask(taskId: string) {
-  return prisma.$transaction(async (tx) => {
-    const lease = await claimQueuedPersistenceLease(taskId, tx);
-    if (!lease) return null;
-    return { lease, task: await loadQueuedTask(taskId, tx) };
-  }, queuedResultTransactionOptions);
-}
-function terminalizeLease(lease: QueuedPersistenceLease, state: "completed" | "failed") {
-  return async (tx: Prisma.TransactionClient) => {
-    await transitionQueuedPersistenceLease(lease, ["persisting"], { state }, tx);
-  };
-}
 
 async function persistProviderFailure(
   task: QueuedTask,
@@ -94,6 +82,8 @@ async function persistProviderResult(
   if (!task.providerTaskId) throw new Error("Queued DataForSEO task is missing its provider id.");
   if (!task.batch.connection) throw new Error("DataForSEO connection is unavailable.");
   const recovery = await queuedHostedRecovery(task);
+  const own =
+    !recovery && (await ownAdmission.assertRetrieval(prisma, task.batch.connection.id, [task.id]));
   const credentials =
     recovery?.credentials ??
     resolveProviderCredentials("dataforseo", task.batch.connection.credentialsEncrypted);
@@ -112,16 +102,18 @@ async function persistProviderResult(
   const data = polled.value;
   const providerTask = dataForSeoQueuedResponseTask(
     data,
-    recovery ? task.providerTaskId : undefined,
+    recovery || own ? task.providerTaskId : undefined,
   );
-  const terminalCostCents = recovery
-    ? explicitQueuedGetCostCents(data, task.providerTaskId)
-    : dataForSeoResponseCostCents(data);
-  if (recovery && terminalCostCents === null) return "pending";
+  const terminalCostCents =
+    recovery || own
+      ? explicitQueuedGetCostCents(data, task.providerTaskId)
+      : dataForSeoResponseCostCents(data);
+  if ((recovery || own) && terminalCostCents === null) return "pending";
   const providerFailed =
     !providerTask ||
     (providerTask.status_code !== 20000 &&
       providerTask.status_code !== DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS);
+  if (own) await recoverOwnQueuedResult(task, data, providerFailed);
   const frozenCost = recovery
     ? await recovery.settleTask(task.id, {
         cached: false,
@@ -201,7 +193,7 @@ async function persistProviderResult(
 }
 
 async function persistTask(taskId: string, options: QueuedResultAttemptOptions) {
-  const claimed = await claimTask(taskId);
+  const claimed = await claimQueuedResultTask(taskId);
   if (!claimed) return;
   const { lease, task } = claimed;
   await resumeQueuedMetering(taskId);

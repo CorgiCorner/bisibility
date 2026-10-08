@@ -1,10 +1,32 @@
-import { describe, expect, it } from "vitest";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { describe, expect, it, vi } from "vitest";
 import {
   dataForSeoBillingStatusCode,
   dataForSeoLabsLocationParams,
   envelopeMessage,
   extractDataForSeoBalance,
+  requestEnvelope,
 } from "./dataforseo-client";
+
+it("preserves a known budget refusal without issuing or retrying a paid POST", async () => {
+  const denied = new DeploymentAdmissionExhaustedError("budget"),
+    fetchMock = vi.fn();
+  vi.stubGlobal("fetch", fetchMock);
+  try {
+    await expect(
+      requestEnvelope(
+        "https://api.dataforseo.com/fixture",
+        { method: "POST" },
+        {
+          usageObserver: { begin: vi.fn().mockRejectedValue(denied), settle: vi.fn() },
+        },
+      ),
+    ).rejects.toBe(denied);
+    expect(fetchMock).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
 
 describe("DataForSEO task failures", () => {
   const taskFailure = {

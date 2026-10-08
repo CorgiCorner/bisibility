@@ -18,6 +18,9 @@ const entry: UsageEntry = {
   measurementStatus: "recorded",
   cached: false,
   failed: false,
+  platformPoolId: "provider-account",
+  providerCredentialVersion: "credential-v1",
+  providerCostOwner: "platform-payer",
 };
 function fixture() {
   const clock = createManualClock();
@@ -61,6 +64,82 @@ function fixture() {
   };
 }
 describe("non-authoritative shadow accounting", () => {
+  it("preserves an import and fails closed without a trusted late-proof handler", async () => {
+    const f = fixture();
+    const partial: UsageEntry = {
+      ...entry,
+      providerRequestId: "shadow-native",
+      costCents: "0.6250",
+      usageQuantity: null,
+      measurementStatus: "unknown",
+      costMeasurement: "recorded",
+      quantityMeasurement: "unknown",
+    };
+    await f.engine.begin(partial, { cents: "1", units: "1" });
+    await f.engine.record(partial);
+    const imported = await f.store.importBilling({
+      scope: { namespace: "test", principal: "owner", connection: "conn" },
+      provider: "search",
+      fileHash: "a".repeat(64),
+      window: { from: "2026-09-01T00:00:00.000Z", to: "2026-10-01T00:00:00.000Z" },
+      expectedPreviousImportId: null,
+      attribution: { fundingSource: "byok", costOwner: "owner" },
+      lines: [
+        {
+          providerRequestId: "shadow-native",
+          occurredAt: partial.createdAt.toISOString(),
+          cost: { units: 9000n, currency: "USD" },
+        },
+      ],
+    });
+    expect(imported.outcome).toBe("imported");
+    await f.engine.record({
+      ...partial,
+      proofVersion: 1,
+      usageQuantity: "1.000000",
+      quantityMeasurement: "recorded",
+      measurementStatus: "recorded",
+    });
+    const op = await f.store.getOperation({
+      namespace: "test",
+      principal: "owner",
+      operationId: entry.id,
+    });
+    expect(op?.state).toBe("pending");
+    expect(op?.receipts.at(-1)?.cost.money?.units).toBe(9000n);
+    expect(op?.receipts.at(-1)?.measurements.find((m) => m.unit === "cents")?.quantity?.value).toBe(
+      9000n,
+    );
+    expect(op?.receipts.at(-1)?.measurements.find((m) => m.unit === "units")?.quantity).toBeNull();
+    expect(f.failure).toHaveBeenCalledWith(expect.objectContaining({ proofVersion: 1 }), "record");
+  });
+  it("corrects a measured cost while its independent quantity remains unknown", async () => {
+    const f = fixture();
+    const partial = {
+      ...entry,
+      measurementStatus: "unknown",
+      costMeasurement: "recorded" as const,
+      quantityMeasurement: "unknown" as const,
+      usageQuantity: null,
+      costCents: "0.6250",
+    };
+    await f.engine.begin(partial, { cents: "1", units: "1" });
+    await f.engine.record(partial);
+    await f.engine.record({ ...partial, costCents: "0.9000" });
+    const op = await f.store.getOperation({
+      namespace: "test",
+      principal: "owner",
+      operationId: entry.id,
+    });
+    expect(op?.receipts.at(-1)?.cost.money?.units).toBe(9000n);
+    expect(op?.receipts.at(-1)?.measurements.find((m) => m.unit === "units")).toEqual({
+      unit: "units",
+      certainty: "unknown",
+      quantity: null,
+    });
+    expect(op?.state).toBe("pending");
+    expect(f.failure).not.toHaveBeenCalled();
+  });
   it("records warn as exceeded but settles full cost exactly once", async () => {
     const f = fixture();
     await f.engine.begin(entry, { cents: "1", units: "1" });
@@ -126,8 +205,8 @@ describe("non-authoritative shadow accounting", () => {
       operationId: entry.id,
     });
     expect(operation?.fundingSource).toBe("platform");
-    expect(operation?.platformPools).toEqual(["hosted:search"]);
-    expect(operation?.costOwner).toBe("owner");
+    expect(operation?.platformPools).toEqual(["provider-account"]);
+    expect(operation?.costOwner).toBe("platform-payer");
   });
   it("unknown stays pending and later evidence corrects it after process loss", async () => {
     const f = fixture();

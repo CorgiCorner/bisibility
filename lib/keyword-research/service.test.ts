@@ -508,7 +508,7 @@ describe("keyword research service", () => {
 
   it("returns 422 outcome when a sole research source exceeds max cost", async () => {
     await expect(run({ maxCostCents: 1, mode: "related" })).resolves.toEqual({
-      estimatedCostCents: 1.02,
+      estimatedCostCents: 1.224,
       ok: false,
       reason: "cost_limit_exceeded",
     });

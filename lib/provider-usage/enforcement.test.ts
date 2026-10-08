@@ -2,6 +2,10 @@ import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { describe, expect, it, vi } from "vitest";
 import { assertProviderAllocationAvailable, ProviderAllocationExhaustedError } from "./enforcement";
 
+vi.mock("@/lib/providers/execution-authority", () => ({
+  readDeploymentMeteringPreflightAuthority: vi.fn(async () => "legacy"),
+}));
+
 const catalog = [
   {
     id: "metered",

@@ -1,3 +1,4 @@
+import { auditFailureMessage } from "./failure";
 import {
   AuditRobotsDisallowedError,
   type AuditTransport,
@@ -8,7 +9,7 @@ import {
   MAX_REQUESTS,
 } from "./fetch";
 import { inspectHtml } from "./html";
-import { robotsDisallows } from "./robots";
+import { auditRobotsPolicy } from "./robots";
 import type { SiteAuditPage, SiteAuditResult } from "./schema";
 import { auditTarget } from "./target";
 
@@ -47,23 +48,14 @@ export async function crawlSite(
     origin: target.origin,
     signal: AbortSignal.timeout(MAX_DURATION_MS),
   };
-  let robots = "";
   const limitations = [
     "HTTP crawl only; JavaScript rendering and Lighthouse are not included.",
     "Indexability uses HTTP status, meta robots and X-Robots-Tag; canonical and search-engine indexing are not verified.",
-    "Only the project origin and URLs without query strings are crawled. Links and headings in reports are bounded samples.",
+    "Only the project origin and its exact apex/www canonical redirects are crawled, without changing scheme or port. URLs with query strings are excluded; links and headings are bounded samples.",
   ];
-  try {
-    const fetched = await fetchAuditPage(new URL("/robots.txt", target), budget, transport);
-    if (fetched.status === 200) robots = fetched.html;
-    else if (fetched.status !== 404)
-      limitations.push(`robots.txt returned HTTP ${fetched.status}.`);
-  } catch {
-    limitations.push("robots.txt could not be read; no additional paths were crawled.");
-  }
-  const robotsUnavailable = limitations.includes(
-    "robots.txt could not be read; no additional paths were crawled.",
-  );
+  const robots = auditRobotsPolicy(target, budget, transport, limitations);
+  budget.disallowed = robots.disallowed;
+  await robots.load(target.origin);
   const queue = [target.href];
   const seen = new Set<string>();
   const pages: SiteAuditPage[] = [];
@@ -76,24 +68,12 @@ export async function crawlSite(
     const next = queue.shift();
     if (!next || seen.has(next)) continue;
     seen.add(next);
-    if (robotsDisallows(robots, new URL(next).pathname)) {
-      const page = failedPage(next, "Crawl skipped because robots.txt disallows this URL.");
-      page.issues = [
-        {
-          code: "robots_disallowed",
-          severity: "info",
-          message: "Crawl skipped because robots.txt disallows this URL.",
-        },
-      ];
-      pages.push(page);
-      continue;
-    }
     try {
-      budget.disallowed = (url) => robotsDisallows(robots, url.pathname);
       const fetched = await fetchAuditPage(new URL(next), budget, transport);
       const { page, discovered } = inspectHtml(fetched, next);
       pages.push(page);
-      if (!robotsUnavailable)
+      seen.add(fetched.url);
+      if (!robots.unavailable())
         for (const link of discovered) {
           if (!seen.has(link) && queue.length < 200) queue.push(link);
         }
@@ -105,12 +85,7 @@ export async function crawlSite(
         pages.push(page);
         continue;
       }
-      pages.push(
-        failedPage(
-          next,
-          error instanceof Error ? error.message.slice(0, 300) : "Page could not be fetched.",
-        ),
-      );
+      pages.push(failedPage(next, auditFailureMessage(error)));
     }
   }
   const failed = new Set(
@@ -140,7 +115,7 @@ export async function crawlSite(
     completedAt: new Date(now()).toISOString(),
     state:
       stopReason === "finished" &&
-      !robotsUnavailable &&
+      !robots.unavailable() &&
       pages.every((page) => page.status !== null || page.issues[0]?.code === "robots_disallowed")
         ? "complete"
         : "partial",

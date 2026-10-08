@@ -14,7 +14,7 @@ test("backlinks smoke: analyze, filter, expand, and load more", async ({ page })
   const analyze = page.getByRole("button", { name: "Analyze", exact: true });
   await expect(analyze).toBeDisabled();
   await page.getByRole("textbox", { name: "Backlinks target" }).fill("example.com");
-  const pricedAnalyze = page.getByRole("button", { name: "Analyze ~$0.07" });
+  const pricedAnalyze = page.getByRole("button", { name: "Analyze ~$0.08" });
   await expect(pricedAnalyze).toBeEnabled();
 
   await pricedAnalyze.click();

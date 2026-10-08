@@ -144,7 +144,7 @@ export const colorSchemes = {
     // #616060 is an operator-chosen interactive edge below the WCAG 1.4.11 3:1 floor;
     // contrast.test.ts asserts its narrower floor so further regressions still fail.
     border: "#343333",
-    "border-soft": "#221D15",
+    "border-soft": "#262626",
     "border-control": "#616060",
     "nav-active": "#141414",
     // Neutral mid-gray visible on --bg (#0F0C07) and --bg-elev (#191919); standard

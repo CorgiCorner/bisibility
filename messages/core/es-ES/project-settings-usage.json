@@ -165,6 +165,56 @@
       "reconciliationStale": "La conciliación del uso está retrasada. Los totales mostrados pueden estar incompletos.",
       "appBudgetHelp": "Comprobaciones iniciadas en la aplicación y comprobaciones automáticas programadas.",
       "apiBudgetHelp": "Solicitudes de API, MCP, SDK y CLI. Este presupuesto protege frente al gasto excesivo de los agentes."
+    },
+    "meter": {
+      "title": "Registro de uso",
+      "description": "Observaciones de uso y límites de este proyecto para el mes UTC actual.",
+      "unavailable": "El registro de uso no está disponible. El uso de proveedores y los saldos actuales siguen disponibles arriba.",
+      "restricted": "Solo el propietario del proyecto puede ver los detalles financieros del registro.",
+      "walletAuthority": "La cuenta del proveedor o la cartera de créditos mantiene la autoridad sobre el saldo. Estos límites no representan un saldo disponible.",
+      "period": "{from} a {to} (UTC)",
+      "asOf": "Leído a las {date} (UTC). Esta hora no confirma la actualización de la facturación del proveedor.",
+      "noObservations": "No hay observaciones en el registro para este periodo. El uso no está disponible y no es un cero confirmado.",
+      "unresolved": "{count, plural, one {# operación sin resolver.} other {# operaciones sin resolver.}}",
+      "oldest": "Operación pendiente más antigua: {date} (UTC).",
+      "unknown": "Desconocido",
+      "connection": "Conexión",
+      "retainedConnection": "Conexión histórica",
+      "byok": "Tu cuenta del proveedor",
+      "platform": "Créditos de la cuenta",
+      "providerCost": "Coste observado del proveedor",
+      "customerCharge": "Cargo confirmado en la cuenta",
+      "units": "Unidades",
+      "certainty": "Evidencia",
+      "unknownOperations": "Operaciones con exposición desconocida",
+      "limitsTitle": "Límites del proyecto",
+      "limitsDescription": "Estos son límites configurados del proyecto y de las conexiones. Las cifras observadas pueden cubrir solo parte del periodo. También pueden aplicarse límites de cuenta, credenciales y capacidad compartida. Consultarlos no reserva capacidad.",
+      "noLimits": "No se recibieron límites de proyecto ni de conexión.",
+      "project": "Proyecto",
+      "used": "Usado",
+      "reserved": "Reservado",
+      "remaining": "Restante",
+      "limit": "Límite",
+      "unlimited": "Sin límite",
+      "blocks": "Configurado para bloquear solicitudes por encima del límite cuando la autorización del registro está activa.",
+      "warns": "Configurado para avisar por encima del límite sin bloquear solicitudes.",
+      "hardLimit": "Límite estricto: {value} {unit}.",
+      "resetsAt": "Se restablece el {date} (UTC).",
+      "truncated": "Esta vista tiene un tamaño limitado. Se omiten algunas conexiones, filas de uso u operaciones sin resolver.",
+      "authority": {
+        "legacy": "La contabilidad actual sigue siendo la referencia. Las entradas del registro son observaciones adicionales.",
+        "preparing": "Se está preparando un cambio de contabilidad. Este periodo no está cubierto por completo por el registro.",
+        "active": "Todo el periodo está cubierto por la autorización de operaciones del registro. El proveedor y la cartera mantienen sus propios saldos.",
+        "draining": "Aún se están resolviendo operaciones anteriores. El registro no representa un total completo de este periodo.",
+        "mixed": "Este periodo abarca distintos sistemas de contabilidad. Las observaciones no representan el periodo completo.",
+        "unknown": "No se pudo verificar la cobertura contable de este periodo. No consideres estas observaciones como totales completos."
+      },
+      "certaintyValue": {
+        "measured": "Medido",
+        "estimated": "Estimado",
+        "unknown": "Desconocido"
+      },
+      "usdAmount": "USD {value}"
     }
   }
 }

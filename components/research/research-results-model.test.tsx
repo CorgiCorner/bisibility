@@ -53,8 +53,8 @@ describe("deeperResearchCostCents", () => {
       connections: [{ id: "c1", label: "DataForSEO", provider: "dataforseo" }],
       sources,
     };
-    // Three sources, each base 1 cent + 0.01 cent per item at 500 items.
-    expect(deeperResearchCostCents(result, 500)).toBe(18);
+    // Three sources, each base 1.2 cents + 0.012 cent per item at 500 items.
+    expect(deeperResearchCostCents(result, 500)).toBe(3 * (1.2 + 500 * 0.012));
     expect(deeperResearchCostCents({ ...result, connections: [] }, 500)).toBeNull();
   });
 });

@@ -2,7 +2,6 @@ import { renderWithInstallMessages as render } from "@/i18n/test-support/render-
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { InstallPageContent } from "./InstallPageContent";
-import { SKILLS } from "./install-catalog";
 
 vi.mock("@/components/ui/CopyButton", () => ({
   CopyButton: ({ label }: { label?: string }) => <button aria-label={label} type="button" />,
@@ -42,7 +41,7 @@ describe("InstallPageContent", () => {
 
     expect(
       within(endpointSection as HTMLElement).getByText(
-        "Tools marked read-only (3 of 5) work in every client. Paid operations such as rank checks and backlink analysis are write tools; some agent apps show them only with a developer or write mode enabled, and some plans expose read tools only. Stored reports and cost estimates are read-only.",
+        "3 of 5 tools are marked read-only. Clients and approved scopes can restrict tool availability. Paid operations such as rank checks and backlink analysis are write tools. Stored reports and cost estimates are read-only.",
       ),
     ).toHaveClass("text-fg-muted");
   });
@@ -51,7 +50,7 @@ describe("InstallPageContent", () => {
     const { container } = render(<InstallPageContent {...props} />);
 
     expect(container).toHaveTextContent(
-      "ChatGPT shows only read-only tools on individual plans; write actions such as rank checks and backlink analysis need a Business or Enterprise workspace with developer mode. Read-only tools cover stored reports and cost estimates.",
+      "Access depends on your workspace policy. This bisibility connection requests read-only access.",
     );
     expect(container).toHaveTextContent(
       "Claude exposes every tool. It asks before each write tool the first time; use Allow always only for tools you trust to run unsupervised. Research runs tools without asking, so disable write tools there.",
@@ -97,16 +96,21 @@ describe("InstallPageContent", () => {
     expect(within(keySection as HTMLElement).getByText(/Read and write/)).not.toHaveClass(
       "font-mono",
     );
-    expect(screen.getByText("planned")).not.toHaveClass("font-mono");
+    expect(screen.getByText("3 available")).not.toHaveClass("font-mono");
     expect(container.querySelector("pre")).toHaveClass("font-mono");
   });
 
-  it("renders the retained planned skills and omits removed catalog entries", () => {
+  it("links available skill archives while keeping planned tasks distinct", () => {
     render(<InstallPageContent {...props} />);
 
-    for (const skill of SKILLS) {
-      const skillName = screen.getByText(skill.name);
-      expect(skillName.closest("a, button")).toBeNull();
+    for (const name of ["keyword-import", "provider-setup", "weekly-report"]) {
+      expect(screen.getByRole("link", { name })).toHaveAttribute(
+        "href",
+        `/.well-known/agent-skills/${name}.tar.gz`,
+      );
+    }
+    for (const name of ["project-onboarding", "keyword-clustering", "seo-audit"]) {
+      expect(screen.getByText(name).closest("a, button")).toBeNull();
     }
 
     expect(screen.queryByText("bisibility")).not.toBeInTheDocument();
@@ -126,7 +130,7 @@ describe("InstallPageContent", () => {
 
     // nav-active is the opaque #EDEAE1 the design calls surface-hover. bg-sunken is a 30%
     // alpha that composites to roughly the card colour, leaving the pill invisible.
-    expect(screen.getByText("planned")).toHaveClass("bg-nav-active", "text-yellow-text");
+    expect(screen.getByText("3 available")).toHaveClass("bg-nav-active", "text-yellow-text");
   });
 
   it("highlights curl syntax and environment variables while keeping the URL neutral", () => {

@@ -1,4 +1,5 @@
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
+import { byokTestEvidence } from "@/lib/provider-usage/byok-test-evidence";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,6 +9,9 @@ const mocks = vi.hoisted(() => ({
   entries: [] as Array<Record<string, unknown>>,
   ledger: [] as Array<{ costCents: number; failed: boolean }>,
   prisma: {
+    meteringUsageEvidence: undefined as unknown as ReturnType<
+      typeof byokTestEvidence
+    >["meteringUsageEvidence"],
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     project: { findUnique: vi.fn() },
@@ -23,6 +27,7 @@ const mocks = vi.hoisted(() => ({
       findMany: vi.fn(),
       groupBy: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     rankCheck: { aggregate: vi.fn() },
   },
@@ -72,6 +77,9 @@ vi.mock("@/lib/providers/rate-limit", () => ({ consumeProviderLimit: mocks.consu
 vi.mock("@/lib/providers/auth-state", () => ({ markProviderNeedsReauth: mocks.markReauth }));
 vi.mock("@/lib/providers/execution-extension", () => ({
   startDeploymentExecution: mocks.startExecution,
+}));
+vi.mock("@/lib/providers/execution-authority", () => ({
+  readDeploymentMeteringPreflightAuthority: async () => "legacy",
 }));
 
 import {
@@ -128,7 +136,7 @@ describe("paid provider lookup", () => {
         rate: backlinksRates("dataforseo").rows,
       });
       expect(Number(deploymentEstimate(estimate, 4))).toBe(
-        Number((2 + itemCount / 100).toFixed(2)),
+        Number((2.4 + itemCount * 0.0036).toFixed(4)),
       );
     }
     expect(() => deploymentEstimate(2.28001, 4)).toThrow(RangeError);
@@ -145,6 +153,7 @@ describe("paid provider lookup", () => {
     expect(() => deploymentEstimate(1000000000000, 6)).toThrow(RangeError);
   });
   beforeEach(() => {
+    mocks.prisma.meteringUsageEvidence = byokTestEvidence("dataforseo").meteringUsageEvidence;
     mocks.correlationId = "00000000-0000-4000-8000-000000000000";
     mocks.ledger.length = 0;
     mocks.entries.length = 0;
@@ -152,6 +161,7 @@ describe("paid provider lookup", () => {
     mocks.consumeLimit.mockResolvedValue({ success: true });
     mocks.startExecution.mockResolvedValue(null);
     mocks.prisma.project.findUnique.mockResolvedValue({
+      ownerId: "owner_1",
       budgetCapCents: 5_000,
       providerAllocationsInitializedAt: null,
     });
@@ -204,6 +214,10 @@ describe("paid provider lookup", () => {
         return { count: victims.length };
       },
     );
+    mocks.prisma.providerCostEntry.updateMany.mockImplementation(async (args) => {
+      await mocks.prisma.providerCostEntry.update(args);
+      return { count: 1 };
+    });
     mocks.prisma.$transaction.mockImplementation(async (run: (tx: unknown) => Promise<unknown>) =>
       run(mocks.prisma),
     );
@@ -874,7 +888,7 @@ describe("paid provider lookup", () => {
       }),
     ).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
     expect(mocks.startExecution).toHaveBeenCalledWith(
-      expect.objectContaining({ estimatedCostCents: "2" }),
+      expect.objectContaining({ estimatedCostCents: "2.4" }),
     );
     expect(call).not.toHaveBeenCalled();
   });

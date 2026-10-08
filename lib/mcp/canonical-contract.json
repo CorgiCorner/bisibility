@@ -659,7 +659,7 @@
   {
     "name": "research_keywords",
     "title": "Research keywords",
-    "description": "Requires API write scope. Paid keyword research uses the project's own DataForSEO account. When cost matters, call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Approximate per-source pricing comes from the current rate card exposed by get_provider_rates. Send one seed per call. Results are cached for 12 hours and shared with the API and future UI. Clickstream-refined volumes double provider cost. already_tracked marks keywords the project tracks.",
+    "description": "Requires API write scope. Paid keyword research uses the project's own DataForSEO account. When cost matters, call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Approximate per-source pricing comes from the current rate card exposed by get_provider_rates. Send one seed per call. Results are cached for 12 hours and shared with the API and UI. Clickstream-refined volumes double provider cost. already_tracked marks keywords the project tracks.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -1351,7 +1351,7 @@
   {
     "name": "get_keyword_metrics",
     "title": "Get keyword metrics",
-    "description": "Requires API write scope. Paid metrics lookup uses the project's own DataForSEO account. When cost matters, call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Approximate pricing per 100 fetched keywords comes from the current rate card exposed by get_provider_rates. Batches contain up to 700 keywords and cache each keyword for 12 hours, shared with the API and future UI. Clickstream-refined volumes double provider cost.",
+    "description": "Requires API write scope. Paid metrics lookup uses the project's own DataForSEO account. When cost matters, call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Approximate pricing per 100 fetched keywords comes from the current rate card exposed by get_provider_rates. Batches contain up to 700 keywords and cache each keyword for 12 hours, shared with the API and UI. Clickstream-refined volumes double provider cost.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -2070,7 +2070,7 @@
   {
     "name": "run_rank_check",
     "title": "Run rank check",
-    "description": "Run a provider-backed rank check for one keyword. Requires write access and may incur provider cost. Ask for explicit user approval immediately before calling; this server cannot enforce the client's confirmation UI. By default the check runs synchronously and returns the completed result. Set async to true to enqueue the check and return a running rank check immediately; poll it with get_rank_check_result. Set max_cost_cents to have the server refuse the check when its preflight estimate is higher.",
+    "description": "Run a provider-backed rank check for one keyword. Requires write access and may incur provider cost. Ask for explicit user approval immediately before calling; this server cannot enforce the client's confirmation UI. The deployment selects inline or queued execution. A queued response contains an rcr_ run ID, not a check_ ID. Follow get_rank_history for that run_id until terminal, then use its check_ ID with get_rank_check_result. The async option only requests an early response. Set max_cost_cents to have the server refuse the check when its preflight estimate is higher.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",

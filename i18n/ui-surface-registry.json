@@ -5366,6 +5366,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/integrations/MeterUsageCard.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/integrations/provider-auth.ts",
       "status": "migrated"
@@ -7353,6 +7358,11 @@
     {
       "kind": "render",
       "path": "components/private/billing/BillingSharedControlsProvider.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/private/billing/CreditsBonusClaimCard.tsx",
       "status": "pending"
     },
     {

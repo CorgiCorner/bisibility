@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { ownAdmission } from "@/lib/provider-usage/admission-extension";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { recoverQueuedDeploymentExecution } from "@/lib/providers/execution-extension";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
@@ -87,6 +88,8 @@ export async function inspectQueuedRankCheckBatch(
           "DataForSEO connection was removed during queued result recovery.",
         );
       } else {
+        if (!recovery && batch.connection)
+          await ownAdmission.assertRetrieval(prisma, batch.connection.id, [...byTag.values()]);
         const credentials =
           recovery?.credentials ??
           resolveProviderCredentials("dataforseo", batch.connection?.credentialsEncrypted);

@@ -43,7 +43,13 @@ export type DeploymentExecution = {
 };
 
 /** Neutral queued transport boundary; private builds attach a durable credit session. */
-export type QueuedDeploymentTask = { correlationId: string; keywordId: string; tag: string };
+export type QueuedDeploymentTask = {
+  correlationId: string;
+  keywordId: string;
+  tag: string;
+  /** Exact quote from the trusted transport's persisted task plan. */
+  meteringEstimate?: { costCents: string; quantity: string };
+};
 export type QueuedDeploymentReceipt = {
   correlationId: string;
   costCents: number | null;
@@ -53,7 +59,7 @@ export type QueuedDeploymentReceipt = {
 export type QueuedDeploymentExecution = {
   credentials: ProviderCredentials;
   begin(tasks: readonly QueuedDeploymentTask[]): Promise<void>;
-  transportStarted(): void;
+  transportStarted(): void | Promise<void>;
   record(receipts: readonly QueuedDeploymentReceipt[]): Promise<void>;
   abort(): Promise<void>;
   finish(): Promise<void>;

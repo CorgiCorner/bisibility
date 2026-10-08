@@ -4,11 +4,16 @@ import { exchangeOauthToken, revokeToken } from "./tokens";
 
 const mocks = vi.hoisted(() => ({
   issuePersonalToken: vi.fn(),
+  getOAuthClientScopePolicy: vi.fn(),
   prisma: { oauthAccessToken: { findUnique: vi.fn() } },
   revokePersonalToken: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/queries/oauth-consent", () => ({
+  getOAuthConsentClient: vi.fn(),
+  getOAuthClientScopePolicy: mocks.getOAuthClientScopePolicy,
+}));
 vi.mock("./pat-service", () => ({
   issuePersonalToken: mocks.issuePersonalToken,
   listPersonalTokens: vi.fn(),
@@ -26,6 +31,10 @@ function request(token: string) {
 describe("OAuth personal-token exchange", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getOAuthClientScopePolicy.mockResolvedValue({
+      name: "Bisibility CLI",
+      redirectUris: ["https://callback.example.com/return"],
+    });
     mocks.issuePersonalToken.mockResolvedValue({
       createdAt: new Date("2026-07-12T00:00:00.000Z"),
       expiresAt: new Date("2026-10-10T00:00:00.000Z"),
@@ -86,6 +95,32 @@ describe("OAuth personal-token exchange", () => {
     expect(response.status).toBe(403);
     expect(mocks.issuePersonalToken).not.toHaveBeenCalled();
   });
+
+  it.each(["stored", "refreshed"])(
+    "rejects an older %s ChatGPT opaque token before it can issue an admin personal token",
+    async (kind) => {
+      mocks.getOAuthClientScopePolicy.mockResolvedValue({
+        name: "ChatGPT",
+        redirectUris: ["https://callback.example.com/return"],
+      });
+      mocks.prisma.oauthAccessToken.findUnique.mockResolvedValue({
+        clientId: "chat-client",
+        expiresAt: new Date("2099-01-01T00:00:00.000Z"),
+        scopes: ["openid", "read", "write", "admin", "tokens:write"],
+        userId: "user_1",
+      });
+      const response = await exchangeOauthToken(
+        request(`${kind}-opaque-token`),
+        new URL("https://example.com"),
+        {
+          headers: new Headers(),
+          instance: "urn:test",
+        },
+      );
+      expect(response.status).toBe(403);
+      expect(mocks.issuePersonalToken).not.toHaveBeenCalled();
+    },
+  );
 
   it("revokes the authenticated token by its public ID for DELETE current", async () => {
     const revoked = {

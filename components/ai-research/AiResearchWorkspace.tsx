@@ -72,14 +72,9 @@ export function AiResearchWorkspace({
   }
   return (
     <div className="grid min-w-0 gap-5">
-      <div>
-        <h1 className="text-[21px] font-semibold tracking-tight">
-          {mode === "visibility" ? t("visibilityTitle") : t("promptTitle")}
-        </h1>
-        <p className="mt-2 max-w-3xl text-ui-body leading-relaxed text-fg-muted">
-          {mode === "visibility" ? t("visibilityDescription") : t("promptDescription")}
-        </p>
-      </div>
+      <p className="m-0 max-w-3xl text-ui-body leading-relaxed text-fg-muted">
+        {mode === "visibility" ? t("visibilityDescription") : t("promptDescription")}
+      </p>
       {!canRun ? <Card className="text-ui-body text-fg-muted">{t("readOnly")}</Card> : null}
       <Card>
         <form

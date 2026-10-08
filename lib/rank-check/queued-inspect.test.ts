@@ -23,6 +23,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/provider-usage/admission-extension", () => ({
+  ownAdmission: { assertRetrieval: vi.fn(async () => {}) },
+}));
 vi.mock("@/lib/providers/credentials", () => ({
   resolveProviderCredentials: vi.fn(() => ({ login: "login", password: "password" })),
 }));

@@ -1,7 +1,8 @@
+import { realpathSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { StorybookConfig } from "@storybook/nextjs-vite";
-import type { Plugin } from "vite";
+import { type Plugin, searchForWorkspaceRoot } from "vite";
 
 const runtimeStubs = fileURLToPath(new URL("./browser-runtime-stubs.tsx", import.meta.url));
 const temporalRuntimeStubs = fileURLToPath(new URL("./temporal-runtime-stubs.ts", import.meta.url));
@@ -72,7 +73,7 @@ const serverActionAliases = [
 const serverActionPattern =
   /^@\/(?:app\/\(regional\)\/(?:app\/(?:account(?:\/preferences)?|settings)|cloud\/import|onboarding)\/actions|lib\/actions\/(?:_shared|account|ai-research|alert-feed|alerts|analytics-consent|apiKey|cloud|competitors|default-project|keyword|keyword-import-export|instance-migration|notification-prefs|notifications|project|project-market-create|providers|rank-check-status|rankCheck|saved-views|sample-data|schedule|search-insights(?:-drawers|-rows)?|settings|slack|tags|team|traffic-sync|waitlist|workspace))$/;
 const runtimeStubPatterns = [
-  /[\\/]credential-source-actions(?:\.ts)?$/,
+  /[\\/](?:credential-source|credits-bonus)-actions(?:\.ts)?$/,
   /^@\/components\/shell\/keyword-search$/,
   /^@\/lib\/api\/ratelimit$/,
   /^@\/lib\/auth\/(auth|client|otp-resend|request-login-code|session)$/,
@@ -205,6 +206,15 @@ const config: StorybookConfig = {
     options: {},
   },
   viteFinal: async (viteConfig) => {
+    const root = fileURLToPath(new URL("../", import.meta.url));
+    viteConfig.server ??= {};
+    viteConfig.server.fs ??= {};
+    // Worktrees can share dependencies through a symlink. Permit the real font
+    // assets so browser layout checks use the same typefaces as the application.
+    viteConfig.server.fs.allow = [
+      ...(viteConfig.server.fs.allow ?? [searchForWorkspaceRoot(root)]),
+      realpathSync(resolve(root, "node_modules/geist/dist/fonts")),
+    ];
     viteConfig.resolve ??= {};
     const existingAliases = viteConfig.resolve.alias;
     viteConfig.resolve.alias = Array.isArray(existingAliases)

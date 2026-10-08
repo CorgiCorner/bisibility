@@ -444,6 +444,7 @@
     "components/integrations/IntegrationsByoNote.tsx",
     "components/integrations/IntegrationsTabs.tsx",
     "components/integrations/IntegrationUsagePanel.tsx",
+    "components/integrations/MeterUsageCard.tsx",
     "components/integrations/provider-auth.ts",
     "components/integrations/provider-card-config.ts",
     "components/integrations/provider-credentials.ts",
@@ -14440,6 +14441,16 @@
       },
       {
         "arguments": [],
+        "key": "projectInstall.skills.available",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.availableCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectInstall.skills.description",
         "tags": []
       },
@@ -21811,7 +21822,7 @@
         "tags": []
       },
       {
-        "arguments": [["count", 2]],
+        "arguments": [["count", 6]],
         "key": "projectRankTracker.keywordImport.management.grid.matchingTargets",
         "tags": []
       },
@@ -22011,7 +22022,7 @@
         "tags": []
       },
       {
-        "arguments": [["count", 2]],
+        "arguments": [["count", 6]],
         "key": "projectRankTracker.keywordImport.management.marketCells.bestPosition",
         "tags": []
       },
@@ -22031,7 +22042,7 @@
         "tags": []
       },
       {
-        "arguments": [["markets", 6], ["targets", 2]],
+        "arguments": [["markets", 6], ["targets", 6]],
         "key": "projectRankTracker.keywordImport.management.marketCells.marketSummary",
         "tags": []
       },
@@ -33107,6 +33118,226 @@
         "tags": []
       },
       {
+        "arguments": [["date", 1]],
+        "key": "projectSettingsUsage.meter.asOf",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.authority.active",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.authority.draining",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.authority.legacy",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.authority.mixed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.authority.preparing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.authority.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.blocks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.byok",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.certainty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.certaintyValue.estimated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.certaintyValue.measured",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.certaintyValue.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.connection",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.customerCharge",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.description",
+        "tags": []
+      },
+      {
+        "arguments": [["unit", 1], ["value", 1]],
+        "key": "projectSettingsUsage.meter.hardLimit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.limit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.limitsDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.limitsTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.noLimits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.noObservations",
+        "tags": []
+      },
+      {
+        "arguments": [["date", 1]],
+        "key": "projectSettingsUsage.meter.oldest",
+        "tags": []
+      },
+      {
+        "arguments": [["from", 1], ["to", 1]],
+        "key": "projectSettingsUsage.meter.period",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.platform",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.project",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.providerCost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.remaining",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.reserved",
+        "tags": []
+      },
+      {
+        "arguments": [["date", 1]],
+        "key": "projectSettingsUsage.meter.resetsAt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.restricted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.retainedConnection",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.truncated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.units",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.unknownOperations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.unlimited",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 6]],
+        "key": "projectSettingsUsage.meter.unresolved",
+        "tags": []
+      },
+      {
+        "arguments": [["value", 1]],
+        "key": "projectSettingsUsage.meter.usdAmount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.used",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.walletAuthority",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.meter.warns",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectSettingsUsage.plan.answered",
         "tags": []
@@ -33938,6 +34169,56 @@
       },
       {
         "arguments": [],
+        "key": "projectSiteAudit.fetchReasons.dns",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.fetchReasons.network",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.fetchReasons.public_network",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.fetchReasons.redirect",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.fetchReasons.redirect_limit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.fetchReasons.request_limit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.fetchReasons.size_limit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.fetchReasons.timeout",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.fetchReasons.tls",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.fetchReasons.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSiteAudit.heading",
         "tags": []
       },
@@ -34043,7 +34324,22 @@
       },
       {
         "arguments": [],
+        "key": "projectSiteAudit.notAssessed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.notFetched",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSiteAudit.noTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.notMeasured",
         "tags": []
       },
       {
@@ -34059,6 +34355,11 @@
       {
         "arguments": [["reason", 1]],
         "key": "projectSiteAudit.partial",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.partialUnavailable",
         "tags": []
       },
       {
@@ -34124,6 +34425,22 @@
       {
         "arguments": [["errors", 2], ["indexable", 2], ["pages", 2], ["warnings", 2]],
         "key": "projectSiteAudit.summary",
+        "tags": []
+      },
+      {
+        "arguments": [
+          ["errors", 2],
+          ["indexable", 2],
+          ["pages", 2],
+          ["unavailable", 2],
+          ["warnings", 2]
+        ],
+        "key": "projectSiteAudit.unavailableSummary",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSiteAudit.unknown",
         "tags": []
       },
       {

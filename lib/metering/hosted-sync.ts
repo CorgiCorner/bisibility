@@ -1,8 +1,13 @@
 import "server-only";
-import { prisma } from "@/lib/db/prisma";
 import type { ProviderCredential } from "@/lib/provider-usage/surface";
 import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
 import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
+import {
+  readDeploymentMeteringEvidence,
+  readDeploymentMeteringExecutionOwner,
+  readDeploymentMeteringSnapshot,
+} from "@/lib/providers/execution-extension";
+import type { HostedMeteringEvidence, HostedMeteringSnapshot } from "./hosted-snapshot";
 import type { UsageEntry } from "./mapping";
 import { persistQueuedHandoff } from "./queued-payload";
 import { shadowForProject } from "./shadow-runtime";
@@ -22,6 +27,7 @@ export type HostedMeteringObservation = {
   source: ProviderRequestSource;
   credential?: ProviderCredential;
   correlationId?: string | null;
+  snapshot?: HostedMeteringSnapshot;
 };
 
 type HostedMeasurement = {
@@ -36,30 +42,61 @@ async function hostedEntry(
   observation: HostedMeteringObservation,
   measured: HostedMeasurement,
 ): Promise<UsageEntry | null> {
-  const project = await prisma.project.findUnique({
-    select: { ownerId: true },
-    where: { id: observation.projectId },
+  if ((await readDeploymentMeteringExecutionOwner(observation.operationKey)) === "meter")
+    return null;
+  const snapshot =
+    observation.snapshot ?? (await readDeploymentMeteringSnapshot(observation.operationKey));
+  if (!snapshot?.namespace) return null;
+  return entryFromHostedEvidence({
+    snapshot,
+    costCents: measured.costCents?.toFixed(4) ?? null,
+    usageQuantity: measured.usageQuantity?.toFixed(6) ?? null,
+    customerCents: null,
+    failed: measured.failed,
+    cached: false,
   });
-  if (!project) return null;
-  const metadata = providerAllocationMetadata(observation.provider);
+}
+
+/** No current project or credential lookup may rewrite a retained execution's identity. */
+export function entryFromHostedEvidence({
+  snapshot,
+  ...measured
+}: HostedMeteringEvidence): UsageEntry {
+  if (
+    !snapshot.platformPoolId ||
+    !snapshot.providerCredentialVersion ||
+    !snapshot.providerCostOwner
+  )
+    throw new Error("Hosted provider funding identity is not configured.");
+  const metadata = providerAllocationMetadata(snapshot.provider);
   return {
-    id: observation.operationKey,
-    ownerId: project.ownerId,
-    projectId: observation.projectId,
-    connectionId: observation.connectionId,
-    provider: observation.provider,
-    feature: observation.feature,
-    source: observation.source,
+    namespace: snapshot.namespace,
+    id: snapshot.operationKey,
+    ownerId: snapshot.ownerId,
+    projectId: snapshot.projectId,
+    connectionId: snapshot.connectionId,
+    provider: snapshot.provider,
+    feature: snapshot.feature,
+    source: snapshot.source,
     credentialSource: "hosted",
-    correlationId: observation.correlationId ?? null,
-    credentialKind: observation.credential?.kind ?? null,
-    credentialId: observation.credential?.id ?? null,
-    createdAt: new Date(),
-    costCents: measured.costCents == null ? "0" : measured.costCents.toFixed(4),
-    usageQuantity: measured.usageQuantity == null ? null : measured.usageQuantity.toFixed(6),
+    correlationId: snapshot.correlationId,
+    credentialKind: snapshot.credentialKind,
+    credentialId: snapshot.credentialId,
+    createdAt: new Date(snapshot.occurredAt),
+    costCents: measured.costCents ?? "0",
+    usageQuantity: measured.usageQuantity,
+    costMeasurement: measured.costCents === null ? "unknown" : "recorded",
+    quantityMeasurement: measured.usageQuantity === null ? "unknown" : "recorded",
+    customerCents: measured.customerCents,
+    estimatedPriceCents: snapshot.estimatedPriceCents,
+    creditAccountRef: snapshot.walletId,
+    customerPriceVersion: snapshot.customerPriceVersion,
+    platformPoolId: snapshot.platformPoolId,
+    providerCredentialVersion: snapshot.providerCredentialVersion,
+    providerCostOwner: snapshot.providerCostOwner,
     measurementStatus:
       measured.costCents == null || measured.usageQuantity == null ? "unknown" : "recorded",
-    cached: false,
+    cached: measured.cached,
     failed: measured.failed,
     unit: metadata?.kind === "billable" ? metadata.allocationUnit : "cents",
   };
@@ -73,7 +110,7 @@ export async function beginHostedExecution(
   try {
     const entry = await hostedEntry(observation, UNKNOWN);
     if (!entry) return;
-    const shadow = await shadowForProject(entry.projectId);
+    const shadow = await shadowForProject(entry.projectId, entry.namespace);
     await shadow?.begin(entry, estimate);
   } catch {
     console.warn("[metering] hosted admission failed", { operationId: observation.operationKey });
@@ -86,9 +123,14 @@ export async function recordHostedExecution(
 ) {
   if (process.env.METERING_SHADOW !== "on") return;
   try {
-    const entry = await hostedEntry(observation, measured);
+    if ((await readDeploymentMeteringExecutionOwner(observation.operationKey)) === "meter") return;
+    const evidence = await readDeploymentMeteringEvidence(observation.operationKey);
+    if (evidence && !evidence.snapshot.namespace) return;
+    const entry = evidence
+      ? entryFromHostedEvidence(evidence)
+      : await hostedEntry(observation, measured);
     if (!entry) return;
-    const shadow = await shadowForProject(entry.projectId);
+    const shadow = await shadowForProject(entry.projectId, entry.namespace);
     await shadow?.record(entry);
   } catch {
     console.warn("[metering] hosted receipt failed", { operationId: observation.operationKey });
@@ -112,10 +154,9 @@ export async function beginHostedQueuedExecution(input: {
   if (process.env.METERING_SHADOW !== "on") return;
   const operationKey = `queued-batch:${input.batchId}`;
   try {
-    const cents = input.tasks
-      .reduce((sum, task) => sum + Number(task.estimate.cents), 0)
-      .toFixed(4);
-    const units = String(input.tasks.reduce((sum, task) => sum + Number(task.estimate.units), 0));
+    if ((await readDeploymentMeteringExecutionOwner(operationKey)) === "meter") return;
+    const snapshot = await readDeploymentMeteringSnapshot(operationKey);
+    if (!snapshot) return;
     const entry = await hostedEntry(
       {
         operationKey,
@@ -126,12 +167,20 @@ export async function beginHostedQueuedExecution(input: {
         source: input.source,
         credential: input.credential,
         correlationId: input.batchId,
+        snapshot,
       },
       UNKNOWN,
     );
     if (!entry) return;
-    const shadow = await shadowForProject(entry.projectId);
-    await shadow?.begin(entry, { cents, units }, 86400000);
+    const shadow = await shadowForProject(entry.projectId, entry.namespace);
+    await shadow?.begin(
+      entry,
+      {
+        cents: snapshot.estimatedCostCents,
+        units: snapshot.estimatedQuantity,
+      },
+      86400000,
+    );
     const handoff = shadow?.handoff(operationKey);
     for (const task of input.tasks) await persistQueuedHandoff(task.correlationId, handoff);
   } catch {

@@ -5,6 +5,7 @@ import { ApiAuthError, type PersonalTokenAuth } from "@/lib/api/auth";
 import { errorResponse } from "@/lib/api/responses";
 import { grantedApiScopes } from "@/lib/api/scope-policy";
 import { AUTH_URL, AUTH_URL_CONFIGURED, MCP_RESOURCE_URL } from "@/lib/auth/auth";
+import { allowedOAuthTokenScopes } from "@/lib/auth/oauth-consent-guard";
 import { prisma } from "@/lib/db/prisma";
 import { protectedResourceMetadataUrl } from "@/lib/deployment/mcp-origin-contract";
 import { verifyAccessToken } from "better-auth/oauth2";
@@ -45,7 +46,7 @@ function oauthClientId(payload: unknown) {
   if (typeof claims.azp === "string" && claims.azp.length > 0) {
     return claims.azp;
   }
-  return "oauth";
+  return null;
 }
 
 function oauthVerificationOptions() {
@@ -74,7 +75,8 @@ export async function authenticateMcpOAuthRequest(req: Request): Promise<OAuthAu
   }
 
   const userId = typeof payload.sub === "string" ? payload.sub : null;
-  const scopes = grantedApiScopes(tokenScopes(payload));
+  const clientId = oauthClientId(payload);
+  const scopes = grantedApiScopes(await allowedOAuthTokenScopes(clientId, tokenScopes(payload)));
   if (!userId || scopes.length === 0) {
     return { response: unauthorized(req, "Invalid OAuth access token claims.") };
   }
@@ -98,7 +100,7 @@ export async function authenticateMcpOAuthRequest(req: Request): Promise<OAuthAu
     auth: {
       kind: "personal_token",
       memberships: user.memberships,
-      oauthClientId: oauthClientId(payload),
+      oauthClientId: clientId ?? "oauth",
       token: {
         id: `oauth:${createHash("sha256").update(rawToken).digest("hex").slice(0, 32)}`,
         name: "MCP OAuth",

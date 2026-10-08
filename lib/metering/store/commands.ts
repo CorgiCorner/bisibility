@@ -3,6 +3,7 @@ import type { Clock, Store } from "@usagekit/store";
 import { InvalidInput } from "@usagekit/store";
 import type { State } from "@usagekit/store/reference";
 import * as reference from "@usagekit/store/reference";
+import { lockConnectionAccounting, lockOperationAccounting } from "./accounting-lock";
 import { key } from "./codec";
 import {
   load,
@@ -14,13 +15,15 @@ import {
   projectUsage,
   VersionConflict,
 } from "./command-state";
-import { lock, type Sql, type transactions } from "./sql";
+import { lock, Prisma, type Sql, type transactions } from "./sql";
 
 type Transactions = ReturnType<typeof transactions>;
 const snapshot = (s: State): State => ({
   ...s,
   operations: structuredClone(s.operations),
   commands: structuredClone(s.commands),
+  reserveAlerts: structuredClone(s.reserveAlerts),
+  alerts: new Set(s.alerts),
 });
 type CommandStore = Pick<
   Store,
@@ -46,11 +49,13 @@ export function commands(tx: Transactions, clock: Clock, hook?: () => void): Com
   ): Promise<T> => {
     try {
       return await tx.write(async (sql) => {
+        await lockOperationAccounting(sql, input);
         await lock(sql, `metering:operation:${key(input.namespace, input.operationId)}`);
         const s = newState(clock);
         await load(sql, s, input.namespace, input.operationId);
         if ("commandId" in input) await loadReplay(sql, s, input as OperationCommand);
         await lockAccounting(sql, s);
+        await projectUsage(sql, s, snapshot(s).operations);
         return execute(sql, s, snapshot(s), () => run(s));
       });
     } catch (error) {
@@ -67,13 +72,23 @@ export function commands(tx: Transactions, clock: Clock, hook?: () => void): Com
   return {
     reserve: (input, policy) =>
       tx.write(async (sql) => {
+        await lockConnectionAccounting(sql, input.scope.namespace, input.scope.connection);
         await lock(sql, `metering:operation:${key(input.scope.namespace, input.operationId)}`);
         const s = newState(clock);
         await load(sql, s, input.scope.namespace, input.operationId);
+        const counted = await sql.query<{
+          identity_hash: string;
+        }>(Prisma.sql`SELECT identity_hash FROM metering_request_command
+          WHERE namespace=${input.scope.namespace} AND command_id=${input.operationId}`);
+        if (counted[0])
+          s.requestCommands?.set(
+            key(input.scope.namespace, input.operationId),
+            counted[0].identity_hash,
+          );
         await loadExpired(sql, s, input.scope.namespace, 100);
         await lockAccounting(sql, s, input);
+        await projectUsage(sql, s, snapshot(s).operations);
         const before = snapshot(s);
-        await projectUsage(sql, s, before.operations);
         return execute(sql, s, before, () => reference.reserve(s, input, policy));
       }),
     expireReservations: (input) =>

@@ -22,8 +22,8 @@
       "chatgpt": {
         "label": "ChatGPT",
         "hint": "アプリ",
-        "note": "設定、アプリ、詳細設定の順に開き、開発者モードを有効化してから、この URL をカスタム MCP アプリとして追加してください。",
-        "caveat": "ChatGPT では個人プランでは読み取り専用ツールのみ表示されます。順位チェックや被リンク分析などの書き込みアクションには、開発者モードを有効にした Business または Enterprise のワークスペースが必要です。読み取り専用ツールは保存済みレポートとコスト見積もりを対象とします。"
+        "note": "ChatGPT の Plugins を開き、+、Add custom MCP server の順に選択します。MCP URL と OAuth を指定します。",
+        "caveat": "アクセスはワークスペースのポリシーによって異なります。この bisibility 接続は読み取り専用アクセスを要求します。"
       },
       "claude-desktop": {
         "label": "Claude（ウェブとデスクトップ）",
@@ -42,7 +42,7 @@
       "description": "リストにないツールをお使いですか？このアドレスを貼り付けて、bisibility アカウントでサインインしてください。",
       "copy": "MCP URL をコピー",
       "selfHosted": "セルフホスティングの場合は、代わりにご自身のアドレスを使用してください: '<your-instance>'/api/mcp",
-      "toolScope": "読み取り専用と表示されたツール（{readOnly} / {total}）はどのクライアントでも動作します。順位チェックや被リンク分析などの有料操作は書き込みツールです。一部のエージェントアプリでは開発者モードまたは書き込みモードを有効にした場合にのみ表示され、一部のプランでは読み取りツールのみが提供されます。保存済みレポートとコスト見積もりは読み取り専用です。"
+      "toolScope": "{total} 個中 {readOnly} 個のツールは読み取り専用です。クライアントと承認されたスコープによって、利用できるツールが制限される場合があります。順位チェックや被リンク分析などの有料操作は書き込みツールです。保存済みレポートと費用見積もりは読み取り専用です。"
     },
     "apiKey": {
       "heading": "API キー",
@@ -59,14 +59,16 @@
     "skills": {
       "heading": "スキル",
       "planned": "予定",
-      "description": "エージェントが代わりに実行できるようになる、既製の SEO タスクです。まだ利用できるものはないため、このリストは今後の予定です。",
-      "footer": "最初のスキルが準備できると、ここにインストールコマンドが表示されます",
+      "description": "利用可能なスキルのアーカイブをダウンロードしてください。他のタスクは計画中です。",
+      "footer": "アーカイブをダウンロードし、エージェントの手順に従ってスキルをインストールしてください。",
       "keyword-import": "一括追加、重複削除",
       "provider-setup": "接続、キーの確認",
       "project-onboarding": "最初のプロジェクト設定",
       "weekly-report": "順位変動のダイジェスト",
       "keyword-clustering": "検索意図でグループ化",
-      "seo-audit": "優先度順の修正"
+      "seo-audit": "優先度順の修正",
+      "availableCount": "3 件利用可能",
+      "available": "利用可能"
     },
     "chatgptIcon": {
       "copyUrl": "アイコン URL をコピー",
@@ -79,17 +81,17 @@
     "gettingStarted": {
       "addApp": {
         "copyMcpUrl": "ChatGPT の MCP URL をコピー",
-        "description": "プラグインを開き、+ を選択して、下の MCP URL を追加します。OAuth を選び、bisibility にサインインしてください。求められた場合は上のアイコンをアップロードしてください。",
+        "description": "以下の MCP URL でプラグインを作成し、OAuth を選び bisibility にサインインします。作成したプラグインをインストールします。",
         "title": "2. bisibility を追加"
       },
       "description": "bisibility を ChatGPT に接続します。",
       "developerMode": {
-        "description": "ChatGPT で設定 → セキュリティとログインを開き、開発者モードをオンにしてください。",
-        "title": "1. 開発者モードを有効化"
+        "description": "ChatGPT の Plugins を開きます。ワークスペースでカスタム MCP サーバーが許可されている必要があります。",
+        "title": "1. Plugins を開く"
       },
       "dismiss": "開始方法の案内を閉じる",
       "firstChat": {
-        "description": "新しいチャットのツールメニューから bisibility を選択します。例: 「{prompt}」",
+        "description": "新しいチャットで @ を入力し、bisibility を選択します。例: \"{prompt}\"",
         "prompt": {
           "withChecks": "今週、順位が下がったキーワードはどれですか？",
           "withoutChecks": "閲覧できるプロジェクトとキーワードを教えてください。"
@@ -98,7 +100,7 @@
       },
       "guideLink": "ChatGPT セットアップガイド",
       "heading": "開始方法",
-      "note": "開発者モードの利用可否はアカウントまたはワークスペースの設定によって異なります。",
+      "note": "管理者によるカスタム MCP サーバーの許可が必要な場合があります。",
       "show": "開始方法を表示",
       "clientSwitcher": "AIアシスタント",
       "accessTitle": "読み取り専用アクセス",

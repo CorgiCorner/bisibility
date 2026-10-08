@@ -101,7 +101,7 @@ export function DataTableResizeHandle<TRow extends DataTableRowBase>({
       aria-valuemax={column.columnDef.maxSize ?? Number.MAX_SAFE_INTEGER}
       aria-valuemin={column.columnDef.minSize ?? 64}
       aria-valuenow={column.getSize()}
-      className="absolute inset-y-0 right-0 z-20 m-0 w-3 cursor-col-resize touch-none border-0 outline-none after:absolute after:inset-y-2 after:right-1 after:w-px after:bg-border-control hover:after:bg-accent focus-visible:after:w-0.5 focus-visible:after:bg-accent data-[resizing=true]:after:bg-accent"
+      className="absolute inset-y-0 right-0 z-20 m-0 w-3 cursor-col-resize touch-none border-0 outline-none after:absolute after:inset-y-2 after:right-0 after:w-px after:bg-border-control hover:after:bg-accent focus-visible:after:w-0.5 focus-visible:after:bg-accent data-[resizing=true]:after:bg-accent"
       data-resizing={column.getIsResizing() || undefined}
       onBlur={() => {
         focusSize.current = null;

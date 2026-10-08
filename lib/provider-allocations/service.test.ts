@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/providers/execution-extension", () => ({
+  readDeploymentMeteringAllocationAuthority: vi.fn().mockResolvedValue("legacy"),
+}));
 vi.mock("./legacy-backfill", () => ({
   backfillLegacyProjectAllocationInLockedTransaction: mocks.backfill,
 }));

@@ -1,3 +1,4 @@
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
 import { providerUsageFailureDetails } from "@/lib/providers/usage-failure-details";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -79,6 +80,21 @@ afterEach(() => {
 });
 
 describe("bounded search receipts", () => {
+  it("preserves a known budget refusal without dispatching a search", async () => {
+    const denied = new DeploymentAdmissionExhaustedError("budget"),
+      journal = observer(),
+      fetchMock = vi.fn();
+    journal.begin.mockRejectedValue(denied);
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(
+      serpApiProvider.fetchRank({
+        ...input,
+        credentials: { ...input.credentials, usageObserver: journal },
+      }),
+    ).rejects.toBe(denied);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(journal.settle).not.toHaveBeenCalled();
+  });
   it("never dispatches a search when admission persistence fails", async () => {
     const journal = observer();
     journal.begin.mockRejectedValue(Object.assign(new Error("private key"), { code: "P2024" }));

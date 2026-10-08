@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   authUrlConfigured: true,
   resourceUrl: "https://resource.example.com/api/mcp",
   userFindUnique: vi.fn(),
+  getOAuthClientScopePolicy: vi.fn(),
   verifyAccessToken: vi.fn(),
 }));
 
@@ -25,6 +26,10 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: { user: { findUnique: mocks.userFindUnique } },
 }));
 
+vi.mock("@/lib/queries/oauth-consent", () => ({
+  getOAuthClientScopePolicy: mocks.getOAuthClientScopePolicy,
+}));
+
 vi.mock("better-auth/oauth2", () => ({
   verifyAccessToken: mocks.verifyAccessToken,
 }));
@@ -42,6 +47,10 @@ function request(token?: string, host = "rank.example.com") {
 describe("MCP OAuth authentication", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getOAuthClientScopePolicy.mockResolvedValue({
+      name: "Custom",
+      redirectUris: ["https://callback.example.com/return"],
+    });
     mocks.authUrl = "https://auth.example.com";
     mocks.authUrlConfigured = true;
     mocks.resourceUrl = "https://resource.example.com/api/mcp";
@@ -54,6 +63,7 @@ describe("MCP OAuth authentication", () => {
 
   it("uses configured verification inputs despite a hostile Host header", async () => {
     mocks.verifyAccessToken.mockResolvedValue({
+      client_id: "custom-client",
       scope: "openid read write admin",
       sub: "user_1",
     });
@@ -250,5 +260,50 @@ describe("MCP OAuth authentication", () => {
     const fallbackResult = await authenticateMcpOAuthRequest(request("oauth-access-token"));
     if (!("auth" in fallbackResult)) throw new Error("Expected an authenticated auth result.");
     expect(fallbackResult.auth.oauthClientId).toBe("oauth");
+  });
+
+  it.each(["client_id", "azp"])(
+    "limits existing and refreshed ChatGPT tokens using the signed %s",
+    async (claim) => {
+      mocks.getOAuthClientScopePolicy.mockResolvedValue({
+        name: "ChatGPT",
+        redirectUris: ["https://callback.example.com/return"],
+      });
+      mocks.verifyAccessToken.mockResolvedValue({
+        [claim]: "chat-client",
+        scope: "openid read write admin tokens:write",
+        sub: "user_1",
+      });
+      mocks.userFindUnique.mockResolvedValue({
+        deactivatedAt: null,
+        email: "owner@example.com",
+        id: "user_1",
+        memberships: [],
+        name: "Owner",
+        publicId: "usr_a00000000000000000000000",
+      });
+      const result = await authenticateMcpOAuthRequest(request("previously-issued-token"));
+      expect(result).toMatchObject({ auth: { token: { scopes: ["read"] } } });
+      expect(mocks.getOAuthClientScopePolicy).toHaveBeenCalledWith("chat-client");
+    },
+  );
+
+  it("does not invent read access when a ChatGPT token only grants a broader scope", async () => {
+    mocks.getOAuthClientScopePolicy.mockResolvedValue({ name: "ChatGPT", redirectUris: [] });
+    mocks.verifyAccessToken.mockResolvedValue({
+      client_id: "chat-client",
+      scope: "admin",
+      sub: "user_1",
+    });
+    const result = await authenticateMcpOAuthRequest(request("old-admin-token"));
+    expect(result).toMatchObject({ response: expect.objectContaining({ status: 401 }) });
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
+  });
+
+  it("does not let an unidentified token client retain write access", async () => {
+    mocks.verifyAccessToken.mockResolvedValue({ scope: "write", sub: "user_1" });
+    const result = await authenticateMcpOAuthRequest(request("missing-client-token"));
+    expect(result).toMatchObject({ response: expect.objectContaining({ status: 401 }) });
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
   });
 });

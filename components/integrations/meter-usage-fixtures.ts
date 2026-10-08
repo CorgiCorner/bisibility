@@ -1,0 +1,70 @@
+import type { ProjectMeteringUsage } from "@/lib/metering/user-types";
+
+/** Synthetic Storybook evidence, never a claim about production coverage. */
+export const emptyMeterUsage: ProjectMeteringUsage = {
+  status: "available",
+  from: "2026-10-01T00:00:00.000Z",
+  to: "2026-10-06T12:00:00.000Z",
+  asOf: "2026-10-06T12:00:00.000Z",
+  authority: "legacy",
+  observed: false,
+  truncated: false,
+  unresolved: 0,
+  oldestUnresolvedAt: null,
+  rows: [],
+  budgets: [],
+};
+
+export const partialMeterUsage: ProjectMeteringUsage = {
+  ...emptyMeterUsage,
+  authority: "mixed",
+  observed: true,
+  unresolved: 2,
+  oldestUnresolvedAt: "2026-10-03T08:00:00.000Z",
+  rows: [
+    {
+      connection: "prc_example",
+      provider: "DataForSEO",
+      surface: "app",
+      source: "worker",
+      funding: "byok",
+      providerCost: "0.362000",
+      customerCharge: null,
+      units: "50.000000",
+      unitsCertainty: "measured",
+      certainty: "measured",
+      unknownOperations: "2",
+    },
+    {
+      connection: "prc_platform_example",
+      provider: "DataForSEO",
+      surface: "programmatic",
+      source: "api",
+      funding: "platform",
+      providerCost: null,
+      customerCharge: null,
+      units: null,
+      unitsCertainty: "unknown",
+      certainty: "unknown",
+      unknownOperations: "1",
+    },
+  ],
+  budgets: [
+    {
+      provider: "DataForSEO",
+      figuresKnown: true,
+      connection: "prc_example",
+      scope: "connection",
+      surface: "app",
+      unit: "cents",
+      used: "36.2000",
+      reserved: "1.6000",
+      remaining: "962.2000",
+      limit: "1000.0000",
+      hardLimit: null,
+      unlimited: false,
+      policy: "block",
+      resetsAt: "2026-11-01T00:00:00.000Z",
+    },
+  ],
+};

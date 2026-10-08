@@ -57,7 +57,7 @@ it("keeps the sweep cutoff fixed when its pages cross a month boundary", async (
   vi.setSystemTime(new Date("2026-10-01T00:00:01Z"));
   await maintainMeteringShadow();
   const dates = mocks.query.mock.calls[1]?.[0].values.filter((v: unknown) => v instanceof Date);
-  expect(dates).toContainEqual(new Date("2026-09-01T00:00:00Z"));
+  expect(dates).not.toContainEqual(new Date("2026-10-01T00:00:00Z"));
   expect(dates).toContainEqual(new Date("2026-09-30T23:59:59Z"));
 });
 

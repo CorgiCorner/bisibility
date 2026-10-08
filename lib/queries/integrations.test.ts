@@ -296,7 +296,7 @@ describe("integration queries", () => {
       { source: "list" },
       { source: "list" },
       {
-        amountCents: 2,
+        amountCents: 2.4,
         editable: false,
         feature: "domain_rank_overview",
         source: "list",
@@ -308,7 +308,7 @@ describe("integration queries", () => {
         source: "list",
       },
       {
-        amountCents: 2,
+        amountCents: 2.4,
         editable: false,
         feature: "relevant_pages",
         source: "list",

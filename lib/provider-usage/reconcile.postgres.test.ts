@@ -4,8 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { reconcileProviderUsage } from "./reconcile";
 
 vi.mock("@/lib/ops/notify", () => ({ notifyOps: vi.fn() }));
+vi.mock("@/lib/provider-usage/admission-extension", () => ({
+  ownAdmission: { acknowledge: vi.fn(async () => false) },
+}));
 let db: PGlite;
 const watermark = vi.fn();
+// Cold PGlite startup and three retained-journal migrations can take more than 10 seconds.
 beforeEach(async () => {
   watermark.mockReset();
   db = new PGlite();
@@ -15,6 +19,7 @@ beforeEach(async () => {
       "connectionId" text, "projectId" text, provider text, feature text,
       "keywordId" text, "correlationId" text, "providerRequestId" text,
       "credentialId" text, "credentialKind" text, source text, trigger text, tag text,
+      "credentialSource" text NOT NULL DEFAULT 'own',
       "costCents" numeric NOT NULL, "usageQuantity" numeric, "unitCostCents" numeric,
       cached boolean NOT NULL, failed boolean NOT NULL,
       "createdAt" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -39,22 +44,57 @@ beforeEach(async () => {
       "utf8",
     ),
   );
-});
+  for (const path of [
+    "../../prisma/migrations/20261006072000_byok_metering_evidence/migration.sql",
+    "../../prisma/migrations/20261006072500_byok_metering_namespace/migration.sql",
+    "../../prisma/migrations/20261006072800_byok_metering_proof_revision/migration.sql",
+  ])
+    await db.exec(readFileSync(new URL(path, import.meta.url), "utf8"));
+}, 30_000);
 afterEach(async () => {
   await db.close();
 });
 
-function client() {
+function client(database: Pick<PGlite, "query"> = db) {
   return {
-    $queryRaw: async (query: { text: string; values: unknown[] }) =>
-      (await db.query(query.text, query.values)).rows,
+    $transaction: async (work: (tx: unknown) => Promise<unknown>) =>
+      db.transaction((tx) => work(client(tx))),
+    meteringUsageEvidence: {
+      findUnique: async ({ where }: { where: { id: string } }) =>
+        (await database.query(`SELECT * FROM metering_usage_evidence WHERE id=$1`, [where.id]))
+          .rows[0] ?? null,
+      update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
+        const entries = Object.entries(data);
+        return (
+          await database.query(
+            `UPDATE metering_usage_evidence SET ${entries.map(([key], i) => `"${key}"=$${i + 2}`).join(",")} WHERE id=$1 RETURNING *`,
+            [
+              where.id,
+              ...entries.map(([key, value]) => (key === "receipt" ? JSON.stringify(value) : value)),
+            ],
+          )
+        ).rows[0];
+      },
+    },
+    $queryRaw: async (
+      query: { text: string; values: unknown[] } | TemplateStringsArray,
+      ...values: unknown[]
+    ) => {
+      const text =
+        "text" in query
+          ? query.text
+          : query
+              .map((part, index) => part + (index < values.length ? `$${index + 1}` : ""))
+              .join("");
+      return (await database.query(text, "text" in query ? query.values : values)).rows;
+    },
     instanceSetting: { upsert: watermark },
     providerCostEntry: {
       createMany: async ({ data }: { data: Record<string, unknown>[] }) => {
         let count = 0;
         for (const record of data) {
           const entries = Object.entries(record).filter(([, value]) => value !== undefined);
-          const result = await db.query(
+          const result = await database.query(
             `INSERT INTO provider_cost_entries (${entries.map(([key]) => `"${key}"`).join(",")}) VALUES (${entries.map((_, i) => `$${i + 1}`).join(",")}) ON CONFLICT DO NOTHING RETURNING id`,
             entries.map(([, value]) => value),
           );
@@ -67,14 +107,14 @@ function client() {
       }: {
         where: { measurementStatus: string; createdAt?: { lt: Date } };
       }) => {
-        const result = await db.query<{ count: number }>(
+        const result = await database.query<{ count: number }>(
           `SELECT count(*)::int AS count FROM provider_cost_entries WHERE "measurementStatus"=$1 ${where.createdAt ? 'AND "createdAt" < $2' : ""}`,
           [where.measurementStatus, ...(where.createdAt ? [where.createdAt.lt] : [])],
         );
         return result.rows[0].count;
       },
       deleteMany: async ({ where }: { where: { id: string; measurementStatus: string } }) => {
-        const result = await db.query(
+        const result = await database.query(
           `DELETE FROM provider_cost_entries WHERE id=$1 AND "measurementStatus"=$2 RETURNING id`,
           [where.id, where.measurementStatus],
         );
@@ -88,8 +128,8 @@ function client() {
         if (!where.providerRequestId) return null;
         return (
           (
-            await db.query(
-              `SELECT id, "measurementStatus" FROM provider_cost_entries WHERE "connectionId"=$1 AND "providerRequestId"=$2 AND id<>$3`,
+            await database.query(
+              `SELECT id, "measurementStatus", "costCents", "usageQuantity", cached, failed FROM provider_cost_entries WHERE "connectionId"=$1 AND "providerRequestId"=$2 AND id<>$3`,
               [where.connectionId, where.providerRequestId, where.id?.not],
             )
           ).rows[0] ?? null
@@ -98,7 +138,7 @@ function client() {
       update: async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
         const entries = Object.entries(data).filter(([, value]) => value !== undefined);
         try {
-          const result = await db.query(
+          const result = await database.query(
             `UPDATE provider_cost_entries SET ${entries.map(([key], index) => `"${key}"=$${index + 2}`).join(",")} WHERE id=$1 RETURNING id`,
             [where.id, ...entries.map(([, value]) => value)],
           );
@@ -120,12 +160,29 @@ async function seed(count: number) {
     INSERT INTO queued_rank_check_batches (id, "connectionId", "projectId", provider, source, trigger, "submittedAt")
     VALUES ('b1','c1','p1','dataforseo','mcp','manual','2026-08-31 23:59:00');
     INSERT INTO queued_rank_check_tasks (id, "batchId", "keywordId", "costCents", "providerTaskId", "providerTag", "createdAt", "updatedAt")
-    SELECT 't'||n,'b1','deleted-keyword',0.625,'request-'||n,'trusted-tag','2026-08-31 23:58:00','2026-09-22 12:00:00'
+    SELECT 't'||n,'b1','deleted-keyword',0.625,'request-'||n,'trusted;cs=own;tag','2026-08-31 23:58:00','2026-09-22 12:00:00'
     FROM generate_series(1,${count}) n;
   `);
 }
 
 describe("provider receipt SQL and migration", () => {
+  it("updates a preexisting original-owner journal through the neutral PostgreSQL port", async () => {
+    await seed(1);
+    await db.exec(`INSERT INTO provider_cost_entries (id,"connectionId","projectId",feature,"correlationId","costCents",cached,failed,"measurementStatus")
+      VALUES ('pending-proof','c1','p1','rank_check','t1',0,false,false,'unknown');
+      INSERT INTO metering_usage_evidence (id,namespace,principal,"projectId","connectionId",provider,feature,source,"correlationId",unit,estimate,"createdAt")
+      VALUES ('pending-proof','retained-namespace','original-owner','p1','c1','dataforseo','rank_check','mcp','t1','cents','{}','2026-08-31 23:57:00');`);
+    expect(await reconcileProviderUsage(client() as never)).toMatchObject({ reconciled: 1 });
+    const evidence = await db.query(
+      `SELECT principal,namespace,"proofVersion",receipt FROM metering_usage_evidence WHERE id='pending-proof'`,
+    );
+    expect(evidence.rows[0]).toMatchObject({
+      principal: "original-owner",
+      namespace: "retained-namespace",
+      proofVersion: 1,
+      receipt: { costCents: "0.6250", quantity: "1.000000" },
+    });
+  });
   it("permits confirmed zero, rejects negative usage and invalid measurement states", async () => {
     await db.exec(
       `INSERT INTO provider_cost_entries ("costCents","usageQuantity",cached,failed) VALUES (0,0,true,false)`,

@@ -31,12 +31,17 @@ export async function fixture(options?: { schema: string; resetOnClose: () => Pr
       "../../../prisma/migrations/20260924011626_metering_shadow/migration.sql",
       "../../../prisma/migrations/20260924032100_metering_shadow_handoff/migration.sql",
       "../../../prisma/migrations/20260924221000_metering_shadow_funding/migration.sql",
+      "../../../prisma/migrations/20261006070000_metering_contract/migration.sql",
+      "../../../prisma/migrations/20261006072000_byok_metering_evidence/migration.sql",
+      "../../../prisma/migrations/20261006072500_byok_metering_namespace/migration.sql",
+      "../../../prisma/migrations/20261006072800_byok_metering_proof_revision/migration.sql",
+      "../../../prisma/migrations/20261006075800_metering_imports/migration.sql",
     ].map((path) => readFileSync(new URL(path, import.meta.url), "utf8"));
     await prisma.$transaction(async (tx) => {
       await tx.$executeRaw(Prisma.sql`SET LOCAL search_path TO ${Prisma.raw(schema)}`);
       await tx.$executeRaw(Prisma.sql`CREATE TABLE queued_rank_check_tasks (id text PRIMARY KEY)`);
       for (const migration of migrations)
-        for (const statement of migration.split(";").filter((s) => s.trim()))
+        for (const statement of migrationStatements(migration))
           await tx.$executeRaw(Prisma.raw(statement));
     });
   }
@@ -111,7 +116,9 @@ export async function createConformanceFixture() {
             await tx.$executeRaw(Prisma.sql`TRUNCATE TABLE
               metering_operation, metering_receipt, metering_measurement, metering_command,
               metering_budget, metering_budget_usage, metering_event, metering_metadata,
-              metering_shadow,
+              metering_shadow, metering_alert, metering_request_command, metering_request_count,
+              metering_usage_evidence,
+              metering_import_family, metering_import,
               queued_rank_check_tasks RESTART IDENTITY CASCADE`);
           });
         } finally {
@@ -147,4 +154,22 @@ export async function createScalingFixture(): Promise<ScalingFixture> {
       await run();
     },
   };
+}
+
+/** Function bodies contain semicolons; keep dollar-quoted SQL intact for real fixture migrations. */
+function migrationStatements(source: string) {
+  const statements: string[] = [];
+  let quoted = false,
+    start = 0;
+  for (const token of source.matchAll(/\$\$|;/g)) {
+    if (token[0] === "$$") quoted = !quoted;
+    else if (!quoted) {
+      const statement = source.slice(start, token.index).trim();
+      if (statement) statements.push(statement);
+      start = token.index + 1;
+    }
+  }
+  const final = source.slice(start).trim();
+  if (final) statements.push(final);
+  return statements;
 }

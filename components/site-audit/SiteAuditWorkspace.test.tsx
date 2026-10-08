@@ -7,7 +7,7 @@ import sharedPl from "@/messages/core/pl/shared.json";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SiteAuditWorkspace } from "./SiteAuditWorkspace";
-import { auditFixture } from "./story-fixtures";
+import { auditFixture, failedAuditFixture } from "./story-fixtures";
 
 const run = vi.fn(async () => auditFixture);
 const props = {
@@ -30,6 +30,42 @@ const wrap = (locale: ActiveLocale = "en", overrides = {}) =>
     </FeatureMessagesProvider>,
   );
 describe("site audit workspace", () => {
+  it("leaves the page title to the shared shell", () => {
+    wrap();
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    expect(screen.getByText(/Check HTTP, metadata/)).toBeTruthy();
+  });
+  it("shows an unavailable fetch as unknown, not measured zeros or noindex", async () => {
+    wrap("en", { initial: failedAuditFixture });
+    expect(screen.getByText(/0 pages fetched · 1 not fetched/)).toBeTruthy();
+    expect(screen.getByText(/Incomplete audit: some pages or robots.txt/)).toBeTruthy();
+    expect(screen.getByText("Unknown")).toBeTruthy();
+    expect(screen.getByText("Not measured")).toBeTruthy();
+    expect(screen.queryByText(/0 ms|0 H1|Partial crawl: finished|pages checked/)).toBeNull();
+    expect(screen.queryByText("No")).toBeNull();
+    expect(screen.queryByText("No title")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Page details" }));
+    const dialog = await screen.findByRole("dialog", { name: "Page details" });
+    expect(dialog.textContent).toContain("The public hostname could not be resolved.");
+    expect(dialog.textContent).not.toContain("No directive");
+    expect(dialog.textContent).not.toContain("Missing");
+  });
+  it("keeps real zero measurements and a measured noindex result", () => {
+    const fixture = structuredClone(auditFixture);
+    fixture.result.pages = [{ ...fixture.result.pages[1], responseTimeMs: 0, indexable: false }];
+    wrap("en", { initial: fixture });
+    expect(screen.getByText("0 ms · 0 H1")).toBeTruthy();
+    expect(screen.getByText("No")).toBeTruthy();
+  });
+  it("localizes safe failure reasons and hides raw details in old saved reports", () => {
+    const fixture = structuredClone(failedAuditFixture);
+    fixture.result.pages[0].issues[0].message =
+      "getaddrinfo ENOTFOUND secret-value.internal.example.com";
+    const { container } = wrap("pl", { initial: fixture });
+    expect(screen.getByText(pl.projectSiteAudit.fetchReasons.dns)).toBeTruthy();
+    expect(screen.getByText("Nieznana")).toBeTruthy();
+    expect(container.textContent).not.toContain("secret-value");
+  });
   it("runs the form and shows real returned URL issues", async () => {
     wrap();
     fireEvent.click(screen.getByRole("button", { name: "Run audit" }));

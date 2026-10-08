@@ -1,3 +1,5 @@
+import { DeploymentAdmissionExhaustedError } from "./execution-extension-errors";
+
 export type ProviderUsageReceipt = {
   cached: boolean;
   costCents: number | null;
@@ -7,8 +9,10 @@ export type ProviderUsageReceipt = {
 };
 
 export type ProviderUsageObserver = {
-  begin(): Promise<string>;
+  begin(input?: { attemptKey: string }): Promise<string>;
   settle(attemptId: string, receipt: ProviderUsageReceipt): Promise<void>;
+  beforeDispatch?(attemptId: string): Promise<void>;
+  cancel?(attemptId: string): Promise<void>;
 };
 
 export type ProviderUsageFailurePhase =
@@ -52,9 +56,14 @@ export async function readObservedResponse<T>(input: {
   requireMeasuredUsage?: boolean;
 }) {
   let attemptId: string | undefined;
+  // One identity exists before accounting starts; a new paid request gets a new identity.
+  const attemptKey = crypto.randomUUID();
   try {
-    attemptId = await input.observer?.begin();
+    attemptId = await input.observer?.begin({ attemptKey });
+    if (attemptId) await input.observer?.beforeDispatch?.(attemptId);
   } catch (cause) {
+    if (attemptId) await input.observer?.cancel?.(attemptId);
+    if (cause instanceof DeploymentAdmissionExhaustedError) throw cause;
     throw new ProviderUsagePersistenceError({
       cause,
       phase: "admission",

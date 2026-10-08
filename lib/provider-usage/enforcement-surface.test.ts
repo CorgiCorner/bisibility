@@ -1,5 +1,16 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { assertProviderAllocationAvailable, ProviderAllocationExhaustedError } from "./enforcement";
+
+const mocks = vi.hoisted(() => ({ authority: vi.fn() }));
+vi.mock("@/lib/providers/execution-authority", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/providers/execution-authority")>()),
+  readDeploymentMeteringPreflightAuthority: mocks.authority,
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.authority.mockResolvedValue("legacy");
+});
 
 const catalog = [
   {
@@ -47,6 +58,54 @@ function db(
 const initializedProject = { budgetCapCents: 50, providerAllocationsInitializedAt: new Date() };
 
 describe("provider allocation enforcement by request surface", () => {
+  it("defers an active connection allocation to its authoritative admission", async () => {
+    const client = db(
+      initializedProject,
+      { allocationAmountPerMonth: 0, allocationUnit: "cents", credentialSource: "own" },
+      { _count: { _all: 0 }, _sum: { costCents: 0, usageQuantity: null } },
+    );
+    mocks.authority.mockResolvedValue("active");
+
+    await expect(
+      assertProviderAllocationAvailable(
+        {
+          catalog,
+          connectionId: "c1",
+          estimatedCostCents: 1,
+          projectId: "p1",
+          provider: "metered",
+          surface: "app",
+        },
+        client,
+      ),
+    ).resolves.toMatchObject({ mode: "allocation", remaining: null, surface: "app" });
+
+    expect(mocks.authority).toHaveBeenCalledWith("c1");
+    expect(client.providerCostEntry.aggregate).not.toHaveBeenCalled();
+  });
+
+  it("refuses a draining connection before calculating legacy headroom", async () => {
+    const client = db(initializedProject, {}, {});
+    mocks.authority.mockResolvedValue("draining");
+
+    await expect(
+      assertProviderAllocationAvailable(
+        {
+          catalog,
+          connectionId: "c1",
+          estimatedCostCents: 1,
+          projectId: "p1",
+          provider: "metered",
+          surface: "app",
+        },
+        client,
+      ),
+    ).rejects.toMatchObject({ name: "ProviderUsagePersistenceError" });
+
+    expect(client.providerConnection.findFirst).not.toHaveBeenCalled();
+    expect(client.providerCostEntry.aggregate).not.toHaveBeenCalled();
+  });
+
   it("exhausts only the capped surface when the other surface is unlimited", async () => {
     const client = db(
       initializedProject,

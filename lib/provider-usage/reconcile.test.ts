@@ -65,7 +65,8 @@ function receipt(
     createdAt: TASK_ACCEPTED_AT,
     id: "task_1",
     keywordId: "keyword_1",
-    providerTag: "app=bisibility;stage=dev;src=sdk;trg=manual;f=rank_check;p=project_1;c=task_1",
+    providerTag:
+      "app=bisibility;stage=dev;src=sdk;cs=own;trg=manual;f=rank_check;p=project_1;c=task_1",
     providerTaskId: "09201523-0000-0000-0000-000000000001",
     updatedAt: NOW,
     ...rest,
@@ -114,7 +115,7 @@ function fixture(
         (row) =>
           row.providerTaskId !== null &&
           row.costCents !== null &&
-          row.providerTag !== null &&
+          row.providerTag?.includes(";cs=own;") &&
           row.batch.connectionId !== null,
       )
       .filter((row) => !settled.has(`${row.batch.connectionId}:${row.providerTaskId}`))
@@ -152,6 +153,9 @@ function fixture(
     return rows;
   };
   const client = {
+    meteringUsageEvidence: {
+      findUnique: vi.fn(async () => null),
+    },
     $queryRaw,
     instanceSetting: {
       upsert: vi.fn(
@@ -229,8 +233,19 @@ function fixture(
       }),
     },
   };
+  const transactional = Object.assign(client, {
+    $transaction: async (work: (tx: typeof client) => Promise<unknown>) => {
+      const before = structuredClone(unknownEntries);
+      try {
+        return await work(client);
+      } catch (error) {
+        unknownEntries.splice(0, unknownEntries.length, ...before);
+        throw error;
+      }
+    },
+  });
   return {
-    client,
+    client: transactional,
     pendingUnknownSql: () => capturedUnknownSql,
     receiptsSql: () => capturedSql,
     settled,
@@ -278,7 +293,7 @@ describe("provider usage receipt reconciliation", () => {
         provider: "dataforseo",
         providerRequestId: "09201523-0000-0000-0000-000000000001",
         source: "sdk",
-        tag: "app=bisibility;stage=dev;src=sdk;trg=manual;f=rank_check;p=project_1;c=task_1",
+        tag: "app=bisibility;stage=dev;src=sdk;cs=own;trg=manual;f=rank_check;p=project_1;c=task_1",
         trigger: "manual",
         usageQuantity: 1,
       }),
@@ -323,7 +338,7 @@ describe("provider usage receipt reconciliation", () => {
     const receipts = [1, 2, 3, 4, 5].map((index) =>
       receipt({
         id: `task_${index}`,
-        providerTag: `tag-${index}`,
+        providerTag: `tag;cs=own;${index}`,
         providerTaskId: `09201523-0000-0000-0000-00000000000${index}`,
         updatedAt: new Date(NOW.getTime() - index * 60_000),
       }),
@@ -356,7 +371,7 @@ describe("provider usage receipt reconciliation", () => {
     const receipts = Array.from({ length: 350 }, (_, index) =>
       receipt({
         id: `task_${index + 1}`,
-        providerTag: `tag-${index + 1}`,
+        providerTag: `tag;cs=own;${index + 1}`,
         providerTaskId: `09201523-0000-0000-0000-${String(index + 1).padStart(12, "0")}`,
         updatedAt: new Date(NOW.getTime() - index * 1_000),
       }),
@@ -492,7 +507,7 @@ describe("provider usage receipt reconciliation", () => {
         },
       ],
     );
-    state.client.providerCostEntry.findFirst.mockResolvedValueOnce({
+    state.client.providerCostEntry.findFirst.mockResolvedValue({
       id: "native_1",
       measurementStatus: "recorded",
       createdAt: TASK_ACCEPTED_AT,
@@ -525,7 +540,7 @@ describe("provider usage receipt reconciliation", () => {
     state.client.providerCostEntry.update.mockRejectedValueOnce(
       Object.assign(new Error("Unique constraint failed."), { code: "P2002" }),
     );
-    state.client.providerCostEntry.findFirst.mockResolvedValueOnce({
+    state.client.providerCostEntry.findFirst.mockResolvedValue({
       id: "native_1",
       measurementStatus: "recorded",
       createdAt: TASK_ACCEPTED_AT,

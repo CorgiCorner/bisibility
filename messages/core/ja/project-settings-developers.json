@@ -77,7 +77,7 @@
     "webhooks": {
       "title": "デプロイ Webhook",
       "inbound": "受信: デプロイ後に CI が bisibility を呼び出し、その呼び出しがタイムラインのシグナルになります。",
-      "outbound": "送信 Webhook はこちらではなく、通知設定にあるアラートチャネルです。",
+      "outbound": "送信 Webhook はこちらではなく、アラートにあるアラートチャネルです。",
       "add": "デプロイフックを追加",
       "disabledDescription": "無効: 行とトークンはそのまま残ります。",
       "sendTestDescription": "「テスト送信」では実際のシグナルを送信し、そのシグナルへのリンクを表示します。",

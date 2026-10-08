@@ -2,8 +2,11 @@ import { randomBytes } from "node:crypto";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
 import type { Budget } from "@usagekit/core";
 import type { Clock, Store } from "@usagekit/store";
+import { billingImports } from "./billing";
 import { currentBudgets, matchingScopes, saveBudget, status } from "./budgets";
 import { commands } from "./commands";
+import { requestCounters } from "./counters";
+import { operationsReader } from "./operations";
 import { usageReader } from "./reads";
 import { find } from "./records";
 import { type Counters, Prisma, transactions } from "./sql";
@@ -33,8 +36,12 @@ export async function createPostgresStore({
     return row.value;
   });
   const aggregate = usageReader(clock, secret);
+  const operations = operationsReader(clock, secret);
   const store: Store = {
+    ...billingImports(tx, clock, testHooks?.afterOperationWrite),
     ...commands(tx, clock, testHooks?.afterOperationWrite),
+    ...requestCounters(tx, clock),
+    listOperations: (query) => tx.read((sql) => operations(sql, query)),
     getOperation: (ref) => tx.read(async (sql) => (await find(sql, ref))?.op ?? null),
     aggregate: (query) => tx.read((sql) => aggregate(sql, query)),
     definedBudgets: (query) =>
@@ -46,6 +53,7 @@ export async function createPostgresStore({
           query.scope.namespace,
           matchingScopes(query),
           query.surface,
+          query.source,
         );
         const result = [];
         for (const budget of budgets) result.push(await status(sql, budget, clock.now()));

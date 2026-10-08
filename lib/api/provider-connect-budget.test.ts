@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   audit: vi.fn(),
   verify: vi.fn(),
+  readAllocationAuthority: vi.fn(),
   prisma: {
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
@@ -19,6 +20,10 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/providers/execution-extension", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/providers/execution-extension")>()),
+  readDeploymentMeteringAllocationAuthority: mocks.readAllocationAuthority,
+}));
 vi.mock("@/lib/providers/crypto", () => ({
   decryptProviderCredentials: () => ({}),
   encryptSecret: () => "encrypted",
@@ -66,6 +71,7 @@ let project: { budgetCapCents: number; providerAllocationsInitializedAt: Date | 
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.readAllocationAuthority.mockResolvedValue("legacy");
   rows = new Map();
   project = { budgetCapCents: 5000, providerAllocationsInitializedAt: null };
   mocks.verify.mockResolvedValue({ ok: true, message: "Connected.", balance: 0.95372 });
@@ -147,6 +153,24 @@ describe("starting provider budgets", () => {
     expect(mocks.prisma.providerConnection.upsert.mock.calls[0]?.[0].update).not.toHaveProperty(
       "allocationAmountPerMonth",
     );
+  });
+
+  it.each([
+    ["active", "Active metering funding source cannot change before rollback"],
+    ["draining", "Metering allocation mutation awaits rollback reconciliation"],
+  ])("refuses reconnect under %s authority without changing budgets", async (state, message) => {
+    rows.set(
+      "dataforseo",
+      connection("dataforseo", { allocationAmountPerMonth: 17, allocationUnit: "cents" }),
+    );
+    mocks.readAllocationAuthority.mockResolvedValue(state);
+
+    await expect(connectProviderConnection(input, context)).rejects.toThrow(message);
+
+    expect(rows.get("dataforseo")?.allocationAmountPerMonth).toBe(17);
+    expect(mocks.prisma.providerConnection.upsert).not.toHaveBeenCalled();
+    expect(mocks.prisma.project.updateMany).not.toHaveBeenCalled();
+    expect(mocks.audit).not.toHaveBeenCalled();
   });
 
   it("preserves the existing project's legacy budget when adding a second provider", async () => {

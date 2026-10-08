@@ -3,6 +3,7 @@ import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
 import { type AdmissionObservation, compareAdmission } from "@/lib/metering/admission";
 import { catalogEntry } from "@/lib/provider-allocations/validation";
 import type { ProviderAllocationUnit } from "@/lib/providers/allocation-catalog";
+import { readDeploymentMeteringPreflightAuthority } from "@/lib/providers/execution-authority";
 import type { ProviderCatalogEntry } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { isBudgetExhaustedError, monthUtcRange } from "@/lib/rank-check/budget";
@@ -113,7 +114,9 @@ async function evaluateProviderAllocation(input: Input, db: EnforcementClient) {
     where: { id: input.projectId },
   });
   if (!project) throw new Error("Project not found.");
-  if (!project.providerAllocationsInitializedAt) {
+  const authority = await readDeploymentMeteringPreflightAuthority(input.connectionId);
+  if (authority === "draining") throw new ProviderUsagePersistenceError();
+  if (!project.providerAllocationsInitializedAt && authority !== "active") {
     await input.legacyBudgetCheck?.(project.budgetCapCents, input.estimatedCostCents);
     return { mode: "legacy" as const, remaining: project.budgetCapCents };
   }
@@ -129,6 +132,14 @@ async function evaluateProviderAllocation(input: Input, db: EnforcementClient) {
     where: { id: input.connectionId, projectId: input.projectId, provider: input.provider },
   });
   if (!connection) throw new Error("Provider connection not found.");
+  if (authority === "active")
+    return {
+      mode: "allocation" as const,
+      remaining: null,
+      surface: input.surface,
+      unit:
+        connection.credentialSource === "hosted" ? ("cents" as const) : connection.allocationUnit,
+    };
   const budget = sourceBudget(connection, input);
   if (!budget)
     return { mode: "allocation" as const, remaining: null, surface: input.surface, unit: null };

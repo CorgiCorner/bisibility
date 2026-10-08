@@ -3,7 +3,10 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { createProviderRequestAttribution } from "@/lib/provider-usage/tag";
-import { startDeploymentExecution } from "@/lib/providers/execution-extension";
+import {
+  hostedRankCheckEstimatedCostCents,
+  startDeploymentExecution,
+} from "@/lib/providers/execution-extension";
 import { exactExecutionEstimate } from "@/lib/providers/execution-extension-estimate";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import type { SerpDepth } from "@/lib/serp/constants";
@@ -103,7 +106,8 @@ export async function prepareLiveRankExecution(
           connectionId: input.connection.id,
           credential: providerUsage.credential,
           estimatedCostCents: exactExecutionEstimate(
-            estimatedRankCheckCostCents(provider, depth, null, LIST_PROVIDER_RATE_CONTEXT),
+            hostedRankCheckEstimatedCostCents(provider, depth) ??
+              estimatedRankCheckCostCents(provider, depth, null, LIST_PROVIDER_RATE_CONTEXT),
             4,
           ),
           // Depth changes estimated cost; one rank task is one native operation.

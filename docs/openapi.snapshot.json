@@ -2462,12 +2462,12 @@
         "properties": {
           "city": {
             "deprecated": true,
-            "description": "City name resolved within country when location_key is omitted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
+            "description": "City name resolved within country when location_key is omitted. Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.",
             "type": ["string", "null"]
           },
           "country": {
             "deprecated": true,
-            "description": "Country market name used when location_key is omitted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
+            "description": "Country market name used when location_key is omitted. Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -2513,13 +2513,13 @@
           },
           "language": {
             "deprecated": true,
-            "description": "SERP UI language code combined with country when location_key is omitted; use the @language qualifier on location_key instead. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
+            "description": "SERP UI language code combined with country when location_key is omitted; use the @language qualifier on location_key instead. Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.",
             "example": "en",
             "type": "string"
           },
           "location": {
             "deprecated": true,
-            "description": "Backward-compatible alias for country. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
+            "description": "Backward-compatible alias for country. Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -2995,12 +2995,12 @@
         "properties": {
           "city": {
             "deprecated": true,
-            "description": "Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
+            "description": "Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted. Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.",
             "type": ["string", "null"]
           },
           "country": {
             "deprecated": true,
-            "description": "Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
+            "description": "Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted. Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -3052,7 +3052,7 @@
           },
           "location": {
             "deprecated": true,
-            "description": "Backward-compatible alias for country. Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
+            "description": "Backward-compatible alias for country. Keyword identity field. A value that resolves to a market different from the stored market is rejected with 409; a value that resolves to the same market is accepted. Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -4068,12 +4068,12 @@
         "properties": {
           "city": {
             "deprecated": true,
-            "description": "Optional city name resolved within country when location_key is omitted. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
+            "description": "Optional city name resolved within country when location_key is omitted. Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.",
             "type": ["string", "null"]
           },
           "country": {
             "deprecated": true,
-            "description": "Optional country selector when location_key is omitted. Provide together with device. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
+            "description": "Optional country selector when location_key is omitted. Provide together with device. Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.",
             "enum": [
               "United States",
               "United Kingdom",
@@ -13432,7 +13432,7 @@
           },
           {
             "deprecated": true,
-            "description": "Filter by canonical country or stored location alias. Also accepted as filter[country]. Deprecated legacy market input: send location_key instead. Accepted until Bisibility 0.24.0, then removed.",
+            "description": "Filter by canonical country or stored location alias. Also accepted as filter[country]. Deprecated legacy market input: send location_key instead. Still accepted for compatibility; no removal version is scheduled.",
             "in": "query",
             "name": "country",
             "schema": {

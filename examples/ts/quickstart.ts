@@ -1,7 +1,7 @@
 import { BisibilityApiError, BisibilityClient } from "@bisibility/sdk";
 
 const exampleId = "ts-quickstart";
-const maxHistoryAttempts = 5;
+const maxHistoryAttempts = 240;
 
 // docs:start:method-contract
 const docsMethodContract = {
@@ -86,11 +86,12 @@ async function run() {
     console.log(`Created keyword ${keywordId}`);
 
     console.log("Running rank check");
-    const check = await client.runRankCheck(keywordId);
-    console.log(`Rank check ${check.id} completed with position ${check.position ?? "none"}`);
-
-    console.log("Reading rank history");
+    const check = await client.runRankCheckAndWait(keywordId);
+    console.log("Waiting for completed rank history");
     const historyCheck = await waitForRankHistory(client, keywordId, check.id);
+    console.log(
+      `Rank check ${historyCheck.id} completed with position ${historyCheck.position ?? "none"}`,
+    );
     console.log(`History includes ${historyCheck.id} from ${historyCheck.checked_at}`);
   } finally {
     if (keywordId) {

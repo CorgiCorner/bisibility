@@ -1,5 +1,6 @@
 import type {
   AllowanceExceeded,
+  BudgetAlertCrossed,
   Operation,
   OperationRef,
   Receipt,
@@ -26,6 +27,7 @@ export type OperationRow = {
   updated_at: Date;
   semantic_hash: string;
   warnings: unknown;
+  alerts: unknown;
 };
 export async function operationRow(sql: Sql, namespace: string, id: string) {
   const [row] = await sql.query<OperationRow>(
@@ -62,7 +64,12 @@ export async function find(sql: Sql, ref: OperationRef) {
   const row = await operationRow(sql, ref.namespace, ref.operationId);
   return row && row.principal === ref.principal ? { row, op: await hydrate(sql, row) } : null;
 }
-export async function insert(sql: Sql, op: Operation, warnings: readonly AllowanceExceeded[]) {
+export async function insert(
+  sql: Sql,
+  op: Operation,
+  warnings: readonly AllowanceExceeded[],
+  alerts: readonly BudgetAlertCrossed[],
+) {
   const {
     state: _,
     version: __,
@@ -76,10 +83,10 @@ export async function insert(sql: Sql, op: Operation, warnings: readonly Allowan
   } = op;
   await sql.execute(Prisma.sql`INSERT INTO metering_operation
     (operation_pk, namespace, principal, operation_id, state, version, semantic_hash, budget_epochs,
-     reservation_expires_at, created_at, updated_at, input, warnings)
+     reservation_expires_at, created_at, updated_at, input, warnings, alerts)
     VALUES (${key(op.scope.namespace, op.operationId)},${op.scope.namespace},${op.scope.principal},${op.operationId},
       ${op.state},${op.version},${hash(identity(input))},${encode(op.budgetEpochs)}::jsonb,
-      ${new Date(op.reservationExpiresAt)},${new Date(op.createdAt)},${new Date(op.updatedAt)},${encode(input)}::jsonb,${encode(warnings)}::jsonb)`);
+      ${new Date(op.reservationExpiresAt)},${new Date(op.createdAt)},${new Date(op.updatedAt)},${encode(input)}::jsonb,${encode(warnings)}::jsonb,${encode(alerts)}::jsonb)`);
 }
 export async function update(sql: Sql, before: Operation, op: Operation, leaseKind: string | null) {
   const count =
