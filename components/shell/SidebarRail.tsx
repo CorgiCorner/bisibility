@@ -189,6 +189,7 @@ type LocalizedNavItem = NavItem & { badgeLabel?: string };
 
 const navigationItemKeys = {
   "AI Visibility": "items.aiVisibility",
+  "AI Tracking": "items.aiTracking",
   "Prompt Explorer": "items.promptExplorer",
   "Site Audit": "items.siteAudit",
   "Project Context": "items.projectContext",
@@ -208,13 +209,19 @@ const navigationItemKeys = {
   Settings: "items.settings",
 } as const;
 
-function localizedItem(t: ReturnType<typeof useTranslations>, item: NavItem): LocalizedNavItem {
+function localizedItem(
+  t: ReturnType<typeof useTranslations<"shell.navigation">>,
+  item: NavItem,
+): LocalizedNavItem {
   const key = navigationItemKeys[item.label as keyof typeof navigationItemKeys];
   if (!key) throw new Error(`Missing shell navigation key for ${item.label}`);
   return { ...item, badgeLabel: item.badge ? t(`badges.${item.badge}`) : undefined, label: t(key) };
 }
 
-function localizedGroup(t: ReturnType<typeof useTranslations>, group: NavItemGroupDescriptor) {
+function localizedGroup(
+  t: ReturnType<typeof useTranslations<"shell.navigation">>,
+  group: NavItemGroupDescriptor,
+) {
   return {
     ...group,
     label: t(`groups.${group.id}.label`),

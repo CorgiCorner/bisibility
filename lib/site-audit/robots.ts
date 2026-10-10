@@ -15,9 +15,10 @@ function pathMatches(pattern: string, path: string) {
   );
 }
 export function robotsDisallows(text: string, pathname: string) {
-  let applies = false;
+  type Group = { agents: string[]; rules: { allow: boolean; path: string }[] };
+  const groups: Group[] = [];
+  let group: Group = { agents: [], rules: [] };
   let groupStarted = false;
-  const rules: { allow: boolean; path: string }[] = [];
   for (const line of text.split(/\r?\n/).slice(0, 5000)) {
     const content = line.split("#")[0]?.trim() ?? "";
     const separator = content.indexOf(":");
@@ -26,17 +27,24 @@ export function robotsDisallows(text: string, pathname: string) {
     const value = content.slice(separator + 1).trim();
     if (directive === "user-agent") {
       if (groupStarted) {
-        applies = false;
+        groups.push(group);
+        group = { agents: [], rules: [] };
         groupStarted = false;
       }
-      applies ||= value === "*" || value.toLowerCase() === "bisibilitysiteaudit";
+      group.agents.push(value.toLowerCase());
     } else if (directive === "allow" || directive === "disallow") {
       groupStarted = true;
-      if (applies && value && value.length <= 512)
-        rules.push({ allow: directive === "allow", path: value });
+      if (value && value.length <= 512)
+        group.rules.push({ allow: directive === "allow", path: value });
     }
   }
-  const matching = rules
+  groups.push(group);
+  const specific = groups.filter((entry) => entry.agents.includes("bisibilitysiteaudit"));
+  const applicable = specific.length
+    ? specific
+    : groups.filter((entry) => entry.agents.includes("*"));
+  const matching = applicable
+    .flatMap((entry) => entry.rules)
     .filter((rule) => pathMatches(rule.path, pathname))
     .sort((a, b) => b.path.length - a.path.length || Number(b.allow) - Number(a.allow));
   return matching[0] ? !matching[0].allow : false;
@@ -57,6 +65,7 @@ export function auditRobotsPolicy(
       });
       if (fetched.status !== 200 && fetched.status !== 404) {
         limitations.push(`robots.txt returned HTTP ${fetched.status}.`);
+        if (fetched.status === 429) throw new Error("robots.txt is rate limited.");
         if (origin !== target.origin || new URL(fetched.url).origin !== target.origin)
           throw new Error("Canonical origin robots.txt could not be read.");
       }

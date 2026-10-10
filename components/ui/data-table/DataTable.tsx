@@ -143,8 +143,8 @@ export function DataTable<TRow extends DataTableRowBase>({
         dataTableRootClassName,
         // The surface drawing the border must also own its corners, even inside a clipped card.
         bordered && "overflow-hidden rounded-card",
-        // A borderless table owns its header top rule; -mt-px lays it over any rule directly above.
-        !bordered && "-mt-px border-0",
+        // Keep the header rule inside the viewport, including clipped card bodies.
+        !bordered && "border-0",
         layout === "fill"
           ? "flex h-full flex-col overflow-auto"
           : rowCount > 0
@@ -165,6 +165,7 @@ export function DataTable<TRow extends DataTableRowBase>({
     >
       <div className="min-w-full shrink-0" style={{ width: `var(${DATA_TABLE_WIDTH_VARIABLE})` }}>
         <DataTableHeader
+          bordered={bordered}
           onSelectionChange={onSelectionChange}
           onSortingChange={onSortingChange}
           rows={selectionRows}

@@ -123,7 +123,21 @@ For Codex and other Agent Skills clients, install the complete `plugins/bisibili
 
 The workflow uses `list_projects`, `get_project`, `get_project_context`, `run_site_audit`, `get_site_audit`, `list_keywords`, `list_agent_reports`, `get_agent_report` and `create_agent_report`. It requires v0.28.0 or newer with these tools visible in the client's tool snapshot. A fresh crawl and report save need write scope plus project membership that allows writes. A read-only client can analyze stored data but must report that it could not crawl or save.
 
-The crawler samples at most 15 pages in 15 seconds and does not render JavaScript or run Lighthouse. Reports retain source dates, partial crawl limits, missing data and uncertainty. Saved AI Visibility evidence is provider-observed; Prompt Explorer responses are synthetic tests and cannot establish real consumer visibility. Optional paid enrichment uses an estimate followed by explicit approval of the operation and cost cap, whether funded by your own provider key or deployment credits.
+The crawler samples at most 15 pages within a 20-request, 15-second budget,
+including robots reads, redirects and retries; each response body is limited
+to 512 KiB. It does not render JavaScript or run Lighthouse. Read `state`,
+`stop_reason` and `limitations` before drawing conclusions: `complete` describes
+the bounded sample, not the whole site or verified search-engine indexing.
+Persistent page 429 responses and unavailable robots policies produce partial
+evidence; robots-disallowed paths are policy skips. Do not label a rate-limited
+page as missing content or a broken link. See [Site Audit](/guides/site-audit)
+for URL scope, retry behavior and saved-report reuse.
+
+Reports retain source dates, partial crawl limits, missing data and uncertainty.
+Saved AI Visibility evidence is provider-observed; Prompt Explorer responses
+are synthetic tests and cannot establish real consumer visibility. Optional
+paid enrichment uses an estimate followed by explicit approval of the operation
+and cost cap, whether funded by your own provider key or deployment credits.
 
 The skill saves bounded JSON/text with external kind `seo_audit` and returns `/app/<project_id>/agent-reports/<report_id>` on your app origin after confirming the save. This link inherits project access and does not publish the report publicly.
 

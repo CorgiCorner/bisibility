@@ -63,6 +63,9 @@ x-app-env: &app-env
   LEGAL_OPERATOR_NAME: ${LEGAL_OPERATOR_NAME:-}
   LEGAL_PRIVACY_URL: ${LEGAL_PRIVACY_URL:-}
   LEGAL_TERMS_URL: ${LEGAL_TERMS_URL:-}
+  NEXT_PUBLIC_DOMAIN_ICONS: ${NEXT_PUBLIC_DOMAIN_ICONS:-}
+  NEXT_PUBLIC_PLAUSIBLE_DOMAIN: ${NEXT_PUBLIC_PLAUSIBLE_DOMAIN:-}
+  NEXT_PUBLIC_PLAUSIBLE_URL: ${NEXT_PUBLIC_PLAUSIBLE_URL:-}
   OPS_EVENTS_ENABLED: ${OPS_EVENTS_ENABLED:-}
   OPS_HEARTBEAT_CRON: ${OPS_HEARTBEAT_CRON:-}
   OPS_HEARTBEAT_TZ: ${OPS_HEARTBEAT_TZ:-}
@@ -90,7 +93,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.29.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.30.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate
@@ -101,7 +104,7 @@ services:
         condition: service_healthy
 
   app:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.29.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.30.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:

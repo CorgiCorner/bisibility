@@ -8,7 +8,10 @@ import type {
 } from "@/components/settings/usage/budget-edit-modal-model";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StatusPill } from "@/components/ui/StatusPill";
-import { tableHeaderClassName } from "@/components/ui/table-header-styles";
+import {
+  tableHeaderClassName,
+  tableHeaderFrameBorderClassName,
+} from "@/components/ui/table-header-styles";
 import type { ProviderSpendConnection } from "@/lib/queries/provider-spend";
 import type { ProviderSpendSourceBlock } from "@/lib/queries/provider-spend-types";
 import type { UsageBudgetCredits } from "@/lib/settings/usage-budget-credits";
@@ -126,14 +129,25 @@ export function BudgetEditTable({
   return (
     <div className="mt-4 overflow-x-auto rounded-control border border-border">
       <div className="grid w-full min-w-[480px] grid-cols-[minmax(0,34%)_minmax(0,1fr)_minmax(0,1fr)] text-left">
-        <div className={cn(tableHeaderClassName, "px-3 py-2")}>{t("providerColumn")}</div>
-        <div className={cn(tableHeaderClassName, "px-3 py-2")}>
+        <div
+          className={cn(tableHeaderClassName, tableHeaderFrameBorderClassName, "px-3 py-2")}
+          data-table-header-border="frame"
+        >
+          {t("providerColumn")}
+        </div>
+        <div
+          className={cn(tableHeaderClassName, tableHeaderFrameBorderClassName, "px-3 py-2")}
+          data-table-header-border="frame"
+        >
           <span className="inline-flex items-center gap-0.5">
             {t("appBudget")}
             <InfoTooltip text={t("appColumnHelp")} />
           </span>
         </div>
-        <div className={cn(tableHeaderClassName, "px-3 py-2")}>
+        <div
+          className={cn(tableHeaderClassName, tableHeaderFrameBorderClassName, "px-3 py-2")}
+          data-table-header-border="frame"
+        >
           <span className="inline-flex items-center gap-0.5">
             {t("programmaticBudget")}
             <InfoTooltip text={t("programmaticColumnHelp")} />

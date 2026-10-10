@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { tableHeaderBorderClassName } from "@/components/ui/table-header-styles";
 import type { RankedKeywordsPage } from "@/lib/providers/types";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
@@ -85,7 +86,7 @@ export function DomainOverviewKeywordsTable({
 
   return (
     <section className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
-      <header className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-3">
+      <header className="flex flex-wrap items-center gap-2.5 px-4 py-3">
         <h3 className="m-0 text-[14.5px] font-semibold">{t("topOrganicKeywords")}</h3>
         <span className="ml-auto text-[12px] text-fg-muted">{t("previewFetched")}</span>
         <Button
@@ -112,7 +113,8 @@ export function DomainOverviewKeywordsTable({
       <div className="max-h-[640px] overflow-auto">
         <div className="min-w-[1140px]">
           <div
-            className={`sticky top-0 z-1 grid ${keywordTableGrid(readOnly)} items-center gap-3 border-b border-border bg-bg-elev px-4 py-2.5`}
+            className={`sticky top-0 z-1 grid ${keywordTableGrid(readOnly)} items-center gap-3 ${tableHeaderBorderClassName} bg-bg-elev px-4 py-2.5`}
+            data-table-header-border="header"
           >
             {!readOnly ? (
               <Checkbox

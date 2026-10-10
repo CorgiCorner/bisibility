@@ -90,6 +90,9 @@ describe("research workspace model", () => {
     expect(researchFailureState({ ok: false, reason: "budget_exhausted" })).toBe(
       "budget_exhausted",
     );
+    expect(researchFailureState({ ok: false, reason: "account_restricted" })).toBe(
+      "account_restricted",
+    );
     expect(researchFailureState({ ok: false, reason: "needs_reauth" })).toBe("needs_reauth");
     expect(researchFailureState({ ok: false, reason: "unsupported_location" })).toBe(
       "unsupported_location",

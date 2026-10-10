@@ -5,6 +5,7 @@ export type ProviderFeatureRate = {
   checkedAt: string;
   costCents: number;
   feature:
+    | "ai_tracking"
     | "ai_visibility"
     | "prompt_explorer"
     | "backlinks_history"

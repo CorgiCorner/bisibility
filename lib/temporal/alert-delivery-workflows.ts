@@ -84,6 +84,7 @@ async function deliverEmail(context: AlertDeliveryContext, outcomes: AlertDelive
       delivered: false,
       reason: "Email delivery has no enabled recipients.",
       recordAttempt: true,
+      ...(context.emailRecipientsConfigured ? { skipped: true } : {}),
     });
     return;
   }
@@ -181,6 +182,7 @@ export async function alertDigestDeliveryWorkflow(input: AlertDigestJob) {
         channel: "email",
         delivered: false,
         reason: "Email delivery has no enabled recipients.",
+        ...(job.emailRecipientsConfigured ? { skipped: true } : {}),
       });
     }
     for (const recipient of job.recipients) {

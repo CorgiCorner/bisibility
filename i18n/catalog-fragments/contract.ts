@@ -4,6 +4,7 @@
  */
 export type CoreFragmentFile =
   | "project-ai-research"
+  | "project-ai-tracking"
   | "project-site-audit"
   | "agent-workspace"
   | "account-preferences"

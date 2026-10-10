@@ -1,6 +1,7 @@
 import type { ProviderLookupFailure } from "@/lib/provider-lookups/paid-call";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type { BacklinkFlag, BacklinkRowMode, BacklinkTargetScope } from "@/lib/providers/types";
+import type { ProviderUsageFailurePhase } from "@/lib/providers/usage";
 
 export type BacklinksServiceContext = {
   actorId?: string | null;
@@ -70,6 +71,7 @@ export type BacklinksSnapshot = {
   fetchedAt: string;
   fetchedRowCount: number;
   history: BacklinksHistoryMonth[];
+  historyUnavailable?: boolean;
   includeSubdomains: boolean;
   ok: true;
   provider: string;
@@ -98,7 +100,40 @@ export type BacklinksEstimate = {
   targetScope: BacklinkTargetScope;
 };
 
-export type BacklinksOutcome = BacklinksSnapshot | BacklinksEstimate | ProviderLookupFailure;
+export type BacklinksHistoryFailure = {
+  code: "provider_usage_unconfirmed" | "provider_transient" | "unexpected_error";
+  phase: ProviderUsageFailurePhase | null;
+};
+
+/** Failed current request evidence, never a successful or reusable report snapshot. */
+export type BacklinksFailedSummary = {
+  costCents: null;
+  knownSummaryCostCents: number;
+  historyFailure: BacklinksHistoryFailure;
+  historyStatus: "failed";
+  includeSubdomains: boolean;
+  ok: false;
+  provider: string;
+  reason: "history_failed";
+  rowsStatus: "not_requested";
+  status: "failed";
+  summary: BacklinksSummary;
+  target: string;
+  targetScope: BacklinkTargetScope;
+};
+
+export type BacklinksOutcome =
+  | BacklinksSnapshot
+  | BacklinksEstimate
+  | BacklinksFailedSummary
+  | ProviderLookupFailure;
+
+export function isBacklinksFailedSummary(outcome: {
+  ok: boolean;
+  reason?: string;
+}): outcome is BacklinksFailedSummary {
+  return !outcome.ok && outcome.reason === "history_failed";
+}
 
 export function isBacklinksEstimate(
   outcome: BacklinksEstimate | BacklinksSnapshot,

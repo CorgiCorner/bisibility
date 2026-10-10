@@ -65,6 +65,40 @@ const stopOnMatchParams = {
 };
 
 describe("dataForSeoProvider", () => {
+  it.each(["task", "envelope"] as const)(
+    "classifies account verification by numeric %s status without retrying",
+    async (level) => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        jsonResponse({
+          cost: 0,
+          status_code: level === "envelope" ? 40104 : 20000,
+          status_message: "Untrusted provider text with secret",
+          tasks: [
+            {
+              cost: 0,
+              status_code: level === "task" ? 40104 : 20000,
+              status_message: "Untrusted provider text with secret",
+            },
+          ],
+        }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      const fetchRelated = dataForSeoProvider.fetchRelatedKeywords;
+      if (!fetchRelated) throw new Error("Related keyword research is unavailable.");
+      await expect(
+        fetchRelated(
+          { login: "login", password: "secret" },
+          { includeClickstream: false, limit: 100, location: location(), seed: "rank tracker" },
+        ),
+      ).rejects.toMatchObject({
+        code: "provider_account_restricted",
+        costCents: 0,
+        message: "Verify your DataForSEO account in the provider dashboard before using the API.",
+      });
+      expect(fetchMock).toHaveBeenCalledOnce();
+    },
+  );
+
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.clearAllMocks();

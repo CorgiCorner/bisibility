@@ -41,6 +41,7 @@ describe("OpenAPI document", () => {
     expect(doc).toHaveProperty(
       "tags",
       [
+        "ai-tracking",
         "discovery",
         "account-access",
         "projects",
@@ -64,7 +65,7 @@ describe("OpenAPI document", () => {
         "migration",
       ].map((name) => expect.objectContaining({ name })),
     );
-    expect(operations).toHaveLength(114);
+    expect(operations).toHaveLength(141);
     expect(operations.every((operation) => operation.tags?.length === 1)).toBe(true);
     expect(
       operations.every(

@@ -1,23 +1,33 @@
 "use client";
 
-import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
-import { formatDateTime } from "@/lib/dates/format";
+import { projectRunsPath } from "@/lib/routing/project-runs-path";
+import { type ProjectRunsQuery, updateProjectRunsQuery } from "@/lib/runs/filters";
 import type { ProjectRun } from "@/lib/runs/project-run";
+import { projectRunTimelineAt, projectRunTimelineGroup } from "@/lib/runs/project-runs-timeline";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useMemo, useState, useTransition } from "react";
 import { RunActions } from "./ProjectRunActions";
 import type { ProjectRunWithOperationSnapshot } from "./project-runs-presentation";
+import { progressFor, scopeLabelFor, titleFor } from "./project-runs-table-copy";
 import { RunStatusChip } from "./RunStatusChip";
 import { RunStatusLegend } from "./RunStatusLegend";
+import { RunTimelineSection } from "./RunTimelineSection";
+import { RunTimelineTime } from "./RunTimelineTime";
+import { RunTitleCell } from "./RunTitleCell";
 import { useRunStatusCopy } from "./run-status-copy";
 
 type ProjectRunAction = (input: { projectRef: string; runId: string }) => Promise<void>;
 
-type ProjectRunsTableRow = { id: string; run: ProjectRunWithOperationSnapshot; title: string };
+type ProjectRunsTableRow = {
+  id: string;
+  kind?: "section";
+  run: ProjectRunWithOperationSnapshot;
+  title: string;
+};
 
 type ProjectRunsTableProps = {
   canMutate: boolean;
@@ -27,34 +37,8 @@ type ProjectRunsTableProps = {
   onSkip: ProjectRunAction;
   projectRef: string;
   rows: readonly ProjectRunWithOperationSnapshot[];
+  query?: ProjectRunsQuery;
 };
-
-function progressFor(run: ProjectRun, t: ReturnType<typeof useTranslations<"projectRuns.table">>) {
-  const { completed, total } = run.progress;
-  if (completed === null || total === null) return t("notAvailable");
-  return t("progressValue", { completed, total });
-}
-
-function titleFor(run: ProjectRun, t: ReturnType<typeof useTranslations<"projectRuns.table">>) {
-  if (run.title.kind === "gsc_import") return t("searchConsoleImport");
-  if (run.title.trigger === "api") return t("rankCheckApi");
-  if (run.title.trigger === "manual") return t("rankCheckManual");
-  if (run.title.trigger === "retry") return t("rankCheckRetry");
-  return t("rankCheckScheduled");
-}
-
-function scopeLabelFor(
-  run: ProjectRun,
-  t: ReturnType<typeof useTranslations<"projectRuns.table">>,
-) {
-  return run.scope.kind === "rank_check"
-    ? t("keywordCount", { count: run.scope.keywordCount })
-    : t("searchConsole");
-}
-
-function startedAt(run: ProjectRun) {
-  return run.kind === "rank_check" ? run.timestamps.startedAt : run.timestamps.syncStartedAt;
-}
 
 export function ProjectRunsTable({
   canMutate,
@@ -64,10 +48,12 @@ export function ProjectRunsTable({
   onSkip,
   projectRef,
   rows,
+  query,
 }: Readonly<ProjectRunsTableProps>) {
   const t = useTranslations("projectRuns.table");
+  const timelineT = useTranslations("projectRuns.timeline");
+  const timeline = query?.view === "timeline";
   const statusCopy = useRunStatusCopy();
-  const dateFormat = useDateFormat();
   const isDesktop = useMediaQuery("(min-width:1024px)");
   const router = useRouter();
   const [pendingRunId, setPendingRunId] = useState<string | null>(null);
@@ -96,23 +82,34 @@ export function ProjectRunsTable({
     () => [
       {
         accessorKey: "title",
-        cell: ({ row }) => (
-          <span className="block min-w-0">
-            <span
-              className="block truncate font-medium text-fg"
-              title={titleFor(row.original.run, t)}
-            >
-              {titleFor(row.original.run, t)}
-            </span>
+        enableSorting: false,
+        cell: ({ row }) => <RunTitleCell run={row.original.run} compact={!isDesktop} />,
+        header: () => (
+          <span className="inline-flex items-center gap-0.5">
+            {t("operation")}
+            {!isDesktop ? (
+              <RunStatusLegend groups={statusCopy.groups} label={t("statusLegend")} />
+            ) : null}
           </span>
         ),
-        header: t("operation"),
         meta: { flex: 1, pin: "left", title: t("operation") },
         minSize: 210,
         size: 260,
       },
       {
+        id: "when",
+        accessorFn: (row) => projectRunTimelineAt(row.run),
+        cell: ({ row }) => <RunTimelineTime run={row.original.run} />,
+        enableSorting: timeline,
+        sortDescFirst: true,
+        header: timelineT("when"),
+        meta: { title: timelineT("when"), sortField: "when" },
+        minSize: 166,
+        size: 184,
+      },
+      {
         id: "type",
+        enableSorting: false,
         cell: ({ row }) =>
           row.original.run.kind === "rank_check" ? t("rankCheck") : t("searchConsoleImport"),
         header: t("type"),
@@ -122,6 +119,7 @@ export function ProjectRunsTable({
       },
       {
         id: "scope",
+        enableSorting: false,
         cell: ({ row }) => (
           <span className="block min-w-0">
             <span className="block truncate text-fg" title={scopeLabelFor(row.original.run, t)}>
@@ -144,7 +142,15 @@ export function ProjectRunsTable({
       },
       {
         id: "status",
-        cell: ({ row }) => <RunStatusChip {...statusCopy.forRun(row.original.run)} />,
+        cell: ({ row }) => (
+          <span className="grid gap-1">
+            <RunStatusChip {...statusCopy.forRun(row.original.run)} />
+            {row.original.run.kind === "rank_check" &&
+            row.original.run.details.blockedReason === "no_active_keywords" ? (
+              <span className="text-[10.5px] text-fg-muted">{timelineT("noActiveKeywords")}</span>
+            ) : null}
+          </span>
+        ),
         enableSorting: false,
         header: () => (
           <span className="inline-flex items-center gap-0.5">
@@ -153,11 +159,12 @@ export function ProjectRunsTable({
           </span>
         ),
         meta: { title: t("status") },
-        minSize: 152,
-        size: 152,
+        minSize: 168,
+        size: 192,
       },
       {
         id: "progress",
+        enableSorting: false,
         cell: ({ row }) => <span className="tabular-nums">{progressFor(row.original.run, t)}</span>,
         header: t("progress"),
         meta: { align: "end", title: t("progress") },
@@ -166,6 +173,7 @@ export function ProjectRunsTable({
       },
       {
         id: "unit",
+        enableSorting: false,
         cell: ({ row }) =>
           row.original.run.progress.unit === "days" ? t("finalizedDays") : t("targets"),
         header: t("unit"),
@@ -174,27 +182,8 @@ export function ProjectRunsTable({
         size: 128,
       },
       {
-        id: "submitted",
-        cell: ({ row }) =>
-          formatDateTime(new Date(row.original.run.timestamps.createdAt), dateFormat),
-        header: t("submitted"),
-        meta: { title: t("submitted") },
-        minSize: 166,
-        size: 184,
-      },
-      {
-        id: "started",
-        cell: ({ row }) => {
-          const value = startedAt(row.original.run);
-          return value ? formatDateTime(new Date(value), dateFormat) : t("notStarted");
-        },
-        header: t("started"),
-        meta: { title: t("started") },
-        minSize: 166,
-        size: 184,
-      },
-      {
         id: "actions",
+        enableSorting: false,
         cell: ({ row }) => (
           <RunActions
             canMutate={canMutate}
@@ -221,7 +210,7 @@ export function ProjectRunsTable({
     ],
     [
       canMutate,
-      dateFormat,
+      isDesktop,
       mutate,
       onRunNow,
       onSkip,
@@ -231,6 +220,8 @@ export function ProjectRunsTable({
       router,
       statusCopy,
       t,
+      timeline,
+      timelineT,
     ],
   );
 
@@ -238,15 +229,54 @@ export function ProjectRunsTable({
     <div className="grid min-w-0 gap-2 [&_[data-column-id=actions]]:px-2 [&_[data-column-id=status]]:px-2">
       <DataTable
         bordered={false}
+        density={isDesktop ? "standard" : "comfortable"}
         ariaLabel={t("projectRuns")}
         columnPinning={isDesktop ? undefined : { left: [], right: ["actions"] }}
+        columnVisibility={
+          isDesktop
+            ? undefined
+            : {
+                when: false,
+                type: false,
+                scope: false,
+                status: false,
+                progress: false,
+                unit: false,
+              }
+        }
         columns={columns}
         emptyState={emptyState}
         id="project-runs-table"
         onRowClick={(row) => router.push(row.run.href)}
-        onSortingChange={() => undefined}
-        rows={rows.map((run) => ({ id: run.id, run, title: titleFor(run, t) }))}
-        sorting={null}
+        onSortingChange={(sort) =>
+          query &&
+          router.push(
+            projectRunsPath(
+              projectRef,
+              updateProjectRunsQuery(query, { order: sort?.direction ?? "default", cursor: null }),
+            ),
+          )
+        }
+        renderSection={(row) => <RunTimelineSection run={row.run} order={query?.order} />}
+        rows={rows.flatMap((run, index) => {
+          const row: ProjectRunsTableRow = { id: run.id, run, title: titleFor(run, t) };
+          return timeline &&
+            (index === 0 ||
+              projectRunTimelineGroup(rows[index - 1]) !== projectRunTimelineGroup(run))
+            ? [
+                { ...row, id: `section-${projectRunTimelineGroup(run)}`, kind: "section" as const },
+                row,
+              ]
+            : [row];
+        })}
+        sorting={
+          query?.order && query.order !== "default"
+            ? { field: "when", direction: query.order }
+            : null
+        }
+        rowClassName={(row) =>
+          projectRunTimelineGroup(row.run) === 2 ? "text-fg-muted" : undefined
+        }
       />
       {actionError ? (
         <p className="m-0 px-1 text-[12px] text-red-text" role="alert">

@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.30.0] - 2026-10-09
+
+### Added
+
+- Added recurring AI tracking with editable model suggestions, explicit consent, retained answers, citations and comparable run history.
+
+### Changed
+
+- Runs now group in-progress, upcoming and completed work with chronological pagination, clear dates and status filters.
+
+### Fixed
+
+- Fixed AI tracking consent, schedules, trends and retries, migration admission, rank coverage and backlink history, costs and response validation.
+
+- Fixed crawl targets, robots/base handling, DNS and redirect deadlines, sitemap/hreflang parsing, provider restriction diagnostics and self-host runtime settings.
+
+- Fixed empty scheduled runs, disabled alert email failure counts, research menu focus, table header borders and Reports, Context and Runs page spacing.
+
 ## [0.29.0] - 2026-10-08
 
 ### Added

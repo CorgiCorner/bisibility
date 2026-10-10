@@ -1,5 +1,6 @@
 "use server";
 import { listAgentReports } from "@/lib/agent-reports/service";
+import { getAiResearchCatalog } from "@/lib/ai-research/catalog-service";
 import { promptSchema, visibilitySchema } from "@/lib/ai-research/schema";
 import { analyzeAiVisibility, compareAiPrompts } from "@/lib/ai-research/service";
 import { getProjectRole } from "@/lib/auth/authorize";
@@ -30,11 +31,20 @@ export async function getAiResearchPage(projectId: string, mode: "visibility" | 
     kind: mode === "visibility" ? "ai_visibility" : "prompt_explorer",
     limit: 10,
   });
+  const catalogOutcome = await getAiResearchCatalog(project.id);
   return {
+    catalog: catalogOutcome.ok ? catalogOutcome.catalog : undefined,
+    catalogError: catalogOutcome.ok ? undefined : catalogOutcome.message,
     domain: trackedProjectDomain(project.domain) ?? "",
     history,
     canRun:
       canProjectAction(getProjectRole(actor, project.id), "create", "project") &&
       !isProjectReadOnly(project.writeMode),
   };
+}
+
+export async function getAiResearchCatalogAction(projectId: string) {
+  const actor = await getActionActor();
+  const project = await requireProjectScope(actor, "read", projectId, { type: "project" });
+  return getAiResearchCatalog(project.id);
 }

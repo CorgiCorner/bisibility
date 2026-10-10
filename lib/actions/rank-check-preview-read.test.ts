@@ -157,6 +157,7 @@ describe("rank check preview read actions", () => {
         rankChecks: [
           {
             position: null,
+            observationRun: { completeness: "unknown" },
             provider: "dataforseo",
             rankingUrl: null,
             requestedDepth: 20,
@@ -187,6 +188,7 @@ describe("rank check preview read actions", () => {
       position: null,
       requestedDepth: 20,
       recordedCostCents: 0.4,
+      observationCompleteness: "unknown",
     });
     expect(result.candidates[1]?.previousResult).toEqual({
       status: "queued",

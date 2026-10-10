@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { launchDuePlannedRuns, launchPlannedRun } from "./launch-due";
+import { materializePlannedRun } from "./materialize";
 
 const mocks = vi.hoisted(() => ({
   activeLocationIds: ["location_active"],
@@ -10,9 +11,11 @@ const mocks = vi.hoisted(() => ({
   keywordLocations: new Map<string, string>(),
   deleteMany: vi.fn(),
   findKeywords: vi.fn(),
+  countKeywords: vi.fn(),
   findMany: vi.fn(),
   findUnique: vi.fn(),
   currentSchedule: vi.fn(),
+  currentRun: vi.fn(),
   findUniqueOrThrow: vi.fn(),
   isBudgetExhausted: vi.fn(),
   loadChain: vi.fn(),
@@ -36,7 +39,7 @@ vi.mock("@/lib/db/prisma", () => ({
       findUniqueOrThrow: mocks.findUniqueOrThrow,
       updateMany: mocks.updateMany,
     },
-    keyword: { findMany: mocks.findKeywords },
+    keyword: { findMany: mocks.findKeywords, count: mocks.countKeywords },
     projectMarket: { findMany: mocks.findMarkets },
     rankCheckRunItem: { createMany: mocks.createMany, deleteMany: mocks.deleteMany },
   },
@@ -65,6 +68,7 @@ function updateStatus({
 function run(id: string) {
   return {
     checkSchedule: {
+      id: "schedule",
       cronExpression: null,
       enabled: true,
       frequency: "daily",
@@ -126,13 +130,14 @@ describe("planned run launching", () => {
     mocks.updateMany.mockImplementation(updateStatus);
     mocks.txUpdateMany.mockImplementation(updateStatus);
     mocks.currentSchedule.mockResolvedValue({ id: "schedule" });
+    mocks.currentRun.mockResolvedValue({ id: "run_1" });
     mocks.transaction.mockImplementation(async (callback) =>
       callback({
         $queryRaw: mocks.queryRaw,
         checkSchedule: { findFirst: mocks.currentSchedule },
-        keyword: { findMany: mocks.findKeywords },
+        keyword: { findMany: mocks.findKeywords, count: mocks.countKeywords },
         projectMarket: { findMany: mocks.findMarkets },
-        rankCheckRun: { updateMany: mocks.txUpdateMany },
+        rankCheckRun: { findFirst: mocks.currentRun, updateMany: mocks.txUpdateMany },
         rankCheckRunItem: { createMany: mocks.createMany, deleteMany: mocks.deleteMany },
       }),
     );
@@ -150,6 +155,7 @@ describe("planned run launching", () => {
     mocks.findMarkets.mockImplementation(() =>
       Promise.resolve(mocks.activeLocationIds.map((locationId) => ({ locationId }))),
     );
+    mocks.countKeywords.mockResolvedValue(0);
     mocks.createMany.mockResolvedValue({ count: 1 });
     mocks.deleteMany.mockResolvedValue({ count: 2 });
     mocks.loadChain.mockResolvedValue([
@@ -162,6 +168,64 @@ describe("planned run launching", () => {
     ]);
     mocks.assertBudget.mockResolvedValue({ capCents: 100, spentCents: 0 });
     mocks.isBudgetExhausted.mockReturnValue(false);
+  });
+
+  it("skips a run when every candidate is deleted before the locked dispatch check", async () => {
+    mocks.status.set("run_1", "planned");
+    mocks.members.set("run_1", [{ id: "keyword_1" }]);
+    mocks.findKeywords.mockResolvedValueOnce([candidate("keyword_1")]).mockResolvedValueOnce([]);
+    const startRun = vi.fn();
+    await launchPlannedRun("run_1", startRun, new Date("2026-09-02T08:00:00Z"));
+    expect(mocks.status.get("run_1")).toBe("completed");
+    expect(mocks.txUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ blockedReason: "no_active_keywords" }),
+      }),
+    );
+    expect(mocks.createMany).not.toHaveBeenCalled();
+    expect(startRun).not.toHaveBeenCalled();
+  });
+
+  it("does not skip when a new schedule member appears before finalizing an empty precheck", async () => {
+    mocks.status.set("run_1", "planned");
+    mocks.members.set("run_1", []);
+    mocks.countKeywords.mockResolvedValue(1);
+    const startRun = vi.fn();
+    await launchPlannedRun("run_1", startRun);
+    expect(mocks.status.get("run_1")).toBe("planned");
+    expect(mocks.txUpdateMany).not.toHaveBeenCalled();
+    expect(startRun).not.toHaveBeenCalled();
+  });
+
+  it("materializes Run now members without keeping the future occurrence delay", async () => {
+    mocks.status.set("run_1", "queued");
+    mocks.members.set("run_1", [{ id: "keyword_1" }]);
+    mocks.occurrenceKeys.set("run_1", "2026-09-03");
+    const now = new Date("2026-09-02T08:00:00Z");
+    expect(await materializePlannedRun("run_1", now, true)).toBe("launch");
+    expect(mocks.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ keywordId: "keyword_1", notBefore: now })],
+    });
+  });
+
+  it("does not reserve or create items for a Run now occurrence already materialized by another worker", async () => {
+    mocks.status.set("run_1", "queued");
+    mocks.members.set("run_1", [{ id: "keyword_1" }]);
+    mocks.currentRun.mockResolvedValue(null);
+    expect(await materializePlannedRun("run_1", new Date(), true)).toBe("not_ready");
+    expect(mocks.createMany).not.toHaveBeenCalled();
+    expect(mocks.txUpdateMany).not.toHaveBeenCalled();
+    expect(mocks.currentRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: "run_1",
+          status: "queued",
+          launchedAt: null,
+          startedAt: null,
+          items: { none: {} },
+        },
+      }),
+    );
   });
 
   it("rejects a run whose schedule is archived during launch admission", async () => {
@@ -258,8 +322,20 @@ describe("planned run launching", () => {
     expect(mocks.loadChain).not.toHaveBeenCalled();
     expect(startRun).not.toHaveBeenCalled();
     expect(mocks.txUpdateMany).toHaveBeenLastCalledWith({
-      data: expect.objectContaining({ outcome: "deferred", startedAt: null, status: "completed" }),
-      where: { id: "run_1", status: "planned" },
+      data: expect.objectContaining({
+        outcome: "deferred",
+        startedAt: null,
+        launchedAt: null,
+        status: "completed",
+        blockedReason: "no_active_keywords",
+      }),
+      where: {
+        id: "run_1",
+        status: "planned",
+        launchedAt: null,
+        startedAt: null,
+        items: { none: {} },
+      },
     });
   });
 
@@ -513,7 +589,7 @@ describe("planned run launching", () => {
     expect(startRun).not.toHaveBeenCalled();
   });
 
-  it("does not materialize when the market is paused after the precheck", async () => {
+  it("skips an occurrence when its final market is paused after the precheck", async () => {
     mocks.status.set("run_1", "planned");
     mocks.members.set("run_1", [{ id: "keyword_1" }]);
     mocks.findMarkets
@@ -527,7 +603,15 @@ describe("planned run launching", () => {
     });
 
     expect(mocks.createMany).not.toHaveBeenCalled();
-    expect(mocks.txUpdateMany).not.toHaveBeenCalled();
-    expect(mocks.status.get("run_1")).toBe("planned");
+    expect(mocks.txUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          blockedReason: "no_active_keywords",
+          outcome: "deferred",
+          status: "completed",
+        }),
+      }),
+    );
+    expect(mocks.status.get("run_1")).toBe("completed");
   });
 });

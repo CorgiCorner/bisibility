@@ -1,4 +1,5 @@
 import { registerAccountAuditDeclarations } from "@/lib/auth/audit-field-declarations-account";
+import { registerAiTrackingAuditDeclarations } from "@/lib/auth/audit-field-declarations-ai-tracking";
 import { registerCompetitorAuditDeclarations } from "@/lib/auth/audit-field-declarations-competitors";
 import { registerAdditionalAuditDeclarations } from "@/lib/auth/audit-field-declarations-extra";
 import { registerMailAuditDeclarations } from "@/lib/auth/audit-field-declarations-mail";
@@ -22,9 +23,7 @@ function declare(actions: readonly string[], policy: AuditPayloadPolicy = {}) {
   }
 }
 
-const project = {
-  ...strings("domain", "id", "name", "publicId", "trackingScope", "writeMode"),
-};
+const project = strings("domain", "id", "name", "publicId", "trackingScope", "writeMode");
 const projectCounts = {
   ...f.numbers(
     "accounts",
@@ -300,6 +299,7 @@ registerAdditionalAuditDeclarations(declare, {
 });
 registerAccountAuditDeclarations(declare, { projectCounts });
 registerRankCheckRunAuditDeclarations(declare);
+registerAiTrackingAuditDeclarations(declare);
 
 export function auditPayloadPolicy(action: string) {
   return declarations.get(action) ?? auditPayloadPolicyExtension(action) ?? undefined;

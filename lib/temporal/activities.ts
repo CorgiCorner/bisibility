@@ -3,6 +3,10 @@
 import "server-only";
 
 export {
+  collectAiTrackingRunActivity,
+  planAiTrackingSchedulesActivity,
+} from "./ai-tracking-activities";
+export {
   claimAlertDeliveryActivity,
   deliverAlertDigestEmailActivity,
   deliverAlertDigestSlackActivity,

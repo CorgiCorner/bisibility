@@ -13,6 +13,13 @@ vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 
 const sections = [
   {
+    key: "aiTracking",
+    title: "AI Tracking",
+    segment: "ai-tracking",
+    group: "modules",
+    scope: "own-axis",
+  },
+  {
     key: "aiVisibility",
     title: "AI Visibility",
     segment: "ai-visibility",
@@ -68,7 +75,7 @@ describe.each(locales)("research sidebar in $locale", ({ locale, messages }) => 
     renderWithFeatureMessages(
       <SidebarRailGroups
         collapsed={collapsed}
-        currentHref={`${items[4].href}/agr_abcdefghijklmnopqrstuvwx`}
+        currentHref={`${items.find((item) => item.label === "Agent Reports")?.href}/agr_abcdefghijklmnopqrstuvwx`}
         items={items}
       />,
       { locale, messages },

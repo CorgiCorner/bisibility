@@ -95,6 +95,7 @@ export function rankProjectRun(
       outcome: runOutcomeSchema.nullable().parse(row.outcome),
       status,
       trigger,
+      blockedReason: row.blockedReason,
     },
     href: projectRunRankCheckPath(asProjectRef(project.publicId), row.publicId),
     id: row.publicId as ProjectRunRankCheck["id"],

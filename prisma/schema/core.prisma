@@ -60,6 +60,7 @@ enum ProviderAllocationUnit {
 }
 
 enum ProviderCostFeature {
+  ai_tracking
   ai_visibility
   prompt_explorer
   backlinks
@@ -544,6 +545,13 @@ model Project {
   providerConnections              ProviderConnection[]
   providerCostEntries              ProviderCostEntry[]
   queuedRankCheckBatches           QueuedRankCheckBatch[]
+  aiTopics                         AiTopic[]
+  aiPrompts                        AiPrompt[]
+  aiPromptRevisions                AiPromptRevision[]
+  aiTrackingSuggestionGenerations  AiTrackingSuggestionGeneration[]
+  aiTrackingSchedules              AiTrackingSchedule[]
+  aiTrackingRuns                   AiTrackingRun[]
+  aiTrackingSamples                AiTrackingSample[]
   rankCheckRuns                    RankCheckRun[]
   checkSchedules                   CheckSchedule[]
   backlinkSnapshots                BacklinkSnapshot[]
@@ -618,6 +626,9 @@ model ProviderCostEntry {
   failed            Boolean                  @default(false)
   createdAt         DateTime                 @default(now())
 
+  aiTrackingSamples               AiTrackingSample[]
+  aiTrackingSuggestionGenerations AiTrackingSuggestionGeneration[]
+
   @@index([projectId, createdAt])
   @@index([connectionId, createdAt])
   @@index([connectionId, feature, createdAt])
@@ -625,6 +636,7 @@ model ProviderCostEntry {
   @@index([projectId, correlationId])
   @@index([provider, providerRequestId])
   @@index([projectId, credentialKind, credentialId, createdAt], map: "provider_cost_entries_credential_idx")
+  @@unique([projectId, id])
   @@map("provider_cost_entries")
 }
 

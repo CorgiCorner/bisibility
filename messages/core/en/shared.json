@@ -180,11 +180,11 @@
       "unavailable": "Human verification is unavailable right now."
     },
     "scheduleName": {
-      "custom": "Custom \u00b7 {expression}",
+      "custom": "Custom · {expression}",
       "daily": "Daily {time}",
-      "monthly": "Monthly \u00b7 {day} {time}",
+      "monthly": "Monthly · {day} {time}",
       "noFixedTime": "No fixed time",
-      "weekly": "Weekly \u00b7 {weekday} {time}"
+      "weekly": "Weekly · {weekday} {time}"
     },
     "operationRow": {
       "days": "{count, plural, one {day} other {days}}",
@@ -197,9 +197,18 @@
           "label": "Pause",
           "tip": "Pauses the import after the current month. Nothing already imported is discarded."
         },
-        "reconnect": { "label": "Reconnect", "tip": "Reconnect Search Console for this property." },
-        "resume": { "label": "Resume", "tip": "Returns this import to its saved queue." },
-        "retry": { "label": "Retry", "tip": "Retries this exact operation from its saved state." }
+        "reconnect": {
+          "label": "Reconnect",
+          "tip": "Reconnect Search Console for this property."
+        },
+        "resume": {
+          "label": "Resume",
+          "tip": "Returns this import to its saved queue."
+        },
+        "retry": {
+          "label": "Retry",
+          "tip": "Retries this exact operation from its saved state."
+        }
       },
       "etaMinutes": "~{count, plural, one {# min left} other {# min left}}",
       "etaSeconds": "~{count, plural, one {# s left} other {# s left}}",
@@ -327,7 +336,9 @@
       }
     },
     "controls": {
-      "alert": { "dismiss": "Dismiss alert" },
+      "alert": {
+        "dismiss": "Dismiss alert"
+      },
       "confirmation": {
         "cancel": "Cancel",
         "failure": "The action could not be completed. Try again.",
@@ -481,7 +492,9 @@
         "standard": "Standard",
         "toggleColumns": "Toggle columns"
       },
-      "drawer": { "close": "Close drawer" },
+      "drawer": {
+        "close": "Close drawer"
+      },
       "emailCapture": {
         "emailAddress": "Email address",
         "joining": "Joining...",
@@ -492,8 +505,13 @@
           "workEmail": "Use your work email."
         }
       },
-      "expandableCard": { "expand": "Expand", "expandNamed": "Expand {title}" },
-      "expiryChoice": { "label": "Expires" },
+      "expandableCard": {
+        "expand": "Expand",
+        "expandNamed": "Expand {title}"
+      },
+      "expiryChoice": {
+        "label": "Expires"
+      },
       "menuMultiSelect": {
         "noResults": "No results",
         "searchPlaceholder": "Search...",
@@ -504,9 +522,16 @@
         "noResults": "No results",
         "searchPlaceholder": "Search..."
       },
-      "modal": { "close": "Close modal" },
-      "password": { "hide": "Hide password", "show": "Show password" },
-      "sheet": { "close": "Close sheet" },
+      "modal": {
+        "close": "Close modal"
+      },
+      "password": {
+        "hide": "Hide password",
+        "show": "Show password"
+      },
+      "sheet": {
+        "close": "Close sheet"
+      },
       "status": {
         "blocked": "Blocked",
         "cancelled": "Cancelled",
@@ -558,7 +583,9 @@
         "undo": "Undo",
         "undoFailed": "Undo failed. Please try again."
       },
-      "toolbarSearch": { "clear": "Clear {label}" }
+      "toolbarSearch": {
+        "clear": "Clear {label}"
+      }
     },
     "nativeUsage": {
       "estimated": "Estimated usage",
@@ -604,6 +631,9 @@
         },
         "not_confirmed": {
           "description": "The run finished, but it has no recorded result."
+        },
+        "skipped": {
+          "description": "No active keywords"
         }
       },
       "searchConsole": {

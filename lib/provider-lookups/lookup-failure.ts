@@ -20,6 +20,8 @@ export type ProviderLookupFailure =
         | "in_progress"
         | "needs_reauth"
         | "no_source"
+        | "own_credentials_required"
+        | "credentials_changed"
         | "rate_limited"
         | "unsupported_location";
       resetAt?: number;

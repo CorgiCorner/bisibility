@@ -77,7 +77,8 @@
         "promptExplorer": "Prompt Explorer",
         "siteAudit": "Site Audit",
         "projectContext": "Project Context",
-        "agentReports": "Agent Reports"
+        "agentReports": "Agent Reports",
+        "aiTracking": "AI Tracking"
       },
       "menu": "Menu"
     },
@@ -218,7 +219,8 @@
         "promptExplorer": "Compare synthetic prompt tests across supported models.",
         "siteAudit": "Crawl your project site and inspect issues by URL.",
         "projectContext": "Business, audience, products and goals for your agents.",
-        "agentReports": "Saved analyses shared with members of this project."
+        "agentReports": "Saved analyses shared with members of this project.",
+        "aiTracking": "Monitor AI answers, brand mentions and cited sources over time."
       },
       "titles": {
         "account": "Account settings",
@@ -250,7 +252,8 @@
         "promptExplorer": "Prompt Explorer",
         "siteAudit": "Site Audit",
         "projectContext": "Project Context",
-        "agentReports": "Agent Reports"
+        "agentReports": "Agent Reports",
+        "aiTracking": "AI Tracking"
       }
     },
     "footer": {

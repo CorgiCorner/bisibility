@@ -39,7 +39,10 @@ export function ProjectRunsFilters({ projectRef, query }: Readonly<ProjectRunsFi
       hideHeading: true,
       id: "all",
       label: t("allStatuses"),
-      options: [{ label: t("allStatuses"), value: "all" }],
+      options: [
+        { label: t("allStatuses"), value: "all" },
+        { label: t("needsAttention"), value: "attention" },
+      ],
     },
     ...statusCopy.groups
       .filter((group) => query.source === "all" || query.source === group.source)
@@ -78,7 +81,7 @@ export function ProjectRunsFilters({ projectRef, query }: Readonly<ProjectRunsFi
         ariaLabel={t("runStatus")}
         groups={statusGroups}
         leadingLabel={t("status")}
-        onChange={(value) => navigate({ ...statusMenuSelection(value), view: "runs" })}
+        onChange={(value) => navigate({ ...statusMenuSelection(value), view: "timeline" })}
         selectedContent={(option) => {
           if (query.view === "planned") return statusCopy.rank("planned").label;
           if (!option || option.value === "all") return legacyGroupLabels[query.status] ?? t("all");

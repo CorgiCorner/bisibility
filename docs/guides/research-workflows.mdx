@@ -1,0 +1,82 @@
+---
+title: "Research and agent workflows"
+description: "Choose the right evidence source, provide business context and retain an analysis with its limitations."
+---
+
+These project workflows serve different purposes. The current application has
+AI Visibility, Prompt Explorer, Project Context, Agent Reports and Site Audit.
+Recurring AI Tracking is in development; this guide does not announce its
+availability in a deployed or released build.
+
+## AI research
+
+AI Visibility searches a supported provider dataset for brand mentions or domain
+citations. Prompt Explorer performs a one-shot synthetic model test. Neither is
+recurring prompt tracking, and a synthetic answer does not establish customer
+search demand.
+
+Connect your own supported provider account, review the input and estimate, and
+choose whether to execute. Inspect evidence type, source dates, coverage, answers
+and cited pages. Unknown costs and partial results require separate interpretation;
+an estimate is not an actual receipt. Completed research saves a project report.
+
+See the [Research workspace API](/api/research-workspace) and
+[MCP guide](/agents) for the available operations and permission requirements.
+
+## Project Context
+
+Save five fields: business, audience, products, goals and agent rules. Each field
+accepts up to 4,000 characters. Saving replaces the complete context and records
+its update time. Reading requires project access; saving requires write access.
+
+Context is guidance, not verified performance data. Do not store credentials in
+these fields. An agent must read the context as part of its workflow; text rules
+do not replace server authorization or spending controls.
+
+Use `get_project_context` and `update_project_context`, or the context endpoints
+in [Research workspace API](/api/research-workspace).
+
+## Agent Reports
+
+Save a title, external kind, structured body and optional provenance through the
+app or `create_agent_report`. Separate findings from hypotheses and proposed
+work. Record source dates, coverage and limitations. Creating a report requires
+write access; reading it requires project access.
+
+A copied project link does not make the report public. Saving recommendations
+does not execute them. Built-in research and Site Audit save application-generated
+reports; external agents must use a non-reserved kind.
+
+Browse through `list_agent_reports` and open a retained analysis through
+`get_agent_report`. See [Research workspace API](/api/research-workspace).
+
+## Site Audit
+
+Sample the tracked public website with a page limit from 1 to 15, default 10.
+The crawler reads HTTP HTML without rendering JavaScript or running Lighthouse.
+It checks HTTP status, metadata, headings, robots directives, sampled links and
+image alt attributes.
+
+Read the complete or partial state and stop reason before interpreting findings.
+The shared request and time budgets, robots rules and rate limits can reduce
+coverage. A missing response is not proof of missing page content. A complete
+sample is not proof of full-site coverage or actual search-engine indexing.
+
+See the [Site Audit guide](/guides/site-audit) for exact budgets, URL eligibility,
+robots behavior and saved-report reuse.
+
+## AI Tracking
+
+The recurring feature in development retains selected prompt observations with
+exact revisions, source, model, market, answers and citations. Consumer scraping,
+model API responses and Google AI Overview observations keep distinct scope.
+Generated suggestions remain editable hypotheses. Saving them does not buy a
+baseline run or enable a schedule.
+
+The design includes explicit paid-run review, disabled-by-default schedules and
+coverage-aware history. Availability depends on the application build and the
+matching released API and client packages. Use the current on-demand research
+and reporting workflows while recurring tracking is prepared for release.
+
+See the [AI Tracking guide](/guides/ai-tracking) for the implementation contract.
+Its presence in the repository does not announce a production release.

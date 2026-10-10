@@ -1,0 +1,131 @@
+---
+title: "Site Audit"
+description: "Run a bounded HTTP sample, interpret crawl coverage and revisit saved project reports."
+---
+
+Site Audit samples the project's public website and saves technical findings
+by URL. It checks HTTP status, titles, meta descriptions, headings, robots
+directives, links and missing image alt attributes. It reads the returned HTML
+without rendering JavaScript or running Lighthouse.
+
+## Run an audit
+
+1. Select a project with a tracked domain and open **Site Audit**.
+2. Choose a page limit between 1 and 15. The default is 10.
+3. Select **Run audit**. Running and saving an audit requires project write
+   access; reading an existing report requires project access.
+4. Read the crawl state, stop reason and limitations before reviewing issues.
+
+REST and MCP use the same crawler and saved reports. The corresponding tools
+are `run_site_audit`, `list_site_audits` and `get_site_audit`. Request shapes and
+endpoints are in [Research workspace API](/api/research-workspace#site-audit).
+
+## Crawl budget
+
+| Limit | What it covers |
+| --- | --- |
+| Up to 15 page entries | The chosen sample, including failed requests and robots-disallowed skips |
+| 20 HTTP requests | Pages, robots reads, redirect hops and retry attempts together |
+| 15 seconds | The crawl's time budget, including DNS, robots reads and retry waits |
+| 512 KiB per response body | The bounded content read for pages and robots |
+| Three redirects per fetch | Redirects share the request and time budgets |
+
+A page limit does not guarantee that many readable pages. Robots checks,
+redirects, rate limits or slow responses can exhaust the other budgets first.
+
+## Which URLs are eligible
+
+The crawl starts from the tracked domain. Each fetch resolves the hostname
+again, validates public-network addresses and pins the connection to those
+checked addresses. Redirects are handled manually and rechecked before the
+next request.
+
+Links are discovered on the current origin. For a tracked apex or `www` host,
+redirects may cross only to its exact apex/www counterpart, preserving the
+scheme and port. This does not permit unrelated hosts or other subdomains.
+The target must use public HTTP(S) on a standard port without URL credentials.
+
+Query-string URLs are excluded from discovery, and fragments are removed.
+Known nonpage asset extensions, such as images, fonts, scripts, stylesheets,
+PDFs and archives, are skipped. Email-protection helper links under
+`/cdn-cgi/l/email-protection` are skipped too. This is a bounded exclusion
+list: unknown extensions and extensionless document URLs remain eligible,
+rather than requiring every page to end in `.html`.
+
+## Rate limits and robots
+
+A page or robots fetch can retry an HTTP 429 response at most once. The
+crawler uses `Retry-After` as an integer number of seconds or an HTTP date;
+if it is absent or invalid, the fallback wait is one second. A retry runs
+only when another request and the wait fit within the remaining crawl budget.
+Redirects do not reset this retry allowance.
+
+If the page still returns 429, the report retains that HTTP status and marks
+the crawl `partial`. It does not use the throttled response to infer missing
+titles, descriptions, headings or image alt text, or to mark links to that
+sampled URL as broken. Treat it as incomplete access to the site's content.
+
+The crawler uses a matching `BisibilitySiteAudit` robots group when present,
+otherwise the wildcard group. A disallowed URL is recorded as a
+`robots_disallowed` informational skip, not a failed content check. Such skips
+can be part of a `complete` sample. A missing robots file returning 404 is
+treated as having no rules.
+
+If robots cannot be read, such as after a network failure or persistent 429,
+the report records the limitation, stops discovering additional paths and
+is `partial`. Inspect the recorded robots limitations rather than assuming
+the site has permitted an unrestricted crawl.
+
+An HTTP 429 from the audit API itself is a separate admission denial with
+retry metadata. It means a new crawl was not admitted. It is not the same as
+a website's HTTP 429 stored inside an audit result.
+
+## Read coverage and findings
+
+The report has two separate coverage fields:
+
+| Field | Meaning |
+| --- | --- |
+| `state: complete` | The eligible sample finished without an unresolved fetch, persistent page 429 or unavailable robots policy |
+| `state: partial` | A budget limit or incomplete access left the sample partial |
+| `stopReason: finished` | No queued eligible URLs remained; access failures can still make the state partial |
+| `stopReason: page_limit` | The selected page limit was reached while URLs remained queued |
+| `stopReason: request_limit` | The shared request budget was reached |
+| `stopReason: time_limit` | The crawl's time budget was reached |
+
+The stored report uses `stopReason`; REST and MCP responses use `stop_reason`.
+A complete result can still
+contain HTTP errors and on-page warnings. Neither state proves full-site
+coverage, and a partial result is not a verdict that the website is defective.
+
+Indexability is a local check of HTML content, successful HTTP status and
+robots indexing directives. Canonical correctness and actual search-engine
+indexing are not verified. A JavaScript-driven page may return sparse HTML
+because the audit does not render the application.
+
+Headings and internal-link lists are bounded samples: each page retains up to
+five of each, while link discovery is capped separately. Link counts are not
+proof that every destination was fetched. Broken-link findings compare sampled
+internal links with sampled HTTP errors, excluding 429 responses.
+
+When a page cannot be fetched, the report records a bounded failure category,
+such as DNS, connection, TLS, timeout, redirect or size limit. A missing
+response does not establish that its title or other content is absent.
+
+## Saved results and five-minute reuse
+
+Each new crawl saves a project-local report, including partial results. The
+most recent report can be reused for five minutes if its result passes
+validation and both the target and chosen page limit match. A reused run
+returns the same saved report with `cached: true` and makes no new crawl.
+
+The reuse window is separate from saved-report history. It does not delete
+the report after five minutes. Reading a saved report returns its original
+observations and timestamps; `cached: true` on that read does not mean its
+website observations are fresh. To check changes, request another audit
+after the reuse window and review its new coverage.
+
+Use `GET /site-audits` to list saved reports and
+`GET /site-audits/{report_id}` to read one under the project's API path.
+See [Research workspace API](/api/research-workspace#site-audit) for the exact
+request and response contract.

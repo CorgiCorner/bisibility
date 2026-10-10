@@ -2,6 +2,7 @@ import { whereExecutedChecks } from "@/lib/checks/status";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
 import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
+import { normalizedObservationCompleteness } from "@/lib/serp/rank-depth";
 import { tierFromScopes } from "./key-scope";
 import {
   apiRankCheckStatus,
@@ -25,7 +26,10 @@ export const keywordInclude = {
   },
   project: { select: { defaults: true } },
   rankChecks: {
-    include: { run: { select: { publicId: true } } },
+    include: {
+      observationRun: { select: { completeness: true } },
+      run: { select: { publicId: true } },
+    },
     orderBy: { checkedAt: "desc" },
     take: 1,
     where: whereExecutedChecks(),
@@ -42,6 +46,7 @@ export const rankCheckSelect = {
   id: true,
   publicId: true,
   keyword: { select: { projectId: true, publicId: true } },
+  observationRun: { select: { completeness: true } },
   position: true,
   previousPosition: true,
   provider: true,
@@ -274,6 +279,7 @@ export function rankCheckResource(
     error_code: check.errorCode,
     id: requireApiPublicId(check.publicId, "check"),
     keyword_id: requireApiPublicId(check.keyword.publicId, "kw"),
+    observation_completeness: normalizedObservationCompleteness(check.observationRun?.completeness),
     position: check.position,
     previous_position: check.previousPosition,
     provider: check.provider,

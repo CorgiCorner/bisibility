@@ -1,0 +1,274 @@
+enum AiPromptCategory {
+  neutral
+  branded
+  comparative
+}
+
+enum AiTrackingSource {
+  consumer_scrape
+  model_api
+  google_aio
+}
+
+enum AiTrackingEngine {
+  chat_gpt
+  gemini
+  claude
+  perplexity
+  google
+}
+
+enum AiTrackingDispatch {
+  planned
+  claimed
+  submission_started
+  submitted
+  collecting
+  submission_unknown
+  terminal
+}
+
+enum AiTrackingMeasurement {
+  answer_present
+  aio_not_present
+  partial
+  unavailable
+  failed
+  unknown
+}
+
+enum AiTrackingRunState {
+  planned
+  running
+  completed
+  partial
+  blocked
+  failed
+  cancelled
+  skipped
+}
+
+model AiTopic {
+  id          String     @id @default(cuid())
+  publicId    String     @unique
+  projectId   String
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  pausedAt    DateTime?
+  archivedAt  DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  prompts     AiPrompt[]
+
+  @@unique([projectId, id])
+  @@index([projectId, archivedAt, pausedAt])
+  @@map("ai_topics")
+}
+
+model AiPrompt {
+  id         String             @id @default(cuid())
+  publicId   String             @unique
+  projectId  String
+  project    Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  topicId    String?
+  topic      AiTopic?           @relation(fields: [projectId, topicId], references: [projectId, id], onDelete: Restrict)
+  label      String?
+  pausedAt   DateTime?
+  archivedAt DateTime?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  revisions  AiPromptRevision[]
+
+  @@unique([projectId, id])
+  @@index([projectId, archivedAt, pausedAt])
+  @@map("ai_prompts")
+}
+
+model AiPromptRevision {
+  id        String             @id @default(cuid())
+  publicId  String             @unique
+  projectId String
+  project   Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  promptId  String
+  prompt    AiPrompt           @relation(fields: [projectId, promptId], references: [projectId, id], onDelete: Cascade)
+  ordinal   Int
+  category  AiPromptCategory   @default(neutral)
+  text      String
+  textHash  String             @db.VarChar(64)
+  createdAt DateTime           @default(now())
+  samples   AiTrackingSample[]
+  generationId String?
+  generationDraftId String?
+  generation AiTrackingSuggestionGeneration? @relation(fields: [projectId, generationId], references: [projectId, id], onDelete: Restrict)
+  provenance Json?
+
+  @@unique([projectId, id])
+  @@unique([promptId, ordinal])
+  @@map("ai_prompt_revisions")
+}
+
+model AiTrackingSchedule {
+  id            String          @id @default(cuid())
+  publicId      String          @unique
+  projectId     String
+  project       Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name          String
+  cron          String
+  timezone      String
+  enabled       Boolean         @default(false)
+  configuration Json
+  nextRunAt     DateTime?
+  archivedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  runs          AiTrackingRun[]
+
+  @@unique([projectId, id])
+  @@index([enabled, nextRunAt, id])
+  @@map("ai_tracking_schedules")
+}
+
+model AiTrackingRun {
+  id                 String             @id @default(cuid())
+  publicId           String             @unique
+  projectId          String
+  project            Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scheduleId         String?
+  schedule           AiTrackingSchedule? @relation(fields: [projectId, scheduleId], references: [projectId, id], onDelete: Restrict)
+  plannedAt          DateTime?
+  actorId            String
+  idempotencyKey     String
+  payloadHash        String             @db.VarChar(64)
+  launchPayload      Json
+  competitorSnapshot Json
+  state              AiTrackingRunState @default(planned)
+  retryOfRunId        String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  finishedAt         DateTime?
+  samples            AiTrackingSample[]
+
+  @@unique([projectId, id])
+  @@unique([projectId, idempotencyKey])
+  @@unique([scheduleId, plannedAt])
+  @@index([projectId, createdAt, id])
+  @@map("ai_tracking_runs")
+}
+
+model AiTrackingSample {
+  id                      String                 @id @default(cuid())
+  publicId                String                 @unique
+  projectId               String
+  project                 Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  runId                   String
+  run                     AiTrackingRun          @relation(fields: [projectId, runId], references: [projectId, id], onDelete: Cascade)
+  promptRevisionId        String
+  promptRevision          AiPromptRevision       @relation(fields: [projectId, promptRevisionId], references: [projectId, id], onDelete: Restrict)
+  source                  AiTrackingSource
+  engine                  AiTrackingEngine
+  configurationHash       String                 @db.VarChar(64)
+  replicateOrdinal        Int                    @default(0)
+  plan                    Json
+  attemptId               String
+  dispatch                AiTrackingDispatch     @default(planned)
+  measurement             AiTrackingMeasurement  @default(unknown)
+  providerTaskId          String?
+  nextPollAt              DateTime?
+  claimedAt               DateTime?
+  evidence                Json?
+  raw                     Json?
+  answerText              String?
+  providerCostEntryId     String?
+  providerCostEntry       ProviderCostEntry?     @relation(fields: [projectId, providerCostEntryId], references: [projectId, id], onDelete: Restrict)
+  receipt                 Json?
+  resultHash              String?                @db.VarChar(64)
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  finishedAt              DateTime?
+  citations               AiTrackingCitation[]
+  observations            AiTrackingEntityObservation[]
+
+  @@unique([projectId, id])
+  @@unique([runId, promptRevisionId, configurationHash, replicateOrdinal], map: "ai_tracking_sample_identity_key")
+  @@index([projectId, runId, createdAt, id])
+  @@index([dispatch, updatedAt, id])
+  @@index([dispatch, nextPollAt, id])
+  @@map("ai_tracking_samples")
+}
+
+model AiTrackingCitation {
+  id        String           @id @default(cuid())
+  sampleId  String
+  sample    AiTrackingSample @relation(fields: [sampleId], references: [id], onDelete: Cascade)
+  url       String
+  title     String?
+  position  Int
+
+  @@unique([sampleId, position])
+  @@map("ai_tracking_citations")
+}
+
+model AiTrackingEntityObservation {
+  id           String           @id @default(cuid())
+  sampleId     String
+  sample       AiTrackingSample @relation(fields: [sampleId], references: [id], onDelete: Cascade)
+  entityKey    String
+  name         String
+  competitorId String?
+  snippet      String?
+  matchPolicy  String           @default("exact_alias")
+  confidence   Float?
+  aliases      String[]         @default([])
+  mentioned    Boolean
+  position     Int?
+
+  @@unique([sampleId, entityKey])
+  @@map("ai_tracking_entity_observations")
+}
+
+enum AiTrackingSuggestionGenerationState {
+  planned
+  claimed
+  submission_started
+  submission_unknown
+  completed
+  failed
+  cancelled
+}
+
+model AiTrackingSuggestionGeneration {
+  id                     String                              @id @default(cuid())
+  publicId               String                              @unique
+  projectId              String
+  project                Project                             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  actorId                String
+  actorCredential        Json?
+  entrySource            String
+  idempotencyKey         String
+  requestHash            String                              @db.VarChar(64)
+  preview                Json
+  credentialConnectionId String
+  requestedModel         String
+  actualModel            String?
+  attemptId              String                              @unique
+  state                  AiTrackingSuggestionGenerationState @default(planned)
+  usageTag               String?
+  providerCostEntryId    String?
+  providerCostEntry      ProviderCostEntry?                  @relation(fields: [projectId, providerCostEntryId], references: [projectId, id], onDelete: Restrict)
+  receipt                Json?
+  evidence               Json?
+  result                 Json?
+  resultHash             String?                             @db.VarChar(64)
+  claimedAt              DateTime?
+  finishedAt             DateTime?
+  createdAt              DateTime                            @default(now())
+  updatedAt              DateTime                            @updatedAt
+  acceptedRevisions      AiPromptRevision[]
+
+  @@unique([projectId, id])
+  @@unique([projectId, idempotencyKey])
+  @@index([projectId, createdAt, id])
+  @@index([state, updatedAt, id])
+  @@map("ai_tracking_suggestion_generations")
+}

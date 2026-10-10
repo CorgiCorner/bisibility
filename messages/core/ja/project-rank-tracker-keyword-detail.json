@@ -75,7 +75,8 @@
         "metricsForMarket": "対象: {market}",
         "checkedDepth": "上位{depth, number}件を確認",
         "connectedSchedule": "この市場とデバイスのスケジュール",
-        "schedulesAllTargets": "すべての市場とデバイス"
+        "schedulesAllTargets": "すべての市場とデバイス",
+        "coverageUnknown": "取得範囲が不明"
       },
       "actions": {
         "moreActions": "キーワードのその他の操作",
@@ -136,7 +137,9 @@
         "checkTop": "上位{depth}位をチェック",
         "runFirstCheck": "最初のチェックを実行",
         "connectSerpProvider": "SERP プロバイダーを接続",
-        "history": "順位履歴"
+        "history": "順位履歴",
+        "coverageUnknownTitle": "取得範囲が不明",
+        "coverageUnknownBody": "プロバイダーの応答では、このキーワードが追跡範囲内にあるか確認できません。"
       },
       "firstCheck": {
         "billing": "プロバイダーアカウントの残高が不足しているため、順位チェックを実行できませんでした。残高を追加するか別のプロバイダーを接続してから、再試行してください。",

@@ -54,6 +54,11 @@ export function requireApiPathPublicIds(path: string[]) {
   const [first, second, third, fourth, fifth] = path;
   if (first === "projects" && second) {
     requireApiPublicId(second, "prj");
+    if (third === "ai-tracking" && fifth && fifth !== "preview") {
+      const prefixes = { topics: "ait", prompts: "aip", schedules: "ais", runs: "air" } as const;
+      const prefix = prefixes[fourth as keyof typeof prefixes];
+      if (prefix) requirePathId(path, 4, prefix);
+    }
     if (third === "agent-reports" || third === "site-audits") requirePathId(path, 3, "agr");
     if (third === "webhooks") requirePathId(path, 3, "we");
     if (third === "saved-keywords") requirePathId(path, 3, "svkw");

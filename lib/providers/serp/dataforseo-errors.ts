@@ -13,6 +13,19 @@ export class DataForSeoError extends ProviderCallError {
   }
 }
 
+export class DataForSeoAccountVerificationError extends DataForSeoError {
+  constructor(costCents: number | null) {
+    super(
+      "Verify your DataForSEO account in the provider dashboard before using the API.",
+      false,
+      undefined,
+      costCents,
+    );
+    this.code = "provider_account_restricted";
+    this.name = "DataForSeoAccountVerificationError";
+  }
+}
+
 export class DataForSeoUnsupportedLocationError extends ProviderCallError {
   constructor(
     message = "DataForSEO does not support this target or location.",
@@ -25,7 +38,7 @@ export class DataForSeoUnsupportedLocationError extends ProviderCallError {
 
 export class DataForSeoBillingError extends ProviderCallError {
   constructor(message: string, costCents: number | null = null) {
-    super(message, costCents);
+    super(message, costCents, "provider_billing");
     this.name = "DataForSeoBillingError";
   }
 }
@@ -36,7 +49,7 @@ export class DataForSeoValidationError extends ProviderCallError {
   constructor(message: string, costCents: number | null = null) {
     super(message, costCents);
     this.name = "DataForSeoValidationError";
-    this.charged = costCents !== null;
+    this.charged = costCents !== null && costCents > 0;
   }
 }
 

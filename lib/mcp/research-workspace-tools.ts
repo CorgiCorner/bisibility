@@ -2,6 +2,7 @@ import type { RestCall } from "./rest-call";
 import type { JsonObject } from "./types";
 
 const routes = {
+  getAiResearchCatalog: ["GET", "ai-catalog"],
   getProjectContext: ["GET", "context"],
   updateProjectContext: ["PATCH", "context"],
   listAgentReports: ["GET", "agent-reports"],
@@ -38,7 +39,12 @@ export function dispatchResearchWorkspaceTool(name: string, input: JsonObject): 
   const mutating = method !== "GET";
   const body = mutating
     ? Object.fromEntries(
-        Object.entries(input).filter(([key]) => !["project_id", "idempotency_key"].includes(key)),
+        Object.entries(input).filter(
+          ([key]) =>
+            key !== "project_id" &&
+            (key !== "idempotency_key" ||
+              (name === "compareAiPrompts" && input.cost_policy === "provider_actual_cost")),
+        ),
       )
     : undefined;
   return {

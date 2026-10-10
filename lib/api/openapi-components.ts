@@ -103,7 +103,7 @@ export const schemas = {
       latest_check: { $ref: "#/components/schemas/KeywordLatestCheck" },
       latest_position: {
         description:
-          '`latest_position` = `latest_check.position`; it is `null` when the latest executed check failed OR when the domain was not found within the requested depth. Agents that need "the last known ranking" must read `latest_successful_check.position`.',
+          '`latest_position` = `latest_check.position`; it is `null` for failed checks, unknown observation coverage, or absence within the requested depth. Agents that need "the last known ranking" must read `latest_successful_check.position`.',
         type: ["integer", "null"],
       },
       latest_successful_check: { $ref: "#/components/schemas/KeywordLatestSuccessfulCheck" },
@@ -237,6 +237,12 @@ export const schemas = {
       },
       id: publicIdSchema("check"),
       keyword_id: publicIdSchema("kw"),
+      observation_completeness: {
+        description:
+          "Persisted coverage, or null when legacy metadata is absent. Only complete coverage supports absence within depth; a valid positive rank remains valid with truncated coverage.",
+        enum: ["complete", "truncated_by_stop_on_match", "unknown", null],
+        type: ["string", "null"],
+      },
       position: { type: ["integer", "null"] },
       previous_position: { type: ["integer", "null"] },
       provider: { type: "string" },
@@ -265,6 +271,7 @@ export const schemas = {
       "keyword_id",
       "checked_at",
       "position",
+      "observation_completeness",
       "previous_position",
       "provider",
       "ranking_url",

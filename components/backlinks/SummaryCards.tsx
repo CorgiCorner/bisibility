@@ -10,6 +10,7 @@ import { historyFooter, latestHistoryDeltas, summaryTrends } from "./summary-car
 
 type SummaryCardsProps = {
   history: BacklinksHistoryMonth[];
+  historyUnavailable?: boolean;
   summary: BacklinksSummary;
 };
 
@@ -177,7 +178,11 @@ function ProfileHealth({ summary }: Readonly<{ summary: BacklinksSummary }>) {
   );
 }
 
-export function SummaryCards({ history, summary }: Readonly<SummaryCardsProps>) {
+export function SummaryCards({
+  history,
+  historyUnavailable,
+  summary,
+}: Readonly<SummaryCardsProps>) {
   const t = useTranslations("projectBacklinks.workspace.summary");
   const deltas = latestHistoryDeltas(history);
   const trends = summaryTrends(history, summary.backlinksTotal, summary.referringDomainsTotal);
@@ -201,7 +206,7 @@ export function SummaryCards({ history, summary }: Readonly<SummaryCardsProps>) 
           />
         </div>
       </section>
-      <NewLostCard history={history} />
+      {historyUnavailable ? null : <NewLostCard history={history} />}
       <ProfileHealth summary={summary} />
     </div>
   );

@@ -175,6 +175,55 @@ describe("alert delivery context", () => {
     );
   });
 
+  it.each(["opt-out", "removed-member", "unconfigured"])(
+    "distinguishes %s from missing email configuration",
+    async (scenario) => {
+      mocks.prisma.notificationPreference.findMany.mockResolvedValue(
+        scenario === "opt-out" ? [{ alertEmail: false, userId: "user_1" }] : [],
+      );
+      mocks.prisma.membership.findMany.mockResolvedValue(
+        scenario === "removed-member" ? [] : [{ userId: "user_1" }],
+      );
+      mocks.prisma.project.findUnique.mockResolvedValue({ ownerId: "other_user" });
+      mocks.prisma.triggeredAlert.findFirst.mockResolvedValue({
+        afterPosition: 14,
+        beforePosition: 8,
+        firedAt: new Date("2026-07-21T20:00:00.000Z"),
+        id: "alert_1",
+        publicId: publicId("al"),
+        keyword: {
+          project: {
+            domain: "example.com",
+            id: "project_1",
+            publicId: publicId("prj"),
+            slackConnection: null,
+            webhookEndpoints: [],
+          },
+          publicId: publicId("kw"),
+          text: "rank tracker",
+        },
+        payload: { action: "Review it.", headline: "Ranking dropped" },
+        rule: {
+          channels: ["email"],
+          conditionType: "exits_top_n",
+          createdBy: null,
+          id: "rule_1",
+          name: "Drop",
+          publicId: publicId("alr"),
+          recipients:
+            scenario === "unconfigured"
+              ? []
+              : [{ user: { email: "owner@example.com", id: "user_1" } }],
+        },
+      });
+
+      await expect(loadAlertDeliveryContextActivity(ownedInput)).resolves.toMatchObject({
+        emailRecipientsConfigured: scenario !== "unconfigured",
+        recipients: [],
+      });
+    },
+  );
+
   it("load terminalizes an owned alert that becomes ineligible", async () => {
     mocks.prisma.triggeredAlert.findFirst.mockResolvedValue(null);
     mocks.prisma.triggeredAlert.updateMany.mockResolvedValue({ count: 1 });

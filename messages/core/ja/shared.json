@@ -505,7 +505,10 @@
           "workEmail": "勤務先のメールアドレスを入力してください。"
         }
       },
-      "expandableCard": { "expand": "拡大", "expandNamed": "{title}を拡大" },
+      "expandableCard": {
+        "expand": "拡大",
+        "expandNamed": "{title}を拡大"
+      },
       "expiryChoice": {
         "label": "有効期限"
       },
@@ -628,6 +631,9 @@
         },
         "not_confirmed": {
           "description": "実行は終了しましたが、記録された結果がありません。"
+        },
+        "skipped": {
+          "description": "有効なキーワードがありません"
         }
       },
       "searchConsole": {

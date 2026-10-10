@@ -19,6 +19,7 @@ import type {
 } from "@/lib/queries/keyword-row-types";
 import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
 import { resolveSerpDepth } from "@/lib/serp/constants";
+import { hasIncompleteObservation, normalizedObservationCompleteness } from "@/lib/serp/rank-depth";
 
 export type {
   CompletedComparableCheck,
@@ -43,7 +44,6 @@ type ScheduleSource = {
   serpDepth?: number | null;
   timezone: string;
 };
-
 type CheckScheduleSource = { name: string; publicId: string; serpDepth?: number | null };
 
 type KeywordProject = { defaults: ScheduleSource | null; domain: string };
@@ -55,7 +55,6 @@ type UrlPresenceSource = {
   url: string;
   verdict: string | null;
 };
-
 export type KeywordRowInput = {
   alertTargets?: {
     rule: {
@@ -93,6 +92,7 @@ export type KeywordRowInput = {
     expectedUrlAtCheck?: string | null;
     id: string;
     normalizationVersion: string | null;
+    observationRun?: { completeness: string } | null;
     position: number | null;
     provider: string;
     previousPosition: number | null;
@@ -107,11 +107,9 @@ export type KeywordRowInput = {
   topic: string | null;
   urlPresence?: UrlPresenceSource | null;
 };
-
 export function iso(date: Date | null | undefined) {
   return date ? date.toISOString() : null;
 }
-
 export function scheduleView(
   schedule: ScheduleSource,
   nextCheckAt = schedule.nextCheckAt,
@@ -126,7 +124,6 @@ export function scheduleView(
     timezone: schedule.timezone,
   };
 }
-
 export function fallbackSchedule(): KeywordSchedule {
   return {
     cron_expression: null,
@@ -138,17 +135,14 @@ export function fallbackSchedule(): KeywordSchedule {
     timezone: "UTC",
   };
 }
-
 export function isCompletedCheck(check: { status?: string }) {
   return check.status === undefined || check.status === "completed";
 }
-
 export function latestStatus(check: { status?: string } | null): LastCheckStatus {
   if (!check) return null;
   if (check.status === "failed" || check.status === "running") return check.status;
   return check.status === undefined || check.status === "completed" ? "completed" : null;
 }
-
 export function latestAttemptHealth(
   check: { status?: string } | null,
   queuedTasks: ReadonlyArray<{ state: string }>,
@@ -157,9 +151,11 @@ export function latestAttemptHealth(
   if (queuedTasks.some((task) => ACTIVE_QUEUED_TASK_STATES.includes(task.state))) return "running";
   return check?.status === "failed" ? "failed" : "ok";
 }
-
 export function keywordCheckState(
-  check: { position: number | null; status?: string } | null,
+  check: Pick<
+    KeywordRowInput["rankChecks"][number],
+    "position" | "status" | "observationRun"
+  > | null,
   queuedTasks: ReadonlyArray<{ state: string }>,
 ): KeywordCheckState {
   if (check?.status === "running") return "running";
@@ -167,9 +163,10 @@ export function keywordCheckState(
   if (check?.status && check.status !== "completed") return "never_checked";
   if (queuedTasks.some((task) => ACTIVE_QUEUED_TASK_STATES.includes(task.state))) return "running";
   if (!check) return "never_checked";
+  if (check.position === null && hasIncompleteObservation(check.observationRun?.completeness))
+    return "unknown";
   return check.position === null ? "not_ranked" : "ranked";
 }
-
 export function mapKeyword(
   row: KeywordRowInput,
   project: KeywordProject,
@@ -236,6 +233,9 @@ export function mapKeyword(
     expectedUrlFallbackCurrent,
     expectedUrlSource: row.expectedUrlResolution?.source ?? (row.targetUrl ? "explicit" : null),
     checkState: keywordCheckState(latestAttempt, row.queuedRankCheckTasks ?? []),
+    observationCompleteness: normalizedObservationCompleteness(
+      latest?.observationRun?.completeness,
+    ),
     checkSchedule: row.checkSchedule
       ? {
           name: row.checkSchedule.name,
@@ -244,6 +244,13 @@ export function mapKeyword(
         }
       : null,
     completedComparableChecks: checks.slice(-2).map((check) => ({
+      ...(check.observationRun
+        ? {
+            observationCompleteness: normalizedObservationCompleteness(
+              check.observationRun.completeness,
+            ),
+          }
+        : {}),
       checkedAt: check.checkedAt.toISOString(),
       position: check.position,
       rankingUrl: check.rankingUrl,

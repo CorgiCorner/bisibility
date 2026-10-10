@@ -146,7 +146,8 @@
         },
         "recentTargetsAria": "最近の分析対象",
         "recentTargets": "最近の分析対象",
-        "removeRecent": "{target} を最近の分析対象から削除"
+        "removeRecent": "{target} を最近の分析対象から削除",
+        "historyUnavailable": "この結果の履歴は利用できません。概要とリンクは引き続き確認できます。"
       },
       "summary": {
         "per30Days": "/ 30日",
@@ -193,6 +194,13 @@
         "description": "DataForSEO からご自身のアカウントに課金されます。スナップショットは24時間キャッシュされ、その間の再表示やタブの切り替えは無料です。",
         "unavailable": "価格不明",
         "perHundred": "{price} / 100件"
+      },
+      "failedSummary": {
+        "title": "被リンク分析に失敗しました",
+        "description": "{target} の概要のみです。履歴の取得に失敗したため、被リンクの詳細はリクエストしていません。",
+        "costUnknown": "合計費用は不明です。",
+        "knownSummaryCost": "確認済みの概要取得費用: {cost}",
+        "previousResult": "前回成功した結果です。今回の分析失敗によって置き換えられていません。"
       }
     }
   }

@@ -537,3 +537,13 @@ describe("mapKeyword traffic fields", () => {
     expect(legacyOnly.positionHistoryBoundaryAt).toBeNull();
   });
 });
+
+describe("persisted observation completeness", () => {
+  it("keeps unknown coverage distinct from a completed absence", () => {
+    const check = rankCheck("2026-07-01T10:00:00.000Z", "check_unknown", null, {
+      observationRun: { completeness: "unknown" },
+    });
+    const row = mapKeyword({ ...keywordRow(), rankChecks: [check] }, project, metrics);
+    expect(row).toMatchObject({ checkState: "unknown", observationCompleteness: "unknown" });
+  });
+});

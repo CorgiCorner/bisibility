@@ -1,6 +1,9 @@
 "use client";
 
-import { tableHeaderClassName } from "@/components/ui/table-header-styles";
+import {
+  tableHeaderClassName,
+  tableHeaderFrameBorderClassName,
+} from "@/components/ui/table-header-styles";
 import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CaretUpIcon as CaretUp } from "@phosphor-icons/react/dist/csr/CaretUp";
@@ -21,6 +24,7 @@ import type { DataTableColumn, DataTableRowBase, DataTableSort } from "./data-ta
 import { DATA_TABLE_SELECTION_COLUMN_ID } from "./use-data-table";
 
 type DataTableHeaderProps<TRow extends DataTableRowBase> = {
+  bordered: boolean;
   onSelectionChange?: (next: ReadonlySet<string>) => void;
   onSortingChange: (sort: DataTableSort | null) => void;
   rows: readonly TRow[];
@@ -91,6 +95,7 @@ function SortableHeader<TRow extends DataTableRowBase>({
 }
 
 export function DataTableHeader<TRow extends DataTableRowBase>({
+  bordered,
   onSelectionChange,
   onSortingChange,
   rows,
@@ -112,7 +117,8 @@ export function DataTableHeader<TRow extends DataTableRowBase>({
       <div
         className={cn(
           tableHeaderClassName,
-          "flex h-[42px] border-t-0 font-semibold group-data-[bordered=false]/table:border-t",
+          "flex h-[42px] font-semibold",
+          bordered && tableHeaderFrameBorderClassName,
         )}
         role="row"
         tabIndex={-1}

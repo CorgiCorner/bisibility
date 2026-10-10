@@ -16,6 +16,11 @@ const locales = [
 
 const sections = [
   {
+    key: "aiTracking",
+    title: "AI Tracking",
+    subtitle: "Monitor AI answers, brand mentions and cited sources over time.",
+  },
+  {
     key: "aiVisibility",
     title: "AI Visibility",
     subtitle: "Brand mentions and citations from available provider observations.",
@@ -61,7 +66,7 @@ describe.each(locales)("research shell copy in $locale", ({ locale, messages }) 
       expect(localized.subtitle).not.toBe(section.subtitle);
     }
   });
-  it("supplies all five command palette destinations", () => {
+  it("supplies all six command palette destinations", () => {
     const translator = createTranslator({
       locale,
       messages,

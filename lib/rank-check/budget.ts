@@ -109,6 +109,7 @@ export type ConnectionLookupSpend = {
   costCents: number;
   entryCount: number;
   feature:
+    | "ai_tracking"
     | "ai_visibility"
     | "prompt_explorer"
     | "backlinks"

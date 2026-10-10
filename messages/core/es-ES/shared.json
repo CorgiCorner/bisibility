@@ -505,7 +505,10 @@
           "workEmail": "Usa tu correo electrónico de trabajo."
         }
       },
-      "expandableCard": { "expand": "Ampliar", "expandNamed": "Ampliar {title}" },
+      "expandableCard": {
+        "expand": "Ampliar",
+        "expandNamed": "Ampliar {title}"
+      },
       "expiryChoice": {
         "label": "Caduca"
       },
@@ -628,6 +631,9 @@
         },
         "not_confirmed": {
           "description": "La ejecución terminó, pero no tiene ningún resultado registrado."
+        },
+        "skipped": {
+          "description": "No hay palabras clave activas"
         }
       },
       "searchConsole": {

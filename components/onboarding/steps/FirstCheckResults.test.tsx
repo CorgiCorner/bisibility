@@ -249,3 +249,33 @@ describe("FirstCheckResults", () => {
     }
   });
 });
+
+it.each(["unknown", "truncated_by_stop_on_match"] as const)(
+  "renders %s coverage without inventing an out-of-depth result",
+  (observationCompleteness) => {
+    renderWithFeatureMessages(
+      <FirstCheckResults
+        state={{
+          mode: "preview",
+          message: null,
+          status: "completed",
+          rows: [
+            {
+              ...queued,
+              status: "completed",
+              position: null,
+              rankingUrl: null,
+              provider: "dataforseo",
+              recordedCostCents: 0.4,
+              requestedDepth: 100,
+              observationCompleteness,
+            },
+          ],
+        }}
+      />,
+      { locale: "en", messages: mergeMessageCatalogs(sharedMessages, onboardingMessages) },
+    );
+    expect(screen.getByText("Coverage unknown")).toBeInTheDocument();
+    expect(screen.queryByText("Not in top 100")).not.toBeInTheDocument();
+  },
+);

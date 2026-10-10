@@ -146,7 +146,8 @@
         },
         "recentTargetsAria": "Recent targets",
         "recentTargets": "Recent targets",
-        "removeRecent": "Remove {target} from recent targets"
+        "removeRecent": "Remove {target} from recent targets",
+        "historyUnavailable": "History is unavailable for this result. The summary and links are still available."
       },
       "summary": {
         "per30Days": "/ 30d",
@@ -193,6 +194,13 @@
         "description": "Charged by DataForSEO to your own account. A snapshot stays cached for 24 hours - reopening or switching tabs within it is free.",
         "unavailable": "Price unavailable",
         "perHundred": "{price} / 100"
+      },
+      "failedSummary": {
+        "title": "Failed backlinks analysis",
+        "description": "Summary only for {target}. History failed and backlink rows were not requested.",
+        "costUnknown": "Total cost is unknown.",
+        "knownSummaryCost": "Known summary cost: {cost}",
+        "previousResult": "Previous successful result. The failed analysis did not replace it."
       }
     }
   }

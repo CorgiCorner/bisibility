@@ -1,3 +1,4 @@
+import { APIError } from "better-auth/api";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { authenticateMcpOAuthRequest } from "./oauth-auth";
 
@@ -189,7 +190,9 @@ describe("MCP OAuth authentication", () => {
 
   it("rejects verifier failures without emitting temporary diagnostics", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-    mocks.verifyAccessToken.mockRejectedValue(new Error("invalid audience"));
+    mocks.verifyAccessToken.mockRejectedValue(
+      new APIError("UNAUTHORIZED", { message: "invalid audience" }),
+    );
 
     const result = await authenticateMcpOAuthRequest(request("oauth-access-token"));
     if (!("response" in result)) throw new Error("Expected an OAuth rejection response.");
@@ -204,6 +207,17 @@ describe("MCP OAuth authentication", () => {
     });
     expect(mocks.userFindUnique).not.toHaveBeenCalled();
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("fails closed with a safe response for unknown verifier failures", async () => {
+    mocks.verifyAccessToken.mockRejectedValue(
+      new Error("private verifier detail with oauth-access-token"),
+    );
+    const result = await authenticateMcpOAuthRequest(request("oauth-access-token"));
+    if (!("response" in result)) throw new Error("Expected an OAuth failure response.");
+    expect(result.response.status).toBe(503);
+    expect(await result.response.text()).not.toContain("private verifier detail");
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
   });
 
   it("rejects tokens without a user subject or bisibility access scope", async () => {

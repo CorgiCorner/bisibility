@@ -279,3 +279,13 @@ describe("rankCheckResource", () => {
     });
   });
 });
+
+it("retains persisted completeness in a rank-check API response", () => {
+  const result = rankCheckResource({
+    ...completedCheck,
+    position: null,
+    observationRun: { completeness: "unknown" },
+    keyword: { projectId: "project_1", publicId: "kw_a00000000000000000000000" },
+  } as unknown as RankCheckRecord);
+  expect(result).toMatchObject({ observation_completeness: "unknown", position: null });
+});

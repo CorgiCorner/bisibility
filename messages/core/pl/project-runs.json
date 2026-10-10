@@ -83,6 +83,25 @@
       "runNow": "Uruchom teraz",
       "skipOnce": "Pomiń raz",
       "viewDetails": "Zobacz szczegóły"
+    },
+    "timeline": {
+      "all": "Wszystkie",
+      "active": "W toku",
+      "upcoming": "Nadchodzące",
+      "history": "Historia",
+      "sections": "Etapy wykonania",
+      "activeHint": "Od najwcześniej rozpoczętego",
+      "upcomingHint": "Najbliższe najpierw.",
+      "historyHint": "Ostatnio zakończone pierwsze",
+      "noActiveKeywords": "Brak aktywnych słów kluczowych",
+      "when": "Kiedy",
+      "finishedAt": "Zakończono",
+      "plannedFor": "Zaplanowano na",
+      "retryFrom": "Ponowienie od",
+      "readyFrom": "Gotowe od",
+      "parallelWorkers": "Workery mogą działać równolegle.",
+      "oldestFirst": "Najstarsze najpierw",
+      "newestFirst": "Najnowsze najpierw"
     }
   }
 }

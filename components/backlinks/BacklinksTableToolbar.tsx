@@ -1,4 +1,5 @@
 import { SegmentedControl, type SegmentedControlOption } from "@/components/ui/SegmentedControl";
+import { cn } from "@/lib/ui/cn";
 import { FunnelSimpleIcon as FunnelSimple } from "@phosphor-icons/react/dist/csr/FunnelSimple";
 import { useTranslations } from "next-intl";
 import type { KeyboardEvent, ReactNode } from "react";
@@ -105,7 +106,12 @@ export function BacklinksTableToolbar({
         />
         {exportControl}
       </div>
-      <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-2.5">
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-2.5 px-4 py-2.5",
+          filter === "broken" && "border-b border-border",
+        )}
+      >
         <button
           aria-label={t("filtersAria", { count: filterCount })}
           className={`inline-flex h-[30px] cursor-pointer items-center gap-1.5 rounded-control border border-border-control bg-transparent px-3 text-[13px] font-medium text-fg hover:border-fg-muted ${focusClass}`}

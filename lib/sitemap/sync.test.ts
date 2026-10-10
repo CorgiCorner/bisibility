@@ -23,20 +23,23 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("server-only", () => ({}));
+vi.mock("node:dns/promises", () => ({
+  lookup: vi.fn(async () => [{ address: "93.184.216.34", family: 4 }]),
+}));
+vi.mock("undici", async (importOriginal) => {
+  const original = await importOriginal<typeof import("undici")>();
+  return { ...original, fetch: (...args: Parameters<typeof fetch>) => fetch(...args) };
+});
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/signals/emit", () => ({ emitSignal: mocks.emitSignal }));
 
 const now = new Date("2026-07-04T04:45:00.000Z");
 
 function xmlResponse(body: string, status = 200, contentLength?: number) {
-  return {
-    headers: new Headers(
-      contentLength === undefined ? {} : { "content-length": String(contentLength) },
-    ),
-    ok: status >= 200 && status < 300,
+  return new Response(body, {
     status,
-    text: vi.fn().mockResolvedValue(body),
-  } as unknown as Response;
+    headers: contentLength === undefined ? {} : { "content-length": String(contentLength) },
+  });
 }
 
 function urlset(urls: string[]) {
@@ -188,11 +191,11 @@ describe("sitemap sync", () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock
       .mockRejectedValueOnce(new Error("network down"))
-      .mockResolvedValueOnce(xmlResponse(urlset(["https://two.example/"])));
+      .mockResolvedValueOnce(xmlResponse(urlset(["https://two.example.com/"])));
     mocks.prisma.project.findMany.mockResolvedValue([{ id: "project_1" }, { id: "project_2" }]);
     mocks.prisma.project.findFirst
-      .mockResolvedValueOnce({ domain: "one.example", id: "project_1" })
-      .mockResolvedValueOnce({ domain: "two.example", id: "project_2" });
+      .mockResolvedValueOnce({ domain: "one.example.com", id: "project_1" })
+      .mockResolvedValueOnce({ domain: "two.example.com", id: "project_2" });
     mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue(null);
 
     await expect(syncSitemapForAllProjects(now)).resolves.toMatchObject({

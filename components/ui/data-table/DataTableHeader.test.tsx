@@ -69,11 +69,14 @@ describe("DataTableHeader", () => {
 
     expect(table).toHaveAttribute("data-bordered", "true");
     expect(table).not.toHaveClass("-mt-px");
-    expect(headerRow).toHaveClass("border-t-0", "group-data-[bordered=false]/table:border-t");
+    expect(headerRow).toHaveClass("border-t-0", "border-b");
 
     rerender(<Table bordered={false} />);
     expect(table).toHaveAttribute("data-bordered", "false");
-    expect(table).toHaveClass("-mt-px", "border-0");
+    expect(table).toHaveClass("border-0");
+    expect(table).not.toHaveClass("-mt-px");
+    expect(headerRow).toHaveClass("border-y");
+    expect(headerRow).not.toHaveClass("border-t-0");
   });
 
   it("cycles descending-first sort through descending, ascending and default", () => {

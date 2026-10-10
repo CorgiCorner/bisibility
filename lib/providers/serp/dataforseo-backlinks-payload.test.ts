@@ -129,7 +129,7 @@ describe("DataForSEO backlinks payload parsers", () => {
     expect(() => dataForSeoBacklinksRows(invalidFieldNotCharged)).toThrowError(
       expect.objectContaining({
         charged: false,
-        costCents: null,
+        costCents: 0,
         name: "DataForSeoValidationError",
       }),
     );

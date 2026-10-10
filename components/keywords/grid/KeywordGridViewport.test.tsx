@@ -43,7 +43,9 @@ describe("KeywordGridViewport", () => {
     expect(table).toHaveAttribute("data-bordered", "false");
     expect(table.parentElement).toBe(viewport);
     expect(table).toHaveClass("border-0");
-    expect(screen.getAllByRole("row")[0]).toHaveClass("border-y", "border-t-0", "border-border");
+    const header = screen.getAllByRole("row")[0];
+    expect(header).toHaveClass("border-y", "border-border");
+    expect(header).not.toHaveClass("border-t-0");
     expect(screen.getByTestId("data-table-footer")).toHaveClass("border-t", "border-border");
   });
 });

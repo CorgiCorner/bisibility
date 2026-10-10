@@ -22,7 +22,19 @@ function pathSegments(path: string) {
   return path.split("/").filter(Boolean);
 }
 
+function readOnlyTrackingPost(method: string, path: string[]) {
+  return (
+    method === "POST" &&
+    path[0] === "projects" &&
+    path[2] === "ai-tracking" &&
+    ((path[3] === "runs" && path[4] === "preview" && path.length === 5) ||
+      (path[3] === "suggestions" &&
+        (path.length === 4 || (path[4] === "preview" && path.length === 5))))
+  );
+}
+
 function legacyRequiredScope(method: string, path: string[]): ApiScope {
+  if (readOnlyTrackingPost(method, path)) return "read";
   if (method === "POST" && path[0] === "projects" && path[2] === "keyword-matches") {
     return "read";
   }
@@ -53,6 +65,7 @@ function legacyRequiredScope(method: string, path: string[]): ApiScope {
 
 function legacyProjectAccess(method: string, path: string[]): ProjectAccess {
   return method === "GET" ||
+    readOnlyTrackingPost(method, path) ||
     (method === "POST" &&
       path[0] === "projects" &&
       ["keyword-matches", "keyword-metrics"].includes(path[2]))
@@ -94,7 +107,7 @@ describe("operation policy", () => {
       .sort((left, right) => left.operationId.localeCompare(right.operationId));
 
     expect(after).toEqual(before);
-    expect(before).toHaveLength(101);
+    expect(before).toHaveLength(128);
     for (const operation of before) {
       const runtimePath = pathSegments(operation.path).map((segment) =>
         segment.startsWith("{") ? "value" : segment,
@@ -114,7 +127,7 @@ describe("operation policy", () => {
       { admin: 0, read: 0, write: 0 },
     );
 
-    expect(counts).toEqual({ admin: 16, read: 35, write: 50 });
+    expect(counts).toEqual({ admin: 16, read: 48, write: 64 });
   });
 
   it("declares self-revocation and prefers it over the token-id route", () => {

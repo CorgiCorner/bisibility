@@ -37,7 +37,9 @@ export function ScheduleEditorMembers({
 
   return (
     <section className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3.5">
+      <header
+        className={`flex flex-wrap items-start justify-between gap-3 px-4 py-3.5 ${members.length === 0 ? "border-b border-border" : ""}`}
+      >
         <span className="min-w-0">
           <span className="block text-[15px] font-semibold text-fg">{t("editor.members")}</span>
           <span className="mt-0.5 block text-[12.5px] leading-5 text-fg-muted">

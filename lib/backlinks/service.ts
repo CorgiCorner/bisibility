@@ -5,6 +5,7 @@ import { backlinksCacheKey, withBacklinksCache } from "./cache";
 import { backlinksProject, backlinksSource } from "./context";
 import {
   assertBacklinksMaxCost,
+  BacklinksHistoryEvidenceError,
   backlinksEstimate,
   fetchBacklinksAnalysis,
   fetchMoreBacklinksRows,
@@ -168,6 +169,23 @@ export async function analyzeBacklinks(
     }
     return lookup.cached ? { ...lookup.value, cached: true, costCents: 0 } : lookup.value;
   } catch (error) {
+    if (error instanceof BacklinksHistoryEvidenceError) {
+      return {
+        costCents: null,
+        knownSummaryCostCents: error.knownSummaryCostCents,
+        historyFailure: error.historyFailure,
+        historyStatus: "failed",
+        includeSubdomains: input.includeSubdomains,
+        ok: false,
+        provider: source.provider.id,
+        reason: "history_failed",
+        rowsStatus: "not_requested",
+        status: "failed",
+        summary: error.summary,
+        target: input.target,
+        targetScope: input.scope,
+      };
+    }
     return lookupFailure(error) ?? Promise.reject(error);
   }
 }

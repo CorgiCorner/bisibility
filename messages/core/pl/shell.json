@@ -77,7 +77,8 @@
         "promptExplorer": "Eksplorator promptów",
         "siteAudit": "Audyt strony",
         "projectContext": "Kontekst projektu",
-        "agentReports": "Raporty agentów"
+        "agentReports": "Raporty agentów",
+        "aiTracking": "Monitoring AI"
       },
       "menu": "Menu"
     },
@@ -218,7 +219,8 @@
         "promptExplorer": "Porównuj syntetyczne testy promptów w obsługiwanych modelach.",
         "siteAudit": "Przeskanuj stronę projektu i sprawdź problemy według adresów URL.",
         "projectContext": "Biznes, odbiorcy, produkty i cele dla Twoich agentów.",
-        "agentReports": "Zapisane analizy udostępnione członkom tego projektu."
+        "agentReports": "Zapisane analizy udostępnione członkom tego projektu.",
+        "aiTracking": "Monitoruj odpowiedzi AI, wzmianki o marce i cytowane źródła w czasie."
       },
       "titles": {
         "account": "Ustawienia konta",
@@ -250,7 +252,8 @@
         "promptExplorer": "Eksplorator promptów",
         "siteAudit": "Audyt strony",
         "projectContext": "Kontekst projektu",
-        "agentReports": "Raporty agentów"
+        "agentReports": "Raporty agentów",
+        "aiTracking": "Monitoring AI"
       }
     },
     "footer": {

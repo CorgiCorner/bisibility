@@ -1,6 +1,8 @@
 import "server-only";
 
 import { backlinksRates } from "@/lib/cost-estimate/provider-rates";
+import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import {
   ProviderLookupSignal,
   paidProviderCall,
@@ -9,13 +11,66 @@ import {
 } from "@/lib/provider-lookups/paid-call";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { type ProviderRequestOrigin, surfaceOf } from "@/lib/provider-usage/surface";
+import { ProviderAuthError } from "@/lib/providers/auth-error";
+import { ProviderCallError } from "@/lib/providers/call-error";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { ProviderRateLimitedError } from "@/lib/providers/rate-limit-error";
 import type {
   BacklinkRowMode,
   BacklinkTargetInput,
   BacklinkTargetScope,
 } from "@/lib/providers/types";
+import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import { isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import type { BacklinksSource } from "./context";
-import type { BacklinksHistoryMonth } from "./types";
+import type { BacklinksHistoryFailure, BacklinksHistoryMonth, BacklinksSummary } from "./types";
+
+/** Server-only error: its cause is never projected into the failed evidence DTO. */
+export class BacklinksHistoryEvidenceError extends Error {
+  readonly historyFailure: BacklinksHistoryFailure;
+  readonly summary: BacklinksSummary;
+
+  constructor(
+    error: unknown,
+    summary: BacklinksSummary,
+    readonly knownSummaryCostCents: number,
+  ) {
+    super("Backlinks history failed; summary evidence is available.", { cause: error });
+    this.name = "BacklinksHistoryEvidenceError";
+    const phases: readonly string[] = [
+      "admission",
+      "request",
+      "response_body",
+      "measurement",
+      "settlement",
+      "unknown",
+    ];
+    this.historyFailure =
+      error instanceof ProviderUsagePersistenceError
+        ? {
+            code: "provider_usage_unconfirmed",
+            phase: phases.includes(error.phase) ? error.phase : "unknown",
+          }
+        : {
+            code: error instanceof ProviderCallError ? "provider_transient" : "unexpected_error",
+            phase: null,
+          };
+    this.summary = {
+      backlinksTotal: summary.backlinksTotal,
+      brokenBacklinks: summary.brokenBacklinks,
+      brokenPages: summary.brokenPages,
+      dofollowPct: summary.dofollowPct,
+      domainRank: summary.domainRank,
+      lostBacklinks: summary.lostBacklinks,
+      lostReferringDomains: summary.lostReferringDomains,
+      newBacklinks: summary.newBacklinks,
+      newReferringDomains: summary.newReferringDomains,
+      referringDomainsTotal: summary.referringDomainsTotal,
+      referringPages: summary.referringPages,
+      spamScore: summary.spamScore,
+    };
+  }
+}
 
 function rateEstimate(input: {
   itemCount: number;
@@ -112,6 +167,7 @@ export async function fetchBacklinksAnalysis(input: {
     itemCount: 1,
     rate: rates.summary,
   });
+  let historyUnavailable = false;
   const history =
     input.scope === "site"
       ? await paidProviderCall({
@@ -124,6 +180,32 @@ export async function fetchBacklinksAnalysis(input: {
             }),
           itemCount: 1,
           rate: rates.history,
+        }).catch((error: unknown) => {
+          if (
+            !(error instanceof ProviderCallError) ||
+            error.code !== "provider_transient" ||
+            error.costCents === null ||
+            !Number.isFinite(error.costCents) ||
+            error.costCents < 0
+          ) {
+            // Keep refusal classifications authoritative; never turn them into a paid fallback.
+            if (
+              error instanceof ProviderLookupSignal ||
+              error instanceof ProviderAuthError ||
+              error instanceof DeploymentAdmissionExhaustedError ||
+              isOperationAccessDeniedError(error) ||
+              error instanceof ProjectReadOnlyError ||
+              error instanceof ProviderRateLimitedError ||
+              (error instanceof Error && isBudgetExhaustedError(error)) ||
+              (error instanceof ProviderCallError && error.code !== "provider_transient") ||
+              !Number.isFinite(summary.costCents) ||
+              summary.costCents < 0
+            )
+              throw error;
+            throw new BacklinksHistoryEvidenceError(error, summary.summary, summary.costCents);
+          }
+          historyUnavailable = true;
+          return { costCents: error.costCents, rows: [] };
         })
       : { costCents: 0, rows: [] };
   const rows = await paidProviderCall({
@@ -150,6 +232,7 @@ export async function fetchBacklinksAnalysis(input: {
   return {
     costCents: summary.costCents + history.costCents + rows.costCents,
     history: months,
+    ...(historyUnavailable ? { historyUnavailable: true } : {}),
     rows: rows.rows,
     summary: summary.summary,
     totalRowsAvailable: rows.totalCount,

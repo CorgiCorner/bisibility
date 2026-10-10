@@ -80,3 +80,53 @@ describe("DataForSEO balance extraction", () => {
     expect(extractDataForSeoBalance({ balance: 8.75 })).toBe(8.75);
   });
 });
+
+describe("DataForSEO account verification receipts", () => {
+  it.each([0, 0.002, undefined])(
+    "preserves receipt cost %s for numeric account failures",
+    async (cost) => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        Response.json({
+          ...(cost === undefined ? {} : { cost }),
+          status_code: 20000,
+          tasks: [{ status_code: 20000 }, { status_code: 40104 }],
+        }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      try {
+        await expect(
+          requestEnvelope("https://api.dataforseo.com/fixture", { method: "POST" }, {}),
+        ).rejects.toMatchObject({
+          code: "provider_account_restricted",
+          costCents: cost === undefined ? null : cost * 100,
+        });
+        expect(fetchMock).toHaveBeenCalledOnce();
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    },
+  );
+
+  it("settles the failed zero-cost request once before rejecting without retry", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ cost: 0, status_code: 40104 }));
+    const observer = { begin: vi.fn().mockResolvedValue("attempt_fixture"), settle: vi.fn() };
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      await expect(
+        requestEnvelope(
+          "https://api.dataforseo.com/fixture",
+          { method: "POST" },
+          { usageObserver: observer },
+        ),
+      ).rejects.toMatchObject({ code: "provider_account_restricted", costCents: 0 });
+      expect(fetchMock).toHaveBeenCalledOnce();
+      expect(observer.begin).toHaveBeenCalledOnce();
+      expect(observer.settle).toHaveBeenCalledExactlyOnceWith(
+        "attempt_fixture",
+        expect.objectContaining({ failed: true, costCents: 0, quantity: 1 }),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});

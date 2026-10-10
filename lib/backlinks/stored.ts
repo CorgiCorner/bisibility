@@ -118,6 +118,7 @@ export function snapshotEnvelope(
     fetchedAt: snapshot.fetchedAt.toISOString(),
     fetchedRowCount: snapshot.fetchedRowCount,
     history: publicHistory(snapshot.history),
+    ...(record(snapshot.summary)._historyUnavailable === true ? { historyUnavailable: true } : {}),
     includeSubdomains: snapshot.includeSubdomains,
     ok: true,
     provider: snapshotProvider(snapshot.summary),

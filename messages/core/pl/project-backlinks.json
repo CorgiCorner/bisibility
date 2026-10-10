@@ -146,7 +146,8 @@
         },
         "recentTargetsAria": "Ostatnie cele",
         "recentTargets": "Ostatnie cele",
-        "removeRecent": "Usuń cel {target} z listy ostatnich"
+        "removeRecent": "Usuń cel {target} z listy ostatnich",
+        "historyUnavailable": "Historia jest niedostępna dla tego wyniku. Podsumowanie i linki są nadal dostępne."
       },
       "summary": {
         "per30Days": "/ 30 dni",
@@ -193,6 +194,13 @@
         "description": "Opłatę pobiera DataForSEO z Twojego konta. Zrzut pozostaje w pamięci podręcznej przez 24 godziny – ponowne otwarcie i przełączanie kart w jego obrębie jest bezpłatne.",
         "unavailable": "Cena niedostępna",
         "perHundred": "{price} / 100"
+      },
+      "failedSummary": {
+        "title": "Analiza linków zwrotnych nie powiodła się",
+        "description": "Tylko podsumowanie dla {target}. Pobranie historii nie powiodło się, a o linki zwrotne nie zapytano.",
+        "costUnknown": "Całkowity koszt jest nieznany.",
+        "knownSummaryCost": "Znany koszt podsumowania: {cost}",
+        "previousResult": "Poprzedni poprawny wynik. Nieudana analiza go nie zastąpiła."
       }
     }
   }

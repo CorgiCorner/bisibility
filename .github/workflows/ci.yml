@@ -1,5 +1,5 @@
 # GENERATED - do not edit directly.
-# Source hash: 24f87d8d74c7558b10895e99025a3d078235849709b529e029e55625f3c1ba3e
+# Source hash: d5d87a6507a16365a7ea85c355d5ed25838a9ee2662f5843f032f4383f0e5cb6
 name: CI
 
 on:
@@ -59,6 +59,24 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version-file: .nvmrc
+      # Docker Hub returns rate limits, auth timeouts and 5xx to shared runners; warm the
+      # third-party images with bounded retries so the smoke tests only see local images.
+      - name: Pull third-party Compose images
+        run: |
+          images="$(sed -nE 's/^[[:space:]]*image:[[:space:]]*([^$[:space:]]+)[[:space:]]*$/\1/p' compose.yaml compose.worker.yaml compose.temporal.yaml | sort -u)"
+          test -n "$images"
+          for image in $images; do
+            for attempt in 1 2 3 4 5; do
+              if docker pull --quiet "$image"; then
+                break
+              fi
+              if [ "$attempt" -eq 5 ]; then
+                echo "::error::Could not pull $image after $attempt attempts"
+                exit 1
+              fi
+              sleep $((attempt * 20))
+            done
+          done
       - run: npm run smoke:compose-contract
 
   test:

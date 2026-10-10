@@ -6,6 +6,10 @@ type Bearer = (
   parameters?: object[],
 ) => object;
 
+import {
+  backlinksFailedSummaryProblem,
+  withBacklinksFailedSummaryProblem,
+} from "./openapi-backlinks-failure";
 import { backlinksEstimateSchema, backlinksSummary } from "./openapi-backlinks-parts";
 import { withCreditsExhausted } from "./openapi-operations";
 
@@ -65,7 +69,6 @@ const backlinkHistory = {
     type: "object",
   },
   maxItems: 12,
-  minItems: 12,
   type: "array",
 } as const;
 
@@ -124,6 +127,7 @@ const backlinkRows = {
 } as const;
 
 export const backlinksSchemas = {
+  BacklinksFailedSummaryProblem: backlinksFailedSummaryProblem,
   BacklinksEstimate: backlinksEstimateSchema,
   BacklinksResponse: {
     properties: { data: { oneOf: [ref("BacklinksEstimate"), ref("BacklinksSnapshot")] } },
@@ -141,6 +145,29 @@ export const backlinksSchemas = {
     type: "object",
   },
   BacklinksSnapshot: {
+    oneOf: [
+      {
+        properties: {
+          history: { minItems: 12, maxItems: 12 },
+          history_unavailable: { const: false },
+        },
+      },
+      {
+        properties: {
+          history: { maxItems: 0 },
+          history_unavailable: { const: true },
+        },
+        required: ["history_unavailable"],
+      },
+      {
+        properties: {
+          history: { maxItems: 0 },
+          history_unavailable: { const: false },
+          target_scope: { const: "page" },
+        },
+        required: ["target_scope"],
+      },
+    ],
     properties: {
       cached: { type: "boolean" },
       cached_until: { format: "date-time", type: "string" },
@@ -148,6 +175,11 @@ export const backlinksSchemas = {
       fetched_at: { format: "date-time", type: "string" },
       fetched_row_count: { minimum: 0, type: "integer" },
       history: backlinkHistory,
+      history_unavailable: {
+        type: "boolean",
+        description:
+          "True only with empty history when the optional history request failed with a confirmed cost. Site history otherwise has exactly 12 months; page scope does not request history. Summary and links remain available.",
+      },
       include_subdomains: { type: "boolean" },
       provider: { type: "string" },
       rows: backlinkRows,
@@ -232,15 +264,17 @@ const queryParameters = [
 export function backlinksPaths(input: { bearer: Bearer }) {
   return {
     "/projects/{projectId}/backlinks": {
-      get: withBacklinksMetadata(
-        input.bearer(
-          "Analyze backlinks or return a free estimate. Requires write scope.",
-          "analyzeBacklinks",
-          ref("BacklinksResponse"),
-          undefined,
-          queryParameters,
+      get: withBacklinksFailedSummaryProblem(
+        withBacklinksMetadata(
+          input.bearer(
+            "Analyze backlinks or return a free estimate. Requires write scope.",
+            "analyzeBacklinks",
+            ref("BacklinksResponse"),
+            undefined,
+            queryParameters,
+          ),
+          'Requires write scope because cache misses spend provider budget. estimate_only=true needs only read scope and never spends provider budget. estimate_only is a free dry run, and max_cost_cents is a best-effort pre-estimate gate. Snapshots are cached for 24 hours. Aggregated referring-domain, page, and anchor views are consumer-side and must be labeled "within fetched rows".',
         ),
-        'Requires write scope because cache misses spend provider budget. estimate_only=true needs only read scope and never spends provider budget. estimate_only is a free dry run, and max_cost_cents is a best-effort pre-estimate gate. Snapshots are cached for 24 hours. Aggregated referring-domain, page, and anchor views are consumer-side and must be labeled "within fetched rows".',
       ),
     },
     "/projects/{projectId}/backlinks/rows": {

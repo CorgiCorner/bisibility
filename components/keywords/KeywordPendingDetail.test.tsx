@@ -47,7 +47,7 @@ function pendingKeyword(overrides: Partial<KeywordRow> = {}): KeywordRow {
 
 function renderDetail(
   keyword = pendingKeyword(),
-  rankState: "never_checked" | "not_ranked" = "never_checked",
+  rankState: "never_checked" | "not_ranked" | "unknown" = "never_checked",
 ) {
   render(
     <ToastProvider>
@@ -136,4 +136,19 @@ describe("KeywordPendingDetail", () => {
       screen.queryByRole("button", { name: "Save markets and devices" }),
     ).not.toBeInTheDocument();
   });
+});
+
+it("describes unknown coverage in the shared header and pending history", () => {
+  renderDetail(
+    pendingKeyword({
+      hasRankData: true,
+      position: 101,
+      checkState: "unknown",
+      observationCompleteness: "unknown",
+    }),
+    "unknown",
+  );
+  expect(screen.getAllByText("Coverage unknown")).toHaveLength(2);
+  expect(screen.queryByText("Not ranked in the top 20")).not.toBeInTheDocument();
+  expect(screen.queryByText("#101")).not.toBeInTheDocument();
 });

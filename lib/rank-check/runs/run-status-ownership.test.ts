@@ -17,7 +17,7 @@ const projectRoot = process.cwd();
 const sourceRoots = [resolve(projectRoot, "lib/rank-check"), resolve(projectRoot, "lib/temporal")];
 const allowedStartWriters = {
   "lib/rank-check/items-claim.ts": "Claims the first due item, which starts its queued run.",
-  "lib/rank-check/planner/launch-due.ts":
+  "lib/rank-check/planner/materialize.ts":
     "Resumes a blocked run only when it had started before blocking.",
 } as const;
 
@@ -197,7 +197,7 @@ describe("run status advancement ownership", () => {
   it("permits only the documented RankCheckRun writers that can start a run", () => {
     expect(allowedStartWriters).toEqual({
       "lib/rank-check/items-claim.ts": "Claims the first due item, which starts its queued run.",
-      "lib/rank-check/planner/launch-due.ts":
+      "lib/rank-check/planner/materialize.ts":
         "Resumes a blocked run only when it had started before blocking.",
     });
     expect(rankCheckRunStartWriters()).toEqual(Object.keys(allowedStartWriters));

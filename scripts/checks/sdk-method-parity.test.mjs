@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it } from "node:test";
-import { checkMethodParity } from "../generate/docs-examples.mjs";
+import { checkMethodParity, parseMethodsTable } from "../generate/docs-examples.mjs";
 
 const methodsContent = readFileSync(resolve("docs/sdks/methods.mdx"), "utf8");
 const mcpContract = JSON.parse(readFileSync(resolve("lib/mcp/canonical-contract.json"), "utf8"));
@@ -23,6 +23,23 @@ function failures(methods = methodsContent, sources = exampleSources(), tools = 
 describe("SDK method parity", () => {
   it("passes for the real methods table and runnable examples", () => {
     assert.deepEqual(failures(), []);
+  });
+
+  it("separates unreleased source operations from released runnable workflows", () => {
+    assert.equal(parseMethodsTable(methodsContent).length, 5);
+    assert.equal(parseMethodsTable(methodsContent, { includeSourceMethods: true }).length, 32);
+    const reclassified = methodsContent.replace("| Source operation |", "| Workflow |");
+    assert.ok(failures(reclassified).some((failure) => failure.includes("missing workflow get AI research Catalog")));
+  });
+
+  it("still checks canonical MCP names in the unreleased source matrix", () => {
+    const stale = methodsContent.replace("| `get_ai_research_catalog` |\n", "| `get_ai_research_catalog_stale` |\n");
+    assert.ok(failures(stale).includes("MCP method get_ai_research_catalog_stale is not canonical."));
+  });
+
+  it("requires examples for additional released workflow tables after source operations", () => {
+    const extra = `${methodsContent}\n\n| Workflow | Python | TypeScript | Go | MCP tool |\n| - | - | - | - | - |\n| New released workflow | \`list_projects\` | \`listProjects\` | \`ListProjects\` | \`list_projects\` |\n`;
+    assert.ok(failures(extra).includes("typescript example contract is missing workflow New released workflow."));
   });
 
   for (const [language, current, stale] of [

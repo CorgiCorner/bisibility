@@ -1,4 +1,5 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { AgentReportResource, AgentReportSummary } from "@/lib/agent-reports/model";
 import messages from "@/messages/core/en/agent-workspace.json";
@@ -6,6 +7,7 @@ import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { AgentReportDetail } from "./AgentReportDetail";
 import { AgentReportHistory } from "./AgentReportHistory";
+import { AgentReportsLayout, AgentReportsLoading, AgentReportsToolbar } from "./AgentReportsLayout";
 
 const projectRef = "prj_abcdefghijklmnopqrstuvwx";
 const reports: AgentReportSummary[] = [
@@ -49,7 +51,6 @@ const analysisReport: AgentReportResource = {
 function HistoryView() {
   return (
     <div className="grid gap-4">
-      <p className="text-[13px] text-fg-muted">{messages.agentWorkspace.reportsDescription}</p>
       <AgentReportHistory reports={reports} projectRef={projectRef} locale="en" timeZone="UTC" />
     </div>
   );
@@ -67,25 +68,40 @@ function AnalysisView() {
   );
 }
 
-function AgentReportsStory({ view }: Readonly<{ view: "history" | "analysis" | "empty" }>) {
+function AgentReportsStory({
+  view,
+}: Readonly<{ view: "history" | "analysis" | "empty" | "loading" }>) {
   return (
     <FeatureMessagesProvider
       locale="en"
       messages={{ ...sharedMessages, ...messages }}
       timeZone="UTC"
     >
-      <div className="mx-auto max-w-[1040px]">
-        {view === "history" ? (
-          <HistoryView />
-        ) : view === "analysis" ? (
+      {view === "analysis" ? (
+        <div className="mx-auto max-w-[1040px]">
           <AnalysisView />
-        ) : (
-          <EmptyState
-            title={messages.agentWorkspace.emptyTitle}
-            description={messages.agentWorkspace.emptyDescription}
+        </div>
+      ) : view === "loading" ? (
+        <AgentReportsLoading
+          description={messages.agentWorkspace.reportsDescription}
+          addReportLabel={messages.agentWorkspace.addReport}
+        />
+      ) : (
+        <AgentReportsLayout>
+          <AgentReportsToolbar
+            description={messages.agentWorkspace.reportsDescription}
+            action={<Button variant="secondary">{messages.agentWorkspace.addReport}</Button>}
           />
-        )}
-      </div>
+          {view === "history" ? (
+            <HistoryView />
+          ) : (
+            <EmptyState
+              title={messages.agentWorkspace.emptyTitle}
+              description={messages.agentWorkspace.emptyDescription}
+            />
+          )}
+        </AgentReportsLayout>
+      )}
     </FeatureMessagesProvider>
   );
 }
@@ -100,3 +116,4 @@ type Story = StoryObj<typeof meta>;
 export const History: Story = { args: { view: "history" } };
 export const Analysis: Story = { args: { view: "analysis" } };
 export const Empty: Story = { args: { view: "empty" } };
+export const Loading: Story = { args: { view: "loading" } };

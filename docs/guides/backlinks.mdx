@@ -31,4 +31,32 @@ referring domain.
 A later filter or sort of the same snapshot does not spend again.
 **Refresh now** requests a fresh snapshot and pays again.
 
+## When history is unavailable
+
+A site analysis can keep its summary and backlink rows when the optional
+history request fails with a typed transient error and its provider cost is
+known, finite and nonnegative. The result marks history as unavailable; the
+empty trend is not evidence of zero new or lost links. This is a successful
+snapshot, and its recorded cost includes the known history-call cost.
+The [API contract](/api/backlinks#partial-history) exposes this through the
+optional `history_unavailable` flag.
+
+If history usage or accounting cannot be confirmed, or an unknown-cost
+transient or unexpected history error occurs after the summary completes,
+the analysis stays failed. The app shows that completed summary in a separate
+failed-result panel for the current response. It shows the known summary cost
+separately from the unknown total; the summary cost is only one component of
+the request, not a settled total. Backlink rows have not been requested.
+
+This failed summary is not saved as a reusable snapshot and cannot be reloaded
+as a durable result or used to load more rows. If an earlier successful result
+remains visible, it is labeled as the previous result and shown read-only.
+Authentication, provider billing, admission, budget and policy refusals stop
+the analysis rather than triggering partial-history recovery. Do not
+automatically repeat a paid analysis after an unknown-cost failure.
+
+REST and MCP preserve the failure status while returning bounded summary
+evidence. See [the error response](/api/backlinks#unconfirmed-history-cost) and
+[API error guidance](/api/errors#500-backlinks-history-failure).
+
 API request shapes stay on [Backlinks](/api/backlinks).

@@ -2967,6 +2967,14 @@
       "path": "components/schedules/schedules-table-columns.tsx",
       "reason": "The scoped next-intl translator passed by SchedulesList resolves the catalog key list.emptyNext; it is not display copy.",
       "text": "list.emptyNext"
+    },
+    {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "d5e3ebe5c163e684f3cfffd54f2bb1e96a3439ff5ad52316be02dff03591d201",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "The status mapping retains an English fallback identifier. Run status chips and the legend resolve the skipped messageKey through the shared catalog.",
+      "text": "Skipped"
     }
   ],
   "schemaVersion": 1,
@@ -3057,7 +3065,17 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/agent-reports/[reportId]/loading.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/agent-reports/[reportId]/page.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/agent-reports/layout.tsx",
       "status": "pending"
     },
     {
@@ -3068,6 +3086,11 @@
     {
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/agent-reports/page.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/ai-tracking/page.tsx",
       "status": "pending"
     },
     {
@@ -3109,6 +3132,11 @@
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/competitors/page.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/context/layout.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -4082,6 +4110,21 @@
     },
     {
       "kind": "render",
+      "path": "components/agent-reports/AgentReportsLayout.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/agent-reports/AgentWorkspaceAccessProvider.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/agent-reports/AgentWorkspaceLayout.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/agent-reports/AgentWorkspaceLoading.tsx",
       "status": "pending"
     },
@@ -4101,6 +4144,21 @@
       "status": "pending"
     },
     {
+      "kind": "ui-data",
+      "path": "components/ai-research/ai-research-presets.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/AiCostPolicyFields.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/AiPromptFields.tsx",
+      "status": "pending"
+    },
+    {
       "kind": "render",
       "path": "components/ai-research/AiResearchResults.tsx",
       "status": "pending"
@@ -4108,6 +4166,156 @@
     {
       "kind": "render",
       "path": "components/ai-research/AiResearchWorkspace.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/AiVisibilityFields.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-research/useAiResearchSubmission.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiTrackingClient.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/AiTrackingWorkspace.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-tracking/fixtures.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-tracking/generation-fixtures.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingAuditReportFixture.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingBulkActions.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingCitations.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingEvidenceDrawer.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingGeneration.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingGenerationDrawer.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingGenerationFields.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingHistoryPanel.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingMarketControls.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingMetrics.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingModelControl.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingPromptDrawer.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingPromptTable.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingRunDrawer.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingRunHistory.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingSchedules.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingSourceControls.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingSuggestions.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingTopicActions.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingTopicDrawer.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingTrends.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-tracking/TrackingWorkspaceDrawers.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-tracking/useTrackingHistory.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-tracking/useTrackingWorkspace.ts",
       "status": "pending"
     },
     {
@@ -4468,6 +4676,11 @@
     {
       "kind": "render",
       "path": "components/backlinks/BacklinksExportMenu.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/backlinks/BacklinksFailedSummary.tsx",
       "status": "migrated"
     },
     {
@@ -7471,6 +7684,11 @@
       "status": "pending"
     },
     {
+      "kind": "render",
+      "path": "components/project-context/ProjectContextLayout.tsx",
+      "status": "pending"
+    },
+    {
       "kind": "ui-data",
       "path": "components/project-runs/project-runs-actions.ts",
       "status": "migrated"
@@ -7483,6 +7701,11 @@
     {
       "kind": "ui-data",
       "path": "components/project-runs/project-runs-status-menu.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/project-runs/project-runs-table-copy.ts",
       "status": "migrated"
     },
     {
@@ -7521,6 +7744,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/project-runs/ProjectRunsTimelineTabs.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/project-runs/run-status-copy.ts",
       "status": "migrated"
@@ -7533,6 +7761,21 @@
     {
       "kind": "render",
       "path": "components/project-runs/RunStatusLegend.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/project-runs/RunTimelineSection.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/project-runs/RunTimelineTime.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/project-runs/RunTitleCell.tsx",
       "status": "migrated"
     },
     {
@@ -9304,6 +9547,11 @@
       "kind": "ui-data",
       "path": "components/ui/data-table/data-table-sorting.ts",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ui/data-table/data-table-story-borders.tsx",
+      "status": "pending"
     },
     {
       "kind": "ui-data",

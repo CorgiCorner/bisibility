@@ -30,7 +30,8 @@ describe("Project runs loading boundaries", () => {
       expect(screen.queryByRole("banner")).not.toBeInTheDocument();
       const header = container.querySelector("[data-loading-table-header]");
       expect(header).toHaveStyle({ height: `${dataTableHeaderHeight}px` });
-      expect(header).toHaveClass("border-t-0");
+      expect(header).toHaveClass("border-y", "border-border");
+      expect(header).not.toHaveClass("border-t-0");
       for (const column of columns) expect(header).toHaveTextContent(column);
       const rows = container.querySelectorAll("[data-loading-table-row]");
       expect(rows).toHaveLength(5);

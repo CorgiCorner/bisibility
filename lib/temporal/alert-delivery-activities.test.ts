@@ -453,6 +453,35 @@ describe("alert delivery activities", () => {
     });
   });
 
+  it("records filtered email delivery as skipped without marking it delivered", async () => {
+    await expect(
+      finalizeAlertDeliveryActivity({
+        alertId: "alert_1",
+        deliveryClaimToken: "claim_1",
+        outcomes: [
+          {
+            channel: "email",
+            delivered: false,
+            recordAttempt: true,
+            skipped: true,
+            reason: "Email delivery has no enabled recipients.",
+          },
+        ],
+        payload: payload(),
+        projectInternalId: "project_1",
+      }),
+    ).resolves.toEqual({ deliveryState: "skipped" });
+    expect(mocks.prisma.deliveryAttempt.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ channel: "email", status: "skipped" }),
+    });
+    expect(mocks.prisma.triggeredAlert.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ deliveredAt: null, deliveryState: "skipped" }),
+      }),
+    );
+    expect(mocks.notifyTriggeredAlertDelivered).not.toHaveBeenCalled();
+  });
+
   it("dead-letters and records missing-recipient failures", async () => {
     await expect(
       finalizeAlertDeliveryActivity({

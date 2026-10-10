@@ -3,6 +3,7 @@
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { researchKeywords } from "@/lib/keyword-research/service";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { ProviderCallError } from "@/lib/providers/call-error";
 import { canonicalKeySchema } from "@/lib/schemas/keyword";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
@@ -34,10 +35,21 @@ export async function researchKeywordsAction(input: unknown) {
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "create", data.projectId, { type: "keyword" });
 
-  return researchKeywords({
-    ...data,
-    actorId: actor.id,
-    origin: APP_REQUEST_ORIGIN,
-    projectId: project.id,
-  });
+  try {
+    return await researchKeywords({
+      ...data,
+      actorId: actor.id,
+      origin: APP_REQUEST_ORIGIN,
+      projectId: project.id,
+    });
+  } catch (error) {
+    if (error instanceof ProviderCallError && error.code === "provider_account_restricted") {
+      return {
+        ...(error.costCents == null ? {} : { costCents: error.costCents }),
+        ok: false as const,
+        reason: "account_restricted" as const,
+      };
+    }
+    throw error;
+  }
 }

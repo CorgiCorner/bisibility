@@ -116,6 +116,7 @@ export function buildAlertDigestGroups(
   return [...groups.values()].map((group) => {
     const first = group[0];
     if (!first) throw new Error("Alert digest group cannot be empty.");
+    const recipients = resolveAlertRuleRecipients(first.rule);
     const alerts = group.map(deliveryPayload);
     const rendered = renderAlertDigest({
       alerts,
@@ -136,10 +137,11 @@ export function buildAlertDigestGroups(
       createdAt: context.createdAt.toISOString(),
       deliveryClaimToken: context.deliveryClaimToken,
       email: rendered.email,
+      emailRecipientsConfigured: recipients.length > 0,
       projectDomain: trackedProjectDomain(first.rule.project.domain) ?? "",
       projectId: first.rule.project.id,
       projectName: first.rule.project.name,
-      recipients: resolveAlertRuleRecipients(first.rule),
+      recipients,
       ruleId: first.ruleId,
       ruleName: first.rule.name,
       slackConnection: first.rule.project.slackConnection,

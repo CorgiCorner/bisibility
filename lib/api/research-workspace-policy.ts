@@ -4,6 +4,7 @@ const create = { action: "create", resourceType: "project" } as const;
 const update = { action: "update", resourceType: "project" } as const;
 
 export const researchWorkspaceOperationPolicy = {
+  getAiResearchCatalog: policy("GET", "/projects/{project_id}/ai-catalog", "read"),
   getProjectContext: policy("GET", "/projects/{project_id}/context", "read"),
   updateProjectContext: policy("PATCH", "/projects/{project_id}/context", "write", "write", update),
   listAgentReports: policy("GET", "/projects/{project_id}/agent-reports", "read"),

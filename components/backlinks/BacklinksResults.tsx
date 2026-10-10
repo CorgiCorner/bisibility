@@ -43,7 +43,16 @@ export function BacklinksResults(props: Readonly<BacklinksResultsProps>) {
   return (
     <section aria-label={t("resultsAria")} className="grid min-w-0 gap-4">
       <BacklinksSnapshotMeta {...props} />
-      <SummaryCards history={props.snapshot.history} summary={props.snapshot.summary} />
+      {props.snapshot.historyUnavailable ? (
+        <p role="status" className="text-sm text-fg-muted">
+          {t("historyUnavailable")}
+        </p>
+      ) : null}
+      <SummaryCards
+        history={props.snapshot.history}
+        historyUnavailable={props.snapshot.historyUnavailable}
+        summary={props.snapshot.summary}
+      />
       <BacklinksTable
         fetchedRowCount={props.snapshot.fetchedRowCount}
         key={props.snapshot.fetchedAt}

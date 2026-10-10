@@ -54,6 +54,8 @@ export async function readObservedResponse<T>(input: {
   request: () => Promise<Response>;
   measure: (data: T | null, response: Response) => ProviderUsageReceipt;
   requireMeasuredUsage?: boolean;
+  // A synchronous producer fence after native admission and immediately before I/O.
+  beforeRequest?: () => void;
 }) {
   let attemptId: string | undefined;
   // One identity exists before accounting starts; a new paid request gets a new identity.
@@ -69,6 +71,17 @@ export async function readObservedResponse<T>(input: {
       phase: "admission",
       attemptId: cause instanceof ProviderUsagePersistenceError ? cause.attemptId : undefined,
     });
+  }
+  try {
+    input.beforeRequest?.();
+  } catch (cause) {
+    await settleUsage(input.observer, attemptId, {
+      cached: false,
+      costCents: 0,
+      failed: true,
+      quantity: 0,
+    });
+    throw cause;
   }
   let response: Response;
   try {

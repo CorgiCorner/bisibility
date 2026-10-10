@@ -11,11 +11,13 @@ import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import type { ProjectRunsQuery } from "@/lib/runs/filters";
 import type { ProjectRun } from "@/lib/runs/project-run";
 import type { ProjectRunsApiResponse } from "@/lib/runs/project-runs-api";
-import { ListChecksIcon as ListChecks } from "@phosphor-icons/react";
+import { ListChecksIcon as ListChecks } from "@phosphor-icons/react/dist/csr/ListChecks";
+import { PlayCircleIcon as PlayCircle } from "@phosphor-icons/react/dist/csr/PlayCircle";
 import { useTranslations } from "next-intl";
 import { ProjectRunsFilters } from "./ProjectRunsFilters";
 import { ProjectRunsTable } from "./ProjectRunsTable";
 import { ProjectRunsTabs } from "./ProjectRunsTabs";
+import { ProjectRunsTimelineTabs } from "./ProjectRunsTimelineTabs";
 import { applyOperationSnapshotToRuns } from "./project-runs-presentation";
 
 type ProjectRunAction = (input: { projectRef: string; runId: string }) => Promise<void>;
@@ -118,7 +120,7 @@ function EmptyRuns({
   return (
     <EmptyState
       description={t("historyDescription")}
-      icon={<ListChecks size={22} weight="regular" />}
+      icon={<PlayCircle size={22} weight="regular" />}
       title={t("historyTitle")}
     />
   );
@@ -133,6 +135,7 @@ export function ProjectRunsLoadError({
   return (
     <div className="grid gap-4">
       <ProjectRunsTabs active="runs" projectRef={projectRef} query={query} />
+      <ProjectRunsTimelineTabs projectRef={projectRef} query={query} />
       <section
         className="rounded-card border border-border bg-bg-elev px-4 py-10 text-center"
         role="alert"
@@ -179,9 +182,9 @@ export function ProjectRunsContent({
       aria-label={query.view === "planned" ? t("upcomingRuns") : t("runs")}
     >
       <ProjectRunsTabs active="runs" projectRef={projectRef} query={query} />
+      <ProjectRunsTimelineTabs projectRef={projectRef} query={query} />
       <Card className="min-w-0 overflow-hidden p-0" size="sm">
         <TableCardHeader
-          className="border-b border-border"
           titleId="runs-list-title"
           title={t("runCount", { count: page.counts.total })}
           actions={<ProjectRunsFilters projectRef={projectRef} query={query} />}
@@ -194,6 +197,7 @@ export function ProjectRunsContent({
           onSkip={skipAction}
           projectRef={projectRef}
           rows={rows}
+          query={query}
         />
       </Card>
       {nextHref ? (

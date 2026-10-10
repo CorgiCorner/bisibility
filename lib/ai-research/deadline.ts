@@ -1,5 +1,5 @@
 import { ProviderCallError } from "@/lib/providers/call-error";
-export const AI_REQUEST_BUDGET_MS = 40_000;
+export const AI_REQUEST_BUDGET_MS = 260_000;
 export class AiDeadlineError extends ProviderCallError {
   constructor() {
     super("AI analysis reached its aggregate request deadline.", 0);

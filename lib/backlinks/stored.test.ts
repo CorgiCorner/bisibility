@@ -74,3 +74,18 @@ describe("stored backlinks", () => {
     ]);
   });
 });
+
+it("retains optional history unavailability when reopening a saved result", async () => {
+  mocks.findFirst.mockResolvedValue({
+    ...snapshot,
+    summary: { ...snapshot.summary, _historyUnavailable: true },
+  });
+  await expect(
+    findStoredBacklinks({
+      includeSubdomains: true,
+      mode: "as_is",
+      projectId: "project_1",
+      target: "example.com",
+    }),
+  ).resolves.toMatchObject({ historyUnavailable: true, costCents: 0 });
+});

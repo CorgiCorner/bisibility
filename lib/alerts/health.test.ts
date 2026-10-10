@@ -49,6 +49,22 @@ describe("alert health", () => {
     ).resolves.toMatchObject({ alarm: false, total: 6 });
   });
 
+  it("does not alarm when all twelve email deliveries were skipped", async () => {
+    mocks.prisma.deliveryAttempt.groupBy.mockResolvedValue([
+      { _count: 12, channel: "email", status: "skipped" },
+    ]);
+
+    await expect(
+      collectAlertDeliveryHealth(new Date("2026-07-21T12:00:00Z"), config),
+    ).resolves.toMatchObject({
+      alarm: false,
+      failed: 0,
+      failureRate: 0,
+      perChannel: { email: { failed: 0, sent: 0, skipped: 12, total: 0 } },
+      total: 0,
+    });
+  });
+
   it("skipped attempts do not dilute the failure rate", async () => {
     mocks.prisma.deliveryAttempt.groupBy.mockResolvedValue([
       { _count: 40, channel: "email", status: "skipped" },

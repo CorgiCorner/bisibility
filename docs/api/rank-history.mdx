@@ -13,13 +13,23 @@ Rank history is stored as rank-check rows. Each row belongs to one keyword.
   "keyword_id": "kw_a00000000000000000000000",
   "attempts": null,
   "checked_at": "2026-06-28T10:00:00.000Z",
+  "observation_completeness": "truncated_by_stop_on_match",
   "position": 4,
   "previous_position": 7,
   "provider": "dataforseo",
   "ranking_url": "https://example.com/rank-tracker",
   "run_id": "rcr_a00000000000000000000000",
+  "run": {
+    "id": "rcr_a00000000000000000000000",
+    "status": "completed",
+    "trigger": "manual",
+    "started_at": "2026-06-28T09:59:58.000Z",
+    "finished_at": "2026-06-28T10:00:00.000Z"
+  },
   "cost_cents": 0.06,
+  "usage": { "quantity": 0.06, "status": "confirmed", "unit": "cents" },
   "error": null,
+  "error_code": null,
   "status": "completed"
 }
 ```
@@ -32,6 +42,16 @@ row with an `error` message when the provider run fails.
 
 `attempts` records provider fallback attempts (`{ "provider", "message" }`)
 before the final status; it is `null` when no fallback attempts were recorded.
+
+`observation_completeness` is `complete`, `truncated_by_stop_on_match`, `unknown`,
+or `null` when recognized metadata is absent, including legacy checks. Execution
+`status` is independent of coverage. A completed check with `position: null`
+supports absence within the requested scope and depth only with `complete`
+coverage. Unknown or truncated coverage does not establish absence. A valid
+positive position within the tracked depth remains valid with incomplete
+coverage, as in the example above. Legacy `null` metadata is not backfilled or
+evidence of complete coverage. See [SERP positions and observations](/serp-observations)
+for row labels and interpretation.
 
 ## List rank checks for a keyword
 
@@ -60,13 +80,23 @@ Response:
       "keyword_id": "kw_a00000000000000000000000",
       "attempts": null,
       "checked_at": "2026-06-28T10:00:00.000Z",
+      "observation_completeness": "truncated_by_stop_on_match",
       "position": 4,
       "previous_position": 7,
       "provider": "dataforseo",
       "ranking_url": "https://example.com/rank-tracker",
       "run_id": "rcr_a00000000000000000000000",
+      "run": {
+        "id": "rcr_a00000000000000000000000",
+        "status": "completed",
+        "trigger": "manual",
+        "started_at": "2026-06-28T09:59:58.000Z",
+        "finished_at": "2026-06-28T10:00:00.000Z"
+      },
       "cost_cents": 0.06,
+      "usage": { "quantity": 0.06, "status": "confirmed", "unit": "cents" },
       "error": null,
+      "error_code": null,
       "status": "completed"
     }
   ],
@@ -84,6 +114,9 @@ Authorization: Bearer <api_key>
 Returns one rank-check resource or `404`. Use this endpoint after a history row
 has provided the rank-check `id`. A queued request returns a run ID, not a
 rank-check ID, so correlate it through the keyword history first.
+
+The MCP tools `get_rank_history` and `get_rank_check_result` return these same
+rank-check fields, including `observation_completeness`, in their JSON results.
 
 ## Export project rank history
 
@@ -105,12 +138,18 @@ The project export supports the same history filters as the app:
 | `format` | Optional `json` or `csv` override. |
 
 JSON uses the standard `data` and `meta.next_cursor` envelope. Every row includes
-`keyword_id`, `keyword`, `checked_at`, `position`, `previous_position`, and
-`ranking_url`, plus `provider`, `requested_depth`, and `normalization_version`.
-Only completed rank checks are included.
+`id`, `keyword_id`, `keyword`, `checked_at`, `position`, `previous_position`, and
+`ranking_url`. Only completed rank checks are included.
 
 Send `Accept: text/csv` or `format=csv` for a streamed CSV download. CSV exports
-include the same fields and are not cursor-paginated.
+include `keyword_id`, `keyword`, `checked_at`, `position`, `previous_position`,
+`ranking_url`, `provider`, `requested_depth`, and `normalization_version`, and
+are not cursor-paginated.
+
+Project exports, including MCP `export_rank_history`, do not include
+`observation_completeness` in JSON or CSV. A null position in an export therefore
+cannot establish complete no-match coverage. Use the keyword rank-check history
+or individual rank-check resource when you need the persisted coverage field.
 
 ## Async polling flow
 

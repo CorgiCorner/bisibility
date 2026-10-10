@@ -161,7 +161,7 @@ export function SchedulesList({
     <Card className="min-w-0 overflow-hidden p-0" size="sm">
       <section aria-labelledby="schedules-list-title">
         <TableCardHeader
-          className="border-b border-border"
+          className={schedules.length === 0 ? "border-b border-border" : undefined}
           titleId="schedules-list-title"
           title={t("scheduleCount", { count: schedules.length })}
           actions={

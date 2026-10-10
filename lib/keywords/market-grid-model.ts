@@ -1,4 +1,5 @@
 import type { KeywordRow } from "@/lib/queries/keyword-row-types";
+import { hasIncompleteObservation, hasTrackedPosition } from "@/lib/serp/rank-depth";
 import type { LensLocationOption } from "./lens-model";
 import type { MarketGridAggregate, MarketGridTarget } from "./market-grid-sorting";
 import { compareMarketGridText, fixedTargetOrder, marketGridTerm } from "./market-grid-sorting";
@@ -164,6 +165,14 @@ export function groupRow(
     difficulty: typeof aggregate.difficulty === "number" ? aggregate.difficulty : 0,
     difficultyKnown: typeof aggregate.difficulty === "number",
     hasRankData: aggregate.position !== null,
+    observationCompleteness: children.some(
+      (child) =>
+        isActive(child) &&
+        !hasTrackedPosition(child) &&
+        hasIncompleteObservation(child.observationCompleteness),
+    )
+      ? "unknown"
+      : source.observationCompleteness,
     id,
     kind: "group",
     keyword: aggregate.keyword,

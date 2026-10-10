@@ -35,6 +35,7 @@ import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/datafor
 import type { SerpProvider } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { ProviderLookupSignal } from "./lookup-failure";
+import { assertOwnCredentialSnapshot } from "./own-credential-guard";
 import { preflightProviderBudget } from "./paid-call-budget";
 import { requiredEstimatedCostCents } from "./paid-call-estimate";
 import { runHostedPaidProviderCall } from "./paid-call-hosted";
@@ -54,11 +55,13 @@ async function executePaidProviderCall<
   ) => Promise<T>;
   connection: { credentialsEncrypted: string | null; id: string; provider: string };
   credential?: ProviderCredential;
+  correlationId?: string;
   feature: Exclude<ProviderCostFeature, "rank_check">;
   includeClickstream?: boolean;
   itemCount: number;
   projectId: string;
   provider: SerpProvider;
+  requiredCredentialSource?: "own";
   rateContext?: Pick<ResolveProviderRateInput, "entries" | "manualAmountCents">;
   rate: ProviderFeatureRate | null;
   source: ProviderRequestSource;
@@ -83,7 +86,7 @@ async function executePaidProviderCall<
     throw error;
   }
   const currentConnection = await prisma.providerConnection.findUnique({
-    select: { credentialSource: true, projectId: true, provider: true },
+    select: { credentialSource: true, projectId: true, provider: true, credentialsEncrypted: true },
     where: { id: input.connection.id },
   });
   if (
@@ -94,6 +97,7 @@ async function executePaidProviderCall<
   ) {
     throw new ProviderUsagePersistenceError({ cause: new Error("Provider connection mismatch.") });
   }
+  assertOwnCredentialSnapshot(input, currentConnection);
   // Backlinks bills three sub-rates per call, so it has no single measured or manual rate to
   // resolve; it prices from the list rates until the rate catalog models those sub-rates.
   const context =
@@ -101,6 +105,7 @@ async function executePaidProviderCall<
     (input.feature === "backlinks" ||
     input.feature === "domain_overview" ||
     input.feature === "ai_visibility" ||
+    input.feature === "ai_tracking" ||
     input.feature === "prompt_explorer"
       ? LIST_PROVIDER_RATE_CONTEXT
       : await loadProviderRateContext(input.connection.id, input.feature));
@@ -117,6 +122,7 @@ async function executePaidProviderCall<
       call: input.call,
       connection: input.connection,
       credential: input.credential,
+      correlationId: input.correlationId,
       feature: input.feature,
       itemCount: input.itemCount,
       projectId: input.projectId,
@@ -171,7 +177,7 @@ async function executePaidProviderCall<
     throw error;
   });
   const ownConnection = await prisma.providerConnection.findUnique({
-    select: { credentialSource: true, projectId: true, provider: true },
+    select: { credentialSource: true, projectId: true, provider: true, credentialsEncrypted: true },
     where: { id: input.connection.id },
   });
   if (
@@ -181,13 +187,14 @@ async function executePaidProviderCall<
   ) {
     throw new ProviderUsagePersistenceError({ cause: new Error("Provider connection changed.") });
   }
+  assertOwnCredentialSnapshot(input, ownConnection);
   const credentials = resolveProviderCredentials(
     input.connection.provider,
     input.connection.credentialsEncrypted,
   );
   const usage = await createProviderRequestAttribution(
     {
-      correlationId: randomUUID(),
+      correlationId: input.correlationId ?? randomUUID(),
       feature: input.feature,
       projectId: input.projectId,
       source: input.source,

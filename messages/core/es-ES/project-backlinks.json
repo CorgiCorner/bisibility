@@ -146,7 +146,8 @@
         },
         "recentTargetsAria": "Objetivos recientes",
         "recentTargets": "Objetivos recientes",
-        "removeRecent": "Quitar {target} de los objetivos recientes"
+        "removeRecent": "Quitar {target} de los objetivos recientes",
+        "historyUnavailable": "El historial no está disponible para este resultado. El resumen y los enlaces siguen disponibles."
       },
       "summary": {
         "per30Days": "/ 30 d",
@@ -193,6 +194,13 @@
         "description": "DataForSEO lo cobra en tu propia cuenta. Una instantánea permanece en caché 24 horas: volver a abrirla o cambiar de pestaña dentro de ella es gratis.",
         "unavailable": "Precio no disponible",
         "perHundred": "{price} / 100"
+      },
+      "failedSummary": {
+        "title": "El análisis de enlaces entrantes ha fallado",
+        "description": "Solo el resumen de {target}. La consulta del historial ha fallado y no se han solicitado los enlaces entrantes.",
+        "costUnknown": "El coste total es desconocido.",
+        "knownSummaryCost": "Coste conocido del resumen: {cost}",
+        "previousResult": "Resultado anterior obtenido correctamente. El análisis fallido no lo ha sustituido."
       }
     }
   }

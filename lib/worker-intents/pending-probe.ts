@@ -6,6 +6,21 @@ import { Prisma } from "@/lib/generated/prisma/client";
 export const WORKER_INTENT_PENDING_PROBE = Prisma.sql`
   SELECT
     EXISTS (
+      SELECT 1 FROM "ai_tracking_runs" AS run
+      JOIN "ai_tracking_samples" AS sample ON sample."runId" = run."id"
+      WHERE run."state" IN ('planned', 'running', 'cancelled')
+        AND (
+          sample."dispatch" IN ('planned', 'claimed', 'submission_started', 'submitted', 'collecting')
+          OR (sample."dispatch" = 'submission_unknown' AND sample."providerTaskId" IS NOT NULL)
+        )
+    )
+    OR EXISTS (
+      SELECT 1 FROM "ai_tracking_schedules"
+      WHERE "enabled" = true AND "archivedAt" IS NULL
+        AND ("nextRunAt" IS NULL OR "nextRunAt" <= NOW())
+    )
+    OR
+    EXISTS (
       SELECT 1
       FROM "search_analytics_imports"
       WHERE "syncRequestedAt" IS NOT NULL

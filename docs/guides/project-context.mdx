@@ -1,0 +1,42 @@
+---
+title: "Project Context"
+description: "Give research and connected agents explicit business context and project rules."
+---
+
+Open **Project Context** in your project to describe the business, audience, products,
+goals and agent rules. Each field accepts up to 4,000 characters. Saving replaces the
+complete context and records its update time. Members with read access can inspect the
+context; saving requires write access.
+
+Keep factual business guidance separate from unverified claims. Agents and model workflows
+use these fields as project input, not as evidence of traffic, search demand or visibility.
+Do not place API credentials in the text fields.
+
+## Use context in AI Tracking
+
+[AI Tracking](/guides/ai-tracking) suggestions read the saved context and project
+competitors. Model generation first shows the exact reviewed input. The combined snapshot
+is limited to 5,000 Unicode code points, so a valid saved context can still require explicit
+editing before generation. It is never shortened silently.
+
+Editing a reviewed snapshot does not overwrite Project Context. Changing the snapshot,
+model or market invalidates the existing generation preview and spending consent.
+
+## REST and MCP
+
+Read `GET /projects/{project_id}/context` or call `get_project_context`. Update with
+`PATCH /projects/{project_id}/context` or `update_project_context`, providing all five fields:
+
+```json
+{
+  "business": "We sell repairable outdoor equipment.",
+  "audience": "Hikers who value durable equipment.",
+  "products": "Backpacks and replacement parts.",
+  "goals": "Improve useful product guidance.",
+  "agent_rules": "Cite retained evidence and ask before paid provider work."
+}
+```
+
+REST fields use `agent_rules` and return `updated_at`. The response belongs to the selected
+project and follows the same membership and token scopes as other project operations.
+Use [Agent Reports](/guides/agent-reports) to save findings with their provenance.

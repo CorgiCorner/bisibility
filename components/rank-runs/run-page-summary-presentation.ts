@@ -197,7 +197,7 @@ export function createRunPageSummaryLabels({
     progress: (processed, total) => t("summary.processed", { processed, total }),
     runPresentation: (run, skipped) => {
       if (skipped) return { label: statusT("skipped"), messageKey: "skipped", tone: "neutral" };
-      const presentation = runStatusChipPresentation(run.status, run.outcome);
+      const presentation = runStatusChipPresentation(run.status, run.outcome, run.blockedReason);
       return { ...presentation, label: statusT(presentation.messageKey) };
     },
     selected: (count) => t("summary.selected", { count }),

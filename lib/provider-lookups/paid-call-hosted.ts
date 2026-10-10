@@ -24,6 +24,7 @@ export async function runHostedPaidProviderCall<
   ) => Promise<T>;
   connection: { credentialsEncrypted: string | null; id: string; provider: string };
   credential?: ProviderCredential;
+  correlationId?: string;
   feature: Exclude<ProviderCostFeature, "rank_check">;
   itemCount: number;
   projectId: string;
@@ -34,7 +35,7 @@ export async function runHostedPaidProviderCall<
 }): Promise<T> {
   const usage = await createProviderRequestAttribution(
     {
-      correlationId: randomUUID(),
+      correlationId: input.correlationId ?? randomUUID(),
       feature: input.feature,
       projectId: input.projectId,
       source: input.source,

@@ -102,7 +102,8 @@
         "queued": "En cola",
         "queuedNote": "Las comprobaciones en cola se inician cuando el servicio de ejecución las recoge.",
         "retry": "Reintentar las fallidas",
-        "retryNote": "Ejecuta una comprobación de prueba para los objetivos que faltan cuando quieras."
+        "retryNote": "Ejecuta una comprobación de prueba para los objetivos que faltan cuando quieras.",
+        "coverageUnknown": "Cobertura desconocida"
       },
       "review": {
         "dataSourceWaiting": "Las comprobaciones empiezan cuando haya un proveedor conectado.",

@@ -3,6 +3,11 @@ import { isPublicIdOfType, type PublicIdPrefix } from "@/lib/db/public-id-resour
 import type { JsonObject } from "./types";
 
 const publicIdInputs = {
+  topic_id: "ait",
+  prompt_id: "aip",
+  schedule_id: "ais",
+  run_id: "air",
+  sample_id: "asm",
   alert_id: "al",
   check_id: "check",
   competitor_id: "cmp",

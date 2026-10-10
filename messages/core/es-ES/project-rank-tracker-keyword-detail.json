@@ -75,7 +75,8 @@
         "metricsForMarket": "Para {market}",
         "checkedDepth": "Top {depth, number} comprobado",
         "connectedSchedule": "Programación para este mercado y dispositivo",
-        "schedulesAllTargets": "Todos los mercados y dispositivos"
+        "schedulesAllTargets": "Todos los mercados y dispositivos",
+        "coverageUnknown": "Cobertura desconocida"
       },
       "actions": {
         "moreActions": "Más acciones de la palabra clave",
@@ -136,7 +137,9 @@
         "checkTop": "Comprobar el top {depth}",
         "runFirstCheck": "Ejecutar la primera comprobación",
         "connectSerpProvider": "Conectar un proveedor de SERP",
-        "history": "Historial de posiciones"
+        "history": "Historial de posiciones",
+        "coverageUnknownTitle": "Cobertura desconocida",
+        "coverageUnknownBody": "La respuesta del proveedor no permite determinar si esta palabra clave está dentro de la profundidad rastreada."
       },
       "firstCheck": {
         "billing": "No se ha podido ejecutar la comprobación de posiciones porque la cuenta del proveedor no tiene saldo suficiente. Añade saldo o conecta otro proveedor y vuelve a intentarlo.",

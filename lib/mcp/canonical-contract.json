@@ -521,7 +521,7 @@
   {
     "name": "list_keywords",
     "title": "List project keywords",
-    "description": "List the tracked keywords (search terms) of a project with their current rankings: latest_position, previous_position, ranking_url, target URL, tags, schedule, and market. Supports pagination, search, filters, and sorting. Use it for rank positions, rank tracking, keyword rankings, and SERP position lookups. Each keyword includes location_key, language_code, and language_label for its exact market pair. latest_position is null after a failed check as well as when the domain is outside the requested depth; read latest_check and latest_successful_check to tell them apart.",
+    "description": "List the tracked keywords (search terms) of a project with their current rankings: latest_position, previous_position, ranking_url, target URL, tags, schedule, and market. Supports pagination, search, filters, and sorting. Use it for rank positions, rank tracking, keyword rankings, and SERP position lookups. Each keyword includes location_key, language_code, and language_label for its exact market pair. latest_position can be null after a failed check, with unknown observation coverage, or for absence within the requested depth. Read latest_check.status and observation_completeness. Only complete coverage supports absence within depth; a positive position remains valid with truncated coverage. latest_successful_check is the most recent completed observation and can also have unknown coverage.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -794,7 +794,7 @@
   {
     "name": "analyze_backlinks",
     "title": "Analyze backlinks",
-    "description": "Requires API write scope because cache misses spend the project's own DataForSEO budget. Returns summary metrics, 12-month history, and per-link rows with new or lost status. Snapshots are cached for 24 hours. Call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Compute aggregate views from rows and treat them as \"within fetched rows\" only.",
+    "description": "Requires API write scope because cache misses spend the project's own DataForSEO budget. Successful snapshots contain summary metrics and per-link rows with new or lost status. Optional 12-month history may be unavailable: history_unavailable marks a history failure with confirmed cost while summary and links remain available. With unknown accounting, the response remains failed (isError) and may retain a completed summary as current-response evidence, with cost_cents null and rows_status not_requested. This evidence is not a cached snapshot or a settled total and does not survive reload. Successful snapshots are cached for 24 hours. Call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Compute aggregate views from rows and treat them as \"within fetched rows\" only.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -946,7 +946,7 @@
   {
     "name": "load_more_backlink_rows",
     "title": "Load more backlink rows",
-    "description": "Requires API write scope. Extends the current unexpired backlinks snapshot at the per-100-row provider rate. Returns 409 snapshot_expired when no current snapshot exists; run analyze_backlinks first.",
+    "description": "Requires API write scope. Extends the current unexpired backlinks snapshot at the per-100-row provider rate. Returns 409 snapshot_expired when no current snapshot exists; run analyze_backlinks first. This tool cannot extend failed current-response summary evidence.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -1692,7 +1692,7 @@
   {
     "name": "get_keyword",
     "title": "Get keyword",
-    "description": "Get a keyword and its latest rank position by keyword id, including location_key, language_code, and language_label for its exact market pair. latest_position is null after a failed check as well as when the domain is outside the requested depth; read latest_check and latest_successful_check to tell them apart.",
+    "description": "Get a keyword and its latest rank position by keyword id, including location_key, language_code, and language_label for its exact market pair. latest_position can be null after a failed check, with unknown observation coverage, or for absence within the requested depth. Read latest_check.status and observation_completeness. Only complete coverage supports absence within depth; a positive position remains valid with truncated coverage. latest_successful_check is the most recent completed observation and can also have unknown coverage.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -2120,7 +2120,7 @@
   {
     "name": "get_rank_history",
     "title": "Get rank history",
-    "description": "List historical rank checks for a keyword with date, status, and pagination filters. error_code is a stable reason (provider_billing, provider_auth, provider_rate_limited, provider_transient); retry only for provider_rate_limited or provider_transient.",
+    "description": "List historical rank checks for a keyword with date, status, and pagination filters. Read status and observation_completeness before interpreting position null. Only complete coverage supports absence within depth; a positive position remains valid with truncated coverage. Unknown or legacy coverage does not establish absence. error_code is a stable reason (provider_billing, provider_auth, provider_rate_limited, provider_transient); retry only for provider_rate_limited or provider_transient.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -2322,7 +2322,7 @@
   {
     "name": "get_rank_check_result",
     "title": "Get rank check result",
-    "description": "Get one rank check result by check id. error_code is a stable reason (provider_billing, provider_auth, provider_rate_limited, provider_transient); retry only for provider_rate_limited or provider_transient.",
+    "description": "Get one rank check result by check id. Read status and observation_completeness before interpreting position null. Only complete coverage supports absence within depth; a positive position remains valid with truncated coverage. Unknown or legacy coverage does not establish absence. error_code is a stable reason (provider_billing, provider_auth, provider_rate_limited, provider_transient); retry only for provider_rate_limited or provider_transient.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -5438,9 +5438,35 @@
     }
   },
   {
+    "name": "get_ai_research_catalog",
+    "title": "Get AI research catalog",
+    "description": "Read the free current provider AI model, locale, and cost-policy capabilities. This read never initiates paid work.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "The public project ID. Project membership and token scopes are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
     "name": "compare_ai_prompts",
     "title": "Compare AI prompts",
-    "description": "Run the same synthetic prompt against supported models and compare answers, brand mentions and returned citations. These tests are not observed ChatGPT/AIO visibility. Requires an explicit cost cap and project write scope.",
+    "description": "Run the same synthetic prompt against supported models and compare answers, brand mentions and returned citations. These tests are not observed ChatGPT/AIO visibility. Requires a guaranteed hard cap or explicit actual-cost consent with an advisory estimate limit, and project write scope.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -5475,33 +5501,147 @@
         },
         "fresh": {
           "default": false,
-          "description": "Bypass the stored result and issue a new paid request when admitted.",
+          "description": "Hard-cap mode bypasses stored results. Actual-cost retries always reuse their durable request identity; fresh never re-dispatches a pending, unknown or completed attempt.",
           "type": "boolean"
+        },
+        "cost_policy": {
+          "default": "hard_cap",
+          "description": "Hard cap or explicitly consented non-guaranteed actual provider cost.",
+          "type": "string",
+          "enum": ["hard_cap", "provider_actual_cost"]
+        },
+        "actual_cost_acknowledgement": {
+          "description": "Explicit acknowledgement that actual provider cost has no guaranteed maximum.",
+          "type": "string",
+          "const": "non_guaranteed_estimate_v1"
+        },
+        "estimated_cost_limit_cents": {
+          "description": "Advisory estimate limit in cents for actual-cost consent.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "estimate_credentials_ref": {
+          "description": "Credential identity from the estimate, required for actual-cost execution.",
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
         },
         "prompt": {
           "type": "string",
           "minLength": 1,
           "maxLength": 500,
-          "description": "The same synthetic test prompt for each selected model. Maximum 2000 UTF-8 bytes."
+          "description": "Same synthetic prompt for each model; maximum 2000 UTF-8 bytes."
         },
         "models": {
           "uniqueItems": true,
-          "description": "Bounded, supported non-reasoning models; web search is disabled in this first version.",
+          "description": "Distinct model IDs advertised by get_ai_research_catalog.",
           "minItems": 1,
           "maxItems": 2,
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["gpt-4.1-mini", "gpt-4.1-nano"]
+            "minLength": 1,
+            "maxLength": 120,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
           }
         },
+        "web_search": {
+          "default": false,
+          "description": "Enable provider web search when supported.",
+          "type": "boolean"
+        },
+        "country_iso_code": {
+          "description": "Country hint; requires web search.",
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "response_language": {
+          "default": "en",
+          "description": "Requested response language.",
+          "type": "string",
+          "pattern": "^[a-z]{2,3}(?:-[a-zA-Z0-9]{2,4})?$"
+        },
+        "max_output_tokens": {
+          "default": 512,
+          "description": "Maximum output tokens; provider limits also apply.",
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 4096
+        },
         "idempotency_key": {
-          "description": "Optional stable retry key, forwarded as the REST Idempotency-Key header.",
-          "type": "string"
+          "description": "Stable retry key sent as a header; actual-cost mode requires a UUID also sent in the body.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
         }
       },
-      "required": ["project_id", "brand", "domain", "max_cost_cents", "prompt"],
-      "additionalProperties": false
+      "required": ["project_id", "brand", "domain", "prompt"],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "cost_policy": {
+              "enum": ["hard_cap"]
+            },
+            "max_cost_cents": {
+              "description": "Maximum guaranteed cost in cents for hard-cap mode."
+            }
+          },
+          "required": ["max_cost_cents"],
+          "not": {
+            "anyOf": [
+              {
+                "required": ["actual_cost_acknowledgement"]
+              },
+              {
+                "required": ["estimated_cost_limit_cents"]
+              },
+              {
+                "required": ["estimate_credentials_ref"]
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "cost_policy": {
+              "const": "provider_actual_cost",
+              "description": "Hard cap or explicitly consented provider actual cost."
+            },
+            "idempotency_key": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "actual_cost_acknowledgement": {
+              "description": "Explicit consent that actual cost has no guaranteed maximum."
+            },
+            "estimated_cost_limit_cents": {
+              "description": "Advisory estimate limit in cents."
+            }
+          },
+          "required": ["cost_policy", "actual_cost_acknowledgement", "estimated_cost_limit_cents"],
+          "not": {
+            "required": ["max_cost_cents"]
+          },
+          "allOf": [
+            {
+              "if": {
+                "not": {
+                  "properties": {
+                    "estimate_only": {
+                      "const": true
+                    }
+                  },
+                  "required": ["estimate_only"]
+                }
+              },
+              "then": {
+                "required": ["idempotency_key", "estimate_credentials_ref"]
+              }
+            }
+          ]
+        }
+      ]
     },
     "annotations": {
       "destructiveHint": false,
@@ -5601,6 +5741,2277 @@
       "destructiveHint": false,
       "openWorldHint": false,
       "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_ai_tracking_topics",
+    "title": "List ai tracking topics",
+    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "limit": {
+          "description": "Page size, at most 100.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "description": "Opaque cursor from the previous response.",
+          "type": "string",
+          "maxLength": 512
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_ai_tracking_topic",
+    "title": "Create ai tracking topic",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "paused": {
+          "description": "Pause or resume future planning for this topic without changing historical samples.",
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Human-readable topic name."
+        },
+        "description": {
+          "description": "Optional topic description.",
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 4000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["project_id", "name"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_ai_tracking_topic",
+    "title": "Update ai tracking topic",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "topic_id": {
+          "description": "Public topic ID scoped to this project.",
+          "type": "string",
+          "pattern": "^ait_[a-z][a-z0-9]{23}$"
+        },
+        "paused": {
+          "description": "Pause or resume future planning for this topic without changing historical samples.",
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Human-readable topic name."
+        },
+        "description": {
+          "description": "Optional topic description.",
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 4000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["project_id", "topic_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "archive_ai_tracking_topic",
+    "title": "Archive ai tracking topic",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "topic_id": {
+          "description": "Public topic ID scoped to this project.",
+          "type": "string",
+          "pattern": "^ait_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "topic_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_ai_tracking_prompts",
+    "title": "List ai tracking prompts",
+    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "limit": {
+          "description": "Page size, at most 100.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "description": "Opaque cursor from the previous response.",
+          "type": "string",
+          "maxLength": 512
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_ai_tracking_prompt",
+    "title": "Create ai tracking prompt",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "generation_reference": {
+          "description": "Trusted model generation provenance, verified against the completed project generation.",
+          "type": "object",
+          "properties": {
+            "generation_id": {
+              "description": "Trusted completed project generation public ID.",
+              "type": "string",
+              "pattern": "^asg_[a-z][a-z0-9]{23}$"
+            },
+            "draft_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Original generated draft UUID; edits retain this trusted reference."
+            }
+          },
+          "required": ["generation_id", "draft_id"],
+          "additionalProperties": false
+        },
+        "provider_dataset_reference": {
+          "description": "Trusted provider dataset provenance, validated against the project report.",
+          "type": "object",
+          "properties": {
+            "report_id": {
+              "description": "Trusted project AI visibility dataset report public ID.",
+              "type": "string",
+              "pattern": "^agr_[a-z][a-z0-9]{23}$"
+            },
+            "row_index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991,
+              "description": "Verified observed-dataset row index in the stored report."
+            }
+          },
+          "required": ["report_id", "row_index"],
+          "additionalProperties": false
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64000,
+          "description": "Prompt text; updates create a new immutable revision."
+        },
+        "category": {
+          "description": "Prompt intent captured in its immutable revision.",
+          "type": "string",
+          "enum": ["neutral", "comparative", "branded"]
+        },
+        "paused": {
+          "description": "Pause or resume future planning without altering historical samples.",
+          "type": "boolean"
+        },
+        "topic_id": {
+          "anyOf": [
+            {
+              "description": "Public topic ID scoped to this project.",
+              "type": "string",
+              "pattern": "^ait_[a-z][a-z0-9]{23}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "description": "Optional display label.",
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["project_id", "text"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_ai_tracking_prompt",
+    "title": "Update ai tracking prompt",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "prompt_id": {
+          "description": "Public prompt ID scoped to this project.",
+          "type": "string",
+          "pattern": "^aip_[a-z][a-z0-9]{23}$"
+        },
+        "generation_reference": {
+          "description": "Trusted model generation provenance, verified against the completed project generation.",
+          "type": "object",
+          "properties": {
+            "generation_id": {
+              "description": "Trusted completed project generation public ID.",
+              "type": "string",
+              "pattern": "^asg_[a-z][a-z0-9]{23}$"
+            },
+            "draft_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "Original generated draft UUID; edits retain this trusted reference."
+            }
+          },
+          "required": ["generation_id", "draft_id"],
+          "additionalProperties": false
+        },
+        "provider_dataset_reference": {
+          "description": "Trusted provider dataset provenance, validated against the project report.",
+          "type": "object",
+          "properties": {
+            "report_id": {
+              "description": "Trusted project AI visibility dataset report public ID.",
+              "type": "string",
+              "pattern": "^agr_[a-z][a-z0-9]{23}$"
+            },
+            "row_index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991,
+              "description": "Verified observed-dataset row index in the stored report."
+            }
+          },
+          "required": ["report_id", "row_index"],
+          "additionalProperties": false
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64000,
+          "description": "Prompt text; updates create a new immutable revision."
+        },
+        "category": {
+          "description": "Prompt intent captured in its immutable revision.",
+          "type": "string",
+          "enum": ["neutral", "comparative", "branded"]
+        },
+        "paused": {
+          "description": "Pause or resume future planning without altering historical samples.",
+          "type": "boolean"
+        },
+        "topic_id": {
+          "anyOf": [
+            {
+              "description": "Public topic ID scoped to this project.",
+              "type": "string",
+              "pattern": "^ait_[a-z][a-z0-9]{23}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "description": "Optional display label.",
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["project_id", "prompt_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "archive_ai_tracking_prompt",
+    "title": "Archive ai tracking prompt",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "prompt_id": {
+          "description": "Public prompt ID scoped to this project.",
+          "type": "string",
+          "pattern": "^aip_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "prompt_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_ai_tracking_schedules",
+    "title": "List ai tracking schedules",
+    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "limit": {
+          "description": "Page size, at most 100.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "description": "Opaque cursor from the previous response.",
+          "type": "string",
+          "maxLength": 512
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_ai_tracking_schedule",
+    "title": "Create ai tracking schedule",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Human-readable schedule name."
+        },
+        "cron": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Cron recurrence evaluated in the schedule timezone."
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "IANA timezone for this schedule."
+        },
+        "enabled": {
+          "default": false,
+          "description": "Schedules default to disabled; no paid baseline or missed-run catch-up.",
+          "type": "boolean"
+        },
+        "consent": {
+          "description": "Explicit acceptance of paid recurring work; the API requires true when enabling a schedule or changing configuration while enabled.",
+          "type": "boolean"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "prompt_ids": {
+              "minItems": 1,
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "description": "Public prompt ID scoped to this project.",
+                "type": "string",
+                "pattern": "^aip_[a-z][a-z0-9]{23}$"
+              },
+              "description": "Active public prompt IDs to observe; each run captures immutable revisions."
+            },
+            "configurations": {
+              "minItems": 1,
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "const": "dataforseo",
+                    "description": "Provider that supplies this observation."
+                  },
+                  "endpoint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "description": "Capability-supported provider endpoint."
+                  },
+                  "engine": {
+                    "type": "string",
+                    "enum": ["chat_gpt", "gemini", "claude", "perplexity", "google"],
+                    "description": "Consumer engine, distinct from the model and observation source."
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["consumer_scrape", "model_api", "google_aio"],
+                    "description": "Observation mechanism; model API responses are synthetic tests."
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 256
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Requested model, or null when unavailable for this source."
+                  },
+                  "parameters": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "$ref": "#/definitions/__schema0"
+                    },
+                    "description": "Requested provider parameters; capability and fresh price checks fail closed."
+                  }
+                },
+                "required": ["provider", "endpoint", "engine", "source", "model", "parameters"],
+                "additionalProperties": false
+              },
+              "description": "Exact observation configurations to review before paid launch."
+            },
+            "credential_connection_id": {
+              "description": "Provider connection returned by the reviewed preview.",
+              "type": "string",
+              "pattern": "^conn_[a-z][a-z0-9]{23}$"
+            },
+            "credential_version": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Credential identity version returned by preview."
+            },
+            "budget_revision": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Budget revision returned by preview."
+            },
+            "consent_revision": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Consent identity returned by preview."
+            },
+            "deadline": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+              "description": "UTC deadline after which work must stop."
+            },
+            "consent": {
+              "type": "boolean",
+              "const": true,
+              "description": "Explicit acceptance of paid provider work for this reviewed configuration."
+            },
+            "schedule_id": {
+              "description": "Public schedule ID scoped to this project.",
+              "type": "string",
+              "pattern": "^ais_[a-z][a-z0-9]{23}$"
+            },
+            "planned_at": {
+              "description": "UTC scheduled occurrence; supplied together with schedule_id.",
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            }
+          },
+          "required": [
+            "prompt_ids",
+            "configurations",
+            "credential_connection_id",
+            "credential_version",
+            "budget_revision",
+            "consent_revision",
+            "deadline",
+            "consent"
+          ],
+          "additionalProperties": false,
+          "description": "Reviewed immutable configuration for each scheduled occurrence."
+        },
+        "next_run_at": {
+          "description": "Next planned UTC occurrence, when provided.",
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["project_id", "name", "cron", "timezone", "configuration"],
+      "additionalProperties": false,
+      "definitions": {
+        "__schema0": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "$ref": "#/definitions/__schema0"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_ai_tracking_schedule",
+    "title": "Update ai tracking schedule",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "schedule_id": {
+          "description": "Public schedule ID scoped to this project.",
+          "type": "string",
+          "pattern": "^ais_[a-z][a-z0-9]{23}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Human-readable schedule name."
+        },
+        "cron": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Cron recurrence evaluated in the schedule timezone."
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "IANA timezone for this schedule."
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether future scheduled occurrences are enabled."
+        },
+        "consent": {
+          "description": "Explicit acceptance of paid recurring work; the API requires true when enabling a schedule or changing configuration while enabled.",
+          "type": "boolean"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "prompt_ids": {
+              "minItems": 1,
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "description": "Public prompt ID scoped to this project.",
+                "type": "string",
+                "pattern": "^aip_[a-z][a-z0-9]{23}$"
+              },
+              "description": "Active public prompt IDs to observe; each run captures immutable revisions."
+            },
+            "configurations": {
+              "minItems": 1,
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "const": "dataforseo",
+                    "description": "Provider that supplies this observation."
+                  },
+                  "endpoint": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "description": "Capability-supported provider endpoint."
+                  },
+                  "engine": {
+                    "type": "string",
+                    "enum": ["chat_gpt", "gemini", "claude", "perplexity", "google"],
+                    "description": "Consumer engine, distinct from the model and observation source."
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["consumer_scrape", "model_api", "google_aio"],
+                    "description": "Observation mechanism; model API responses are synthetic tests."
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 256
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Requested model, or null when unavailable for this source."
+                  },
+                  "parameters": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "$ref": "#/definitions/__schema0"
+                    },
+                    "description": "Requested provider parameters; capability and fresh price checks fail closed."
+                  }
+                },
+                "required": ["provider", "endpoint", "engine", "source", "model", "parameters"],
+                "additionalProperties": false
+              },
+              "description": "Exact observation configurations to review before paid launch."
+            },
+            "credential_connection_id": {
+              "description": "Provider connection returned by the reviewed preview.",
+              "type": "string",
+              "pattern": "^conn_[a-z][a-z0-9]{23}$"
+            },
+            "credential_version": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Credential identity version returned by preview."
+            },
+            "budget_revision": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Budget revision returned by preview."
+            },
+            "consent_revision": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Consent identity returned by preview."
+            },
+            "deadline": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+              "description": "UTC deadline after which work must stop."
+            },
+            "consent": {
+              "type": "boolean",
+              "const": true,
+              "description": "Explicit acceptance of paid provider work for this reviewed configuration."
+            },
+            "schedule_id": {
+              "description": "Public schedule ID scoped to this project.",
+              "type": "string",
+              "pattern": "^ais_[a-z][a-z0-9]{23}$"
+            },
+            "planned_at": {
+              "description": "UTC scheduled occurrence; supplied together with schedule_id.",
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            }
+          },
+          "required": [
+            "prompt_ids",
+            "configurations",
+            "credential_connection_id",
+            "credential_version",
+            "budget_revision",
+            "consent_revision",
+            "deadline",
+            "consent"
+          ],
+          "additionalProperties": false,
+          "description": "Reviewed immutable configuration for each scheduled occurrence."
+        },
+        "next_run_at": {
+          "description": "Next planned UTC occurrence, when provided.",
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["project_id", "schedule_id"],
+      "additionalProperties": false,
+      "definitions": {
+        "__schema0": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "$ref": "#/definitions/__schema0"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "archive_ai_tracking_schedule",
+    "title": "Archive ai tracking schedule",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "schedule_id": {
+          "description": "Public schedule ID scoped to this project.",
+          "type": "string",
+          "pattern": "^ais_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "schedule_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "preview_ai_tracking_run",
+    "title": "Preview ai tracking run",
+    "description": "Review capability, credentials, budget and price before paid AI tracking. Preview never submits a provider task.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "prompt_ids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "description": "Public prompt ID scoped to this project.",
+            "type": "string",
+            "pattern": "^aip_[a-z][a-z0-9]{23}$"
+          },
+          "description": "Active public prompt IDs to observe; each run captures immutable revisions."
+        },
+        "configurations": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string",
+                "const": "dataforseo",
+                "description": "Provider that supplies this observation."
+              },
+              "endpoint": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "description": "Capability-supported provider endpoint."
+              },
+              "engine": {
+                "type": "string",
+                "enum": ["chat_gpt", "gemini", "claude", "perplexity", "google"],
+                "description": "Consumer engine, distinct from the model and observation source."
+              },
+              "source": {
+                "type": "string",
+                "enum": ["consumer_scrape", "model_api", "google_aio"],
+                "description": "Observation mechanism; model API responses are synthetic tests."
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Requested model, or null when unavailable for this source."
+              },
+              "parameters": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "description": "Requested provider parameters; capability and fresh price checks fail closed."
+              }
+            },
+            "required": ["provider", "endpoint", "engine", "source", "model", "parameters"],
+            "additionalProperties": false
+          },
+          "description": "Exact observation configurations to review before paid launch."
+        },
+        "credential_connection_id": {
+          "description": "Project provider connection; credentials are never accepted here.",
+          "type": "string",
+          "pattern": "^conn_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "prompt_ids", "configurations"],
+      "additionalProperties": false,
+      "definitions": {
+        "__schema0": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "$ref": "#/definitions/__schema0"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "create_ai_tracking_run",
+    "title": "Create ai tracking run",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "prompt_ids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "description": "Public prompt ID scoped to this project.",
+            "type": "string",
+            "pattern": "^aip_[a-z][a-z0-9]{23}$"
+          },
+          "description": "Active public prompt IDs to observe; each run captures immutable revisions."
+        },
+        "configurations": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string",
+                "const": "dataforseo",
+                "description": "Provider that supplies this observation."
+              },
+              "endpoint": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "description": "Capability-supported provider endpoint."
+              },
+              "engine": {
+                "type": "string",
+                "enum": ["chat_gpt", "gemini", "claude", "perplexity", "google"],
+                "description": "Consumer engine, distinct from the model and observation source."
+              },
+              "source": {
+                "type": "string",
+                "enum": ["consumer_scrape", "model_api", "google_aio"],
+                "description": "Observation mechanism; model API responses are synthetic tests."
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Requested model, or null when unavailable for this source."
+              },
+              "parameters": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "description": "Requested provider parameters; capability and fresh price checks fail closed."
+              }
+            },
+            "required": ["provider", "endpoint", "engine", "source", "model", "parameters"],
+            "additionalProperties": false
+          },
+          "description": "Exact observation configurations to review before paid launch."
+        },
+        "credential_connection_id": {
+          "description": "Provider connection returned by the reviewed preview.",
+          "type": "string",
+          "pattern": "^conn_[a-z][a-z0-9]{23}$"
+        },
+        "credential_version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Credential identity version returned by preview."
+        },
+        "budget_revision": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Budget revision returned by preview."
+        },
+        "consent_revision": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Consent identity returned by preview."
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+          "description": "UTC deadline after which work must stop."
+        },
+        "consent": {
+          "type": "boolean",
+          "const": true,
+          "description": "Explicit acceptance of paid provider work for this reviewed configuration."
+        },
+        "schedule_id": {
+          "description": "Public schedule ID scoped to this project.",
+          "type": "string",
+          "pattern": "^ais_[a-z][a-z0-9]{23}$"
+        },
+        "planned_at": {
+          "description": "UTC scheduled occurrence; supplied together with schedule_id.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Stable launch retry key sent as REST Idempotency-Key; payload must remain identical."
+        }
+      },
+      "required": [
+        "project_id",
+        "prompt_ids",
+        "configurations",
+        "credential_connection_id",
+        "credential_version",
+        "budget_revision",
+        "consent_revision",
+        "deadline",
+        "consent",
+        "idempotency_key"
+      ],
+      "additionalProperties": false,
+      "definitions": {
+        "__schema0": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "$ref": "#/definitions/__schema0"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_ai_tracking_runs",
+    "title": "List ai tracking runs",
+    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "limit": {
+          "description": "Page size, at most 100.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "description": "Opaque cursor from the previous response.",
+          "type": "string",
+          "maxLength": 512
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_ai_tracking_run",
+    "title": "Get ai tracking run",
+    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "run_id": {
+          "description": "Public tracking run ID scoped to this project.",
+          "type": "string",
+          "pattern": "^air_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "run_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_ai_tracking_samples",
+    "title": "List ai tracking samples",
+    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "run_id": {
+          "description": "Public tracking run ID scoped to this project.",
+          "type": "string",
+          "pattern": "^air_[a-z][a-z0-9]{23}$"
+        },
+        "limit": {
+          "description": "Page size, at most 100.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "description": "Opaque cursor from the previous response.",
+          "type": "string",
+          "maxLength": 512
+        }
+      },
+      "required": ["project_id", "run_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "cancel_ai_tracking_run",
+    "title": "Cancel ai tracking run",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "run_id": {
+          "description": "Public tracking run ID scoped to this project.",
+          "type": "string",
+          "pattern": "^air_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "run_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "retry_ai_tracking_run",
+    "title": "Retry ai tracking run",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "run_id": {
+          "description": "Public tracking run ID scoped to this project.",
+          "type": "string",
+          "pattern": "^air_[a-z][a-z0-9]{23}$"
+        },
+        "prompt_ids": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "description": "Public prompt ID scoped to this project.",
+            "type": "string",
+            "pattern": "^aip_[a-z][a-z0-9]{23}$"
+          },
+          "description": "Active public prompt IDs to observe; each run captures immutable revisions."
+        },
+        "configurations": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string",
+                "const": "dataforseo",
+                "description": "Provider that supplies this observation."
+              },
+              "endpoint": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256,
+                "description": "Capability-supported provider endpoint."
+              },
+              "engine": {
+                "type": "string",
+                "enum": ["chat_gpt", "gemini", "claude", "perplexity", "google"],
+                "description": "Consumer engine, distinct from the model and observation source."
+              },
+              "source": {
+                "type": "string",
+                "enum": ["consumer_scrape", "model_api", "google_aio"],
+                "description": "Observation mechanism; model API responses are synthetic tests."
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Requested model, or null when unavailable for this source."
+              },
+              "parameters": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "$ref": "#/definitions/__schema0"
+                },
+                "description": "Requested provider parameters; capability and fresh price checks fail closed."
+              }
+            },
+            "required": ["provider", "endpoint", "engine", "source", "model", "parameters"],
+            "additionalProperties": false
+          },
+          "description": "Exact observation configurations to review before paid launch."
+        },
+        "credential_connection_id": {
+          "description": "Provider connection returned by the reviewed preview.",
+          "type": "string",
+          "pattern": "^conn_[a-z][a-z0-9]{23}$"
+        },
+        "credential_version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Credential identity version returned by preview."
+        },
+        "budget_revision": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Budget revision returned by preview."
+        },
+        "consent_revision": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Consent identity returned by preview."
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+          "description": "UTC deadline after which work must stop."
+        },
+        "consent": {
+          "type": "boolean",
+          "const": true,
+          "description": "Explicit acceptance of paid provider work for this reviewed configuration."
+        },
+        "schedule_id": {
+          "description": "Public schedule ID scoped to this project.",
+          "type": "string",
+          "pattern": "^ais_[a-z][a-z0-9]{23}$"
+        },
+        "planned_at": {
+          "description": "UTC scheduled occurrence; supplied together with schedule_id.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Stable launch retry key sent as REST Idempotency-Key; payload must remain identical."
+        }
+      },
+      "required": [
+        "project_id",
+        "run_id",
+        "prompt_ids",
+        "configurations",
+        "credential_connection_id",
+        "credential_version",
+        "budget_revision",
+        "consent_revision",
+        "deadline",
+        "consent",
+        "idempotency_key"
+      ],
+      "additionalProperties": false,
+      "definitions": {
+        "__schema0": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/__schema0"
+              }
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "$ref": "#/definitions/__schema0"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_ai_tracking_history",
+    "title": "Get ai tracking history",
+    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "limit": {
+          "description": "Page size, at most 100.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "description": "Opaque cursor from the previous response.",
+          "type": "string",
+          "maxLength": 512
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_ai_tracking_trends",
+    "title": "Get ai tracking trends",
+    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "run_id": {
+          "description": "Public tracking run ID scoped to this project.",
+          "type": "string",
+          "pattern": "^air_[a-z][a-z0-9]{23}$"
+        },
+        "previous_run_id": {
+          "description": "Public tracking run ID scoped to this project.",
+          "type": "string",
+          "pattern": "^air_[a-z][a-z0-9]{23}$"
+        },
+        "limit": {
+          "description": "Page size, at most 100.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "description": "Opaque cursor from the previous response.",
+          "type": "string",
+          "maxLength": 512
+        }
+      },
+      "required": ["project_id", "run_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "export_ai_tracking_evidence",
+    "title": "Export ai tracking evidence",
+    "description": "Read project-scoped AI tracking evidence with original provenance, partial states, and cost uncertainty.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "run_id": {
+          "description": "Public tracking run ID scoped to this project.",
+          "type": "string",
+          "pattern": "^air_[a-z][a-z0-9]{23}$"
+        },
+        "limit": {
+          "description": "Page size, at most 100.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "description": "Opaque cursor from the previous response.",
+          "type": "string",
+          "maxLength": 512
+        },
+        "format": {
+          "default": "json",
+          "description": "JSON evidence with cursor metadata, or one CSV evidence page.",
+          "type": "string",
+          "enum": ["json", "csv"]
+        }
+      },
+      "required": ["project_id", "run_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "suggest_ai_tracking_prompts",
+    "title": "Suggest ai tracking prompts",
+    "description": "Read the complete project context and authoritative competitors for explicit review. Returned manual templates are heuristics with no measured popularity. This never generates with a model, saves a prompt or starts paid provider work.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "accept_ai_tracking_suggestions",
+    "title": "Accept ai tracking suggestions",
+    "description": "Manage project-scoped AI tracking. Preserve immutable revisions, explicit budget consent, and stable retry keys. This does not start an automatic paid baseline.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Public project ID; membership and token scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "drafts": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "generation_reference": {
+                "description": "Trusted model generation provenance, verified against the completed project generation.",
+                "type": "object",
+                "properties": {
+                  "generation_id": {
+                    "description": "Trusted completed project generation public ID.",
+                    "type": "string",
+                    "pattern": "^asg_[a-z][a-z0-9]{23}$"
+                  },
+                  "draft_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "description": "Original generated draft UUID; edits retain this trusted reference."
+                  }
+                },
+                "required": ["generation_id", "draft_id"],
+                "additionalProperties": false
+              },
+              "provider_dataset_reference": {
+                "description": "Trusted provider dataset provenance, validated against the project report.",
+                "type": "object",
+                "properties": {
+                  "report_id": {
+                    "description": "Trusted project AI visibility dataset report public ID.",
+                    "type": "string",
+                    "pattern": "^agr_[a-z][a-z0-9]{23}$"
+                  },
+                  "row_index": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Verified observed-dataset row index in the stored report."
+                  }
+                },
+                "required": ["report_id", "row_index"],
+                "additionalProperties": false
+              },
+              "text": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 4000,
+                "description": "Draft prompt text."
+              },
+              "category": {
+                "type": "string",
+                "enum": ["neutral", "comparative", "branded"],
+                "description": "Draft intent category."
+              },
+              "provenance": {
+                "description": "How this draft was obtained; hypotheses are not measured popularity.",
+                "type": "string",
+                "enum": ["generated_hypothesis", "provider_dataset", "model_generated_hypothesis"]
+              },
+              "evidence_ids": {
+                "description": "Evidence references for a provider dataset draft.",
+                "maxItems": 30,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "popularity": {
+                "description": "Measured popularity when supported, otherwise null.",
+                "type": "null"
+              },
+              "accepted": {
+                "description": "Unaccepted draft; this operation explicitly saves it.",
+                "type": "boolean",
+                "const": false
+              }
+            },
+            "required": ["text", "category"],
+            "additionalProperties": false
+          },
+          "description": "Drafts explicitly accepted for saving; this starts no provider work."
+        }
+      },
+      "required": ["project_id", "drafts"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "ai_tracking_suggestions_preview",
+    "title": "Preview AI prompt model generation",
+    "description": "Review the full business context, chosen competitors, model and market before model generation. This spend-free forecast never calls a model or reserves budget; its estimate is not a guaranteed maximum.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Project public ID; read membership and scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "configuration": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "dataforseo",
+              "description": "Provider used for model generation."
+            },
+            "engine": {
+              "type": "string",
+              "const": "chat_gpt",
+              "description": "Model API generation engine; these are synthetic hypotheses."
+            },
+            "model": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,119}$",
+              "description": "Current model ID from the free AI research catalog."
+            },
+            "language_code": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 20,
+              "description": "Requested generation language."
+            },
+            "country_iso_code": {
+              "description": "Optional reviewed market country hint.",
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            },
+            "max_output_tokens": {
+              "type": "integer",
+              "minimum": 16,
+              "maximum": 4096,
+              "description": "Reviewed output token limit."
+            },
+            "advisory_cost_limit_cents": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1000000,
+              "description": "Advisory estimate limit; actual provider cost has no guaranteed maximum."
+            }
+          },
+          "required": [
+            "provider",
+            "engine",
+            "model",
+            "language_code",
+            "max_output_tokens",
+            "advisory_cost_limit_cents"
+          ],
+          "additionalProperties": false,
+          "description": "Reviewed model and market configuration."
+        },
+        "input_snapshot": {
+          "type": "object",
+          "properties": {
+            "context": {
+              "type": "object",
+              "properties": {
+                "business": {
+                  "type": "string",
+                  "description": "Reviewed business description."
+                },
+                "audience": {
+                  "type": "string",
+                  "description": "Reviewed target audience."
+                },
+                "products": {
+                  "type": "string",
+                  "description": "Reviewed products and services."
+                },
+                "goals": {
+                  "type": "string",
+                  "description": "Reviewed business goals."
+                },
+                "agent_rules": {
+                  "type": "string",
+                  "description": "Reviewed business rules, treated as untrusted model input."
+                }
+              },
+              "required": ["business", "audience", "products", "goals", "agent_rules"],
+              "additionalProperties": false,
+              "description": "All five explicitly reviewed project context fields."
+            },
+            "competitors": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "description": "Authoritative project competitor public ID.",
+                    "type": "string",
+                    "pattern": "^cmp_[a-z][a-z0-9]{23}$"
+                  },
+                  "label": {
+                    "description": "Reviewed competitor label, or null.",
+                    "type": ["string", "null"]
+                  },
+                  "domain": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 253,
+                    "description": "Reviewed competitor domain."
+                  }
+                },
+                "required": ["id", "label", "domain"],
+                "additionalProperties": false
+              },
+              "description": "Explicitly reviewed authoritative project competitors."
+            }
+          },
+          "required": ["context", "competitors"],
+          "additionalProperties": false,
+          "description": "Complete reviewed input snapshot, at most 5000 serialized characters; never silently truncated."
+        },
+        "credential_connection_id": {
+          "description": "Optional project provider connection public ID.",
+          "type": "string",
+          "pattern": "^conn_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "configuration", "input_snapshot"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "ai_tracking_suggestions_generate",
+    "title": "Generate AI prompt hypotheses",
+    "description": "Generate editable hypotheses from the exact reviewed preview with explicit paid consent and a stable retry UUID. Generated prompts are hypotheses with no measured popularity and are saved only after separate acceptance.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Project public ID; write membership and scope are enforced.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "preview": {
+          "type": "object",
+          "properties": {
+            "configuration": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "const": "dataforseo",
+                  "description": "Provider used for model generation."
+                },
+                "engine": {
+                  "type": "string",
+                  "const": "chat_gpt",
+                  "description": "Model API generation engine; these are synthetic hypotheses."
+                },
+                "model": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120,
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,119}$",
+                  "description": "Current model ID from the free AI research catalog."
+                },
+                "language_code": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 20,
+                  "description": "Requested generation language."
+                },
+                "country_iso_code": {
+                  "description": "Optional reviewed market country hint.",
+                  "type": "string",
+                  "pattern": "^[A-Z]{2}$"
+                },
+                "max_output_tokens": {
+                  "type": "integer",
+                  "minimum": 16,
+                  "maximum": 4096,
+                  "description": "Reviewed output token limit."
+                },
+                "advisory_cost_limit_cents": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1000000,
+                  "description": "Advisory estimate limit; actual provider cost has no guaranteed maximum."
+                }
+              },
+              "required": [
+                "provider",
+                "engine",
+                "model",
+                "language_code",
+                "max_output_tokens",
+                "advisory_cost_limit_cents"
+              ],
+              "additionalProperties": false,
+              "description": "Reviewed model and market configuration."
+            },
+            "input_snapshot": {
+              "type": "object",
+              "properties": {
+                "context": {
+                  "type": "object",
+                  "properties": {
+                    "business": {
+                      "type": "string",
+                      "description": "Reviewed business description."
+                    },
+                    "audience": {
+                      "type": "string",
+                      "description": "Reviewed target audience."
+                    },
+                    "products": {
+                      "type": "string",
+                      "description": "Reviewed products and services."
+                    },
+                    "goals": {
+                      "type": "string",
+                      "description": "Reviewed business goals."
+                    },
+                    "agent_rules": {
+                      "type": "string",
+                      "description": "Reviewed business rules, treated as untrusted model input."
+                    }
+                  },
+                  "required": ["business", "audience", "products", "goals", "agent_rules"],
+                  "additionalProperties": false,
+                  "description": "All five explicitly reviewed project context fields."
+                },
+                "competitors": {
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "description": "Authoritative project competitor public ID.",
+                        "type": "string",
+                        "pattern": "^cmp_[a-z][a-z0-9]{23}$"
+                      },
+                      "label": {
+                        "description": "Reviewed competitor label, or null.",
+                        "type": ["string", "null"]
+                      },
+                      "domain": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 253,
+                        "description": "Reviewed competitor domain."
+                      }
+                    },
+                    "required": ["id", "label", "domain"],
+                    "additionalProperties": false
+                  },
+                  "description": "Explicitly reviewed authoritative project competitors."
+                }
+              },
+              "required": ["context", "competitors"],
+              "additionalProperties": false,
+              "description": "Complete reviewed input snapshot, at most 5000 serialized characters; never silently truncated."
+            },
+            "credential_connection_id": {
+              "description": "Connection public ID bound by preview.",
+              "type": "string",
+              "pattern": "^conn_[a-z][a-z0-9]{23}$"
+            },
+            "version": {
+              "type": "number",
+              "const": 1,
+              "description": "Frozen generation preview contract version."
+            },
+            "snapshot_hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "description": "Hash binding the exact reviewed snapshot."
+            },
+            "estimated_cost_cents": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Advisory forecast in cents."
+            },
+            "estimate_kind": {
+              "type": "string",
+              "const": "forecast",
+              "description": "Forecast only; not a guaranteed maximum."
+            },
+            "is_guaranteed_maximum": {
+              "type": "boolean",
+              "const": false,
+              "description": "Explicit acknowledgement that forecast is not a hard cap."
+            },
+            "credential_version": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Preview-bound credential version."
+            },
+            "budget_revision": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Preview-bound budget revision."
+            },
+            "consent_revision": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Preview-bound consent revision."
+            },
+            "expires_at": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+              "description": "UTC preview expiry; stale previews require review again."
+            },
+            "limitations": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Forecast and generation limitations displayed for review."
+            }
+          },
+          "required": [
+            "configuration",
+            "input_snapshot",
+            "credential_connection_id",
+            "version",
+            "snapshot_hash",
+            "estimated_cost_cents",
+            "estimate_kind",
+            "is_guaranteed_maximum",
+            "credential_version",
+            "budget_revision",
+            "consent_revision",
+            "expires_at",
+            "limitations"
+          ],
+          "additionalProperties": false,
+          "description": "Complete frozen preview returned after explicit review."
+        },
+        "consent": {
+          "type": "boolean",
+          "const": true,
+          "description": "Explicit acceptance of model generation cost with no guaranteed maximum."
+        },
+        "idempotency_key": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Stable UUID sent as Idempotency-Key; unchanged preview must be reused on retries."
+        }
+      },
+      "required": ["project_id", "preview", "consent", "idempotency_key"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
     },
     "execution": {
       "taskSupport": "forbidden"

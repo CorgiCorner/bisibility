@@ -1,5 +1,9 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
-import { deriveKeywordDetailState } from "@/lib/keyword-detail/state-model";
+import {
+  deriveKeywordDetailChangeDimensions,
+  deriveKeywordDetailState,
+  describeKeywordDetailPositionChange,
+} from "@/lib/keyword-detail/state-model";
 import type { KeywordTrafficDetail } from "@/lib/queries/keyword-traffic";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { describe, expect, it } from "vitest";
@@ -49,6 +53,7 @@ describe("deriveKeywordDetailState", () => {
     ["not_ranked", "not_ranked"],
     ["failed", "failed"],
     ["running", "running"],
+    ["unknown", "unknown"],
   ] as const)("maps %s to the %s rank state", (checkState, rankState) => {
     expect(
       deriveKeywordDetailState(
@@ -301,4 +306,37 @@ describe("deriveKeywordDetailState", () => {
       ).whatChanged,
     ).toBe("diff");
   });
+});
+
+it("retains unknown coverage after a completed null result without inventing a ranked state", () => {
+  expect(
+    deriveKeywordDetailState(
+      keyword({
+        hasRankData: true,
+        position: 101,
+        checkState: "unknown",
+        observationCompleteness: "unknown",
+      }),
+      traffic(),
+    ).rankState,
+  ).toBe("unknown");
+});
+
+it("does not claim rank or URL loss when the latest absence has unknown coverage", () => {
+  const row = keyword({
+    observationCompleteness: "unknown",
+    completedComparableChecks: [
+      { checkedAt: "2026-10-07T12:00:00Z", position: 5, rankingUrl: "https://example.com/" },
+      {
+        checkedAt: "2026-10-08T12:00:00Z",
+        position: null,
+        rankingUrl: null,
+        observationCompleteness: "unknown",
+      },
+    ],
+  });
+  const dimensions = deriveKeywordDetailChangeDimensions(row);
+  expect(describeKeywordDetailPositionChange(dimensions)).toBeNull();
+  expect(dimensions.rankingUrlChanged).toBe(false);
+  expect(deriveKeywordDetailState(row, traffic()).whatChanged).toBe("unknown");
 });

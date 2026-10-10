@@ -268,6 +268,7 @@
     "components/backlinks/backlinks-workspace-model.ts",
     "components/backlinks/BacklinksAggregateTable.tsx",
     "components/backlinks/BacklinksExportMenu.tsx",
+    "components/backlinks/BacklinksFailedSummary.tsx",
     "components/backlinks/BacklinksFiltersDrawer.tsx",
     "components/backlinks/BacklinksIdleState.tsx",
     "components/backlinks/BacklinksLoadingSkeletons.tsx",
@@ -817,6 +818,7 @@
     "components/project-runs/project-runs-actions.ts",
     "components/project-runs/project-runs-presentation.ts",
     "components/project-runs/project-runs-status-menu.ts",
+    "components/project-runs/project-runs-table-copy.ts",
     "components/project-runs/ProjectRunActions.tsx",
     "components/project-runs/ProjectRunsContent.tsx",
     "components/project-runs/ProjectRunsFeatureBoundary.tsx",
@@ -824,9 +826,13 @@
     "components/project-runs/ProjectRunsLoading.tsx",
     "components/project-runs/ProjectRunsTable.tsx",
     "components/project-runs/ProjectRunsTabs.tsx",
+    "components/project-runs/ProjectRunsTimelineTabs.tsx",
     "components/project-runs/run-status-copy.ts",
     "components/project-runs/RunStatusChip.tsx",
     "components/project-runs/RunStatusLegend.tsx",
+    "components/project-runs/RunTimelineSection.tsx",
+    "components/project-runs/RunTimelineTime.tsx",
+    "components/project-runs/RunTitleCell.tsx",
     "components/rank-check/FirstCheckBanner.tsx",
     "components/rank-check/FirstCheckBannerAction.tsx",
     "components/rank-check/FirstCheckRunModal.tsx",
@@ -6111,6 +6117,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "onboarding.firstCheck.results.coverageUnknown",
+        "tags": []
+      },
+      {
         "arguments": [["device", 1]],
         "key": "onboarding.firstCheck.results.device",
         "tags": []
@@ -7597,6 +7608,56 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.actualCostAcknowledgement",
+        "tags": []
+      },
+      {
+        "arguments": [["cost", 1]],
+        "key": "projectAiResearch.actualCostForecast",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.actualCostOwnCredentials",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.actualCostPolicy",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.actualCostRisk",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.actualCostUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.actualCostUsageReview",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.actualModel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.actualReplayHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.actualSearchForecast",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.brand",
         "tags": []
       },
@@ -7613,6 +7674,16 @@
       {
         "arguments": [],
         "key": "projectAiResearch.cacheHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.catalogUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.catalogUnavailableLegacy",
         "tags": []
       },
       {
@@ -7637,7 +7708,22 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.costPolicy",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.country",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.coverageDisclaimer",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.credentialsChanged",
         "tags": []
       },
       {
@@ -7662,7 +7748,32 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.estimateAboveCap",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.estimateCost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.estimatedCostLimit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.estimateRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.expandedPricingRequirement",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.firstModel",
         "tags": []
       },
       {
@@ -7672,12 +7783,57 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.hardCapPolicy",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.historyEmpty",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.language",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.languageCode",
+        "tags": []
+      },
+      {
+        "arguments": [["cost", 1], ["date", 1]],
+        "key": "projectAiResearch.legacyAdmissionEstimate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.legacyPreset",
+        "tags": []
+      },
+      {
+        "arguments": [["date", 1]],
+        "key": "projectAiResearch.legacyPricingProvenance",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.legacyPromptLanguage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.legacyPromptLanguageHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.legacyVisibilityPreset",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.liveCatalog",
         "tags": []
       },
       {
@@ -7687,7 +7843,17 @@
       },
       {
         "arguments": [],
-        "key": "projectAiResearch.modelHint",
+        "key": "projectAiResearch.marketCoverageHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPolicyPending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.newRequest",
         "tags": []
       },
       {
@@ -7717,6 +7883,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.noSecondModel",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.noSource",
         "tags": []
       },
@@ -7737,12 +7908,27 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.outputTokens",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.partialFailure",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectAiResearch.platform",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.pricingUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.pricingUnavailableLegacy",
         "tags": []
       },
       {
@@ -7762,6 +7948,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.promptPlaceholder",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.promptTitle",
         "tags": []
       },
@@ -7772,12 +7963,37 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.reasoningModel",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.recentReports",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.requestedModel",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.requestFailure",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.responseLanguage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.responseLanguageHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.restoreLegacyPreset",
         "tags": []
       },
       {
@@ -7792,7 +8008,22 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.searchCountry",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.searchCountryHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.searchFor",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.secondModel",
         "tags": []
       },
       {
@@ -7806,8 +8037,28 @@
         "tags": []
       },
       {
+        "arguments": [["max", 2], ["min", 2]],
+        "key": "projectAiResearch.tokenBounds",
+        "tags": []
+      },
+      {
         "arguments": [["cost", 1]],
         "key": "projectAiResearch.unknownCost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.unknownModel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.unknownPrice",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.unsupportedSettings",
         "tags": []
       },
       {
@@ -7837,7 +8088,931 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.webSearch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.webSearchHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.webSearchPolicyPending",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.yourDomain",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.90MinimumInBothPeriods",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.actions",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.actualModel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.addATopicAndAPromptNothingRuns",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.addPrompt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.addSchedule",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.addTopic",
+        "tags": []
+      },
+      {
+        "arguments": [["cost", 1]],
+        "key": "projectAiTracking.advisoryEstimate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.aiTracking",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.allTopics",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.answer",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.answerTruncatedAtTheRetentionLimit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.approveAndQueueRun",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.archive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.aRetainedObservationWithItsSourceAndMeasurement",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.branded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.budgetAndCredentialsAreCheckedAgainBeforeLaunch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.cancel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.cancelFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.capabilitiesUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 2]],
+        "key": "projectAiTracking.citationAnswers",
+        "tags": []
+      },
+      {
+        "arguments": [["expected", 2], ["loaded", 2], ["run", 1]],
+        "key": "projectAiTracking.citationScope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.citationScopeIncomplete",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.citationScopeMethod",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 2]],
+        "key": "projectAiTracking.citationUrls",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.citedSources",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.comparableCoverage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.comparative",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.compare",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.compareEvidence",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.completedRuns",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.configureARun",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.configureSchedule",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.consumerScraper",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.consumerScraperModelAPIAndGoogleAIOverview",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.consumerScrapersMeasureTheConsumerSurfaceModelAPI",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.contextDraftMethod",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.contextPromptDrafts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.cost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.costUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.couldNotSaveChanges",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.cronExpression",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.currentRun",
+        "tags": []
+      },
+      {
+        "arguments": [
+          ["absent", 2],
+          ["coverage", 1],
+          ["eligible", 2],
+          ["expected", 2],
+          ["failed", 2],
+          ["missing", 2],
+          ["partial", 2],
+          ["unknown", 2]
+        ],
+        "key": "projectAiTracking.denominators",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.disabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.edit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.editPrompt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.editTopic",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.effectiveLocale",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.enabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.enabledSchedules",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.enableSchedule",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.engine",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.everyTextEditCreatesANewImmutableRevision",
+        "tags": []
+      },
+      {
+        "arguments": [["expected", 2], ["loaded", 2]],
+        "key": "projectAiTracking.evidenceLoaded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.exactProviderModelIdentifier",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.exactRevisionRetained",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.explicitCostConsentRequired",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 2]],
+        "key": "projectAiTracking.exportCompleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.exportContinue",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.exportCsv",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 2]],
+        "key": "projectAiTracking.exportIncomplete",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.exportJson",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.filterByTopic",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generatedPrompt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationAdvisoryLimit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationAgentRules",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationAudience",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationBusiness",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationCompetitors",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationConsent",
+        "tags": []
+      },
+      {
+        "arguments": [["date", 1]],
+        "key": "projectAiTracking.generationContextUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationCostMethod",
+        "tags": []
+      },
+      {
+        "arguments": [["cost", 1], ["state", 1]],
+        "key": "projectAiTracking.generationCostReceipt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationCountry",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationDrafts",
+        "tags": []
+      },
+      {
+        "arguments": [["id", 1]],
+        "key": "projectAiTracking.generationFailureId",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationGenerate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationGoals",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationLoadingContext",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationMarketMethod",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationNoCompetitors",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationNoCountry",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationOutputTokens",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationPreview",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationProducts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationProvider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationReconcileBeforeRetry",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationReviewContext",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationReviewMethod",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationReviewRequired",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 2], ["limit", 2]],
+        "key": "projectAiTracking.generationScopeCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationScopeTooLarge",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.generationUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.googleAIOverview",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.groupPromptsAroundAQuestionYourCustomersAsk",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.historyUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.iApproveThisRunAndTheProviderActual",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.languageCode",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.lastResult",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.limitedScheduleSources",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.loadMoreRuns",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.loadMoreSamples",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.loadSupportedModels",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.location",
+        "tags": []
+      },
+      {
+        "arguments": [["delta", 1]],
+        "key": "projectAiTracking.mentionDelta",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.model",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.modelAPI",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.modelCapabilitiesHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.neutral",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.nextRun",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.nextRunPending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.noAIOverviewWasPresentThisIsNot",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.noCitationsWereRetained",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.noCitedSourcesInLoadedEvidence",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.noCompleteAnswerIsAvailableForThisSample",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.noResultYet",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.noRunsYetPreviewAConfigurationToBegin",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.noSchedulesConfiguredRunAManualPreviewFirst",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.notAvailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.notObserved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.notScheduled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.observationTimeUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.observed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.optionalLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.partialRunsStaySeparate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.pause",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.popularityUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.previewConfigurationAndCost",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 2]],
+        "key": "projectAiTracking.previewDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.previewRun",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.previewUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.previousRun",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 2], ["domain", 1]],
+        "key": "projectAiTracking.projectTrackingMeta",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.prompt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.promptCategory",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 2]],
+        "key": "projectAiTracking.promptCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.prompts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.promptText",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.providerDatasetPrompt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.replacementConfigurationScope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.requestedLocale",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.resume",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.reviewDraft",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.reviewReplacementConfiguration",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.revision",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.runFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.runHistory",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.sampleEvidence",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 2]],
+        "key": "projectAiTracking.savedConfigurationReview",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.saveRevision",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.saveSchedule",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.saveTopic",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.savingAPromptDoesNotRunItOr",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.scheduleName",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.schedules",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.schedulesUseAnExactConfigurationAndAnExplicit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.searchResultsNotCitedInTheAnswerAre",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 2]],
+        "key": "projectAiTracking.selectedPrompts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.source",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.sourceNotConfigured",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.startWithAQuestionYourCustomersAsk",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.status",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.suggestFromContext",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.suggestionsUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.timezone",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.topic",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.topicName",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.trackedPrompts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.trackingViews",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.trackTheQuestionsThatMatterWithEvidenceYou",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.trendMethod",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.unassigned",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.unknownFreshness",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.whichToolsHelpASmallTeamTrackSearch",
         "tags": []
       },
       {
@@ -9847,6 +11022,31 @@
       },
       {
         "arguments": [],
+        "key": "projectBacklinks.workspace.failedSummary.costUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [["target", 1]],
+        "key": "projectBacklinks.workspace.failedSummary.description",
+        "tags": []
+      },
+      {
+        "arguments": [["cost", 1]],
+        "key": "projectBacklinks.workspace.failedSummary.knownSummaryCost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectBacklinks.workspace.failedSummary.previousResult",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectBacklinks.workspace.failedSummary.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectBacklinks.workspace.filters.anchorContains",
         "tags": []
       },
@@ -10098,6 +11298,11 @@
       {
         "arguments": [],
         "key": "projectBacklinks.workspace.snapshot.exactPage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectBacklinks.workspace.snapshot.historyUnavailable",
         "tags": []
       },
       {
@@ -12185,6 +13390,11 @@
       {
         "arguments": [],
         "key": "projectDashboard.highlights.awaitingFirstCheck",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.highlights.coverageUnknown",
         "tags": []
       },
       {
@@ -18031,6 +19241,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.header.coverageUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.header.cpc",
         "tags": []
       },
@@ -18309,6 +19524,16 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.pending.connectSerpProvider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.pending.coverageUnknownBody",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.pending.coverageUnknownTitle",
         "tags": []
       },
       {
@@ -21287,6 +22512,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.grid.coverageUnknown",
+        "tags": []
+      },
+      {
         "arguments": [["summary", 1]],
         "key": "projectRankTracker.keywordImport.management.grid.currentPage",
         "tags": []
@@ -22029,6 +23259,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordImport.management.marketCells.checkRunning",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.marketCells.coverageUnknown",
         "tags": []
       },
       {
@@ -24703,6 +25938,21 @@
       },
       {
         "arguments": [],
+        "key": "projectResearch.state.accountRestrictedAction",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectResearch.state.accountRestrictedDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectResearch.state.accountRestrictedTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectResearch.state.budgetAction",
         "tags": []
       },
@@ -27334,6 +28584,91 @@
       {
         "arguments": [],
         "key": "projectRuns.table.updatingPlannedRun",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.active",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.activeHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.all",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.finishedAt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.history",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.historyHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.newestFirst",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.noActiveKeywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.oldestFirst",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.parallelWorkers",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.plannedFor",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.readyFrom",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.retryFrom",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.sections",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.upcoming",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.upcomingHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.when",
         "tags": []
       },
       {
@@ -37423,6 +38758,11 @@
       },
       {
         "arguments": [],
+        "key": "shared.runStatuses.rank.skipped.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.runStatuses.rank.succeeded.description",
         "tags": []
       },
@@ -38158,6 +39498,11 @@
       },
       {
         "arguments": [],
+        "key": "shell.header.subtitles.aiTracking",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shell.header.subtitles.aiVisibility",
         "tags": []
       },
@@ -38289,6 +39634,11 @@
       {
         "arguments": [],
         "key": "shell.header.titles.agentReports",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.header.titles.aiTracking",
         "tags": []
       },
       {
@@ -38549,6 +39899,11 @@
       {
         "arguments": [],
         "key": "shell.navigation.items.agentReports",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.items.aiTracking",
         "tags": []
       },
       {

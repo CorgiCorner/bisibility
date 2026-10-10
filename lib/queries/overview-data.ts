@@ -71,6 +71,7 @@ export async function loadOverviewMetricData(
           select: {
             checkedAt: true,
             normalizationVersion: true,
+            observationRun: { select: { completeness: true } },
             position: true,
             previousPosition: true,
             requestedDepth: true,

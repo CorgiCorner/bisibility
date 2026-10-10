@@ -89,7 +89,9 @@ export async function crawlSite(
     }
   }
   const failed = new Set(
-    pages.filter((page) => page.status !== null && page.status >= 400).map((page) => page.url),
+    pages
+      .filter((page) => page.status !== null && page.status >= 400 && page.status !== 429)
+      .map((page) => page.url),
   );
   for (const page of pages) {
     const count = page.internalLinks.filter((link) => failed.has(link)).length;
@@ -116,7 +118,11 @@ export async function crawlSite(
     state:
       stopReason === "finished" &&
       !robots.unavailable() &&
-      pages.every((page) => page.status !== null || page.issues[0]?.code === "robots_disallowed")
+      pages.every(
+        (page) =>
+          (page.status !== null && page.status !== 429) ||
+          page.issues[0]?.code === "robots_disallowed",
+      )
         ? "complete"
         : "partial",
     stopReason,

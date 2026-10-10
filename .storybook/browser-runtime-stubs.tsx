@@ -211,6 +211,8 @@ export function headers() {
   return new Headers();
 }
 
+export const webcrypto = globalThis.crypto;
+
 export function createHash() {
   return {
     digest: () => "preview_hash",

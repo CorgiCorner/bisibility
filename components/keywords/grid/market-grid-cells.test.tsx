@@ -65,3 +65,45 @@ describe("market grid cells", () => {
     expect(screen.getByText("#2")).toBeInTheDocument();
   });
 });
+
+it("discloses unknown coverage instead of declaring an out-of-depth absence", () => {
+  render(
+    <MarketPositionCell
+      row={{
+        ...row,
+        hasRankData: true,
+        position: 101,
+        checkState: "unknown",
+        observationCompleteness: "unknown",
+      }}
+    />,
+  );
+  expect(screen.getByLabelText("Coverage unknown")).toBeInTheDocument();
+  expect(screen.queryByText("Not found in top 100")).not.toBeInTheDocument();
+});
+
+it("retains incomplete coverage when an unranked group contains an unknown target", () => {
+  const targets = [
+    {
+      ...row,
+      id: "complete",
+      hasRankData: true,
+      position: 101,
+      checkState: "not_ranked" as const,
+      observationCompleteness: "complete" as const,
+    },
+    {
+      ...row,
+      id: "unknown",
+      hasRankData: true,
+      position: 101,
+      checkState: "unknown" as const,
+      observationCompleteness: "unknown" as const,
+    },
+  ];
+  const aggregate = aggregateMarketGridRows(targets)[0];
+  const parent = groupRow(aggregate, aggregate.children);
+  render(<MarketPositionCell row={parent} />);
+  expect(screen.getByLabelText("Coverage unknown")).toBeInTheDocument();
+  expect(screen.queryByText("Not found in top 100")).not.toBeInTheDocument();
+});

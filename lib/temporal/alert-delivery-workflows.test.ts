@@ -239,6 +239,31 @@ describe("alertDeliveryWorkflow", () => {
     );
   });
 
+  it("skips email when every configured recipient was filtered out", async () => {
+    mocks.activities.loadAlertDeliveryContextActivity.mockResolvedValue(
+      context({ channels: ["email"], emailRecipientsConfigured: true, recipients: [] }),
+    );
+    mocks.activities.finalizeAlertDeliveryActivity.mockResolvedValue({ deliveryState: "skipped" });
+
+    await expect(alertDeliveryWorkflow({ alertId: "alert_1" })).resolves.toMatchObject({
+      status: "skipped",
+    });
+    expect(mocks.activities.deliverAlertEmailActivity).not.toHaveBeenCalled();
+    expect(mocks.activities.finalizeAlertDeliveryActivity).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcomes: [
+          {
+            channel: "email",
+            delivered: false,
+            reason: "Email delivery has no enabled recipients.",
+            recordAttempt: true,
+            skipped: true,
+          },
+        ],
+      }),
+    );
+  });
+
   it("does not touch channels when the claim is not acquired", async () => {
     mocks.activities.claimAlertDeliveryActivity.mockResolvedValue({ claimed: false });
     await expect(alertDeliveryWorkflow({ alertId: "alert_1" })).resolves.toEqual({
@@ -390,6 +415,34 @@ describe("alertDigestDeliveryWorkflow", () => {
       expect.objectContaining({ recipient: { email: "second@example.com", userId: "user_2" } }),
     );
   });
+
+  it.each([true, false])(
+    "classifies an empty digest recipient list with configured=%s",
+    async (configured) => {
+      const emailOnlyJob: AlertDigestJob = {
+        ...job,
+        channels: ["email"],
+        emailRecipientsConfigured: configured,
+        recipients: [],
+      };
+
+      await alertDigestDeliveryWorkflow(emailOnlyJob);
+
+      expect(mocks.activities.deliverAlertDigestEmailActivity).not.toHaveBeenCalled();
+      expect(mocks.activities.finalizeAlertDigestDeliveryActivity).toHaveBeenCalledWith(
+        expect.objectContaining({
+          outcomes: [
+            {
+              channel: "email",
+              delivered: false,
+              reason: "Email delivery has no enabled recipients.",
+              ...(configured ? { skipped: true } : {}),
+            },
+          ],
+        }),
+      );
+    },
+  );
 
   it("preserves a non-retryable email-budget message for the recorded outcome", async () => {
     const emailOnlyJob: AlertDigestJob = { ...job, channels: ["email"] };

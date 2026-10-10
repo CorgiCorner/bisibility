@@ -3,6 +3,7 @@ import "server-only";
 import { whereCompletedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { normalizedObservationCompleteness } from "@/lib/serp/rank-depth";
 import { requireApiPublicId } from "./public-id";
 
 export const RANK_CHECK_COMPLETED_STATUS = "completed";
@@ -24,6 +25,7 @@ export type LatestExecutedCheckInput = {
   checkedAt: Date;
   errorCode: string | null;
   error: string | null;
+  observationRun?: { completeness: string } | null;
   position: number | null;
   publicId: string;
   run: { publicId: string } | null;
@@ -33,6 +35,7 @@ export type LatestExecutedCheckInput = {
 export type LatestSuccessfulCheckRecord = {
   checkedAt: Date;
   keywordId: string;
+  observationRun?: { completeness: string } | null;
   position: number | null;
   publicId: string;
   rankingUrl: string | null;
@@ -42,6 +45,7 @@ export type LatestSuccessfulCheckRecord = {
 const latestSuccessfulCheckSelect = {
   checkedAt: true,
   keywordId: true,
+  observationRun: { select: { completeness: true } },
   position: true,
   publicId: true,
   rankingUrl: true,
@@ -88,6 +92,7 @@ export function latestCheckState(check: LatestExecutedCheckInput | null | undefi
     error: check.error,
     error_code: check.errorCode,
     id: requireApiPublicId(check.publicId, "check"),
+    observation_completeness: normalizedObservationCompleteness(check.observationRun?.completeness),
     position: check.position,
     run_id: check.run ? requireApiPublicId(check.run.publicId, "rcr") : null,
     status: apiRankCheckStatus(check.status),
@@ -102,6 +107,7 @@ export function latestSuccessfulCheckState(check: LatestSuccessfulCheckRecord | 
   return {
     checked_at: check.checkedAt.toISOString(),
     id: requireApiPublicId(check.publicId, "check"),
+    observation_completeness: normalizedObservationCompleteness(check.observationRun?.completeness),
     position: check.position,
     ranking_url: check.rankingUrl,
     run_id: check.run ? requireApiPublicId(check.run.publicId, "rcr") : null,

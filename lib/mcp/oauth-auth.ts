@@ -8,6 +8,7 @@ import { AUTH_URL, AUTH_URL_CONFIGURED, MCP_RESOURCE_URL } from "@/lib/auth/auth
 import { allowedOAuthTokenScopes } from "@/lib/auth/oauth-consent-guard";
 import { prisma } from "@/lib/db/prisma";
 import { protectedResourceMetadataUrl } from "@/lib/deployment/mcp-origin-contract";
+import { APIError } from "better-auth/api";
 import { verifyAccessToken } from "better-auth/oauth2";
 
 type OAuthAuthentication = { auth: PersonalTokenAuth } | { response: Response };
@@ -70,8 +71,18 @@ export async function authenticateMcpOAuthRequest(req: Request): Promise<OAuthAu
   let payload: Awaited<ReturnType<typeof verifyAccessToken>>;
   try {
     payload = await verifyAccessToken(rawToken, verificationOptions);
-  } catch {
-    return { response: unauthorized(req, "Invalid or expired OAuth access token.") };
+  } catch (error) {
+    if (error instanceof APIError && (error.statusCode === 401 || error.statusCode === 403)) {
+      return { response: unauthorized(req, "Invalid or expired OAuth access token.") };
+    }
+    return {
+      response: errorResponse(
+        "internal_server_error",
+        "OAuth token verification is unavailable. Check the authentication server configuration and availability.",
+        503,
+        { instance: `urn:bisibility:mcp:${new URL(req.url).pathname}` },
+      ),
+    };
   }
 
   const userId = typeof payload.sub === "string" ? payload.sub : null;

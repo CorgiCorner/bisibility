@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
@@ -13,8 +12,11 @@ import {
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-
-const fields = ["business", "audience", "products", "goals", "agentRules"] as const;
+import {
+  ProjectContextFields,
+  ProjectContextFooter,
+  ProjectContextLayout,
+} from "./ProjectContextLayout";
 
 function formValues(context: ProjectContextResource): ProjectContextInput {
   const { updatedAt: _updatedAt, ...values } = context;
@@ -50,40 +52,34 @@ export function ProjectContextForm({
     }
   }
   return (
-    <Card>
-      <h2 className="text-[15px] font-semibold">{t("contextTitle")}</h2>
-      <p className="mt-1 text-[13px] leading-relaxed text-fg-muted">{t("contextDescription")}</p>
-      <form className="mt-5 grid gap-5" onSubmit={form.handleSubmit(save)}>
-        {fields.map((field) => (
-          <div className="grid gap-2" key={field}>
-            <label className="text-[13px] font-semibold" htmlFor={`context-${field}`}>
-              {t(field)}
-            </label>
-            <p className="text-[12px] text-fg-muted" id={`context-${field}-hint`}>
-              {t(`${field}Hint`)}
-            </p>
-            <Textarea
-              {...form.register(field)}
-              aria-describedby={`context-${field}-hint`}
-              aria-invalid={Boolean(form.formState.errors[field])}
-              disabled={!canEdit || form.formState.isSubmitting}
-              id={`context-${field}`}
-              invalid={Boolean(form.formState.errors[field])}
-              maxLength={4000}
-            />
-            {form.formState.errors[field] ? (
-              <p className="text-[12px] text-red-text" role="alert">
-                {t("validation")}
-              </p>
-            ) : null}
-          </div>
-        ))}
+    <ProjectContextLayout>
+      <form className="grid gap-5" onSubmit={form.handleSubmit(save)}>
+        <ProjectContextFields>
+          {(field) => (
+            <>
+              <Textarea
+                {...form.register(field)}
+                aria-describedby={`context-${field}-hint`}
+                aria-invalid={Boolean(form.formState.errors[field])}
+                disabled={!canEdit || form.formState.isSubmitting}
+                id={`context-${field}`}
+                invalid={Boolean(form.formState.errors[field])}
+                maxLength={4000}
+              />
+              {form.formState.errors[field] ? (
+                <p className="text-[12px] text-red-text" role="alert">
+                  {t("validation")}
+                </p>
+              ) : null}
+            </>
+          )}
+        </ProjectContextFields>
         {failed ? (
           <p className="text-[13px] text-red-text" role="alert">
             {t("failed")}
           </p>
         ) : null}
-        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
+        <ProjectContextFooter>
           {canEdit ? (
             <Button
               disabled={!form.formState.isDirty}
@@ -96,8 +92,8 @@ export function ProjectContextForm({
           ) : (
             <p className="text-[13px] text-fg-muted">{t("readOnly")}</p>
           )}
-        </div>
+        </ProjectContextFooter>
       </form>
-    </Card>
+    </ProjectContextLayout>
   );
 }

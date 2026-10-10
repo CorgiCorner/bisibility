@@ -24,8 +24,15 @@ function rankingLabel(
   position: number | null,
   rankingUrl: string | null,
   trackedDepth?: number,
+  completeness?: string | null,
 ) {
-  const observation = rankObservationState({ completedChecks: 1, position, trackedDepth });
+  const observation = rankObservationState({
+    completedChecks: 1,
+    position,
+    trackedDepth,
+    completeness,
+  });
+  if (observation.kind === "unknown") return t("results.coverageUnknown");
   if (observation.kind !== "ranked")
     return t("results.notRanked", { depth: trackedDepth ?? DEFAULT_SERP_DEPTH });
   if (!rankingUrl) return `#${position}`;
@@ -94,7 +101,13 @@ function resultText(
     case "queued":
       return t("results.queued");
     case "completed":
-      return rankingLabel(t, row.position, row.rankingUrl, row.requestedDepth);
+      return rankingLabel(
+        t,
+        row.position,
+        row.rankingUrl,
+        row.requestedDepth,
+        row.observationCompleteness,
+      );
     case "blocked":
     case "cancelled":
     case "deferred":

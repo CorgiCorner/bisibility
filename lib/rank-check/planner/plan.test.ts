@@ -14,7 +14,10 @@ const mocks = vi.hoisted(() => ({
   loadChain: vi.fn(),
   makePublicId: vi.fn(),
   upsert: vi.fn(),
+  skipEmpty: vi.fn(),
 }));
+
+vi.mock("./empty-schedule", () => ({ skipEmptyScheduleOccurrences: mocks.skipEmpty }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/operations/access-extension", () => ({
@@ -25,6 +28,7 @@ vi.mock("@/lib/db/prisma", () => ({
     $transaction: async (fn: (tx: object) => unknown) =>
       fn({
         $queryRaw: mocks.queryRaw,
+        projectMarket: { findMany: vi.fn().mockResolvedValue([{ locationId: "location_active" }]) },
         checkSchedule: { findFirst: mocks.currentSchedule },
         rankCheckRun: {
           findUnique: vi.fn(({ where }) =>
@@ -78,10 +82,19 @@ function schedule(
     id,
     jitterMinutes: 0,
     keywords: [
-      { id: `${id}_keyword_1`, publicId: "kw_a00000000000000000000000" },
-      { id: `${id}_keyword_2`, publicId: "kw_b00000000000000000000000" },
+      {
+        id: `${id}_keyword_1`,
+        publicId: "kw_a00000000000000000000000",
+        locationId: "location_active",
+      },
+      {
+        id: `${id}_keyword_2`,
+        publicId: "kw_b00000000000000000000000",
+        locationId: "location_active",
+      },
     ],
     project: {
+      markets: [{ locationId: "location_active" }],
       budgetCapCents: 1_000,
       defaults: { serpDepth: 20, timezone: "UTC" },
       providerAllocationsInitializedAt: null,
@@ -145,7 +158,12 @@ describe("rank-check run planner", () => {
     expect(mocks.upsert).not.toHaveBeenCalled();
     expect(mocks.currentSchedule).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: "daily", archivedAt: null, enabled: true, keywords: { some: {} } },
+        where: {
+          id: "daily",
+          archivedAt: null,
+          enabled: true,
+          keywords: { some: { archivedAt: null, locationId: { in: ["location_active"] } } },
+        },
       }),
     );
   });

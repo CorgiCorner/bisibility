@@ -76,6 +76,7 @@ paginate with \`?limit=<n>&cursor=<next_cursor>\`. Errors are
 | Stand up a new domain end to end | \`domain-onboarding\` | write |
 | Add or bulk-update tracked keywords | \`keyword-import\` | write |
 | Investigate triggered alerts, tune alert rules | \`alert-triage\` | write |
+| Audit retained AI answers, mentions and citations | \`ai-visibility-audit\` | read |
 | Build a weekly rank-movement report | \`weekly-report\` | read |
 | Verify a self-hosted instance is healthy | \`self-host-health\` | read |
 | Manage API keys, team invites, migration tokens | \`team-api-governance\` | admin |
@@ -132,7 +133,7 @@ Origin is either \`https://bisibility.com\` (hosted) or
 ## Task skills to route to
 
 provider-setup, domain-onboarding, keyword-import, alert-triage,
-weekly-report, self-host-health, team-api-governance.`,
+weekly-report, ai-visibility-audit, self-host-health, team-api-governance.`,
     },
   ],
 };

@@ -16,6 +16,7 @@ import type { ReactNode } from "react";
 import { ResearchResultsLoading } from "./ResearchLoadingSkeletons";
 
 export type ResearchState =
+  | "account_restricted"
   | "budget_exhausted"
   | "empty"
   | "idle"
@@ -218,6 +219,20 @@ export function ResearchStatePanel({
           resumeLabel: resumeLabel ?? t("defaultResume"),
         })}
         title={t("budgetTitle")}
+      />
+    );
+  }
+  if (state === "account_restricted") {
+    return (
+      <MessageState
+        action={
+          <AccentCtaLink href="https://app.dataforseo.com/">
+            {t("accountRestrictedAction")}
+          </AccentCtaLink>
+        }
+        description={t("accountRestrictedDescription")}
+        mark={<ModuleMark bordered icon={Binoculars} />}
+        title={t("accountRestrictedTitle")}
       />
     );
   }

@@ -75,7 +75,8 @@
         "metricsForMarket": "For {market}",
         "checkedDepth": "Checked top {depth, number}",
         "connectedSchedule": "Schedule for this market and device",
-        "schedulesAllTargets": "Across all markets and devices"
+        "schedulesAllTargets": "Across all markets and devices",
+        "coverageUnknown": "Coverage unknown"
       },
       "actions": {
         "moreActions": "More keyword actions",
@@ -136,7 +137,9 @@
         "checkTop": "Check top {depth}",
         "runFirstCheck": "Run first check",
         "connectSerpProvider": "Connect a SERP provider",
-        "history": "Position history"
+        "history": "Position history",
+        "coverageUnknownTitle": "Coverage unknown",
+        "coverageUnknownBody": "The provider response does not establish whether this keyword is within the tracked depth."
       },
       "firstCheck": {
         "billing": "The rank check could not run because the provider account has insufficient funds. Add funds or connect a different provider, then try again.",

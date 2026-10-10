@@ -102,7 +102,8 @@
         "queued": "W kolejce",
         "queuedNote": "Sprawdzenia z kolejki ruszą, gdy worker przejmie przebieg.",
         "retry": "Ponów nieudane",
-        "retryNote": "Uruchom przykładowe sprawdzenie dla pozostałych celów, kiedy zechcesz."
+        "retryNote": "Uruchom przykładowe sprawdzenie dla pozostałych celów, kiedy zechcesz.",
+        "coverageUnknown": "Nieznany zakres wyników"
       },
       "review": {
         "dataSourceWaiting": "Sprawdzenia ruszą, gdy połączysz dostawcę.",

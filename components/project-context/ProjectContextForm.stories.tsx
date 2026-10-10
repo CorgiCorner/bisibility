@@ -4,6 +4,7 @@ import messages from "@/messages/core/en/agent-workspace.json";
 import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { ProjectContextForm } from "./ProjectContextForm";
+import { ProjectContextLoading } from "./ProjectContextLayout";
 
 const meta = {
   component: ProjectContextForm,
@@ -33,6 +34,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Empty: Story = {};
+export const Loading: Story = { render: () => <ProjectContextLoading /> };
 export const Saved: Story = {
   args: {
     context: {

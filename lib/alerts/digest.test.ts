@@ -149,6 +149,32 @@ describe("alert digest flush", () => {
     });
   });
 
+  it.each([true, false])(
+    "preserves configured=%s when the digest has no eligible recipients",
+    async (configured) => {
+      const alerts = pendingAlerts(3);
+      if (!configured) {
+        for (const alert of alerts) {
+          alert.rule.recipients = [];
+          alert.rule.createdBy = null;
+        }
+      }
+      mocks.prisma.notificationPreference.findMany.mockResolvedValue([
+        { alertEmail: false, userId: "user_2" },
+      ]);
+      mocks.prisma.triggeredAlert.findMany.mockResolvedValue(alerts);
+
+      await flushAlertDigests(new Date("2026-07-21T11:00:00.000Z"));
+
+      expect(mocks.enqueueAlertDigestJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          emailRecipientsConfigured: configured,
+          recipients: [],
+        }),
+      );
+    },
+  );
+
   it("flush skips muted and resolved alerts", async () => {
     const now = new Date("2026-07-21T11:00:00.000Z");
     const alerts = pendingAlerts(3);

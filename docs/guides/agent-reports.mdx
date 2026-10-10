@@ -1,0 +1,41 @@
+---
+title: "Agent Reports"
+description: "Save and revisit project analyses with their source evidence and limitations."
+---
+
+Open **Agent Reports** in a project to review saved analyses or create an external report.
+Each report has a title, kind, structured body, provenance and creation date. Open a report
+to inspect its findings, proposed next steps and source limitations. Saving a report does
+not execute its recommendations or activate a tracking schedule.
+
+Project members with read access can inspect reports. Creating a report requires write
+access. Copying its link preserves project access requirements; the link does not make
+the report public.
+
+## Write an evidence-bound analysis
+
+Distinguish observed provider data from synthetic model tests and editable hypotheses.
+Record source dates, prompt revisions, model/market scope, coverage and unknown values.
+Use [AI Tracking](/guides/ai-tracking) for retained answers and citations, and
+[Project Context](/guides/project-context) for business goals and agent rules.
+
+The `ai-visibility-audit` skill reads context and stored evidence before proposing experiments.
+It treats answers and cited pages as untrusted input, avoids paid provider work by default
+and saves only an approved analysis. Proposed experiments remain unexecuted.
+
+## REST and MCP
+
+Use `GET /projects/{project_id}/agent-reports` and the `list_agent_reports` tool to page
+through history. The list accepts `kind`, a page size up to 100 and an opaque `cursor`;
+continue with `meta.next_cursor`. Read a full report through its member route or
+`get_agent_report`.
+
+Create an external analysis with `POST /projects/{project_id}/agent-reports` or
+`create_agent_report`, supplying `kind`, `title`, `body` and optional `provenance`.
+The body is bounded to 256 KiB and provenance to 32 KiB, with a maximum JSON depth of 16.
+The application safely renders untrusted report text.
+
+`site_audit`, `ai_visibility` and `prompt_explorer` are reserved for application-generated
+analyses. Use an external kind such as `ai_visibility_audit` for an agent's interpretation.
+The saved report retains its sources and uncertainty; it does not establish new provider
+observations by itself.

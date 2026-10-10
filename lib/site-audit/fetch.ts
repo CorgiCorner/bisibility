@@ -81,6 +81,31 @@ async function readBody(response: Response | UndiciResponse) {
   }
 }
 
+function retryDelay(header: string | null, now: number) {
+  const value = header?.trim();
+  if (!value) return 1000;
+  if (/^\d+$/.test(value)) return Number(value) * 1000;
+  const at = Date.parse(value);
+  return Number.isFinite(at) ? Math.max(0, at - now) : 1000;
+}
+
+async function waitForRetry(ms: number, signal: AbortSignal) {
+  if (!ms) return;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      signal.removeEventListener("abort", abort);
+      resolve();
+    }, ms);
+    function abort() {
+      clearTimeout(timer);
+      signal.removeEventListener("abort", abort);
+      reject(new Error("Audit time limit reached."));
+    }
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) abort();
+  });
+}
+
 export async function fetchAuditPage(
   url: URL,
   budget: CrawlBudget,
@@ -90,7 +115,9 @@ export async function fetchAuditPage(
   const now = transport.now ?? Date.now;
   const started = now();
   let current = url;
-  for (let hop = 0; hop <= 3; hop++) {
+  let hop = 0;
+  let retries = 0;
+  while (hop <= 3) {
     if (policy.checkRobots !== false && (await budget.disallowed?.(current)))
       throw new AuditRobotsDisallowedError(current.href);
     if (now() >= budget.deadline || budget.signal.aborted)
@@ -132,6 +159,18 @@ export async function fetchAuditPage(
         headers: { "User-Agent": "BisibilitySiteAudit/1.0", Accept: "text/html,text/plain;q=0.5" },
       };
       const response = await request(current, options);
+      const delay = retryDelay(response.headers.get("retry-after"), now());
+      if (
+        response.status === 429 &&
+        retries === 0 &&
+        budget.requests < MAX_REQUESTS &&
+        delay < budget.deadline - now()
+      ) {
+        await response.body?.cancel();
+        retries++;
+        await waitForRetry(delay, budget.signal);
+        continue;
+      }
       if ([301, 302, 303, 307, 308].includes(response.status)) {
         await response.body?.cancel();
         const next = auditRedirectUrl(
@@ -142,6 +181,7 @@ export async function fetchAuditPage(
         if (!next || !response.headers.get("location"))
           throw new Error("Redirect outside the project origin is blocked.");
         current = next;
+        hop++;
         continue;
       }
       const html = await readBody(response);

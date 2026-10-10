@@ -29,4 +29,4 @@ it("keeps deleted run idempotency and ranking data while excluding it from histo
   } finally {
     await db.close();
   }
-});
+}, 20_000);

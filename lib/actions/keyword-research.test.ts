@@ -1,4 +1,5 @@
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { ProviderCallError } from "@/lib/providers/call-error";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { researchKeywordsAction } from "./keyword-research";
 
@@ -20,6 +21,31 @@ vi.mock("./_shared", () => ({
 }));
 
 describe("researchKeywordsAction", () => {
+  it.each([0, 7, null])(
+    "returns account restrictions without raw errors or losing cost %s",
+    async (costCents) => {
+      mocks.research.mockRejectedValueOnce(
+        new ProviderCallError(
+          "untrusted provider error with credential",
+          costCents,
+          "provider_account_restricted",
+        ),
+      );
+      await expect(researchKeywordsAction({ projectId: "prj_1", seed: "seo" })).resolves.toEqual({
+        ok: false,
+        reason: "account_restricted",
+        ...(costCents == null ? {} : { costCents }),
+      });
+    },
+  );
+
+  it("keeps unknown research errors out of structured account outcomes", async () => {
+    mocks.research.mockRejectedValueOnce(new Error("Unexpected failure"));
+    await expect(researchKeywordsAction({ projectId: "prj_1", seed: "seo" })).rejects.toThrow(
+      "Unexpected failure",
+    );
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireScope.mockResolvedValue(mocks.project);

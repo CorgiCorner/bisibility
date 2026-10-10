@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { fetchPublicDocument } from "@/lib/expected-url/public-document-fetch";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { emitSignal } from "@/lib/signals/emit";
@@ -69,37 +70,21 @@ export function sitemapUrlForDomain(domain: string) {
 }
 
 async function fetchSitemapXml(url: string) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(url, {
-      headers: { accept: "application/xml,text/xml,*/*;q=0.1", "user-agent": USER_AGENT },
-      signal: controller.signal,
-    });
-    if (!response.ok) {
-      throw new Error(`Sitemap fetch failed with HTTP ${response.status}`);
-    }
-    const declared = Number(response.headers.get("content-length"));
-    if (Number.isFinite(declared) && declared > MAX_RESPONSE_BYTES) {
-      throw new Error(`Sitemap response exceeds ${MAX_RESPONSE_BYTES} bytes`);
-    }
-    const xml = await response.text();
-    if (Buffer.byteLength(xml, "utf8") > MAX_RESPONSE_BYTES) {
-      throw new Error(`Sitemap response exceeds ${MAX_RESPONSE_BYTES} bytes`);
-    }
-    return xml;
-  } finally {
-    clearTimeout(timeout);
-  }
+  return fetchPublicDocument({
+    url,
+    protocols: ["http:", "https:"],
+    headers: { accept: "application/xml,text/xml,*/*;q=0.1", "user-agent": USER_AGENT },
+    maxBytes: MAX_RESPONSE_BYTES,
+    timeoutMs: FETCH_TIMEOUT_MS,
+  });
 }
 
 function resolveChildUrl(childUrl: string, parentUrl: string) {
-  try {
-    return new URL(childUrl, parentUrl).toString();
-  } catch {
-    return childUrl;
+  const url = new URL(childUrl, parentUrl);
+  if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) {
+    throw new Error("Child sitemap must use HTTP or HTTPS without credentials.");
   }
+  return url.href;
 }
 
 function warnIfTruncated(projectId: string, sitemap: ResolvedSitemap) {
@@ -113,7 +98,8 @@ function warnIfTruncated(projectId: string, sitemap: ResolvedSitemap) {
 }
 
 async function resolveSitemap(sitemapUrl: string): Promise<ResolvedSitemap> {
-  const root = parseSitemapXml(await fetchSitemapXml(sitemapUrl));
+  const document = await fetchSitemapXml(sitemapUrl);
+  const root = parseSitemapXml(document.body);
   if (root.kind === "unknown") {
     throw new Error("Sitemap response is not a urlset or sitemapindex document");
   }
@@ -140,9 +126,12 @@ async function resolveSitemap(sitemapUrl: string): Promise<ResolvedSitemap> {
       break;
     }
 
-    const child = parseSitemapXml(await fetchSitemapXml(resolveChildUrl(childUrl, sitemapUrl)), {
-      maxEntries: remaining,
-    });
+    const child = parseSitemapXml(
+      (await fetchSitemapXml(resolveChildUrl(childUrl, document.url))).body,
+      {
+        maxEntries: remaining,
+      },
+    );
     childSitemapsFetched += 1;
     urlCount += child.urlCount;
     truncated = truncated || child.truncated || child.kind === "sitemapindex";

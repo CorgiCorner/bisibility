@@ -10,6 +10,7 @@ export type AlertDigestJob = {
   createdAt: string;
   deliveryClaimToken: string;
   email: { html: string; subject: string; text: string };
+  emailRecipientsConfigured?: boolean;
   projectDomain: string;
   projectId: string;
   projectName: string;

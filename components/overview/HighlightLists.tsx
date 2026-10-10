@@ -47,6 +47,7 @@ export function highlightNoteCopy(t: HighlightTranslations, note: HighlightNote)
       value: note.value,
     });
   }
+  if (note.kind === "coverageUnknown") return t("coverageUnknown");
   if (note.kind === "latestCheckFailed") return t("latestCheckFailed");
   if (note.kind === "latestCheckNotRanked") return t("latestCheckNotRanked");
   if (note.kind === "enteredTop10") return t("enteredTop10", { url: note.url ?? noRankingUrl });

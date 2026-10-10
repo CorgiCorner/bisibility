@@ -16,6 +16,7 @@ import { startAlertDeliveryWorkflow } from "./alert-delivery-client";
 
 export type AlertDeliveryContext = {
   channels: AlertDeliveryChannel[];
+  emailRecipientsConfigured?: boolean;
   payload: AlertExternalDeliveryPayload;
   projectInternalId: string;
   recipients: AlertEmailRecipient[];
@@ -157,12 +158,11 @@ export async function loadAlertDeliveryContextActivity(
 
   const project = alert.keyword.project;
   const presentation = payloadStrings(alert.payload);
-  const recipients = await filterAlertEmailRecipients(
-    project.id,
-    resolveAlertRuleRecipients(alert.rule),
-  );
+  const configuredRecipients = resolveAlertRuleRecipients(alert.rule);
+  const recipients = await filterAlertEmailRecipients(project.id, configuredRecipients);
   return {
     channels: alert.rule.channels,
+    emailRecipientsConfigured: configuredRecipients.length > 0,
     payload: {
       ...presentation,
       afterPosition: alert.afterPosition,

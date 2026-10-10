@@ -14,13 +14,15 @@ const observed = z
   })
   .passthrough();
 const section = z
-  .object({ text: z.string().optional(), annotations: z.array(citation).optional() })
+  .object({ text: z.string().optional(), annotations: z.array(citation).nullish() })
   .passthrough();
 const response = z
   .object({
-    model_name: z.string(),
+    model_name: z.string().trim().min(1).nullish(),
     datetime: z.string().nullish(),
-    items: z.array(z.object({ sections: z.array(section).optional() }).passthrough()),
+    items: z.array(
+      z.object({ type: z.string().optional(), sections: z.array(section).nullish() }).passthrough(),
+    ),
   })
   .passthrough();
 
@@ -45,6 +47,8 @@ function row(
     prompt: string;
     answer: string;
     model: string;
+    requestedModel?: string;
+    actualModel?: string | null;
     datetime?: string | null;
     citations: z.infer<typeof citation>[];
   },
@@ -72,6 +76,12 @@ function row(
     prompt: input.prompt.slice(0, 500),
     answer: input.answer.slice(0, 4000),
     model: input.model.slice(0, 120),
+    ...(input.requestedModel === undefined
+      ? {}
+      : {
+          requestedModel: input.requestedModel.slice(0, 120),
+          actualModel: input.actualModel?.slice(0, 120) ?? null,
+        }),
     observedAt: input.datetime?.slice(0, 64) ?? null,
     brandMentioned: input.answer.toLocaleLowerCase().includes(target.brand.toLocaleLowerCase()),
     domainCited,
@@ -98,14 +108,19 @@ export function observedRow(value: unknown, target: { brand: string; domain: str
 export function promptRow(
   value: unknown,
   target: { brand: string; domain: string; prompt: string },
+  requestedModel?: string,
 ) {
   const item = response.parse(value);
-  const sections = item.items.flatMap((entry) => entry.sections ?? []);
+  const sections = item.items
+    .filter((entry) => entry.type !== "reasoning")
+    .flatMap((entry) => entry.sections ?? []);
   return row(
     {
       prompt: target.prompt,
       answer: sections.map((entry) => entry.text ?? "").join("\n"),
-      model: item.model_name,
+      model: item.model_name ?? "unknown",
+      requestedModel,
+      actualModel: item.model_name ?? null,
       datetime: item.datetime,
       citations: sections.flatMap((entry) => entry.annotations ?? []),
     },

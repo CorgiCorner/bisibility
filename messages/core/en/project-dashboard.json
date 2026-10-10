@@ -243,7 +243,8 @@
       "relativeMinutes": "{value, number}m ago",
       "relativeYesterday": "yesterday",
       "winsDescription": "Gained the most positions",
-      "winsTitle": "Biggest wins"
+      "winsTitle": "Biggest wins",
+      "coverageUnknown": "Coverage unknown"
     },
     "markets": {
       "activeMarkets": "{count, number} active {count, plural, one {market} other {markets}} / paused markets excluded",

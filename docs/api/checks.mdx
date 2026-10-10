@@ -45,13 +45,23 @@ Response status is `201` when the check completes during the request.
   "keyword_id": "kw_a00000000000000000000000",
   "attempts": null,
   "checked_at": "2026-06-28T10:00:00.000Z",
+  "observation_completeness": "truncated_by_stop_on_match",
   "position": 4,
   "previous_position": 7,
   "provider": "dataforseo",
   "ranking_url": "https://example.com/rank-tracker",
   "run_id": "rcr_a00000000000000000000000",
+  "run": {
+    "id": "rcr_a00000000000000000000000",
+    "status": "completed",
+    "trigger": "manual",
+    "started_at": "2026-06-28T09:59:58.000Z",
+    "finished_at": "2026-06-28T10:00:00.000Z"
+  },
   "cost_cents": 0.06,
+  "usage": { "quantity": 0.06, "status": "confirmed", "unit": "cents" },
   "error": null,
+  "error_code": null,
   "status": "completed"
 }
 ```
@@ -71,8 +81,15 @@ features do not change that value. `ranking_url` preserves the URL reported by
 the provider; bisibility does not replace it after resolving redirects or
 canonicals.
 
-`position: null` is a valid ranking observation only when a completed check
-found no matching organic result within the requested depth. A malformed
+`status: "completed"` describes execution, not complete observation coverage.
+Read `observation_completeness` alongside `position`: a completed check with
+`position: null` supports no match within the requested scope and depth only
+when completeness is `complete`. With `unknown` or
+`truncated_by_stop_on_match`, a null position does not establish absence. A
+valid positive position within the tracked depth remains valid with incomplete
+coverage, as in the example above. `observation_completeness: null` means no
+recognized metadata is available, including legacy checks; it is not evidence
+of complete coverage and is not backfilled. A malformed
 provider payload fails the provider attempt and can use the configured fallback
 chain; it is not stored as a completed no-match.
 

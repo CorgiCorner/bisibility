@@ -1,4 +1,5 @@
 import * as caps from "./operation-capabilities";
+import { aiTrackingPolicies } from "./operation-policy-ai-tracking";
 import { type OperationPolicy, policy } from "./operation-policy-helpers";
 import { researchWorkspaceOperationPolicy } from "./research-workspace-policy";
 
@@ -13,6 +14,7 @@ export type ProjectAccess = "read" | "write";
 export type { OperationCapability } from "./operation-capabilities";
 
 export const operationPolicy = {
+  ...aiTrackingPolicies,
   ...researchWorkspaceOperationPolicy,
   addCompetitor: policy("POST", "/projects/{project_id}/competitors", "write"),
   addKeywords: policy("POST", "/projects/{project_id}/keywords", "write"),

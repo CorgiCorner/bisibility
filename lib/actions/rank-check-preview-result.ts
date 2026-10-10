@@ -1,5 +1,6 @@
 import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import type { ObservationCompleteness } from "@/lib/observation/types";
 import { redactOpsText } from "@/lib/ops/redact-text";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { isBudgetExhaustedError } from "@/lib/rank-check/budget";
@@ -68,6 +69,7 @@ export type RunFirstCheckPreviewResult =
       status: "queued";
     }
   | {
+      observationCompleteness?: ObservationCompleteness | null;
       position: number | null;
       recordedCostCents: number | null;
       requestedDepth?: number;

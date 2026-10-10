@@ -42,6 +42,7 @@ export type HighlightPositionState = "awaitingFirstCheck" | "noData" | "notRanke
 export type HighlightNote =
   | { kind: "rankingUrl"; url: string | null }
   | { kind: "movement"; direction: "dropped" | "gained"; value: number; url: string | null }
+  | { kind: "coverageUnknown" }
   | { kind: "latestCheckFailed" }
   | { kind: "latestCheckNotRanked" }
   | { kind: "enteredTop10"; url: string | null }

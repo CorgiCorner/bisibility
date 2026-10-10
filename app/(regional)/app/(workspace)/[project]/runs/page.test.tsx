@@ -65,7 +65,7 @@ describe("RunsPage", () => {
 
     expect(mocks.listProjectRuns).toHaveBeenCalledWith(
       { id: "project_1", name: "Example", publicId: projectRef },
-      { cursor: null, limit: 20, source: "all", status: "all", view: "runs" },
+      { cursor: null, limit: 20, source: "all", status: "all", view: "timeline" },
     );
     expect(mocks.readOperationSnapshot).toHaveBeenCalledTimes(1);
     expect(mocks.readOperationSnapshot).toHaveBeenCalledWith("project_1");
@@ -123,7 +123,7 @@ describe("RunsPage", () => {
 
     expect(mocks.listProjectRuns).toHaveBeenCalledWith(
       { id: "project_1", name: "Example", publicId: projectRef },
-      { cursor: null, limit: 20, source: "search_console", status: "all", view: "runs" },
+      { cursor: null, limit: 20, source: "search_console", status: "all", view: "timeline" },
     );
   });
 });

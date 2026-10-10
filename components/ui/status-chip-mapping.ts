@@ -18,6 +18,7 @@ const RANK_RUN_STATUS_PRESENTATIONS = {
   succeeded: { label: "Succeeded", messageKey: "succeeded", tone: "positive" },
   partial: { label: "Partial", messageKey: "partial", tone: "attention" },
   deferred: { label: "Deferred", messageKey: "deferred", tone: "attention" },
+  skipped: { label: "Skipped", messageKey: "skipped", tone: "neutral" },
   failed: { label: "Failed", messageKey: "failed", tone: "critical" },
   cancelled: { label: "Cancelled", messageKey: "cancelled", tone: "neutral" },
   not_confirmed: { label: "Not confirmed", messageKey: "notConfirmed", tone: "neutral" },
@@ -51,8 +52,9 @@ export function rankRunStatusKeyChipPresentation(key: RankRunStatusKey): StatusC
 export function runStatusChipPresentation(
   status: RunStatus,
   outcome: RunOutcome | null = null,
+  reason?: string | null,
 ): StatusChipPresentation {
-  return rankRunStatusKeyChipPresentation(rankRunStatusKey(status, outcome));
+  return rankRunStatusKeyChipPresentation(rankRunStatusKey(status, outcome, reason));
 }
 
 export function itemStatusChipPresentation(status: ItemStatus): StatusChipPresentation {

@@ -122,3 +122,29 @@ describe("getKeywordRows queued task selection", () => {
     expect(row).toMatchObject({ checkState: "running" });
   });
 });
+
+it("keeps failed and pending checks ahead of unknown coverage", () => {
+  const observationRun = { completeness: "unknown" };
+  expect(keywordCheckState({ position: null, status: "failed", observationRun }, [])).toBe(
+    "failed",
+  );
+  expect(
+    keywordCheckState({ position: null, status: "completed", observationRun }, queued("prepared")),
+  ).toBe("running");
+  expect(keywordCheckState({ position: 4, status: "completed", observationRun }, [])).toBe(
+    "ranked",
+  );
+});
+
+it("does not affirm absence for a truncated no-position result", () => {
+  expect(
+    keywordCheckState(
+      {
+        position: null,
+        status: "completed",
+        observationRun: { completeness: "truncated_by_stop_on_match" },
+      },
+      [],
+    ),
+  ).toBe("unknown");
+});

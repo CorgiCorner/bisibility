@@ -1,5 +1,7 @@
 // Temporal sandbox module: no Prisma, providers, Node built-ins, or side effects.
 // Only deterministic Temporal packages and type-only activity imports are allowed.
+export { aiTrackingRunWorkflow } from "./ai-tracking-workflows";
+
 import { defineSearchAttributeKey, SearchAttributeType } from "@temporalio/common";
 import { ApplicationFailure, proxyActivities, workflowInfo } from "@temporalio/workflow";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";

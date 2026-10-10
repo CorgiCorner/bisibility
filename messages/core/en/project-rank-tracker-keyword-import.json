@@ -342,7 +342,8 @@
           "dimensionCurrent": "{label}, currently shown",
           "dimensionAddA": "Add a {name}",
           "dimensionAdd": "Add {item}",
-          "dimensionTrack": "Track"
+          "dimensionTrack": "Track",
+          "coverageUnknown": "Coverage unknown"
         },
         "runChecks": {
           "top": "Top {depth, number}",
@@ -506,7 +507,8 @@
           "pairVolumeHelp": "Search volume for this market-language pair",
           "position": "#{position, number}",
           "mixed": "mixed",
-          "noDifficultyData": "No difficulty data"
+          "noDifficultyData": "No difficulty data",
+          "coverageUnknown": "Coverage unknown"
         },
         "columns": {
           "keyword": "Keyword",

@@ -1,4 +1,11 @@
 import { AiResearchWorkspace } from "@/components/ai-research/AiResearchWorkspace";
+import {
+  aiResearchCatalogFixture,
+  fixtureChargedFailure,
+  fixtureCredentialRotationAction,
+  fixtureResearchAction,
+  fixtureUnknownCostAction,
+} from "@/components/ai-research/ai-research-fixtures";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { AppFooter } from "@/components/shell/AppFooter";
 import { AppHeaderFrame } from "@/components/shell/AppHeaderFrame";
@@ -41,9 +48,17 @@ const noop = async () => ({ updated: 0 });
 export function ResearchShell({
   module = "audit",
   failed = false,
+  catalogUnavailable = false,
+  unknownCost = false,
+  credentialRotation = false,
+  chargedFailure = false,
 }: {
   module?: "audit" | "visibility" | "prompt";
   failed?: boolean;
+  catalogUnavailable?: boolean;
+  unknownCost?: boolean;
+  credentialRotation?: boolean;
+  chargedFailure?: boolean;
 }) {
   return (
     <FeatureMessagesProvider
@@ -100,17 +115,20 @@ export function ResearchShell({
                   />
                 ) : (
                   <AiResearchWorkspace
+                    catalog={catalogUnavailable ? undefined : aiResearchCatalogFixture}
+                    catalogError={catalogUnavailable ? "Fixture catalog unavailable" : undefined}
                     projectId={projectId}
                     domain="example.com"
                     mode={module}
                     history={[]}
-                    analyzeAction={async () => ({
-                      ok: true,
-                      estimate: true,
-                      evidence:
-                        module === "visibility" ? "observed_dataset" : "synthetic_prompt_test",
-                      estimatedCostCents: 10,
-                    })}
+                    initialOutcome={chargedFailure ? fixtureChargedFailure : undefined}
+                    analyzeAction={
+                      credentialRotation
+                        ? fixtureCredentialRotationAction
+                        : unknownCost
+                          ? fixtureUnknownCostAction
+                          : fixtureResearchAction
+                    }
                   />
                 )}
               </main>
@@ -143,4 +161,28 @@ export const Visibility: Story = {
 export const PromptExplorer: Story = {
   args: { module: "prompt" },
   parameters: { nextjs: { navigation: { pathname: `/app/${projectId}/prompt-explorer` } } },
+};
+
+export const LegacyPromptCatalogOutage: Story = {
+  args: { module: "prompt", catalogUnavailable: true },
+  parameters: PromptExplorer.parameters,
+};
+export const LegacyVisibilityCatalogOutage: Story = {
+  args: { module: "visibility", catalogUnavailable: true },
+  parameters: Visibility.parameters,
+};
+
+export const ActualCostUnknownReceipt: Story = {
+  args: { module: "prompt", unknownCost: true },
+  parameters: PromptExplorer.parameters,
+};
+
+export const ActualCostCredentialRotation: Story = {
+  args: { module: "prompt", credentialRotation: true },
+  parameters: PromptExplorer.parameters,
+};
+
+export const ChargedProviderFailure: Story = {
+  args: { module: "prompt", chargedFailure: true },
+  parameters: PromptExplorer.parameters,
 };

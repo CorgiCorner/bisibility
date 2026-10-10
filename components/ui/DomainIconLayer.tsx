@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { domainIconsEnabled } from "./domain-icon-url";
 
 export type DomainIconLayerProps = {
   layerClassName?: string;
@@ -43,7 +44,7 @@ export function DomainIconLayer({
     }
   }, []);
 
-  if (!src) {
+  if (!src || !domainIconsEnabled()) {
     return null;
   }
 

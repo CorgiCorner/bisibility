@@ -2,6 +2,7 @@ import "server-only";
 
 import type { FirstCheckCandidate } from "@/lib/actions/rank-check-preview-result";
 import { prisma } from "@/lib/db/prisma";
+import { normalizedObservationCompleteness } from "@/lib/serp/rank-depth";
 
 export async function firstCheckTargets(
   projectId: string,
@@ -29,6 +30,7 @@ export async function firstCheckTargets(
         orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
         take: 1,
         select: {
+          observationRun: { select: { completeness: true } },
           position: true,
           provider: true,
           rankingUrl: true,
@@ -46,6 +48,9 @@ export async function firstCheckTargets(
       : completed
         ? {
             status: "completed",
+            observationCompleteness: normalizedObservationCompleteness(
+              completed.observationRun?.completeness,
+            ),
             position: completed.position,
             provider: completed.provider,
             rankingUrl: completed.rankingUrl,

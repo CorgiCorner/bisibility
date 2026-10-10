@@ -1,4 +1,5 @@
 import { PageContent } from "@/components/shell/PageContent";
+import { tableHeaderBorderClassName } from "@/components/ui/table-header-styles";
 import { cn } from "@/lib/ui/cn";
 
 function Bar({ className }: Readonly<{ className?: string }>) {
@@ -62,14 +63,17 @@ function IdleStateLoading() {
 function ResultsTableLoading() {
   return (
     <div className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
-      <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-3">
+      <div className="flex flex-wrap items-center gap-2.5 px-4 py-3">
         <Bar className="h-8 w-[86px]" />
         <Bar className="h-3 w-[210px]" />
         <Bar className="ml-auto h-8 w-[84px]" />
       </div>
       <div className="min-w-0 overflow-x-auto">
         <div className="min-w-[930px]">
-          <div className={cn(tableGrid, "h-[42px] border-b border-border bg-bg-sunken px-2")}>
+          <div
+            className={cn(tableHeaderBorderClassName, tableGrid, "h-[42px] bg-bg-sunken px-2")}
+            data-table-header-border="header"
+          >
             {tableHeaderKeys.map((key, index) => (
               <Bar
                 className={cn(

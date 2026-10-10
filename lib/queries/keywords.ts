@@ -47,7 +47,6 @@ const LIST_CHECK_HISTORY = 12;
 // Counts newest attempts, including failed checks.
 // Bounds position chart, ranking-URL history, and CSV export.
 const DETAIL_CHECK_HISTORY = 90;
-
 const EMPTY_METRICS: Metrics = {
   cpc: null,
   difficulty: null,
@@ -61,6 +60,7 @@ const rankCheckSelect = {
   expectedUrlAtCheck: true,
   id: true,
   normalizationVersion: true,
+  observationRun: { select: { completeness: true } },
   position: true,
   provider: true,
   previousPosition: true,

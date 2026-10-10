@@ -77,7 +77,8 @@
         "promptExplorer": "プロンプト比較",
         "siteAudit": "サイト監査",
         "projectContext": "プロジェクトのコンテキスト",
-        "agentReports": "エージェントのレポート"
+        "agentReports": "エージェントのレポート",
+        "aiTracking": "AIトラッキング"
       },
       "menu": "メニュー"
     },
@@ -218,7 +219,8 @@
         "promptExplorer": "対応モデル間で合成プロンプトテストを比較します。",
         "siteAudit": "プロジェクトのサイトをクロールし、URLごとに問題を確認します。",
         "projectContext": "エージェントに共有する事業、顧客、製品、目標。",
-        "agentReports": "このプロジェクトのメンバーと共有する保存済み分析。"
+        "agentReports": "このプロジェクトのメンバーと共有する保存済み分析。",
+        "aiTracking": "AIの回答、ブランドへの言及、引用された情報源を継続的に確認します。"
       },
       "titles": {
         "account": "アカウント設定",
@@ -250,7 +252,8 @@
         "promptExplorer": "プロンプト比較",
         "siteAudit": "サイト監査",
         "projectContext": "プロジェクトのコンテキスト",
-        "agentReports": "エージェントのレポート"
+        "agentReports": "エージェントのレポート",
+        "aiTracking": "AIトラッキング"
       }
     },
     "footer": {

@@ -195,7 +195,7 @@ export function ResearchResultsTable({
           </div>
         </div>
       ) : null}
-      <div className="flex flex-wrap items-center gap-2.5 border-b border-border px-4 py-3">
+      <div className="flex flex-wrap items-center gap-2.5 px-4 py-3">
         <Button
           onClick={onOpenFilters}
           size="sm"

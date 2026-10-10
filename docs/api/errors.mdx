@@ -43,7 +43,7 @@ Errors use `application/problem+json`.
 | <span id="budget_exhausted"></span>`budget_exhausted` | 429 | Monthly rank-check or provider budget is exhausted. Deployment cap failures also carry `details.scope` (`wallet` or `connection`). The problem carries `details.surface` (`programmatic` for every API, MCP and SDK request; `app` in session app routes) and `details.resets_at`, the first moment the budget resets, and sets `Retry-After`. |
 | <span id="lookup_in_progress"></span>`lookup_in_progress` | 429 | An identical cached provider lookup is still running. |
 | <span id="rate_limited"></span>`rate_limited` | 429 | Request or upstream provider exceeded a rate limit. |
-| <span id="internal_server_error"></span>`internal_server_error` | 500 | Unexpected API error. |
+| <span id="internal_server_error"></span>`internal_server_error` | 500 | Unexpected API error. A failed backlinks history request can include completed summary evidence in `details`, with unknown total cost. |
 | <span id="provider_unavailable"></span>`provider_unavailable` | 400, 404, 422, or 502 | Provider is not connected, needs authorization, rejects the request, or fails the lookup. |
 | <span id="scheduler_unavailable"></span>`scheduler_unavailable` | 503 | Async rank-check scheduler is unavailable. |
 
@@ -118,6 +118,35 @@ For a hosted wallet admission with a trusted affected project, `details.top_up_u
 | Retry? | Yes with `estimate_only: true`, then a higher explicit cap. |
 | HTTP | `422` |
 | Problem type | `cost_limit_exceeded` |
+
+### 500 backlinks history failure
+
+When a backlink summary completes but the history request fails with
+unconfirmed usage or accounting, an unknown-cost transient error, or an
+unexpected error, the response remains `internal_server_error` with HTTP
+`500` and `application/problem+json`. Its `details` member can contain
+`ok: false`, `status: failed`, `reason: history_failed`, the completed summary,
+and `rows_status: not_requested`. This is error evidence, not a successful
+`data` response. Other `500` responses need not contain this evidence.
+
+`details.cost_cents` is `null`, meaning the total provider cost is unknown.
+`details.known_summary_cost_cents` covers only the completed summary component;
+it is not the total or a promise that the history call cost nothing.
+`details.history_failure` provides a bounded code and accounting phase without
+exposing raw provider errors or credentials. See the complete
+[backlinks error example](/api/backlinks#unconfirmed-history-cost).
+
+MCP preserves the same problem as an error result with `isError: true`, not
+as a successful tool result. The [app](/guides/backlinks#when-history-is-unavailable)
+can display the summary in the current failed response, but this request
+creates no reusable snapshot or durable result and does not continue to paid
+row requests. Do not automatically retry the paid analysis or convert unknown
+cost to zero. Authentication, provider billing, admission, budget and policy
+refusals retain their existing behavior and stop the analysis.
+
+A successful snapshot with optional `history_unavailable: true` is a different
+case: a typed transient history error had a known finite cost, and summary and
+rows remain available. See [partial history](/api/backlinks#partial-history).
 
 For other status codes, start from the table above, then see
 [Authentication](/authentication#troubleshoot-the-first-request) or

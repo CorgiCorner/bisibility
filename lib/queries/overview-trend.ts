@@ -4,6 +4,7 @@ import { comparableCompletedWindow } from "@/lib/checks/status";
 export type Check = {
   checkedAt: Date;
   normalizationVersion: string | null;
+  observationRun?: { completeness: string } | null;
   position: number | null;
   previousPosition: number | null;
   rankingUrl: string | null;
@@ -50,10 +51,25 @@ function average(values: readonly number[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function latestDailyChecks(checks: readonly Check[], start?: Date) {
+  const days = new Map<string, Check>();
+  for (const check of checks) {
+    if (check.status !== "completed" || (start && check.checkedAt < start)) continue;
+    if (check.position !== null && position(check.position) === null) continue;
+    const day = check.checkedAt.toISOString().slice(0, 10);
+    const previous = days.get(day);
+    if (!previous || check.checkedAt > previous.checkedAt) days.set(day, check);
+  }
+  return days;
+}
+
 function dailyAverages(keywords: readonly Keyword[], start?: Date) {
   const groups = new Map<string, { date: Date; positions: number[] }>();
   for (const keyword of keywords) {
-    for (const check of comparableCompletedWindow(keyword.rankChecks).checks) {
+    for (const check of latestDailyChecks(
+      comparableCompletedWindow(keyword.rankChecks).checks,
+      start,
+    ).values()) {
       const current = position(check.position);
       if (!current || check.status !== "completed" || (start && check.checkedAt < start)) continue;
       const key = check.checkedAt.toISOString().slice(0, 10);
@@ -73,10 +89,7 @@ function dailyAverages(keywords: readonly Keyword[], start?: Date) {
 export function buildTrend(keywords: readonly Keyword[], start?: Date): Trend[] {
   const days = new Map<string, Map<string, Check>>();
   for (const keyword of keywords) {
-    for (const check of keyword.rankChecks) {
-      if (check.status !== "completed" || (start && check.checkedAt < start)) continue;
-      if (check.position !== null && position(check.position) === null) continue;
-      const day = check.checkedAt.toISOString().slice(0, 10);
+    for (const [day, check] of latestDailyChecks(keyword.rankChecks, start)) {
       const observations = days.get(day) ?? new Map<string, Check>();
       const previous = observations.get(keyword.id);
       if (!previous || check.checkedAt > previous.checkedAt) observations.set(keyword.id, check);
@@ -114,11 +127,10 @@ function leadKeyword(
 ) {
   return keywords
     .flatMap((keyword) => {
-      const checks = comparableCompletedWindow(keyword.rankChecks)
-        .checks.filter(
-          (check) =>
-            check.status === "completed" && check.checkedAt >= start && position(check.position),
-        )
+      const checks = [
+        ...latestDailyChecks(comparableCompletedWindow(keyword.rankChecks).checks, start).values(),
+      ]
+        .filter((check) => position(check.position))
         .sort((left, right) => left.checkedAt.getTime() - right.checkedAt.getTime());
       const first = position(checks[0]?.position);
       const latest = position(checks.at(-1)?.position);

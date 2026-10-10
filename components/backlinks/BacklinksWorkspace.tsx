@@ -2,11 +2,17 @@
 
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
 import type { AnalyzeBacklinksActionInput } from "@/lib/actions/backlinks";
-import { type BacklinksSnapshot, isBacklinksEstimate } from "@/lib/backlinks/types";
+import {
+  type BacklinksSnapshot,
+  type BacklinksFailedSummary as FailedSummary,
+  isBacklinksEstimate,
+  isBacklinksFailedSummary,
+} from "@/lib/backlinks/types";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AnalyzeCard } from "./AnalyzeCard";
+import { BacklinksFailedSummary } from "./BacklinksFailedSummary";
 import { BacklinksIdleState } from "./BacklinksIdleState";
 import { BacklinksResultsLoading } from "./BacklinksLoadingSkeletons";
 import { BacklinksResults } from "./BacklinksResults";
@@ -44,6 +50,7 @@ export function BacklinksWorkspace({
   const [submitting, setSubmitting] = useState(false);
   const [snapshot, setSnapshot] = useState<BacklinksSnapshot | null>(null);
   const [failure, setFailure] = useState(false);
+  const [failedSummary, setFailedSummary] = useState<FailedSummary | null>(null);
 
   const requestInput = (
     nextTarget: string,
@@ -67,6 +74,7 @@ export function BacklinksWorkspace({
     setTarget(nextTarget);
     setSnapshot(null);
     setFailure(false);
+    setFailedSummary(null);
     scheduleEstimate(nextTarget);
   }
 
@@ -82,6 +90,7 @@ export function BacklinksWorkspace({
     setResultLimit(nextResultLimit);
     setSnapshot(null);
     setFailure(false);
+    setFailedSummary(null);
     scheduleEstimate(nextTarget, {
       includeSubdomains: nextScope === "site" && nextIncludeSubdomains,
       resultLimit: nextResultLimit,
@@ -101,6 +110,7 @@ export function BacklinksWorkspace({
   async function analyze(request: AnalyzeRequest = {}) {
     setSubmitting(true);
     setFailure(false);
+    setFailedSummary(null);
     try {
       const overrides = request.overrides ?? {};
       const nextTarget = request.target ?? target;
@@ -118,6 +128,10 @@ export function BacklinksWorkspace({
           maxCostCents,
         }),
       );
+      if (isBacklinksFailedSummary(outcome)) {
+        setFailedSummary(outcome);
+        return;
+      }
       if (!outcome.ok) {
         if (request.fallbackOnCostLimit && outcome.reason === "cost_limit_exceeded") return;
         setFailure(true);
@@ -209,6 +223,7 @@ export function BacklinksWorkspace({
         }
         targets={recentTargets}
       />
+      {failedSummary ? <BacklinksFailedSummary evidence={failedSummary} /> : null}
       {failure ? (
         <p className="m-0 text-center text-[13px] text-red-text" role="status">
           {t("loadFailed")}
@@ -217,14 +232,22 @@ export function BacklinksWorkspace({
       {submitting ? (
         <BacklinksResultsLoading />
       ) : snapshot ? (
-        <BacklinksResults
-          estimateCents={estimate.costCents}
-          onLoadMore={() => loadMoreRows(snapshot)}
-          onRefresh={() => void analyze({ fresh: true })}
-          refreshing={submitting}
-          snapshot={snapshot}
-        />
-      ) : (
+        <div className="grid min-w-0 gap-3">
+          {failedSummary ? (
+            <p className="m-0 text-[13px] font-semibold text-fg-muted">
+              {t("failedSummary.previousResult")}
+            </p>
+          ) : null}
+          <BacklinksResults
+            estimateCents={estimate.costCents}
+            onLoadMore={failedSummary ? undefined : () => loadMoreRows(snapshot)}
+            onRefresh={failedSummary ? undefined : () => void analyze({ fresh: true })}
+            readOnly={Boolean(failedSummary)}
+            refreshing={submitting}
+            snapshot={snapshot}
+          />
+        </div>
+      ) : failedSummary ? null : (
         <BacklinksIdleState
           projectRef={projectId}
           state={context.providerStatus === "connected" ? "idle" : context.providerStatus}

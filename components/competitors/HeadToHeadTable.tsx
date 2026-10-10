@@ -2,7 +2,9 @@
 
 import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
+import { tableHeaderBorderClassName } from "@/components/ui/table-header-styles";
 import type { CompetitorMarket } from "@/lib/competitors/types";
+import { cn } from "@/lib/ui/cn";
 import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -68,7 +70,12 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
 
   return (
     <Card className="overflow-hidden p-0" size="md">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-border border-b px-4.5 py-[15px]">
+      <div
+        className={cn(
+          "flex flex-wrap items-center justify-between gap-3 px-4.5 py-[15px]",
+          !hasCompetitors && "border-b border-border",
+        )}
+      >
         <div className="flex min-w-0 flex-col gap-1">
           <SectionTitle>{t("sharedKeywordsHeadToHead")}</SectionTitle>
           <p className="m-0 font-sans tabular-nums text-[11px] text-fg-muted">
@@ -111,7 +118,11 @@ export function HeadToHeadTable({ market, onExport }: Readonly<HeadToHeadTablePr
       <div className="overflow-x-auto">
         <div className="min-w-[720px]">
           <div
-            className="grid gap-x-2.5 border-border border-b bg-bg-sunken px-4.5 py-2.5 font-sans tabular-nums text-[10px] uppercase text-fg-muted"
+            className={cn(
+              tableHeaderBorderClassName,
+              "grid gap-x-2.5 bg-bg-sunken px-4.5 py-2.5 font-sans tabular-nums text-[10px] uppercase text-fg-muted",
+            )}
+            data-table-header-border="header"
             style={{ gridTemplateColumns }}
           >
             <span>{t("keyword")}</span>

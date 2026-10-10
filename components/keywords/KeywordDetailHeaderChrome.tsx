@@ -86,13 +86,15 @@ export function KeywordDetailHeaderChrome({
         : (bestPositionDetail ?? "");
   const chips = keywordChips(keyword);
   const position =
-    rankState === "not_ranked"
-      ? t("header.notRanked")
-      : keyword.hasRankData
-        ? keyword.position === null
-          ? t("common.noData")
-          : t("header.positionValue", { position: keyword.position })
-        : t("common.noData");
+    rankState === "unknown"
+      ? t("header.coverageUnknown")
+      : rankState === "not_ranked"
+        ? t("header.notRanked")
+        : keyword.hasRankData
+          ? keyword.position === null
+            ? t("common.noData")
+            : t("header.positionValue", { position: keyword.position })
+          : t("common.noData");
   const positionState = rankState === "normal" && keyword.hasRankData ? "numeric" : "textual";
 
   return (

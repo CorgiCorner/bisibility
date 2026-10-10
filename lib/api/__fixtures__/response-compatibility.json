@@ -1,0 +1,798 @@
+{
+  "generated_by": "lib/api/response-compatibility.test.ts",
+  "full_backlinks": {
+    "status": 200,
+    "body": {
+      "data": {
+        "cached": false,
+        "cached_until": "2026-10-09T12:00:00.000Z",
+        "cost_cents": 0.3,
+        "fetched_at": "2026-10-08T12:00:00.000Z",
+        "fetched_row_count": 0,
+        "history": [
+          {
+            "month": "2026-01",
+            "new_links": 1,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          },
+          {
+            "month": "2026-02",
+            "new_links": 2,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          },
+          {
+            "month": "2026-03",
+            "new_links": 3,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          },
+          {
+            "month": "2026-04",
+            "new_links": 4,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          },
+          {
+            "month": "2026-05",
+            "new_links": 5,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          },
+          {
+            "month": "2026-06",
+            "new_links": 6,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          },
+          {
+            "month": "2026-07",
+            "new_links": 7,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          },
+          {
+            "month": "2026-08",
+            "new_links": 8,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          },
+          {
+            "month": "2026-09",
+            "new_links": 9,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          },
+          {
+            "month": "2026-10",
+            "new_links": 10,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          },
+          {
+            "month": "2026-11",
+            "new_links": 11,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          },
+          {
+            "month": "2026-12",
+            "new_links": 12,
+            "lost_links": 2,
+            "new_referring_domains": 1,
+            "lost_referring_domains": 1
+          }
+        ],
+        "include_subdomains": true,
+        "provider": "dataforseo",
+        "rows": [],
+        "summary": {
+          "backlinks_total": 12,
+          "broken_backlinks": 0,
+          "broken_pages": 0,
+          "dofollow_pct": 50,
+          "domain_rank": 10,
+          "lost_backlinks": 0,
+          "lost_referring_domains": 0,
+          "new_backlinks": 0,
+          "new_referring_domains": 0,
+          "referring_domains_total": 2,
+          "referring_pages": 3,
+          "spam_score": 0
+        },
+        "target": "example.com",
+        "target_scope": "site",
+        "total_rows_available": 12
+      }
+    }
+  },
+  "partial_backlinks": {
+    "status": 200,
+    "body": {
+      "data": {
+        "cached": false,
+        "cached_until": "2026-10-09T12:00:00.000Z",
+        "cost_cents": 0.3,
+        "fetched_at": "2026-10-08T12:00:00.000Z",
+        "fetched_row_count": 0,
+        "history": [],
+        "include_subdomains": true,
+        "provider": "dataforseo",
+        "rows": [],
+        "summary": {
+          "backlinks_total": 12,
+          "broken_backlinks": 0,
+          "broken_pages": 0,
+          "dofollow_pct": 50,
+          "domain_rank": 10,
+          "lost_backlinks": 0,
+          "lost_referring_domains": 0,
+          "new_backlinks": 0,
+          "new_referring_domains": 0,
+          "referring_domains_total": 2,
+          "referring_pages": 3,
+          "spam_score": 0
+        },
+        "target": "example.com",
+        "target_scope": "site",
+        "total_rows_available": 12,
+        "history_unavailable": true
+      }
+    }
+  },
+  "failed_summary": {
+    "status": 500,
+    "body": {
+      "detail": "The backlinks history request failed. Total provider cost is unknown.",
+      "docs_url": "https://bisibility.com/docs/api/errors#internal_server_error",
+      "instance": "urn:fixture:backlinks",
+      "status": 500,
+      "title": "Internal server error",
+      "type": "https://bisibility.com/problems/internal_server_error",
+      "details": {
+        "cost_cents": null,
+        "known_summary_cost_cents": 0.2,
+        "history_failure": {
+          "code": "provider_usage_unconfirmed",
+          "phase": "measurement"
+        },
+        "history_status": "failed",
+        "include_subdomains": true,
+        "ok": false,
+        "provider": "dataforseo",
+        "reason": "history_failed",
+        "rows_status": "not_requested",
+        "status": "failed",
+        "summary": {
+          "backlinks_total": 12,
+          "broken_backlinks": 0,
+          "broken_pages": 0,
+          "dofollow_pct": 50,
+          "domain_rank": 10,
+          "lost_backlinks": 0,
+          "lost_referring_domains": 0,
+          "new_backlinks": 0,
+          "new_referring_domains": 0,
+          "referring_domains_total": 2,
+          "referring_pages": 3,
+          "spam_score": 0
+        },
+        "target": "example.com",
+        "target_scope": "site"
+      }
+    }
+  },
+  "page_backlinks": {
+    "status": 200,
+    "body": {
+      "data": {
+        "cached": false,
+        "cached_until": "2026-10-09T12:00:00.000Z",
+        "cost_cents": 0.3,
+        "fetched_at": "2026-10-08T12:00:00.000Z",
+        "fetched_row_count": 0,
+        "history": [],
+        "include_subdomains": true,
+        "provider": "dataforseo",
+        "rows": [],
+        "summary": {
+          "backlinks_total": 12,
+          "broken_backlinks": 0,
+          "broken_pages": 0,
+          "dofollow_pct": 50,
+          "domain_rank": 10,
+          "lost_backlinks": 0,
+          "lost_referring_domains": 0,
+          "new_backlinks": 0,
+          "new_referring_domains": 0,
+          "referring_domains_total": 2,
+          "referring_pages": 3,
+          "spam_score": 0
+        },
+        "target": "https://example.com/page",
+        "target_scope": "page",
+        "total_rows_available": 12
+      }
+    }
+  },
+  "ranks": [
+    {
+      "check": {
+        "usage": {
+          "quantity": null,
+          "status": "unconfirmed",
+          "unit": "cents"
+        },
+        "attempts": null,
+        "checked_at": "2026-10-08T12:00:00.000Z",
+        "cost_cents": null,
+        "error": null,
+        "error_code": null,
+        "id": "check_a00000000000000000000000",
+        "keyword_id": "kw_a00000000000000000000000",
+        "observation_completeness": "complete",
+        "position": null,
+        "previous_position": 8,
+        "provider": "dataforseo",
+        "ranking_url": "https://example.com/rank",
+        "run": null,
+        "run_id": null,
+        "status": "completed"
+      },
+      "keyword": {
+        "country": "United States",
+        "created_at": "2026-10-08T12:00:00.000Z",
+        "device": "desktop",
+        "id": "kw_a00000000000000000000000",
+        "intent": null,
+        "latest_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "error": null,
+          "error_code": null,
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "complete",
+          "position": null,
+          "run_id": null,
+          "status": "completed"
+        },
+        "latest_position": null,
+        "latest_successful_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "complete",
+          "position": null,
+          "ranking_url": "https://example.com/rank",
+          "run_id": null
+        },
+        "location": "United States",
+        "location_key": "US",
+        "language_code": "en",
+        "language_label": "English",
+        "previous_position": 8,
+        "project_id": "prj_a00000000000000000000000",
+        "ranking_url": "https://example.com/rank",
+        "schedule": null,
+        "tags": [],
+        "target_url": null,
+        "text": "example keyword",
+        "topic": null,
+        "updated_at": "2026-10-08T12:00:00.000Z"
+      }
+    },
+    {
+      "check": {
+        "usage": {
+          "quantity": null,
+          "status": "unconfirmed",
+          "unit": "cents"
+        },
+        "attempts": null,
+        "checked_at": "2026-10-08T12:00:00.000Z",
+        "cost_cents": null,
+        "error": null,
+        "error_code": null,
+        "id": "check_a00000000000000000000000",
+        "keyword_id": "kw_a00000000000000000000000",
+        "observation_completeness": "complete",
+        "position": 6,
+        "previous_position": 8,
+        "provider": "dataforseo",
+        "ranking_url": "https://example.com/rank",
+        "run": null,
+        "run_id": null,
+        "status": "completed"
+      },
+      "keyword": {
+        "country": "United States",
+        "created_at": "2026-10-08T12:00:00.000Z",
+        "device": "desktop",
+        "id": "kw_a00000000000000000000000",
+        "intent": null,
+        "latest_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "error": null,
+          "error_code": null,
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "complete",
+          "position": 6,
+          "run_id": null,
+          "status": "completed"
+        },
+        "latest_position": 6,
+        "latest_successful_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "complete",
+          "position": 6,
+          "ranking_url": "https://example.com/rank",
+          "run_id": null
+        },
+        "location": "United States",
+        "location_key": "US",
+        "language_code": "en",
+        "language_label": "English",
+        "previous_position": 8,
+        "project_id": "prj_a00000000000000000000000",
+        "ranking_url": "https://example.com/rank",
+        "schedule": null,
+        "tags": [],
+        "target_url": null,
+        "text": "example keyword",
+        "topic": null,
+        "updated_at": "2026-10-08T12:00:00.000Z"
+      }
+    },
+    {
+      "check": {
+        "usage": {
+          "quantity": null,
+          "status": "unconfirmed",
+          "unit": "cents"
+        },
+        "attempts": null,
+        "checked_at": "2026-10-08T12:00:00.000Z",
+        "cost_cents": null,
+        "error": null,
+        "error_code": null,
+        "id": "check_a00000000000000000000000",
+        "keyword_id": "kw_a00000000000000000000000",
+        "observation_completeness": "unknown",
+        "position": null,
+        "previous_position": 8,
+        "provider": "dataforseo",
+        "ranking_url": "https://example.com/rank",
+        "run": null,
+        "run_id": null,
+        "status": "completed"
+      },
+      "keyword": {
+        "country": "United States",
+        "created_at": "2026-10-08T12:00:00.000Z",
+        "device": "desktop",
+        "id": "kw_a00000000000000000000000",
+        "intent": null,
+        "latest_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "error": null,
+          "error_code": null,
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "unknown",
+          "position": null,
+          "run_id": null,
+          "status": "completed"
+        },
+        "latest_position": null,
+        "latest_successful_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "unknown",
+          "position": null,
+          "ranking_url": "https://example.com/rank",
+          "run_id": null
+        },
+        "location": "United States",
+        "location_key": "US",
+        "language_code": "en",
+        "language_label": "English",
+        "previous_position": 8,
+        "project_id": "prj_a00000000000000000000000",
+        "ranking_url": "https://example.com/rank",
+        "schedule": null,
+        "tags": [],
+        "target_url": null,
+        "text": "example keyword",
+        "topic": null,
+        "updated_at": "2026-10-08T12:00:00.000Z"
+      }
+    },
+    {
+      "check": {
+        "usage": {
+          "quantity": null,
+          "status": "unconfirmed",
+          "unit": "cents"
+        },
+        "attempts": null,
+        "checked_at": "2026-10-08T12:00:00.000Z",
+        "cost_cents": null,
+        "error": null,
+        "error_code": null,
+        "id": "check_a00000000000000000000000",
+        "keyword_id": "kw_a00000000000000000000000",
+        "observation_completeness": "unknown",
+        "position": 6,
+        "previous_position": 8,
+        "provider": "dataforseo",
+        "ranking_url": "https://example.com/rank",
+        "run": null,
+        "run_id": null,
+        "status": "completed"
+      },
+      "keyword": {
+        "country": "United States",
+        "created_at": "2026-10-08T12:00:00.000Z",
+        "device": "desktop",
+        "id": "kw_a00000000000000000000000",
+        "intent": null,
+        "latest_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "error": null,
+          "error_code": null,
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "unknown",
+          "position": 6,
+          "run_id": null,
+          "status": "completed"
+        },
+        "latest_position": 6,
+        "latest_successful_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "unknown",
+          "position": 6,
+          "ranking_url": "https://example.com/rank",
+          "run_id": null
+        },
+        "location": "United States",
+        "location_key": "US",
+        "language_code": "en",
+        "language_label": "English",
+        "previous_position": 8,
+        "project_id": "prj_a00000000000000000000000",
+        "ranking_url": "https://example.com/rank",
+        "schedule": null,
+        "tags": [],
+        "target_url": null,
+        "text": "example keyword",
+        "topic": null,
+        "updated_at": "2026-10-08T12:00:00.000Z"
+      }
+    },
+    {
+      "check": {
+        "usage": {
+          "quantity": null,
+          "status": "unconfirmed",
+          "unit": "cents"
+        },
+        "attempts": null,
+        "checked_at": "2026-10-08T12:00:00.000Z",
+        "cost_cents": null,
+        "error": null,
+        "error_code": null,
+        "id": "check_a00000000000000000000000",
+        "keyword_id": "kw_a00000000000000000000000",
+        "observation_completeness": "truncated_by_stop_on_match",
+        "position": null,
+        "previous_position": 8,
+        "provider": "dataforseo",
+        "ranking_url": "https://example.com/rank",
+        "run": null,
+        "run_id": null,
+        "status": "completed"
+      },
+      "keyword": {
+        "country": "United States",
+        "created_at": "2026-10-08T12:00:00.000Z",
+        "device": "desktop",
+        "id": "kw_a00000000000000000000000",
+        "intent": null,
+        "latest_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "error": null,
+          "error_code": null,
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "truncated_by_stop_on_match",
+          "position": null,
+          "run_id": null,
+          "status": "completed"
+        },
+        "latest_position": null,
+        "latest_successful_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "truncated_by_stop_on_match",
+          "position": null,
+          "ranking_url": "https://example.com/rank",
+          "run_id": null
+        },
+        "location": "United States",
+        "location_key": "US",
+        "language_code": "en",
+        "language_label": "English",
+        "previous_position": 8,
+        "project_id": "prj_a00000000000000000000000",
+        "ranking_url": "https://example.com/rank",
+        "schedule": null,
+        "tags": [],
+        "target_url": null,
+        "text": "example keyword",
+        "topic": null,
+        "updated_at": "2026-10-08T12:00:00.000Z"
+      }
+    },
+    {
+      "check": {
+        "usage": {
+          "quantity": null,
+          "status": "unconfirmed",
+          "unit": "cents"
+        },
+        "attempts": null,
+        "checked_at": "2026-10-08T12:00:00.000Z",
+        "cost_cents": null,
+        "error": null,
+        "error_code": null,
+        "id": "check_a00000000000000000000000",
+        "keyword_id": "kw_a00000000000000000000000",
+        "observation_completeness": "truncated_by_stop_on_match",
+        "position": 6,
+        "previous_position": 8,
+        "provider": "dataforseo",
+        "ranking_url": "https://example.com/rank",
+        "run": null,
+        "run_id": null,
+        "status": "completed"
+      },
+      "keyword": {
+        "country": "United States",
+        "created_at": "2026-10-08T12:00:00.000Z",
+        "device": "desktop",
+        "id": "kw_a00000000000000000000000",
+        "intent": null,
+        "latest_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "error": null,
+          "error_code": null,
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "truncated_by_stop_on_match",
+          "position": 6,
+          "run_id": null,
+          "status": "completed"
+        },
+        "latest_position": 6,
+        "latest_successful_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": "truncated_by_stop_on_match",
+          "position": 6,
+          "ranking_url": "https://example.com/rank",
+          "run_id": null
+        },
+        "location": "United States",
+        "location_key": "US",
+        "language_code": "en",
+        "language_label": "English",
+        "previous_position": 8,
+        "project_id": "prj_a00000000000000000000000",
+        "ranking_url": "https://example.com/rank",
+        "schedule": null,
+        "tags": [],
+        "target_url": null,
+        "text": "example keyword",
+        "topic": null,
+        "updated_at": "2026-10-08T12:00:00.000Z"
+      }
+    },
+    {
+      "check": {
+        "usage": {
+          "quantity": null,
+          "status": "unconfirmed",
+          "unit": "cents"
+        },
+        "attempts": null,
+        "checked_at": "2026-10-08T12:00:00.000Z",
+        "cost_cents": null,
+        "error": null,
+        "error_code": null,
+        "id": "check_a00000000000000000000000",
+        "keyword_id": "kw_a00000000000000000000000",
+        "observation_completeness": null,
+        "position": null,
+        "previous_position": 8,
+        "provider": "dataforseo",
+        "ranking_url": "https://example.com/rank",
+        "run": null,
+        "run_id": null,
+        "status": "completed"
+      },
+      "keyword": {
+        "country": "United States",
+        "created_at": "2026-10-08T12:00:00.000Z",
+        "device": "desktop",
+        "id": "kw_a00000000000000000000000",
+        "intent": null,
+        "latest_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "error": null,
+          "error_code": null,
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": null,
+          "position": null,
+          "run_id": null,
+          "status": "completed"
+        },
+        "latest_position": null,
+        "latest_successful_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": null,
+          "position": null,
+          "ranking_url": "https://example.com/rank",
+          "run_id": null
+        },
+        "location": "United States",
+        "location_key": "US",
+        "language_code": "en",
+        "language_label": "English",
+        "previous_position": 8,
+        "project_id": "prj_a00000000000000000000000",
+        "ranking_url": "https://example.com/rank",
+        "schedule": null,
+        "tags": [],
+        "target_url": null,
+        "text": "example keyword",
+        "topic": null,
+        "updated_at": "2026-10-08T12:00:00.000Z"
+      }
+    },
+    {
+      "check": {
+        "usage": {
+          "quantity": null,
+          "status": "unconfirmed",
+          "unit": "cents"
+        },
+        "attempts": null,
+        "checked_at": "2026-10-08T12:00:00.000Z",
+        "cost_cents": null,
+        "error": null,
+        "error_code": null,
+        "id": "check_a00000000000000000000000",
+        "keyword_id": "kw_a00000000000000000000000",
+        "observation_completeness": null,
+        "position": 6,
+        "previous_position": 8,
+        "provider": "dataforseo",
+        "ranking_url": "https://example.com/rank",
+        "run": null,
+        "run_id": null,
+        "status": "completed"
+      },
+      "keyword": {
+        "country": "United States",
+        "created_at": "2026-10-08T12:00:00.000Z",
+        "device": "desktop",
+        "id": "kw_a00000000000000000000000",
+        "intent": null,
+        "latest_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "error": null,
+          "error_code": null,
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": null,
+          "position": 6,
+          "run_id": null,
+          "status": "completed"
+        },
+        "latest_position": 6,
+        "latest_successful_check": {
+          "checked_at": "2026-10-08T12:00:00.000Z",
+          "id": "check_a00000000000000000000000",
+          "observation_completeness": null,
+          "position": 6,
+          "ranking_url": "https://example.com/rank",
+          "run_id": null
+        },
+        "location": "United States",
+        "location_key": "US",
+        "language_code": "en",
+        "language_label": "English",
+        "previous_position": 8,
+        "project_id": "prj_a00000000000000000000000",
+        "ranking_url": "https://example.com/rank",
+        "schedule": null,
+        "tags": [],
+        "target_url": null,
+        "text": "example keyword",
+        "topic": null,
+        "updated_at": "2026-10-08T12:00:00.000Z"
+      }
+    }
+  ],
+  "unobserved_keyword": {
+    "country": "United States",
+    "created_at": "2026-10-08T12:00:00.000Z",
+    "device": "desktop",
+    "id": "kw_a00000000000000000000000",
+    "intent": null,
+    "latest_check": null,
+    "latest_position": null,
+    "latest_successful_check": null,
+    "location": "United States",
+    "location_key": "US",
+    "language_code": "en",
+    "language_label": "English",
+    "previous_position": null,
+    "project_id": "prj_a00000000000000000000000",
+    "ranking_url": null,
+    "schedule": null,
+    "tags": [],
+    "target_url": null,
+    "text": "example keyword",
+    "topic": null,
+    "updated_at": "2026-10-08T12:00:00.000Z"
+  },
+  "failed_keyword": {
+    "country": "United States",
+    "created_at": "2026-10-08T12:00:00.000Z",
+    "device": "desktop",
+    "id": "kw_a00000000000000000000000",
+    "intent": null,
+    "latest_check": {
+      "checked_at": "2026-10-08T12:00:00.000Z",
+      "error": "Provider request failed.",
+      "error_code": "provider_error",
+      "id": "check_a00000000000000000000000",
+      "observation_completeness": null,
+      "position": null,
+      "run_id": null,
+      "status": "failed"
+    },
+    "latest_position": null,
+    "latest_successful_check": {
+      "checked_at": "2026-10-08T12:00:00.000Z",
+      "id": "check_a00000000000000000000000",
+      "observation_completeness": "truncated_by_stop_on_match",
+      "position": 6,
+      "ranking_url": "https://example.com/rank",
+      "run_id": null
+    },
+    "location": "United States",
+    "location_key": "US",
+    "language_code": "en",
+    "language_label": "English",
+    "previous_position": 8,
+    "project_id": "prj_a00000000000000000000000",
+    "ranking_url": null,
+    "schedule": null,
+    "tags": [],
+    "target_url": null,
+    "text": "example keyword",
+    "topic": null,
+    "updated_at": "2026-10-08T12:00:00.000Z"
+  }
+}

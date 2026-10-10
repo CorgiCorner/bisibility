@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { checkRateLimit, clientIpForRequest, resetRateLimitStateForTests } from "./ratelimit";
+import {
+  checkRateLimit,
+  clientIpForRequest,
+  consume,
+  resetRateLimitStateForTests,
+} from "./ratelimit";
 
 function requestWithHeaders(headers: HeadersInit = {}) {
   return new Request("https://example.test/api/v1/openapi.json", { headers });
@@ -26,6 +31,17 @@ describe("API rate limiting", () => {
     expect(second.headers.get("RateLimit-Limit")).toBe("1");
     expect(second.headers.get("X-RateLimit-Limit")).toBe("1");
     expect(second.headers.get("Retry-After")).toBeTruthy();
+  });
+  it("refuses memory fallback when shared quota is mandatory", async () => {
+    await expect(
+      consume({
+        prefix: "fixture",
+        bucketKey: "opaque-account",
+        limit: 30,
+        windowSeconds: 125,
+        requireShared: true,
+      }),
+    ).rejects.toThrow("Shared Redis");
   });
 
   it("keeps separate buckets per resolved IP", async () => {

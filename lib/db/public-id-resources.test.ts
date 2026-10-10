@@ -18,6 +18,13 @@ describe("runtime public ID resource extensions", () => {
     expect(PUBLIC_ID_RESOURCE_REGISTRY).toEqual({
       ...core.PUBLIC_ID_RESOURCE_REGISTRY,
       agr: "agentReport",
+      ait: "aiTopic",
+      aip: "aiPrompt",
+      apr: "aiPromptRevision",
+      ais: "aiTrackingSchedule",
+      air: "aiTrackingRun",
+      asm: "aiTrackingSample",
+      asg: "aiTrackingSuggestionGeneration",
     });
     expect(core.PUBLIC_ID_RESOURCE_REGISTRY).not.toHaveProperty("agr");
     for (const prefix of Object.keys(core.PUBLIC_ID_RESOURCE_REGISTRY) as core.PublicIdPrefix[]) {
@@ -44,6 +51,17 @@ describe("runtime public ID resource extensions", () => {
       expect(core.parsePublicId(id)).toBeNull();
     }
   });
+
+  it.each(["ait", "aip", "apr", "ais", "air", "asm", "asg"] as const)(
+    "generates strict tracking resource IDs: %s",
+    (prefix) => {
+      const id = makePublicId(prefix);
+      expect(parsePublicId(id)?.prefix).toBe(prefix);
+      expect(requirePublicId(id, prefix)).toBe(id);
+      expect(core.parsePublicId(id)).toBeNull();
+      expect(parsePublicId(`${prefix}_legacy`)).toBeNull();
+    },
+  );
 
   it.each([
     "agr_legacy",

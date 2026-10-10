@@ -1,5 +1,8 @@
+import { ProviderCallError } from "@/lib/providers/call-error";
 import type { ProviderCredentials } from "@/lib/providers/types";
+import { dataForSeoBillingStatusCode } from "./dataforseo-client";
 import {
+  DataForSeoBillingError,
   DataForSeoError,
   DataForSeoUnsupportedLocationError,
   messageWithSentParameters,
@@ -8,7 +11,8 @@ import {
   unsupportedLabsRequest,
   validationFailure,
 } from "./dataforseo-errors";
-import { type DataForSeoResponse, dataForSeoResponseCostCents } from "./dataforseo-payload";
+import type { DataForSeoResponse } from "./dataforseo-payload";
+import { dataForSeoFailureCostCents } from "./usage-receipts";
 
 type RequestAuthenticatedEnvelope = (
   url: string,
@@ -60,7 +64,13 @@ export function createDataForSeoLabsClient(options: DataForSeoLabsClientOptions)
       unsupported || validationFailure(rawMessage)
         ? messageWithSentParameters(rawMessage, payload, credentials)
         : redactedMessage(rawMessage, credentials);
-    const costCents = dataForSeoResponseCostCents(data);
+    const costCents = dataForSeoFailureCostCents(data);
+    if (data.status_code === 40201 || data.tasks?.some((task) => task.status_code === 40201)) {
+      throw new ProviderCallError(message, costCents, "provider_account_restricted");
+    }
+    if (dataForSeoBillingStatusCode(data) !== undefined) {
+      throw new DataForSeoBillingError(message, costCents);
+    }
     if (unsupported) throw new DataForSeoUnsupportedLocationError(message, costCents);
     throw new DataForSeoError(message, false, undefined, costCents);
   }

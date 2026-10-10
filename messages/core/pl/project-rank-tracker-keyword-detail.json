@@ -75,7 +75,8 @@
         "metricsForMarket": "Dla {market}",
         "checkedDepth": "Sprawdzono top {depth, number}",
         "connectedSchedule": "Harmonogram dla tego rynku i urządzenia",
-        "schedulesAllTargets": "Wszystkie rynki i urządzenia"
+        "schedulesAllTargets": "Wszystkie rynki i urządzenia",
+        "coverageUnknown": "Nieznany zakres wyników"
       },
       "actions": {
         "moreActions": "Więcej akcji dla słowa kluczowego",
@@ -136,7 +137,9 @@
         "checkTop": "Sprawdź Top {depth}",
         "runFirstCheck": "Uruchom pierwsze sprawdzenie",
         "connectSerpProvider": "Połącz dostawcę SERP",
-        "history": "Historia pozycji"
+        "history": "Historia pozycji",
+        "coverageUnknownTitle": "Nieznany zakres wyników",
+        "coverageUnknownBody": "Odpowiedź dostawcy nie pozwala ustalić, czy słowo kluczowe mieści się w śledzonym zakresie."
       },
       "firstCheck": {
         "billing": "Nie udało się uruchomić sprawdzenia pozycji, ponieważ na koncie dostawcy brakuje środków. Doładuj konto lub połącz innego dostawcę, a potem spróbuj ponownie.",

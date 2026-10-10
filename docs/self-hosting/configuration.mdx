@@ -161,7 +161,7 @@ hand.
 
 | Variable | Purpose |
 | - | - |
-| `NEXT_PUBLIC_DOMAIN_ICONS` | Optional domain-icon opt-out. Domain favicons are on by default; set this to `off` to suppress third-party domain icon requests for project and competitor tiles. |
+| `NEXT_PUBLIC_DOMAIN_ICONS` | Optional domain-icon opt-out. Domain favicons are on by default; set this to `off` to suppress third-party domain icon requests on request-rendered login and app pages, including project and competitor tiles. Recreate the app container after changing it; published self-host images require no rebuild. Custom prerendered pages retain their build-time setting until rebuilt. |
 | `NEXT_PUBLIC_LOGODEV_TOKEN` | Optional logo.dev token for provider and marketing brand logos only. Project and competitor tiles do not use it. |
 | `NEXT_PUBLIC_PLAUSIBLE_URL`, `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Optional privacy-first site analytics. Set both values to load the tracker; the Stats API token is server-side only. |
 | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | Optional consent-gated product analytics and setup replays. Set the key and the EU Cloud host to enable it; leave the key unset to disable the provider and consent banner. See [Product analytics](/self-hosting/analytics). |

@@ -17,11 +17,36 @@ contain search-result features, recorded as separate observations.
 The keyword fixes the market, language, and device. Its organic `position`
 does not move just because the provider includes a local pack or AI Overview.
 `position: null` means no matching organic result was found within the checked
-depth when the check completed successfully. It does not mean a provider failed.
+depth only when the check completed with `observation_completeness: "complete"`.
+A completed check can also have unknown or truncated coverage, so completion
+alone does not establish absence within that depth. A valid positive position
+within the tracked depth remains a recorded match even when wider observation
+coverage is incomplete.
 
 See [Checks](/api/checks) for completion, queued runs, and failure handling.
 
 ## Understand observation coverage
+
+Rank-check resources expose persisted coverage as `observation_completeness`:
+
+| Value | How to read it |
+| - | - |
+| `complete` | The adapter records coverage as complete for the requested scope and depth. A completed check with no matching organic position supports absence within that scope and depth. |
+| `truncated_by_stop_on_match` | Collection stopped after a match. The positive rank remains valid, but the rest of the results were not fully collected. Without a valid position within the tracked depth, do not infer absence. |
+| `unknown` | Coverage is not established. A null position does not prove absence within the requested depth. |
+| `null` | No recognized completeness metadata is available, including legacy checks. This is not retrospective proof of complete coverage, and older checks are not backfilled as complete. |
+
+Execution and coverage are separate: `status: "completed"` describes a completed
+check, not necessarily complete coverage. `running` and `failed` describe the
+execution state and must not be read as a no-match result.
+
+In keyword rows and rank details, a completed observation without a valid
+position within the tracked depth shows **Coverage unknown** when completeness
+is `unknown` or `truncated_by_stop_on_match`. A valid position shows its rank.
+Complete no-match observations show **Not in top N**, where N is the tracked
+depth. Checks without completeness metadata retain the legacy no-match label
+for compatibility; that label does not supply missing coverage evidence. No
+completed data, running checks, and failed checks have separate state labels.
 
 DataForSEO and SerpApi adapters can record local-pack and AI Overview data when
 their response includes it. Coverage depends on the provider response, requested
@@ -34,7 +59,12 @@ or cross-engine AI visibility measurement. Dedicated AI visibility and LLM
 citation tracking remain separate from this capability.
 
 Storage support does not imply that every observation field is exposed by every
-client. Consult the generated **API Reference** for response fields and
+client. The API exposes `observation_completeness` on rank-check resources and
+on a keyword's `latest_check` and `latest_successful_check`. MCP
+`get_rank_history`, `get_rank_check_result`, `list_keywords`, and `get_keyword`
+return those API fields in their JSON results. Project rank-history exports use
+a separate contract without this field. Consult the generated **API Reference**
+for response fields and
 [released client support](/compatibility) for inspected client versions.
 
 ## Related workflows

@@ -342,7 +342,8 @@
           "dimensionCurrent": "{label} – obecnie wyświetlane",
           "dimensionAddA": "Dodaj: {name}",
           "dimensionAdd": "Dodaj: {item}",
-          "dimensionTrack": "Śledź"
+          "dimensionTrack": "Śledź",
+          "coverageUnknown": "Nieznany zakres wyników"
         },
         "runChecks": {
           "top": "Top {depth, number}",
@@ -506,7 +507,8 @@
           "pairVolumeHelp": "Liczba wyszukiwań dla tej pary rynek–język",
           "position": "poz. {position, number}",
           "mixed": "różne",
-          "noDifficultyData": "Brak danych o trudności"
+          "noDifficultyData": "Brak danych o trudności",
+          "coverageUnknown": "Nieznany zakres wyników"
         },
         "columns": {
           "keyword": "Słowo kluczowe",

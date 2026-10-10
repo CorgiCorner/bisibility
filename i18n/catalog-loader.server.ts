@@ -11,6 +11,7 @@ import type { CoreMessages } from "./core-messages.generated";
 
 export const coreNamespaces = [
   "projectAiResearch",
+  "projectAiTracking",
   "projectSiteAudit",
   "agentWorkspace",
   "account",
@@ -56,6 +57,7 @@ export type CoreNamespace = (typeof coreNamespaces)[number];
 // is declared once and each locale contributes only its own static import map.
 const coreNamespaceFragments = {
   projectAiResearch: ["project-ai-research"],
+  projectAiTracking: ["project-ai-tracking"],
   projectSiteAudit: ["project-site-audit"],
   agentWorkspace: ["agent-workspace"],
   account: ["account", "account-preferences"],

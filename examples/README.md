@@ -43,6 +43,8 @@ OK ts-quickstart
 
 ## Included Examples
 
+- `ai-tracking/read-evidence.sh`: read saved project context, the free AI catalog
+  and retained tracking runs. Set `BISIBILITY_PROJECT_ID` to the project's public ID.
 - `ts/list-projects.ts`: complete copyable list-projects program used by the
   TypeScript SDK page.
 - `ts/quickstart.ts`: list projects, create a keyword, run a rank check, read

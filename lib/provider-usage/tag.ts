@@ -20,6 +20,7 @@ export const PROVIDER_REQUEST_SOURCES = ["app", "worker", "api", "cli", "mcp", "
 export type ProviderRequestSource = (typeof PROVIDER_REQUEST_SOURCES)[number];
 export const PROVIDER_REQUEST_FEATURES = [
   "ai_visibility",
+  "ai_tracking",
   "prompt_explorer",
   "backlinks",
   "domain_overview",

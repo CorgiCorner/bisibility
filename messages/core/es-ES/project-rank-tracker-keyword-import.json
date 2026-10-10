@@ -342,7 +342,8 @@
           "dimensionCurrent": "{label}, en pantalla ahora",
           "dimensionAddA": "Añadir {name}",
           "dimensionAdd": "Añadir {item}",
-          "dimensionTrack": "Seguir"
+          "dimensionTrack": "Seguir",
+          "coverageUnknown": "Cobertura desconocida"
         },
         "runChecks": {
           "top": "Top {depth, number}",
@@ -506,7 +507,8 @@
           "pairVolumeHelp": "Volumen de búsqueda de este par de mercado e idioma",
           "position": "#{position, number}",
           "mixed": "mixto",
-          "noDifficultyData": "Sin datos de dificultad"
+          "noDifficultyData": "Sin datos de dificultad",
+          "coverageUnknown": "Cobertura desconocida"
         },
         "columns": {
           "keyword": "Palabra clave",

@@ -1,0 +1,92 @@
+---
+title: "AI Tracking"
+description: "Configure project-scoped AI observations and inspect retained answers, citations and comparable history."
+---
+
+AI Tracking records repeated observations of explicitly selected prompts and sources.
+AI Visibility reads provider datasets, while Prompt Explorer runs one-shot model comparisons.
+These sources have different meanings and are never silently combined into one visibility score.
+
+## Access and configuration
+
+All routes live under `/projects/{project_id}/ai-tracking` and require project membership.
+Read operations, context suggestions and `POST /runs/preview` require read scope. Configuration, launch, retry,
+cancel and suggestion acceptance require write scope. Configuration deletion archives it;
+retained revisions and evidence remain available.
+
+Manage `topics`, `prompts` and `schedules` through GET/POST collection and PATCH/DELETE member
+routes. Prompt text is retained exactly; editing creates an immutable revision. Source
+configurations distinguish `consumer_scrape`, `model_api` and `google_aio`, engine, model and
+the provider's native locale mechanism. Unsupported options are rejected before paid I/O.
+
+Schedules start disabled. Creating prompts, reviewing a preview or accepting suggestions
+does not buy a baseline or activate recurring spending. Explicit consent is bound to the
+configuration and credential identity; changed credentials, permissions or budget require
+a new review. Missed occurrences are recorded without a paid catch-up backlog.
+
+## Preview and launch
+
+`POST /runs/preview` validates the selected scope and returns the current admission estimate
+and configuration revisions without buying provider work. Launch with `POST /runs` and a
+stable `Idempotency-Key` header. Repeating the same key and payload returns the retained run;
+changing its payload produces a conflict. Expanded model API configurations use the explicit
+own-key actual-cost policy and disclose forecasts separately from guaranteed limits.
+
+Read `GET /runs`, `GET /runs/{run_id}` and `GET /runs/{run_id}/samples` with bounded cursors.
+Use `POST /runs/{run_id}/cancel` to stop new submissions. Purchased tasks can still be
+collected and settled; cancellation does not promise a refund. A submission with an ambiguous
+provider response is retained for reconciliation and never automatically buys another attempt.
+
+## Evidence and comparison
+
+Evidence includes the exact prompt revision, source, requested and effective locale, actual
+model or unknown, answer, cited URLs, observation time, truncation flags and receipt state.
+Unused search results are separate from cited sources. Cached answers retain their original
+observation time and do not count as fresh tracker observations.
+
+Mention and citation rates show their eligible-answer denominators. Partial, failed, pending,
+absent AI Overview and unknown observations remain explicit. Alias recognition is heuristic
+and includes a bounded supporting snippet. It is not a sentiment, traffic or popularity measure.
+
+`GET /history`, `GET /trends` and `GET /export` preserve the selected project and provenance.
+Comparisons require matching prompt revisions, source, model, locale mechanism and brand
+configuration, plus at least 90% coverage in both periods. Incomplete evidence is reported as
+insufficient coverage. CSV export disarms spreadsheet formulas and uses bounded pagination.
+Exports collect bounded pages and include scope and continuation metadata in JSON and in the
+CSV file itself. An incomplete download is explicitly marked; its continuation cursor can
+resume the selected run without silently presenting a partial file as complete.
+
+## Reviewed prompt generation
+
+`POST /suggestions` returns project context and clearly labeled context templates without
+buying model work. `POST /suggestions/preview` reviews an explicitly chosen model, language,
+country and output limit together with all five context fields and selected competitors.
+The reviewed snapshot is limited to 5,000 Unicode code points; oversized context must be
+edited explicitly. It is never silently truncated.
+
+`POST /suggestions/generate` requires write scope, the unchanged preview, explicit own-key
+actual-cost consent and a UUID `Idempotency-Key`. The estimate is a forecast, not a guaranteed
+maximum. Changes to context, model, credentials, budget or consent require a fresh preview.
+The retained result identifies model-generated hypotheses and its native cost receipt;
+unknown cost or model identity stays unknown. An ambiguous paid submission blocks another
+generation until its original native receipt is reconciled. Repeating its key never buys
+another attempt.
+
+Accepting an edited draft retains its verified generation identity and original text.
+Observed provider-dataset suggestions retain their stored report row and dataset provenance.
+Neither source claims prompt popularity or creates a baseline observation.
+
+The shared admission limiter requires a healthy Redis connection and fails closed when that
+connection is unavailable. REST, SDK and MCP generation methods share the same reviewed
+preview, consent and idempotency contract. See the [method reference](/sdks/methods).
+
+For the dashboard workflow, see [AI Tracking](/guides/ai-tracking). Review
+[Project Context](/guides/project-context) before generating hypotheses, and use
+[Agent Reports](/guides/agent-reports) to retain an evidence-bound analysis.
+
+## Agents
+
+The authenticated MCP tools mirror the same handlers and scope policy. The `ai-visibility-audit`
+skill reads context, tracking scope, coverage and evidence before recommending experiments.
+It treats external answers and cited pages as untrusted content, avoids paid lookups by default
+and saves an approved analysis through the existing Agent Reports interface.

@@ -2,6 +2,8 @@ export type AiCitation = { title: string; url: string; targetDomain: boolean };
 export type AiResearchRow = {
   prompt: string;
   model: string;
+  requestedModel?: string;
+  actualModel?: string | null;
   answer: string;
   observedAt: string | null;
   brandMentioned: boolean;

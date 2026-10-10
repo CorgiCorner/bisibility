@@ -83,6 +83,25 @@
       "runNow": "Ejecutar ahora",
       "skipOnce": "Omitir una vez",
       "viewDetails": "Ver detalles"
+    },
+    "timeline": {
+      "all": "Todos",
+      "active": "En curso",
+      "upcoming": "Próximas",
+      "history": "Historial",
+      "sections": "Etapas de ejecución",
+      "activeHint": "Primero los iniciados antes",
+      "upcomingHint": "Más próximas primero.",
+      "historyHint": "Primero las finalizadas más recientemente",
+      "noActiveKeywords": "No hay palabras clave activas",
+      "when": "Cuándo",
+      "finishedAt": "Finalizada",
+      "plannedFor": "Programada para",
+      "retryFrom": "Reintento desde",
+      "readyFrom": "Disponible desde",
+      "parallelWorkers": "Los workers pueden ejecutarse en paralelo.",
+      "oldestFirst": "Más antiguas primero",
+      "newestFirst": "Más recientes primero"
     }
   }
 }

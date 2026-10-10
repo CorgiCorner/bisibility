@@ -1,5 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { claimQueuedRankCheckRun, launchQueuedRankCheckRuns } from "./queued-launch";
+
+const materialize = vi.hoisted(() => vi.fn());
+vi.mock("./materialize", () => ({ materializePlannedRun: materialize }));
+beforeEach(() => vi.clearAllMocks());
 
 describe("queued rank-check run launcher", () => {
   it("starts one workflow when two racing database CAS operations claim one queued run", async () => {
@@ -89,9 +93,91 @@ describe("queued rank-check run launcher", () => {
     ).resolves.toEqual({ claimed: 2, launched: 2, scanned: 2 });
     expect(client.rankCheckRun.findMany).toHaveBeenCalledWith({
       orderBy: { id: "asc" },
-      select: { id: true, orchestrationWorkflowId: true },
+      select: {
+        id: true,
+        orchestrationWorkflowId: true,
+        checkScheduleId: true,
+        launchedAt: true,
+        startedAt: true,
+        _count: { select: { items: true } },
+      },
       take: 100,
       where: { claimedAt: null, orchestrationWorkflowId: { not: null }, status: "queued" },
     });
+  });
+
+  it("retains the normal launcher for already materialized runs whose keywords were later deleted", async () => {
+    const startRun = vi.fn().mockResolvedValue(undefined);
+    const client = {
+      rankCheckRun: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: "run",
+            orchestrationWorkflowId: "workflow",
+            checkScheduleId: "schedule",
+            launchedAt: new Date("2026-10-01T08:00:00Z"),
+            startedAt: null,
+            _count: { items: 0 },
+          },
+        ]),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      },
+    };
+    expect(await launchQueuedRankCheckRuns({ startRun }, client as never)).toMatchObject({
+      launched: 1,
+    });
+    expect(materialize).not.toHaveBeenCalled();
+    expect(startRun).toHaveBeenCalledOnce();
+  });
+
+  it("does not claim or start an empty scheduled Run now occurrence", async () => {
+    materialize.mockResolvedValue("deferred");
+    const startRun = vi.fn();
+    const client = {
+      rankCheckRun: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: "empty",
+            orchestrationWorkflowId: "workflow",
+            checkScheduleId: "schedule",
+            _count: { items: 0 },
+          },
+        ]),
+        updateMany: vi.fn(),
+      },
+    };
+    const now = new Date("2026-10-07T08:00:00Z");
+    expect(await launchQueuedRankCheckRuns({ now, startRun }, client as never)).toEqual({
+      claimed: 0,
+      launched: 0,
+      scanned: 1,
+    });
+    expect(materialize).toHaveBeenCalledWith("empty", now, true);
+    expect(client.rankCheckRun.updateMany).not.toHaveBeenCalled();
+    expect(startRun).not.toHaveBeenCalled();
+  });
+
+  it("materializes current members before claiming a scheduled Run now occurrence", async () => {
+    materialize.mockResolvedValue("launch");
+    const startRun = vi.fn().mockResolvedValue(undefined);
+    const client = {
+      rankCheckRun: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: "run",
+            orchestrationWorkflowId: "workflow",
+            checkScheduleId: "schedule",
+            _count: { items: 0 },
+          },
+        ]),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      },
+    };
+    expect(await launchQueuedRankCheckRuns({ startRun }, client as never)).toMatchObject({
+      launched: 1,
+    });
+    expect(materialize.mock.invocationCallOrder[0]).toBeLessThan(
+      client.rankCheckRun.updateMany.mock.invocationCallOrder[0],
+    );
   });
 });

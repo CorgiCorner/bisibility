@@ -5,6 +5,7 @@ type HeaderTranslations = ReturnType<typeof useTranslations<"shell.header">>;
 
 const titleKeys = {
   "AI Visibility": "titles.aiVisibility",
+  "AI Tracking": "titles.aiTracking",
   "Prompt Explorer": "titles.promptExplorer",
   "Site Audit": "titles.siteAudit",
   "Project Context": "titles.projectContext",
@@ -37,6 +38,7 @@ const titleKeys = {
 } as const;
 
 const subtitleKeys = {
+  "Monitor AI answers, brand mentions and cited sources over time.": "subtitles.aiTracking",
   "Brand mentions and citations from available provider observations.": "subtitles.aiVisibility",
   "Compare synthetic prompt tests across supported models.": "subtitles.promptExplorer",
   "Crawl your project site and inspect issues by URL.": "subtitles.siteAudit",

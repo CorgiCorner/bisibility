@@ -7,6 +7,11 @@ import { describe, expect, it } from "vitest";
 
 const routeCases = [
   {
+    path: appPath("prj_1", "ai-tracking"),
+    pattern: appPath("[project]", "ai-tracking"),
+    title: "AI Tracking",
+  },
+  {
     path: appPath("prj_1", "ai-visibility"),
     pattern: appPath("[project]", "ai-visibility"),
     title: "AI Visibility",

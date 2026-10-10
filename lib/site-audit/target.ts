@@ -36,6 +36,14 @@ export function sameOriginAuditUrl(value: string, base: URL, origin: string): UR
   }
 }
 
+export function isAuditDocumentUrl(url: URL) {
+  if (/^\/cdn-cgi\/l\/email-protection(?:\/|$)/.test(url.pathname)) return false;
+  const segment = url.pathname.split("/").at(-1) ?? "";
+  return !/\.(?:jpe?g|png|gif|webp|avif|svg|ico|bmp|tiff?|heic|woff2?|ttf|otf|eot|mp[34]|webm|mov|m4[av]|wav|ogg|flac|css|m?js|map|json|xml|csv|txt|md|pdf|zip|gz|tgz|rar|7z|dmg|exe|docx?|xlsx?|pptx?)$/i.test(
+    segment,
+  );
+}
+
 export function auditRedirectUrl(value: string, base: URL, origin: string): URL | null {
   const sameOrigin = sameOriginAuditUrl(value, base, origin);
   if (sameOrigin) return sameOrigin;

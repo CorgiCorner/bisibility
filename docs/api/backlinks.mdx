@@ -32,14 +32,15 @@ or `fetched_at`, so it cannot be mistaken for an empty backlink profile.
 `max_cost_cents` is a best-effort guard applied to the pre-estimate; the monthly
 provider budget remains the hard stop.
 
-The response envelope carries `target`, `target_scope`, `include_subdomains`,
+A successful snapshot's `data` carries `target`, `target_scope`, `include_subdomains`,
 `provider`, `fetched_at`, `cached`, `cached_until`, `cost_cents`,
 `fetched_row_count`, and `total_rows_available`. `summary` reports
 `backlinks_total`, referring domain counts, `dofollow_pct`, `domain_rank`,
 broken backlink and page counts, and provider-lifetime `new_backlinks`,
 `lost_backlinks`, `new_referring_domains`, and `lost_referring_domains`.
-`history` always holds the last twelve months as `{month, new_links,
-lost_links}`.
+When available, `history` contains monthly `{month, new_links, lost_links}`
+entries. Page-scope analyses do not request history. An empty history array
+does not establish that every month had zero new or lost links.
 
 Each row carries `source_domain`, `source_url`, `anchor`, `target_url`,
 `flags` (`nofollow`, `ugc`, `sponsored`, `image`, `sitewide`), `links_count`,
@@ -51,6 +52,81 @@ A provider result with no backlinks is a successful empty response, not an error
 
 Unsupported targets, exhausted budgets, provider throttling, reauthorization,
 and missing eligible connections use the standard problem response.
+
+## Partial history
+
+For a site analysis, a typed transient history failure with a known, finite,
+nonnegative provider cost can produce a successful snapshot with the completed
+summary and fetched rows. The optional snapshot field `historyUnavailable`
+appears as `history_unavailable: true` in REST and MCP output, with
+`history: []`. Site snapshots without this explicit flag must contain exactly
+12 history months. Empty site history without the flag, an 11- or 13-month
+normal history, and a nonempty history marked unavailable are invalid. Page
+scope still permits empty history because it does not request the history endpoint.
+Treat unavailable trends as unavailable, not as twelve months of zeros.
+The snapshot's `cost_cents` includes the known cost of the failed history call
+along with the summary and rows. The existing snapshot cache still applies.
+
+Authentication, provider billing, admission, budget and policy refusals retain
+their error handling and stop the analysis. They are not eligible for this
+partial-history recovery.
+
+## Unconfirmed history cost
+
+If the summary completes but history fails with unconfirmed usage or accounting,
+an unknown-cost transient error, or an unexpected error, the request remains a
+failure. Its `BacklinksFailedSummary` evidence has `ok: false`, `status: failed`,
+`reason: history_failed`, `history_status: failed`, and
+`rows_status: not_requested`. The total `cost_cents` is `null`.
+`known_summary_cost_cents` records only the completed summary component; it is
+neither a settled total nor an upper bound for the request.
+
+REST returns HTTP `500` with `application/problem+json`. The evidence is in the
+problem's `details` member, not in a successful `data` envelope or the
+validation `errors` member. For example:
+
+```json
+{
+  "type": "https://bisibility.com/problems/internal_server_error",
+  "title": "Internal server error", "status": 500,
+  "detail": "The backlinks history request failed. Total provider cost is unknown.",
+  "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_a00000000000000000000000/backlinks",
+  "docs_url": "https://bisibility.com/docs/api/errors#internal_server_error",
+  "details": {
+    "cost_cents": null,
+    "known_summary_cost_cents": 0.2,
+    "history_failure": { "code": "provider_usage_unconfirmed", "phase": "measurement" },
+    "history_status": "failed", "rows_status": "not_requested",
+    "include_subdomains": true, "provider": "dataforseo",
+    "ok": false, "status": "failed", "reason": "history_failed",
+    "summary": {
+      "backlinks_total": 12, "referring_domains_total": 2, "referring_pages": 3,
+      "broken_backlinks": 0, "broken_pages": 0, "dofollow_pct": 50,
+      "domain_rank": 10, "spam_score": 0,
+      "lost_backlinks": 0, "lost_referring_domains": 0,
+      "new_backlinks": 0, "new_referring_domains": 0
+    },
+    "target": "example.com", "target_scope": "site"
+  }
+}
+```
+
+`history_failure.code` is `provider_usage_unconfirmed`, `provider_transient`,
+or `unexpected_error`. Its `phase` is `admission`, `request`, `response_body`,
+`measurement`, `settlement`, or `unknown` for an accounting failure, and `null`
+for the other two codes. Raw provider errors, credentials and attempt IDs are
+not exposed.
+
+MCP returns `isError: true`, with the HTTP status and problem payload under
+`structuredContent.error`; the evidence is at
+`structuredContent.error.payload.details`. This is not a successful tool result.
+
+The [app displays the completed summary](/guides/backlinks#when-history-is-unavailable)
+for the current response only. This failed request creates no reusable cached
+snapshot or durable result to reopen, requests no rows, and offers no paid
+continuation from that evidence. Do not automatically repeat the paid request
+or interpret `null` cost as zero. See
+[API error guidance](/api/errors#500-backlinks-history-failure).
 
 ## Load more rows
 

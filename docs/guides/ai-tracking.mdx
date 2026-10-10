@@ -1,0 +1,90 @@
+---
+title: "AI Tracking"
+description: "Review prompt hypotheses, configure recurring observations and inspect retained evidence."
+---
+
+AI Tracking retains repeated observations of selected prompts. Each result records its
+exact prompt revision, source, model, market, observation time and available cost receipt.
+AI Visibility reads provider datasets; Prompt Explorer tests one-shot model responses.
+Keep these sources separate when interpreting a result.
+
+## Set up topics and prompts
+
+Open **AI Tracking** in your project. Add a topic, then enter the exact prompts you want
+to observe. Editing a prompt creates a new immutable revision; earlier answers keep
+their original text and revision. Archiving configuration retains its evidence.
+
+Choose a supported source and market explicitly. Consumer scraping, model API responses
+and Google AI Overview have different locale and model capabilities. Unsupported settings
+are refused before provider work.
+
+## Review model suggestions
+
+Save [Project Context](/guides/project-context), then open prompt suggestions. Review all
+five context fields and the selected competitors. Choose a model, language, country and
+output limit from the available catalog. Oversized context must be edited explicitly;
+the review never silently shortens it.
+
+Review and cost preview do not buy model work. Generation requires the unchanged,
+unexpired preview and explicit own-key actual-cost consent. The estimate is a forecast,
+not a guaranteed maximum. Changed input, credentials or budget require another review.
+
+Model suggestions are editable hypotheses, not observed popular queries. Review their
+limitations and accept selected drafts to save prompts. Acceptance retains the original
+generation reference and text. It does not run a baseline or activate recurring spending.
+An uncertain submission stays blocked until its original receipt is reconciled.
+
+## Preview a run or configure a schedule
+
+Select prompts and source configurations, then inspect the run preview before confirming
+paid work. Schedules start disabled. Enabling or changing a schedule requires a fresh
+review and explicit consent. Missed occurrences do not create a paid catch-up backlog.
+
+Cancellation stops new submissions. Work already purchased can still be collected and
+settled. A retry keeps the original submission identity; it cannot silently buy another
+attempt after an ambiguous provider response.
+
+## Read results and export evidence
+
+Open a retained run and page through its samples. Answer and citation details show the
+matching prompt revision, source, requested/effective locale and observation time. Unused
+search results remain separate from cited sources. Cached answers keep their original dates.
+
+History and trends show eligible-answer denominators and coverage. Pending, failed,
+partial, absent AI Overview and unknown values remain explicit. Period comparisons require
+compatible revisions, sources, models, markets and brand configuration, with at least 90%
+coverage in each period.
+
+CSV and JSON downloads include their selected scope and completeness. A bounded partial
+download supplies continuation metadata; resume it rather than treating it as a complete
+project export. CSV values are protected against spreadsheet formulas.
+
+## Read through the API
+
+Set `BISIBILITY_BASE_URL` to your instance API root, `BISIBILITY_API_KEY` to a read-scoped
+credential and `BISIBILITY_PROJECT_ID` to the project public ID. This example only reads
+saved context, the free catalog and retained runs.
+
+{/* docs-example:start ai-tracking-read-evidence */}
+{/* Generated from examples/ai-tracking/read-evidence.sh. Do not edit. */}
+```bash
+#!/usr/bin/env bash
+set -eu
+
+: "${BISIBILITY_BASE_URL:?Set the instance API root, including /api/v1}"
+: "${BISIBILITY_API_KEY:?Set a read-scoped credential}"
+: "${BISIBILITY_PROJECT_ID:?Set the project public ID}"
+
+project_url="${BISIBILITY_BASE_URL%/}/projects/${BISIBILITY_PROJECT_ID}"
+for resource in context ai-catalog 'ai-tracking/runs?limit=20'; do
+  curl --fail-with-body --silent --show-error \
+    --header "Authorization: Bearer ${BISIBILITY_API_KEY}" \
+    "${project_url}/${resource}"
+done
+printf '\nOK ai-tracking-read-evidence\n'
+```
+{/* docs-example:end ai-tracking-read-evidence */}
+
+Use the [API contract](/api/ai-tracking) and [SDK/MCP method reference](/sdks/methods)
+for launch, generation, evidence pagination and retry fields. To save an interpretation
+of the retained evidence, use [Agent Reports](/guides/agent-reports).

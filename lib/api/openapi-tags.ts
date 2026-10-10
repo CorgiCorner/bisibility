@@ -4,6 +4,12 @@ import { assertOperationPolicy } from "./operation-policy";
 
 export const openApiTags = [
   {
+    name: "ai-tracking",
+    description:
+      "Configure AI observations and inspect project-scoped answers, citations and comparable history.",
+    "x-group": "AI Tracking",
+  },
+  {
     name: "discovery",
     description: "Discover the API contract, capabilities, health, and public provider pricing.",
     "x-group": "Discovery",

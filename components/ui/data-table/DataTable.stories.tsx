@@ -5,6 +5,7 @@ import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, within } from "storybook/test";
 import { DataTableStoryHarness } from "./DataTableStoryHarness";
+import { DataTableBorderlessStory } from "./data-table-story-borders";
 import {
   clientPaginationStoryRows,
   dataTableStoryRows,
@@ -82,6 +83,10 @@ export const RoundedBorder: Story = {
       <DataTableStoryHarness id="rounded-border" showColumnsMenu={false} showDensityMenu={false} />
     </div>
   ),
+};
+
+export const BorderlessWithinClippedCard: Story = {
+  render: () => <DataTableBorderlessStory />,
 };
 
 export const StableClientSorting: Story = {

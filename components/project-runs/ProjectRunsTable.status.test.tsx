@@ -1,10 +1,15 @@
 import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ProjectRun } from "@/lib/runs/project-run";
 import { fireEvent, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectRunsTable } from "./ProjectRunsTable";
 
 const projectRef = "prj_abcdefghijklmnopqrstuvwx";
+const viewport = vi.hoisted(() => ({ desktop: false }));
+vi.mock("@/lib/ui/use-media-query", () => ({ useMediaQuery: () => viewport.desktop }));
+beforeEach(() => {
+  viewport.desktop = false;
+});
 
 const importRun: ProjectRun = {
   attention: { kind: "needs_reauthentication", message: null },
@@ -59,7 +64,7 @@ const deferredRun: ProjectRun = {
   title: { kind: "rank_check", trigger: "manual" },
 };
 
-function renderTable() {
+function renderTable(rows: readonly ProjectRun[] = [importRun, deferredRun]) {
   return render(
     <ProjectRunsTable
       canMutate={false}
@@ -67,12 +72,83 @@ function renderTable() {
       onRunNow={vi.fn(async () => undefined)}
       onSkip={vi.fn(async () => undefined)}
       projectRef={projectRef}
-      rows={[importRun, deferredRun]}
+      rows={rows}
     />,
   );
 }
 
 describe("ProjectRunsTable status chips", () => {
+  it.each([true, false])(
+    "keeps unknown import measurements distinct from zero (desktop=%s)",
+    (desktop) => {
+      viewport.desktop = desktop;
+      renderTable([importRun]);
+      const row = screen.getAllByText("Search Console import")[0]?.closest('[role="row"]');
+      expect(
+        row?.querySelector(desktop ? '[data-column-id="progress"]' : '[data-column-id="title"]'),
+      ).toHaveTextContent("Not available");
+      if (desktop)
+        expect(row?.querySelector('[data-column-id="when"]')).toHaveTextContent("Submitted");
+      else
+        expect(row?.querySelector("time")).toHaveAttribute(
+          "title",
+          expect.stringMatching(/^Submitted:/),
+        );
+      expect(row).not.toHaveTextContent("Started");
+      expect(row).not.toHaveTextContent("0 / 0");
+    },
+  );
+  it.each([true, false])(
+    "keeps queued runs unstarted until a real start is recorded (desktop=%s)",
+    (desktop) => {
+      viewport.desktop = desktop;
+      const queued: ProjectRun = {
+        ...deferredRun,
+        details: { ...deferredRun.details, status: "queued", outcome: null },
+        lifecycle: "queued",
+        progress: { completed: 0, total: 3, unit: "targets" },
+        timestamps: { ...deferredRun.timestamps, startedAt: null, finishedAt: null },
+      };
+      const view = renderTable([queued]);
+      expect(screen.getByText("Queued")).toBeInTheDocument();
+      expect(screen.queryByText("Running")).not.toBeInTheDocument();
+      expect(screen.queryByText("Failed")).not.toBeInTheDocument();
+      const row = screen.getByText("Manual rank check").closest('[role="row"]');
+      expect(
+        row?.querySelector(desktop ? '[data-column-id="progress"]' : '[data-column-id="title"]'),
+      ).toHaveTextContent("0 / 3");
+      if (desktop)
+        expect(row?.querySelector('[data-column-id="when"]')).toHaveTextContent("Ready from");
+      else
+        expect(row?.querySelector("time")).toHaveAttribute(
+          "title",
+          expect.stringMatching(/^Ready from:/),
+        );
+      expect(row).not.toHaveTextContent("Started");
+      const started: ProjectRun = {
+        ...queued,
+        details: { ...queued.details, status: "running" },
+        lifecycle: "running",
+        timestamps: { ...queued.timestamps, startedAt: "2026-09-06T09:01:00.000Z" },
+      };
+      view.unmount();
+      renderTable([started]);
+      const startedRow = screen.getByText("Manual rank check").closest('[role="row"]');
+      expect(screen.getByText("Running")).toBeInTheDocument();
+      if (desktop)
+        expect(startedRow?.querySelector('[data-column-id="when"]')).toHaveTextContent("Started");
+      else {
+        expect(startedRow?.querySelector("time")).toHaveAttribute(
+          "title",
+          expect.stringMatching(/^Started:/),
+        );
+        expect(startedRow?.querySelector("time")).toHaveAttribute(
+          "datetime",
+          "2026-09-06T09:01:00.000Z",
+        );
+      }
+    },
+  );
   it("labels each chip with a filter word and describes it", () => {
     renderTable();
 

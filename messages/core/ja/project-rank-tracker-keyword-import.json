@@ -342,7 +342,8 @@
           "dimensionCurrent": "{label}、現在表示中",
           "dimensionAddA": "{name}を追加",
           "dimensionAdd": "{item}を追加",
-          "dimensionTrack": "追跡"
+          "dimensionTrack": "追跡",
+          "coverageUnknown": "取得範囲が不明"
         },
         "runChecks": {
           "top": "上位{depth, number}位",
@@ -506,7 +507,8 @@
           "pairVolumeHelp": "この市場と言語の組み合わせの検索ボリューム",
           "position": "{position, number}位",
           "mixed": "混在",
-          "noDifficultyData": "難易度データなし"
+          "noDifficultyData": "難易度データなし",
+          "coverageUnknown": "取得範囲が不明"
         },
         "columns": {
           "keyword": "キーワード",

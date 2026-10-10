@@ -31,19 +31,86 @@ Content-Type: application/json
 }
 ```
 
-The Prompt Explorer endpoint is `POST /prompt-explorer`. Its body also requires
-`prompt`; supported `models` are `gpt-4.1-mini` and `gpt-4.1-nano`. A prompt is
-limited to 500 characters and 2000 UTF-8 bytes. Model output is bounded to 512
-tokens and web search is disabled.
+Read `GET /ai-catalog` (MCP: `get_ai_research_catalog`) for the connected
+provider's current model names and observed platform, country and language
+combinations in `visibility_markets`. This is a free authenticated metadata lookup. ChatGPT observed
+mentions currently cover the United States and English only; use returned
+catalog combinations for Google coverage.
 
-Paid requests require an explicit integer `max_cost_cents` between 0 and 1000.
-Inspect the estimate and provider configuration before consenting to a run.
-Existing BYOK or hosted-credit admission and receipts apply. A zero cap permits
-cache hits only. `fresh: true` bypasses cached results without bypassing admission.
-Estimates are conservative bounds; actual confirmed charges and ambiguous cost
-failures are preserved. Cached responses have a zero new charge while their
-stored result retains the historical charge. Cache scope includes the project
-and its context, and expires after twelve hours.
+The Prompt Explorer endpoint is `POST /prompt-explorer`. It accepts one or two
+current model IDs, a prompt of at most 500 characters and 2000 UTF-8 bytes,
+and a requested `max_output_tokens` of 16-4096. Omitting models and output limit
+preserves the original mini/nano, 512-token, text-only request and raw prompt.
+That legacy path uses the already approved dated admission rates and needs no
+new catalog or public pricing request. Warm legacy results retain their existing
+cache identity. The legacy country/English settings do not add a language
+instruction to the user's prompt.
+
+Other settings use current provider capabilities. `response_language` adds an
+answer instruction, not a native dataset filter. `web_search` uses optional
+`country_iso_code` as a country hint. `response_countries` is a bundled ISO
+country-name dictionary for the documented
+[`web_search_country_iso_code` contract](https://docs.dataforseo.com/v3/ai_optimization/chat_gpt/llm_responses/live/),
+not observed dataset coverage. Reasoning requests require at least 1024 requested
+output tokens. The provider may exceed the requested limit for reasoning or search.
+
+The default `hard_cap` policy requires `max_cost_cents` from 0 to 1000 and keeps
+existing BYOK or hosted-credit admission. A zero cap permits cache hits only.
+Expanded mini/nano text limits require fresh verified prices and conservative
+bounds. Other models, reasoning and search require explicit own-key actual-cost
+consent; they cannot run on credits or silently fall back to hosted credentials.
+A model's `price_available` reports current unit-price facts; `admission_enabled`
+and `actual_cost_enabled` distinguish the supported billing policies.
+
+To request an own-key **PARTIAL ESTIMATE**, send:
+
+```json
+{
+  "brand": "Example",
+  "domain": "example.com",
+  "prompt": "Where would Example help a small business?",
+  "models": ["gpt-5-mini"],
+  "max_output_tokens": 1024,
+  "web_search": true,
+  "cost_policy": "provider_actual_cost",
+  "actual_cost_acknowledgement": "non_guaranteed_estimate_v1",
+  "estimated_cost_limit_cents": 10,
+  "estimate_only": true
+}
+```
+
+The partial estimate covers approximate prompt tokens and requested output plus
+one base task charge. It excludes search/tool fees, repeated calls, retrieved
+content, tool-loop input, provider role/serialization overhead and regional or
+cache-write surcharges. It assumes standard uncached short-context rates.
+`is_partial_estimate`, `forecast_scope`, assumptions and exclusions accompany the
+estimate. It has **no guaranteed maximum** and may be exceeded during one request.
+Official USD unit prices come from current page-referenced assets, not a documented
+pricing API. Unknown formats or stale source data block only fresh expanded
+options; saved reports and the dated legacy path remain available.
+
+Actual-cost execution repeats those inputs with `estimate_only: false`, the
+returned `estimate_credentials_ref`, and a stable UUID `idempotency_key`.
+Do not send `max_cost_cents` in this mode. Both authoritative credential reads
+require the same own-key identity; rotation requires a new estimate. Each confirmed
+single task's `cost` is authoritative and already includes its base charge.
+The next serial model stops when measured spend reaches the advisory limit;
+an in-flight charge may exceed it. Amounts are never reconstructed from tokens.
+
+The request ID binds all settings, consent and advisory limit. Confirmed replay
+returns the saved report without another provider request or fresh pricing lookup.
+Changing bound inputs with the same ID conflicts. Pending or unknown cost blocks
+all new actual-cost attempts for that project, including `fresh: true` and new IDs.
+Only recorded, scoped receipts can reconcile an ambiguous result. Explicit proof
+of no paid dispatch can safely settle the matching unknown journal row to zero.
+Missing provider receipts remain blocked for operator investigation; there is no
+automatic paid retry. Proven no-dispatch refusal allows an explicit new request.
+
+Hard-cap results use the existing twelve-hour cache. Actual-cost results use
+saved request-ID replay, not the shared twelve-hour cache: explicitly creating a
+new request can charge again even for the same prompt. Cached/replayed envelopes
+show zero new charge while the saved result retains its actual historical amount.
+All reports and lookup state remain project-scoped with existing access controls.
 
 ## Project Context
 
@@ -64,17 +131,41 @@ a field. Each field is limited to 4000 characters:
 ## Site Audit
 
 `POST /site-audits` accepts `{ "maxPages": 10 }`, with a maximum of 15 pages.
-The project must have a tracked domain. The crawler checks HTTP status, title,
-description, headings, indexability, links and image alt text. It respects robots
-rules and limits requests to the same origin with protected redirects and DNS.
+The project must have a tracked domain, and running an audit requires write
+access. The crawler samples HTTP status, title, description, headings, robots
+directives, links and image alt text. JavaScript rendering and Lighthouse are
+not included.
 
-A run stops after 20 requests or 15 seconds, and responses are limited to 512 KiB.
-Results expose the stop reason and limits; a bounded sample is not a full-site
-audit. JavaScript rendering and Lighthouse are not included. Cached runs expire
-after five minutes. Rate denials return HTTP 429 and retry metadata.
+The crawl budget is 20 HTTP requests and 15 seconds, including robots reads,
+redirects and retry attempts. Each response body is limited to 512 KiB. Hosts
+are resolved and validated before each request, and connections use those
+checked addresses. Redirects are handled manually: only the project origin
+and its exact apex/www pair are eligible, with the same scheme and port.
+Query-string variants, known nonpage assets and email-protection helper links
+are excluded from discovery; unknown extensions and extensionless document
+URLs remain eligible.
+
+Each page or robots fetch can retry HTTP 429 once if the remaining request and
+time budgets allow it. A persistent page 429 or unavailable robots policy makes
+the result `partial`; a rate-limited response is not evidence of missing content
+or a broken internal link. A robots-disallowed URL is a separate policy skip.
+API admission denials also return HTTP 429 with retry metadata, but do not
+represent a sampled page's status.
+
+The result exposes `state`, `stop_reason`, `limits` and `limitations`.
+`stop_reason` is `finished`, `page_limit`, `request_limit` or `time_limit`.
+`complete` describes the bounded sample, not full-site coverage or verified
+search-engine indexing. Links and headings are bounded samples.
+
+The most recent valid report can be reused for five minutes when the target
+and `maxPages` match. This reuse window does not delete saved reports or make
+their observations current.
 
 Read history with `GET /site-audits` and a saved result with
 `GET /site-audits/{report_id}`.
+
+See [Site Audit](/guides/site-audit) for retry timing, robots behavior and how
+to interpret coverage and saved results.
 
 ## Agent Reports
 
@@ -87,7 +178,7 @@ to 256 KiB and 32 KiB respectively. The producer kinds `ai_visibility`,
 one report. Report IDs use the `agr_` prefix. Shared report links require existing
 project access and do not create public access grants.
 
-The corresponding MCP tools are `analyze_ai_visibility`, `compare_ai_prompts`,
+The corresponding MCP tools are `get_ai_research_catalog`, `analyze_ai_visibility`, `compare_ai_prompts`,
 `get_project_context`, `update_project_context`, `run_site_audit`,
 `list_site_audits`, `get_site_audit`, `create_agent_report`, `list_agent_reports`
 and `get_agent_report`. Exact request and response schemas are in API Reference.

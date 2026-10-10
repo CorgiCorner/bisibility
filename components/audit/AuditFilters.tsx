@@ -136,7 +136,7 @@ export function AuditFilters({
   ];
 
   return (
-    <div className="border-b border-border px-4 py-3.5">
+    <div className="px-4 py-3.5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div
           className="flex min-w-0 flex-1 flex-wrap items-center gap-[7px]"

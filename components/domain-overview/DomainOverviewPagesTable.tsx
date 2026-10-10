@@ -2,7 +2,9 @@
 
 import { Button } from "@/components/ui/Button";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { tableHeaderBorderClassName } from "@/components/ui/table-header-styles";
 import type { RelevantPagesResult } from "@/lib/providers/types";
+import { cn } from "@/lib/ui/cn";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useLocale, useTranslations } from "next-intl";
@@ -94,7 +96,7 @@ export function DomainOverviewPagesTable({
 
   return (
     <section className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
-      <header className="flex items-center gap-2.5 border-b border-border px-4 py-3">
+      <header className="flex items-center gap-2.5 px-4 py-3">
         <h3 className="m-0 text-[14.5px] font-semibold">{t("topPages")}</h3>
         <span className="ml-auto text-[12px] text-fg-muted">{t("previewFetched")}</span>
         <Button
@@ -109,7 +111,13 @@ export function DomainOverviewPagesTable({
       </header>
       <div className="max-h-[640px] overflow-auto">
         <div className="min-w-[900px]">
-          <div className="sticky top-0 z-1 grid grid-cols-[minmax(220px,1.25fr)_104px_86px_minmax(180px,1fr)_96px_86px] items-center gap-3 border-b border-border bg-bg-sunken px-4 py-2.5">
+          <div
+            className={cn(
+              tableHeaderBorderClassName,
+              "sticky top-0 z-1 grid grid-cols-[minmax(220px,1.25fr)_104px_86px_minmax(180px,1fr)_96px_86px] items-center gap-3 bg-bg-sunken px-4 py-2.5",
+            )}
+            data-table-header-border="header"
+          >
             <SortableColumnHeader
               active={sort === "path"}
               direction={direction}

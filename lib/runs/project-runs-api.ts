@@ -60,6 +60,7 @@ const rankCheckRunSchema = z
         outcome: z.enum(RUN_OUTCOMES).nullable(),
         status: z.enum(RUN_STATUSES),
         trigger: z.enum(RUN_TRIGGERS),
+        blockedReason: z.string().nullable().optional(),
       })
       .strict(),
     id: z.string(),
@@ -79,6 +80,7 @@ const rankCheckRunSchema = z
         launchedAt: nullableIsoDateTime,
         plannedFor: nullableIsoDateTime,
         startedAt: nullableIsoDateTime,
+        nextCheckAt: nullableIsoDateTime.optional(),
       })
       .strict(),
     title: z.object({ kind: z.literal("rank_check"), trigger: z.enum(RUN_TRIGGERS) }).strict(),
@@ -148,6 +150,8 @@ const projectRunsApiRequestSchema = z
     source: z.string().optional(),
     status: z.string().optional(),
     view: z.string().optional(),
+    section: z.string().optional(),
+    order: z.string().optional(),
   })
   .strict();
 

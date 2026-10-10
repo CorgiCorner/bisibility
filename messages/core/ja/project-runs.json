@@ -83,6 +83,25 @@
       "runNow": "今すぐ実行",
       "skipOnce": "1回スキップ",
       "viewDetails": "詳細を表示"
+    },
+    "timeline": {
+      "all": "すべて",
+      "active": "実行中",
+      "upcoming": "今後の実行",
+      "history": "履歴",
+      "sections": "実行の段階",
+      "activeHint": "開始が早い順",
+      "upcomingHint": "予定が近い順。",
+      "historyHint": "完了が新しい順",
+      "noActiveKeywords": "有効なキーワードがありません",
+      "when": "日時",
+      "finishedAt": "完了日時",
+      "plannedFor": "予定日時",
+      "retryFrom": "再試行可能日時",
+      "readyFrom": "実行可能日時",
+      "parallelWorkers": "ワーカーは並列に実行される場合があります。",
+      "oldestFirst": "古い順",
+      "newestFirst": "新しい順"
     }
   }
 }

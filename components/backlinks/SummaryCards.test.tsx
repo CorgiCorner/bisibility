@@ -33,3 +33,11 @@ describe("SummaryCards", () => {
     expect(screen.getByText(/biggest loss: 14 in Apr/)).toBeInTheDocument();
   });
 });
+
+it("does not manufacture zero history metrics when the history request failed", () => {
+  render(
+    <SummaryCards history={[]} historyUnavailable summary={backlinksSnapshotFixture.summary} />,
+  );
+  expect(screen.queryByRole("region", { name: "New vs lost" })).not.toBeInTheDocument();
+  expect(screen.getByRole("region", { name: "Backlink totals" })).toBeInTheDocument();
+});

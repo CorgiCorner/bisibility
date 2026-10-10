@@ -3,6 +3,7 @@ import type {
   FirstCheckPreviewFailureCode,
   RunFirstCheckPreviewResult,
 } from "@/lib/actions/rank-check-preview";
+import type { ObservationCompleteness } from "@/lib/observation/types";
 import type { ItemStatus } from "@/lib/rank-check/runs/contract";
 
 type FirstCheckTarget = Pick<FirstCheckCandidate, "device" | "market">;
@@ -26,6 +27,7 @@ export type FirstCheckResultRow =
       keywordId: string;
       provider: string;
       publicId: string;
+      observationCompleteness?: ObservationCompleteness | null;
       position: number | null;
       recordedCostCents: number | null;
       requestedDepth?: number;
@@ -94,6 +96,7 @@ export function previewRow(
       device: candidate.device,
       keywordId: candidate.id,
       market: candidate.market,
+      observationCompleteness: result.observationCompleteness,
       position: result.position,
       provider: result.provider,
       recordedCostCents: result.recordedCostCents,

@@ -9,6 +9,7 @@ import {
 } from "@/lib/api/pagination";
 import { prisma } from "@/lib/db/prisma";
 import { ITEM_STATUSES, type ItemStatus } from "@/lib/rank-check/runs/contract";
+import { normalizedObservationCompleteness } from "@/lib/serp/rank-depth";
 import {
   ledgerActualCostCents,
   ledgerActualUnits,
@@ -53,6 +54,7 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
           costCents: true,
           errorCode: true,
           id: true,
+          observationRun: { select: { completeness: true } },
           position: true,
           provider: true,
           publicId: true,
@@ -104,6 +106,9 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
                 storedRankCheck.costCents === null ? null : Number(storedRankCheck.costCents),
               ),
               errorCode: storedRankCheck.errorCode,
+              observationCompleteness: normalizedObservationCompleteness(
+                storedRankCheck.observationRun?.completeness,
+              ),
               position: storedRankCheck.position,
               provider: storedRankCheck.provider,
               publicId: storedRankCheck.publicId,

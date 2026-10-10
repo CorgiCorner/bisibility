@@ -1,7 +1,7 @@
 import { handleMcpHttpRequest } from "@/lib/mcp/transport";
 
-// Provider work has a 40-second aggregate budget, leaving time to settle usage and save results.
-export const maxDuration = 60;
+// Provider work has a 260-second aggregate budget, leaving time to settle usage and save results.
+export const maxDuration = 300;
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";

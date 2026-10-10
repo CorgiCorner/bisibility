@@ -52,7 +52,6 @@ function decodeEntity(entity: string) {
 
 function decodeXmlText(value: string) {
   return value
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
     .replace(/&(#x[0-9a-f]+|#\d+|amp|apos|gt|lt|quot);/gi, (_, entity: string) =>
       decodeEntity(entity),
     )
@@ -67,8 +66,23 @@ function firstTagText(xml: string, tag: "lastmod" | "loc") {
   return decoded.length > 0 ? decoded : null;
 }
 
+function documentXml(xml: string) {
+  // Escape CDATA before structural matching so text cannot become live XML entries.
+  return xml.replace(
+    /<!\[CDATA\[([\s\S]*?)\]\]>|<!--[\s\S]*?-->|<\?[\s\S]*?\?>/g,
+    (_token, text: string | undefined) =>
+      text === undefined
+        ? ""
+        : text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"),
+  );
+}
+
 function hasRoot(xml: string, root: "sitemapindex" | "urlset") {
-  return new RegExp(String.raw`<${root}\b`, "i").test(xml); // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp - root is a closed literal union.
+  const pattern =
+    root === "sitemapindex"
+      ? /^\s*<sitemapindex\b(?:[^>]*?\/\s*>|[^>]*>[\s\S]*<\/sitemapindex>)\s*$/i
+      : /^\s*<urlset\b(?:[^>]*?\/\s*>|[^>]*>[\s\S]*<\/urlset>)\s*$/i;
+  return pattern.test(xml);
 }
 
 function entryFromBlock(block: string): SitemapEntry | null {
@@ -130,6 +144,7 @@ export function parseSitemapXml(xml: string, options: ParseOptions = {}): Parsed
   const maxEntries = Math.max(0, options.maxEntries ?? MAX_SITEMAP_ENTRIES);
   const maxChildSitemaps = Math.max(0, options.maxChildSitemaps ?? MAX_CHILD_SITEMAPS);
 
+  xml = documentXml(xml);
   if (hasRoot(xml, "sitemapindex")) {
     return parseSitemapIndex(xml, maxChildSitemaps);
   }

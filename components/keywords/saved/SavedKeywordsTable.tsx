@@ -152,6 +152,7 @@ export function SavedKeywordsTable({
           projectRef={projectId}
           rows={filtered}
           search={search}
+          separated={selectedRows.length > 0 || Boolean(actionError) || filtered.length === 0}
         />
         {selectedRows.length > 0 ? (
           <SavedKeywordsBulkBar
@@ -162,10 +163,13 @@ export function SavedKeywordsTable({
             onClear={() => setSelectedIds([])}
             onRemove={() => void removeRows(selectedRows)}
             onTrack={() => setTrackDraft(selectedRows)}
+            separated={Boolean(actionError) || filtered.length === 0}
           />
         ) : null}
         {actionError ? (
-          <p className="m-0 border-b border-red/30 bg-red/10 px-4 py-2 text-[12px] text-red-text">
+          <p
+            className={`m-0 bg-red/10 px-4 py-2 text-[12px] text-red-text ${filtered.length === 0 ? "border-b border-red/30" : ""}`}
+          >
             {actionError}
           </p>
         ) : null}

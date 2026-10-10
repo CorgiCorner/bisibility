@@ -1,5 +1,4 @@
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { SEARCH_INSIGHTS_SEARCH_TYPE } from "@/lib/search-insights/constants";
@@ -35,6 +34,7 @@ import {
   rankStatusWhere,
   upcomingStatusWhere,
 } from "./project-runs-status-where";
+import { listProjectRunsTimeline } from "./project-runs-timeline-query";
 
 type ProjectRunsProject = Readonly<{ id: string; name?: string; publicId: string }>;
 
@@ -45,7 +45,7 @@ function rankWhere(
 ): Prisma.RankCheckRunWhereInput {
   const membership = launched
     ? { launchedAt: { not: null } }
-    : { finishedAt: { not: null }, launchedAt: null, status: "cancelled" };
+    : { finishedAt: { not: null }, launchedAt: null, status: { in: ["cancelled", "completed"] } };
   return { AND: [{ projectId, deletedAt: null }, membership, rankStatusWhere(query.status)] };
 }
 
@@ -140,6 +140,7 @@ export async function listProjectRuns(
   query: ProjectRunsQuery,
 ): Promise<ProjectRunsApiResponse> {
   const displayProject = await presentationProject(project);
+  if (query.view === "timeline") return listProjectRunsTimeline(project.id, displayProject, query);
   if (query.view === "planned") return listPlannedProjectRuns(project.id, displayProject, query);
   const cursor = decodeProjectRunsCursor(query.cursor, {
     ...filtersFor(query),

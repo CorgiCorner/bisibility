@@ -4,6 +4,7 @@ import {
   researchWorkspaceSchemas,
   researchWorkspaceToolNames,
 } from "@/lib/mcp/research-workspace-contract";
+import { aiTrackingSchemas, aiTrackingToolNames } from "@/lib/mcp/tracking-contract";
 import { JITTER_MINUTES_MAX, JITTER_MINUTES_MIN } from "@/lib/schemas/keyword";
 import { DEFAULT_SERP_DEVICE, serpDeviceValues } from "@/lib/serp/constants";
 import { apiKeyCreateProperties } from "./api-key-contract";
@@ -71,6 +72,7 @@ const scheduleSchema = {
 } as const;
 
 export const toolInputSchemas = {
+  ...aiTrackingSchemas(),
   ...researchWorkspaceSchemas,
   addKeywords: {
     properties: {
@@ -250,6 +252,7 @@ export const toolInputSchemas = {
 export type ToolName = keyof typeof toolInputSchemas;
 
 export const mcpToolNameByCapability: Record<ToolName, McpToolName | null> = {
+  ...aiTrackingToolNames,
   ...researchWorkspaceToolNames,
   addCompetitor: "add_competitor",
   addKeywords: "add_keywords",

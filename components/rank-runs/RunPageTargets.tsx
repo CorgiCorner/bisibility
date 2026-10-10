@@ -97,7 +97,7 @@ export function RunPageTargets({
       aria-labelledby="run-targets-title"
       className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev"
     >
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3.5">
+      <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5">
         <div>
           <h2
             className="m-0 text-[15px] font-semibold leading-[1.35] text-fg"

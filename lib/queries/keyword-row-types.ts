@@ -1,5 +1,6 @@
 import type { PositionObservation } from "@/lib/checks/position-observations";
 import type { ExpectedUrlSource } from "@/lib/expected-url/types";
+import type { ObservationCompleteness } from "@/lib/observation/types";
 import type { KeywordLocation } from "@/lib/queries/keyword-location";
 import type { SerpDepth } from "@/lib/serp/constants";
 
@@ -30,6 +31,7 @@ export type PositionPoint = {
   position: number;
 };
 export type CompletedComparableCheck = {
+  observationCompleteness?: ObservationCompleteness | null;
   checkedAt: string;
   position: number | null;
   rankingUrl: string | null;
@@ -45,7 +47,13 @@ export type RankingUrlEvent = {
 };
 export type LastCheckStatus = "completed" | "failed" | "running" | null;
 export type LatestAttemptHealth = "failed" | "ok" | "running";
-export type KeywordCheckState = "failed" | "never_checked" | "not_ranked" | "ranked" | "running";
+export type KeywordCheckState =
+  | "failed"
+  | "never_checked"
+  | "not_ranked"
+  | "ranked"
+  | "running"
+  | "unknown";
 type ScheduleOrigin = "fallback" | "keyword" | "project";
 export type KeywordTrafficSummary = {
   clicks: number;
@@ -82,6 +90,7 @@ export type KeywordRow = {
   expectedUrlFallbackCurrent?: boolean;
   expectedUrlSource?: ExpectedUrlSource | null;
   checkState?: KeywordCheckState;
+  observationCompleteness?: ObservationCompleteness | null;
   checkSchedule?: KeywordCheckSchedule | null;
   completedComparableChecks?: CompletedComparableCheck[];
   hasRankData: boolean;

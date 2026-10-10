@@ -102,7 +102,8 @@
         "queued": "Queued",
         "queuedNote": "Queued checks start when the worker claims the run.",
         "retry": "Retry failed",
-        "retryNote": "Run a sample check for the remaining targets whenever you are ready."
+        "retryNote": "Run a sample check for the remaining targets whenever you are ready.",
+        "coverageUnknown": "Coverage unknown"
       },
       "review": {
         "dataSourceWaiting": "Checks start once a provider is connected.",

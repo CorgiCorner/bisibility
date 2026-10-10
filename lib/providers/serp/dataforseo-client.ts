@@ -5,7 +5,11 @@ import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/provi
 import { resolveSerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import { researchScopeForLocation } from "@/lib/serp/research-capability";
-import { DataForSeoError, redactedMessage } from "./dataforseo-errors";
+import {
+  DataForSeoAccountVerificationError,
+  DataForSeoError,
+  redactedMessage,
+} from "./dataforseo-errors";
 import { type DataForSeoResponse, dataForSeoResponseCostCents } from "./dataforseo-payload";
 import { dataForSeoUsageReceipt } from "./usage-receipts";
 
@@ -172,6 +176,11 @@ export async function requestEnvelope(
         measure: dataForSeoUsageReceipt,
       });
       const data = readResponse(observed.response, observed.data, creds);
+      if (data.status_code === 40104 || data.tasks?.some((task) => task.status_code === 40104)) {
+        throw new DataForSeoAccountVerificationError(
+          dataForSeoUsageReceipt(data, observed.response).costCents,
+        );
+      }
 
       if (envelopeRetryable(data) && attempt < MAX_ATTEMPTS - 1) {
         await wait(retryDelay(attempt));
@@ -207,7 +216,10 @@ export async function requestAuthenticatedEnvelope(
     return await requestEnvelope(url, { ...init, headers }, credentials);
   } catch (error) {
     if (error instanceof ProviderAuthError) throw error;
-    if (error instanceof DataForSeoError && error.httpStatus === 401) {
+    if (
+      error instanceof DataForSeoError &&
+      (error.httpStatus === 401 || error.httpStatus === 403)
+    ) {
       throw new ProviderAuthError("dataforseo");
     }
     throw error;

@@ -1,11 +1,147 @@
 import { ProviderCallError } from "@/lib/providers/call-error";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { modelMap } from "./catalog-fixtures.test-support";
 import { aiProviderRequest, fetchObserved, fetchPrompt, VISIBILITY_PATH } from "./provider";
 import { promptSchema, visibilitySchema } from "./schema";
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/providers/live-capacity", () => ({
+  reserveLiveResponseCapacity: vi.fn(),
+  assertLiveResponseCapacity: vi.fn(),
+}));
 afterEach(() => vi.unstubAllGlobals());
 describe("AI provider request accounting", () => {
+  it("uses catalog reasoning capabilities and omits unsupported temperature", async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      Response.json({
+        status_code: 20000,
+        cost: 0.001,
+        tasks: [
+          {
+            id: "response",
+            status_code: 20000,
+            cost: 0.001,
+            result: [
+              {
+                model_name: "catalog-reasoning",
+                items: [
+                  { type: "reasoning", sections: [{ text: "summary" }] },
+                  { type: "message", sections: [{ text: "Acme", annotations: null }] },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const input = promptSchema.parse({
+      brand: "Acme",
+      domain: "acme.com",
+      prompt: "Same question",
+      models: ["catalog-reasoning"],
+      max_cost_cents: 20,
+      response_language: "pl",
+      max_output_tokens: 1024,
+    });
+    const models = new Map([
+      [
+        "catalog-reasoning",
+        {
+          id: "catalog-reasoning",
+          provider: "chat_gpt" as const,
+          label: "Catalog reasoning",
+          reasoning: true,
+          webSearch: true,
+          minOutputTokens: 1024,
+          maxOutputTokens: 4096,
+          priceAvailable: true,
+          admissionEnabled: false,
+          actualCostEnabled: true,
+        },
+      ],
+    ]);
+    const result = await fetchPrompt(
+      { login: "fixture", password: "fictional" },
+      input,
+      "catalog-reasoning",
+      "tag",
+      Date.now() + 120_000,
+      models,
+    );
+    const payload = JSON.parse(fetch.mock.calls[0][1].body)[0];
+    expect(payload).toMatchObject({
+      user_prompt: "Same question",
+      model_name: "catalog-reasoning",
+      max_output_tokens: 1024,
+      web_search: false,
+    });
+    expect(payload).not.toHaveProperty("temperature");
+    expect(payload).not.toHaveProperty("language_code");
+    expect(payload.system_message).toContain("pl");
+    expect(result.row.answer).toBe("Acme");
+  });
+  it("sends web search country as a hint and rejects unsupported model options without dispatch", async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      Response.json({
+        status_code: 20000,
+        cost: 0.001,
+        tasks: [
+          {
+            id: "response",
+            status_code: 20000,
+            cost: 0.001,
+            result: [
+              {
+                model_name: "gpt-4.1-mini",
+                items: [{ type: "message", sections: [{ text: "Acme", annotations: [] }] }],
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const input = promptSchema.parse({
+      brand: "Acme",
+      domain: "acme.com",
+      prompt: "Same question",
+      models: ["gpt-4.1-mini"],
+      max_cost_cents: 20,
+      web_search: true,
+      country_iso_code: "PL",
+      max_output_tokens: 4096,
+    });
+    await fetchPrompt(
+      { login: "fixture", password: "fictional" },
+      input,
+      "gpt-4.1-mini",
+      "tag",
+      Date.now() + 120_000,
+      modelMap,
+    );
+    expect(JSON.parse(fetch.mock.calls[0][1].body)[0]).toMatchObject({
+      web_search: true,
+      web_search_country_iso_code: "PL",
+      max_output_tokens: 4096,
+    });
+    fetch.mockClear();
+    const unsupported = new Map([
+      ["gpt-4.1-mini", { ...modelMap.get("gpt-4.1-mini"), webSearch: false }],
+    ]);
+    await expect(
+      fetchPrompt(
+        { login: "fixture", password: "fictional" },
+        input,
+        "gpt-4.1-mini",
+        "tag",
+        Date.now() + 120_000,
+        unsupported as typeof modelMap,
+      ),
+    ).rejects.toThrow("unsupported");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("settles the actual receipt before returning results", async () => {
     const settle = vi.fn();
     const fetch = vi.fn().mockResolvedValue(
@@ -55,7 +191,7 @@ describe("AI provider request accounting", () => {
                 id: "malformed",
                 status_code: 20000,
                 cost: 0.103,
-                result: [{ items: [{}], total_count: 1 }],
+                result: [{ items: [{ sections: "malformed" }], total_count: 1 }],
               },
             ],
           }),
@@ -78,11 +214,11 @@ describe("AI provider request accounting", () => {
             )
           : fetchPrompt(
               credentials,
-              promptSchema.parse({ ...target, prompt: "q" }),
+              promptSchema.parse({ ...target, prompt: "q", models: ["gpt-4.1-mini"] }),
               "gpt-4.1-mini",
               "tag",
               Date.now() + 40_000,
-              new Set(["gpt-4.1-mini"]),
+              modelMap,
               dispatched,
             );
       const error = await request.catch((failure: unknown) => failure);

@@ -32,6 +32,7 @@ import {
 import { createSignalOperation, runRankCheckOperation } from "./openapi-special-operations";
 import { openApiTags, tagOpenApiPaths } from "./openapi-tags";
 import { teamMutationPaths } from "./openapi-team-mutations";
+import { aiTrackingPaths } from "./openapi-tracking";
 
 const json = (schema: object) => ({ "application/json": { schema } });
 const response = (schema: object, description = "JSON response") => ({
@@ -136,6 +137,7 @@ export function getOpenApiDocument() {
           }),
           ...publicPaths,
           ...researchWorkspacePaths(),
+          ...aiTrackingPaths(),
           ...locationSearchPaths({ bearer: bearerOperation, ref }),
           ...keywordResearchPaths({ bearer: bearerOperation, ref }),
           ...loopClosurePaths({ bearer: bearerOperation, ref }),

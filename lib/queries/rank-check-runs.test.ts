@@ -569,6 +569,7 @@ describe("rank-check run queries", () => {
           errorCode: null,
           id: "rc_stored",
           position: null,
+          observationRun: { completeness: "unknown" },
           provider: "dataforseo",
           publicId: "check_1",
           rankingUrl: null,
@@ -583,6 +584,7 @@ describe("rank-check run queries", () => {
     );
     expect(page.data[0]?.rankCheck).toMatchObject({
       costCents: 0.4,
+      observationCompleteness: "unknown",
       requestedDepth: 20,
       position: null,
     });
@@ -599,6 +601,7 @@ describe("rank-check run queries", () => {
               costCents: true,
               errorCode: true,
               id: true,
+              observationRun: { select: { completeness: true } },
               position: true,
               provider: true,
               publicId: true,

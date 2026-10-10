@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   source: vi.fn(),
+  capabilities: vi.fn(),
   paid: vi.fn(),
   preflight: vi.fn(),
   report: vi.fn(),
@@ -11,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   cache: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
+vi.mock("./catalog-service", () => ({ loadAiResearchCapabilities: mocks.capabilities }));
 vi.mock("./context", () => ({ requireAiSource: mocks.source }));
 vi.mock("./provider", () => ({
   fetchObserved: mocks.observed,
@@ -34,6 +36,8 @@ import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/lookup-failure";
 import { ProviderCallError } from "@/lib/providers/call-error";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { capabilities } from "./catalog-fixtures.test-support";
+import { AI_REQUEST_BUDGET_MS } from "./deadline";
 import { analyzeAiVisibility, compareAiPrompts } from "./service";
 
 const context = {
@@ -41,7 +45,13 @@ const context = {
   actorId: "actor",
   origin: { source: "app" as const },
 };
-const input = { brand: "Acme", domain: "acme.com", max_cost_cents: 60 };
+const input = {
+  brand: "Acme",
+  domain: "acme.com",
+  max_cost_cents: 60,
+  models: ["gpt-4.1-mini", "gpt-4.1-nano"],
+};
+const { models: _models, ...visibilityInput } = input;
 const row = {
   prompt: "q",
   answer: "Acme",
@@ -58,6 +68,7 @@ beforeEach(() => {
     connection: { id: "connection", provider: "dataforseo" },
     provider: { id: "dataforseo" },
   });
+  mocks.capabilities.mockResolvedValue(capabilities);
   mocks.models.mockResolvedValue(new Set(["gpt-4.1-mini", "gpt-4.1-nano"]));
   mocks.report.mockResolvedValue({ id: "agr_report" });
   mocks.cache.mockImplementation(async ({ load }) => ({
@@ -75,10 +86,100 @@ beforeEach(() => {
     return { row, costCents: 0.1 };
   });
 });
+
+it("retains internal scheduled attribution and distinct request correlations", async () => {
+  await compareAiPrompts(
+    {
+      ...context,
+      origin: { source: "worker" },
+      execution: { trigger: "scheduled", correlationId: "tracking-attempt" },
+    },
+    { ...input, prompt: "q" },
+  );
+  expect(
+    mocks.paid.mock.calls.map(([call]) => [call.source, call.trigger, call.correlationId]),
+  ).toEqual([
+    ["worker", "scheduled", "tracking-attempt:0"],
+    ["worker", "scheduled", "tracking-attempt:1"],
+  ]);
+});
 afterEach(() => vi.useRealTimers());
 describe("AI research vertical contracts", () => {
+  it("preserves legacy omitted-model requests without new metadata admission", async () => {
+    mocks.capabilities.mockRejectedValue(new Error("new catalog outage"));
+    const legacy = { ...visibilityInput, prompt: "q", estimate_only: true };
+    expect(await compareAiPrompts(context, legacy)).toMatchObject({
+      ok: true,
+      estimate: true,
+      estimatedCostCents: 52.6013,
+    });
+    expect(await compareAiPrompts(context, { ...legacy, estimate_only: false })).toMatchObject({
+      ok: true,
+      estimate: false,
+    });
+    expect(mocks.capabilities).not.toHaveBeenCalled();
+    expect(mocks.models).toHaveBeenCalledTimes(1);
+    expect(mocks.prompt).toHaveBeenCalledTimes(2);
+    for (const call of mocks.prompt.mock.calls)
+      expect(call[1]).toMatchObject({
+        models: ["gpt-4.1-mini", "gpt-4.1-nano"],
+        max_output_tokens: 512,
+      });
+  });
+  it("blocks unknown complete model prices before paid admission or report writes", async () => {
+    mocks.capabilities.mockResolvedValue({ ...capabilities, modelRates: new Map() });
+    for (const estimate_only of [true, false])
+      expect(
+        await compareAiPrompts(context, {
+          ...input,
+          prompt: "q",
+          max_output_tokens: 4096,
+          estimate_only,
+        }),
+      ).toMatchObject({ ok: false, reason: "pricing_unavailable" });
+    expect(mocks.paid).not.toHaveBeenCalled();
+    expect(mocks.preflight).not.toHaveBeenCalled();
+    expect(mocks.report).not.toHaveBeenCalled();
+  });
+  it("blocks unpriced search even when ordinary token rates exist", async () => {
+    expect(
+      await compareAiPrompts(context, {
+        ...input,
+        prompt: "q",
+        web_search: true,
+        country_iso_code: "US",
+      }),
+    ).toMatchObject({ ok: false, reason: "web_search_not_enabled" });
+    expect(mocks.paid).not.toHaveBeenCalled();
+  });
+  it("rejects unsupported observed market combinations before paid I/O", async () => {
+    expect(
+      await analyzeAiVisibility(context, {
+        ...visibilityInput,
+        location_code: 2616,
+        language_code: "pl",
+      }),
+    ).toMatchObject({ ok: false, reason: "unsupported_market" });
+    expect(mocks.paid).not.toHaveBeenCalled();
+  });
+  it("does not convert unknown visibility row prices into a free estimate", async () => {
+    mocks.capabilities.mockResolvedValue({ ...capabilities, visibilityPricing: null });
+    expect(
+      await analyzeAiVisibility(context, {
+        ...visibilityInput,
+        platform: "google",
+        location_code: 2616,
+        language_code: "pl",
+        estimate_only: true,
+      }),
+    ).toMatchObject({ ok: false, reason: "pricing_unavailable" });
+    expect(mocks.paid).not.toHaveBeenCalled();
+  });
+
   it("estimates without credentials or paid I/O", async () => {
-    expect(await analyzeAiVisibility(context, { ...input, estimate_only: true })).toMatchObject({
+    expect(
+      await analyzeAiVisibility(context, { ...visibilityInput, estimate_only: true }),
+    ).toMatchObject({
       ok: true,
       estimate: true,
       estimatedCostCents: 11,
@@ -87,7 +188,9 @@ describe("AI research vertical contracts", () => {
     expect(mocks.paid).not.toHaveBeenCalled();
   });
   it("rejects a cost cap before provider I/O or persistence", async () => {
-    expect(await analyzeAiVisibility(context, { ...input, max_cost_cents: 0 })).toMatchObject({
+    expect(
+      await analyzeAiVisibility(context, { ...visibilityInput, max_cost_cents: 0 }),
+    ).toMatchObject({
       ok: false,
       reason: "cost_limit_exceeded",
     });
@@ -95,7 +198,7 @@ describe("AI research vertical contracts", () => {
     expect(mocks.report).not.toHaveBeenCalled();
   });
   it("saves real observed evidence scoped to the project", async () => {
-    const outcome = await analyzeAiVisibility(context, input);
+    const outcome = await analyzeAiVisibility(context, visibilityInput);
     expect(outcome).toMatchObject({
       ok: true,
       reportId: "agr_report",
@@ -146,7 +249,7 @@ describe("AI research vertical contracts", () => {
   it("stops before the next paid model when the aggregate deadline expires", async () => {
     vi.useFakeTimers();
     mocks.prompt.mockImplementationOnce(async () => {
-      vi.advanceTimersByTime(40_001);
+      vi.advanceTimersByTime(AI_REQUEST_BUDGET_MS + 1);
       return { row, costCents: 0.1 };
     });
     const outcome = await compareAiPrompts(context, { ...input, prompt: "q" });
@@ -160,7 +263,7 @@ describe("AI research vertical contracts", () => {
       },
     });
     expect(mocks.paid).toHaveBeenCalledTimes(1);
-    expect(mocks.models).toHaveBeenCalledTimes(1);
+    expect(mocks.capabilities).not.toHaveBeenCalled();
   });
   it.each([
     new DeploymentAdmissionExhaustedError("balance"),
@@ -197,8 +300,10 @@ describe("AI research vertical contracts", () => {
   });
   it("does not make a failed free capability read a sticky paid failure", async () => {
     const error = new Error("free metadata unavailable");
-    mocks.models.mockRejectedValueOnce(error);
-    await expect(compareAiPrompts(context, { ...input, prompt: "q" })).rejects.toBe(error);
+    mocks.capabilities.mockRejectedValueOnce(error);
+    expect(
+      await compareAiPrompts(context, { ...input, prompt: "q", max_output_tokens: 4096 }),
+    ).toMatchObject({ ok: false, reason: "pricing_unavailable" });
     expect(mocks.prompt).not.toHaveBeenCalled();
     expect(mocks.report).not.toHaveBeenCalled();
   });
@@ -207,7 +312,7 @@ describe("AI research vertical contracts", () => {
       args[4]?.();
       throw new ProviderCallError("AI visibility response could not be normalized.", 10.3);
     });
-    expect(await analyzeAiVisibility(context, input)).toMatchObject({
+    expect(await analyzeAiVisibility(context, visibilityInput)).toMatchObject({
       ok: true,
       result: { rows: [], costCents: 10.3, costStatus: "confirmed" },
     });
@@ -221,7 +326,9 @@ describe("AI research vertical contracts", () => {
         result: { evidence: "observed_dataset", costCents: 11, rows: [] },
       },
     });
-    expect(await analyzeAiVisibility(context, { ...input, max_cost_cents: 0 })).toMatchObject({
+    expect(
+      await analyzeAiVisibility(context, { ...visibilityInput, max_cost_cents: 0 }),
+    ).toMatchObject({
       ok: true,
       cached: true,
       costCents: 0,

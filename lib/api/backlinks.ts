@@ -7,9 +7,11 @@ import {
 } from "@/lib/backlinks/service";
 import { UnsupportedBacklinksTargetError } from "@/lib/backlinks/target";
 import type { BacklinksEstimate, BacklinksOutcome, BacklinksSnapshot } from "@/lib/backlinks/types";
+import { isBacklinksFailedSummary } from "@/lib/backlinks/types";
 import { READINESS_REASON } from "@/lib/projects/readiness";
 import type { ProviderLookupFailure } from "@/lib/provider-lookups/paid-call";
 import { z } from "zod";
+import { backlinksFailureResponse } from "./backlinks-failure-response";
 import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
 import { providerOrigin } from "./request-origin";
@@ -131,6 +133,7 @@ function successResponse(ctx: ApiContext, snapshot: BacklinksEstimate | Backlink
 }
 
 function outcomeResponse(ctx: ApiContext, outcome: BacklinksOutcome) {
+  if (isBacklinksFailedSummary(outcome)) return backlinksFailureResponse(ctx, outcome);
   return outcome.ok ? successResponse(ctx, outcome) : lookupError(ctx, outcome);
 }
 

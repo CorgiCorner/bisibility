@@ -83,6 +83,25 @@
       "runNow": "Run now",
       "skipOnce": "Skip once",
       "viewDetails": "View details"
+    },
+    "timeline": {
+      "all": "All",
+      "active": "In progress",
+      "upcoming": "Upcoming",
+      "history": "History",
+      "sections": "Run timeline",
+      "activeHint": "Started first",
+      "upcomingHint": "Earliest first.",
+      "historyHint": "Most recently finished first",
+      "noActiveKeywords": "No active keywords",
+      "when": "When",
+      "finishedAt": "Finished",
+      "plannedFor": "Planned for",
+      "retryFrom": "Retry from",
+      "readyFrom": "Ready from",
+      "parallelWorkers": "Workers can run in parallel.",
+      "oldestFirst": "Oldest first",
+      "newestFirst": "Newest first"
     }
   }
 }

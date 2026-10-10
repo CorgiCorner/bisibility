@@ -15,6 +15,7 @@ import {
   validationFailure,
 } from "./dataforseo-errors";
 import { type DataForSeoResponse, dataForSeoResponseCostCents } from "./dataforseo-payload";
+import { dataForSeoFailureCostCents } from "./usage-receipts";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -75,8 +76,7 @@ function assertSuccess(data: unknown) {
     dataForSeoTaskFailureMessage(data as DataForSeoResponse) || string(root.status_message);
   if (statusCode === 20000) return "success" as const;
   if (noSearchResults(statusCode, message)) return "empty" as const;
-  const chargedCost = responseCostCents(data);
-  const costCents = chargedCost > 0 ? chargedCost : null;
+  const costCents = dataForSeoFailureCostCents(data as DataForSeoResponse);
   if (
     (statusCode >= 40200 && statusCode < 40300) ||
     /balance|billing|payment required/i.test(message)

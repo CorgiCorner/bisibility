@@ -82,5 +82,12 @@
     "cwd": "examples/deploy-webhooks",
     "command": "sh syntax.sh",
     "timeout_ms": 5000
+  },
+  {
+    "id": "ai-tracking-read-evidence-syntax",
+    "language": "sh",
+    "cwd": "examples/ai-tracking",
+    "command": "sh syntax.sh",
+    "timeout_ms": 5000
   }
 ]

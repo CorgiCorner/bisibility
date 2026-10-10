@@ -93,6 +93,7 @@ describe("loadLatestSuccessfulChecks", () => {
       select: {
         checkedAt: true,
         keywordId: true,
+        observationRun: { select: { completeness: true } },
         position: true,
         publicId: true,
         rankingUrl: true,
@@ -163,6 +164,7 @@ describe("loadLatestSuccessfulChecks", () => {
       select: {
         checkedAt: true,
         keywordId: true,
+        observationRun: { select: { completeness: true } },
         position: true,
         publicId: true,
         rankingUrl: true,
@@ -219,6 +221,7 @@ describe("keyword list check-state loading", () => {
       select: {
         checkedAt: true,
         keywordId: true,
+        observationRun: { select: { completeness: true } },
         position: true,
         publicId: true,
         rankingUrl: true,

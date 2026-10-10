@@ -243,7 +243,8 @@
       "relativeMinutes": "hace {value, number} min",
       "relativeYesterday": "ayer",
       "winsDescription": "Las que más posiciones han ganado",
-      "winsTitle": "Mayores subidas"
+      "winsTitle": "Mayores subidas",
+      "coverageUnknown": "Cobertura desconocida"
     },
     "markets": {
       "activeMarkets": "{count, number} {count, plural, one {mercado activo} other {mercados activos}} / mercados en pausa excluidos",

@@ -18,7 +18,7 @@ describe("ProjectRunsFilters", () => {
           limit: 20,
           source: "rank_checks",
           status: "all",
-          view: "runs",
+          view: "timeline",
         }}
       />,
     );
@@ -38,7 +38,7 @@ describe("ProjectRunsFilters", () => {
           limit: 20,
           source: "search_console",
           status: "all",
-          view: "runs",
+          view: "timeline",
         }}
       />,
     );
@@ -46,7 +46,7 @@ describe("ProjectRunsFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: "Run status" }));
 
     expect(screen.queryByText("Deferred")).toBeNull();
-    expect(screen.queryByText("Needs attention")).toBeNull();
+    expect(screen.getByText("Needs attention")).toBeVisible();
     fireEvent.click(screen.getByText("Waiting for Google"));
 
     expect(routerMock.push).toHaveBeenCalledWith(
@@ -58,7 +58,7 @@ describe("ProjectRunsFilters", () => {
     render(
       <ProjectRunsFilters
         projectRef={projectRef}
-        query={{ cursor: null, limit: 20, source: "all", status: "all", view: "runs" }}
+        query={{ cursor: null, limit: 20, source: "all", status: "all", view: "timeline" }}
       />,
     );
 
@@ -78,7 +78,7 @@ describe("ProjectRunsFilters", () => {
     render(
       <ProjectRunsFilters
         projectRef={projectRef}
-        query={{ cursor: null, limit: 20, source: "all", status: "attention", view: "runs" }}
+        query={{ cursor: null, limit: 20, source: "all", status: "attention", view: "timeline" }}
       />,
     );
 
@@ -91,7 +91,7 @@ describe("ProjectRunsFilters", () => {
     render(
       <ProjectRunsFilters
         projectRef={projectRef}
-        query={{ cursor: null, limit: 20, source: "all", status: "importing", view: "runs" }}
+        query={{ cursor: null, limit: 20, source: "all", status: "importing", view: "timeline" }}
       />,
     );
 

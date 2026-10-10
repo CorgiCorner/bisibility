@@ -75,7 +75,9 @@ export function CompetitorSetTable({
 
   return (
     <Card className="min-w-0 overflow-hidden p-0" data-competitor-set-table="">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-border border-b px-4 py-3.5">
+      <div
+        className={`flex flex-wrap items-start justify-between gap-3 px-4 py-3.5 ${showFinder || competitors.length === 0 ? "border-b border-border" : ""}`}
+      >
         <div className="min-w-0">
           <h2 className="m-0 text-[15px] font-semibold text-fg">{t("competitors")}</h2>
           <p className="m-0 mt-1 max-w-xl text-[12.5px] leading-5 text-fg-muted">
@@ -91,7 +93,7 @@ export function CompetitorSetTable({
         </div>
       </div>
       {showFinder ? (
-        <div className="border-border border-b px-4 py-3">
+        <div className="px-4 py-3">
           <Input
             aria-label={t("searchCompetitors")}
             className="max-w-45"

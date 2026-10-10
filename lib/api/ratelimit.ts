@@ -38,6 +38,8 @@ export type LimiterInput = {
   bucketKey: string;
   limit: number;
   windowSeconds: number;
+  /** Refuse local fallback for a quota that must be shared across replicas. */
+  requireShared?: boolean;
 };
 
 export type ConsumeResult = {
@@ -228,6 +230,7 @@ async function redisPeek(input: LimiterInput) {
 export async function consume(input: LimiterInput): Promise<ConsumeResult> {
   const redisResult = await redisConsume(input);
   if (!redisResult) {
+    if (input.requireShared) throw new Error("Shared Redis rate limiting is unavailable.");
     return memoryConsume(redisBucketKey(input), input);
   }
 

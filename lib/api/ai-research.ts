@@ -1,4 +1,5 @@
 import "server-only";
+import { getAiResearchCatalog } from "@/lib/ai-research/catalog-service";
 import { promptSchema, visibilitySchema } from "@/lib/ai-research/schema";
 import { analyzeAiVisibility, compareAiPrompts } from "@/lib/ai-research/service";
 import type { ApiContext } from "./context";
@@ -27,7 +28,15 @@ async function postAnalysis(ctx: ApiContext, projectId: string, mode: "visibilit
         result.reason === "no_source" ? "not_found" : "provider_unavailable",
         result.message,
         result.reason === "no_source" ? 404 : 422,
-        { headers: ctx.headers, instance: ctx.instance, details: { reason: result.reason } },
+        {
+          headers: ctx.headers,
+          instance: ctx.instance,
+          details: {
+            reason: result.reason,
+            retry_blocked: result.retryBlocked ?? false,
+            safe_to_start_new_request: result.safeToStartNewRequest ?? false,
+          },
+        },
       );
 }
 export function postAiVisibility(ctx: ApiContext, projectId: string) {
@@ -35,4 +44,16 @@ export function postAiVisibility(ctx: ApiContext, projectId: string) {
 }
 export function postPromptExplorer(ctx: ApiContext, projectId: string) {
   return postAnalysis(ctx, projectId, "prompt");
+}
+
+export async function getAiCatalog(ctx: ApiContext, projectId: string) {
+  const scope = scopedProject(ctx, projectId);
+  if (scope) return scope;
+  const result = await getAiResearchCatalog(ctx.auth.project.id);
+  return result.ok
+    ? dataResponse(snakeizeKeys(result.catalog), { headers: ctx.headers })
+    : errorResponse("provider_unavailable", result.message, 422, {
+        headers: ctx.headers,
+        instance: ctx.instance,
+      });
 }

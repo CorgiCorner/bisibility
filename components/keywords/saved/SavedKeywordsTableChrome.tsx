@@ -23,11 +23,13 @@ export function SavedKeywordsToolbar({
   projectRef,
   rows,
   search,
+  separated = true,
 }: Readonly<{
   onSearchChange: (value: string) => void;
   projectRef: string;
   rows: readonly SavedKeywordRow[];
   search: string;
+  separated?: boolean;
 }>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.saved");
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -55,7 +57,9 @@ export function SavedKeywordsToolbar({
   const savedRegisterRef = useRegisterCommands(savedCommands);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
+    <div
+      className={`flex flex-wrap items-center gap-2 px-4 py-3 ${separated ? "border-b border-border" : ""}`}
+    >
       <ToolbarSearch
         className="min-w-[220px]"
         id="saved-keywords-filter"
@@ -98,6 +102,7 @@ export function SavedKeywordsBulkBar({
   onClear,
   onRemove,
   onTrack,
+  separated = true,
   trackDisabledReason,
 }: Readonly<{
   canDelete: boolean;
@@ -107,6 +112,7 @@ export function SavedKeywordsBulkBar({
   onClear: () => void;
   onRemove: () => void;
   onTrack: () => void;
+  separated?: boolean;
   trackDisabledReason?: string;
 }>) {
   const usage = useNativeUsageFormat();
@@ -123,7 +129,9 @@ export function SavedKeywordsBulkBar({
         ? t("trackingAllUsage", { count, usage: usageText })
         : t("trackingAll", { cost, count });
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b border-[#e8d5c9] bg-accent-soft px-4 py-[9px]">
+    <div
+      className={`flex flex-wrap items-center gap-3 bg-accent-soft px-4 py-[9px] ${separated ? "border-b border-[#e8d5c9]" : ""}`}
+    >
       <strong className="whitespace-nowrap text-[13px] text-accent-text">
         {t("selected", { count })}
       </strong>

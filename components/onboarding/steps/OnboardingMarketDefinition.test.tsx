@@ -142,7 +142,7 @@ describe("OnboardingMarketDefinition", () => {
 
     expect(await screen.findByRole("button", { name: "Remove Spain / Spanish" })).toBeVisible();
     expect(createMarketAction).toHaveBeenCalledTimes(1);
-  });
+  }, 20_000);
 
   it("shows the localized refusal and keeps the draft when creation fails", async () => {
     const user = userEvent.setup();

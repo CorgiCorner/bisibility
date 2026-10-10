@@ -3,11 +3,13 @@ import "server-only";
 import { reconcileRequestedSearchInsightsSyncs } from "../search-insights/sync/requested-sync-reconciler";
 import { hasPendingWorkerIntent } from "../worker-intents/pending-probe";
 import { subscribeToWorkerIntents, workerIntentPollIntervalMs } from "../worker-intents/realtime";
+import { dispatchAiTrackingIntents } from "./ai-tracking-intent-dispatch";
 import { dispatchQueuedRankCheckRunIntents } from "./rank-run-intent-dispatch";
 import { dispatchFirstTrafficSyncIntent } from "./traffic-intent-dispatch";
 import { sweepWelcomeFollowupIntents } from "./welcome-intent-processor";
 
 type SweepOptions = {
+  dispatchTracking?: typeof dispatchAiTrackingIntents;
   dispatchRankRuns?: typeof dispatchQueuedRankCheckRunIntents;
   dispatchTraffic?: typeof dispatchFirstTrafficSyncIntent;
   reconcileSearchInsights?: typeof reconcileRequestedSearchInsightsSyncs;
@@ -17,10 +19,11 @@ type SweepOptions = {
 export async function sweepWorkerIntents(options: SweepOptions = {}) {
   // A person is usually waiting on a rank run, so it goes before the background syncs.
   const rankRuns = await (options.dispatchRankRuns ?? dispatchQueuedRankCheckRunIntents)();
+  const tracking = await (options.dispatchTracking ?? dispatchAiTrackingIntents)();
   const search = await (options.reconcileSearchInsights ?? reconcileRequestedSearchInsightsSyncs)();
   const traffic = await (options.dispatchTraffic ?? dispatchFirstTrafficSyncIntent)();
   const welcome = await (options.sweepWelcome ?? sweepWelcomeFollowupIntents)();
-  return { rankRuns, search, traffic, welcome };
+  return { rankRuns, tracking, search, traffic, welcome };
 }
 
 export function startWorkerIntentProcessor() {

@@ -21,7 +21,7 @@ export function emptyRankCopy(
       href: projectRunsPath(projectRef),
     };
   }
-  if (state === "failed") {
+  if (state === "failed" || state === "unknown") {
     return {
       action: "retry",
       depth: trackedDepth,

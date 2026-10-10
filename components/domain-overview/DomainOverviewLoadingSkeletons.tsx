@@ -1,4 +1,5 @@
 import { PageContent } from "@/components/shell/PageContent";
+import { tableHeaderBorderClassName } from "@/components/ui/table-header-styles";
 import { cn } from "@/lib/ui/cn";
 import type { ComponentPropsWithoutRef } from "react";
 
@@ -60,13 +61,16 @@ function ChartLoading() {
 function TableLoading({ pages = false }: Readonly<{ pages?: boolean }>) {
   return (
     <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
-      <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+      <div className="flex items-center gap-3 px-4 py-3">
         <Bar className="h-4 w-[150px]" />
         <Bar className="ml-auto h-8 w-[84px]" />
       </div>
       <div className="overflow-x-auto">
         <div className={pages ? "min-w-[900px]" : "min-w-[1180px]"}>
-          <div className="h-[42px] border-b border-border bg-bg-sunken" />
+          <div
+            className={cn(tableHeaderBorderClassName, "h-[42px] bg-bg-sunken")}
+            data-table-header-border="header"
+          />
           {eight.map((key, index) => (
             <div className="flex h-[58px] items-center gap-8 border-b border-border px-4" key={key}>
               <Bar className={cn("h-3", index % 2 ? "w-[58%]" : "w-[72%]")} />

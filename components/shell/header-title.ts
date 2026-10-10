@@ -94,6 +94,11 @@ export function headerMetaFor(pathname: string, setup?: HeaderSetupState): Heade
 
   const researchSections = [
     [
+      "ai-tracking",
+      "AI Tracking",
+      "Monitor AI answers, brand mentions and cited sources over time.",
+    ],
+    [
       "ai-visibility",
       "AI Visibility",
       "Brand mentions and citations from available provider observations.",

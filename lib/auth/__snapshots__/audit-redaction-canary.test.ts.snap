@@ -983,6 +983,16 @@ exports[`audit redaction canaries > enumerates every application audit payload p
     "writer": "writeAudit",
   },
   {
+    "action": "action",
+    "after": "after",
+    "before": null,
+    "input": "{ action, actorId: actor.id, projectId: project.id, targetType: "project", targetId: project.publicId, after, }",
+    "occurrence": 1,
+    "path": "lib/api/ai-tracking-audit.ts",
+    "statusReason": null,
+    "writer": "writeAudit",
+  },
+  {
     "action": ""alert_rule.create"",
     "after": "alertRuleAuditResource(rule)",
     "before": null,

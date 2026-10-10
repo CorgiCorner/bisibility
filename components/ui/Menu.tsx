@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/ui/cn";
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, type ReactNode, useRef } from "react";
 import styles from "./overlay.module.css";
 import { usePopupAnchor } from "./popup-anchor";
 import { MenuAnchor, MenuContent, MenuPortal, Menu as Root } from "./primitives/menu";
@@ -20,6 +20,8 @@ export type MenuProps = {
   id?: string;
   onClick?: ComponentProps<"div">["onClick"];
   restoreFocus?: boolean;
+  /** Nonmodal menus let outside controls activate on the dismissal click. */
+  modal?: boolean;
 };
 export function Menu({
   anchorEl,
@@ -34,11 +36,14 @@ export function Menu({
   autoFocus = true,
   instant,
   restoreFocus = true,
+  modal = true,
   ...props
 }: MenuProps) {
   const { virtualRef, element } = usePopupAnchor(anchorEl);
+  const interactedOutside = useRef(false);
   return (
     <Root
+      modal={modal}
       open={open}
       onOpenChange={(value) => {
         if (!value) onClose();
@@ -73,9 +78,13 @@ export function Menu({
               }
             }
           }}
+          onInteractOutside={() => {
+            if (!modal) interactedOutside.current = true;
+          }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
-            if (restoreFocus) element.current?.focus();
+            if (restoreFocus && !interactedOutside.current) element.current?.focus();
+            interactedOutside.current = false;
             onExited?.();
           }}
           onEscapeKeyDown={(event) => {

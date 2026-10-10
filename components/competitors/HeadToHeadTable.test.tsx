@@ -42,7 +42,7 @@ describe("HeadToHeadTable", () => {
     expect(card).toHaveClass("border", "border-border");
     expect(header).toHaveClass("border-b", "border-border");
     expect(notice).not.toHaveClass("border-b", "border-t");
-    expect(tableHeader).toHaveClass("border-b", "border-border");
+    expect(tableHeader).toHaveClass("border-y", "border-border");
   });
 
   it("shows You plus top three competitors and expands the remaining columns explicitly", () => {

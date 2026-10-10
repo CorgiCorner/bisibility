@@ -1,5 +1,7 @@
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { ProviderCallError } from "@/lib/providers/call-error";
+import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { analyzeBacklinks } from "./service";
 import { UnsupportedBacklinksTargetError } from "./target";
@@ -182,6 +184,106 @@ describe("backlinks analyze service", () => {
         }),
       ),
     );
+  });
+
+  it("persists successful sections and the charged history failure without replay", async () => {
+    provider.fetchBacklinksHistory.mockRejectedValueOnce(
+      new ProviderCallError("Unavailable history", 2),
+    );
+    const outcome = await run({ target: "sub.example.com" });
+    expect(outcome).toMatchObject({
+      ok: true,
+      costCents: 5,
+      historyUnavailable: true,
+      history: [],
+      summary: { backlinksTotal: 1685 },
+    });
+    expect(mocks.tx.backlinkSnapshot.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          costCents: 5,
+          summary: expect.objectContaining({ _historyUnavailable: true }),
+        }),
+      }),
+    );
+    expect(provider.fetchBacklinksHistory).toHaveBeenCalledTimes(1);
+    expect(provider.fetchBacklinksRows).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not store a numeric-cost success after an unknown-cost history error", async () => {
+    provider.fetchBacklinksHistory.mockRejectedValueOnce(
+      new ProviderCallError("Unknown history charge"),
+    );
+    await expect(run({ target: "sub.example.com" })).resolves.toMatchObject({
+      ok: false,
+      status: "failed",
+      reason: "history_failed",
+      costCents: null,
+      knownSummaryCostCents: 2,
+      summary,
+      historyStatus: "failed",
+      rowsStatus: "not_requested",
+      historyFailure: { code: "provider_transient", phase: null },
+    });
+    expect(mocks.tx.backlinkSnapshot.create).not.toHaveBeenCalled();
+    expect(provider.fetchBacklinksRows).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      new ProviderUsagePersistenceError({
+        phase: "measurement",
+        attemptId: "private-attempt",
+        cause: new Error("private-cause"),
+      }),
+      "provider_usage_unconfirmed",
+      "measurement",
+    ],
+    [new Error("private-provider-response"), "unexpected_error", null],
+  ])(
+    "retains safe summary evidence outside the rejected cache loader: %s",
+    async (error, code, phase) => {
+      const cacheWrite = vi.fn();
+      mocks.withCache.mockImplementationOnce(async ({ load }: { load: () => Promise<unknown> }) => {
+        const value = await load();
+        cacheWrite(value);
+        return { cached: false, status: "success", value };
+      });
+      provider.fetchBacklinksHistory.mockRejectedValueOnce(error);
+      const outcome = await run({ target: "sub.example.com" });
+      expect(outcome).toMatchObject({
+        ok: false,
+        status: "failed",
+        reason: "history_failed",
+        costCents: null,
+        knownSummaryCostCents: 2,
+        summary,
+        historyFailure: { code, phase },
+        historyStatus: "failed",
+        rowsStatus: "not_requested",
+        provider: "dataforseo",
+        target: "sub.example.com",
+        targetScope: "site",
+      });
+      expect(cacheWrite).not.toHaveBeenCalled();
+      expect(mocks.tx.backlinkSnapshot.create).not.toHaveBeenCalled();
+      expect(provider.fetchBacklinksSummary).toHaveBeenCalledTimes(1);
+      expect(provider.fetchBacklinksHistory).toHaveBeenCalledTimes(1);
+      expect(provider.fetchBacklinksRows).not.toHaveBeenCalled();
+      const serialized = JSON.stringify(outcome);
+      expect(serialized).not.toMatch(/private|attemptId|cause|cachedUntil|"rows":|"history":/);
+    },
+  );
+
+  it("projects only normalized summary facts into failed evidence", async () => {
+    provider.fetchBacklinksSummary.mockResolvedValueOnce({
+      costCents: 2,
+      summary: { ...summary, raw: "private-provider-payload", credentials: "private" },
+    });
+    provider.fetchBacklinksHistory.mockRejectedValueOnce(new ProviderUsagePersistenceError());
+    const outcome = await run({ target: "sub.example.com" });
+    expect(outcome).toMatchObject({ ok: false, summary });
+    expect(JSON.stringify(outcome)).not.toMatch(/private|credentials|"raw"/);
   });
 
   it("returns an unexpired sufficiently large snapshot for free", async () => {

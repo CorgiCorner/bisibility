@@ -74,6 +74,7 @@ export async function persistBacklinksSnapshot(input: {
   costCents: number;
   fetchedAt: Date;
   history: BacklinksHistoryMonth[];
+  historyUnavailable?: boolean;
   includeSubdomains: boolean;
   mode: BacklinkRowMode;
   projectId: string;
@@ -100,6 +101,7 @@ export async function persistBacklinksSnapshot(input: {
           ...input.summary,
           _mode: input.mode,
           _provider: input.provider,
+          ...(input.historyUnavailable ? { _historyUnavailable: true } : {}),
         } as Prisma.InputJsonObject,
         target: input.target,
         targetScope: input.scope,

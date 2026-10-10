@@ -12,11 +12,7 @@ import {
   cacheTimeRemaining,
   type RecentKeywordResearch,
 } from "@/lib/keyword-research/recent-searches";
-import type {
-  KeywordResearchMode,
-  KeywordResearchOutcome,
-  KeywordResearchSuccess,
-} from "@/lib/keyword-research/types";
+import type { KeywordResearchMode, KeywordResearchSuccess } from "@/lib/keyword-research/types";
 import type { CheckHealth } from "@/lib/queries/check-health";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { getKeywordResearchPageContext } from "@/lib/queries/keyword-research";
@@ -125,7 +121,7 @@ export async function loadResearchEstimate(
 }
 
 export type UiResearchOutcome =
-  | Exclude<KeywordResearchOutcome, { estimate: true }>
+  | Exclude<Awaited<ReturnType<ResearchKeywordsAction>>, { estimate: true }>
   | { charged: boolean | null; ok: false; reason: "lookup_failed" };
 
 export type ResearchTab = {
@@ -277,6 +273,7 @@ export function researchFailureState(
   outcome: Exclude<UiResearchOutcome, KeywordResearchSuccess>,
 ): ResearchState {
   if (outcome.reason === "budget_exhausted") return "budget_exhausted";
+  if (outcome.reason === "account_restricted") return "account_restricted";
   if (outcome.reason === "needs_reauth") return "needs_reauth";
   if (outcome.reason === "no_source") return "no_provider";
   if (outcome.reason === "unsupported_location") return "unsupported_location";

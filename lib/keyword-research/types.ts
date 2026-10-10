@@ -9,6 +9,8 @@ export type KeywordResearchSourceReason =
   | "in_progress"
   | "needs_reauth"
   | "no_source"
+  | "own_credentials_required"
+  | "credentials_changed"
   | "previous_source_failed"
   | "provider_error"
   | "rate_limited"

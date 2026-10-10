@@ -63,7 +63,7 @@ export function useRunStatusCopy() {
     ];
     const forRun = (run: ProjectRunWithOperationSnapshot) =>
       run.kind === "rank_check"
-        ? rank(rankRunStatusKey(run.details.status, run.details.outcome))
+        ? rank(rankRunStatusKey(run.details.status, run.details.outcome, run.details.blockedReason))
         : searchConsole(gscRunStatusKey(run));
     return { forRun, groups, rank, searchConsole };
   }, [statusT, t]);

@@ -10,7 +10,10 @@ export type BoundedBody =
  * more than the caller allows. Stream read failures are reported as "unreadable" rather than
  * thrown.
  */
-export async function readBodyWithLimit(req: Request, limit: number): Promise<BoundedBody> {
+export async function readBodyWithLimit(
+  req: Pick<Request, "headers" | "body">,
+  limit: number,
+): Promise<BoundedBody> {
   const declared = Number.parseInt(req.headers.get("content-length") ?? "", 10);
   if (Number.isFinite(declared) && declared > limit) {
     return { ok: false, reason: "too_large" };

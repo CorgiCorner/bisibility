@@ -117,9 +117,13 @@ export function PositionHistoryCard({
     : positions.every((position) => position === null) ||
       ((chartState === "one_check" || !chartState) && history.length < 2);
   const chartLabels = allMarkets ? comparisonLabels : labels;
-  const notRankedTitle = pending("notRankedTitle", {
-    depth: keyword.trackedDepth ?? keyword.projectSerpDepth ?? 20,
-  });
+  const notRankedTitle =
+    keyword.observationCompleteness === "unknown" ||
+    keyword.observationCompleteness === "truncated_by_stop_on_match"
+      ? pending("coverageUnknownTitle")
+      : pending("notRankedTitle", {
+          depth: keyword.trackedDepth ?? keyword.projectSerpDepth ?? 20,
+        });
   const emptyStateTitle = rangeEmpty
     ? t("noChecks", { days: activeRange.days })
     : positions.every((position) => position === null)

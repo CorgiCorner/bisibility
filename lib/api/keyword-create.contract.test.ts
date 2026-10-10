@@ -190,8 +190,8 @@ describe("keyword create check-state contract", () => {
         {
           keyword: {
             id: "kw_b00000000000000000000000",
-            latest_check: { position: 3 },
-            latest_successful_check: { position: 3 },
+            latest_check: { observation_completeness: null, position: 3 },
+            latest_successful_check: { observation_completeness: null, position: 3 },
           },
           status: "skipped",
         },
@@ -203,6 +203,7 @@ describe("keyword create check-state contract", () => {
       select: {
         checkedAt: true,
         keywordId: true,
+        observationRun: { select: { completeness: true } },
         position: true,
         publicId: true,
         rankingUrl: true,

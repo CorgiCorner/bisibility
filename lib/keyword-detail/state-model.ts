@@ -1,20 +1,23 @@
 import { dailyPositionPoints } from "@/lib/keywords/position-history";
 import type { KeywordRow, LatestAttemptHealth } from "@/lib/queries/keyword-row";
 import type { KeywordTrafficDetail } from "@/lib/queries/keyword-traffic";
+import { hasIncompleteObservation } from "@/lib/serp/rank-depth";
 
 export type KeywordDetailRankState =
   | "normal"
   | "never_checked"
   | "not_ranked"
+  | "unknown"
   | "failed"
   | "running";
 export type KeywordDetailChartState = "normal" | "one_check";
-export type KeywordDetailWhatChanged = "diff" | "no_change" | "first_check";
+export type KeywordDetailWhatChanged = "diff" | "no_change" | "first_check" | "unknown";
 export type KeywordDetailKeywordContext = "full" | "partial" | "unavailable";
 export type KeywordDetailTrafficState = "both" | "gsc_only" | "awaiting_sync" | "not_connected";
 
 export type KeywordDetailChangeDimensions = {
   hasMultipleChecks: boolean;
+  coverageUnknown?: boolean;
   position: { current: number; previous: number } | null;
   positionChanged: boolean;
   positionTransition: { current: number | null; previous: number | null } | null;
@@ -40,10 +43,14 @@ function attemptHealth(keyword: KeywordRow): LatestAttemptHealth {
 }
 
 function rankState(keyword: KeywordRow): KeywordDetailRankState {
-  if (keyword.hasRankData) return keyword.position <= 100 ? "normal" : "not_ranked";
+  if (keyword.hasRankData && keyword.position <= 100) return "normal";
+  if (keyword.hasRankData && hasIncompleteObservation(keyword.observationCompleteness))
+    return "unknown";
+  if (keyword.hasRankData) return "not_ranked";
   const health = attemptHealth(keyword);
   if (health === "failed") return "failed";
   if (health === "running") return "running";
+  if (keyword.checkState === "unknown") return "unknown";
   return keyword.checkState === "not_ranked" ? "not_ranked" : "never_checked";
 }
 
@@ -67,8 +74,16 @@ export function deriveKeywordDetailChangeDimensions(
   const previous = checks.at(-2);
   const latestComparable = comparableChecks?.at(-1);
   const previousComparable = comparableChecks?.at(-2);
+  const coverageUnknown = Boolean(
+    (latest?.position === null &&
+      hasIncompleteObservation(
+        latestComparable?.observationCompleteness ?? keyword.observationCompleteness,
+      )) ||
+      (previous?.position === null &&
+        hasIncompleteObservation(previousComparable?.observationCompleteness)),
+  );
   const positionTransition =
-    latest !== undefined && previous !== undefined
+    !coverageUnknown && latest !== undefined && previous !== undefined
       ? { current: latest.position, previous: previous.position }
       : null;
   const positionChanged =
@@ -80,12 +95,13 @@ export function deriveKeywordDetailChangeDimensions(
       ? { current: positionTransition.current, previous: positionTransition.previous }
       : null;
   const rankingUrlChanged =
-    latestComparable !== undefined && previousComparable !== undefined
+    !coverageUnknown && latestComparable !== undefined && previousComparable !== undefined
       ? latestComparable.rankingUrl !== previousComparable.rankingUrl
       : false;
 
   return {
     hasMultipleChecks: checks.length >= 2,
+    ...(coverageUnknown ? { coverageUnknown: true } : {}),
     position,
     positionChanged,
     positionTransition,
@@ -118,6 +134,7 @@ export function describeKeywordDetailPositionChange(
 
 export function deriveKeywordDetailWhatChanged(keyword: KeywordRow): KeywordDetailWhatChanged {
   const dimensions = deriveKeywordDetailChangeDimensions(keyword);
+  if (dimensions.coverageUnknown) return "unknown";
   if (!dimensions.hasMultipleChecks) return "first_check";
   return dimensions.positionChanged || dimensions.rankingUrlChanged ? "diff" : "no_change";
 }

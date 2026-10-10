@@ -32,6 +32,7 @@ export function RunPageHeader({
 }: Readonly<RunPageHeaderProps>) {
   const dateDisplay = useDateDisplay();
   const t = useTranslations("projectRuns.rankRuns");
+  const tTimeline = useTranslations("projectRuns.timeline");
   const launchedIso = run.launchedAt ?? run.plannedFor;
   const launchedLabel = launchedIso
     ? formatDisplayDateTime(new Date(launchedIso), dateDisplay)
@@ -74,6 +75,9 @@ export function RunPageHeader({
               </h1>
               <StatusChip {...summary.runPresentation} live />
             </div>
+            {run.blockedReason === "no_active_keywords" && run.status === "completed" ? (
+              <p className="mt-1.5 text-[12.5px] text-fg-muted">{tTimeline("noActiveKeywords")}</p>
+            ) : null}
             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-fg-muted">
               <IdChip
                 className="border-border bg-transparent"

@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { RUN_STATUS_KEYS } from "./run-status-vocabulary";
 
-export const PROJECT_RUNS_VIEWS = ["runs", "planned"] as const;
+export const PROJECT_RUNS_VIEWS = ["timeline", "runs", "planned"] as const;
+export const PROJECT_RUNS_SECTIONS = ["all", "active", "upcoming", "history"] as const;
+export const PROJECT_RUNS_ORDERS = ["default", "asc", "desc"] as const;
 export const PROJECT_RUNS_SOURCES = ["all", "rank_checks", "search_console"] as const;
 /** Group values predate per-chip statuses and stay valid for URLs and `GET /api/runs`. */
 export const PROJECT_RUNS_STATUS_GROUPS = ["all", "active", "attention", "finished"] as const;
@@ -28,6 +30,8 @@ export const projectRunsFiltersSchema = z
     source: projectRunsSourceSchema,
     status: projectRunsStatusSchema,
     view: projectRunsViewSchema,
+    section: z.enum(PROJECT_RUNS_SECTIONS).optional(),
+    order: z.enum(PROJECT_RUNS_ORDERS).optional(),
   })
   .strict();
 
@@ -45,7 +49,7 @@ export type ProjectRunsQuery = z.infer<typeof projectRunsQuerySchema>;
 export const PROJECT_RUNS_DEFAULT_FILTERS: ProjectRunsFilters = {
   source: "all",
   status: "all",
-  view: "runs",
+  view: "timeline",
 };
 
 export const PROJECT_RUNS_DEFAULT_QUERY: ProjectRunsQuery = {
@@ -61,6 +65,8 @@ const rawProjectRunsQuerySchema = z
     source: projectRunsSourceSchema.optional(),
     status: projectRunsStatusSchema.optional(),
     view: projectRunsViewSchema.optional(),
+    section: z.enum(PROJECT_RUNS_SECTIONS).optional(),
+    order: z.enum(PROJECT_RUNS_ORDERS).optional(),
   })
   .strict();
 
@@ -75,6 +81,8 @@ export function parseProjectRunsQuery(searchParams: URLSearchParams): ProjectRun
     source: queryValue(searchParams, "source"),
     status: queryValue(searchParams, "status"),
     view: queryValue(searchParams, "view"),
+    section: queryValue(searchParams, "section"),
+    order: queryValue(searchParams, "order"),
   });
   const definedQuery = Object.fromEntries(
     Object.entries(raw).filter(([, value]) => value !== undefined),
@@ -87,7 +95,13 @@ export function parseProjectRunsQuery(searchParams: URLSearchParams): ProjectRun
 }
 
 export function sameProjectRunsFilters(left: ProjectRunsFilters, right: ProjectRunsFilters) {
-  return left.source === right.source && left.status === right.status && left.view === right.view;
+  return (
+    left.source === right.source &&
+    left.status === right.status &&
+    left.view === right.view &&
+    (left.section ?? "all") === (right.section ?? "all") &&
+    (left.order ?? "default") === (right.order ?? "default")
+  );
 }
 
 export function updateProjectRunsQuery(

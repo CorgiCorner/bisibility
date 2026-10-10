@@ -28,3 +28,29 @@ describe("rank observation formatting", () => {
     expect(notRankedLabel(50)).toBe("Not in top 50");
   });
 });
+
+it("does not infer absence within depth from unknown coverage", () => {
+  expect(
+    rankObservationState({ completedChecks: 1, position: null, completeness: "unknown" }),
+  ).toEqual({ kind: "unknown", label: "Coverage unknown", position: null });
+  expect(
+    rankObservationState({ completedChecks: 1, position: 4, completeness: "unknown" }),
+  ).toMatchObject({ kind: "ranked", position: 4 });
+});
+
+it("treats truncated absence as unknown but keeps positive observations valid", () => {
+  expect(
+    rankObservationState({
+      completedChecks: 1,
+      position: 101,
+      completeness: "truncated_by_stop_on_match",
+    }),
+  ).toMatchObject({ kind: "unknown", label: "Coverage unknown" });
+  expect(
+    rankObservationState({
+      completedChecks: 1,
+      position: 4,
+      completeness: "truncated_by_stop_on_match",
+    }),
+  ).toMatchObject({ kind: "ranked", position: 4 });
+});

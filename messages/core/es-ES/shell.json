@@ -77,7 +77,8 @@
         "promptExplorer": "Explorador de prompts",
         "siteAudit": "Auditoría del sitio",
         "projectContext": "Contexto del proyecto",
-        "agentReports": "Informes de agentes"
+        "agentReports": "Informes de agentes",
+        "aiTracking": "Seguimiento de IA"
       },
       "menu": "Menú"
     },
@@ -218,7 +219,8 @@
         "promptExplorer": "Compara pruebas sintéticas de prompts entre modelos compatibles.",
         "siteAudit": "Rastrea el sitio del proyecto y revisa problemas por URL.",
         "projectContext": "Negocio, público, productos y objetivos para tus agentes.",
-        "agentReports": "Análisis guardados y compartidos con los miembros de este proyecto."
+        "agentReports": "Análisis guardados y compartidos con los miembros de este proyecto.",
+        "aiTracking": "Supervisa respuestas de IA, menciones de marca y fuentes citadas a lo largo del tiempo."
       },
       "titles": {
         "account": "Ajustes de la cuenta",
@@ -250,7 +252,8 @@
         "promptExplorer": "Explorador de prompts",
         "siteAudit": "Auditoría del sitio",
         "projectContext": "Contexto del proyecto",
-        "agentReports": "Informes de agentes"
+        "agentReports": "Informes de agentes",
+        "aiTracking": "Seguimiento de IA"
       }
     },
     "footer": {

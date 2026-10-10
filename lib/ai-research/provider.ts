@@ -1,15 +1,28 @@
 import "server-only";
+import { readBodyWithLimit } from "@/lib/http/bounded-body";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { ProviderCallError } from "@/lib/providers/call-error";
+import {
+  assertLiveResponseCapacity,
+  reserveLiveResponseCapacity,
+} from "@/lib/providers/live-capacity";
+import { consumeProviderLimit } from "@/lib/providers/rate-limit";
 import { requireDataForSeoLogin } from "@/lib/providers/serp/dataforseo-client";
 import type { DataForSeoResponse } from "@/lib/providers/serp/dataforseo-payload";
-import { dataForSeoResponseCostCents } from "@/lib/providers/serp/dataforseo-payload";
-import { dataForSeoUsageReceipt } from "@/lib/providers/serp/usage-receipts";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { readObservedResponse } from "@/lib/providers/usage";
 import { z } from "zod";
-import { AI_REQUEST_BUDGET_MS, aiDeadlineSignal } from "./deadline";
+import { fetchAiResearchCapabilities } from "./catalog";
+import type { AiModelCapability } from "./catalog-types";
+import {
+  AI_REQUEST_BUDGET_MS,
+  AiDeadlineError,
+  aiDeadlineSignal,
+  assertAiDeadline,
+} from "./deadline";
+import { isLegacyModel, isLegacyPrompt } from "./legacy";
 import { observedRow, promptRow } from "./normalize";
+import { aiUsageReceipt } from "./provider-receipt";
 import type { PromptInput, VisibilityInput } from "./schema";
 
 const BASE = "https://api.dataforseo.com/v3/ai_optimization/";
@@ -21,23 +34,43 @@ export async function aiProviderRequest(
   payload: Record<string, unknown>,
   deadlineAt = Date.now() + AI_REQUEST_BUDGET_MS,
   onDispatch?: () => void,
+  projectId?: string,
 ) {
-  const signal = aiDeadlineSignal(deadlineAt, AI_REQUEST_BUDGET_MS);
+  const signal = aiDeadlineSignal(deadlineAt, 120_000);
+  const authorization = requireDataForSeoLogin(credentials);
+  const reservation = path.endsWith("/llm_responses/live")
+    ? await reserveLiveResponseCapacity(credentials, projectId)
+    : undefined;
   const observed = await readObservedResponse<DataForSeoResponse>({
     observer: credentials.usageObserver,
     requireMeasuredUsage: true,
-    measure: dataForSeoUsageReceipt,
-    request: () => {
-      const authorization = requireDataForSeoLogin(credentials);
+    measure: aiUsageReceipt,
+    beforeRequest: () => {
+      assertAiDeadline(deadlineAt);
+      if (signal.aborted) throw new AiDeadlineError();
+      if (reservation) assertLiveResponseCapacity(reservation);
+    },
+    request: async () => {
       onDispatch?.();
-      return fetch(`${BASE}${path}`, {
+      const response = await fetch(`${BASE}${path}`, {
         method: "POST",
+        redirect: "error",
         headers: {
           Authorization: authorization,
           "Content-Type": "application/json",
         },
         body: JSON.stringify([payload]),
         signal,
+      });
+      const body = await readBodyWithLimit(response, 2 * 1024 * 1024);
+      if (!body.ok) {
+        await response.body?.cancel().catch(() => undefined);
+        throw new Error("The provider response is unreadable or exceeds its bounded size.");
+      }
+      return new Response(new Uint8Array(body.bytes), {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
       });
     },
   });
@@ -47,11 +80,11 @@ export async function aiProviderRequest(
   if (!observed.response.ok || data?.status_code !== 20000 || !task || task.status_code !== 20000)
     throw new ProviderCallError(
       "AI provider rejected the request.",
-      data ? dataForSeoResponseCostCents(data) : null,
+      aiUsageReceipt(data, observed.response).costCents,
     );
   return {
     result: task.result?.[0],
-    costCents: dataForSeoResponseCostCents(data),
+    costCents: aiUsageReceipt(data, observed.response).costCents!,
     providerRequestId: task.id,
   };
 }
@@ -109,10 +142,22 @@ export async function supportedPromptModels(
   credentials: ProviderCredentials,
   deadlineAt = Date.now() + AI_REQUEST_BUDGET_MS,
 ) {
+  const limit = await consumeProviderLimit("dataforseo", credentials);
+  if (!limit.success)
+    throw new ProviderCallError("Provider model capabilities are rate limited.", 0);
   const response = await fetch(`${BASE}chat_gpt/llm_responses/models`, {
     headers: { Authorization: requireDataForSeoLogin(credentials) },
     signal: aiDeadlineSignal(deadlineAt, 10_000),
+    cache: "no-store",
+    redirect: "error",
   });
+  if (!response.ok) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new ProviderCallError("Provider model capabilities are unavailable.", 0);
+  }
+  const body = await readBodyWithLimit(response, 2 * 1024 * 1024);
+  if (!body.ok)
+    throw new ProviderCallError("Provider model capabilities are unreadable or too large.", 0);
   const envelope = z
     .object({
       status_code: z.literal(20000),
@@ -125,8 +170,7 @@ export async function supportedPromptModels(
         }),
       ),
     })
-    .parse(await response.json());
-  if (!response.ok) throw new Error("Provider model capabilities are unavailable.");
+    .parse(JSON.parse(body.bytes.toString("utf8")));
   return new Set(
     envelope.tasks.flatMap((task) =>
       task.result.filter((model) => !model.reasoning).map((model) => model.model_name),
@@ -139,31 +183,60 @@ export async function fetchPrompt(
   model: string,
   tag: string,
   deadlineAt = Date.now() + AI_REQUEST_BUDGET_MS,
-  capabilities?: ReadonlySet<string>,
+  capabilities?: ReadonlyMap<string, AiModelCapability> | ReadonlySet<string>,
   onDispatch?: () => void,
 ) {
-  const supported = capabilities ?? (await supportedPromptModels(credentials, deadlineAt));
-  if (!supported.has(model))
+  const legacy = isLegacyPrompt(input);
+  const supported =
+    capabilities ??
+    (legacy
+      ? await supportedPromptModels(credentials, deadlineAt)
+      : new Map(
+          (await fetchAiResearchCapabilities(credentials, deadlineAt)).catalog.models.map(
+            (entry) => [entry.id, entry],
+          ),
+        ));
+  const capability = "get" in supported ? supported.get(model) : undefined;
+  if (
+    !("get" in supported ? capability : supported.has(model)) ||
+    (legacy && (!isLegacyModel(model) || capability?.reasoning))
+  )
     throw new ProviderCallError(
       "Selected model is unavailable or no longer supports bounded responses.",
       0,
     );
+  if (
+    (!legacy && !capability) ||
+    (capability &&
+      (input.max_output_tokens < capability.minOutputTokens ||
+        input.max_output_tokens > capability.maxOutputTokens ||
+        (input.web_search && !capability.webSearch)))
+  )
+    throw new ProviderCallError("Selected model options are unsupported.", 0);
   const result = await aiProviderRequest(
     credentials,
     PROMPT_PATH,
     {
       user_prompt: input.prompt,
       model_name: model,
-      max_output_tokens: 512,
-      web_search: false,
-      temperature: 0,
+      ...(legacy
+        ? { max_output_tokens: 512, web_search: false, temperature: 0 }
+        : {
+            max_output_tokens: input.max_output_tokens,
+            web_search: input.web_search,
+            ...(capability?.reasoning ? {} : { temperature: 0 }),
+            ...(input.country_iso_code
+              ? { web_search_country_iso_code: input.country_iso_code }
+              : {}),
+            system_message: `Respond in language ${input.response_language}. This is a response instruction, not a dataset filter.`,
+          }),
       tag,
     },
     deadlineAt,
     onDispatch,
   );
   try {
-    return { ...result, row: promptRow(result.result, input) };
+    return { ...result, row: promptRow(result.result, input, model) };
   } catch {
     throw new ProviderCallError("Prompt response could not be normalized.", result.costCents);
   }

@@ -41,6 +41,7 @@ describe("navItems", () => {
       "Search Console",
       "AI Visibility",
       "Prompt Explorer",
+      "AI Tracking",
       "Site Audit",
       "Markets",
       "Alerts",
@@ -73,6 +74,7 @@ describe("navItems", () => {
       "Search Console",
       "AI Visibility",
       "Prompt Explorer",
+      "AI Tracking",
       "Site Audit",
     ]);
     expect(items.filter((item) => item.group === "project").map((item) => item.label)).toEqual([
@@ -85,7 +87,7 @@ describe("navItems", () => {
       "Install",
       "Settings",
     ]);
-    expect(items).toHaveLength(18);
+    expect(items).toHaveLength(19);
     expect(new Set(items.map((item) => item.group))).toEqual(new Set([null, "modules", "project"]));
   });
 
@@ -220,6 +222,7 @@ describe("navItems", () => {
       Dashboard: "level",
       "AI Visibility": "own-axis",
       "Prompt Explorer": "own-axis",
+      "AI Tracking": "own-axis",
       "Site Audit": "own-axis",
       "Project Context": "project",
       "Agent Reports": "project",

@@ -4,6 +4,7 @@ type PinnedLookup = (
   callback: (error: Error | null, address: unknown, family?: number) => void,
 ) => void;
 
+import { getEventListeners } from "node:events";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchAuditPage, MAX_PAGE_BYTES } from "./fetch";
 
@@ -152,5 +153,87 @@ describe("site audit transport security", () => {
       ),
     ).rejects.toThrow(/time limit/);
     expect(request).not.toHaveBeenCalled();
+  });
+
+  it.each([3, 4])("keeps a 429 retry separate from the %i-redirect chain", async (redirects) => {
+    const paths: string[] = [];
+    const dns = vi.fn(resolveHost);
+    const request = vi.fn(async (input: URL | RequestInfo, _options: RequestInit) => {
+      const path = new URL(String(input)).pathname;
+      paths.push(path);
+      if (paths.length === 1)
+        return new Response("Rate limited", { status: 429, headers: { "retry-after": "0" } });
+      const depth = Number(path.slice(1)) || 0;
+      return depth < redirects
+        ? new Response(null, { status: 302, headers: { location: `/${depth + 1}` } })
+        : new Response("Recovered");
+    });
+    const limits = budget();
+    const pending = fetchAuditPage(new URL("https://example.com/"), limits, {
+      fetch: request as typeof fetch,
+      resolveHost: dns,
+    });
+    if (redirects === 3)
+      await expect(pending).resolves.toMatchObject({
+        url: "https://example.com/3",
+        status: 200,
+        html: "Recovered",
+      });
+    else await expect(pending).rejects.toThrow("three-redirect audit limit");
+    expect(paths).toEqual(["/", "/", "/1", "/2", "/3"]);
+    expect(limits.requests).toBe(5);
+    expect(dns).toHaveBeenCalledTimes(5);
+    expect(agents.options).toHaveLength(5);
+    expect(agents.close).toHaveBeenCalledTimes(5);
+    for (const [, options] of request.mock.calls)
+      expect(options).toMatchObject({ redirect: "manual" });
+  });
+
+  it("cleans aborted retry waits and gives the next invocation a fresh budget", async () => {
+    vi.useFakeTimers();
+    try {
+      for (let cycle = 0; cycle < 3; cycle++) {
+        const controller = new AbortController();
+        const first = new Response("Rate limited", {
+          status: 429,
+          headers: { "retry-after": "1" },
+        });
+        const cancel = vi.spyOn(first.body as ReadableStream, "cancel");
+        const request = vi
+          .fn()
+          .mockResolvedValueOnce(first)
+          .mockResolvedValueOnce(new Response("Recovered"));
+        const abortedBudget = { ...budget(), signal: controller.signal };
+        const pending = fetchAuditPage(new URL("https://example.com/"), abortedBudget, {
+          fetch: request,
+          resolveHost,
+        });
+        const outcome = expect(pending).rejects.toThrow("Audit time limit reached.");
+        await vi.advanceTimersByTimeAsync(0);
+        expect(request).toHaveBeenCalledOnce();
+        expect(cancel).toHaveBeenCalledOnce();
+        controller.abort();
+        await outcome;
+        expect(vi.getTimerCount()).toBe(0);
+        expect(getEventListeners(controller.signal, "abort")).toHaveLength(0);
+        expect(abortedBudget.requests).toBe(1);
+        expect(agents.close).toHaveBeenCalledTimes(cycle * 2 + 1);
+
+        const fresh = budget();
+        await expect(
+          fetchAuditPage(new URL("https://example.com/"), fresh, {
+            fetch: request,
+            resolveHost,
+          }),
+        ).resolves.toMatchObject({ status: 200, html: "Recovered" });
+        expect(request).toHaveBeenCalledTimes(2);
+        expect(fresh.requests).toBe(1);
+        expect(fresh.signal.aborted).toBe(false);
+        expect(agents.options).toHaveLength(cycle * 2 + 2);
+        expect(agents.close).toHaveBeenCalledTimes(cycle * 2 + 2);
+      }
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

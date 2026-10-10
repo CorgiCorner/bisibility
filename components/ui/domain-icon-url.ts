@@ -43,8 +43,20 @@ export function domainIconHost(domain: string | null | undefined) {
   }
 }
 
+export function domainIconsEnabled() {
+  if (typeof document !== "undefined") {
+    const runtimeSetting = document.documentElement.getAttribute("data-domain-icons");
+    if (runtimeSetting !== null) return runtimeSetting !== "off";
+    return process.env.NEXT_PUBLIC_DOMAIN_ICONS !== "off";
+  }
+  // Server rendering reads the deployment environment at request time.
+  if (typeof process === "undefined") return true;
+  const environment = process.env;
+  return environment.NEXT_PUBLIC_DOMAIN_ICONS !== "off";
+}
+
 export function buildDomainIconUrl({ domain }: DomainIconUrlInput) {
-  if (process.env.NEXT_PUBLIC_DOMAIN_ICONS === "off") {
+  if (!domainIconsEnabled()) {
     return null;
   }
 

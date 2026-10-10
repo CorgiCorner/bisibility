@@ -1,6 +1,6 @@
 import { type DefaultTreeAdapterMap, parse } from "parse5";
 import type { SiteAuditIssue, SiteAuditPage } from "./schema";
-import { sameOriginAuditUrl } from "./target";
+import { isAuditDocumentUrl, sameOriginAuditUrl } from "./target";
 
 type Node = DefaultTreeAdapterMap["node"];
 function elements(root: Node) {
@@ -39,12 +39,25 @@ function text(root: Node): string {
 function clean(value: string | null, limit = 400) {
   return value?.replace(/\s+/g, " ").trim().slice(0, limit) || null;
 }
+function documentBase(nodes: DefaultTreeAdapterMap["element"][], fallback: URL) {
+  const node = nodes.find(
+    (element) => element.tagName === "base" && attribute(element, "href") !== null,
+  );
+  if (!node) return fallback;
+  try {
+    const base = new URL(attribute(node, "href") ?? "", fallback);
+    return ["data:", "javascript:"].includes(base.protocol) ? fallback : base;
+  } catch {
+    return fallback;
+  }
+}
 export function inspectHtml(
   input: { html: string; url: string; status: number; headers: Headers; responseTimeMs: number },
   requestedUrl: string,
 ) {
   const nodes = elements(parse(input.html));
   const url = new URL(input.url);
+  const base = documentBase(nodes, url);
   const meta = (name: string) =>
     nodes.find(
       (node) => node.tagName === "meta" && attribute(node, "name")?.toLowerCase() === name,
@@ -56,14 +69,18 @@ export function inspectHtml(
     (node) => node.tagName === "link" && attribute(node, "rel")?.split(/\s+/).includes("canonical"),
   );
   const canonical = clean(canonicalNode ? attribute(canonicalNode, "href") : null, 512);
-  const robotsNode = meta("robots");
-  const robots = clean(
-    [input.headers.get("x-robots-tag"), robotsNode ? attribute(robotsNode, "content") : null]
-      .filter(Boolean)
-      .join(", "),
-    200,
-  );
-  const noindex = /\b(noindex|none)\b/i.test(robots ?? "");
+  const directives = [
+    input.headers.get("x-robots-tag"),
+    ...nodes
+      .filter(
+        (node) => node.tagName === "meta" && attribute(node, "name")?.toLowerCase() === "robots",
+      )
+      .map((node) => attribute(node, "content")),
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const robots = clean(directives, 200);
+  const noindex = /\b(noindex|none)\b/i.test(directives);
   const headings = nodes.filter((node) => /^h[1-6]$/.test(node.tagName));
   const h1Count = headings.filter((node) => node.tagName === "h1").length;
   const images = nodes.filter((node) => node.tagName === "img");
@@ -76,15 +93,16 @@ export function inspectHtml(
   const discovered = [
     ...new Set(
       links
-        .map((href) => sameOriginAuditUrl(href, url, url.origin)?.href)
-        .filter((href): href is string => !!href),
+        .map((href) => sameOriginAuditUrl(href, base, url.origin))
+        .filter((linked): linked is URL => !!linked && isAuditDocumentUrl(linked))
+        .map((linked) => linked.href),
     ),
   ].slice(0, 200);
   let externalLinkCount = 0;
   let internalLinkCount = 0;
   for (const href of links) {
     try {
-      const linked = new URL(href, url);
+      const linked = new URL(href, base);
       if (!["http:", "https:"].includes(linked.protocol)) continue;
       if (linked.origin === url.origin) internalLinkCount++;
       else externalLinkCount++;
@@ -98,7 +116,7 @@ export function inspectHtml(
   if (input.status >= 400) add("http_error", "error", `HTTP ${input.status}`);
   const isHtml = input.headers.get("content-type")?.toLowerCase().includes("text/html") ?? false;
   if (!isHtml) add("non_html", "info", "Response is not HTML; on-page checks are unavailable.");
-  if (isHtml) {
+  if (isHtml && input.status !== 429) {
     if (!title) add("missing_title", "warning", "Title is missing.");
     if (!description) add("missing_description", "warning", "Meta description is missing.");
     if (h1Count !== 1) add("h1_count", "warning", `${h1Count} H1 headings; expected one.`);

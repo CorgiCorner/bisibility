@@ -1,3 +1,4 @@
+import { observationCompleteness } from "@/lib/observation/types";
 import { itemStatusSchema } from "@/lib/rank-check/runs/contract";
 import { z } from "zod";
 import type { FirstCheckResultRow } from "./first-check-run-rows";
@@ -10,6 +11,7 @@ const itemSchema = z.object({
   rankCheck: z
     .object({
       costCents: z.number().nonnegative().nullable(),
+      observationCompleteness: z.enum(observationCompleteness).nullable().optional(),
       position: z.number().nullable(),
       provider: z.string(),
       rankingUrl: z.string().nullable(),

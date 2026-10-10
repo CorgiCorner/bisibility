@@ -4,6 +4,7 @@ import { hasUrlMismatch } from "@/lib/alerts/url-mismatch";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import { pathFromUrl } from "@/lib/queries/keyword-row-format";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import { hasIncompleteObservation } from "@/lib/serp/rank-depth";
 import { useTranslations } from "next-intl";
 
 type TargetRankingCellProps = {
@@ -51,7 +52,9 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
     ? pathFromUrl(row.rankingUrl)
     : row.checkState === "never_checked"
       ? t("notCheckedYet")
-      : t("notFound");
+      : hasIncompleteObservation(row.observationCompleteness)
+        ? t("coverageUnknown")
+        : t("notFound");
   const expectedUrl = row.expectedUrl ?? row.targetUrl;
 
   return (

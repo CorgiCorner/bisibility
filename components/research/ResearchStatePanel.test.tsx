@@ -18,6 +18,21 @@ const expected: Array<[ResearchState, RegExp]> = [
 ];
 
 describe("ResearchStatePanel", () => {
+  it("explains account restrictions and directs verification to the provider dashboard", () => {
+    render(<ResearchStatePanel projectRef="prj_1" state="account_restricted" />, {
+      messages: researchFeatureTestMessages,
+    });
+    expect(screen.getByText(/account needs attention/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/verify your account and resolve any restrictions/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open DataForSEO dashboard" })).toHaveAttribute(
+      "href",
+      "https://app.dataforseo.com/",
+    );
+    expect(screen.queryByRole("button", { name: /retry/i })).not.toBeInTheDocument();
+  });
+
   it.each(expected)("renders the %s state", (state, label) => {
     render(<ResearchStatePanel projectRef="prj_1" state={state} />, {
       messages: researchFeatureTestMessages,

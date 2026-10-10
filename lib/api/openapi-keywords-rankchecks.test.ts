@@ -124,13 +124,13 @@ describe("OpenAPI document", () => {
     const keyword = doc.components.schemas.Keyword;
 
     expect(keyword.properties.latest_position.description).toContain(
-      '`latest_position` = `latest_check.position`; it is `null` when the latest executed check failed OR when the domain was not found within the requested depth. Agents that need "the last known ranking" must read `latest_successful_check.position`.',
+      '`latest_position` = `latest_check.position`; it is `null` for failed checks, unknown observation coverage, or absence within the requested depth. Agents that need "the last known ranking" must read `latest_successful_check.position`.',
     );
     expect(keyword.properties.previous_position.description).toContain(
       "`previous_position` = the position recorded on `latest_check` as its predecessor.",
     );
     expect(doc.components.schemas.KeywordLatestCheck.description).toContain(
-      'A completed check with `position: null` means "not ranked within the requested depth"; `latest_check.status: "failed"` means "unknown, the check did not run to completion".',
+      'A completed check with `position: null` can have unknown coverage; read `observation_completeness` before inferring absence within the requested depth; `latest_check.status: "failed"` means "unknown, the check did not run to completion".',
     );
     expect(keyword.properties).toMatchObject({
       latest_check: { $ref: "#/components/schemas/KeywordLatestCheck" },
@@ -243,4 +243,19 @@ describe("OpenAPI document", () => {
       expect(selectionRefs(exempt)).toEqual([]);
     }
   });
+});
+
+it("documents persisted coverage separately from position and execution status", () => {
+  const schemas = getOpenApiDocument().components.schemas;
+  for (const schema of [
+    schemas.RankCheck,
+    schemas.KeywordLatestCheck,
+    schemas.KeywordLatestSuccessfulCheck,
+  ]) {
+    expect(schema.properties.observation_completeness).toMatchObject({
+      enum: ["complete", "truncated_by_stop_on_match", "unknown", null],
+      type: ["string", "null"],
+    });
+    expect(schema.required).toContain("observation_completeness");
+  }
 });

@@ -72,7 +72,6 @@ export function ProjectRunsLoading({
         </div>
         <Card className="min-w-0 overflow-hidden p-0" size="sm">
           <TableCardHeader
-            className="border-b border-border"
             title={<Bar className="h-4 w-20" />}
             titleId={`${active}-loading-title`}
             actions={
@@ -84,7 +83,7 @@ export function ProjectRunsLoading({
           />
           <div className="min-w-0 overflow-x-auto">
             <div
-              className={cn(tableHeaderClassName, "grid items-center border-t-0", layout.grid)}
+              className={cn(tableHeaderClassName, "grid items-center", layout.grid)}
               style={{ height: dataTableHeaderHeight }}
               data-loading-table-header
             >

@@ -505,7 +505,10 @@
           "workEmail": "Użyj służbowego adresu e-mail."
         }
       },
-      "expandableCard": { "expand": "Powiększ", "expandNamed": "Powiększ: {title}" },
+      "expandableCard": {
+        "expand": "Powiększ",
+        "expandNamed": "Powiększ: {title}"
+      },
       "expiryChoice": {
         "label": "Wygasa"
       },
@@ -628,6 +631,9 @@
         },
         "not_confirmed": {
           "description": "Przebieg się zakończył, ale nie ma zapisanego wyniku."
+        },
+        "skipped": {
+          "description": "Brak aktywnych słów kluczowych"
         }
       },
       "searchConsole": {

@@ -13,6 +13,13 @@ instance with `NEXT_PUBLIC_PLAUSIBLE_URL` and `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`.
 Both values are required. This integration is disabled by default and does not
 show the hosted product analytics consent banner.
 
+For published Compose images, set both values in `.env` and recreate the app
+container with `docker compose -f compose.yaml up -d --force-recreate app`.
+Request-rendered login and app pages read these values at runtime; rebuilding
+the image is unnecessary. Clearing either value and recreating the app disables
+the integration. Custom prerendered pages retain their build-time configuration
+until rebuilt.
+
 The shared UI retains neutral event contracts for operator-owned integrations.
 The events below describe those contracts; their presence does not load a
 tracker or send data to the hosted service. Hosted consent and replay controls

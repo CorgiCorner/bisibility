@@ -2,24 +2,21 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { createAgentReport } from "@/lib/agent-reports/service";
 import { withProviderLookupCache } from "@/lib/provider-lookups/cache";
-import {
-  ProviderLookupSignal,
-  paidProviderCall,
-  preflightProviderBudget,
-} from "@/lib/provider-lookups/paid-call";
+import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
-import { surfaceOf } from "@/lib/provider-usage/surface";
-import { requireAiSource } from "./context";
-import { aiRate, modelAdmissionBound, PROMPT_PRICING, promptCost, visibilityCost } from "./cost";
-import { AI_REQUEST_BUDGET_MS, assertAiDeadline } from "./deadline";
-import { researchFailure } from "./failure";
+import type { ProviderRequestTrigger } from "@/lib/provider-usage/tag";
 import {
-  fetchObserved,
-  fetchPrompt,
-  PROMPT_PATH,
-  supportedPromptModels,
-  VISIBILITY_PATH,
-} from "./provider";
+  ACTUAL_COST_ASSUMPTIONS,
+  ACTUAL_COST_EXCLUSIONS,
+  credentialReference,
+} from "./actual-cost";
+import { runActualCost } from "./actual-cost-run";
+import { admissionRate, loadAiAdmission } from "./admission";
+import { requireAiSource } from "./context";
+import { AI_REQUEST_BUDGET_MS } from "./deadline";
+import { executeResearch } from "./execution";
+import { isLegacyPrompt, isLegacyVisibility } from "./legacy";
+import { researchProvenance } from "./report-provenance";
 import {
   type AiResearchKind,
   type PromptInput,
@@ -27,15 +24,32 @@ import {
   type VisibilityInput,
   visibilitySchema,
 } from "./schema";
-import type { AiResearchResult, AiResearchRow } from "./types";
+import type { AiResearchResult } from "./types";
+import { AiPreDispatchRefusal, AiResearchValidationError } from "./validation";
 
 export type AiResearchContext = {
   projectId: string;
   actorId?: string | null;
   origin: ProviderRequestOrigin;
+  execution?: { trigger: ProviderRequestTrigger; correlationId: string };
 };
 export type AiResearchOutcome =
-  | { ok: true; estimate: true; estimatedCostCents: number; evidence: AiResearchResult["evidence"] }
+  | {
+      ok: true;
+      estimate: true;
+      estimatedCostCents: number;
+      evidence: AiResearchResult["evidence"];
+      estimateKind?: "forecast" | "admission_bound";
+      isGuaranteedMaximum?: boolean;
+      credentialSource?: "own" | "hosted";
+      estimateCredentialsRef?: string;
+      forecastAssumptions?: string[];
+      forecastScope?: "tokens_and_base_only";
+      pricingPolicy?: string;
+      pricingCheckedAt?: string;
+      isPartialEstimate?: boolean;
+      forecastExclusions?: string[];
+    }
   | {
       ok: true;
       estimate: false;
@@ -43,8 +57,16 @@ export type AiResearchOutcome =
       reportId: string;
       costCents: number;
       result: AiResearchResult;
+      retryBlocked?: boolean;
+      safeToStartNewRequest?: boolean;
     }
-  | { ok: false; reason: string; message: string };
+  | {
+      ok: false;
+      reason: string;
+      message: string;
+      retryBlocked?: boolean;
+      safeToStartNewRequest?: boolean;
+    };
 
 async function run(
   context: AiResearchContext,
@@ -52,148 +74,94 @@ async function run(
   input: VisibilityInput | PromptInput,
 ): Promise<AiResearchOutcome> {
   const deadlineAt = Date.now() + AI_REQUEST_BUDGET_MS;
-  const source = await requireAiSource(context.projectId);
-  const estimate = "prompt" in input ? promptCost(input) : visibilityCost(input);
+  let source: Awaited<ReturnType<typeof requireAiSource>>;
+  try {
+    source = await requireAiSource(context.projectId);
+  } catch (error) {
+    if ("prompt" in input && input.cost_policy === "provider_actual_cost" && !input.estimate_only)
+      throw new AiPreDispatchRefusal(error);
+    throw error;
+  }
+  const admission = () => loadAiAdmission(source, input, deadlineAt);
   const evidence = kind === "ai_visibility" ? "observed_dataset" : "synthetic_prompt_test";
-  if (input.estimate_only)
-    return { ok: true, estimate: true, estimatedCostCents: estimate, evidence };
-  const { fresh, estimate_only: _estimateOnly, max_cost_cents: _cap, ...identity } = input;
-  const key = `ai:v1:${context.projectId}:${source.connection.id}:${kind}:${createHash("sha256").update(JSON.stringify(identity)).digest("hex")}`;
+  if (input.estimate_only) {
+    const admitted = await admission();
+    const actual = admitted.policy === "provider_actual_cost";
+    return {
+      ok: true,
+      estimate: true,
+      estimatedCostCents: admitted.estimate,
+      evidence,
+      estimateKind: actual ? "forecast" : "admission_bound",
+      isPartialEstimate: actual,
+      isGuaranteedMaximum: admitted.policy === "current_catalog",
+      pricingPolicy: admitted.policy,
+      pricingCheckedAt: admissionRate(admitted, kind, admitted.estimate).checkedAt,
+      credentialSource: source.connection.credentialSource === "own" ? "own" : "hosted",
+      estimateCredentialsRef: credentialReference(source.connection),
+      ...(actual
+        ? {
+            forecastAssumptions: ACTUAL_COST_ASSUMPTIONS,
+            forecastExclusions: ACTUAL_COST_EXCLUSIONS,
+            forecastScope: "tokens_and_base_only" as const,
+          }
+        : {}),
+    };
+  }
+  if ("prompt" in input && input.cost_policy === "provider_actual_cost") {
+    return runActualCost({ context, input, source, loadAdmission: admission, deadlineAt });
+  }
+  const legacy = "prompt" in input ? isLegacyPrompt(input) : isLegacyVisibility(input);
+  const { fresh, estimate_only: _estimateOnly, max_cost_cents: _cap, ...rawIdentity } = input;
+  if (legacy && "prompt" in rawIdentity) {
+    delete (rawIdentity as Partial<PromptInput>).cost_policy;
+    delete (rawIdentity as Partial<PromptInput>).max_output_tokens;
+    delete (rawIdentity as Partial<PromptInput>).web_search;
+    delete (rawIdentity as Partial<PromptInput>).response_language;
+    delete (rawIdentity as Partial<PromptInput>).country_iso_code;
+  }
+  const identity = Object.fromEntries(
+    Object.entries(rawIdentity).filter(([, value]) => value !== undefined),
+  );
+  const key = `ai:${legacy ? "v1" : "v2"}:${context.projectId}:${source.connection.id}:${kind}:${createHash("sha256").update(JSON.stringify(identity)).digest("hex")}`;
   const loaded = await withProviderLookupCache({
     fresh,
     key,
     ttlSeconds: 43_200,
-    lockTtlSeconds: 180,
+    lockTtlSeconds: 330,
     load: async () => {
-      if (estimate > input.max_cost_cents)
+      const admitted = await admission();
+      const { estimate } = admitted;
+      if (estimate > input.max_cost_cents!)
         throw new ProviderLookupSignal({
           ok: false,
           reason: "cost_limit_exceeded",
           estimatedCostCents: estimate,
         });
-      await preflightProviderBudget({
-        budgetCapCents: source.project.budgetCapCents,
-        connectionId: source.connection.id,
-        projectId: context.projectId,
-        provider: source.provider.id,
-        estimatedCostCents: estimate,
-        estimatedUsageQuantity: "prompt" in input ? input.models.length : 1,
-        surface: surfaceOf(context.origin.source),
+      const { result, providerRequestIds } = await executeResearch({
+        context,
+        kind,
+        input,
+        source,
+        admitted,
+        deadlineAt,
       });
-      const common = {
-        connection: source.connection,
-        credential: context.origin.credential,
-        feature: kind,
-        itemCount: 1,
-        projectId: context.projectId,
-        provider: source.provider,
-        source: context.origin.source,
-        trigger: "manual" as const,
-      };
-      let costCents = 0;
-      let totalAvailable: number | null = null;
-      let failure: string | null = null;
-      let costStatus: "confirmed" | "unknown" = "confirmed";
-      const rows: AiResearchRow[] = [];
-      const providerRequestIds: string[] = [];
-      let capabilities: ReadonlySet<string> | undefined;
-      let dispatched = false;
-      const markDispatched = () => {
-        dispatched = true;
-      };
-      try {
-        if ("prompt" in input) {
-          for (const model of input.models) {
-            dispatched = false;
-            assertAiDeadline(deadlineAt);
-            const answer = await paidProviderCall({
-              ...common,
-              rate: aiRate(kind, modelAdmissionBound(model)),
-              call: async (credentials, usage) => {
-                capabilities ??= await supportedPromptModels(credentials, deadlineAt);
-                return fetchPrompt(
-                  credentials,
-                  input,
-                  model,
-                  usage.tag,
-                  deadlineAt,
-                  capabilities,
-                  markDispatched,
-                );
-              },
-            });
-            if (answer.providerRequestId) providerRequestIds.push(answer.providerRequestId);
-            costCents += answer.costCents;
-            rows.push(answer.row);
-            if (costCents > input.max_cost_cents) break;
-          }
-        } else {
-          assertAiDeadline(deadlineAt);
-          const observations = await paidProviderCall({
-            ...common,
-            rate: aiRate(kind, estimate),
-            call: (credentials, usage) =>
-              fetchObserved(credentials, input, usage.tag, deadlineAt, markDispatched),
-          });
-          if (observations.providerRequestId)
-            providerRequestIds.push(observations.providerRequestId);
-          costCents = observations.costCents;
-          totalAvailable = observations.totalAvailable;
-          rows.push(...observations.rows);
-        }
-      } catch (error) {
-        // No paid dispatch means no uncertain charge. Surface the refusal without caching
-        // when there are no earlier answers; a retry after removing the blocker is safe.
-        if (!dispatched && rows.length === 0) throw error;
-        const classified = researchFailure(error, dispatched);
-        costCents += classified.costCents;
-        costStatus = classified.costStatus;
-        failure = classified.message;
-      }
-      const result: AiResearchResult = {
-        evidence,
-        rows,
-        totalAvailable,
-        failure,
-        costStatus,
-        truncated:
-          totalAvailable !== null
-            ? totalAvailable > rows.length
-            : "prompt" in input && rows.length < input.models.length,
-        fetchedAt: new Date().toISOString(),
-        costCents,
-      };
       const report = await createAgentReport({
         projectId: context.projectId,
         actorId: context.actorId,
         kind,
         title: `${kind === "ai_visibility" ? "AI visibility" : "Prompt comparison"}: ${input.brand}`,
         body: { input: identity, result },
-        provenance: {
-          executionBudgetMs: AI_REQUEST_BUDGET_MS,
-          deadlineReached: Date.now() >= deadlineAt,
-          pricingCheckedAt: "2026-10-02",
-          pricingSource: aiRate(kind, estimate).sourceUrl,
+        provenance: researchProvenance({
+          kind,
+          input,
+          admission: admitted,
+          estimate,
+          deadlineAt,
           providerRequestIds,
-          ...("prompt" in input
-            ? {
-                modelPricing: input.models.map((model) => ({
-                  model,
-                  ...PROMPT_PRICING[model],
-                  admissionBoundCents: modelAdmissionBound(model),
-                  outputTokens: 512,
-                  reasoning: false,
-                  webSearch: false,
-                })),
-              }
-            : { requestCostCents: 10, rowCostCents: 0.1 }),
-          admissionBoundCents: estimate,
-          provider: source.provider.id,
-          endpoint: kind === "ai_visibility" ? VISIBILITY_PATH : PROMPT_PATH,
-          evidence,
-          scope: kind === "ai_visibility" ? "provider_dataset_only" : "synthetic_only",
-          webSearch: false,
-        },
+          providerId: source.provider.id,
+          rows: result.rows,
+        }),
       });
       return { reportId: report.id, result };
     },
@@ -215,15 +183,37 @@ async function run(
 async function outcome(load: () => Promise<AiResearchOutcome>): Promise<AiResearchOutcome> {
   try {
     return await load();
-  } catch (error) {
+  } catch (caught) {
+    const safe = caught instanceof AiPreDispatchRefusal;
+    const error = safe ? caught.original : caught;
+    const refusal = safe ? { safeToStartNewRequest: true, retryBlocked: false } : {};
+    if (error instanceof AiResearchValidationError)
+      return {
+        ok: false,
+        reason: error.reason,
+        message: error.message,
+        ...refusal,
+        ...(["usage_reconciliation_required", "idempotency_conflict"].includes(error.reason)
+          ? { retryBlocked: true }
+          : {}),
+      };
     if (error instanceof ProviderLookupSignal)
       return {
         ok: false,
+        ...refusal,
         reason: error.outcome.reason,
         message:
           error.outcome.reason === "no_source"
             ? "Connect a compatible data provider in Integrations."
             : `Analysis unavailable: ${error.outcome.reason}.`,
+      };
+    if (safe)
+      return {
+        ok: false,
+        reason: "analysis_refused",
+        message:
+          "Analysis was refused before any paid provider request. Review provider availability and limits before creating a new request.",
+        ...refusal,
       };
     throw error;
   }

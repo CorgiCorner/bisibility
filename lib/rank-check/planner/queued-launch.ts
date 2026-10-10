@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { materializePlannedRun } from "./materialize";
 
 const DEFAULT_LAUNCH_LIMIT = 100;
 const MAX_LAUNCH_LIMIT = 500;
@@ -42,7 +43,14 @@ export async function launchQueuedRankCheckRuns(
   const now = input.now ?? new Date();
   const rows = await client.rankCheckRun.findMany({
     orderBy: { id: "asc" },
-    select: { id: true, orchestrationWorkflowId: true },
+    select: {
+      id: true,
+      orchestrationWorkflowId: true,
+      checkScheduleId: true,
+      launchedAt: true,
+      startedAt: true,
+      _count: { select: { items: true } },
+    },
     take: boundedLimit(input.limit),
     where: { claimedAt: null, orchestrationWorkflowId: { not: null }, status: "queued" },
   });
@@ -50,6 +58,9 @@ export async function launchQueuedRankCheckRuns(
   let launched = 0;
   for (const run of rows) {
     if (!run.orchestrationWorkflowId) continue;
+    if (run.checkScheduleId && !run.launchedAt && !run.startedAt && run._count.items === 0) {
+      if ((await materializePlannedRun(run.id, now, true)) !== "launch") continue;
+    }
     const result = await claimQueuedRankCheckRun(
       { now, runId: run.id, startRun: input.startRun, workflowId: run.orchestrationWorkflowId },
       client,

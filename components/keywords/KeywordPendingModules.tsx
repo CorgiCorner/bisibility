@@ -37,7 +37,7 @@ function PendingChart({
   const Icon =
     state === "never_checked"
       ? ClockCountdown
-      : state === "not_ranked"
+      : state === "not_ranked" || state === "unknown"
         ? Ranking
         : state === "failed"
           ? WarningCircle
@@ -66,20 +66,24 @@ function PendingChart({
               ? t("runningTitle")
               : state === "failed"
                 ? t("failedTitle")
-                : state === "not_ranked"
-                  ? t("notRankedTitle", { depth: copy.depth })
-                  : t("firstTitle")}
+                : state === "unknown"
+                  ? t("coverageUnknownTitle")
+                  : state === "not_ranked"
+                    ? t("notRankedTitle", { depth: copy.depth })
+                    : t("firstTitle")}
           </p>
           <p className="m-0 mt-1.5 text-[12px] leading-[1.45] text-fg-muted">
             {state === "running"
               ? t("runningBody")
               : state === "failed"
                 ? t("failedBody")
-                : state === "not_ranked"
-                  ? t("notRankedBody")
-                  : copy.action === "connect_provider"
-                    ? t("firstBodyNoProvider")
-                    : t("firstBody")}
+                : state === "unknown"
+                  ? t("coverageUnknownBody")
+                  : state === "not_ranked"
+                    ? t("notRankedBody")
+                    : copy.action === "connect_provider"
+                      ? t("firstBodyNoProvider")
+                      : t("firstBody")}
           </p>
         </div>
       </div>

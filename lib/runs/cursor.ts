@@ -19,6 +19,10 @@ export const projectRunsSortTupleSchema = z
   .strict();
 
 export type ProjectRunsSortTuple = z.infer<typeof projectRunsSortTupleSchema>;
+export const projectRunsTimelineSortTupleSchema = projectRunsSortTupleSchema.extend({
+  group: z.number().int().min(0).max(2),
+});
+export type ProjectRunsTimelineSortTuple = z.infer<typeof projectRunsTimelineSortTupleSchema>;
 
 export const projectRunsPlannedSortTupleSchema = z
   .object({
@@ -33,11 +37,16 @@ export type ProjectRunsPlannedSortTuple = z.infer<typeof projectRunsPlannedSortT
 type ProjectRunsCursorFilters<View extends ProjectRunsView> = ProjectRunsFilters &
   Readonly<{ view: View }>;
 
-export type ProjectRunsCursorSortTuple = ProjectRunsSortTuple | ProjectRunsPlannedSortTuple;
+export type ProjectRunsCursorSortTuple =
+  | ProjectRunsSortTuple
+  | ProjectRunsPlannedSortTuple
+  | ProjectRunsTimelineSortTuple;
 
 export type ProjectRunsCursorSortTupleForView<View extends ProjectRunsView> = View extends "planned"
   ? ProjectRunsPlannedSortTuple
-  : ProjectRunsSortTuple;
+  : View extends "timeline"
+    ? ProjectRunsTimelineSortTuple
+    : ProjectRunsSortTuple;
 
 export type ProjectRunsCursorInput<View extends ProjectRunsView = ProjectRunsView> = Readonly<{
   filters: ProjectRunsCursorFilters<View>;
@@ -45,6 +54,13 @@ export type ProjectRunsCursorInput<View extends ProjectRunsView = ProjectRunsVie
 }>;
 
 const projectRunsCursorSchema = z.union([
+  z
+    .object({
+      filters: projectRunsFiltersSchema.extend({ view: z.literal("timeline") }),
+      sort: projectRunsTimelineSortTupleSchema,
+      v: z.literal(PROJECT_RUNS_CURSOR_VERSION),
+    })
+    .strict(),
   z
     .object({
       filters: projectRunsFiltersSchema.extend({ view: z.literal("runs") }),

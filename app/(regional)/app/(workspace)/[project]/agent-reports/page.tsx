@@ -1,7 +1,10 @@
 import { AgentReportHistory } from "@/components/agent-reports/AgentReportHistory";
+import {
+  AgentReportsLayout,
+  AgentReportsToolbar,
+} from "@/components/agent-reports/AgentReportsLayout";
 import { ReportComposer } from "@/components/agent-reports/ReportComposer";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
-import { PageContent } from "@/components/shell/PageContent";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
@@ -26,18 +29,18 @@ export default async function AgentReportsPage({
       messages={messages}
       timeZone={runtime.timeZone}
     >
-      <PageContent variant="constrained" className="grid gap-4">
-        <div className="grid gap-3">
-          <p className="text-[13px] text-fg-muted">{t("agentWorkspace.reportsDescription")}</p>
-          {canCreate ? (
-            <div>
+      <AgentReportsLayout>
+        <AgentReportsToolbar
+          description={t("agentWorkspace.reportsDescription")}
+          action={
+            canCreate ? (
               <ReportComposer
                 projectId={access.publicId}
                 saveAction={saveManualAgentReportAction}
               />
-            </div>
-          ) : null}
-        </div>
+            ) : undefined
+          }
+        />
         {reports.length ? (
           <AgentReportHistory
             reports={reports}
@@ -54,7 +57,7 @@ export default async function AgentReportsPage({
         {reports.length === 100 ? (
           <p className="text-[12px] text-fg-muted">{t("agentWorkspace.historyLimit")}</p>
         ) : null}
-      </PageContent>
+      </AgentReportsLayout>
     </FeatureMessagesProvider>
   );
 }

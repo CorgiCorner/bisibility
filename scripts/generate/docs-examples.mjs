@@ -7,6 +7,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const region = "client-usage";
 const examples = [
   {
+    id: "ai-tracking-read-evidence",
+    language: "bash",
+    page: "docs/guides/ai-tracking.mdx",
+    source: "examples/ai-tracking/read-evidence.sh",
+    mode: "file",
+  },
+  {
     id: "python-client-usage",
     language: "python",
     page: "docs/sdks/python.mdx",
@@ -167,15 +174,25 @@ export function parseExampleMethodContract(language, source, sourcePath = langua
   return entries;
 }
 
-function parseMethodsTable(content) {
+function parseMethodsTable(content, { includeSourceMethods = false } = {}) {
   const lines = content.split(/\r?\n/);
   const rows = [];
+  let tableKind = null;
   for (const line of lines) {
-    if (!line.trim().startsWith("|")) continue;
+    if (!line.trim().startsWith("|")) {
+      tableKind = null;
+      continue;
+    }
     const cells = line.split("|").map((c) => c.trim());
     if (cells.length < 6) continue;
     const workflow = cells[1];
-    if (!workflow || workflow === "Workflow") continue;
+    if (workflow === "Workflow" || workflow === "Source operation") {
+      tableKind = workflow;
+      continue;
+    }
+    if (!workflow || !tableKind) continue;
+    // Source operation tables document unreleased packages; runnable examples use released SDKs.
+    if (tableKind === "Source operation" && !includeSourceMethods) continue;
     if (tableLanguages.every((_, i) => /^-+$/.test(cells[i + 2] ?? ""))) continue;
     const unbacktick = (c) => c.replace(/^`|`$/g, "");
     rows.push({
@@ -207,7 +224,7 @@ export function checkMethodParity({ methodsContent, exampleSources, mcpToolNames
       if (!workflows.has(workflow)) failures.push(`${lang} example has extra workflow ${workflow}.`);
     }
   }
-  for (const row of rows) {
+  for (const row of parseMethodsTable(methodsContent, { includeSourceMethods: true })) {
     if (!mcpToolNames.has(row.mcp)) failures.push(`MCP method ${row.mcp} is not canonical.`);
   }
   return failures;

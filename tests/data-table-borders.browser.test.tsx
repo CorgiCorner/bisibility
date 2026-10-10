@@ -77,6 +77,25 @@ function expectRootAndHeaderEdges(root: HTMLElement) {
   expect(header.getBoundingClientRect().top).toBeCloseTo(root.getBoundingClientRect().top + 1, 1);
 }
 
+function expectVisibleBorderlessHeader(root: HTMLElement, clip: HTMLElement) {
+  const header = headerRow(root);
+  const rootStyle = getComputedStyle(root);
+  const headerStyle = getComputedStyle(header);
+  expect(rootStyle.marginTop).toBe("0px");
+  expect(rootStyle.borderTopWidth).toBe("0px");
+  expect(headerStyle.borderTopWidth).toBe("1px");
+  expect(headerStyle.borderBottomWidth).toBe("1px");
+  expect(headerStyle.borderTopColor).toBe(resolveColor(header, "var(--border)"));
+  expect(header.getBoundingClientRect().top).toBeCloseTo(clip.getBoundingClientRect().top, 1);
+  const preceding = clip.previousElementSibling;
+  if (!(preceding instanceof HTMLElement)) throw new Error("Table card header is missing");
+  expect(getComputedStyle(preceding).borderBottomWidth).toBe("0px");
+  expect(preceding.getBoundingClientRect().bottom).toBeCloseTo(
+    header.getBoundingClientRect().top,
+    1,
+  );
+}
+
 function expectOuterBottom(root: HTMLElement) {
   const style = getComputedStyle(root);
   expect(style.borderBottomWidth).toBe("1px");
@@ -122,6 +141,50 @@ async function assertAcrossThemes(
 }
 
 describe("DataTable border ownership", () => {
+  it("keeps the top rule inside a clipped borderless viewport through scroll and resize", async () => {
+    const Story = composedStories.BorderlessWithinClippedCard;
+    const canvasElement = document.createElement("div");
+    document.body.appendChild(canvasElement);
+    try {
+      await Story.run({ canvasElement });
+      const canvas = within(canvasElement);
+      const root = canvas.getByTestId("borderless-clipped");
+      const clip = canvas.getByTestId("borderless-clip-boundary");
+      await assertAcrossThemes(canvasElement, async () => {
+        root.scrollTop = 0;
+        root.scrollLeft = 0;
+        expectVisibleBorderlessHeader(root, clip);
+        root.style.marginTop = "-1px";
+        expect(headerRow(root).getBoundingClientRect().top).toBeLessThan(
+          clip.getBoundingClientRect().top,
+        );
+        root.style.marginTop = "";
+        expectVisibleBorderlessHeader(root, clip);
+        const pinned = root.querySelector<HTMLElement>(
+          '[role="columnheader"][data-pin-edge="left"]',
+        );
+        if (!pinned) throw new Error("Pinned header is missing");
+        const initialLeft = pinned.getBoundingClientRect().left;
+        root.scrollTop = 90;
+        root.scrollLeft = 180;
+        root.dispatchEvent(new Event("scroll", { bubbles: true }));
+        await waitFor(() => expect(root).toHaveAttribute("data-scrolled", "true"));
+        expectVisibleBorderlessHeader(root, clip);
+        expect(pinned.getBoundingClientRect().left).toBeCloseTo(initialLeft, 1);
+        expect(getComputedStyle(pinned).boxShadow).not.toBe("none");
+        const handle = canvas.getByRole("separator", { name: "Resize Position column" });
+        const oldSize = root.style.getPropertyValue("--dt-col-position");
+        handle.focus();
+        await userEvent.keyboard("{ArrowRight}");
+        expect(root.style.getPropertyValue("--dt-col-position")).not.toBe(oldSize);
+        expectVisibleBorderlessHeader(root, clip);
+      });
+    } finally {
+      await Story.load();
+      canvasElement.remove();
+    }
+  });
+
   it("keeps one outer and row rule in auto layout without a footer", async () => {
     const Story = composedStories.AutoLayoutWithSections;
     const canvasElement = document.createElement("div");

@@ -28,30 +28,51 @@ const latestCheckRunIdSchema = {
 export const keywordCheckStateSchemas = {
   KeywordLatestCheck: {
     description:
-      'The most recent executed check of any status. A completed check with `position: null` means "not ranked within the requested depth"; `latest_check.status: "failed"` means "unknown, the check did not run to completion".',
+      'The most recent executed check of any status. A completed check with `position: null` can have unknown coverage; read `observation_completeness` before inferring absence within the requested depth; `latest_check.status: "failed"` means "unknown, the check did not run to completion".',
     properties: {
       checked_at: { format: "date-time", type: "string" },
       error: { type: ["string", "null"] },
       error_code: { type: ["string", "null"] },
       id: publicIdSchema("check"),
+      observation_completeness: {
+        description:
+          "Persisted coverage, or null when legacy metadata is absent. Only complete coverage supports absence within depth; a valid positive rank remains valid with truncated coverage.",
+        enum: ["complete", "truncated_by_stop_on_match", "unknown", null],
+        type: ["string", "null"],
+      },
       position: { type: ["integer", "null"] },
       run_id: latestCheckRunIdSchema,
       status: { enum: ["completed", "failed", "running"], type: "string" },
     },
-    required: ["checked_at", "error", "error_code", "id", "position", "run_id", "status"],
+    required: [
+      "checked_at",
+      "error",
+      "error_code",
+      "id",
+      "observation_completeness",
+      "position",
+      "run_id",
+      "status",
+    ],
     type: ["object", "null"],
   },
   KeywordLatestSuccessfulCheck: {
     description:
-      "The most recent check with status completed, i.e. the last known ranking for this keyword.",
+      "The most recent completed check. Null position with unknown observation_completeness does not establish absence within depth.",
     properties: {
       checked_at: { format: "date-time", type: "string" },
       id: publicIdSchema("check"),
+      observation_completeness: {
+        description:
+          "Persisted coverage, or null when legacy metadata is absent. Only complete coverage supports absence within depth; a valid positive rank remains valid with truncated coverage.",
+        enum: ["complete", "truncated_by_stop_on_match", "unknown", null],
+        type: ["string", "null"],
+      },
       position: { type: ["integer", "null"] },
       ranking_url: { type: ["string", "null"] },
       run_id: latestCheckRunIdSchema,
     },
-    required: ["checked_at", "id", "position", "ranking_url", "run_id"],
+    required: ["checked_at", "id", "observation_completeness", "position", "ranking_url", "run_id"],
     type: ["object", "null"],
   },
 };
@@ -70,7 +91,7 @@ export const keywordMatchSchemas = {
       previous_position: { type: ["integer", "null"] },
       ranking_url: {
         description:
-          "URL that ranked at `latest_position` in the last completed check, or null when the keyword has no completed check.",
+          "Ranking URL from the most recent executed check, or null when that check has no ranking URL or no check exists. Fetch the keyword resource to read latest_successful_check for the most recent completed observation and its coverage.",
         type: ["string", "null"],
       },
       text: {

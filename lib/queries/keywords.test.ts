@@ -42,6 +42,7 @@ const rankCheckSelect = {
   expectedUrlAtCheck: true,
   id: true,
   normalizationVersion: true,
+  observationRun: { select: { completeness: true } },
   position: true,
   provider: true,
   previousPosition: true,

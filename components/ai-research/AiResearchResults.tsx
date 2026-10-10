@@ -6,14 +6,22 @@ import { useTranslations } from "next-intl";
 
 export function AiResearchResults({ result }: Readonly<{ result: AiResearchResult }>) {
   const t = useTranslations("projectAiResearch");
-  if (result.failure && !result.rows.length)
-    return (
-      <Card role="alert" className="text-ui-body text-red-text">
-        {t("partialFailure")}
-      </Card>
-    );
+  const costMessage = t(result.costStatus === "unknown" ? "unknownCost" : "actualCost", {
+    cost: result.costCents.toFixed(2),
+  });
   if (!result.rows.length)
-    return <EmptyState title={t("noObservations")} description={t("coverageDisclaimer")} />;
+    return (
+      <div className="grid min-w-0 gap-4">
+        <Card className="text-ui-body tabular-nums">{costMessage}</Card>
+        {result.failure ? (
+          <Card role="alert" className="text-ui-body text-red-text">
+            {t("partialFailure")}
+          </Card>
+        ) : (
+          <EmptyState title={t("noObservations")} description={t("coverageDisclaimer")} />
+        )}
+      </div>
+    );
   return (
     <section className="grid min-w-0 gap-4" aria-label="Analysis results">
       <Card className="flex flex-wrap items-center gap-4 text-ui-body">
@@ -27,11 +35,7 @@ export function AiResearchResults({ result }: Readonly<{ result: AiResearchResul
             citations: result.rows.filter((row) => row.domainCited).length,
           })}
         </span>
-        <span className="text-ui-xs tabular-nums">
-          {t(result.costStatus === "unknown" ? "unknownCost" : "actualCost", {
-            cost: result.costCents.toFixed(2),
-          })}
-        </span>
+        <span className="text-ui-xs tabular-nums">{costMessage}</span>
       </Card>
       {result.truncated ? (
         <p className="text-ui-body text-fg-muted">
@@ -47,12 +51,24 @@ export function AiResearchResults({ result }: Readonly<{ result: AiResearchResul
         {result.rows.map((row, index) => (
           <Card key={`${row.model}:${index}`} className="grid min-w-0 content-start gap-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-mono text-ui-xs text-fg-muted">{row.model}</span>
+              <span className="font-mono text-ui-xs text-fg-muted">
+                {row.actualModel === null ? t("unknownModel") : row.model}
+              </span>
               <span className="text-ui-xs text-fg-muted">
                 {row.brandMentioned ? t("brandMentioned") : t("noBrandMention")} ·{" "}
                 {row.domainCited ? t("domainCited") : t("noDomainCitation")}
               </span>
             </div>
+            {row.requestedModel ? (
+              <div className="grid gap-1 break-words text-ui-xs text-fg-muted">
+                <span>
+                  {t("requestedModel")}: {row.requestedModel}
+                </span>
+                <span>
+                  {t("actualModel")}: {row.actualModel ?? t("unknownModel")}
+                </span>
+              </div>
+            ) : null}
             <h2 className="text-ui-body font-semibold">{row.prompt}</h2>
             {row.contentTruncated ? (
               <p className="text-ui-xs text-fg-muted">{t("contentTruncated")}</p>

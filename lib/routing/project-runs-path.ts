@@ -16,6 +16,10 @@ function normalizeProjectRunsQuery(query: Partial<ProjectRunsQuery> | undefined)
 export function projectRunsPath(projectRef: ProjectRef, query?: Partial<ProjectRunsQuery>): string {
   const normalized = normalizeProjectRunsQuery(query);
   const searchParams = new URLSearchParams();
+  if (normalized.section && normalized.section !== "all")
+    searchParams.set("section", normalized.section);
+  if (normalized.order && normalized.order !== "default")
+    searchParams.set("order", normalized.order);
   if (normalized.view !== PROJECT_RUNS_DEFAULT_QUERY.view)
     searchParams.set("view", normalized.view);
   if (normalized.source !== PROJECT_RUNS_DEFAULT_QUERY.source) {

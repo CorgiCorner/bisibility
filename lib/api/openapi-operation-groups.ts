@@ -1,8 +1,10 @@
 import type { openApiTags } from "./openapi-tags";
+import { aiTrackingPolicies } from "./operation-policy-ai-tracking";
 
 type OpenApiTagName = (typeof openApiTags)[number]["name"];
 
 export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly string[]]> = [
+  ["ai-tracking", Object.keys(aiTrackingPolicies)],
   [
     "discovery",
     [
@@ -79,6 +81,7 @@ export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly s
       "listAgentReports",
       "createAgentReport",
       "getAgentReport",
+      "getAiResearchCatalog",
       "analyzeAiVisibility",
       "compareAiPrompts",
       "runSiteAudit",

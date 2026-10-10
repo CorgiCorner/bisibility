@@ -49,11 +49,11 @@ describe("MCP tool dispatch", () => {
     vi.clearAllMocks();
   });
 
-  it("publishes the canonical unprefixed 105-tool contract", () => {
+  it("publishes the canonical unprefixed 132-tool contract", () => {
     const definitions = getMcpToolDefinitions();
 
     expect(definitions.map((tool) => tool.name)).toEqual(MCP_TOOL_NAMES);
-    expect(definitions).toHaveLength(105);
+    expect(definitions).toHaveLength(132);
     expect(definitions.every((tool) => /^[a-z][a-z0-9_]*$/.test(tool.name))).toBe(true);
     expect(definitions.some((tool) => tool.name.startsWith("bisibility_"))).toBe(false);
     expect(definitions.some((tool) => tool.name === "list_rank_checks")).toBe(false);

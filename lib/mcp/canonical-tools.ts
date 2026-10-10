@@ -1,3 +1,5 @@
+import { aiTrackingToolNames } from "./tracking-contract";
+
 export const MCP_TOOL_NAMES = [
   "get_session_profile",
   "get_health",
@@ -100,10 +102,12 @@ export const MCP_TOOL_NAMES = [
   "create_agent_report",
   "get_agent_report",
   "analyze_ai_visibility",
+  "get_ai_research_catalog",
   "compare_ai_prompts",
   "run_site_audit",
   "list_site_audits",
   "get_site_audit",
+  ...Object.values(aiTrackingToolNames),
 ] as const;
 
 // Phase C ships list_stored_reports and get_stored_report in the standalone

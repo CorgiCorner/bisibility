@@ -99,7 +99,7 @@ export function MarketsTable({
       aria-label={title}
       className="overflow-hidden rounded-card border border-border bg-bg-elev"
     >
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+      <div className="flex items-center justify-between px-4 py-3">
         <h2 className="m-0 text-[14px] font-semibold text-fg">{title}</h2>
         <span className="text-[12px] text-fg-muted">{rows.length}</span>
       </div>

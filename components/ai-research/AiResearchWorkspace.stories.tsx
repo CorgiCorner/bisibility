@@ -4,6 +4,7 @@ import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Observed, Synthetic } from "./AiResearchResults.stories";
 import { AiResearchWorkspace } from "./AiResearchWorkspace";
+import { aiResearchCatalogFixture, fixtureResearchAction } from "./ai-research-fixtures";
 
 const meta = {
   title: "Research/AI Workspace",
@@ -21,20 +22,16 @@ const meta = {
       </FeatureMessagesProvider>
     ),
   ],
-  parameters: { layout: "fullscreen" },
+  parameters: { layout: "fullscreen", themeControls: false },
   args: {
+    catalog: aiResearchCatalogFixture,
     projectId: "prj_example",
     domain: "acme.example",
     mode: "visibility",
     history: [
       { id: "agr_example", title: "AI visibility: Acme", createdAt: "2026-10-02T12:00:00Z" },
     ],
-    analyzeAction: async () => ({
-      ok: true,
-      estimate: true,
-      evidence: "observed_dataset",
-      estimatedCostCents: 11,
-    }),
+    analyzeAction: fixtureResearchAction,
   },
 } satisfies Meta<typeof AiResearchWorkspace>;
 export default meta;
@@ -54,6 +51,7 @@ export const Visibility: Story = {
 export const PromptExplorer: Story = {
   args: {
     mode: "prompt",
+    analyzeAction: fixtureResearchAction,
     history: [
       { id: "agr_example", title: "Prompt comparison: Acme", createdAt: "2026-10-02T12:00:00Z" },
     ],
@@ -69,3 +67,17 @@ export const PromptExplorer: Story = {
 };
 export const ReadOnly: Story = { args: { canRun: false } };
 export const Empty: Story = { args: { history: [] } };
+
+export const CatalogUnavailable: Story = {
+  args: { mode: "prompt", catalog: undefined, catalogError: "Provider unavailable" },
+};
+
+export const PricingUnavailable: Story = {
+  args: {
+    mode: "prompt",
+    catalog: {
+      ...aiResearchCatalogFixture,
+      models: aiResearchCatalogFixture.models.map((model) => ({ ...model, priceAvailable: false })),
+    },
+  },
+};

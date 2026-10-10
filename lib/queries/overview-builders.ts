@@ -1,4 +1,5 @@
 import { comparableCompletedWindow } from "@/lib/checks/status";
+import { hasIncompleteObservation } from "@/lib/serp/rank-depth";
 import { rankBucketColors } from "@/lib/theme/chart-colors";
 import type { Keyword } from "./overview-trend";
 import type {
@@ -55,7 +56,7 @@ export const tone = (value: number): Tone => {
 export function snapshotFor(keyword: Keyword, volume: number | null = null) {
   const latestAttempt = keyword.rankChecks[0] ?? null;
   const comparableChecks = comparableCompletedWindow(keyword.rankChecks).checks;
-  const latest = comparableChecks.find((check) => pos(check.position)) ?? null;
+  const latest = comparableChecks[0] ?? null;
   const current = pos(latest?.position);
   // Compare only with a genuine earlier positive check in the selected window.
   // Stored previousPosition may refer to a check outside that window.
@@ -95,9 +96,11 @@ export function rowFor(
 ): HighlightRow {
   const positionState: HighlightPositionState = snapshot.position
     ? "ranked"
-    : snapshot.latestAttempt?.status === "completed"
-      ? "notRanked"
-      : "awaitingFirstCheck";
+    : hasIncompleteObservation(snapshot.latest?.observationRun?.completeness)
+      ? "noData"
+      : snapshot.latestAttempt?.status === "completed"
+        ? "notRanked"
+        : "awaitingFirstCheck";
   return {
     ...(showDelta ? { delta: delta(snapshot.position, snapshot.previous) } : {}),
     device: snapshot.keyword.device,
@@ -140,7 +143,8 @@ export function buildHighlights(snapshots: Snapshot[], now: Date): HighlightList
   const failures = snapshots.filter((item) => item.latestAttempt?.status === "failed").map((item) => ({
     ...rowFor(item, { kind: "latestCheckFailed" }, false), position: null, positionState: "noData" as const, positionTone: "danger" as const,
   }));
-  const outsideTop100 = snapshots.filter((item) => item.latestAttempt?.status === "completed" && !pos(item.latestAttempt.position)).map((item) => ({
+  const unknown = snapshots.filter((item) => item.latestAttempt?.status === "completed" && !pos(item.latestAttempt.position) && hasIncompleteObservation(item.latestAttempt.observationRun?.completeness)).map((item) => rowFor(item, { kind: "coverageUnknown" }, false));
+  const outsideTop100 = snapshots.filter((item) => item.latestAttempt?.status === "completed" && !pos(item.latestAttempt.position) && !hasIncompleteObservation(item.latestAttempt.observationRun?.completeness)).map((item) => ({
     ...rowFor(item, { kind: "latestCheckNotRanked" }, false), position: null, positionState: "notRanked" as const, positionTone: "muted" as const,
   }));
   const drops = byGain.filter((item) => (item.movement ?? 0) < 0 && successfulLatest(item)).reverse().map((item) => rowFor(item, note(item, "dropped")));
@@ -163,7 +167,7 @@ export function buildHighlights(snapshots: Snapshot[], now: Date): HighlightList
             : Math.floor(minutes / (24 * 60)) === 1
               ? { kind: "yesterday" }
               : { kind: "days", value: Math.floor(minutes / (24 * 60)) };
-      const isNotRanked = item.latestAttempt?.status === "completed" && !pos(item.latestAttempt.position);
+      const isNotRanked = item.latestAttempt?.status === "completed" && !pos(item.latestAttempt.position) && !hasIncompleteObservation(item.latestAttempt.observationRun?.completeness);
       return rowFor(item, {
         age,
         checkState: isNotRanked ? "notRanked" : item.latest ? "rankingUrl" : "firstCheckPending",
@@ -173,7 +177,7 @@ export function buildHighlights(snapshots: Snapshot[], now: Date): HighlightList
     });
   return [
     list("wins", wins),
-    list("attention", [...failures, ...outsideTop100, ...drops].slice(0, 4)),
+    list("attention", [...failures, ...unknown, ...outsideTop100, ...drops].slice(0, 4)),
     list("newTop10", top10),
     list("recentlyAdded", recentlyAdded),
   ];

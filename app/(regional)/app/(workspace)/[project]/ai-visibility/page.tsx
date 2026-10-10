@@ -4,8 +4,8 @@ import { PageContent } from "@/components/shell/PageContent";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { getAiResearchPage } from "@/lib/actions/ai-research";
-// Provider work has a 40-second aggregate budget, leaving time to settle usage and save results.
-export const maxDuration = 60;
+// Provider work has a 260-second aggregate budget, leaving time to settle usage and save results.
+export const maxDuration = 300;
 
 export default async function AiVisibilityPage({
   params,
@@ -28,6 +28,8 @@ export default async function AiVisibilityPage({
           domain={data.domain}
           history={data.history}
           canRun={data.canRun}
+          catalog={data.catalog}
+          catalogError={data.catalogError}
         />
       </PageContent>
     </FeatureMessagesProvider>

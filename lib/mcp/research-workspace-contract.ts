@@ -7,6 +7,7 @@ type InputSchema = {
 };
 
 export const researchWorkspaceToolNames = {
+  getAiResearchCatalog: "get_ai_research_catalog",
   getProjectContext: "get_project_context",
   updateProjectContext: "update_project_context",
   listAgentReports: "list_agent_reports",

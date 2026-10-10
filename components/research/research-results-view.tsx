@@ -95,6 +95,7 @@ export function ResearchExportMenu({
         {t("export")}
       </Button>
       <Menu
+        modal={false}
         anchorEl={anchorEl}
         onClose={() => setAnchorEl(null)}
         open={Boolean(anchorEl)}

@@ -19,6 +19,12 @@ export function noRankLabel(row: KeywordRow, t: MarketCellsTranslations) {
   const state = row.checkState ?? row.lastCheckStatus;
   if (state === "running") return t("checkRunning");
   if (state === "failed") return t("latestCheckFailed");
+  if (
+    state === "unknown" ||
+    (rankDepth.hasIncompleteObservation(row.observationCompleteness) &&
+      !rankDepth.hasTrackedPosition(row))
+  )
+    return t("coverageUnknown");
   if (state === "not_ranked" || state === "completed")
     return t("notRanked", { depth: row.trackedDepth ?? 100 });
   return t("awaitingFirstCheck");
@@ -83,6 +89,11 @@ export function MarketKeywordCell({
 export function MarketPositionCell({ row }: Readonly<{ row: KeywordRow }>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.marketCells");
   const parent = marketGridParent(row);
+  if (
+    rankDepth.hasIncompleteObservation(row.observationCompleteness) &&
+    !rankDepth.hasTrackedPosition(row)
+  )
+    return <NoDataValue className="text-[13px]" label={noRankLabel(row, t)} />;
   if (!row.hasRankData) return <NoDataValue className="text-[13px]" label={noRankLabel(row, t)} />;
   if (rankDepth.isPositionOutsideTrackedDepth(row.position, row.trackedDepth))
     return <span>{t("notFoundInTop", { depth: row.trackedDepth ?? 100 })}</span>;

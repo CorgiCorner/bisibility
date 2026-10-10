@@ -22,6 +22,13 @@ export const researchModuleNavEntries = [
   },
   {
     group: "modules",
+    label: "AI Tracking",
+    scope: "own-axis",
+    segment: "ai-tracking",
+    icon: SparkleIcon,
+  },
+  {
+    group: "modules",
     label: "Site Audit",
     scope: "own-axis",
     segment: "site-audit",

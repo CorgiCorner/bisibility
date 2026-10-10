@@ -15,6 +15,13 @@ if (!databaseUrl) throw new Error("DIRECT_URL or DATABASE_URL is required.");
 
 const publicIdTables = {
   agr: "agent_reports",
+  ait: "ai_topics",
+  aip: "ai_prompts",
+  apr: "ai_prompt_revisions",
+  ais: "ai_tracking_schedules",
+  air: "ai_tracking_runs",
+  asm: "ai_tracking_samples",
+  asg: "ai_tracking_suggestion_generations",
   al: "triggered_alerts",
   alr: "alert_rules",
   audit: "audit_logs",

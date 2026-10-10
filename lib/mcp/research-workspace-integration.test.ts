@@ -12,6 +12,7 @@ import type { JsonObject } from "./types";
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   context: vi.fn(),
+  catalog: vi.fn(),
   saveContext: vi.fn(),
   createReport: vi.fn(),
   getReport: vi.fn(),
@@ -55,6 +56,7 @@ vi.mock("@/lib/site-audit/service", () => ({
   listSiteAudits: mocks.listAudits,
   readSiteAudit: mocks.readAudit,
 }));
+vi.mock("@/lib/ai-research/catalog-service", () => ({ getAiResearchCatalog: mocks.catalog }));
 vi.mock("@/lib/ai-research/service", () => ({
   analyzeAiVisibility: mocks.visibility,
   compareAiPrompts: mocks.prompts,
@@ -93,6 +95,7 @@ const report = {
   createdAt: stamp,
 };
 const operations: [string, JsonObject, number][] = [
+  ["get_ai_research_catalog", {}, 200],
   ["get_project_context", {}, 200],
   ["update_project_context", contextFields, 200],
   ["list_agent_reports", { kind: "external_analysis", limit: 2 }, 200],
@@ -118,6 +121,7 @@ const operations: [string, JsonObject, number][] = [
   ["get_site_audit", { report_id: reportId }, 200],
 ];
 const operationServices: Record<string, typeof mocks.context> = {
+  get_ai_research_catalog: mocks.catalog,
   get_project_context: mocks.context,
   update_project_context: mocks.saveContext,
   list_agent_reports: mocks.listReports,
@@ -162,6 +166,10 @@ beforeEach(() => {
   vi.stubGlobal("fetch", mocks.fetch);
   mocks.prisma.project.findFirst.mockResolvedValue(project);
   mocks.prisma.project.findUnique.mockResolvedValue(project);
+  mocks.catalog.mockResolvedValue({
+    ok: true,
+    catalog: { models: [{ id: "catalog-model", priceAvailable: false }], fetchedAt: stamp },
+  });
   mocks.context.mockResolvedValue({
     ...contextFields,
     agentRules: contextFields.agent_rules,
@@ -381,6 +389,7 @@ describe("MCP dispatch through the REST router and research handlers", () => {
     expectNoWork();
     expect(mocks.getReport).not.toHaveBeenCalled();
     expect(mocks.context).not.toHaveBeenCalled();
+    expect(mocks.catalog).not.toHaveBeenCalled();
     expect(mocks.readAudit).not.toHaveBeenCalled();
     expect(mocks.listReports).not.toHaveBeenCalled();
     expect(mocks.listAudits).not.toHaveBeenCalled();
@@ -401,7 +410,7 @@ describe("MCP dispatch through the REST router and research handlers", () => {
     { max_cost_cents: -1 },
     { max_cost_cents: 1001 },
     { max_cost_cents: 1.2 },
-    { models: ["unsupported-model"] },
+    { models: ["invalid/model"] },
     { models: ["gpt-4.1-mini", "gpt-4.1-mini"] },
   ])("rejects invalid AI cap or model %j", async (invalid) => {
     const result = await dispatchMcpTool(
@@ -411,6 +420,32 @@ describe("MCP dispatch through the REST router and research handlers", () => {
     );
     expect(result.status).toBe(400);
     expectNoWork();
+  });
+  it("defers valid model IDs to admission and preserves its refusal through MCP", async () => {
+    mocks.prompts.mockResolvedValue({
+      ok: false,
+      reason: "model_not_enabled",
+      message: "This model requires explicit own-key actual-cost consent.",
+    });
+    const result = await dispatchMcpTool(
+      "compare_ai_prompts",
+      {
+        project_id: projectId,
+        ...analysisFields,
+        prompt: "Compare tools",
+        models: ["unsupported-model"],
+      },
+      "bsb_key_test",
+    );
+    expect(result.status).toBe(422);
+    expect(result.payload).toMatchObject({
+      errors: { reason: "model_not_enabled", retry_blocked: false },
+    });
+    expect(mocks.prompts).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ models: ["unsupported-model"] }),
+    );
+    expect(mocks.fetch).not.toHaveBeenCalled();
   });
   it.each(["agent-reports", "site-audits"])(
     "rejects malformed agr identifiers for %s at REST dispatch",

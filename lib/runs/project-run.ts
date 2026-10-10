@@ -48,6 +48,7 @@ export type ProjectRunRankCheckTimestamps = Readonly<{
   launchedAt: string | null;
   plannedFor: string | null;
   startedAt: string | null;
+  nextCheckAt?: string | null;
 }>;
 
 export type ProjectRunGscImportTimestamps = Readonly<{
@@ -64,6 +65,7 @@ export type ProjectRunRankCheckDetails = Readonly<{
   outcome: RunOutcome | null;
   status: RunStatus;
   trigger: RunTrigger;
+  blockedReason?: string | null;
 }>;
 
 export const PROJECT_RUN_GSC_IMPORT_KNOWN_STATES = [

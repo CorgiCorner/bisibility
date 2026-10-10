@@ -17,6 +17,7 @@ export const RANK_RUN_STATUS_KEYS = [
   "succeeded",
   "partial",
   "deferred",
+  "skipped",
   "failed",
   "cancelled",
   "not_confirmed",
@@ -51,8 +52,13 @@ export function isGscRunStatusKey(value: string): value is GscRunStatusKey {
   return (GSC_RUN_STATUS_KEYS as readonly string[]).includes(value);
 }
 
-export function rankRunStatusKey(status: RunStatus, outcome: RunOutcome | null): RankRunStatusKey {
+export function rankRunStatusKey(
+  status: RunStatus,
+  outcome: RunOutcome | null,
+  reason?: string | null,
+): RankRunStatusKey {
   if (status !== "completed") return status;
+  if (reason === "no_active_keywords") return "skipped";
   return outcome ?? "not_confirmed";
 }
 
@@ -124,6 +130,6 @@ export function gscRunStatusKey(run: GscRunWithTitle): GscRunStatusKey {
 
 export function projectRunStatusKey(run: ProjectRun | GscRunWithTitle): RunStatusKey {
   return run.kind === "rank_check"
-    ? rankRunStatusKey(run.details.status, run.details.outcome)
+    ? rankRunStatusKey(run.details.status, run.details.outcome, run.details.blockedReason)
     : gscRunStatusKey(run);
 }

@@ -1,11 +1,14 @@
 import account from "@/messages/core/en/account.json";
 import accountPreferences from "@/messages/core/en/account-preferences.json";
+import agentWorkspace from "@/messages/core/en/agent-workspace.json";
 import auth from "@/messages/core/en/auth.json";
 import cloudImport from "@/messages/core/en/cloud-import.json";
 import emailPreferences from "@/messages/core/en/email-preferences.json";
 import instanceAdmin from "@/messages/core/en/instance-admin.json";
 import invite from "@/messages/core/en/invite.json";
 import onboarding from "@/messages/core/en/onboarding.json";
+import projectAiResearch from "@/messages/core/en/project-ai-research.json";
+import projectAiTracking from "@/messages/core/en/project-ai-tracking.json";
 import projectAlerts from "@/messages/core/en/project-alerts.json";
 import projectAudit from "@/messages/core/en/project-audit.json";
 import projectBacklinks from "@/messages/core/en/project-backlinks.json";
@@ -35,6 +38,7 @@ import projectSettingsShell from "@/messages/core/en/project-settings-shell.json
 import projectSettingsTeam from "@/messages/core/en/project-settings-team.json";
 import projectSettingsTracking from "@/messages/core/en/project-settings-tracking.json";
 import projectSettingsUsage from "@/messages/core/en/project-settings-usage.json";
+import projectSiteAudit from "@/messages/core/en/project-site-audit.json";
 import projectTimeline from "@/messages/core/en/project-timeline.json";
 import setup from "@/messages/core/en/setup.json";
 import shared from "@/messages/core/en/shared.json";
@@ -51,6 +55,9 @@ export type AppMessages = CoreMessages & HostedMessageExtensions;
 export const sharedMessages = shared as unknown as Pick<CoreMessages, "shared">;
 export const coreMessages = mergeMessageCatalogs(
   shared,
+  agentWorkspace,
+  projectAiResearch,
+  projectSiteAudit,
   auth,
   cloudImport,
   emailPreferences,
@@ -59,6 +66,7 @@ export const coreMessages = mergeMessageCatalogs(
   onboarding,
   account,
   accountPreferences,
+  projectAiTracking,
   projectAlerts,
   projectAudit,
   projectBacklinks,

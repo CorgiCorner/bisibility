@@ -59,7 +59,10 @@
               "guides/keyword-research",
               "guides/saved-keywords",
               "guides/backlinks",
-              "guides/domain-overview"
+              "guides/domain-overview",
+              "guides/ai-tracking",
+              "guides/site-audit",
+              "guides/research-workflows"
             ]
           },
           {
@@ -73,7 +76,13 @@
           },
           {
             "group": "Organize and collaborate",
-            "pages": ["guides/saved-views", "guides/teams", "audit-log"]
+            "pages": [
+              "guides/project-context",
+              "guides/agent-reports",
+              "guides/saved-views",
+              "guides/teams",
+              "audit-log"
+            ]
           }
         ]
       },
@@ -117,7 +126,8 @@
               "api/saved-keywords",
               "api/backlinks",
               "api/domain-overview",
-              "api/research-workspace"
+              "api/research-workspace",
+              "api/ai-tracking"
             ]
           },
           {
@@ -166,6 +176,37 @@
         "tab": "API Reference",
         "openapi": "openapi.snapshot.json",
         "groups": [
+          {
+            "group": "AI Tracking",
+            "pages": [
+              "GET /projects/{project_id}/ai-tracking/export",
+              "GET /projects/{project_id}/ai-tracking/history",
+              "GET /projects/{project_id}/ai-tracking/prompts",
+              "POST /projects/{project_id}/ai-tracking/prompts",
+              "DELETE /projects/{project_id}/ai-tracking/prompts/{prompt_id}",
+              "PATCH /projects/{project_id}/ai-tracking/prompts/{prompt_id}",
+              "GET /projects/{project_id}/ai-tracking/runs",
+              "POST /projects/{project_id}/ai-tracking/runs",
+              "GET /projects/{project_id}/ai-tracking/runs/{run_id}",
+              "POST /projects/{project_id}/ai-tracking/runs/{run_id}/cancel",
+              "POST /projects/{project_id}/ai-tracking/runs/{run_id}/retry",
+              "GET /projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+              "POST /projects/{project_id}/ai-tracking/runs/preview",
+              "GET /projects/{project_id}/ai-tracking/schedules",
+              "POST /projects/{project_id}/ai-tracking/schedules",
+              "DELETE /projects/{project_id}/ai-tracking/schedules/{schedule_id}",
+              "PATCH /projects/{project_id}/ai-tracking/schedules/{schedule_id}",
+              "POST /projects/{project_id}/ai-tracking/suggestions",
+              "POST /projects/{project_id}/ai-tracking/suggestions/accept",
+              "POST /projects/{project_id}/ai-tracking/suggestions/generate",
+              "POST /projects/{project_id}/ai-tracking/suggestions/preview",
+              "GET /projects/{project_id}/ai-tracking/topics",
+              "POST /projects/{project_id}/ai-tracking/topics",
+              "DELETE /projects/{project_id}/ai-tracking/topics/{topic_id}",
+              "PATCH /projects/{project_id}/ai-tracking/topics/{topic_id}",
+              "GET /projects/{project_id}/ai-tracking/trends"
+            ]
+          },
           {
             "group": "Discovery",
             "pages": [
@@ -260,6 +301,7 @@
           {
             "group": "Research Reports",
             "pages": [
+              "GET /projects/{project_id}/ai-catalog",
               "GET /projects/{project_id}/context",
               "PATCH /projects/{project_id}/context",
               "GET /projects/{project_id}/agent-reports",

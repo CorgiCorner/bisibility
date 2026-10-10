@@ -25,6 +25,54 @@ compatibility form still used by the longer repository examples.
 For version-specific Domain Overview methods and Python project creation, see
 [released client support](/compatibility).
 
+## AI Tracking methods
+
+Use these methods to configure tracking, inspect retained evidence and review model-generated
+prompt hypotheses. REST, Python, TypeScript, Go and MCP preserve the same project scope,
+prompt revisions and cost provenance. See the [dashboard workflow](/guides/ai-tracking)
+and [API contract](/api/ai-tracking) for the complete review and consent flow.
+
+| Source operation | Python | TypeScript | Go | MCP tool |
+| - | - | - | - | - |
+| get AI research Catalog | `get_ai_research_catalog` | `getAiResearchCatalog` | `GetAIResearchCatalog` | `get_ai_research_catalog` |
+| list AI tracking Topics | `list_ai_tracking_topics` | `listAiTrackingTopics` | `ListAITrackingTopics` | `list_ai_tracking_topics` |
+| create AI tracking Topic | `create_ai_tracking_topic` | `createAiTrackingTopic` | `CreateAITrackingTopic` | `create_ai_tracking_topic` |
+| update AI tracking Topic | `update_ai_tracking_topic` | `updateAiTrackingTopic` | `UpdateAITrackingTopic` | `update_ai_tracking_topic` |
+| archive AI tracking Topic | `archive_ai_tracking_topic` | `archiveAiTrackingTopic` | `ArchiveAITrackingTopic` | `archive_ai_tracking_topic` |
+| list AI tracking Prompts | `list_ai_tracking_prompts` | `listAiTrackingPrompts` | `ListAITrackingPrompts` | `list_ai_tracking_prompts` |
+| create AI tracking Prompt | `create_ai_tracking_prompt` | `createAiTrackingPrompt` | `CreateAITrackingPrompt` | `create_ai_tracking_prompt` |
+| update AI tracking Prompt | `update_ai_tracking_prompt` | `updateAiTrackingPrompt` | `UpdateAITrackingPrompt` | `update_ai_tracking_prompt` |
+| archive AI tracking Prompt | `archive_ai_tracking_prompt` | `archiveAiTrackingPrompt` | `ArchiveAITrackingPrompt` | `archive_ai_tracking_prompt` |
+| list AI tracking Schedules | `list_ai_tracking_schedules` | `listAiTrackingSchedules` | `ListAITrackingSchedules` | `list_ai_tracking_schedules` |
+| create AI tracking Schedule | `create_ai_tracking_schedule` | `createAiTrackingSchedule` | `CreateAITrackingSchedule` | `create_ai_tracking_schedule` |
+| update AI tracking Schedule | `update_ai_tracking_schedule` | `updateAiTrackingSchedule` | `UpdateAITrackingSchedule` | `update_ai_tracking_schedule` |
+| archive AI tracking Schedule | `archive_ai_tracking_schedule` | `archiveAiTrackingSchedule` | `ArchiveAITrackingSchedule` | `archive_ai_tracking_schedule` |
+| preview AI tracking Run | `preview_ai_tracking_run` | `previewAiTrackingRun` | `PreviewAITrackingRun` | `preview_ai_tracking_run` |
+| create AI tracking Run | `create_ai_tracking_run` | `createAiTrackingRun` | `CreateAITrackingRun` | `create_ai_tracking_run` |
+| list AI tracking Runs | `list_ai_tracking_runs` | `listAiTrackingRuns` | `ListAITrackingRuns` | `list_ai_tracking_runs` |
+| get AI tracking Run | `get_ai_tracking_run` | `getAiTrackingRun` | `GetAITrackingRun` | `get_ai_tracking_run` |
+| list AI tracking Samples | `list_ai_tracking_samples` | `listAiTrackingSamples` | `ListAITrackingSamples` | `list_ai_tracking_samples` |
+| cancel AI tracking Run | `cancel_ai_tracking_run` | `cancelAiTrackingRun` | `CancelAITrackingRun` | `cancel_ai_tracking_run` |
+| retry AI tracking Run | `retry_ai_tracking_run` | `retryAiTrackingRun` | `RetryAITrackingRun` | `retry_ai_tracking_run` |
+| get AI tracking History | `get_ai_tracking_history` | `getAiTrackingHistory` | `GetAITrackingHistory` | `get_ai_tracking_history` |
+| get AI tracking Trends | `get_ai_tracking_trends` | `getAiTrackingTrends` | `GetAITrackingTrends` | `get_ai_tracking_trends` |
+| export AI tracking Evidence | `export_ai_tracking_evidence` | `exportAiTrackingEvidence` | `ExportAITrackingEvidence` | `export_ai_tracking_evidence` |
+| suggest AI tracking Prompts | `suggest_ai_tracking_prompts` | `suggestAiTrackingPrompts` | `SuggestAITrackingPrompts` | `suggest_ai_tracking_prompts` |
+| accept AI tracking Suggestions | `accept_ai_tracking_suggestions` | `acceptAiTrackingSuggestions` | `AcceptAITrackingSuggestions` | `accept_ai_tracking_suggestions` |
+| Preview AI prompt generation | `ai_tracking_suggestions_preview` | `aiTrackingSuggestionsPreview` | `AITrackingSuggestionsPreview` | `ai_tracking_suggestions_preview` |
+| Generate AI prompt hypotheses | `ai_tracking_suggestions_generate` | `aiTrackingSuggestionsGenerate` | `AITrackingSuggestionsGenerate` | `ai_tracking_suggestions_generate` |
+
+Tracking previews never submit paid provider work. Launch and retry require explicit consent,
+reviewed preview revisions, and a stable retry key. Export returns bounded JSON evidence with
+completeness and continuation metadata by default; select CSV explicitly. Suggestions read saved project context and competitors, remain
+editable hypotheses, and require acceptance before saving. Unknown costs stay null decimal USD
+amounts, and cached observations keep their original timestamps.
+
+Model generation first freezes the complete reviewed context, selected competitors, model and
+market. Generation requires that unexpired preview, explicit paid consent and a stable UUID
+retry header. The forecast is not a guaranteed maximum. Edited hypotheses retain a verified
+generation and draft reference; provider dataset prompts require a verified stored report row.
+
 ## Client pages
 
 - [Python SDK](/sdks/python)
@@ -146,7 +194,34 @@ The separately published MCP package is versioned independently; see
 | `create_agent_report` | Create agent report |
 | `get_agent_report` | Get agent report |
 | `analyze_ai_visibility` | Analyze AI visibility |
+| `get_ai_research_catalog` | Get AI research catalog |
 | `compare_ai_prompts` | Compare AI prompts |
 | `run_site_audit` | Run site audit |
 | `list_site_audits` | List site audits |
 | `get_site_audit` | Get site audit |
+| `list_ai_tracking_topics` | List ai tracking topics |
+| `create_ai_tracking_topic` | Create ai tracking topic |
+| `update_ai_tracking_topic` | Update ai tracking topic |
+| `archive_ai_tracking_topic` | Archive ai tracking topic |
+| `list_ai_tracking_prompts` | List ai tracking prompts |
+| `create_ai_tracking_prompt` | Create ai tracking prompt |
+| `update_ai_tracking_prompt` | Update ai tracking prompt |
+| `archive_ai_tracking_prompt` | Archive ai tracking prompt |
+| `list_ai_tracking_schedules` | List ai tracking schedules |
+| `create_ai_tracking_schedule` | Create ai tracking schedule |
+| `update_ai_tracking_schedule` | Update ai tracking schedule |
+| `archive_ai_tracking_schedule` | Archive ai tracking schedule |
+| `preview_ai_tracking_run` | Preview ai tracking run |
+| `create_ai_tracking_run` | Create ai tracking run |
+| `list_ai_tracking_runs` | List ai tracking runs |
+| `get_ai_tracking_run` | Get ai tracking run |
+| `list_ai_tracking_samples` | List ai tracking samples |
+| `cancel_ai_tracking_run` | Cancel ai tracking run |
+| `retry_ai_tracking_run` | Retry ai tracking run |
+| `get_ai_tracking_history` | Get ai tracking history |
+| `get_ai_tracking_trends` | Get ai tracking trends |
+| `export_ai_tracking_evidence` | Export ai tracking evidence |
+| `suggest_ai_tracking_prompts` | Suggest ai tracking prompts |
+| `accept_ai_tracking_suggestions` | Accept ai tracking suggestions |
+| `ai_tracking_suggestions_preview` | Preview AI prompt model generation |
+| `ai_tracking_suggestions_generate` | Generate AI prompt hypotheses |

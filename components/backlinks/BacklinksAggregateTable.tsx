@@ -1,7 +1,9 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { tableHeaderBorderClassName } from "@/components/ui/table-header-styles";
 import { type DateFormat, formatDate } from "@/lib/dates/format";
+import { cn } from "@/lib/ui/cn";
 import { useFormatter, useTranslations } from "next-intl";
 import type { BacklinksAggregateRow, BacklinksView } from "./backlinks-table-model";
 
@@ -30,10 +32,16 @@ export function BacklinksAggregateTable({
   };
   return (
     <>
-      <p className="m-0 border-b border-border px-4 py-2 text-[12px] text-fg-muted">
+      <p className="m-0 px-4 py-2 text-[12px] text-fg-muted">
         {t("aggregateWithin", { fetched: fetchedCount, label: labels[view], total: totalCount })}
       </p>
-      <div className="grid grid-cols-[minmax(260px,1fr)_190px_60px_60px_70px_120px] gap-3 border-b border-border px-4 py-2 font-sans tabular-nums text-[10px] uppercase tracking-[.08em] text-fg-muted">
+      <div
+        className={cn(
+          tableHeaderBorderClassName,
+          "grid grid-cols-[minmax(260px,1fr)_190px_60px_60px_70px_120px] gap-3 px-4 py-2 font-sans tabular-nums text-[10px] uppercase tracking-[.08em] text-fg-muted",
+        )}
+        data-table-header-border="header"
+      >
         <span>{labels[view]}</span>
         <span>{t("coverage")}</span>
         <span className="text-right">DA</span>

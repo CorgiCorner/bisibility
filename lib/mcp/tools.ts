@@ -1,6 +1,6 @@
 import "server-only";
-
 import { dispatchAgentToolRoute } from "./agent-tool-routes";
+import { dispatchAiTrackingTool } from "./ai-tracking-tools";
 import { internalMcpToolName } from "./canonical-tools";
 import { dispatchExtendedToolRoute } from "./extended-tool-routes";
 import { dispatchKeywordResearchTool } from "./keyword-research-tools";
@@ -84,6 +84,8 @@ function projectPath(input: ToolArgs, resource = "") {
 
 function dispatchToRest(name: string, input: ToolArgs): RestCall {
   validateMcpPublicIds(name, input);
+  const trackingRoute = dispatchAiTrackingTool(name, input);
+  if (trackingRoute) return trackingRoute;
   // biome-ignore format: compact dispatch keeps this registry under the file line cap.
   const directRoute = dispatchAgentToolRoute(name, input) ?? dispatchKeywordResearchTool(name, input);
   const researchRoute = dispatchResearchWorkspaceTool(name, input);

@@ -27,7 +27,7 @@ export function statusMenuValueFor(query: Pick<ProjectRunsQuery, "source" | "sta
 export function statusMenuSelection(
   value: string,
 ): Partial<Pick<ProjectRunsQuery, "source" | "status">> {
-  if (value === "all") return { status: "all" };
+  if (isProjectRunsStatusGroup(value)) return { status: value };
   const [source, status] = value.split(":");
   return {
     source: projectRunsSourceSchema.parse(source),

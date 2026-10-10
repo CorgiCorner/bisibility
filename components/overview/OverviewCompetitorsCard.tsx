@@ -80,7 +80,7 @@ export function OverviewCompetitorsCard({
       aria-label={t("summaryAriaLabel")}
       className="min-w-0 overflow-hidden p-0"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
         <div className="min-w-0">
           <SectionTitle>{t("title")}</SectionTitle>
           <p className="m-0 mt-1 text-[12px] text-fg-muted">{t("description")}</p>

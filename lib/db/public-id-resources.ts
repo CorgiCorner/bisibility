@@ -10,25 +10,52 @@ import {
 export const PUBLIC_ID_RESOURCE_REGISTRY = {
   ...CORE_PUBLIC_ID_RESOURCE_REGISTRY,
   agr: "agentReport",
+  ait: "aiTopic",
+  aip: "aiPrompt",
+  apr: "aiPromptRevision",
+  ais: "aiTrackingSchedule",
+  air: "aiTrackingRun",
+  asm: "aiTrackingSample",
+  asg: "aiTrackingSuggestionGeneration",
 } as const;
 
 export type PublicIdPrefix = keyof typeof PUBLIC_ID_RESOURCE_REGISTRY;
 export type PublicIdResource = (typeof PUBLIC_ID_RESOURCE_REGISTRY)[PublicIdPrefix];
 export type PublicId = `${PublicIdPrefix}_${string}`;
 export type PublicIdForPrefix<Prefix extends PublicIdPrefix> = `${Prefix}_${string}`;
+type RuntimePrefix = Exclude<PublicIdPrefix, keyof typeof CORE_PUBLIC_ID_RESOURCE_REGISTRY>;
 export type ParsedPublicId =
   | CoreParsedPublicId
-  | { prefix: "agr"; resource: "agentReport"; suffix: string; value: PublicId };
+  | {
+      [Prefix in RuntimePrefix]: {
+        prefix: Prefix;
+        resource: (typeof PUBLIC_ID_RESOURCE_REGISTRY)[Prefix];
+        suffix: string;
+        value: PublicId;
+      };
+    }[RuntimePrefix];
+
+function isRuntimePrefix(prefix: string): prefix is RuntimePrefix {
+  return prefix in PUBLIC_ID_RESOURCE_REGISTRY && !(prefix in CORE_PUBLIC_ID_RESOURCE_REGISTRY);
+}
 
 export function makePublicId(prefix: PublicIdPrefix): string {
-  return prefix === "agr" ? `agr_${makeCorePublicId("prj").slice(4)}` : makeCorePublicId(prefix);
+  return isRuntimePrefix(prefix)
+    ? `${prefix}_${makeCorePublicId("prj").slice(4)}`
+    : makeCorePublicId(prefix);
 }
 
 export function parsePublicId(value: string): ParsedPublicId | null {
-  if (!value.startsWith("agr_")) return parseCorePublicId(value);
-  const parsed = parseCorePublicId(`prj_${value.slice(4)}`);
+  const prefix = value.slice(0, value.indexOf("_"));
+  if (!isRuntimePrefix(prefix)) return parseCorePublicId(value);
+  const parsed = parseCorePublicId(`prj_${value.slice(prefix.length + 1)}`);
   return parsed
-    ? { prefix: "agr", resource: "agentReport", suffix: parsed.suffix, value: value as PublicId }
+    ? ({
+        prefix,
+        resource: PUBLIC_ID_RESOURCE_REGISTRY[prefix],
+        suffix: parsed.suffix,
+        value: value as PublicId,
+      } as ParsedPublicId)
     : null;
 }
 

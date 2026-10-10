@@ -10,7 +10,9 @@ import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
+import { activeMarketLocationIds, runnableKeywordWhere } from "@/lib/rank-check/runnable";
 import { resolveEffectiveSerpDepth } from "@/lib/serp/constants";
+import { skipEmptyScheduleOccurrences } from "./empty-schedule";
 import { plannedOccurrences } from "./occurrence";
 import { scheduledRunMembers } from "./schedule-members";
 
@@ -22,10 +24,15 @@ const plannerScheduleSelect = {
   frequency: true,
   id: true,
   jitterMinutes: true,
-  keywords: { orderBy: { id: "asc" as const }, select: { id: true, publicId: true } },
+  keywords: {
+    where: { archivedAt: null },
+    orderBy: { id: "asc" as const },
+    select: { id: true, publicId: true, locationId: true },
+  },
   project: {
     select: {
       defaults: { select: { timezone: true } },
+      markets: { where: { status: "active" as const }, select: { locationId: true } },
     },
   },
   projectId: true,
@@ -148,8 +155,14 @@ async function persistOccurrence(
   const idempotencyKey = `plan:${schedule.publicId}:${occurrence.occurrenceKey}`;
   return prisma.$transaction(async (tx) => {
     await lockProjectForProviderMutation(tx, schedule.projectId);
+    const locations = await activeMarketLocationIds(schedule.projectId, tx);
     const current = await tx.checkSchedule.findFirst({
-      where: { id: schedule.id, archivedAt: null, enabled: true, keywords: { some: {} } },
+      where: {
+        id: schedule.id,
+        archivedAt: null,
+        enabled: true,
+        keywords: { some: runnableKeywordWhere(locations) },
+      },
       select: { id: true },
     });
     if (!current) return null;
@@ -192,7 +205,15 @@ async function persistOccurrence(
 }
 
 async function planSchedule(schedule: PlannerSchedule, now: Date) {
-  if (schedule.keywords.length === 0) return { blocked: 0, planned: 0 };
+  const activeLocations = new Set(schedule.project.markets.map((market) => market.locationId));
+  schedule = {
+    ...schedule,
+    keywords: schedule.keywords.filter((keyword) => activeLocations.has(keyword.locationId)),
+  };
+  if (schedule.keywords.length === 0) {
+    await skipEmptyScheduleOccurrences(schedule, now);
+    return { blocked: 0, planned: 0 };
+  }
   const effective = {
     ...schedule,
     timezone: schedule.timezone ?? schedule.project.defaults?.timezone ?? "UTC",

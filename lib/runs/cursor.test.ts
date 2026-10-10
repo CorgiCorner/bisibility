@@ -5,7 +5,9 @@ import {
   decodeProjectRunsCursor,
   encodeProjectRunsCursor,
 } from "./cursor";
-import { PROJECT_RUNS_DEFAULT_FILTERS } from "./filters";
+import { PROJECT_RUNS_DEFAULT_FILTERS as DEFAULT_FILTERS } from "./filters";
+
+const PROJECT_RUNS_DEFAULT_FILTERS = { ...DEFAULT_FILTERS, view: "runs" as const };
 
 const sort = {
   id: "rcr_a00000000000000000000000",
@@ -15,6 +17,23 @@ const sort = {
 const plannedFilters = { ...PROJECT_RUNS_DEFAULT_FILTERS, view: "planned" as const };
 
 describe("project runs cursors", () => {
+  it("binds timeline pagination to section and direction", () => {
+    const filters = {
+      ...DEFAULT_FILTERS,
+      view: "timeline" as const,
+      section: "upcoming" as const,
+      order: "asc" as const,
+    };
+    const timelineSort = { ...sort, group: 1 };
+    const cursor = encodeProjectRunsCursor({ filters, sort: timelineSort });
+    expect(decodeProjectRunsCursor(cursor, filters)).toEqual(timelineSort);
+    expect(() => decodeProjectRunsCursor(cursor, { ...filters, section: "history" })).toThrow(
+      "filter set",
+    );
+    expect(() => decodeProjectRunsCursor(cursor, { ...filters, order: "desc" })).toThrow(
+      "filter set",
+    );
+  });
   it("keeps the existing Runs cursor bound to normalized filters", () => {
     const cursor = encodeProjectRunsCursor({ filters: PROJECT_RUNS_DEFAULT_FILTERS, sort });
 

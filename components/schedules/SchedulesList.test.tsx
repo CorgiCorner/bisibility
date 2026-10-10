@@ -136,11 +136,14 @@ describe("SchedulesList", () => {
   it("renders the Schedule, Cadence, Members, Per run, and Next columns", () => {
     renderList();
 
-    expect(screen.getByRole("heading", { name: "4 schedules" }).closest("header")).toHaveClass(
+    expect(screen.getByRole("heading", { name: "4 schedules" }).closest("header")).not.toHaveClass(
       "border-b",
-      "border-border",
     );
     const table = screen.getByRole("table", { name: "Schedules" });
+    expect(table.querySelector('[role="rowgroup"] > [role="row"]')).toHaveClass(
+      "border-y",
+      "border-border",
+    );
     expect(
       within(table)
         .getAllByRole("columnheader")

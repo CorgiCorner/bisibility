@@ -38,6 +38,7 @@ export async function DocumentShell({
   timeZone,
 }: Readonly<DocumentShellProps>) {
   setRequestLocale(locale);
+  const environment = process.env;
   const provider = resolveAnalyticsProvider(process.env);
   const [consent, session] = providerRequiresConsent(provider)
     ? await Promise.all([readConsentFromCookies(), getSessionReference()])
@@ -47,6 +48,7 @@ export async function DocumentShell({
     <html
       lang={htmlLanguage(locale)}
       data-scroll-behavior="smooth"
+      data-domain-icons={environment.NEXT_PUBLIC_DOMAIN_ICONS === "off" ? "off" : "on"}
       className={`${GeistSans.variable} ${GeistMono.variable}`}
       suppressHydrationWarning
     >

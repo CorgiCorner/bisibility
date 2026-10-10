@@ -14,6 +14,7 @@ const queued: TrackedFirstCheck = {
 };
 const result = {
   costCents: 0.4,
+  observationCompleteness: "unknown",
   position: null,
   provider: "dataforseo",
   rankingUrl: null,
@@ -67,7 +68,15 @@ describe("first-check progress", () => {
     await vi.advanceTimersByTimeAsync(2_000);
     expect(store.getSnapshot()).toMatchObject({
       status: "completed",
-      rows: [{ status: "completed", requestedDepth: 20, position: null, recordedCostCents: 0.4 }],
+      rows: [
+        {
+          status: "completed",
+          requestedDepth: 20,
+          position: null,
+          recordedCostCents: 0.4,
+          observationCompleteness: "unknown",
+        },
+      ],
     });
     await vi.advanceTimersByTimeAsync(60_000);
     expect(fetch).toHaveBeenCalledTimes(3);

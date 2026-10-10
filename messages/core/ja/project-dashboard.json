@@ -243,7 +243,8 @@
       "relativeMinutes": "{value, number}分前",
       "relativeYesterday": "昨日",
       "winsDescription": "最も順位を上げたキーワード",
-      "winsTitle": "最大の上昇"
+      "winsTitle": "最大の上昇",
+      "coverageUnknown": "取得範囲が不明"
     },
     "markets": {
       "activeMarkets": "{count, plural, other {有効な市場#件}} / 一時停止中の市場を除く",

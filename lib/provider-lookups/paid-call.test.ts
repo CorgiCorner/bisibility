@@ -1,9 +1,14 @@
+import {
+  BacklinksHistoryEvidenceError,
+  fetchBacklinksAnalysis,
+} from "@/lib/backlinks/provider-call";
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { byokTestEvidence } from "@/lib/provider-usage/byok-test-evidence";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  attribution: vi.fn(),
   assertOperationAccess: vi.fn(),
   correlationId: "00000000-0000-4000-8000-000000000000",
   entries: [] as Array<Record<string, unknown>>,
@@ -63,11 +68,13 @@ vi.mock("@/lib/provider-usage/tag", async (importOriginal) => {
     ...actual,
     createProviderRequestAttribution: (
       ...args: Parameters<typeof actual.createProviderRequestAttribution>
-    ) =>
-      actual.createProviderRequestAttribution(
+    ) => {
+      mocks.attribution(args[0]);
+      return actual.createProviderRequestAttribution(
         { ...args[0], correlationId: mocks.correlationId },
         args[1],
-      ),
+      );
+    },
   };
 });
 vi.mock("@/lib/providers/credentials", () => ({
@@ -105,7 +112,10 @@ const location: SerpRankLocation = {
   secondaryGeoName: "United States",
 };
 
-function runSuggestions(call = dataForSeoProvider.fetchKeywordSuggestions) {
+function runSuggestions(
+  call = dataForSeoProvider.fetchKeywordSuggestions,
+  requiredCredentialSource?: "own",
+) {
   if (!call) throw new Error("Suggestions capability is unavailable.");
   return paidProviderCall({
     call: (credentials) =>
@@ -120,6 +130,7 @@ function runSuggestions(call = dataForSeoProvider.fetchKeywordSuggestions) {
     itemCount: 100,
     projectId: "project_1",
     provider: dataForSeoProvider,
+    requiredCredentialSource,
     rate: keywordResearchRate("dataforseo", "suggestions"),
     source: "app",
     trigger: "manual",
@@ -127,6 +138,117 @@ function runSuggestions(call = dataForSeoProvider.fetchKeywordSuggestions) {
 }
 
 describe("paid provider lookup", () => {
+  it("retains summary evidence and an unresolved history journal through the real paid wrapper", async () => {
+    const provider = dataForSeoProvider;
+    if (
+      !provider.fetchBacklinksSummary ||
+      !provider.fetchBacklinksHistory ||
+      !provider.fetchBacklinksRows
+    )
+      throw new Error("Backlinks capability is unavailable.");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({
+          cost: 0.012,
+          status_code: 20000,
+          tasks: [{ cost: 0.012, id: "summary", status_code: 20000, result: [{ backlinks: 12 }] }],
+        }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          status_code: 20000,
+          tasks: [{ id: "history", status_code: 40501, status_message: "History unavailable" }],
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const failure = await fetchBacklinksAnalysis({
+      budgetCapCents: 5000,
+      includeSubdomains: true,
+      mode: "as_is",
+      origin: { source: "mcp" },
+      projectId: "project_1",
+      resultLimit: 100,
+      scope: "site",
+      source: {
+        connection: {
+          credentialsEncrypted: "encrypted",
+          id: "connection_1",
+          provider: "dataforseo",
+        },
+        provider: {
+          ...provider,
+          fetchBacklinksSummary: provider.fetchBacklinksSummary,
+          fetchBacklinksHistory: provider.fetchBacklinksHistory,
+          fetchBacklinksRows: provider.fetchBacklinksRows,
+        },
+      },
+      target: "example.com",
+    }).catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(BacklinksHistoryEvidenceError);
+    expect(failure).toMatchObject({
+      knownSummaryCostCents: 1.2,
+      summary: { backlinksTotal: 12 },
+      historyFailure: { code: "provider_usage_unconfirmed", phase: "measurement" },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(mocks.entries).toHaveLength(2);
+    expect(mocks.entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ feature: "backlinks", source: "mcp", costCents: 1.2 }),
+        expect.objectContaining({
+          feature: "backlinks",
+          source: "mcp",
+          costCents: 0,
+          measurementStatus: "unknown",
+        }),
+      ]),
+    );
+  });
+  it.each(["own", "hosted"])(
+    "passes internal scheduled correlation through %s accounting admission",
+    async (credentialSource) => {
+      mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+        credentialSource,
+        credentialsEncrypted: "encrypted",
+        projectId: "project_1",
+        provider: "dataforseo",
+      });
+      const request = paidProviderCall({
+        call: vi.fn(async () => ({ costCents: 1 })),
+        connection: {
+          credentialsEncrypted: "encrypted",
+          id: "connection_1",
+          provider: "dataforseo",
+        },
+        correlationId: "tracking-attempt",
+        feature: "ai_tracking",
+        itemCount: 1,
+        projectId: "project_1",
+        provider: dataForSeoProvider,
+        rate: {
+          costCents: 1,
+          feature: "prompt_explorer",
+          providerId: "dataforseo",
+          checkedAt: "2026-10-08",
+          sourceUrl: "https://dataforseo.com/pricing",
+        },
+        source: "worker",
+        trigger: "scheduled",
+      });
+      if (credentialSource === "hosted")
+        await expect(request).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
+      else await expect(request).resolves.toMatchObject({ costCents: 1 });
+      expect(mocks.attribution).toHaveBeenCalledWith(
+        expect.objectContaining({
+          correlationId: "tracking-attempt",
+          feature: "ai_tracking",
+          source: "worker",
+          trigger: "scheduled",
+        }),
+      );
+    },
+  );
   it("accepts representational float noise from the actual provider rate estimator", () => {
     for (const itemCount of [28, 53, 57, 72, 78, 97]) {
       const estimate = requiredEstimatedCostCents({
@@ -175,6 +297,7 @@ describe("paid provider lookup", () => {
     });
     mocks.prisma.providerConnection.findUnique.mockResolvedValue({
       credentialSource: "own",
+      credentialsEncrypted: "encrypted",
       projectId: "project_1",
       provider: "dataforseo",
     });
@@ -494,40 +617,48 @@ describe("paid provider lookup", () => {
     await expect(monthlySpendCents("project_1")).resolves.toBe(1);
   });
 
-  it("returns all confirmed request charges rather than the last adapter estimate", async () => {
-    const result = await paidProviderCall({
-      call: async (credentials) => {
-        const observer = credentials.usageObserver;
-        if (!observer) throw new Error("Missing durable request accounting");
-        await observer.settle(await observer.begin(), {
-          cached: false,
-          failed: true,
-          costCents: 0.25,
-          quantity: 1,
-          providerRequestId: "charged-retry",
-        });
-        await observer.settle(await observer.begin(), {
-          cached: false,
-          failed: false,
-          costCents: 1,
-          quantity: 1,
-          providerRequestId: "success",
-        });
-        return { costCents: 1 };
-      },
-      connection: { credentialsEncrypted: "encrypted", id: "connection_1", provider: "dataforseo" },
-      feature: "keyword_metrics",
-      itemCount: 1,
-      projectId: "project_1",
-      provider: dataForSeoProvider,
-      rate: keywordMetricsRate("dataforseo"),
-      source: "app",
-      trigger: "manual",
-    });
-    expect(result.costCents).toBe(1.25);
-    expect(mocks.entries).toHaveLength(2);
-    await expect(monthlySpendCents("project_1")).resolves.toBe(1.25);
-  });
+  it.each([undefined, "own"] as const)(
+    "returns all confirmed request charges with credential requirement %s",
+    async (requiredCredentialSource) => {
+      const result = await paidProviderCall({
+        call: async (credentials) => {
+          const observer = credentials.usageObserver;
+          if (!observer) throw new Error("Missing durable request accounting");
+          await observer.settle(await observer.begin(), {
+            cached: false,
+            failed: true,
+            costCents: 0.25,
+            quantity: 1,
+            providerRequestId: "charged-retry",
+          });
+          await observer.settle(await observer.begin(), {
+            cached: false,
+            failed: false,
+            costCents: 1,
+            quantity: 1,
+            providerRequestId: "success",
+          });
+          return { costCents: 1 };
+        },
+        connection: {
+          credentialsEncrypted: "encrypted",
+          id: "connection_1",
+          provider: "dataforseo",
+        },
+        feature: "keyword_metrics",
+        itemCount: 1,
+        projectId: "project_1",
+        provider: dataForSeoProvider,
+        requiredCredentialSource,
+        rate: keywordMetricsRate("dataforseo"),
+        source: "app",
+        trigger: "manual",
+      });
+      expect(result.costCents).toBe(1.25);
+      expect(mocks.entries).toHaveLength(2);
+      await expect(monthlySpendCents("project_1")).resolves.toBe(1.25);
+    },
+  );
 
   it("makes no HTTP request when the journal cannot persist its begin row", async () => {
     const fetchMock = vi.fn();
@@ -862,6 +993,51 @@ describe("paid provider lookup", () => {
     expect(mocks.startExecution).toHaveBeenCalledTimes(1);
   });
 
+  it.each(["hosted", "unexpected", null])(
+    "requires own credentials before any provider work when the current source is %s",
+    async (credentialSource) => {
+      mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+        credentialSource,
+        projectId: "project_1",
+        provider: "dataforseo",
+      });
+      const call = vi.fn();
+
+      await expect(runSuggestions(call, "own")).rejects.toMatchObject({
+        outcome: { ok: false, reason: "own_credentials_required" },
+      });
+      expect(mocks.prisma.providerConnectionRate.findMany).not.toHaveBeenCalled();
+      expect(mocks.prisma.project.findUnique).not.toHaveBeenCalled();
+      expect(mocks.startExecution).not.toHaveBeenCalled();
+      expect(mocks.resolveCredentials).not.toHaveBeenCalled();
+      expect(mocks.consumeLimit).not.toHaveBeenCalled();
+      expect(mocks.prisma.providerCostEntry.createMany).not.toHaveBeenCalled();
+      expect(call).not.toHaveBeenCalled();
+      expect(mocks.ledger).toEqual([]);
+    },
+  );
+
+  it.each([
+    null,
+    { credentialSource: "hosted", projectId: "other_project", provider: "dataforseo" },
+    { credentialSource: "hosted", projectId: "project_1", provider: "serpapi" },
+  ])(
+    "preserves connection isolation before checking required credentials: %j",
+    async (connection) => {
+      mocks.prisma.providerConnection.findUnique.mockResolvedValue(connection);
+      const call = vi.fn();
+
+      await expect(runSuggestions(call, "own")).rejects.toBeInstanceOf(
+        ProviderUsagePersistenceError,
+      );
+      expect(mocks.prisma.providerConnectionRate.findMany).not.toHaveBeenCalled();
+      expect(mocks.startExecution).not.toHaveBeenCalled();
+      expect(mocks.resolveCredentials).not.toHaveBeenCalled();
+      expect(mocks.consumeLimit).not.toHaveBeenCalled();
+      expect(call).not.toHaveBeenCalled();
+    },
+  );
+
   it("ignores a stale own-key caller rate when estimating deployment execution", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue({
       credentialSource: "hosted",
@@ -906,21 +1082,59 @@ describe("paid provider lookup", () => {
     expect(call).not.toHaveBeenCalled();
   });
 
-  it("refuses an own-to-hosted source change before decryption", async () => {
-    mocks.prisma.providerConnection.findUnique
-      .mockResolvedValueOnce({
+  it.each([undefined, "own"] as const)(
+    "refuses an own-to-hosted source change before decryption with requirement %s",
+    async (requiredCredentialSource) => {
+      mocks.prisma.providerConnection.findUnique
+        .mockResolvedValueOnce({
+          credentialSource: "own",
+          credentialsEncrypted: "encrypted",
+          projectId: "project_1",
+          provider: "dataforseo",
+        })
+        .mockResolvedValueOnce({
+          credentialSource: "hosted",
+          projectId: "project_1",
+          provider: "dataforseo",
+        });
+      const call = vi.fn();
+      await expect(runSuggestions(call, requiredCredentialSource)).rejects.toBeInstanceOf(
+        ProviderUsagePersistenceError,
+      );
+      expect(mocks.startExecution).not.toHaveBeenCalled();
+      expect(mocks.resolveCredentials).not.toHaveBeenCalled();
+      expect(mocks.consumeLimit).not.toHaveBeenCalled();
+      expect(call).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["first", "second"])(
+    "refuses own credential rotation at the %s authoritative read",
+    async (stage) => {
+      const original = {
         credentialSource: "own",
+        credentialsEncrypted: "encrypted",
         projectId: "project_1",
         provider: "dataforseo",
-      })
-      .mockResolvedValueOnce({
-        credentialSource: "hosted",
-        projectId: "project_1",
-        provider: "dataforseo",
+      };
+      const rotated = { ...original, credentialsEncrypted: "fictional-rotated-reference" };
+      if (stage === "first")
+        mocks.prisma.providerConnection.findUnique.mockResolvedValueOnce(rotated);
+      else
+        mocks.prisma.providerConnection.findUnique
+          .mockResolvedValueOnce(original)
+          .mockResolvedValueOnce(rotated);
+      const call = vi.fn();
+      await expect(runSuggestions(call, "own")).rejects.toMatchObject({
+        outcome: { ok: false, reason: "credentials_changed" },
       });
-    await expect(runSuggestions(vi.fn())).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
-    expect(mocks.resolveCredentials).not.toHaveBeenCalled();
-  });
+      expect(mocks.startExecution).not.toHaveBeenCalled();
+      expect(mocks.resolveCredentials).not.toHaveBeenCalled();
+      expect(mocks.consumeLimit).not.toHaveBeenCalled();
+      expect(call).not.toHaveBeenCalled();
+      expect(mocks.ledger).toEqual([]);
+    },
+  );
 
   it("finishes a hosted rate-limit refusal without calling the provider", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue({

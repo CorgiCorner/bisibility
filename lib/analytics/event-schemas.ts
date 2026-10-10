@@ -80,6 +80,11 @@ export const analyticsEventSchemas = {
   }),
   marketing_cta_clicked: z.object({
     page: z.enum([
+      "ai-tracking",
+      "ai-research",
+      "project-context",
+      "agent-reports",
+      "site-audit",
       "features-hub",
       "rank-tracking",
       "serp-history",

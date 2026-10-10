@@ -168,9 +168,7 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
         </p>
       ) : null}
       <Card className="overflow-hidden p-0">
-        <div className="border-b border-border px-4 py-3 text-[14px] font-semibold">
-          {t("urlIssues")}
-        </div>
+        <div className="px-4 py-3 text-[14px] font-semibold">{t("urlIssues")}</div>
         <DataTable<AuditRow>
           ariaLabel={t("urlIssues")}
           bordered={false}
