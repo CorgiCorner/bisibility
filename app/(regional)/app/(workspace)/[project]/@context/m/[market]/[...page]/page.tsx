@@ -1,3 +1,4 @@
+import { KeywordHeaderContextBoundary } from "@/components/keywords/KeywordHeaderContextBoundary";
 import { RankTrackerHeaderContext } from "@/components/keywords/RankTrackerHeaderContext";
 import { HeaderContextSlot } from "@/components/shell/HeaderContextSlot";
 import { type NextSearchParams, parseRankTrackerQuery } from "@/lib/keywords/rank-tracker-query";
@@ -41,11 +42,13 @@ export default async function HeaderContextRoute({
     : null;
   const savedView = viewId ? await getSavedView(access.publicId, viewId) : null;
   return rankTracker ? (
-    <RankTrackerHeaderContext
-      contexts={contexts}
-      projectRef={access.publicId}
-      savedView={savedView?.config}
-    />
+    <KeywordHeaderContextBoundary>
+      <RankTrackerHeaderContext
+        contexts={contexts}
+        projectRef={access.publicId}
+        savedView={savedView?.config}
+      />
+    </KeywordHeaderContextBoundary>
   ) : (
     <HeaderContextSlot contexts={contexts} projectRef={access.publicId} />
   );

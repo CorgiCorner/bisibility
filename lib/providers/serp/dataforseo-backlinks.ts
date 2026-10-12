@@ -1,3 +1,4 @@
+import { BACKLINK_HISTORY_MONTHS, previousFullHistoryMonths } from "@/lib/providers/history-window";
 import type { ProviderCredentials, SerpProvider } from "@/lib/providers/types";
 import {
   dataForSeoBacklinksHistory,
@@ -36,16 +37,6 @@ function commonPayload(input: Parameters<BacklinksMethods["fetchBacklinksSummary
   };
 }
 
-function isoDate(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function lastTwelveFullMonths(now: Date) {
-  const dateFrom = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 12, 1));
-  const dateTo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0));
-  return { date_from: isoDate(dateFrom), date_to: isoDate(dateTo) };
-}
-
 export function createDataForSeoBacklinksMethods(deps: Dependencies): BacklinksMethods {
   return {
     async fetchBacklinksSummary(credentials, input) {
@@ -54,9 +45,14 @@ export function createDataForSeoBacklinksMethods(deps: Dependencies): BacklinksM
     },
     async fetchBacklinksHistory(credentials, input) {
       if (input.targetScope !== "site") return { costCents: 0, rows: [] };
+      const window =
+        input.historyWindow ?? previousFullHistoryMonths(BACKLINK_HISTORY_MONTHS, deps.now?.());
       const data = await deps.request(HISTORY_URL, credentials, {
-        ...commonPayload(input),
-        ...lastTwelveFullMonths((deps.now ?? (() => new Date()))()),
+        target: input.target,
+        rank_scale: "one_hundred",
+        date_from: window.dateFrom,
+        date_to: window.dateTo,
+        ...(input.tag ? { tag: input.tag } : {}),
       });
       return dataForSeoBacklinksHistory(data);
     },

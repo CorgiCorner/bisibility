@@ -28,11 +28,7 @@ function booleanValue(value: unknown) {
 
 async function acquireLock(
   db: DataMigrationDatabase,
-  {
-    lockTimeoutMs,
-    now,
-    sleep,
-  }: Required<Pick<RunOptions, "lockTimeoutMs" | "now" | "sleep">>,
+  { lockTimeoutMs, now, sleep }: Required<Pick<RunOptions, "lockTimeoutMs" | "now" | "sleep">>,
 ) {
   const deadline = now() + lockTimeoutMs;
   let delay = LOCK_RETRY_INITIAL_MS;
@@ -123,6 +119,8 @@ export async function runActiveDataMigrations(
         continue;
       }
       if (!row) {
+        await runMigrationWork(db, migration, options, log);
+      } else if (!row.runCompletedAt && migration.replaySafe) {
         await runMigrationWork(db, migration, options, log);
       } else if (!row.runCompletedAt) {
         throw new Error(

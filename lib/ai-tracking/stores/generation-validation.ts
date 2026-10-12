@@ -1,6 +1,8 @@
 import { canonicalJson } from "@/lib/ai-tracking/identity";
 import { SuggestionGenerationError } from "@/lib/ai-tracking/suggestions/generation-schema";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { meterOperationReference, receiptOperationId } from "@/lib/metering/operation-reference";
+import { canonicalReceipt, readCanonicalUsage } from "@/lib/metering/usage-read";
 import { z } from "zod";
 import type { GenerationReceipt } from "./generation-contract";
 import { reconcileProjectGenerations } from "./generation-reconciliation";
@@ -44,19 +46,24 @@ export async function requireResolvedGenerations(
     where: {
       projectId,
       ...(exceptId ? { id: { not: exceptId } } : {}),
-      OR: [
-        { state: { in: ["claimed", "submission_started", "submission_unknown"] } },
-        { providerCostEntry: { is: { measurementStatus: "unknown" } } },
-      ],
+      OR: [{ state: { in: ["claimed", "submission_started", "submission_unknown"] } }],
     },
     select: { publicId: true },
   });
-  if (unresolved)
+  const unknown = unresolved
+    ? []
+    : await readCanonicalUsage(
+        Prisma.sql`"projectId"=${projectId} AND feature='ai_tracking' AND "measurementStatus"<>'recorded'`,
+        tx,
+      );
+  if (unresolved || unknown.length)
     throw new SuggestionGenerationError(
       409,
       "usage_reconciliation_required",
-      "Project has an unresolved suggestion generation; reconcile its native receipt before another paid attempt.",
-      unresolved.publicId,
+      unresolved
+        ? "Project has an unresolved suggestion generation; reconcile its native receipt before another paid attempt."
+        : "Project has unresolved AI usage; reconcile its native receipt before another paid attempt.",
+      unresolved?.publicId,
     );
 }
 export async function validateReceipt(
@@ -71,19 +78,22 @@ export async function validateReceipt(
     (receipt.amountUsd !== null && !/^\d+(\.\d+)?$/.test(receipt.amountUsd))
   )
     throw new Error("Generation receipt identity invalid.");
-  if (receipt.providerCostEntryId) {
+  const operationId = receiptOperationId(receipt);
+  if (operationId) {
     const ledger = requireFound(
-      await tx.providerCostEntry.findFirst({
-        where: { projectId, id: receipt.providerCostEntryId, connectionId },
-      }),
+      await canonicalReceipt(tx, projectId, operationId, connectionId),
       "Generation native ledger receipt",
     );
+    if (ledger.providerCredentialVersion !== receipt.credentialVersion)
+      throw new Error("Generation credential version conflicts with canonical evidence.");
     if (
       ["confirmed", "derived"].includes(receipt.state) &&
       (ledger.measurementStatus !== "recorded" ||
         receipt.amountUsd === null ||
-        !ledger.costCents.div(100).equals(new Prisma.Decimal(receipt.amountUsd)))
+        !ledger.costCents?.div(100).equals(new Prisma.Decimal(receipt.amountUsd)))
     )
       throw new Error("Generation cost conflicts with authoritative native ledger.");
+    return meterOperationReference(ledger.id, ledger.namespace);
   }
+  return null;
 }

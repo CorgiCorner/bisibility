@@ -11,7 +11,7 @@ export function AgentReportsLayout({
   busy = false,
 }: Readonly<{ children: ReactNode; busy?: boolean }>) {
   return (
-    <PageContent aria-busy={busy || undefined} className="flex flex-col gap-5">
+    <PageContent variant="section" aria-busy={busy || undefined} className="flex flex-col gap-5">
       {children}
     </PageContent>
   );

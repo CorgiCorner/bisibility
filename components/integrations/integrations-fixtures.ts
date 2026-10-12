@@ -73,7 +73,6 @@ function makeDrawer(input: DrawerInput): IntegrationProvider["drawer"] {
       ...input.defaults,
     },
     envHint: input.envHint ?? "Credentials can also be configured through environment variables.",
-    rates: input.rates,
   };
 }
 
@@ -101,67 +100,6 @@ export const integrationCategories = [
           costHelp: COST_ESTIMATE_PER_CHECK_HELP,
           credentialFields: providerCredentialFieldsFor("dataforseo", { connected: true }),
           defaults: { costPerCheck: 0.0155, login: "team@example.com" },
-          rates: [
-            {
-              amountCents: 1.55,
-              checkedAt: "2026-07-27T00:00:00.000Z",
-              fallbackSource: "list",
-              feature: "rank_check",
-              label: "Rank check",
-              sampleSize: 248,
-              source: "measured",
-              unit: "checks",
-            },
-            {
-              amountCents: 1,
-              fallbackSource: "list",
-              feature: "keyword_research",
-              label: "Keyword research",
-              source: "manual",
-              unit: "calls",
-            },
-            {
-              amountCents: 1,
-              checkedAt: "2026-07-22T00:00:00.000Z",
-              feature: "keyword_metrics",
-              label: "Keyword metrics",
-              source: "list",
-              unit: "calls",
-            },
-            {
-              feature: "ranked_keywords",
-              label: "Ranked keywords",
-              source: "unknown",
-              unit: "calls",
-            },
-            {
-              amountCents: 1.212,
-              checkedAt: "2026-08-11T00:00:00.000Z",
-              editable: false,
-              feature: "domain_rank_overview",
-              label: "Domain overview",
-              source: "list",
-              unit: "calls",
-            },
-            {
-              amountCents: 12.12,
-              checkedAt: "2026-08-11T00:00:00.000Z",
-              editable: false,
-              feature: "historical_rank_overview",
-              label: "Organic history",
-              source: "list",
-              unit: "calls",
-            },
-            {
-              amountCents: 2.4,
-              checkedAt: "2026-08-11T00:00:00.000Z",
-              editable: false,
-              feature: "relevant_pages",
-              label: "Relevant pages (100)",
-              source: "list",
-              unit: "loads",
-            },
-          ],
         }),
       },
       {
@@ -180,16 +118,6 @@ export const integrationCategories = [
         drawer: makeDrawer({
           activities: activities("never"),
           credentialFields: providerCredentialFieldsFor("serpapi", { connected: false }),
-          rates: [
-            {
-              amountCents: 10,
-              checkedAt: "2026-07-15T00:00:00.000Z",
-              feature: "rank_check",
-              label: "Rank check",
-              source: "list",
-              unit: "checks",
-            },
-          ],
         }),
       },
     ],

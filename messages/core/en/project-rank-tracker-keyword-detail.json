@@ -173,7 +173,8 @@
         "runningTitle": "Check running",
         "completeTitle": "Check complete",
         "failedTitle": "Check failed",
-        "couldNotStart": "The rank check could not be started."
+        "couldNotStart": "The rank check could not be started.",
+        "viewRuns": "View runs"
       },
       "traffic": {
         "noData": "No data",

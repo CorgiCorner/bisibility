@@ -20,7 +20,7 @@ const emptyOverview = {
 } satisfies OverviewView;
 
 const healthyChecks = {
-  budget: { capCents: 5000, exhausted: false, spentCents: 0 },
+  budget: { reason: undefined, capCents: 5000, exhausted: false, spentCents: 0 },
   currentFailures: { count: 0, latestCheckId: null },
   failed24h: { count: 0, latest: null },
   providerConnected: false,
@@ -364,7 +364,7 @@ describe("OverviewDashboardView", () => {
   it("separates failed-check and budget health banners without a trailing divider", () => {
     const unhealthyChecks = {
       ...healthyChecks,
-      budget: { capCents: 5000, exhausted: true, spentCents: 5000 },
+      budget: { reason: undefined, capCents: 5000, exhausted: true, spentCents: 5000 },
       failed24h: {
         count: 1,
         latest: {

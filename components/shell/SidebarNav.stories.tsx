@@ -23,14 +23,16 @@ export const Expanded: Story = {
   args: { activeHref: appPath("prj_1", "dashboard"), projectRef: "prj_1" },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText("Activity")).toBeVisible();
-    await expect(canvas.getByText("Modules")).toBeVisible();
+    await expect(canvas.queryByText("Activity")).not.toBeInTheDocument();
+    await expect(canvas.getByText("Tracking")).toBeVisible();
+    await expect(canvas.getByText("Research & audits")).toBeVisible();
+    await expect(canvas.getByText("Data & reports")).toBeVisible();
     await expect(canvas.getByText("Project")).toBeVisible();
     const searchConsole = canvas.getByText("Search Console").closest("a");
     if (!searchConsole) {
       throw new Error("Search Console navigation link is missing.");
     }
-    await expect(within(searchConsole).getByText("beta")).toBeVisible();
+    await expect(canvas.queryAllByText(/^(alpha|beta)$/i)).toHaveLength(0);
   },
 };
 
@@ -46,14 +48,16 @@ export const Collapsed: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // Each heading swaps its label for the 80px tag, so the collapsed rail keeps its three
+    // Each heading swaps its label for the 80px tag, so the collapsed rail keeps its
     // captions rather than falling back to a bare pad. The two spellings differ by case, which
     // is exactly what an exact-string query distinguishes.
-    await expect(canvas.getByText("ACTIVITY")).toBeVisible();
-    await expect(canvas.getByText("MODULES")).toBeVisible();
+    await expect(canvas.queryByText("ACTIVITY")).not.toBeInTheDocument();
+    await expect(canvas.getByText("TRACKING")).toBeVisible();
+    await expect(canvas.getByText("RESEARCH")).toBeVisible();
+    await expect(canvas.getByText("DATA")).toBeVisible();
     await expect(canvas.getByText("PROJECT")).toBeVisible();
     await expect(canvas.queryByText("Activity")).not.toBeInTheDocument();
-    await expect(canvas.queryByText("Modules")).not.toBeInTheDocument();
+    await expect(canvas.queryByText("Tracking")).not.toBeInTheDocument();
     await expect(canvas.queryByText("Project")).not.toBeInTheDocument();
 
     // A row drops its visible label and its badge, and the aria-label is the only thing left

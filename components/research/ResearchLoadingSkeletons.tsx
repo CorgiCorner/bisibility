@@ -137,9 +137,9 @@ export function ResearchResultsLoading({ ariaLabel }: Readonly<{ ariaLabel: stri
   );
 }
 
-export function ResearchPageLoading() {
+export function ResearchPageLoading({ variant }: Readonly<{ variant?: "analytics" | "section" }>) {
   return (
-    <PageContent aria-hidden className="grid gap-4">
+    <PageContent variant={variant} aria-hidden className="grid gap-4">
       <SearchCardLoading />
       <IdleStateLoading />
     </PageContent>

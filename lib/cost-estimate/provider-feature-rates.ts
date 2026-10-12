@@ -1,4 +1,6 @@
 import { type ResolveProviderRateInput, resolveProviderRate } from "@/lib/provider-rates/resolver";
+import { formatQuantity } from "@usagekit/core";
+import { dataforseo } from "@usagekit/providers";
 
 export type ProviderFeatureRate = {
   baseCostCents?: number;
@@ -24,85 +26,106 @@ export type ProviderFeatureRate = {
   unitCostCents?: number;
 };
 
-export const PROVIDER_FEATURE_RATES: ProviderFeatureRate[] = [
-  {
-    checkedAt: "2026-10-01",
-    costCents: 2.4,
-    feature: "ranked_keywords",
-    providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
-  },
-  // provisional - finalize via scripts/backlinks-cost-profile
-  {
-    checkedAt: "2026-10-01",
-    costCents: 2.4,
-    feature: "backlinks_summary",
-    providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/pricing/backlinks/backlinks",
-  },
-  // provisional - finalize via scripts/backlinks-cost-profile
-  {
-    checkedAt: "2026-10-01",
-    costCents: 2.4,
-    feature: "backlinks_history",
-    providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/pricing/backlinks/backlinks",
-  },
-  // Backlinks: $0.024 per request + $0.000036 per row (checked 2026-10-01).
-  {
-    baseCostCents: 2.4,
-    checkedAt: "2026-10-01",
-    costCents: 2.76,
-    feature: "backlinks_rows",
-    providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/pricing/backlinks/backlinks",
-    unitCostCents: 0.0036,
-  },
-  // Flat per-request figure, raised 20% per DataForSEO's July 1, 2026 Labs price update.
-  {
-    checkedAt: "2026-10-01",
-    costCents: 2.4,
-    feature: "domain_rank_overview",
-    providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
-  },
-  // provisional - finalize via scripts/domain-overview-cost-profile
-  {
-    baseCostCents: 12,
-    checkedAt: "2026-10-01",
-    costCents: 12,
-    feature: "historical_rank_overview",
-    providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
-    unitCostCents: 0.12,
-  },
-  // Labs "all other endpoints": $0.012 per task + $0.00012 per item (checked 2026-10-01).
-  {
-    baseCostCents: 1.2,
-    checkedAt: "2026-10-01",
-    costCents: 2.4,
-    feature: "relevant_pages",
-    providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
-    unitCostCents: 0.012,
-  },
-  ...(
-    [
-      "keyword_research_related",
-      "keyword_research_suggestions",
-      "keyword_research_ideas",
-      "keyword_metrics",
-    ] as const
-  ).map((feature) => ({
-    baseCostCents: 1.2,
-    checkedAt: "2026-10-01",
-    costCents: 2.4,
+const featureOperations = {
+  ranked_keywords: "dataforseo_labs.google.ranked_keywords.live",
+  backlinks_summary: "backlinks.summary.live",
+  backlinks_history: "backlinks.history.live",
+  backlinks_rows: "backlinks.backlinks.live",
+  domain_rank_overview: "dataforseo_labs.google.domain_rank_overview.live",
+  historical_rank_overview: "dataforseo_labs.google.historical_rank_overview.live",
+  relevant_pages: "dataforseo_labs.google.relevant_pages.live",
+  keyword_research_related: "dataforseo_labs.google.related_keywords.live",
+  keyword_research_suggestions: "dataforseo_labs.google.keyword_suggestions.live",
+  keyword_research_ideas: "dataforseo_labs.google.keyword_ideas.live",
+  keyword_metrics: "dataforseo_labs.google.keyword_overview.live",
+} as const;
+type CatalogFeature = keyof typeof featureOperations;
+const isCatalogFeature = (feature: string): feature is CatalogFeature =>
+  Object.hasOwn(featureOperations, feature);
+
+export function providerFeatureOperation(rate: ProviderFeatureRate | null) {
+  return rate?.providerId === "dataforseo" && isCatalogFeature(rate.feature)
+    ? featureOperations[rate.feature]
+    : null;
+}
+
+/** Keep the meaning of existing editor values independent of the catalog's list formula. */
+export function providerFeatureOverrideBasis(feature: string): "call" | "item" {
+  return [
+    "ranked_keywords",
+    "backlinks_summary",
+    "backlinks_history",
+    "domain_rank_overview",
+  ].includes(feature)
+    ? "call"
+    : "item";
+}
+
+function featurePrice(feature: CatalogFeature) {
+  const operation = featureOperations[feature];
+  const price = dataforseo.descriptor.prices.find((row) => row.operation === operation);
+  if (price?.unit !== "cents" || price.calculation?.kind !== "base_plus_items")
+    throw new Error("Feature catalog price is unavailable");
+  return price;
+}
+
+/** Display reference prices use the installed descriptor and its own shared formula.
+ * Live admission additionally checks the request and effective-date policy. */
+function catalogFeatureAmount(
+  feature: CatalogFeature,
+  count: number,
+  clickstream: boolean,
+  itemPrice?: number,
+) {
+  if (!Number.isSafeInteger(count) || count < 0) return null;
+  const operation = dataforseo.descriptor.operations.find(
+    (entry) => entry.id === featureOperations[feature],
+  );
+  if (!operation) return null;
+  const price = featurePrice(feature);
+  const calculation = price.calculation;
+  if (calculation?.kind !== "base_plus_items") return null;
+  const quantities = dataforseo.extractors.estimate({
+    operation,
+    options: { itemCount: String(count), clickstream: String(clickstream) },
+    prices: [
+      {
+        ...price,
+        calculation: {
+          ...calculation,
+          ...(itemPrice === undefined ? {} : { perItem: String(itemPrice) }),
+        },
+      },
+    ],
+  });
+  const amount = quantities.find((quantity) => quantity.unit === "cents");
+  return amount ? Number(formatQuantity(amount)) : null;
+}
+
+export const PROVIDER_FEATURE_RATES: ProviderFeatureRate[] = (
+  Object.keys(featureOperations) as CatalogFeature[]
+).map((feature) => {
+  const row = featurePrice(feature);
+  const calculation = row.calculation;
+  if (calculation?.kind !== "base_plus_items") throw new Error("Missing item formula");
+  const referenceCount =
+    feature === "historical_rank_overview"
+      ? 0
+      : ["backlinks_summary", "backlinks_history", "domain_rank_overview"].includes(feature)
+        ? 1
+        : 100;
+  const costCents = catalogFeatureAmount(feature, referenceCount, false);
+  if (costCents === null) throw new Error("Feature reference quote is unavailable");
+  return {
+    baseCostCents: Number(row.perUnit),
+    checkedAt: row.checkedAt,
+    costCents,
     feature,
-    providerId: "dataforseo",
-    sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
-    unitCostCents: 0.012,
-  })),
-];
+    providerId: dataforseo.descriptor.id,
+    sourceUrl: row.source,
+    unitCostCents: Number(calculation.perItem),
+  };
+});
 
 export function estimatedFeatureCostCents(
   rate: ProviderFeatureRate,
@@ -122,7 +145,11 @@ export function estimatedFeatureCostCents(
   includeClickstream: boolean,
   context: Pick<ResolveProviderRateInput, "entries" | "manualAmountCents">,
 ) {
-  const scalesByItem = rate?.unitCostCents !== undefined;
+  const nativeFeature =
+    rate?.providerId === "dataforseo" && isCatalogFeature(rate.feature) ? rate.feature : null;
+  const scalesByItem = nativeFeature
+    ? providerFeatureOverrideBasis(nativeFeature) === "item"
+    : rate?.unitCostCents !== undefined;
   const listAmountCents = rate ? (scalesByItem ? rate.unitCostCents : rate.costCents) : null;
   const resolved = resolveProviderRate({
     entries: context.entries.map((entry) => ({
@@ -140,6 +167,12 @@ export function estimatedFeatureCostCents(
   });
 
   if (!("amountCents" in resolved)) return null;
+  if (nativeFeature) {
+    if (resolved.source === "list")
+      return catalogFeatureAmount(nativeFeature, itemCount, includeClickstream);
+    if (!scalesByItem) return resolved.amountCents;
+    return catalogFeatureAmount(nativeFeature, itemCount, includeClickstream, resolved.amountCents);
+  }
   const amountCents = scalesByItem
     ? (rate?.baseCostCents ?? 0) + resolved.amountCents * itemCount
     : resolved.amountCents;

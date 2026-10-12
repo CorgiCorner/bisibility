@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./fixtures";
 import { testAndSaveDataForSeo } from "./workspace";
 
 test("provider setup recovers when an enabled test button remounts disabled before click", async ({
@@ -6,14 +6,14 @@ test("provider setup recovers when an enabled test button remounts disabled befo
 }) => {
   test.setTimeout(20_000);
   await page.setContent(`
-    <html data-hydrated="true"><body>
+    <html data-hydrated="true"><body><form id="onboarding-step-form">
       <label>API login<input id="login" oninput="updateTestButton()"></label>
       <label>API password<input id="password" oninput="updateTestButton()"></label>
       <div role="status"></div>
-      <button id="test" disabled onclick="verifyProvider()">Test connection</button>
-      <button id="save" disabled onclick="saveProvider()">Save connection</button>
-      <button id="continue" disabled>Continue</button>
-      <script>
+      <button type="button" id="test" disabled onclick="verifyProvider()">Test connection</button>
+      <button type="button" id="save" disabled onclick="saveProvider()">Save connection</button>
+      <button type="button" id="continue" disabled>Continue</button>
+      </form><script>
         function updateTestButton() {
           document.getElementById("test").disabled =
             !document.getElementById("login").value || !document.getElementById("password").value;

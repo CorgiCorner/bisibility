@@ -1,44 +1,86 @@
 import { captured, getPageMocks, renderPage, setupPageTest } from "@/tests/rank-tracker-page";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = getPageMocks();
 
 describe("KeywordsPage grouped tabs", () => {
   beforeEach(setupPageTest);
 
-  it("uses grouped server rows when grouping is explicit", async () => {
-    await renderPage({ grouped: "1" });
+  function projectMarkets(count: number) {
+    mocks.getProjectMarkets.mockResolvedValue({
+      markets: Array.from({ length: count }, (_, index) => ({
+        id: `pmkt_${index}`,
+        status: "active",
+      })),
+      maxMarkets: 5,
+      monthlyCostCents: 0,
+      perMarketChecks: 0,
+      projectId: "prj_1",
+    });
+  }
 
+  it.each([0, 1, 2])(
+    "renders the automatic mode for %i project markets without a manual choice",
+    async (count) => {
+      projectMarkets(count);
+      await renderPage({});
+      expect(captured.gridProps.query).toMatchObject({ grouped: count > 1 });
+      expect(
+        count > 1 ? mocks.getRankTrackerGroupedList : mocks.getRankTrackerKeywordList,
+      ).toHaveBeenCalledOnce();
+      expect(
+        count > 1 ? mocks.getRankTrackerKeywordList : mocks.getRankTrackerGroupedList,
+      ).not.toHaveBeenCalled();
+      expect(mocks.getProjectMarkets).toHaveBeenCalledOnce();
+    },
+  );
+
+  it.each([0, 1, 2])(
+    "preserves the explicit URL choice with %i registered markets",
+    async (count) => {
+      projectMarkets(count);
+      const grouped = count <= 1;
+      await renderPage({ grouped: grouped ? "1" : "0" });
+      expect(captured.gridProps.query).toMatchObject({ grouped });
+      expect(
+        grouped ? mocks.getRankTrackerGroupedList : mocks.getRankTrackerKeywordList,
+      ).toHaveBeenCalledOnce();
+      expect(
+        grouped ? mocks.getRankTrackerKeywordList : mocks.getRankTrackerGroupedList,
+      ).not.toHaveBeenCalled();
+    },
+  );
+
+  it("groups from the registry even before its second market has keywords", async () => {
+    projectMarkets(2);
+    await renderPage({});
     expect(mocks.getRankTrackerGroupedList).toHaveBeenCalledWith({
       projectRef: "prj_1",
       query: expect.objectContaining({ grouped: true }),
     });
     expect(mocks.getRankTrackerKeywordList).not.toHaveBeenCalled();
-    expect(captured.gridProps.query).toMatchObject({ grouped: true });
   });
+});
 
-  it("defaults to grouped server rows when project locations span two markets", async () => {
-    mocks.getRankTrackerKeywordList.mockResolvedValueOnce({
-      facets: { intents: [], positions: [], tags: [], topics: [] },
-      locations: [
-        { count: 1, displayName: "Spain", id: "country:es@es", kind: "country" },
-        { count: 1, displayName: "United States", id: "country:us@en", kind: "country" },
-      ],
-      matchedTargetCount: 2,
-      page: 1,
-      pageCount: 1,
-      pageSize: 25,
-      resolvedLens: { device: "all", locationId: null },
-      rows: [],
-      totalCount: 2,
-    });
-
-    await renderPage({});
-
-    expect(mocks.getRankTrackerGroupedList).toHaveBeenCalledWith({
-      projectRef: "prj_1",
-      query: expect.objectContaining({ grouped: true }),
-    });
-    expect(captured.gridProps.query).toMatchObject({ grouped: true });
+it("waits for the registry before choosing a row query, avoiding a temporary flat render", async () => {
+  setupPageTest();
+  let resolveMarkets!: (value: { markets: { id: string; status: "active" }[] }) => void;
+  mocks.getProjectMarkets.mockReturnValue(
+    new Promise((resolve) => {
+      resolveMarkets = resolve;
+    }),
+  );
+  const pendingPage = renderPage({});
+  await vi.waitFor(() => expect(mocks.getProjectMarkets).toHaveBeenCalled());
+  expect(mocks.getRankTrackerKeywordList).not.toHaveBeenCalled();
+  expect(mocks.getRankTrackerGroupedList).not.toHaveBeenCalled();
+  resolveMarkets({
+    markets: [
+      { id: "pmkt_1", status: "active" },
+      { id: "pmkt_2", status: "active" },
+    ],
   });
+  await pendingPage;
+  expect(captured.gridProps.query).toMatchObject({ grouped: true });
+  expect(mocks.getRankTrackerKeywordList).not.toHaveBeenCalled();
 });

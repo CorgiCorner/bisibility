@@ -13,7 +13,7 @@ import {
 } from "@/i18n/test-support/render-with-feature-messages";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cdp, page, userEvent } from "vitest/browser";
 
 const options = [
@@ -21,6 +21,11 @@ const options = [
   { label: "Paris", value: "paris", disabled: true, tooltip: "Unavailable in this provider" },
   { label: "Warsaw", value: "warsaw" },
 ];
+beforeEach(async () => {
+  await cdp().send("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-reduced-motion", value: "no-preference" }],
+  });
+});
 afterEach(async () => {
   cleanup();
   await page.viewport(1024, 768);

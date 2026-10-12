@@ -1,3 +1,12 @@
+vi.mock("@/lib/provider-usage/enforcement", async (load) => ({
+  ...(await load<typeof import("@/lib/provider-usage/enforcement")>()),
+  assertProviderAllocationAvailable: vi.fn(async () => ({
+    mode: "allocation",
+    remaining: null,
+    unit: null,
+  })),
+}));
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { launchDuePlannedRuns, launchPlannedRun } from "./launch-due";
 import { materializePlannedRun } from "./materialize";
@@ -19,6 +28,8 @@ const mocks = vi.hoisted(() => ({
   findUniqueOrThrow: vi.fn(),
   isBudgetExhausted: vi.fn(),
   loadChain: vi.fn(),
+  nativeCosts: vi.fn(),
+  queuedRoute: vi.fn(),
   occurrenceKeys: new Map<string, string>(),
   items: new Map<string, { id: string }[]>(),
   members: new Map<string, { id: string }[]>(),
@@ -47,6 +58,10 @@ vi.mock("@/lib/db/prisma", () => ({
 vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.loadChain,
 }));
+vi.mock("@/lib/provider-rates/native-rank-request", () => ({
+  loadNativeRankRequestCosts: mocks.nativeCosts,
+}));
+vi.mock("@/lib/rank-check/queued-routing", () => ({ queuedRankCheckRoute: mocks.queuedRoute }));
 vi.mock("@/lib/rank-check/budget", () => ({
   assertBudgetAvailable: mocks.assertBudget,
   isBudgetExhaustedError: mocks.isBudgetExhausted,
@@ -120,6 +135,8 @@ function matchesKeywordWhere(row: ReturnType<typeof candidate>, where: KeywordWh
 describe("planned run launching", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.nativeCosts.mockResolvedValue(undefined);
+    mocks.queuedRoute.mockResolvedValue({ mode: "legacy", reason: "dispatcher_disabled" });
     mocks.activeLocationIds = ["location_active"];
     mocks.archived.clear();
     mocks.keywordLocations.clear();
@@ -129,7 +146,12 @@ describe("planned run launching", () => {
     mocks.status.clear();
     mocks.updateMany.mockImplementation(updateStatus);
     mocks.txUpdateMany.mockImplementation(updateStatus);
-    mocks.currentSchedule.mockResolvedValue({ id: "schedule" });
+    mocks.currentSchedule.mockResolvedValue({
+      id: "schedule",
+      providerPolicy: null,
+      serpDepth: 20,
+      project: { defaults: { serpDepth: 20 } },
+    });
     mocks.currentRun.mockResolvedValue({ id: "run_1" });
     mocks.transaction.mockImplementation(async (callback) =>
       callback({
@@ -351,15 +373,63 @@ describe("planned run launching", () => {
       runId: "run_1",
     });
 
-    expect(mocks.assertBudget).toHaveBeenCalledWith("project_1", expect.any(Date), {
-      capCents: 100,
-      estimatedCostCents: 2,
-    });
-    expect(mocks.updateMany).toHaveBeenCalledWith({
+    expect(mocks.assertBudget).toHaveBeenCalledWith(
+      "project_1",
+      expect.any(Date),
+      expect.objectContaining({
+        estimatedCostCents: 2,
+        client: expect.any(Object),
+      }),
+    );
+    expect(mocks.txUpdateMany).toHaveBeenCalledWith({
       data: { blockedReason: "budget_exhausted", status: "blocked" },
       where: { id: "run_1", status: "blocked" },
     });
     expect(mocks.createMany).not.toHaveBeenCalled();
+  });
+
+  it("prices the locked keywords and current schedule inside the reservation transaction", async () => {
+    mocks.status.set("run_1", "planned");
+    mocks.members.set("run_1", [{ id: "a" }, { id: "b" }]);
+    mocks.loadChain.mockResolvedValue([
+      {
+        id: "connection_1",
+        provider: "dataforseo",
+        credentialSource: "own",
+        credentialsEncrypted: "encrypted",
+      },
+    ]);
+    mocks.nativeCosts.mockResolvedValue([0.2, 1]);
+    mocks.currentSchedule.mockResolvedValue({
+      id: "schedule",
+      providerPolicy: null,
+      serpDepth: 10,
+      project: { defaults: { serpDepth: 100 } },
+    });
+    mocks.findKeywords
+      .mockResolvedValueOnce([candidate("a"), candidate("b")])
+      .mockResolvedValueOnce([
+        { ...candidate("a"), text: "plain" },
+        { ...candidate("b"), text: "site:example.com" },
+      ]);
+    expect(await materializePlannedRun("run_1", new Date("2026-09-02T08:00:00Z"))).toBe("launch");
+    expect(mocks.nativeCosts).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: "connection_1" }),
+      [
+        { keyword: "plain", depth: 10 },
+        { keyword: "site:example.com", depth: 10 },
+      ],
+      expect.any(Date),
+    );
+    expect(mocks.assertBudget).toHaveBeenCalledWith(
+      "project_1",
+      expect.any(Date),
+      expect.objectContaining({ client: expect.any(Object), estimatedCostCents: 2 }),
+    );
+    expect(mocks.nativeCosts.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mocks.queryRaw.mock.invocationCallOrder[0] ?? 0,
+    );
   });
 
   it("materializes a blocked occurrence only when it has no items yet", async () => {

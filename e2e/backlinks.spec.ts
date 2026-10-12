@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { completeOnboarding, signIn } from "./workspace";
 
 test("backlinks smoke: analyze, filter, expand, and load more", async ({ page }) => {

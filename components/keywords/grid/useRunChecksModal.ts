@@ -35,7 +35,14 @@ type RunConfirmationMessages = ReturnType<
   typeof useTranslations<"projectRankTracker.keywordImport.management.runConfirmation">
 >;
 
-function blockMessage(code: string | null, t: RunConfirmationMessages) {
+function blockMessage(
+  code: string | null,
+  t: RunConfirmationMessages,
+  budgetMissing: string,
+  unresolvedUsage: string,
+) {
+  if (code === "usage_reconciliation_required") return unresolvedUsage;
+  if (code === "budget_missing") return budgetMissing;
   if (code === "budget_exhausted") return t("budgetExhausted");
   if (code === "check_in_progress") return t("checkInProgress");
   if (code === "sample_project") return t("sampleProject");
@@ -137,8 +144,18 @@ export function useRunChecksModal({
               ? String((result.value as { code: unknown }).code)
               : null,
             t,
+            sharedErrors.budgetMissing(),
+            sharedErrors.usageReconciliationRequired(),
           ),
           rankCheckId: null,
+        });
+        continue;
+      }
+      if (outcome === "failed") {
+        failures.push({
+          code: "errorCode" in result.value ? result.value.errorCode : null,
+          message: t("startFailed"),
+          rankCheckId: keywordRunCheckId(result.value),
         });
         continue;
       }

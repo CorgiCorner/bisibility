@@ -1,4 +1,5 @@
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchRankedKeywordSuggestions } from "./ranked-keywords";
 
@@ -19,6 +20,15 @@ vi.mock("./_shared", () => ({
 }));
 
 describe("fetchRankedKeywordSuggestions action", () => {
+  it("resolves a hosted missing-budget refusal", async () => {
+    mocks.fetch.mockRejectedValueOnce(
+      new DeploymentAdmissionExhaustedError("budget", { budgetReason: "budget_missing" }),
+    );
+    await expect(fetchRankedKeywordSuggestions({ projectId: "prj_1" })).resolves.toEqual({
+      reason: "budget_exhausted",
+      budgetReason: "budget_missing",
+    });
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getActor.mockResolvedValue({ id: "user_1" });
@@ -68,4 +78,18 @@ describe("fetchRankedKeywordSuggestions action", () => {
       expect(mocks.fetch).not.toHaveBeenCalled();
     },
   );
+});
+
+it("preserves the missing-budget reason in the action result", async () => {
+  mocks.getActor.mockResolvedValue({ id: "user_1" });
+  mocks.requireScope.mockResolvedValue({ id: "project_1" });
+  mocks.fetch.mockResolvedValue({
+    ok: false,
+    reason: "budget_exhausted",
+    budgetReason: "budget_missing",
+  });
+  await expect(fetchRankedKeywordSuggestions({ projectId: "prj_1" })).resolves.toEqual({
+    reason: "budget_exhausted",
+    budgetReason: "budget_missing",
+  });
 });

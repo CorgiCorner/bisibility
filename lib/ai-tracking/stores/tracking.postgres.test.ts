@@ -5,6 +5,8 @@ import type {
 } from "@/lib/ai-tracking/contract";
 import { makePublicId } from "@/lib/db/public-id-resources";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
+import { seedCanonicalUsage } from "@/lib/metering/canonical-postgres.test-fixture";
+import { meterOperationReference } from "@/lib/metering/operation-reference";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { isolatedTrackingDatabase, trackingProject } from "./fixtures.postgres-test-support";
 
@@ -16,6 +18,7 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 
 import { listTrackingRuns } from "@/lib/ai-tracking/queries/runs";
+import { listTrackingSamples } from "@/lib/ai-tracking/queries/samples";
 import { archivePrompt, createPrompt, listPromptRevisions, updatePrompt } from "./prompts";
 import { cancelTrackingRun, planTrackingRun, retryTrackingRun } from "./runs";
 import { claimTrackingSample, persistTrackingResult, transitionTrackingSample } from "./samples";
@@ -178,6 +181,47 @@ describe("isolated PostgreSQL tracking stores", () => {
       planTrackingRun(a.project.id, { ...occurrence, idempotencyKey: "other" }),
     ).rejects.toThrow("occurrence");
   });
+  it("retains proven no-dispatch zeroes and rejects that proof after the submission barrier", async () => {
+    const prompt = await createPrompt(a.project.id, { text: "No dispatch" });
+    for (const crossed of [false, true]) {
+      const run = await planTrackingRun(a.project.id, launch(prompt.id, `no-dispatch-${crossed}`));
+      const sample = run.samples[0];
+      const plan = sample.plan as unknown as SamplePlan;
+      await claimTrackingSample(a.project.id, sample.id, plan.attemptId);
+      if (crossed)
+        await transitionTrackingSample(a.project.id, sample.id, {
+          attemptId: plan.attemptId,
+          expectedDispatch: "claimed",
+          nextDispatch: "submission_started",
+        });
+      const input = {
+        ...result(plan),
+        expectedDispatch: crossed ? ("submission_started" as const) : ("claimed" as const),
+        measurement: "unavailable" as const,
+        citations: [],
+        receipt: {
+          providerCostEntryId: null,
+          operationRef: null,
+          noDispatch: true as const,
+          state: "confirmed" as const,
+          amountUsd: "0",
+        },
+      };
+      if (crossed) {
+        await expect(persistTrackingResult(a.project.id, sample.id, input)).rejects.toThrow(
+          "No-dispatch",
+        );
+      } else {
+        await persistTrackingResult(a.project.id, sample.id, input);
+        expect((await listTrackingSamples(a.project.id, run.id)).items[0]?.receipt).toMatchObject({
+          amountUsd: "0",
+          noDispatch: true,
+          state: "confirmed",
+        });
+      }
+    }
+  });
+
   it("persists citations separately, rejects cached/foreign receipts, and deduplicates results", async () => {
     const prompt = await createPrompt(a.project.id, { text: "Result" });
     const run = await planTrackingRun(a.project.id, launch(prompt.id, "result"));
@@ -192,24 +236,21 @@ describe("isolated PostgreSQL tracking stores", () => {
         evidence: { ...input.evidence, recordedSource: "cache" },
       }),
     ).toThrow("Cached");
-    const receipt = await db.client.providerCostEntry.create({
-      data: {
+    const foreign = await seedCanonicalUsage(
+      db.client,
+      {
         projectId: b.project.id,
         connectionId: b.connection.id,
-        costCents: "1",
+        provider: "dataforseo",
         feature: "ai_tracking",
+        costCents: "1",
       },
-    });
-    await expect(
-      db.client.aiTrackingSample.update({
-        where: { id: sample.id },
-        data: { providerCostEntryId: receipt.id },
-      }),
-    ).rejects.toThrow();
+      { principal: b.project.ownerId },
+    );
     await expect(
       persistTrackingResult(a.project.id, sample.id, {
         ...input,
-        receipt: { ...input.receipt, providerCostEntryId: receipt.id },
+        receipt: { ...input.receipt, operationRef: meterOperationReference(foreign.operationId) },
       }),
     ).rejects.toThrow("receipt not found");
     const saved = await persistTrackingResult(a.project.id, sample.id, input);

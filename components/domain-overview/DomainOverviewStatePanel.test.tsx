@@ -16,6 +16,8 @@ const expected: Array<[DomainOverviewUiState, RegExp]> = [
   ["snapshot_expired", /cached analysis has expired/i],
   ["no_provider", /connect dataforseo to analyze domains/i],
   ["needs_reauth", /needs to be reconnected/i],
+  ["usage_reconciliation_required", /provider usage is not fully confirmed/i],
+  ["budget_missing", /project spending budget is missing/i],
   ["budget_exhausted", /monthly provider budget reached/i],
   ["lookup_failed", /lookup did not go through/i],
   ["unsupported_location", /^research is not available for this country and language$/i],
@@ -118,4 +120,10 @@ describe("DomainOverviewStatePanel", () => {
     expect(screen.getByText(/try again after/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /retry/i })).not.toBeInTheDocument();
   });
+});
+
+it("shows wallet budget copy without project settings", () => {
+  render(<DomainOverviewStatePanel projectRef="prj_1" state="wallet_budget_exhausted" />);
+  expect(screen.getByText("Deployment spending budget is exhausted.")).toBeVisible();
+  expect(screen.queryByRole("link")).not.toBeInTheDocument();
 });

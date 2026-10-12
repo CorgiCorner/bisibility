@@ -1,6 +1,7 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import KeywordDetailPage from "./page";
 
@@ -329,9 +330,14 @@ describe("KeywordDetailPage", () => {
         checkIds: ["check_saved_0"],
         projectId: "project_1",
       });
-      const compare = screen.getByRole("button", { name: "Compare two" });
+      const oneCheck = screen.getByRole("radio", { name: "One check" });
+      const compare = screen.getByRole("radio", { name: "Compare two" });
+      expect(oneCheck).toBeChecked();
       expect(compare).toBeEnabled();
-      fireEvent.click(compare);
+      expect(compare).not.toBeChecked();
+      await userEvent.click(compare);
+      expect(compare).toBeChecked();
+      expect(oneCheck).not.toBeChecked();
       expect(await screen.findByText(/These checks used different providers/)).toBeInTheDocument();
       await waitFor(() =>
         expect(mocks.loadRetrievedResults).toHaveBeenCalledWith({

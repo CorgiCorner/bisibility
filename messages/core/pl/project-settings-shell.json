@@ -104,6 +104,10 @@
         "websiteDomain": {
           "label": "Domena witryny",
           "keywords": "witryna url zmiana domeny"
+        },
+        "projectContext": {
+          "label": "Kontekst projektu",
+          "keywords": "firma odbiorcy produkty cele agenci kontekst"
         }
       }
     },
@@ -117,7 +121,8 @@
       "general": "Ogólne",
       "notifications": "Powiadomienia",
       "team": "Zespół",
-      "tracking": "Monitorowanie"
+      "tracking": "Monitorowanie",
+      "context": "Kontekst projektu"
     }
   }
 }

@@ -20,8 +20,10 @@ import {
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
+import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { revalidatePath } from "next/cache";
 import { getActionActor } from "./_shared";
+import { actionFailureResult, handledActionResult } from "./action-result";
 
 export async function getAiTrackingPage(projectId: string): Promise<TrackingWorkspaceData> {
   const actor = await getActionActor();
@@ -131,27 +133,39 @@ export async function mutateAiTrackingAction(
   revalidatePath(`/app/${projectId}/ai-tracking`);
   return getAiTrackingPage(projectId);
 }
+async function trackingActionResult<T>(run: () => Promise<T>) {
+  try {
+    return await handledActionResult(run);
+  } catch (error) {
+    const budget = budgetFailureResult(error);
+    if (!budget) throw error;
+    return actionFailureResult({ code: budget.code, message: budget.message, status: 429 });
+  }
+}
+
 export async function previewAiTrackingAction(projectId: string, input: unknown) {
   const project = await trackingScope(await getActionActor(), projectId);
-  return trackingLaunch(project.id, input, true);
+  return trackingActionResult(() => trackingLaunch(project.id, input, true));
 }
 export async function launchAiTrackingAction(projectId: string, input: unknown) {
   const actor = await getActionActor();
   const project = await trackingScope(actor, projectId, true);
-  const result = await trackingLaunch(
-    project.id,
-    {
-      ...(input as object),
-      actorId: actor.id,
-      actorCredential: undefined,
-      entrySource: "app",
-      origin: "manual",
-    },
-    false,
-  );
-  await auditTrackingRun(actor, project, "launch", result);
-  revalidatePath(`/app/${projectId}/ai-tracking`);
-  return result;
+  return trackingActionResult(async () => {
+    const result = await trackingLaunch(
+      project.id,
+      {
+        ...(input as object),
+        actorId: actor.id,
+        actorCredential: undefined,
+        entrySource: "app",
+        origin: "manual",
+      },
+      false,
+    );
+    await auditTrackingRun(actor, project, "launch", result);
+    revalidatePath(`/app/${projectId}/ai-tracking`);
+    return result;
+  });
 }
 export async function getAiTrackingSamplesAction(
   projectId: string,

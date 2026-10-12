@@ -42,21 +42,29 @@
       "collapseSidebar": "Collapse sidebar",
       "expandSidebar": "Expand sidebar",
       "badges": {
-        "alpha": "alpha",
-        "beta": "beta",
         "experimental": "Experimental",
         "new": "new"
       },
       "groups": {
-        "modules": {
-          "label": "Modules",
-          "tag": "MODULES",
-          "tooltip": "Market modules follow the selected market. The rest keep their own axis."
+        "tracking": {
+          "label": "Tracking",
+          "tag": "TRACKING",
+          "tooltip": "Track rankings and AI performance over time."
+        },
+        "research": {
+          "label": "Research & audits",
+          "tag": "RESEARCH",
+          "tooltip": "Explore keywords, websites and AI responses."
+        },
+        "reports": {
+          "label": "Data & reports",
+          "tag": "DATA",
+          "tooltip": "Review connected search data and saved reports."
         },
         "project": {
           "label": "Project",
           "tag": "PROJECT",
-          "tooltip": "Project-wide configuration. A market never narrows it."
+          "tooltip": "Project configuration and shared operations."
         }
       },
       "items": {

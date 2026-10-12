@@ -27,7 +27,7 @@ export async function allocationBudget(
         connectionId,
         estimatedCostCents: costCents ?? 0,
         estimatedUsageQuantity: depths.reduce((sum, depth) => sum + pagesPerCheck(depth), 0),
-        legacyBudgetCheck: async () => undefined,
+
         projectId,
         provider,
         surface,

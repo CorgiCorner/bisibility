@@ -2,8 +2,6 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { resolveExpectedUrlForKeyword } from "@/lib/expected-url/keyword";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { resumeQueuedMetering, settleQueuedMetering } from "@/lib/metering/queued-context";
-import { withShadowRequest } from "@/lib/metering/shadow-context";
 import { ownAdmission } from "@/lib/provider-usage/admission-extension";
 import { chargedProviderCostCents } from "@/lib/providers/call-error";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
@@ -38,7 +36,6 @@ import {
   assertQueuedPersistenceLease,
   type QueuedPersistenceLease,
 } from "./queued-persistence-lease";
-import { dataForSeoQueuedEstimate } from "./queued-pricing";
 import { dataForSeoQueuedResponseTask, pollDataForSeoQueue } from "./queued-provider-poll";
 import {
   type QueuedResultAttemptOptions,
@@ -149,7 +146,7 @@ async function persistProviderResult(
       : task.costCents === null
         ? null
         : Number(task.costCents);
-  const costCents = rankCheckCostCents(reportedCost, task.batch.connection.costPerCheckCents);
+  const costCents = rankCheckCostCents(reportedCost);
   const previous = await loadComparablePrevious(task);
   const expectedUrl = await resolveExpectedUrlForKeyword(task.keyword.id);
   const origin = queuedBatchAttribution(task.batch);
@@ -167,12 +164,9 @@ async function persistProviderResult(
         checkedAt,
         costCents,
         estimatedCostCents:
-          costCents !== null
+          costCents !== null || task.rankCheck.estimatedCostCents == null
             ? null
-            : dataForSeoQueuedEstimate(
-                task.batch.priority === "normal" ? "normal" : "high",
-                requestedDepth,
-              ),
+            : Number(task.rankCheck.estimatedCostCents),
         keywordId: task.keyword.id,
         normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
         organicRanks: organicDomainRanksFromV2Results(rawPayload.organic_results),
@@ -196,7 +190,6 @@ async function persistTask(taskId: string, options: QueuedResultAttemptOptions) 
   const claimed = await claimQueuedResultTask(taskId);
   if (!claimed) return;
   const { lease, task } = claimed;
-  await resumeQueuedMetering(taskId);
   const attempt = queuedResultAttemptSignal(options.signal);
 
   try {
@@ -257,7 +250,6 @@ async function persistTask(taskId: string, options: QueuedResultAttemptOptions) 
     }
   } finally {
     attempt.clear();
-    await settleQueuedMetering(taskId);
   }
 }
 
@@ -289,5 +281,5 @@ export function persistReadyQueuedRankCheckTasks(
   batchId: string,
   options: QueuedResultAttemptOptions = {},
 ) {
-  return withShadowRequest(() => persistReadyTasks(batchId, options));
+  return persistReadyTasks(batchId, options);
 }

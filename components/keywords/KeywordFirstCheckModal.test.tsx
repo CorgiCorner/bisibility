@@ -208,7 +208,7 @@ describe("KeywordFirstCheckModal", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open integrations" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View check details" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View runs" })).toBeInTheDocument();
   });
 
   it("sends a check result without a run ID to the Runs list", () => {
@@ -232,7 +232,7 @@ describe("KeywordFirstCheckModal", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
-    const link = screen.getByRole("link", { name: "View check details" });
+    const link = screen.getByRole("link", { name: "View runs" });
     expect(link).toHaveAttribute("href", "/app/prj_demo/runs");
   });
 
@@ -311,7 +311,7 @@ describe("KeywordFirstCheckModal", () => {
       />,
     );
 
-    const link = screen.getByRole("link", { name: "View check details" });
+    const link = screen.getByRole("link", { name: "View runs" });
     expect(link).toHaveAttribute("href", "/app/prj_demo/runs");
   });
 
@@ -334,4 +334,22 @@ describe("KeywordFirstCheckModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(onTryAgain).toHaveBeenCalledOnce();
   });
+});
+
+it("shows shared missing-budget guidance for a blocked first check", () => {
+  render(
+    <KeywordFirstCheckModal
+      {...baseProps}
+      confirmError="blocked"
+      confirming={false}
+      costLabel={null}
+      depth={20}
+      errorCode="budget_missing"
+      open
+      step="confirm"
+    />,
+  );
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Ask the project owner to configure a monthly budget",
+  );
 });

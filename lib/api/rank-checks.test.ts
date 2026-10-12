@@ -121,8 +121,7 @@ describe("rank-check API list serialization", () => {
     expect(mocks.queryRaw).toHaveBeenCalledTimes(1);
     const query = mocks.queryRaw.mock.calls[0][0] as { values: unknown[] };
     expect(query.values).toContain("project_1");
-    expect(query.values).toContain("rank_check_1");
-    expect(query.values).toContain("rank_check_2");
+    expect(query.values).toContainEqual(expect.arrayContaining(["rank_check_1", "rank_check_2"]));
     expect(body.data[0]).toMatchObject({
       cost_cents: 1.5,
       usage: { quantity: 3, status: "confirmed", unit: "operations" },
@@ -157,7 +156,7 @@ describe("rank-check API list serialization", () => {
     });
   });
 
-  it("preserves measured legacy fields when no receipts exist", async () => {
+  it("keeps list actuals unknown without Meter receipts", async () => {
     mocks.rankCheckFindMany.mockResolvedValue([checkRecord({ billingUnits: 2, costCents: 2 })]);
     mocks.queryRaw.mockResolvedValue([]);
 
@@ -169,8 +168,8 @@ describe("rank-check API list serialization", () => {
 
     expect(mocks.queryRaw).toHaveBeenCalledTimes(1);
     expect(body.data[0]).toMatchObject({
-      cost_cents: 2,
-      usage: { quantity: 2, status: "confirmed", unit: "operations" },
+      cost_cents: null,
+      usage: { quantity: null, status: "unconfirmed", unit: "operations" },
     });
   });
 });
@@ -224,7 +223,7 @@ describe("rank-check API detail serialization", () => {
     });
   });
 
-  it("keeps stored fields when the check predates the ledger", async () => {
+  it("keeps detail actuals unknown without Meter receipts", async () => {
     mocks.rankCheckFindFirst.mockResolvedValue(checkRecord({ billingUnits: 2, costCents: 2 }));
 
     const response = await getRankCheck(
@@ -235,8 +234,8 @@ describe("rank-check API detail serialization", () => {
 
     expect(mocks.queryRaw).toHaveBeenCalledTimes(1);
     expect(body).toMatchObject({
-      cost_cents: 2,
-      usage: { quantity: 2, status: "confirmed", unit: "operations" },
+      cost_cents: null,
+      usage: { quantity: null, status: "unconfirmed", unit: "operations" },
     });
   });
 });

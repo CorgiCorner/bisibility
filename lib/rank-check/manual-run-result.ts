@@ -20,6 +20,7 @@ export type RunCheckNowResult =
       status: "not_started";
     }
   | { runId: string; status: "queued" }
+  | { errorCode: string | null; runId: string; status: "failed" }
   | {
       attempts: number;
       billingUnits: number | null;

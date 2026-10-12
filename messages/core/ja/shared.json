@@ -40,11 +40,14 @@
       "title": "プライバシー設定"
     },
     "errors": {
+      "walletBudgetExhausted": "この環境の支出予算を使い切りました。",
+      "budgetMissing": "プロジェクトの支出予算が設定されていません。プロジェクトのオーナーに、設定 > 利用状況で月間予算を設定するよう依頼してください。",
       "genericFallback": "操作を完了できませんでした。",
       "rateLimited": "リクエストが多すぎます。しばらくしてから再試行してください。",
       "serverComponentDigest": "サーバー側でチェックに失敗しました（参照 ID: {digest}）。しばらくしてから再試行してください。",
       "staleDeployment": "このページを開いている間に bisibility が更新されました。続行するにはアプリを再読み込みしてください。未保存の変更は失われます。",
-      "verificationFailed": "確認できませんでした。再試行してください。"
+      "verificationFailed": "確認できませんでした。再試行してください。",
+      "usageReconciliationRequired": "プロバイダーの利用料金が完全に確認されていません。次の有料リクエストを開始する前に、利用履歴を確認して照合してください。"
     },
     "emergencyRecovery": {
       "error": {
@@ -300,7 +303,8 @@
         "noneReady": "最初のチェックの準備ができたキーワードはありません。",
         "providerMissing": "チェックを実行する前に SERP プロバイダーを接続してください。",
         "raiseBudget": "予算の引き上げ",
-        "sampleProject": "サンプルプロジェクトでは実際のチェックは行われません。"
+        "sampleProject": "サンプルプロジェクトでは実際のチェックは行われません。",
+        "reviewUsage": "利用状況を確認"
       },
       "scope": {
         "allReady": "すべて準備完了（{count, number}件）",
@@ -415,7 +419,11 @@
         "transferProjectOwnershipBody": "このメンバーをプロジェクト所有者にします。あなたのプロジェクトロールは管理者に変わり、再度所有権を移譲できるのは新しい所有者だけです。",
         "transferProjectOwnershipDangerLabel": "所有権を移譲",
         "transferProjectOwnershipTitle": "プロジェクトの所有権を移譲",
-        "transferProjectOwnershipToastMessage": "プロジェクトの所有権を移譲しました"
+        "transferProjectOwnershipToastMessage": "プロジェクトの所有権を移譲しました",
+        "deleteTimelineNoteBody": "このタイムラインノートを削除しますか？この操作は取り消せません。",
+        "deleteTimelineNoteDangerLabel": "ノートを削除",
+        "deleteTimelineNoteTitle": "タイムラインノートを削除しますか？",
+        "deleteTimelineNoteToastMessage": "タイムラインノートを削除しました。"
       },
       "copy": {
         "action": "コピー",
@@ -677,6 +685,147 @@
           "label": "ステータス不明",
           "description": "現在のインポート状態を今は読み取れません。"
         }
+      }
+    },
+    "usageViews": {
+      "summary": {
+        "asOf": "更新日時",
+        "title": "使用量",
+        "customerCharges": "顧客請求額",
+        "loading": "使用量の概要を読み込み中。",
+        "empty": "この期間の使用量はありません。",
+        "forbidden": "この範囲の使用量は表示できません。",
+        "failed": "使用量の概要は現在利用できません。",
+        "incomplete": "概要は全期間を網羅していません。期間を短くしてください。",
+        "unknownOperations": "測定値が不明な処理"
+      },
+      "cost": {
+        "asOf": "更新日時",
+        "title": "プロバイダー費用",
+        "description": "この期間に記録された使用量のプロバイダー費用。",
+        "loading": "費用の概要を読み込み中。",
+        "empty": "この期間に記録された費用はありません。",
+        "forbidden": "この範囲の費用は表示できません。",
+        "failed": "費用の概要は現在利用できません。",
+        "incomplete": "全期間を集計できなかったため、費用は利用できません。",
+        "byok": "自分のキー",
+        "platform": "アカウントクレジット",
+        "costOwner": "費用負担者",
+        "funding": "支払い元別"
+      },
+      "table": {
+        "title": "使用量の詳細",
+        "funding": "支払い元",
+        "byok": "自分のキー",
+        "platform": "アカウントクレジット",
+        "cost": "費用",
+        "customerCharges": "顧客請求額",
+        "cents": "米セント",
+        "certainty": "確実性",
+        "unknownOperations": "不明な処理",
+        "measured": "測定済み",
+        "estimated": "推定",
+        "unknown": "不明",
+        "unavailable": "利用不可",
+        "loading": "使用量を読み込み中。",
+        "empty": "この期間の使用量はありません。",
+        "forbidden": "この範囲の使用量は表示できません。",
+        "failed": "使用量は現在利用できません。",
+        "next": "次のページ",
+        "first": "最初のページ"
+      },
+      "exceptions": {
+        "title": "要確認",
+        "next": "次のページ",
+        "first": "最初のページ",
+        "operation": "処理",
+        "provider": "プロバイダー",
+        "principal": "主体",
+        "kind": "例外",
+        "state": "状態",
+        "age": "経過時間",
+        "reservation_expired": "予約期限切れ",
+        "lease_expired": "リース期限切れ",
+        "pending": "証拠待ち",
+        "loading": "例外を読み込み中。",
+        "empty": "この期間に例外はありません。",
+        "forbidden": "この範囲の処理は表示できません。",
+        "failed": "例外は現在利用できません。"
+      },
+      "budget": {
+        "used": "使用済み",
+        "reserved": "予約済み",
+        "remaining": "残り",
+        "limit": "上限",
+        "hardLimit": "ハード上限",
+        "alert": "アラート",
+        "resets": "リセット",
+        "noReset": "リセットなし",
+        "unlimited": "無制限",
+        "unavailable": "利用不可",
+        "unknown": "不明",
+        "redacted": "この共有予算は適用されますが、数値は非表示です。",
+        "block": "上限でブロック",
+        "allow": "超過を許可",
+        "ok": "予算内",
+        "warning": "警告",
+        "exceeded": "上限超過",
+        "loading": "予算を読み込み中。",
+        "empty": "適用される予算はありません。",
+        "forbidden": "これらの予算は表示できません。",
+        "failed": "予算は現在利用できません。"
+      },
+      "overview": {
+        "unknown": "使用量不明",
+        "empty": "接続はまだありません。",
+        "ok": "予算内",
+        "warning": "上限間近",
+        "exceeded": "上限超過",
+        "partial": "測定中",
+        "loading": "使用量を読み込み中。"
+      },
+      "measurement": {
+        "measured": "測定済み",
+        "estimated": "推定",
+        "unknown": "不明",
+        "unavailable": "利用不可",
+        "cents": "米セント"
+      },
+      "units": {
+        "cents": "米セント",
+        "customer_cents": "クレジットのセント",
+        "units": "単位",
+        "requests": "リクエスト",
+        "budget_cents": "米セント",
+        "paid_attempts": "有料の試行"
+      },
+      "dimensions": {
+        "connection": "接続",
+        "provider": "プロバイダー",
+        "surface": "実行範囲",
+        "source": "実行元"
+      },
+      "other": {
+        "project": "プロジェクト",
+        "retained": "保持された接続",
+        "app": "アプリとスケジュール",
+        "programmatic": "APIとエージェント",
+        "any": "すべての通信",
+        "rank_check": "順位確認",
+        "operation": "その他の処理",
+        "worker": "スケジュール実行",
+        "api": "API",
+        "sdk": "SDK",
+        "cli": "CLI",
+        "mcp": "MCP",
+        "proxy": "プロキシ"
+      },
+      "states": {
+        "reserved": "予約済み処理",
+        "dispatch_intended": "送信予定",
+        "pending": "保留中",
+        "settled": "確定済み",
+        "released": "解放済み"
       }
     }
   }

@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   prisma: {
     $queryRaw: vi.fn(),
     providerConnectionRate: { findMany: vi.fn() },
+    providerConnection: { findMany: vi.fn() },
   },
 }));
 
@@ -21,6 +22,7 @@ describe("provider rate context loading", () => {
     vi.clearAllMocks();
     mocks.prisma.$queryRaw.mockResolvedValue([]);
     mocks.prisma.providerConnectionRate.findMany.mockResolvedValue([]);
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
   });
 
   it("bounds each connection-feature history with a SQL window", async () => {
@@ -36,13 +38,14 @@ describe("provider rate context loading", () => {
     expect(query.values).toContain(MAX_PROVIDER_RATE_SAMPLES);
   });
 
-  it("uses two batched reads for a whole provider chain", async () => {
+  it("batches legacy history, overrides and native connection bindings for the whole chain", async () => {
     const connectionIds = ["connection_1", "connection_2", "connection_3", "connection_4"];
 
     const contexts = await loadProviderRateContexts(connectionIds, ["rank_check"]);
 
     expect(mocks.prisma.providerConnectionRate.findMany).toHaveBeenCalledTimes(1);
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(mocks.prisma.providerConnection.findMany).toHaveBeenCalledTimes(1);
     for (const connectionId of connectionIds) {
       expect(contexts.get(providerRateContextKey(connectionId, "rank_check"))).toEqual({
         entries: [],

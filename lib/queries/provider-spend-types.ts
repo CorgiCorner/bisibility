@@ -30,7 +30,7 @@ export type ProviderSpendSourceBlock = {
  */
 export type ProviderSpendConnection = {
   allocation: { amountPerMonth: number; unit: "cents" | "units" } | null;
-  allocationSource: "connection" | "legacy_project" | "none";
+  allocationSource: "connection" | "none";
   /** Provider-side balance; only for connections on the project's own keys. */
   availableAtProvider?: ProviderAvailabilityData;
   billing: "metered" | "quota";
@@ -67,6 +67,7 @@ export type ProviderSpendSummary = {
   projected:
     | { kind: "within_limits" }
     | { at: string; kind: "cap_by"; provider: string }
+    | { kind: "partial" }
     | { kind: "no_usage" };
   /**
    * Confirmed spend this month, split by who was paid: `cents` is what providers
@@ -75,6 +76,8 @@ export type ProviderSpendSummary = {
    */
   recorded: { cents: number; creditsCents: number; units: number };
   requestCount: number;
+  /** Unsettled measurements across both paying sources; confirmed totals are lower bounds. */
+  unconfirmedCount: number;
   /** Tightest budget among the sources connections run on today. */
   tightest: {
     connectionId: string;

@@ -1,3 +1,4 @@
+import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RunSelectionSpec } from "./selection";
 
@@ -395,6 +396,23 @@ describe("launchRankCheckRun", () => {
     expect(mocks.prisma.rankCheckRun.updateMany).not.toHaveBeenCalled();
   });
 
+  it("preserves missing-budget reason through the launch refusal", async () => {
+    mocks.assertBudgetAvailable.mockRejectedValueOnce(
+      new BudgetExhaustedError({
+        projectId: "project_1",
+        capCents: 0,
+        spentCents: 0,
+        reason: "budget_missing",
+      }),
+    );
+    await expect(launchRankCheckRun(input)).rejects.toMatchObject({
+      code: "budget_exhausted",
+      budgetReason: "budget_missing",
+      message: expect.stringContaining("configure a monthly budget"),
+    });
+    expect(mocks.tx.rankCheckRun.create).not.toHaveBeenCalled();
+  });
+
   it("rechecks the whole frozen estimate under the launch transaction", async () => {
     mocks.assertBudgetAvailable.mockRejectedValueOnce(
       Object.assign(new Error("exhausted"), { code: "budget_exhausted" }),
@@ -407,7 +425,6 @@ describe("launchRankCheckRun", () => {
       "project_1",
       expect.any(Date),
       expect.objectContaining({
-        capCents: 5_000,
         estimatedCostCents: 50,
       }),
     );
@@ -496,7 +513,6 @@ describe("launchRankCheckRun", () => {
       "project_1",
       expect.any(Date),
       expect.objectContaining({
-        capCents: 5_000,
         estimatedCostCents: 25,
       }),
     );

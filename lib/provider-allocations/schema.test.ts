@@ -16,20 +16,12 @@ const migration = readFileSync(
 );
 
 describe("provider allocation storage schema", () => {
-  it("maps typed nullable allocation columns and preserves the legacy cap", () => {
-    expect(schema).toContain("enum ProviderAllocationUnit");
-    expect(schema).toMatch(/allocationUnit\s+ProviderAllocationUnit\?/);
-    expect(schema).toMatch(/allocationAmountPerMonth\s+Int\?/);
-    expect(schema).toMatch(/providerAllocationsInitializedAt\s+DateTime\?/);
-    expect(schema).toMatch(/budgetCapCents\s+Int\s+@default\(5000\)/);
-  });
-
-  it("maps nullable ledger quantity without a Prisma compound unique", () => {
-    expect(schema).toMatch(/usageQuantity\s+Decimal\?\s+@db\.Decimal\(18, 6\)/);
-    expect(schema).toContain(
-      "A migration-only partial unique index covers non-null connection/request identifiers.",
-    );
-    expect(schema).not.toMatch(/@@unique\(\[connectionId,\s*providerRequestId\]/);
+  it("stores spending limits externally and keeps only the canonical rate table", () => {
+    expect(schema).not.toContain("allocationAmountPerMonth");
+    expect(schema).not.toContain("model ProviderCostEntry");
+    expect(schema).not.toContain("budgetCapCents");
+    expect(schema).not.toContain("costPerCheckCents");
+    expect(schema).toContain("model ProviderConnectionRate");
   });
 
   it("enforces paired nulls and a positive PostgreSQL integer amount", () => {

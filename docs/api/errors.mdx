@@ -40,7 +40,7 @@ Errors use `application/problem+json`.
 | <span id="unsupported_target"></span>`unsupported_target` | 422 | Backlinks target is not a supported site, subdomain, or page target. |
 | <span id="unsupported_location"></span>`unsupported_location` | 422 | The provider cannot perform the requested lookup for that location. |
 | <span id="project_read_only"></span>`project_read_only` | 423 | Project writes are blocked by migration hold. |
-| <span id="budget_exhausted"></span>`budget_exhausted` | 429 | Monthly rank-check or provider budget is exhausted. Deployment cap failures also carry `details.scope` (`wallet` or `connection`). The problem carries `details.surface` (`programmatic` for every API, MCP and SDK request; `app` in session app routes) and `details.resets_at`, the first moment the budget resets, and sets `Retry-After`. |
+| <span id="budget_exhausted"></span>`budget_exhausted` | 429 | Monthly rank-check or provider budget is exhausted. Deployment cap failures also carry `details.scope` (`wallet` or `connection`). The problem carries `details.surface` (`programmatic` for every API, MCP and SDK request; `app` in session app routes) and `details.resets_at`, the first moment the budget resets, and sets `Retry-After`. A missing project budget carries `details.reason: "budget_missing"` with neither `details.resets_at` nor `Retry-After`. |
 | <span id="lookup_in_progress"></span>`lookup_in_progress` | 429 | An identical cached provider lookup is still running. |
 | <span id="rate_limited"></span>`rate_limited` | 429 | Request or upstream provider exceeded a rate limit. |
 | <span id="internal_server_error"></span>`internal_server_error` | 500 | Unexpected API error. A failed backlinks history request can include completed summary evidence in `details`, with unknown total cost. |
@@ -104,10 +104,10 @@ For a hosted wallet admission with a trusted affected project, `details.top_up_u
 | - | - |
 | What happened | The API or the project's monthly provider budget refused the request. |
 | Most likely cause | Burst traffic, or the project cap in **Settings > Provider usage**. |
-| Retry? | Yes after `Retry-After`. A `budget_exhausted` response also sets `Retry-After`, to the whole seconds until `details.resets_at`; the budget resets at the start of the next UTC month. |
+| Retry? | Yes after `Retry-After`. A `budget_exhausted` response also sets `Retry-After`, to the whole seconds until `details.resets_at`; the budget resets at the start of the next UTC month. For `details.reason: "budget_missing"`, configure a monthly project budget before retrying; neither `details.resets_at` nor `Retry-After` is set. |
 | HTTP | `429` |
 | Problem type | `rate_limited` or `budget_exhausted` |
-| Related details | `budget_exhausted` carries `details.surface` (`programmatic` for every API, MCP and SDK request; `app` in session app routes) and `details.resets_at`. Deployment caps also carry `details.scope` (`wallet` or `connection`). |
+| Related details | `budget_exhausted` carries `details.surface` (`programmatic` for every API, MCP and SDK request; `app` in session app routes) and `details.resets_at`. Deployment caps also carry `details.scope` (`wallet` or `connection`). A missing project budget carries `details.reason: "budget_missing"` with neither `details.resets_at` nor `Retry-After`. |
 
 ### 422 cost_limit_exceeded
 

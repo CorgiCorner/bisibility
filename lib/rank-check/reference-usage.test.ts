@@ -32,7 +32,7 @@ describe("aggregateProviderReferenceUsage", () => {
         provider: "dataforseo",
         providerLabel: "DataForSEO",
         rateBasis: "live_depth",
-        referenceCostCents: 1.95,
+        referenceCostCents: 2.4,
         referenceCostKnown: true,
       },
     ]);

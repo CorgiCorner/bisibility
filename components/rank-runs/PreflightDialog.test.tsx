@@ -173,6 +173,41 @@ describe("PreflightDialog", () => {
     expect(screen.getByRole("link", { name: cta })).toBeInTheDocument();
   });
 
+  it("explains missing budgets without saying the monthly budget was reached", () => {
+    render(
+      <PreflightDialog
+        {...props({
+          initialPreview: {
+            ...preview,
+            budget: { ...preview.budget, blocked: true, reason: "budget_missing" },
+          },
+        })}
+      />,
+    );
+    expect(screen.getAllByText(/project spending budget is missing/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/monthly budget.*reached/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start run" })).toBeDisabled();
+  });
+
+  it("blocks unresolved usage with reconciliation advice instead of budget advice", () => {
+    render(
+      <PreflightDialog
+        {...props({
+          initialPreview: {
+            ...preview,
+            budget: { ...preview.budget, blocked: true, reason: "usage_reconciliation_required" },
+          },
+        })}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Start run" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Open Integrations" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Edit budget" })).not.toBeInTheDocument();
+    expect(screen.getAllByText(/Review and reconcile the usage history/i).length).toBeGreaterThan(
+      0,
+    );
+  });
+
   it("plan criterion: title mirrors the trigger and names the market scope", () => {
     render(<PreflightDialog {...props()} />);
 

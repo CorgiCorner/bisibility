@@ -8,6 +8,7 @@ import {
 } from "@/components/shell/types";
 import { UserMenu } from "@/components/shell/UserMenu";
 import { Avatar } from "@/components/ui/Avatar";
+import { headerUtilityControlClassName } from "@/components/ui/header-icon-button-styles";
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { cn } from "@/lib/ui/cn";
 import { DotsThreeVerticalIcon as DotsThreeVertical } from "@phosphor-icons/react/dist/csr/DotsThreeVertical";
@@ -49,28 +50,26 @@ export function SidebarUserButton({
         aria-label={t("accountMenu")}
         className={[
           "group flex items-center rounded-control text-left text-fg transition-colors",
-          collapsed ? "" : "hover:bg-bg-sunken",
+          collapsed ? headerUtilityControlClassName : "hover:bg-bg-sunken",
           // Expanded reads as a card; collapsed is a 32px icon button matching the search and
           // bell beside it, so its hover box is not the largest thing in the cluster.
           collapsed
-            ? "h-8 w-8 flex-none justify-center gap-0 border-0 bg-transparent p-0"
+            ? "h-8 w-8 flex-none justify-center gap-0 p-0"
             : "w-full gap-2.5 border border-border bg-bg-elev p-2",
-          open ? "bg-bg-sunken" : "",
+          !collapsed && open ? "bg-bg-sunken" : "",
         ].join(" ")}
         onClick={(event) => setAnchorEl(event.currentTarget)}
         type="button"
       >
-        {/* Same tile spec as the search and bell buttons beside it (bg-bg-elev on
-            border-border-control, hover to bg-bg-sunken); the accent initials alone carry
-            the identity signal, so the cluster reads as one family of controls. */}
+        {/* The header button owns the quiet border and interaction fill. Images and initials
+            share its dimensions without introducing a second tile or a primary-action fill. */}
         <Avatar
           alt=""
           className={cn(
-            "grid flex-none place-items-center rounded-control bg-bg-elev font-semibold text-accent-text transition-colors",
+            "grid flex-none place-items-center rounded-control font-semibold text-fg",
             collapsed
-              ? "h-8 w-8 border border-border text-[10.5px] group-hover:bg-bg-sunken"
-              : "h-8 w-8 border border-border-control text-xs",
-            collapsed && open ? "bg-bg-sunken" : "",
+              ? "h-full w-full text-[10.5px]"
+              : "h-8 w-8 border border-border-control bg-bg-elev text-xs",
           )}
           initials={initials}
           src={user?.avatarUrl}

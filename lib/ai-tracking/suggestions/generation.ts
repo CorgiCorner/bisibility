@@ -121,6 +121,7 @@ export async function generateModelSuggestions(
     barrier: false,
     nativeId: null,
     receipt: {
+      operationRef: null,
       providerCostEntryId: null,
       amountUsd: null,
       state: "unknown",

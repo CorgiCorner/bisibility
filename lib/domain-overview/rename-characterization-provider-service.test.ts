@@ -166,6 +166,8 @@ describe("domain overview provider and service characterization", () => {
       { id: "snapshot_1" },
       {
         historyRequest: {
+          dateFrom: "2026-02-01",
+          dateTo: "2026-07-31",
           includeSubdomains: true,
           languageCode: "pl",
           location: {

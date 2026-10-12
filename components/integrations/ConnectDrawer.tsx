@@ -19,7 +19,6 @@ import {
   testInput,
   testNotice,
 } from "@/components/integrations/ConnectDrawerSchema";
-import { ProviderRates } from "@/components/integrations/ProviderRates";
 import {
   oauthScopes,
   providerAuthMode,
@@ -31,6 +30,7 @@ import {
   credentialFieldsSignature,
   hasRequiredCredentialFields,
 } from "@/components/integrations/provider-credentials";
+import { ConnectionRatePanel } from "@/components/provider-management/ConnectionRatePanel";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Sheet } from "@/components/ui/Sheet";
 import { zodResolver } from "@/lib/forms/zod-resolver";
@@ -252,44 +252,45 @@ export function ConnectDrawer({
 
   return (
     <Sheet footer={footer} onClose={onClose} open={open} title={title}>
-      <form className="flex flex-col gap-5" id={formId} onSubmit={handleSave}>
-        <input type="hidden" {...form.register("projectId")} />
-        <input type="hidden" {...form.register("providerId")} />
-        {authMode === "oauth" ? (
-          <ConnectDrawerOauth
-            completePropertySelection={activeActions.completeGooglePropertySelection}
-            disconnectProvider={activeActions.disconnectProvider}
-            loadStoredProperties={activeActions.loadStoredGoogleProperties}
-            onDisconnected={onClose}
-            projectId={projectId}
-            projectRef={projectRef}
-            provider={provider}
-            saveStoredProperty={activeActions.saveStoredGoogleProperty}
-            scopes={oauthScopes(provider)}
-            syncPlan={provider.id === "gsc" ? searchSyncPlan : undefined}
-          />
-        ) : (
-          <>
-            <CredentialFields errors={errors} form={form} provider={provider} />
-            {notice ? <ActionNotice notice={notice} /> : null}
-          </>
-        )}
-        {requiresSuccessfulTest && hasCurrentSuccessfulTest && testState === "ok" ? (
-          <ConnectionOkBanner message={testSuccessMessage} />
-        ) : null}
-        {provider.kind === "serp" && provider.drawer.rates ? (
-          <ProviderRates
+      <div className="flex flex-col gap-5">
+        <form className="flex flex-col gap-5" id={formId} onSubmit={handleSave}>
+          <input type="hidden" {...form.register("projectId")} />
+          <input type="hidden" {...form.register("providerId")} />
+          {authMode === "oauth" ? (
+            <ConnectDrawerOauth
+              completePropertySelection={activeActions.completeGooglePropertySelection}
+              disconnectProvider={activeActions.disconnectProvider}
+              loadStoredProperties={activeActions.loadStoredGoogleProperties}
+              onDisconnected={onClose}
+              projectId={projectId}
+              projectRef={projectRef}
+              provider={provider}
+              saveStoredProperty={activeActions.saveStoredGoogleProperty}
+              scopes={oauthScopes(provider)}
+              syncPlan={provider.id === "gsc" ? searchSyncPlan : undefined}
+            />
+          ) : (
+            <>
+              <CredentialFields errors={errors} form={form} provider={provider} />
+              {notice ? <ActionNotice notice={notice} /> : null}
+            </>
+          )}
+          {requiresSuccessfulTest && hasCurrentSuccessfulTest && testState === "ok" ? (
+            <ConnectionOkBanner message={testSuccessMessage} />
+          ) : null}
+        </form>
+        {/* Each rate saves through its own form, which cannot sit inside the connection form. */}
+        {provider.kind === "serp" ? (
+          <ConnectionRatePanel
             connected={isManage}
             projectId={projectId}
             providerId={provider.id}
-            rates={provider.drawer.rates}
             readOnlyRates={provider.credentialSource === "hosted"}
-            updateRate={activeActions.updateProviderRate}
           />
         ) : null}
         {provider.kind === "serp" ? <ActivityList provider={provider} /> : null}
         {authMode === "oauth" && notice ? <ActionNotice notice={notice} /> : null}
-      </form>
+      </div>
     </Sheet>
   );
 }

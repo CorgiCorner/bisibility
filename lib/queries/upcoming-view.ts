@@ -7,7 +7,8 @@ import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
-import { monthlyBudgetExhausted } from "@/lib/rank-check/budget-contract";
+import { projectBudgetStatus } from "@/lib/metering/project-budget-read";
+import { formatQuantity } from "@usagekit/core";
 import { requireReadableProject } from "./_auth";
 import {
   getRequestMonthlySpendCents,
@@ -21,7 +22,7 @@ export async function getUpcomingView(
 ) {
   const now = options.now ?? new Date();
   const { project } = await requireReadableProject(projectId);
-  const [keywords, defaults, providerChain, spentCents] = await Promise.all([
+  const [keywords, defaults, providerChain, spentCents, budget] = await Promise.all([
     prisma.keyword.findMany({
       orderBy: [{ text: "asc" }, { publicId: "asc" }],
       select: {
@@ -44,6 +45,7 @@ export async function getUpcomingView(
     getRequestProjectDefaults(project.id),
     getRequestSerpProviderChain(project.id),
     getRequestMonthlySpendCents(project.id, now),
+    projectBudgetStatus(project.id, now),
   ]);
   const schedules = keywords.flatMap((keyword): UpcomingScheduleSource[] => {
     const effective = resolveEffectiveSchedule(keyword.schedule, defaults, keyword.id, now);
@@ -60,13 +62,25 @@ export async function getUpcomingView(
       },
     ];
   });
+  const capCents = budget?.budget.limit ? Number(formatQuantity(budget.budget.limit)) : 0;
+  const exhausted =
+    !budget ||
+    budget.uncertain ||
+    (budget.budget.limit !== null &&
+      spentCents +
+        Number(formatQuantity(budget.reserved ?? { unit: "budget_cents", value: 0n, scale: 0 })) >=
+        capCents);
   const blockedReason = isProjectReadOnly(project.writeMode)
     ? "migration_hold"
     : providerChain.length === 0
       ? "no_provider"
-      : monthlyBudgetExhausted(project.budgetCapCents, spentCents)
-        ? "budget_exhausted"
-        : null;
+      : !budget
+        ? "budget_missing"
+        : budget.uncertain
+          ? "usage_reconciliation_required"
+          : exhausted
+            ? "budget_exhausted"
+            : null;
 
   const providers: UpcomingProviderSource[] = providerChain.map((provider) => ({
     provider: provider.provider,
@@ -75,7 +89,7 @@ export async function getUpcomingView(
 
   return buildUpcomingView({
     blockedReason,
-    budgetCapCents: project.budgetCapCents,
+    monthlyCapCents: capCents,
     dateFormat: options.dateFormat ?? "iso",
     now,
     projectTimezone: defaults?.timezone ?? "UTC",

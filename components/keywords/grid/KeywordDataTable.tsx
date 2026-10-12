@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/Card";
 import { useDataTableLayout } from "@/components/ui/data-table/data-table-layout-store";
 import type { DataTableDensity, DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { FloatingSelectionBarSpacer } from "@/components/ui/FloatingSelectionBar";
-import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { SummaryStrip } from "@/components/ui/SummaryStrip";
 import {
   rankTrackerMutationPresence,
@@ -171,24 +170,6 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
           density={density}
           filterChips={filterChips}
           filterCount={filterCount}
-          groupingControl={
-            <SegmentedControl
-              activeVariant="neutral"
-              ariaLabel={t("grouping")}
-              fitContent
-              onChange={(value) => {
-                const grouped = value === "grouped";
-                if (grouped !== query.grouped)
-                  navigate(resetRankTrackerPage({ ...query, grouped }), ["grouped", "page"]);
-              }}
-              options={[
-                { label: t("grouped"), value: "grouped" },
-                { label: t("flat"), value: "flat" },
-              ]}
-              size="toolbar"
-              value={query.grouped ? "grouped" : "flat"}
-            />
-          }
           id={KEYWORD_DATA_TABLE_ID}
           onAddKeyword={onAddKeyword}
           onClearFilters={onClearFilters}
@@ -210,7 +191,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
 
         {weeklySummary ? (
           <SummaryStrip
-            className="rounded-none border-b border-border px-4"
+            className="rounded-none px-4"
             sentence={t("currentPage", { summary: weeklySummarySentence(weeklySummary, t) })}
             tone={weeklySummary.tone}
           />

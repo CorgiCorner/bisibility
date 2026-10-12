@@ -1,3 +1,4 @@
+import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { previewRankCheckRun } from "./preview";
@@ -122,6 +123,20 @@ describe("rank-check run preview", () => {
     });
   });
 
+  it("keeps missing project budgets distinct in preview results", async () => {
+    mocks.isBudgetError.mockReturnValue(true);
+    mocks.assertBudget.mockRejectedValueOnce(
+      new BudgetExhaustedError({
+        projectId: "project_1",
+        capCents: 0,
+        spentCents: 0,
+        reason: "budget_missing",
+      }),
+    );
+    const result = await previewRankCheckRun({ origin: APP_REQUEST_ORIGIN, project, spec: spec() });
+    expect(result.budget).toMatchObject({ blocked: true, reason: "budget_missing" });
+  });
+
   it("rejects a sample project before calculating a preview", async () => {
     await expect(
       previewRankCheckRun({
@@ -223,7 +238,7 @@ describe("rank-check run preview", () => {
     expect(mocks.token).toHaveBeenCalledWith(expect.objectContaining({ estimateCents: 10 }));
   });
 
-  it("blocks the legacy branch when the whole estimate exceeds remaining budget", async () => {
+  it("blocks the project cap alongside connection limits", async () => {
     const budgetError = Object.assign(new Error("budget"), {
       budget: { capCents: 100, projectId: "project_1", spentCents: 80 },
     });
@@ -236,7 +251,7 @@ describe("rank-check run preview", () => {
       budget: {
         blocked: true,
         capCents: 100,
-        mode: "legacy",
+        mode: "allocation",
         reason: "budget_exhausted",
         remainingAfterCents: 0,
         spentCents: 80,
@@ -259,7 +274,7 @@ describe("rank-check run preview", () => {
     });
 
     expect(result.budget).toMatchObject({ blocked: false, mode: "allocation", reason: null });
-    expect(mocks.assertBudget).not.toHaveBeenCalled();
+    expect(mocks.assertBudget).toHaveBeenCalled();
     expect(mocks.assertAllocation).toHaveBeenCalledWith(
       expect.objectContaining({
         connectionId: "connection_1",

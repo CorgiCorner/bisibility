@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   paidCall: vi.fn(),
   prisma: {
     project: { findFirst: vi.fn() },
+    providerConnection: { findUnique: vi.fn() },
+    $queryRaw: vi.fn(async () => []),
   },
   withCache: vi.fn(),
 }));
@@ -56,6 +58,17 @@ const project = {
 describe("ranked-keyword paid call origin", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialSource: "own",
+      credentialsEncrypted: "encrypted",
+      projectId: "project_1",
+      provider: "dataforseo",
+      enabled: true,
+      status: "connected",
+      rates: [],
+      project: { ownerId: "owner_1" },
+    });
     mocks.prisma.project.findFirst.mockResolvedValue(project);
     mocks.getProvider.mockReturnValue({
       fetchRankedKeywords: vi.fn(),

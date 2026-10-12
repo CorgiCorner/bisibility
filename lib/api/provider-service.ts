@@ -3,13 +3,14 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { dollarsToCents } from "@/lib/format/currency";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { guardConnectionFundingMutation } from "@/lib/metering/budget-mirror";
-import { initialProviderAllocation } from "@/lib/provider-allocations/initial-allocation";
-import { backfillLegacyProjectAllocationInLockedTransaction } from "@/lib/provider-allocations/legacy-backfill";
+import { initializeConnectionBudgets } from "@/lib/provider-allocations/initialize";
 import {
   hasAcceptedConnectionRun,
   lockProjectForProviderMutation,
 } from "@/lib/provider-allocations/project-lock";
+import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
 import { credentialsFromInput } from "@/lib/providers/credentials-input";
 import { decryptProviderCredentials, encryptSecret } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
@@ -17,7 +18,7 @@ import { connectProviderSchema, providerConnectionRefSchema } from "@/lib/schema
 import { firstSyncIntentOnConnect } from "@/lib/traffic/first-sync-intent-state";
 import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
 import { z } from "zod";
-import { auditConnection, auditProviderMutation, type ProviderClient } from "./provider-audit";
+import { auditConnection, auditProviderMutation } from "./provider-audit";
 import { renumberProviderChain } from "./provider-chain-writer";
 import { withProviderCredentialDefaults } from "./provider-credential-defaults";
 import { verifyProviderConnectionBeforeSave } from "./provider-verification";
@@ -41,8 +42,7 @@ type ProviderMutationContext = {
   projectId: string;
   projectPublicId?: string;
 };
-type ProviderMutationClient = ProviderClient &
-  Pick<typeof prisma, "$queryRaw" | "project" | "providerConnectionRate" | "rankCheckRun">;
+type ProviderMutationClient = Prisma.TransactionClient;
 
 function wakeTrafficFirstSyncWorker() {
   void publishWorkerIntent("traffic_first_sync").catch(() => undefined);
@@ -61,6 +61,7 @@ function findConnection(
   client: Pick<typeof prisma, "providerConnection"> = prisma,
 ) {
   return client.providerConnection.findUnique({
+    include: { rates: rankCheckRateSelection },
     where: { projectId_provider: { projectId, provider: providerId } },
   });
 }
@@ -130,22 +131,8 @@ export async function connectProviderConnection(
       { enabled, kind: item.kind, status: "connected" },
       new Date(),
     );
-    if (!before && item.allocation.kind === "billable") {
-      // Preserve existing legacy budgets before creating an account-based allocation.
-      await backfillLegacyProjectAllocationInLockedTransaction(
-        client,
-        context.projectId,
-        PROVIDER_CATALOG,
-      );
-      await client.project.updateMany({
-        data: { providerAllocationsInitializedAt: new Date() },
-        where: { id: context.projectId, providerAllocationsInitializedAt: null },
-      });
-    }
     const connection = await client.providerConnection.upsert({
       create: {
-        ...initialProviderAllocation(item, verification),
-        costPerCheckCents: cost,
         credentialsEncrypted: secret ?? null,
         credentialSource: "own",
         enabled,
@@ -158,7 +145,6 @@ export async function connectProviderConnection(
         status: "connected",
       },
       update: {
-        ...(cost === null ? {} : { costPerCheckCents: cost }),
         enabled,
         ...firstSyncIntent,
         ...(secret ? { credentialsEncrypted: secret } : {}),
@@ -169,6 +155,7 @@ export async function connectProviderConnection(
       },
       where: { projectId_provider: { projectId: context.projectId, provider: item.id } },
     });
+    if (!before) await initializeConnectionBudgets(client, connection, item, verification);
     if (input.priority === 0) {
       await renumberProviderChain(context.projectId, item.kind, item.id, client);
     }
@@ -188,12 +175,21 @@ export async function connectProviderConnection(
         },
       });
     }
+    const projectedConnection = {
+      ...connection,
+      costPerCheckCents:
+        cost === null
+          ? before
+            ? withRankCheckManualRate({ ...before, credentialSource: "own" }).costPerCheckCents
+            : null
+          : String(cost),
+    };
     await auditProviderMutation(
       {
         action: before ? "provider.update" : "provider.connect",
         actorId: context.actorId,
-        after: auditConnection(connection),
-        before: before ? auditConnection(before) : null,
+        after: auditConnection(projectedConnection),
+        before: before ? auditConnection(withRankCheckManualRate(before)) : null,
         projectId: context.projectId,
         targetId: requireApiPublicId(connection.publicId ?? "", "conn"),
       },
@@ -212,7 +208,10 @@ export async function connectProviderConnection(
         client,
       );
     }
-    return { connection, shouldWake: "firstSyncRequestedAt" in firstSyncIntent };
+    return {
+      connection: projectedConnection,
+      shouldWake: "firstSyncRequestedAt" in firstSyncIntent,
+    };
   };
 
   const result = await prisma.$transaction(writeConnection);
@@ -256,14 +255,23 @@ export async function setProviderSettings(
       {
         action: "provider.set_settings",
         actorId: context.actorId,
-        after: auditConnection(updated),
-        before: auditConnection(before),
+        after: auditConnection({
+          ...updated,
+          costPerCheckCents: withRankCheckManualRate(before).costPerCheckCents,
+        }),
+        before: auditConnection(withRankCheckManualRate(before)),
         projectId: context.projectId,
         targetId: requireApiPublicId(updated.publicId ?? "", "conn"),
       },
       tx,
     );
-    return { connection: updated, shouldWake: "firstSyncRequestedAt" in firstSyncIntent };
+    return {
+      connection: {
+        ...updated,
+        costPerCheckCents: withRankCheckManualRate(before).costPerCheckCents,
+      },
+      shouldWake: "firstSyncRequestedAt" in firstSyncIntent,
+    };
   });
   if (result.shouldWake) wakeTrafficFirstSyncWorker();
   return result.connection;

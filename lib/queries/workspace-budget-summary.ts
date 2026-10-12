@@ -1,81 +1,49 @@
 import "server-only";
-
-import { Prisma } from "@/lib/generated/prisma/client";
-import { PROVIDER_CATALOG } from "@/lib/providers/registry";
-import { projectBudgetCapCents } from "@/lib/rank-check/budget";
-import { loadProjectProviderSpend } from "./provider-spend";
-import { getRequestMonthlySpendCents } from "./workspace-request-data";
-
+import { getProjectMeteringBudgets } from "@/lib/metering/user-data";
+import { emptyProjectUsage } from "@/lib/metering/user-views";
+import { type BudgetsView, type HeaderStatus, headerStatusFromBudgets } from "@usagekit/views";
+import { cache } from "react";
 export type WorkspaceBudgetSummary = {
-  capCents: number;
-  hasAllocation: boolean;
-  headerAction: "details" | "set_budget" | null;
-  maxUsedPercent: number | null;
-  recorded: { cents: number; units: number };
-  spentCents: number;
-  tightest: { connectionId: string; provider: string; usedPercent: number } | null;
+  status: HeaderStatus;
+  budgets: BudgetsView;
+  eligible: boolean;
+  paidWorkBlocked: boolean | null;
 };
 
-// Only Prisma 7 connectivity and pool errors may hide the spend widget;
-// programming and authorization failures must remain visible.
-const CONNECTION_ERROR_CODES = new Set(["P2024", "P1001", "P1002", "P1008", "P1017"]);
+const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn) => fn;
 
-function connectionErrorCode(error: unknown): string | null {
-  if (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    CONNECTION_ERROR_CODES.has(error.code)
-  ) {
-    return error.code;
-  }
-  if (
-    error instanceof Prisma.PrismaClientInitializationError &&
-    error.errorCode &&
-    CONNECTION_ERROR_CODES.has(error.errorCode)
-  ) {
-    return error.errorCode;
-  }
-  return null;
-}
-
-export async function loadWorkspaceBudgetSummary(
-  projectId: string,
-  now = new Date(),
-): Promise<WorkspaceBudgetSummary | null> {
-  try {
-    const spentCents = await getRequestMonthlySpendCents(projectId, now);
-    const capCents = await projectBudgetCapCents(projectId);
-    const providerSpend = await loadProjectProviderSpend({
-      catalog: PROVIDER_CATALOG,
-      now,
-      projectId,
-    });
-    const connected = providerSpend.connections.filter(
-      (connection) => connection.status === "connected",
-    );
-    const hasAllocation = connected.some((connection) => connection.allocation !== null);
-    return {
-      capCents,
-      hasAllocation,
-      headerAction: connected.length ? (hasAllocation ? "details" : "set_budget") : null,
-      maxUsedPercent: providerSpend.summary.maxUsedPercent,
-      // The header pill shows one total the workspace paid this month: provider charges
-      // on its own keys plus credits spent. Budgets stay separate per source.
-      recorded: {
-        cents: providerSpend.summary.recorded.cents + providerSpend.summary.recorded.creditsCents,
-        units: providerSpend.summary.recorded.units,
-      },
-      spentCents,
-      tightest: providerSpend.summary.tightest,
-    };
-  } catch (error) {
-    const code = connectionErrorCode(error);
-    if (code) {
-      console.warn(
-        `loadWorkspaceBudgetSummary: database connectivity error ${code}; returning null`,
-      );
-      return null;
-    }
-    console.warn("loadWorkspaceBudgetSummary: unexpected error; rethrowing");
+export const loadWorkspaceBudgetSummary = perRequestCache(async function loadWorkspaceBudgetSummary(
+  projectRef: string,
+): Promise<WorkspaceBudgetSummary> {
+  const data = await getProjectMeteringBudgets(projectRef).catch((error: unknown) => {
+    const code =
+      error && typeof error === "object"
+        ? "code" in error
+          ? error.code
+          : "errorCode" in error
+            ? error.errorCode
+            : undefined
+        : undefined;
+    if (typeof code === "string" && ["P2024", "P1001", "P1002", "P1008", "P1017"].includes(code))
+      return emptyProjectUsage();
     throw error;
-  }
-}
+  });
+  const budgets: BudgetsView = {
+    state:
+      data.status === "restricted"
+        ? "forbidden"
+        : data.status === "unavailable"
+          ? "unavailable"
+          : data.budgets.length
+            ? "ok"
+            : "empty",
+    rows: data.budgets,
+    problem: null,
+  };
+  return {
+    status: headerStatusFromBudgets(budgets),
+    paidWorkBlocked: data.paidWorkBlocked,
+    budgets,
+    eligible: data.connections.length > 0 || data.budgets.length > 0,
+  };
+});

@@ -18,7 +18,7 @@ export default async function AiTrackingPage({
       messages={messages}
       timeZone={runtime.timeZone}
     >
-      <PageContent>
+      <PageContent variant="section">
         <AiTrackingClient projectId={project} data={data} />
       </PageContent>
     </FeatureMessagesProvider>

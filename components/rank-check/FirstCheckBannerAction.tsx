@@ -119,7 +119,9 @@ export function FirstCheckBannerAction({
       try {
         const result = await runCheckNowAction({ keywordId });
         const resultError = isBudgetExhaustedResult(result)
-          ? t("notices.budgetExhausted")
+          ? result.code === "budget_missing"
+            ? errors.budgetMissing()
+            : t("notices.budgetExhausted")
           : runResultError(result, t);
         if (resultError) {
           setConfirmError(resultError);

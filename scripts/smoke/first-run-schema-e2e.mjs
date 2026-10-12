@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { assertLocalTestBrowser } from "./attached-opera-playwright.mjs";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -138,6 +139,7 @@ let server;
 let exitCode = 0;
 
 try {
+  await assertLocalTestBrowser();
   ensureDockerVmFreeSpace({ profile: "runtime" });
   await fs.mkdir(reportDir, { recursive: true });
   await fs.writeFile(otpFile, "{}");

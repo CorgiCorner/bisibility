@@ -159,12 +159,12 @@ describe("scheduleMonthlyDeltaLabel", () => {
   });
 
   it("keeps the metered cents counterpart for the same depth change", () => {
-    // Pinned to the maintained list rates: a DataForSEO check costs 0.35 cents at Top 20
-    // and 1.55 cents at Top 100. A configured override replaces the per-check amount, so
+    // Pinned to the maintained list rates: a DataForSEO check costs 0.4 cents at Top 20
+    // and 2 cents at Top 100. A configured override replaces the per-check amount, so
     // the depth-driven change is only visible on the list rates.
-    expect(defaultCostPerCheckCents("dataforseo", 20)).toBe(0.35);
-    expect(defaultCostPerCheckCents("dataforseo", 100)).toBe(1.55);
-    const expectedCentsDelta = (1.55 - 0.35) * dailyRuns;
+    expect(defaultCostPerCheckCents("dataforseo", 20)).toBe(0.4);
+    expect(defaultCostPerCheckCents("dataforseo", 100)).toBe(2);
+    const expectedCentsDelta = (2 - 0.4) * dailyRuns;
 
     const result = label({
       providerRate: { overrideCents: null, providerId: "dataforseo" },

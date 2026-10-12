@@ -139,6 +139,15 @@ export const persistTrackingResultSchema = z.object({
     )
     .max(100),
   receipt: z.object({
+    noDispatch: z.literal(true).optional(),
+    operationRef: z
+      .object({
+        version: z.literal(1),
+        namespace: z.string().min(1),
+        operationId: z.string().min(1),
+      })
+      .nullable()
+      .optional(),
     providerCostEntryId: z.string().nullable(),
     amountUsd: z
       .string()

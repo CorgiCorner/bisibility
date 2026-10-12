@@ -77,7 +77,7 @@ describe("project estimates", () => {
   });
 
   it("sums mixed-depth run costs", () => {
-    expect(runCostCents([10, 100], dataForSeo)).toBe(1.75);
+    expect(runCostCents([10, 100], dataForSeo)).toBe(2.2);
   });
 
   it("hides money for an unknown provider", () => {

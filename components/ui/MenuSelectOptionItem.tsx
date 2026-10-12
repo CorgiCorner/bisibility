@@ -39,7 +39,15 @@ export function MenuSelectOptionItem({
     <MenuItem
       aria-label={option.ariaLabel}
       data-current={current || undefined}
-      disabled={option.disabled}
+      disabled={option.disabled && !option.tooltip}
+      aria-disabled={option.disabled || undefined}
+      data-disabled={option.disabled ? "" : undefined}
+      data-disabled-help={option.disabled && option.tooltip ? "" : undefined}
+      textValue={option.label}
+      className="w-full"
+      onKeyDown={(event) => {
+        if (option.disabled && (event.key === "Enter" || event.key === " ")) event.preventDefault();
+      }}
       onClick={() => {
         if (option.disabled) return;
         onSelect();
@@ -77,7 +85,7 @@ export function MenuSelectOptionItem({
   );
 
   return option.tooltip ? (
-    <Tooltip content={option.tooltip} semantics="description">
+    <Tooltip content={option.tooltip} semantics="description" wrapperClassName="flex w-full">
       {item}
     </Tooltip>
   ) : (

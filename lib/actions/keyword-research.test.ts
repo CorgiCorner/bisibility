@@ -1,5 +1,6 @@
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { ProviderCallError } from "@/lib/providers/call-error";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { researchKeywordsAction } from "./keyword-research";
 
@@ -21,6 +22,18 @@ vi.mock("./_shared", () => ({
 }));
 
 describe("researchKeywordsAction", () => {
+  it("resolves a hosted missing-budget refusal", async () => {
+    mocks.research.mockRejectedValueOnce(
+      new DeploymentAdmissionExhaustedError("budget", { budgetReason: "budget_missing" }),
+    );
+    await expect(
+      researchKeywordsAction({ projectId: "prj_1", seed: "seo" }),
+    ).resolves.toMatchObject({
+      ok: false,
+      reason: "budget_exhausted",
+      budgetReason: "budget_missing",
+    });
+  });
   it.each([0, 7, null])(
     "returns account restrictions without raw errors or losing cost %s",
     async (costCents) => {

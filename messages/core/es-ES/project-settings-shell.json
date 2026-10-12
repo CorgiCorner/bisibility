@@ -104,6 +104,10 @@
         "websiteDomain": {
           "label": "Dominio del sitio web",
           "keywords": "sitio web url cambiar dominio"
+        },
+        "projectContext": {
+          "label": "Contexto del proyecto",
+          "keywords": "negocio audiencia productos objetivos agentes contexto"
         }
       }
     },
@@ -117,7 +121,8 @@
       "general": "General",
       "notifications": "Notificaciones",
       "team": "Equipo",
-      "tracking": "Seguimiento"
+      "tracking": "Seguimiento",
+      "context": "Contexto del proyecto"
     }
   }
 }

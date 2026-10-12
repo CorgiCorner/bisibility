@@ -5,7 +5,8 @@ import { trackedProjectDomain } from "@/lib/schemas/project";
 import { resolveSerpDepth, resolveSerpStopOnMatch } from "@/lib/serp/constants";
 import { serpRankLocation } from "@/lib/serp/location";
 import { queuedBatchAttribution } from "./queued-attribution";
-import { dataForSeoQueuedEstimate, queuedBillingUnits } from "./queued-pricing";
+import { queuedBillingUnits } from "./queued-pricing";
+import { queuedRequestCosts } from "./queued-request-costs";
 import type { claimQueuedSubmission } from "./queued-submit-claim";
 
 /** One provider task per queued rank-check task, priced for the usage journal. */
@@ -13,8 +14,17 @@ export async function submissionTasks(
   batch: Awaited<ReturnType<typeof claimQueuedSubmission>>["batch"],
 ) {
   const origin = queuedBatchAttribution(batch);
+  if (!batch.connection) throw new Error("Queued provider connection is unavailable");
+  const costs = await queuedRequestCosts(
+    batch.connection,
+    batch.tasks.map((task) => ({
+      keyword: task.keyword.text,
+      depth: resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined),
+    })),
+    batch.priority === "normal" ? "normal" : "high",
+  );
   return Promise.all(
-    batch.tasks.map(async (task) => {
+    batch.tasks.map(async (task, index) => {
       const attribution = await createProviderRequestAttribution(
         {
           correlationId: task.id,
@@ -28,10 +38,7 @@ export async function submissionTasks(
       );
       return {
         estimate: {
-          cents: dataForSeoQueuedEstimate(
-            batch.priority === "normal" ? "normal" : "high",
-            resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined),
-          ).toFixed(4),
+          cents: costs[index].toFixed(4),
           units: String(
             queuedBillingUnits(resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined)),
           ),

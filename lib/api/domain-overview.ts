@@ -104,6 +104,7 @@ function lookupError(ctx: ApiContext, outcome: DomainOverviewLookupFailure) {
   }
   if (outcome.reason === "budget_exhausted") {
     return budgetExhaustedResponse(ctx, {
+      reason: outcome.budgetReason,
       surface: "programmatic",
       ...(outcome.provider === undefined ? {} : { provider: outcome.provider }),
     });

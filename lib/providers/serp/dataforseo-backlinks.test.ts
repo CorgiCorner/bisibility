@@ -53,15 +53,34 @@ describe("createDataForSeoBacklinksMethods", () => {
     expect(request).toHaveBeenCalledWith(
       "https://api.dataforseo.com/v3/backlinks/history/live",
       credentials,
-      expect.objectContaining({
-        backlinks_status_type: "all",
+      {
         date_from: "2025-07-01",
         date_to: "2026-06-30",
-        exclude_internal_backlinks: true,
-        include_indirect_links: false,
-        include_subdomains: true,
         rank_scale: "one_hundred",
-      }),
+        target: "acme-store.com",
+      },
+    );
+  });
+
+  it("uses the admitted history window even after the calendar month changes", async () => {
+    const request = vi.fn().mockResolvedValue(response(historySuccess));
+    const methods = createDataForSeoBacklinksMethods({
+      now: () => new Date("2026-10-01T00:00:00.000Z"),
+      request,
+    });
+    await methods.fetchBacklinksHistory(credentials, {
+      ...target,
+      historyWindow: { dateFrom: "2025-09-01", dateTo: "2026-08-31" },
+    });
+    expect(request).toHaveBeenCalledWith(
+      "https://api.dataforseo.com/v3/backlinks/history/live",
+      credentials,
+      {
+        date_from: "2025-09-01",
+        date_to: "2026-08-31",
+        rank_scale: "one_hundred",
+        target: "acme-store.com",
+      },
     );
   });
 

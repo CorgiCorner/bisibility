@@ -1,6 +1,6 @@
 import "server-only";
-
 import { ApiInputError } from "@/lib/api/errors";
+import { projectBudgetCapCents } from "@/lib/metering/project-budget-read";
 import type { RankCheckRunRow } from "./rank-check-run-dto";
 
 export function iso(value: Date | null) {
@@ -19,9 +19,9 @@ export function statusCsv<T extends string>(
   return [...new Set(values)] as T[];
 }
 
-export function budgetForRuns(rows: RankCheckRunRow[], spentCents: number | null) {
+export async function budgetForRuns(rows: RankCheckRunRow[], spentCents: number | null) {
   const budget = rows.find((row) => row.blockedReason === "budget_exhausted");
   return budget && spentCents !== null
-    ? { capCents: budget.project.budgetCapCents, spentCents }
+    ? { capCents: await projectBudgetCapCents(budget.projectId), spentCents }
     : null;
 }

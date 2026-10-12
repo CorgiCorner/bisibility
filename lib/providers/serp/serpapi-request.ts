@@ -1,6 +1,12 @@
+import {
+  BudgetExhaustedError,
+  ProviderAllocationExhaustedError,
+} from "@/lib/metering/admission-errors";
+import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import type { ProviderCredentials, SerpRankInput } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
+import { dispatchPricedRequest } from "@usagekit/providers";
 import type { SerpApiResponse } from "./serpapi-payload";
 import { serpApiUsageReceipt } from "./usage-receipts";
 
@@ -49,11 +55,21 @@ async function observedAttempt(url: string, creds: ProviderCredentials, timeoutM
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const search = url.startsWith(SEARCH_URL);
+  const pricingUrl = new URL(url);
+  const dispatchCredentials = { secret: pricingUrl.searchParams.get("api_key") ?? "" };
+  pricingUrl.searchParams.delete("api_key");
   try {
     // Keep the deadline armed until the body and its receipt have been consumed.
     const result = await readObservedResponse<SerpApiResponse>({
       observer: search ? creds.usageObserver : undefined,
       request: () => fetch(url, { signal: controller.signal }),
+      ...(search
+        ? {
+            providerRequest: { method: "GET", url: pricingUrl.toString() },
+            dispatch: (request: Parameters<typeof dispatchPricedRequest>[0]) =>
+              dispatchPricedRequest(request, fetch, controller.signal, dispatchCredentials),
+          }
+        : {}),
       measure: serpApiUsageReceipt,
       requireMeasuredUsage: search,
     });
@@ -124,7 +140,13 @@ export async function requestJson(
         !url.startsWith(SEARCH_URL) || serpApiUsageReceipt(data, response).quantity === 0,
       );
     } catch (error) {
-      if (error instanceof DeploymentAdmissionExhaustedError) throw error;
+      if (
+        error instanceof ProviderCostLimitError ||
+        error instanceof DeploymentAdmissionExhaustedError ||
+        error instanceof BudgetExhaustedError ||
+        error instanceof ProviderAllocationExhaustedError
+      )
+        throw error;
       if (error instanceof ProviderUsagePersistenceError) throw error;
       // A transport rejection cannot prove the search was uncharged, even without a journal.
       if (url.startsWith(SEARCH_URL) && !(error instanceof SerpApiError))

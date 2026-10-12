@@ -150,11 +150,10 @@ describe("KeywordDataTable server contract", () => {
     expectScopedMarketNavigation();
   });
 
-  it("keeps grouping on the scoped market route", () => {
+  it("does not offer a manual grouping override on the scoped market route", () => {
     renderScopedMarketGrid();
-
-    fireEvent.click(screen.getByRole("radio", { name: "Grouped" }));
-    expectScopedMarketNavigation();
+    expect(screen.queryByRole("radio", { name: "Grouped" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Flat" })).not.toBeInTheDocument();
   });
 
   it("builds the grouped summary from matching leaf targets", () => {

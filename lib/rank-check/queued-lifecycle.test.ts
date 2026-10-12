@@ -260,7 +260,7 @@ describe("queued ledger compare-and-set transitions", () => {
     expect(mocks.state.rankCheckCostCents).toBe(2.4);
     expect(mocks.state.task).toBe("failed");
     expect(mocks.state.batch).toBe("failed");
-    expect(mocks.state.evidenceEntries).toBe(1);
+    expect(mocks.state.evidenceEntries).toBe(0);
   });
 
   it("leaves a live persistence owner untouched until a later timeout retry", async () => {

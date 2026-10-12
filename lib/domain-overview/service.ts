@@ -1,5 +1,5 @@
 import "server-only";
-
+import { requestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { RankedKeywordsPage, RelevantPagesResult } from "@/lib/providers/types";
 import {
   type CachedDomainOverviewModule,
@@ -94,9 +94,9 @@ export async function analyzeDomainOverview(
     }
     assertDomainOverviewMaxCost(estimatedCostCents, options.maxCostCents);
     const reserveCost = domainOverviewCostReservation(options.maxCostCents);
+    const costLimit = requestCostLimit(options.maxCostCents);
     if (estimatedCostCents > 0) {
       await preflightDomainOverview({
-        budgetCapCents: project.budgetCapCents,
         connectionId: source.connection.id,
         estimatedCostCents,
         estimatedUsageQuantity: 1 + Number(!keywordsCached) + Number(!pagesCached),
@@ -107,6 +107,7 @@ export async function analyzeDomainOverview(
     }
     const overview = await resolveDomainOverviewSnapshot({
       ...input,
+      costLimit,
       beforeLoad: () => reserveCost(estimate.overview),
       fresh: options.fresh,
       key: keys.overview,
@@ -174,7 +175,7 @@ export async function analyzeDomainOverview(
         load: async () => {
           const data = await fetchDomainKeywords({
             ...input,
-            budgetCapCents: project.budgetCapCents,
+            costLimit,
             limit: input.keywordLimit,
             origin: context.origin,
             offset: 0,
@@ -191,7 +192,7 @@ export async function analyzeDomainOverview(
         load: async () => {
           const data = await fetchDomainPages({
             ...input,
-            budgetCapCents: project.budgetCapCents,
+            costLimit,
             limit: input.pageLimit,
             origin: context.origin,
             offset: 0,
@@ -256,7 +257,7 @@ export async function loadDomainOverviewHistory(
       load: async () => {
         const result = await fetchDomainHistory({
           ...input,
-          budgetCapCents: project.budgetCapCents,
+          costLimit: requestCostLimit(options.maxCostCents),
           origin: context.origin,
           projectId: project.id,
           source,

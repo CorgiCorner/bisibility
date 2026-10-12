@@ -4,13 +4,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
   backfill: vi.fn(),
+  readBudgets: vi.fn(),
+  putBudget: vi.fn(),
   prisma: { $transaction: vi.fn() },
   writeAudit: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/providers/execution-extension", () => ({
-  readDeploymentMeteringAllocationAuthority: vi.fn().mockResolvedValue("legacy"),
+vi.mock("@/lib/metering/spending-limit-store", () => ({
+  readSpendingBudgets: mocks.readBudgets,
+  putSpendingBudget: mocks.putBudget,
 }));
 vi.mock("./legacy-backfill", () => ({
   backfillLegacyProjectAllocationInLockedTransaction: mocks.backfill,
@@ -24,6 +27,7 @@ vi.mock("@/lib/auth/audit", async (original) => ({
   writeAudit: mocks.writeAudit,
 }));
 
+import { fundingSpendingBudgets } from "@/lib/metering/spending-limits";
 import { setProviderConnectionAllocation } from "./service";
 
 const catalog = [
@@ -44,7 +48,6 @@ const actor = { id: "user_1", memberships: [{ projectId: "project_1", role: "adm
 function transaction() {
   return {
     $queryRaw: vi.fn(),
-    auditLog: { create: vi.fn() },
     project: {
       findUnique: vi.fn().mockResolvedValueOnce({ id: "project_1" }).mockResolvedValue({
         id: "project_1",
@@ -55,15 +58,8 @@ function transaction() {
       update: vi.fn(),
     },
     providerConnection: {
-      findFirst: vi.fn().mockResolvedValue({
-        allocationAmountPerMonth: null,
-        allocationUnit: null,
-        id: "connection_1",
-        programmaticAllocationAmountPerMonth: null,
-        provider: "metered",
-      }),
+      findFirst: vi.fn().mockResolvedValue({ id: "connection_1", provider: "metered" }),
       update: vi.fn(),
-      updateMany: vi.fn(),
     },
   };
 }
@@ -74,17 +70,23 @@ const input = {
   connectionPublicId: "conn_abcdefghijklmnopqrstuvwx",
   projectPublicId: "prj_abcdefghijklmnopqrstuvwx",
 };
-
-describe("provider allocation service", () => {
+function existing() {
+  mocks.readBudgets.mockResolvedValue(
+    fundingSpendingBudgets(
+      "default",
+      { id: "connection_1", provider: "metered", unit: "cents", app: "1000", programmatic: "500" },
+      "byok",
+      4,
+    ),
+  );
+}
+describe("provider allocation Store commands", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.backfill.mockResolvedValue({
-      internalPrimaryConnectionId: "connection_1",
-      status: "backfilled",
-    });
+    mocks.readBudgets.mockResolvedValue([]);
+    mocks.putBudget.mockImplementation(async (_tx, b) => b);
   });
-
-  it("resolves public ids, authorizes, writes, and audits in one transaction", async () => {
+  it("resolves public ids, locks, authorizes, persists exact Store limits and audits atomically", async () => {
     const tx = transaction();
     mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
     await setProviderConnectionAllocation(input);
@@ -92,152 +94,99 @@ describe("provider allocation service", () => {
       projectId: "project_1",
       type: "provider_connection",
     });
-    expect(tx.project.findUnique).toHaveBeenNthCalledWith(1, {
-      select: { id: true },
-      where: { publicId: "prj_abcdefghijklmnopqrstuvwx" },
-    });
-    expect(tx.project.findUnique).toHaveBeenNthCalledWith(2, {
-      select: { id: true, isSample: true, publicId: true, writeMode: true },
-      where: { id: "project_1" },
-    });
     expect(tx.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
       tx.project.findUnique.mock.invocationCallOrder[1] ?? 0,
     );
-    expect(tx.providerConnection.findFirst).toHaveBeenCalledWith(
+    expect(mocks.putBudget).toHaveBeenCalledWith(
+      tx,
       expect.objectContaining({
-        where: { projectId: "project_1", publicId: "conn_abcdefghijklmnopqrstuvwx" },
+        id: "own-connection:connection_1:app",
+        version: 1,
+        limit: { unit: "cents", value: 25000000n, scale: 4 },
+        onExceed: "block",
       }),
     );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
-      expect.objectContaining({ targetId: "conn_abcdefghijklmnopqrstuvwx" }),
-      tx,
-    );
-  });
-
-  it("materializes the legacy allocation before applying the explicit allocation", async () => {
-    const tx = transaction();
-    mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
-
-    await setProviderConnectionAllocation(input);
-
-    expect(mocks.backfill).toHaveBeenCalledWith(tx, "project_1", catalog);
-    expect(mocks.backfill.mock.invocationCallOrder[0]).toBeLessThan(
-      tx.providerConnection.update.mock.invocationCallOrder[0] ?? 0,
-    );
-    expect(tx.providerConnection.update).toHaveBeenCalledWith({
-      data: { allocationAmountPerMonth: 2500, allocationUnit: "cents" },
-      where: { id: "connection_1" },
-    });
-    expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
+        targetId: input.connectionPublicId,
         after: {
-          app: { amountPerMonth: 2500, unit: "cents" },
-          credits: { app: null, programmatic: null },
+          app: input.allocations.app,
           programmatic: null,
-        },
-        before: {
-          app: null,
           credits: { app: null, programmatic: null },
-          programmatic: null,
         },
       }),
       tx,
     );
   });
-
-  it("persists a two-sided update and audits both surfaces", async () => {
+  it("edits never backfill a project cap or write legacy connection limits", async () => {
     const tx = transaction();
-    tx.providerConnection.findFirst.mockResolvedValue({
-      allocationAmountPerMonth: 1000,
-      allocationUnit: "cents",
-      id: "connection_1",
-      programmaticAllocationAmountPerMonth: 500,
-      provider: "metered",
-    });
     mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
-
+    await setProviderConnectionAllocation(input);
+    expect(mocks.backfill).not.toHaveBeenCalled();
+    expect(tx.providerConnection.update).not.toHaveBeenCalled();
+    expect(tx.project.update).not.toHaveBeenCalled();
+  });
+  it("updates both surfaces with their retained identities and versions", async () => {
+    existing();
+    const tx = transaction();
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
     await setProviderConnectionAllocation({
       ...input,
-      allocations: {
-        app: { amountPerMonth: 2500, unit: "cents" },
-        programmatic: { amountPerMonth: 1200, unit: "cents" },
-      },
+      allocations: { ...input.allocations, programmatic: { amountPerMonth: 1200, unit: "cents" } },
     });
-
-    expect(tx.providerConnection.update).toHaveBeenCalledWith({
-      data: {
-        allocationAmountPerMonth: 2500,
-        allocationUnit: "cents",
-        programmaticAllocationAmountPerMonth: 1200,
-      },
-      where: { id: "connection_1" },
-    });
+    expect(mocks.putBudget.mock.calls.map(([, b]) => [b.id, b.version])).toEqual([
+      ["own-connection:connection_1:app", 5],
+      ["own-connection:connection_1:programmatic", 5],
+    ]);
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
-        after: {
-          app: { amountPerMonth: 2500, unit: "cents" },
-          credits: { app: null, programmatic: null },
-          programmatic: { amountPerMonth: 1200, unit: "cents" },
-        },
         before: {
           app: { amountPerMonth: 1000, unit: "cents" },
-          credits: { app: null, programmatic: null },
           programmatic: { amountPerMonth: 500, unit: "cents" },
+          credits: { app: null, programmatic: null },
         },
       }),
       tx,
     );
   });
-
-  it("keeps the stored programmatic cap when the update omits it", async () => {
+  it("omitted surfaces retain their stored limit and version; explicit null clears only the named budget", async () => {
+    existing();
     const tx = transaction();
-    tx.providerConnection.findFirst.mockResolvedValue({
-      allocationAmountPerMonth: 1000,
-      allocationUnit: "cents",
-      id: "connection_1",
-      programmaticAllocationAmountPerMonth: 500,
-      provider: "metered",
-    });
     mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
-
-    await setProviderConnectionAllocation(input);
-
-    const update = tx.providerConnection.update.mock.calls[0]?.[0] as {
-      data: Record<string, unknown>;
-    };
-    expect(update.data).toEqual({
-      allocationAmountPerMonth: 2500,
-      allocationUnit: "cents",
-    });
-    expect(mocks.writeAudit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        after: {
-          app: { amountPerMonth: 2500, unit: "cents" },
-          credits: { app: null, programmatic: null },
-          programmatic: { amountPerMonth: 500, unit: "cents" },
-        },
-      }),
+    const result = await setProviderConnectionAllocation({ ...input, allocations: { app: null } });
+    expect(mocks.putBudget).toHaveBeenCalledOnce();
+    expect(mocks.putBudget).toHaveBeenCalledWith(
       tx,
+      expect.objectContaining({ limit: null, version: 5 }),
     );
+    expect(result.programmatic).toEqual({ amountPerMonth: 500, unit: "cents" });
   });
-
-  it("rejects app and programmatic caps with different units", async () => {
+  it("rejects mismatched native units before Store writes", async () => {
     const tx = transaction();
     mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
-
     await expect(
       setProviderConnectionAllocation({
         ...input,
-        allocations: {
-          app: { amountPerMonth: 2500, unit: "cents" },
-          programmatic: { amountPerMonth: 100, unit: "units" },
-        },
+        allocations: { ...input.allocations, programmatic: { amountPerMonth: 100, unit: "units" } },
       }),
-    ).rejects.toThrow(TypeError("App and programmatic allocations must share one unit."));
-    expect(tx.providerConnection.update).not.toHaveBeenCalled();
+    ).rejects.toThrow("share one unit");
+    expect(mocks.putBudget).not.toHaveBeenCalled();
   });
-
-  it("does not write when authorization fails", async () => {
+  it("cannot reinterpret an existing Store counter in a different native unit", async () => {
+    mocks.readBudgets.mockResolvedValue(
+      fundingSpendingBudgets(
+        "default",
+        { id: "connection_1", provider: "metered", unit: "units", app: "10", programmatic: null },
+        "byok",
+        1,
+      ),
+    );
+    const tx = transaction();
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
+    await expect(setProviderConnectionAllocation(input)).rejects.toThrow("unit changed");
+    expect(mocks.putBudget).not.toHaveBeenCalled();
+  });
+  it("authorization failure cannot mutate budgets", async () => {
     const tx = transaction();
     const denied = new Error("forbidden");
     mocks.authorize.mockImplementationOnce(() => {
@@ -245,11 +194,9 @@ describe("provider allocation service", () => {
     });
     mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
     await expect(setProviderConnectionAllocation(input)).rejects.toBe(denied);
-    expect(tx.$queryRaw).toHaveBeenCalledOnce();
-    expect(tx.providerConnection.update).not.toHaveBeenCalled();
+    expect(mocks.putBudget).not.toHaveBeenCalled();
   });
-
-  it("rejects a migration hold that begins before the locked reread", async () => {
+  it("a migration hold is rechecked under the project lock", async () => {
     const tx = transaction();
     tx.project.findUnique
       .mockReset()
@@ -257,35 +204,26 @@ describe("provider allocation service", () => {
       .mockResolvedValueOnce({
         id: "project_1",
         isSample: false,
-        publicId: "prj_abcdefghijklmnopqrstuvwx",
+        publicId: input.projectPublicId,
         writeMode: "migration_hold",
       });
     mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
-
     await expect(setProviderConnectionAllocation(input)).rejects.toMatchObject({
       code: "project_read_only",
     });
-
-    expect(tx.$queryRaw).toHaveBeenCalledOnce();
-    expect(tx.providerConnection.findFirst).not.toHaveBeenCalled();
-    expect(tx.providerConnection.update).not.toHaveBeenCalled();
-    expect(tx.project.update).not.toHaveBeenCalled();
+    expect(mocks.putBudget).not.toHaveBeenCalled();
     expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
-
-  it("rolls the mutation back when audit fails", async () => {
+  it("Store conflicts and audit failures abort the caller transaction", async () => {
     const tx = transaction();
-    const auditFailure = new Error("audit failed");
-    mocks.writeAudit.mockRejectedValueOnce(auditFailure);
-    mocks.prisma.$transaction.mockImplementation(async (callback) => {
-      await callback(tx);
-    });
-    await expect(setProviderConnectionAllocation(input)).rejects.toBe(auditFailure);
-    expect(tx.providerConnection.update).toHaveBeenCalledOnce();
-    expect(mocks.writeAudit).toHaveBeenCalledOnce();
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
+    mocks.putBudget.mockRejectedValueOnce(new Error("budget conflict"));
+    await expect(setProviderConnectionAllocation(input)).rejects.toThrow("budget conflict");
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+    mocks.writeAudit.mockRejectedValueOnce(new Error("audit failed"));
+    await expect(setProviderConnectionAllocation(input)).rejects.toThrow("audit failed");
   });
-
-  it("rejects malformed public ids before opening a transaction", async () => {
+  it("malformed public ids cannot open a transaction", async () => {
     await expect(
       setProviderConnectionAllocation({ ...input, connectionPublicId: "connection_1" }),
     ).rejects.toThrow("public resource ID");

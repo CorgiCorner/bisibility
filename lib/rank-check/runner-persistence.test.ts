@@ -169,23 +169,7 @@ describe("rank-check persistence update path", () => {
       data: { lastUsedAt: checkedAt },
       where: { id: "connection_1" },
     });
-    expect(tx.providerCostEntry.createMany).toHaveBeenCalledWith({
-      data: [
-        {
-          cached: false,
-          connectionId: "connection_1",
-          costCents: 0.04,
-          failed: false,
-          feature: "rank_check",
-          keywordId: "keyword_1",
-          provider: "dataforseo",
-          providerRequestId: undefined,
-          projectId: "project_1",
-          usageQuantity: 4,
-        },
-      ],
-      skipDuplicates: true,
-    });
+    expect(tx.providerCostEntry.createMany).not.toHaveBeenCalled();
     expect(tx.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -931,23 +915,7 @@ describe("rank-check persistence update path", () => {
       }),
       where: { id: "rank_running_1", status: "running" },
     });
-    expect(tx.providerCostEntry.createMany).toHaveBeenCalledWith({
-      data: [
-        {
-          cached: false,
-          connectionId: "connection_1",
-          costCents: 1.2,
-          failed: true,
-          feature: "rank_check",
-          keywordId: "keyword_1",
-          provider: "serpapi",
-          providerRequestId: undefined,
-          projectId: "project_1",
-          usageQuantity: undefined,
-        },
-      ],
-      skipDuplicates: true,
-    });
+    expect(tx.providerCostEntry.createMany).not.toHaveBeenCalled();
     expect(tx.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -1046,41 +1014,5 @@ describe("rank-check persistence update path", () => {
     );
     expect(mocks.prisma.auditLog.create).not.toHaveBeenCalled();
     expect(mocks.notifyRankCheckFailed).not.toHaveBeenCalled();
-  });
-
-  it("records native provider usage when monetary cost is zero", async () => {
-    const { writeRankCheckProviderCostEntry } = await import("./provider-cost-persistence");
-    const createMany = vi.fn().mockResolvedValue({ count: 1 });
-    const tx = {
-      providerCostEntry: {
-        findFirst: vi.fn().mockResolvedValue(null),
-        create: vi.fn(),
-        createMany,
-      },
-    };
-
-    await writeRankCheckProviderCostEntry(tx as never, {
-      connectionId: "connection_1",
-      costCents: 0,
-      failed: false,
-      provider: "serpapi",
-      projectId: "project_1",
-      usage: {
-        context: {
-          correlationId: "00000000-0000-4000-8000-000000000000",
-          feature: "rank_check",
-          projectId: "project_1",
-          source: "worker",
-          trigger: "scheduled",
-        },
-        tag: "app=bisibility;stage=test;src=worker;trg=scheduled;f=rank_check;p=project_1;c=00000000-0000-4000-8000-000000000000",
-      },
-      usageQuantity: 3,
-    });
-
-    expect(createMany).toHaveBeenCalledWith({
-      data: [expect.objectContaining({ costCents: 0, usageQuantity: 3 })],
-      skipDuplicates: true,
-    });
   });
 });

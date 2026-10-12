@@ -1,5 +1,6 @@
 import { UnsupportedBacklinksTargetError } from "@/lib/backlinks/target";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { analyzeBacklinksAction, loadMoreBacklinkRowsAction } from "./backlinks";
 
@@ -23,6 +24,27 @@ vi.mock("./_shared", () => ({
 }));
 
 describe("backlinks actions", () => {
+  it.each([
+    [analyzeBacklinksAction, mocks.analyze],
+    [loadMoreBacklinkRowsAction, mocks.loadMore],
+  ])("resolves a hosted missing-budget refusal for %s", async (action, service) => {
+    service.mockRejectedValueOnce(
+      new DeploymentAdmissionExhaustedError("budget", { budgetReason: "budget_missing" }),
+    );
+    await expect(
+      action({
+        projectId: "prj_1",
+        target: "example.com",
+        targetScope: "site",
+        includeSubdomains: true,
+        limit: 100,
+      }),
+    ).resolves.toMatchObject({
+      ok: false,
+      reason: "budget_exhausted",
+      budgetReason: "budget_missing",
+    });
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireScope.mockResolvedValue(mocks.project);

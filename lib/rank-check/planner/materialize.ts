@@ -39,9 +39,7 @@ export async function materializePlannedRun(runId: string, now: Date, runNow = f
       },
       project: {
         select: {
-          budgetCapCents: true,
           defaults: { select: { serpDepth: true, timezone: true } },
-          providerAllocationsInitializedAt: true,
         },
       },
       projectId: true,
@@ -141,24 +139,6 @@ export async function materializePlannedRun(runId: string, now: Date, runNow = f
       status: run.status,
     });
   }
-  const admission = await scheduleAdmission(
-    {
-      keywords: keywordIds.map((id) => ({ id })),
-      project: run.project,
-      projectId: run.projectId,
-      providerPolicy: schedule.providerPolicy,
-      serpDepth: schedule.serpDepth,
-    },
-    now,
-  );
-  if (admission.blockedReason) {
-    await prisma.rankCheckRun.updateMany({
-      data: { blockedReason: admission.blockedReason, status: "blocked" },
-      where: { id: runId, status: run.status },
-    });
-    return "not_ready" as const;
-  }
-
   const materialized = await prisma.$transaction(async (tx) => {
     await lockProjectForProviderMutation(tx, run.projectId);
     const current = await tx.checkSchedule.findFirst({
@@ -168,7 +148,12 @@ export async function materializePlannedRun(runId: string, now: Date, runNow = f
         archivedAt: null,
         enabled: true,
       },
-      select: { id: true },
+      select: {
+        id: true,
+        providerPolicy: true,
+        serpDepth: true,
+        project: { select: { defaults: { select: { serpDepth: true } } } },
+      },
     });
     if (!current) return "not_ready" as const;
     const pending = await tx.rankCheckRun.findFirst({
@@ -202,16 +187,34 @@ export async function materializePlannedRun(runId: string, now: Date, runNow = f
     ) {
       return "not_ready" as const;
     }
+    const admission = await scheduleAdmission(
+      {
+        keywords: lockedRows,
+        project: current.project,
+        projectId: run.projectId,
+        providerPolicy: current.providerPolicy,
+        serpDepth: current.serpDepth,
+      },
+      now,
+      tx,
+    );
+    if (admission.blockedReason) {
+      await tx.rankCheckRun.updateMany({
+        data: { blockedReason: admission.blockedReason, status: "blocked" },
+        where: { id: runId, status: run.status },
+      });
+      return "not_ready" as const;
+    }
     const selectionSpec = await reserveScheduledRunAllocation(tx, {
       connection: admission.connection,
       estimatedCostCents: admission.estimatedCostCents,
-      initializedAllocations: Boolean(run.project.providerAllocationsInitializedAt),
+      initializedAllocations: true,
       now,
       projectId: run.projectId,
       selectionSpec: run.selectionSpec,
       usageQuantity: admission.usageQuantity,
-      items: keywordIds.map((keywordId, index) => ({
-        keywordId,
+      items: lockedRows.map((row, index) => ({
+        keywordId: row.id,
         cost: admission.itemCosts[index],
         depth: admission.depth,
       })),
@@ -242,7 +245,7 @@ export async function materializePlannedRun(runId: string, now: Date, runNow = f
       });
     }
     await tx.rankCheckRunItem.createMany({
-      data: keywordIds.map((keywordId, index) => ({
+      data: lockedRows.map(({ id: keywordId }, index) => ({
         estimatedCostCents:
           admission.itemCosts[index] === null ? null : Math.ceil(admission.itemCosts[index] ?? 0),
         keywordId,

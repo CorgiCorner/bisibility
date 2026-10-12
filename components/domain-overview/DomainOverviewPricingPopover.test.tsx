@@ -62,7 +62,8 @@ describe("DomainOverviewPricingPopover", () => {
       />,
     );
 
-    expect(screen.getByText("~$0.07")).toBeInTheDocument();
+    // One overview market plus the keyword and page requests totals 6.012 cents.
+    expect(screen.getByText("~$0.06")).toBeInTheDocument();
     expect(screen.getByText("~$0.12")).toBeInTheDocument();
     expect(screen.queryByText("enter a domain")).not.toBeInTheDocument();
   });

@@ -177,7 +177,13 @@ describe("AlertsPage", () => {
 
     expect(
       screen.getByText(
-        "Notify me when a competitor ranks above example.com for a tracked keyword.",
+        "Notify me when ? starts ranking above example.com. Scope: All keywords. Markets: All markets.",
+      ),
+    ).toBeInTheDocument();
+    await userEvent.type(screen.getByRole("textbox", { name: "Competitor domain" }), "rival.test");
+    expect(
+      screen.getByText(
+        "Notify me when rival.test starts ranking above example.com. Scope: All keywords. Markets: All markets.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/your project domain/i)).not.toBeInTheDocument();

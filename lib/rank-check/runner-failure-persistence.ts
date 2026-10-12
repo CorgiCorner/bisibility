@@ -9,7 +9,6 @@ import { notifyRankCheckFailed } from "@/lib/notifications/events";
 import type { ProviderErrorCode } from "@/lib/providers/provider-error-code";
 import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 import { positiveCostCents } from "./cost";
-import { writeRankCheckProviderCostEntry } from "./provider-cost-persistence";
 import { updateRunningRankCheck, writeRankCheckAudit } from "./runner-persistence-shared";
 import type { RankCheckFailureTarget as BaseRankCheckFailureTarget } from "./runner-persistence-types";
 
@@ -53,17 +52,6 @@ export async function persistFailedRankCheckInTransaction(
   const persisted =
     existing?.rankCheck ??
     (await tx.rankCheck.create({ data: { ...data, publicId: makePublicId("check") } }));
-
-  await writeRankCheckProviderCostEntry(tx, {
-    connectionId: target.connectionId,
-    costCents: target.providerCostCents,
-    failed: true,
-    keywordId: target.keywordId,
-    provider: target.provider,
-    providerRequestId: target.providerRequestId,
-    projectId: target.projectId,
-    usage: target.providerUsage,
-  });
 
   await writeRankCheckAudit(tx, {
     action: "rank_check.failed",

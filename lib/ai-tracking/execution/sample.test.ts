@@ -1,5 +1,6 @@
 import type { CostReceipt, DispatchState } from "@/lib/ai-tracking/contract";
 import type { TrackingEnvelope } from "@/lib/ai-tracking/providers/envelope";
+import { meteringNamespace } from "@/lib/metering/runtime";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { describe, expect, it, vi } from "vitest";
 import { samplePlan } from "./fixture";
@@ -11,7 +12,12 @@ function harness(initial: DispatchState = "planned") {
   let dispatch = initial;
   let taskId: string | null = initial === "submitted" ? "provider-task" : null;
   let receipt: CostReceipt | null = taskId
-    ? { providerCostEntryId: "ledger", amountUsd: "0.0102", state: "refund_pending" }
+    ? {
+        providerCostEntryId: null,
+        operationRef: { version: 1, namespace: meteringNamespace(), operationId: "ledger" },
+        amountUsd: "0.0102",
+        state: "refund_pending",
+      }
     : null;
   let cancelled = false;
   const submit = vi.fn(
@@ -89,7 +95,12 @@ describe("durable tracking execution", () => {
       "claimed",
       "submission_started",
       undefined,
-      { providerCostEntryId: "ledger", amountUsd: null, state: "unknown" },
+      {
+        providerCostEntryId: null,
+        operationRef: { version: 1, namespace: meteringNamespace(), operationId: "ledger" },
+        amountUsd: null,
+        state: "unknown",
+      },
     );
   });
   it("ambiguous response becomes submission_unknown and never replays POST", async () => {
@@ -118,7 +129,12 @@ describe("durable tracking execution", () => {
     expect(await executeTrackingSample(test.ports, "project", "sample")).toBe("terminal");
     expect(test.ports.settle).toHaveBeenCalledWith(
       test.plan,
-      { providerCostEntryId: "ledger", amountUsd: "0.0032", state: "derived" },
+      {
+        providerCostEntryId: null,
+        operationRef: { version: 1, namespace: meteringNamespace(), operationId: "ledger" },
+        amountUsd: "0.0032",
+        state: "derived",
+      },
       false,
       "provider-task",
     );
@@ -155,7 +171,12 @@ describe("durable tracking execution", () => {
         test.plan,
         expect.objectContaining({
           measurement: "unavailable",
-          receipt: { providerCostEntryId: "ledger", amountUsd: "0", state: "confirmed" },
+          receipt: {
+            providerCostEntryId: null,
+            operationRef: { version: 1, namespace: meteringNamespace(), operationId: "ledger" },
+            amountUsd: "0",
+            state: "confirmed",
+          },
         }),
       );
       expect(test.submit).not.toHaveBeenCalled();
@@ -186,7 +207,13 @@ describe("durable tracking execution", () => {
       test.plan,
       expect.objectContaining({
         measurement: "unavailable",
-        receipt: { providerCostEntryId: null, amountUsd: "0", state: "confirmed" },
+        receipt: {
+          noDispatch: true,
+          providerCostEntryId: null,
+          operationRef: null,
+          amountUsd: "0",
+          state: "confirmed",
+        },
       }),
     );
     expect(test.submit).not.toHaveBeenCalled();
@@ -216,7 +243,8 @@ describe("durable tracking execution", () => {
     const retained = await test.ports.load("project", "sample");
     expect(retained?.providerTaskId).toBe("provider-task");
     expect(retained?.receipt).toEqual({
-      providerCostEntryId: "ledger",
+      providerCostEntryId: null,
+      operationRef: { version: 1, namespace: meteringNamespace(), operationId: "ledger" },
       amountUsd: "0.0102",
       state: "refund_pending",
     });

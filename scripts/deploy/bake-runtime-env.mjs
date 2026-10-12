@@ -9,7 +9,6 @@ export const bakedRuntimeEnvKeys = [
   "APP_REVISION",
   "APP_VERSION",
   "METERING_NAMESPACE",
-  "METERING_SHADOW",
   "AUDIT_IP_HMAC_SECRET",
   "AUDIT_RETENTION_DAYS",
   "DATABASE_URL",

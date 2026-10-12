@@ -1,10 +1,14 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
+import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { ProviderCredential } from "@/lib/provider-usage/surface";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import type { ProviderCredentials } from "./types";
 import type { ProviderUsageReceipt } from "./usage";
 
 export type DeploymentExecutionInput = {
+  /** Shared logical-call consent, applied to the frozen customer price before each dispatch. */
+  costLimit?: RequestCostLimit;
+  maxCostCents?: number;
   attribution: ProviderRequestAttribution;
   connectionId: string;
   credential?: ProviderCredential;

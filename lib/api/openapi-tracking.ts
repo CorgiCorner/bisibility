@@ -36,13 +36,41 @@ const summaries: Record<keyof typeof aiTrackingPolicies, string> = {
 const json = (schema: object) => ({ "application/json": { schema } });
 const problem = (description: string) => ({ description, content: json(ref("Problem")) });
 
+function withComponentReferences(value: unknown, operationId: string): unknown {
+  if (Array.isArray(value)) return value.map((item) => withComponentReferences(item, operationId));
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [
+      key,
+      key === "$ref" && typeof item === "string" && item.startsWith("#/definitions/")
+        ? `#/components/schemas/${operationId}_${item.slice("#/definitions/".length)}`
+        : withComponentReferences(item, operationId),
+    ]),
+  );
+}
+
+/** Preserve recursive input definitions when moving MCP schemas into an OpenAPI document. */
+export function aiTrackingSchemaComponents(): Record<string, object> {
+  return Object.fromEntries(
+    Object.entries(aiTrackingSchemas()).flatMap(([operationId, input]) =>
+      Object.entries((input.definitions ?? {}) as Record<string, object>).map(([name, schema]) => [
+        `${operationId}_${name}`,
+        withComponentReferences(schema, operationId) as object,
+      ]),
+    ),
+  );
+}
+
 export function aiTrackingPaths() {
   const inputs = aiTrackingSchemas();
   const paths: Record<string, Record<string, object>> = {};
   for (const [name, operation] of Object.entries(aiTrackingPolicies)) {
     const operationId = name as keyof typeof inputs;
     const input = inputs[operationId];
-    const properties = { ...input.properties };
+    const properties = withComponentReferences(input.properties ?? {}, operationId) as Record<
+      string,
+      unknown
+    >;
     const parameters: object[] = [];
     for (const [field, schema] of Object.entries(properties)) {
       if (operation.path.includes(`{${field}}`)) {

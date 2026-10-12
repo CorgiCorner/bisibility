@@ -4,6 +4,7 @@ import { AgentWorkspaceLoading } from "@/components/agent-reports/AgentWorkspace
 import { PageContent } from "@/components/shell/PageContent";
 import { emptyProjectContext } from "@/lib/project-context/model";
 import messages from "@/messages/core/en/agent-workspace.json";
+import settings from "@/messages/core/en/project-settings-shell.json";
 import shared from "@/messages/core/en/shared.json";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
@@ -30,7 +31,7 @@ vi.mock("@/i18n/document-locale.server", () => ({
   resolveRegionalDocumentLocale: async () => ({ locale: "en", timeZone: "UTC" }),
 }));
 vi.mock("@/i18n/catalog-loader.server", () => ({
-  loadCoreMessages: async () => ({ ...shared, ...messages }),
+  loadCoreMessages: async () => ({ ...shared, ...messages, ...settings }),
 }));
 
 beforeEach(() => {
@@ -54,7 +55,8 @@ it.each(["empty", "populated", "loading"])(
           },
         ],
       });
-    const reference = render(<PageContent />).container.firstElementChild?.className;
+    const reference = render(<PageContent variant="section" />).container.firstElementChild
+      ?.className;
     if (!reference) throw new Error("List-page container is missing");
     const view = render(
       state === "loading" ? await AgentWorkspaceLoading({}) : await AgentReportsPage({ params }),
@@ -62,7 +64,7 @@ it.each(["empty", "populated", "loading"])(
     const root = view.container.firstElementChild;
     for (const className of reference.split(" ")) expect(root).toHaveClass(className);
     expect(root).toHaveClass("gap-5");
-    expect(root).not.toHaveClass("p-4", "m-4", "max-w-[1040px]");
+    expect(root).not.toHaveClass("p-4", "m-4", "max-w-[1040px]", "mx-auto");
     if (state === "loading") expect(root).toHaveAttribute("aria-busy", "true");
   },
 );
@@ -74,17 +76,33 @@ it("preserves the Reports read-only affordance", async () => {
   expect(screen.queryByRole("button", { name: "Save an analysis" })).not.toBeInTheDocument();
 });
 
-it("keeps the context loader in the same form container and field structure", async () => {
+it("keeps context and its loader in the canonical settings shell without nested containers", async () => {
   const settled = render(await ProjectContextPage({ params }));
   const formClasses = settled.container.firstElementChild?.className;
-  const labels = [...settled.container.querySelectorAll("label")].map((label) => label.textContent);
+  const labels = [...settled.container.querySelectorAll('label[for^="context-"]')].map(
+    (label) => label.textContent,
+  );
   const loading = render(await AgentWorkspaceLoading({ view: "context" }));
   expect(loading.container.firstElementChild?.className).toBe(formClasses);
   expect(
-    [...loading.container.querySelectorAll("label")].map((label) => label.textContent),
+    [...loading.container.querySelectorAll('label[for^="context-"]')].map(
+      (label) => label.textContent,
+    ),
   ).toEqual(labels);
   expect(loading.container.querySelectorAll("textarea:disabled")).toHaveLength(5);
-  expect(loading.container.firstElementChild).toHaveAttribute("aria-busy", "true");
+  expect(loading.container.firstElementChild).toHaveAttribute(
+    "data-settings-loading-boundary",
+    "context",
+  );
+  expect(settled.container.querySelectorAll("[data-settings-shell]")).toHaveLength(1);
+  expect(screen.getByRole("link", { name: "Project Context" })).toHaveAttribute(
+    "href",
+    `/app/${project}/context`,
+  );
+  expect(screen.getByRole("link", { name: "Project Context" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
   expect(loading.container.querySelector('[data-slot="card"]')).toHaveClass("p-5");
 });
 
@@ -104,9 +122,9 @@ it.each([
   },
 );
 
-it("preserves the original constrained detail fallback", () => {
+it("aligns the detail fallback with the report list", () => {
   const detail = render(<AgentReportLoading />);
-  expect(detail.container.firstElementChild).toHaveClass("max-w-[1040px]");
+  expect(detail.container.firstElementChild).toHaveClass("max-w-[1400px]");
   expect(detail.container.querySelectorAll('[data-slot="card"]')).toHaveLength(1);
   expect(detail.container.querySelectorAll(".h-20")).toHaveLength(3);
   expect(detail.container.querySelector('[aria-busy="true"]')).toBeInTheDocument();

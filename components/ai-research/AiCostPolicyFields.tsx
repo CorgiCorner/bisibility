@@ -1,12 +1,15 @@
 "use client";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
+import { MenuItem } from "@/components/ui/MenuItem";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import type { AiResearchCatalog } from "@/lib/ai-research/catalog-types";
+import type { AiModelCapability, AiResearchCatalog } from "@/lib/ai-research/catalog-types";
 import { LEGACY_MODELS, LEGACY_OUTPUT_TOKENS } from "@/lib/ai-research/legacy";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { Controller } from "react-hook-form";
 import type { AiResearchForm } from "./AiVisibilityFields";
+import { legacyModelOptions } from "./ai-research-presets";
 
 export function AiCostPolicyFields({
   form,
@@ -101,5 +104,99 @@ export function AiCostPolicyFields({
         />
       </label>
     </>
+  );
+}
+
+export function AiModelSelect({
+  catalog,
+  actual,
+  disabled,
+  index,
+  models,
+  onChange,
+}: Readonly<{
+  catalog?: AiResearchCatalog;
+  actual: boolean;
+  disabled: boolean;
+  index: number;
+  models: string[];
+  onChange: (value: string) => void;
+}>) {
+  const t = useTranslations("projectAiResearch");
+  const [showUnavailable, setShowUnavailable] = useState(false);
+  const value = models[index] ?? "";
+  const other = models[1 - index];
+  function reason(model: AiModelCapability) {
+    if (model.id === other) return t("modelAlreadySelected");
+    if (actual) {
+      if (!catalog?.actualCostAvailable) return t("modelNeedsOwnAccount");
+      return model.actualCostEnabled ? undefined : t("modelPricingUnavailable");
+    }
+    if (!model.admissionEnabled && model.actualCostEnabled) return t("modelNeedsActualPayment");
+    if (!model.priceAvailable) return t("modelPricingUnavailable");
+    if (!model.admissionEnabled) return t("modelUnavailable");
+    return undefined;
+  }
+  const presetIds = new Set<string>(legacyModelOptions.map((model) => model.value));
+  const live = [...new Map((catalog?.models ?? []).map((model) => [model.id, model])).values()]
+    .filter((model) => !presetIds.has(model.id))
+    .map((model) => {
+      const help = reason(model);
+      return {
+        label: model.label,
+        ariaLabel: model.label,
+        value: model.id,
+        secondary: help ?? (model.reasoning ? t("reasoningModel") : undefined),
+        disabled: Boolean(help),
+        tooltip: help,
+        searchText: model.id,
+      };
+    });
+  const unavailable = live.filter((model) => model.disabled);
+  return (
+    <MenuSelect
+      ariaLabel={t(index === 0 ? "firstModel" : "secondModel")}
+      size="input"
+      searchable
+      matchTriggerWidth
+      disabled={disabled}
+      value={value}
+      onChange={onChange}
+      groups={[
+        {
+          id: "existing-preset",
+          label: t("legacyPreset"),
+          options: [
+            ...(index ? [{ label: t("noSecondModel"), value: "" }] : []),
+            ...legacyModelOptions.map((model) => ({
+              ...model,
+              disabled: other === model.value,
+              tooltip: other === model.value ? t("modelAlreadySelected") : undefined,
+            })),
+          ],
+        },
+        {
+          id: "live-catalog",
+          label: t("liveCatalog"),
+          options: live.filter((model) => !model.disabled),
+        },
+        {
+          id: "unavailable-models",
+          label: t("unavailableModels"),
+          options: unavailable.filter((model) => showUnavailable || model.value === value),
+        },
+      ]}
+      menuFooter={
+        unavailable.length ? (
+          <MenuItem
+            role="menuitemcheckbox"
+            aria-checked={showUnavailable}
+            onClick={() => setShowUnavailable((current) => !current)}
+          >
+            {t("showUnavailableModels")}
+          </MenuItem>
+        ) : undefined
+      }
+    />
   );
 }

@@ -1,19 +1,22 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
-import { beginUsageEntry } from "@/lib/metering/entry-sync";
+import {
+  BudgetExhaustedError,
+  ProviderAllocationExhaustedError,
+} from "@/lib/metering/admission-errors";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import type { ProviderRequest } from "@usagekit/providers";
 import { type OwnAttemptGrant, ownAdmission } from "./admission-extension";
 import { type ByokEvidenceInput, captureByokEvidence } from "./byok-evidence";
-import { recordProviderUsage } from "./recorder";
 
 /** The whole native POST taskset owns one database commit and one possible-send fence. */
 export async function beginProviderTaskset(
   db: PrismaClient,
-  inputs: readonly (ByokEvidenceInput & { keywordId: string })[],
+  inputs: readonly (ByokEvidenceInput & { keywordId: string; providerRequest?: ProviderRequest })[],
 ) {
-  const identities = inputs.map((input) => ({
+  const identities = structuredClone(inputs).map((input) => ({
     input,
     id: createHash("sha256")
       .update(
@@ -28,7 +31,7 @@ export async function beginProviderTaskset(
   const grants = await db
     .$transaction(async (tx) => {
       for (const { input, id } of identities) {
-        const evidence = await captureByokEvidence(tx, input, id);
+        await captureByokEvidence(tx, input, id);
         const query = {
           select: { id: true },
           where: {
@@ -39,22 +42,12 @@ export async function beginProviderTaskset(
             id: { not: id },
           },
         };
-        const unresolved =
-          (await tx.providerCostEntry.findFirst(query)) ??
-          (await tx.meteringUsageEvidence.findFirst({
-            ...query,
-            where: { ...query.where, discarded: false },
-          }));
+        const unresolved = await tx.meteringUsageEvidence.findFirst({
+          ...query,
+          where: { ...query.where, discarded: false },
+        });
         if (unresolved)
           throw new ProviderUsagePersistenceError({ phase: "admission", attemptId: unresolved.id });
-        await recordProviderUsage(tx, {
-          ...input,
-          id,
-          createdAt: evidence.createdAt,
-          costCents: 0,
-          failed: false,
-          measurementStatus: "unknown",
-        });
       }
       return ownAdmission.reserve(
         tx,
@@ -62,18 +55,24 @@ export async function beginProviderTaskset(
           id,
           queued: true,
           credentialVersion: input.credentialVersion ?? null,
+          ...(input.providerRequest ? { providerRequest: input.providerRequest } : {}),
+          attribution: {
+            tag: input.attribution.tag,
+            trigger: input.attribution.context.trigger,
+            keywordId: input.keywordId,
+          },
         })),
       );
     })
     .catch((cause) => {
       if (
         cause instanceof DeploymentAdmissionExhaustedError ||
+        cause instanceof BudgetExhaustedError ||
+        cause instanceof ProviderAllocationExhaustedError ||
         cause instanceof ProviderUsagePersistenceError
       )
         throw cause;
       throw new ProviderUsagePersistenceError({ cause, phase: "admission" });
     });
-  for (const { input, id } of identities)
-    await beginUsageEntry(id, input.estimate ?? { cents: "0", units: "1" }, true);
   return { identities, grants: grants as OwnAttemptGrant[] };
 }

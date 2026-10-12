@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.31.0] - 2026-10-12
+
+### Changed
+
+- **Breaking:** Unified paid-call accounting with project and connection budgets, retained receipts and unknown-cost gates. Follow the documented upgrade and rollback steps.
+
+- Estimates use request-specific catalog prices and custom rates across research, rank checks, schedules and queues, with frozen history windows.
+
+- Provider settings and usage views share compact, accessible controls, scoped details and saved currency and precision choices, with clearer navigation and documentation.
+
+### Fixed
+
+- Fixed provider edits, budget errors, usage privacy and totals, keyboard focus and layout; drafts survive outages and uncertain saves stay blocked.
+
+- Fixed API response envelopes and validation, including partial backlink history and recursive OpenAPI definitions.
+
 ## [0.30.0] - 2026-10-09
 
 ### Added

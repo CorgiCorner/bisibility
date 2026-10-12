@@ -3,6 +3,11 @@ import { payloadHash } from "@/lib/ai-tracking/identity";
 import type { SuggestionGenerationPreview } from "@/lib/ai-tracking/suggestions/generation-schema";
 import { requirePublicId } from "@/lib/db/public-id-resources";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
+import {
+  correctCanonicalUsage,
+  seedCanonicalUsage,
+} from "@/lib/metering/canonical-postgres.test-fixture";
+import { canonicalFixture } from "@/lib/metering/canonical-query.test-fixture";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { isolatedTrackingDatabase, trackingProject } from "./fixtures.postgres-test-support";
 
@@ -126,7 +131,7 @@ describe("durable generation data", () => {
   it("rejects foreign receipts and retains bounded result, unknown barrier and edited provenance", async () => {
     const row = (await start("paid")).row;
     await claimSuggestionGeneration(a.project.id, row.id, row.attemptId);
-    const foreign = await db.client.providerCostEntry.create({
+    const foreign = await canonicalFixture(db.client).create({
       data: {
         projectId: b.project.id,
         connectionId: b.connection.id,
@@ -135,12 +140,6 @@ describe("durable generation data", () => {
         measurementStatus: "unknown",
       },
     });
-    await expect(
-      db.client.aiTrackingSuggestionGeneration.update({
-        where: { id: row.id },
-        data: { providerCostEntryId: foreign.id },
-      }),
-    ).rejects.toThrow();
     await expect(
       recordGenerationUsageTag(a.project.id, row.id, {
         attemptId: row.attemptId,
@@ -155,16 +154,22 @@ describe("durable generation data", () => {
         },
       }),
     ).rejects.toThrow("receipt");
-    const ledger = await db.client.providerCostEntry.create({
-      data: {
+    const ledger = { id: randomUUID() };
+    await seedCanonicalUsage(
+      db.client,
+      {
+        id: ledger.id,
         projectId: a.project.id,
         connectionId: a.connection.id,
         feature: "ai_tracking",
-        costCents: 0,
+        costCents: "0",
         measurementStatus: "unknown",
-        correlationId: row.publicId,
+        tag: "fixture-usage",
+        correlationId: row.attemptId,
+        source: "api",
       },
-    });
+      { principal: a.project.ownerId, providerCredentialVersion: "v1" },
+    );
     const receipt: GenerationReceipt = {
       providerCostEntryId: ledger.id,
       connectionId: a.connection.id,
@@ -179,7 +184,7 @@ describe("durable generation data", () => {
         usageTag: "fixture-usage",
         receipt,
       }),
-    ).toMatchObject({ state: "submission_started", providerCostEntryId: ledger.id });
+    ).toMatchObject({ state: "submission_started" });
     expect(
       await recordGenerationUsageTag(a.project.id, row.id, {
         attemptId: row.attemptId,
@@ -287,9 +292,9 @@ describe("durable generation data", () => {
         data: { provenance: {} },
       }),
     ).rejects.toThrow("immutable");
-    await db.client.providerCostEntry.update({
-      where: { id: ledger.id },
-      data: { measurementStatus: "recorded", costCents: "0.1" },
+    await correctCanonicalUsage(db.client, ledger.id, {
+      measurementStatus: "recorded",
+      costCents: "0.1",
     });
     expect((await start("settled-new-key")).created).toBe(true);
   });

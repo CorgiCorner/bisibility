@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { makePublicId } from "@/lib/db/public-id-resources";
 import { PrismaClient } from "@/lib/generated/prisma/client";
+import { ensureProjectSpendingBudget } from "@/lib/metering/project-budget-bootstrap";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Client } from "pg";
 
@@ -69,6 +70,9 @@ export async function trackingProject(client: PrismaClient, suffix: string) {
   const project = await client.project.create({
     data: { publicId: makePublicId("prj"), name: suffix, ownerId: user.id },
   });
+  await client.$transaction((tx) =>
+    ensureProjectSpendingBudget(tx, process.env.METERING_NAMESPACE ?? "default", project.id),
+  );
   await client.membership.create({
     data: { publicId: makePublicId("mbr"), projectId: project.id, userId: user.id, role: "owner" },
   });

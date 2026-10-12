@@ -6,8 +6,8 @@ import {
   requireProjectScope,
   revalidateBudgetViews,
 } from "@/lib/actions/_shared";
-import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { setProjectSpendingLimit } from "@/lib/metering/project-spending-limit";
 import { z } from "zod";
 
 const MAX_BUDGET_CAP_CENTS = 100_000_000;
@@ -25,30 +25,14 @@ export async function updateProjectBudgetAction(input: unknown) {
   const data = parseActionInput(updateProjectBudgetSchema, input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "manage", data.projectId, { type: "project" });
-  const before = await prisma.project.findUnique({
-    select: { budgetCapCents: true },
-    where: { id: project.id },
-  });
-  if (!before) {
-    throw new Error("Project not found.");
-  }
-
-  const updated = await prisma.project.update({
-    data: { budgetCapCents: data.capCents },
-    select: { budgetCapCents: true },
-    where: { id: project.id },
-  });
-
-  await writeAudit({
-    action: "settings.budget_updated",
-    actorId: actor.id,
-    after: { capCents: updated.budgetCapCents },
-    before: { capCents: before.budgetCapCents },
-    projectId: project.id,
-    targetId: requiredPublicAuditId(project.publicId, "prj", "Project"),
-    targetType: "project",
-  });
+  const updated = await prisma.$transaction((tx) =>
+    setProjectSpendingLimit(tx, {
+      actor,
+      projectPublicId: project.publicId,
+      capCents: data.capCents,
+    }),
+  );
   revalidateBudgetViews();
 
-  return { capCents: updated.budgetCapCents };
+  return updated;
 }

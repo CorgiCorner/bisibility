@@ -31,7 +31,7 @@ export async function projectContextSuggestions(
       requiresAcceptance: true,
       costUsd: "0",
       limitations: [
-        "Add project context or enter prompts manually. No model generation or paid baseline is started.",
+        "Add project context or enter prompts manually. Saving prompts does not start an analysis.",
       ],
     };
   const drafts = contextSuggestions({
@@ -50,7 +50,7 @@ export async function projectContextSuggestions(
     costUsd: "0",
     limitations: [
       "Templates are hypotheses, not measured demand or provider datasets",
-      "No model generation was requested; review and edit before acceptance",
+      "Review and edit these drafts before saving. Saving prompts does not start an analysis.",
     ],
   };
 }

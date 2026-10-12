@@ -100,6 +100,13 @@
     "actualReplayHint": "完了済みリクエストを同じリクエストIDで繰り返すと、プロバイダーを再度呼び出さずに保存済みの結果を再表示します。同じプロンプトでも新しいリクエストには追加料金が発生する場合があります。保存済みレポートは引き続き利用できます。",
     "requestedModel": "リクエストしたモデル",
     "actualModel": "実際のモデル",
-    "unknownModel": "不明なモデル"
+    "unknownModel": "不明なモデル",
+    "showUnavailableModels": "利用できないモデルを表示",
+    "unavailableModels": "利用できないモデル",
+    "modelAlreadySelected": "もう一方のモデルとして選択済みです。",
+    "modelNeedsOwnAccount": "連携設定で自分のプロバイダーアカウントを接続し、実際のプロバイダー費用を選択してください。",
+    "modelNeedsActualPayment": "自分のプロバイダーアカウントでこのモデルを使うには、実際のプロバイダー費用を選択してください。",
+    "modelPricingUnavailable": "このモデルの現在の料金を確認できません。後でもう一度お試しください。",
+    "modelUnavailable": "このモデルはまだプロンプト分析に対応していません。"
   }
 }

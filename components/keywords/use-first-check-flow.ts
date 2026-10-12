@@ -167,6 +167,20 @@ export function useFirstCheckFlow({
         );
         return;
       }
+      if (outcome === "failed") {
+        setModal((prev) =>
+          prev
+            ? {
+                ...prev,
+                step: "failed",
+                rankCheckId: keywordRunCheckId(result),
+                errorCode: "errorCode" in result ? result.errorCode : null,
+              }
+            : prev,
+        );
+        refresh();
+        return;
+      }
       if (outcome === "completed") {
         setModal((prev) =>
           prev

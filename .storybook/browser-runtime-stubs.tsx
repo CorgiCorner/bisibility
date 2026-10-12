@@ -1,10 +1,28 @@
 import { usePathname as useStorybookPathname } from "@storybook/nextjs-vite/navigation.mock";
+import type { ProviderCommand } from "@usagekit/views";
 import type { ReactNode } from "react";
 import React from "react";
 
 export { analyzeAiResearchAction } from "./ai-research-action-stubs";
 export { competitorDetailsFormSchema } from "./competitor-action-stubs";
 export { previewKeywordDeletion, refreshKeywordViewsAfterImport } from "./keyword-action-stubs";
+export { loadMeteringAdminPageAction } from "./metering-admin-action-stubs";
+
+export async function getProviderUiBindingAction() {
+  return null;
+}
+
+export async function readProviderUiAction() {
+  return { outcome: "forbidden" as const };
+}
+
+export async function executeProviderUiAction(_projectId: string, command: ProviderCommand) {
+  return { outcome: "forbidden" as const, commandId: command.commandId };
+}
+
+export async function reconcileProviderUiAction(_projectId: string, command: ProviderCommand) {
+  return { outcome: "forbidden" as const, commandId: command.commandId };
+}
 
 type LinkProps = {
   children?: ReactNode;

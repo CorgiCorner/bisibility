@@ -48,12 +48,16 @@ export function ImportStepper({ step }: Readonly<{ step: number }>) {
                 className="grid h-[26px] w-[26px] place-items-center rounded-full border-[1.5px] font-sans tabular-nums text-[11px] font-semibold"
                 style={{
                   backgroundColor: current
-                    ? "var(--accent)"
+                    ? "var(--accent-solid)"
                     : completed
                       ? "var(--accent-soft)"
                       : "var(--bg-sunken)",
-                  borderColor: current ? "var(--accent)" : "transparent",
-                  color: current ? "#fff" : completed ? "var(--accent)" : "var(--fg-muted)",
+                  borderColor: current ? "var(--accent-solid)" : "transparent",
+                  color: current
+                    ? "var(--accent-on-solid)"
+                    : completed
+                      ? "var(--accent-text)"
+                      : "var(--fg-muted)",
                 }}
               >
                 {completed ? <Check aria-hidden size={15} weight="regular" /> : number}

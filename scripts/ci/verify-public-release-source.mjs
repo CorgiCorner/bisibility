@@ -3,6 +3,35 @@ import { fileURLToPath } from "node:url";
 
 const workflow = "ci.yml";
 const pollIntervalMs = 60_000;
+export const nativePublicCiJobs = Object.freeze([
+  "static", "compose-contract", "postgres-migration-contract", "build",
+  "test (1)", "test (2)", "test (3)", "test (4)", "coverage", "ci-ok",
+]);
+
+export function assertNativePublicCi(ci, { sha, ref }) {
+  const run = ci?.run;
+  if (ci?.state !== "success" || !Number.isSafeInteger(run?.id) || run.id < 1 ||
+    !Number.isSafeInteger(run.run_attempt) || run.run_attempt < 1 ||
+    run.head_sha !== sha || run.head_branch !== ref || run.event !== "push" ||
+    run.path !== ".github/workflows/ci.yml" || run.status !== "completed" ||
+    run.conclusion !== "success" || !Array.isArray(ci.jobs)) {
+    throw new Error("Native public CI identity is incomplete or unsuccessful.");
+  }
+  const indexed = new Map();
+  for (const job of ci.jobs) {
+    if (indexed.has(job.name)) throw new Error(`Duplicate native public CI job: ${job.name}.`);
+    indexed.set(job.name, job);
+  }
+  for (const name of nativePublicCiJobs) {
+    const job = indexed.get(name);
+    if (!job || !Number.isSafeInteger(job.id) || job.id < 1 ||
+      job.head_sha !== sha || job.run_attempt !== run.run_attempt ||
+      job.status !== "completed" || job.conclusion !== "success") {
+      throw new Error(`Native public CI job has not passed for the exact attempt: ${name}.`);
+    }
+  }
+  return ci;
+}
 
 function pause(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -68,13 +97,16 @@ export async function inspectPublicCi(api, sha, ref = "main") {
   if (run.conclusion !== "success") return { run, state: "failed" };
 
   if (!Number.isSafeInteger(run.run_attempt) || run.run_attempt < 1) return { run, state: "failed" };
-  const jobs = await api(`/actions/runs/${run.id}/attempts/${run.run_attempt}/jobs?per_page=100`);
-  const gate = (jobs.jobs ?? []).find((job) => job.name === "ci-ok");
-  if (!gate || gate.head_sha !== sha || gate.run_attempt !== run.run_attempt ||
-    gate.status !== "completed" || gate.conclusion !== "success") {
-    return { gate, run, state: "failed" };
+  const response = await api(`/actions/runs/${run.id}/attempts/${run.run_attempt}/jobs?per_page=100`);
+  const jobs = response.jobs;
+  if (!Array.isArray(jobs) || response.total_count !== jobs.length) return { run, state: "failed" };
+  const gate = jobs.find((job) => job.name === "ci-ok");
+  const ci = { gate, jobs, run, state: "success" };
+  try {
+    return assertNativePublicCi(ci, { sha, ref });
+  } catch {
+    return { gate, jobs, run, state: "failed" };
   }
-  return { gate, run, state: "success" };
 }
 
 export async function verifyPublicReleaseSource({

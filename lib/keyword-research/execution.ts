@@ -73,7 +73,7 @@ export async function estimateKeywordResearch(input: {
             }),
           );
       const cached = Boolean(cachedEntry);
-      return { cached, costCents: cached ? 0 : sourceEstimate({ ...input, source }), source };
+      return { cached, costCents: cached ? 0 : await sourceEstimate({ ...input, source }), source };
     }),
   );
   return {

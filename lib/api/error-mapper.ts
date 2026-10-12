@@ -1,10 +1,13 @@
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import {
+  BudgetExhaustedError,
+  ProviderAllocationExhaustedError,
+} from "@/lib/metering/admission-errors";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { ProjectDomainRequiredError } from "@/lib/projects/tracked-domain";
 import type { AdmissionErrorDetails } from "@/lib/providers/admission-error-details";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
-import { BudgetExhaustedError } from "@/lib/rank-check/budget";
 import { ProviderChainError } from "@/lib/rank-check/provider-chain-error";
 import { RankCheckRunnerError } from "@/lib/rank-check/runner-error";
 import {
@@ -23,6 +26,16 @@ export function errorFromUnknown(
   admissionDetails?: AdmissionErrorDetails | null,
 ) {
   const instance = `urn:bisibility:api:v1:${url.pathname}`;
+  if (error instanceof ProviderAllocationExhaustedError)
+    return budgetExhaustedResponse(
+      { headers, instance },
+      {
+        surface: error.surface,
+        scope: "connection",
+        resetAt: error.resetAt,
+        reason: error.budgetReason,
+      },
+    );
   if (error instanceof DeploymentAdmissionExhaustedError) {
     if (error.reason === "budget") {
       return budgetExhaustedResponse(
@@ -30,6 +43,8 @@ export function errorFromUnknown(
         {
           detail: "Deployment spending budget is exhausted for this month.",
           scope: error.scope,
+          reason: error.budgetReason,
+          resetAt: error.resetAt,
           surface: error.surface ?? "programmatic",
         },
       );
@@ -97,7 +112,13 @@ export function errorFromUnknown(
   }
   if (error instanceof LaunchRankCheckRunError) {
     if (error.code === "budget_exhausted") {
-      return budgetExhaustedResponse({ headers, instance }, { surface: "programmatic" });
+      return budgetExhaustedResponse(
+        { headers, instance },
+        {
+          surface: "programmatic",
+          reason: error.budgetReason,
+        },
+      );
     }
     if (error.code === "cost_limit_exceeded") {
       return errorResponse("cost_limit_exceeded", error.message, 422, {
@@ -109,7 +130,15 @@ export function errorFromUnknown(
     return errorResponse("provider_unavailable", error.message, 409, { headers, instance });
   }
   if (error instanceof BudgetExhaustedError) {
-    return errorResponse("budget_exhausted", error.message, 429, { headers, instance });
+    return budgetExhaustedResponse(
+      { headers, instance },
+      {
+        detail: error.message,
+        reason: error.budget.reason,
+        resetAt: error.budget.valuationIncomplete ? null : error.budget.resetAt,
+        surface: "programmatic",
+      },
+    );
   }
   if (error instanceof ProviderRateLimitedError) {
     const retryAfter = String(error.retryAfterSeconds());

@@ -175,15 +175,9 @@ function interactionState(className: ParsedClass) {
 
 function contrastFloor(
   _scheme: ColorSchemeName,
-  foregroundClass: string,
-  backgroundToken: ColorTokenName,
+  _foregroundClass: string,
+  _backgroundToken: ColorTokenName,
 ) {
-  if (
-    (foregroundClass === "text-primary-contrast" || foregroundClass === "text-accent-on-solid") &&
-    (backgroundToken === "accent-solid" || backgroundToken === "accent-solid-hover")
-  ) {
-    return 3;
-  }
   return 4.5;
 }
 
@@ -308,20 +302,18 @@ function allPairsForScheme(scheme: ColorSchemeName): Pair[] {
       });
     }
 
-    // --border-control draws every interactive edge: inputs, buttons, chips, switches.
-    // Both schemes use operator-chosen control edges below the WCAG 1.4.11 3:1 floor.
-    // Dark #616060 was chosen visually; its narrower floor is asserted rather than
-    // skipped so any further regression still fails. Light #C5BFB4 on the requested
-    // #EBE8E0 section band has a 1.49:1 floor under the same palette exception.
-    // --bg-inset is excluded because it is a momentary :active fill and a meter track, never a resting surface under a bordered control.
-    if (surface !== "bg-inset") {
-      pairs.push({
-        background: token(scheme, surface),
-        description: `${scheme}: --border-control against --${surface}`,
-        foreground: token(scheme, "border-control"),
-        minimum: scheme === "dark" ? 2.8 : 1.49,
-      });
-    }
+    pairs.push({
+      background: token(scheme, surface),
+      description: `${scheme}: --border-control against --${surface}`,
+      foreground: token(scheme, "border-control"),
+      minimum: 3,
+    });
+    pairs.push({
+      background: token(scheme, surface),
+      description: `${scheme}: --accent-solid focus against --${surface}`,
+      foreground: token(scheme, "accent-solid"),
+      minimum: 3,
+    });
 
     for (const status of statusTintTokens) {
       pairs.push({
@@ -358,14 +350,22 @@ function allPairsForScheme(scheme: ColorSchemeName): Pair[] {
     }
   }
 
+  for (const surface of ["button-secondary-bg", "button-secondary-hover-bg"] as const) {
+    pairs.push({
+      background: token(scheme, surface),
+      description: `${scheme}: secondary button label on --${surface}`,
+      foreground: token(scheme, "fg"),
+      minimum: 4.5,
+    });
+  }
+
   const primaryButtonForeground = primaryButtonForegroundTokens[scheme];
   for (const buttonSurface of ["accent-solid", "accent-solid-hover"] as const) {
     pairs.push({
       background: token(scheme, buttonSurface),
       description: `${scheme}: --${primaryButtonForeground} primary text on --${buttonSurface}`,
       foreground: token(scheme, primaryButtonForeground),
-      // Cream-on-brand is an operator-chosen pair at ~3.25:1 (3:1 UI floor, below text AA).
-      minimum: 3,
+      minimum: 4.5,
     });
   }
 
@@ -421,56 +421,63 @@ describe("theme contrast contract", () => {
     });
   });
 
-  it("pins the primary button pair and leaves the brand accent untouched", () => {
-    const ratioFor = (scheme: ColorSchemeName, surface: ColorTokenName) => {
-      const foreground = token(scheme, primaryButtonForegroundTokens[scheme]);
-      return Number(contrast(foreground, token(scheme, surface)).toFixed(2));
-    };
+  it.each(["light", "dark"] as const)(
+    "keeps neutral workspace and interaction roles achromatic in %s mode",
+    (scheme) => {
+      const roles = [
+        "bg",
+        "bg-elev",
+        "bg-sidebar",
+        "bg-sunken",
+        "bg-band",
+        "bg-inset",
+        "fg",
+        "fg-muted",
+        "border",
+        "border-soft",
+        "border-control",
+        "nav-active",
+        "accent",
+        "accent-hover",
+        "accent-text",
+        "accent-soft",
+        "accent-solid",
+        "accent-solid-hover",
+        "accent-on-solid",
+        "button-secondary-bg",
+        "button-secondary-hover-bg",
+      ] as const;
+      for (const role of roles) {
+        const [red, green, blue] = token(scheme, role);
+        expect(red, `${scheme}: --${role}`).toBe(green);
+        expect(green, `${scheme}: --${role}`).toBe(blue);
+      }
+    },
+  );
 
-    expect(primaryButtonForegroundTokens).toEqual({
-      light: "accent-on-solid",
-      dark: "accent-on-solid",
-    });
+  it.each(["light", "dark"] as const)(
+    "keeps navigation darker than the workspace and cards in %s mode",
+    (scheme) => {
+      expect(luminance(token(scheme, "bg-sidebar"))).toBeLessThan(luminance(token(scheme, "bg")));
+      expect(luminance(token(scheme, "bg"))).toBeLessThan(luminance(token(scheme, "bg-elev")));
+    },
+  );
 
-    // Cream-on-brand is the operator pair in both schemes; dark --accent stays the peach.
-    expect(colorSchemes.light.accent).toBe("#F1511C");
-    expect(colorSchemes.dark.accent).toBe("#E08A6A");
-
-    expect(colorSchemes.light).toMatchObject({
-      "accent-solid": "#F1511C",
-      "accent-solid-hover": "#F0450F",
-      "accent-on-solid": "#FFF3EE",
-    });
-    expect(ratioFor("light", "accent-solid")).toBe(3.25);
-    expect(ratioFor("light", "accent-solid-hover")).toBe(3.47);
-
-    expect(colorSchemes.dark).toMatchObject({
-      bg: "#0F0C07",
-      "bg-elev": "#191919",
-      "bg-band": "#141414",
-      "fg-muted": "#A09D95",
-      border: "#343333",
-      "border-control": "#616060",
-      "accent-solid": "#F1511C",
-      "accent-solid-hover": "#F0450F",
-      "accent-on-solid": "#FFF3EE",
-    });
-    expect(ratioFor("dark", "accent-solid")).toBe(3.25);
-    expect(ratioFor("dark", "accent-solid-hover")).toBe(3.47);
-  });
-
-  it("keeps onboarding done and active glyphs distinct in both themes", () => {
-    const ratioFor = (
-      scheme: ColorSchemeName,
-      foreground: ColorTokenName,
-      background: ColorTokenName,
-    ) => Number(contrast(token(scheme, foreground), token(scheme, background)).toFixed(2));
-
-    expect(ratioFor("light", "accent-on-solid", "green-text")).toBe(5.89);
-    expect(ratioFor("dark", "bg", "green-text")).toBe(9.87);
-    expect(ratioFor("light", "accent-on-solid", "accent-solid")).toBe(3.25);
-    expect(ratioFor("dark", "accent-on-solid", "accent-solid")).toBe(3.25);
-  });
+  it.each(["light", "dark"] as const)(
+    "keeps primary and completed onboarding glyphs readable in %s mode",
+    (scheme) => {
+      expect(
+        contrast(token(scheme, "accent-on-solid"), token(scheme, "accent-solid")),
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrast(token(scheme, "accent-on-solid"), token(scheme, "accent-solid-hover")),
+      ).toBeGreaterThanOrEqual(4.5);
+      const doneForeground = scheme === "light" ? "accent-on-solid" : "bg";
+      expect(
+        contrast(token(scheme, doneForeground), token(scheme, "green-text")),
+      ).toBeGreaterThanOrEqual(4.5);
+    },
+  );
 
   it("keeps muted as the only named foreground tier", () => {
     expect(colorTokenNames.filter((name) => name.startsWith("fg-"))).toEqual(["fg-muted"]);
@@ -506,25 +513,14 @@ describe("theme contrast contract", () => {
     },
   );
 
-  it("detects an inaccessible accent source pairing", () => {
-    expect(sourcePairFailures("fixture.tsx", '<span className="bg-accent text-white" />')).toEqual([
-      "fixture.tsx:1: text-white on bg-accent (light) is 3.54:1, below 4.5:1",
-      "fixture.tsx:1: text-white on bg-accent (dark) is 2.62:1, below 4.5:1",
-    ]);
+  it("detects an inaccessible static colored surface pairing", () => {
+    const failures = sourcePairFailures("fixture.tsx", '<span className="bg-red text-red" />');
+    expect(failures).toContain("fixture.tsx:1: text-red on bg-red (light) is 1.00:1, below 4.5:1");
+    expect(failures).toContain("fixture.tsx:1: text-red on bg-red (dark) is 1.00:1, below 4.5:1");
   });
 
   it("detects inaccessible status text on ordinary page backgrounds", () => {
-    expect(
-      sourcePairFailures(
-        "fixture.tsx",
-        '<><span className="text-red" /><span className="text-blue" /></>',
-      ),
-    ).toEqual([
-      "fixture.tsx:1: text-red on --bg (light) is 4.31:1, below 4.5:1",
-      "fixture.tsx:1: text-red on --bg-sunken (light) is 4.16:1, below 4.5:1",
-      "fixture.tsx:1: text-blue on --bg (light) is 3.21:1, below 4.5:1",
-      "fixture.tsx:1: text-blue on --bg-elev (light) is 3.38:1, below 4.5:1",
-      "fixture.tsx:1: text-blue on --bg-sunken (light) is 3.10:1, below 4.5:1",
-    ]);
+    const failures = sourcePairFailures("fixture.tsx", '<span className="text-yellow" />');
+    expect(failures.some((failure) => failure.includes("text-yellow on --bg (light)"))).toBe(true);
   });
 });

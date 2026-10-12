@@ -55,8 +55,8 @@ describe("public cost API routes", () => {
               label: "Standard queue",
               short_label: "Standard",
               turnaround: "~5 min",
-              additional_page_cost_cents: 0.045,
-              top_100_check_cost_cents: 0.465,
+              additional_page_cost_cents: 0.06,
+              top_100_check_cost_cents: 0.6,
               unit_cost_cents: 0.06,
               unit_cost_usd: 0.0006,
             }),
@@ -93,7 +93,7 @@ describe("public cost API routes", () => {
       billing_units_per_check: 10,
       monthly_billing_units: 74400,
       monthly_checks: 7440,
-      monthly_cost_usd: 34.596,
+      monthly_cost_usd: 44.64,
       pricing_model: "flat",
       provider_id: "dataforseo",
       selected_option: expect.objectContaining({
@@ -103,7 +103,7 @@ describe("public cost API routes", () => {
         turnaround: "~5 min",
       }),
     });
-    expect(body.data.monthly_cost_cents).toBeCloseTo(3459.6);
+    expect(body.data.monthly_cost_cents).toBeCloseTo(4464);
   });
 
   it("prices the requested depth and defaults to top 100", async () => {
@@ -121,20 +121,20 @@ describe("public cost API routes", () => {
     });
   });
 
-  it("selects plans by searches and flags volume beyond public tiers", async () => {
+  it("selects the larger public plan by search volume", async () => {
     const response = await call("/cost-estimate?keywords=5000&frequency=monthly&provider=serpapi");
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body.data).toMatchObject({
       billing_units_per_check: 10,
-      exceeds_largest_plan: true,
+      exceeds_largest_plan: false,
       monthly_billing_units: 50000,
       monthly_checks: 5000,
-      monthly_cost_cents: 27500,
+      monthly_cost_cents: 72500,
       pricing_model: "plan",
       provider_id: "serpapi",
-      selected_plan: expect.objectContaining({ plan_key: "bigdata" }),
+      selected_plan: expect.objectContaining({ plan_key: "searcher" }),
     });
   });
 

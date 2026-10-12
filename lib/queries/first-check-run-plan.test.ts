@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  budgetStatus: vi.fn(),
   budgetCap: vi.fn().mockResolvedValue(5_000),
   chain: vi.fn(),
   defaults: vi.fn(),
@@ -18,10 +19,11 @@ vi.mock("@/lib/db/prisma", () => ({
     projectMarket: mocks.projectMarket,
   },
 }));
-vi.mock("@/lib/rank-check/budget", () => ({
-  monthlySpendCents: mocks.monthlySpend,
+vi.mock("@/lib/metering/project-budget-read", () => ({
   projectBudgetCapCents: mocks.budgetCap,
+  projectBudgetStatus: mocks.budgetStatus,
 }));
+vi.mock("@/lib/metering/usage-read", () => ({ monthlySpendCents: mocks.monthlySpend }));
 vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.chain,
 }));
@@ -51,6 +53,11 @@ describe("first-check run plan", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.budgetCap.mockResolvedValue(5_000);
+    mocks.budgetStatus.mockResolvedValue({
+      budget: { limit: { value: 5000n, scale: 0, unit: "budget_cents" } },
+      reserved: { value: 0n, scale: 0, unit: "budget_cents" },
+      uncertain: false,
+    });
     mocks.monthlySpend.mockResolvedValue(120);
     mocks.defaults.mockResolvedValue({ serpDepth: 100 });
     mocks.keywordCount.mockResolvedValue(2);
@@ -109,4 +116,21 @@ describe("first-check run plan", () => {
     });
     expect(plan.firstTargetEstimate).toMatchObject({ quantity: null, unknownTargets: 1 });
   });
+});
+
+it("first-check advisory includes outstanding Store reservations and uncertainty", async () => {
+  mocks.chain.mockResolvedValue([{ costPerCheckCents: null, provider: "serpapi" }]);
+  mocks.keywordFindMany.mockResolvedValue([]);
+  mocks.budgetStatus.mockResolvedValue({
+    budget: { limit: { value: 5000n, scale: 0, unit: "budget_cents" } },
+    reserved: { value: 5000n, scale: 0, unit: "budget_cents" },
+    uncertain: false,
+  });
+  expect((await buildFirstCheckRunPlan("project")).budgetExhausted).toBe(true);
+  mocks.budgetStatus.mockResolvedValue({
+    budget: { limit: null },
+    reserved: { value: 0n, scale: 0, unit: "budget_cents" },
+    uncertain: true,
+  });
+  expect((await buildFirstCheckRunPlan("project")).budgetExhausted).toBe(true);
 });

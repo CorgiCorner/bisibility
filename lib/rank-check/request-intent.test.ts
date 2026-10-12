@@ -1,3 +1,7 @@
+import { usageReadFixture } from "@/lib/metering/read.test-fixture";
+import { seedTestUsage } from "@/lib/metering/usage.test-fixture";
+import { testOwnAdmission } from "@/lib/provider-usage/byok-test-evidence";
+import { byokTestJournal } from "@/lib/provider-usage/byok-test-journal";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const checkedAt = new Date("2026-09-04T12:00:00.000Z");
@@ -103,6 +107,7 @@ vi.mock("@/lib/auth/audit", async () => ({
   writeAudit: mocks.writeAudit,
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/provider-usage/admission-extension", () => ({ ownAdmission: testOwnAdmission }));
 vi.mock("@/lib/notifications/events", () => ({
   notifyRankCheckCompleted: mocks.notifyRankCheckCompleted,
 }));
@@ -180,6 +185,8 @@ describe("single rank-check request intent", () => {
     mocks.launchSingleRankCheckRun.mockResolvedValue(run);
     mocks.prisma.$executeRaw.mockResolvedValue(1);
     mocks.prisma.$queryRaw.mockResolvedValue([]);
+    const evidence = byokTestJournal("serpapi");
+    Object.assign(mocks.prisma, { meteringUsageEvidence: evidence.table });
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.keyword.findMany.mockResolvedValue([]);
     mocks.prisma.keyword.findUnique.mockResolvedValue({
@@ -205,6 +212,7 @@ describe("single rank-check request intent", () => {
       isSample: false,
     });
     mocks.prisma.project.findUnique.mockResolvedValue({
+      ownerId: "owner_1",
       budgetCapCents: null,
       providerAllocationsInitializedAt: checkedAt,
     });
@@ -229,7 +237,12 @@ describe("single rank-check request intent", () => {
     });
     mocks.prisma.rankCheck.create.mockResolvedValue(rankCheck);
     mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
-    mocks.prisma.rankCheck.findUnique.mockResolvedValue({ trigger: "manual" });
+    mocks.prisma.rankCheck.findUnique.mockResolvedValue({
+      trigger: "manual",
+      status: "running",
+      keywordId: keyword.id,
+      provider: "serpapi",
+    });
     mocks.prisma.rankCheck.findUniqueOrThrow.mockResolvedValue(rankCheck);
     mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
     mocks.prisma.projectMarket.findMany.mockResolvedValue([{ locationId: "location_active" }]);
@@ -272,12 +285,12 @@ describe("single rank-check request intent", () => {
     mocks.evaluateKeywordAlerts.mockResolvedValue([{ id: "alert_1" }]);
     mocks.findComparablePredecessor.mockResolvedValue(null);
     mocks.notifyRankCheckCompleted.mockResolvedValue(undefined);
-    mocks.provider.fetchRank.mockResolvedValue({
-      billingUnits: 1,
-      checkedAt,
-      costCents: 1,
-      position: 3,
-      rankingUrl: null,
+    mocks.provider.fetchRank.mockImplementation(async ({ credentials }) => {
+      const observer = credentials.usageObserver;
+      const attemptId = await observer.begin({ attemptKey: "fixture" });
+      await observer.beforeDispatch?.(attemptId);
+      await observer.settle(attemptId, { costCents: 1, quantity: 1, cached: false, failed: false });
+      return { billingUnits: 1, checkedAt, costCents: 1, position: 3, rankingUrl: null };
     });
     mocks.publishOperationChanged.mockResolvedValue(undefined);
     mocks.writeAudit.mockResolvedValue(undefined);
@@ -355,6 +368,24 @@ describe("single rank-check request intent", () => {
     expect(mocks.provider.fetchRank).not.toHaveBeenCalled();
   });
 
+  it("preserves the launched run ID when inline execution has recorded a failure", async () => {
+    vi.stubEnv("SCHEDULER_DRIVER", "none");
+    vi.spyOn(await import("./runs/inline"), "runInlineRankCheck").mockRejectedValueOnce(
+      new Error("Preflight failed"),
+    );
+    mocks.prisma.rankCheckRunItem.findFirst.mockResolvedValueOnce({
+      status: "failed",
+      rankCheck: { errorCode: "provider_auth" },
+    });
+    await expect(manualRunCheckNow({ keywordId: keyword.publicId })).resolves.toEqual({
+      runId: run.publicId,
+      status: "failed",
+      errorCode: "provider_auth",
+    });
+    expect(mocks.provider.fetchRank).not.toHaveBeenCalled();
+    expect(mocks.revalidateRankCheckViews).toHaveBeenCalledWith(keyword.publicId);
+  });
+
   it("reports the inline guard's refusal as a blocked manual-run result", async () => {
     vi.stubEnv("SCHEDULER_DRIVER", "none");
     mocks.prisma.projectMarket.findMany.mockResolvedValue([]);
@@ -406,25 +437,19 @@ describe("single rank-check request intent", () => {
       }),
     );
   });
-  it("reports ledger actuals on the inline response instead of the stored final attempt", async () => {
+  it("reports Store actuals on the inline response instead of the stored final attempt", async () => {
     vi.stubEnv("SCHEDULER_DRIVER", "none");
-    mocks.prisma.$queryRaw.mockImplementation(async (query: unknown) => {
-      const text = (query as { text?: string }).text ?? "";
-      return text.includes("provider_cost_entries")
-        ? [
-            {
-              receiptCount: 3,
-              unitProvider: "serpapi",
-              providerCount: 1,
-              recordedCostCents: "1.5",
-              recordedUnits: "3",
-              scopeId: "rank_check_1",
-              unconfirmedCount: 0,
-              unmeasuredCount: 0,
-            },
-          ]
-        : [];
-    });
+    const store = await usageReadFixture();
+    await store.db.exec(
+      `CREATE TABLE rank_checks(id text,"runId" text); CREATE TABLE queued_rank_check_tasks(id text,"rankCheckId" text);`,
+    );
+    for (const costCents of [0.625, 0.625, 0.25])
+      await seedTestUsage(store.db, { costCents, usageQuantity: 1, rankCheckId: "rank_check_1" });
+    mocks.prisma.$queryRaw.mockImplementation((query: { text?: string; values: unknown[] }) =>
+      query.text?.includes("metering_operation")
+        ? store.query(query as { text: string; values: unknown[] })
+        : [],
+    );
 
     const api = await requestRankCheck(context(), {}, scopedKeyword());
     const body = await api.json();
@@ -432,5 +457,6 @@ describe("single rank-check request intent", () => {
     expect(api.status).toBe(201);
     expect(body.cost_cents).toBe(1.5);
     expect(body.usage).toEqual({ quantity: 3, status: "confirmed", unit: "operations" });
-  });
+    await store.db.close();
+  }, 15000);
 });

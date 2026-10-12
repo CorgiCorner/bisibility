@@ -9,7 +9,7 @@ import { Spinner } from "./Spinner";
 
 export const buttonXsStyle = { fontSize: "12px", minHeight: 30, padding: "4px 10px" } as const;
 
-export type ButtonVariant = "destructive" | "ghost" | "primary" | "secondary";
+export type ButtonVariant = "destructive" | "ghost" | "outline" | "primary" | "secondary";
 export type ButtonSize = "lg" | "md" | "sm" | "xs";
 export type ButtonProps = Omit<ComponentProps<"button">, "color"> & {
   asChild?: boolean;
@@ -32,6 +32,7 @@ const buttonVariants = cva(styles.root, {
     variant: {
       primary: styles.primary,
       secondary: styles.secondary,
+      outline: styles.outline,
       ghost: styles.ghost,
       destructive: styles.destructive,
     },

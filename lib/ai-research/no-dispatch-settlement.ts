@@ -1,58 +1,38 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
-import type { Prisma } from "@/lib/generated/prisma/client";
-import { syncUsageEntry } from "@/lib/metering/entry-sync";
+import { Prisma } from "@/lib/generated/prisma/client";
+import { cancelUnsentPaidAttempt } from "@/lib/metering/cancel-paid-attempt";
+import { readCanonicalUsage } from "@/lib/metering/usage-read";
 
 type Scope = { projectId: string; connectionId: string; tags: string[] };
-
-/** Only persisted, explicit proof that the paid transport was never invoked permits zero settlement. */
 export async function settleNoDispatchInTransaction(tx: Prisma.TransactionClient, scope: Scope) {
   if (!scope.tags.length) return [];
-  const where = {
-    projectId: scope.projectId,
-    connectionId: scope.connectionId,
-    provider: "dataforseo",
-    feature: "prompt_explorer" as const,
-    credentialSource: "own" as const,
-    tag: { in: scope.tags },
-    measurementStatus: "unknown",
-    providerRequestId: null,
-  };
-  const rows = await tx.providerCostEntry.findMany({ where, select: { id: true } });
-  if (rows.length)
-    await tx.providerCostEntry.updateMany({
-      where: { ...where, id: { in: rows.map((row) => row.id) } },
-      data: { measurementStatus: "recorded", costCents: 0, usageQuantity: 0, failed: true },
+  const rows = await readCanonicalUsage(
+    Prisma.sql`"projectId"=${scope.projectId} AND "connectionId"=${scope.connectionId} AND provider='dataforseo' AND feature='prompt_explorer' AND "credentialSource"='own' AND tag IN (${Prisma.join(scope.tags)})`,
+    tx,
+    true,
+  );
+  for (const row of rows)
+    await cancelUnsentPaidAttempt(tx, {
+      namespace: row.namespace,
+      principal: row.principal,
+      operationId: row.id,
     });
   return rows.map((row) => row.id);
 }
-
 export async function settleNoDispatch(scope: Scope) {
-  const ids = await prisma.$transaction((tx) => settleNoDispatchInTransaction(tx, scope));
-  // Read and synchronize only after the zero receipt has committed.
-  await Promise.all(ids.map((id) => syncUsageEntry(id)));
+  await prisma.$transaction((tx) => settleNoDispatchInTransaction(tx, scope));
 }
-
-/** Recover a late journal commit only by matching trusted producer proof, never by absent receipts. */
 export async function settleLateNoDispatch(
   tx: Prisma.TransactionClient,
   projectId: string,
   connectionId: string,
 ) {
-  const rows = await tx.providerCostEntry.findMany({
-    where: {
-      projectId,
-      connectionId,
-      provider: "dataforseo",
-      feature: "prompt_explorer",
-      credentialSource: "own",
-      measurementStatus: "unknown",
-      providerRequestId: null,
-      tag: { not: null },
-    },
-    select: { tag: true },
-    take: 10,
-  });
+  const rows = await readCanonicalUsage(
+    Prisma.sql`"projectId"=${projectId} AND "connectionId"=${connectionId} AND feature='prompt_explorer' AND "measurementStatus"='unknown' AND tag IS NOT NULL`,
+    tx,
+    true,
+  );
   const ids: string[] = [];
   for (const row of rows) {
     if (!row.tag) continue;

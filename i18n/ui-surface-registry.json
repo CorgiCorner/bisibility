@@ -1473,86 +1473,6 @@
       "text": "all"
     },
     {
-      "anchor": "function:marketTableColumns",
-      "fingerprint": "059c4e6a6dc07deee9a012819ef4e0fd02ef7dac0afc5db7be1557faf212033f",
-      "kind": "accessible-attribute",
-      "path": "components/markets/page/MarketsTable.tsx",
-      "reason": "marketTableColumns passes semantic table keys through the local scoped translator before headers and actions are rendered. Current consumer: function:marketTableColumns; retained value: \"paused\".",
-      "text": "paused"
-    },
-    {
-      "anchor": "function:marketTableColumns",
-      "fingerprint": "248deda5bf2ab2005022d4d440ec575a574d7c93223261a110177ed1a47e3f5b",
-      "kind": "ui-property",
-      "path": "components/markets/page/MarketsTable.tsx",
-      "reason": "marketTableColumns passes semantic table keys through the local scoped translator before headers and actions are rendered. Current consumer: function:marketTableColumns; retained value: \"topThree\".",
-      "text": "topThree"
-    },
-    {
-      "anchor": "function:marketTableColumns",
-      "fingerprint": "41df90fa463383db54e49df87c9597a2b7f616bcd30422eb422a3ae9c80595e5",
-      "kind": "ui-property",
-      "path": "components/markets/page/MarketsTable.tsx",
-      "reason": "marketTableColumns passes semantic table keys through the local scoped translator before headers and actions are rendered. Current consumer: function:marketTableColumns; retained value: \"status\".",
-      "text": "status"
-    },
-    {
-      "anchor": "function:marketTableColumns",
-      "fingerprint": "5de18cfc44aef725c3cfd874423dc422ef9c9ff5cca18a0219495b365bc0989f",
-      "kind": "accessible-attribute",
-      "path": "components/markets/page/MarketsTable.tsx",
-      "reason": "marketTableColumns passes semantic table keys through the local scoped translator before headers and actions are rendered. Current consumer: function:marketTableColumns; retained value: \"active\".",
-      "text": "active"
-    },
-    {
-      "anchor": "function:marketTableColumns",
-      "fingerprint": "6ea92d4ec8cb41edaf2d9337ad3553f622487003e2cfb26e3dcbe8dbd6156da3",
-      "kind": "ui-property",
-      "path": "components/markets/page/MarketsTable.tsx",
-      "reason": "marketTableColumns passes semantic table keys through the local scoped translator before headers and actions are rendered. Current consumer: function:marketTableColumns; retained value: \"visibility\".",
-      "text": "visibility"
-    },
-    {
-      "anchor": "function:marketTableColumns",
-      "fingerprint": "75af386a254d62089ccf4f05685a25b651c479c207b4e160efb8504ca0e62d28",
-      "kind": "accessible-attribute",
-      "path": "components/markets/page/MarketsTable.tsx",
-      "reason": "marketTableColumns passes semantic table keys through the local scoped translator before headers and actions are rendered. Current consumer: function:marketTableColumns; retained value: \"resume\".",
-      "text": "resume"
-    },
-    {
-      "anchor": "function:marketTableColumns",
-      "fingerprint": "78d73798aff4b64f2e0b77e3f09e192a41637f6019c1d1da90e18516d50ff878",
-      "kind": "ui-property",
-      "path": "components/markets/page/MarketsTable.tsx",
-      "reason": "marketTableColumns passes semantic table keys through the local scoped translator before headers and actions are rendered. Current consumer: function:marketTableColumns; retained value: \"actions\".",
-      "text": "actions"
-    },
-    {
-      "anchor": "function:marketTableColumns",
-      "fingerprint": "9360a707d4016c5fa79168390b4d3c9cf38c26c6a37f395045554dc1dfd40048",
-      "kind": "ui-property",
-      "path": "components/markets/page/MarketsTable.tsx",
-      "reason": "marketTableColumns passes semantic table keys through the local scoped translator before headers and actions are rendered. Current consumer: function:marketTableColumns; retained value: \"market\".",
-      "text": "market"
-    },
-    {
-      "anchor": "function:marketTableColumns",
-      "fingerprint": "bb7cb73102779c6a84f67f848e262177cdc3a98bc7ad44023aae382fd0a801bc",
-      "kind": "ui-property",
-      "path": "components/markets/page/MarketsTable.tsx",
-      "reason": "marketTableColumns passes semantic table keys through the local scoped translator before headers and actions are rendered. Current consumer: function:marketTableColumns; retained value: \"keywordCount\".",
-      "text": "keywordCount"
-    },
-    {
-      "anchor": "function:marketTableColumns",
-      "fingerprint": "e283a1cdab0f704e3ed9e0befcf85fbcdfc114e92178a824ddc2d1647440feac",
-      "kind": "accessible-attribute",
-      "path": "components/markets/page/MarketsTable.tsx",
-      "reason": "marketTableColumns passes semantic table keys through the local scoped translator before headers and actions are rendered. Current consumer: function:marketTableColumns; retained value: \"pause\".",
-      "text": "pause"
-    },
-    {
       "anchor": "function:onboardingSteps",
       "fingerprint": "1fa47e3e0e60eba47300aa72c6896acfc65510fde0f2bd23f843cafdb0fd129f",
       "kind": "ui-property",
@@ -2530,6 +2450,14 @@
     },
     {
       "anchor": "function:headerMetaFor",
+      "fingerprint": "97cbaf9f835ddb1e7471b7ae221b7e31b4ef144a9b2385e595cd87f054fc6ca9",
+      "kind": "ui-property",
+      "path": "components/shell/header-title.ts",
+      "reason": "headerMetaFor supplies route metadata to AppHeaderTitle. AppHeaderTitle calls localizedHeaderMeta in header-copy.ts, whose titleKeys maps Instance administration to shell.header.titles.instanceAdministration and translates it before rendering.",
+      "text": "Instance administration"
+    },
+    {
+      "anchor": "function:headerMetaFor",
       "fingerprint": "c86bf7647199850d9ab6d3c65b14183dc3b7d35733e2e52c1bebf7f25b7579f5",
       "kind": "ui-property",
       "path": "components/shell/header-title.ts",
@@ -2817,6 +2745,38 @@
       "text": "GitHub"
     },
     {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "0fff4f89e889ea33480ab5080e94852817aed14378efacb8819d960739eeee89",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "RANK_RUN_STATUS_PRESENTATIONS retains status descriptors with a typed messageKey. useRunStatusCopy, PlannedSection and createRunPageSummaryLabels resolve presentation.messageKey through shared.controls.status before rendering a label; OperationsTrayModel retains the descriptor as model data. The raw label is not rendered at those boundaries.",
+      "text": "Failed"
+    },
+    {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "1108a1c1e0f0b06c422d59b1f554e3f83bd774630509b8e5ff5c902e33d0cc3a",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "RANK_RUN_STATUS_PRESENTATIONS retains status descriptors with a typed messageKey. useRunStatusCopy, PlannedSection and createRunPageSummaryLabels resolve presentation.messageKey through shared.controls.status before rendering a label; OperationsTrayModel retains the descriptor as model data. The raw label is not rendered at those boundaries.",
+      "text": "Deferred"
+    },
+    {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "1544c3900fa97137a18e36824bf4681ebc05456bc800578e27b8a7b4c72df54f",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "RANK_RUN_STATUS_PRESENTATIONS retains status descriptors with a typed messageKey. useRunStatusCopy, PlannedSection and createRunPageSummaryLabels resolve presentation.messageKey through shared.controls.status before rendering a label; OperationsTrayModel retains the descriptor as model data. The raw label is not rendered at those boundaries.",
+      "text": "Planned"
+    },
+    {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "15a83fc165c39fe504aabc7884a6b8bd21cb2c760f6cc5cb4f9c406e795bc6bb",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "RANK_RUN_STATUS_PRESENTATIONS retains status descriptors with a typed messageKey. useRunStatusCopy, PlannedSection and createRunPageSummaryLabels resolve presentation.messageKey through shared.controls.status before rendering a label; OperationsTrayModel retains the descriptor as model data. The raw label is not rendered at those boundaries.",
+      "text": "Partial"
+    },
+    {
       "anchor": "variable:ITEM_STATUS_PRESENTATIONS",
       "fingerprint": "213f5d06b499479232033f782214ced6c708eae3ede8bae8fe086196372ae3df",
       "kind": "ui-property",
@@ -2849,12 +2809,44 @@
       "text": "Completed"
     },
     {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "6ec9bcb2720775460db0e4536569a8aec84adb4085ba20ec8f7409d5cb9b81a9",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "RANK_RUN_STATUS_PRESENTATIONS retains status descriptors with a typed messageKey. useRunStatusCopy, PlannedSection and createRunPageSummaryLabels resolve presentation.messageKey through shared.controls.status before rendering a label; OperationsTrayModel retains the descriptor as model data. The raw label is not rendered at those boundaries.",
+      "text": "Cancelled"
+    },
+    {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "8069b3f805b009437f7c2e0878e764a37ccef191f352b46e892574dc1954ffc4",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "RANK_RUN_STATUS_PRESENTATIONS retains status descriptors with a typed messageKey. useRunStatusCopy, PlannedSection and createRunPageSummaryLabels resolve presentation.messageKey through shared.controls.status before rendering a label; OperationsTrayModel retains the descriptor as model data. The raw label is not rendered at those boundaries.",
+      "text": "Not confirmed"
+    },
+    {
       "anchor": "variable:ITEM_STATUS_PRESENTATIONS",
       "fingerprint": "8c09b259ba3f4325ae92002d6c7791291cb36c24af68c482519a4281d5fa5478",
       "kind": "ui-property",
       "path": "components/ui/status-chip-mapping.ts",
       "reason": "Status-chip mapping stores durable status identifiers which StatusChip callers resolve through their scoped catalog mapping. Current consumer: variable:ITEM_STATUS_PRESENTATIONS; retained value: \"Cancelled\".",
       "text": "Cancelled"
+    },
+    {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "abcaca115d5060ab90d21627f753597e666ede897b04cc684f0f73c723b1c2c1",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "RANK_RUN_STATUS_PRESENTATIONS retains status descriptors with a typed messageKey. useRunStatusCopy, PlannedSection and createRunPageSummaryLabels resolve presentation.messageKey through shared.controls.status before rendering a label; OperationsTrayModel retains the descriptor as model data. The raw label is not rendered at those boundaries.",
+      "text": "Cancelling"
+    },
+    {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "bc1c1621ad4daa9cbcb1ab887047370b34107630ce5ffc7794887ed4a782d165",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "RANK_RUN_STATUS_PRESENTATIONS retains status descriptors with a typed messageKey. useRunStatusCopy, PlannedSection and createRunPageSummaryLabels resolve presentation.messageKey through shared.controls.status before rendering a label; OperationsTrayModel retains the descriptor as model data. The raw label is not rendered at those boundaries.",
+      "text": "Queued"
     },
     {
       "anchor": "variable:ITEM_STATUS_PRESENTATIONS",
@@ -2865,12 +2857,36 @@
       "text": "Running"
     },
     {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "ca25b060bf3381c3e2f3acd3568384873c6287252327e34b88541a629474dab9",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "RANK_RUN_STATUS_PRESENTATIONS retains status descriptors with a typed messageKey. useRunStatusCopy, PlannedSection and createRunPageSummaryLabels resolve presentation.messageKey through shared.controls.status before rendering a label; OperationsTrayModel retains the descriptor as model data. The raw label is not rendered at those boundaries.",
+      "text": "Running"
+    },
+    {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "e22fa4b02c9f1c633c68c21f31285214493ca83a738141ba6217a53de0c7311f",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "RANK_RUN_STATUS_PRESENTATIONS retains status descriptors with a typed messageKey. useRunStatusCopy, PlannedSection and createRunPageSummaryLabels resolve presentation.messageKey through shared.controls.status before rendering a label; OperationsTrayModel retains the descriptor as model data. The raw label is not rendered at those boundaries.",
+      "text": "Blocked"
+    },
+    {
       "anchor": "variable:ITEM_STATUS_PRESENTATIONS",
       "fingerprint": "f2b17eb2a0712566c662649219ddfebdc21421bdbac07478d10ec7fb11bad104",
       "kind": "ui-property",
       "path": "components/ui/status-chip-mapping.ts",
       "reason": "Status-chip mapping stores durable status identifiers which StatusChip callers resolve through their scoped catalog mapping. Current consumer: variable:ITEM_STATUS_PRESENTATIONS; retained value: \"Queued\".",
       "text": "Queued"
+    },
+    {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "f54a53ede21bd9a0d77b3528f9dfc40a715d8bd089426297423e0eb0c9820dba",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "RANK_RUN_STATUS_PRESENTATIONS retains status descriptors with a typed messageKey. useRunStatusCopy, PlannedSection and createRunPageSummaryLabels resolve presentation.messageKey through shared.controls.status before rendering a label; OperationsTrayModel retains the descriptor as model data. The raw label is not rendered at those boundaries.",
+      "text": "Succeeded"
     },
     {
       "anchor": "variable:ITEM_STATUS_PRESENTATIONS",
@@ -2975,6 +2991,70 @@
       "path": "components/ui/status-chip-mapping.ts",
       "reason": "The status mapping retains an English fallback identifier. Run status chips and the legend resolve the skipped messageKey through the shared catalog.",
       "text": "Skipped"
+    },
+    {
+      "anchor": "variable:settingsSearchEntries",
+      "fingerprint": "54f00b88e6b7890bb7b8f1d0835f7f74abee9c5b586efd4f3ab47e9abf162287",
+      "kind": "ui-property",
+      "path": "components/settings/shell/settings-search-index.ts",
+      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.projectContext.label\".",
+      "text": "search.entries.projectContext.label"
+    },
+    {
+      "anchor": "variable:rows",
+      "fingerprint": "fe8011812a65de35d7dcb944c876ec426d5b992f04cab4e5ed9047b78071b3aa",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Result ${index + 1}"
+    },
+    {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "625abb49be239b229dba297f2ec9eff9e6a15c6bec17742a63c06b4ca6aa8fcd",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "What is a headless CMS?"
+    },
+    {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "73f059a3437bd673fb32ee46919839ffe4a4d76d9330fb403e1090b0e910c5a7",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Strapi - Open source headless CMS"
+    },
+    {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "2d1f4a1de0eb1a4f7f44ae23af1d5be72a031b8b455210eb39bd209b8ba81810",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Sanity - the composable content cloud"
+    },
+    {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "6a4d622b628da02b62425a115e2a43f14a037673ff40bb1c3257ff879e27c220",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Headless CMS for product teams - Acme"
+    },
+    {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "d37580198b5323ae48744d42af07e09d4400c471bd94a2ad30d7f10b1b2dc75d",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Hygraph - GraphQL-native headless CMS"
+    },
+    {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "9a2dbc85a66b1327ea571fb12748c54b85208fa46a2005e7d4c644c2214ef194",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Headless content management system"
     }
   ],
   "schemaVersion": 1,
@@ -4400,6 +4480,11 @@
     },
     {
       "kind": "render",
+      "path": "components/alerts/NewRuleConditionFields.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/alerts/NewRuleDeliveryFields.tsx",
       "status": "excluded"
     },
@@ -5094,38 +5179,18 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/cost-estimate/header-budget-summary.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/cost-estimate/HeaderProviderSpend.tsx",
       "status": "migrated"
     },
     {
-      "kind": "ui-data",
-      "path": "components/cost-estimate/provider-spend-segments.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/cost-estimate/ProviderSpendMeter.tsx",
-      "status": "migrated"
-    },
-    {
       "kind": "render",
       "path": "components/cost-estimate/SessionSpendProvider.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/cost-estimate/spend-tone.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/cost-estimate/SpendBar.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/cost-estimate/SpendMeterDocsInfo.tsx",
       "status": "migrated"
     },
     {
@@ -5454,8 +5519,23 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/i18n/MissingBudgetNotice.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/i18n/UsageReconciliationNotice.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/i18n/useSharedErrorMessages.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/i18n/WalletBudgetNotice.tsx",
       "status": "migrated"
     },
     {
@@ -5579,8 +5659,13 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/integrations/project-chain-labels.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
-      "path": "components/integrations/MeterUsageCard.tsx",
+      "path": "components/integrations/ProjectSerpChain.tsx",
       "status": "migrated"
     },
     {
@@ -5650,23 +5735,13 @@
     },
     {
       "kind": "render",
-      "path": "components/integrations/ProviderRates.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/integrations/ProviderSyncFailureAlert.tsx",
       "status": "migrated"
     },
     {
       "kind": "render",
-      "path": "components/integrations/RateSourceChip.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/integrations/SerpFallbackOrder.tsx",
-      "status": "migrated"
+      "path": "components/integrations/UsageSummary.tsx",
+      "status": "pending"
     },
     {
       "kind": "ui-data",
@@ -6670,6 +6745,11 @@
     },
     {
       "kind": "render",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "status": "excluded"
+    },
+    {
+      "kind": "render",
       "path": "components/keywords/RetrievedResultsCard.tsx",
       "status": "migrated"
     },
@@ -6911,7 +6991,7 @@
     {
       "kind": "render",
       "path": "components/markets/page/MarketsTable.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -6961,6 +7041,26 @@
     {
       "kind": "render",
       "path": "components/markets/sheet/NewMarketSheetFooter.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/metering/usage-number-format.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/metering/UsageDisplayControls.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/metering/use-usage-display-settings.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/metering/use-usage-presentation.ts",
       "status": "migrated"
     },
     {
@@ -7777,6 +7877,56 @@
       "kind": "render",
       "path": "components/project-runs/RunTitleCell.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/provider-management/allocation-labels.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/provider-management/AllocationEvidence.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/provider-management/ConnectionRatePanel.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/provider-management/provider-ui-fixtures.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/provider-management/ProviderAllocationDialog.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/provider-management/ProviderBalanceEvidence.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/provider-management/ProviderUiFeedback.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/provider-management/ProviderUiProvider.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/provider-management/ProviderWalletEvidence.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/provider-management/use-allocation-form.ts",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -8970,13 +9120,13 @@
     },
     {
       "kind": "ui-data",
-      "path": "components/settings/usage/budget-edit-modal-model.ts",
-      "status": "migrated"
+      "path": "components/settings/usage/__tests__/BudgetEditModal.fixtures.ts",
+      "status": "pending"
     },
     {
       "kind": "render",
-      "path": "components/settings/usage/BudgetAmountField.tsx",
-      "status": "migrated"
+      "path": "components/settings/usage/__tests__/BudgetEditModal.render.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -8985,47 +9135,12 @@
     },
     {
       "kind": "render",
-      "path": "components/settings/usage/BudgetEditRow.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/settings/usage/BudgetEditTable.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
       "path": "components/settings/usage/PlanCard.tsx",
       "status": "migrated"
     },
     {
-      "kind": "ui-data",
-      "path": "components/settings/usage/provider-usage-view.ts",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/settings/usage/ProviderBudgetGuide.tsx",
-      "status": "pending"
-    },
-    {
       "kind": "render",
       "path": "components/settings/usage/ProviderUsageCard.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/settings/usage/ProviderUsageFeatureList.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
-      "path": "components/settings/usage/ProviderUsageFreshnessNote.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/settings/usage/ProviderUsageRow.tsx",
       "status": "migrated"
     },
     {
@@ -10067,6 +10182,166 @@
       "kind": "render",
       "path": "components/ui/ZonedTime.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/budget-card.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/cost-summary-card.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/exceptions-list.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/measurement-card.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/primitives/badge.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/primitives/button.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/primitives/card.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/primitives/input.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/primitives/label.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/primitives/table.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-allocation-editor.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-allocation-form.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-allocation-observation.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-allocation-panel.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-allocation-policy.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-allocation-row.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-balance-card.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-chain-editor.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-feedback.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-project-chain.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-project-controller.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-rate-editor.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/usagekit/provider-rate-labels.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/provider-rate-row.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/usage-cap-pill.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/usage-connection-row.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/usage-meter.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/usage-motion.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/usage-overview-card.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/usage-progress.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/usage-summary-cards.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/usagekit/usage-table.tsx",
+      "status": "pending"
     }
   ]
 }

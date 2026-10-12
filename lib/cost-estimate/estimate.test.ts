@@ -268,7 +268,7 @@ describe("depth-aware flat pricing", () => {
     expect(pagesPerCheck(100)).toBe(10);
   });
 
-  it("prices a top-100 check at base plus nine discounted pages", () => {
+  it("prices a top-100 check at the catalog rate for all ten pages", () => {
     const live = options.find((option) => option.key === "live");
     const standard = options.find((option) => option.key === "standard");
     const priority = options.find((option) => option.key === "priority");
@@ -276,13 +276,13 @@ describe("depth-aware flat pricing", () => {
       throw new Error("All DataForSEO rate options are required for cost estimate tests");
     }
 
-    expect(flatPerCheckCostCents(live, 100)).toBeCloseTo(1.55, 6);
-    expect(flatPerCheckCostCents(standard, 100)).toBeCloseTo(0.465, 6);
-    expect(flatPerCheckCostCents(priority, 100)).toBeCloseTo(0.93, 6);
-    expect(centsToDollars(flatPerCheckCostCents(standard, 100))).toBeCloseTo(0.00465, 6);
+    expect(flatPerCheckCostCents(live, 100)).toBeCloseTo(2, 6);
+    expect(flatPerCheckCostCents(standard, 100)).toBeCloseTo(0.6, 6);
+    expect(flatPerCheckCostCents(priority, 100)).toBeCloseTo(1.2, 6);
+    expect(centsToDollars(flatPerCheckCostCents(standard, 100))).toBeCloseTo(0.006, 6);
   });
 
-  it("estimates 30,000 monthly Live top-100 checks at $465", () => {
+  it("estimates 30,000 monthly Live top-100 checks at $600", () => {
     const estimate = estimateCost(
       { depth: 100, keywordCount: 1000, locationCount: 1, deviceCount: 1, frequency: "daily" },
       dataforseo,
@@ -290,7 +290,7 @@ describe("depth-aware flat pricing", () => {
     );
 
     expect(estimate.monthlyChecks).toBe(30_000);
-    expect(estimate.monthlyCostCents).toBeCloseTo(46_500, 3);
+    expect(estimate.monthlyCostCents).toBeCloseTo(60_000, 3);
     expect(estimate.billingUnitsPerCheck).toBe(10);
   });
 
@@ -338,13 +338,25 @@ describe("plan selection by searches", () => {
     expect(estimate.selectedPlan?.planKey).toBe("developer");
   });
 
-  it("flags volumes beyond Big Data as exceeding all plans", () => {
+  it("selects Infrastructure for volumes beyond the smaller public plans", () => {
     const estimate = estimateCost(
       { depth: 100, keywordCount: 1000, locationCount: 1, deviceCount: 1, frequency: "daily" },
       serpapi,
     );
 
     expect(estimate.monthlyBillingUnits).toBe(300_000);
+    expect(estimate.selectedPlan?.planKey).toBe("infrastructure");
+    expect(estimate.exceedsLargestPlan).toBe(false);
+  });
+
+  it("flags volumes above the largest public plan", () => {
+    const estimate = estimateCost(
+      { depth: 100, keywordCount: 2000, locationCount: 1, deviceCount: 1, frequency: "daily" },
+      serpapi,
+    );
+
+    expect(estimate.monthlyBillingUnits).toBe(600_000);
+    expect(estimate.selectedPlan?.planKey).toBe("infrastructure");
     expect(estimate.exceedsLargestPlan).toBe(true);
   });
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { posix } from "node:path";
 import { parse } from "yaml";
 
 function assert(condition, message) {
@@ -22,6 +23,22 @@ const instrumentation = readFileSync("instrumentation.ts", "utf8");
 const health = readFileSync("lib/api/discovery.ts", "utf8");
 const temporalWorker = readFileSync("lib/temporal/worker.ts", "utf8");
 const deployMigration = readFileSync("scripts/deploy/migrate.ts", "utf8");
+const runnerStage = dockerfile.split(/^FROM .+ AS runner\s*$/im)[1]?.split(/^FROM /im)[0] ?? "";
+const runnerCopies = [...runnerStage.matchAll(/^COPY\s+(?:--\S+\s+)*(\S+)\s+(\S+)\s*$/gm)];
+for (const [, specifier] of deployMigration.matchAll(
+  /(?:\bfrom\s*|\bimport\s*(?:\(\s*)?)["'](\.[^"']+)["']/g,
+)) {
+  const imported = posix.join("scripts/deploy", specifier);
+  const dependency = [imported, `${imported}.ts`, `${imported}.mjs`].find(existsSync);
+  assert(dependency, `Cannot resolve migration runner import ${specifier}`);
+  const copied = runnerCopies.some(([, source, destination]) => {
+    const from = posix.normalize(source).replace(/^\/workspace\//, "");
+    const to = posix.normalize(destination).replace(/^\/workspace\//, "");
+    if (dependency === from) return to === dependency || to === posix.dirname(dependency);
+    return dependency.startsWith(`${from}/`) && posix.join(to, dependency.slice(from.length)) === dependency;
+  });
+  assert(copied, `Final Docker runner must copy migration dependency ${dependency}`);
+}
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 // The RUN may carry BuildKit flags such as a --mount cache; the guard is about what the
 // closure installs, not how the layer is built.

@@ -5,7 +5,7 @@ import { consume } from "@/lib/api/ratelimit";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { prisma } from "@/lib/db/prisma";
-import { monthStartUtc } from "@/lib/rank-check/budget";
+import { monthlySpendCents } from "@/lib/metering/usage-read";
 import { z } from "zod";
 
 const LOOKUP_LIMIT = 10;
@@ -38,10 +38,6 @@ function normalizedIdentifier(raw: string) {
 
 function identifierHash(identifier: string) {
   return `sha256:${createHash("sha256").update(identifier).digest("hex")}`;
-}
-
-function nextMonthStartUtc(now: Date) {
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 }
 
 async function auditLookup(
@@ -94,15 +90,9 @@ async function loadAccount(identifier: string, now: Date): Promise<InstanceAdmin
       by: ["kind"],
       where: projectWhere,
     }),
-    prisma.providerCostEntry.aggregate({
-      _sum: { costCents: true },
-      where: {
-        cached: false,
-        createdAt: { gte: monthStartUtc(now), lt: nextMonthStartUtc(now) },
-        measurementStatus: "recorded",
-        projectId: { in: projectIds },
-      },
-    }),
+    Promise.all(projectIds.map((id) => monthlySpendCents(id, now))).then((values) =>
+      values.reduce((sum, value) => sum + value, 0),
+    ),
   ]);
 
   return {
@@ -111,7 +101,7 @@ async function loadAccount(identifier: string, now: Date): Promise<InstanceAdmin
     id: requiredPublicAuditId(user.publicId, "usr", "User"),
     keywordCount,
     lastActiveAt: user.sessions[0]?.updatedAt.toISOString() ?? null,
-    monthlySpendCents: Number(spend._sum.costCents ?? 0),
+    monthlySpendCents: spend,
     projectCount: projectIds.length,
     providerConnectionsByKind: connectionGroups.map((group) => ({
       count: group._count._all,

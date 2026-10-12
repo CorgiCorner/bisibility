@@ -4,6 +4,41 @@ import { API_VERSION_HEADER } from "./api-versions";
 import { getOpenApiDocument } from "./openapi";
 
 describe("OpenAPI document", () => {
+  it("resolves every local reference, including recursive AI tracking input definitions", () => {
+    const document = getOpenApiDocument();
+    const unresolved: string[] = [];
+    const visit = (value: unknown) => {
+      if (!value || typeof value !== "object") return;
+      const record = value as Record<string, unknown>;
+      if (typeof record.$ref === "string" && record.$ref.startsWith("#/")) {
+        const target = record.$ref
+          .slice(2)
+          .split("/")
+          .map((part) => part.replace(/~1/g, "/").replace(/~0/g, "~"))
+          .reduce<unknown>(
+            (node, key) => (node as Record<string, unknown> | undefined)?.[key],
+            document,
+          );
+        if (target === undefined) unresolved.push(record.$ref);
+      }
+      for (const [key, child] of Object.entries(record)) {
+        if (key !== "example" && key !== "examples") visit(child);
+      }
+    };
+    visit(document);
+    expect(unresolved).toEqual([]);
+  });
+
+  it("retains executable recursive JSON constraints on AI tracking provider parameters", () => {
+    const schemas = getOpenApiDocument().components.schemas as Record<string, object>;
+    const validate = new AjvJsonSchemaValidator().getValidator({
+      ...schemas.createAiTrackingSchedule___schema0,
+      components: { schemas },
+    } as never);
+    expect(validate({ nested: [null, true, 1, "text", { nested: [false] }] }).valid).toBe(true);
+    expect(validate({ nested: [() => null] }).valid).toBe(false);
+  });
+
   it("advertises 402 only on operations that can issue paid provider requests", () => {
     const paths = getOpenApiDocument().paths;
     const paid = [

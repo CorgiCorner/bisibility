@@ -92,35 +92,25 @@ export function queuedBatchAttribution(batch: {
   };
 }
 
-/**
- * The budget deferral a prepared batch earns, or null when its budget admits it. A project still
- * on the legacy cap is gated by that cap; an initialized project is gated by the connection's
- * allocation on the batch's own surface, so dispatcher batches (app) are never deferred by the
- * programmatic cap while API-launched batches are.
- */
+/** Project and connection Store budgets both constrain a queued batch. */
 export async function queuedBatchBudgetDeferral(
   batch: {
     connectionId: string | undefined;
     estimatedCostCents: number;
-    project: { budgetCapCents: number; providerAllocationsInitializedAt: Date | null };
     source: string;
-    tasks: readonly { depth: SerpDepth }[];
+    tasks: readonly { depth: SerpDepth; estimatedCostCents?: number }[];
   },
   call: { now: Date; priority: DataForSeoQueuePriority; projectId: string },
   tx: Prisma.TransactionClient,
 ): Promise<string | null> {
-  if (batch.project.providerAllocationsInitializedAt === null) {
-    try {
-      await assertBudgetAvailable(call.projectId, call.now, {
-        capCents: batch.project.budgetCapCents,
-        client: tx,
-        estimatedCostCents: batch.estimatedCostCents,
-      });
-    } catch (error) {
-      if (!isBudgetExhaustedError(error)) throw error;
-      return "Rank check monthly budget reached before queued batch submission.";
-    }
-    return null;
+  try {
+    await assertBudgetAvailable(call.projectId, call.now, {
+      client: tx,
+      estimatedCostCents: batch.estimatedCostCents,
+    });
+  } catch (error) {
+    if (!isBudgetExhaustedError(error)) throw error;
+    return "Rank check monthly budget reached before queued batch submission.";
   }
   if (!batch.connectionId || surfaceOf(batch.source as ProviderRequestSource) !== "programmatic") {
     return null;

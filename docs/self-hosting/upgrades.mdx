@@ -50,6 +50,74 @@ before starting the upgrade; see
 [Backup and restore](/self-hosting/backup-restore). Migrations are forward-only;
 an image rollback does not reverse Prisma migrations.
 
+### Accounting migration
+
+When upgrading from the legacy usage ledger to Meter accounting, rehearse the
+complete target release against a restored backup before the maintenance window.
+Measure snapshot/import time and verify the backup is restorable. A fresh empty
+installation does not need a legacy-history drain.
+
+Before invoking the upgrade, close paid entry points and budget/rate changes,
+pause paid scheduling, and drain old work while its original code and credentials
+can still retrieve and settle it. Release provably unsent work; finish accepted
+queued tasks. Ambiguous live sends stop the upgrade. Stop old processes and
+prevent their supervisors from restarting. Stopping containers alone does not
+prove that an accepted provider task has settled.
+
+From `20261011040000_retire_accounting` until the upgraded web is promoted,
+requests that read dropped project or connection columns fail because the old
+Prisma client still selects them. Keep `app` stopped as described below; for split
+deployments, scale old web instances to zero for this interval or these pages
+return errors.
+
+The nonempty legacy snapshot requires the PostgreSQL session setting
+`bisibility.accounting_quiesced=on`. After proving the drain, configure that
+startup setting on the actual migration connections using the PostgreSQL
+connection `options` value `-c bisibility.accounting_quiesced=on`. Rehearse this
+with your migration service. A setting in a separate SQL session is insufficient;
+it must reach the Prisma migration connection. Keep database credentials in the
+service's secret configuration. The setting asserts quiescence; it does not stop
+paid work. Remove it after migration.
+
+The migration snapshots history before retiring the old ledger, then imports
+all historical months with original identities, receipts, budgets and references.
+Unknown historical costs remain unknown and block affected scopes. Imported
+operations cannot dispatch provider requests. `npm run db:migrate` runs both
+schema and blocking data work; Prisma schema migration alone is insufficient.
+The migration runner, web and worker must use the same database, schema and
+`METERING_NAMESPACE` (default `default`).
+
+Any failure of `20261011050000_drop_project_spending_cap`, including its guard,
+a lock timeout, conflicting provenance or an inconsistent Store budget, rolls back
+the transaction but leaves a failed `_prisma_migrations` row; every later
+`npm run db:migrate` stops with P3009 before data migrations.
+Direct `prisma migrate deploy` reports only `current transaction is aborted`
+without a P-code; inspect the PostgreSQL log for the real cause.
+
+Fix the cause first, then run
+`npx prisma migrate resolve --rolled-back 20261011050000_drop_project_spending_cap`
+and `npm run db:migrate`, in that order.
+Resolving the failed row without fixing the cause fails again.
+Exception: if the history guard failed only because direct `prisma migrate deploy`
+skipped the data migrations, resolving the failed row and then running
+`npm run db:migrate` is itself the fix, importing and verifying history before
+the cap drop.
+
+Keep paid entry points closed if the import fails. After resolving a cap-drop
+failure as above, retry from the same release, database, schema
+and accounting namespace: the history importer resumes committed batches and
+rejects changed source or target mappings. Do not delete its progress or mark it
+complete by hand. Require successful verification, migration readiness, matching
+web/worker releases and functioning
+[accounting maintenance](/self-hosting/operations#paid-call-accounting-maintenance)
+before reopening. There is no shadow phase or runtime switch back to the old ledger.
+
+A pre-upgrade restore is safe only before any new paid attempt and with all
+writers stopped. After new paid work, prefer repair in place: an old backup would
+erase new charges and provider evidence. Returning to old code then requires a
+rehearsed reconstruction that preserves new receipts, native request IDs and
+budget settings, with exact totals reconciled. Unknown new evidence blocks it.
+
 ### Verify release assets
 
 When the manifest contains `upgradeScript`, the script verifies the manifest,
@@ -84,8 +152,9 @@ assuming a worker service always exists.
 ### Run migrations
 
 The script runs the one-shot `db-migrations` service with
-`prisma migrate deploy` for the full Prisma tree and then all blocking data
-migrations before the web app. The migration container's exit code is
+`prisma migrate deploy` in stages: schema migrations before guarded contracts,
+then all blocking data migrations, then the guarded schema contracts before
+the web app. The migration container's exit code is
 propagated: a failed verification or migration returns nonzero and prevents
 app/worker restart.
 
@@ -112,6 +181,20 @@ need to block the web deployment.
 After a successful migration, the script starts the selected `app` and
 `worker` services from the matched release images. It does not perform the
 operator's post-start readiness checks; those are the next step.
+
+Project spending limits are imported and verified in the accounting Store before
+the obsolete project-cap column is removed. The upgrade command runs schema
+preparation, data migration and the guarded schema cleanup in that order. A failed
+import leaves the column in place and stops the upgrade. New projects receive a
+5000-cent monthly Store cap when created.
+
+The cap drop backfills missing Store project budgets from the current column,
+mapping caps of 0 or less to unlimited (`limit: null`) and null caps to 5000 cents.
+For an imported project, it writes version 2 from the current column only when the
+latest Store budget is version 1, a project snapshot exists and the column differs
+from that snapshot; a newer Store version is preserved.
+Backfills retain immutable provenance, and the migration verifies every project's
+latest Store budget before removing the column.
 
 ### Validate readiness
 
@@ -156,7 +239,7 @@ the database in an intermediate state, a database restore may be required; see
 
 ### Restore from backup
 
-If the upgrade cannot complete, restore the pre-upgrade database backup with
+If the upgrade cannot complete before any new paid attempt, restore the pre-upgrade database backup with
 the matching previous release. Restoring must use the same bisibility release
 that created the dump; an image rollback alone does not reverse Prisma
 migrations. See [Backup and restore](/self-hosting/backup-restore) for the

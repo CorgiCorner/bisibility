@@ -70,7 +70,7 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
   return (
     <div
       className={[
-        "sticky top-0 z-50 hidden h-dvh min-h-dvh flex-col overflow-hidden border-r border-border bg-bg-elev lg:flex",
+        "sticky top-0 z-50 hidden h-dvh min-h-dvh flex-col overflow-hidden border-r border-border bg-bg-sidebar lg:flex",
         collapsed ? "px-0 py-3.5" : "p-3.5",
       ].join(" ")}
       data-testid="shell-skeleton-sidebar"
@@ -121,7 +121,7 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
 function HeaderSkeleton() {
   return (
     <div
-      className="relative z-40 flex flex-nowrap items-center justify-between gap-2.5 border-b border-border bg-bg px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5"
+      className="relative z-40 flex flex-nowrap items-center justify-between gap-2.5 border-b border-border bg-bg-sidebar px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5"
       data-testid="shell-skeleton-header"
     >
       <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">

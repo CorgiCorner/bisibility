@@ -30,7 +30,12 @@ export function decisionLine(
   budgetBlocked: string,
   leftAfterLabel?: string,
 ) {
-  if (preview.budget.reason === "budget_exhausted") return budgetBlocked;
+  if (
+    preview.budget.reason === "budget_exhausted" ||
+    preview.budget.reason === "budget_missing" ||
+    preview.budget.reason === "usage_reconciliation_required"
+  )
+    return budgetBlocked;
   const duration =
     preview.targetCount <= 30 ? "~40s" : preview.targetCount <= 400 ? "~6 min" : "~9 min";
   return leftAfterLabel ?? duration;

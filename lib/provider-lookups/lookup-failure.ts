@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
 import type { ProviderRequestSurface } from "@/lib/provider-usage/surface";
 
 export type ProviderLookupFailure =
@@ -8,6 +9,7 @@ export type ProviderLookupFailure =
       ok: false;
       provider?: string;
       reason: "budget_exhausted";
+      budgetReason?: BudgetDenialReason;
       resetAt?: number;
       surface?: ProviderRequestSurface;
     }
@@ -16,6 +18,7 @@ export type ProviderLookupFailure =
       estimatedCostCents?: number;
       ok: false;
       reason:
+        | "wallet_budget_exhausted"
         | "cost_limit_exceeded"
         | "in_progress"
         | "needs_reauth"

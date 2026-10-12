@@ -15,7 +15,6 @@ import { emitSignal } from "@/lib/signals/emit";
 import { signalsForRankCheck } from "@/lib/signals/rank-check";
 import { enqueueAlertDeliveries } from "@/lib/temporal/alert-delivery-client";
 import { positiveCostCents } from "./cost";
-import { writeRankCheckProviderCostEntry } from "./provider-cost-persistence";
 import { updateRunningRankCheck, writeRankCheckAudit } from "./runner-persistence-shared";
 import type {
   RankCheckFailureTarget as BaseRankCheckFailureTarget,
@@ -91,18 +90,6 @@ export async function persistRankCheck(
         data: { lastUsedAt: result.rankCheck.checkedAt },
         where: { id: target.connectionId },
       });
-      if (!result.usageRecorded)
-        await writeRankCheckProviderCostEntry(tx, {
-          connectionId: target.connectionId,
-          costCents: result.providerCostCents,
-          failed: false,
-          keywordId: target.keywordId,
-          provider: result.rankCheck.provider,
-          providerRequestId: target.providerRequestId,
-          projectId: target.projectId,
-          usage: target.providerUsage ?? result.providerUsage,
-          usageQuantity: result.rankCheck.billingUnits,
-        });
     }
     await writeRankCheckAudit(tx, {
       action: "rank_check.completed",
@@ -209,16 +196,6 @@ export async function persistFailedRankCheckInTransaction(
     existing?.rankCheck ??
     (await tx.rankCheck.create({ data: { ...data, publicId: makePublicId("check") } }));
   await applyRunItemTransition(tx, { rankCheckId: persisted.id, to: "failed" });
-  await writeRankCheckProviderCostEntry(tx, {
-    connectionId: target.connectionId,
-    costCents: target.providerCostCents,
-    failed: true,
-    keywordId: target.keywordId,
-    provider: target.provider,
-    providerRequestId: target.providerRequestId,
-    projectId: target.projectId,
-    usage: target.providerUsage,
-  });
   await writeRankCheckAudit(tx, {
     action: "rank_check.failed",
     after: {

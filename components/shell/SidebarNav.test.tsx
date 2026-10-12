@@ -51,6 +51,35 @@ vi.mock("next/link", () => ({
 }));
 
 describe("SidebarNav", () => {
+  it.each([false, true])("omits Alpha and Beta labels with collapsed=%s", (collapsed) => {
+    setNavigationState({ pathname: appPath("prj_1", "dashboard") });
+    const view = render(
+      <SidebarNav
+        collapsed={collapsed}
+        enabledExperimentalModules={["timeline", "competitors"]}
+        projectRef="prj_1"
+      />,
+    );
+
+    expect(view.queryAllByText(/^(alpha|beta)$/i)).toHaveLength(0);
+    for (const label of ["Search Console", "Alerts"]) {
+      const row = view.getByRole("link", { name: label });
+      expect(row).toHaveAttribute(
+        "href",
+        appPath("prj_1", label === "Alerts" ? "alerts" : "search-console"),
+      );
+      if (!collapsed) expect(row).toHaveTextContent(label);
+    }
+    expect(view.getByRole("link", { name: "Competitors" })).toBeInTheDocument();
+  });
+  it("keeps Settings current on the existing Project Context route", () => {
+    setNavigationState({ pathname: appPath("prj_1", "context") });
+    render(<SidebarNav projectRef="prj_1" />);
+    expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("link", { name: "Project Context" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Runs" })).not.toHaveAttribute("aria-current");
+  });
+
   it.each(["", "/new", "/sch_daily"])(
     "marks Runs as current on schedule routes ending in %s",
     (suffix) => {
@@ -158,47 +187,41 @@ describe("SidebarNav", () => {
     expect(other).toHaveAttribute("data-weight", "regular");
   });
 
-  it("keeps Dashboard alone before Modules and Project in expanded and collapsed drawers", () => {
+  it("keeps Dashboard alone before purpose groups in expanded and collapsed drawers", () => {
     setNavigationState({ pathname: appPath("prj_1", "dashboard") });
     const expanded = render(
       <SidebarNav enabledExperimentalModules={["timeline", "competitors"]} projectRef="prj_1" />,
     );
 
     expect(expanded.queryByText("Activity")).toBeNull();
-    expect(expanded.getByText("Modules")).toBeInTheDocument();
+    expect(expanded.getByText("Tracking")).toBeInTheDocument();
+    expect(expanded.getByText("Research & audits")).toBeInTheDocument();
+    expect(expanded.getByText("Data & reports")).toBeInTheDocument();
     expect(expanded.getByText("Project")).toBeInTheDocument();
     expect(expanded.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       "/app/prj_1/dashboard",
       "/app/prj_1/rank-tracker",
+      "/app/prj_1/ai-tracking",
       "/app/prj_1/competitors",
       "/app/prj_1/keyword-research",
       "/app/prj_1/domain-overview",
       "/app/prj_1/backlinks",
-      "/app/prj_1/search-console",
       "/app/prj_1/ai-visibility",
       "/app/prj_1/prompt-explorer",
-      "/app/prj_1/ai-tracking",
       "/app/prj_1/site-audit",
+      "/app/prj_1/search-console",
+      "/app/prj_1/agent-reports",
       "/app/prj_1/markets",
       "/app/prj_1/alerts",
       "/app/prj_1/runs",
       "/app/prj_1/integrations",
-      "/app/prj_1/context",
-      "/app/prj_1/agent-reports",
       "/app/prj_1/install",
       "/app/prj_1/settings",
     ]);
 
-    const gcsInsights = expanded.getByText("Search Console").closest("a");
-    expect(gcsInsights).not.toBeNull();
-    expect(within(gcsInsights as HTMLAnchorElement).getByText("beta")).toHaveClass(
-      "inline-flex",
-      "flex-none",
-      "rounded-full",
-      "text-[9.5px]",
-      "font-semibold",
-    );
-    expect(within(gcsInsights as HTMLAnchorElement).getByText("beta")).not.toHaveClass("font-mono");
+    const gcsInsights = expanded.getByRole("link", { name: "Search Console" });
+    expect(gcsInsights).toHaveTextContent("Search Console");
+    expect(expanded.queryAllByText(/^(alpha|beta)$/i)).toHaveLength(0);
     expanded.unmount();
 
     const collapsed = render(
@@ -209,30 +232,31 @@ describe("SidebarNav", () => {
       />,
     );
     expect(collapsed.queryByText("Activity")).toBeNull();
-    expect(collapsed.queryByText("Modules")).toBeNull();
+    expect(collapsed.queryByText("Tracking")).toBeNull();
     expect(collapsed.queryByText("Project")).toBeNull();
     expect(collapsed.queryByText("ACTIVITY")).toBeNull();
-    expect(collapsed.getByText("MODULES")).toHaveClass("w-20", "text-center");
+    expect(collapsed.getByText("TRACKING")).toHaveClass("w-20", "text-center");
+    expect(collapsed.getByText("RESEARCH")).toHaveClass("w-20", "text-center");
+    expect(collapsed.getByText("DATA")).toHaveClass("w-20", "text-center");
     expect(collapsed.getByText("PROJECT")).toHaveClass("w-20", "text-center");
     expect(collapsed.queryByText("beta")).toBeNull();
     expect(collapsed.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       "/app/prj_1/dashboard",
       "/app/prj_1/rank-tracker",
+      "/app/prj_1/ai-tracking",
       "/app/prj_1/competitors",
       "/app/prj_1/keyword-research",
       "/app/prj_1/domain-overview",
       "/app/prj_1/backlinks",
-      "/app/prj_1/search-console",
       "/app/prj_1/ai-visibility",
       "/app/prj_1/prompt-explorer",
-      "/app/prj_1/ai-tracking",
       "/app/prj_1/site-audit",
+      "/app/prj_1/search-console",
+      "/app/prj_1/agent-reports",
       "/app/prj_1/markets",
       "/app/prj_1/alerts",
       "/app/prj_1/runs",
       "/app/prj_1/integrations",
-      "/app/prj_1/context",
-      "/app/prj_1/agent-reports",
       "/app/prj_1/install",
       "/app/prj_1/settings",
     ]);
@@ -242,7 +266,7 @@ describe("SidebarNav", () => {
     setNavigationState({ pathname: appPath("prj_1", "dashboard") });
     render(<SidebarNav projectRef="prj_1" />);
 
-    const heading = screen.getByText("Modules");
+    const heading = screen.getByText("Tracking");
 
     // A heading is a caption, not a destination: a focusable or role-bearing element here would
     // put three extra stops in the rail's tab order.
@@ -269,7 +293,7 @@ describe("SidebarNav", () => {
     render(<SidebarNav projectRef="prj_1" />);
 
     const dashboard = screen.getByRole("link", { name: "Dashboard" });
-    const modules = screen.getByText("Modules");
+    const modules = screen.getByText("Tracking");
     const alerts = screen.getByRole("link", { name: "Alerts" });
     const project = screen.getByText("Project");
     const settings = screen.getByRole("link", { name: "Settings" });
@@ -292,11 +316,8 @@ describe("SidebarNav", () => {
       <SidebarNav enabledExperimentalModules={["timeline", "competitors"]} projectRef="prj_1" />,
     );
 
-    // Text tags are decorative: they must not alter the containing row's accessible name.
     const gcsInsights = screen.getByRole("link", { name: "Search Console" });
-    const beta = within(gcsInsights).getByText("beta");
-    expect(beta).toHaveAttribute("aria-hidden", "true");
-    expect(beta).toHaveClass("px-[7px]", "py-0.5", "bg-bg-sunken", "text-fg-muted");
+    expect(within(gcsInsights).queryByText("beta")).not.toBeInTheDocument();
 
     const competitors = screen.getByRole("link", { name: "Competitors" });
     expect(competitors.querySelector("[data-experimental-badge-flask]")).toBeInTheDocument();
@@ -321,7 +342,7 @@ describe("SidebarNav", () => {
     expect(flask).toHaveAttribute("width", "14");
     expect(flask).toHaveAttribute("height", "14");
     expect(flask).toHaveClass("shrink-0", "text-current");
-    expect(beta.querySelector("[data-experimental-badge-flask]")).toBeNull();
+    expect(gcsInsights.querySelector("[data-experimental-badge-flask]")).toBeNull();
 
     const dashboard = screen.getByRole("link", { name: "Dashboard" });
     expect(within(dashboard).getByText("new")).toHaveClass(

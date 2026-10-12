@@ -1,3 +1,4 @@
+import { meterOperationReference } from "@/lib/metering/operation-reference";
 import "server-only";
 import { aiProviderRequest, PROMPT_PATH } from "@/lib/ai-research/provider";
 import type { AiResearchContext } from "@/lib/ai-research/service";
@@ -55,7 +56,11 @@ export async function executeSuggestionModel(
         async begin(attempt) {
           const nativeId = await observer.begin(attempt);
           state.nativeId = nativeId;
-          state.receipt = { ...state.receipt, providerCostEntryId: nativeId };
+          state.receipt = {
+            ...state.receipt,
+            providerCostEntryId: null,
+            operationRef: meterOperationReference(nativeId),
+          };
           const barrier = await recordGenerationUsageTag(context.projectId, row.id, {
             attemptId: row.attemptId,
             expectedState: "claimed",

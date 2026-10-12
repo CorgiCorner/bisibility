@@ -9,10 +9,10 @@ import {
   TemplatePicker,
 } from "@/components/alerts/NewRuleDrawerControls";
 import { NewRuleDrawerFooter } from "@/components/alerts/NewRuleDrawerFooter";
-import { NewRuleMarketFields, RulePreview } from "@/components/alerts/NewRuleMarketFields";
+import { CurrentRulePreview, NewRuleMarketFields } from "@/components/alerts/NewRuleMarketFields";
 import { localizedNewRuleFormDefaults } from "@/components/alerts/new-rule-form-defaults";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { inputClassName } from "@/components/ui/input-styles";
+import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Sheet } from "@/components/ui/Sheet";
 import type {
@@ -54,13 +54,9 @@ type NewRuleDrawerProps = {
   projectId: string;
   targets: AlertTargetOptions;
 };
-
 const labelClass =
   "flex flex-col gap-[7px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
-const fieldClass = `${inputClassName} rounded-control px-3 py-2.5 text-[13px] font-medium`;
-const selectTriggerClass =
-  "mb-3 min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium";
-
+const selectTriggerClass = "mb-3 normal-case tracking-normal";
 export function NewRuleDrawer({
   actions,
   canManageEndpoints,
@@ -96,7 +92,6 @@ export function NewRuleDrawer({
     watch,
   } = form;
   const templates = ruleTemplatesForDomain(projectDomain);
-  const previewDomain = projectDomain ?? targets.projectDomain ?? t("defaultProjectDomain");
   const selectedId = watch("template");
   const selectedSeverity = watch("severity");
   const isEdit = Boolean(initialRule || watch("ruleId"));
@@ -205,10 +200,18 @@ export function NewRuleDrawer({
         <input type="hidden" {...register("severity")} />
         <input type="hidden" {...register("template")} />
         <TemplatePicker onSelect={selectTemplate} selectedId={selectedId} />
-        <label className={labelClass}>
+        <label className={labelClass} htmlFor="alert-rule-name">
           {t("ruleName")}
-          <input className={fieldClass} {...register("name")} />
-          {errors.name ? <span className="text-red-text">{errors.name.message}</span> : null}
+          <Input
+            aria-label={t("ruleName")}
+            aria-describedby="alert-rule-name-error"
+            aria-invalid={Boolean(errors.name)}
+            id="alert-rule-name"
+            {...register("name")}
+          />
+          <span className="h-8 overflow-y-auto text-red-text" id="alert-rule-name-error">
+            {errors.name?.message}
+          </span>
         </label>
         <AlertSeveritySelect
           onChange={(value) =>
@@ -235,6 +238,7 @@ export function NewRuleDrawer({
           </div>
           <input type="hidden" {...register("conditionType")} />
           <MenuSelect
+            size="input"
             ariaLabel={t("conditionAria")}
             onChange={(value) =>
               setValue("conditionType", value as NewRuleForm["conditionType"], {
@@ -272,27 +276,24 @@ export function NewRuleDrawer({
           }
           watch={watch}
         />
-        {actionError ? (
-          <p
-            className="m-0 flex items-center gap-1.5 font-sans tabular-nums text-[11.5px] text-red-text"
-            role="alert"
-          >
-            <X aria-hidden size={12} weight="regular" />
-            {actionError}
-          </p>
-        ) : null}
+        <div className="h-14 overflow-y-auto" data-testid="alert-rule-action-error">
+          {actionError ? (
+            <p
+              className="m-0 flex items-start gap-1.5 font-sans tabular-nums text-[11.5px] text-red-text"
+              role="alert"
+            >
+              <X aria-hidden className="mt-0.5 shrink-0" size={12} weight="regular" />
+              {actionError}
+            </p>
+          ) : null}
+        </div>
         {actionWarning ? (
           <p className="m-0 flex items-start gap-1.5 font-sans tabular-nums text-[11.5px] text-yellow-text">
             <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={12} weight="regular" />
             {actionWarning}
           </p>
         ) : null}
-        <RulePreview>
-          {t("templatePreview", {
-            domain: previewDomain,
-            template: selectedId,
-          })}
-        </RulePreview>
+        <CurrentRulePreview projectDomain={projectDomain} targets={targets} values={watch()} />
       </form>
     </Sheet>
   );

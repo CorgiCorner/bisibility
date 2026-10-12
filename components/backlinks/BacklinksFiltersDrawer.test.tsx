@@ -58,7 +58,10 @@ describe("Backlinks filters drawer", () => {
       renderTable();
 
       await user.click(filtersButton());
-      await user.type(screen.getByLabelText("Exclude domain"), "toolindex.app");
+      // This case verifies dismissal of a prepared draft; typing is covered by the apply case.
+      const excludeDomain = screen.getByLabelText("Exclude domain");
+      await user.click(excludeDomain);
+      fireEvent.change(excludeDomain, { target: { value: "toolindex.app" } });
       expect(screen.getByText("toolindex.app")).toBeInTheDocument();
       if (dismissal === "scrim") {
         fireEvent.pointerDown(document.querySelector('[data-slot="dialog-overlay"]') as Element);

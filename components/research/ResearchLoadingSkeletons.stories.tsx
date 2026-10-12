@@ -3,6 +3,7 @@ import { ResearchPageLoading, ResearchResultsLoading } from "./ResearchLoadingSk
 
 const meta = {
   component: ResearchPageLoading,
+  args: { variant: "analytics" },
   decorators: [
     (Story) => (
       <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">

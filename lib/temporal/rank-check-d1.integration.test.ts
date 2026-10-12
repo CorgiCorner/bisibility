@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import { setTimeout as visibilityDelay } from "node:timers/promises";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -35,6 +36,7 @@ vi.mock("../rank-check/runs/finalize", () => ({
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
 import { runLegacyScheduleRollback } from "../rank-check/legacy-schedule-rollback";
 import { ensurePausedRollbackScheduleWithClient } from "../rank-check/legacy-schedule-rollback-schedule";
+import { waitForExactSchedulerCount } from "../rank-check/scheduler-count-convergence";
 import {
   buildRankCheckScheduleOptions,
   rankCheckScheduleId,
@@ -281,6 +283,32 @@ describe.runIf(integration)("D1 real Temporal integration", () => {
     120_000,
   );
 
+  // Describe is strongly consistent; list/count visibility is asynchronous even on the owned dev server.
+  // Wait only for explicit fixture identities; ownership/attribute assertions remain in the real inventory.
+  async function waitForScheduleVisibility(present: string[], absent: string[] = []) {
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      const visible = new Set<string>();
+      for await (const summary of environment.client.schedule.list({ pageSize: 10 })) {
+        visible.add(summary.scheduleId);
+      }
+      if (present.every((id) => visible.has(id)) && absent.every((id) => !visible.has(id))) {
+        return visible.size;
+      }
+      if (attempt + 1 < 100) await visibilityDelay(100);
+    }
+    throw new Error("Owned fixture Schedule visibility did not converge to exact identities.");
+  }
+
+  async function waitForSchedulerVisibility(expected: number) {
+    const result = await waitForExactSchedulerCount({
+      expected,
+      intervalMs: 100,
+      maxAttempts: 100,
+      read: () => countTemporalSystemSchedulers(environment.client),
+    });
+    expect(result.converged, JSON.stringify(result.samples)).toBe(true);
+  }
+
   async function createSingleton(scheduleId: string, workflowType: string) {
     await environment.client.schedule.create({
       action: {
@@ -432,6 +460,15 @@ describe.runIf(integration)("D1 real Temporal integration", () => {
         },
       }),
     );
+    const known = [
+      rankCheckScheduleId("d1-temporal-keyword"),
+      rankCheckScheduleId("d1-retire-keyword"),
+      RECONCILER_SCHEDULE_ID,
+      RANK_CHECK_DISPATCHER_SCHEDULE_ID,
+      "maintenance-d1-unrelated",
+    ];
+    const visible = await waitForScheduleVisibility(known);
+    await waitForSchedulerVisibility(visible);
     const before = await inventoryRankCheckSchedules(10, environment.client.schedule);
     const schedulerBefore = await countTemporalSystemSchedulers(environment.client);
     expect(before.ambiguousIds).toEqual([]);
@@ -442,6 +479,11 @@ describe.runIf(integration)("D1 real Temporal integration", () => {
       await deleteOwnedRankCheckSchedule(scheduleId, environment.client.schedule);
     }
 
+    await waitForScheduleVisibility(
+      [RECONCILER_SCHEDULE_ID, RANK_CHECK_DISPATCHER_SCHEDULE_ID, "maintenance-d1-unrelated"],
+      before.ownedIds,
+    );
+    await waitForSchedulerVisibility(schedulerBefore - before.ownedIds.length);
     const after = await inventoryRankCheckSchedules(10, environment.client.schedule);
     let schedulerAfter = await countTemporalSystemSchedulers(environment.client);
     for (
@@ -476,21 +518,26 @@ describe.runIf(integration)("D1 real Temporal integration", () => {
     await environment.client.schedule.create(options);
     const scheduleId = rankCheckScheduleId(input.keywordId);
 
+    await waitForScheduleVisibility([scheduleId]);
     const inventory = await inventoryRankCheckSchedules(10, environment.client.schedule);
-    expect(inventory.ambiguousIds).toContain(scheduleId);
-    await expect(
-      pauseOwnedRankCheckSchedule(scheduleId, environment.client.schedule),
-    ).rejects.toThrow("no longer satisfies exact ownership invariants");
-    await expect(
-      deleteOwnedRankCheckSchedule(scheduleId, environment.client.schedule),
-    ).rejects.toThrow("no longer satisfies exact ownership invariants");
-    await expect(
-      ensurePausedRollbackScheduleWithClient(input, environment.client.schedule),
-    ).rejects.toThrow("is not exact owned state");
-    expect((await environment.client.schedule.getHandle(scheduleId).describe()).state.paused).toBe(
-      false,
-    );
-    await environment.client.schedule.getHandle(scheduleId).delete();
+    try {
+      expect(inventory.ambiguousIds).toContain(scheduleId);
+      await expect(
+        pauseOwnedRankCheckSchedule(scheduleId, environment.client.schedule),
+      ).rejects.toThrow("no longer satisfies exact ownership invariants");
+      await expect(
+        deleteOwnedRankCheckSchedule(scheduleId, environment.client.schedule),
+      ).rejects.toThrow("no longer satisfies exact ownership invariants");
+      await expect(
+        ensurePausedRollbackScheduleWithClient(input, environment.client.schedule),
+      ).rejects.toThrow("is not exact owned state");
+      expect(
+        (await environment.client.schedule.getHandle(scheduleId).describe()).state.paused,
+      ).toBe(false);
+    } finally {
+      await environment.client.schedule.getHandle(scheduleId).delete();
+      await waitForScheduleVisibility([], [scheduleId]);
+    }
   });
 
   it("dry-runs and recreates an exact paused monthly rollback Schedule", async () => {
@@ -519,6 +566,8 @@ describe.runIf(integration)("D1 real Temporal integration", () => {
       const options = buildRankCheckScheduleOptions(rollbackInput);
       options.state = { note: "D1 rollback prepared", paused: true };
       await environment.client.schedule.create(options);
+      const visible = await waitForScheduleVisibility([scheduleId]);
+      await waitForSchedulerVisibility(visible);
       return "created";
     });
     const store = {
@@ -557,10 +606,15 @@ describe.runIf(integration)("D1 real Temporal integration", () => {
       }),
     };
 
+    const visible = await waitForScheduleVisibility(
+      [RECONCILER_SCHEDULE_ID, RANK_CHECK_DISPATCHER_SCHEDULE_ID, "maintenance-d1-unrelated"],
+      [rankCheckScheduleId("d1-attribute-mismatch")],
+    );
+    await waitForSchedulerVisibility(visible);
     const dryRun = await runLegacyScheduleRollback({
       dryRun: true,
       pageSize: 10,
-      schedulerVisibility: { intervalMs: 0, maxAttempts: 3 },
+      schedulerVisibility: { intervalMs: 100, maxAttempts: 100 },
       store,
     });
     expect(dryRun.verdict).toBe("PASS");
@@ -569,7 +623,7 @@ describe.runIf(integration)("D1 real Temporal integration", () => {
     const result = await runLegacyScheduleRollback({
       dryRun: false,
       pageSize: 10,
-      schedulerVisibility: { intervalMs: 0, maxAttempts: 3 },
+      schedulerVisibility: { intervalMs: 100, maxAttempts: 100 },
       store,
     });
     const description = await environment.client.schedule.getHandle(scheduleId).describe();

@@ -22,7 +22,6 @@ import {
 import {
   assertLaunchBudget,
   estimatedRunUsageQuantity,
-  estimateRunRows,
   lockLaunchSourceSnapshot,
   providerAllocationReservation,
   quoteRankRunReservationForLaunch,
@@ -39,6 +38,7 @@ import {
   type RetryParentRun,
   requireRankCheckRunProject,
 } from "./launch-types";
+import { quoteRunRows } from "./native-quotes";
 import {
   lockRunSelectionKeywords,
   resolveRunSelection,
@@ -63,9 +63,7 @@ export async function launchRankCheckRun(
   const [project, rows, connections] = await Promise.all([
     prisma.project.findUnique({
       select: {
-        budgetCapCents: true,
         defaults: { select: { serpDepth: true } },
-        providerAllocationsInitializedAt: true,
       },
       where: { id: input.project.id },
     }),
@@ -91,7 +89,7 @@ export async function launchRankCheckRun(
       (input.retry ? true : !runSelectionKeywordHeld(row, input.trigger)),
   );
   const estimate = connections[0]
-    ? estimateRunRows(executable, project.defaults?.serpDepth, input, connections[0])
+    ? await quoteRunRows(executable, project.defaults?.serpDepth, input, connections[0])
     : {
         native: { providerId: null, unit: null, quantity: null, unknownTargets: 0 },
         costCents: null,
@@ -133,11 +131,12 @@ export async function launchRankCheckRun(
             ),
           );
         }
-        const estimate = estimateRunRows(
+        const estimate = await quoteRunRows(
           executable,
           currentProject.defaults?.serpDepth,
           input,
           currentConnection,
+          tx,
         );
         if (!input.retry) {
           verifyLaunchPreviewToken(input, estimate.costCents, resolved.selectionHash, now);
@@ -145,7 +144,7 @@ export async function launchRankCheckRun(
         const concurrent = await findIdempotentRun(input.project.id, idempotencyKey, tx);
         if (concurrent) return { existing: concurrent };
         if (currentConnection.credentialSource !== "hosted") {
-          await assertLaunchBudget(input, currentProject, currentConnection, estimate, now, tx);
+          await assertLaunchBudget(input, currentConnection, estimate, now, tx);
         }
         const rankReservation = await quoteRankRunReservationForLaunch(tx, {
           connection: currentConnection,
@@ -154,15 +153,11 @@ export async function launchRankCheckRun(
           targets: estimate.targets,
         });
         const estimatedCostCents = estimate.costCents ?? 0;
-        const allocationReservation =
-          currentProject.providerAllocationsInitializedAt && currentConnection.id
-            ? providerAllocationReservation(
-                currentConnection.id,
-                estimatedRunUsageQuantity(estimate),
-              )
-            : currentConnection.id
-              ? { providerConnectionId: currentConnection.id }
-              : {};
+        const allocationReservation = currentConnection.id
+          ? providerAllocationReservation(currentConnection.id, estimatedRunUsageQuantity(estimate))
+          : currentConnection.id
+            ? { providerConnectionId: currentConnection.id }
+            : {};
         const usageEstimate = runUsageEstimate(currentConnection, estimate);
         const keywordCount = new Set(executable.map(({ text }) => text)).size;
         const run = await tx.rankCheckRun.create({

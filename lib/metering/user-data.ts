@@ -2,49 +2,50 @@ import "server-only";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { prisma } from "@/lib/db/prisma";
-import { readDeploymentMeteringAuthority } from "@/lib/providers/execution-extension";
 import { requireReadableProject } from "@/lib/queries/_auth";
-import type { AccessContext, Source } from "@usagekit/core";
+import type { AccessContext } from "@usagekit/core";
+import type { BudgetRow } from "@usagekit/views";
+import { cache } from "react";
 import { mapAdminQueries } from "./admin-batch";
 import { readOwnConnectionBudgets } from "./own-budget-read";
+import { readOwnerUsage } from "./owner-reads";
+import { readProjectBudgetStatuses } from "./project-budget-statuses";
 import { meteringNamespace, meteringRuntime } from "./runtime";
-import {
-  projectAuthority,
-  projectBudgetFiguresKnown,
-  projectBudgetRow,
-  projectUsageRow,
-} from "./user-model";
-import type { ProjectMeteringBudget, ProjectMeteringUsage } from "./user-types";
+import { projectBudgetFiguresKnown, projectBudgetRow } from "./user-model";
+import { emptyProjectUsage, type ProjectUsageViews } from "./user-views";
 
-const sources: readonly Source[] = ["app", "worker", "api", "sdk", "cli", "mcp", "proxy"];
 const connectionLimit = 20;
+const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn) => fn;
 
 /** Auth and scope come exclusively from the verified project session, never a caller scope. */
-export async function getProjectMeteringUsage(projectRef: string): Promise<ProjectMeteringUsage> {
+const projectContext = perRequestCache(async (projectRef: string) => {
   const { actor, project } = await requireReadableProject(projectRef);
   const now = new Date();
   const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   const to = now.toISOString();
-  const empty: ProjectMeteringUsage = {
-    status: "unavailable",
-    from,
-    to,
-    asOf: null,
-    authority: "unknown",
-    observed: false,
-    truncated: false,
-    unresolved: 0,
-    oldestUnresolvedAt: null,
-    rows: [],
-    budgets: [],
+  const connections = await prisma.providerConnection.findMany({
+    where: { projectId: project.id },
+    orderBy: { id: "asc" },
+    take: 50,
+    select: { id: true, publicId: true, provider: true },
+  });
+  const empty = {
+    ...emptyProjectUsage(now),
+    connections: connections.map((connection) => ({
+      connectionId: connection.publicId,
+      provider: connection.provider,
+    })),
   };
   // Billing is an owner-only resource in this host. Ordinary project membership must
   // never grant owner-wide usage, wallet details, shared tag totals or pool visibility.
-  if (
+  const restricted =
     actor.id !== project.ownerId ||
-    !canProjectAction(getProjectRole(actor, project.id), "read", "billing")
-  )
-    return { ...empty, status: "restricted" };
+    !canProjectAction(getProjectRole(actor, project.id), "read", "billing");
+  return { actor, project, connections, empty, restricted, from, to };
+});
+
+const projectBudgetState = perRequestCache(async (projectRef: string) => {
+  const { actor, project, connections, empty, restricted, to } = await projectContext(projectRef);
   try {
     const namespace = meteringNamespace();
     const access: AccessContext = {
@@ -55,76 +56,30 @@ export async function getProjectMeteringUsage(projectRef: string): Promise<Proje
       canReadBillingDetail: true,
       canManageBudgets: false,
     };
-    const [{ meter }, connections] = await Promise.all([
-      meteringRuntime(),
-      prisma.providerConnection.findMany({
-        where: { projectId: project.id },
-        orderBy: { id: "asc" },
-        take: connectionLimit + 1,
-        select: { id: true, publicId: true, provider: true },
-      }),
-    ]);
+    const { meter } = await meteringRuntime();
     const scope = { kind: "group" as const, namespace, group: project.id };
-    const [usage, pending] = await Promise.all([
-      meter.usage(access, {
-        scope,
-        from,
-        to,
-        units: ["cents", "units", "customer_cents"],
-        // Split before filtering so a transferred project's former payer cannot be
-        // combined with the current owner's observations. Principal never reaches UI.
-        groupBy: ["principal", "connection", "provider", "surface", "source"],
-        limit: 100,
-      }),
-      meter.listOperations(access, {
-        scope,
-        // Retained exposure survives month boundaries; do not hide an older pending call.
-        from: "1970-01-01T00:00:00.000Z",
-        to,
-        states: ["reserved", "dispatch_intended", "pending"],
-        limit: 100,
-      }),
-    ]);
-    if (usage.outcome !== "ok" || pending.outcome !== "ok")
-      throw new Error("Meter read unavailable");
     const selected = connections.slice(0, connectionLimit);
-    const refs = new Map(selected.map((connection) => [connection.id, connection.publicId]));
-    const [statuses, coverage, own] = await Promise.all([
-      mapAdminQueries(
-        selected.flatMap((connection) => sources.map((source) => ({ connection, source }))),
-        async ({ connection, source }) => {
-          const result = await meter.applicableBudgets(access, {
-            scope: {
-              namespace,
-              principal: project.ownerId,
-              group: project.id,
-              connection: connection.id,
-            },
-            source,
-            surface: source === "app" || source === "worker" ? "app" : "programmatic",
-            units: ["cents", "units", "customer_cents", "requests"],
-          });
-          if (result.outcome !== "ok") throw new Error("Meter limits unavailable");
-          return { connection, statuses: result.value };
-        },
-      ),
-      mapAdminQueries(selected, (connection) =>
-        readDeploymentMeteringAuthority({
-          namespace,
-          connectionId: connection.id,
-          from,
-          to,
-        }),
-      ),
-      mapAdminQueries(selected, (connection) =>
-        readOwnConnectionBudgets({
-          namespace,
-          actorId: actor.id,
-          projectId: project.id,
-          connectionId: connection.id,
-        }),
-      ),
-    ]);
+    const refs = new Map(connections.map((connection) => [connection.id, connection.publicId]));
+    const statuses = await readProjectBudgetStatuses(meter, access, project, selected);
+    const budgetData = {
+      ...empty,
+      truncated: connections.length > connectionLimit,
+      paidWorkBlocked: statuses.some((result) => result.blocked === true)
+        ? true
+        : connections.length > connectionLimit || statuses.some((result) => result.blocked === null)
+          ? null
+          : false,
+    };
+    if (restricted)
+      return { data: { ...budgetData, status: "restricted" as const }, usageContext: null };
+    const own = await mapAdminQueries(selected, (connection) =>
+      readOwnConnectionBudgets({
+        namespace,
+        actorId: actor.id,
+        projectId: project.id,
+        connectionId: connection.id,
+      }),
+    );
     const epochStarts = statuses
       .flatMap((result) => result.statuses)
       .filter(
@@ -144,7 +99,7 @@ export async function getProjectMeteringUsage(projectRef: string): Promise<Proje
     if (provenance && provenance.outcome !== "ok") throw new Error("Meter provenance unavailable");
     const completeProvenance = provenance?.outcome === "ok" && !provenance.value.nextCursor;
     const operations = provenance?.outcome === "ok" ? provenance.value.operations : [];
-    const budgets: ProjectMeteringBudget[] = [];
+    const budgets: BudgetRow[] = [];
     const seen = new Set<string>();
     for (const result of statuses)
       for (const status of result.statuses) {
@@ -152,12 +107,13 @@ export async function getProjectMeteringUsage(projectRef: string): Promise<Proje
           status.budget.scope.kind === "connection" &&
           own.some(
             (verified) =>
-              verified?.binding.connection === result.connection.id &&
+              verified !== null &&
+              verified.binding.connection === result.connection?.id &&
               verified.binding.namespace === namespace &&
               verified.binding.principal === actor.id &&
               verified.binding.group === project.id &&
-              verified.binding.publicConnection === result.connection.publicId &&
-              verified.binding.provider === result.connection.provider &&
+              verified.binding.publicConnection === result.connection?.publicId &&
+              verified.binding.provider === result.connection?.provider &&
               status.budget.unit === verified.binding.unit &&
               verified.budgets.length > 0,
           )
@@ -168,9 +124,9 @@ export async function getProjectMeteringUsage(projectRef: string): Promise<Proje
         seen.add(identity);
         const row = projectBudgetRow(
           status,
-          result.connection.publicId,
+          result.connection?.publicId ?? null,
           projectBudgetFiguresKnown(status, operations, project.ownerId, completeProvenance),
-          result.connection.provider,
+          result.connection?.provider ?? null,
         );
         if (row) budgets.push(row);
       }
@@ -196,37 +152,72 @@ export async function getProjectMeteringUsage(projectRef: string): Promise<Proje
         if (row) budgets.push(row);
       }
     }
-    const rows = usage.value.rows.filter((row) => row.dimensions.principal === project.ownerId);
-    const unresolved = pending.value.operations.filter(
-      (operation) => operation.scope.principal === project.ownerId,
-    );
-    const retainedConnection = rows.some((row) => !refs.has(row.dimensions.connection));
-    const priorOwner = rows.length !== usage.value.rows.length;
     return {
-      ...empty,
-      status: "available",
-      asOf: usage.value.asOf,
-      authority: projectAuthority(
-        coverage,
-        connections.length <= connectionLimit &&
-          !retainedConnection &&
-          !priorOwner &&
-          !usage.value.nextCursor,
-      ),
-      observed: rows.length > 0,
-      rows: rows.map((row) => projectUsageRow(row, refs.get(row.dimensions.connection) ?? null)),
-      budgets,
-      unresolved: unresolved.length,
-      oldestUnresolvedAt: unresolved[0]?.createdAt ?? null,
-      truncated: Boolean(
-        usage.value.nextCursor ||
-          pending.value.nextCursor ||
-          (provenance?.outcome === "ok" && provenance.value.nextCursor) ||
-          connections.length > connectionLimit,
-      ),
+      data: {
+        ...budgetData,
+        status: "available" as const,
+        budgets,
+      },
+      usageContext: { meter, access, scope, refs, owner: project.ownerId },
     };
   } catch {
+    console.error("[metering] project usage unavailable");
     // A failed observer or authority read cannot turn missing data into a confirmed zero.
-    return empty;
+    return {
+      data: { ...empty, status: restricted ? ("restricted" as const) : ("unavailable" as const) },
+      usageContext: null,
+    };
   }
-}
+});
+
+/** Header and runs need budget evidence only, without usage pages or the pending scan. */
+export const getProjectMeteringBudgets = perRequestCache(
+  async (projectRef: string): Promise<ProjectUsageViews> =>
+    (await projectBudgetState(projectRef)).data,
+);
+
+export const getProjectMeteringUsage = perRequestCache(
+  async (projectRef: string): Promise<ProjectUsageViews> => {
+    const { data, usageContext } = await projectBudgetState(projectRef);
+    if (!usageContext) return data;
+    const { from, to, project } = await projectContext(projectRef);
+    const { meter, access, scope, refs, owner } = usageContext;
+    try {
+      const [usage, pending] = await Promise.all([
+        readOwnerUsage(meter, access, { scope, from, to }, owner, refs, async (ids) => {
+          const current = await prisma.providerConnection.findMany({
+            where: { projectId: project.id, id: { in: ids } },
+            select: { id: true, publicId: true },
+          });
+          return new Map(current.map((connection) => [connection.id, connection.publicId]));
+        }),
+        meter.listOperations(access, {
+          scope,
+          from: "1970-01-01T00:00:00.000Z",
+          to,
+          states: ["reserved", "dispatch_intended", "pending"],
+          limit: 100,
+        }),
+      ]);
+      if (pending.outcome !== "ok") throw new Error("Meter read unavailable");
+      const unresolved = pending.value.operations.filter(
+        (operation) => operation.scope.principal === owner,
+      );
+      return {
+        ...data,
+        summary: usage.summary,
+        detail: { ...usage.detail, nextCursor: null },
+        unresolved: unresolved.length,
+        oldestUnresolvedAt: unresolved[0]?.createdAt ?? null,
+        truncated:
+          data.truncated ||
+          usage.truncated ||
+          !usage.summary.complete ||
+          Boolean(pending.value.nextCursor),
+      };
+    } catch {
+      console.error("[metering] project usage unavailable");
+      return { ...data, status: "unavailable" };
+    }
+  },
+);

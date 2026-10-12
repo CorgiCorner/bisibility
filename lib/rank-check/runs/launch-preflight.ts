@@ -3,6 +3,7 @@ import "server-only";
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { budgetDenialReason } from "@/lib/metering/budget-denial";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import {
@@ -21,7 +22,6 @@ import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { resolveEffectiveSerpDepth, type SerpDepth } from "@/lib/serp/constants";
-import { ACTIVE_RUN_STATUSES } from "./contract";
 import { LaunchRankCheckRunError, type LaunchRankCheckRunInput } from "./launch-types";
 import { verifyPreviewToken } from "./preview-token";
 import type { RunSelectionKeyword } from "./selection";
@@ -58,9 +58,7 @@ export async function lockLaunchSourceSnapshot(
   await lockProjectForProviderMutation(tx, projectId);
   const project = await tx.project.findUnique({
     select: {
-      budgetCapCents: true,
       defaults: { select: { serpDepth: true } },
-      providerAllocationsInitializedAt: true,
     },
     where: { id: projectId },
   });
@@ -84,14 +82,17 @@ export function estimateRunRows(
   projectDepth: number | null | undefined,
   input: Pick<LaunchRankCheckRunInput, "depth">,
   connection: ProviderConnection,
+  targetCosts?: readonly (number | null)[],
 ) {
+  if (targetCosts && targetCosts.length !== rows.length)
+    throw new Error("Rank quote count does not match targets");
   const override = connection.credentialSource === "hosted" ? null : connection.costPerCheckCents;
   const loadedRateContext = connection.rateContext ?? LIST_PROVIDER_RATE_CONTEXT;
   const rateContext =
     connection.credentialSource === "hosted"
       ? { ...loadedRateContext, manualAmountCents: null }
       : loadedRateContext;
-  const targets = rows.map((row) => {
+  const targets = rows.map((row, index) => {
     const depth = resolveEffectiveSerpDepth({
       projectDepth,
       requestedDepth: input.depth,
@@ -103,8 +104,9 @@ export function estimateRunRows(
         ? hostedRankCheckEstimatedCostCents(connection.provider, depth)
         : null;
     return {
-      cost:
-        connection.credentialSource === "hosted" && connection.provider === "serpapi"
+      cost: targetCosts
+        ? (targetCosts[index] ?? null)
+        : connection.credentialSource === "hosted" && connection.provider === "serpapi"
           ? hostedEstimate
           : estimatedRankCheckCostCents(connection.provider, depth, override, rateContext),
       depth,
@@ -120,6 +122,7 @@ export function estimateRunRows(
         overrideCents: override == null ? null : Number(override),
         rateContext,
       },
+      targetCosts,
     ),
     costCents: known.length > 0 ? known.reduce((sum, cost) => sum + cost, 0) : null,
     targets,
@@ -158,7 +161,7 @@ export async function quoteRankRunReservationForLaunch(
     return await quoteRankRunReservation(...args);
   } catch (error) {
     if (isBudgetExhaustedError(error) || error instanceof ProviderAllocationExhaustedError) {
-      throw new LaunchRankCheckRunError("budget_exhausted");
+      throw new LaunchRankCheckRunError("budget_exhausted", undefined, budgetDenialReason(error));
     }
     throw error;
   }
@@ -187,45 +190,6 @@ export function providerAllocationReservation(connectionId: string | undefined, 
     : {};
 }
 
-function reservationQuantity(selectionSpec: unknown) {
-  if (!selectionSpec || typeof selectionSpec !== "object" || Array.isArray(selectionSpec)) return 0;
-  const value = (selectionSpec as { providerAllocationQuantity?: unknown })
-    .providerAllocationQuantity;
-  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : 0;
-}
-
-async function activeAllocationReservations(
-  client: Prisma.TransactionClient,
-  input: {
-    connectionId: string;
-    projectId: string;
-    surface: ProviderRequestSurface;
-    unit: "cents" | "units";
-  },
-) {
-  const runs = await client.rankCheckRun.findMany({
-    select: { estimatedCostCents: true, selectionSpec: true, source: true },
-    where: {
-      projectId: input.projectId,
-      OR: [
-        { status: { in: [...ACTIVE_RUN_STATUSES] } },
-        { items: { some: { status: { in: ["queued", "running"] } } }, status: "blocked" },
-      ],
-    },
-  });
-  return runs.reduce((total, run) => {
-    const selectionSpec = run.selectionSpec as { providerConnectionId?: unknown };
-    if (selectionSpec?.providerConnectionId !== input.connectionId) return total;
-    // Reservations bind to the surface that launched the run; a null source is a
-    // legacy app-surface row, so it counts against app launches only.
-    if (surfaceOf(run.source as ProviderRequestSource | null) !== input.surface) return total;
-    return (
-      total +
-      (input.unit === "cents" ? run.estimatedCostCents : reservationQuantity(run.selectionSpec))
-    );
-  }, 0);
-}
-
 export async function reserveProviderAllocation(
   client: Prisma.TransactionClient,
   input: ProviderAllocationReservationInput,
@@ -237,13 +201,13 @@ export async function reserveProviderAllocation(
     WHERE "id" = ${input.connection.id} AND "projectId" = ${input.projectId}
     FOR UPDATE
   `);
-  const allocation = await assertProviderAllocationAvailable(
+  await assertProviderAllocationAvailable(
     {
       catalog: PROVIDER_CATALOG,
       connectionId: input.connection.id,
       estimatedCostCents: input.estimatedCostCents,
       estimatedUsageQuantity: input.estimatedUsageQuantity,
-      legacyBudgetCheck: async () => undefined,
+
       now: input.now,
       projectId: input.projectId,
       provider: input.connection.provider,
@@ -251,37 +215,20 @@ export async function reserveProviderAllocation(
     },
     client,
   );
-  if (allocation.mode !== "allocation" || allocation.remaining === null || !allocation.unit) return;
-  const reserved = await activeAllocationReservations(client, {
-    connectionId: input.connection.id,
-    projectId: input.projectId,
-    surface: input.surface,
-    unit: allocation.unit,
-  });
-  const requested =
-    allocation.unit === "cents" ? input.estimatedCostCents : input.estimatedUsageQuantity;
-  if (reserved + requested > allocation.remaining) {
-    throw new ProviderAllocationExhaustedError(input.connection.id, input.surface);
-  }
 }
 
 export async function assertLaunchBudget(
   input: LaunchRankCheckRunInput,
-  project: { budgetCapCents: number; providerAllocationsInitializedAt: Date | null },
   connection: ProviderConnection,
   estimate: ReturnType<typeof estimateRunRows>,
   now: Date,
   client?: Prisma.TransactionClient,
 ) {
   try {
-    if (!project.providerAllocationsInitializedAt) {
-      await assertBudgetAvailable(input.project.id, now, {
-        capCents: project.budgetCapCents,
-        client,
-        estimatedCostCents: estimate.costCents,
-      });
-      return;
-    }
+    await assertBudgetAvailable(input.project.id, now, {
+      client,
+      estimatedCostCents: estimate.costCents,
+    });
     if (!client) throw new Error("Provider allocation checks require a transaction.");
     await reserveProviderAllocation(client, {
       connection,
@@ -293,7 +240,7 @@ export async function assertLaunchBudget(
     });
   } catch (error) {
     if (isBudgetExhaustedError(error) || error instanceof ProviderAllocationExhaustedError) {
-      throw new LaunchRankCheckRunError("budget_exhausted");
+      throw new LaunchRankCheckRunError("budget_exhausted", undefined, budgetDenialReason(error));
     }
     throw error;
   }

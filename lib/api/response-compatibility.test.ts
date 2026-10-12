@@ -156,8 +156,11 @@ it("generates the same response evidence consumed by all SDKs and MCP", async ()
     expect(validate(response.body.data).valid).toBe(true);
   expect(validate(responses[3].body.data).valid).toBe(true);
   const normal = responses[0].body.data;
-  for (const history of [[], normal.history.slice(1), [...normal.history, normal.history[0]]])
-    expect(validate({ ...normal, history }).valid).toBe(false);
-  expect(validate({ ...normal, history: [], history_unavailable: false }).valid).toBe(false);
+  for (const history of [[], normal.history.slice(0, 1), normal.history.slice(1)])
+    expect(validate({ ...normal, history }).valid).toBe(true);
+  expect(validate({ ...normal, history: [...normal.history, normal.history[0]] }).valid).toBe(
+    false,
+  );
+  expect(validate({ ...normal, history: [], history_unavailable: false }).valid).toBe(true);
   expect(validate({ ...normal, history_unavailable: true }).valid).toBe(false);
 });

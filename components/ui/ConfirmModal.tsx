@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { Modal, type ModalSize } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/toast-context";
 import { useTranslations } from "next-intl";
@@ -92,22 +93,12 @@ export function ConfirmModal({
     <Modal
       footer={
         <>
-          <button
-            className="p-0 text-[13px] font-semibold text-fg-muted outline-none transition-colors hover:text-fg focus-visible:text-fg"
-            disabled={isBusy}
-            onClick={handleClose}
-            type="button"
-          >
+          <Button variant="ghost" disabled={isBusy} onClick={handleClose} type="button">
             {t("cancel")}
-          </button>
-          <button
-            className="rounded-control bg-red px-4 py-2.5 text-[13px] font-semibold text-error-contrast outline-none transition-[opacity,transform] duration-[var(--motion-press)] hover:opacity-90 focus-visible:opacity-90 motion-safe:active:not-focus-visible:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={disabled}
-            onClick={handleConfirm}
-            type="button"
-          >
+          </Button>
+          <Button variant="destructive" disabled={disabled} onClick={handleConfirm} type="button">
             {isBusy ? t("working") : dangerLabel}
-          </button>
+          </Button>
         </>
       }
       headerDivider

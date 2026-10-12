@@ -180,6 +180,7 @@
       "budgetReached": "予算上限に到達",
       "checksThisMonth": "今月のチェック数",
       "description": "このプロジェクトで順位データを取得する方法",
+      "providerCostUnknown": "不明",
       "estimateProviderCost": "推定プロバイダー費用",
       "failedChecks": "失敗（24時間）",
       "lastCheck": "前回のチェック",

@@ -1,27 +1,19 @@
 {
   "projectCostEstimate": {
     "providerSpend": {
-      "docs": "Jak działają budżety",
-      "eyebrow": "Budżet miesięczny",
-      "noCapAmount": "{spent} w tym miesiącu",
-      "meterAria": "Wydatki u dostawcy: {spent} z {cap} w tym miesiącu{session, select, none {} other {, {session} w tej sesji}}",
-      "segmentedAmount": "Wykorzystano {spent} z {cap}",
-      "cardCap": "z limitu {cap}",
-      "thisMonth": "w tym miesiącu",
-      "capReached": "osiągnięto limit",
-      "session": "{spent} w tej sesji",
-      "pace": "w tempie ~{spent}/mies.",
-      "left": "pozostało {spent}",
-      "otherProvider": "Pozostali",
-      "headerUnavailable": "Wydatki niedostępne",
-      "headerCapTooltip": "Miesięczny budżet u dostawcy.",
+      "headerUnavailable": "Zużycie niedostępne",
+      "headerUsageUnknown": "Zużycie nieznane",
+      "headerCapTooltip": "Zużycie budżetów z uwzględnieniem rezerwacji. Szczegóły w widoku Zużycie.",
       "headerNoCap": "Brak budżetu · Ustaw",
-      "headerNoCapWithSpend": "{spent} · brak budżetu · Ustaw",
       "headerNoCapAria": "Brak budżetu, ustaw go",
-      "headerNoCapAriaWithSpend": "Wydano {spent} bez budżetu, ustaw go",
-      "headerUnderOnePercent": "Wykorzystano <1%",
-      "headerUsed": "Wykorzystano {percent, number}%",
-      "headerCapAria": "Limit miesięczny: {used}"
+      "headerUsed": "Wykorzystano {percent}%",
+      "headerAtLeastUsed": "Wykorzystano co najmniej {percent}%",
+      "headerUnderOne": "Wykorzystano mniej niż 1%",
+      "headerAtLeastUnderOne": "Co najmniej niewielkie zużycie",
+      "headerExceeded": "Przekroczono budżet",
+      "headerUsageAria": "Zużycie budżetów: {status}. Zobacz szczegóły",
+      "headerNoLimit": "Bez limitu",
+      "headerWarning": "Ostrzeżenie budżetu"
     },
     "status": {
       "unavailable": "Szacowany koszt jest niedostępny.",

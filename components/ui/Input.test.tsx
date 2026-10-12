@@ -46,6 +46,8 @@ describe("Input", () => {
       "rounded-control",
       "text-ui-body",
       "font-medium",
+      "normal-case",
+      "tracking-normal",
       "min-h-10",
       "w-full",
     );

@@ -3,34 +3,36 @@
   --radius-control: 6px;
   --radius-card: 12px;
   --error-contrast: var(--bg-sidebar);
-  --bg: #f5f3ee;
-  --bg-elev: #fbf9f4;
-  --bg-sidebar: #ffffff;
-  --bg-sunken: #ece7db4d;
-  --bg-band: #ebe8e0;
-  --bg-inset: #e2ddd0;
-  --contrast-bg: #1c1a16;
-  --contrast-surface: #24211b;
-  --contrast-fg: #f3f0e6;
-  --contrast-muted: #a09d95;
-  --contrast-border: #343333;
-  --contrast-accent: #f0a18a;
+  --bg: #f5f5f5;
+  --bg-elev: #ffffff;
+  --bg-sidebar: #e8e8e8;
+  --bg-sunken: #e4e4e4;
+  --bg-band: #ececec;
+  --bg-inset: #dcdcdc;
+  --contrast-bg: #1a1a1a;
+  --contrast-surface: #262626;
+  --contrast-fg: #f2f2f2;
+  --contrast-muted: #b8b8b8;
+  --contrast-border: #444444;
+  --contrast-accent: #d8d8d8;
   --table-header-bg: transparent;
-  --fg: #1a1813;
-  --fg-muted: #615b4d;
-  --border: #ddd8cc;
-  --border-soft: #f0eee6;
-  --border-control: #c5bfb4;
-  --nav-active: #edeae1;
-  --meter-track: #e2ddd0;
-  --accent: #f1511c;
-  --accent-hover: #f0450f;
-  --accent-text: #ac3a15;
-  --accent-soft: #fae5da;
-  /* Primary pair: cream --accent-on-solid on brand fill in both schemes. */
-  --accent-solid: #f1511c;
-  --accent-solid-hover: #f0450f;
-  --accent-on-solid: #fff3ee;
+  --fg: #202020;
+  --fg-muted: #585858;
+  --border: #d0d0d0;
+  --border-soft: #e7e7e7;
+  --border-control: #7c7c7c;
+  --nav-active: #dddddd;
+  --meter-track: #dcdcdc;
+  --accent: #171717;
+  --accent-hover: #303030;
+  --accent-text: #171717;
+  --accent-soft: #e5e5e5;
+  /* Primary labels and focus indicators meet the contrast contract in both schemes. */
+  --accent-solid: #171717;
+  --accent-solid-hover: #303030;
+  --accent-on-solid: #fafafa;
+  --button-secondary-bg: #f5f5f5;
+  --button-secondary-hover-bg: #ebebeb;
   --module-mark-top: rgba(255, 255, 255, 0.4);
   --module-mark-bottom: rgba(26, 24, 19, 0.08);
   --blue: #4f86e8;
@@ -39,7 +41,7 @@
   --purple-text: #5b3ea6;
   --green: #3c9a63;
   --green-text: #1f6c40;
-  --red: #c8463a;
+  --red: #b7352b;
   --yellow: #e0a93b;
   --rank-bucket-green: #3c9a63;
   --rank-bucket-green-muted: #7fb36b;
@@ -47,14 +49,14 @@
   --rank-bucket-orange: #e08a4e;
   --rank-bucket-red: #c8463a;
   --yellow-text: #77580f;
-  --red-text: #b03a2e;
+  --red-text: #a32d27;
   /* Select arrow fill tracks --fg-muted; asserted in globals.test.ts. */
-  --select-arrow-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 256 256' fill='%23615B4D'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80A8 8 8 0 0 1 53.66 90.34L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E");
-  --code-bg: #1c1a16;
-  --code-fg: #edeae0;
-  --code-faint: #8c887c;
+  --select-arrow-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 256 256' fill='%23585858'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80A8 8 8 0 0 1 53.66 90.34L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E");
+  --code-bg: #1a1a1a;
+  --code-fg: #ededed;
+  --code-faint: #aaaaaa;
   /* Code-block hairline: lighter than --code-bg in both themes. */
-  --code-border: #33302a;
+  --code-border: #404040;
   /* Motion tokens - theme-independent easing and duration scale. Kept in sync
      with lib/ui/motion.ts and asserted in lib/ui/motion.test.ts. The toast pair
      is the settled lifecycle timing, included now so later overlay work does
@@ -77,42 +79,44 @@
 
 [data-theme="dark"] {
   --error-contrast: var(--bg);
-  --bg: #0f0c07;
-  --bg-elev: #191919;
-  --bg-sidebar: #070603;
-  --bg-sunken: #141414;
-  --bg-band: #141414;
-  --bg-inset: #080704;
-  --contrast-bg: #f3eee3;
-  --contrast-surface: #fbf9f4;
-  --contrast-fg: #1a1813;
-  --contrast-muted: #615b4d;
-  --contrast-border: #ddd8cc;
-  --contrast-accent: #ac3a15;
+  --bg: #1e1e1e;
+  --bg-elev: #282828;
+  --bg-sidebar: #121212;
+  --bg-sunken: #181818;
+  --bg-band: #242424;
+  --bg-inset: #101010;
+  --contrast-bg: #e8e8e8;
+  --contrast-surface: #ffffff;
+  --contrast-fg: #202020;
+  --contrast-muted: #585858;
+  --contrast-border: #d0d0d0;
+  --contrast-accent: #404040;
   --table-header-bg: transparent;
-  --fg: #ece7db;
-  --fg-muted: #a09d95;
-  --border: #343333;
-  --border-soft: #262626;
-  --border-control: #616060;
-  --nav-active: #141414;
-  --meter-track: #595959;
-  --accent: #e08a6a;
-  --accent-hover: #ec9a7c;
-  --accent-text: #f0a18a;
-  --accent-soft: #2a2018;
-  --accent-solid: #f1511c;
-  --accent-solid-hover: #f0450f;
-  --accent-on-solid: #fff3ee;
+  --fg: #eeeeee;
+  --fg-muted: #bababa;
+  --border: #484848;
+  --border-soft: #383838;
+  --border-control: #878787;
+  --nav-active: #303030;
+  --meter-track: #696969;
+  --accent: #e5e5e5;
+  --accent-hover: #d4d4d4;
+  --accent-text: #e5e5e5;
+  --accent-soft: #333333;
+  --accent-solid: #e5e5e5;
+  --accent-solid-hover: #d4d4d4;
+  --accent-on-solid: #171717;
+  --button-secondary-bg: #383838;
+  --button-secondary-hover-bg: #464646;
   --module-mark-top: rgba(0, 0, 0, 0.32);
   --module-mark-bottom: rgba(255, 255, 255, 0.08);
-  --blue: #6a9bf0;
-  --blue-text: #6a9bf0;
-  --purple: #9e82e6;
-  --purple-text: #b9a5f2;
-  --green: #57a77e;
-  --green-text: #79c998;
-  --red: #e0705c;
+  --blue: #80b0ff;
+  --blue-text: #80b0ff;
+  --purple: #bba4f5;
+  --purple-text: #cab8fa;
+  --green: #67b58b;
+  --green-text: #87d4a6;
+  --red: #ef8a7b;
   --yellow: #e6b452;
   --rank-bucket-green: #57a77e;
   --rank-bucket-green-muted: #8cc07a;
@@ -120,11 +124,25 @@
   --rank-bucket-orange: #ec9a63;
   --rank-bucket-red: #e0705c;
   --yellow-text: #eec069;
-  --red-text: #e0705c;
-  --select-arrow-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 256 256' fill='%23A09D95'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80A8 8 0 0 1 53.66 90.34L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E");
-  --code-bg: #0e0d0a;
-  --code-fg: #ece7db;
-  --code-faint: #7e7a6e;
-  --code-border: #26231e;
+  --red-text: #ef8a7b;
+  --select-arrow-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 256 256' fill='%23BABABA'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80A8 8 0 0 1 53.66 90.34L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E");
+  --code-bg: #101010;
+  --code-fg: #eeeeee;
+  --code-faint: #aaaaaa;
+  --code-border: #404040;
   color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  input,
+  textarea,
+  [role="slider"],
+  [role="radio"],
+  [role="tab"],
+  input[type="radio"] + span,
+  input[type="checkbox"] ~ svg,
+  nav a {
+    transition-duration: 0s !important;
+  }
 }

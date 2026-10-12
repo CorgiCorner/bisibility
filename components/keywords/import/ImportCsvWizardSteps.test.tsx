@@ -22,7 +22,7 @@ describe("ImportStepper", () => {
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(container.querySelector("svg")?.parentElement).toHaveStyle({
       backgroundColor: "var(--accent-soft)",
-      color: "var(--accent)",
+      color: "var(--accent-text)",
     });
   });
 

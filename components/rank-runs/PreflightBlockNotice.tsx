@@ -1,3 +1,4 @@
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button } from "@/components/ui/Button";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { useTranslations } from "next-intl";
@@ -12,14 +13,29 @@ type Props = {
 };
 
 export function PreflightBlockNotice(props: Readonly<Props>) {
+  const errors = useSharedErrorMessages();
   const t = useTranslations("shared.rankPreflight");
   if (!props.code) return null;
   const block = {
+    budget_missing: {
+      cta: t("editBudget"),
+      href: props.budgetHref,
+      label: t("budget"),
+      message: errors.budgetMissing(),
+      tone: "attention" as const,
+    },
     budget_exhausted: {
       cta: t("editBudget"),
       href: props.budgetHref,
       label: t("budget"),
       message: t("budgetBlocked"),
+      tone: "attention" as const,
+    },
+    usage_reconciliation_required: {
+      cta: t("openIntegrations"),
+      href: props.integrationsHref,
+      label: t("budget"),
+      message: errors.usageReconciliationRequired(),
       tone: "attention" as const,
     },
     duplicate: {

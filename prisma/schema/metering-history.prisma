@@ -1,0 +1,84 @@
+// Immutable migration inputs. No application delegate is generated for source snapshots.
+model MeteringLegacyUsageSource {
+  source_id String @id
+  payload   Json
+
+  @@map("metering_legacy_usage_source")
+  @@ignore
+}
+
+model MeteringLegacySettingSource {
+  kind      String
+  source_id String
+  payload   Json
+
+  @@id([kind, source_id])
+  @@map("metering_legacy_setting_source")
+  @@ignore
+}
+
+model MeteringLegacyReferenceSource {
+  kind         String
+  reference_id String
+  source_id    String
+  payload      Json
+
+  @@id([kind, reference_id])
+  @@index([source_id], map: "metering_legacy_reference_source_id_idx")
+  @@map("metering_legacy_reference_source")
+  @@ignore
+}
+
+model MeteringLegacyProofSource {
+  kind      String
+  source_id String
+  payload   Json
+
+  @@id([kind, source_id])
+  @@index([source_id], map: "metering_legacy_proof_source_id_idx")
+  @@map("metering_legacy_proof_source")
+  @@ignore
+}
+
+model MeteringHistoryProgress {
+  migration_id String    @id
+  namespace    String?
+  snapshot_at  DateTime  @default(now()) @db.Timestamptz
+  cursor       String    @default("")
+  verified_at  DateTime? @db.Timestamptz
+
+  @@map("metering_history_progress")
+  @@ignore
+}
+
+model MeteringHistoryImport {
+  migration_id      String
+  source_id         String
+  source_hash       String
+  target_hash       String
+  namespace         String
+  operation_id      String
+  created_operation Boolean
+  body              Json
+  operation         MeteringOperation @relation(fields: [namespace, operation_id], references: [namespace, operation_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([migration_id, source_id])
+  @@map("metering_history_import")
+  @@ignore
+}
+
+model MeteringHistoryReference {
+  kind         String
+  reference_id String
+  source_id    String
+  namespace    String
+  operation_id String
+  principal    String
+  receipt_id   String?
+  body         Json
+  operation    MeteringOperation @relation(fields: [namespace, operation_id], references: [namespace, operation_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([kind, reference_id])
+  @@map("metering_history_reference")
+  @@ignore
+}

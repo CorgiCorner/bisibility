@@ -83,6 +83,7 @@ describe("FirstCheckResults", () => {
       message: null,
       mode: "preview",
       rows: [
+        failed("budget_missing"),
         failed("budget_exhausted"),
         failed("failed"),
         failed("no_provider"),
@@ -99,6 +100,7 @@ describe("FirstCheckResults", () => {
     });
 
     for (const copy of [
+      sharedMessages.shared.errors.budgetMissing,
       "Limit budzetu",
       "Blad sprawdzenia",
       "Brak dostawcy",

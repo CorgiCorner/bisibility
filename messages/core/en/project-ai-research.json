@@ -100,6 +100,13 @@
     "actualReplayHint": "Repeating a completed request with the same request ID replays its saved result without a new provider call. Starting a new request can incur a new provider charge, even for the same prompt. Saved reports remain available.",
     "requestedModel": "Requested model",
     "actualModel": "Actual model",
-    "unknownModel": "Unknown model"
+    "unknownModel": "Unknown model",
+    "showUnavailableModels": "Show unavailable models",
+    "unavailableModels": "Unavailable models",
+    "modelAlreadySelected": "Already selected as the other model.",
+    "modelNeedsOwnAccount": "Connect your own provider account in Integrations and select actual provider cost.",
+    "modelNeedsActualPayment": "Select actual provider cost to use this model with your own provider account.",
+    "modelPricingUnavailable": "Current pricing cannot be verified for this model. Try again later.",
+    "modelUnavailable": "This model is not supported for prompt runs yet."
   }
 }

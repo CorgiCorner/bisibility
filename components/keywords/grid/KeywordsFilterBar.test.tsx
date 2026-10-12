@@ -1,5 +1,6 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
+import buttonStyles from "@/components/ui/Button.module.css";
 import messages from "@/messages/core/en/project-rank-tracker.json";
 import { fireEvent, render as renderDom, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -98,11 +99,10 @@ describe("KeywordsFilterBar", () => {
     expect(container.querySelector("[data-keywords-toolbar-context]")).not.toBeInTheDocument();
   });
 
-  it("keeps scope, grouping, and saved views in one flex row from sm", () => {
+  it("keeps scope and saved views in one flex row from sm", () => {
     const { container } = render(
       <KeywordsFilterBar
         {...baseProps}
-        groupingControl={<span>Grouped</span>}
         savedViewControl={<span>All keywords</span>}
         scopeControl={<span>All locations</span>}
       />,
@@ -119,7 +119,7 @@ describe("KeywordsFilterBar", () => {
     render(
       <KeywordsFilterBar
         {...baseProps}
-        groupingControl={<span>Grouped</span>}
+        scopeControl={<span>All locations</span>}
         onRefresh={onRefresh}
       />,
     );
@@ -181,7 +181,7 @@ describe("KeywordsFilterBar", () => {
     expect(onRemoveFilter).toHaveBeenCalledWith("change");
   });
 
-  it("hides the chips row on sm+ when only the scope chip is present", () => {
+  it("preserves the chips footprint when only the mobile scope chip is present", () => {
     render(
       <KeywordsFilterBar
         {...baseProps}
@@ -190,7 +190,7 @@ describe("KeywordsFilterBar", () => {
     );
 
     const chipsRow = screen.getByTestId("scope-chip").parentElement;
-    expect(chipsRow).toHaveClass("lg:hidden");
+    expect(chipsRow).toHaveClass("min-h-7", "overflow-x-auto");
   });
 
   it("does not hide the chips row when filters are also active alongside the scope chip", () => {
@@ -206,4 +206,37 @@ describe("KeywordsFilterBar", () => {
     const chipsRow = screen.getByTestId("scope-chip").parentElement;
     expect(chipsRow).not.toHaveClass("lg:hidden");
   });
+});
+
+it("keeps filter clearing on the shared button and invokes the existing clear handler", () => {
+  const onClearFilters = vi.fn();
+  render(<KeywordsFilterBar {...baseProps} filterCount={1} onClearFilters={onClearFilters} />);
+  const clear = screen.getByRole("button", { name: "Clear all search and filters" });
+  expect(clear).toHaveClass(buttonStyles.root, buttonStyles.ghost);
+  fireEvent.click(clear);
+  expect(onClearFilters).toHaveBeenCalledOnce();
+});
+
+it("only renders the chip row while search, filters or a mobile scope need it", () => {
+  const { container, rerender } = render(<KeywordsFilterBar {...baseProps} />);
+  expect(container.querySelector("[data-keywords-filter-chips]")).toBeNull();
+  rerender(
+    <ProjectRankTrackerMessages>
+      <KeywordsFilterBar
+        {...baseProps}
+        searchValue="long search"
+        filterCount={1}
+        filterChips={[{ key: "position", label: "Position: Top 3" }]}
+      />
+    </ProjectRankTrackerMessages>,
+  );
+  const row = container.querySelector("[data-keywords-filter-chips]");
+  expect(row).toHaveClass("min-h-7", "overflow-x-auto");
+  expect(row).not.toHaveClass("h-10", "flex-wrap");
+  rerender(
+    <ProjectRankTrackerMessages>
+      <KeywordsFilterBar {...baseProps} />
+    </ProjectRankTrackerMessages>,
+  );
+  expect(container.querySelector("[data-keywords-filter-chips]")).toBeNull();
 });

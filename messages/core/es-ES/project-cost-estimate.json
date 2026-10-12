@@ -1,27 +1,19 @@
 {
   "projectCostEstimate": {
     "providerSpend": {
-      "docs": "Cómo funcionan los presupuestos",
-      "eyebrow": "PRESUPUESTO MENSUAL",
-      "noCapAmount": "{spent} este mes",
-      "meterAria": "Gasto de proveedores: {spent} de {cap} este mes{session, select, none {} other {, {session} en esta sesión}}",
-      "segmentedAmount": "{spent} de {cap} usados",
-      "cardCap": "sobre un tope de {cap}",
-      "thisMonth": "este mes",
-      "capReached": "tope alcanzado",
-      "session": "{spent} en esta sesión",
-      "pace": "a este ritmo, ~{spent}/mes",
-      "left": "quedan {spent}",
-      "otherProvider": "Otros",
-      "headerUnavailable": "Gasto no disponible",
-      "headerCapTooltip": "Presupuesto mensual de proveedores.",
+      "headerUnavailable": "Uso no disponible",
+      "headerUsageUnknown": "Consumo desconocido",
+      "headerCapTooltip": "Uso de presupuestos, incluidas las reservas. Abre Uso para ver los detalles.",
       "headerNoCap": "Sin presupuesto · Definir uno",
-      "headerNoCapWithSpend": "{spent} · sin presupuesto · Definir uno",
       "headerNoCapAria": "Sin presupuesto, definir uno",
-      "headerNoCapAriaWithSpend": "{spent} gastados sin presupuesto, definir uno",
-      "headerUnderOnePercent": "<1 % usado",
-      "headerUsed": "{percent, number} % usado",
-      "headerCapAria": "Tope mensual, {used}"
+      "headerUsed": "{percent}% usado",
+      "headerAtLeastUsed": "Al menos {percent}% usado",
+      "headerUnderOne": "Menos del 1% usado",
+      "headerAtLeastUnderOne": "Al menos algo de uso",
+      "headerExceeded": "Presupuesto excedido",
+      "headerUsageAria": "Uso del presupuesto: {status}. Ver detalles",
+      "headerNoLimit": "Sin límite",
+      "headerWarning": "Alerta de presupuesto"
     },
     "status": {
       "unavailable": "Estimación no disponible.",

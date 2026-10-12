@@ -1,9 +1,10 @@
 import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
 import type { ObservationCompleteness } from "@/lib/observation/types";
 import { redactOpsText } from "@/lib/ops/redact-text";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
-import { isBudgetExhaustedError } from "@/lib/rank-check/budget";
+import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { RankCheckRunnerError } from "@/lib/rank-check/runner-error";
 import type { SerpDevice } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
@@ -44,6 +45,7 @@ export type FirstCheckRunPlan = {
   providerReady: boolean;
   isSampleProject: boolean;
   budgetExhausted: boolean;
+  budgetReason?: BudgetDenialReason;
 };
 
 export type ObservedPosition = {
@@ -55,6 +57,8 @@ export type ObservedPosition = {
 };
 
 export type FirstCheckPreviewFailureCode =
+  | "usage_reconciliation_required"
+  | "budget_missing"
   | "budget_exhausted"
   | "failed"
   | "no_provider"
@@ -104,9 +108,14 @@ export function expectedPreviewFailure(error: unknown): RunFirstCheckPreviewResu
   if (isProjectReadOnlyError(error)) {
     return previewFailure("project_read_only", "This project is read-only right now.");
   }
-  if (isBudgetExhaustedError(error)) {
-    return previewFailure("budget_exhausted", "Monthly rank-check budget reached.");
-  }
+  const budgetFailure = budgetFailureResult(error);
+  if (budgetFailure)
+    return previewFailure(
+      budgetFailure.code,
+      budgetFailure.code !== "budget_exhausted"
+        ? budgetFailure.message
+        : "Monthly rank-check budget reached.",
+    );
   if (
     error instanceof ProviderRateLimitedError ||
     (error instanceof RankCheckRunnerError && error.code === "provider_rate_limited")

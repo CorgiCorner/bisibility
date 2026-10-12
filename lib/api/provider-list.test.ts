@@ -38,7 +38,11 @@ const serpCatalogStatus =
 
 function connectionRow(overrides: Record<string, unknown> = {}) {
   return {
-    costPerCheckCents: null,
+    credentialSource: "own",
+    rates:
+      overrides.costPerCheckCents === null
+        ? []
+        : [{ feature: "rank_check", amountCents: overrides.costPerCheckCents ?? 0.01 }],
     enabled: true,
     kind: "serp",
     lastUsedAt: new Date("2026-02-03T04:05:06.000Z"),

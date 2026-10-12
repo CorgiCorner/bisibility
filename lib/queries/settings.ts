@@ -1,5 +1,4 @@
 import "server-only";
-
 import { MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY } from "@/lib/alerts/limits";
 import { projectedMonthlySpendCents } from "@/lib/cost-estimate/spend-pace";
 import type { DateFormatPreference } from "@/lib/dates/format";
@@ -7,18 +6,20 @@ import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { centsToDollars } from "@/lib/format/currency";
 import { createUserDateTimeFormatter } from "@/lib/format/user-datetime";
+import { projectBudgetCapCents } from "@/lib/metering/project-budget-read";
+import { monthlySpendCents } from "@/lib/metering/usage-read";
+import { monthUtcRange } from "@/lib/metering/utc-window";
 import { DEFAULT_INSPECTION_DAILY_LIMIT } from "@/lib/presence/constants";
 import { presenceUrl } from "@/lib/presence/url";
 import {
   loadProviderRateContexts,
   providerRateContextKey,
 } from "@/lib/provider-rates/connection-context";
+import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { decryptProviderCredentials } from "@/lib/providers/crypto";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
-import { monthlySpendCents, monthUtcRange } from "@/lib/rank-check/budget";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
-import { aggregateObservedUsage } from "@/lib/rank-check/observed-usage";
 import {
   primaryProviderConnection,
   providerChainOrderBy,
@@ -33,7 +34,6 @@ import { requireReadableProject } from "./_auth";
 import { apiKeyExpiryLabel } from "./api-key-settings";
 import { monthlySpendByApiKey } from "./api-key-spend";
 import { loadProviderAvailability } from "./provider-availability";
-import { loadProjectProviderSpend } from "./provider-spend";
 import { providerCostBySource } from "./provider-spend-usage";
 import { initials, memberColor, roleLabel } from "./settings-members";
 import { settingsConnectionUsage, settingsProviderSummaries } from "./settings-provider-summaries";
@@ -87,7 +87,7 @@ function labelFromDate(prefix: string, date: Date | null | undefined, dateTime: 
 export async function getSettings(projectId: string, options: { dateFormat?: DateFormatPreference; now?: Date } = {}): Promise<SettingsView> {
   const { project } = await requireReadableProject(projectId);
   const now = options.now ?? new Date();
-  const [fullProject, monthChecks, spentCents, apiKeySpend, sourceUsage, providerSpend, savedViews] =
+  const [fullProject, monthChecks, spentCents, apiKeySpend, sourceUsage, savedViews] =
     await Promise.all([
     prisma.project.findUnique({
       include: {
@@ -98,13 +98,13 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
         defaults: true,
         keywords: { select: { device: true, location: true, locationRef: true, targetUrl: true } },
         members: { include: { user: true }, orderBy: { createdAt: "asc" } },
-        providerConnections: { orderBy: providerChainOrderBy() },
+        providerConnections: { include: { rates: rankCheckRateSelection }, orderBy: providerChainOrderBy() },
         tags: { include: { _count: { select: { keywords: true } } }, orderBy: { name: "asc" } },
       },
       where: { id: project.id },
     }),
     prisma.rankCheck.findMany({
-      select: { costCents: true, estimatedCostCents: true, provider: true, status: true },
+      select: { provider: true, status: true },
       where: {
         checkedAt: monthUtcRange(now),
         keyword: { projectId: project.id },
@@ -114,14 +114,14 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
     monthlySpendCents(project.id, now),
     monthlySpendByApiKey(project.id, now),
     providerCostBySource(project.id, now),
-    loadProjectProviderSpend({ catalog: PROVIDER_CATALOG, now, projectId: project.id }),
     prisma.savedView.findMany({
       select: { config: true },
       where: { projectId: project.id, surface: "keywords" },
     }),
   ]);
   if (!fullProject) throw new Error("Project not found.");
-  const gscConnection = fullProject.providerConnections.find((item) => item.provider === "gsc");
+  const connections = fullProject.providerConnections.map(withRankCheckManualRate);
+  const gscConnection = connections.find((item) => item.provider === "gsc");
   let storedGscProperty: string | undefined;
   try {
     storedGscProperty = gscConnection
@@ -138,15 +138,15 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
   const searchSyncSettings = resolveSearchSyncSettings(fullProject.defaults);
   const [rateContexts, providerAvailability, searchSyncMetrics] = await Promise.all([
     loadProviderRateContexts(
-      fullProject.providerConnections.map((connection) => connection.id),
+      connections.map((connection) => connection.id),
       ["rank_check"],
       now,
     ),
-    loadProviderAvailability(fullProject.providerConnections),
+    loadProviderAvailability(connections),
     loadSearchSyncMetrics(fullProject.id, gscProperty, searchSyncSettings, now),
   ]);
 
-  const primarySerp = primaryProviderConnection(fullProject.providerConnections, "serp");
+  const primarySerp = primaryProviderConnection(connections, "serp");
   const schedule = fullProject.defaults ?? {
     cronExpression: null,
     frequency: "manual" as const,
@@ -177,7 +177,7 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
         : LIST_PROVIDER_RATE_CONTEXT,
     ) ?? 0;
   const completedMonthChecks = monthChecks.filter((check) => check.status === "completed");
-  const observedUsage = aggregateObservedUsage(completedMonthChecks);
+  const capCents = await projectBudgetCapCents(project.id);
   const segmentCounts = segmentCountByTag(savedViews);
   return {
     apiKeys: fullProject.apiKeys.map((apiKey) => ({
@@ -246,7 +246,7 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
       trackingScope: normalizeTrackingScope(fullProject.trackingScope),
       writeMode: fullProject.writeMode,
     },
-    providers: settingsProviderSummaries(fullProject.providerConnections, completedMonthChecks),
+    providers: settingsProviderSummaries(connections, completedMonthChecks, sourceUsage),
     tags: fullProject.tags.map((tag) => ({
       color: tag.color ?? "var(--blue)",
       keywordCount: tag._count.keywords,
@@ -263,16 +263,15 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
       userId: requiredPublicId(member.user.publicId, "usr", "User"),
     })),
     usage: {
-      budget: { capCents: fullProject.budgetCapCents, spentCents },
+      budget: { capCents: capCents, spentCents },
       connections: settingsConnectionUsage(
-        fullProject.providerConnections,
+        connections,
         monthChecks,
         serpDepth,
         rateContexts,
         providerAvailability,
         sourceUsage,
       ),
-      providerSpend,
       hasProvider: primarySerp != null,
       onPaceCents: projectedMonthlySpendCents(spentCents, now),
       period: usagePeriod(now, options.dateFormat),
@@ -280,7 +279,7 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
         ? (PROVIDER_CATALOG.find((entry) => entry.id === primarySerp.provider)?.label ??
           primarySerp.provider)
         : "-",
-      serpChecksMonth: observedUsage.checkCount.toLocaleString("en-US"),
+      serpChecksMonth: completedMonthChecks.length.toLocaleString("en-US"),
     },
   };
 }

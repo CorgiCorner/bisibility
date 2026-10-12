@@ -21,6 +21,23 @@ const mocks = vi.hoisted(() => ({
 const cacheKeySpy = vi.fn();
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    providerConnection: {
+      findUnique: vi.fn(async () => ({
+        credentialSource: "own",
+        credentialsEncrypted: "secret",
+        projectId: "project_1",
+        provider: "dataforseo",
+        enabled: true,
+        status: "connected",
+        rates: [],
+        project: { ownerId: "owner_1" },
+      })),
+    },
+    $queryRaw: vi.fn(async () => []),
+  },
+}));
 vi.mock("@/lib/provider-rates/connection-context", () => ({
   loadProviderRateContext: mocks.rateContext,
 }));
@@ -114,7 +131,43 @@ function run(overrides: Partial<Parameters<typeof researchKeywords>[0]> = {}) {
 }
 
 describe("keyword research service", () => {
+  it("passes the exact remaining request consent to each source", async () => {
+    mocks.related.mockResolvedValue({ costCents: 1.55, rows: [row("seed"), row("Alpha")] });
+    await expect(run({ maxCostCents: 3.65 })).resolves.toMatchObject({ ok: true, costCents: 3.55 });
+    expect(mocks.paidCall).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ maxCostCents: 3.65 }),
+    );
+    expect(mocks.paidCall).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ maxCostCents: 2.1 }),
+    );
+  });
+
+  it("retains paid retry cost when a later source exceeds its consent", async () => {
+    mocks.paidCall
+      .mockImplementationOnce(({ call }: { call: (credentials: object) => Promise<unknown> }) =>
+        call({}),
+      )
+      .mockRejectedValueOnce(
+        new ProviderLookupSignal({
+          ok: false,
+          reason: "cost_limit_exceeded",
+          estimatedCostCents: 3,
+          costCents: 0.4,
+        }),
+      );
+    await expect(run({ maxCostCents: 5 })).resolves.toMatchObject({
+      ok: true,
+      costCents: 1.4,
+      sources: expect.arrayContaining([
+        expect.objectContaining({ source: "suggestion", costCents: 0.4, reason: "cost_limit" }),
+      ]),
+    });
+    expect(mocks.ideas).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
+    vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
     vi.clearAllMocks();
     mocks.project.mockResolvedValue(project);
     mocks.rateContext.mockResolvedValue({ entries: [], manualAmountCents: null });

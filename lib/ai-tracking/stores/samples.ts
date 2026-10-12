@@ -6,6 +6,8 @@ import type {
 import { boundedRaw, boundedUtf8, payloadHash } from "@/lib/ai-tracking/identity";
 import { persistTrackingResultSchema } from "@/lib/ai-tracking/schema";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { meterOperationReference, receiptOperationId } from "@/lib/metering/operation-reference";
+import { canonicalReceipt } from "@/lib/metering/usage-read";
 import {
   jsonInput,
   lockTrackingProject,
@@ -82,13 +84,13 @@ export function transitionTrackingSample(
       },
     });
     if (!sample) return null;
-    if (input.receipt?.providerCostEntryId) {
-      requireFound(
-        await tx.providerCostEntry.findFirst({
-          where: { projectId, id: input.receipt.providerCostEntryId },
-        }),
+    let operationRef = input.receipt?.operationRef ?? null;
+    if (receiptOperationId(input.receipt)) {
+      const operation = requireFound(
+        await canonicalReceipt(tx, projectId, receiptOperationId(input.receipt) as string),
         "Provider receipt",
       );
+      operationRef = meterOperationReference(operation.id, operation.namespace);
     }
     const changed = await tx.aiTrackingSample.updateMany({
       where: {
@@ -109,8 +111,13 @@ export function transitionTrackingSample(
               : new Date(input.nextPollAt),
         dispatch: input.nextDispatch,
         providerTaskId: input.providerTaskId,
-        receipt: input.receipt ? jsonInput(input.receipt) : undefined,
-        providerCostEntryId: input.receipt?.providerCostEntryId,
+        receipt: input.receipt
+          ? jsonInput({
+              ...input.receipt,
+              providerCostEntryId: null,
+              operationRef,
+            })
+          : undefined,
       },
     });
     return changed.count
@@ -180,13 +187,24 @@ export function persistTrackingResult(
         include: { citations: true, observations: true },
       });
     }
-    if (input.receipt.providerCostEntryId)
-      requireFound(
-        await tx.providerCostEntry.findFirst({
-          where: { projectId, id: input.receipt.providerCostEntryId },
-        }),
+    if (
+      input.receipt.noDispatch &&
+      (input.expectedDispatch !== "claimed" ||
+        sample.dispatch !== "claimed" ||
+        sample.providerTaskId ||
+        receiptOperationId(input.receipt) ||
+        input.receipt.amountUsd !== "0" ||
+        input.receipt.state !== "confirmed")
+    )
+      throw new Error("No-dispatch evidence requires an unsent claimed sample and exact zero.");
+    let operationRef = input.receipt.operationRef ?? null;
+    if (receiptOperationId(input.receipt)) {
+      const operation = requireFound(
+        await canonicalReceipt(tx, projectId, receiptOperationId(input.receipt) as string),
         "Provider receipt",
       );
+      operationRef = meterOperationReference(operation.id, operation.namespace);
+    }
     const competitorIds = [
       ...new Set(
         input.observations
@@ -230,8 +248,11 @@ export function persistTrackingResult(
         evidence: jsonInput(evidence),
         answerText: answer?.text ?? null,
         raw: raw.raw === null ? Prisma.DbNull : jsonInput(raw.raw),
-        receipt: jsonInput(input.receipt),
-        providerCostEntryId: input.receipt.providerCostEntryId,
+        receipt: jsonInput({
+          ...input.receipt,
+          providerCostEntryId: null,
+          operationRef,
+        }),
         resultHash: hash,
         finishedAt: new Date(),
       },

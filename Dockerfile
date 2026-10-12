@@ -27,6 +27,13 @@ RUN --mount=type=cache,target=/root/.npm npm install --prefix /seed-cli --no-sav
   pg@"$(node -p "require('./node_modules/pg/package.json').version")" \
   @prisma/adapter-pg@"$(node -p "require('./node_modules/@prisma/adapter-pg/package.json').version")" \
   @paralleldrive/cuid2@"$(node -p "require('./node_modules/@paralleldrive/cuid2/package.json').version")"
+
+# Operator commands execute the lib/ source graph, outside Next's bundled routes.
+# Retain the complete production dependency closure from the same frozen install;
+# copying individual bundled-away packages misses their later runtime imports.
+FROM deps AS operator-runtime
+RUN npm prune --omit=dev --no-audit --no-fund
+
 FROM node:22.23.1-alpine AS builder
 WORKDIR /workspace
 ARG APP_REVISION
@@ -84,6 +91,7 @@ COPY --from=builder --chown=nextjs:nodejs /workspace/public ./public
 # and Fly invoke npm run db:migrate in this image, so keep the repository
 # manifest that defines the frozen entrypoint.
 COPY --from=builder --chown=nextjs:nodejs /workspace/package.json ./package.json
+COPY --from=operator-runtime --chown=nextjs:nodejs /workspace/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /workspace/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /workspace/node_modules/prisma ./node_modules/prisma
 COPY --from=deps --chown=nextjs:nodejs /migrate-cli/node_modules ./migrate-cli/node_modules
@@ -104,9 +112,12 @@ COPY --from=builder --chown=nextjs:nodejs /workspace/prisma ./prisma
 COPY --from=deps --chown=nextjs:nodejs /seed-cli/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /workspace/lib ./lib
 # Railway and Fly execute db:migrate in this final image. The wrapper selects
-# the packaged Prisma CLI/config above, applies the full migration tree, then
-# runs the generic data-migration registry.
+# the packaged Prisma CLI/config above, applies schema changes, runs data
+# migrations, then applies the guarded schema contracts.
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/migrate.ts ./scripts/deploy/migrate.ts
+COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/pre-data-migrations.ts ./scripts/deploy/pre-data-migrations.ts
+COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/completed-data-migrations.ts ./scripts/deploy/completed-data-migrations.ts
+COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/accounting-cutover-preflight.ts ./scripts/deploy/accounting-cutover-preflight.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/data-migrations ./scripts/data-migrations
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/locked-verification.ts ./scripts/ops/locked-verification.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/provider-secret-rotation.ts ./scripts/ops/provider-secret-rotation.ts

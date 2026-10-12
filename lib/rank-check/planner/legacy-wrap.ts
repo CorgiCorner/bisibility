@@ -27,19 +27,16 @@ export async function wrapLegacyRankCheck(
     estimatedCostCents: number | null;
     keywordPublicId: string;
     projectId: string;
-    providerAllocationsInitializedAt: boolean;
   },
   startedAt: Date,
 ) {
-  const allocationReservation =
-    reservation.providerAllocationsInitializedAt && reservation.allocationConnection?.id
-      ? providerAllocationReservation(
-          reservation.allocationConnection.id,
-          pagesPerCheck(reservation.depth),
-        )
-      : {};
+  const allocationReservation = reservation.allocationConnection?.id
+    ? providerAllocationReservation(
+        reservation.allocationConnection.id,
+        pagesPerCheck(reservation.depth),
+      )
+    : {};
   if (
-    reservation.providerAllocationsInitializedAt &&
     reservation.allocationConnection &&
     reservation.allocationConnection.credentialSource !== "hosted"
   ) {

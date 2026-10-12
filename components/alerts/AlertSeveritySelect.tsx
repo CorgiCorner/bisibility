@@ -37,6 +37,7 @@ export function AlertSeveritySelect({
         {t("severity")}
       </span>
       <MenuSelect
+        size="input"
         ariaLabel={t("severity")}
         leadingIcon={
           <span
@@ -46,7 +47,7 @@ export function AlertSeveritySelect({
         }
         onChange={(next) => onChange(next as AlertSeverity)}
         options={options}
-        triggerClassName="mb-3 min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium [&>span:nth-of-type(2)]:flex-1 [&>span:nth-of-type(2)]:text-left"
+        triggerClassName="mb-3 [&>span:nth-of-type(2)]:flex-1 [&>span:nth-of-type(2)]:text-left"
         value={value}
       />
     </div>

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 for (const width of [390, 768, 1440]) {
   for (const feature of ["api", "mcp-server"]) {

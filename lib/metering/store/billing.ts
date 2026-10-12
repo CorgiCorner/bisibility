@@ -1,3 +1,4 @@
+import { projectAdmissionMeasurements } from "@/lib/metering/current-paid-measurements";
 import type { BillingImportRecord } from "@usagekit/core";
 import type { Clock, Store, StoredBillingImport } from "@usagekit/store";
 import {
@@ -58,8 +59,16 @@ export function billingImports(
           clock.now(),
         );
         if (!prepared.stored) return structuredClone(prepared.result);
-        for (const { after } of prepared.changes)
+        for (const { before: prior, after } of prepared.changes) {
+          // Existing snapshots retain their receipt prefix byte-for-byte.
+          after.receipts = after.receipts.map((receipt, index) =>
+            index < (prior?.receipts.length ?? 0) ||
+            !after.estimate.some((q) => q.unit === "budget_cents")
+              ? receipt
+              : projectAdmissionMeasurements(after, receipt),
+          );
           state.operations.set(key(after.scope.namespace, after.operationId), after);
+        }
         prepared.stored.record.alerts = recordBillingAlerts(state, prepared.changes);
         await persist(sql, before, state, hook);
         const { record, identity } = prepared.stored;

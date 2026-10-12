@@ -24,7 +24,12 @@ const mocks = vi.hoisted(() => {
     task: "prepared",
   };
   const batch = () => ({
-    connection: { credentialsEncrypted: "encrypted", id: "connection_1" },
+    connection: {
+      credentialsEncrypted: "encrypted",
+      credentialSource: "own",
+      provider: "dataforseo",
+      id: "connection_1",
+    },
     connectionId: "connection_1",
     credentialId: state.origin.credentialId,
     credentialKind: state.origin.credentialKind,
@@ -130,6 +135,7 @@ const mocks = vi.hoisted(() => {
     assertQueuedRankCheckBatchAllocation: vi.fn(),
     assertOperationAccess: vi.fn(),
     beginJournal: vi.fn(),
+    nativeCosts: vi.fn(),
     consumeProviderLimit: vi.fn(),
     deferQueuedRankCheckBatch: vi.fn(),
     journal: { discard: vi.fn(), settle: vi.fn(), transportStarted: vi.fn() },
@@ -141,6 +147,9 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/provider-rates/native-rank-request", () => ({
+  loadNativeRankRequestCosts: mocks.nativeCosts,
+}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/operations/access-extension", () => ({
   assertOperationAccess: mocks.assertOperationAccess,
@@ -160,6 +169,12 @@ vi.mock("@/lib/providers/serp/dataforseo-queued", async (importOriginal) => {
   return {
     ...original,
     submitDataForSeoQueuedTasks: mocks.submit,
+    prepareDataForSeoQueuedTasks: (
+      input: Parameters<typeof original.prepareDataForSeoQueuedTasks>[0],
+    ) => ({
+      ...original.prepareDataForSeoQueuedTasks(input),
+      submit: () => mocks.submit(input),
+    }),
   };
 });
 vi.mock("./queued-lifecycle", () => ({
@@ -171,7 +186,9 @@ vi.mock("./queued-usage-journal", () => ({
 
 describe("queued paid-call fence", () => {
   beforeEach(() => {
+    vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
     vi.clearAllMocks();
+    mocks.nativeCosts.mockResolvedValue([0.725]);
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
     vi.stubEnv("DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED", "1");
     mocks.state.batch = "prepared";
@@ -214,41 +231,22 @@ describe("queued paid-call fence", () => {
     mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 0 });
   });
 
-  it("leaves an allocation preflight infrastructure failure retryable", async () => {
-    const preflightFailure = new Error("allocation query unavailable");
-    mocks.assertQueuedRankCheckBatchAllocation.mockRejectedValueOnce(preflightFailure);
-
-    await expect(submitQueuedRankCheckBatch("batch_1")).rejects.toBe(preflightFailure);
-
-    expect(mocks.state.batch).toBe("prepared");
-    expect(mocks.state.task).toBe("prepared");
-    expect(mocks.consumeProviderLimit).not.toHaveBeenCalled();
+  it("retains a known not-sent failure when shared admission is unavailable", async () => {
+    mocks.beginJournal.mockRejectedValueOnce(new Error("accounting unavailable"));
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "ready" });
+    expect(mocks.state.task).toBe("provider_failed");
     expect(mocks.submit).not.toHaveBeenCalled();
   });
 
   it("defers the whole batch when its allocation estimate is exhausted", async () => {
     const { ProviderAllocationExhaustedError } = await import("@/lib/provider-usage/enforcement");
-    mocks.assertQueuedRankCheckBatchAllocation.mockRejectedValueOnce(
+    mocks.beginJournal.mockRejectedValueOnce(
       new ProviderAllocationExhaustedError("connection_1", "app"),
     );
 
     await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "deferred" });
 
-    expect(mocks.assertQueuedRankCheckBatchAllocation).toHaveBeenCalledWith(
-      expect.objectContaining({
-        connection: expect.objectContaining({ id: "connection_1" }),
-        priority: "high",
-        projectId: "project_1",
-        surface: "app",
-        tasks: [{ depth: 100 }],
-      }),
-      mocks.prisma,
-    );
-    expect(mocks.deferQueuedRankCheckBatch).toHaveBeenCalledWith(
-      "batch_1",
-      "Queued provider allocation reached; deferring this batch.",
-    );
-    expect(mocks.consumeProviderLimit).not.toHaveBeenCalled();
+    expect(mocks.deferQueuedRankCheckBatch).toHaveBeenCalledWith("batch_1", "budget_exhausted:app");
     expect(mocks.submit).not.toHaveBeenCalled();
   });
 
@@ -256,6 +254,7 @@ describe("queued paid-call fence", () => {
     await submitQueuedRankCheckBatch("batch_1");
 
     expect(mocks.submit).toHaveBeenCalledOnce();
+    expect(mocks.submit.mock.calls[0]?.[0].tasks[0].estimate.cents).toBe("0.7250");
     expect(mocks.journal.transportStarted).toHaveBeenCalledOnce();
     expect(mocks.journal.transportStarted.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.submit.mock.invocationCallOrder[0] ?? 0,
@@ -268,6 +267,13 @@ describe("queued paid-call fence", () => {
     expect(mocks.prisma.queuedRankCheckBatch.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.submit.mock.invocationCallOrder[0] ?? 0,
     );
+  });
+
+  it("does not POST or open a journal when the native quote is unknown", async () => {
+    mocks.nativeCosts.mockResolvedValueOnce([null]);
+    await submitQueuedRankCheckBatch("batch_1");
+    expect(mocks.submit).not.toHaveBeenCalled();
+    expect(mocks.beginJournal).not.toHaveBeenCalled();
   });
 
   it("persists the new provider tag before an ambiguous paid submission", async () => {
@@ -323,10 +329,7 @@ describe("queued paid-call fence", () => {
 
     await submitQueuedRankCheckBatch("batch_1");
 
-    expect(mocks.assertQueuedRankCheckBatchAllocation).toHaveBeenCalledWith(
-      expect.objectContaining({ surface: "programmatic" }),
-      mocks.prisma,
-    );
+    expect(mocks.assertQueuedRankCheckBatchAllocation).not.toHaveBeenCalled();
     expect(mocks.submit.mock.calls[0]?.[0].tasks[0]?.attribution.context).toEqual({
       correlationId: "qtask_1",
       feature: "rank_check",
@@ -364,6 +367,12 @@ describe("queued paid-call fence", () => {
       connectionId: "connection_1",
       credentialVersion: expect.stringMatching(/^[a-f0-9]{64}$/),
       projectId: "project_1",
+      providerRequests: [
+        expect.objectContaining({
+          method: "POST",
+          url: "https://api.dataforseo.com/v3/serp/google/organic/task_post",
+        }),
+      ],
       tasks: [
         expect.objectContaining({
           attribution: expect.objectContaining({

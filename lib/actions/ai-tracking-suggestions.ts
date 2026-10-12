@@ -8,6 +8,7 @@ import { SuggestionGenerationError } from "@/lib/ai-tracking/suggestions/generat
 import { projectContextSuggestions } from "@/lib/ai-tracking/suggestions/project";
 import { auditTrackingGeneration } from "@/lib/api/ai-tracking-audit";
 import { trackingScope } from "@/lib/api/ai-tracking-service";
+import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { z } from "zod";
 import { getActionActor } from "./_shared";
 import { type ActionFailure, mapActionFailure } from "./action-result";
@@ -16,11 +17,22 @@ async function publicResult<T>(run: () => Promise<T>): Promise<TrackingGeneratio
   try {
     return { ok: true, value: await run() };
   } catch (error) {
+    const budget = budgetFailureResult(error);
+    if (budget)
+      return {
+        ok: false,
+        error: { code: budget.code, message: budget.message, status: 429, reason: budget.code },
+      };
+
     if (error instanceof SuggestionGenerationError) {
       const failure: ActionFailure =
-        error.status === 409
-          ? { code: "conflict", status: 409, message: error.message }
-          : { code: "invalid_input", status: 400, message: error.message };
+        error.reason === "budget_missing" ||
+        error.reason === "budget_exhausted" ||
+        error.reason === "usage_reconciliation_required"
+          ? { code: error.reason, status: 429, message: error.message }
+          : error.status === 409
+            ? { code: "conflict", status: 409, message: error.message }
+            : { code: "invalid_input", status: 400, message: error.message };
       return {
         ok: false,
         error: {

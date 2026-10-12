@@ -7,6 +7,10 @@ import { ApiConflictError, ApiInputError, ApiNotFoundError } from "@/lib/api/err
 import { errorResponse } from "@/lib/api/responses";
 import { type Actor, AuthorizationError } from "@/lib/auth/authorize";
 import { getSession } from "@/lib/auth/session";
+import {
+  BudgetExhaustedError,
+  ProviderAllocationExhaustedError,
+} from "@/lib/metering/admission-errors";
 import { ProjectDomainRequiredError } from "@/lib/projects/tracked-domain";
 import type { AdmissionErrorDetails } from "@/lib/providers/admission-error-details";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
@@ -55,6 +59,8 @@ function mappedError(
         {
           detail: "Deployment spending budget is exhausted for this month.",
           scope: error.scope,
+          reason: error.budgetReason,
+          resetAt: error.resetAt,
           surface: error.surface ?? "app",
         },
       );
@@ -67,6 +73,28 @@ function mappedError(
         headers: CACHE_HEADERS,
         instance: APP_INSTANCE,
         problemDetails: admissionDetails ?? { balance_cents: null },
+      },
+    );
+  }
+  if (error instanceof ProviderAllocationExhaustedError) {
+    return budgetExhaustedResponse(
+      { headers: new Headers(CACHE_HEADERS), instance: APP_INSTANCE },
+      {
+        surface: error.surface,
+        scope: "connection",
+        resetAt: error.resetAt,
+        reason: error.budgetReason,
+      },
+    );
+  }
+  if (error instanceof BudgetExhaustedError) {
+    return budgetExhaustedResponse(
+      { headers: new Headers(CACHE_HEADERS), instance: APP_INSTANCE },
+      {
+        detail: error.message,
+        reason: error.budget.reason,
+        resetAt: error.budget.valuationIncomplete ? null : error.budget.resetAt,
+        surface: "app",
       },
     );
   }
@@ -105,7 +133,7 @@ function mappedError(
     if (error.code === "budget_exhausted") {
       return budgetExhaustedResponse(
         { headers: new Headers(CACHE_HEADERS), instance: APP_INSTANCE },
-        { detail: error.message, surface: "app" },
+        { detail: error.message, reason: error.budgetReason, surface: "app" },
       );
     }
     return problem("provider_unavailable", error.message, 409, {

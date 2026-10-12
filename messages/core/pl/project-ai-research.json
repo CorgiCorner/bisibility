@@ -100,6 +100,13 @@
     "actualReplayHint": "Ponowienie zakończonego żądania z tym samym identyfikatorem odtwarza zapisany wynik bez nowego wywołania providera. Nowe żądanie może naliczyć kolejną opłatę, także dla identycznego promptu. Zapisane raporty pozostają dostępne.",
     "requestedModel": "Żądany model",
     "actualModel": "Model odpowiedzi",
-    "unknownModel": "Nieznany model"
+    "unknownModel": "Nieznany model",
+    "showUnavailableModels": "Pokaż niedostępne modele",
+    "unavailableModels": "Niedostępne modele",
+    "modelAlreadySelected": "Wybrano już jako drugi model.",
+    "modelNeedsOwnAccount": "Połącz własne konto dostawcy w Integracjach i wybierz rzeczywisty koszt dostawcy.",
+    "modelNeedsActualPayment": "Wybierz rzeczywisty koszt dostawcy, aby użyć tego modelu z własnym kontem dostawcy.",
+    "modelPricingUnavailable": "Nie można potwierdzić aktualnej ceny tego modelu. Spróbuj ponownie później.",
+    "modelUnavailable": "Ten model nie jest jeszcze obsługiwany w analizach promptów."
   }
 }

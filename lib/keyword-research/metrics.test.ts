@@ -19,6 +19,23 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    providerConnection: {
+      findUnique: vi.fn(async () => ({
+        credentialSource: "own",
+        credentialsEncrypted: "secret",
+        projectId: "project_1",
+        provider: "dataforseo",
+        enabled: true,
+        status: "connected",
+        rates: [],
+        project: { ownerId: "owner_1" },
+      })),
+    },
+    $queryRaw: vi.fn(async () => []),
+  },
+}));
 vi.mock("@/lib/provider-rates/connection-context", () => ({
   loadProviderRateContext: () => Promise.resolve({ entries: [], manualAmountCents: null }),
 }));
@@ -88,7 +105,25 @@ function run(overrides: Partial<Parameters<typeof fetchKeywordMetrics>[0]> = {})
 }
 
 describe("keyword metrics service", () => {
+  it("carries consent into admission and retains an earlier paid retry cost on refusal", async () => {
+    mocks.read.mockResolvedValue(null);
+    mocks.paidCall.mockRejectedValueOnce(
+      new ProviderLookupSignal({
+        ok: false,
+        reason: "cost_limit_exceeded",
+        estimatedCostCents: 3,
+        costCents: 0.5,
+      }),
+    );
+    await expect(run({ maxCostCents: 2 })).resolves.toMatchObject({
+      ok: false,
+      reason: "cost_limit_exceeded",
+      costCents: 0.5,
+    });
+    expect(mocks.paidCall).toHaveBeenCalledWith(expect.objectContaining({ maxCostCents: 2 }));
+  });
   beforeEach(() => {
+    vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
     vi.clearAllMocks();
     mocks.project.mockResolvedValue(project);
     mocks.acquire.mockResolvedValue({ key: "lock", token: "token" });

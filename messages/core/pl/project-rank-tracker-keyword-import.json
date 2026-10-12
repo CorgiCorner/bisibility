@@ -194,9 +194,6 @@
       "management": {
         "grid": {
           "tableAria": "Słowa kluczowe w monitorze pozycji",
-          "grouping": "Grupowanie słów kluczowych",
-          "grouped": "Zgrupowane",
-          "flat": "Bez grupowania",
           "deleteFailed": "Nie udało się usunąć słowa kluczowego.",
           "currentPage": "Bieżąca strona: {summary}",
           "weeklySteady": "Pozycje w tym tygodniu bez zmian",
@@ -398,7 +395,8 @@
           "providerUnknown": "Sprawdzenie pozycji nie mogło ruszyć z powodu błędu dostawcy. Spróbuj ponownie lub zobacz szczegóły sprawdzenia.",
           "runningBody": "{count, plural, one {Sprawdzenie jest w toku.} few {# sprawdzenia są w toku.} many {# sprawdzeń jest w toku.} other {# sprawdzenia jest w toku.}} Możesz zamknąć to okno – wyniki pojawią się na tej stronie.",
           "successBody": "{count, plural, one {Zakończono # sprawdzenie pozycji.} few {Zakończono # sprawdzenia pozycji.} many {Zakończono # sprawdzeń pozycji.} other {Zakończono # sprawdzenia pozycji.}}",
-          "checksNeedAttention": "{count, plural, one {# sprawdzenie wymaga reakcji.} few {# sprawdzenia wymagają reakcji.} many {# sprawdzeń wymaga reakcji.} other {# sprawdzenia wymaga reakcji.}}"
+          "checksNeedAttention": "{count, plural, one {# sprawdzenie wymaga reakcji.} few {# sprawdzenia wymagają reakcji.} many {# sprawdzeń wymaga reakcji.} other {# sprawdzenia wymaga reakcji.}}",
+          "viewRuns": "Zobacz uruchomienia"
         },
         "schedule": {
           "title": "Ustaw harmonogram dla {count, plural, one {# słowa kluczowego / # celu} few {# słów kluczowych / # celów} many {# słów kluczowych / # celów} other {# słowa kluczowego / # celu}}",
@@ -634,7 +632,9 @@
           "wrongUrl": "Inny URL w wynikach",
           "wrongUrlDescription": "URL w wynikach różni się od docelowego",
           "urlChanged": "Zmienił się URL w wynikach",
-          "urlChangedDescription": "W śledzonej historii pozycje zajmował więcej niż jeden adres URL"
+          "urlChangedDescription": "W śledzonej historii pozycje zajmował więcej niż jeden adres URL",
+          "volumeMinimumAria": "Minimalna miesięczna liczba wyszukiwań",
+          "volumeMaximumAria": "Maksymalna miesięczna liczba wyszukiwań"
         },
         "savedViews": {
           "allKeywords": "Wszystkie słowa kluczowe",

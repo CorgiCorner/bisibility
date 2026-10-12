@@ -1,6 +1,6 @@
+import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
-import { withShadowRequest } from "@/lib/metering/shadow-context";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
@@ -14,13 +14,12 @@ import {
   assertQueuedTaskBatchSize,
   DataForSeoAmbiguousSubmissionError,
   type DataForSeoQueuedSubmissionResult,
-  submitDataForSeoQueuedTasks,
+  prepareDataForSeoQueuedTasks,
 } from "@/lib/providers/serp/dataforseo-queued";
 import { queuedRankCheckConfig } from "./queued-config";
 import { deferQueuedRankCheckBatch } from "./queued-lifecycle";
 import { queuedRankCheckModeAuthorization } from "./queued-mode";
 import { claimQueuedSubmission } from "./queued-submit-claim";
-import { beginQueuedHostedShadow, compareQueuedHostedAdmission } from "./queued-submit-shadow";
 import { submissionTasks } from "./queued-submit-tasks";
 import { markAmbiguous, markDefiniteFailure } from "./queued-submit-transitions";
 import { beginQueuedTaskUsageJournal, type QueuedTaskUsageJournal } from "./queued-usage-journal";
@@ -28,7 +27,7 @@ import { rankCheckSchedulerMode } from "./scheduler-mode";
 
 const TERMINAL_STATES = new Set(["completed", "deferred", "failed"]);
 export function submitQueuedRankCheckBatch(batchId: string) {
-  return withShadowRequest(() => submitBatch(batchId));
+  return submitBatch(batchId);
 }
 async function submitBatch(batchId: string) {
   const schedulerMode = rankCheckSchedulerMode();
@@ -94,11 +93,6 @@ async function submitBatch(batchId: string) {
   } catch (error) {
     if (error instanceof DeploymentAdmissionExhaustedError) {
       // Credits map to the wallet comparison and allocation to the budget one.
-      await compareQueuedHostedAdmission({
-        batch: claimed.batch,
-        connectionId: connection.id,
-        reason: error.reason,
-      });
       const progress = await deferQueuedRankCheckBatch(
         batchId,
         error.reason === "balance"
@@ -129,6 +123,11 @@ async function submitBatch(batchId: string) {
   try {
     const tasks = await submissionTasks(claimed.batch);
     assertQueuedTaskBatchSize(tasks.length);
+    const submission = prepareDataForSeoQueuedTasks({
+      credentials,
+      priority: claimed.batch.priority === "normal" ? "normal" : "high",
+      tasks,
+    });
     await prisma.$transaction(async (tx) => {
       for (const task of tasks) {
         const persisted = await tx.queuedRankCheckTask.updateMany({
@@ -150,13 +149,13 @@ async function submitBatch(batchId: string) {
           meteringEstimate: { costCents: task.estimate.cents, quantity: "1.000000" },
         })),
       );
-      await beginQueuedHostedShadow({ batch: claimed.batch, connectionId: connection.id, tasks });
     } else {
       journal = await beginQueuedTaskUsageJournal({
         client: prisma,
         connectionId: connection.id,
         projectId: claimed.batch.projectId,
         tasks,
+        providerRequests: submission.requests,
         credentialVersion: ownCredentialVersion(
           "dataforseo",
           connection.id,
@@ -168,11 +167,7 @@ async function submitBatch(batchId: string) {
     await execution?.transportStarted();
     await journal?.transportStarted();
     try {
-      result = await submitDataForSeoQueuedTasks({
-        credentials,
-        priority: claimed.batch.priority === "normal" ? "normal" : "high",
-        tasks,
-      });
+      result = await submission.submit(journal?.pricedRequests);
     } catch (error) {
       phase = error instanceof DataForSeoError ? "rejected" : "unknown";
       throw error;
@@ -268,12 +263,17 @@ async function submitBatch(batchId: string) {
         batchId,
         `DataForSEO submission rejection is not proof of zero charge: ${message}`,
       );
+    if (
+      error instanceof BudgetExhaustedError ||
+      error instanceof ProviderAllocationExhaustedError
+    ) {
+      const progress = await deferQueuedRankCheckBatch(
+        batchId,
+        `budget_exhausted:${error instanceof ProviderAllocationExhaustedError ? error.surface : "app"}`,
+      );
+      return { state: progress.state };
+    }
     if (error instanceof DeploymentAdmissionExhaustedError) {
-      await compareQueuedHostedAdmission({
-        batch: claimed.batch,
-        connectionId: connection.id,
-        reason: error.reason,
-      });
       const progress = await deferQueuedRankCheckBatch(
         batchId,
         error.reason === "balance"

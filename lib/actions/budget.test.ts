@@ -35,15 +35,20 @@ const mocks = vi.hoisted(() => {
       return { actorId: actor.id, projectId: resource.projectId, role };
     }),
     prisma: {
+      $transaction: vi.fn(),
       project: { findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
       user: { findUnique: vi.fn() },
     },
+    setBudget: vi.fn(),
     requireSession: vi.fn(),
     revalidatePath: vi.fn(),
     writeAudit: vi.fn(),
   };
 });
 
+vi.mock("@/lib/metering/project-spending-limit", () => ({
+  setProjectSpendingLimit: mocks.setBudget,
+}));
 vi.mock("@/lib/auth/authorize", () => ({
   AuthorizationError: mocks.AuthorizationError,
   authorize: mocks.authorize,
@@ -67,6 +72,8 @@ function mockActor(role: "admin" | "member" | "owner" | "viewer") {
 describe("updateProjectBudgetAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$transaction.mockImplementation((body) => body(mocks.prisma));
+    mocks.setBudget.mockResolvedValue({ capCents: 7500 });
     mocks.prisma.project.findFirst.mockResolvedValue({
       id: "project_1",
       ownerId: "user_1",
@@ -86,33 +93,24 @@ describe("updateProjectBudgetAction", () => {
       updateProjectBudgetAction({ capCents: 7_500, projectId: "prj_a00000000000000000000000" }),
     ).resolves.toEqual({ capCents: 7_500 });
 
-    expect(mocks.prisma.project.update).toHaveBeenCalledWith({
-      data: { budgetCapCents: 7_500 },
-      select: { budgetCapCents: true },
-      where: { id: "project_1" },
-    });
+    expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
+    expect(mocks.setBudget).toHaveBeenCalledWith(
+      mocks.prisma,
+      expect.objectContaining({ projectPublicId: "prj_a00000000000000000000000", capCents: 7500 }),
+    );
+    expect(mocks.prisma.project.update).not.toHaveBeenCalled();
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/app", "layout");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "dashboard"), "page");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "settings"), "page");
   });
 
-  it("writes an audit entry with the old and new cap", async () => {
+  it("propagates Store/audit transaction failures before revalidation", async () => {
     mockActor("owner");
-
-    await updateProjectBudgetAction({
-      capCents: 7_500,
-      projectId: "prj_a00000000000000000000000",
-    });
-
-    expect(mocks.writeAudit).toHaveBeenCalledWith({
-      action: "settings.budget_updated",
-      actorId: "user_1",
-      after: { capCents: 7_500 },
-      before: { capCents: 5_000 },
-      projectId: "project_1",
-      targetId: "prj_a00000000000000000000000",
-      targetType: "project",
-    });
+    mocks.setBudget.mockRejectedValueOnce(new Error("audit failed"));
+    await expect(
+      updateProjectBudgetAction({ capCents: 7500, projectId: "prj_a00000000000000000000000" }),
+    ).rejects.toThrow("audit failed");
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
   it("rejects members without touching the cap", async () => {

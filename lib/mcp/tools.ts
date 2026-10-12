@@ -2,7 +2,7 @@ import "server-only";
 import { dispatchAgentToolRoute } from "./agent-tool-routes";
 import { dispatchAiTrackingTool } from "./ai-tracking-tools";
 import { internalMcpToolName } from "./canonical-tools";
-import { dispatchExtendedToolRoute } from "./extended-tool-routes";
+import { dispatchExtendedToolRoute, providerSettingsBody } from "./extended-tool-routes";
 import { dispatchKeywordResearchTool } from "./keyword-research-tools";
 import { dispatchLoopClosureTool } from "./loop-closure-tools";
 import { validateMcpPublicIds } from "./public-id-input";
@@ -103,12 +103,14 @@ function dispatchToRest(name: string, input: ToolArgs): RestCall {
       "limit",
       "country",
       "device",
+      "intent",
       "location_key",
       "position_gt",
       "position_lt",
       "search",
       "sort",
       "tag",
+      "topic",
     ]);
 
   switch (name) {
@@ -236,7 +238,7 @@ function dispatchProjectTool(name: string, input: ToolArgs, page: string): RestC
         member("providers", "provider_id", "/connect"),
         "POST",
         input,
-        body(input, ["project_id", "provider_id"]),
+        providerSettingsBody(input),
       );
     case "testProviderConnection":
       return call(
@@ -246,12 +248,7 @@ function dispatchProjectTool(name: string, input: ToolArgs, page: string): RestC
         body(input, ["project_id", "provider_id"]),
       );
     case "updateProviderSettings":
-      return call(
-        member("providers", "provider_id"),
-        "PATCH",
-        input,
-        body(input, ["project_id", "provider_id"]),
-      );
+      return call(member("providers", "provider_id"), "PATCH", input, providerSettingsBody(input));
     case "disconnectProvider":
       return call(member("providers", "provider_id"), "DELETE", input);
     case "listSavedKeywords":

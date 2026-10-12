@@ -1,9 +1,14 @@
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { dataForSeoProvider } from "./dataforseo";
 import { createDataForSeoBacklinksMethods } from "./dataforseo-backlinks";
 
-const credentials = { login: "fixture@example.com", password: "fixture-password" };
+const credentials = {
+  login: "fixture@example.com",
+  password: "fixture-password",
+  usageObserver: testUsageObserver,
+};
 const target = { includeSubdomains: true, target: "example.com", targetScope: "site" as const };
 const failure = { status_code: 40501, status_message: "History unavailable" };
 const receipts = [
@@ -44,8 +49,9 @@ describe("backlinks failed-request cost contract", () => {
       const fetchHistory = dataForSeoProvider.fetchBacklinksHistory;
       if (!fetchHistory) throw new Error("Backlinks history is unavailable.");
       await expect(fetchHistory(credentials, target)).rejects.toMatchObject({
-        costCents,
-        code: "provider_transient",
+        ...(costCents === null
+          ? { phase: "measurement", name: "ProviderUsagePersistenceError" }
+          : { costCents, code: "provider_transient" }),
       });
       expect(fetchMock).toHaveBeenCalledOnce();
     },
@@ -63,7 +69,7 @@ describe("backlinks failed-request cost contract", () => {
     vi.stubGlobal("fetch", fetchMock);
     const fetchHistory = dataForSeoProvider.fetchBacklinksHistory;
     if (!fetchHistory) throw new Error("Backlinks history is unavailable.");
-    await expect(fetchHistory(credentials, target)).rejects.toMatchObject({ costCents: null });
+    await expect(fetchHistory(credentials, target)).rejects.toMatchObject({ phase: "measurement" });
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 

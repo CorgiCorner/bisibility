@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -65,7 +66,10 @@ beforeEach(() => {
     return { status: "success", cached: false, value };
   });
   mocks.paid.mockImplementation(({ call }) =>
-    call({ login: "fixture", password: "fictional" }, { tag: "fictional-usage-tag" }),
+    call(
+      { login: "fixture", password: "fictional", usageObserver: testUsageObserver },
+      { tag: "fictional-usage-tag" },
+    ),
   );
   mocks.fetch.mockImplementation(async (url: string, options?: RequestInit) => {
     if (url.endsWith("/models"))
@@ -249,8 +253,9 @@ describe("Approved legacy availability without new catalog dependency", () => {
       const publicId = "prj_a00000000000000000000000";
       const routed =
         surface === "MCP"
-          ? dispatchResearchWorkspaceTool("compareAiPrompts", { project_id: publicId, ...input })!
+          ? dispatchResearchWorkspaceTool("compareAiPrompts", { project_id: publicId, ...input })
           : { body: input };
+      if (!routed) throw new Error("Expected the research tool route");
       const req = new Request("http://fixture.invalid", {
         method: "POST",
         body: JSON.stringify(routed.body),

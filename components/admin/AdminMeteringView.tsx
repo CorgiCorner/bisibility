@@ -1,109 +1,127 @@
 "use client";
-import { DataTable } from "@/components/ui/data-table/DataTable";
-import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
-import type { CoreMessages } from "@/i18n/core-messages.generated";
+import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
+import { Button } from "@/components/ui/Button";
+import { BudgetCard } from "@/components/usagekit/budget-card";
+import { ExceptionsList } from "@/components/usagekit/exceptions-list";
+import { UsageTable } from "@/components/usagekit/usage-table";
+import { loadMeteringAdminPageAction } from "@/lib/actions/metering-admin";
 import type { MeteringAdminData } from "@/lib/metering/admin-types";
 import { useTranslations } from "next-intl";
-
-type Row = { id: string; [key: string]: string | null };
-function MeteringTable({
-  title,
-  fields,
-  rows,
-  empty,
+import { useState, useTransition } from "react";
+export function AdminMeteringView({
+  data,
+  month,
+  project,
 }: {
-  title: string;
-  fields: (keyof CoreMessages["instanceAdmin"]["metering"])[];
-  rows: Row[];
-  empty: string;
+  data: MeteringAdminData | null;
+  month?: string;
+  project?: string | null;
 }) {
   const t = useTranslations("instanceAdmin.metering");
-  const columns: DataTableColumn<Row>[] = fields.map((field) => ({
-    id: field,
-    header: t(field),
-    accessorFn: (row) => row[field],
-    meta: { sortable: false },
-    minSize: field === "connection" || field === "operation" ? 180 : 130,
-    cell: ({ row }) => (
-      <span className="whitespace-nowrap text-xs tabular-nums">
-        {row.original[field] === "unlimited"
-          ? t("unlimited")
-          : (row.original[field] ?? t("unavailable"))}
-      </span>
-    ),
-  }));
-  return (
-    <section className="min-w-0 rounded-2xl border border-border bg-bg-elev p-5 sm:p-6">
-      <h2 className="mb-4 text-sm font-semibold text-fg">{title}</h2>
-      {rows.length ? (
-        <div className="min-w-0 overflow-x-auto">
-          <DataTable
-            id={`metering-${fields.join("-")}`}
-            ariaLabel={title}
-            columns={columns}
-            rows={rows}
-            sorting={null}
-            onSortingChange={() => undefined}
-            layout="auto"
-          />
-        </div>
-      ) : (
-        <p className="m-0 rounded-xl border border-dashed border-border px-5 py-8 text-center text-sm text-fg-muted">
-          {empty}
-        </p>
-      )}
-    </section>
-  );
-}
-export function AdminMeteringView({ data }: { data: MeteringAdminData | null }) {
-  const t = useTranslations("instanceAdmin.metering");
-  if (!data)
+  const p = useUsagePresentation();
+  const common = useTranslations("shared.emergencyRecovery.error");
+  const [failedPage, setFailedPage] = useState<{
+    input: typeof data;
+    kind: "usage" | "exceptions";
+    cursor?: string;
+  } | null>(null);
+  const [loaded, setLoaded] = useState<{ input: typeof data; value: typeof data } | null>(null);
+  const [position, setPosition] = useState<{
+    input: typeof data;
+    usageCursor?: string;
+    exceptionCursor?: string;
+  }>({ input: data });
+  const [busy, startTransition] = useTransition();
+  const current = loaded?.input === data ? loaded.value : data;
+  function page(kind: "usage" | "exceptions", cursor?: string) {
+    if (!month || busy) return;
+    const previous = position.input === data ? position : { input: data };
+    const cursors = {
+      usageCursor: kind === "usage" ? cursor : previous.usageCursor,
+      exceptionCursor: kind === "exceptions" ? cursor : previous.exceptionCursor,
+    };
+    startTransition(async () => {
+      try {
+        const next = await loadMeteringAdminPageAction({
+          month,
+          project: project ?? undefined,
+          ...cursors,
+        });
+        setPosition({ input: data, ...cursors });
+        setLoaded({ input: data, value: next.data });
+        setFailedPage(next.data ? null : { input: data, kind, cursor });
+      } catch {
+        setFailedPage({ input: data, kind, cursor });
+        setLoaded({ input: data, value: null });
+      }
+    });
+  }
+  if (!current)
     return (
-      <p
-        role="status"
-        className="rounded-2xl border border-border bg-bg-elev p-6 text-sm text-fg-muted"
-      >
-        {t("unavailableNote")}
-      </p>
+      <div className="space-y-3">
+        <p role="status" className="rounded-2xl border border-border p-6 text-sm text-fg-muted">
+          {t("unavailableNote")}
+        </p>
+        {month && (
+          <Button
+            disabled={busy}
+            onClick={() => {
+              const retry = failedPage?.input === data ? failedPage : null;
+              page(retry?.kind ?? "usage", retry?.cursor);
+            }}
+          >
+            {common("retry")}
+          </Button>
+        )}
+      </div>
     );
   return (
     <div className="grid min-w-0 gap-5">
-      <div className="rounded-2xl border border-border bg-bg-elev p-5">
-        <p className="text-xs text-fg-muted">{t("disagreements")}</p>
-        <p className="mt-3 text-2xl font-semibold tabular-nums">{data.disagreements}</p>
-      </div>
-      {data.truncated && (
-        <p role="status" className="text-sm text-fg-muted">
-          {t("truncated")}
-        </p>
-      )}
-      <MeteringTable
-        title={t("usage")}
-        fields={[
-          "connection",
-          "surface",
-          "funding",
-          "meter",
-          "reserved",
-          "legacy",
-          "difference",
-          "certainty",
-        ]}
-        rows={data.usage}
-        empty={t("emptyUsage")}
+      {current.truncated && <p role="status">{t("truncated")}</p>}
+      <UsageTable
+        view={current.usage}
+        labels={p.table}
+        dimensionLabels={p.dimensions}
+        formatDimension={p.dimension}
+        formatFigure={p.figure}
+        formatUnit={p.unit}
+        showFunding
+        busy={busy}
+        onNextPage={(cursor) => page("usage", cursor)}
+        onFirstPage={() => page("usage")}
+        metadata={
+          current.usage.asOf && (
+            <p>
+              {p.summary.asOf}: {p.date(current.usage.asOf)}
+            </p>
+          )
+        }
       />
       <p className="text-xs text-fg-muted">{t("budgetNote")}</p>
-      <MeteringTable
-        title={t("budgets")}
-        fields={["connection", "surface", "used", "reserved", "remaining", "resetsAt"]}
-        rows={data.budgets}
-        empty={t("emptyBudgets")}
-      />
-      <MeteringTable
-        title={t("exceptions")}
-        fields={["operation", "state", "updatedAt"]}
-        rows={data.exceptions}
-        empty={t("emptyExceptions")}
+      {current.budgets.length ? (
+        current.budgets.map((row) => (
+          <BudgetCard
+            key={row.id}
+            row={row}
+            title={p.bound(row)}
+            labels={p.budget}
+            formatTime={p.date}
+            formatFigure={p.figure}
+            formatUnit={p.unit}
+          />
+        ))
+      ) : (
+        <p>{p.budget.empty}</p>
+      )}
+      <ExceptionsList
+        view={current.exceptions}
+        labels={p.exceptions}
+        formatState={p.state}
+        formatAge={p.age}
+        formatOperation={p.operation}
+        busy={busy}
+        onNextPage={(cursor) => page("exceptions", cursor)}
+        onFirstPage={() => page("exceptions")}
       />
     </div>
   );

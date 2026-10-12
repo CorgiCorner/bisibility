@@ -106,8 +106,9 @@ estimate, and budget state. Send that token unchanged when launching the run.
 ```
 
 `excluded[].reason` is one of `paused`, `manual`, `in_progress`, `no_provider`,
-or `other_project`. Budget `reason` is `budget_exhausted`, `duplicate`,
-`no_provider`, or `null`.
+or `other_project`. Budget `reason` is `budget_missing`, `budget_exhausted`,
+`duplicate`, `no_provider`, or `null`. A `budget_missing` reason requires the project
+owner to configure a monthly budget in Settings > Usage before retrying.
 
 ### Launch a run
 

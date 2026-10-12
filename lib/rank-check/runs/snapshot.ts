@@ -1,3 +1,4 @@
+import { projectBudgetCapCents } from "@/lib/metering/project-budget-read";
 import "server-only";
 
 import { nativeEstimateFromSelection } from "@/lib/cost-estimate/native-usage";
@@ -50,7 +51,7 @@ const snapshotRunSelect = {
   outcome: true,
   parentRun: { select: { publicId: true } },
   plannedFor: true,
-  project: { select: { budgetCapCents: true, defaults: { select: { serpDepth: true } } } },
+  project: { select: { defaults: { select: { serpDepth: true } } } },
   projectId: true,
   publicId: true,
   requestedCount: true,
@@ -184,6 +185,7 @@ export async function readOperationSnapshot(projectId: string): Promise<Operatio
   const spentCents = runs.some((run) => run.blockedReason === "budget_exhausted")
     ? await monthlySpendCents(projectId, snapshotAt)
     : null;
+  const capCents = spentCents === null ? 0 : await projectBudgetCapCents(projectId);
   const [usageGroups, ledgerActuals] = await Promise.all([
     rankCheckRunUsageGroups(runs.map((run) => run.id)),
     rankCheckRunLedgerActuals(
@@ -200,7 +202,7 @@ export async function readOperationSnapshot(projectId: string): Promise<Operatio
           ledgerActuals.get(run.id),
           snapshotAt,
           run.blockedReason === "budget_exhausted" && spentCents !== null
-            ? { capCents: run.project.budgetCapCents, spentCents }
+            ? { capCents, spentCents }
             : null,
         ),
       ),

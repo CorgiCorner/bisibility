@@ -136,7 +136,7 @@ describe("KeywordsGrid pending state", () => {
     fireEvent.click(children[0] as HTMLElement);
     const detailPaths = rows[0]?.subRows?.map((row) => appPath("prj_1", "rank-tracker", row.id));
     expect(detailPaths).toContain(routerMock.push.mock.calls.at(-1)?.[0]);
-    fireEvent.click(screen.getByRole("radio", { name: "Flat" }));
-    expect(routerMock.push).toHaveBeenLastCalledWith(expect.stringMatching(/page=1.*grouped=0/));
+    expect(screen.queryByRole("radio", { name: "Flat" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Grouped" })).not.toBeInTheDocument();
   });
 });

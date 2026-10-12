@@ -20,6 +20,7 @@ vi.mock("@/lib/cost-estimate/project-estimate", () => ({ unitCostCentsFor: mocks
 vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.loadProviderChain,
 }));
+vi.mock("@/lib/metering/project-budget-read", () => ({ projectBudgetCapCents: async () => 5000 }));
 vi.mock("@/lib/rank-check/budget", () => ({ monthlySpendCents: mocks.monthlySpend }));
 vi.mock("@/lib/search-insights/sync/operation-snapshot", () => ({
   readActiveSearchImportSnapshot: mocks.activeSearchImport,
@@ -61,6 +62,7 @@ describe("readOperationSnapshot", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.ledgerRaw.mockResolvedValue([]);
+    mocks.rankCheck.groupBy.mockResolvedValue([]);
     mocks.loadProviderChain.mockResolvedValue([
       { costPerCheckCents: 2, provider: "serpapi", rateContext: { entries: [] } },
     ]);
@@ -92,7 +94,7 @@ describe("readOperationSnapshot", () => {
     });
   });
 
-  it("includes recorded native operations in the validated live snapshot", async () => {
+  it("keeps live snapshot actuals unknown without Meter receipts", async () => {
     mocks.rankCheckRun.findMany.mockResolvedValueOnce([
       {
         ...baseRun,
@@ -113,7 +115,7 @@ describe("readOperationSnapshot", () => {
       },
     ]);
     const [operation] = await readOperationSnapshot("project_1");
-    expect(operation).toMatchObject({ usage: { actual: 3, estimated: 4, unit: "operations" } });
+    expect(operation).toMatchObject({ usage: { actual: null, estimated: 4, unit: "operations" } });
     expect(mocks.rankCheck.groupBy).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { runId: { in: [baseRun.id] } },
@@ -149,7 +151,7 @@ describe("readOperationSnapshot", () => {
     expect(operation).toMatchObject({ costCents: 0.925, usage: { actual: 2 } });
     expect(mocks.ledgerRaw).toHaveBeenCalledWith(
       expect.objectContaining({
-        values: expect.arrayContaining(["project_1", baseRun.id]),
+        values: expect.arrayContaining(["project_1", expect.arrayContaining([baseRun.id])]),
       }),
     );
   });

@@ -17,15 +17,14 @@ it("denies a non-admin before any metering read or audit", async () => {
 it("audits the verified administrator before reading identifiers and totals", async () => {
   mocks.guard.mockResolvedValue({ user: { id: "admin1" } });
   mocks.read.mockResolvedValue({
-    usage: [],
+    usage: { state: "empty", rows: [], nextCursor: null },
     budgets: [],
-    exceptions: [],
+    exceptions: { state: "empty", rows: [], nextCursor: null },
     projects: [],
-    disagreements: "0",
     truncated: false,
   });
   const page = await getMeteringAdminPage({ month: "2026-09", project: "project1" });
-  expect(page.data?.usage).toEqual([]);
+  expect(page.data?.usage.rows).toEqual([]);
   expect(mocks.audit).toHaveBeenCalledWith(
     expect.objectContaining({
       actorId: "admin1",
@@ -54,5 +53,59 @@ it("rejects invalid filters instead of widening the selected scope", async () =>
   await expect(getMeteringAdminPage({ month: "2026-99" })).rejects.toThrow(
     "Invalid metering filter",
   );
+  expect(mocks.read).not.toHaveBeenCalled();
+});
+it("rejects foreign or changed-query cursor envelopes before reading", async () => {
+  mocks.guard.mockResolvedValue({ user: { id: "admin1" } });
+  await expect(
+    getMeteringAdminPage({ month: "2026-09", project: "p1", usageCursor: "not-a-valid-envelope" }),
+  ).rejects.toThrow("Invalid metering cursor");
+  expect(mocks.read).not.toHaveBeenCalled();
+});
+
+it("reauthenticates and audits both sealed pagination positions without resetting either", async () => {
+  mocks.guard.mockResolvedValue({ user: { id: "admin1" } });
+  mocks.read.mockResolvedValue({
+    usage: { state: "ok", rows: [], nextCursor: "usage-offset" },
+    exceptions: { state: "ok", rows: [], nextCursor: "exception-offset" },
+    budgets: [],
+    projects: [],
+    truncated: false,
+  });
+  const first = await getMeteringAdminPage({ month: "2026-09", project: "project1" });
+  const next = await getMeteringAdminPage({
+    month: "2026-09",
+    project: "project1",
+    usageCursor: first.data?.usage.nextCursor ?? undefined,
+    exceptionCursor: first.data?.exceptions.nextCursor ?? undefined,
+  });
+  expect(next.data).not.toBeNull();
+  expect(mocks.guard).toHaveBeenCalledTimes(2);
+  expect(mocks.audit).toHaveBeenCalledTimes(2);
+  expect(mocks.read).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      usageCursor: "usage-offset",
+      exceptionCursor: "exception-offset",
+      exceptionTo: mocks.read.mock.calls[0][0].exceptionTo,
+    }),
+  );
+  expect(mocks.audit.mock.invocationCallOrder[1]).toBeLessThan(
+    mocks.read.mock.invocationCallOrder[1] ?? 0,
+  );
+});
+
+it.each([
+  { project: ["p1"] },
+  { month: ["2026-09"] },
+  { project: 123 },
+  { month: {} },
+  null,
+  [],
+  { usageCursor: ["cursor"] },
+  { extra: "unexpected" },
+])("rejects malformed raw input before audit and data reads: %j", async (input) => {
+  mocks.guard.mockResolvedValue({ user: { id: "admin1" } });
+  await expect(getMeteringAdminPage(input as never)).rejects.toThrow("Invalid metering filter");
+  expect(mocks.audit).not.toHaveBeenCalled();
   expect(mocks.read).not.toHaveBeenCalled();
 });

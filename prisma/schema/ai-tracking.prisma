@@ -179,8 +179,6 @@ model AiTrackingSample {
   evidence                Json?
   raw                     Json?
   answerText              String?
-  providerCostEntryId     String?
-  providerCostEntry       ProviderCostEntry?     @relation(fields: [projectId, providerCostEntryId], references: [projectId, id], onDelete: Restrict)
   receipt                 Json?
   resultHash              String?                @db.VarChar(64)
   createdAt               DateTime               @default(now())
@@ -254,8 +252,6 @@ model AiTrackingSuggestionGeneration {
   attemptId              String                              @unique
   state                  AiTrackingSuggestionGenerationState @default(planned)
   usageTag               String?
-  providerCostEntryId    String?
-  providerCostEntry      ProviderCostEntry?                  @relation(fields: [projectId, providerCostEntryId], references: [projectId, id], onDelete: Restrict)
   receipt                Json?
   evidence               Json?
   result                 Json?

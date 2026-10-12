@@ -62,7 +62,11 @@ export function createDataForSeoDomainMethods(deps: Dependencies): DomainMethods
           true,
         );
       }
-      const data = await deps.request(OVERVIEW_URL, credentials, commonPayload(input));
+      const data = await deps.request(OVERVIEW_URL, credentials, {
+        ...commonPayload(input),
+        // The caller selects one market and consumes only its first overview.
+        limit: 1,
+      });
       return { ...dataForSeoDomainOverview(data), sourceSnapshotAt };
     },
     async fetchHistoricalRankOverview(credentials, input) {

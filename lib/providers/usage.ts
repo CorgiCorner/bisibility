@@ -1,3 +1,9 @@
+import {
+  BudgetExhaustedError,
+  ProviderAllocationExhaustedError,
+} from "@/lib/metering/admission-errors";
+import type { PricedRequest, ProviderRequest } from "@usagekit/providers";
+import { ProviderCostLimitError } from "./cost-limit";
 import { DeploymentAdmissionExhaustedError } from "./execution-extension-errors";
 
 export type ProviderUsageReceipt = {
@@ -10,6 +16,10 @@ export type ProviderUsageReceipt = {
 
 export type ProviderUsageObserver = {
   begin(input?: { attemptKey: string }): Promise<string>;
+  prepare?(input: { attemptKey: string; request: ProviderRequest }): Promise<{
+    attemptId: string;
+    request: PricedRequest;
+  }>;
   settle(attemptId: string, receipt: ProviderUsageReceipt): Promise<void>;
   beforeDispatch?(attemptId: string): Promise<void>;
   cancel?(attemptId: string): Promise<void>;
@@ -52,20 +62,43 @@ async function settleUsage(
 export async function readObservedResponse<T>(input: {
   observer?: ProviderUsageObserver;
   request: () => Promise<Response>;
+  providerRequest?: ProviderRequest;
+  dispatch?: (request: PricedRequest) => Promise<Response>;
   measure: (data: T | null, response: Response) => ProviderUsageReceipt;
   requireMeasuredUsage?: boolean;
   // A synchronous producer fence after native admission and immediately before I/O.
   beforeRequest?: () => void;
 }) {
+  if (input.requireMeasuredUsage && !input.observer)
+    throw new ProviderUsagePersistenceError({
+      phase: "admission",
+      cause: new Error("Billable transport requires an accounting observer"),
+    });
   let attemptId: string | undefined;
+  let pricedRequest: PricedRequest | undefined;
+  // Copy before admission can yield, including while waiting for another journal begin.
+  const snapshot = input.providerRequest && structuredClone(input.providerRequest);
   // One identity exists before accounting starts; a new paid request gets a new identity.
   const attemptKey = crypto.randomUUID();
   try {
-    attemptId = await input.observer?.begin({ attemptKey });
+    if (snapshot && input.observer?.prepare) {
+      if (!input.dispatch) throw new Error("Priced transport dispatch is unavailable");
+      const prepared = await input.observer.prepare({ attemptKey, request: snapshot });
+      attemptId = prepared.attemptId;
+      pricedRequest = prepared.request;
+    } else {
+      attemptId = await input.observer?.begin({ attemptKey });
+    }
     if (attemptId) await input.observer?.beforeDispatch?.(attemptId);
   } catch (cause) {
     if (attemptId) await input.observer?.cancel?.(attemptId);
-    if (cause instanceof DeploymentAdmissionExhaustedError) throw cause;
+    if (
+      cause instanceof ProviderCostLimitError ||
+      cause instanceof DeploymentAdmissionExhaustedError ||
+      cause instanceof BudgetExhaustedError ||
+      cause instanceof ProviderAllocationExhaustedError
+    )
+      throw cause;
     throw new ProviderUsagePersistenceError({
       cause,
       phase: "admission",
@@ -85,7 +118,8 @@ export async function readObservedResponse<T>(input: {
   }
   let response: Response;
   try {
-    response = await input.request();
+    response =
+      pricedRequest && input.dispatch ? await input.dispatch(pricedRequest) : await input.request();
   } catch (cause) {
     if (attemptId && input.observer) {
       await settleUsage(input.observer, attemptId, {

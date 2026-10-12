@@ -1,6 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { budgetFixture, headerFixture } from "@/lib/metering/shared-view-fixtures";
+import { screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { type BudgetNotice, BudgetNotices } from "./BudgetNotices";
 import { RankTrackerRunsTab } from "./RankTrackerRunsTab";
 
 const mocks = vi.hoisted(() => ({
@@ -26,7 +29,11 @@ vi.mock("@/components/rank-tracker/RankTrackerFeatureBoundary", () => ({
 vi.mock("./RunsSection", () => ({
   RunsSection: (props: Record<string, unknown>) => {
     capturedRunsProps = props;
-    return <div data-testid="runs-section" />;
+    return (
+      <div data-testid="runs-section">
+        <BudgetNotices notices={props.notices as readonly BudgetNotice[]} />
+      </div>
+    );
   },
 }));
 vi.mock("@/lib/queries/keywords", () => ({ getKeywordCount: mocks.getKeywordCount }));
@@ -58,7 +65,7 @@ describe("RankTrackerRunsTab", () => {
     mocks.getKeywordCount.mockResolvedValue(0);
     mocks.getRankCheckRunCount.mockResolvedValue(0);
     mocks.savedKeywordCount.mockResolvedValue(0);
-    mocks.loadWorkspaceBudgetSummary.mockResolvedValue(null);
+    mocks.loadWorkspaceBudgetSummary.mockResolvedValue(headerFixture([]));
 
     render(await RankTrackerRunsTab({ projectId: "project_1", projectRef: "prj_1" }));
 
@@ -73,7 +80,7 @@ describe("RankTrackerRunsTab", () => {
     mocks.getKeywordCount.mockResolvedValue(0);
     mocks.getRankCheckRunCount.mockResolvedValue(25);
     mocks.savedKeywordCount.mockResolvedValue(0);
-    mocks.loadWorkspaceBudgetSummary.mockResolvedValue(null);
+    mocks.loadWorkspaceBudgetSummary.mockResolvedValue(headerFixture([]));
 
     render(await RankTrackerRunsTab({ projectId: "project_1", projectRef: "prj_1" }));
 
@@ -87,10 +94,9 @@ describe("RankTrackerRunsTab", () => {
     mocks.getKeywordCount.mockResolvedValue(9);
     mocks.getRankCheckRunCount.mockResolvedValue(1);
     mocks.savedKeywordCount.mockResolvedValue(2);
-    mocks.loadWorkspaceBudgetSummary.mockResolvedValue({
-      hasAllocation: true,
-      maxUsedPercent: 100,
-    });
+    mocks.loadWorkspaceBudgetSummary.mockResolvedValue(
+      headerFixture([{ ...budgetFixture("100"), level: "exceeded" }]),
+    );
 
     render(await RankTrackerRunsTab({ projectId: "project_1", projectRef: "prj_1" }));
 
@@ -100,7 +106,7 @@ describe("RankTrackerRunsTab", () => {
       (url as URL).searchParams.get("segment"),
     );
     expect(segments).toEqual(["history", "planned"]);
-    expect(mocks.loadWorkspaceBudgetSummary).toHaveBeenCalledWith("project_1");
+    expect(mocks.loadWorkspaceBudgetSummary).toHaveBeenCalledWith("prj_1");
     expect(capturedRunsProps).toMatchObject({
       budgetExhausted: true,
       budgetSettingsHref: "/app/prj_1/integrations?tab=usage&budget=edit",
@@ -114,13 +120,38 @@ describe("RankTrackerRunsTab", () => {
     mocks.getKeywordCount.mockResolvedValue(0);
     mocks.getRankCheckRunCount.mockResolvedValue(0);
     mocks.savedKeywordCount.mockResolvedValue(0);
-    mocks.loadWorkspaceBudgetSummary.mockResolvedValue({
-      hasAllocation: false,
-      maxUsedPercent: 100,
-    });
+    mocks.loadWorkspaceBudgetSummary.mockResolvedValue(headerFixture([]));
 
     render(await RankTrackerRunsTab({ projectId: "project_1", projectRef: "prj_1" }));
 
     expect(capturedRunsProps).toMatchObject({ budgetExhausted: false, notices: [] });
   });
+});
+
+it("passes an amount-free blocking notice for a restricted member", async () => {
+  mocks.listRankCheckRuns.mockResolvedValue({ data: [], nextCursor: null });
+  mocks.getKeywordCount.mockResolvedValue(0);
+  mocks.getRankCheckRunCount.mockResolvedValue(0);
+  mocks.savedKeywordCount.mockResolvedValue(0);
+  mocks.loadWorkspaceBudgetSummary.mockResolvedValue({
+    ...headerFixture([]),
+    paidWorkBlocked: true,
+    budgets: { state: "forbidden", rows: [], problem: null },
+  });
+  render(await RankTrackerRunsTab({ projectId: "project_1", projectRef: "prj_1" }));
+  expect(capturedRunsProps).toMatchObject({
+    budgetExhausted: true,
+    notices: [expect.objectContaining({ kind: "budget-exhausted" })],
+  });
+  expect(capturedRunsProps.notices).toEqual([
+    {
+      kind: "budget-exhausted",
+      capPeriod: expect.any(String),
+      budgetSettingsHref: "/app/prj_1/integrations?tab=usage&budget=edit",
+    },
+  ]);
+  expect(capturedRunsProps).not.toHaveProperty("budgets");
+  expect(screen.getByRole("status")).toHaveTextContent(
+    "Targets are paused because the budget was reached.",
+  );
 });

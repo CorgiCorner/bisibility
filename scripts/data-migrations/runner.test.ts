@@ -40,10 +40,21 @@ class FakeDatabase implements DataMigrationDatabase {
     }
     if (sql.includes('FROM "data_migrations"') && sql.includes('SELECT "id"')) {
       const ids = (values[0] ?? []) as string[];
-      return result(ids.flatMap((id) => (this.ledger.has(id) ? [this.ledger.get(id)!] : [])));
+      return result(
+        ids.flatMap((id) => {
+          const row = this.ledger.get(id);
+          return row ? [row] : [];
+        }),
+      );
     }
     if (sql.includes('INSERT INTO "data_migrations"')) {
-      return this.insert(values);
+      return this.insert(values, sql.includes('ON CONFLICT ("id") DO UPDATE'));
+    }
+    if (sql.includes('SET "attempts" = "attempts" + 1')) {
+      const row = this.match(values);
+      if (!row || row.finishedAt || row.runCompletedAt) return result([]);
+      row.attempts += 1;
+      return result([{ attempts: row.attempts }]);
     }
     if (sql.includes('SET "runCompletedAt" = NOW()')) {
       return this.completeRun(values);
@@ -85,11 +96,21 @@ class FakeDatabase implements DataMigrationDatabase {
     return row?.checksum === values[1] ? row : undefined;
   }
 
-  private insert(values: readonly unknown[]) {
+  private insert(values: readonly unknown[], replaySafe = false) {
     const id = String(values[0]);
     const checksum = String(values[1]);
     const previous = this.ledger.get(id);
-    if (previous) return result([]);
+    if (previous) {
+      if (
+        !replaySafe ||
+        previous.checksum !== checksum ||
+        previous.runCompletedAt ||
+        previous.finishedAt
+      )
+        return result([]);
+      previous.attempts += 1;
+      return result([{ attempts: previous.attempts }]);
+    }
     const row: LedgerRow = {
       attempts: 1,
       checksum,
@@ -170,6 +191,19 @@ async function runEntry(db: FakeDatabase, entry: ResolvedDataMigration) {
 }
 
 describe("active data migration runner", () => {
+  it("resumes only explicitly replay-safe incomplete work under the same checksum", async () => {
+    const db = new FakeDatabase();
+    const run = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("interrupted"))
+      .mockResolvedValue(undefined);
+    const entry = migration(run, { replaySafe: true });
+    await expect(runEntry(db, entry)).rejects.toThrow("interrupted");
+    await runEntry(db, entry);
+    expect(run).toHaveBeenCalledTimes(2);
+    expect(db.ledger.get(entry.id)).toMatchObject({ attempts: 2, finishedAt: expect.any(Date) });
+  });
+
   it("completes run and finalization once, then skips the finished migration", async () => {
     const db = new FakeDatabase();
     const run = vi.fn().mockResolvedValue(undefined);
@@ -193,10 +227,7 @@ describe("active data migration runner", () => {
     const db = new FakeDatabase();
     const finalize = vi.fn().mockResolvedValue(undefined);
     const entry = migration(vi.fn(), { finalize });
-    db.ledger.set(
-      entry.id,
-      ledgerRow(entry, { finishedAt: new Date(), runCompletedAt: null }),
-    );
+    db.ledger.set(entry.id, ledgerRow(entry, { finishedAt: new Date(), runCompletedAt: null }));
 
     await runEntry(db, entry);
 

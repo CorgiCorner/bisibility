@@ -37,23 +37,10 @@ export type ProviderConnectionAllocationUpdate = {
   programmatic?: ProviderAllocation | null;
 };
 
-export type AllocationConnection = StoredProviderAllocation & {
-  enabled: boolean;
-  id: string;
-  priority: number;
-  provider: string;
-  status: string;
-};
-
-export type AllocationProject = {
-  budgetCapCents: number;
-  providerAllocationsInitializedAt: Date | null;
-};
-
 export type EffectiveProviderAllocation = {
   allocation: ProviderAllocation | null;
   credits: SurfaceAllocations;
   internalConnectionId: string;
   programmaticAllocation: ProviderAllocation | null;
-  source: "connection" | "legacy_project" | "none";
+  source: "connection" | "none";
 };

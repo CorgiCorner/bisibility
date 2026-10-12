@@ -106,9 +106,10 @@ object with a `keywords` array. String entries in `keywords` are converted to
 
 `keyword` is required (1 to 180 characters). `location_key` is the primary
 location reference and takes precedence over the deprecated `country`,
-`language`, `location`, and `city` fields. Those legacy selectors are accepted
-until bisibility 0.24.0, then removed. Unresolved cities fall back to
-country-level tracking with a warning.
+`language`, `location`, and `city` fields. Those legacy selectors remain
+accepted for backward compatibility and no removal version is scheduled; new
+code should send `location_key`. Unresolved cities fall back to country-level
+tracking with a warning.
 
 `tags` accepts up to 12 tags, each 1 to 48 characters. Within `schedule`,
 `jitter_minutes` must be a whole number from `0` to `120`. Omitting it uses

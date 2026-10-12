@@ -1,117 +1,139 @@
 "use client";
-
-import { spendFillClass, spendTone } from "@/components/cost-estimate/spend-tone";
-import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
+import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { UsageCapPill } from "@/components/usagekit/usage-cap-pill";
+import type { WorkspaceBudgetSummary } from "@/lib/queries/workspace-budget-summary";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
-import { cn } from "@/lib/ui/cn";
 import Link from "next/link";
-import { useFormatter, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { headerBudgetFigure, headerBudgetSummary } from "./header-budget-summary";
 
 export type HeaderProviderSpendProps = {
-  action: "details" | "set_budget" | null | undefined;
-  recorded: { cents: number; units: number } | null;
   projectRef: ProjectRef;
-  tightest: { provider: string; usedPercent: number } | null;
-  usedPercent: number | null;
+  summary: WorkspaceBudgetSummary | null;
 };
-
-const pillClassName = cn(
-  quietChipVariants({ size: "sm" }),
-  "max-w-none font-sans text-[10.5px] font-semibold leading-none tabular-nums text-fg transition-colors",
-);
-
-const linkPillClassName = cn(
-  pillClassName,
-  "no-underline hover:border-border-control hover:bg-bg-inset active:bg-bg-inset",
-);
-
-function CapMiniBar({ percent }: Readonly<{ percent: number }>) {
-  const tone = spendTone(percent, true);
-  return (
-    <span
-      aria-hidden
-      className="relative h-1 w-9 shrink-0 overflow-hidden rounded-full border border-border-strong bg-transparent"
-    >
-      <span
-        className={cn("absolute inset-y-0 left-0 rounded-full", spendFillClass[tone])}
-        style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
-      />
-    </span>
-  );
-}
-
-function WarningDot() {
-  return (
-    <span
-      aria-hidden
-      className="h-1.5 w-1.5 shrink-0 rounded-full"
-      style={{ backgroundColor: "var(--yellow)" }}
-    />
-  );
-}
-
-// Compact monthly-cap pill for the app header. Figures come from the server read model.
-export function HeaderProviderSpend({
-  action,
-  recorded,
-  projectRef,
-  usedPercent,
-}: Readonly<HeaderProviderSpendProps>) {
-  const format = useFormatter();
+export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpendProps) {
   const t = useTranslations("projectCostEstimate.providerSpend");
-  if (action === null) {
+  const p = useUsagePresentation();
+  const locale = useLocale();
+  const compact = headerBudgetSummary(summary?.budgets.rows ?? []);
+  const percent = new Intl.NumberFormat(locale).format(Math.floor(compact.percent ?? 0));
+  const label = compact.unavailable
+    ? t("headerUnavailable")
+    : compact.level === "exceeded"
+      ? t("headerExceeded")
+      : compact.level === "warning" && compact.percent === null
+        ? t("headerWarning")
+        : compact.unlimited
+          ? t("headerNoLimit")
+          : compact.percent === null || (compact.partial && compact.percent === 0)
+            ? t("headerUsageUnknown")
+            : compact.percent > 0 && compact.percent < 1
+              ? t(compact.partial ? "headerAtLeastUnderOne" : "headerUnderOne")
+              : t(compact.partial ? "headerAtLeastUsed" : "headerUsed", { percent });
+  const amount = (value: import("@usagekit/views").Figure | "unlimited", lowerBound = false) => {
+    if (value === "unlimited") return p.budget.unlimited;
+    if (value === "unavailable") return p.budget.unavailable;
+    if (value.certainty === "unknown") return p.budget.unknown;
+    const formatted = lowerBound ? value : { ...value, certainty: "measured" as const };
+    const text =
+      headerBudgetFigure(formatted, locale, p.options) ??
+      `${p.figure(value)} ${p.unit(value.unit)}`;
+    return lowerBound && value.certainty === "estimated" ? `≥ ${text}` : text;
+  };
+  const scope = (row: import("@usagekit/views").BudgetRow) => {
+    const target = row.kind === "group" ? p.operation("project") : row.target;
+    const traffic =
+      row.traffic.kind === "any"
+        ? "any"
+        : row.traffic.kind === "surface"
+          ? row.traffic.surface
+          : row.traffic.source;
+    return `${target} · ${row.traffic.kind === "source" ? p.dimension("source", traffic) : p.operation(traffic)}`;
+  };
+  const details = (
+    <div className="max-w-xs space-y-2 text-left">
+      <p>{t("headerCapTooltip")}</p>
+      {summary?.budgets.rows.map((row) => (
+        <div key={row.id}>
+          {row.redacted ? (
+            p.budget.redacted
+          ) : (
+            <>
+              <p className="font-medium">{scope(row)}</p>
+              {row.level === "unavailable" ? (
+                p.budget.unavailable
+              ) : (
+                <p>
+                  {p.budget.used}: {amount(row.used, true)}; {p.budget.reserved}:{" "}
+                  {amount(row.reserved)}; {p.budget.limit}: {amount(row.limit)}
+                  {row.boundary.onExceed === "allow" && row.boundary.hardLimit && (
+                    <>
+                      ; {p.budget.hardLimit}: {amount(row.boundary.hardLimit)}
+                    </>
+                  )}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+  const href = `${appPath(projectRef, "integrations")}?tab=usage`;
+  const labels = { unknown: t("headerUsageUnknown"), unavailable: t("headerUnavailable") };
+  const renderLink = (
+    props: Parameters<
+      NonNullable<import("@/components/usagekit/usage-cap-pill").UsageCapPillProps["renderLink"]>
+    >[0],
+  ) => <Link {...props} />;
+  const renderTooltip = (trigger: import("react").ReactNode) => (
+    <Tooltip
+      content={details}
+      semantics="description"
+      placement="bottom"
+      wrapperClassName="items-center"
+    >
+      {trigger}
+    </Tooltip>
+  );
+  if (
+    summary?.status.state === "forbidden" ||
+    (summary && !summary.eligible && summary.status.state !== "unavailable")
+  )
     return null;
-  }
-
-  if (recorded == null || action === undefined) {
-    return (
-      <div className="hidden self-center md:flex md:items-center">
-        <span className={cn(pillClassName, "text-fg-muted")}>{t("headerUnavailable")}</span>
-      </div>
-    );
-  }
-
-  const usageHref = `${appPath(projectRef, "integrations")}?tab=usage`;
-  const setCapHref = `${usageHref}&budget=edit`;
-  const spentCents = recorded.cents;
-  const spent = format.number(spentCents / 100, { currency: "USD", style: "currency" });
-
-  if (action === "set_budget" || usedPercent == null) {
-    return (
-      <div className="hidden self-center md:flex md:items-center">
-        <Tooltip content={t("headerCapTooltip")} placement="bottom" wrapperClassName="items-center">
-          <Link
-            aria-label={
-              spentCents > 0 ? t("headerNoCapAriaWithSpend", { spent }) : t("headerNoCapAria")
-            }
-            className={cn(linkPillClassName, "gap-1.5")}
-            href={setCapHref}
-          >
-            <WarningDot />
-            <span>{spentCents > 0 ? t("headerNoCapWithSpend", { spent }) : t("headerNoCap")}</span>
-          </Link>
-        </Tooltip>
-      </div>
-    );
-  }
-
-  const usedLabel =
-    usedPercent > 0 && usedPercent < 1
-      ? t("headerUnderOnePercent")
-      : t("headerUsed", { percent: Math.round(usedPercent) });
+  const unavailable = !summary || summary.status.state === "unavailable";
   return (
-    <div className="hidden self-center md:flex md:items-center">
-      <Tooltip content={t("headerCapTooltip")} placement="bottom" wrapperClassName="items-center">
-        <Link
-          aria-label={t("headerCapAria", { used: usedLabel })}
-          className={cn(linkPillClassName, "gap-2")}
-          href={usageHref}
-        >
-          <CapMiniBar percent={usedPercent} />
-          <span>{usedLabel}</span>
-        </Link>
-      </Tooltip>
+    <div className="hidden max-w-56 shrink-0 self-center md:flex md:items-center">
+      {unavailable ? (
+        <UsageCapPill state="unavailable" size="sm" labels={labels} />
+      ) : summary.budgets.rows.length ? (
+        <UsageCapPill
+          state="ready"
+          href={href}
+          label={label}
+          ariaLabel={t("headerUsageAria", {
+            status: label,
+          })}
+          percent={compact.partial && compact.percent === 0 ? null : compact.percent}
+          partial={compact.partial}
+          level={compact.level}
+          renderLink={renderLink}
+          renderTooltip={renderTooltip}
+          labels={labels}
+          size="sm"
+        />
+      ) : (
+        <UsageCapPill
+          state="ready"
+          href={`${href}&budget=edit`}
+          label={t("headerNoCap")}
+          ariaLabel={t("headerNoCapAria")}
+          labels={labels}
+          renderLink={renderLink}
+          size="sm"
+        />
+      )}
     </div>
   );
 }

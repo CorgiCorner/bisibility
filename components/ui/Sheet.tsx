@@ -108,7 +108,7 @@ export function Sheet({
             {headerAction}
             <button
               aria-label={closeLabel ?? t("close")}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-control text-fg-muted outline-none transition-[color,background-color,transform] duration-[var(--motion-press)] hover:bg-bg-sunken focus-visible:bg-bg-sunken motion-safe:active:not-focus-visible:scale-[0.97]"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-control text-fg-muted outline-none transition-[color,background-color,transform] duration-[var(--motion-press)] hover:bg-bg-sunken focus-visible:bg-bg-sunken focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-accent-solid focus-visible:outline-offset-2 motion-reduce:transition-none motion-safe:active:not-focus-visible:scale-[0.97]"
               onClick={onClose}
               type="button"
             >

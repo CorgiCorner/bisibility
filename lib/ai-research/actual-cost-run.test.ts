@@ -14,7 +14,20 @@ const mocks = vi.hoisted(() => ({
   failCleanup: false,
 }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/metering/entry-sync", () => ({ syncUsageEntry: vi.fn() }));
+vi.mock("@/lib/metering/usage-read", () => ({
+  readCanonicalUsage: async (query: { values: unknown[] }) =>
+    mocks.receipts.filter(
+      (row) =>
+        row.projectId === query.values[0] &&
+        row.connectionId === query.values[1] &&
+        query.values.slice(2).includes(row.tag),
+    ),
+}));
+vi.mock("@/lib/metering/cancel-paid-attempt", () => ({
+  cancelUnsentPaidAttempt: async () => {
+    if (mocks.failCleanup) throw new Error("Fictional cleanup commit unavailable");
+  },
+}));
 vi.mock("./context", () => ({ requireAiSource: mocks.source }));
 vi.mock("./catalog-service", () => ({ loadAiResearchCapabilities: mocks.capabilities }));
 vi.mock("./provider", () => ({

@@ -3,9 +3,13 @@ import type { ApiContext } from "./context";
 import { listProviderBudgets, updateProviderBudgets } from "./provider-budgets";
 
 const mocks = vi.hoisted(() => ({
+  allocations: vi.fn(),
   findConnection: vi.fn(),
   findProject: vi.fn(),
   setAllocation: vi.fn(),
+}));
+vi.mock("@/lib/provider-allocations/repository", () => ({
+  readProjectProviderAllocations: mocks.allocations,
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
@@ -63,6 +67,18 @@ describe("provider budgets REST", () => {
       providerAllocationsInitializedAt: new Date("2026-09-01T00:00:00Z"),
       providerConnections: [hostedConnection()],
     });
+    mocks.allocations.mockResolvedValue([
+      {
+        internalConnectionId: "internal_conn",
+        allocation: { amountPerMonth: 3000, unit: "cents" },
+        programmaticAllocation: null,
+        credits: {
+          app: { amountPerMonth: 1200, unit: "cents" },
+          programmatic: { amountPerMonth: 500, unit: "cents" },
+        },
+        source: "connection",
+      },
+    ]);
     mocks.findConnection.mockResolvedValue({ publicId: CONNECTION_ID });
     mocks.setAllocation.mockResolvedValue(undefined);
   });

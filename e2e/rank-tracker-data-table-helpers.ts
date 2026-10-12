@@ -41,7 +41,7 @@ function assertIsolatedE2eDatabase() {
   return { databaseUrl, schema };
 }
 
-function e2ePrisma() {
+export function e2ePrisma() {
   const { databaseUrl, schema } = assertIsolatedE2eDatabase();
   cachedPrisma ??= withPublicIdWrites(
     new PrismaClient({

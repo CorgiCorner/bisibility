@@ -27,7 +27,7 @@ export type UpcomingProviderSource = {
 
 export type UpcomingViewInput = {
   blockedReason: UpcomingBlockReason | null;
-  budgetCapCents: number;
+  monthlyCapCents: number;
   dateFormat?: DateFormat;
   now: Date;
   projectTimezone: string;
@@ -188,8 +188,8 @@ function observedDailySpend(input: UpcomingViewInput) {
 export function buildUpcomingView(input: UpcomingViewInput): UpcomingView {
   const next48h = next48hCents(input);
   const dailyRate = observedDailySpend(input);
-  const hasBudgetCap = hasMonthlyBudgetCap(input.budgetCapCents);
-  const remaining = hasBudgetCap ? Math.max(0, input.budgetCapCents - input.spentCents) : 0;
+  const hasBudgetCap = hasMonthlyBudgetCap(input.monthlyCapCents);
+  const remaining = hasBudgetCap ? Math.max(0, input.monthlyCapCents - input.spentCents) : 0;
   const capLastsUntil =
     hasBudgetCap && dailyRate > 0
       ? new Date(input.now.getTime() + (remaining / dailyRate) * DAY_MS).toISOString()
@@ -202,7 +202,7 @@ export function buildUpcomingView(input: UpcomingViewInput): UpcomingView {
         : [],
     days: dayGroups(input),
     forecast: {
-      capCents: input.budgetCapCents,
+      capCents: input.monthlyCapCents,
       capLastsUntil,
       next48hCents: next48h,
       next48hNative: next48hUsage(input),

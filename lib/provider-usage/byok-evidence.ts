@@ -18,6 +18,7 @@ export type ByokEvidenceInput = {
   unit: "cents" | "units";
   estimate?: { cents: string; units: string };
   credentialVersion?: string | null;
+  keywordId?: string;
 };
 
 /** Only trusted pre-I/O project/connection rows may assign a new accounting principal. */
@@ -63,7 +64,8 @@ export async function captureByokEvidence(
       correlationId: context.correlationId,
       unit: input.unit,
       estimate: {
-        ...(input.estimate ?? { cents: "0", units: "1" }),
+        cents: input.estimate?.cents ?? "0",
+        units: input.estimate?.units ?? "1",
         credentialVersion: input.credentialVersion ?? null,
         allocationTag: ownAllocationTag(input.provider, input.connectionId),
         publicConnectionId: connection.publicId ?? null,

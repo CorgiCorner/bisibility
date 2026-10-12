@@ -7,6 +7,9 @@ v.describe("SearchInsightsBody", () => {
   v.beforeEach(() => {
     t.analyticsMock().track.mockReset();
   });
+  v.afterEach(() => {
+    v.vi.useRealTimers();
+  });
 
   v.it("walks the server pages with the table footer", async () => {
     const loadRowsAction = v.vi.fn(async (input: { offset: number }) => ({
@@ -33,6 +36,7 @@ v.describe("SearchInsightsBody", () => {
   });
 
   v.it("sends the search to the server and says when nothing matches", async () => {
+    v.vi.useFakeTimers();
     const loadRowsAction = v.vi.fn(async () => ({
       kind: "pages" as const,
       rows: [],
@@ -41,19 +45,21 @@ v.describe("SearchInsightsBody", () => {
     t.renderBody({ loadRowsAction: loadRowsAction as never });
 
     const card = t.pagesCard();
-    await userEvent.type(r.within(card).getByRole("searchbox", { name: "Search pages" }), "zzz");
+    const search = r.within(card).getByRole("searchbox", { name: "Search pages" });
+    for (const value of ["z", "zz", "zzz"]) {
+      r.fireEvent.change(search, { target: { value } });
+      if (value !== "zzz") await r.act(async () => v.vi.advanceTimersByTimeAsync(100));
+    }
+    v.expect(loadRowsAction).not.toHaveBeenCalled();
+    await r.act(async () => v.vi.advanceTimersByTimeAsync(299));
+    v.expect(loadRowsAction).not.toHaveBeenCalled();
+    await r.act(async () => v.vi.advanceTimersByTimeAsync(1));
 
-    await r.waitFor(() =>
-      v
-        .expect(loadRowsAction)
-        .toHaveBeenCalledWith(
-          v.expect.objectContaining({ kind: "pages", offset: 0, search: "zzz" }),
-        ),
+    v.expect(loadRowsAction).toHaveBeenCalledWith(
+      v.expect.objectContaining({ kind: "pages", offset: 0, search: "zzz" }),
     );
     v.expect(loadRowsAction).toHaveBeenCalledTimes(1);
-    await r.waitFor(() =>
-      v.expect(r.within(card).getByText('No rows match "zzz".')).toBeInTheDocument(),
-    );
+    v.expect(r.within(card).getByText('No rows match "zzz".')).toBeInTheDocument();
     // The card still holds the search box: the window has rows, only this search found none.
     v.expect(r.within(card).getByRole("searchbox", { name: "Search pages" })).toHaveValue("zzz");
   });

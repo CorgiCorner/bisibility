@@ -32,7 +32,7 @@ export default async function AgentReportPage({
       messages={messages}
       timeZone={runtime.timeZone}
     >
-      <PageContent variant="constrained" className="grid gap-4">
+      <PageContent variant="section" className="grid gap-4">
         <Link
           href={appPath(access.publicId, "agent-reports")}
           className="text-[13px] font-semibold text-accent-text hover:underline"

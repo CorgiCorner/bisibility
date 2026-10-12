@@ -1,6 +1,6 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { ProjectContextLoading } from "@/components/project-context/ProjectContextLayout";
-import { PageContent } from "@/components/shell/PageContent";
+import { SettingsRouteLoading } from "@/components/settings/shell/SettingsRouteLoading";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
@@ -19,9 +19,9 @@ export async function AgentWorkspaceLoading({
       timeZone={runtime.timeZone}
     >
       {view === "context" ? (
-        <PageContent variant="form" aria-busy="true">
+        <SettingsRouteLoading activeSection="context" withSearch>
           <ProjectContextLoading />
-        </PageContent>
+        </SettingsRouteLoading>
       ) : (
         <AgentReportsLoading
           description={t("agentWorkspace.reportsDescription")}

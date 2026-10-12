@@ -7,9 +7,8 @@ export type RunUsageGroup = {
 };
 
 /**
- * Provider-ledger receipts correlated with one run or one target. A positive
- * receipt count means the ledger owns the actuals; zero receipts means the run
- * predates the ledger and stored measurements may be used as a fallback.
+ * Meter receipts correlated with one run or one target. Missing receipts keep
+ * actuals unknown; stored business measurements are not accounting evidence.
  */
 export type RunLedgerActual = {
   costCents: number | null;
@@ -37,11 +36,6 @@ export function runUsage(
     return null;
   }
   const checks = groups.reduce((sum, group) => sum + group._count._all, 0);
-  const recorded = groups.reduce((sum, group) => sum + group._count.billingUnits, 0);
-  const complete =
-    checks >= run.startedTargets &&
-    recorded === checks &&
-    groups.every((group) => group.provider === "serpapi");
   const savedEstimate = spec.estimatedOperations ?? spec.providerAllocationQuantity;
   const estimated =
     typeof savedEstimate === "number" && Number.isInteger(savedEstimate) && savedEstimate >= 0
@@ -66,12 +60,7 @@ export function runUsage(
       ? ledger.units
       : null;
   return {
-    actual:
-      ledger && ledger.receiptCount > 0
-        ? ledgerUnits
-        : complete
-          ? groups.reduce((sum, group) => sum + (group._sum.billingUnits ?? 0), 0)
-          : null,
+    actual: ledgerUnits,
     estimated,
     unit: "operations",
   };

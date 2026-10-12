@@ -1,20 +1,19 @@
-import { estimateRankUsage, type NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
+import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import { prisma } from "@/lib/db/prisma";
-import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
+import { budgetDenialReason } from "@/lib/metering/budget-denial";
 import {
   type ProviderRequestOrigin,
   type ProviderRequestSurface,
   surfaceOf,
 } from "@/lib/provider-usage/surface";
-import { hostedRankCheckEstimatedCostCents } from "@/lib/providers/execution-extension";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
-import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { activeMarketLocationIds, unrunnableKeywordReason } from "@/lib/rank-check/runnable";
 import type { UnrunnableReason } from "@/lib/rank-check/runnable-reasons";
-import { resolveEffectiveSerpDepth, type SerpDepth } from "@/lib/serp/constants";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { ACTIVE_RUN_STATUSES } from "./contract";
 import { type RankCheckRunProject, requireRankCheckRunProject } from "./launch-types";
+import { quoteRunRows } from "./native-quotes";
 import { allocationBudget } from "./preview-budget";
 import { findRankCheckRunOverlaps, type RankCheckRunOverlap } from "./preview-overlaps";
 import { createPreviewToken } from "./preview-token";
@@ -39,7 +38,13 @@ export type RankCheckRunPreview = {
     blocked: boolean;
     capCents: number | null;
     mode: "allocation" | "legacy";
-    reason: "budget_exhausted" | "duplicate" | "no_provider" | null;
+    reason:
+      | "budget_missing"
+      | "budget_exhausted"
+      | "usage_reconciliation_required"
+      | "duplicate"
+      | "no_provider"
+      | null;
     remainingAfterCents: number | null;
     spentCents: number | null;
     surface?: ProviderRequestSurface;
@@ -82,47 +87,22 @@ function selectedPublicIds(spec: RunSelectionSpec) {
   return spec.kind === "selected" ? spec.keywordIds : [];
 }
 
-function estimateTargets(
+async function estimateTargets(
   rows: KeywordRow[],
   projectDepth: number | null | undefined,
   requestedDepth: SerpDepth | undefined,
   connection: Awaited<ReturnType<typeof loadSerpProviderChain>>[number],
 ) {
-  const targets = rows.map((row) => {
-    const depth = resolveEffectiveSerpDepth({
-      projectDepth,
-      requestedDepth,
-      checkScheduleDepth: row.checkSchedule?.serpDepth,
-      scheduleDepth: row.schedule?.serpDepth,
-    });
-    const cost =
-      connection.credentialSource === "hosted" && connection.provider === "serpapi"
-        ? hostedRankCheckEstimatedCostCents(connection.provider, depth)
-        : estimatedRankCheckCostCents(
-            connection.provider,
-            depth,
-            connection.costPerCheckCents,
-            connection.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
-          );
-    return { cost, depth };
-  });
-  const known = targets.flatMap(({ cost }) => (cost === null ? [] : [cost]));
+  const estimate = await quoteRunRows(rows, projectDepth, { depth: requestedDepth }, connection);
+  const known = estimate.targets.flatMap(({ cost }) => (cost === null ? [] : [cost]));
   const unique = new Set(known);
   return {
-    costCents: known.length > 0 ? known.reduce((sum, cost) => sum + cost, 0) : null,
-    depths: targets.map(({ depth }) => depth),
-    native: estimateRankUsage(
-      targets.map(({ depth }) => depth),
-      {
-        providerId: connection.provider,
-        overrideCents:
-          connection.costPerCheckCents == null ? null : Number(connection.costPerCheckCents),
-        rateContext: connection.rateContext,
-      },
-    ),
+    costCents: estimate.costCents,
+    depths: estimate.targets.map(({ depth }) => depth),
+    native: estimate.native,
     perTargetCents:
-      known.length === targets.length && unique.size === 1 ? (known[0] ?? null) : null,
-    unknownCostTargets: targets.length - known.length,
+      known.length === estimate.targets.length && unique.size === 1 ? (known[0] ?? null) : null,
+    unknownCostTargets: estimate.targets.length - known.length,
   };
 }
 
@@ -131,10 +111,9 @@ function remainingAfterCents(state: { capCents: number; reservedCents?: number; 
   return Math.max(0, state.capCents - state.spentCents - (state.reservedCents ?? 0) - (costCents ?? 0));
 }
 
-async function legacyBudget(projectId: string, capCents: number, costCents: number | null) {
+async function previewProjectBudget(projectId: string, costCents: number | null) {
   try {
     const state = await assertBudgetAvailable(projectId, new Date(), {
-      capCents,
       estimatedCostCents: costCents,
     });
     return {
@@ -151,7 +130,7 @@ async function legacyBudget(projectId: string, capCents: number, costCents: numb
       blocked: true,
       capCents: error.budget.capCents,
       mode: "legacy" as const,
-      reason: "budget_exhausted" as const,
+      reason: budgetDenialReason(error) ?? ("budget_exhausted" as const),
       remainingAfterCents: remainingAfterCents(error.budget, costCents),
       spentCents: error.budget.spentCents,
     };
@@ -168,9 +147,7 @@ export async function previewRankCheckRun(
   const [project, rows, connections, duplicate] = await Promise.all([
     prisma.project.findUnique({
       select: {
-        budgetCapCents: true,
         defaults: { select: { serpDepth: true } },
-        providerAllocationsInitializedAt: true,
       },
       where: { id: input.project.id },
     }),
@@ -229,14 +206,19 @@ export async function previewRankCheckRun(
         )
       : { runs: [], total: 0 };
   const estimate = connections[0]
-    ? estimateTargets(executableRows, project.defaults?.serpDepth, input.depth, connections[0])
+    ? await estimateTargets(
+        executableRows,
+        project.defaults?.serpDepth,
+        input.depth,
+        connections[0],
+      )
     : { costCents: null, depths: [], perTargetCents: null, unknownCostTargets: 0 };
   let budget: RankCheckRunPreview["budget"];
   if (duplicate) {
     budget = {
       blocked: true,
       capCents: null,
-      mode: project.providerAllocationsInitializedAt ? "allocation" : "legacy",
+      mode: "allocation",
       reason: "duplicate",
       remainingAfterCents: null,
       spentCents: null,
@@ -245,13 +227,11 @@ export async function previewRankCheckRun(
     budget = {
       blocked: true,
       capCents: null,
-      mode: project.providerAllocationsInitializedAt ? "allocation" : "legacy",
+      mode: "allocation",
       reason: "no_provider",
       remainingAfterCents: null,
       spentCents: null,
     };
-  } else if (!project.providerAllocationsInitializedAt) {
-    budget = await legacyBudget(input.project.id, project.budgetCapCents, estimate.costCents);
   } else {
     if (!connections[0].id) throw new Error("Provider connection not found.");
     const allocation = await allocationBudget(
@@ -262,12 +242,14 @@ export async function previewRankCheckRun(
       estimate.depths,
       surfaceOf(input.origin.source),
     );
+    const projectBudget = await previewProjectBudget(input.project.id, estimate.costCents);
     budget = {
       ...allocation,
-      capCents: null,
+      ...(projectBudget.blocked ? { blocked: true, reason: projectBudget.reason } : {}),
+      capCents: projectBudget.capCents,
       mode: "allocation",
-      remainingAfterCents: null,
-      spentCents: null,
+      remainingAfterCents: projectBudget.remainingAfterCents,
+      spentCents: projectBudget.spentCents,
     };
   }
   const signed = createPreviewToken({

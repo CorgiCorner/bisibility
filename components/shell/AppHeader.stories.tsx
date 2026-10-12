@@ -1,11 +1,21 @@
 import { HeaderProviderSpend } from "@/components/cost-estimate/HeaderProviderSpend";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { MarketsPageContent } from "@/components/markets/page/MarketsPageContent";
 import { ProjectRunsContent } from "@/components/project-runs/ProjectRunsContent";
 import { NotificationBellClient } from "@/components/shell/NotificationBellClient";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import { DEFAULT_LOCALE } from "@/i18n/config";
+import { DEFAULT_TIME_ZONE } from "@/i18n/formats";
+import { budgetFixture, headerFixture } from "@/lib/metering/shared-view-fixtures";
 import type { NotificationFeed } from "@/lib/queries/notifications";
 import type { OperationSnapshot } from "@/lib/rank-check/runs/contract";
 import { AppRealtimeContext, type AppRealtimeValue } from "@/lib/realtime/useAppRealtime";
 import type { ProjectRunsApiResponse } from "@/lib/runs/project-runs-api";
+import projectCostEstimateMessages from "@/messages/core/en/project-cost-estimate.json";
+import projectMarketsMessages from "@/messages/core/en/project-markets.json";
+import projectRunsMessages from "@/messages/core/en/project-runs.json";
+import sharedMessages from "@/messages/core/en/shared.json";
+import shellMessages from "@/messages/core/en/shell.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
 import { AppHeaderFrame } from "./AppHeaderFrame";
@@ -45,7 +55,7 @@ const rankCheck = {
 type HeaderStoryProps = {
   content?: ReactNode;
   operations?: OperationSnapshot[];
-  spend: "capped" | "unavailable" | "without-cap";
+  spend: "capped" | "mixed" | "unavailable" | "without-cap";
   status?: AppRealtimeValue["status"];
   theme?: "dark" | "light";
   trayOpen?: boolean;
@@ -59,22 +69,28 @@ function HeaderStory({
   theme = "light",
   trayOpen = false,
 }: Readonly<HeaderStoryProps>) {
-  const action = spend === "unavailable" ? undefined : "details";
-  const recorded = spend === "unavailable" ? null : { cents: 3100, units: 1240 };
-  const tightest = spend === "without-cap" ? null : { provider: "DataForSEO", usedPercent: 62 };
-  const usedPercent = spend === "without-cap" ? null : 62;
-
   return (
     <AppRealtimeContext.Provider value={{ notifications: null, operations, status }}>
       <div className="min-h-24 bg-bg text-fg" data-theme={theme}>
         <AppHeaderFrame
           actions={
             <HeaderProviderSpend
-              action={action}
               projectRef="prj_story"
-              recorded={recorded}
-              tightest={tightest}
-              usedPercent={usedPercent}
+              summary={
+                spend === "unavailable"
+                  ? null
+                  : spend === "mixed"
+                    ? headerFixture([
+                        budgetFixture("10", "requests"),
+                        {
+                          ...budgetFixture(),
+                          id: "unavailable",
+                          level: "unavailable",
+                          used: "unavailable",
+                        },
+                      ])
+                    : headerFixture(spend === "without-cap" ? [] : undefined)
+              }
             />
           }
           activeProjectId="prj_story"
@@ -98,9 +114,29 @@ function HeaderStory({
   );
 }
 
+// The workspace layout loads these catalogs; without them the header cannot render.
+const headerMessages = mergeMessageCatalogs(
+  sharedMessages,
+  shellMessages,
+  projectCostEstimateMessages,
+  projectRunsMessages,
+  projectMarketsMessages,
+);
+
 const meta = {
   title: "Components/AppHeader",
   component: HeaderStory,
+  decorators: [
+    (Story) => (
+      <FeatureMessagesProvider
+        locale={DEFAULT_LOCALE}
+        messages={headerMessages}
+        timeZone={DEFAULT_TIME_ZONE}
+      >
+        <Story />
+      </FeatureMessagesProvider>
+    ),
+  ],
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof HeaderStory>;
 
@@ -234,3 +270,5 @@ export const MarketsPage: Story = {
     ),
   },
 };
+
+export const MixedBudgets: Story = { args: { spend: "mixed" } };

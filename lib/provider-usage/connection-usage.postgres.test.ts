@@ -1,12 +1,23 @@
+import { createBudgetedConnectionFixture } from "@/lib/metering/budget-config.test-fixture";
+
+vi.mock("@/lib/metering/admission", () => ({ compareAdmission: async () => {} }));
+
 import { randomUUID } from "node:crypto";
 import { databasePoolConfig, databaseSchemaFromUrl } from "@/lib/db/pool-config";
 import { makePublicId } from "@/lib/db/public-id";
 import { PrismaClient } from "@/lib/generated/prisma/client";
-import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import {
+  clearCanonicalUsage,
+  seedCanonicalUsage,
+} from "@/lib/metering/canonical-postgres.test-fixture";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { aggregateConnectionUsage } from "./connection-usage";
 import { assertProviderAllocationAvailable } from "./enforcement";
+
+vi.mock("@/lib/providers/execution-authority", () => ({
+  readDeploymentMeteringPreflightAuthority: async () => "legacy",
+}));
 
 /**
  * Real-DDL proof of the price-aware connection usage aggregation. The suite
@@ -63,6 +74,7 @@ type EntryInput = {
 };
 
 const ownedProjects: string[] = [];
+const ownedOperations: string[] = [];
 const ownedUsers: string[] = [];
 
 async function fixtureProject(): Promise<{ connectionId: string; projectId: string }> {
@@ -84,7 +96,6 @@ async function fixtureProject(): Promise<{ connectionId: string; projectId: stri
       name: "Priced usage fixture",
       ownerId: userId,
       publicId: makePublicId("prj"),
-      providerAllocationsInitializedAt: NOW,
     },
   });
   ownedProjects.push(projectId);
@@ -92,20 +103,28 @@ async function fixtureProject(): Promise<{ connectionId: string; projectId: stri
 }
 
 async function entry(projectId: string, connectionId: string, input: EntryInput): Promise<void> {
-  await db.providerCostEntry.create({
-    data: {
+  const seeded = await seedCanonicalUsage(
+    db,
+    {
       cached: input.cached ?? false,
       connectionId: input.connectionId ?? connectionId,
-      costCents: input.costCents,
-      createdAt: input.createdAt ?? new Date("2026-09-10T10:00:00.000Z"),
+      costCents: String(input.costCents),
+      createdAt: (input.createdAt ?? new Date("2026-09-10T10:00:00.000Z")).toISOString(),
       credentialSource: input.credentialSource ?? "own",
       measurementStatus: input.measurementStatus ?? "recorded",
-      priceCents: input.priceCents,
+      priceCents: input.priceCents == null ? null : String(input.priceCents),
       projectId: input.projectId ?? projectId,
-      source: input.source,
-      usageQuantity: input.usageQuantity,
+      source: input.source ?? "app",
+      usageQuantity: input.usageQuantity == null ? null : String(input.usageQuantity),
     },
-  });
+    {
+      principal: ownedUsers[0],
+      ...(input.credentialSource === "hosted" && input.priceCents != null
+        ? { debitId: randomUUID(), customerCents: String(input.priceCents) }
+        : {}),
+    },
+  );
+  ownedOperations.push(seeded.id);
 }
 
 beforeEach(async () => {
@@ -114,8 +133,8 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  await clearCanonicalUsage(db, ownedOperations.splice(0));
   for (const projectId of ownedProjects.splice(0)) {
-    await db.providerCostEntry.deleteMany({ where: { projectId } });
     await db.providerConnection.deleteMany({ where: { projectId } });
     await db.project.deleteMany({ where: { id: projectId } });
   }
@@ -235,7 +254,7 @@ describe("aggregateConnectionUsage against real PostgreSQL", () => {
       }),
     ).resolves.toEqual({ requestCount: 1, unconfirmedCount: 1, used: 0 });
 
-    await db.providerConnection.create({
+    await createBudgetedConnectionFixture(db, {
       data: {
         credentialSource: "hosted",
         creditsAllocationAmountPerMonth: 12,
@@ -273,7 +292,7 @@ describe("aggregateConnectionUsage against real PostgreSQL", () => {
         },
         db,
       ),
-    ).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
+    ).rejects.toMatchObject({ code: "budget_exhausted" });
   });
 
   it("keeps scope exact across connection, project, month, cache, and surface", async () => {

@@ -52,14 +52,16 @@ export const Expanded: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByTestId("sidebar-collapse-icon")).toBeInTheDocument();
-    await expect(canvas.getByText("Activity")).toBeVisible();
-    await expect(canvas.getByText("Modules")).toBeVisible();
+    await expect(canvas.queryByText("Activity")).not.toBeInTheDocument();
+    await expect(canvas.getByText("Tracking")).toBeVisible();
+    await expect(canvas.getByText("Research & audits")).toBeVisible();
+    await expect(canvas.getByText("Data & reports")).toBeVisible();
     await expect(canvas.getByText("Project")).toBeVisible();
     const searchConsole = canvas.getByText("Search Console").closest("a");
     if (!searchConsole) {
       throw new Error("Search Console navigation link is missing.");
     }
-    await expect(within(searchConsole).getByText("beta")).toBeVisible();
+    await expect(canvas.queryAllByText(/^(alpha|beta)$/i)).toHaveLength(0);
   },
 };
 

@@ -3,6 +3,11 @@ import {
   useSessionSpend,
 } from "@/components/cost-estimate/SessionSpendProvider";
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
+import {
+  featureMessagesElement,
+  projectRankTrackerFeatureTestMessages,
+} from "@/i18n/test-support/render-with-feature-messages";
+import sharedMessages from "@/messages/core/en/shared.json";
 import { deferred } from "@/tests/deferred";
 import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -10,7 +15,9 @@ import { describe, expect, it, vi } from "vitest";
 import { useKeywordRunChecks } from "./useKeywordRunChecks";
 
 function wrapper({ children }: Readonly<{ children: ReactNode }>) {
-  return <SessionSpendProvider>{children}</SessionSpendProvider>;
+  return featureMessagesElement(<SessionSpendProvider>{children}</SessionSpendProvider>, {
+    messages: projectRankTrackerFeatureTestMessages,
+  });
 }
 
 describe("useKeywordRunChecks", () => {
@@ -135,3 +142,22 @@ describe("useKeywordRunChecks", () => {
     expect(result.current.statusLabel).toBe("Started 1 rank check. 1 rank check failed to start.");
   });
 });
+
+it.each(["budget_missing", "usage_reconciliation_required"] as const)(
+  "budget regression: labels %s with shared guidance",
+  async (code) => {
+    const runCheckNowAction = vi.fn().mockResolvedValue({
+      code,
+      status: "not_started",
+      message: "Server fallback",
+    });
+    const { result } = renderHook(() => useKeywordRunChecks(runCheckNowAction), { wrapper });
+    await act(async () => result.current.runChecks(["kw_1"]));
+    expect(result.current.checkFailed).toBe(true);
+    expect(result.current.statusLabel).toBe(
+      code === "budget_missing"
+        ? sharedMessages.shared.errors.budgetMissing
+        : sharedMessages.shared.errors.usageReconciliationRequired,
+    );
+  },
+);

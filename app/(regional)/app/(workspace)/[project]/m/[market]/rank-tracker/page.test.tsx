@@ -1,3 +1,4 @@
+import { KeywordHeaderContextBoundary } from "@/components/keywords/KeywordHeaderContextBoundary";
 import { RankTrackerFeatureBoundary } from "@/components/rank-tracker/RankTrackerFeatureBoundary";
 import { HEADER_CONTEXT_LABEL } from "@/components/shell/HeaderContextSlot";
 import { shellMessagesElement } from "@/i18n/test-support/render-with-feature-messages";
@@ -146,7 +147,10 @@ async function renderMarketRankTrackerRoute() {
     shellMessagesElement(
       await ProjectLayout({
         children: marketLayout,
-        context,
+        context:
+          context.type === KeywordHeaderContextBoundary
+            ? await KeywordHeaderContextBoundary(context.props)
+            : context,
         params: Promise.resolve({ project: PROJECT }),
       }),
     ),
@@ -201,7 +205,6 @@ describe("market Rank Tracker route composition", () => {
     mocks.resolveProjectAccess.mockResolvedValue({ projectId: "project_1", publicId: PROJECT });
     mocks.resolveRankTrackerPageQuery.mockResolvedValue({
       activeView: null,
-      groupedWasSpecified: false,
       malformedDevice: false,
       query: pageQuery(null),
       staleView: false,
@@ -214,13 +217,15 @@ describe("market Rank Tracker route composition", () => {
 
     expect(screen.getByRole("group", { name: HEADER_CONTEXT_LABEL })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Belgium" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Device scope" })).toHaveTextContent("All devices");
     expect(screen.getByRole("table", { name: "Rank Tracker grid" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Run checks" })).toBeInTheDocument();
     expect(mocks.loadRankTrackerPageList).toHaveBeenCalledWith(
       PROJECT,
       expect.objectContaining({ lens: { device: "all", locationId: MARKET_LOCATION_KEY } }),
-      false,
+      [],
+      { explicitGrouping: undefined },
     );
     expect(capturedGridProps.lens).toEqual({ device: "all", locationId: MARKET_LOCATION_KEY });
   });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useDeploymentMode } from "@/components/shell/DeploymentModeProvider";
+import { headerUtilityControlClassName } from "@/components/ui/header-icon-button-styles";
 import { OperationRow } from "@/components/ui/OperationRow";
 import { Popup as Popover } from "@/components/ui/Popup";
 import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
@@ -43,7 +44,8 @@ export const operationsTrayPaperStyle = {
 
 export const operationsTrayPillClassName = cn(
   quietChipVariants({ size: "sm" }),
-  "max-w-none flex-none gap-1.5 font-sans text-[10.5px] font-semibold leading-none tabular-nums text-fg transition-colors hover:border-border-control hover:bg-bg-inset",
+  headerUtilityControlClassName,
+  "max-w-none flex-none gap-1.5 font-sans text-[10.5px] font-semibold leading-none tabular-nums text-fg",
 );
 
 const pillToneClassName = {

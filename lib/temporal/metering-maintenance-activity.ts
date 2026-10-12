@@ -1,14 +1,16 @@
 import "server-only";
 
-import { maintainMeteringShadow } from "../metering/maintenance";
+import { maintainMeteringReservations } from "../metering/maintenance";
 import { isScheduledMaintenanceEnabled } from "./maintenance-schedule-bootstrap";
 
-export type MeteringMaintenanceActivityResult = { status: "completed" | "skipped" };
+export type MeteringMaintenanceActivityResult =
+  | { status: "completed"; count: number; hasMore: boolean }
+  | { status: "skipped" };
 
-export async function maintainMeteringShadowActivity(): Promise<MeteringMaintenanceActivityResult> {
-  if (!isScheduledMaintenanceEnabled() || process.env.METERING_SHADOW !== "on") {
+export async function maintainMeteringReservationsActivity(): Promise<MeteringMaintenanceActivityResult> {
+  if (!isScheduledMaintenanceEnabled()) {
     return { status: "skipped" };
   }
-  await maintainMeteringShadow();
-  return { status: "completed" };
+  const result = await maintainMeteringReservations();
+  return { status: "completed", ...result };
 }

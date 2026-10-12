@@ -1,5 +1,7 @@
 import "server-only";
 
+import { MISSING_PROJECT_BUDGET_MESSAGE } from "@/lib/metering/budget-denial";
+
 type ErrorLike = {
   code?: unknown;
   message?: unknown;
@@ -83,6 +85,8 @@ function budgetResetLabel(payload: Record<string, unknown>): string {
 }
 
 export function budgetExhaustedMessage(payload: Record<string, unknown>): string {
+  if ((payload.details as { reason?: unknown } | undefined)?.reason === "budget_missing")
+    return MISSING_PROJECT_BUDGET_MESSAGE;
   return `Provider budget for API, MCP and SDK is exhausted until ${budgetResetLabel(payload)}. Ask the project owner to raise it in Settings > Usage.`;
 }
 

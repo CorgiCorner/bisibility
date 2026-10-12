@@ -10,8 +10,8 @@ import {
   MenuSearchField,
   type MenuSelectInput,
   menuSelectInputClass,
-  menuSelectPaperStyle,
   menuSelectTriggerClass,
+  resolveMenuSelectPaperStyle,
   resolveSelectedOption,
 } from "@/components/ui/menu-select-support";
 import { track } from "@/lib/analytics/client";
@@ -19,7 +19,6 @@ import { type AnalyticsControlId, analyticsControlModule } from "@/lib/analytics
 import { cn } from "@/lib/ui/cn";
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { useTranslations } from "next-intl";
-import type { CSSProperties } from "react";
 import { type ReactNode, useCallback, useRef, useState } from "react";
 import { Tooltip } from "./Tooltip";
 
@@ -38,6 +37,8 @@ type MenuSelectBaseProps = {
   filterOptions?: boolean;
   leadingIcon?: ReactNode;
   leadingLabel?: ReactNode;
+  matchTriggerWidth?: boolean;
+  menuFooter?: ReactNode;
   menuMaxHeight?: string;
   menuMinWidth?: number;
   menuWidth?: number;
@@ -71,6 +72,8 @@ export function MenuSelect({
   filterOptions = true,
   leadingIcon,
   leadingLabel,
+  matchTriggerWidth = false,
+  menuFooter,
   menuMaxHeight,
   menuMinWidth,
   menuWidth,
@@ -132,23 +135,14 @@ export function MenuSelect({
     : (searchHint ?? (hasHiddenOptions ? t("moreOptionsHint") : undefined));
   const resolvedSearchPlaceholder = searchPlaceholder ?? t("searchPlaceholder");
 
-  const minimumMenuWidth =
-    menuWidth ??
-    menuMinWidth ??
-    Math.max(
-      compact ? 0 : (anchorEl?.getBoundingClientRect().width ?? 0),
-      menuSelectPaperStyle.minWidth,
-    );
-  const paperStyle: CSSProperties = {
-    ...menuSelectPaperStyle,
-    boxSizing: "border-box",
-    maxWidth: "calc(100vw - 32px)",
-    minWidth: `min(${minimumMenuWidth}px, calc(100vw - 32px))`,
-    width: menuWidth ?? "max-content",
-    maxHeight: menuMaxHeight ?? "min(360px, calc(100dvh - 84px))",
-    overflowX: "hidden",
-    overflowY: "auto",
-  };
+  const paperStyle = resolveMenuSelectPaperStyle({
+    anchorWidth: anchorEl?.getBoundingClientRect().width ?? 0,
+    compact,
+    matchTriggerWidth,
+    menuMaxHeight,
+    menuMinWidth,
+    menuWidth,
+  });
 
   function selectValue(nextValue: string) {
     onChange(nextValue);
@@ -239,6 +233,12 @@ export function MenuSelect({
         contentProps={{
           ref: attachContent,
           style: paperStyle,
+          onKeyDownCapture: (event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              closeMenu();
+            }
+          },
         }}
         onExited={handleExited}
       >
@@ -281,6 +281,9 @@ export function MenuSelect({
                 option={option}
               />
             ))}
+        {menuFooter ? (
+          <div className="sticky -bottom-1.5 bg-bg-elev pt-1.5">{menuFooter}</div>
+        ) : null}
       </Menu>
     </>
   );

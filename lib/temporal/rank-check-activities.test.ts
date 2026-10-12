@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
+import { meteringNamespace } from "../metering/runtime";
 import {
   PROJECT_DOMAIN_REQUIRED_MESSAGE,
   ProjectDomainRequiredError,
 } from "../projects/tracked-domain";
+import { ownAllocationTag } from "../provider-usage/credential-version";
 import { DeploymentAdmissionExhaustedError } from "../providers/execution-extension-errors";
 import { ProviderRateLimitedError } from "../providers/rate-limit";
 import { ProviderUsagePersistenceError } from "../providers/usage";
@@ -27,7 +29,9 @@ import {
 } from "./rank-check-activities";
 
 const mocks = vi.hoisted(() => ({
+  currentBudgets: vi.fn(),
   loadProviderRateContext: vi.fn(),
+  nativeCosts: vi.fn(),
   notifyDeferredRankCheckOps: vi.fn(),
   notifyFailedRankCheckOps: vi.fn(),
   paidProvider: { fetchRank: vi.fn() },
@@ -41,6 +45,7 @@ const mocks = vi.hoisted(() => ({
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
     keyword: { findMany: vi.fn(), findUnique: vi.fn() },
+    project: { findUnique: vi.fn() },
     projectMarket: { findMany: vi.fn() },
     providerConnection: { findFirst: vi.fn() },
     rankCheck: {
@@ -59,6 +64,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("../metering/store/budgets", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../metering/store/budgets")>()),
+  currentBudgets: mocks.currentBudgets,
+}));
 vi.mock("../expected-url/keyword", () => ({
   resolveExpectedUrlForKeyword: mocks.resolveExpectedUrlForKeyword,
 }));
@@ -67,6 +76,9 @@ vi.mock("../notifications/realtime", () => ({
 }));
 vi.mock("../provider-rates/connection-context", () => ({
   loadProviderRateContext: mocks.loadProviderRateContext,
+}));
+vi.mock("../provider-rates/native-rank-request", () => ({
+  loadNativeRankRequestCosts: mocks.nativeCosts,
 }));
 vi.mock("../rank-check/fallback", async () => {
   const actual =
@@ -99,12 +111,18 @@ function runningInput(
 describe("rank-check activities", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.nativeCosts.mockResolvedValue(undefined);
     mocks.prisma.$executeRaw.mockResolvedValue(1);
+    mocks.prisma.$queryRaw.mockResolvedValue([]);
+    mocks.prisma.project.findUnique.mockResolvedValue({ ownerId: "owner_1" });
+    mocks.currentBudgets.mockResolvedValue([]);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.loadProviderRateContext.mockResolvedValue({ entries: [], manualAmountCents: null });
     mocks.prisma.auditLog.create.mockResolvedValue({ id: "audit_1" });
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
       costPerCheckCents: 0,
+      credentialSource: "own",
+      provider: "serpapi",
       id: "connection_1",
       projectId: "project_1",
     });
@@ -129,6 +147,47 @@ describe("rank-check activities", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllEnvs();
+  });
+
+  it("prices a running check from its actual keyword request", async () => {
+    mocks.prisma.providerConnection.findFirst.mockResolvedValue({
+      id: "connection_1",
+      projectId: "project_1",
+      provider: "dataforseo",
+      credentialSource: "own",
+      credentialsEncrypted: "encrypted",
+    });
+    const keyword = await mocks.prisma.keyword.findUnique();
+    mocks.prisma.keyword.findUnique.mockResolvedValue({ ...keyword, text: "site:example.com" });
+    mocks.nativeCosts.mockResolvedValue([1]);
+    mocks.prisma.rankCheck.create.mockResolvedValue({
+      id: "check_1",
+      publicId: "check_a00000000000000000000000",
+    });
+    await createRunningRankCheckActivity(runningInput({ depth: 10 }));
+    expect(mocks.prisma.rankCheck.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ estimatedCostCents: 1 }) }),
+    );
+    expect(mocks.nativeCosts).toHaveBeenCalledWith(
+      mocks.prisma,
+      expect.objectContaining({ id: "connection_1" }),
+      [{ keyword: "site:example.com", depth: 10 }],
+    );
+  });
+
+  it("does not start a running check with an unknown own-key quote", async () => {
+    mocks.prisma.providerConnection.findFirst.mockResolvedValue({
+      id: "connection_1",
+      projectId: "project_1",
+      provider: "dataforseo",
+      credentialSource: "own",
+      credentialsEncrypted: "encrypted",
+    });
+    mocks.nativeCosts.mockResolvedValue([null]);
+    await expect(createRunningRankCheckActivity(runningInput({ depth: 10 }))).rejects.toThrow(
+      "no confirmed monetary estimate",
+    );
+    expect(mocks.prisma.rankCheck.create).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -170,6 +229,7 @@ describe("rank-check activities", () => {
       id: "rank_running_1",
       publicId: "check_a00000000000000000000000",
     });
+    mocks.loadProviderRateContext.mockResolvedValue({ entries: [], manualAmountCents: 0.75 });
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
       costPerCheckCents: 0.75,
       provider: "serpapi",
@@ -198,6 +258,7 @@ describe("rank-check activities", () => {
   });
 
   it("reserves the runtime chain head by priority", async () => {
+    mocks.loadProviderRateContext.mockResolvedValue({ entries: [], manualAmountCents: 0.25 });
     const connections = [
       {
         costPerCheckCents: 0.25,
@@ -285,6 +346,8 @@ describe("rank-check activities", () => {
     });
     mocks.prisma.keyword.findUnique.mockResolvedValue({
       ...keyword,
+      projectId: "project_1",
+      text: "plain",
       publicId: "kw_a00000000000000000000000",
     });
 
@@ -297,8 +360,8 @@ describe("rank-check activities", () => {
     expect(mocks.prisma.providerConnection.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         select: {
-          costPerCheckCents: true,
           credentialSource: true,
+          credentialsEncrypted: true,
           id: true,
           projectId: true,
           provider: true,
@@ -307,12 +370,12 @@ describe("rank-check activities", () => {
     );
     expect(mocks.prisma.keyword.findUnique).toHaveBeenCalledWith({
       select: {
+        text: true,
         projectId: true,
         publicId: true,
         project: {
           select: {
             defaults: { select: { serpDepth: true } },
-            providerAllocationsInitializedAt: true,
           },
         },
         checkSchedule: { select: { serpDepth: true } },
@@ -379,7 +442,62 @@ describe("rank-check activities", () => {
       }),
       select: { id: true, publicId: true },
     });
+    const namespace = meteringNamespace();
+    expect(mocks.currentBudgets).toHaveBeenCalledWith(
+      expect.anything(),
+      namespace,
+      [
+        { kind: "group", namespace, group: "project_1" },
+        { kind: "principal", namespace, principal: "owner_1" },
+        { kind: "connection", namespace, connection: "connection_1" },
+        { kind: "tag", namespace, tag: ownAllocationTag("serpapi", "connection_1") },
+      ],
+      "app",
+    );
   });
+
+  it.each(["project", "connection"] as const)(
+    "rejects a scheduled wrap when its Store %s budget is exhausted",
+    async (scope) => {
+      mocks.currentBudgets.mockResolvedValue([
+        {
+          id: `${scope}:monthly`,
+          version: 1,
+          scope:
+            scope === "project"
+              ? { kind: "group", namespace: "default", group: "project_1" }
+              : { kind: "connection", namespace: "default", connection: "connection_1" },
+          surface: "app",
+          unit: "budget_cents",
+          limit: { value: 0n, scale: 0, unit: "budget_cents" },
+          window: { kind: "calendar_month", timezone: "UTC" },
+          onExceed: "block",
+        },
+      ]);
+      mocks.prisma.rankCheck.create.mockResolvedValue({
+        id: "rank_legacy_1",
+        publicId: "check_a00000000000000000000000",
+      });
+      mocks.prisma.providerConnection.findFirst.mockResolvedValue({
+        id: "connection_1",
+        projectId: "project_1",
+        provider: "serpapi",
+        credentialSource: "own",
+        costPerCheckCents: 1,
+      });
+
+      await expect(
+        createRunningRankCheckActivity(
+          runningInput({ scheduleId: "rank-check-keyword_1", trigger: "scheduled" }),
+        ),
+      ).rejects.toMatchObject({
+        code: scope === "project" ? "budget_exhausted" : "provider_allocation_exhausted",
+      });
+      expect(mocks.prisma.rankCheckRun.create).not.toHaveBeenCalled();
+      expect(mocks.prisma.rankCheck.update).not.toHaveBeenCalled();
+      expect(mocks.prisma.auditLog.create).not.toHaveBeenCalled();
+    },
+  );
 
   it("wraps a legacy fire once and reuses its linked rank check on replay", async () => {
     mocks.prisma.rankCheck.create.mockResolvedValue({
@@ -404,6 +522,7 @@ describe("rank-check activities", () => {
 
     expect(mocks.prisma.rankCheck.create).toHaveBeenCalledOnce();
     expect(mocks.prisma.rankCheckRun.create).toHaveBeenCalledOnce();
+    expect(mocks.currentBudgets).toHaveBeenCalledOnce();
     expect(mocks.prisma.rankCheckRun.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         items: {
@@ -418,6 +537,8 @@ describe("rank-check activities", () => {
           kind: "legacy_schedule",
           keywordId: "kw_a00000000000000000000000",
           v: 1,
+          providerConnectionId: "connection_1",
+          providerAllocationQuantity: 10,
         },
         status: "running",
       }),
@@ -520,6 +641,8 @@ describe("rank-check activities", () => {
   it("audits the running transition in the same transaction", async () => {
     const tx = {
       $queryRaw: vi.fn(),
+      keyword: mocks.prisma.keyword,
+      providerConnection: mocks.prisma.providerConnection,
       auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
       rankCheck: {
         create: vi.fn(({ data }) =>
@@ -533,6 +656,7 @@ describe("rank-check activities", () => {
       },
     };
     mocks.prisma.$transaction.mockImplementation((callback) => callback(tx));
+    mocks.loadProviderRateContext.mockResolvedValue({ entries: [], manualAmountCents: 0.75 });
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
       costPerCheckCents: 0.75,
       provider: "serpapi",

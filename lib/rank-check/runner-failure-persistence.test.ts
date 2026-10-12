@@ -95,3 +95,14 @@ describe("failed rank-check persistence", () => {
     expect(mocks.prisma.observationRun.create).not.toHaveBeenCalled();
   });
 });
+
+it("persists a paid failure without reconstructing a legacy accounting receipt", async () => {
+  const tx = transaction();
+  await persistFailedRankCheckInTransaction(tx as never, {
+    ...failureTarget,
+    connectionId: "connection_1",
+    providerCostCents: 2,
+  });
+  expect(tx.rankCheck.create).toHaveBeenCalledOnce();
+  expect(tx.providerCostEntry.createMany).not.toHaveBeenCalled();
+});

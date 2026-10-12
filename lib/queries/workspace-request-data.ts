@@ -1,7 +1,9 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { monthlySpendCents, monthStartUtc } from "@/lib/rank-check/budget";
+import { monthlySpendCents } from "@/lib/metering/usage-read";
+import { monthStartUtc } from "@/lib/metering/utc-window";
+import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
 import {
   providerChainWhere,
   serpProviderChainOrderBy,
@@ -14,26 +16,29 @@ export const getRequestProjectDefaults = perRequestCache((projectId: string) =>
   prisma.projectDefaults.findUnique({ where: { projectId } }),
 );
 
-export const getRequestPrimarySerpProvider = perRequestCache((projectId: string) =>
-  prisma.providerConnection.findFirst({
+export const getRequestPrimarySerpProvider = perRequestCache(async (projectId: string) => {
+  const connection = await prisma.providerConnection.findFirst({
     orderBy: serpProviderChainOrderBy(),
-    select: { costPerCheckCents: true, id: true, provider: true },
+    select: { credentialSource: true, rates: rankCheckRateSelection, id: true, provider: true },
     where: { ...providerChainWhere("serp"), projectId },
-  }),
-);
+  });
+  return connection ? withRankCheckManualRate(connection) : null;
+});
 
-export const getRequestSerpProviderChain = perRequestCache((projectId: string) =>
-  prisma.providerConnection.findMany({
+export const getRequestSerpProviderChain = perRequestCache(async (projectId: string) => {
+  const connections = await prisma.providerConnection.findMany({
     orderBy: serpProviderChainOrderBy(),
     select: {
-      costPerCheckCents: true,
+      credentialSource: true,
+      rates: rankCheckRateSelection,
       id: true,
       priority: true,
       provider: true,
     },
     where: { ...providerChainWhere("serp"), projectId },
-  }),
-);
+  });
+  return connections.map(withRankCheckManualRate);
+});
 
 const loadMonthlySpendCents = perRequestCache((projectId: string, monthStart: string) =>
   monthlySpendCents(projectId, new Date(monthStart)),

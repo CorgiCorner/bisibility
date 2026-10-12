@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { resolveEffectiveAllocations } from "@/lib/provider-allocations/compatibility";
+import { readProjectProviderAllocations } from "@/lib/provider-allocations/repository";
 import { setProviderConnectionAllocation } from "@/lib/provider-allocations/service";
 import {
   MAX_ALLOCATION_AMOUNT,
@@ -24,15 +24,10 @@ import {
 } from "./surface";
 
 const connectionSelect = {
-  allocationAmountPerMonth: true,
-  allocationUnit: true,
   credentialSource: true,
-  creditsAllocationAmountPerMonth: true,
-  creditsProgrammaticAllocationAmountPerMonth: true,
   enabled: true,
   id: true,
   priority: true,
-  programmaticAllocationAmountPerMonth: true,
   provider: true,
   publicId: true,
   status: true,
@@ -69,8 +64,6 @@ function isBillable(provider: string) {
 async function loadProviderBudgets(projectId: string) {
   const project = await prisma.project.findUnique({
     select: {
-      budgetCapCents: true,
-      providerAllocationsInitializedAt: true,
       providerConnections: { orderBy: providerChainOrderBy(), select: connectionSelect },
     },
     where: { id: projectId },
@@ -80,9 +73,10 @@ async function loadProviderBudgets(projectId: string) {
     isBillable(connection.provider),
   );
   const resolved = new Map(
-    resolveEffectiveAllocations({ catalog: PROVIDER_CATALOG, connections, project }).map(
-      (allocation) => [allocation.internalConnectionId, allocation],
-    ),
+    (await readProjectProviderAllocations(projectId, PROVIDER_CATALOG)).map((allocation) => [
+      allocation.internalConnectionId,
+      allocation,
+    ]),
   );
   return connections.map((connection) => {
     const allocation = resolved.get(connection.id);

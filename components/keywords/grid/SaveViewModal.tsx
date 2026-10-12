@@ -74,13 +74,9 @@ export function SaveViewModal({
     <Modal
       footer={
         <>
-          <button
-            className="p-0 text-[13px] font-semibold text-fg-muted outline-none hover:text-fg focus-visible:text-fg"
-            onClick={onClose}
-            type="button"
-          >
+          <Button variant="ghost" onClick={onClose} type="button">
             {t("cancel")}
-          </button>
+          </Button>
           <Button
             disabled={!createSavedViewAction}
             form="save-keyword-view"

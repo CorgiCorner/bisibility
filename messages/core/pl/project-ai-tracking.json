@@ -105,7 +105,7 @@
     "denominators": "Oczekiwane {expected, number} · kwalifikujące się odpowiedzi {eligible, number} · pokrycie {coverage}% · częściowe {partial, number} · nieudane {failed, number} · brak AIO {absent, number} · nieznane {unknown, number} · brakujące {missing, number}",
     "trendMethod": "Wzmianki o projekcie i konkurentach są rozdzielone. Porównuj identyczne wersje promptów, źródło, model, ustawienia regionalne i konfigurację marki, przy co najmniej 90% pokrycia pełnymi odpowiedziami w obu okresach.",
     "contextPromptDrafts": "Szkice promptów z kontekstu",
-    "contextDraftMethod": "Twórz szkice pytań neutralnych, porównawczych i dotyczących marki na podstawie zapisanego kontekstu projektu. Sprawdź każdy szkic przed zaakceptowaniem. Żadne wywołanie modelu ani pomiar bazowy nie rozpoczyna się automatycznie.",
+    "contextDraftMethod": "Przygotuj pytania na podstawie zapisanego kontekstu projektu. Sprawdź i edytuj je przed zapisaniem. Zapisanie promptu nie uruchamia analizy.",
     "suggestFromContext": "Zaproponuj z kontekstu projektu",
     "suggestionsUnavailable": "Propozycje promptów są niedostępne. Wpisz prompt ręcznie.",
     "popularityUnknown": "Popularność nieznana",
@@ -179,6 +179,8 @@
     "generationReconcileBeforeRetry": "Ta próba jest zablokowana przed ponownym wysłaniem. Przed rozpoczęciem kolejnego generowania sprawdź jej trwale zapisany wynik lub uzgodnij potwierdzenie kosztu dostawcy. Żadna próba nie jest ponawiana automatycznie.",
     "generationFailureId": "Generowanie wymagające przeglądu: {id}",
     "observationTimeUnknown": "Nieznany czas obserwacji",
-    "citedSources": "Cytowane źródła"
+    "citedSources": "Cytowane źródła",
+    "contextMissingHint": "Dodaj kontekst projektu lub wpisz prompty ręcznie. Zapisanie promptów nie uruchamia analizy.",
+    "contextDraftReviewHint": "Propozycje opierają się na zapisanym kontekście, a nie pomiarach zainteresowania w wyszukiwarce. Sprawdź i edytuj je przed zapisaniem."
   }
 }

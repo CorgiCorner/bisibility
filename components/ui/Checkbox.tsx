@@ -76,7 +76,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
       />
       <svg
         aria-hidden="true"
-        className="pointer-events-none col-start-1 row-start-1 size-[68%] text-white opacity-0 transition-opacity peer-checked:opacity-100"
+        className="pointer-events-none col-start-1 row-start-1 size-[68%] text-primary-contrast opacity-0 transition-opacity peer-checked:opacity-100"
         fill="none"
         focusable="false"
         viewBox="0 0 16 16"

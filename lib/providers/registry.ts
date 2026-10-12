@@ -2,6 +2,7 @@ import { PROVIDER_ALLOCATION_METADATA } from "./allocation-metadata";
 import { ga4AnalyticsProvider } from "./analytics/ga4";
 import { gscAnalyticsProvider } from "./analytics/gsc";
 import { plausibleAnalyticsProvider } from "./analytics/plausible";
+import { syntheticProviderResult } from "./fake-request-receipts";
 import { dataForSeoProvider } from "./serp/dataforseo";
 import {
   fakeBacklinksHistory,
@@ -139,23 +140,23 @@ function fakeSerpProvider(id: string, label: string): SerpProvider {
     },
     async fetchRank(input) {
       const position = stablePosition(input);
-      return {
+      return syntheticProviderResult(input.credentials, () => ({
         checkedAt: new Date("2026-06-19T00:00:00.000Z"),
         costCents: 0,
         position,
         rankingUrl: `https://${input.domain}/rank-${position}`,
-      };
+      }));
     },
     ...(id === "dataforseo"
       ? {
-          async fetchBacklinksSummary() {
-            return fakeBacklinksSummary();
+          async fetchBacklinksSummary(credentials) {
+            return syntheticProviderResult(credentials, fakeBacklinksSummary);
           },
-          async fetchBacklinksHistory() {
-            return fakeBacklinksHistory();
+          async fetchBacklinksHistory(credentials) {
+            return syntheticProviderResult(credentials, fakeBacklinksHistory);
           },
-          async fetchBacklinksRows(_credentials, input) {
-            return fakeBacklinksRows(input);
+          async fetchBacklinksRows(credentials, input) {
+            return syntheticProviderResult(credentials, () => fakeBacklinksRows(input));
           },
         }
       : {}),

@@ -10,8 +10,8 @@ const datasourceUrl =
 export default defineConfig({
   schema: "prisma/schema",
   migrations: {
-    path: "prisma/migrations",
-    seed: "node --experimental-strip-types prisma/seed.ts",
+    path: process.env.BISIBILITY_MIGRATIONS_PATH ?? "prisma/migrations",
+    seed: "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs prisma/seed.ts",
   },
   datasource: { url: datasourceUrl },
 });

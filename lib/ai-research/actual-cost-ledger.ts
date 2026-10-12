@@ -3,8 +3,8 @@ import { agentReportSchema } from "@/lib/agent-reports/model";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id-resources";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
-import type { AgentReport, Prisma } from "@/lib/generated/prisma/client";
-import { syncUsageEntry } from "@/lib/metering/entry-sync";
+import { type AgentReport, Prisma } from "@/lib/generated/prisma/client";
+import { readCanonicalUsage } from "@/lib/metering/usage-read";
 import { settleLateNoDispatch, settleNoDispatchInTransaction } from "./no-dispatch-settlement";
 import type { AiResearchContext, AiResearchOutcome } from "./service";
 import type { AiResearchResult } from "./types";
@@ -72,16 +72,12 @@ async function reconciled(
   )
     return row;
   if (typeof provenance.connectionId !== "string") return row;
-  const receipts = await tx.providerCostEntry.findMany({
-    where: {
-      projectId: row.projectId,
-      connectionId: provenance.connectionId,
-      provider: "dataforseo",
-      feature: "prompt_explorer",
-      credentialSource: "own",
-      tag: { in: tags },
-    },
-  });
+  const receipts = await readCanonicalUsage(
+    Prisma.sql`"projectId"=${row.projectId}
+    AND "connectionId"=${provenance.connectionId} AND provider='dataforseo' AND feature='prompt_explorer'
+    AND "credentialSource"='own' AND tag IN (${Prisma.join(tags)})`,
+    tx,
+  );
   if (
     tags.some((tag) => !receipts.some((receipt) => receipt.tag === tag)) ||
     receipts.some(
@@ -220,6 +216,5 @@ export async function checkActualCostAttempt({
       }),
     };
   });
-  await Promise.all([...settled].map((id) => syncUsageEntry(id)));
   return result;
 }

@@ -34,3 +34,55 @@ describe("research account restriction recovery", () => {
     expect(researchAction.mock.calls.filter(([input]) => !input.estimateOnly)).toHaveLength(1);
   });
 });
+
+it("budget regression: blocks research with the missing-budget state", async () => {
+  const outcome = {
+    ok: false as const,
+    reason: "budget_exhausted" as const,
+    budgetReason: "budget_missing" as const,
+  };
+  const { result } = renderHook(() =>
+    useResearchRuns({
+      addSpend: vi.fn(),
+      connectionId: "",
+      includeClickstream: false,
+      initialBudgetBlocked: false,
+      scope: researchScopeForLocationKey("US"),
+      mode: "related",
+      projectId: "prj_fixture",
+      recent: { add: vi.fn() },
+      researchAction: vi.fn().mockResolvedValue(outcome),
+      resultLimit: 100,
+    }),
+  );
+  await act(async () => result.current.runResearch(["rank tracker"]));
+  expect(result.current.activeTab?.outcome).toEqual(outcome);
+  expect(result.current.budgetBlocked).toBe(true);
+  expect(result.current.budgetMissing).toBe(true);
+});
+
+it("blocks wallet-denied research without presenting a project budget denial", async () => {
+  const outcome = { ok: false as const, reason: "wallet_budget_exhausted" as const, costCents: 0 };
+  const addSpend = vi.fn();
+  const recent = { add: vi.fn() };
+  const { result } = renderHook(() =>
+    useResearchRuns({
+      addSpend,
+      connectionId: "",
+      includeClickstream: false,
+      initialBudgetBlocked: false,
+      scope: researchScopeForLocationKey("US"),
+      mode: "related",
+      projectId: "prj_fixture",
+      recent,
+      researchAction: vi.fn().mockResolvedValue(outcome),
+      resultLimit: 100,
+    }),
+  );
+  await act(async () => result.current.runResearch(["rank tracker"]));
+  expect(result.current.activeTab?.outcome).toEqual(outcome);
+  expect(result.current.budgetBlocked).toBe(true);
+  expect(result.current.budgetState).toBe("wallet_budget_exhausted");
+  expect(addSpend).not.toHaveBeenCalled();
+  expect(recent.add).not.toHaveBeenCalled();
+});

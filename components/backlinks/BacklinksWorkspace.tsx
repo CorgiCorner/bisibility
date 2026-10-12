@@ -1,6 +1,9 @@
 "use client";
 
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
+import { MissingBudgetNotice } from "@/components/i18n/MissingBudgetNotice";
+import { UsageReconciliationNotice } from "@/components/i18n/UsageReconciliationNotice";
+import { WalletBudgetNotice } from "@/components/i18n/WalletBudgetNotice";
 import type { AnalyzeBacklinksActionInput } from "@/lib/actions/backlinks";
 import {
   type BacklinksSnapshot,
@@ -8,6 +11,7 @@ import {
   isBacklinksEstimate,
   isBacklinksFailedSummary,
 } from "@/lib/backlinks/types";
+import { budgetDenialReason } from "@/lib/metering/budget-denial";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -50,6 +54,8 @@ export function BacklinksWorkspace({
   const [submitting, setSubmitting] = useState(false);
   const [snapshot, setSnapshot] = useState<BacklinksSnapshot | null>(null);
   const [failure, setFailure] = useState(false);
+  const [walletBudgetBlocked, setWalletBudgetBlocked] = useState(false);
+  const [budgetReason, setBudgetReason] = useState<ReturnType<typeof budgetDenialReason>>();
   const [failedSummary, setFailedSummary] = useState<FailedSummary | null>(null);
 
   const requestInput = (
@@ -74,6 +80,8 @@ export function BacklinksWorkspace({
     setTarget(nextTarget);
     setSnapshot(null);
     setFailure(false);
+    setBudgetReason(undefined);
+    setWalletBudgetBlocked(false);
     setFailedSummary(null);
     scheduleEstimate(nextTarget);
   }
@@ -90,6 +98,8 @@ export function BacklinksWorkspace({
     setResultLimit(nextResultLimit);
     setSnapshot(null);
     setFailure(false);
+    setBudgetReason(undefined);
+    setWalletBudgetBlocked(false);
     setFailedSummary(null);
     scheduleEstimate(nextTarget, {
       includeSubdomains: nextScope === "site" && nextIncludeSubdomains,
@@ -110,6 +120,8 @@ export function BacklinksWorkspace({
   async function analyze(request: AnalyzeRequest = {}) {
     setSubmitting(true);
     setFailure(false);
+    setBudgetReason(undefined);
+    setWalletBudgetBlocked(false);
     setFailedSummary(null);
     try {
       const overrides = request.overrides ?? {};
@@ -133,6 +145,8 @@ export function BacklinksWorkspace({
         return;
       }
       if (!outcome.ok) {
+        setBudgetReason(budgetDenialReason(outcome));
+        setWalletBudgetBlocked(outcome.reason === "wallet_budget_exhausted");
         if (request.fallbackOnCostLimit && outcome.reason === "cost_limit_exceeded") return;
         setFailure(true);
         return;
@@ -224,7 +238,13 @@ export function BacklinksWorkspace({
         targets={recentTargets}
       />
       {failedSummary ? <BacklinksFailedSummary evidence={failedSummary} /> : null}
-      {failure ? (
+      {walletBudgetBlocked ? (
+        <WalletBudgetNotice />
+      ) : budgetReason === "usage_reconciliation_required" ? (
+        <UsageReconciliationNotice />
+      ) : budgetReason === "budget_missing" ? (
+        <MissingBudgetNotice />
+      ) : failure ? (
         <p className="m-0 text-center text-[13px] text-red-text" role="status">
           {t("loadFailed")}
         </p>

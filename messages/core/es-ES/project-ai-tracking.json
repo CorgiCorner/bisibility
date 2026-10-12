@@ -105,7 +105,7 @@
     "denominators": "Esperadas {expected, number} · respuestas válidas {eligible, number} · cobertura {coverage}% · parciales {partial, number} · fallidas {failed, number} · AIO ausente {absent, number} · desconocidas {unknown, number} · faltantes {missing, number}",
     "trendMethod": "Las menciones del proyecto y de los competidores se tratan por separado. Compara revisiones de prompt, fuente, modelo, configuración regional y configuración de marca idénticas, con una cobertura de respuestas completas de al menos el 90% en ambos periodos.",
     "contextPromptDrafts": "Borradores de prompts a partir del contexto",
-    "contextDraftMethod": "Crea borradores de preguntas neutrales, comparativas y de marca a partir del contexto guardado del proyecto. Revisa cada borrador antes de aceptarlo. No se inicia automáticamente ninguna llamada al modelo ni medición de referencia.",
+    "contextDraftMethod": "Crea preguntas a partir del contexto guardado del proyecto. Revísalas y edítalas antes de guardarlas. Guardar un prompt no inicia un análisis.",
     "suggestFromContext": "Sugerir a partir del contexto del proyecto",
     "suggestionsUnavailable": "Las sugerencias de prompts no están disponibles. Introduce un prompt manualmente.",
     "popularityUnknown": "Popularidad desconocida",
@@ -179,6 +179,8 @@
     "generationReconcileBeforeRetry": "Este intento está bloqueado para otro envío. Revisa su resultado persistente o concilia el recibo del proveedor antes de iniciar otra generación. Ningún reintento es automático.",
     "generationFailureId": "Generación que requiere revisión: {id}",
     "observationTimeUnknown": "Hora de observación desconocida",
-    "citedSources": "Fuentes citadas"
+    "citedSources": "Fuentes citadas",
+    "contextMissingHint": "Añade contexto al proyecto o escribe los prompts manualmente. Guardarlos no inicia un análisis.",
+    "contextDraftReviewHint": "Los borradores usan tu contexto guardado, no datos de demanda de búsqueda. Revísalos y edítalos antes de guardarlos."
   }
 }

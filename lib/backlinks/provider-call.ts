@@ -1,5 +1,4 @@
 import "server-only";
-
 import { backlinksRates } from "@/lib/cost-estimate/provider-rates";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
@@ -10,10 +9,12 @@ import {
   requiredEstimatedCostCents,
 } from "@/lib/provider-lookups/paid-call";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
+import { type RequestCostLimit, requestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import { type ProviderRequestOrigin, surfaceOf } from "@/lib/provider-usage/surface";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { ProviderCallError } from "@/lib/providers/call-error";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { BACKLINK_HISTORY_MONTHS, previousFullHistoryMonths } from "@/lib/providers/history-window";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit-error";
 import type {
   BacklinkRowMode,
@@ -94,7 +95,11 @@ export function backlinksEstimate(input: {
   const summary = rateEstimate({ itemCount: 1, rate: rates.summary, source: input.source });
   const history =
     input.scope === "site"
-      ? rateEstimate({ itemCount: 1, rate: rates.history, source: input.source })
+      ? rateEstimate({
+          itemCount: BACKLINK_HISTORY_MONTHS,
+          rate: rates.history,
+          source: input.source,
+        })
       : 0;
   const rows = rateEstimate({
     itemCount: input.resultLimit,
@@ -117,13 +122,14 @@ function providerTarget(input: {
 }
 
 function paidCallInput(input: {
-  budgetCapCents: number;
+  costLimit?: RequestCostLimit;
   origin: ProviderRequestOrigin;
   projectId: string;
   source: BacklinksSource;
 }) {
   return {
     connection: input.source.connection,
+    costLimit: input.costLimit,
     credential: input.origin.credential,
     feature: "backlinks" as const,
     projectId: input.projectId,
@@ -134,7 +140,7 @@ function paidCallInput(input: {
 }
 
 export async function fetchBacklinksAnalysis(input: {
-  budgetCapCents: number;
+  maxCostCents?: number;
   includeSubdomains: boolean;
   mode: BacklinkRowMode;
   origin: ProviderRequestOrigin;
@@ -144,6 +150,7 @@ export async function fetchBacklinksAnalysis(input: {
   source: BacklinksSource;
   target: string;
 }) {
+  const historyWindow = previousFullHistoryMonths(BACKLINK_HISTORY_MONTHS);
   const rates = backlinksRates(input.source.provider.id);
   const estimate = backlinksEstimate(input);
   await preflightProviderBudget({
@@ -155,7 +162,7 @@ export async function fetchBacklinksAnalysis(input: {
     surface: surfaceOf(input.origin.source),
   });
   const target = providerTarget(input);
-  const common = paidCallInput(input);
+  const common = paidCallInput({ ...input, costLimit: requestCostLimit(input.maxCostCents) });
   const summary = await paidProviderCall({
     ...common,
     call: (credentials, usage) =>
@@ -175,10 +182,12 @@ export async function fetchBacklinksAnalysis(input: {
           call: (credentials, usage) =>
             input.source.provider.fetchBacklinksHistory(credentials, {
               ...target,
+              historyWindow,
               attribution: usage,
               tag: usage?.tag,
             }),
-          itemCount: 1,
+          itemCount: BACKLINK_HISTORY_MONTHS,
+          historyWindow,
           rate: rates.history,
         }).catch((error: unknown) => {
           if (
@@ -240,7 +249,6 @@ export async function fetchBacklinksAnalysis(input: {
 }
 
 export async function fetchMoreBacklinksRows(input: {
-  budgetCapCents: number;
   includeSubdomains: boolean;
   limit: number;
   mode: BacklinkRowMode;

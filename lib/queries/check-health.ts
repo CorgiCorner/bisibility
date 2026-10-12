@@ -2,7 +2,8 @@ import "server-only";
 
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
-import { monthlyBudgetExhausted } from "@/lib/rank-check/budget-contract";
+import { projectBudgetStatus } from "@/lib/metering/project-budget-read";
+import { formatQuantity } from "@usagekit/core";
 import { requireReadableProject } from "./_auth";
 import {
   getRequestMonthlySpendCents,
@@ -85,7 +86,10 @@ export async function getCheckHealth(projectId: string, options: { now?: Date } 
   const now = options.now ?? new Date();
   const since = new Date(now.getTime() - DAY_MS);
   const { project } = await requireReadableProject(projectId);
-  const capCents = project.budgetCapCents;
+  const budgetStatus = await projectBudgetStatus(project.id, now);
+  const capCents = budgetStatus?.budget.limit
+    ? Number(formatQuantity(budgetStatus.budget.limit))
+    : 0;
   const [spentCents, stats, provider] = await Promise.all([
     getRequestMonthlySpendCents(project.id, now),
     loadCheckHealthStats(project.id, since),
@@ -104,7 +108,22 @@ export async function getCheckHealth(projectId: string, options: { now?: Date } 
   return {
     budget: {
       capCents,
-      exhausted: monthlyBudgetExhausted(capCents, spentCents),
+      reason: !budgetStatus
+        ? ("budget_missing" as const)
+        : budgetStatus.uncertain
+          ? ("usage_reconciliation_required" as const)
+          : undefined,
+      exhausted:
+        !budgetStatus ||
+        budgetStatus.uncertain ||
+        (budgetStatus.budget.limit !== null &&
+          spentCents +
+            Number(
+              formatQuantity(
+                budgetStatus.reserved ?? { unit: "budget_cents", value: 0n, scale: 0 },
+              ),
+            ) >=
+            capCents),
       spentCents,
     },
     currentFailures: {

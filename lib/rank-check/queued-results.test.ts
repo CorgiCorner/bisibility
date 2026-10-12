@@ -41,7 +41,7 @@ const mocks = vi.hoisted(() => {
     providerTaskId: string;
     persistenceLeaseExpiresAt: Date | null;
     persistenceLeaseOwner: string | null;
-    rankCheck: { requestedDepth: number; status: string };
+    rankCheck: { requestedDepth: number; status: string; estimatedCostCents: number | null };
     rankCheckId: string;
     state: string;
   } {
@@ -77,7 +77,7 @@ const mocks = vi.hoisted(() => {
       persistenceLeaseExpiresAt:
         state === "persisting" ? new Date("2026-01-01T00:00:00.000Z") : null,
       persistenceLeaseOwner: state === "persisting" ? `abandoned_${id}` : null,
-      rankCheck: { requestedDepth: 100, status: "running" },
+      rankCheck: { requestedDepth: 100, status: "running", estimatedCostCents: 0.725 },
       rankCheckId: `rank_check_${id}`,
       state,
     };
@@ -326,20 +326,24 @@ describe("queued result persistence", () => {
     });
   });
 
-  it("does not infer a free submission from a zero-cost retrieval", async () => {
-    mocks.tasks.splice(1);
-    mocks.tasks[0].costCents = null;
-    mocks.fetchResult.mockResolvedValue({
-      status_code: 20000,
-      cost: 0,
-      tasks: [{ status_code: 20000, cost: 0, result: [{ items: [] }] }],
-    });
-    await persistReadyQueuedRankCheckTasks("batch_1");
-    expect(mocks.persistRankCheck.mock.calls[0]?.[1]).toMatchObject({
-      rankCheck: { costCents: null, billingUnits: 1 },
-      providerCostCents: undefined,
-    });
-  });
+  it.each([0, 0.725, null])(
+    "retains estimate %s without inferring a free submission from retrieval",
+    async (estimate) => {
+      mocks.tasks.splice(1);
+      mocks.tasks[0].costCents = null;
+      mocks.tasks[0].rankCheck.estimatedCostCents = estimate;
+      mocks.fetchResult.mockResolvedValue({
+        status_code: 20000,
+        cost: 0,
+        tasks: [{ status_code: 20000, cost: 0, result: [{ items: [] }] }],
+      });
+      await persistReadyQueuedRankCheckTasks("batch_1");
+      expect(mocks.persistRankCheck.mock.calls[0]?.[1]).toMatchObject({
+        rankCheck: { costCents: null, billingUnits: 1, estimatedCostCents: estimate },
+        providerCostCents: undefined,
+      });
+    },
+  );
 
   it("recovers a persisting task, isolates partial failure, and records actual cost once", async () => {
     await expect(persistReadyQueuedRankCheckTasks("batch_1")).resolves.toEqual({
@@ -709,3 +713,10 @@ describe("queued result persistence", () => {
     expect(mocks.tasks[0]?.state).toBe("completed");
   });
 });
+
+vi.mock("@/lib/provider-usage/admission-extension", async () => ({
+  ownAdmission: {
+    ...(await import("@/lib/provider-usage/byok-test-evidence")).testOwnAdmission,
+    assertRetrieval: async () => false,
+  },
+}));

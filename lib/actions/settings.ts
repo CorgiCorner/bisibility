@@ -40,7 +40,7 @@ type ManualCheckKeyword = { publicId: string };
 type ManualCheckResult = {
   failed: number;
   queued: number;
-  reason?: "budget_exhausted";
+  reason?: "budget_exhausted" | "budget_missing" | "usage_reconciliation_required";
   total: number;
 };
 const MANUAL_CHECK_CONCURRENCY = 4;
@@ -53,20 +53,20 @@ async function runManualChecks(
   runCheck: (input: { keywordId: string }) => Promise<unknown>,
 ): Promise<ManualCheckResult> {
   let nextIndex = 0;
-  let budgetExhausted = false;
+  let budgetReason: ManualCheckResult["reason"];
   let failed = 0;
   let queued = 0;
   const workerCount = Math.min(MANUAL_CHECK_CONCURRENCY, keywords.length);
   await Promise.all(
     Array.from({ length: workerCount }, async () => {
-      while (!budgetExhausted && nextIndex < keywords.length) {
+      while (!budgetReason && nextIndex < keywords.length) {
         const keyword = keywords[nextIndex];
         nextIndex += 1;
         if (!keyword) continue;
         try {
           const result = await runCheck({ keywordId: keyword.publicId });
           if (isBudgetExhaustedResult(result)) {
-            budgetExhausted = true;
+            if (!budgetReason || result.code === "budget_missing") budgetReason = result.code;
             continue;
           }
           if (!manualCheckStarted(result)) {
@@ -81,11 +81,11 @@ async function runManualChecks(
       }
     }),
   );
-  if (budgetExhausted) {
+  if (budgetReason) {
     return {
       failed: keywords.length - queued,
       queued,
-      reason: "budget_exhausted",
+      reason: budgetReason,
       total: keywords.length,
     };
   }

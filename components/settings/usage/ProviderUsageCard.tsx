@@ -1,312 +1,166 @@
 "use client";
-
-import { SpendBar } from "@/components/cost-estimate/SpendBar";
-import { spendTone } from "@/components/cost-estimate/spend-tone";
+import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
 import { BudgetEditModal } from "@/components/settings/usage/BudgetEditModal";
-import { ProviderBudgetGuide } from "@/components/settings/usage/ProviderBudgetGuide";
-import { ProviderUsageRow } from "@/components/settings/usage/ProviderUsageRow";
-import { UsageCard } from "@/components/settings/usage/UsageCard";
 import { Button } from "@/components/ui/Button";
-import type { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
-import { formatDisplayDate, formatDisplayMonthYear } from "@/lib/dates/format";
-import { resolveDateFormat } from "@/lib/dates/resolve";
-import type { ProjectProviderSpend } from "@/lib/queries/provider-spend";
+import { UsageCapPill, usageCapFromBudget } from "@/components/usagekit/usage-cap-pill";
+import { UsageOverviewCard } from "@/components/usagekit/usage-overview-card";
+import type { ProjectUsageViews } from "@/lib/metering/user-views";
 import { appPath } from "@/lib/routing/app-path";
-import type { ProviderUsageData } from "@/lib/settings/options";
-import type { UsageBudgetCredits } from "@/lib/settings/usage-budget-credits";
-import { cn } from "@/lib/ui/cn";
-import { metricEyebrowClassName } from "@/lib/ui/elevated-surface-styles";
-import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { useProviderAction } from "@usagekit/react";
 import Link from "next/link";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
-
-type ProviderUsageCardProps = {
-  budgetExplanation?: ReactNode;
-  canEditBudget: boolean;
-  /** Present only in deployments with credits; null hides every credits surface. */
-  credits?: UsageBudgetCredits | null;
-  initialBudgetEditOpen?: boolean;
-  projectId: string;
-  projectRef: string;
-  updateProviderAllocation: typeof updateProviderConnectionAllocationAction;
-  usage: ProviderUsageData & { providerSpend: ProjectProviderSpend };
-};
-
-function Kpi({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <div>
-      <span className={metricEyebrowClassName}>{label}</span>
-      <p className="m-0 mt-[5px] text-[15px] font-semibold text-fg tabular-nums">{value}</p>
-    </div>
-  );
-}
-
-function formatUsdCents(cents: number, locale: string) {
-  const dollars = cents / 100;
-  const fractionDigits = Math.abs(dollars) < 100 ? 2 : 0;
-  return new Intl.NumberFormat(locale, {
-    currency: "USD",
-    currencyDisplay: "narrowSymbol",
-    maximumFractionDigits: fractionDigits,
-    minimumFractionDigits: fractionDigits,
-    style: "currency",
-  }).format(dollars);
-}
-
-function formatLocalizedNumber(value: number, locale: string) {
-  return new Intl.NumberFormat(locale).format(value);
-}
-
-/** What providers charged on the project's own keys; credits are reported apart. */
-function paidToProviders(
-  recorded: ProjectProviderSpend["summary"]["recorded"],
-  locale: string,
-  t: ProviderUsageTranslator,
-) {
-  return t("recordedSpendValue", {
-    amount: formatUsdCents(recorded.cents, locale),
-    hasSearches: recorded.units ? "true" : "false",
-    searches: t("searches", { count: recorded.units }),
-  });
-}
-
-type ProviderUsageTranslator = ReturnType<typeof useTranslations<"projectSettingsUsage.provider">>;
-
-function periodLine(
-  usage: ProviderUsageCardProps["usage"],
-  locale: string,
-  t: ProviderUsageTranslator,
-) {
-  const period = usage.providerSpend.summary.period;
-  const start = new Date(period.startsAt);
-  const end = new Date(period.endsAt);
-  const dateContext = {
-    dateFormat: resolveDateFormat(usage.period.dateFormat),
-    locale,
-    timeZone: "UTC",
-  } as const;
-  const calendarMonth = start.getUTCDate() === 1 && end.getUTCDate() === 1;
-  const range = calendarMonth
-    ? formatDisplayMonthYear(start.toISOString().slice(0, 10), dateContext)
-    : `${formatDisplayDate(start.toISOString().slice(0, 10), dateContext)} - ${formatDisplayDate(end.toISOString().slice(0, 10), dateContext)}`;
-  return t("period", { days: period.daysUntilReset, range });
-}
-
-function projectionExplanation(
-  usage: ProviderUsageCardProps["usage"],
-  locale: string,
-  t: ProviderUsageTranslator,
-) {
-  const projected = usage.providerSpend.summary.projected;
-  if (projected.kind === "no_usage") return t("noUsage");
-  if (projected.kind === "within_limits") return t("withinLimits");
-  const otherBelow = usage.providerSpend.connections
-    .filter((item) => item.provider !== projected.provider)
-    .every((item) => (item.usedPercent ?? 0) < 40);
-  return t("projectionPace", {
-    date: formatDisplayDate(new Date(projected.at).toISOString().slice(0, 10), {
-      dateFormat: resolveDateFormat(usage.period.dateFormat),
-      locale,
-      timeZone: "UTC",
-    }),
-    othersBelow: otherBelow ? "true" : "false",
-    provider: projected.provider,
-  });
-}
-
-function projectionKpi(
-  usage: ProviderUsageCardProps["usage"],
-  locale: string,
-  t: ProviderUsageTranslator,
-) {
-  const projected = usage.providerSpend.summary.projected;
-  if (projected.kind === "no_usage") return t("noUsage");
-  if (projected.kind === "within_limits") return t("withinLimits");
-  return t("projectionBy", {
-    date: formatDisplayDate(new Date(projected.at).toISOString().slice(0, 10), {
-      dateFormat: resolveDateFormat(usage.period.dateFormat),
-      locale,
-      timeZone: "UTC",
-    }),
-    provider: projected.provider,
-  });
-}
-
-function attentionCopy(usage: ProviderUsageCardProps["usage"], t: ProviderUsageTranslator) {
-  const connections = usage.providerSpend.connections.filter((item) =>
-    usage.providerSpend.summary.attention.includes(item.connectionId),
-  );
-  if (connections.length > 1) return t("attentionMany", { count: connections.length });
-  const connection = connections[0];
-  if (!connection) return null;
-  if (connection.state === "fallback_active") {
-    const fallback = usage.providerSpend.connections.find(
-      (item) =>
-        item.connectionId !== connection.connectionId && item.enabled && item.state !== "capped",
-    );
-    return t("attentionFallback", {
-      fallback: fallback?.provider ?? t("anotherProvider"),
-      provider: connection.provider,
-    });
-  }
-  if (connection.state === "top_up_required")
-    return t("attentionTopUp", { provider: connection.provider });
-  const appCapped = connection.surfaces.app.state === "capped";
-  const programmaticCapped = connection.surfaces.programmatic.state === "capped";
-  if (programmaticCapped && !appCapped)
-    return t("attentionProgrammatic", { provider: connection.provider });
-  if (appCapped && !programmaticCapped) return t("attentionApp", { provider: connection.provider });
-  return t("attentionPaused", { provider: connection.provider });
-}
 
 export function ProviderUsageCard({
   budgetExplanation,
   canEditBudget,
-  credits = null,
   initialBudgetEditOpen = false,
   projectId,
   projectRef,
-  updateProviderAllocation,
-  usage,
-}: Readonly<ProviderUsageCardProps>) {
-  const locale = useLocale();
+  data,
+}: {
+  budgetExplanation?: ReactNode;
+  canEditBudget: boolean;
+  initialBudgetEditOpen?: boolean;
+  projectId: string;
+  projectRef: string;
+  data: ProjectUsageViews;
+}) {
   const t = useTranslations("projectSettingsUsage.provider");
-  const [editOpen, setEditOpen] = useState(initialBudgetEditOpen && canEditBudget);
-  const { connections, summary } = usage.providerSpend;
-  const banner = summary.attention.length ? attentionCopy(usage, t) : null;
-  const summaryTone = spendTone(summary.maxUsedPercent ?? 0, summary.maxUsedPercent != null);
-  // Credits surfaces appear where credits can run, or where credits budgets or spend exist.
-  const creditsAvailable =
-    credits !== null &&
-    (credits.providers.length > 0 ||
-      connections.some(
-        (connection) =>
-          connection.credentialSource === "hosted" ||
-          connection.credits.requestCount > 0 ||
-          connection.credits.usedPriorMonth > 0 ||
-          connection.credits.surfaces.app.allocation !== null ||
-          connection.credits.surfaces.programmatic.allocation !== null,
-      ));
-  const showCreditsSpent = creditsAvailable || summary.recorded.creditsCents > 0;
-  return (
-    <UsageCard
-      action={
-        canEditBudget ? (
-          <Button onClick={() => setEditOpen(true)} size="sm" type="button" variant="secondary">
-            {t("editBudget")}
-          </Button>
-        ) : null
-      }
-      className="min-h-0"
-      description={t("description")}
-      id="provider-usage"
-      title={t("title")}
-    >
-      <p className="m-0 text-[12px] text-fg-muted">{periodLine(usage, locale, t)}</p>
-      <ProviderBudgetGuide />
-      {budgetExplanation}
-      {banner ? (
-        <div className="mt-4 flex items-start gap-2.5 rounded-control border border-red/30 bg-[color-mix(in_srgb,var(--red)_8%,transparent)] px-3.5 py-3 text-[12.5px] leading-5 text-red-text">
-          <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={16} weight="regular" />
-          <span>
-            <span className="font-semibold">{banner}</span>{" "}
-            <Link
-              className="font-medium underline hover:no-underline"
-              href={appPath(projectRef, "integrations")}
-            >
-              {t("connectionSettings")}
-            </Link>
-          </span>
-        </div>
-      ) : null}
-      <section className="mt-4" aria-label={t("budgetUsed")}>
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-          <span className={metricEyebrowClassName}>{t("budgetUsed")}</span>
-          {summary.tightest ? (
-            <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-              {creditsAvailable
-                ? t("tightestSource", {
-                    percent: formatLocalizedNumber(
-                      Math.round(summary.tightest.usedPercent),
-                      locale,
-                    ),
-                    provider: summary.tightest.provider,
-                    source: summary.tightest.source,
-                  })
-                : t("tightest", {
-                    percent: formatLocalizedNumber(
-                      Math.round(summary.tightest.usedPercent),
-                      locale,
-                    ),
-                    provider: summary.tightest.provider,
-                  })}
-            </span>
-          ) : (
-            <span className="font-sans tabular-nums text-[11px] text-fg-muted">
-              {t("noBudget")}
-            </span>
-          )}
-        </div>
-        {summary.maxUsedPercent == null ? null : (
-          <SpendBar
-            ariaLabel={t("budgetUsed")}
-            className="mt-2 h-1.5 w-full overflow-hidden rounded-full"
-            percent={summary.maxUsedPercent}
-            roundedFill
-            tone={summaryTone}
-          />
-        )}
-        <p className="m-0 mt-2 font-sans tabular-nums text-[11px] text-fg-muted">
-          {projectionExplanation(usage, locale, t)}
-        </p>
-      </section>
-      <div
-        className={cn(
-          "mt-4 grid grid-cols-2 gap-4 border-t border-border pt-4",
-          showCreditsSpent ? "sm:grid-cols-4" : "sm:grid-cols-3",
-        )}
+  const common = useTranslations("projectIntegrations.providerManagement");
+  const p = useUsagePresentation();
+  const action = useProviderAction();
+  const [open, setOpen] = useState(initialBudgetEditOpen && canEditBudget);
+  const bounds = data.budgets.map((row) =>
+    usageCapFromBudget(row, {
+      formatBound: p.bound,
+      formatFigure: p.figure,
+      formatUnit: p.unit,
+      labels: p.budget,
+    }),
+  );
+  const rank = (index: number) =>
+    data.budgets[index].limit === "unlimited"
+      ? 0
+      : bounds[index].state === "unavailable" || bounds[index].percent === null
+        ? 2
+        : 1;
+  const headlineIndex = bounds.reduce<number>((selected, bound, index) => {
+    if (selected < 0 || rank(index) > rank(selected)) return index;
+    if (rank(index) < rank(selected)) return selected;
+    return (bound.percent ?? 0) > (bounds[selected].percent ?? 0) ? index : selected;
+  }, -1);
+  const headline = bounds[headlineIndex];
+  const unavailable =
+    data.status !== "available" ||
+    data.budgets.some(
+      (row) =>
+        row.redacted ||
+        row.level === "unavailable" ||
+        [row.used, row.reserved, row.limit].some(
+          (value) =>
+            value === "unavailable" || (typeof value !== "string" && value.certainty === "unknown"),
+        ),
+    );
+  const redacted = data.budgets.some((row) => row.redacted);
+  const attentionRows = data.budgets.filter(
+    (row) => row.level === "warning" || row.level === "exceeded",
+  );
+  const blocked = attentionRows.find(
+    (row) => row.level === "exceeded" && row.boundary.onExceed === "block",
+  );
+  const attention = attentionRows.length > 0;
+  const attentionMessage = attention
+    ? t(blocked ? "attentionBlocked" : "attentionWarning", {
+        bound: p.bound(blocked ?? attentionRows[0]),
+        count: attentionRows.length,
+      })
+    : "";
+  const budgetAction =
+    canEditBudget || (action.ambiguous && action.canReconcile) ? (
+      <Button
+        type="button"
+        size="sm"
+        variant="secondary"
+        disabled={!action.canReconcile}
+        onClick={() => setOpen(true)}
       >
-        <Kpi label={t("paidToProviders")} value={paidToProviders(summary.recorded, locale, t)} />
-        {showCreditsSpent ? (
-          <Kpi
-            label={t("creditsSpent")}
-            value={formatUsdCents(summary.recorded.creditsCents, locale)}
-          />
-        ) : null}
-        <Kpi
-          label={t("providerRequests")}
-          value={formatLocalizedNumber(summary.requestCount, locale)}
-        />
-        <Kpi label={t("projectedSpend")} value={projectionKpi(usage, locale, t)} />
-      </div>
-      {connections.length ? (
-        <ul className="m-0 mt-4 list-none border-t border-border p-0">
-          {connections.map((connection) => (
-            <ProviderUsageRow
-              connection={connection}
-              creditsAvailable={creditsAvailable}
-              key={connection.connectionId}
-              now={usage.period.now}
-            />
-          ))}
-        </ul>
+        {canEditBudget ? t("editBudget") : common("reconcile")}
+      </Button>
+    ) : null;
+  return (
+    <>
+      {data.status === "restricted" ? (
+        <div className="flex justify-end">{budgetAction}</div>
       ) : (
-        <p className="m-0 mt-4 border-t border-border pt-4 text-[12px] text-fg-muted">
-          {t("usageAfterConnect")}
-        </p>
+        <UsageOverviewCard
+          id="provider-usage"
+          size="md"
+          title={t("title")}
+          description={t("description")}
+          labels={p.overview}
+          metrics={[]}
+          budget={{
+            label: t("budgetUsed"),
+            value:
+              data.status === "available"
+                ? data.budgets.length
+                  ? redacted
+                    ? p.budget.redacted
+                    : headline?.state === "unavailable"
+                      ? p.budget.unavailable
+                      : (headline?.label ?? p.overview.unknown)
+                  : p.budget.empty
+                : p.budget.unavailable,
+            percent: null,
+            partial: !data.summary.complete,
+            status: unavailable
+              ? p.overview.unknown
+              : !data.budgets.length
+                ? p.budget.empty
+                : attention
+                  ? p.budget.warning
+                  : p.budget.ok,
+          }}
+          introduction={budgetExplanation}
+          action={budgetAction}
+          notice={
+            attention
+              ? {
+                  message: attentionMessage,
+                  action: (
+                    <Link href={appPath(projectRef, "integrations")}>
+                      {t("connectionSettings")}
+                    </Link>
+                  ),
+                }
+              : undefined
+          }
+        >
+          {data.budgets.map((row) => (
+            <div key={row.id} className="py-2">
+              <UsageCapPill
+                {...usageCapFromBudget(row, {
+                  formatBound: p.bound,
+                  formatFigure: p.figure,
+                  formatUnit: p.unit,
+                  labels: p.budget,
+                })}
+                labels={{ unknown: p.overview.unknown, unavailable: p.budget.unavailable }}
+              />
+            </div>
+          ))}
+        </UsageOverviewCard>
       )}
-      {editOpen ? (
+      {open && (
         <BudgetEditModal
-          connections={connections}
-          credits={creditsAvailable ? credits : null}
-          onClose={() => setEditOpen(false)}
-          onSaved={() => setEditOpen(false)}
+          connections={data.connections}
           projectId={projectId}
           projectRef={projectRef}
-          updateProviderAllocation={updateProviderAllocation}
+          onClose={() => setOpen(false)}
+          onSaved={() => setOpen(false)}
         />
-      ) : null}
-    </UsageCard>
+      )}
+    </>
   );
 }

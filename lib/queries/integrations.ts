@@ -1,5 +1,4 @@
 import "server-only";
-
 import type { DateFormat } from "@/lib/dates/format";
 import { prisma } from "@/lib/db/prisma";
 import { isSelfHost } from "@/lib/deployment/deployment";
@@ -18,8 +17,7 @@ import type {
   IntegrationProviderData as IntegrationProvider,
   ProviderStatusKind,
 } from "@/lib/integrations/types";
-import { loadRecentProviderRateEntries } from "@/lib/provider-rates/connection-context";
-import { PROVIDER_RATE_FEATURES } from "@/lib/provider-rates/resolver";
+import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
 import { PROVIDER_CATALOG, tintFor } from "@/lib/providers/registry";
 import {
   compareProviderChainEntries,
@@ -32,11 +30,9 @@ import { loadGscConsumerStatuses } from "./integration-consumer-status";
 import {
   displayedProviderLogin,
   type ProviderConnectionRow,
-  type ProviderCostEntryRow,
   providerActivities,
   providerDescription,
   providerMeta,
-  providerRates,
 } from "./integration-provider-drawer";
 import { getRequestProjectDefaults } from "./workspace-request-data";
 
@@ -88,7 +84,6 @@ function integrationProvider(
   primaryProvider: string | null,
   googleOAuth?: GoogleOAuthSetup,
   syncFailure?: SyncFailure,
-  costEntries: readonly ProviderCostEntryRow[] = [],
   consumerStatuses?: ConsumerStatuses,
 ): IntegrationProvider {
   const { connection, item } = row;
@@ -135,7 +130,6 @@ function integrationProvider(
           ? "Credentials can also be configured through environment variables."
           : undefined,
       googleOAuth: item.id === (googleOAuth?.provider ?? "gsc") ? googleOAuth : undefined,
-      rates: item.kind === "serp" ? providerRates(connection, item.id, costEntries) : undefined,
     },
     enabled: connection?.enabled,
     icon: providerIcon(item.id, item.kind),
@@ -168,15 +162,12 @@ function integrationProvider(
 }
 
 async function loadProviderConnections(projectId: string) {
-  return prisma.providerConnection.findMany({
-    include: {
-      rates: {
-        select: { amountCents: true, feature: true },
-      },
-    },
+  const connections = await prisma.providerConnection.findMany({
+    include: { rates: rankCheckRateSelection },
     orderBy: providerChainOrderBy(),
     where: { projectId },
-  }) as Promise<ProviderConnectionRow[]>;
+  });
+  return connections.map(withRankCheckManualRate);
 }
 
 async function categoriesForProject(
@@ -186,17 +177,12 @@ async function categoriesForProject(
   dateFormat: DateFormat = "month_first",
 ): Promise<IntegrationCategory[]> {
   const connections = await loadProviderConnections(projectId);
-  const [runs, costEntries, gscConsumerStatuses] = await Promise.all([
+  const [runs, gscConsumerStatuses] = await Promise.all([
     prisma.operationalRun.findMany({
       orderBy: { startedAt: "desc" },
       select: { connectionId: true, errorClass: true, startedAt: true, status: true },
       where: { kind: "traffic_sync", projectId },
     }),
-    loadRecentProviderRateEntries(
-      connections.map((connection) => connection.id),
-      PROVIDER_RATE_FEATURES,
-      new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-    ) as Promise<ProviderCostEntryRow[]>,
     loadGscConsumerStatuses(projectId, connections, now, dateFormat),
   ]);
   const failuresByConnection = new Map<string, SyncFailure>();
@@ -230,7 +216,6 @@ async function categoriesForProject(
           primaryProvider,
           googleOAuth,
           row.connection ? failuresByConnection.get(row.connection.id) : undefined,
-          costEntries,
           row.item.id === "gsc" ? gscConsumerStatuses : undefined,
         ),
       ),

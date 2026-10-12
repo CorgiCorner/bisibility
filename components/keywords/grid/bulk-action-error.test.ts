@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { presentBulkActionError } from "./bulk-action-error";
 
 const sharedErrors: SharedErrorMessages = {
+  usageReconciliationRequired: () => "Wymagane uzgodnienie użycia.",
+  budgetMissing: () => "Configure a project budget.",
   genericFallback: () => "fallback",
   rateLimited: () => "rate limited",
   serverComponentDigest: ({ digest }) => `digest ${digest}`,

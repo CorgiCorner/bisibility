@@ -1,6 +1,7 @@
 "use server";
 
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { launchRankCheckRun } from "@/lib/rank-check/runs/launch";
 import { LaunchRankCheckRunError, SampleProjectError } from "@/lib/rank-check/runs/launch-types";
 import { PreviewTokenError } from "@/lib/rank-check/runs/preview-token";
@@ -37,6 +38,8 @@ export async function launchRankCheckRunAction(
       trigger: "manual",
     });
   } catch (error) {
+    const budgetFailure = budgetFailureResult(error);
+    if (budgetFailure) return budgetFailure;
     if (error instanceof PreviewTokenError) {
       return failure(
         error.code === "expired" ? "preview_expired" : "preview_mismatch",

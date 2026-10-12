@@ -17,7 +17,13 @@ export type FetchRankedKeywordSuggestionsAction = (input: {
   connectionId?: string;
   offset?: number;
   projectId: string;
-}) => Promise<RankedKeywordsPage | { reason: RankedKeywordError }>;
+}) => Promise<
+  | RankedKeywordsPage
+  | {
+      reason: RankedKeywordError;
+      budgetReason?: "budget_missing" | "usage_reconciliation_required";
+    }
+>;
 
 export type RankedKeywordError =
   Exclude<RankedKeywordsOutcome, { ok: true }> extends { reason: infer T } ? T : never;
@@ -70,6 +76,7 @@ export function groupRankedKeywords(pages: RankedKeywordsPage[]): RankedKeywordG
 
 export function rankedKeywordErrorCopy(reason: RankedKeywordError) {
   const messages: Record<RankedKeywordError, string> = {
+    wallet_budget_exhausted: "Deployment spending budget is exhausted.",
     budget_exhausted: "Monthly rank-check budget reached.",
     cost_limit_exceeded: "The estimated provider cost exceeds the requested limit.",
     needs_reauth: "DataForSEO authorization has expired.",

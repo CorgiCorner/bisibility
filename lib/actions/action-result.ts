@@ -8,6 +8,11 @@ import { KeywordIdentityImmutableError } from "@/lib/keywords/identity";
 
 export type ActionFailure =
   | {
+      code: "usage_reconciliation_required" | "budget_missing" | "budget_exhausted";
+      message: string;
+      status: 429;
+    }
+  | {
       code: "enrollment_expired";
       message: string;
       status: 410;

@@ -1,3 +1,4 @@
+import { headerFixture } from "@/lib/metering/shared-view-fixtures";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -193,7 +194,7 @@ describe("workspace layout", () => {
       },
     ]);
     mocks.cookies.mockResolvedValue({ get: vi.fn(() => undefined) });
-    mocks.budgetSummary.mockResolvedValue({ capCents: 5_000, spentCents: 20 });
+    mocks.budgetSummary.mockResolvedValue(headerFixture());
     mocks.lastExport.mockResolvedValue(null);
     mocks.loadSetupContext.mockResolvedValue({
       completedCheckCount: 0,
@@ -520,7 +521,7 @@ describe("workspace layout", () => {
     );
     mocks.budgetSummary.mockImplementationOnce(async () => {
       budgetStartedBeforeListResolved = !listResolved;
-      return { capCents: 5_000, spentCents: 20 };
+      return headerFixture();
     });
 
     await WorkspaceShell({
@@ -532,21 +533,36 @@ describe("workspace layout", () => {
     expect(budgetStartedBeforeListResolved).toBe(true);
   });
 
-  it("keeps the route shell usable when provider spend is unavailable", async () => {
-    mocks.budgetSummary.mockResolvedValueOnce(null);
+  it.each(["owner", "viewer", "admin"])(
+    "keeps the %s route usable when usage is unavailable",
+    async (role) => {
+      mocks.budgetSummary.mockResolvedValueOnce(null);
+      mocks.listWorkspaces.mockResolvedValueOnce([
+        {
+          domain: "example.com",
+          id: "prj_f00000000000000000000000",
+          keywordCount: 9,
+          name: "Example",
+          publicId: "prj_f00000000000000000000000",
+          role,
+          writeMode: "active",
+        },
+      ]);
 
-    const result = await WorkspaceShell({
-      activeProjectId: "project_1",
-      children: <div>Import workspace</div>,
-      projectRef: "prj_f00000000000000000000000",
-    });
-    const markup = renderToStaticMarkup(result);
+      const result = await WorkspaceShell({
+        activeProjectId: "project_1",
+        children: <div>Import workspace</div>,
+        projectRef: "prj_f00000000000000000000000",
+      });
+      const markup = renderToStaticMarkup(result);
 
-    expect(markup).toContain("data-shell-root");
-    expect(markup).toContain("Import workspace");
-    expect(markup).toContain("Spend unavailable");
-    expect(markup).not.toContain("$0.00");
-  });
+      expect(markup).toContain("data-shell-root");
+      expect(markup).toContain("Import workspace");
+      if (role === "owner") expect(markup).toContain("Usage unavailable");
+      else expect(markup).not.toContain("Usage unavailable");
+      expect(markup).not.toContain("$0.00");
+    },
+  );
 
   it("hands the project's markets to the command palette", async () => {
     const projectRef = "prj_f00000000000000000000000";

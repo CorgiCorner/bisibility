@@ -96,6 +96,23 @@ describe("useFirstCheckFlow", () => {
     });
     expect(refresh).toHaveBeenCalledTimes(1);
   });
+  it("retains a terminal inline failure's run ID for its exact details link", async () => {
+    const action = vi.fn<RunCheckNowAction>().mockResolvedValue({
+      runId: CHECK_ID,
+      status: "failed",
+      errorCode: "provider_auth",
+    } as RunCheckNowResult);
+    const { result } = renderFlow({ runCheckNowAction: action });
+    act(() => result.current.openCheckModal(20));
+    await act(async () => {
+      await result.current.confirmRun();
+    });
+    expect(result.current.modal).toMatchObject({
+      step: "failed",
+      rankCheckId: CHECK_ID,
+      errorCode: "provider_auth",
+    });
+  });
   beforeEach(() => {
     vi.useFakeTimers();
   });

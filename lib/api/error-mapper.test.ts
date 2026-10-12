@@ -12,6 +12,24 @@ const headers = new Headers();
 const url = new URL("https://example.com/api/v1/keywords/kw_a00000000000000000000000/checks");
 
 describe("errorFromUnknown", () => {
+  it("preserves project budget surface and the authoritative reset", async () => {
+    const resetAt = new Date(Date.now() + 60_000);
+    const response = errorFromUnknown(
+      new BudgetExhaustedError({
+        projectId: "private-project",
+        capCents: 10,
+        spentCents: 10,
+        resetAt,
+      }),
+      new Headers(),
+      url,
+    );
+    expect((await response.json()).details).toMatchObject({
+      surface: "programmatic",
+      resets_at: resetAt.toISOString(),
+    });
+    expect(Number(response.headers.get("Retry-After"))).toBeGreaterThan(0);
+  });
   it("maps deployment balance admission to 402 without inherited reset timing or private data", async () => {
     const inherited = new Headers({
       "RateLimit-Remaining": "7",
@@ -105,6 +123,7 @@ describe("errorFromUnknown", () => {
 
     expect(response.status).toBe(429);
     const body = await response.json();
+    expect(body.detail).toMatch(/^API, MCP and SDK budget reached for [A-Za-z]+ \d{4}\.$/);
     expect(body.details.surface).toBe("programmatic");
     expect(typeof body.details.resets_at).toBe("string");
     expect(response.headers.get("Retry-After")).toBeTruthy();
@@ -156,4 +175,48 @@ describe("errorFromUnknown", () => {
     expect(body.title).toBe("Forbidden");
     expect(body.detail).toBe("This operation is unavailable for this project.");
   });
+});
+
+it.each(["own", "hosted"])(
+  "maps %s missing budgets without reconciliation or reset advice",
+  async (kind) => {
+    const error =
+      kind === "own"
+        ? new BudgetExhaustedError({
+            projectId: "private-project",
+            capCents: 0,
+            spentCents: 0,
+            reason: "budget_missing",
+          })
+        : new DeploymentAdmissionExhaustedError("budget", { budgetReason: "budget_missing" });
+    const response = errorFromUnknown(
+      error,
+      new Headers({ "Retry-After": "123", "RateLimit-Reset": "123" }),
+      url,
+    );
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBeNull();
+    expect(response.headers.get("RateLimit-Reset")).toBeNull();
+    const body = await response.json();
+    expect(body.details).toMatchObject({ reason: "budget_missing" });
+    expect(body.details.resets_at).toBeUndefined();
+    expect(body.detail).toContain("configure a monthly budget");
+    expect(JSON.stringify(body)).not.toMatch(/reconcil|private-project/);
+  },
+);
+
+it("budget regression: preserves a launch missing-budget reason without reset advice", async () => {
+  const response = errorFromUnknown(
+    new LaunchRankCheckRunError("budget_exhausted", undefined, "budget_missing"),
+    new Headers({ "Retry-After": "123", "RateLimit-Reset": "123" }),
+    url,
+  );
+  expect(response.status).toBe(429);
+  const body = await response.json();
+  expect(body.type).toBe("https://bisibility.com/problems/budget_exhausted");
+  expect(body.details.reason).toBe("budget_missing");
+  expect(body.detail).toContain("configure a monthly budget");
+  expect(body.details.resets_at).toBeUndefined();
+  expect(response.headers.get("Retry-After")).toBeNull();
+  expect(response.headers.get("RateLimit-Reset")).toBeNull();
 });

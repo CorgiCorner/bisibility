@@ -16,6 +16,7 @@ type SettingsLoadingBarProps = {
 type SettingsRouteLoadingProps = {
   activeSection: SettingsSectionId;
   children: ReactNode;
+  withSearch?: boolean;
 };
 
 export function SettingsLoadingBar({ className }: Readonly<SettingsLoadingBarProps>) {
@@ -27,15 +28,19 @@ export function SettingsLoadingBar({ className }: Readonly<SettingsLoadingBarPro
   );
 }
 
-function SettingsLoadingMobileMenu() {
+function SettingsLoadingMobileMenu({ withSearch }: Readonly<{ withSearch: boolean }>) {
   return (
     <div className="mb-5 lg:hidden" data-settings-loading-mobile-menu="">
+      {withSearch ? <SettingsLoadingBar className="mb-3 h-8.5 w-full" /> : null}
       <SettingsLoadingBar className="h-8.5 w-full" />
     </div>
   );
 }
 
-function SettingsLoadingSubnav({ activeSection }: Readonly<{ activeSection: SettingsSectionId }>) {
+function SettingsLoadingSubnav({
+  activeSection,
+  withSearch,
+}: Readonly<{ activeSection: SettingsSectionId; withSearch: boolean }>) {
   return (
     <nav
       aria-hidden
@@ -43,6 +48,7 @@ function SettingsLoadingSubnav({ activeSection }: Readonly<{ activeSection: Sett
       data-settings-loading-active-section={activeSection}
       data-settings-loading-subnav=""
     >
+      {withSearch ? <SettingsLoadingBar className="mb-3 h-8.5 w-full" /> : null}
       <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
         {settingsSections.map((section) => {
           const current = section.id === activeSection;
@@ -79,6 +85,7 @@ function SettingsLoadingSubnav({ activeSection }: Readonly<{ activeSection: Sett
 export function SettingsRouteLoading({
   activeSection,
   children,
+  withSearch = false,
 }: Readonly<SettingsRouteLoadingProps>) {
   return (
     <div
@@ -88,9 +95,9 @@ export function SettingsRouteLoading({
       data-settings-route-loading=""
     >
       <div className={settingsShellGridClassName} data-settings-loading-grid="">
-        <SettingsLoadingSubnav activeSection={activeSection} />
+        <SettingsLoadingSubnav activeSection={activeSection} withSearch={withSearch} />
         <div className={settingsContentColumnClassName}>
-          <SettingsLoadingMobileMenu />
+          <SettingsLoadingMobileMenu withSearch={withSearch} />
           {children}
         </div>
       </div>

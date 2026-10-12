@@ -20,9 +20,7 @@ export async function readDataMigrationLedger(
   db: DataMigrationDatabase,
   migrations: readonly ResolvedDataMigration[],
 ) {
-  const exists = await db.query(
-    `SELECT to_regclass('data_migrations') IS NOT NULL AS "exists"`,
-  );
+  const exists = await db.query(`SELECT to_regclass('data_migrations') IS NOT NULL AS "exists"`);
   if (!booleanValue(exists.rows[0]?.exists)) {
     throw new Error(
       `The data_migrations ledger is missing; run ${DATA_MIGRATION_RECOVERY_COMMAND}.`,
@@ -51,17 +49,21 @@ export function assertDataMigrationChecksum(
   }
 }
 
-export async function startRunAttempt(
-  db: DataMigrationDatabase,
-  migration: ResolvedDataMigration,
-) {
+export async function startRunAttempt(db: DataMigrationDatabase, migration: ResolvedDataMigration) {
   const result = await db.query(
     `INSERT INTO "data_migrations"
        ("id", "checksum", "attempts", "startedAt", "runCompletedAt",
         "finishedAt", "failedAt", "error", "finalizationAttempts",
         "finalizationFailedAt", "finalizationError")
      VALUES ($1, $2, 1, NOW(), NULL, NULL, NULL, NULL, 0, NULL, NULL)
-     ON CONFLICT ("id") DO NOTHING
+     ${
+       migration.replaySafe
+         ? `ON CONFLICT ("id") DO UPDATE
+       SET "attempts" = "data_migrations"."attempts" + 1, "failedAt" = NULL, "error" = NULL
+       WHERE "data_migrations"."checksum" = EXCLUDED."checksum"
+         AND "data_migrations"."runCompletedAt" IS NULL AND "data_migrations"."finishedAt" IS NULL`
+         : `ON CONFLICT ("id") DO NOTHING`
+}
      RETURNING "attempts"`,
     [migration.id, migration.checksum],
   );
@@ -72,10 +74,7 @@ export async function startRunAttempt(
   }
 }
 
-export async function completeRun(
-  db: DataMigrationDatabase,
-  migration: ResolvedDataMigration,
-) {
+export async function completeRun(db: DataMigrationDatabase, migration: ResolvedDataMigration) {
   const result = await db.query(
     `UPDATE "data_migrations"
         SET "runCompletedAt" = NOW(), "failedAt" = NULL, "error" = NULL
@@ -140,10 +139,7 @@ export async function failFinalization(
     .catch(() => undefined);
 }
 
-export async function finishMigration(
-  db: DataMigrationDatabase,
-  migration: ResolvedDataMigration,
-) {
+export async function finishMigration(db: DataMigrationDatabase, migration: ResolvedDataMigration) {
   const result = await db.query(
     `UPDATE "data_migrations"
         SET "finishedAt" = NOW(),

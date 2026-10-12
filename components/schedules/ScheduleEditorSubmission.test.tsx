@@ -165,3 +165,30 @@ describe("ScheduleEditor submission", () => {
     ).toMatchObject({ dayOfMonth: "15th" });
   });
 });
+
+it.each([
+  { field: "Name", value: "", error: "Enter a schedule name." },
+  { field: "Name", value: "x".repeat(81), error: "Schedule names are 80 characters or fewer." },
+  {
+    field: "Cron expression",
+    value: "invalid",
+    error: "Enter a valid five-field cron expression.",
+  },
+])(
+  "blocks invalid $field without changing its error footprint",
+  async ({ field, value, error }) => {
+    const user = userEvent.setup();
+    const fetchMock = mockScheduleUpdate();
+    renderEditor();
+    if (field === "Cron expression")
+      await user.click(screen.getByRole("radio", { name: "Custom cron" }));
+    const input = screen.getByLabelText(field);
+    const slot = input.parentElement?.querySelector("span.text-red-text");
+    expect(slot).toHaveClass("h-10");
+    fireEvent.change(input, { target: { value } });
+    await user.click(screen.getByRole("button", { name: "Save schedule" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(error);
+    expect(input.parentElement?.querySelector("span.text-red-text")).toBe(slot);
+    expect(fetchMock).not.toHaveBeenCalled();
+  },
+);

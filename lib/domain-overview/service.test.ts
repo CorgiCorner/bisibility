@@ -81,7 +81,6 @@ const metrics = {
 };
 
 const project = {
-  budgetCapCents: 500,
   id: "project_1",
   providerConnections: [],
   publicId: "prj_1",
@@ -219,7 +218,6 @@ describe("domain overview service", () => {
       state: "ok",
     });
     expect(mocks.preflight).toHaveBeenCalledWith({
-      budgetCapCents: 500,
       connectionId: "connection_1",
       estimatedCostCents: 6,
       estimatedUsageQuantity: 3,
@@ -258,6 +256,14 @@ describe("domain overview service", () => {
     await vi.waitFor(() => expect(mocks.fetchPages).toHaveBeenCalledOnce());
     releaseKeywords?.();
     await expect(pending).resolves.toMatchObject({ ok: true, state: "ok" });
+  });
+
+  it("shares the request cost limit across overview and parallel modules", async () => {
+    await expect(analyze({ maxCostCents: 9 })).resolves.toMatchObject({ ok: true });
+    const limit = mocks.resolveSnapshot.mock.calls[0]?.[0].costLimit;
+    expect(limit.remaining()).toBe("9");
+    expect(mocks.fetchKeywords.mock.calls[0]?.[0].costLimit).toBe(limit);
+    expect(mocks.fetchPages.mock.calls[0]?.[0].costLimit).toBe(limit);
   });
 
   it("returns a free durable estimate without loading provider data", async () => {
@@ -546,7 +552,6 @@ describe("domain overview service", () => {
     expect(mocks.resolveSnapshot).not.toHaveBeenCalled();
     expect(mocks.loadModule).not.toHaveBeenCalled();
     expect(mocks.preflight).toHaveBeenCalledWith({
-      budgetCapCents: 500,
       connectionId: "connection_1",
       estimatedCostCents: 6,
       estimatedUsageQuantity: 3,

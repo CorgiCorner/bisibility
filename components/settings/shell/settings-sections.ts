@@ -9,11 +9,13 @@ import { FlaskIcon as Flask } from "@phosphor-icons/react/dist/ssr/Flask";
 import { PaperPlaneTiltIcon as PaperPlaneTilt } from "@phosphor-icons/react/dist/ssr/PaperPlaneTilt";
 import { ShieldWarningIcon as ShieldWarning } from "@phosphor-icons/react/dist/ssr/ShieldWarning";
 import { SlidersHorizontalIcon as SlidersHorizontal } from "@phosphor-icons/react/dist/ssr/SlidersHorizontal";
+import { TargetIcon as Target } from "@phosphor-icons/react/dist/ssr/Target";
 import { UserPlusIcon as UserPlus } from "@phosphor-icons/react/dist/ssr/UserPlus";
 import type { useTranslations } from "next-intl";
 
 export const settingsSections = [
   { icon: SlidersHorizontal, id: "general" },
+  { icon: Target, id: "context" },
   { icon: Database, id: "data-sources" },
   { icon: Crosshair, id: "tracking" },
   { icon: Flag, id: "competitors" },
@@ -39,6 +41,8 @@ export function settingsSectionLabel(t: SettingsShellTranslations, section: Sett
       return t("sections.billing");
     case "competitors":
       return t("sections.competitors");
+    case "context":
+      return t("sections.context");
     case "data-sources":
       return t("sections.dataSources");
     case "developers":
@@ -72,6 +76,7 @@ export function getSettingsSection(id: string): SettingsSection | undefined {
 }
 
 export function settingsSectionHref(projectRef: ProjectRef, section: SettingsSectionId) {
+  if (section === "context") return appPath(projectRef, "context");
   return section === "usage"
     ? `${appPath(projectRef, "integrations")}?tab=usage`
     : appPath(projectRef, "settings", section);

@@ -3,8 +3,8 @@ import path from "node:path";
 import { databaseConnectionConfig, databaseSchemaFromUrl } from "@/lib/db/pool-config";
 import { withPublicIdWrites } from "@/lib/db/public-id-writes";
 import { PrismaClient } from "@/lib/generated/prisma/client";
-import { expect, test } from "@playwright/test";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { expect, test } from "./fixtures";
 
 const otpFile = process.env.BISIBILITY_E2E_OTP_FILE;
 const databaseUrl = process.env.DATABASE_URL;

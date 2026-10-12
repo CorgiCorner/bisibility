@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveProviderRate } from "./resolver";
+import { exactMedianText, resolveProviderRate } from "./resolver";
 
 const checkedAt = new Date("2026-07-27T00:00:00.000Z");
 
@@ -60,10 +60,25 @@ describe("resolveProviderRate", () => {
 
     expect(resolved).toEqual({
       amountCents: 3,
+      amountText: "3",
       checkedAt,
       sampleSize: 5,
       source: "measured",
     });
+  });
+
+  it("averages an even median exactly", () => {
+    const decimals = ["0.0500", "0.0700", "0.1000", "0.2000", "0.3000", "0.4000"];
+    const resolved = resolveProviderRate({
+      entries: decimals.map((costCents) => ({ ...entry(0), costCents })),
+      list: null,
+      manualAmountCents: null,
+    });
+
+    // Floating point would give 0.15000000000000002.
+    expect(resolved).toMatchObject({ amountCents: 0.15, amountText: "0.15", sampleSize: 6 });
+    expect(exactMedianText(["0.0001", "0.0002"])).toBe("0.00015");
+    expect(exactMedianText(["1.5", "0.25", "2"])).toBe("1.5");
   });
 
   it("falls through with four samples and resolves measured with five", () => {

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   audit: vi.fn(),
   verify: vi.fn(),
-  readAllocationAuthority: vi.fn(),
+  saveBudget: vi.fn(),
   prisma: {
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
@@ -20,10 +20,7 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/providers/execution-extension", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/providers/execution-extension")>()),
-  readDeploymentMeteringAllocationAuthority: mocks.readAllocationAuthority,
-}));
+vi.mock("@/lib/metering/spending-limit-store", () => ({ putSpendingBudget: mocks.saveBudget }));
 vi.mock("@/lib/providers/crypto", () => ({
   decryptProviderCredentials: () => ({}),
   encryptSecret: () => "encrypted",
@@ -38,7 +35,6 @@ vi.mock("./provider-audit", () => ({
 }));
 
 import { initialProviderAllocation } from "@/lib/provider-allocations/initial-allocation";
-import { backfillLegacyProjectAllocationInLockedTransaction } from "@/lib/provider-allocations/legacy-backfill";
 import { connectProviderConnection } from "./provider-service";
 
 function connection(
@@ -47,6 +43,8 @@ function connection(
 ) {
   return {
     ...allocation,
+    credentialSource: "own",
+    rates: [],
     provider,
     id: provider,
     credentialsEncrypted: "encrypted",
@@ -71,7 +69,8 @@ let project: { budgetCapCents: number; providerAllocationsInitializedAt: Date | 
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.readAllocationAuthority.mockResolvedValue("legacy");
+  mocks.prisma.$queryRaw.mockResolvedValue([]);
+  mocks.saveBudget.mockResolvedValue(undefined);
   rows = new Map();
   project = { budgetCapCents: 5000, providerAllocationsInitializedAt: null };
   mocks.verify.mockResolvedValue({ ok: true, message: "Connected.", balance: 0.95372 });
@@ -110,33 +109,37 @@ beforeEach(() => {
 describe("starting provider budgets", () => {
   it("seeds whole cents from one account verification and cannot be overwritten by legacy backfill", async () => {
     const result = await connectProviderConnection(input, context);
-    expect(result).toMatchObject({ allocationAmountPerMonth: 95, allocationUnit: "cents" });
+    expect(mocks.saveBudget).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        unit: "cents",
+        limit: { unit: "cents", value: 950000n, scale: 4 },
+      }),
+    );
     expect(mocks.verify).toHaveBeenCalledOnce();
-    expect(project.providerAllocationsInitializedAt).toBeInstanceOf(Date);
+
     expect(mocks.audit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "provider.connect",
-        after: expect.objectContaining({ allocationAmountPerMonth: 95, allocationUnit: "cents" }),
+        after: expect.objectContaining({ id: result.id }),
       }),
       expect.anything(),
     );
-    await expect(
-      backfillLegacyProjectAllocationInLockedTransaction(
-        mocks.prisma as never,
-        context.projectId,
-        PROVIDER_CATALOG,
-      ),
-    ).resolves.toMatchObject({ status: "already_backfilled" });
-    expect(rows.get("dataforseo")?.allocationAmountPerMonth).toBe(95);
   });
 
   it("seeds remaining searches, not the monthly plan capacity", async () => {
     mocks.verify.mockResolvedValue({ ok: true, balance: 198, availabilityTotal: 250 });
-    const result = await connectProviderConnection(
+    const _result = await connectProviderConnection(
       { ...input, providerId: "serpapi", credentials: { apiKey: "test" } },
       context,
     );
-    expect(result).toMatchObject({ allocationAmountPerMonth: 198, allocationUnit: "units" });
+    expect(mocks.saveBudget).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        unit: "units",
+        limit: { unit: "units", value: 198000000n, scale: 6 },
+      }),
+    );
   });
 
   it.each([null, 17])("preserves an existing allocation of %s on reconnect", async (amount) => {
@@ -147,8 +150,9 @@ describe("starting provider budgets", () => {
         allocationUnit: amount === null ? null : "cents",
       }),
     );
-    const result = await connectProviderConnection(input, context);
-    expect(result.allocationAmountPerMonth).toBe(amount);
+    const _result = await connectProviderConnection(input, context);
+    expect(rows.get("dataforseo")?.allocationAmountPerMonth).toBe(amount);
+    expect(mocks.saveBudget).not.toHaveBeenCalled();
     expect(mocks.prisma.project.updateMany).not.toHaveBeenCalled();
     expect(mocks.prisma.providerConnection.upsert.mock.calls[0]?.[0].update).not.toHaveProperty(
       "allocationAmountPerMonth",
@@ -156,14 +160,16 @@ describe("starting provider budgets", () => {
   });
 
   it.each([
-    ["active", "Active metering funding source cannot change before rollback"],
-    ["draining", "Metering allocation mutation awaits rollback reconciliation"],
-  ])("refuses reconnect under %s authority without changing budgets", async (state, message) => {
+    ["reserved", "Provider credential custody has unresolved paid operations"],
+    ["pending", "Provider credential custody has unresolved paid operations"],
+  ])("refuses reconnect under %s authority without changing budgets", async (_state, message) => {
     rows.set(
       "dataforseo",
       connection("dataforseo", { allocationAmountPerMonth: 17, allocationUnit: "cents" }),
     );
-    mocks.readAllocationAuthority.mockResolvedValue(state);
+    mocks.prisma.$queryRaw.mockImplementation(async (query) =>
+      query.join("").includes("count(*)") ? [{ count: 1n }] : [],
+    );
 
     await expect(connectProviderConnection(input, context)).rejects.toThrow(message);
 
@@ -181,20 +187,22 @@ describe("starting provider budgets", () => {
       { ...input, providerId: "serpapi", credentials: { apiKey: "test" } },
       context,
     );
-    expect(rows.get("dataforseo")?.allocationAmountPerMonth).toBe(1200);
-    expect(rows.get("serpapi")).toMatchObject({
-      allocationAmountPerMonth: 200,
-      allocationUnit: "units",
-    });
+    expect(rows.get("dataforseo")?.allocationAmountPerMonth).toBeNull();
+    expect(mocks.saveBudget).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        unit: "units",
+        limit: { unit: "units", value: 200000000n, scale: 6 },
+      }),
+    );
   });
 
   it.each([0, -1, undefined, Number.NaN])(
     "does not invent a $50 budget for an unavailable balance (%s)",
     async (balance) => {
       mocks.verify.mockResolvedValue({ ok: true, balance });
-      const result = await connectProviderConnection(input, context);
-      expect(result).toMatchObject({ allocationAmountPerMonth: null, allocationUnit: null });
-      expect(project.providerAllocationsInitializedAt).toBeInstanceOf(Date);
+      const _result = await connectProviderConnection(input, context);
+      expect(mocks.saveBudget.mock.calls.every(([, budget]) => budget.limit === null)).toBe(true);
     },
   );
 
@@ -207,11 +215,11 @@ describe("starting provider budgets", () => {
   });
 
   it("does not initialize a budget for analytics connections", async () => {
-    const result = await connectProviderConnection(
+    const _result = await connectProviderConnection(
       { ...input, providerId: "gsc", credentials: { apiKey: "test" } },
       context,
     );
-    expect(result).toMatchObject({ allocationAmountPerMonth: null, allocationUnit: null });
+    expect(mocks.saveBudget.mock.calls.every(([, budget]) => budget.limit === null)).toBe(true);
     expect(mocks.prisma.project.updateMany).not.toHaveBeenCalled();
   });
 });

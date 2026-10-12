@@ -28,4 +28,17 @@ describe("estimateRunRows", () => {
     expect(result.targets[0].cost).toBe(expected);
     expect(result.native.quantity).toBe(expected);
   });
+
+  it("uses exact request quotes for each target and its native allocation", () => {
+    const rows = [{ id: "plain" }, { id: "operator" }] as Parameters<typeof estimateRunRows>[0];
+    const connection = {
+      credentialSource: "own",
+      provider: "dataforseo",
+      rateContext: { entries: [], manualAmountCents: null },
+    } as Parameters<typeof estimateRunRows>[3];
+    const result = estimateRunRows(rows, 10, {}, connection, [0.2, 1]);
+    expect(result.targets.map((target) => target.cost)).toEqual([0.2, 1]);
+    expect(result.costCents).toBe(1.2);
+    expect(result.native.quantity).toBe(1.2);
+  });
 });

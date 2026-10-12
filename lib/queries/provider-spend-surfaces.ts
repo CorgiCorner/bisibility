@@ -1,5 +1,6 @@
 import { projectedMonthlySpendCents } from "@/lib/cost-estimate/spend-pace";
 import { monthStartUtc } from "@/lib/rank-check/budget";
+import type { ProviderSpendConnection, ProviderSpendSummary } from "./provider-spend-types";
 
 export type SurfaceAllocation = { amountPerMonth: number; unit: "cents" | "units" } | null;
 
@@ -109,6 +110,34 @@ export function surfaceTightestEntries(
           },
         ];
   });
+}
+
+export function providerSpendUnconfirmed(connections: readonly ProviderSpendConnection[]) {
+  return connections.reduce(
+    (sum, connection) =>
+      sum + connection.own.unconfirmedCount + connection.credits.unconfirmedCount,
+    0,
+  );
+}
+
+export function providerSpendProjection(
+  connections: readonly ProviderSpendConnection[],
+  unconfirmedCount: number,
+): ProviderSpendSummary["projected"] {
+  if (unconfirmedCount > 0) return { kind: "partial" };
+  if (
+    connections.every((connection) => connection.own.used === 0 && connection.credits.used === 0)
+  ) {
+    return { kind: "no_usage" };
+  }
+  const exhaustion = connections
+    .filter((connection) => connection.projectedExhaustionAt !== null)
+    .sort((left, right) =>
+      (left.projectedExhaustionAt ?? "").localeCompare(right.projectedExhaustionAt ?? ""),
+    )[0];
+  return exhaustion?.projectedExhaustionAt
+    ? { at: exhaustion.projectedExhaustionAt, kind: "cap_by", provider: exhaustion.provider }
+    : { kind: "within_limits" };
 }
 
 const MONTH_LABELS = [

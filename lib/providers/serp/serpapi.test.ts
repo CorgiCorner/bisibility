@@ -1,7 +1,7 @@
-import type { PrismaClient } from "@/lib/generated/prisma/client";
-import { byokTestEvidence } from "@/lib/provider-usage/byok-test-evidence";
+import { byokTestJournal } from "@/lib/provider-usage/byok-test-journal";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { type SerpRankLocation, serpRankLocation } from "@/lib/serp/location";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { serpApiProvider } from "./serpapi";
@@ -46,7 +46,7 @@ function rankInput(
   } = {},
 ) {
   return {
-    credentials: { apiKey: input.apiKey ?? "serp-key" },
+    credentials: { apiKey: input.apiKey ?? "serp-key", usageObserver: testUsageObserver },
     depth: input.depth,
     device: input.device ?? ("desktop" as const),
     domain: input.domain ?? "example.com",
@@ -725,7 +725,9 @@ describe("serpApiProvider", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(serpApiProvider.testConnection({ apiKey: "serp-key" })).resolves.toEqual({
+    await expect(
+      serpApiProvider.testConnection({ apiKey: "serp-key", usageObserver: testUsageObserver }),
+    ).resolves.toEqual({
       availabilityTotal: 26,
       balance: 23,
       message: "Connected.",
@@ -745,7 +747,9 @@ describe("serpApiProvider", () => {
         .mockResolvedValue(jsonResponse({ searches_per_month: 250, total_searches_left: 222 })),
     );
 
-    await expect(serpApiProvider.testConnection({ apiKey: "serp-key" })).resolves.toEqual({
+    await expect(
+      serpApiProvider.testConnection({ apiKey: "serp-key", usageObserver: testUsageObserver }),
+    ).resolves.toEqual({
       availabilityTotal: 250,
       balance: 222,
       message: "Connected.",
@@ -766,7 +770,9 @@ describe("serpApiProvider", () => {
       ),
     );
 
-    await expect(serpApiProvider.testConnection({ apiKey: "serp-key" })).resolves.toEqual({
+    await expect(
+      serpApiProvider.testConnection({ apiKey: "serp-key", usageObserver: testUsageObserver }),
+    ).resolves.toEqual({
       balance: 17,
       message: "Connected.",
       ok: true,
@@ -776,7 +782,9 @@ describe("serpApiProvider", () => {
   it("keeps successful connections backwards compatible when quota data is absent", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({})));
 
-    await expect(serpApiProvider.testConnection({ apiKey: "serp-key" })).resolves.toEqual({
+    await expect(
+      serpApiProvider.testConnection({ apiKey: "serp-key", usageObserver: testUsageObserver }),
+    ).resolves.toEqual({
       message: "Connected.",
       ok: true,
     });
@@ -931,59 +939,8 @@ describe("SerpApi observation completeness", () => {
 
 type JournalRow = Record<string, unknown> & { id: string };
 
-function journalMatches(row: JournalRow, where: Record<string, unknown> = {}): boolean {
-  return Object.entries(where).every(([key, value]) => {
-    if (key === "OR") {
-      return (value as Array<Record<string, unknown>>).some((clause) =>
-        journalMatches(row, clause),
-      );
-    }
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      if ("notIn" in value) return !(value as { notIn: unknown[] }).notIn.includes(row[key]);
-      if ("in" in value) return (value as { in: unknown[] }).in.includes(row[key]);
-      if ("not" in value) return row[key] !== (value as { not: unknown }).not;
-    }
-    if (value === null) return row[key] == null;
-    return row[key] === value;
-  });
-}
-
-// Small persistent fake ledger: the real journal and transport run against it.
 function createJournalLedger(seed: JournalRow[] = []) {
-  const rows: JournalRow[] = seed.map((row) => ({ ...row }));
-  const table = {
-    findFirst: vi.fn(
-      async ({ where }: { where: Record<string, unknown> }) =>
-        rows.find((row) => journalMatches(row, where)) ?? null,
-    ),
-    createMany: vi.fn(async ({ data }: { data: JournalRow[] }) => {
-      for (const entry of data) rows.push({ ...entry });
-      return { count: data.length };
-    }),
-    update: vi.fn(async ({ where, data }: { where: { id: string }; data: JournalRow }) => {
-      const row = rows.find((candidate) => candidate.id === where.id);
-      if (!row) throw Object.assign(new Error("Record not found."), { code: "P2025" });
-      Object.assign(row, data);
-      return row;
-    }),
-    deleteMany: vi.fn(async ({ where }: { where: Record<string, unknown> }) => {
-      const victims = rows.filter((row) => journalMatches(row, where));
-      for (const victim of victims) rows.splice(rows.indexOf(victim), 1);
-      return { count: victims.length };
-    }),
-  };
-  const db = {
-    ...byokTestEvidence("serpapi"),
-    providerCostEntry: {
-      ...table,
-      updateMany: vi.fn(async (args: Parameters<typeof table.update>[0]) => {
-        await table.update(args);
-        return { count: 1 };
-      }),
-    },
-    $transaction: vi.fn(async (run: (tx: unknown) => Promise<unknown>) => run(db)),
-  };
-  return { db: db as unknown as PrismaClient, rows, table };
+  return byokTestJournal("serpapi", seed);
 }
 
 function journalRankInput(ledger: ReturnType<typeof createJournalLedger>, depth: 10 | 20 = 20) {
@@ -1137,6 +1094,7 @@ describe("SerpApi provider request journal", () => {
         providerRequestId: "search-dup",
         usageQuantity: 1,
       }),
+      expect.objectContaining({ canonicalId: ledger.rows[0].id, usageQuantity: 0 }),
     ]);
   });
 
@@ -1165,3 +1123,7 @@ describe("SerpApi provider request journal", () => {
     }
   });
 });
+
+vi.mock("@/lib/provider-usage/admission-extension", async () => ({
+  ownAdmission: (await import("@/lib/provider-usage/byok-test-evidence")).testOwnAdmission,
+}));

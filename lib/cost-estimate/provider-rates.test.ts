@@ -130,8 +130,11 @@ describe("provider rates", () => {
       "developer",
       "production",
       "bigdata",
+      "searcher",
+      "volume",
+      "infrastructure",
     ]);
-    expect(serpapi?.checkedAt).toBe("2026-10-01");
+    expect(serpapi?.checkedAt).toBe("2026-09-25");
   });
 
   it("pins the verified DataForSEO base and additional-page rates", () => {
@@ -139,18 +142,18 @@ describe("provider rates", () => {
 
     expect(dataforseo?.pricingModel).toBe("flat");
     expect(dataforseo && "options" in dataforseo ? dataforseo.options : []).toMatchObject([
-      { key: "standard", unitCostCents: 0.06, additionalPageCostCents: 0.045 },
-      { key: "priority", unitCostCents: 0.12, additionalPageCostCents: 0.09 },
-      { key: "live", unitCostCents: 0.2, additionalPageCostCents: 0.15 },
+      { key: "standard", unitCostCents: 0.06, additionalPageCostCents: 0.06 },
+      { key: "priority", unitCostCents: 0.12, additionalPageCostCents: 0.12 },
+      { key: "live", unitCostCents: 0.2, additionalPageCostCents: 0.2 },
     ]);
-    expect(dataforseo?.notes).toContain("each additional page at 75%");
-    expect(dataforseo?.checkedAt).toBe("2026-10-01");
-    expect(SERP_RATES_CHECKED_AT).toBe("2026-10-01");
+    expect(dataforseo?.notes).toContain("full base rate for each requested SERP page");
+    expect(dataforseo?.checkedAt).toBe("2026-09-25");
+    expect(SERP_RATES_CHECKED_AT).toBe("2026-09-25");
   });
 
   it("keeps ranked-keyword page pricing in the provider rate table", () => {
     expect(rankedKeywordPageRate("dataforseo")).toMatchObject({
-      checkedAt: "2026-10-01",
+      checkedAt: "2026-09-25",
       costCents: 2.4,
       feature: "ranked_keywords",
       providerId: "dataforseo",
@@ -283,19 +286,21 @@ describe("provider rates", () => {
     expect(costCents).toBe(5.16);
   });
 
-  it("pins the provisional domain overview feature rates", () => {
+  it("pins the catalog domain overview feature rates", () => {
     const rates = domainOverviewRates("dataforseo");
 
     expect(rates.overview).toEqual({
-      checkedAt: "2026-10-01",
-      costCents: 2.4,
+      baseCostCents: 1.2,
+      checkedAt: "2026-09-25",
+      costCents: 1.212,
+      unitCostCents: 0.012,
       feature: "domain_rank_overview",
       providerId: "dataforseo",
       sourceUrl: "https://dataforseo.com/pricing/dataforseo-labs/dataforseo-google-api",
     });
     expect(rates.history).toMatchObject({
       baseCostCents: 12,
-      checkedAt: "2026-10-01",
+      checkedAt: "2026-09-25",
       costCents: 12,
       feature: "historical_rank_overview",
       providerId: "dataforseo",
@@ -304,7 +309,7 @@ describe("provider rates", () => {
     });
     expect(rates.pages).toMatchObject({
       baseCostCents: 1.2,
-      checkedAt: "2026-10-01",
+      checkedAt: "2026-09-25",
       costCents: 2.4,
       feature: "relevant_pages",
       providerId: "dataforseo",
@@ -324,7 +329,7 @@ describe("provider rates", () => {
   it("estimates domain overview costs per task plus returned item", () => {
     const rates = domainOverviewRates("dataforseo");
 
-    // The overview is a flat per-request charge, so the item count does not scale it.
+    // Catalog list prices include both the base charge and requested items.
     expect(estimatedFeatureCostCents(rates.overview, 100, false, LIST_PROVIDER_RATE_CONTEXT)).toBe(
       2.4,
     );
@@ -336,7 +341,10 @@ describe("provider rates", () => {
     );
   });
   it("exposes the default list estimate before a target-specific cache check", () => {
-    expect(domainOverviewListEstimate("dataforseo")).toEqual({ core: 3 * 2.4, history: 12.12 });
+    expect(domainOverviewListEstimate("dataforseo")).toEqual({
+      core: 1.212 + 2.4 + 2.4,
+      history: 12.12,
+    });
     expect(domainOverviewListEstimate("missing")).toEqual({ core: null, history: null });
   });
   it("keeps provider-rate verification fresh", () => {

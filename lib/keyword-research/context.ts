@@ -16,7 +16,6 @@ import type { KeywordResearchConnection } from "./types";
 export async function keywordResearchProject(projectId: string) {
   return prisma.project.findFirst({
     select: {
-      budgetCapCents: true,
       defaults: { include: { locationRef: true } },
       id: true,
       keywords: { select: { device: true, location: true, locationRef: true, text: true } },

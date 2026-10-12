@@ -42,21 +42,29 @@
       "collapseSidebar": "Contraer la barra lateral",
       "expandSidebar": "Expandir la barra lateral",
       "badges": {
-        "alpha": "alfa",
-        "beta": "beta",
         "experimental": "Experimental",
         "new": "nuevo"
       },
       "groups": {
-        "modules": {
-          "label": "Módulos",
-          "tag": "MÓDULOS",
-          "tooltip": "Los módulos de mercado siguen al mercado seleccionado. El resto mantiene su propio eje."
+        "tracking": {
+          "label": "Seguimiento",
+          "tag": "SEGUIMIENTO",
+          "tooltip": "Sigue las posiciones y el rendimiento de IA a lo largo del tiempo."
+        },
+        "research": {
+          "label": "Investigación y auditorías",
+          "tag": "INVESTIGACIÓN",
+          "tooltip": "Explora palabras clave, sitios web y respuestas de IA."
+        },
+        "reports": {
+          "label": "Datos e informes",
+          "tag": "DATOS",
+          "tooltip": "Revisa los datos conectados de búsqueda y los informes guardados."
         },
         "project": {
           "label": "Proyecto",
           "tag": "PROYECTO",
-          "tooltip": "Ajustes que afectan a todo el proyecto. Ningún mercado los restringe."
+          "tooltip": "Configuración del proyecto y operaciones compartidas."
         }
       },
       "items": {

@@ -112,6 +112,21 @@ Run these source-checked checks at a cadence suitable to your deployment.
 - **Repair owners:** For failures, use [Troubleshooting](/self-hosting/troubleshooting) for diagnosis
   and [Upgrades](/self-hosting/upgrades) for version repair.
 
+## Paid-call accounting maintenance
+
+Meter and its PostgreSQL Store enforce project and connection budgets in both builds. Keep the migration runner,
+app and worker on the same release, database, schema and `METERING_NAMESPACE` (default `default`). Enable `SCHEDULED_MAINTENANCE_ENABLED=1`
+on the worker; disabling it pauses recovery without disabling admission.
+
+- `maintenance-metering-reservations` runs every minute, expiring unsent reservations in bounded batches.
+  Pending or dispatched work needs proof recovery; it cannot expire as zero. Failed expiry is a retryable error.
+- `maintenance-provider-usage-reconciliation` runs every five minutes, recovering retained native/queued proof.
+  It preserves the original billing month and never sends another paid request. Retention protects unresolved proof.
+
+Check failed activities, unconfirmed/overdue counts and the completed `provider_usage_reconciled_at` watermark.
+A page with `hasMore` is incomplete; unknown evidence older than 15 minutes raises a warning and keeps its scope blocked.
+Never clear gates or change namespaces to bypass uncertainty. See [Accounting migration](/self-hosting/upgrades#accounting-migration).
+
 ## Back up and restore PostgreSQL
 
 Back up and restore the application database, secrets, and Temporal persistence on the canonical

@@ -11,7 +11,9 @@ import {
   releaseProviderLookupLock,
   waitForProviderLookupCache,
 } from "@/lib/provider-lookups/cache";
+import { requiredConnectionEstimate } from "@/lib/provider-lookups/connection-estimate";
 import { loadProviderRateContext } from "@/lib/provider-rates/connection-context";
+import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type { KeywordMetrics, ResearchKeywordRow } from "@/lib/providers/types";
 import {
@@ -31,7 +33,7 @@ import {
   normalizeResearchKeyword,
   researchLocation,
 } from "./context";
-import { ProviderLookupSignal, paidProviderCall, requiredEstimatedCostCents } from "./paid-call";
+import { ProviderLookupSignal, paidProviderCall } from "./paid-call";
 import type { KeywordMetricsOutcome } from "./types";
 
 const emptyMetrics: KeywordMetrics = {
@@ -143,7 +145,10 @@ export async function fetchKeywordMetrics(input: {
   if (!supportsResearchScope(location.value.gl, location.value.hl)) {
     return { ok: false, reason: "unsupported_location" };
   }
-  const rateContext = await loadProviderRateContext(selected.connection.id, "keyword_metrics");
+  const rateContext =
+    selected.provider.id === "dataforseo"
+      ? LIST_PROVIDER_RATE_CONTEXT
+      : await loadProviderRateContext(selected.connection.id, "keyword_metrics");
   const keys = uniqueKeywords(input.keywords).map((item) => ({
     ...item,
     cacheKey: keywordMetricsCacheKey({
@@ -166,7 +171,9 @@ export async function fetchKeywordMetrics(input: {
     }
     const fetchedCountEstimate = keys.length - values.size;
     const estimatedCostCents = fetchedCountEstimate
-      ? requiredEstimatedCostCents({
+      ? await requiredConnectionEstimate({
+          connection: selected.connection,
+          feature: "keyword_metrics",
           context: rateContext,
           includeClickstream: input.includeClickstream,
           itemCount: fetchedCountEstimate,
@@ -198,7 +205,9 @@ export async function fetchKeywordMetrics(input: {
   try {
     if (prepared.misses.length) {
       const chunk = prepared.misses;
-      const estimatedCostCents = requiredEstimatedCostCents({
+      const estimatedCostCents = await requiredConnectionEstimate({
+        connection: selected.connection,
+        feature: "keyword_metrics",
         context: rateContext,
         includeClickstream: input.includeClickstream,
         itemCount: chunk.length,
@@ -227,6 +236,7 @@ export async function fetchKeywordMetrics(input: {
         includeClickstream: input.includeClickstream,
         itemCount: chunk.length,
         projectId: project.id,
+        maxCostCents: input.maxCostCents,
         provider: selected.provider,
         rateContext,
         rate: keywordMetricsRate(selected.provider.id),

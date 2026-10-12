@@ -200,3 +200,43 @@ describe("reviewed model suggestion generation", () => {
     expect(screen.getByRole("textbox", { name: "Business" })).toHaveValue("New current review");
   });
 });
+
+it("shows an exhausted budget returned through the real action-result consumer", async () => {
+  const { unwrapTrackingGenerationActionResult } = await import(
+    "@/lib/ai-tracking/projections/generation-result"
+  );
+  const user = userEvent.setup();
+  const generate = vi.fn(async () =>
+    unwrapTrackingGenerationActionResult<never>(
+      JSON.parse(
+        JSON.stringify({
+          ok: false,
+          error: {
+            code: "budget_exhausted",
+            status: 429,
+            reason: "budget_exhausted",
+            message: "Monthly provider budget reached.",
+            generationId: "asg_budget",
+          },
+        }),
+      ),
+    ),
+  );
+  render(
+    wrap(
+      <TrackingGeneration
+        canWrite
+        actions={{ ...generationFixtureActions, generate }}
+        onReviewDraft={vi.fn()}
+      />,
+    ),
+  );
+  const dialog = await reviewAndPreview(user);
+  await user.click(within(dialog).getByRole("checkbox", { name: /provider actual cost/ }));
+  await user.click(within(dialog).getByRole("button", { name: "Approve and generate drafts" }));
+  expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+    "Monthly provider budget reached.",
+  );
+  expect(within(dialog).getByText(/Generation requiring review: asg_budget/)).toBeVisible();
+  expect(generate).toHaveBeenCalledOnce();
+});

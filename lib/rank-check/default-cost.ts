@@ -1,6 +1,6 @@
 import { flatPerCheckCostCents, pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { rateForProvider } from "@/lib/cost-estimate/provider-rates";
-import { type ResolveProviderRateInput, resolveProviderRate } from "@/lib/provider-rates/resolver";
+import { type ProviderRateContext, resolveProviderRate } from "@/lib/provider-rates/resolver";
 import type { SerpDepth } from "@/lib/serp/constants";
 
 const DEFAULT_FLAT_OPTION_KEY = "live";
@@ -34,9 +34,11 @@ export function estimatedRankCheckCostCents(
   providerId: string | undefined,
   depth: SerpDepth,
   configuredCostCents: unknown,
-  context: Pick<ResolveProviderRateInput, "entries" | "manualAmountCents">,
+  context: ProviderRateContext,
   options: RankCheckCostEstimateOptions = {},
 ): number | null {
+  if (context.nativeRankCosts && context.nativeRankCosts.provider === providerId)
+    return context.nativeRankCosts.centsByDepth[depth] ?? null;
   let manualAmountCents: unknown = context.manualAmountCents;
   if (configuredCostCents != null) {
     const configured = Number(configuredCostCents);

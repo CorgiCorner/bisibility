@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/Card";
 
 export default function AgentReportLoading() {
   return (
-    <PageContent variant="constrained">
+    <PageContent variant="section">
       <Card aria-busy="true">
         <div aria-hidden="true" className="grid gap-5 motion-safe:animate-pulse">
           {["title", "body", "footer"].map((key) => (

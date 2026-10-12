@@ -173,7 +173,8 @@
         "runningTitle": "Sprawdzenie w toku",
         "completeTitle": "Sprawdzenie zakończone",
         "failedTitle": "Sprawdzenie nie powiodło się",
-        "couldNotStart": "Nie udało się uruchomić sprawdzenia pozycji."
+        "couldNotStart": "Nie udało się uruchomić sprawdzenia pozycji.",
+        "viewRuns": "Zobacz uruchomienia"
       },
       "traffic": {
         "noData": "Brak danych",

@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { usageReadFixture } from "@/lib/metering/read.test-fixture";
+import { seedTestUsage } from "@/lib/metering/usage.test-fixture";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { lookupInstanceAdminAccount } from "./instance-admin-account";
 
 const mocks = vi.hoisted(() => ({
@@ -9,7 +11,7 @@ const mocks = vi.hoisted(() => ({
     keyword: { count: vi.fn() },
     notification: { create: vi.fn(), createMany: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     providerConnection: { groupBy: vi.fn() },
-    providerCostEntry: { aggregate: vi.fn() },
+    $queryRaw: vi.fn(),
     user: { findFirst: vi.fn() },
   },
   writeAudit: vi.fn(),
@@ -40,8 +42,14 @@ function sha256(value: string) {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
 }
 
+let store: Awaited<ReturnType<typeof usageReadFixture>>;
+afterEach(async () => {
+  vi.useRealTimers();
+  await store.db.close();
+});
+
 describe("lookupInstanceAdminAccount", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     vi.useRealTimers();
     mocks.getInstanceAdminSession.mockResolvedValue({ user: { id: "admin_1" } });
@@ -57,8 +65,29 @@ describe("lookupInstanceAdminAccount", () => {
       { _count: { _all: 2 }, kind: "rank" },
       { _count: { _all: 1 }, kind: "traffic" },
     ]);
-    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
-      _sum: { costCents: "12.2500" },
+    store = await usageReadFixture();
+    mocks.prisma.$queryRaw.mockImplementation(store.query);
+    await seedTestUsage(store.db, {
+      projectId: "project_1",
+      costCents: 5,
+      createdAt: "2026-07-15",
+    });
+    await seedTestUsage(store.db, {
+      projectId: "project_2",
+      costCents: 7.25,
+      createdAt: "2026-07-15",
+    });
+    await seedTestUsage(store.db, { projectId: "other", costCents: 99, createdAt: "2026-07-15" });
+    await seedTestUsage(store.db, {
+      projectId: "project_1",
+      costCents: 99,
+      cached: true,
+      createdAt: "2026-07-15",
+    });
+    await seedTestUsage(store.db, {
+      projectId: "project_1",
+      costCents: 99,
+      createdAt: "2026-06-30",
     });
     mocks.writeAudit.mockResolvedValue({ id: "audit_1" });
   });
@@ -91,18 +120,7 @@ describe("lookupInstanceAdminAccount", () => {
         where: { email: { equals: "member@example.com", mode: "insensitive" } },
       }),
     );
-    expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledWith({
-      _sum: { costCents: true },
-      where: {
-        cached: false,
-        createdAt: {
-          gte: new Date("2026-07-01T00:00:00.000Z"),
-          lt: new Date("2026-08-01T00:00:00.000Z"),
-        },
-        measurementStatus: "recorded",
-        projectId: { in: ["project_1", "project_2"] },
-      },
-    });
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(2);
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "instance_admin.account_viewed",

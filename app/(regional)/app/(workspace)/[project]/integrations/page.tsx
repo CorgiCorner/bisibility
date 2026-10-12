@@ -2,6 +2,7 @@ import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvid
 import { IntegrationCategory } from "@/components/integrations/IntegrationCategory";
 import { IntegrationsTabs } from "@/components/integrations/IntegrationsTabs";
 import { IntegrationUsagePanel } from "@/components/integrations/IntegrationUsagePanel";
+import { ProviderUiProvider } from "@/components/provider-management/ProviderUiProvider";
 import { PageContent } from "@/components/shell/PageContent";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
@@ -132,24 +133,28 @@ export default async function IntegrationsPage({
           id="integrations-panel"
           role="tabpanel"
         >
-          <div className="flex flex-col gap-5 scroll-mt-6" id="all-providers">
-            {categories.map((category) => (
-              <IntegrationCategory
-                actions={providerActions}
-                canManageProviders={canManageProviders}
-                canUpdateProject={canUpdateProject}
-                category={category}
-                deploymentMode={deploymentMode()}
-                initialConnectProviderId={canManageProviders ? initialConnectProviderId : undefined}
-                key={category.id}
-                noProvidersYet={noProvidersYet}
-                projectId={publicId}
-                projectRef={publicId}
-                searchSyncPlan={searchSyncPlan}
-                timeZone={timeZone}
-              />
-            ))}
-          </div>
+          <ProviderUiProvider projectId={publicId}>
+            <div className="flex flex-col gap-5 scroll-mt-6" id="all-providers">
+              {categories.map((category) => (
+                <IntegrationCategory
+                  actions={providerActions}
+                  canManageProviders={canManageProviders}
+                  canUpdateProject={canUpdateProject}
+                  category={category}
+                  deploymentMode={deploymentMode()}
+                  initialConnectProviderId={
+                    canManageProviders ? initialConnectProviderId : undefined
+                  }
+                  key={category.id}
+                  noProvidersYet={noProvidersYet}
+                  projectId={publicId}
+                  projectRef={publicId}
+                  searchSyncPlan={searchSyncPlan}
+                  timeZone={timeZone}
+                />
+              ))}
+            </div>
+          </ProviderUiProvider>
         </div>
       </PageContent>
     </FeatureMessagesProvider>

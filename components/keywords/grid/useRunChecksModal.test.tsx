@@ -303,3 +303,42 @@ describe("useRunChecksModal", () => {
     expect(screen.queryByRole("link", { name: "Open integrations" })).not.toBeInTheDocument();
   });
 });
+
+it("shows localized missing-budget guidance from a returned action failure", async () => {
+  const { result } = renderHook(
+    () =>
+      useRunChecksModal({
+        projectId: "prj_abcdefghijklmnopqrstuvwx",
+        rows: [],
+        onSettled: vi.fn(),
+        runCheckNowAction: vi.fn<RunCheckNowAction>().mockResolvedValue({
+          code: "budget_missing",
+          message: "server text",
+          status: "not_started",
+        }),
+      }),
+    { wrapper },
+  );
+  act(() => result.current.request(["kw_abcdefghijklmnopqrstuvwx"]));
+  await act(() => result.current.confirm());
+  expect(result.current.flow?.failures).toEqual([
+    {
+      code: "budget_missing",
+      message: expect.stringContaining("Project spending budget is missing"),
+      rankCheckId: null,
+    },
+  ]);
+  renderWithFeatureMessages(
+    <RunChecksConfirmationModal
+      flow={result.current.flow}
+      onClose={result.current.close}
+      onConfirm={result.current.confirm}
+      onRetry={result.current.retry}
+      projectId="prj_abcdefghijklmnopqrstuvwx"
+      rows={[]}
+    />,
+    { messages: projectRankTrackerFeatureTestMessages },
+  );
+  expect(screen.getByText(/Project spending budget is missing/)).toBeInTheDocument();
+  expect(screen.queryByText("server text")).not.toBeInTheDocument();
+});

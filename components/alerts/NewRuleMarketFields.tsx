@@ -96,3 +96,45 @@ export function RulePreview({ children }: Readonly<{ children: string }>) {
     </section>
   );
 }
+
+export function CurrentRulePreview({
+  projectDomain,
+  values,
+  targets,
+}: Readonly<{
+  projectDomain?: string | null;
+  values: NewRuleForm;
+  targets: AlertTargetOptions;
+}>) {
+  const t = useTranslations("projectAlerts.drawer");
+  const choices = values.targetType === "tag" ? targets.tags : targets.keywords;
+  const targetScope =
+    values.targetType === "all"
+      ? t("scopeAll")
+      : values.targetIds
+          .map((id) => choices.find((item) => item.id === id)?.label ?? t("chooseTarget"))
+          .join(", ") || t("chooseTarget");
+  const markets = values.marketIds.length
+    ? values.marketIds
+        .map((id) => targets.markets.find((market) => market.id === id)?.label ?? t("chooseTarget"))
+        .join(", ")
+    : t("allMarkets");
+  const topN = Number(values.topN);
+  return (
+    <RulePreview>
+      {t("templatePreview", {
+        condition: values.conditionType,
+        domain: projectDomain ?? targets.projectDomain ?? t("defaultProjectDomain"),
+        topN: Number.isFinite(topN) && topN > 0 ? String(topN) : "?",
+        nextPosition: Number.isFinite(topN) && topN > 0 ? String(topN + 1) : "?",
+        dropPositions: String(values.dropPositions || "?"),
+        thresholdPosition: String(values.thresholdPosition || "?"),
+        changePct: String(values.changePct || "?"),
+        competitorDomain: values.competitorDomain || "?",
+        serpFeature: values.serpFeature || "?",
+        targets: targetScope,
+        markets,
+      })}
+    </RulePreview>
+  );
+}

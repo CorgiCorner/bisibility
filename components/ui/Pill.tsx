@@ -47,12 +47,12 @@ export function Pill({ active = false, className, size = "md", style, ...props }
       style={{
         "--control-press-scale": ".98",
         "--control-background-color": active ? "var(--accent-soft)" : "var(--bg-elev)",
-        "--control-color": active ? "var(--accent)" : "var(--fg-muted)",
+        "--control-color": active ? "var(--accent-text)" : "var(--fg-muted)",
         "--control-hover-background-color": active
           ? "color-mix(in srgb, var(--accent) 18%, var(--bg-elev))"
           : "var(--bg-sunken)",
-        "--control-hover-border-color": active ? "var(--accent-hover)" : "var(--accent)",
-        "--control-hover-color": active ? "var(--accent-hover)" : "var(--accent)",
+        "--control-hover-border-color": "var(--accent-text)",
+        "--control-hover-color": "var(--accent-text)",
         ...style,
       }}
     />

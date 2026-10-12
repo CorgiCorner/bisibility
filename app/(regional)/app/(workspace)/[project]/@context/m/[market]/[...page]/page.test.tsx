@@ -1,6 +1,7 @@
+import { KeywordHeaderContextBoundary } from "@/components/keywords/KeywordHeaderContextBoundary";
 import { RankTrackerHeaderContext } from "@/components/keywords/RankTrackerHeaderContext";
 import { HEADER_CONTEXT_LABEL } from "@/components/shell/HeaderContextSlot";
-import { renderWithShellProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { asMarketRef, asProjectRef, marketPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
 import { screen } from "@testing-library/react";
@@ -11,6 +12,9 @@ const mocks = vi.hoisted(() => ({ listHeaderMarkets: vi.fn(), resolveProjectAcce
 vi.mock("@/lib/queries/_auth", () => ({ resolveProjectAccess: mocks.resolveProjectAccess }));
 vi.mock("@/lib/queries/header-markets", () => ({ listHeaderMarkets: mocks.listHeaderMarkets }));
 vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
+vi.mock("@/i18n/document-locale.server", () => ({
+  resolveRegionalDocumentLocale: () => Promise.resolve({ locale: "en", timeZone: "UTC" }),
+}));
 
 import NoHeaderContext from "../../../default";
 import HeaderContextRoute from "./page";
@@ -20,10 +24,14 @@ const MARKET = asMarketRef("pmkt_us");
 
 async function renderRoute(page: string[]) {
   setNavigationState({ pathname: marketPath(PROJECT, MARKET, ...page) });
+  const element = await HeaderContextRoute({
+    params: Promise.resolve({ market: MARKET, page, project: PROJECT }),
+  });
+  // Resolve the async server boundary before handing its client subtree to jsdom.
   render(
-    await HeaderContextRoute({
-      params: Promise.resolve({ market: MARKET, page, project: PROJECT }),
-    }),
+    element.type === KeywordHeaderContextBoundary
+      ? await KeywordHeaderContextBoundary(element.props)
+      : element,
   );
 }
 

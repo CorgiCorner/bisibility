@@ -2,6 +2,9 @@ import type { ProviderCatalogEntry } from "@/lib/providers/types";
 import { describe, expect, it, vi } from "vitest";
 import { readProjectProviderAllocations } from "./repository";
 
+vi.mock("@/lib/metering/spending-limit-store", () => ({
+  readSpendingBudgets: vi.fn().mockResolvedValue([]),
+}));
 const catalog = [
   {
     allocation: {
@@ -18,7 +21,7 @@ const catalog = [
 ] as const satisfies readonly ProviderCatalogEntry[];
 
 describe("provider allocation repository", () => {
-  it("reads effective allocations by internal project id", async () => {
+  it("does not turn the project cap into connection allocations", async () => {
     const db = {
       project: {
         findUnique: vi.fn().mockResolvedValue({
@@ -43,11 +46,11 @@ describe("provider allocation repository", () => {
       readProjectProviderAllocations("project_1", catalog, db as never),
     ).resolves.toEqual([
       {
-        allocation: { amountPerMonth: 5000, unit: "cents" },
+        allocation: null,
         credits: { app: null, programmatic: null },
         internalConnectionId: "connection_1",
-        programmaticAllocation: { amountPerMonth: 5000, unit: "cents" },
-        source: "legacy_project",
+        programmaticAllocation: null,
+        source: "none",
       },
     ]);
     expect(db.project.findUnique).toHaveBeenCalledWith(

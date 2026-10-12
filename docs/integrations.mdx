@@ -131,6 +131,12 @@ The integrations page shows one dedicated order for SERP providers. Active
 connections are tried from top to bottom. Paused and disconnected providers are
 shown separately and are not used for rank checks.
 
+Use the arrow buttons to move a provider, then **Save fallback order** to apply
+the complete order. The pause button removes a connected provider from active
+fallback without disconnecting it. Readers see the ordered list without editing
+buttons. When project writes are temporarily paused, managers keep the same
+controls in a disabled state.
+
 If a rank check succeeds, bisibility stores the result with the provider that
 returned it. If a provider request fails, is rate-limited, or cannot use its
 stored credentials, bisibility tries the next enabled provider in the chain.

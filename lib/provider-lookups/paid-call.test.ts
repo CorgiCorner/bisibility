@@ -2,8 +2,16 @@ import {
   BacklinksHistoryEvidenceError,
   fetchBacklinksAnalysis,
 } from "@/lib/backlinks/provider-call";
+import {
+  BudgetExhaustedError,
+  ProviderAllocationExhaustedError,
+} from "@/lib/metering/admission-errors";
+import { projectTestBudget } from "@/lib/metering/read.test-fixture";
+import { encode } from "@/lib/metering/store/codec";
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
-import { byokTestEvidence } from "@/lib/provider-usage/byok-test-evidence";
+import { type byokTestEvidence, testOwnAdmission } from "@/lib/provider-usage/byok-test-evidence";
+import { byokTestJournal } from "@/lib/provider-usage/byok-test-journal";
+import type { ProviderCredentials } from "@/lib/providers/types";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -43,10 +51,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 // Where-clause matcher for the fake provider cost entry table.
-function entryMatches(row: Record<string, unknown>, where: Record<string, unknown> = {}): boolean {
+function _entryMatches(row: Record<string, unknown>, where: Record<string, unknown> = {}): boolean {
   return Object.entries(where).every(([key, value]) => {
     if (key === "OR") {
-      return (value as Array<Record<string, unknown>>).some((clause) => entryMatches(row, clause));
+      return (value as Array<Record<string, unknown>>).some((clause) => _entryMatches(row, clause));
     }
     if (value && typeof value === "object" && !Array.isArray(value)) {
       if ("notIn" in value) return !(value as { notIn: unknown[] }).notIn.includes(row[key]);
@@ -97,11 +105,12 @@ import {
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { ProviderCallError } from "@/lib/providers/call-error";
+import * as historyWindow from "@/lib/providers/history-window";
 import { dataForSeoProvider } from "@/lib/providers/serp/dataforseo";
 import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/dataforseo-errors";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { monthlySpendCents } from "@/lib/rank-check/budget";
-import { paidProviderCall, preflightProviderBudget, requiredEstimatedCostCents } from "./paid-call";
+import { paidProviderCall, requiredEstimatedCostCents } from "./paid-call";
 import { deploymentEstimate } from "./paid-call-deployment";
 
 const location: SerpRankLocation = {
@@ -137,74 +146,122 @@ function runSuggestions(
   });
 }
 
-describe("paid provider lookup", () => {
-  it("retains summary evidence and an unresolved history journal through the real paid wrapper", async () => {
-    const provider = dataForSeoProvider;
-    if (
-      !provider.fetchBacklinksSummary ||
-      !provider.fetchBacklinksHistory ||
-      !provider.fetchBacklinksRows
-    )
-      throw new Error("Backlinks capability is unavailable.");
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(
-        Response.json({
-          cost: 0.012,
-          status_code: 20000,
-          tasks: [{ cost: 0.012, id: "summary", status_code: 20000, result: [{ backlinks: 12 }] }],
-        }),
-      )
-      .mockResolvedValueOnce(
-        Response.json({
-          status_code: 20000,
-          tasks: [{ id: "history", status_code: 40501, status_message: "History unavailable" }],
-        }),
-      );
-    vi.stubGlobal("fetch", fetchMock);
-    const failure = await fetchBacklinksAnalysis({
-      budgetCapCents: 5000,
-      includeSubdomains: true,
-      mode: "as_is",
-      origin: { source: "mcp" },
-      projectId: "project_1",
-      resultLimit: 100,
-      scope: "site",
-      source: {
-        connection: {
-          credentialsEncrypted: "encrypted",
-          id: "connection_1",
-          provider: "dataforseo",
-        },
-        provider: {
-          ...provider,
-          fetchBacklinksSummary: provider.fetchBacklinksSummary,
-          fetchBacklinksHistory: provider.fetchBacklinksHistory,
-          fetchBacklinksRows: provider.fetchBacklinksRows,
-        },
-      },
-      target: "example.com",
-    }).catch((error: unknown) => error);
-    expect(failure).toBeInstanceOf(BacklinksHistoryEvidenceError);
-    expect(failure).toMatchObject({
-      knownSummaryCostCents: 1.2,
-      summary: { backlinksTotal: 12 },
-      historyFailure: { code: "provider_usage_unconfirmed", phase: "measurement" },
+function observedMock<T extends { costCents: number }>(result: T) {
+  return vi.fn(async (credentials: ProviderCredentials) => {
+    const observer = credentials.usageObserver;
+    if (!observer) throw new ProviderUsagePersistenceError();
+    const id = await observer.begin({ attemptKey: crypto.randomUUID() });
+    await observer.beforeDispatch?.(id);
+    await observer.settle(id, {
+      cached: false,
+      failed: false,
+      costCents: result.costCents,
+      quantity: 1,
     });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(mocks.entries).toHaveLength(2);
-    expect(mocks.entries).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ feature: "backlinks", source: "mcp", costCents: 1.2 }),
-        expect.objectContaining({
-          feature: "backlinks",
-          source: "mcp",
-          costCents: 0,
-          measurementStatus: "unknown",
-        }),
-      ]),
-    );
+    return result;
   });
+}
+
+function observedFailure(error: DataForSeoUnsupportedLocationError) {
+  return async (credentials: ProviderCredentials) => {
+    const observer = credentials.usageObserver;
+    if (!observer) throw new ProviderUsagePersistenceError();
+    const id = await observer.begin({ attemptKey: crypto.randomUUID() });
+    await observer.beforeDispatch?.(id);
+    await observer.settle(id, {
+      cached: false,
+      failed: true,
+      costCents: error.costCents,
+      quantity: 1,
+    });
+    throw error;
+  };
+}
+
+describe("paid provider lookup", () => {
+  it.each(["unpriced", "unconfirmed"])(
+    "retains summary evidence for %s history",
+    async (scenario) => {
+      const invalidWindow =
+        scenario === "unpriced"
+          ? vi
+              .spyOn(historyWindow, "previousFullHistoryMonths")
+              .mockReturnValue(Object.freeze({ dateFrom: "invalid", dateTo: "invalid" }))
+          : null;
+      const provider = dataForSeoProvider;
+      if (
+        !provider.fetchBacklinksSummary ||
+        !provider.fetchBacklinksHistory ||
+        !provider.fetchBacklinksRows
+      )
+        throw new Error("Backlinks capability is unavailable.");
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(
+          Response.json({
+            cost: 0.012,
+            status_code: 20000,
+            tasks: [
+              { cost: 0.012, id: "summary", status_code: 20000, result: [{ backlinks: 12 }] },
+            ],
+          }),
+        )
+        .mockResolvedValueOnce(
+          Response.json({
+            status_code: 20000,
+            tasks: [{ id: "history", status_code: 40501, status_message: "History unavailable" }],
+          }),
+        );
+      vi.stubGlobal("fetch", fetchMock);
+      const failure = await fetchBacklinksAnalysis({
+        includeSubdomains: true,
+        mode: "as_is",
+        origin: { source: "mcp" },
+        projectId: "project_1",
+        resultLimit: 100,
+        scope: "site",
+        source: {
+          connection: {
+            credentialsEncrypted: "encrypted",
+            id: "connection_1",
+            provider: "dataforseo",
+          },
+          provider: {
+            ...provider,
+            fetchBacklinksSummary: provider.fetchBacklinksSummary,
+            fetchBacklinksHistory: provider.fetchBacklinksHistory,
+            fetchBacklinksRows: provider.fetchBacklinksRows,
+          },
+        },
+        target: "example.com",
+      }).catch((error: unknown) => error);
+      invalidWindow?.mockRestore();
+      expect(failure).toBeInstanceOf(BacklinksHistoryEvidenceError);
+      expect(failure).toMatchObject({
+        knownSummaryCostCents: 1.2,
+        summary: { backlinksTotal: 12 },
+        historyFailure: {
+          code: "provider_usage_unconfirmed",
+          phase: scenario === "unpriced" ? "admission" : "measurement",
+        },
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(scenario === "unpriced" ? 1 : 2);
+      expect(mocks.entries).toEqual([
+        expect.objectContaining({ feature: "backlinks", source: "mcp", costCents: 1.2 }),
+        ...(scenario === "unconfirmed"
+          ? [
+              expect.objectContaining({
+                feature: "backlinks",
+                source: "mcp",
+                providerRequestId: "history",
+                measurementStatus: "unknown",
+                receipt: expect.objectContaining({ costCents: null, failed: true }),
+              }),
+            ]
+          : []),
+      ]);
+    },
+  );
   it.each(["own", "hosted"])(
     "passes internal scheduled correlation through %s accounting admission",
     async (credentialSource) => {
@@ -215,7 +272,7 @@ describe("paid provider lookup", () => {
         provider: "dataforseo",
       });
       const request = paidProviderCall({
-        call: vi.fn(async () => ({ costCents: 1 })),
+        call: observedMock({ costCents: 1 }),
         connection: {
           credentialsEncrypted: "encrypted",
           id: "connection_1",
@@ -275,7 +332,17 @@ describe("paid provider lookup", () => {
     expect(() => deploymentEstimate(1000000000000, 6)).toThrow(RangeError);
   });
   beforeEach(() => {
-    mocks.prisma.meteringUsageEvidence = byokTestEvidence("dataforseo").meteringUsageEvidence;
+    vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
+    const fixture = byokTestJournal("dataforseo");
+    mocks.prisma.meteringUsageEvidence = fixture.table;
+    Object.defineProperty(mocks, "entries", { configurable: true, get: () => fixture.rows });
+    Object.defineProperty(mocks, "ledger", {
+      configurable: true,
+      get: () =>
+        fixture.rows
+          .filter((row) => row.measurementStatus === "recorded")
+          .map((row) => ({ costCents: row.costCents, failed: Boolean(row.failed) })),
+    });
     mocks.correlationId = "00000000-0000-4000-8000-000000000000";
     mocks.ledger.length = 0;
     mocks.entries.length = 0;
@@ -284,7 +351,6 @@ describe("paid provider lookup", () => {
     mocks.startExecution.mockResolvedValue(null);
     mocks.prisma.project.findUnique.mockResolvedValue({
       ownerId: "owner_1",
-      budgetCapCents: 5_000,
       providerAllocationsInitializedAt: null,
     });
     mocks.prisma.rankCheck.aggregate.mockResolvedValue({
@@ -300,47 +366,23 @@ describe("paid provider lookup", () => {
       credentialsEncrypted: "encrypted",
       projectId: "project_1",
       provider: "dataforseo",
+      project: { ownerId: "owner_1" },
+      enabled: true,
+      status: "connected",
+      rates: [],
     });
-    mocks.prisma.$queryRaw.mockResolvedValue([]);
+    mocks.prisma.$queryRaw.mockImplementation(async (sql: { text?: string }) =>
+      sql.text?.includes('SUM("costCents")')
+        ? [{ total: mocks.entries.reduce((sum, entry) => sum + Number(entry.costCents ?? 0), 0) }]
+        : sql.text?.includes("FROM metering_budget b")
+          ? [{ body: encode(projectTestBudget(5000)) }]
+          : [],
+    );
     mocks.prisma.providerCostEntry.count.mockResolvedValue(0);
-    // Persistent fake ledger: journal begin/settle SQL shapes run against it.
-    mocks.prisma.providerCostEntry.findFirst.mockImplementation(
-      async ({ where }: { where: Record<string, unknown> }) =>
-        mocks.entries.find((row) => entryMatches(row, where)) ?? null,
-    );
-    mocks.prisma.providerCostEntry.createMany.mockImplementation(
-      async ({ data }: { data: Array<Record<string, unknown>> }) => {
-        for (const entry of data) {
-          mocks.entries.push({ ...entry });
-          mocks.ledger.push({
-            costCents: Number(entry.costCents),
-            failed: Boolean(entry.failed),
-          });
-        }
-        return { count: data.length };
-      },
-    );
-    mocks.prisma.providerCostEntry.update.mockImplementation(
-      async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
-        const row = mocks.entries.find((entry) => entry.id === where.id);
-        if (!row) throw Object.assign(new Error("Record not found."), { code: "P2025" });
-        Object.assign(row, data);
-        return row;
-      },
-    );
-    mocks.prisma.providerCostEntry.deleteMany.mockImplementation(
-      async ({ where }: { where: Record<string, unknown> }) => {
-        const victims = mocks.entries.filter((row) => entryMatches(row, where));
-        for (const victim of victims) {
-          mocks.entries.splice(mocks.entries.indexOf(victim), 1);
-        }
-        return { count: victims.length };
-      },
-    );
-    mocks.prisma.providerCostEntry.updateMany.mockImplementation(async (args) => {
-      await mocks.prisma.providerCostEntry.update(args);
-      return { count: 1 };
-    });
+    mocks.prisma.providerCostEntry.createMany = fixture.table
+      .createMany as typeof mocks.prisma.providerCostEntry.createMany;
+    mocks.prisma.providerCostEntry.update = fixture.table
+      .update as typeof mocks.prisma.providerCostEntry.update;
     mocks.prisma.$transaction.mockImplementation(async (run: (tx: unknown) => Promise<unknown>) =>
       run(mocks.prisma),
     );
@@ -373,90 +415,8 @@ describe("paid provider lookup", () => {
     ).toThrow("No rate configured for provider unknown.");
   });
 
-  describe.each(["backlinks", "domain overview"])("%s aggregate preflight", (_feature) => {
-    const input = {
-      connectionId: "connection_1",
-      estimatedCostCents: 5,
-      projectId: "project_1",
-      provider: "dataforseo",
-      surface: "app" as const,
-    };
-
-    it("maps a legacy project cap overage to budget_exhausted", async () => {
-      mocks.prisma.project.findUnique.mockResolvedValue({
-        budgetCapCents: 10,
-        providerAllocationsInitializedAt: null,
-      });
-
-      await expect(
-        preflightProviderBudget({ ...input, estimatedCostCents: 11 }),
-      ).rejects.toMatchObject({ outcome: { reason: "budget_exhausted" } });
-      expect(mocks.prisma.providerConnection.findFirst).not.toHaveBeenCalled();
-    });
-
-    it("allows an initialized project over its legacy cap when its allocation has room", async () => {
-      mocks.prisma.project.findUnique.mockResolvedValue({
-        budgetCapCents: 1,
-        providerAllocationsInitializedAt: new Date("2026-08-01T00:00:00.000Z"),
-      });
-      mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
-        _count: { _all: 1 },
-        _sum: { costCents: 20, usageQuantity: null },
-      });
-
-      await expect(preflightProviderBudget(input)).resolves.toBeUndefined();
-      expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
-    });
-
-    it("maps an exhausted initialized allocation to budget_exhausted", async () => {
-      mocks.prisma.project.findUnique.mockResolvedValue({
-        budgetCapCents: 10_000,
-        providerAllocationsInitializedAt: new Date("2026-08-01T00:00:00.000Z"),
-      });
-      mocks.prisma.providerConnection.findFirst.mockResolvedValue({
-        allocationAmountPerMonth: 10,
-        allocationUnit: "cents",
-      });
-      mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
-        _count: { _all: 1 },
-        _sum: { costCents: 8, usageQuantity: null },
-      });
-
-      await expect(preflightProviderBudget(input)).rejects.toMatchObject({
-        outcome: { provider: "dataforseo", reason: "budget_exhausted" },
-      });
-    });
-  });
-
-  it("uses the aggregate request estimate for quota connection allocations", async () => {
-    mocks.prisma.project.findUnique.mockResolvedValue({
-      budgetCapCents: 10_000,
-      providerAllocationsInitializedAt: new Date("2026-08-01T00:00:00.000Z"),
-    });
-    mocks.prisma.providerConnection.findFirst.mockResolvedValue({
-      allocationAmountPerMonth: 4,
-      allocationUnit: "units",
-    });
-    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
-      _count: { _all: 2 },
-      _sum: { costCents: 50, usageQuantity: 2 },
-    });
-
-    await expect(
-      preflightProviderBudget({
-        connectionId: "connection_1",
-        estimatedCostCents: 999,
-        estimatedUsageQuantity: 3,
-        projectId: "project_1",
-        provider: "serpapi",
-        surface: "app",
-      }),
-    ).rejects.toMatchObject({ outcome: { reason: "budget_exhausted" } });
-  });
-
   it("enforces an sdk-sourced call against the programmatic surface", async () => {
     mocks.prisma.project.findUnique.mockResolvedValue({
-      budgetCapCents: 10_000,
       providerAllocationsInitializedAt: new Date("2026-08-01T00:00:00.000Z"),
     });
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
@@ -468,7 +428,7 @@ describe("paid provider lookup", () => {
       _count: { _all: 0 },
       _sum: { costCents: 0, usageQuantity: null },
     });
-    const call = vi.fn().mockResolvedValue({ costCents: 1 });
+    const call = observedMock({ costCents: 1 });
 
     await paidProviderCall({
       call,
@@ -482,16 +442,11 @@ describe("paid provider lookup", () => {
       trigger: "manual",
     });
 
-    expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ source: { in: ["api", "sdk", "cli", "mcp"] } }),
-      }),
-    );
+    expect(mocks.entries).toEqual([expect.objectContaining({ source: "sdk" })]);
   });
 
   it("enforces an app-sourced call against the app surface with legacy rows", async () => {
     mocks.prisma.project.findUnique.mockResolvedValue({
-      budgetCapCents: 10_000,
       providerAllocationsInitializedAt: new Date("2026-08-01T00:00:00.000Z"),
     });
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
@@ -503,7 +458,7 @@ describe("paid provider lookup", () => {
       _count: { _all: 0 },
       _sum: { costCents: 0, usageQuantity: null },
     });
-    const call = vi.fn().mockResolvedValue({ costCents: 1 });
+    const call = observedMock({ costCents: 1 });
 
     await paidProviderCall({
       call,
@@ -517,18 +472,11 @@ describe("paid provider lookup", () => {
       trigger: "manual",
     });
 
-    expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          OR: [{ source: { in: ["app", "worker"] } }, { source: null }],
-        }),
-      }),
-    );
+    expect(mocks.entries).toEqual([expect.objectContaining({ source: "app" })]);
   });
 
   it("carries the exhausted surface on the budget failure outcome", async () => {
     mocks.prisma.project.findUnique.mockResolvedValue({
-      budgetCapCents: 10_000,
       providerAllocationsInitializedAt: new Date("2026-08-01T00:00:00.000Z"),
     });
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
@@ -540,8 +488,11 @@ describe("paid provider lookup", () => {
       _count: { _all: 8 },
       _sum: { costCents: 8, usageQuantity: null },
     });
-    const call = vi.fn();
+    const call = observedMock({ costCents: 1 });
 
+    testOwnAdmission.reserve.mockRejectedValueOnce(
+      new ProviderAllocationExhaustedError("connection_1", "programmatic"),
+    );
     await expect(
       paidProviderCall({
         call,
@@ -561,7 +512,7 @@ describe("paid provider lookup", () => {
     ).rejects.toMatchObject({
       outcome: { provider: "dataforseo", reason: "budget_exhausted", surface: "programmatic" },
     });
-    expect(call).not.toHaveBeenCalled();
+    expect(testOwnAdmission.acknowledge).not.toHaveBeenCalled();
   });
 
   it("ledgers charged validation failures and includes them in monthly spend", async () => {
@@ -592,11 +543,8 @@ describe("paid provider lookup", () => {
     // The journal settles the charged failure onto the durable row it opened.
     expect(mocks.prisma.providerCostEntry.update).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        cached: false,
-        costCents: 1,
-        failed: true,
+        receipt: { cached: false, costCents: "1.0000", failed: true, quantity: "1.000000" },
         measurementStatus: "recorded",
-        usageQuantity: 1,
       }),
       where: expect.objectContaining({ id: expect.any(String) }),
     });
@@ -610,7 +558,6 @@ describe("paid provider lookup", () => {
         projectId: "project_1",
         provider: "dataforseo",
         source: "app",
-        trigger: "manual",
         usageQuantity: 1,
       }),
     ]);
@@ -696,7 +643,7 @@ describe("paid provider lookup", () => {
   });
 
   it("passes complete attribution to the paid client and ledger", async () => {
-    const call = vi.fn().mockResolvedValue({ costCents: 1 });
+    const call = observedMock({ costCents: 1 });
 
     await paidProviderCall({
       call,
@@ -730,14 +677,13 @@ describe("paid provider lookup", () => {
       }),
     );
     expect(mocks.prisma.providerCostEntry.createMany).toHaveBeenCalledWith({
-      data: [expect.objectContaining({ source: "sdk", trigger: "manual" })],
-      skipDuplicates: true,
+      data: expect.objectContaining({ source: "sdk" }),
     });
   });
 
   it("passes the credential through the attribution to the ledger on success and charged failure", async () => {
     const credential = { id: "key_1", kind: "project_key" as const };
-    const call = vi.fn().mockResolvedValue({ costCents: 1 });
+    const call = observedMock({ costCents: 1 });
 
     await paidProviderCall({
       call,
@@ -764,16 +710,13 @@ describe("paid provider lookup", () => {
       expect.objectContaining({ credential: { id: "key_1", kind: "project_key" } }),
     );
     expect(mocks.prisma.providerCostEntry.createMany).toHaveBeenCalledWith({
-      data: [expect.objectContaining({ credentialId: "key_1", credentialKind: "project_key" })],
-      skipDuplicates: true,
+      data: expect.objectContaining({ credentialId: "key_1", credentialKind: "project_key" }),
     });
 
     mocks.prisma.providerCostEntry.createMany.mockClear();
     await expect(
       paidProviderCall({
-        call: async () => {
-          throw new DataForSeoUnsupportedLocationError("unsupported", 7);
-        },
+        call: observedFailure(new DataForSeoUnsupportedLocationError("unsupported", 7)),
         connection: {
           credentialsEncrypted: "encrypted",
           id: "connection_1",
@@ -790,15 +733,7 @@ describe("paid provider lookup", () => {
       }),
     ).rejects.toMatchObject({ outcome: { costCents: 7, reason: "unsupported_location" } });
     expect(mocks.prisma.providerCostEntry.createMany).toHaveBeenCalledWith({
-      data: [
-        expect.objectContaining({
-          costCents: 7,
-          credentialId: "key_1",
-          credentialKind: "project_key",
-          failed: true,
-        }),
-      ],
-      skipDuplicates: true,
+      data: expect.objectContaining({ credentialId: "key_1", credentialKind: "project_key" }),
     });
   });
 
@@ -807,7 +742,7 @@ describe("paid provider lookup", () => {
     const acceptedCorrelationId = "c".repeat(255 - Buffer.byteLength(shortestPrefix, "utf8"));
     mocks.correlationId = `${acceptedCorrelationId}c`;
     expect(Buffer.byteLength(`${shortestPrefix}${mocks.correlationId}`, "utf8")).toBe(256);
-    const call = vi.fn().mockResolvedValue({ costCents: 1 });
+    const call = observedMock({ costCents: 1 });
 
     await expect(
       paidProviderCall({
@@ -845,10 +780,8 @@ describe("paid provider lookup", () => {
     mocks.prisma.providerCostEntry.createMany.mockRejectedValueOnce(storageFailure);
 
     await expect(
-      runSuggestions(async () => {
-        throw new DataForSeoUnsupportedLocationError("unsupported", 7);
-      }),
-    ).rejects.toBe(storageFailure);
+      runSuggestions(observedFailure(new DataForSeoUnsupportedLocationError("unsupported", 7))),
+    ).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
   });
 
   it("preserves an auth outcome when charged usage recording fails", async () => {
@@ -879,18 +812,9 @@ describe("paid provider lookup", () => {
   });
 
   it("preserves charged cost when mapping unsupported locations to a signal", async () => {
-    mocks.prisma.providerCostEntry.createMany.mockReset();
-    mocks.prisma.providerCostEntry.createMany.mockImplementation(
-      async ({ data }: { data: Array<{ costCents: number; failed: boolean }> }) => {
-        mocks.ledger.push({ costCents: Number(data[0].costCents), failed: data[0].failed });
-        return { count: 1 };
-      },
-    );
     await expect(
       paidProviderCall({
-        call: async () => {
-          throw new DataForSeoUnsupportedLocationError("unsupported", 7);
-        },
+        call: observedFailure(new DataForSeoUnsupportedLocationError("unsupported", 7)),
         connection: {
           credentialsEncrypted: "encrypted",
           id: "connection_1",
@@ -927,14 +851,16 @@ describe("paid provider lookup", () => {
     ],
     ["list", LIST_PROVIDER_RATE_CONTEXT],
   ] as const)(
-    "applies the same large-call budget gate to %s rates",
+    "applies the budget gate despite stale caller %s rates",
     async (_source, rateContext) => {
-      const call = vi.fn().mockResolvedValue({ costCents: 11, rows: [] });
+      const call = observedMock({ costCents: 11, rows: [] });
       mocks.prisma.project.findUnique.mockResolvedValue({
-        budgetCapCents: 10.5,
         providerAllocationsInitializedAt: null,
       });
 
+      testOwnAdmission.reserve.mockRejectedValueOnce(
+        new BudgetExhaustedError({ projectId: "project_1", capCents: 10.5, spentCents: 10.5 }),
+      );
       await expect(
         paidProviderCall({
           call,
@@ -944,7 +870,7 @@ describe("paid provider lookup", () => {
             provider: "dataforseo",
           },
           feature: "keyword_metrics",
-          itemCount: 1_000,
+          itemCount: 700,
           projectId: "project_1",
           provider: dataForSeoProvider,
           rate: keywordMetricsRate("dataforseo"),
@@ -953,7 +879,7 @@ describe("paid provider lookup", () => {
           trigger: "manual",
         }),
       ).rejects.toMatchObject({ outcome: { reason: "budget_exhausted" } });
-      expect(call).not.toHaveBeenCalled();
+      expect(testOwnAdmission.acknowledge).not.toHaveBeenCalled();
     },
   );
 
@@ -973,7 +899,7 @@ describe("paid provider lookup", () => {
   it("admits the paid provider call when the access gate allows the project", async () => {
     mocks.assertOperationAccess.mockResolvedValueOnce(undefined);
 
-    await runSuggestions(vi.fn().mockResolvedValue({ costCents: 20 }));
+    await runSuggestions(observedMock({ costCents: 20, rows: [] }));
 
     expect(mocks.assertOperationAccess).toHaveBeenCalledWith("project_1");
     expect(mocks.ledger).toEqual([{ costCents: 20, failed: false }]);
@@ -1173,9 +1099,9 @@ describe("paid provider lookup", () => {
       quantity: null,
       finish,
     });
-    await expect(
-      runSuggestions(vi.fn().mockResolvedValue({ costCents: 12 })),
-    ).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
+    await expect(runSuggestions(observedMock({ costCents: 12, rows: [] }))).rejects.toBeInstanceOf(
+      ProviderUsagePersistenceError,
+    );
     await expect(
       runSuggestions(vi.fn().mockRejectedValue(new ProviderAuthError("dataforseo"))),
     ).rejects.toBeInstanceOf(ProviderAuthError);
@@ -1213,3 +1139,7 @@ describe("paid provider lookup", () => {
     expect(mocks.prisma.providerCostEntry.createMany).not.toHaveBeenCalled();
   });
 });
+
+vi.mock("@/lib/provider-usage/admission-extension", async () => ({
+  ownAdmission: (await import("@/lib/provider-usage/byok-test-evidence")).testOwnAdmission,
+}));

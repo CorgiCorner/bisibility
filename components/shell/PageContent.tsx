@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef } from "react";
 
 const variantClasses = {
   analytics: "mx-auto max-w-[1400px]",
+  section: "max-w-[1400px]",
   constrained: "mx-auto max-w-[1040px]",
   form: "max-w-settings",
 } as const;

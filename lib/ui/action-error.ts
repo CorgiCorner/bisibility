@@ -1,12 +1,24 @@
 import type { WaitlistFailureCode } from "@/lib/landing/waitlist-result";
 
 export type SharedErrorMessages = {
+  budgetMissing: () => string;
+  usageReconciliationRequired: () => string;
   genericFallback: () => string;
   rateLimited: () => string;
   serverComponentDigest: (values: { digest: string }) => string;
   staleDeployment: () => string;
   verificationFailed: () => string;
 };
+
+export function presentBudgetDenial(
+  reason: string | null | undefined,
+  messages: Pick<SharedErrorMessages, "budgetMissing" | "usageReconciliationRequired">,
+  fallback: string,
+): string {
+  if (reason === "budget_missing") return messages.budgetMissing();
+  if (reason === "usage_reconciliation_required") return messages.usageReconciliationRequired();
+  return fallback;
+}
 
 export type ActionErrorClassification =
   | { kind: "fallback" }
@@ -38,6 +50,10 @@ const safeWaitlistMessages: Readonly<Record<WaitlistFailureCode, string>> = {
 };
 
 const englishSharedErrorMessages: SharedErrorMessages = {
+  budgetMissing: () =>
+    "Project spending budget is missing. Ask the project owner to configure a monthly budget in Settings > Usage.",
+  usageReconciliationRequired: () =>
+    "Provider usage is not fully confirmed. Reconcile the retained usage evidence before retrying.",
   genericFallback: () => "The action could not be completed.",
   rateLimited: () => safeWaitlistMessages.rate_limited,
   serverComponentDigest: ({ digest }) =>

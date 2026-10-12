@@ -1,5 +1,6 @@
 import { resetRateLimitStateForTests } from "@/lib/api/ratelimit";
 import { clearProviderRateLimitState } from "@/lib/providers/rate-limit";
+import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { ProviderChainError, runCheckWithFallback } from "@/lib/rank-check/fallback";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -31,6 +32,7 @@ describe("DataForSEO fallback attempts", () => {
       vi.fn().mockResolvedValue(
         new Response(
           JSON.stringify({
+            cost: 0,
             status_code: 20000,
             status_message: "Ok.",
             tasks: [{ status_code: 40210, status_message: "Insufficient funds" }],
@@ -42,7 +44,10 @@ describe("DataForSEO fallback attempts", () => {
 
     const error = await runCheckWithFallback({
       connections: [
-        { provider: "dataforseo", credentials: { login: "login", password: "secret" } },
+        {
+          provider: "dataforseo",
+          credentials: { login: "login", password: "secret", usageObserver: testUsageObserver },
+        },
       ],
       keyword: {
         device: "desktop",

@@ -118,6 +118,7 @@ describe("AppHeader", () => {
     const slot = screen.getByTestId("context-slot");
     expect(title.compareDocumentPosition(slot)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(title.parentElement).toContainElement(slot);
+    expect(title.parentElement).toHaveClass("col-span-3", "row-start-2", "flex-col", "sm:flex-row");
   });
 
   it("renders no context slot when the route matched none", () => {

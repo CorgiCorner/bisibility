@@ -1,3 +1,4 @@
+import { createDataTableLayoutStore } from "@/components/ui/data-table/data-table-layout-store";
 import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
@@ -8,7 +9,7 @@ import { KeywordDataTable } from "./KeywordDataTable";
 import { pendingRows } from "./KeywordsGrid.test-helpers";
 
 vi.mock("./KeywordsFilterBar", () => ({
-  KeywordsFilterBar: (props: { groupingControl?: React.ReactNode }) => <>{props.groupingControl}</>,
+  KeywordsFilterBar: () => null,
 }));
 vi.mock("./BulkActionBar", () => ({ BulkActionBar: () => null }));
 
@@ -114,10 +115,19 @@ describe("KeywordDataTable query history", () => {
     expect(routerMock.replace).not.toHaveBeenCalled();
   });
 
-  it("pushes grouping as a separate history entry", () => {
+  it("does not expose a manual grouping setting", () => {
     setup();
-    fireEvent.click(screen.getByRole("radio", { name: "Grouped" }));
-    expect(routerMock.push).toHaveBeenCalledWith(expect.stringMatching(/page=1.*grouped=1/));
-    expect(routerMock.replace).not.toHaveBeenCalled();
+    expect(screen.queryByRole("radio", { name: "Grouped" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Flat" })).not.toBeInTheDocument();
   });
+});
+
+it("ignores stale manual grouping in local table storage", () => {
+  const store = createDataTableLayoutStore("legacy-layout", () => ({
+    getItem: () =>
+      JSON.stringify({ grouped: true, mode: "grouped", columnSizing: {}, columnVisibility: {} }),
+    removeItem: vi.fn(),
+    setItem: vi.fn(),
+  }));
+  expect(store.getSnapshot()).toEqual({ columnSizing: {}, columnVisibility: {} });
 });

@@ -43,6 +43,8 @@ const nextConfig: NextConfig = {
   // hand-written AGENTS.md carrying the private agent instructions, and a dev or build
   // run overwrote it.
   agentRules: false,
+  // Keep framework chrome from intercepting bottom-aligned mobile actions.
+  devIndicators: false,
   experimental: {
     useTypeScriptCli: true,
     // Managed webpack builds release each compiler process before TypeScript starts.
@@ -83,10 +85,14 @@ const nextConfig: NextConfig = {
     // The CSP deliberately leaves script/style/img unrestricted so the Next runtime,
     // Sentry, and analytics keep working; tightening script-src needs nonces.
     const securityHeaders = [
-      {
-        key: "Strict-Transport-Security",
-        value: "max-age=63072000; includeSubDomains; preload",
-      },
+      ...(process.env.NODE_ENV === "development"
+        ? []
+        : [
+            {
+              key: "Strict-Transport-Security",
+              value: "max-age=63072000; includeSubDomains; preload",
+            },
+          ]),
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "X-Frame-Options", value: "SAMEORIGIN" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -97,7 +103,8 @@ const nextConfig: NextConfig = {
       {
         key: "Content-Security-Policy",
         value:
-          "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; upgrade-insecure-requests",
+          "frame-ancestors 'self'; object-src 'none'; base-uri 'self'" +
+          (process.env.NODE_ENV === "development" ? "" : "; upgrade-insecure-requests"),
       },
     ];
     return [

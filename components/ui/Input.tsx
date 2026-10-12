@@ -26,7 +26,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     <input
       className={cn(
         inputClassName,
-        "min-h-10 w-full rounded-control px-[13px] py-[9px] text-ui-body font-medium",
+        "min-h-10 w-full rounded-control px-[13px] py-[9px] text-ui-body font-medium normal-case tracking-normal",
         className,
       )}
       ref={ref}

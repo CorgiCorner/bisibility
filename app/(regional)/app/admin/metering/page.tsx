@@ -27,7 +27,7 @@ export default async function MeteringPage({
         </p>
       </div>
       <AdminMeteringFilters {...page} projects={page.data?.projects ?? []} />
-      <AdminMeteringView data={page.data} />
+      <AdminMeteringView data={page.data} month={page.month} project={page.project} />
     </div>
   );
 }

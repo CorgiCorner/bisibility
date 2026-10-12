@@ -2,6 +2,7 @@ import "server-only";
 
 import { requireApiPublicId } from "@/lib/api/public-id";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
+import { remainingRequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import type { ResearchPage } from "@/lib/providers/types";
@@ -25,6 +26,7 @@ import { maybePersistKeywordResearchSnapshot } from "./snapshot";
 export { fetchKeywordMetrics } from "./metrics";
 
 import { loadProviderRateContext } from "@/lib/provider-rates/connection-context";
+import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { callResearchSource, sourceEstimate, sourcesForMode } from "./source-call";
 import type {
   KeywordResearchMode,
@@ -62,7 +64,10 @@ export async function researchKeywords(input: {
   if (!supportsResearchScope(location.value.gl, location.value.hl)) {
     return { ok: false, reason: "unsupported_location" };
   }
-  const rateContext = await loadProviderRateContext(selected.connection.id, "keyword_research");
+  const rateContext =
+    selected.provider.id === "dataforseo"
+      ? LIST_PROVIDER_RATE_CONTEXT
+      : await loadProviderRateContext(selected.connection.id, "keyword_research");
   const fetchedAt = new Date().toISOString();
   if (input.estimateOnly) {
     const estimate = await estimateKeywordResearch({
@@ -108,7 +113,7 @@ export async function researchKeywords(input: {
         fresh: input.fresh,
         key,
         load: async () => {
-          const estimated = sourceEstimate({
+          const estimated = await sourceEstimate({
             context: rateContext,
             includeClickstream: input.includeClickstream,
             limit: input.resultLimit,
@@ -127,8 +132,8 @@ export async function researchKeywords(input: {
           }
           const page = await callResearchSource({
             ...input,
-            budgetCapCents: project.budgetCapCents,
             limit: input.resultLimit,
+            maxCostCents: remainingRequestCostLimit(input.maxCostCents, spentThisRequest),
             location: location.value,
             projectId: project.id,
             rateContext,
@@ -179,7 +184,7 @@ export async function researchKeywords(input: {
           : "provider_error";
       diagnostics.push({
         cached: false,
-        costCents: 0,
+        costCents: outcome?.costCents ?? 0,
         reason,
         returned: 0,
         source,

@@ -5,8 +5,10 @@ import type { DataForSeoQueuePriority } from "@/lib/rank-check/queued-config";
 import { QUEUED_RESULT_GET_TIMEOUT_MS } from "@/lib/rank-check/queued-timeouts";
 import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
+import type { PricedRequest, ProviderRequest } from "@usagekit/providers";
 import { DataForSeoError, redactedMessage } from "./dataforseo-errors";
 import { dataForSeoResponseCostCents } from "./dataforseo-payload";
+import { pricedTasksetBody } from "./dataforseo-priced-taskset";
 
 const TASK_POST_URL = "https://api.dataforseo.com/v3/serp/google/organic/task_post";
 const TASKS_READY_URL = "https://api.dataforseo.com/v3/serp/google/organic/tasks_ready";
@@ -92,18 +94,21 @@ function costCents(value: unknown): number | null {
 
 async function postTasks(
   credentials: ProviderCredentials,
-  body: unknown,
+  body: readonly unknown[],
+  pricedRequests?: readonly PricedRequest[],
 ): Promise<TaskPostResponse> {
+  const payload = pricedRequests ? pricedTasksetBody(pricedRequests, body) : body;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TASK_POST_TIMEOUT_MS);
   try {
     const response = await fetch(TASK_POST_URL, {
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
       headers: {
         Authorization: dataForSeoAuthorization(credentials),
         "Content-Type": "application/json",
       },
       method: "POST",
+      redirect: "error",
       signal: controller.signal,
     });
     if (response.status >= 500) {
@@ -153,17 +158,47 @@ export type DataForSeoQueuedSubmissionResult = {
   unknown: Array<{ correlationId: string; message: string }>;
 };
 
-export async function submitDataForSeoQueuedTasks(input: {
+type QueuedSubmissionInput = {
   credentials: ProviderCredentials;
   priority: DataForSeoQueuePriority;
   tasks: DataForSeoQueuedTaskInput[];
-}): Promise<DataForSeoQueuedSubmissionResult> {
+};
+
+/** Capture credentials, attribution and all pricing fields before the first asynchronous step. */
+export function prepareDataForSeoQueuedTasks(input: QueuedSubmissionInput) {
+  const snapshot = {
+    credentials: { login: input.credentials.login, password: input.credentials.password },
+    priority: input.priority,
+    tasks: structuredClone(input.tasks),
+  };
+  assertQueuedTaskBatchSize(snapshot.tasks.length);
+  dataForSeoAuthorization(snapshot.credentials);
+  const payloads = snapshot.tasks.map((task) => taskPayload(task, snapshot.priority));
+  const requests: ProviderRequest[] = payloads.map((payload) => ({
+    method: "POST",
+    url: TASK_POST_URL,
+    headers: { "Content-Type": "application/json" },
+    body: structuredClone([payload]),
+  }));
+  return {
+    requests,
+    submit: (pricedRequests?: readonly PricedRequest[]) =>
+      submitPreparedTasks(snapshot, payloads, pricedRequests),
+  };
+}
+
+export async function submitDataForSeoQueuedTasks(input: QueuedSubmissionInput) {
+  return prepareDataForSeoQueuedTasks(input).submit();
+}
+
+async function submitPreparedTasks(
+  input: QueuedSubmissionInput,
+  payloads: readonly unknown[],
+  pricedRequests?: readonly PricedRequest[],
+): Promise<DataForSeoQueuedSubmissionResult> {
   assertQueuedTaskBatchSize(input.tasks.length);
   const byTag = new Map(input.tasks.map((task) => [task.attribution.tag, task.correlationId]));
-  const data = await postTasks(
-    input.credentials,
-    input.tasks.map((task) => taskPayload(task, input.priority)),
-  );
+  const data = await postTasks(input.credentials, payloads, pricedRequests);
   const accepted: DataForSeoQueuedSubmissionResult["accepted"] = [];
   const failed: DataForSeoQueuedSubmissionResult["failed"] = [];
   const unknown: DataForSeoQueuedSubmissionResult["unknown"] = [];

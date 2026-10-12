@@ -100,7 +100,7 @@ export function UserMenu({
       <div className="flex items-center gap-2.5 px-[9px] pb-[11px] pt-[9px]">
         <Avatar
           alt=""
-          className="grid h-8.5 w-[34px] flex-none place-items-center rounded-control bg-accent-solid text-xs font-semibold text-accent-on-solid"
+          className="grid h-8.5 w-[34px] flex-none place-items-center rounded-control border border-border bg-bg-band text-xs font-semibold text-fg"
           initials={initials}
           src={avatarUrl}
         />

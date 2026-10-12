@@ -54,9 +54,8 @@ export const providerBudgetSchemas = {
       own: surfaceBudgets(ownBudget, true),
       provider: { description: "Natural provider catalog ID.", type: "string" },
       source: {
-        description:
-          "Where the own-keys budget comes from: the connection, the legacy project cap, or none.",
-        enum: ["connection", "legacy_project", "none"],
+        description: "Where the own-keys budget comes from: the connection or none.",
+        enum: ["connection", "none"],
         type: "string",
       },
     },

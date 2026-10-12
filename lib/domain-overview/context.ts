@@ -9,7 +9,6 @@ import { providerChainOrderBy, providerChainWhere } from "@/lib/rank-check/provi
 export async function domainOverviewProject(projectId: string) {
   return prisma.project.findFirst({
     select: {
-      budgetCapCents: true,
       id: true,
       providerConnections: {
         orderBy: providerChainOrderBy(),

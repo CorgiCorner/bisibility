@@ -8,6 +8,8 @@ import {
 } from "@/lib/ai-tracking/stores/fixtures.postgres-test-support";
 import { makePublicId } from "@/lib/db/public-id-resources";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
+import { receiptOperationId } from "@/lib/metering/operation-reference";
+import { canonicalReceipt } from "@/lib/metering/usage-read";
 import { afterAll, afterEach, beforeAll, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
@@ -37,13 +39,8 @@ vi.mock("@/lib/providers/live-capacity", () => ({
   assertLiveResponseCapacity: state.fence,
 }));
 vi.mock("@/lib/metering/entry-sync", () => ({ beginUsageEntry: vi.fn(), syncUsageEntry: vi.fn() }));
-vi.mock("@/lib/provider-usage/admission-extension", () => ({
-  ownAdmission: {
-    reserve: vi.fn(async () => []),
-    fence: vi.fn(),
-    cancel: vi.fn(),
-    acknowledge: vi.fn(),
-  },
+vi.mock("@/lib/provider-usage/admission-extension", async () => ({
+  ownAdmission: (await import("@/lib/metering/own-admission.test-fixture")).fixtureOwnAdmission,
 }));
 
 import { createPrompt, listPromptRevisions, updatePrompt } from "@/lib/ai-tracking/stores/prompts";
@@ -195,7 +192,7 @@ it("retains every reviewed field through forecast, model, native durable receipt
       where: { projectId: fixture.project.id, idempotencyKey: key },
     });
     expect(barrier.state).toBe("submission_started");
-    expect(barrier.providerCostEntryId).not.toBeNull();
+    expect(receiptOperationId(barrier.receipt)).not.toBeNull();
     return modelResponse();
   });
   vi.stubGlobal("fetch", fetch);
@@ -211,11 +208,13 @@ it("retains every reviewed field through forecast, model, native durable receipt
     requestedModel: preview.configuration.model,
     actualModel: "gpt-4.1-mini-actual-fixture",
   });
-  const ledger = await db.client.providerCostEntry.findUniqueOrThrow({
-    where: { id: generation.providerCostEntryId ?? "missing-native-receipt" },
-  });
+  const ledger = (await canonicalReceipt(
+    db.client,
+    fixture.project.id,
+    receiptOperationId(generation.receipt) ?? "missing-native-receipt",
+  ))!;
   expect(ledger.measurementStatus).toBe("recorded");
-  expect(ledger.costCents.toString()).toBe("0.7");
+  expect(ledger.costCents?.toString()).toBe("0.7");
   expect(ledger.correlationId).toBe(generation.attemptId);
   expect(await generateModelSuggestions(context, { preview, consent: true }, key)).toEqual(result);
   expect(fetch).toHaveBeenCalledTimes(1);
@@ -296,11 +295,13 @@ it("keeps a delayed capacity fence refusal as native confirmed zero with no tran
     where: { projectId: fixture.project.id, idempotencyKey: key },
   });
   expect(row.state).toBe("failed");
-  const ledger = await db.client.providerCostEntry.findUniqueOrThrow({
-    where: { id: row.providerCostEntryId ?? "missing-native-receipt" },
-  });
+  const ledger = (await canonicalReceipt(
+    db.client,
+    fixture.project.id,
+    receiptOperationId(row.receipt) ?? "missing-native-receipt",
+  ))!;
   expect(ledger.measurementStatus).toBe("recorded");
-  expect(ledger.costCents.toString()).toBe("0");
+  expect(ledger.costCents?.toString()).toBe("0");
 });
 it("records a confirmed malformed paid model result without ever resubmitting its key", async () => {
   const preview = await previewModelSuggestions(context, input);
@@ -344,9 +345,11 @@ it("keeps ambiguous receipts blocked, reconciles the original journal and never 
     where: { projectId: fixture.project.id, idempotencyKey: key },
   });
   expect(row.state).toBe("submission_unknown");
-  const ledger = await db.client.providerCostEntry.findUniqueOrThrow({
-    where: { id: row.providerCostEntryId ?? "missing-native-receipt" },
-  });
+  const ledger = (await canonicalReceipt(
+    db.client,
+    fixture.project.id,
+    receiptOperationId(row.receipt) ?? "missing-native-receipt",
+  ))!;
   expect(ledger.measurementStatus).toBe("unknown");
   const originalJournal = createProviderRequestJournal(db.client, {
     attribution: {
@@ -385,7 +388,7 @@ it("keeps ambiguous receipts blocked, reconciles the original journal and never 
     where: { id: row.id },
   });
   expect(reconciled.state).toBe("failed");
-  expect(reconciled.providerCostEntryId).toBe(ledger.id);
+  expect(receiptOperationId(reconciled.receipt)).toBe(ledger.id);
   expect(reconciled.receipt).toMatchObject({ state: "confirmed", amountUsd: "0.007" });
   await expect(
     generateModelSuggestions(context, { preview, consent: true }, key),

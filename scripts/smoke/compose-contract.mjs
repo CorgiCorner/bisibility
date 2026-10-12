@@ -30,7 +30,8 @@ const env = {
   BISIBILITY_IMAGE: appImage,
   BISIBILITY_PULL_POLICY: "never",
   CORGICORNER_EPHEMERAL: "1",
-  BISIBILITY_SECRETS_KEY: "compose-contract-secrets-key",
+  BISIBILITY_SECRETS_KEY: Buffer.alloc(32, 7).toString("base64"),
+  BISIBILITY_SECRETS_KEYS_RETIRED: "",
   BISIBILITY_WORKER_IMAGE: workerImage,
   DATABASE_URL: "postgresql://bisibility:contract@postgres:5432/bisibility",
   DEMO_FIXED_OTP: "1",
@@ -44,13 +45,32 @@ const env = {
 
 const workflowProbe = `
 const { prisma } = await import("file:///app/lib/db/prisma.ts");
+const { encryptSecret } = await import("file:///app/lib/providers/crypto.ts");
 const { closeTemporalClient, getTemporalClient, startRankCheckWorkflow } = await import(
   "file:///app/lib/temporal/client.ts"
 );
 
 try {
+  if (process.env.BISIBILITY_FAKE_PROVIDER !== "1" || process.env.DEPLOYMENT_ENV !== "test") {
+    throw new Error("Compose workflow fixture requires the isolated fake-provider environment.");
+  }
   const keyword = await prisma.keyword.findFirst({ orderBy: { createdAt: "asc" } });
   if (!keyword) throw new Error("Demo seed did not create a keyword.");
+  const connection = await prisma.providerConnection.findFirst({
+    where: { projectId: keyword.projectId, provider: "dataforseo", credentialSource: "own", enabled: true, status: "connected" },
+    select: { id: true },
+  });
+  if (!connection) throw new Error("Demo seed did not create the fake provider connection.");
+  await prisma.providerConnection.update({
+    where: { id: connection.id },
+    data: { credentialsEncrypted: encryptSecret(JSON.stringify({ login: "compose-fixture", password: "compose-fixture" })) },
+  });
+  // Synthetic manual quote uses the same rate authority as preview and admission.
+  await prisma.providerConnectionRate.upsert({
+    where: { connectionId_feature: { connectionId: connection.id, feature: "rank_check" } },
+    create: { connectionId: connection.id, feature: "rank_check", amountCents: "1.2345" },
+    update: { amountCents: "1.2345" },
+  });
   const started = await startRankCheckWorkflow({
     keywordId: keyword.id,
     providerId: "dataforseo",

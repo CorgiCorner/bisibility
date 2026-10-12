@@ -1,4 +1,5 @@
 import { ProviderCallError } from "@/lib/providers/call-error";
+import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { modelMap } from "./catalog-fixtures.test-support";
 import { aiProviderRequest, fetchObserved, fetchPrompt, VISIBILITY_PATH } from "./provider";
@@ -62,7 +63,7 @@ describe("AI provider request accounting", () => {
       ],
     ]);
     const result = await fetchPrompt(
-      { login: "fixture", password: "fictional" },
+      { login: "fixture", password: "fictional", usageObserver: testUsageObserver },
       input,
       "catalog-reasoning",
       "tag",
@@ -113,7 +114,7 @@ describe("AI provider request accounting", () => {
       max_output_tokens: 4096,
     });
     await fetchPrompt(
-      { login: "fixture", password: "fictional" },
+      { login: "fixture", password: "fictional", usageObserver: testUsageObserver },
       input,
       "gpt-4.1-mini",
       "tag",
@@ -131,7 +132,7 @@ describe("AI provider request accounting", () => {
     ]);
     await expect(
       fetchPrompt(
-        { login: "fixture", password: "fictional" },
+        { login: "fixture", password: "fictional", usageObserver: testUsageObserver },
         input,
         "gpt-4.1-mini",
         "tag",
@@ -309,7 +310,11 @@ describe("AI provider request accounting", () => {
         ),
     );
     await expect(
-      aiProviderRequest({ login: "test", password: "secret" }, VISIBILITY_PATH, {}),
+      aiProviderRequest(
+        { login: "test", password: "secret", usageObserver: testUsageObserver },
+        VISIBILITY_PATH,
+        {},
+      ),
     ).rejects.toThrow("usage could not be confirmed");
   });
 });

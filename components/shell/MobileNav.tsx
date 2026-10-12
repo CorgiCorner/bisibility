@@ -70,7 +70,7 @@ export function MobileNav({
         onClose={close}
         contentProps={{
           style: {
-            backgroundColor: "var(--bg-elev)",
+            backgroundColor: "var(--bg-sidebar)",
             borderRight: "1px solid var(--border)",
             boxShadow: "none",
             color: "var(--fg)",

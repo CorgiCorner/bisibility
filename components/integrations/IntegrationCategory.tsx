@@ -4,8 +4,8 @@
 // Component this section resolved `projectIntegrations.categories` against the `shared`-only
 // request config and baked the raw keys into the RSC payload.
 
+import { ProjectSerpChain } from "@/components/integrations/ProjectSerpChain";
 import { ProviderCard } from "@/components/integrations/ProviderCard";
-import { SerpFallbackOrder } from "@/components/integrations/SerpFallbackOrder";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { IntegrationCategoryData, ProviderActionHandlers } from "@/lib/integrations/types";
 import type { ProjectRef } from "@/lib/routing/app-path";
@@ -90,9 +90,8 @@ export function IntegrationCategory({
             timeZone={timeZone}
           />
         ))}
-      {category.id === "serp" ? (
-        <SerpFallbackOrder
-          actions={actions}
+      {category.id === "serp" && projectId ? (
+        <ProjectSerpChain
           canManageProviders={canManageProviders}
           projectId={projectId}
           providers={category.providers}

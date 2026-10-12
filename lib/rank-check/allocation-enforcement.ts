@@ -17,7 +17,7 @@ export async function assertRankCheckConnectionAllocation(
     projectId: string;
     surface: ProviderRequestSurface;
   },
-  db: Pick<PrismaClient, "project" | "providerConnection" | "providerCostEntry">,
+  db: Pick<PrismaClient, "$queryRaw" | "project" | "providerConnection">,
 ) {
   if (!input.connection.id) return;
   const estimatedCostCents = estimatedRankCheckCostCents(
@@ -34,9 +34,8 @@ export async function assertRankCheckConnectionAllocation(
       estimatedUsageQuantity: pagesPerCheck(input.depth),
       projectId: input.projectId,
       provider: input.connection.provider,
-      legacyBudgetCheck: async () => undefined,
+
       surface: input.surface,
-      shadow: { feature: "rank_check", source: input.surface === "app" ? "worker" : "api" },
     },
     db,
   );
@@ -48,15 +47,15 @@ export async function assertQueuedRankCheckBatchAllocation(
     priority: DataForSeoQueuePriority;
     projectId: string;
     surface: ProviderRequestSurface;
-    tasks: readonly { depth: SerpDepth }[];
+    tasks: readonly { depth: SerpDepth; estimatedCostCents?: number; keyword?: string }[];
   },
-  db: Pick<
-    PrismaClient | Prisma.TransactionClient,
-    "project" | "providerConnection" | "providerCostEntry"
-  >,
+  db: Pick<PrismaClient | Prisma.TransactionClient, "$queryRaw" | "project" | "providerConnection">,
 ) {
   const estimatedCostCents = input.tasks.reduce(
-    (sum, task) => sum + dataForSeoQueuedEstimate(input.priority, task.depth),
+    (sum, task) =>
+      sum +
+      (task.estimatedCostCents ??
+        dataForSeoQueuedEstimate(input.priority, task.depth, task.keyword)),
     0,
   );
   const estimatedUsageQuantity = input.tasks.reduce(
@@ -71,9 +70,8 @@ export async function assertQueuedRankCheckBatchAllocation(
       estimatedUsageQuantity,
       projectId: input.projectId,
       provider: "dataforseo",
-      legacyBudgetCheck: async () => undefined,
+
       surface: input.surface,
-      shadow: { feature: "rank_check", source: input.surface === "app" ? "worker" : "api" },
     },
     db,
   );

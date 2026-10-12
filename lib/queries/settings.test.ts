@@ -1,6 +1,7 @@
 import { keywordLocation } from "@/lib/test/fixtures/location";
 import { dateFromFrozenNow, FROZEN_NOW_ISO } from "@/tests/clock";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { frozenUsageResponse } from "./canonical-query.test-fixture";
 import { getSettings } from "./settings";
 
 const mocks = vi.hoisted(() => ({
@@ -9,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     $queryRaw: vi.fn(),
     project: { findUnique: vi.fn() },
     providerConnectionRate: { findMany: vi.fn() },
+    providerConnection: { findMany: vi.fn() },
     providerCostEntry: { aggregate: vi.fn(), count: vi.fn(), groupBy: vi.fn() },
     rankCheck: { aggregate: vi.fn(), findMany: vi.fn() },
     savedView: { findMany: vi.fn() },
@@ -18,6 +20,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/metering/project-budget-read", () => ({
+  projectBudgetCapCents: async () => (await mocks.prisma.project.findUnique())?.budgetCapCents ?? 0,
+}));
 vi.mock("./_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
 }));
@@ -146,6 +151,11 @@ function fullProject(overrides: Record<string, unknown> = {}) {
   return {
     ...value,
     providerConnections: providerConnections.map((connection, index) => ({
+      credentialSource: "own",
+      rates:
+        connection.costPerCheckCents == null
+          ? []
+          : [{ feature: "rank_check", amountCents: connection.costPerCheckCents }],
       enabled: true,
       id: `connection_${String(connection.provider ?? index)}`,
       priority: index,
@@ -159,6 +169,9 @@ function fullProject(overrides: Record<string, unknown> = {}) {
 describe("settings queries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$queryRaw.mockImplementation((query) =>
+      frozenUsageResponse(query, mocks.prisma.providerCostEntry),
+    );
     mocks.requireReadableProject.mockResolvedValue({ project });
     mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
       _count: { _all: 0 },
@@ -167,7 +180,8 @@ describe("settings queries", () => {
     mocks.prisma.providerCostEntry.count.mockResolvedValue(0);
     mocks.prisma.providerCostEntry.groupBy.mockResolvedValue([]);
     mocks.prisma.providerConnectionRate.findMany.mockResolvedValue([]);
-    mocks.prisma.$queryRaw.mockResolvedValue([]);
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
+
     mocks.prisma.rankCheck.aggregate.mockResolvedValue({
       _sum: { costCents: null, estimatedCostCents: null },
     });
@@ -291,7 +305,7 @@ describe("settings queries", () => {
     });
 
     expect(mocks.prisma.rankCheck.findMany).toHaveBeenCalledWith({
-      select: { costCents: true, estimatedCostCents: true, provider: true, status: true },
+      select: { provider: true, status: true },
       where: {
         checkedAt: { gte: expect.any(Date), lt: expect.any(Date) },
         keyword: { projectId: "project_1" },
@@ -326,7 +340,7 @@ describe("settings queries", () => {
       maskedValue: "bsb_key_live_******",
     });
     expect(result.providers[0]).toMatchObject({
-      detail: "SERP rank data - $0.3750 / check",
+      detail: "SERP rank data - Provider-billed",
       icon: "database",
       logoDomain: "dataforseo.com",
       name: "DataForSEO",
@@ -452,7 +466,7 @@ describe("settings queries", () => {
     );
   });
 
-  it("shows observed provider cost instead of a zero configured placeholder", async () => {
+  it("keeps stored business cost out of the provider financial summary", async () => {
     mocks.prisma.project.findUnique.mockResolvedValue(
       fullProject({
         providerConnections: [
@@ -471,7 +485,7 @@ describe("settings queries", () => {
 
     const result = await getSettings("prj_abcdefghijklmnopqrstuvwx");
 
-    expect(result.providers[0]?.detail).toBe("SERP rank data - $0.0078 / check");
+    expect(result.providers[0]?.detail).toBe("SERP rank data - Provider-billed");
     expect(result.providers[0]?.detail).not.toContain("$0.0000 / check");
   });
 

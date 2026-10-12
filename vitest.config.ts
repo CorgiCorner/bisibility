@@ -2,6 +2,7 @@ import { isBuiltin } from "node:module";
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
+import { attachedOpera } from "./tests/config/vitest.attached-opera";
 import { testModuleCache } from "./tests/config/vitest.module-cache";
 import { nodeRenderTests } from "./tests/config/vitest.node-render-tests";
 
@@ -214,7 +215,7 @@ export default defineConfig({
           clearMocks: false,
           browser: {
             enabled: true,
-            provider: playwright(),
+            provider: process.env.CI === "true" ? playwright() : attachedOpera(),
             instances: [{ browser: "chromium" }],
           },
           include: [

@@ -6,7 +6,7 @@ import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-ext
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit-error";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { BudgetExhaustedError } from "@/lib/rank-check/budget";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const paid = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/provider-lookups/paid-call", () => ({
@@ -38,6 +38,31 @@ const input = {
   } as never,
 };
 beforeEach(() => paid.mockReset());
+afterEach(() => vi.useRealTimers());
+
+it("reserves twelve months and sends the same frozen bounds after a summary crosses midnight", async () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-09-30T23:59:59.000Z"));
+  const fetchHistory = vi.fn().mockResolvedValue({ costCents: 2, rows: [] });
+  const source = {
+    connection: { id: "connection" },
+    provider: { id: "dataforseo", fetchBacklinksHistory: fetchHistory },
+  } as never;
+  paid
+    .mockImplementationOnce(async () => {
+      vi.setSystemTime(new Date("2026-10-01T00:00:01.000Z"));
+      return { costCents: 1, summary: {} };
+    })
+    .mockImplementationOnce(({ call }) => call({ apiKey: "test" }))
+    .mockResolvedValueOnce({ costCents: 3, rows: [], totalCount: 0 });
+  await fetchBacklinksAnalysis({ ...input, source });
+  const historyWindow = { dateFrom: "2025-09-01", dateTo: "2026-08-31" };
+  expect(paid.mock.calls[1][0]).toMatchObject({ itemCount: 12, historyWindow });
+  expect(fetchHistory).toHaveBeenCalledWith(
+    { apiKey: "test" },
+    expect.objectContaining({ historyWindow }),
+  );
+});
 it.each([0, 2])("keeps summary and rows after a known-cost history error of %i", async (cost) => {
   paid
     .mockResolvedValueOnce({ costCents: 1, summary: { backlinksTotal: 123 } })
@@ -100,3 +125,16 @@ it.each([
     expect(paid).toHaveBeenCalledTimes(2);
   },
 );
+
+it("shares one atomic cost ceiling across all modules of an analysis", async () => {
+  paid
+    .mockResolvedValueOnce({ costCents: 1, summary: {} })
+    .mockResolvedValueOnce({ costCents: 1, rows: [] })
+    .mockResolvedValueOnce({ costCents: 1, rows: [], totalCount: 0 });
+  await fetchBacklinksAnalysis({ ...input, maxCostCents: 9 });
+  const limits = paid.mock.calls.map(([request]) => request.costLimit);
+  expect(limits).toHaveLength(3);
+  expect(limits[0]).toBeDefined();
+  expect(limits.every((limit) => limit === limits[0])).toBe(true);
+  expect(limits[0].remaining()).toBe("9");
+});

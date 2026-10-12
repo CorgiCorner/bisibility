@@ -194,9 +194,6 @@
       "management": {
         "grid": {
           "tableAria": "Palabras clave del seguimiento de posiciones",
-          "grouping": "Agrupación de palabras clave",
-          "grouped": "Agrupadas",
-          "flat": "Sin agrupar",
           "deleteFailed": "No se ha podido eliminar la palabra clave.",
           "currentPage": "Página actual: {summary}",
           "weeklySteady": "Las posiciones se han mantenido estables esta semana",
@@ -398,7 +395,8 @@
           "providerUnknown": "La comprobación de posiciones no se ha podido ejecutar por un error del proveedor. Inténtalo de nuevo o consulta los detalles de la comprobación para saber más.",
           "runningBody": "{count, plural, one {La comprobación está en curso.} other {Hay # comprobaciones en curso.}} Puedes cerrar esta ventana: los resultados aparecerán en esta página.",
           "successBody": "{count, plural, one {Se ha completado # comprobación de posiciones.} other {Se han completado # comprobaciones de posiciones.}}",
-          "checksNeedAttention": "{count, plural, one {# comprobación necesita tu atención.} other {# comprobaciones necesitan tu atención.}}"
+          "checksNeedAttention": "{count, plural, one {# comprobación necesita tu atención.} other {# comprobaciones necesitan tu atención.}}",
+          "viewRuns": "Ver ejecuciones"
         },
         "schedule": {
           "title": "Definir la programación de {count, plural, one {# palabra clave / # objetivo} other {# palabras clave / # objetivos}}",
@@ -634,7 +632,9 @@
           "wrongUrl": "Posiciona una URL que no es la de destino",
           "wrongUrlDescription": "La URL posicionada no coincide con la URL de destino",
           "urlChanged": "La URL posicionada ha cambiado",
-          "urlChangedDescription": "Más de una URL ha posicionado durante el historial registrado"
+          "urlChangedDescription": "Más de una URL ha posicionado durante el historial registrado",
+          "volumeMinimumAria": "Volumen de búsqueda mensual mínimo",
+          "volumeMaximumAria": "Volumen de búsqueda mensual máximo"
         },
         "savedViews": {
           "allKeywords": "Todas las palabras clave",

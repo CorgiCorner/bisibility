@@ -1,6 +1,4 @@
 import "server-only";
-import type { Prisma } from "@/lib/generated/prisma/client";
-import type { MeteringAuthorityCoverage, MeteringAuthorityQuery } from "@/lib/metering/authority";
 import type {
   HostedMeteringEvidence,
   HostedMeteringSnapshot,
@@ -65,30 +63,4 @@ export async function readDeploymentMeteringEvidence(
   _operationKey: string,
 ): Promise<HostedMeteringEvidence | null> {
   return null;
-}
-
-export async function readDeploymentMeteringAuthority(
-  _query: MeteringAuthorityQuery,
-): Promise<MeteringAuthorityCoverage> {
-  return { mode: "legacy", coverage: "none", windows: [] };
-}
-
-export async function readDeploymentMeteringExecutionOwner(
-  _operationKey: string,
-): Promise<"legacy" | "meter" | null> {
-  return null;
-}
-
-export async function readDeploymentMeteringPreflightAuthority(
-  _connectionId: string,
-): Promise<"legacy" | "active" | "draining"> {
-  return "legacy";
-}
-
-export async function readDeploymentMeteringAllocationAuthority(
-  _tx: Pick<Prisma.TransactionClient, "$queryRaw">,
-  _namespace: string,
-  _connectionId: string,
-): Promise<"legacy" | "active" | "draining"> {
-  return "legacy";
 }

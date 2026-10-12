@@ -1,4 +1,7 @@
 import { spawn } from "node:child_process";
+import { assertLocalTestBrowser } from "./attached-opera-playwright.mjs";
+
+await assertLocalTestBrowser();
 
 // `build-storybook` and `smoke:visual` cover validity when the browser or Vitest
 // integration is unavailable here.
@@ -28,7 +31,7 @@ child.on("exit", (code) => {
     process.exit(0);
   }
 
-  if (integrationUnavailable.test(output)) {
+  if (process.env.CI === "true" && integrationUnavailable.test(output)) {
     console.warn(
       "test:storybook skipped: vitest browser-Storybook integration not configured; " +
         "story rendering is validated by build-storybook + smoke:visual.",

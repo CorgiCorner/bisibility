@@ -19,23 +19,27 @@ export function testDatabaseUrl() {
     throw new Error("Metering integration requires an isolated local or CI database");
   return value;
 }
-export async function fixture(options?: { schema: string; resetOnClose: () => Promise<void> }) {
+export async function fixture(options?: {
+  schema: string;
+  pooledClient: PrismaClient;
+  resetOnClose: () => Promise<void>;
+}) {
   const url = testDatabaseUrl(),
     schema = options?.schema ?? `metering_${randomUUID().replaceAll("-", "")}`;
   const connect = () =>
     new PrismaClient({ adapter: new PrismaPg({ connectionString: url, max: 5 }) });
-  let prisma = connect();
+  let prisma = options?.pooledClient ?? connect();
   if (!options) {
     await prisma.$executeRaw(Prisma.sql`CREATE SCHEMA ${Prisma.raw(schema)}`);
     const migrations = [
       "../../../prisma/migrations/20260924011626_metering_shadow/migration.sql",
-      "../../../prisma/migrations/20260924032100_metering_shadow_handoff/migration.sql",
-      "../../../prisma/migrations/20260924221000_metering_shadow_funding/migration.sql",
       "../../../prisma/migrations/20261006070000_metering_contract/migration.sql",
       "../../../prisma/migrations/20261006072000_byok_metering_evidence/migration.sql",
       "../../../prisma/migrations/20261006072500_byok_metering_namespace/migration.sql",
       "../../../prisma/migrations/20261006072800_byok_metering_proof_revision/migration.sql",
       "../../../prisma/migrations/20261006075800_metering_imports/migration.sql",
+      "../../../prisma/migrations/20261011010000_shared_paid_attempt_context/migration.sql",
+      "../../../prisma/migrations/20261011020000_accounting_history_snapshot/migration.sql",
     ].map((path) => readFileSync(new URL(path, import.meta.url), "utf8"));
     await prisma.$transaction(async (tx) => {
       await tx.$executeRaw(Prisma.sql`SET LOCAL search_path TO ${Prisma.raw(schema)}`);
@@ -43,6 +47,7 @@ export async function fixture(options?: { schema: string; resetOnClose: () => Pr
       for (const migration of migrations)
         for (const statement of migrationStatements(migration))
           await tx.$executeRaw(Prisma.raw(statement));
+      await tx.$executeRaw`DROP TABLE IF EXISTS metering_shadow`;
     });
   }
   const clock = createManualClock(),
@@ -81,6 +86,7 @@ export async function fixture(options?: { schema: string; resetOnClose: () => Pr
     client: () => prisma,
     connect,
     counters,
+    syncBudgets: sync,
     async restart() {
       await prisma.$disconnect();
       prisma = connect();
@@ -89,7 +95,7 @@ export async function fixture(options?: { schema: string; resetOnClose: () => Pr
     },
     async close() {
       if (options) {
-        await prisma.$disconnect();
+        if (prisma !== options.pooledClient) await prisma.$disconnect();
         await options.resetOnClose();
       } else {
         await prisma.$executeRaw(Prisma.sql`DROP SCHEMA ${Prisma.raw(schema)} CASCADE`);
@@ -109,14 +115,15 @@ export async function createConformanceFixture() {
     const base = await conformancePool;
     return await fixture({
       schema: base.schema,
+      pooledClient: base.client(),
       async resetOnClose() {
         try {
           await base.client().$transaction(async (tx) => {
             await tx.$executeRaw(Prisma.sql`SET LOCAL search_path TO ${Prisma.raw(base.schema)}`);
             await tx.$executeRaw(Prisma.sql`TRUNCATE TABLE
-              metering_operation, metering_receipt, metering_measurement, metering_command,
+              metering_history_reference, metering_history_import, metering_paid_attempt_context, metering_operation, metering_receipt, metering_measurement, metering_command,
               metering_budget, metering_budget_usage, metering_event, metering_metadata,
-              metering_shadow, metering_alert, metering_request_command, metering_request_count,
+              metering_alert, metering_request_command, metering_request_count,
               metering_usage_evidence,
               metering_import_family, metering_import,
               queued_rank_check_tasks RESTART IDENTITY CASCADE`);

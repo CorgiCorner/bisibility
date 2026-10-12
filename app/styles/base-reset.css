@@ -111,16 +111,14 @@
     top: 45%;
     width: 4px;
     height: 8px;
-    border: solid #fff;
+    border: solid var(--accent-on-solid);
     border-width: 0 2px 2px 0;
     transform: translate(-50%, -50%) rotate(45deg);
     box-sizing: border-box;
   }
 
-  /* HANDOFF-12: global keyboard focus ring (components that opt out set outline:none).
-     Light --accent-solid (#F1511C) measures 3.31:1 against --bg, which meets the 3:1
-     WCAG 2.1 SC 1.4.11 / 2.4.11 require of a focus indicator. Dark --accent-solid
-     stays at 3.94:1 against --bg. */
+  /* Shared keyboard focus uses the action fill. The theme contract verifies at least
+     3:1 against workspace, card, and navigation surfaces in both schemes. */
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,

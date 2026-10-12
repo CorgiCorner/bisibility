@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { completeOnboarding, signIn } from "./workspace";
 
 const key = process.env.E2E_POSTHOG_KEY;

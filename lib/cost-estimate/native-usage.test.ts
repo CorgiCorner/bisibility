@@ -10,7 +10,7 @@ describe("operational provider usage estimates", () => {
   it("preserves fractional metered cents", () => {
     expect(
       estimateRankUsage([10, 20], { providerId: "dataforseo", overrideCents: null }),
-    ).toMatchObject({ quantity: 0.55, unit: "cents", unknownTargets: 0 });
+    ).toMatchObject({ quantity: 0.6, unit: "cents", unknownTargets: 0 });
   });
   it("keeps unknown provider estimates unknown instead of free", () => {
     expect(

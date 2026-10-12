@@ -148,7 +148,7 @@ describe("ShellSkeleton", () => {
     expect(container.querySelectorAll(".h-8.w-8.rounded-control")).toHaveLength(3);
   });
 
-  it("frames the sidebar rather than filling it with a solid slab", () => {
+  it("uses the same navigation surface for the header and sidebar loader", () => {
     render(
       <ShellSkeleton>
         <div>content</div>
@@ -156,7 +156,8 @@ describe("ShellSkeleton", () => {
     );
 
     const sidebar = screen.getByTestId("shell-skeleton-sidebar");
-    expect(sidebar).toHaveClass("border-r", "border-border", "bg-bg-elev");
+    expect(sidebar).toHaveClass("border-r", "border-border", "bg-bg-sidebar");
+    expect(screen.getByTestId("shell-skeleton-header")).toHaveClass("bg-bg-sidebar");
     expect(sidebar).not.toHaveClass("animate-pulse");
   });
 

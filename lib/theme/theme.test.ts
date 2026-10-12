@@ -12,6 +12,6 @@ describe("CSS theme contract", () => {
 });
 
 it("pins the neutral dark internal divider", () => {
-  expect(readFileSync("app/styles/theme-tokens.css", "utf8")).toContain("--border-soft: #262626;");
-  expect(readFileSync("lib/theme/tokens.ts", "utf8")).toContain('"border-soft": "#262626"');
+  expect(readFileSync("app/styles/theme-tokens.css", "utf8")).toContain("--border-soft: #383838;");
+  expect(readFileSync("lib/theme/tokens.ts", "utf8")).toContain('"border-soft": "#383838"');
 });

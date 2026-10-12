@@ -18,6 +18,7 @@ import type {
   RelevantPagesInput,
   RelevantPagesResult,
 } from "./domain-overview-types";
+import type { ProviderHistoryWindow } from "./history-window";
 import type { ProviderUsageObserver } from "./usage";
 
 export type {
@@ -186,6 +187,8 @@ export type BacklinkTargetInput = {
   targetScope: BacklinkTargetScope;
 };
 
+export type BacklinkHistoryInput = BacklinkTargetInput & { historyWindow?: ProviderHistoryWindow };
+
 export type BacklinkSummaryResult = { costCents: number; summary: BacklinkSummary };
 export type BacklinkHistoryResult = { costCents: number; rows: BacklinkHistoryRow[] };
 export type BacklinkRowsResult = {
@@ -249,7 +252,7 @@ export type SerpProvider = {
   ): Promise<BacklinkSummaryResult>;
   fetchBacklinksHistory?(
     credentials: ProviderCredentials,
-    input: BacklinkTargetInput,
+    input: BacklinkHistoryInput,
   ): Promise<BacklinkHistoryResult>;
   fetchBacklinksRows?(
     credentials: ProviderCredentials,

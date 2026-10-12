@@ -2,10 +2,13 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { PrismaClient } from "@/lib/generated/prisma/client";
-import { loadUsageEntry } from "@/lib/metering/entry-sync";
+import { canonicalFixture } from "@/lib/metering/canonical-query.test-fixture";
+import { ensureProjectSpendingBudget } from "@/lib/metering/project-budget-bootstrap";
 import { meteringRuntime } from "@/lib/metering/runtime";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { afterAll, afterEach, beforeEach, expect, it, vi } from "vitest";
+import { loadByokEvidence } from "./byok-evidence-storage";
+import { ownCredentialVersion } from "./credential-version";
 import { reconcileProviderUsage } from "./reconcile";
 import { createProviderRequestJournal } from "./request-journal";
 import { buildProviderTag } from "./tag";
@@ -36,6 +39,7 @@ beforeEach(() => {
   vi.stubEnv("METERING_SHADOW", "on");
 });
 afterEach(async () => {
+  await prisma.$executeRaw`DELETE FROM metering_paid_attempt_context WHERE namespace=${namespace}`;
   await prisma.meteringUsageEvidence.deleteMany({ where: { namespace } });
   await prisma.$executeRaw`DELETE FROM metering_event WHERE namespace=${namespace}`;
   await prisma.$executeRaw`DELETE FROM metering_measurement WHERE receipt_pk IN
@@ -43,7 +47,8 @@ afterEach(async () => {
   await prisma.$executeRaw`DELETE FROM metering_receipt WHERE operation_pk IN (SELECT operation_pk FROM metering_operation WHERE namespace=${namespace})`;
   await prisma.$executeRaw`DELETE FROM metering_command WHERE operation_pk IN (SELECT operation_pk FROM metering_operation WHERE namespace=${namespace})`;
   await prisma.meteringOperation.deleteMany({ where: { namespace } });
-  await prisma.meteringShadow.deleteMany({ where: { namespace } });
+  await prisma.$executeRaw`DELETE FROM metering_budget_usage WHERE namespace=${namespace}`;
+  await prisma.$executeRaw`DELETE FROM metering_budget WHERE namespace=${namespace}`;
   for (const projectId of projects.splice(0)) {
     await prisma.instanceSetting.deleteMany({
       where: { key: `metering.shadow.project.${projectId}` },
@@ -59,14 +64,17 @@ afterAll(() => prisma.$disconnect());
 async function fixture() {
   const ownerId = await createUser();
   const projectId = randomUUID();
-  await prisma.project.create({
-    data: {
-      id: projectId,
-      ownerId,
-      publicId: makePublicId("prj"),
-      name: "BYOK reconciliation fixture",
-      domain: `${randomUUID()}.example.com`,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.project.create({
+      data: {
+        id: projectId,
+        ownerId,
+        publicId: makePublicId("prj"),
+        name: "BYOK reconciliation fixture",
+        domain: `${randomUUID()}.example.com`,
+      },
+    });
+    await ensureProjectSpendingBudget(tx, process.env.METERING_NAMESPACE ?? "default", projectId);
   });
   projects.push(projectId);
   const connection = await prisma.providerConnection.create({
@@ -76,6 +84,7 @@ async function fixture() {
       provider: "dataforseo",
       kind: "serp",
       credentialSource: "own",
+      credentialsEncrypted: "reconcile-retained-key",
       enabled: true,
       status: "connected",
     },
@@ -196,12 +205,20 @@ function journalFor(base: Fixture, correlationId = base.taskId) {
     keywordId: base.keywordId,
     provider: "dataforseo",
     unit: "cents",
+    credentialVersion: ownCredentialVersion(
+      "dataforseo",
+      base.connectionId,
+      "reconcile-retained-key",
+    ),
     queued: true,
     estimate: { cents: "1.0000", units: "1.000000" },
   });
 }
 async function begin(base: Fixture, correlationId = base.taskId) {
-  return journalFor(base, correlationId).observer.begin({ attemptKey: randomUUID() });
+  const journal = journalFor(base, correlationId);
+  const id = await journal.observer.begin({ attemptKey: randomUUID() });
+  await journal.observer.beforeDispatch?.(id);
+  return id;
 }
 async function operation(base: Fixture, id: string) {
   return (await meteringRuntime()).store.getOperation({
@@ -211,41 +228,36 @@ async function operation(base: Fixture, id: string) {
   });
 }
 
-it.each([false, true])(
-  "repairs a %s missing projection through the original owner after transfer and replays once",
-  async (missing) => {
-    const base = await fixture(),
-      id = await begin(base);
-    const captured = await prisma.meteringUsageEvidence.findUniqueOrThrow({ where: { id } });
-    if (missing) await prisma.providerCostEntry.delete({ where: { id } });
-    const nextOwner = await createUser();
-    await prisma.project.update({ where: { id: base.projectId }, data: { ownerId: nextOwner } });
-    // A source switch cannot reinterpret this original cs=own transport evidence.
-    await prisma.providerConnection.update({
-      where: { id: base.connectionId },
-      data: { credentialSource: "hosted" },
-    });
-    expect(await reconcileProviderUsage(prisma)).toMatchObject({ reconciled: 1 });
-    const retained = await prisma.meteringUsageEvidence.findUniqueOrThrow({ where: { id } });
-    expect(retained).toMatchObject({
-      principal: base.ownerId,
-      namespace,
-      createdAt: captured.createdAt,
-      measurementStatus: "recorded",
-      receipt: { costCents: "0.6250", quantity: "1.000000" },
-    });
-    const op = await operation(base, id);
-    expect(op).toMatchObject({ state: "settled", scope: { principal: base.ownerId } });
-    expect(op?.receipts.at(-1)?.providerRequestId).toBe(base.nativeId);
-    expect((await prisma.providerCostEntry.findUniqueOrThrow({ where: { id } })).createdAt).toEqual(
-      captured.createdAt,
-    );
-    expect(await reconcileProviderUsage(prisma)).toMatchObject({ reconciled: 0 });
-    expect((await operation(base, id))?.version).toBe(op?.version);
-  },
-);
+it("reconciles retained paid evidence through the original owner after transfer and replays once", async () => {
+  const base = await fixture(),
+    id = await begin(base);
+  const captured = await prisma.meteringUsageEvidence.findUniqueOrThrow({ where: { id } });
+  expect(await canonicalFixture(prisma).count({ where: { id } })).toBe(1);
+  const nextOwner = await createUser();
+  await prisma.project.update({ where: { id: base.projectId }, data: { ownerId: nextOwner } });
+  // A source switch cannot reinterpret this original cs=own transport evidence.
+  await prisma.providerConnection.update({
+    where: { id: base.connectionId },
+    data: { credentialSource: "hosted" },
+  });
+  expect(await reconcileProviderUsage(prisma)).toMatchObject({ reconciled: 1 });
+  const retained = await prisma.meteringUsageEvidence.findUniqueOrThrow({ where: { id } });
+  expect(retained).toMatchObject({
+    principal: base.ownerId,
+    namespace,
+    createdAt: captured.createdAt,
+    measurementStatus: "recorded",
+    receipt: { costCents: "0.6250", quantity: "1.000000" },
+  });
+  const op = await operation(base, id);
+  expect(op).toMatchObject({ state: "settled", scope: { principal: base.ownerId } });
+  expect(op?.receipts.at(-1)?.providerRequestId).toBe(base.nativeId);
+  expect(await canonicalFixture(prisma).count({ where: { id } })).toBe(1);
+  expect(await reconcileProviderUsage(prisma)).toMatchObject({ reconciled: 0 });
+  expect((await operation(base, id))?.version).toBe(op?.version);
+});
 
-it("atomically restores the pending core row when its retained proof write fails", async () => {
+it("atomically preserves the pending Meter operation when its retained proof write fails", async () => {
   const base = await fixture(),
     id = await begin(base);
   let failed = false;
@@ -276,34 +288,37 @@ it("atomically restores the pending core row when its retained proof write fails
         );
     },
   }) as PrismaClient;
-  await expect(reconcileProviderUsage(db)).rejects.toThrow("proof fixture failure");
-  expect(await prisma.providerCostEntry.findUniqueOrThrow({ where: { id } })).toMatchObject({
-    measurementStatus: "unknown",
-    providerRequestId: null,
+  await expect(reconcileProviderUsage(db)).resolves.toMatchObject({
+    failed: 1,
+    lastReconciledAt: null,
+    reconciled: 0,
+    unconfirmed: 1,
   });
+  expect(failed).toBe(true);
+  expect(await canonicalFixture(prisma).count({ where: { id } })).toBe(1);
   expect(await prisma.meteringUsageEvidence.findUniqueOrThrow({ where: { id } })).toMatchObject({
     receipt: null,
   });
   expect((await operation(base, id))?.receipts).toHaveLength(0);
-  expect(await reconcileProviderUsage(prisma)).toMatchObject({ reconciled: 1 });
+  expect(await reconcileProviderUsage(prisma)).toMatchObject({ failed: 0, reconciled: 1 });
 });
 
 it("recovers the canonical proof and retains duplicate zero lineage without a second native Meter identity", async () => {
   const base = await fixture(),
     canonical = await begin(base, randomUUID()),
     duplicate = await begin(base);
-  await prisma.providerCostEntry.update({
+  await prisma.meteringUsageEvidence.update({
     where: { id: canonical },
     data: { providerRequestId: base.nativeId },
   });
   expect(await reconcileProviderUsage(prisma)).toMatchObject({ reconciled: 1 });
-  expect(await prisma.providerCostEntry.findUnique({ where: { id: duplicate } })).toBeNull();
-  expect(await loadUsageEntry(canonical)).toMatchObject({
+  expect(await canonicalFixture(prisma).findUnique({ where: { id: duplicate } })).not.toBeNull();
+  expect(await loadByokEvidence(prisma, canonical)).toMatchObject({
     ownerId: base.ownerId,
     costCents: "0.6250",
     usageQuantity: "1.000000",
   });
-  expect(await loadUsageEntry(duplicate)).toMatchObject({
+  expect(await loadByokEvidence(prisma, duplicate)).toMatchObject({
     ownerId: base.ownerId,
     costCents: "0",
     usageQuantity: "0",
@@ -326,10 +341,11 @@ it("recovers the canonical proof and retains duplicate zero lineage without a se
   expect((await operation(base, duplicate))?.version).toBe(duplicateOperation?.version);
 });
 
-it("serializes normal settlement and the pending sweep through the journal before the core row", async () => {
+it("serializes normal settlement and the pending sweep through the journal before the canonical receipt", async () => {
   const base = await fixture(),
     journal = journalFor(base);
   const id = await journal.observer.begin({ attemptKey: randomUUID() });
+  await journal.observer.beforeDispatch?.(id);
   let release!: () => void;
   const held = new Promise<void>((resolve) => {
     release = resolve;
@@ -383,16 +399,15 @@ it("serializes normal settlement and the pending sweep through the journal befor
   }
   expect((await normalResult)[0].status).toBe("fulfilled");
   if (!sweepResult) throw new Error("The sweep did not start.");
-  expect((await sweepResult)[0].status).toBe("fulfilled");
+  const swept = (await sweepResult)[0];
+  if (swept.status === "rejected") throw swept.reason;
+  expect(swept.status).toBe("fulfilled");
   expect(await prisma.meteringUsageEvidence.findUniqueOrThrow({ where: { id } })).toMatchObject({
     proofVersion: 1,
     measurementStatus: "recorded",
     receipt: { costCents: "0.6250", quantity: "1.000000" },
   });
-  expect(await prisma.providerCostEntry.findUniqueOrThrow({ where: { id } })).toMatchObject({
-    measurementStatus: "recorded",
-    providerRequestId: base.nativeId,
-  });
+  expect(await canonicalFixture(prisma).count({ where: { id } })).toBe(1);
   expect((await operation(base, id))?.receipts).toHaveLength(1);
 });
 
@@ -403,7 +418,7 @@ it("excludes hosted preliminary POST receipts and leaves legacy unknown funding 
     data: { providerTag: base.tag.replace("cs=own", "cs=hosted") },
   });
   for (const credentialSource of ["hosted", "own"] as const) {
-    const hosted = await prisma.providerCostEntry.create({
+    const hosted = await canonicalFixture(prisma).create({
       data: {
         projectId: base.projectId,
         connectionId: base.connectionId,
@@ -419,9 +434,9 @@ it("excludes hosted preliminary POST receipts and leaves legacy unknown funding 
     });
     expect(await reconcileProviderUsage(prisma)).toMatchObject({ reconciled: 0 });
     expect(
-      await prisma.providerCostEntry.findUniqueOrThrow({ where: { id: hosted.id } }),
+      await canonicalFixture(prisma).findUniqueOrThrow({ where: { id: hosted.id } }),
     ).toMatchObject({ measurementStatus: "unknown", priceCents: null });
-    await prisma.providerCostEntry.delete({ where: { id: hosted.id } });
+    await canonicalFixture(prisma).deleteMany({ where: { id: hosted.id } });
   }
   await prisma.queuedRankCheckTask.update({
     where: { id: base.taskId },
@@ -432,7 +447,8 @@ it("excludes hosted preliminary POST receipts and leaves legacy unknown funding 
     where: { id: base.taskId },
     data: { providerTag: base.tag },
   });
-  expect(await reconcileProviderUsage(prisma)).toMatchObject({ reconciled: 1 });
+  expect(await reconcileProviderUsage(prisma)).toMatchObject({ reconciled: 0 });
+  expect(await canonicalFixture(prisma).count({ where: { projectId: base.projectId } })).toBe(0);
   expect(await prisma.meteringUsageEvidence.count({ where: { projectId: base.projectId } })).toBe(
     0,
   );

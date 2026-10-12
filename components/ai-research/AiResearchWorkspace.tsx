@@ -1,4 +1,5 @@
 "use client";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -12,6 +13,7 @@ import {
 } from "@/lib/ai-research/legacy";
 import { promptSchema, visibilitySchema } from "@/lib/ai-research/schema";
 import type { AiResearchOutcome } from "@/lib/ai-research/service";
+import { presentBudgetDenial } from "@/lib/ui/action-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -60,6 +62,7 @@ export function AiResearchWorkspace({
   catalog?: AiResearchCatalog;
   catalogError?: string;
 }>) {
+  const errors = useSharedErrorMessages();
   const t = useTranslations("projectAiResearch");
   const schema = mode === "visibility" ? visibilitySchema : promptSchema;
   const form = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
@@ -227,7 +230,7 @@ export function AiResearchWorkspace({
           {error
             ? t("requestFailure")
             : outcome && !outcome.ok
-              ? t(failureCopyKey(outcome.reason))
+              ? presentBudgetDenial(outcome.reason, errors, t(failureCopyKey(outcome.reason)))
               : ""}
         </Card>
       ) : null}

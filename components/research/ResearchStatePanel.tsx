@@ -1,5 +1,8 @@
 "use client";
 
+import { MissingBudgetNotice } from "@/components/i18n/MissingBudgetNotice";
+import { UsageReconciliationNotice } from "@/components/i18n/UsageReconciliationNotice";
+import { WalletBudgetNotice } from "@/components/i18n/WalletBudgetNotice";
 import { AccentCtaLink } from "@/components/ui/AccentCtaLink";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -17,6 +20,9 @@ import { ResearchResultsLoading } from "./ResearchLoadingSkeletons";
 
 export type ResearchState =
   | "account_restricted"
+  | "wallet_budget_exhausted"
+  | "usage_reconciliation_required"
+  | "budget_missing"
   | "budget_exhausted"
   | "empty"
   | "idle"
@@ -195,6 +201,9 @@ export function ResearchStatePanel({
   if (state === "idle") return <IdleState />;
   if (state === "loading") return <LoadingState />;
   if (state === "no_provider") return <NoProviderState projectRef={projectRef} />;
+  if (state === "wallet_budget_exhausted") return <WalletBudgetNotice />;
+  if (state === "usage_reconciliation_required") return <UsageReconciliationNotice />;
+  if (state === "budget_missing") return <MissingBudgetNotice />;
   if (state === "budget_exhausted") {
     return (
       <MessageState

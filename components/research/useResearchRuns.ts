@@ -54,6 +54,9 @@ export function useResearchRuns({
   const [tabs, setTabs] = useState<ResearchTab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [budgetBlocked, setBudgetBlocked] = useState(initialBudgetBlocked);
+  const [walletBudgetBlocked, setWalletBudgetBlocked] = useState(false);
+  const [budgetMissing, setBudgetMissing] = useState(false);
+  const [usageUnresolved, setUsageUnresolved] = useState(false);
 
   function requestInput(
     seed: string,
@@ -113,7 +116,16 @@ export function useResearchRuns({
       );
       const nextTabs: ResearchTab[] = [];
       for (const [index, { deeperEstimate, outcome, retryEstimate, seed }] of perSeed.entries()) {
-        if (!outcome.ok && outcome.reason === "budget_exhausted") setBudgetBlocked(true);
+        if (!outcome.ok && outcome.reason === "wallet_budget_exhausted") {
+          setBudgetBlocked(true);
+          setWalletBudgetBlocked(true);
+        }
+        if (!outcome.ok && outcome.reason === "budget_exhausted") {
+          setWalletBudgetBlocked(false);
+          setBudgetBlocked(true);
+          setBudgetMissing(outcome.budgetReason === "budget_missing");
+          setUsageUnresolved(outcome.budgetReason === "usage_reconciliation_required");
+        }
         if (outcome.ok) {
           addSpend(actualResearchCostCents(outcome));
           recent.add({
@@ -170,6 +182,16 @@ export function useResearchRuns({
   return {
     activeTab: tabs.find((tab) => tab.id === activeTabId) ?? tabs[0] ?? null,
     budgetBlocked,
+    budgetMissing,
+    budgetState: walletBudgetBlocked
+      ? ("wallet_budget_exhausted" as const)
+      : usageUnresolved
+        ? ("usage_reconciliation_required" as const)
+        : budgetMissing
+          ? ("budget_missing" as const)
+          : budgetBlocked
+            ? ("budget_exhausted" as const)
+            : null,
     closeTab,
     markAdded,
     markSaved,

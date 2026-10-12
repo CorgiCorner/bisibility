@@ -1,27 +1,19 @@
 {
   "projectCostEstimate": {
     "providerSpend": {
-      "docs": "予算の仕組み",
-      "eyebrow": "月間予算",
-      "noCapAmount": "今月 {spent}",
-      "meterAria": "プロバイダー利用額: 今月 {cap} のうち {spent}{session, select, none {} other {、このセッション {session}}}",
-      "segmentedAmount": "{cap} のうち {spent} を使用",
-      "cardCap": "上限 {cap}",
-      "thisMonth": "今月",
-      "capReached": "上限に到達",
-      "session": "このセッション {spent}",
-      "pace": "月あたり約 {spent} のペース",
-      "left": "残り {spent}",
-      "otherProvider": "その他",
-      "headerUnavailable": "利用額不明",
-      "headerCapTooltip": "プロバイダーの月間予算です。",
+      "headerUnavailable": "使用量を取得できません",
+      "headerUsageUnknown": "使用量不明",
+      "headerCapTooltip": "予約分を含む予算の使用状況。詳細は使用状況画面で確認できます。",
       "headerNoCap": "予算なし · 予算を設定",
-      "headerNoCapWithSpend": "{spent} · 予算なし · 予算を設定",
       "headerNoCapAria": "予算なし、予算を設定",
-      "headerNoCapAriaWithSpend": "予算なしで {spent} を使用、予算を設定",
-      "headerUnderOnePercent": "使用率1%未満",
-      "headerUsed": "使用率{percent, number}%",
-      "headerCapAria": "月間上限 {used}"
+      "headerUsed": "{percent}% 使用済み",
+      "headerAtLeastUsed": "少なくとも {percent}% 使用済み",
+      "headerUnderOne": "1% 未満使用済み",
+      "headerAtLeastUnderOne": "一部の使用量を確認済み",
+      "headerExceeded": "予算超過",
+      "headerUsageAria": "予算の使用状況: {status}。詳細を表示",
+      "headerNoLimit": "上限なし",
+      "headerWarning": "予算の警告"
     },
     "status": {
       "unavailable": "見積もりを取得できません。",

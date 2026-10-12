@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { gunzipSync, inflateSync } from "node:zlib";
 import { ensureDockerVmFreeSpace } from "./docker-ephemeral.mjs";
 import { waitForUsableService } from "./harness-readiness.mjs";
+import { assertLocalTestBrowser } from "./attached-opera-playwright.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const port = Number(process.env.E2E_PORT ?? 3100);
@@ -295,6 +296,7 @@ let analyticsCollector;
 let exitCode = 0;
 
 try {
+  await assertLocalTestBrowser();
   if (process.env.E2E_POSTHOG_KEY) {
     analyticsCollector = await startAnalyticsCollector();
     serverEnv.NEXT_PUBLIC_POSTHOG_HOST = analyticsCollector.url;

@@ -7,6 +7,8 @@ import {
   type ProviderChainEntry,
 } from "@/lib/checks/runs-view";
 import { prisma } from "@/lib/db/prisma";
+import { Prisma } from "@/lib/generated/prisma/client";
+import { canonicalUsageSql } from "@/lib/metering/usage-sql";
 
 type SpendRow = { total: unknown };
 type DeferredGroupRow = {
@@ -67,16 +69,16 @@ export async function loadCheckRunsSummary(
       prisma.rankCheck.count({
         where: { ...scope, viaFallback: true },
       }),
-      prisma.$queryRaw<SpendRow[]>`
+      prisma.$queryRaw<SpendRow[]>(Prisma.sql`
       SELECT COALESCE(SUM("costCents"), 0) AS total
-      FROM "provider_cost_entries"
+      FROM (${canonicalUsageSql()}) usage
       WHERE "projectId" = ${projectId}
         AND feature = 'rank_check'
         AND "createdAt" >= ${range.start}
         AND "createdAt" <= ${range.end}
         AND cached = false
         AND "measurementStatus" = 'recorded'
-    `,
+    `),
       prisma.$queryRaw<DeferredGroupRow[]>`
       SELECT
         rc."deferredReason" AS reason,

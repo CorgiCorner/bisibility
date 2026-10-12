@@ -6,9 +6,8 @@ import {
   resolveEffectiveSchedule,
   summarizeEffectiveSchedules,
 } from "@/lib/keywords/effective-schedule";
+import { monthStartUtc } from "@/lib/metering/utc-window";
 import { isGoogleOAuthConfigured } from "@/lib/providers/analytics/google-client";
-import { monthStartUtc } from "@/lib/rank-check/budget";
-import { aggregateObservedUsage } from "@/lib/rank-check/observed-usage";
 import {
   primaryProviderConnection,
   providerChainOrderBy,
@@ -33,6 +32,7 @@ import {
   overviewRangeStart,
 } from "./overview-filters";
 import { buildOverviewMarkets } from "./overview-markets";
+import { rankCheckLedgerActuals } from "./rank-check-run-accounting";
 import { deriveWorkspaceState } from "./workspace-state";
 
 export type { OverviewFilters } from "./overview-filters";
@@ -64,7 +64,7 @@ export async function getOverview(projectId: string, options: { filters?: Partia
     loadOverviewMetricData(project.id, filters, now, { includeMarkets: true }),
     hasKeywordFilter ? prisma.keyword.count({ where: { projectId: project.id } }) : Promise.resolve(null),
     prisma.providerConnection.findMany({ orderBy: providerChainOrderBy(), select: { enabled: true, kind: true, priority: true, provider: true, status: true }, where: { OR: [{ kind: "serp" }, { enabled: true, kind: "analytics", status: "connected" }], projectId: project.id } }),
-    prisma.rankCheck.findMany({ select: { costCents: true }, where: { checkedAt: { gte: monthStartUtc(now), lt: nextMonthStartUtc(now) }, keyword: where, status: "completed" } }),
+    prisma.rankCheck.findMany({ select: { id: true }, where: { checkedAt: { gte: monthStartUtc(now), lt: nextMonthStartUtc(now) }, keyword: where, status: "completed" } }),
     prisma.tag.findMany({ orderBy: { name: "asc" }, select: { name: true }, where: { projectId: project.id } }),
   ]);
   const {
@@ -98,8 +98,12 @@ export async function getOverview(projectId: string, options: { filters?: Partia
   const serpProviderState: SerpProviderState = providerConnected ? "ready" : serpProviders.length > 0 ? "needs_attention" : "missing";
   const hasAnalyticsSource = providerConnections.some((connection) => connection.kind === "analytics");
   const state = totalKeywordCount === 0 ? "empty" : deriveWorkspaceState({ hasEverChecked, keywordCount: Math.max(1, keywords.length) });
-  const observedUsage = aggregateObservedUsage(monthChecks);
-  const checksThisMonth = observedUsage.checkCount;
+  const actuals = await rankCheckLedgerActuals(project.id, monthChecks.map(check => check.id));
+  const checksThisMonth = monthChecks.length;
+  const providerCostCents = monthChecks.reduce<number | null>((sum, check) => {
+    const cost = actuals.get(check.id)?.costCents;
+    return sum === null || cost == null ? null : sum + cost;
+  }, 0);
   const providerStatus: DataSourceStatus = projectReadOnly
     ? "migrationHold"
     : providerConnected
@@ -114,7 +118,7 @@ export async function getOverview(projectId: string, options: { filters?: Partia
     nextCheckAt: projectReadOnly ? null : upcoming?.toISOString() ?? null,
     now: now.toISOString(),
     primaryProvider: configuredPrimary?.provider ?? null,
-    providerCostCents: observedUsage.totalCostCents,
+    providerCostCents: providerCostCents,
     status: providerStatus,
   };
   return {
@@ -134,7 +138,7 @@ export async function getOverview(projectId: string, options: { filters?: Partia
     dataSource,
     distribution: buildDistribution(positions),
     domain: trackedProjectDomain(project.domain) ?? "",
-    estimatedProviderCostCents: observedUsage.totalCostCents,
+    estimatedProviderCostCents: providerCostCents,
     firstPendingKeywordId: state === "no-data" ? (keywords[0]?.publicId ?? null) : null,
     gettingStarted: { gscOAuthConfigured: isGoogleOAuthConfigured(), hasAnalyticsSource, hasCheck: hasEverChecked, hasKeywords: totalKeywordCount > 0, projectId: project.publicId, projectRef: asProjectRef(project.publicId), providerConnected } as { gscOAuthConfigured: boolean; hasAnalyticsSource: boolean; hasCheck: boolean; hasKeywords: boolean; projectId: string; projectRef?: import("@/lib/routing/app-path").ProjectRef; providerConnected: boolean },
     hasEverChecked,

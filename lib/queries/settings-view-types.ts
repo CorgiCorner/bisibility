@@ -6,7 +6,6 @@ import type {
 } from "@/lib/search-insights/sync/control-model";
 import type { SerpDepth } from "@/lib/serp/constants";
 import type { ProviderUsageData } from "@/lib/settings/options";
-import type { ProjectProviderSpend } from "./provider-spend";
 import type { SettingsProviderSummary } from "./settings-provider-summaries";
 
 export type SettingsView = {
@@ -90,5 +89,5 @@ export type SettingsView = {
     role: "Editor" | "Owner" | "Viewer";
     userId: string;
   }[];
-  usage: { providerSpend: ProjectProviderSpend } & ProviderUsageData;
+  usage: ProviderUsageData;
 };

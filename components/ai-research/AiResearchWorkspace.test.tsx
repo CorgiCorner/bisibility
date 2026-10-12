@@ -1,9 +1,13 @@
+import sharedMessages from "@/messages/core/en/shared.json";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
   useLocale: () => "en",
-  useTranslations: () => (key: string) => key,
+  useTranslations: (namespace: string) => (key: string) =>
+    namespace === "shared.errors" && key === "budgetMissing"
+      ? sharedMessages.shared.errors.budgetMissing
+      : key,
 }));
 vi.mock("@/lib/actions/ai-research", () => ({ analyzeAiResearchAction: vi.fn() }));
 
@@ -177,6 +181,8 @@ it("searches current model names and keeps unknown-price models unselectable", a
   const search = screen.getByRole("textbox", { name: "searchPlaceholder" });
   fireEvent.change(search, { target: { value: "reasoning" } });
   expect(screen.queryByRole("menuitem", { name: "GPT-4.1 mini" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: /Reasoning example/ })).toBeNull();
+  fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "showUnavailableModels" }));
   const unavailable = screen.getByRole("menuitem", { name: /Reasoning example/ });
   expect(unavailable).toHaveAttribute("aria-disabled", "true");
   fireEvent.click(unavailable);
@@ -405,8 +411,32 @@ it("keeps priced snapshots disabled while policy approval is pending", () => {
     />,
   );
   fireEvent.click(screen.getByRole("button", { name: "firstModel" }));
+  expect(screen.queryByRole("menuitem", { name: "Mini snapshot" })).toBeNull();
+  fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "showUnavailableModels" }));
   expect(screen.getByRole("menuitem", { name: "Mini snapshot" })).toHaveAttribute(
     "aria-disabled",
     "true",
   );
+});
+
+it("budget regression: shows shared guidance for a returned missing budget", async () => {
+  const analyze = vi
+    .fn()
+    .mockResolvedValue({ ok: false, reason: "budget_missing", message: "Server fallback" });
+  render(
+    <AiResearchWorkspace
+      projectId="prj_example"
+      domain="acme.com"
+      mode="visibility"
+      history={[]}
+      analyzeAction={analyze}
+    />,
+  );
+  fireEvent.change(screen.getByLabelText("brand"), { target: { value: "Acme" } });
+  fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
+  expect(await screen.findByText(sharedMessages.shared.errors.budgetMissing)).toHaveAttribute(
+    "role",
+    "alert",
+  );
+  expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
 });

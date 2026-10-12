@@ -1,3 +1,4 @@
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -22,6 +23,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.actor.mockResolvedValue({ id: "actor" });
   mocks.scope.mockResolvedValue({ id: "internal-project" });
+  mocks.analyze.mockResolvedValue({ ok: false, reason: "no_source", message: "Connect a source." });
 });
 const input = { brand: "Acme", domain: "acme.com", max_cost_cents: 60 };
 describe("AI action authorization", () => {
@@ -64,5 +66,16 @@ describe("AI action authorization", () => {
       expect.objectContaining({ projectId: "internal-project", actorId: "actor" }),
       expect.objectContaining(input),
     );
+  });
+});
+
+it("preserves missing-budget guidance in the research action result", async () => {
+  mocks.analyze.mockRejectedValueOnce(
+    new DeploymentAdmissionExhaustedError("budget", { budgetReason: "budget_missing" }),
+  );
+  await expect(analyzeAiResearchAction("prj_public", "visibility", input)).resolves.toMatchObject({
+    ok: false,
+    reason: "budget_missing",
+    message: expect.stringContaining("configure a monthly budget"),
   });
 });

@@ -1,5 +1,4 @@
 import "server-only";
-
 import { domainOverviewRates, rankedKeywordPageRate } from "@/lib/cost-estimate/provider-rates";
 import {
   ProviderLookupSignal,
@@ -8,7 +7,9 @@ import {
   requiredEstimatedCostCents,
 } from "@/lib/provider-lookups/paid-call";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
+import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import { type ProviderRequestOrigin, surfaceOf } from "@/lib/provider-usage/surface";
+import { DOMAIN_HISTORY_MONTHS, previousFullHistoryMonths } from "@/lib/providers/history-window";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import {
   researchProviderLanguageCode,
@@ -37,7 +38,11 @@ export function domainOverviewEstimate(input: {
 }) {
   const rates = domainOverviewRates(input.source.provider.id);
   const overview = estimate({ itemCount: 1, rate: rates.overview, source: input.source });
-  const history = estimate({ itemCount: 1, rate: rates.history, source: input.source });
+  const history = estimate({
+    itemCount: DOMAIN_HISTORY_MONTHS,
+    rate: rates.history,
+    source: input.source,
+  });
   const keywords = estimate({
     itemCount: input.keywordLimit,
     rate: rankedKeywordPageRate(input.source.provider.id),
@@ -48,13 +53,14 @@ export function domainOverviewEstimate(input: {
 }
 
 function paidCallInput(input: {
-  budgetCapCents: number;
+  costLimit?: RequestCostLimit;
   origin: ProviderRequestOrigin;
   projectId: string;
   source: DomainOverviewSource;
 }) {
   return {
     connection: input.source.connection,
+    costLimit: input.costLimit,
     credential: input.origin.credential,
     feature: "domain_overview" as const,
     projectId: input.projectId,
@@ -103,7 +109,6 @@ export function domainOverviewCostReservation(maxCostCents: number | undefined) 
 }
 
 export function preflightDomainOverview(input: {
-  budgetCapCents: number;
   connectionId: string;
   estimatedCostCents: number;
   estimatedUsageQuantity?: number;
@@ -116,7 +121,7 @@ export function preflightDomainOverview(input: {
 
 export function fetchDomainOverviewMetrics(
   input: DomainOverviewResearchScope & {
-    budgetCapCents: number;
+    costLimit?: RequestCostLimit;
     origin: ProviderRequestOrigin;
     projectId: string;
     scope: DomainOverviewScope;
@@ -139,7 +144,7 @@ export function fetchDomainOverviewMetrics(
 
 export function fetchDomainHistory(
   input: DomainOverviewResearchScope & {
-    budgetCapCents: number;
+    costLimit?: RequestCostLimit;
     origin: ProviderRequestOrigin;
     projectId: string;
     scope: DomainOverviewScope;
@@ -147,24 +152,28 @@ export function fetchDomainHistory(
     target: string;
   },
 ) {
+  const historyWindow = previousFullHistoryMonths(DOMAIN_HISTORY_MONTHS);
   return paidProviderCall({
     ...paidCallInput(input),
     call: (credentials, usage) =>
       input.source.provider.fetchHistoricalRankOverview(credentials, {
         ...providerTarget(input),
+        dateFrom: historyWindow.dateFrom,
+        dateTo: historyWindow.dateTo,
         attribution: usage,
         tag: usage?.tag,
       }),
-    itemCount: 1,
+    itemCount: DOMAIN_HISTORY_MONTHS,
+    historyWindow,
     rate: domainOverviewRates(input.source.provider.id).history,
   });
 }
 
 export function fetchDomainKeywords(
   input: DomainOverviewResearchScope & {
-    budgetCapCents: number;
     limit: number;
     offset: number;
+    costLimit?: RequestCostLimit;
     origin: ProviderRequestOrigin;
     projectId: string;
     source: DomainOverviewSource;
@@ -192,9 +201,9 @@ export function fetchDomainKeywords(
 
 export function fetchDomainPages(
   input: DomainOverviewResearchScope & {
-    budgetCapCents: number;
     limit: number;
     offset: number;
+    costLimit?: RequestCostLimit;
     origin: ProviderRequestOrigin;
     projectId: string;
     scope: DomainOverviewScope;

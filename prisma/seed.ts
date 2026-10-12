@@ -14,6 +14,7 @@ import {
   RankCheckFrequency,
   Role,
 } from "../lib/generated/prisma/client.ts";
+import { ensureProjectSpendingBudget } from "../lib/metering/project-budget-bootstrap.ts";
 import { hashApiKey } from "../lib/providers/crypto.ts";
 import { acmeSeedKeywords } from "../lib/sample-data/acme-seed-keywords.ts";
 import { densePositionSeries } from "../lib/sample-data/dense-position-series.ts";
@@ -65,10 +66,18 @@ type SeedProject = { domain: string; name: string; publicId: string };
 type SeedKeyword = AcmeKeywordFixture;
 
 async function upsertWorkspace(ownerId: string, project: SeedProject) {
-  const workspace = await prisma.project.upsert({
-    where: { publicId: project.publicId },
-    update: { domain: project.domain, name: project.name, ownerId },
-    create: { ...project, ownerId },
+  const workspace = await prisma.$transaction(async (tx) => {
+    const workspace = await tx.project.upsert({
+      where: { publicId: project.publicId },
+      update: { domain: project.domain, name: project.name, ownerId },
+      create: { ...project, ownerId },
+    });
+    await ensureProjectSpendingBudget(
+      tx,
+      process.env.METERING_NAMESPACE ?? "default",
+      workspace.id,
+    );
+    return workspace;
   });
   await prisma.membership.upsert({
     where: { userId_projectId: { projectId: workspace.id, userId: ownerId } },
@@ -142,6 +151,7 @@ async function upsertEnvSeededApiKey(projectId: string) {
 
 async function upsertDefaults(projectId: string, lastCheckedAt: Date | null, nextCheckAt: Date) {
   const data = {
+    enabledExperimentalModules: ["timeline", "competitors"],
     cronExpression: "0 6 * * *",
     frequency: RankCheckFrequency.daily,
     jitterMinutes: 60,
@@ -307,10 +317,9 @@ export async function seed() {
     tagByName.set(name, tag.id);
   }
 
-  await prisma.providerConnection.upsert({
+  const seededConnection = await prisma.providerConnection.upsert({
     where: { projectId_provider: { projectId: acme.id, provider: "dataforseo" } },
     update: {
-      costPerCheckCents: "1.5500",
       credentialsEncrypted: null,
       kind: ProviderKind.serp,
       lastUsedAt: new Date("2026-06-18T08:42:00.000Z"),
@@ -318,7 +327,7 @@ export async function seed() {
       status: ProviderStatus.connected,
     },
     create: {
-      costPerCheckCents: "1.5500",
+      credentialSource: "own",
       credentialsEncrypted: null,
       kind: ProviderKind.serp,
       lastUsedAt: new Date("2026-06-18T08:42:00.000Z"),
@@ -329,6 +338,19 @@ export async function seed() {
       status: ProviderStatus.connected,
     },
   });
+  if (seededConnection.credentialSource === "own") {
+    await prisma.providerConnectionRate.upsert({
+      create: {
+        amountCents: "1.5500",
+        connectionId: seededConnection.id,
+        feature: "rank_check",
+      },
+      update: { amountCents: "1.5500" },
+      where: {
+        connectionId_feature: { connectionId: seededConnection.id, feature: "rank_check" },
+      },
+    });
+  }
 
   await upsertApiKey({
     hashedKey: "sha256:demo-production-api-key-hash-4f2a",

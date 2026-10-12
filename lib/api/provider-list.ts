@@ -1,5 +1,4 @@
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
 import { centsToDollars } from "@/lib/format/currency";
 import {
@@ -7,6 +6,7 @@ import {
   INTEGRATION_CATEGORY_COPY,
 } from "@/lib/integrations/category-copy";
 import type { ProviderAreaCapabilities } from "@/lib/projects/readiness";
+import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
 import {
   getAnalyticsProvider,
   PROVIDER_CATALOG,
@@ -171,10 +171,12 @@ function providerResource(
 }
 
 async function loadProviderConnections(projectId: string) {
-  return prisma.providerConnection.findMany({
+  const connections = await prisma.providerConnection.findMany({
+    include: { rates: rankCheckRateSelection },
     orderBy: providerChainOrderBy(),
     where: { projectId },
-  }) as Promise<ProviderConnectionRow[]>;
+  });
+  return connections.map(withRankCheckManualRate);
 }
 
 export async function listProviderCategories(projectId: string) {

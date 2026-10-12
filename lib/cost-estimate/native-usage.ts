@@ -21,21 +21,26 @@ export function nativeUsageUnit(providerId: string | null | undefined): NativeUs
 export function estimateRankUsage(
   depths: readonly SerpDepth[],
   rate: CostRateInfo,
+  targetCosts?: readonly (number | null)[],
 ): NativeUsageEstimate {
+  if (targetCosts && targetCosts.length !== depths.length)
+    throw new Error("Rank usage quote count does not match targets");
   const metadata = providerAllocationMetadata(rate.providerId);
   const unit = metadata?.kind === "billable" ? metadata.allocationUnit : metadata ? "cents" : null;
-  const values = depths.map((depth) =>
+  const values = depths.map((depth, index) =>
     unit === "units"
       ? pagesPerCheck(depth)
       : metadata?.kind === "non_billable"
         ? 0
         : unit === "cents"
-          ? estimatedRankCheckCostCents(
-              rate.providerId ?? undefined,
-              depth,
-              rate.overrideCents,
-              rate.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
-            )
+          ? targetCosts
+            ? (targetCosts[index] ?? null)
+            : estimatedRankCheckCostCents(
+                rate.providerId ?? undefined,
+                depth,
+                rate.overrideCents,
+                rate.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
+              )
           : null,
   );
   const unknownTargets = values.filter((value) => value === null).length;

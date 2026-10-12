@@ -1,3 +1,4 @@
+import type { MeterOperationReference } from "@/lib/metering/operation-reference";
 export const PROMPT_CATEGORIES = ["neutral", "branded", "comparative"] as const;
 export type PromptCategory = (typeof PROMPT_CATEGORIES)[number];
 export const TRACKING_SOURCES = ["consumer_scrape", "model_api", "google_aio"] as const;
@@ -99,6 +100,10 @@ export interface Evidence {
   recordedSource: "fresh" | "cache";
 }
 export interface CostReceipt {
+  /** Host-proven refusal before a transport barrier; carries exact zero only. */
+  noDispatch?: true;
+  operationRef?: MeterOperationReference | null;
+  /** Historical input alias; runtime accounting resolves only Store operations. */
   providerCostEntryId: string | null;
   amountUsd: string | null;
   state: "unknown" | "pending" | "confirmed" | "refund_pending" | "derived";

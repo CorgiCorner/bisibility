@@ -1,24 +1,22 @@
+import {
+  BudgetExhaustedError,
+  ProviderAllocationExhaustedError,
+} from "@/lib/metering/admission-errors";
+import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
+import { surfaceOf } from "@/lib/provider-usage/surface";
 import "server-only";
 import { randomUUID } from "node:crypto";
 import type { ProviderFeatureRate } from "@/lib/cost-estimate/provider-rates";
 import { prisma } from "@/lib/db/prisma";
 import type { ProviderCostFeature } from "@/lib/generated/prisma/client";
-import { compareAdmission } from "@/lib/metering/admission";
-import { withShadowRequest } from "@/lib/metering/shadow-context";
-import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { assertOperationAccess } from "@/lib/operations/access-extension";
 import { loadProviderRateContext } from "@/lib/provider-rates/connection-context";
+import { ProviderQuoteUnavailableError } from "@/lib/provider-rates/native-quote";
 import {
   LIST_PROVIDER_RATE_CONTEXT,
   type ResolveProviderRateInput,
 } from "@/lib/provider-rates/resolver";
-import { normalizedProviderUnitCostCents } from "@/lib/provider-rates/unit-cost";
-import {
-  assertProviderAllocationAvailable,
-  ProviderAllocationExhaustedError,
-} from "@/lib/provider-usage/enforcement";
-import { recordProviderUsage } from "@/lib/provider-usage/recorder";
-import { type ProviderCredential, surfaceOf } from "@/lib/provider-usage/surface";
+import type { ProviderCredential } from "@/lib/provider-usage/surface";
 import {
   createProviderRequestAttribution,
   type ProviderRequestAttribution,
@@ -28,15 +26,16 @@ import {
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
 import { chargedProviderCostCents, ProviderCallError } from "@/lib/providers/call-error";
+import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
+import type { ProviderHistoryWindow } from "@/lib/providers/history-window";
 import { consumeProviderLimit } from "@/lib/providers/rate-limit";
-import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/dataforseo";
 import type { SerpProvider } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import { requiredConnectionEstimate } from "./connection-estimate";
 import { ProviderLookupSignal } from "./lookup-failure";
 import { assertOwnCredentialSnapshot } from "./own-credential-guard";
-import { preflightProviderBudget } from "./paid-call-budget";
 import { requiredEstimatedCostCents } from "./paid-call-estimate";
 import { runHostedPaidProviderCall } from "./paid-call-hosted";
 import { createOwnPaidCallJournal } from "./paid-call-own-journal";
@@ -58,7 +57,10 @@ async function executePaidProviderCall<
   correlationId?: string;
   feature: Exclude<ProviderCostFeature, "rank_check">;
   includeClickstream?: boolean;
+  historyWindow?: ProviderHistoryWindow;
   itemCount: number;
+  maxCostCents?: number;
+  costLimit?: RequestCostLimit;
   projectId: string;
   provider: SerpProvider;
   requiredCredentialSource?: "own";
@@ -67,24 +69,7 @@ async function executePaidProviderCall<
   source: ProviderRequestSource;
   trigger: ProviderRequestTrigger;
 }) {
-  // Access admission precedes provider credential and transport use.
-  try {
-    await assertOperationAccess(input.projectId);
-  } catch (error) {
-    if (isOperationAccessDeniedError(error))
-      await compareAdmission(
-        {
-          connectionId: input.connection.id,
-          projectId: input.projectId,
-          provider: input.provider.id,
-          surface: surfaceOf(input.source),
-          estimatedCostCents: 0,
-          shadow: { feature: input.feature, source: input.source, credential: input.credential },
-        },
-        "wallet_blocked",
-      );
-    throw error;
-  }
+  await assertOperationAccess(input.projectId);
   const currentConnection = await prisma.providerConnection.findUnique({
     select: { credentialSource: true, projectId: true, provider: true, credentialsEncrypted: true },
     where: { id: input.connection.id },
@@ -98,10 +83,10 @@ async function executePaidProviderCall<
     throw new ProviderUsagePersistenceError({ cause: new Error("Provider connection mismatch.") });
   }
   assertOwnCredentialSnapshot(input, currentConnection);
-  // Backlinks bills three sub-rates per call, so it has no single measured or manual rate to
-  // resolve; it prices from the list rates until the rate catalog models those sub-rates.
   const context =
-    (currentConnection.credentialSource === "own" ? input.rateContext : undefined) ??
+    (input.provider.id === "dataforseo" && currentConnection.credentialSource === "own"
+      ? LIST_PROVIDER_RATE_CONTEXT
+      : input.rateContext) ??
     (input.feature === "backlinks" ||
     input.feature === "domain_overview" ||
     input.feature === "ai_visibility" ||
@@ -109,14 +94,6 @@ async function executePaidProviderCall<
     input.feature === "prompt_explorer"
       ? LIST_PROVIDER_RATE_CONTEXT
       : await loadProviderRateContext(input.connection.id, input.feature));
-  const estimatedCostCents = requiredEstimatedCostCents({
-    context,
-    includeClickstream: input.includeClickstream,
-    itemCount: input.itemCount,
-    providerId: input.provider.id,
-    rate: input.rate,
-  });
-  const surface = surfaceOf(input.source);
   if (currentConnection.credentialSource === "hosted") {
     return runHostedPaidProviderCall({
       call: input.call,
@@ -125,57 +102,32 @@ async function executePaidProviderCall<
       correlationId: input.correlationId,
       feature: input.feature,
       itemCount: input.itemCount,
+      maxCostCents: input.maxCostCents,
+      costLimit: input.costLimit,
       projectId: input.projectId,
       provider: input.provider,
       source: input.source,
       trigger: input.trigger,
-      estimatedCostCents,
+      estimatedCostCents: requiredEstimatedCostCents({
+        context: LIST_PROVIDER_RATE_CONTEXT,
+        includeClickstream: input.includeClickstream,
+        itemCount: input.itemCount,
+        providerId: input.provider.id,
+        rate: input.rate,
+      }),
+    }).catch((error: unknown) => {
+      if (error instanceof ProviderCostLimitError)
+        throw new ProviderLookupSignal({
+          ok: false,
+          reason: "cost_limit_exceeded",
+          estimatedCostCents: error.estimatedCostCents,
+        });
+      throw error;
     });
   }
   if (currentConnection.credentialSource !== "own") {
     throw new ProviderUsagePersistenceError({ cause: new Error("Unknown credential source.") });
   }
-  await assertProviderAllocationAvailable(
-    {
-      catalog: PROVIDER_CATALOG,
-      connectionId: input.connection.id,
-      shadow: { feature: input.feature, source: input.source, credential: input.credential },
-      estimatedCostCents,
-      projectId: input.projectId,
-      provider: input.provider.id,
-      legacyBudgetCheck: async (capCents, estimate) =>
-        preflightProviderBudget({
-          budgetCapCents: capCents,
-          estimatedCostCents: estimate,
-          projectId: input.projectId,
-          surface,
-        }),
-      surface,
-    },
-    prisma,
-  ).catch(async (error) => {
-    if (error instanceof ProviderLookupSignal && error.outcome.reason === "budget_exhausted")
-      await compareAdmission(
-        {
-          connectionId: input.connection.id,
-          projectId: input.projectId,
-          provider: input.provider.id,
-          surface,
-          estimatedCostCents,
-          shadow: { feature: input.feature, source: input.source, credential: input.credential },
-        },
-        "blocked",
-      );
-    if (error instanceof ProviderAllocationExhaustedError) {
-      throw new ProviderLookupSignal({
-        ok: false,
-        provider: input.provider.id,
-        reason: "budget_exhausted",
-        surface: error.surface,
-      });
-    }
-    throw error;
-  });
   const ownConnection = await prisma.providerConnection.findUnique({
     select: { credentialSource: true, projectId: true, provider: true, credentialsEncrypted: true },
     where: { id: input.connection.id },
@@ -188,6 +140,20 @@ async function executePaidProviderCall<
     throw new ProviderUsagePersistenceError({ cause: new Error("Provider connection changed.") });
   }
   assertOwnCredentialSnapshot(input, ownConnection);
+  const estimatedCostCents = await requiredConnectionEstimate({
+    connection: input.connection,
+    feature: input.feature,
+    context,
+    includeClickstream: input.includeClickstream,
+    historyWindow: input.historyWindow,
+    itemCount: input.itemCount,
+    providerId: input.provider.id,
+    rate: input.rate,
+  }).catch((cause: unknown) => {
+    if (cause instanceof ProviderQuoteUnavailableError)
+      throw new ProviderUsagePersistenceError({ cause, phase: "admission" });
+    throw cause;
+  });
   const credentials = resolveProviderCredentials(
     input.connection.provider,
     input.connection.credentialsEncrypted,
@@ -214,6 +180,8 @@ async function executePaidProviderCall<
     connection: input.connection,
     projectId: input.projectId,
     estimatedCostCents,
+    maxCostCents: input.maxCostCents,
+    costLimit: input.costLimit,
   });
   try {
     result = await input.call(
@@ -221,28 +189,23 @@ async function executePaidProviderCall<
       usage,
     );
   } catch (error) {
+    if (error instanceof ProviderCostLimitError)
+      throw new ProviderLookupSignal({
+        ok: false,
+        reason: "cost_limit_exceeded",
+        estimatedCostCents: (journal.costCents ?? 0) + error.estimatedCostCents,
+        ...(journal.started && journal.costCents !== null ? { costCents: journal.costCents } : {}),
+      });
+    if (error instanceof BudgetExhaustedError || error instanceof ProviderAllocationExhaustedError)
+      throw new ProviderLookupSignal({
+        ok: false,
+        reason: "budget_exhausted",
+        ...(error instanceof BudgetExhaustedError ? { budgetReason: error.budget.reason } : {}),
+        provider: input.provider.id,
+        surface: surfaceOf(input.source),
+      });
     const chargedCostCents = journal?.started ? journal.costCents : chargedProviderCostCents(error);
     const isAuthError = error instanceof ProviderAuthError;
-    if (chargedCostCents != null && !journal?.started) {
-      try {
-        await recordProviderUsage(prisma, {
-          attribution: usage,
-          connectionId: input.connection.id,
-          costCents: chargedCostCents,
-          failed: true,
-          projectId: input.projectId,
-          provider: input.provider.id,
-          unitCostCents: normalizedProviderUnitCostCents({
-            costCents: chargedCostCents,
-            includeClickstream: input.includeClickstream,
-            itemCount: input.itemCount,
-            rate: input.rate,
-          }),
-        });
-      } catch (recorderError) {
-        if (!isAuthError) throw recorderError;
-      }
-    }
     if (isAuthError) {
       await Promise.resolve(
         markProviderNeedsReauth({
@@ -272,28 +235,13 @@ async function executePaidProviderCall<
     if (journal.costCents === null) throw new ProviderUsagePersistenceError();
     return { ...result, costCents: journal.costCents };
   }
-  if (!journal?.started)
-    await recordProviderUsage(prisma, {
-      attribution: usage,
-      connectionId: input.connection.id,
-      costCents: result.costCents,
-      failed: false,
-      projectId: input.projectId,
-      provider: input.provider.id,
-      providerRequestId: result.providerRequestId ?? usage.context.correlationId,
-      unitCostCents: normalizedProviderUnitCostCents({
-        costCents: result.costCents,
-        includeClickstream: input.includeClickstream,
-        itemCount: input.itemCount,
-        rate: input.rate,
-      }),
-      usageQuantity: result.usageQuantity,
-    });
-  return result;
+  throw new ProviderUsagePersistenceError({
+    cause: new Error("Paid transport did not retain accounting evidence"),
+  });
 }
 
 export function paidProviderCall<
   T extends { costCents: number; providerRequestId?: string; usageQuantity?: number },
 >(input: Parameters<typeof executePaidProviderCall<T>>[0]): Promise<T> {
-  return withShadowRequest(() => executePaidProviderCall(input));
+  return executePaidProviderCall(input);
 }

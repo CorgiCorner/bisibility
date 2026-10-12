@@ -93,18 +93,18 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.30.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.31.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate
-      && if [ "$$DEMO_FIXED_OTP" = "1" ]; then node --experimental-strip-types prisma/seed.ts; fi'
+      && if [ "$$DEMO_FIXED_OTP" = "1" ]; then node --experimental-transform-types --import ./lib/temporal/register-loader.mjs prisma/seed.ts; fi'
     environment: *app-env
     depends_on:
       postgres:
         condition: service_healthy
 
   app:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.30.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.31.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:

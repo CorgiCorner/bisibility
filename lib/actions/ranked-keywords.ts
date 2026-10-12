@@ -5,6 +5,7 @@ import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { fetchRankedKeywords } from "@/lib/ranked-keywords/service";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
+import { withLookupBudgetResult } from "./lookup-budget-result";
 
 const rankedKeywordsSchema = z.object({
   connectionId: z
@@ -28,14 +29,22 @@ export async function fetchRankedKeywordSuggestions(input: unknown) {
   const data = parseActionInput(rankedKeywordsSchema, input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "create", data.projectId, { type: "keyword" });
-  const result = await fetchRankedKeywords({
-    actorId: actor.id,
-    connectionId: data.connectionId,
-    limit: 100,
-    offset: data.offset,
-    origin: APP_REQUEST_ORIGIN,
-    projectId: project.id,
-  });
-  if (!result.ok) return { reason: result.reason } as const;
+  const result = await withLookupBudgetResult(() =>
+    fetchRankedKeywords({
+      actorId: actor.id,
+      connectionId: data.connectionId,
+      limit: 100,
+      offset: data.offset,
+      origin: APP_REQUEST_ORIGIN,
+      projectId: project.id,
+    }),
+  );
+  if (!result.ok)
+    return {
+      reason: result.reason,
+      ...("budgetReason" in result && result.budgetReason
+        ? { budgetReason: result.budgetReason }
+        : {}),
+    } as const;
   return result;
 }

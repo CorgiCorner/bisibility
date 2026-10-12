@@ -12,6 +12,7 @@ import type {
   DomainRecentTarget,
 } from "@/lib/domain-overview/types";
 import { normalizeDomain } from "@/lib/domains/normalize";
+import { budgetDenialReason } from "@/lib/metering/budget-denial";
 import { type ResearchScope, researchScopeKey } from "@/lib/research/scope";
 import { getDomain } from "tldts";
 
@@ -37,6 +38,9 @@ export type DomainOverviewEstimateView = {
 };
 
 export type DomainOverviewUiState =
+  | "usage_reconciliation_required"
+  | "budget_missing"
+  | "wallet_budget_exhausted"
   | "budget_exhausted"
   | "empty"
   | "idle"
@@ -129,7 +133,9 @@ export function failureState(
   outcome: DomainOverviewUiOutcome | null,
 ): DomainOverviewUiState | null {
   if (!outcome || outcome.ok) return null;
-  if (outcome.reason === "budget_exhausted") return "budget_exhausted";
+  if (outcome.reason === "wallet_budget_exhausted") return "wallet_budget_exhausted";
+  if (outcome.reason === "budget_exhausted")
+    return budgetDenialReason(outcome) ?? "budget_exhausted";
   if (outcome.reason === "needs_reauth") return "needs_reauth";
   if (outcome.reason === "no_source") return "no_provider";
   if (outcome.reason === "unsupported_location") return "unsupported_location";

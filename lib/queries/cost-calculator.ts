@@ -1,9 +1,9 @@
 import "server-only";
-
 import {
   type EstimateFrequency,
   frequencyFromRankCheckFrequency,
 } from "@/lib/cost-estimate/estimate";
+import { projectBudgetCapCents } from "@/lib/metering/project-budget-read";
 import { resolveSerpDepth, type SerpDepth } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 import { requireReadableProject } from "./_auth";
@@ -76,13 +76,14 @@ export async function getCalculatorPrefill(projectId: string): Promise<Calculato
 
 export async function getProjectCostContext(projectId: string): Promise<ProjectCostContext> {
   const { project } = await requireReadableProject(projectId);
-  const [context, spentCents] = await Promise.all([
+  const [context, spentCents, capCents] = await Promise.all([
     loadCalculatorContext(project),
     getRequestMonthlySpendCents(project.id),
+    projectBudgetCapCents(project.id),
   ]);
   return {
     ...context.prefill,
-    capCents: project.budgetCapCents,
+    capCents,
     cronExpression: context.cronExpression,
     rawFrequency: context.rawFrequency,
     spentCents,

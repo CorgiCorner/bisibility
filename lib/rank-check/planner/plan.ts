@@ -3,13 +3,17 @@ import "server-only";
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { assertOperationAccess } from "@/lib/operations/access-extension";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
+import { loadNativeRankRequestCosts } from "@/lib/provider-rates/native-rank-request";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
+import { queuedRankCheckConfig } from "@/lib/rank-check/queued-config";
+import { queuedRankCheckRoute } from "@/lib/rank-check/queued-routing";
 import { activeMarketLocationIds, runnableKeywordWhere } from "@/lib/rank-check/runnable";
 import { resolveEffectiveSerpDepth } from "@/lib/serp/constants";
 import { skipEmptyScheduleOccurrences } from "./empty-schedule";
@@ -46,11 +50,9 @@ type PlannerSchedule = Awaited<
 >[number];
 
 type ScheduleAdmissionInput = {
-  keywords: readonly { id: string }[];
+  keywords: readonly { id: string; text: string }[];
   project: {
-    budgetCapCents: number;
     defaults: { serpDepth: number } | null;
-    providerAllocationsInitializedAt: Date | null;
   };
   projectId: string;
   providerPolicy: string | null;
@@ -71,7 +73,11 @@ function boundedLimit(value?: number) {
   return Math.min(MAX_SCHEDULE_PAGE, Math.max(1, Math.floor(value ?? MAX_SCHEDULE_PAGE)));
 }
 
-export async function scheduleAdmission(schedule: ScheduleAdmissionInput, now: Date) {
+export async function scheduleAdmission(
+  schedule: ScheduleAdmissionInput,
+  now: Date,
+  client?: Prisma.TransactionClient,
+) {
   try {
     // Admission comes first: a denied schedule stays blocked under a neutral
     // reason until the owner's entitlement returns, and nothing here marks a
@@ -89,10 +95,17 @@ export async function scheduleAdmission(schedule: ScheduleAdmissionInput, now: D
     }
     throw error;
   }
-  const connections = await loadSerpProviderChain(
-    schedule.projectId,
-    schedule.providerPolicy === "project" ? undefined : (schedule.providerPolicy ?? undefined),
-  );
+  const route = await queuedRankCheckRoute({ projectId: schedule.projectId }, client);
+  const connections =
+    route.mode === "deferred"
+      ? []
+      : await loadSerpProviderChain(
+          schedule.projectId,
+          route.mode === "queued" || schedule.providerPolicy === "project"
+            ? undefined
+            : (schedule.providerPolicy ?? undefined),
+          client,
+        );
   const connection = connections[0];
   if (!connection) {
     return {
@@ -107,26 +120,45 @@ export async function scheduleAdmission(schedule: ScheduleAdmissionInput, now: D
     projectDepth: schedule.project.defaults?.serpDepth,
     scheduleDepth: schedule.serpDepth,
   });
-  const itemCosts = schedule.keywords.map(() =>
-    estimatedRankCheckCostCents(
-      connection.provider,
-      depth,
-      connection.costPerCheckCents,
-      connection.credentialSource === "hosted"
-        ? LIST_PROVIDER_RATE_CONTEXT
-        : (connection.rateContext ?? LIST_PROVIDER_RATE_CONTEXT),
-    ),
-  );
+  const priority = route.mode === "queued" ? queuedRankCheckConfig().priority : undefined;
+  const itemCosts =
+    (await loadNativeRankRequestCosts(
+      client ?? prisma,
+      { ...connection, credentialsEncrypted: connection.credentialsEncrypted ?? null },
+      schedule.keywords.map(({ text }) => ({
+        keyword: text,
+        depth,
+        ...(priority ? { priority } : {}),
+      })),
+      now,
+    )) ??
+    schedule.keywords.map(() =>
+      estimatedRankCheckCostCents(
+        connection.provider,
+        depth,
+        connection.costPerCheckCents,
+        connection.credentialSource === "hosted"
+          ? LIST_PROVIDER_RATE_CONTEXT
+          : (connection.rateContext ?? LIST_PROVIDER_RATE_CONTEXT),
+      ),
+    );
   const estimatedCostCents = Math.ceil(
     itemCosts.reduce<number>((sum, cost) => sum + (cost ?? 0), 0),
   );
+  if (itemCosts.some((cost) => cost === null))
+    return {
+      blockedReason: "pricing_unavailable" as const,
+      connection,
+      estimatedCostCents,
+      itemCosts,
+      usageQuantity: schedule.keywords.length * pagesPerCheck(depth),
+      depth,
+    };
   try {
-    if (!schedule.project.providerAllocationsInitializedAt) {
-      await assertBudgetAvailable(schedule.projectId, now, {
-        capCents: schedule.project.budgetCapCents,
-        estimatedCostCents,
-      });
-    }
+    await assertBudgetAvailable(schedule.projectId, now, {
+      estimatedCostCents,
+      ...(client ? { client } : {}),
+    });
     return {
       blockedReason: null,
       connection,

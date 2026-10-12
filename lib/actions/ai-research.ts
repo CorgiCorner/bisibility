@@ -7,6 +7,7 @@ import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { getActionActor, requireProjectScope } from "./_shared";
 
@@ -18,10 +19,17 @@ export async function analyzeAiResearchAction(
   const data = (mode === "visibility" ? visibilitySchema : promptSchema).parse(input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "create", projectId, { type: "project" });
-  return (mode === "visibility" ? analyzeAiVisibility : compareAiPrompts)(
-    { projectId: project.id, actorId: actor.id, origin: APP_REQUEST_ORIGIN },
-    data,
-  );
+  try {
+    const result = await (mode === "visibility" ? analyzeAiVisibility : compareAiPrompts)(
+      { projectId: project.id, actorId: actor.id, origin: APP_REQUEST_ORIGIN },
+      data,
+    );
+    return result;
+  } catch (error) {
+    const budget = budgetFailureResult(error);
+    if (budget) return { ok: false as const, reason: budget.code, message: budget.message };
+    throw error;
+  }
 }
 export async function getAiResearchPage(projectId: string, mode: "visibility" | "prompt") {
   const actor = await getActionActor();

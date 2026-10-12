@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   ledgerRaw: vi.fn(),
   loadProviderChain: vi.fn(),
   monthlySpend: vi.fn(),
+  budgetCap: vi.fn().mockResolvedValue(777),
   raw: vi.fn(),
   projectMarket: { findMany: vi.fn() },
   runCount: vi.fn(),
@@ -17,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   unitCost: vi.fn(),
 }));
 
+vi.mock("@/lib/metering/project-budget-read", () => ({ projectBudgetCapCents: mocks.budgetCap }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
@@ -25,7 +27,7 @@ vi.mock("@/lib/db/prisma", () => ({
       const text = Array.isArray((query as { strings?: string[] }).strings)
         ? (query as { strings: string[] }).strings.join(" ")
         : String(query);
-      return text.includes("provider_cost_entries") ? mocks.ledgerRaw(query) : mocks.raw(query);
+      return text.includes("metering_operation") ? mocks.ledgerRaw(query) : mocks.raw(query);
     },
     auditLog: mocks.auditLog,
     checkSchedule: mocks.checkSchedule,
@@ -129,6 +131,7 @@ describe("rank-check run queries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.ledgerRaw.mockResolvedValue([]);
+    mocks.usageGroups.mockResolvedValue([]);
     mocks.loadProviderChain.mockResolvedValue([
       { costPerCheckCents: 2, provider: "serpapi", rateContext: { entries: [] } },
     ]);
@@ -513,7 +516,7 @@ describe("rank-check run queries", () => {
       new URL("https://example.com/api/rank-check-runs?project=prj_x"),
     );
 
-    expect(result.data[0]?.budget).toEqual({ capCents: 5_000, spentCents: 1_250 });
+    expect(result.data[0]?.budget).toEqual({ capCents: 777, spentCents: 1_250 });
     expect(mocks.monthlySpend).toHaveBeenCalledWith("project_1");
   });
 
@@ -583,7 +586,7 @@ describe("rank-check run queries", () => {
       new URL("https://example.com/items"),
     );
     expect(page.data[0]?.rankCheck).toMatchObject({
-      costCents: 0.4,
+      costCents: null,
       observationCompleteness: "unknown",
       requestedDepth: 20,
       position: null,
@@ -642,8 +645,8 @@ describe("rank-check run queries", () => {
       new URL("https://example.com/items"),
     );
 
-    expect(page.data[0]).toMatchObject({ actualCostCents: 4 });
-    expect(page.data[0]?.rankCheck).toMatchObject({ billingUnits: 5 });
+    expect(page.data[0]).toMatchObject({ actualCostCents: null });
+    expect(page.data[0]?.rankCheck).toMatchObject({ billingUnits: null });
   });
 
   it("projects per-target ledger actuals onto target cost and units, one receipt set per target", async () => {
@@ -744,7 +747,7 @@ describe("rank-check run queries", () => {
     expect(list.data[0]).toMatchObject({ costCents: 0.925, usage: { actual: 2 } });
     expect(mocks.ledgerRaw).toHaveBeenCalledWith(
       expect.objectContaining({
-        values: expect.arrayContaining(["project_1", row.id]),
+        values: expect.arrayContaining(["project_1", expect.arrayContaining([row.id])]),
       }),
     );
   });
@@ -784,13 +787,28 @@ describe("rank-check run queries", () => {
     expect(detail.usage?.actual).toBeNull();
   });
 
-  it("keeps explicitly measured stored cost when the run predates the ledger", async () => {
-    const row = run(runIds[0] as string, new Date("2026-09-02T12:00:00.000Z"));
+  it("keeps run actuals unknown without Meter receipts despite stored values", async () => {
+    const row = {
+      ...run(runIds[0] as string, new Date("2026-09-02T12:00:00.000Z")),
+      _count: { items: 2 },
+      selectionSpec: { providerId: "serpapi" },
+      targetCount: 2,
+    };
     mocks.runFindFirst.mockResolvedValue(row);
+    mocks.usageGroups.mockResolvedValue([
+      {
+        runId: row.id,
+        provider: "serpapi",
+        requestedDepth: 20,
+        _count: { _all: 2, billingUnits: 2 },
+        _sum: { billingUnits: 3 },
+      },
+    ]);
 
     const detail = await getRankCheckRun("project_1", row.publicId);
 
-    expect(detail.costCents).toBe(10);
+    expect(detail.costCents).toBeNull();
+    expect(detail.usage?.actual).toBeNull();
   });
 
   it("filters a shared scheduled run to the requested keyword", async () => {

@@ -22,7 +22,7 @@ describe("navItems", () => {
     ).not.toContain("Timeline");
     expect(competitorsOnly.find((item) => item.label === "Competitors")).toMatchObject({
       badge: "experimental",
-      group: "modules",
+      group: "tracking",
       scope: "market",
     });
     expect(competitorsOnly.map((item) => item.label)).not.toContain("Timeline");
@@ -34,71 +34,82 @@ describe("navItems", () => {
     ).toEqual([
       "Dashboard",
       "Rank Tracker",
+      "AI Tracking",
       "Competitors",
       "Keyword Research",
       "Domain Overview",
       "Backlinks",
-      "Search Console",
       "AI Visibility",
       "Prompt Explorer",
-      "AI Tracking",
       "Site Audit",
+      "Search Console",
+      "Agent Reports",
       "Markets",
       "Alerts",
       "Runs",
       "Integrations",
-      "Project Context",
-      "Agent Reports",
       "Install",
       "Settings",
     ]);
   });
 
-  it("keeps Dashboard above the headed rail groups", () => {
+  it("groups existing destinations by purpose while keeping Dashboard standalone", () => {
     const items = navItems("prj_example", undefined, allExperimentalModules);
-
     expect(navItemGroups.map((group) => [group.id, group.label, group.tag])).toEqual([
-      ["modules", "Modules", "MODULES"],
+      ["tracking", "Tracking", "TRACKING"],
+      ["research", "Research & audits", "RESEARCH"],
+      ["reports", "Data & reports", "DATA"],
       ["project", "Project", "PROJECT"],
     ]);
     expect(items.filter((item) => item.group === null).map((item) => item.label)).toEqual([
       "Dashboard",
     ]);
-    // Market modules first, own-axis modules after: the order is the group's only sub-structure.
-    expect(items.filter((item) => item.group === "modules").map((item) => item.label)).toEqual([
+    expect(items.filter((item) => item.group === "tracking").map((item) => item.label)).toEqual([
       "Rank Tracker",
+      "AI Tracking",
       "Competitors",
+    ]);
+    expect(items.filter((item) => item.group === "research").map((item) => item.label)).toEqual([
       "Keyword Research",
       "Domain Overview",
       "Backlinks",
-      "Search Console",
       "AI Visibility",
       "Prompt Explorer",
-      "AI Tracking",
       "Site Audit",
+    ]);
+    expect(items.filter((item) => item.group === "reports").map((item) => item.label)).toEqual([
+      "Search Console",
+      "Agent Reports",
     ]);
     expect(items.filter((item) => item.group === "project").map((item) => item.label)).toEqual([
       "Markets",
       "Alerts",
       "Runs",
       "Integrations",
-      "Project Context",
-      "Agent Reports",
       "Install",
       "Settings",
     ]);
-    expect(items).toHaveLength(19);
-    expect(new Set(items.map((item) => item.group))).toEqual(new Set([null, "modules", "project"]));
+    expect(items).toHaveLength(18);
+    expect(
+      items.some((item) => item.label === "Project Context" || item.label === "Analytics"),
+    ).toBe(false);
+    expect(items.find((item) => item.label === "Settings")).toMatchObject({
+      activeHrefs: ["/app/prj_example/context"],
+      href: "/app/prj_example/settings",
+    });
   });
 
-  it("says what scopes a group covers in its tooltip rather than under its heading", () => {
+  it("keeps group help in tooltips and short captions on the collapsed rail", () => {
     for (const group of navItemGroups) {
       expect(group.tooltip.length).toBeGreaterThan(0);
-      expect(group.tag).toBe(group.label.toUpperCase());
+      expect(group.tag).toMatch(/^[A-Z]+$/);
+      expect(group.tag.length).toBeLessThanOrEqual(8);
     }
     expect(navItemGroups.map((group) => group.tooltip)).toEqual([
-      "Market modules follow the selected market. The rest keep their own axis.",
-      "Project-wide configuration. A market never narrows it.",
+      "Track rankings and AI performance over time.",
+      "Explore keywords, websites and AI responses.",
+      "Review connected search data and saved reports.",
+      "Project configuration and shared operations.",
     ]);
   });
 
@@ -174,29 +185,14 @@ describe("navItems", () => {
     ).toBe("ChartLineUpIcon");
   });
 
-  it("assigns module tags only to the designated entries", () => {
-    expect(
-      Object.fromEntries(
-        navItems("prj_example", undefined, allExperimentalModules).map((item) => [
-          item.label,
-          item.badge,
-        ]),
-      ),
-    ).toEqual({
-      Dashboard: undefined,
-      Alerts: "alpha",
-      "Rank Tracker": undefined,
-      Competitors: "experimental",
-      "Keyword Research": undefined,
-      "Domain Overview": undefined,
-      Backlinks: undefined,
-      "Search Console": "beta",
-      Markets: undefined,
-      Runs: undefined,
-      Integrations: undefined,
-      Install: undefined,
-      Settings: undefined,
-    });
+  it("keeps module maturity labels out of navigation while retaining experimental access", () => {
+    const items = navItems("prj_example", undefined, allExperimentalModules);
+
+    expect(items.filter((item) => item.badge).map((item) => [item.label, item.badge])).toEqual([
+      ["Competitors", "experimental"],
+    ]);
+    expect(items.find((item) => item.label === "Search Console")?.badge).toBeUndefined();
+    expect(items.find((item) => item.label === "Alerts")?.badge).toBeUndefined();
   });
 
   it("carries no count on any rail row", () => {
@@ -207,7 +203,15 @@ describe("navItems", () => {
     );
 
     expect([...keys].filter((key) => /count/iu.test(key))).toEqual([]);
-    expect([...keys].sort()).toEqual(["badge", "group", "href", "icon", "label", "scope"]);
+    expect([...keys].sort()).toEqual([
+      "activeHrefs",
+      "badge",
+      "group",
+      "href",
+      "icon",
+      "label",
+      "scope",
+    ]);
   });
 
   it("gives every rail row a scope", () => {
@@ -224,7 +228,6 @@ describe("navItems", () => {
       "Prompt Explorer": "own-axis",
       "AI Tracking": "own-axis",
       "Site Audit": "own-axis",
-      "Project Context": "project",
       "Agent Reports": "project",
       Alerts: "project",
       "Rank Tracker": "market",

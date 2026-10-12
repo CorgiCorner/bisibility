@@ -173,7 +173,8 @@
         "runningTitle": "チェックを実行中",
         "completeTitle": "チェック完了",
         "failedTitle": "チェック失敗",
-        "couldNotStart": "順位チェックを開始できませんでした。"
+        "couldNotStart": "順位チェックを開始できませんでした。",
+        "viewRuns": "実行を表示"
       },
       "traffic": {
         "noData": "データなし",

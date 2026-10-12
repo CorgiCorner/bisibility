@@ -1,10 +1,16 @@
+import {
+  BudgetExhaustedError,
+  ProviderAllocationExhaustedError,
+} from "@/lib/metering/admission-errors";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
+import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
 import { resolveSerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import { researchScopeForLocation } from "@/lib/serp/research-capability";
+import { dispatchPricedRequest } from "@usagekit/providers";
 import {
   DataForSeoAccountVerificationError,
   DataForSeoError,
@@ -167,12 +173,37 @@ export async function requestEnvelope(
 ) {
   let lastError: DataForSeoError | null = null;
   let timeoutRetries = 0;
+  if (init.method === "POST" && creds.usageObserver?.prepare) requireDataForSeoLogin(creds);
+  const dispatchCredentials = { secret: `${creds.login}:${creds.password}` };
+  const pricingHeaders = new Headers(init.headers);
+  pricingHeaders.delete("authorization");
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     try {
       const observed = await readObservedResponse<DataForSeoResponse>({
         observer: init.method === "POST" ? creds.usageObserver : undefined,
+        requireMeasuredUsage: init.method === "POST",
         request: () => fetchWithTimeout(url, init, timeoutMs),
+        ...(init.method === "POST"
+          ? {
+              providerRequest: {
+                method: "POST",
+                url,
+                headers: Object.fromEntries(pricingHeaders),
+                body: init.body,
+              },
+              dispatch: (request: Parameters<typeof dispatchPricedRequest>[0]) => {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), timeoutMs ?? REQUEST_TIMEOUT_MS);
+                return dispatchPricedRequest(
+                  request,
+                  fetch,
+                  controller.signal,
+                  dispatchCredentials,
+                ).finally(() => clearTimeout(timer));
+              },
+            }
+          : {}),
         measure: dataForSeoUsageReceipt,
       });
       const data = readResponse(observed.response, observed.data, creds);
@@ -189,7 +220,13 @@ export async function requestEnvelope(
 
       return data;
     } catch (error) {
-      if (error instanceof DeploymentAdmissionExhaustedError) throw error;
+      if (
+        error instanceof ProviderCostLimitError ||
+        error instanceof DeploymentAdmissionExhaustedError ||
+        error instanceof BudgetExhaustedError ||
+        error instanceof ProviderAllocationExhaustedError
+      )
+        throw error;
       if (error instanceof ProviderUsagePersistenceError) throw error;
       // Timeouts (AbortError) are retried at most once so the fallback chain keeps headroom.
       const timedOut = error instanceof Error && error.name === "AbortError";

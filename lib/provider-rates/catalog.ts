@@ -1,3 +1,4 @@
+import { providerFeatureOverrideBasis } from "@/lib/cost-estimate/provider-feature-rates";
 import {
   domainOverviewRates,
   estimatedFeatureCostCents,
@@ -80,7 +81,10 @@ export function providerListRate(
         ? keywordMetricsRate(providerId)
         : rankedKeywordPageRate(providerId);
   if (!featureRate) return null;
-  const amountCents = featureRate.unitCostCents ?? featureRate.costCents;
+  const amountCents =
+    providerFeatureOverrideBasis(featureRate.feature) === "item"
+      ? (featureRate.unitCostCents ?? featureRate.costCents)
+      : featureRate.costCents;
   return { amountCents, checkedAt: checkedAt(featureRate.checkedAt) };
 }
 

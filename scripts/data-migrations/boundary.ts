@@ -57,12 +57,13 @@ export async function lintDataMigrationReleaseBoundaries(
     );
     const contractExists = await fileSystem.exists(contract);
     if (entry.lifecycle === "active") {
-      if (contractExists) {
+      if (!contractExists) continue;
+      const sql = await fileSystem.read(contract);
+      if (!sql.includes(`-- after-data-migration: ${entry.id}`)) {
         throw new Error(
           `Active data migration ${entry.id} must not ship contract schema migration ${entry.contractMigrationId}.`,
         );
       }
-      continue;
     }
     if (!contractExists) {
       throw new Error(

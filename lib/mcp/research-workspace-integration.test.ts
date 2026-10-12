@@ -238,7 +238,7 @@ describe("MCP dispatch through the REST router and research handlers", () => {
       { project_id: projectId },
       "bsb_key_test",
     );
-    expect(context.payload).toMatchObject({ business: "Tools", goals: "Growth" });
+    expect(context.payload).toMatchObject({ data: { business: "Tools", goals: "Growth" } });
     const crawl = await dispatchMcpTool(
       "run_site_audit",
       { project_id: projectId, max_pages: 2 },
@@ -266,7 +266,7 @@ describe("MCP dispatch through the REST router and research handlers", () => {
     expect(saved).toMatchObject({
       ok: true,
       status: 201,
-      payload: { id: reportId, kind: "seo_audit" },
+      payload: { data: { id: reportId, kind: "seo_audit" } },
     });
     mocks.getReport.mockResolvedValueOnce({ ...payload, id: reportId, createdAt: stamp });
     const readback = await dispatchMcpTool(
@@ -274,7 +274,9 @@ describe("MCP dispatch through the REST router and research handlers", () => {
       { project_id: projectId, report_id: reportId },
       "bsb_key_test",
     );
-    expect(readback.payload).toMatchObject({ body: payload.body, provenance: payload.provenance });
+    expect(readback.payload).toMatchObject({
+      data: { body: payload.body, provenance: payload.provenance },
+    });
     expect(reportLink("https://bisibility.com", projectId, reportId)).toBe(
       `https://bisibility.com/app/${projectId}/agent-reports/${reportId}`,
     );
@@ -295,9 +297,11 @@ describe("MCP dispatch through the REST router and research handlers", () => {
       "bsb_key_test",
     );
     expect(saved.payload).toMatchObject({
-      body: opaque,
-      created_at: stamp,
-      provenance: { sourceType: "external_analysis" },
+      data: {
+        body: opaque,
+        created_at: stamp,
+        provenance: { sourceType: "external_analysis" },
+      },
     });
     expect(mocks.createReport).toHaveBeenCalledWith(
       expect.objectContaining({ body: opaque, projectId: project.id, actorId: null }),
@@ -307,7 +311,9 @@ describe("MCP dispatch through the REST router and research handlers", () => {
       { project_id: projectId, ...contextFields },
       "bsb_key_test",
     );
-    expect(context.payload).toMatchObject({ agent_rules: "Bound costs", updated_at: stamp });
+    expect(context.payload).toMatchObject({
+      data: { agent_rules: "Bound costs", updated_at: stamp },
+    });
     expect(mocks.saveContext).toHaveBeenCalledWith(
       project.id,
       expect.objectContaining({ agentRules: "Bound costs" }),

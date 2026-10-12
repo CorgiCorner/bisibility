@@ -86,3 +86,20 @@ describe("domain overview workspace model", () => {
     expect(cacheHoursRemaining("2026-08-12T11:00:00.000Z", now)).toBe(0);
   });
 });
+
+it("budget regression: maps the missing-budget reason to its own state", () => {
+  expect(
+    failureState({
+      costCents: 0,
+      ok: false,
+      reason: "budget_exhausted",
+      budgetReason: "budget_missing",
+    }),
+  ).toBe("budget_missing");
+});
+
+it("preserves the wallet budget state", () => {
+  expect(failureState({ costCents: 0, ok: false, reason: "wallet_budget_exhausted" })).toBe(
+    "wallet_budget_exhausted",
+  );
+});

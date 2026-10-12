@@ -1,4 +1,5 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { PageContent } from "@/components/shell/PageContent";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { AgentReportResource, AgentReportSummary } from "@/lib/agent-reports/model";
@@ -78,9 +79,9 @@ function AgentReportsStory({
       timeZone="UTC"
     >
       {view === "analysis" ? (
-        <div className="mx-auto max-w-[1040px]">
+        <PageContent variant="section">
           <AnalysisView />
-        </div>
+        </PageContent>
       ) : view === "loading" ? (
         <AgentReportsLoading
           description={messages.agentWorkspace.reportsDescription}

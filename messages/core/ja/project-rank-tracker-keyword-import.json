@@ -194,9 +194,6 @@
       "management": {
         "grid": {
           "tableAria": "順位トラッカーのキーワード",
-          "grouping": "キーワードのグループ化",
-          "grouped": "グループ化",
-          "flat": "フラット",
           "deleteFailed": "キーワードを削除できませんでした。",
           "currentPage": "現在のページ: {summary}",
           "weeklySteady": "今週は順位に変動なし",
@@ -398,7 +395,8 @@
           "providerUnknown": "プロバイダーのエラーにより、順位チェックを実行できませんでした。再試行するか、チェックの詳細で詳しい情報を確認してください。",
           "runningBody": "{count, plural, other {#件のチェックを実行中です。}}このウィンドウは閉じてかまいません。結果はこのページに表示されます。",
           "successBody": "{count, plural, other {#件の順位チェックが完了しました。}}",
-          "checksNeedAttention": "{count, plural, other {#件のチェックが要対応です。}}"
+          "checksNeedAttention": "{count, plural, other {#件のチェックが要対応です。}}",
+          "viewRuns": "実行を表示"
         },
         "schedule": {
           "title": "{count, plural, other {キーワード#件 / ターゲット#件}}のスケジュールを設定",
@@ -634,7 +632,9 @@
           "wrongUrl": "別の URL が順位獲得",
           "wrongUrlDescription": "順位取得 URL が対象 URL と異なります",
           "urlChanged": "順位取得 URL の変更",
-          "urlChangedDescription": "追跡履歴の中で複数の URL が順位を獲得しました"
+          "urlChangedDescription": "追跡履歴の中で複数の URL が順位を獲得しました",
+          "volumeMinimumAria": "月間検索数の最小値",
+          "volumeMaximumAria": "月間検索数の最大値"
         },
         "savedViews": {
           "allKeywords": "すべてのキーワード",

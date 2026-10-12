@@ -1,5 +1,4 @@
 "use client";
-
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { ResearchKeywordsActionInput } from "@/lib/actions/keyword-research";
@@ -31,7 +30,6 @@ import { useResearchEstimate } from "./useResearchEstimate";
 import { useResearchRuns } from "./useResearchRuns";
 import { useResearchSavedKeywords } from "./useResearchSavedKeywords";
 import { useResearchWorkspaceCopy } from "./useResearchWorkspaceCopy";
-
 export function ResearchWorkspace({
   addKeywordsAction,
   canDeleteSavedKeywords,
@@ -88,7 +86,7 @@ export function ResearchWorkspace({
     resultLimit,
   });
   // biome-ignore format: grouped hook state keeps this page component below the line limit.
-  const { activeTab, budgetBlocked, closeTab, markAdded, markSaved, researching, runResearch, setActiveTabId, tabs } = researchRuns;
+  const { activeTab, budgetBlocked, budgetState, closeTab, markAdded, markSaved, researching, runResearch, setActiveTabId, tabs } = researchRuns;
   const researchAvailable = researchScopeMetricsAvailable(scope);
   const savedKeywords = useResearchSavedKeywords({
     canRemove: canDeleteSavedKeywords,
@@ -97,7 +95,6 @@ export function ResearchWorkspace({
     removeSavedKeywordsAction,
     saveKeywordsAction,
   });
-
   function updateSeeds(next: string[]) {
     setSeeds(next);
     scheduleEstimate(researchAvailable ? next : []);
@@ -141,7 +138,7 @@ export function ResearchWorkspace({
 
   return (
     <section className="grid min-w-0 gap-4">
-      <Tooltip content={budgetBlocked ? copy.budgetBlockedTooltip : ""} wrapperClassName="w-full">
+      <Tooltip content={copy.budgetTooltip(budgetState)} wrapperClassName="w-full">
         <div className="w-full">
           <ResearchSearchCard
             connectionId={connectionId}
@@ -201,9 +198,7 @@ export function ResearchWorkspace({
           projectRef={context.project.id}
           resumeLabel={copy.budgetResetLabel()}
           scopeLabel={`${scope.countryName} / ${scope.languageLabel}`}
-          state={
-            budgetBlocked ? "budget_exhausted" : researchAvailable ? "idle" : "unsupported_location"
-          }
+          state={budgetState ?? (researchAvailable ? "idle" : "unsupported_location")}
         />
       ) : null}
       {hasProvider &&
@@ -253,13 +248,10 @@ export function ResearchWorkspace({
           metricsAvailable={researchScopeMetricsAvailable(activeTab.scope)}
           onAdd={setAddDraft}
           onDeeper={() => {
-            const deeper = activeTab.requestedLimit === 100 ? 300 : 500;
-            setResultLimit(deeper);
-            void runResearch(
-              [activeTab.seed],
-              researchTabRequest(activeTab, deeper),
-              activeTab.scope,
-            );
+            const limit = activeTab.requestedLimit === 100 ? 300 : 500;
+            setResultLimit(limit);
+            const request = researchTabRequest(activeTab, limit);
+            void runResearch([activeTab.seed], request, activeTab.scope);
           }}
           onRemoveSaved={
             canDeleteSavedKeywords ? (draft) => void savedKeywords.remove(draft) : undefined

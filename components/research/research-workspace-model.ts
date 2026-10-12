@@ -13,6 +13,7 @@ import {
   type RecentKeywordResearch,
 } from "@/lib/keyword-research/recent-searches";
 import type { KeywordResearchMode, KeywordResearchSuccess } from "@/lib/keyword-research/types";
+import { budgetDenialReason } from "@/lib/metering/budget-denial";
 import type { CheckHealth } from "@/lib/queries/check-health";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { getKeywordResearchPageContext } from "@/lib/queries/keyword-research";
@@ -272,7 +273,9 @@ export function researchSaveInput(projectId: string, draft: ResearchSaveDraft): 
 export function researchFailureState(
   outcome: Exclude<UiResearchOutcome, KeywordResearchSuccess>,
 ): ResearchState {
-  if (outcome.reason === "budget_exhausted") return "budget_exhausted";
+  if (outcome.reason === "wallet_budget_exhausted") return "wallet_budget_exhausted";
+  if (outcome.reason === "budget_exhausted")
+    return budgetDenialReason(outcome) ?? "budget_exhausted";
   if (outcome.reason === "account_restricted") return "account_restricted";
   if (outcome.reason === "needs_reauth") return "needs_reauth";
   if (outcome.reason === "no_source") return "no_provider";

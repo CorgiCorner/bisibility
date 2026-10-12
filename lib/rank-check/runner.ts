@@ -1,8 +1,11 @@
+import {
+  BudgetExhaustedError,
+  ProviderAllocationExhaustedError,
+} from "@/lib/metering/admission-errors";
 import "server-only";
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { withShadowRequest } from "@/lib/metering/shadow-context";
 import { assertOperationAccess } from "@/lib/operations/access-extension";
 import {
   LIST_PROVIDER_RATE_CONTEXT,
@@ -122,7 +125,7 @@ function rankCheckRaw(rank: SerpRankResult, connectionId?: string) {
 }
 
 export function runCheck(input: RunCheckInput): Promise<RankCheckRunResult> {
-  return withShadowRequest(() => runCheckScoped(input));
+  return runCheckScoped(input);
 }
 async function runCheckScoped(input: RunCheckInput): Promise<RankCheckRunResult> {
   // Final guard for every caller, including the legacy scheduled path: a
@@ -221,7 +224,12 @@ async function runCheckScoped(input: RunCheckInput): Promise<RankCheckRunResult>
       credentials: journal ? { ...credentials, usageObserver: journal.observer } : credentials,
     });
   } catch (error) {
-    if (error instanceof DeploymentAdmissionExhaustedError) throw error;
+    if (
+      error instanceof DeploymentAdmissionExhaustedError ||
+      error instanceof BudgetExhaustedError ||
+      error instanceof ProviderAllocationExhaustedError
+    )
+      throw error;
     if (error instanceof ProviderUsagePersistenceError) throw error;
     if (execution && (!execution.started || execution.costCents === null)) {
       throw new ProviderUsagePersistenceError({ cause: error });

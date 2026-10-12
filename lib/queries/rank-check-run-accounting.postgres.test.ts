@@ -1,3 +1,4 @@
+import { createUsageTables, seedTestUsage } from "@/lib/metering/usage.test-fixture";
 import { PGlite } from "@electric-sql/pglite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -34,24 +35,8 @@ beforeEach(async () => {
       id text PRIMARY KEY,
       "rankCheckId" text NOT NULL REFERENCES rank_checks(id)
     );
-    CREATE TABLE provider_cost_entries (
-      id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
-      "projectId" text NOT NULL,
-      provider text NOT NULL DEFAULT 'serpapi',
-      feature text NOT NULL DEFAULT 'rank_check',
-      "correlationId" text,
-      "costCents" numeric NOT NULL,
-      "usageQuantity" numeric,
-      "measurementStatus" text NOT NULL DEFAULT 'recorded',
-      cached boolean NOT NULL DEFAULT false,
-      failed boolean NOT NULL DEFAULT false,
-      "createdAt" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT provider_cost_entries_measurement_status_check
-        CHECK ("measurementStatus" IN ('recorded', 'unknown')),
-      CONSTRAINT provider_cost_entries_usage_quantity_check
-        CHECK ("usageQuantity" IS NULL OR "usageQuantity" >= 0)
-    );
   `);
+  await createUsageTables(db);
 });
 afterEach(async () => {
   await db.close();
@@ -70,22 +55,7 @@ async function seedTask(id: string, rankCheckId: string) {
   ]);
 }
 async function seedReceipt(entry: Receipt) {
-  await db.query(
-    `INSERT INTO provider_cost_entries
-      ("projectId", feature, "correlationId", "costCents", "usageQuantity", "measurementStatus", cached, failed, provider)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-    [
-      entry.projectId ?? "project_1",
-      entry.feature ?? "rank_check",
-      entry.correlationId,
-      entry.costCents,
-      entry.usageQuantity ?? null,
-      entry.measurementStatus ?? "recorded",
-      entry.cached ?? false,
-      entry.failed ?? false,
-      entry.provider ?? "serpapi",
-    ],
-  );
+  await seedTestUsage(db, entry);
 }
 
 function ledgerClient() {
@@ -99,6 +69,49 @@ async function runActuals(runIds: string[], projectId = "project_1") {
   const map = await rankCheckRunLedgerActuals(projectId, runIds, ledgerClient() as never);
   return map;
 }
+
+it.each(["run", "check", "target"] as const)(
+  "%s accounting retains proven cached zero and rejects uncertain cache evidence",
+  async (scope) => {
+    const cases: { name: string; cache: Partial<Receipt>; confirmed: boolean }[] = [
+      { name: "zero", cache: {}, confirmed: true },
+      { name: "unknown", cache: { measurementStatus: "unknown" }, confirmed: false },
+      { name: "null-quantity", cache: { usageQuantity: null }, confirmed: false },
+      { name: "nonzero-cost", cache: { costCents: 9 }, confirmed: false },
+      { name: "nonzero-quantity", cache: { usageQuantity: 1 }, confirmed: false },
+    ];
+    for (const scenario of cases) {
+      for (const paid of [false, true]) {
+        const id = `${scenario.name}-${paid}`;
+        await seedRun(`run-${id}`);
+        await seedCheck(`check-${id}`, `run-${id}`);
+        await seedTask(`task-${id}`, `check-${id}`);
+        await seedReceipt({
+          correlationId: `task-${id}`,
+          cached: true,
+          costCents: 0,
+          usageQuantity: 0,
+          ...scenario.cache,
+        });
+        if (paid)
+          await seedReceipt({ correlationId: `check-${id}`, costCents: 0.625, usageQuantity: 1 });
+        const client = ledgerClient() as never;
+        const actuals =
+          scope === "run"
+            ? await rankCheckRunLedgerActuals("project_1", [`run-${id}`], client)
+            : scope === "check"
+              ? await rankCheckLedgerActuals("project_1", [`check-${id}`], client)
+              : await rankCheckRunTargetLedgerActuals("project_1", `run-${id}`, client);
+        expect.soft(actuals.get(`${scope === "run" ? "run" : "check"}-${id}`), id).toMatchObject({
+          costCents: scenario.confirmed ? (paid ? 0.625 : 0) : null,
+          units: scenario.confirmed ? (paid ? 1 : 0) : null,
+          receiptCount: paid ? 2 : 1,
+          unconfirmedCount: scenario.confirmed ? 0 : 1,
+        });
+      }
+    }
+  },
+);
 
 describe("rank-check run ledger accounting SQL", () => {
   it("sums every paid attempt across a partial provider failure, including fallback receipts", async () => {
@@ -185,7 +198,7 @@ describe("rank-check run ledger accounting SQL", () => {
     expect(ledgerActualUnits(ledger, 3)).toBeNull();
   });
 
-  it("excludes cached, foreign-project, foreign-feature, and other-run receipts while retaining explicit zero", async () => {
+  it("excludes foreign scopes but keeps inconsistent cache evidence unknown", async () => {
     await seedRun("run_1");
     await seedRun("run_2");
     await seedCheck("rc_zero", "run_1");
@@ -207,13 +220,13 @@ describe("rank-check run ledger accounting SQL", () => {
 
     const runs = await runActuals(["run_1"]);
     expect(runs.get("run_1")).toEqual({
-      costCents: 0,
-      receiptCount: 1,
+      costCents: null,
+      receiptCount: 2,
       unitProvider: "serpapi",
-      unconfirmedCount: 0,
-      units: 0,
+      unconfirmedCount: 1,
+      units: null,
     });
-    expect(ledgerActualCostCents(runs.get("run_1"), 5)).toBe(0);
+    expect(ledgerActualCostCents(runs.get("run_1"), 5)).toBeNull();
 
     const targets = await rankCheckRunTargetLedgerActuals(
       "project_1",
@@ -221,7 +234,7 @@ describe("rank-check run ledger accounting SQL", () => {
       ledgerClient() as never,
     );
     expect([...targets.keys()]).toEqual(["rc_zero"]);
-    expect(ledgerActualUnits(targets.get("rc_zero"), 8)).toBe(0);
+    expect(ledgerActualUnits(targets.get("rc_zero"), 8)).toBeNull();
   });
 
   it("treats a recorded receipt without a quantity as unmeasured native usage", async () => {
@@ -234,14 +247,14 @@ describe("rank-check run ledger accounting SQL", () => {
     expect(ledgerActualUnits(runs.get("run_1"), 4)).toBeNull();
   });
 
-  it("falls back to stored measurements only when the ledger has no receipts", async () => {
+  it("keeps missing canonical evidence unknown", async () => {
     await seedRun("run_1");
     await seedCheck("rc_legacy", "run_1");
 
     const runs = await runActuals(["run_1"]);
     expect(runs.size).toBe(0);
-    expect(ledgerActualCostCents(undefined, 7)).toBe(7);
-    expect(ledgerActualUnits(undefined, 4)).toBe(4);
+    expect(ledgerActualCostCents(undefined, 7)).toBeNull();
+    expect(ledgerActualUnits(undefined, 4)).toBeNull();
     expect(ledgerActualUnits(undefined, null)).toBeNull();
   });
 
@@ -270,6 +283,75 @@ describe("rank-check run ledger accounting SQL", () => {
 });
 
 describe("rank-check ledger accounting SQL (check-id scope)", () => {
+  it("counts confirmed cached checks as zero without charging native replays twice", async () => {
+    await seedRun("run_cache");
+    for (const id of ["cached", "mixed", "missing"]) await seedCheck(id, "run_cache");
+    await seedTask("cached_task", "cached");
+    await seedReceipt({
+      correlationId: "cached_task",
+      cached: true,
+      costCents: 0,
+      usageQuantity: 0,
+    });
+    await seedReceipt({ correlationId: "mixed", costCents: 0.625, usageQuantity: 1 });
+    await seedReceipt({ correlationId: "mixed", cached: true, costCents: 0, usageQuantity: 0 });
+    await seedTestUsage(db, {
+      id: "native-replay",
+      correlationId: "mixed",
+      costCents: 0,
+      usageQuantity: 0,
+    });
+    await db.query(
+      `UPDATE metering_receipt SET body = body || '{"metadata":{"chargeReplayed":true}}'::jsonb WHERE receipt_pk = 'native-replay'`,
+    );
+
+    const actuals = await rankCheckLedgerActuals(
+      "project_1",
+      ["cached", "mixed", "missing"],
+      ledgerClient() as never,
+    );
+    expect(actuals.get("cached")).toMatchObject({ costCents: 0, units: 0, receiptCount: 1 });
+    expect(actuals.get("mixed")).toMatchObject({ costCents: 0.625, units: 1 });
+    expect(actuals.has("missing")).toBe(false);
+  });
+
+  it("keeps incomplete or inconsistent cached evidence unknown, even beside a paid receipt", async () => {
+    await seedRun("run_cache_unknown");
+    for (const id of ["unknown", "quantity", "nativeUnits", "cost", "mixed"])
+      await seedCheck(id, "run_cache_unknown");
+    await seedReceipt({
+      correlationId: "unknown",
+      cached: true,
+      costCents: 0,
+      usageQuantity: 0,
+      measurementStatus: "unknown",
+    });
+    await seedReceipt({
+      correlationId: "quantity",
+      cached: true,
+      costCents: 0,
+      usageQuantity: null,
+    });
+    await seedReceipt({
+      correlationId: "nativeUnits",
+      cached: true,
+      costCents: 0,
+      usageQuantity: 1,
+    });
+    await seedReceipt({ correlationId: "cost", cached: true, costCents: 9, usageQuantity: 0 });
+    await seedReceipt({ correlationId: "mixed", costCents: 0.625, usageQuantity: 1 });
+    await seedReceipt({ correlationId: "mixed", cached: true, costCents: 0, usageQuantity: null });
+
+    const actuals = await rankCheckLedgerActuals(
+      "project_1",
+      ["unknown", "quantity", "nativeUnits", "cost", "mixed"],
+      ledgerClient() as never,
+    );
+    for (const id of ["unknown", "quantity", "nativeUnits", "cost", "mixed"]) {
+      expect(actuals.get(id)).toMatchObject({ costCents: null, units: null, unconfirmedCount: 1 });
+    }
+  });
+
   it("totals paid partial failures across live and queued correlations for the requested checks", async () => {
     await seedRun("run_1");
     await seedCheck("rc_a", "run_1");
@@ -307,7 +389,7 @@ describe("rank-check ledger accounting SQL (check-id scope)", () => {
     expect(ledgerActualUnits(actuals.get("rc_a"), 7)).toBe(3);
   });
 
-  it("keeps a requested check isolated from other checks, cached, foreign-project, and foreign-feature receipts", async () => {
+  it("keeps foreign scopes out and does not silently confirm inconsistent cached evidence", async () => {
     await seedRun("run_1");
     await seedCheck("rc_zero", "run_1");
     await seedCheck("rc_other", "run_1");
@@ -323,11 +405,11 @@ describe("rank-check ledger accounting SQL (check-id scope)", () => {
 
     const actuals = await rankCheckLedgerActuals("project_1", ["rc_zero"], ledgerClient() as never);
     expect(actuals.get("rc_zero")).toEqual({
-      costCents: 0,
-      receiptCount: 1,
+      costCents: null,
+      receiptCount: 2,
       unitProvider: "serpapi",
-      unconfirmedCount: 0,
-      units: 0,
+      unconfirmedCount: 1,
+      units: null,
     });
   });
 

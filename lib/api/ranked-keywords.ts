@@ -71,6 +71,7 @@ function error(ctx: ApiContext, outcome: RankedKeywordsFailure) {
   }
   if (reason === "budget_exhausted") {
     return budgetExhaustedResponse(ctx, {
+      reason: outcome.budgetReason,
       surface: "programmatic",
       ...(outcome.provider === undefined ? {} : { provider: outcome.provider }),
     });

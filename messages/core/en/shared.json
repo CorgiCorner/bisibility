@@ -40,11 +40,14 @@
       "title": "Privacy choices"
     },
     "errors": {
+      "walletBudgetExhausted": "Deployment spending budget is exhausted.",
+      "budgetMissing": "Project spending budget is missing. Ask the project owner to configure a monthly budget in Settings > Usage.",
       "genericFallback": "The action could not be completed.",
       "rateLimited": "Too many requests. Please try again later.",
       "serverComponentDigest": "Check failed on our side (ref {digest}). Retry in a moment.",
       "staleDeployment": "bisibility was updated while this page was open. Refresh the app to continue. Any unsaved changes will be lost.",
-      "verificationFailed": "Verification failed. Please try again."
+      "verificationFailed": "Verification failed. Please try again.",
+      "usageReconciliationRequired": "Provider usage is not fully confirmed. Review and reconcile the usage history before starting another paid request."
     },
     "emergencyRecovery": {
       "error": {
@@ -300,7 +303,8 @@
         "noneReady": "No keywords are ready for a first check.",
         "providerMissing": "Connect a SERP provider before running checks.",
         "raiseBudget": "Raise the budget",
-        "sampleProject": "Sample projects don't run real checks."
+        "sampleProject": "Sample projects don't run real checks.",
+        "reviewUsage": "Review usage"
       },
       "scope": {
         "allReady": "All ready ({count, number})",
@@ -415,7 +419,11 @@
         "transferProjectOwnershipBody": "Make this member the project owner. Your project role changes to admin, and only the new owner can transfer ownership again.",
         "transferProjectOwnershipDangerLabel": "Transfer ownership",
         "transferProjectOwnershipTitle": "Transfer project ownership",
-        "transferProjectOwnershipToastMessage": "Project ownership transferred"
+        "transferProjectOwnershipToastMessage": "Project ownership transferred",
+        "deleteTimelineNoteBody": "Delete this timeline note? This cannot be undone.",
+        "deleteTimelineNoteDangerLabel": "Delete note",
+        "deleteTimelineNoteTitle": "Delete timeline note?",
+        "deleteTimelineNoteToastMessage": "Timeline note deleted."
       },
       "copy": {
         "action": "Copy",
@@ -677,6 +685,147 @@
           "label": "Status unavailable",
           "description": "The app cannot read the current import state right now."
         }
+      }
+    },
+    "usageViews": {
+      "summary": {
+        "asOf": "As of",
+        "title": "Usage",
+        "customerCharges": "Customer charges",
+        "loading": "Loading usage summary.",
+        "empty": "No usage in this period.",
+        "forbidden": "You cannot view usage for this scope.",
+        "failed": "Usage summary is unavailable right now.",
+        "incomplete": "The summary could not cover the whole period. Narrow the period and try again.",
+        "unknownOperations": "Operations with unknown measurements"
+      },
+      "cost": {
+        "asOf": "As of",
+        "title": "Provider cost",
+        "description": "Provider charges for tracked usage in this period.",
+        "loading": "Loading cost summary.",
+        "empty": "No tracked costs in this period.",
+        "forbidden": "You cannot view costs for this scope.",
+        "failed": "Cost summary is unavailable right now.",
+        "incomplete": "The whole period could not be summarized. Cost is unavailable.",
+        "byok": "Own key",
+        "platform": "Platform funded",
+        "costOwner": "Cost owner",
+        "funding": "By funding source"
+      },
+      "table": {
+        "title": "Usage detail",
+        "funding": "Funding source",
+        "byok": "Own key",
+        "platform": "Platform funded",
+        "cost": "Cost",
+        "customerCharges": "Customer charges",
+        "cents": "cents",
+        "certainty": "Certainty",
+        "unknownOperations": "Unknown operations",
+        "measured": "Measured",
+        "estimated": "Estimated",
+        "unknown": "Unknown",
+        "unavailable": "Unavailable",
+        "loading": "Loading usage.",
+        "empty": "No usage in this period.",
+        "forbidden": "You cannot view usage for this scope.",
+        "failed": "Usage is unavailable right now.",
+        "next": "Next page",
+        "first": "First page"
+      },
+      "exceptions": {
+        "title": "Needs attention",
+        "next": "Next page",
+        "first": "First page",
+        "operation": "Operation",
+        "provider": "Provider",
+        "principal": "Principal",
+        "kind": "Exception",
+        "state": "State",
+        "age": "Age",
+        "reservation_expired": "Reservation expired",
+        "lease_expired": "Lease expired",
+        "pending": "Pending evidence",
+        "loading": "Loading exceptions.",
+        "empty": "No exceptions in this period.",
+        "forbidden": "You cannot view operations for this scope.",
+        "failed": "Exceptions are unavailable right now."
+      },
+      "budget": {
+        "used": "Used",
+        "reserved": "Reserved",
+        "remaining": "Remaining",
+        "limit": "Limit",
+        "hardLimit": "Hard limit",
+        "alert": "Alert",
+        "resets": "Resets",
+        "noReset": "No reset",
+        "unlimited": "Unlimited",
+        "unavailable": "Unavailable",
+        "unknown": "Unknown",
+        "redacted": "This shared budget applies, but its figures are hidden from you.",
+        "block": "Blocks at the limit",
+        "allow": "Allows overage",
+        "ok": "Within budget",
+        "warning": "Warning",
+        "exceeded": "Over limit",
+        "loading": "Loading budgets.",
+        "empty": "No budgets apply.",
+        "forbidden": "You cannot view these budgets.",
+        "failed": "Budgets are unavailable right now."
+      },
+      "overview": {
+        "unknown": "Usage unknown",
+        "empty": "No connections yet.",
+        "ok": "Within budget",
+        "warning": "Near limit",
+        "exceeded": "Over limit",
+        "partial": "Still measuring",
+        "loading": "Loading usage."
+      },
+      "measurement": {
+        "measured": "Measured",
+        "estimated": "Estimated",
+        "unknown": "Unknown",
+        "unavailable": "Unavailable",
+        "cents": "cents"
+      },
+      "units": {
+        "cents": "cents",
+        "customer_cents": "credit cents",
+        "units": "Units",
+        "requests": "Requests",
+        "budget_cents": "cents",
+        "paid_attempts": "Paid attempts"
+      },
+      "dimensions": {
+        "connection": "Connection",
+        "provider": "Provider",
+        "surface": "Surface",
+        "source": "Source"
+      },
+      "other": {
+        "project": "Project",
+        "retained": "Retained connection",
+        "app": "App and schedules",
+        "programmatic": "API and agents",
+        "any": "Any traffic",
+        "rank_check": "Rank check",
+        "operation": "Other operation",
+        "worker": "Scheduled worker",
+        "api": "API",
+        "sdk": "SDK",
+        "cli": "CLI",
+        "mcp": "MCP",
+        "proxy": "Proxy"
+      },
+      "states": {
+        "reserved": "Reserved operation",
+        "dispatch_intended": "Dispatch intended",
+        "pending": "Pending",
+        "settled": "Settled",
+        "released": "Released"
       }
     }
   }

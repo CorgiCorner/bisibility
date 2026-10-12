@@ -11,8 +11,8 @@ vi.mock("@/components/integrations/ProviderCard", () => ({
   )),
 }));
 
-vi.mock("@/components/integrations/SerpFallbackOrder", () => ({
-  SerpFallbackOrder: vi.fn(() => <div data-testid="serp-fallback-order" />),
+vi.mock("@/components/integrations/ProjectSerpChain", () => ({
+  ProjectSerpChain: vi.fn(() => <div data-testid="serp-fallback-order" />),
 }));
 
 const actions = {
@@ -30,6 +30,7 @@ describe("IntegrationCategory", () => {
         actions={actions}
         canManageProviders
         canUpdateProject
+        projectId="prj_category"
         category={integrationCategories[0]}
         searchSyncPlan={undefined}
         timeZone="UTC"
@@ -60,6 +61,7 @@ describe("IntegrationCategory", () => {
         actions={actions}
         canManageProviders
         canUpdateProject
+        projectId="prj_category"
         category={integrationCategories[0]}
         searchSyncPlan={undefined}
         timeZone="UTC"

@@ -37,6 +37,8 @@ import { appExtensions } from "@/lib/app-extensions";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { explicitDeploymentDataRegionLabel } from "@/lib/deployment/deployment";
 import { googleOAuthErrorKey } from "@/lib/integrations/google-oauth-copy";
+import { DEFAULT_MONTHLY_COST_CAP_CENTS } from "@/lib/metering/project-budget-bootstrap";
+import { projectBudgetCapCents } from "@/lib/metering/project-budget-read";
 import { MAX_ONBOARDING_WEBSITE_LENGTH } from "@/lib/onboarding/website";
 import { isGoogleOAuthConfigured } from "@/lib/providers/analytics/google-client";
 import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oauth-pending";
@@ -51,7 +53,6 @@ import {
 } from "@/lib/queries/onboarding";
 import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
 import { listWorkspaces } from "@/lib/queries/workspaces";
-import { DEFAULT_MONTHLY_COST_CAP_CENTS } from "@/lib/rank-check/budget";
 import { serpDepthValues } from "@/lib/serp/constants";
 import { redirect } from "next/navigation";
 import { createOnboardingProject, deriveOnboardingWebsite, saveOnboardingMarkets } from "./actions";
@@ -141,6 +142,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
     projectDefaults,
     nextCheckAt,
     trackingStartedAt,
+    monthlyCapCents,
   ] = project
     ? await Promise.all([
         getOnboardingKeywordCount(project.publicId),
@@ -158,8 +160,19 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         getRequestProjectDefaults(project.id),
         getOnboardingNextCheckAt(project.publicId),
         getOnboardingTrackingStartedAt(project.publicId),
+        projectBudgetCapCents(project.id),
       ])
-    : [0, [], await getOnboardingProviderState(null), null, null, null, null, null];
+    : [
+        0,
+        [],
+        await getOnboardingProviderState(null),
+        null,
+        null,
+        null,
+        null,
+        null,
+        DEFAULT_MONTHLY_COST_CAP_CENTS,
+      ];
   const initialKeywordText = initialKeywordTexts[0] ?? null;
   const locations = await resolveOnboardingLocations({
     countryValues: paramValues(params?.country),
@@ -284,7 +297,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         initialWebsite={project?.domain ? undefined : websitePrefill}
         initialSerpConnections={providerState.serpConnections}
         initialStep={currentStep}
-        monthlyCapCents={project?.budgetCapCents ?? DEFAULT_MONTHLY_COST_CAP_CENTS}
+        monthlyCapCents={monthlyCapCents}
         nextCheckAt={nextCheckAt?.toISOString() ?? null}
         providerConnected={providerState.providerConnected}
         rankedKeywordConnections={providerState.rankedKeywordConnections}

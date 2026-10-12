@@ -41,6 +41,8 @@ export function connection(
     allocationAmountPerMonth: null,
     allocationUnit: null,
     costPerCheckCents: null,
+    credentialSource: "own",
+    rates: [],
     credentialsEncrypted: null,
     enabled: true,
     id,
@@ -65,4 +67,25 @@ export function project(
     providerAllocationsInitializedAt: initialized,
     providerConnections: connections,
   };
+}
+
+/** Stored budget projections for spend presentation tests; independent from the legacy project cap. */
+export function fixtureAllocations(connections: Record<string, unknown>[]) {
+  return connections.map((c) => {
+    const limit = (amount: unknown, unit: unknown = "cents") =>
+      amount == null || unit == null ? null : { amountPerMonth: amount, unit };
+    return {
+      internalConnectionId: c.id,
+      allocation: limit(c.allocationAmountPerMonth, c.allocationUnit),
+      programmaticAllocation: limit(c.programmaticAllocationAmountPerMonth, c.allocationUnit),
+      credits: {
+        app: limit(c.creditsAllocationAmountPerMonth),
+        programmatic: limit(c.creditsProgrammaticAllocationAmountPerMonth),
+      },
+      source:
+        c.allocationAmountPerMonth != null || c.programmaticAllocationAmountPerMonth != null
+          ? "connection"
+          : "none",
+    };
+  });
 }

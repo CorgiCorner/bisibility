@@ -148,9 +148,11 @@ export const backlinksSchemas = {
     oneOf: [
       {
         properties: {
-          history: { minItems: 12, maxItems: 12 },
+          history: { maxItems: 12 },
           history_unavailable: { const: false },
+          target_scope: { const: "site" },
         },
+        required: ["target_scope"],
       },
       {
         properties: {
@@ -178,7 +180,7 @@ export const backlinksSchemas = {
       history_unavailable: {
         type: "boolean",
         description:
-          "True only with empty history when the optional history request failed with a confirmed cost. Site history otherwise has exactly 12 months; page scope does not request history. Summary and links remain available.",
+          "True only with empty history when the optional history request failed with a confirmed cost. Successful site history can contain zero to twelve returned months; page scope does not request history. Summary and links remain available.",
       },
       include_subdomains: { type: "boolean" },
       provider: { type: "string" },
@@ -254,7 +256,8 @@ const queryParameters = [
   },
   { in: "query", name: "fresh", schema: { default: false, type: "boolean" } },
   {
-    description: "Best-effort pre-estimate provider cost gate, in cents.",
+    description:
+      "Limit admitted cost estimates across summary, history, rows and retries, in cents. Confirmed provider charges can differ from estimates.",
     in: "query",
     name: "max_cost_cents",
     schema: { minimum: 1, type: "integer" },
@@ -273,7 +276,7 @@ export function backlinksPaths(input: { bearer: Bearer }) {
             undefined,
             queryParameters,
           ),
-          'Requires write scope because cache misses spend provider budget. estimate_only=true needs only read scope and never spends provider budget. estimate_only is a free dry run, and max_cost_cents is a best-effort pre-estimate gate. Snapshots are cached for 24 hours. Aggregated referring-domain, page, and anchor views are consumer-side and must be labeled "within fetched rows".',
+          'Requires write scope because cache misses spend provider budget. estimate_only=true needs only read scope and never spends provider budget. estimate_only is a free dry run, and max_cost_cents limits admitted cost estimates across summary, history, rows and retries. Confirmed provider charges can differ from estimates. Snapshots are cached for 24 hours. Aggregated referring-domain, page, and anchor views are consumer-side and must be labeled "within fetched rows".',
         ),
       ),
     },

@@ -1,10 +1,6 @@
 "use client";
 
-import type {
-  ConnectFormValues,
-  Notice,
-  PendingAction,
-} from "@/components/integrations/ConnectDrawerSchema";
+import type { ConnectFormValues, Notice } from "@/components/integrations/ConnectDrawerSchema";
 import { providerCredentialFields } from "@/components/integrations/provider-auth";
 import { useProviderMetaCopy } from "@/components/integrations/provider-meta-copy";
 import { Button } from "@/components/ui/Button";
@@ -127,35 +123,6 @@ export function CredentialFields({
         );
       })}
     </div>
-  );
-}
-
-export function CostField({
-  busy,
-  errors,
-  form,
-  pendingAction,
-}: FormProps & {
-  busy: boolean;
-  errors: FieldErrors<ConnectFormValues>;
-  pendingAction: PendingAction | null;
-}) {
-  const t = useTranslations("projectIntegrations.drawer");
-  return (
-    <label className={labelClass}>
-      {t("costEstimate")}
-      <input
-        className={inputClass}
-        disabled={busy || pendingAction === "cost"}
-        min={0}
-        step={0.0001}
-        type="number"
-        {...form.register("costPerCheck", { valueAsNumber: true })}
-      />
-      <span className="text-[10px] normal-case tracking-normal text-fg-muted">
-        {errors.costPerCheck?.message ? String(errors.costPerCheck.message) : t("costHelp")}
-      </span>
-    </label>
   );
 }
 

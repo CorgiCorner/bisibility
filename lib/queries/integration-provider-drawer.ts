@@ -1,21 +1,4 @@
-import type {
-  ProviderMetaRow,
-  ProviderRateData,
-  ProviderStatusKind,
-} from "@/lib/integrations/types";
-import {
-  PROVIDER_RATE_LABELS,
-  PROVIDER_RATE_UNITS,
-  providerDomainOverviewListRates,
-  providerListRate,
-  providerRateFeatures,
-} from "@/lib/provider-rates/catalog";
-import {
-  type ProviderRateEntry,
-  type ProviderRateFeature,
-  type ResolvedProviderRate,
-  resolveProviderRate,
-} from "@/lib/provider-rates/resolver";
+import type { ProviderMetaRow, ProviderStatusKind } from "@/lib/integrations/types";
 import { normalizeGscProperty } from "@/lib/providers/analytics/gsc-property";
 import type { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { ProviderCredentials, ProviderKind } from "@/lib/providers/types";
@@ -33,15 +16,6 @@ export type ProviderConnectionRow = {
   provider: string;
   status: ProviderStatusKind;
   updatedAt: Date;
-  rates?: readonly {
-    amountCents: unknown;
-    feature: ProviderRateFeature;
-  }[];
-};
-
-export type ProviderCostEntryRow = ProviderRateEntry & {
-  connectionId: string;
-  feature: ProviderRateFeature;
 };
 
 export function providerDescription(item: (typeof PROVIDER_CATALOG)[number]) {
@@ -112,59 +86,6 @@ export function providerActivities(
       valueKey: connection ? (connection.enabled ? "enabled" : "disabled") : "notConnected",
     },
   ];
-}
-
-function serializedRate(
-  feature: ProviderRateFeature,
-  resolved: ResolvedProviderRate,
-  fallback: ResolvedProviderRate,
-): ProviderRateData {
-  return {
-    ...("amountCents" in resolved ? { amountCents: resolved.amountCents } : {}),
-    ...("checkedAt" in resolved ? { checkedAt: resolved.checkedAt.toISOString() } : {}),
-    ...(resolved.source === "measured" ? { sampleSize: resolved.sampleSize } : {}),
-    ...(fallback.source === "measured" || fallback.source === "list"
-      ? { fallbackSource: fallback.source }
-      : {}),
-    feature,
-    label: PROVIDER_RATE_LABELS[feature],
-    source: resolved.source,
-    unit: PROVIDER_RATE_UNITS[feature],
-  };
-}
-
-export function providerRates(
-  connection: ProviderConnectionRow | undefined,
-  providerId: string,
-  costEntries: readonly ProviderCostEntryRow[],
-): ProviderRateData[] {
-  const editableRates = providerRateFeatures(providerId).map((feature) => {
-    const manualRate =
-      connection?.credentialSource === "hosted"
-        ? undefined
-        : connection?.rates?.find((rate) => rate.feature === feature);
-    const legacyRankRate =
-      feature === "rank_check" && !manualRate && connection?.credentialSource !== "hosted"
-        ? connection?.costPerCheckCents
-        : null;
-    const entries = connection
-      ? costEntries.filter(
-          (entry) => entry.connectionId === connection.id && entry.feature === feature,
-        )
-      : [];
-    const list = providerListRate(providerId, feature);
-    const fallback = resolveProviderRate({ entries, list, manualAmountCents: null });
-    const resolved = resolveProviderRate({
-      entries,
-      list,
-      manualAmountCents: manualRate?.amountCents ?? legacyRankRate,
-    });
-    return serializedRate(feature, resolved, fallback);
-  });
-  const domainOverviewRates: ProviderRateData[] = providerDomainOverviewListRates(providerId).map(
-    (rate) => ({ ...rate, checkedAt: rate.checkedAt.toISOString() }),
-  );
-  return [...editableRates, ...domainOverviewRates];
 }
 
 export function displayedProviderLogin(itemId: string, login: string | undefined) {

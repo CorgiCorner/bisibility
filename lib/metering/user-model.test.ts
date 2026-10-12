@@ -1,28 +1,7 @@
-import type { BudgetStatus, UsageRow } from "@usagekit/core";
+import type { BudgetStatus } from "@usagekit/core";
 import { describe, expect, it } from "vitest";
-import { projectAuthority, projectBudgetRow, projectUsageRow } from "./user-model";
+import { projectBudgetRow } from "./user-model";
 
-const row: UsageRow = {
-  dimensions: {
-    connection: "private-connection",
-    provider: "DataForSEO",
-    surface: "app",
-    source: "worker",
-    platform_pool: "secret-pool",
-  },
-  cost: { money: { units: 9223372036854775807n, currency: "USD" }, certainty: "measured" },
-  measurements: [
-    { unit: "units", certainty: "unknown", quantity: null },
-    {
-      unit: "customer_cents",
-      certainty: "measured",
-      quantity: { unit: "customer_cents", value: 1234567890123456789n, scale: 4 },
-    },
-  ],
-  fundingSource: "byok",
-  costOwner: "private-payer",
-  unknownOperations: 2n,
-};
 const budget: BudgetStatus = {
   budget: {
     id: "private-budget",
@@ -46,49 +25,12 @@ const budget: BudgetStatus = {
 };
 
 describe("project Meter display boundary", () => {
-  it("keeps exact money beyond Number range and unknown quantity without payer identities", () => {
-    const data = projectUsageRow(row, "prc_public");
-    expect(data).toMatchObject({
-      providerCost: "9223372036854.775807",
-      units: null,
-      customerCharge: null,
-      unknownOperations: "2",
-    });
-    expect(JSON.stringify(data)).not.toMatch(/private-|secret-pool/);
-  });
-  it("shows acknowledged customer charges separately and hides platform upstream costs", () => {
-    expect(projectUsageRow({ ...row, fundingSource: "platform" }, "prc_public")).toMatchObject({
-      providerCost: null,
-      customerCharge: "1234567890123.456789",
-      certainty: "measured",
-    });
-    expect(
-      projectUsageRow({ ...row, fundingSource: "platform", measurements: [] }, null),
-    ).toMatchObject({ providerCost: null, customerCharge: null, certainty: "unknown" });
-    expect(
-      projectUsageRow(
-        {
-          ...row,
-          fundingSource: "platform",
-          measurements: [
-            {
-              unit: "customer_cents",
-              certainty: "estimated",
-              quantity: { unit: "customer_cents", value: 999n, scale: 4 },
-            },
-          ],
-        },
-        null,
-      ),
-    ).toMatchObject({ providerCost: null, customerCharge: null, certainty: "estimated" });
-  });
   it("preserves negative budget remainder and distinguishes warning from hard limit", () => {
     expect(projectBudgetRow(budget, "prc_public", true)).toMatchObject({
-      scope: "project",
-      connection: null,
-      remaining: "-0.6000",
-      hardLimit: "2.0000",
-      policy: "allow",
+      kind: "group",
+      target: "project",
+      remaining: { text: "-0.6" },
+      boundary: { onExceed: "allow", hardLimit: { text: "2" } },
     });
     expect(JSON.stringify(projectBudgetRow(budget, null))).not.toMatch(/private-/);
   });
@@ -105,15 +47,5 @@ describe("project Meter display boundary", () => {
       },
     ] as const)
       expect(projectBudgetRow({ ...budget, budget: { ...budget.budget, scope } }, null)).toBeNull();
-  });
-  it("requires complete inventory and complete period coverage before claiming active authority", () => {
-    expect(projectAuthority([], true)).toBe("legacy");
-    expect(projectAuthority([], false)).toBe("unknown");
-    const full = { mode: "active", coverage: "full", windows: [] } as const;
-    expect(projectAuthority([full], true)).toBe("active");
-    expect(projectAuthority([full, { mode: "legacy", coverage: "none", windows: [] }], true)).toBe(
-      "mixed",
-    );
-    expect(projectAuthority([{ ...full, coverage: "partial" }], true)).toBe("mixed");
   });
 });

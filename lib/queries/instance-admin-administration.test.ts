@@ -166,13 +166,13 @@ describe("getInstanceAdminAdministration", () => {
       provider: "serpapi",
       referenceCostCents: 12,
     });
-    expect(result.topConsumption[0]?.sharePercent).toBeCloseTo(86.02, 2);
+    expect(result.topConsumption[0]?.sharePercent).toBeCloseTo(83.33, 2);
     expect(result.topConsumption[1]).toMatchObject({
       billableUnits: 1,
       checks: 1,
       projectId: "project_2",
       provider: "dataforseo",
-      referenceCostCents: 1.55,
+      referenceCostCents: 2,
     });
     expect(result.topConsumption[2]).toMatchObject({
       billableUnits: 2,

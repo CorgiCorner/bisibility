@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { keywordScheduleTarget } from "@/lib/keywords/schedule-targets";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { useTranslations } from "next-intl";
@@ -26,13 +27,9 @@ export function KeywordConnectedSchedules({
         <div className="flex flex-wrap items-center gap-3">
           <ScheduleCell projectRef={projectRef} targets={[keywordScheduleTarget(keyword)]} />
           {onChange ? (
-            <button
-              className="text-[12px] font-semibold text-accent-text hover:underline"
-              onClick={onChange}
-              type="button"
-            >
+            <Button variant="ghost" size="xs" onClick={onChange} type="button">
               {keyword.checkSchedule ? t("changeSchedule") : t("setSchedule")}
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>

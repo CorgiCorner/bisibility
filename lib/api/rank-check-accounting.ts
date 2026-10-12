@@ -23,8 +23,8 @@ function quotaProvider(provider: string) {
 export function rankCheckAccountingOverride(
   check: Pick<RankCheckRecord, "provider">,
   ledger: RunLedgerActual | undefined,
-): RankCheckAccountingOverride | undefined {
-  if (!ledger || ledger.receiptCount === 0) return undefined;
+): RankCheckAccountingOverride {
+  if (!ledger || ledger.receiptCount === 0) return { costCents: null, usageQuantity: null };
   return {
     costCents: ledger.costCents,
     usageQuantity: quotaProvider(check.provider)
@@ -38,9 +38,9 @@ export function rankCheckAccountingOverride(
 /**
  * Ledger-aware API serialization for a page of rank checks: one batched ledger
  * read replaces the stored per-check usage fields, which only describe the
- * final provider attempt. Checks predating the ledger keep their measured
- * stored fields; once receipts exist the ledger decides, unconfirmed null
- * included. The project comes from the trusted API context or the verified
+ * final provider attempt. Missing or unconfirmed receipts keep actuals unknown;
+ * historical values must be imported into Meter before they become actuals.
+ * The project comes from the trusted API context or the verified
  * check keyword, never from client input.
  */
 export async function rankCheckResources(projectId: string, checks: readonly RankCheckRecord[]) {

@@ -72,6 +72,23 @@ describe("withAppRoute", () => {
     expect(handler).toHaveBeenCalledWith(request, { id: "user_1" }, undefined);
   });
 
+  it("preserves app project budget surface and the authoritative reset", async () => {
+    const resetAt = new Date(Date.now() + 60_000);
+    const response = await withAppRoute(async () => {
+      throw new BudgetExhaustedError({
+        projectId: "private-project",
+        capCents: 10,
+        spentCents: 10,
+        resetAt,
+      });
+    })(request);
+    expect((await response.json()).details).toMatchObject({
+      surface: "app",
+      resets_at: resetAt.toISOString(),
+    });
+    expect(Number(response.headers.get("Retry-After"))).toBeGreaterThan(0);
+  });
+
   it.each([
     [new AuthorizationError("forbidden"), 403],
     [new ProjectNotFoundError(), 404],
@@ -165,6 +182,44 @@ describe("withAppRoute", () => {
     expect((await legacy.json()).details.scope).toBeUndefined();
   });
 
+  it("maps an own exhausted budget consistently with the API error mapper", async () => {
+    const response = await withAppRoute(async () => {
+      throw new BudgetExhaustedError({
+        projectId: "project_1",
+        capCents: 1,
+        spentCents: 1,
+        resetAt: new Date("2026-11-01T00:00:00.000Z"),
+      });
+    })(request);
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBeTruthy();
+    await expect(response.json()).resolves.toMatchObject({
+      details: { surface: "app", resets_at: "2026-11-01T00:00:00.000Z" },
+      type: "https://bisibility.com/problems/budget_exhausted",
+    });
+  });
+
+  it.each(["own", "hosted"])("maps %s missing budgets in app routes", async (kind) => {
+    const error =
+      kind === "own"
+        ? new BudgetExhaustedError({
+            projectId: "project_1",
+            capCents: 0,
+            spentCents: 0,
+            reason: "budget_missing",
+          })
+        : new DeploymentAdmissionExhaustedError("budget", { budgetReason: "budget_missing" });
+    const response = await withAppRoute(async () => {
+      throw error;
+    })(request);
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBeNull();
+    const body = await response.json();
+    expect(body.details).toMatchObject({ reason: "budget_missing" });
+    expect(body.detail).toContain("configure a monthly budget");
+  });
+
   it("adds owner details for a trusted admission in a session app route", async () => {
     mocks.admissionDetails.mockResolvedValue({
       balance_cents: 4,
@@ -208,5 +263,18 @@ describe("withAppRoute", () => {
     );
     expect(log).not.toHaveBeenCalled();
     log.mockRestore();
+  });
+  it("budget regression: preserves a launch missing-budget reason without reset advice", async () => {
+    const response = await withAppRoute(async () => {
+      throw new LaunchRankCheckRunError("budget_exhausted", undefined, "budget_missing");
+    })(request);
+    expect(response.status).toBe(429);
+    const body = await response.json();
+    expect(body.type).toBe("https://bisibility.com/problems/budget_exhausted");
+    expect(body.details.reason).toBe("budget_missing");
+    expect(body.detail).toContain("configure a monthly budget");
+    expect(body.details.resets_at).toBeUndefined();
+    expect(response.headers.get("Retry-After")).toBeNull();
+    expect(response.headers.get("RateLimit-Reset")).toBeNull();
   });
 });

@@ -132,7 +132,9 @@ describe("workspace REST boundaries", () => {
     );
     const saved = await agentReportsRoute(ctx, projectId);
     expect(saved.status).toBe(201);
-    expect(await saved.json()).toEqual({ ...report, createdAt: undefined, created_at: stamp });
+    expect(await saved.json()).toEqual({
+      data: { ...report, createdAt: undefined, created_at: stamp },
+    });
     expect(mocks.create).toHaveBeenCalledWith(
       expect.objectContaining({
         projectId: "internal1",
@@ -142,7 +144,9 @@ describe("workspace REST boundaries", () => {
     );
     const update = context("PATCH", JSON.stringify(contextBody));
     const contextResult = await projectContextRoute(update, projectId);
-    expect(await contextResult.json()).toEqual({ ...contextBody, updated_at: stamp });
+    expect(await contextResult.json()).toEqual({
+      data: { ...contextBody, updated_at: stamp },
+    });
   });
   it.each([
     "null",
@@ -268,4 +272,36 @@ describe("workspace REST boundaries", () => {
       expect(mocks.list).not.toHaveBeenCalled();
     },
   );
+  it("envelopes context GET, context PATCH, report POST and report GET as {data}", async () => {
+    mocks.context.mockResolvedValue({ ...contextBody, agentRules: "r", updatedAt: stamp });
+    const getCtx = context("GET");
+    const getResult = await projectContextRoute(getCtx, projectId);
+    const getBody = await getResult.json();
+    expect(getBody).toHaveProperty("data");
+    expect(getBody.data).toMatchObject({ business: expect.anything() });
+
+    const patchCtx = context("PATCH", JSON.stringify(contextBody));
+    const patchBody = await (await projectContextRoute(patchCtx, projectId)).json();
+    expect(patchBody).toEqual({ data: { ...contextBody, updated_at: stamp } });
+
+    const postCtx = context(
+      "POST",
+      JSON.stringify({
+        kind: "external_analysis",
+        title: report.title,
+        body: report.body,
+        provenance: report.provenance,
+      }),
+    );
+    const postResponse = await agentReportsRoute(postCtx, projectId);
+    expect(postResponse.status).toBe(201);
+    const postBody = await postResponse.json();
+    expect(postBody).toHaveProperty("data");
+    expect(postBody.data.id).toBe(reportId);
+
+    const singleCtx = context();
+    const singleBody = await (await agentReportRoute(singleCtx, projectId, reportId)).json();
+    expect(singleBody).toHaveProperty("data");
+    expect(singleBody.data.id).toBe(reportId);
+  });
 });

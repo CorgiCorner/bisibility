@@ -1,47 +1,55 @@
 "use client";
 
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { IconButton } from "@/components/ui/IconButton";
 import { removeSignalNote } from "@/lib/actions/signals";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
-type RemoveNoteActionProps = {
-  projectId: string;
-  signalId: string;
-};
+type RemoveNoteActionProps = { projectId: string; signalId: string };
 
 export function RemoveNoteAction({ projectId, signalId }: Readonly<RemoveNoteActionProps>) {
   const t = useTranslations("projectTimeline.remove");
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-
-  function remove() {
-    if (!window.confirm(t("confirm"))) return;
+  async function remove() {
     setMessage(null);
-    startTransition(() => {
-      void removeSignalNote({ projectId, signalId })
-        .then(() => router.refresh())
-        .catch((error: unknown) => setMessage(actionErrorMessage(error, t("error"))));
-    });
+    try {
+      await removeSignalNote({ projectId, signalId });
+      setOpen(false);
+      router.refresh();
+    } catch (error) {
+      setMessage(actionErrorMessage(error, t("error")));
+      throw error;
+    }
   }
-
   return (
     <span className="flex flex-col items-end gap-1 md:pt-0.5">
-      <button
+      <IconButton
         aria-label={t("aria")}
-        className="grid h-8 w-8 place-items-center rounded-control border border-border-control bg-bg-elev text-red-text hover:border-red focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
-        disabled={isPending}
-        onClick={remove}
-        type="button"
+        onClick={() => setOpen(true)}
+        size="small"
+        variant="secondary"
       >
-        <Trash weight="regular" aria-hidden size={13} />
-      </button>
-      {message ? (
-        <span className="font-sans tabular-nums text-[10px] text-red-text">{message}</span>
-      ) : null}
+        <Trash weight="regular" aria-hidden size={13} className="text-red-text" />
+      </IconButton>
+      <ConfirmModal
+        kind="deleteTimelineNote"
+        onClose={() => setOpen(false)}
+        onConfirm={remove}
+        open={open}
+        failureDetail={
+          message ? (
+            <p role="alert" className="text-red-text">
+              {message}
+            </p>
+          ) : undefined
+        }
+      />
     </span>
   );
 }

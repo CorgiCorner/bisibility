@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { frozenUsageResponse } from "./canonical-query.test-fixture";
 import { getCalculatorPrefill, getProjectCostContext } from "./cost-calculator";
 
 const mocks = vi.hoisted(() => ({
+  budgetCap: vi.fn().mockResolvedValue(777),
   prisma: {
+    $queryRaw: vi.fn(),
     keyword: { groupBy: vi.fn() },
     providerCostEntry: { aggregate: vi.fn() },
     projectDefaults: { findUnique: vi.fn() },
@@ -10,7 +13,7 @@ const mocks = vi.hoisted(() => ({
     rankCheck: { aggregate: vi.fn() },
   },
   project: {
-    budgetCapCents: 900,
+    monthlyCapCents: 900,
     domain: "https://www.example.com",
     id: "project_1",
     name: "Example",
@@ -20,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   requireReadableProject: vi.fn(),
 }));
 
+vi.mock("@/lib/metering/project-budget-read", () => ({ projectBudgetCapCents: mocks.budgetCap }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
@@ -27,6 +31,9 @@ vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject
 describe("cost calculator query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$queryRaw.mockImplementation((query) =>
+      frozenUsageResponse(query, mocks.prisma.providerCostEntry),
+    );
     mocks.requireReadableProject.mockResolvedValue({ project: mocks.project });
     mocks.prisma.keyword.groupBy.mockResolvedValue([]);
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
@@ -47,7 +54,8 @@ describe("cost calculator query", () => {
       serpDepth: 50,
     });
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
-      costPerCheckCents: 0.06,
+      credentialSource: "own",
+      rates: [{ feature: "rank_check", amountCents: "0.06" }],
       provider: "dataforseo",
     });
 
@@ -61,7 +69,12 @@ describe("cost calculator query", () => {
     });
     expect(mocks.prisma.providerConnection.findFirst).toHaveBeenCalledWith({
       orderBy: [{ priority: "asc" }, { provider: "asc" }],
-      select: { costPerCheckCents: true, id: true, provider: true },
+      select: {
+        credentialSource: true,
+        id: true,
+        provider: true,
+        rates: { select: { amountCents: true, feature: true }, where: { feature: "rank_check" } },
+      },
       where: {
         enabled: true,
         kind: "serp",
@@ -124,7 +137,8 @@ describe("cost calculator query", () => {
 
   it("preserves an explicit zero-cost provider rate", async () => {
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
-      costPerCheckCents: 0,
+      credentialSource: "own",
+      rates: [{ feature: "rank_check", amountCents: "0" }],
       provider: "local-sequence",
     });
 
@@ -149,7 +163,7 @@ describe("cost calculator query", () => {
     mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 75 } });
 
     await expect(getProjectCostContext("prj_1")).resolves.toMatchObject({
-      capCents: 900,
+      capCents: 777,
       cronExpression: "0 6 * * 1",
       rawFrequency: "custom_cron",
       spentCents: 75,

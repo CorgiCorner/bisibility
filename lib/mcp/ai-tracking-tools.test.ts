@@ -85,4 +85,17 @@ describe("AI tracking MCP REST parity", () => {
     ).toThrow("run_id");
     expect(dispatchAiTrackingTool("unrecognized", {})).toBeNull();
   });
+  it("forwards the CSV format for the evidence export", () => {
+    const call = dispatchAiTrackingTool("exportAiTrackingEvidence", {
+      project_id: "prj_example",
+      run_id: "air_example",
+      format: "csv",
+      limit: 50,
+    });
+    expect(call?.method).toBe("GET");
+    const params = new URLSearchParams(call?.path.split("?")[1] ?? "");
+    expect(params.get("format")).toBe("csv");
+    expect(params.get("run_id")).toBe("air_example");
+    expect(params.get("limit")).toBe("50");
+  });
 });

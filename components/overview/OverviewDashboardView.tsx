@@ -128,6 +128,7 @@ export function OverviewDashboardView({
           {sampleBanner}
           <OverviewNoData
             budgetExhausted={checkHealth.budget.exhausted}
+            budgetReason={checkHealth.budget.reason}
             canCreateKeyword={canCreateKeyword}
             canManageProviders={canManageProviders}
             canRunChecks={canRunChecks}

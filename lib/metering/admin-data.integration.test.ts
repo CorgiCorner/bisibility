@@ -1,3 +1,4 @@
+import { ownAllocationTag } from "@/lib/provider-usage/credential-version";
 import { createMeter } from "@usagekit/meter";
 import { expect, it, vi } from "vitest";
 
@@ -17,24 +18,34 @@ vi.mock("@/lib/db/prisma", () => ({
 vi.mock("./runtime", () => ({ meteringNamespace: () => "test", meteringRuntime: mocks.runtime }));
 
 import { readMeteringAdmin } from "./admin-data";
-import { allocationBudgets, type UsageEntry } from "./mapping";
-import { createShadowEngine } from "./shadow-engine";
-import { createPostgresShadowHandoffs } from "./shadow-handoff";
-import { Prisma, transactions } from "./store/sql";
+import { receiptFromEntry, reserveFromEntry, type UsageEntry } from "./mapping";
+import { fundingSpendingBudgets } from "./spending-limits";
+import { type Prisma, transactions } from "./store/sql";
 import { fixture } from "./store/test-fixture";
 
-it("reads exact admin differences, current budget headroom, and durable exceptions from Postgres", async () => {
+it("reads canonical admin usage, current budget headroom, and durable exceptions from Postgres", async () => {
   const f = await fixture();
   try {
     f.clock.set("2026-09-23T12:00:00Z");
     const tx = transactions(f.client(), f.schema, f.counters);
     mocks.query.mockImplementation((query: Prisma.Sql) => tx.read((sql) => sql.query(query)));
     mocks.connections.mockResolvedValue([
-      { id: "c1", projectId: "p1", project: { ownerId: "u1" } },
+      {
+        id: "c1",
+        publicId: "prc_c1",
+        provider: "dataforseo",
+        projectId: "p1",
+        project: { ownerId: "u1" },
+      },
     ]);
-    mocks.projects.mockResolvedValue([{ id: "p1" }]);
+    mocks.projects.mockResolvedValue([{ id: "p1", publicId: "prj_p1", ownerId: "u1" }]);
     f.budgets.push(
-      ...allocationBudgets("test", { id: "c1", app: "10", programmatic: "10", unit: "cents" }, 1),
+      ...fundingSpendingBudgets(
+        "test",
+        { id: "c1", provider: "dataforseo", app: "10", programmatic: "10", unit: "cents" },
+        "byok",
+        1,
+      ),
     );
     const meter = createMeter({
       store: f.store,
@@ -46,33 +57,47 @@ it("reads exact admin differences, current budget headroom, and durable exceptio
       }),
     });
     mocks.runtime.mockResolvedValue({ meter });
-    await tx.write(async (sql) => {
-      await sql.execute(
-        Prisma.sql`CREATE TABLE provider_cost_entries (id text PRIMARY KEY,"connectionId" text,"projectId" text,source text,"createdAt" timestamptz,"costCents" numeric(10,4),"credentialSource" text,"measurementStatus" text)`,
-      );
-      await sql.execute(
-        Prisma.sql`INSERT INTO provider_cost_entries VALUES('op','c1','p1','app','2026-09-23','1.0000','own','recorded')`,
-      );
-    });
-    const failure = vi.fn();
-    const engine = createShadowEngine({
-      meter,
-      clock: f.clock,
-      namespace: "test",
-      handoffs: createPostgresShadowHandoffs({
-        prisma: f.client(),
+    const grants = new Map<string, { version: number; leaseId: string }>();
+    const begin = async (entry: UsageEntry, estimate: { cents: string; units: string }) => {
+      const reserved = await meter.reserve(reserveFromEntry("test", entry, estimate));
+      if (reserved.outcome !== "reserved") throw new Error(reserved.outcome);
+      const grant = await f.store.markDispatchIntent({
         namespace: "test",
-        schema: f.schema,
-      }),
-      sink: async () => undefined,
-      failure,
-    });
+        principal: "u1",
+        operationId: entry.id,
+        expectedVersion: reserved.operation.version,
+        commandId: `dispatch:${entry.id}`,
+        holder: "test",
+        leaseTtlMs: 60000,
+      });
+      if (!("granted" in grant) || !grant.granted) throw new Error("dispatch denied");
+      grants.set(entry.id, { version: grant.operation.version, leaseId: grant.lease.leaseId });
+    };
+    const record = async (entry: UsageEntry) => {
+      const grant = grants.get(entry.id);
+      if (!grant) throw new Error("Missing fixture dispatch grant");
+      const result = await meter.settle({
+        namespace: "test",
+        principal: "u1",
+        operationId: entry.id,
+        expectedVersion: grant.version,
+        commandId: `settle:${entry.id}:${entry.measurementStatus}`,
+        authority:
+          entry.id === "pending" && entry.measurementStatus === "recorded"
+            ? { kind: "late_evidence", source: "verified_fixture" }
+            : { kind: "lease", leaseId: grant.leaseId },
+        receipt: receiptFromEntry(entry, f.clock.now()),
+      });
+      if (result.outcome !== "settled") throw new Error(result.outcome);
+      grants.set(entry.id, { ...grant, version: result.operation.version });
+    };
     const entry: UsageEntry = {
       id: "op",
       ownerId: "u1",
       projectId: "p1",
       connectionId: "c1",
-      provider: "search",
+      provider: "dataforseo",
+      allocationTag: ownAllocationTag("dataforseo", "c1"),
       feature: "rank_check",
       source: "app",
       createdAt: f.clock.now(),
@@ -82,40 +107,36 @@ it("reads exact admin differences, current budget headroom, and durable exceptio
       cached: false,
       failed: false,
     };
-    await engine.begin(entry, { cents: "1.0001", units: "1" });
-    await engine.record(entry);
-    await engine.begin({ ...entry, id: "pending" }, { cents: "2", units: "1" });
-    await engine.record({
+    await begin(entry, { cents: "1.0001", units: "1" });
+    await record(entry);
+    await begin({ ...entry, id: "pending" }, { cents: "2", units: "1" });
+    await record({
       ...entry,
       id: "pending",
       measurementStatus: "unknown",
       usageQuantity: null,
     });
-    expect(failure).not.toHaveBeenCalled();
     const page = await readMeteringAdmin({ month: "2026-09", project: "p1" });
-    expect(page.usage).toHaveLength(1);
+    expect(page.usage.rows).toHaveLength(1);
     // A pending operation makes the aggregate's certainty unknown; it cannot show a false precise delta.
-    expect(page.usage[0]).toMatchObject({
-      connection: "c1",
-      meter: null,
-      legacy: "1.0000",
-      difference: null,
+    expect(page.usage.rows[0]).toMatchObject({
+      dimensions: { connection: "prc_c1" },
+      cost: { certainty: "unknown" },
       certainty: "unknown",
-      reserved: "2.0000 cents",
     });
-    expect(page.budgets.find((b) => b.surface === "app")).toMatchObject({
-      used: "1.0001 cents",
-      reserved: "2.0000 cents",
-      remaining: "6.9999 cents",
+    expect(
+      page.budgets.find((b) => b.traffic.kind === "surface" && b.traffic.surface === "app"),
+    ).toMatchObject({
+      used: { text: "1.0001" },
+      remaining: { text: "6.9999" },
     });
-    expect(page.exceptions).toEqual([
-      expect.objectContaining({ operation: "pending", state: "pending" }),
+    expect(page.exceptions.rows).toEqual([
+      expect.objectContaining({ operationId: "pending", state: "pending" }),
     ]);
-    await engine.record({ ...entry, id: "pending", costCents: "0.0000", usageQuantity: "0" });
+    await record({ ...entry, id: "pending", costCents: "0.0000", usageQuantity: "0" });
     const settled = await readMeteringAdmin({ month: "2026-09", project: "p1" });
-    expect(settled.usage[0]).toMatchObject({
-      meter: "1.0001",
-      difference: "0.0001",
+    expect(settled.usage.rows[0]).toMatchObject({
+      cost: { text: "1.0001" },
       certainty: "measured",
     });
   } finally {

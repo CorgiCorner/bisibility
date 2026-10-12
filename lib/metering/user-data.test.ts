@@ -20,7 +20,7 @@ vi.mock("@/lib/providers/execution-extension", () => ({
 }));
 vi.mock("./own-budget-read", () => ({ readOwnConnectionBudgets: mocks.ownBudgets }));
 
-import { getProjectMeteringUsage } from "./user-data";
+import { getProjectMeteringBudgets, getProjectMeteringUsage } from "./user-data";
 
 const now = "2026-10-06T12:00:00.000Z";
 const occurredAt = "2026-10-06T11:00:00.000Z";
@@ -178,20 +178,13 @@ describe("verified project Meter queries", () => {
     const budget = vi.spyOn(f.meter, "applicableBudgets");
     const writes = vi.spyOn(f.store, "reserve");
     const data = await getProjectMeteringUsage("prj_public");
-    expect(data).toMatchObject({
-      status: "available",
-      authority: "legacy",
-      observed: true,
-      unresolved: 0,
-    });
-    expect(data.rows).toHaveLength(1);
-    expect(data.rows[0]).toMatchObject({ providerCost: "0.010000", units: "1.000000" });
+    expect(data.status).toBe("available");
+    expect(data.summary.complete).toBe(true);
+    expect(data.detail.groupBy).toEqual(["connection", "provider", "surface", "source"]);
+    expect(data.detail.rows).toHaveLength(1);
+    expect(data.detail.rows[0].cost).toMatchObject({ text: "1.0000", certainty: "measured" });
     expect(data.budgets).toHaveLength(2);
-    expect(data.budgets.find((row) => row.surface === "worker")).toMatchObject({
-      used: "1.000000",
-      provider: "dataforseo",
-      connection: "prc_public",
-    });
+    expect(data.budgets.find((row) => row.unit === "units")?.used).toMatchObject({ text: "1" });
     expect(usage).toHaveBeenCalledWith(
       expect.objectContaining({
         readablePrincipals: ["owner"],
@@ -201,7 +194,7 @@ describe("verified project Meter queries", () => {
       }),
       expect.objectContaining({ scope: { kind: "group", namespace: "test", group: "project" } }),
     );
-    expect(budget.mock.calls.map(([, query]) => query.source)).toEqual([
+    expect(budget.mock.calls.slice(0, 7).map(([, query]) => query.source)).toEqual([
       "app",
       "worker",
       "api",
@@ -211,14 +204,8 @@ describe("verified project Meter queries", () => {
       "proxy",
     ]);
     expect(mocks.connections).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { projectId: "project" }, take: 21 }),
+      expect.objectContaining({ where: { projectId: "project" }, take: 50 }),
     );
-    expect(mocks.authority).toHaveBeenCalledWith({
-      namespace: "test",
-      connectionId: "connection",
-      from: "2026-10-01T00:00:00.000Z",
-      to: now,
-    });
     expect(writes).not.toHaveBeenCalled();
     expect(JSON.stringify(data)).not.toMatch(/private-owner|shared-tag|project-op|other-op/);
   });
@@ -226,21 +213,20 @@ describe("verified project Meter queries", () => {
     const f = fixture();
     expect(await getProjectMeteringUsage("prj_public")).toMatchObject({
       status: "available",
-      observed: false,
-      rows: [],
+      detail: { state: "empty", rows: [] },
     });
     await record(f.meter, "pending-op", "project", true);
     expect(await getProjectMeteringUsage("prj_public")).toMatchObject({
-      observed: true,
       unresolved: 1,
       oldestUnresolvedAt: occurredAt,
-      rows: [
-        expect.objectContaining({
-          providerCost: null,
-          certainty: "unknown",
-          unknownOperations: "1",
-        }),
-      ],
+      detail: {
+        rows: [
+          expect.objectContaining({
+            cost: { text: "", unit: "cents", certainty: "unknown" },
+            unknownOperations: "1",
+          }),
+        ],
+      },
     });
   });
   it("retains unresolved exposure from an earlier month even with no current-month observations", async () => {
@@ -248,7 +234,6 @@ describe("verified project Meter queries", () => {
     f.clock.set("2026-09-30T10:00:00.000Z");
     await record(f.meter, "old-pending", "project", true, "2026-09-30T10:00:00.000Z");
     expect(await getProjectMeteringUsage("prj_public")).toMatchObject({
-      observed: false,
       unresolved: 1,
       oldestUnresolvedAt: "2026-09-30T10:00:00.000Z",
     });
@@ -258,12 +243,18 @@ describe("verified project Meter queries", () => {
     await record(f.meter, "old-wallet-operation", "project", true, occurredAt, "old-owner");
     await record(f.meter, "new-owner-operation", "project");
     const data = await getProjectMeteringUsage("prj_public");
-    expect(data.rows).toHaveLength(1);
-    expect(data.rows[0]).toMatchObject({ funding: "byok", providerCost: "0.010000" });
+    expect(data.detail.rows).toHaveLength(1);
+    expect(data.detail.rows[0]).toMatchObject({
+      fundingSource: "byok",
+      cost: { text: "1.0000", unit: "cents", certainty: "measured" },
+    });
     expect(data.unresolved).toBe(0);
     expect(
       data.budgets.every(
-        (budget) => budget.used === null && budget.reserved === null && budget.remaining === null,
+        (budget) =>
+          budget.used === "unavailable" &&
+          budget.reserved === "unavailable" &&
+          budget.remaining === "unavailable",
       ),
     ).toBe(true);
     expect(JSON.stringify(data)).not.toMatch(/0\.050000|old-wallet|old-owner/);
@@ -296,28 +287,27 @@ describe("verified project Meter queries", () => {
       { id: "other-connection", publicId: "prc_empty", provider: "serpapi" },
     ]);
     const data = await getProjectMeteringUsage("prj_public");
-    expect(data.observed).toBe(true);
-    expect(data.budgets.find((budget) => budget.connection === "prc_empty")).toMatchObject({
-      provider: "serpapi",
-      used: null,
-      reserved: null,
-      remaining: null,
+    expect(data.summary.state).toBe("ok");
+    expect(data.budgets.find((budget) => budget.target === "prc_empty")).toMatchObject({
+      used: "unavailable",
+      reserved: "unavailable",
+      remaining: "unavailable",
     });
   });
   it.each(["member", "admin", "viewer", "auditor"])(
-    "denies financial reads to a %s before touching Meter or authority storage",
+    "denies financial detail reads to a %s while permitting the blocking signal",
     async (role) => {
+      fixture();
       mocks.access.mockResolvedValue({
         actor: { id: "member", memberships: [{ projectId: "project", role }] },
         project: { id: "project", ownerId: "owner" },
       });
       expect(await getProjectMeteringUsage("prj_public")).toMatchObject({
         status: "restricted",
-        rows: [],
+        detail: { rows: [] },
         budgets: [],
       });
-      expect(mocks.runtime).not.toHaveBeenCalled();
-      expect(mocks.connections).not.toHaveBeenCalled();
+      expect(mocks.connections).toHaveBeenCalledWith(expect.objectContaining({ take: 50 }));
       expect(mocks.authority).not.toHaveBeenCalled();
       expect(mocks.ownBudgets).not.toHaveBeenCalled();
     },
@@ -329,15 +319,13 @@ describe("verified project Meter queries", () => {
     mocks.runtime.mockRejectedValueOnce(new Error("Storage down"));
     expect(await getProjectMeteringUsage("prj_public")).toMatchObject({
       status: "unavailable",
-      observed: false,
-      rows: [],
-      asOf: null,
+      detail: { state: "unavailable", rows: [] },
     });
   });
-  it("does not infer full-month authority from active current epochs or a truncated inventory", async () => {
+  it("reports uniform authority and preserves incomplete inventory visibility", async () => {
     fixture();
     mocks.authority.mockResolvedValue({ mode: "active", coverage: "partial", windows: [] });
-    expect(await getProjectMeteringUsage("prj_public")).toMatchObject({ authority: "mixed" });
+    expect((await getProjectMeteringUsage("prj_public")).summary.complete).toBe(true);
     mocks.connections.mockResolvedValue(
       Array.from({ length: 21 }, (_, index) => ({
         id: `connection-${index}`,
@@ -346,8 +334,200 @@ describe("verified project Meter queries", () => {
     );
     mocks.authority.mockResolvedValue({ mode: "active", coverage: "full", windows: [] });
     expect(await getProjectMeteringUsage("prj_public")).toMatchObject({
-      authority: "unknown",
       truncated: true,
     });
+  });
+});
+it("keeps current project constraints visible after the final connection is deleted", async () => {
+  const f = fixture();
+  await record(f.meter, "retained-project-use", "project");
+  mocks.connections.mockResolvedValue([]);
+  const data = await getProjectMeteringUsage("prj_public");
+  expect(data.budgets.some((row) => row.kind === "group")).toBe(true);
+  expect(data.detail.rows[0].dimensions.connection).toBe("");
+});
+it("uses a complete hypothetical operation scope to observe a connectionless project budget", async () => {
+  const f = fixture();
+  const reads = vi.spyOn(f.meter, "applicableBudgets");
+  mocks.connections.mockResolvedValue([]);
+  await getProjectMeteringUsage("prj_public");
+  expect(reads).toHaveBeenCalled();
+  for (const [, query] of reads.mock.calls)
+    expect(query.scope.connection).toEqual(expect.any(String));
+});
+
+it.each(["restricted admin", "Meter failure", "21st connection"])(
+  "retains the authorized budget editor inventory for %s",
+  async (scenario) => {
+    fixture();
+    const connections = Array.from({ length: 50 }, (_, index) => ({
+      id: `connection-${index}`,
+      publicId: `prc_${index}`,
+      provider: "serpapi",
+    }));
+    mocks.connections.mockResolvedValue(connections);
+    if (scenario === "restricted admin")
+      mocks.access.mockResolvedValue({
+        actor: { id: "admin", memberships: [{ projectId: "project", role: "admin" }] },
+        project: { id: "project", ownerId: "owner" },
+      });
+    if (scenario === "Meter failure")
+      mocks.runtime.mockRejectedValue(new Error("private failure detail"));
+    const data = await getProjectMeteringUsage("prj_public");
+    expect(data.connections).toHaveLength(50);
+    expect(data.connections[20]).toEqual({ connectionId: "prc_20", provider: "serpapi" });
+    expect(mocks.connections).toHaveBeenCalledWith(expect.objectContaining({ take: 50 }));
+    expect(JSON.stringify(data.connections)).not.toContain("connection-20");
+  },
+);
+it("logs a content-free failure while keeping the observer unavailable", async () => {
+  const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  try {
+    mocks.runtime.mockRejectedValue(new Error("private failure detail"));
+    expect((await getProjectMeteringUsage("prj_public")).status).toBe("unavailable");
+    expect(log).toHaveBeenCalledWith("[metering] project usage unavailable");
+    expect(JSON.stringify(log.mock.calls)).not.toContain("private failure detail");
+  } finally {
+    log.mockRestore();
+  }
+});
+it.each(["member", "owner"])(
+  "returns only the blocking signal to a %s despite incomplete provenance",
+  async (role) => {
+    const f = fixture([
+      {
+        ...budgets[1],
+        id: "one-request",
+        unit: "requests",
+        scope: { kind: "group", namespace: "test", group: "project" },
+        surface: "any",
+        limit: { unit: "requests", scale: 0, value: 1n },
+      },
+    ]);
+    const reservation = await f.meter.reserve({
+      operationId: "blocked-reservation",
+      scope: {
+        namespace: "test",
+        principal: "owner",
+        group: "project",
+        connection: "connection",
+      },
+      fundingSource: "byok",
+      costOwner: "owner",
+      source: "app",
+      surface: "app",
+      provider: "serpapi",
+      operation: "rank_check",
+      estimate: [
+        { unit: "requests", scale: 0, value: 1n },
+        { unit: "cents", scale: 4, value: 0n },
+        { unit: "units", scale: 6, value: 0n },
+      ],
+    });
+    expect(reservation).toMatchObject({ outcome: "reserved" });
+    if (role === "member")
+      mocks.access.mockResolvedValue({
+        actor: { id: "member", memberships: [{ projectId: "project", role: "member" }] },
+        project: { id: "project", ownerId: "owner" },
+      });
+    const reads = vi.spyOn(f.meter, "listOperations");
+    if (role === "owner")
+      reads.mockResolvedValue({
+        outcome: "ok",
+        value: {
+          operations: [],
+          nextCursor: "more",
+          asOf: now,
+          watermark: null,
+        },
+      } as never);
+    const data = await getProjectMeteringUsage("prj_public");
+    expect(data).toHaveProperty("paidWorkBlocked", true);
+    if (role === "member") {
+      expect(data.budgets).toEqual([]);
+      expect(data.detail.rows).toEqual([]);
+      expect(reads).not.toHaveBeenCalled();
+      expect(JSON.stringify(data)).not.toMatch(/one-request|blocked-reservation/);
+    } else expect(data.budgets.every((row) => row.level === "unavailable")).toBe(true);
+  },
+);
+
+it.each(["owner", "member"])(
+  "keeps incomplete allocation coverage unknown for %s",
+  async (role) => {
+    fixture();
+    mocks.connections.mockResolvedValue(
+      Array.from({ length: 21 }, (_, index) => ({
+        id: `connection-${index}`,
+        publicId: `prc_${index}`,
+        provider: "serpapi",
+      })),
+    );
+    mocks.access.mockResolvedValue({
+      actor: { id: role, memberships: [{ projectId: "project", role }] },
+      project: { id: "project", ownerId: "owner" },
+    });
+    expect(await getProjectMeteringUsage("prj_public")).toMatchObject({
+      paidWorkBlocked: null,
+      truncated: true,
+    });
+  },
+);
+it("keeps current connection labels beyond the budget scan limit", async () => {
+  const f = fixture();
+  await record(f.meter, "current-operation", "project");
+  mocks.connections.mockResolvedValue([
+    ...Array.from({ length: 20 }, (_, index) => ({
+      id: `c-${index}`,
+      publicId: `prc_${index}`,
+      provider: "serpapi",
+    })),
+    { id: "connection", publicId: "prc_current", provider: "dataforseo" },
+  ]);
+  const data = await getProjectMeteringUsage("prj_public");
+  expect(data.detail.rows[0].dimensions.connection).toBe("prc_current");
+});
+
+it("resolves current usage connections outside the capped inventory within the project", async () => {
+  const f = fixture();
+  await record(f.meter, "current-outside-inventory", "project");
+  mocks.connections.mockImplementation(async (query) =>
+    query.where.id
+      ? [{ id: "connection", publicId: "prc_current", provider: "dataforseo" }]
+      : Array.from({ length: 50 }, (_, index) => ({
+          id: `c-${index}`,
+          publicId: `prc_${index}`,
+          provider: "serpapi",
+        })),
+  );
+  const data = await getProjectMeteringUsage("prj_public");
+  expect(data.detail.rows[0].dimensions.connection).toBe("prc_current");
+  expect(mocks.connections).toHaveBeenCalledWith({
+    where: { projectId: "project", id: { in: ["connection"] } },
+    select: { id: true, publicId: true },
+  });
+});
+
+it("preserves confirmed budgets and a proven block when the usage read fails", async () => {
+  const f = fixture([
+    {
+      ...budgets[0],
+      id: "zero-request-budget",
+      unit: "requests",
+      limit: { unit: "requests", scale: 0, value: 0n },
+    },
+  ]);
+  const confirmed = await getProjectMeteringBudgets("prj_public");
+  expect(confirmed.paidWorkBlocked).toBe(true);
+  expect(confirmed.budgets.length).toBeGreaterThan(0);
+  vi.spyOn(f.meter, "usage").mockRejectedValue(new Error("usage unavailable"));
+  const result = await getProjectMeteringUsage("prj_public");
+  expect(result).toMatchObject({
+    status: "unavailable",
+    paidWorkBlocked: true,
+    budgets: confirmed.budgets,
+    connections: confirmed.connections,
+    summary: { state: "unavailable", complete: false },
+    detail: { state: "unavailable", rows: [] },
   });
 });

@@ -17,6 +17,7 @@ import { supportsResearchScope } from "@/lib/serp/research-capability";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
+import { withLookupBudgetResult } from "./lookup-budget-result";
 
 const projectId = z.string().trim().min(1).max(120);
 const target = z.string().trim().min(1).max(253);
@@ -86,18 +87,20 @@ async function mutationScope(data: { projectId: string }, type: "keyword" | "pro
 export async function analyzeDomainOverviewAction(input: unknown) {
   const data = parseActionInput(analyzeSchema, input);
   const { actor, project } = await mutationScope(data);
-  return analyzeDomainOverview(
-    { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
-    {
-      estimateOnly: data.estimateOnly,
-      fresh: data.fresh,
-      ...(data.countryCode ? { countryCode: data.countryCode } : {}),
-      languageCode: data.languageCode,
-      locationCode: data.locationCode,
-      maxCostCents: data.maxCostCents,
-      scopeOverride: data.scopeOverride,
-      target: data.target,
-    },
+  return withLookupBudgetResult(() =>
+    analyzeDomainOverview(
+      { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
+      {
+        estimateOnly: data.estimateOnly,
+        fresh: data.fresh,
+        ...(data.countryCode ? { countryCode: data.countryCode } : {}),
+        languageCode: data.languageCode,
+        locationCode: data.locationCode,
+        maxCostCents: data.maxCostCents,
+        scopeOverride: data.scopeOverride,
+        target: data.target,
+      },
+    ),
   );
 }
 
@@ -129,17 +132,19 @@ export async function selectDomainOverviewMarketAction(input: unknown) {
 export async function loadDomainHistoryAction(input: unknown) {
   const data = parseActionInput(historySchema, input);
   const { actor, project } = await mutationScope(data);
-  return loadDomainOverviewHistory(
-    { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
-    {
-      fresh: data.fresh,
-      ...(data.countryCode ? { countryCode: data.countryCode } : {}),
-      languageCode: data.languageCode,
-      locationCode: data.locationCode,
-      maxCostCents: data.maxCostCents,
-      scopeOverride: data.scopeOverride,
-      target: data.target,
-    },
+  return withLookupBudgetResult(() =>
+    loadDomainOverviewHistory(
+      { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
+      {
+        fresh: data.fresh,
+        ...(data.countryCode ? { countryCode: data.countryCode } : {}),
+        languageCode: data.languageCode,
+        locationCode: data.locationCode,
+        maxCostCents: data.maxCostCents,
+        scopeOverride: data.scopeOverride,
+        target: data.target,
+      },
+    ),
   );
 }
 
@@ -167,15 +172,10 @@ async function loadTablePage(input: unknown, module: "keywords" | "pages") {
   };
   // sort and filters describe free client-side slicing of fetched rows; the paid cache key is
   // intentionally based only on provider pagination and market dimensions.
-  return module === "keywords"
-    ? loadDomainKeywordsPage(
-        { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
-        options,
-      )
-    : loadDomainPagesPage(
-        { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
-        options,
-      );
+  const context = { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id };
+  if (module === "keywords")
+    return withLookupBudgetResult(() => loadDomainKeywordsPage(context, options));
+  return withLookupBudgetResult(() => loadDomainPagesPage(context, options));
 }
 
 export async function loadDomainKeywordsPageAction(input: unknown) {

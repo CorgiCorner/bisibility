@@ -24,13 +24,13 @@ describe("SidebarUserButton", () => {
     expect(button.closest("[data-tooltip]")).toBeNull();
   });
 
-  it("uses the standard border on the 32px collapsed avatar for initials and images", () => {
+  it("keeps one quiet 32px header boundary for initials and images", () => {
     const { rerender } = render(<SidebarUserButton collapsed />);
 
     const button = screen.getByRole("button", { name: "Account menu" });
     const initialsAvatar = button.firstElementChild;
-    expect(button).toHaveClass("h-8", "w-8", "border-0");
-    expect(initialsAvatar).toHaveClass("h-8", "w-8", "border", "border-border");
+    expect(button).toHaveClass("h-8", "w-8", "border", "border-border", "bg-transparent");
+    expect(initialsAvatar).toHaveClass("h-full", "w-full", "text-fg");
     expect(initialsAvatar).not.toHaveClass("border-border-control");
 
     rerender(
@@ -45,7 +45,7 @@ describe("SidebarUserButton", () => {
     );
 
     const imageAvatar = screen.getByRole("button", { name: "Account menu" }).firstElementChild;
-    expect(imageAvatar).toHaveClass("h-8", "w-8", "border", "border-border");
+    expect(imageAvatar).toHaveClass("h-full", "w-full", "text-fg");
     expect(imageAvatar).not.toHaveClass("border-border-control");
   });
 

@@ -95,3 +95,42 @@ describe("motion tokens", () => {
     }
   });
 });
+
+it("uses shared tokens for button hover and removes shared control transitions under reduced motion", () => {
+  const buttonCss = readFileSync(
+    resolve(import.meta.dirname, "../../components/ui/Button.module.css"),
+    "utf8",
+  );
+  expect(buttonCss).not.toMatch(/0\.16s ease/);
+  expect(buttonCss).toContain("background-color var(--motion-press) var(--ease-out)");
+  const css = postcss.parse(readFileSync(tokensPath, "utf8"));
+  const reduced: string[] = [];
+  css.walkAtRules("media", (rule) => {
+    if (rule.params === "(prefers-reduced-motion: reduce)")
+      rule.walkDecls("transition-duration", (declaration) => {
+        reduced.push(declaration.value);
+      });
+  });
+  expect(reduced).toContain("0s");
+});
+
+it("reduces transitions on painted radio, navigation and checkbox surfaces", () => {
+  const css = postcss.parse(readFileSync(tokensPath, "utf8"));
+  const selectors: string[] = [];
+  css.walkAtRules("media", (media) => {
+    if (media.params !== "(prefers-reduced-motion: reduce)") return;
+    media.walkRules((rule) => {
+      rule.walkDecls("transition-duration", (declaration) => {
+        if (declaration.value === "0s" && declaration.important) selectors.push(...rule.selectors);
+      });
+    });
+  });
+  for (const surface of [
+    'input[type="radio"] + span',
+    'input[type="checkbox"] ~ svg',
+    "nav a",
+    '[role="tab"]',
+  ]) {
+    expect(selectors).toContain(surface);
+  }
+});

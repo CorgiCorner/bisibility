@@ -1,8 +1,8 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import type { ProviderCostFeature } from "@/lib/generated/prisma/client";
-import { compareAdmission } from "@/lib/metering/admission";
-import { type ProviderCredential, surfaceOf } from "@/lib/provider-usage/surface";
+import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
+import type { ProviderCredential } from "@/lib/provider-usage/surface";
 import {
   createProviderRequestAttribution,
   type ProviderRequestAttribution,
@@ -10,11 +10,10 @@ import {
   type ProviderRequestTrigger,
 } from "@/lib/provider-usage/tag";
 import type { resolveProviderCredentials } from "@/lib/providers/credentials";
-import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import type { SerpProvider } from "@/lib/providers/types";
 import { runDeploymentPaidCall } from "./paid-call-deployment";
 
-/** Hosted-credential paid lookups: deployment execution plus an observation-only shadow. */
+/** Hosted-credential paid lookups: frozen deployment execution and wallet-backed Meter admission. */
 export async function runHostedPaidProviderCall<
   T extends { costCents: number; providerRequestId?: string; usageQuantity?: number },
 >(input: {
@@ -32,6 +31,8 @@ export async function runHostedPaidProviderCall<
   source: ProviderRequestSource;
   trigger: ProviderRequestTrigger;
   estimatedCostCents: number;
+  maxCostCents?: number;
+  costLimit?: RequestCostLimit;
 }): Promise<T> {
   const usage = await createProviderRequestAttribution(
     {
@@ -44,32 +45,15 @@ export async function runHostedPaidProviderCall<
     input.credential,
     "hosted",
   );
-  try {
-    return await runDeploymentPaidCall({
-      attribution: usage,
-      call: input.call,
-      connectionId: input.connection.id,
-      credential: input.credential,
-      estimatedCostCents: input.estimatedCostCents,
-      estimatedQuantity: input.itemCount,
-      provider: input.provider.id,
-    });
-  } catch (error) {
-    if (error instanceof DeploymentAdmissionExhaustedError) {
-      // Credit denials mirror the own path's wallet comparison; allocation denials its budget one.
-      await compareAdmission(
-        {
-          connectionId: input.connection.id,
-          projectId: input.projectId,
-          provider: input.provider.id,
-          surface: surfaceOf(input.source),
-          estimatedCostCents: input.estimatedCostCents,
-          credentialSource: "hosted",
-          shadow: { feature: input.feature, source: input.source, credential: input.credential },
-        },
-        error.reason === "balance" ? "wallet_blocked" : "blocked",
-      );
-    }
-    throw error;
-  }
+  return runDeploymentPaidCall({
+    attribution: usage,
+    call: input.call,
+    connectionId: input.connection.id,
+    credential: input.credential,
+    estimatedCostCents: input.estimatedCostCents,
+    estimatedQuantity: input.itemCount,
+    provider: input.provider.id,
+    maxCostCents: input.maxCostCents,
+    costLimit: input.costLimit,
+  });
 }

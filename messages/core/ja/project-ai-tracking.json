@@ -105,7 +105,7 @@
     "denominators": "予定数{expected, number} · 対象となる回答{eligible, number} · カバレッジ{coverage}% · 部分的な回答{partial, number} · 失敗{failed, number} · AIOなし{absent, number} · 不明{unknown, number} · 欠落{missing, number}",
     "trendMethod": "プロジェクトと競合への言及は個別に扱います。プロンプトのリビジョン、ソース、モデル、ロケール、ブランド設定が同一で、両期間とも完全な回答のカバレッジが90%以上のデータを比較してください。",
     "contextPromptDrafts": "コンテキストから作成したプロンプトの下書き",
-    "contextDraftMethod": "保存されたプロジェクトのコンテキストから、中立的な質問、比較の質問、ブランドに関する質問の下書きを作成します。各下書きを確認してから採用してください。モデルの呼び出しや基準測定は自動で開始されません。",
+    "contextDraftMethod": "保存したプロジェクトの情報から質問案を作成します。保存前に確認・編集してください。プロンプトを保存しても分析は開始されません。",
     "suggestFromContext": "プロジェクトのコンテキストから提案",
     "suggestionsUnavailable": "プロンプトの提案を利用できません。手動で入力してください。",
     "popularityUnknown": "人気度不明",
@@ -179,6 +179,8 @@
     "generationReconcileBeforeRetry": "この試行は再送信できません。次の生成を開始する前に、永続保存された結果を確認するか、プロバイダーの費用明細を照合してください。自動再試行は行われません。",
     "generationFailureId": "確認が必要な生成：{id}",
     "observationTimeUnknown": "観測時刻不明",
-    "citedSources": "引用元"
+    "citedSources": "引用元",
+    "contextMissingHint": "プロジェクトの情報を追加するか、プロンプトを手入力してください。保存しても分析は開始されません。",
+    "contextDraftReviewHint": "質問案は保存した情報に基づき、検索需要の測定結果ではありません。保存前に確認・編集してください。"
   }
 }

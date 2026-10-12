@@ -112,7 +112,7 @@ describe("rank tracker list SQL", () => {
     expect(sql).toContain("COUNT(DISTINCT k.id)::int count");
     expect(sql).toContain("WHERE btrim(tag.label) <> ''");
     expect(sql).not.toContain("default_tags");
-    expect(sql).toContain("FROM project_keywords GROUP BY 1,2,3");
+    expect(sql).toContain("GROUP BY 1,2,3");
   });
 
   it("supports every closed sort field with stable tie paging", () => {
@@ -152,4 +152,11 @@ describe("rank tracker list SQL", () => {
     const { values } = rendered({ ...defaultRankTrackerQueryState, search: "50%_\\" });
     expect(values).toContain("%50\\%\\_\\\\%");
   });
+});
+
+it("labels populated and registered empty scopes from their stored language, never the key", () => {
+  const { sql } = rendered();
+  expect(sql).toContain('l."languageLabel"');
+  expect(sql.match(/concat_ws\(' \/ ', [^)]*l\."languageLabel"\)/g)).toHaveLength(2);
+  expect(sql).toContain('l."canonicalKey" = k."canonicalKey"');
 });

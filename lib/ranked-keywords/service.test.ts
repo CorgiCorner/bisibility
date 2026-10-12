@@ -1,6 +1,12 @@
+import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
+import { testOwnAdmission } from "@/lib/provider-usage/byok-test-evidence";
+import { byokTestJournal } from "@/lib/provider-usage/byok-test-journal";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
+import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/dataforseo";
+import type { ProviderCredentials } from "@/lib/providers/types";
+import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchRankedKeywords, listEligibleRankedKeywordConnections } from "./service";
 
@@ -9,17 +15,18 @@ const connectionPublicId = "conn_a00000000000000000000000";
 
 const mocks = vi.hoisted(() => ({
   acquireLock: vi.fn(),
-  assertBudget: vi.fn(),
+  evidenceRows: [] as Array<Record<string, unknown>>,
   consumeLimit: vi.fn(),
   fetchPage: vi.fn(),
   getProvider: vi.fn(),
   markReauth: vi.fn(),
   prisma: {
     $queryRaw: vi.fn(),
+    $transaction: vi.fn(),
     project: { findFirst: vi.fn(), findUnique: vi.fn() },
     providerConnection: { findUnique: vi.fn() },
     providerConnectionRate: { findMany: vi.fn() },
-    providerCostEntry: { createMany: vi.fn() },
+    meteringUsageEvidence: undefined as unknown as ReturnType<typeof byokTestJournal>["table"],
   },
   readCache: vi.fn(),
   redisConfigured: vi.fn(),
@@ -40,11 +47,7 @@ vi.mock("@/lib/providers/registry", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/providers/registry")>()),
   getSerpProvider: mocks.getProvider,
 }));
-vi.mock("@/lib/rank-check/budget", () => ({
-  assertBudgetAvailable: mocks.assertBudget,
-  isBudgetExhaustedError: (error: unknown) =>
-    error instanceof Error && error.name === "BudgetExhaustedError",
-}));
+vi.mock("@/lib/provider-usage/admission-extension", () => ({ ownAdmission: testOwnAdmission }));
 vi.mock("@/lib/redis/redis", () => ({ redisConfigured: mocks.redisConfigured }));
 vi.mock("./cache", () => ({
   acquireRankedKeywordsLock: mocks.acquireLock,
@@ -111,13 +114,38 @@ function run(overrides: Partial<Parameters<typeof fetchRankedKeywords>[0]> = {})
   });
 }
 
+function observedPage(page: typeof cacheEntry) {
+  return async (credentials: ProviderCredentials) => {
+    const observer = credentials.usageObserver;
+    if (!observer) throw new ProviderUsagePersistenceError();
+    const id = await observer.begin({ attemptKey: crypto.randomUUID() });
+    await observer.beforeDispatch?.(id);
+    await observer.settle(id, {
+      cached: false,
+      failed: false,
+      costCents: page.costCents,
+      quantity: 1,
+    });
+    return page;
+  };
+}
+
 describe("ranked-keyword service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.assertBudget.mockReset();
+    vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
+    testOwnAdmission.reserve
+      .mockReset()
+      .mockImplementation(async (_tx, inputs) =>
+        inputs.map(({ id }) => ({ attemptId: id, leaseId: `lease:${id}` })),
+      );
+    const fixture = byokTestJournal("dataforseo");
+    mocks.prisma.meteringUsageEvidence = fixture.table;
+    mocks.prisma.$transaction.mockImplementation(fixture.db.$transaction);
+    Object.defineProperty(mocks, "evidenceRows", { configurable: true, get: () => fixture.rows });
     mocks.fetchPage.mockReset();
     mocks.prisma.$queryRaw.mockReset();
-    mocks.prisma.providerCostEntry.createMany.mockReset();
+    testOwnAdmission.acknowledge.mockClear();
     mocks.prisma.providerConnectionRate.findMany.mockReset();
     mocks.readCache.mockReset();
     mocks.releaseLock.mockReset();
@@ -125,15 +153,14 @@ describe("ranked-keyword service", () => {
     mocks.withCache.mockReset();
     mocks.writeCache.mockReset();
     mocks.prisma.project.findFirst.mockResolvedValue(project);
-    // Allocation enforcement reads the project before every paid call. An
-    // uninitialized allocation keeps these cases on the legacy budget path,
-    // which is what assertBudgetAvailable below asserts against.
-    mocks.prisma.project.findUnique.mockResolvedValue({
-      budgetCapCents: project.budgetCapCents,
-      providerAllocationsInitializedAt: null,
-    });
+    mocks.prisma.project.findUnique.mockResolvedValue({ ownerId: "owner_1" });
     mocks.prisma.providerConnection.findUnique.mockResolvedValue({
       credentialSource: "own",
+      credentialsEncrypted: "encrypted",
+      enabled: true,
+      status: "connected",
+      project: { ownerId: "owner_1" },
+      rates: [],
       projectId: project.id,
       provider: "dataforseo",
     });
@@ -146,11 +173,11 @@ describe("ranked-keyword service", () => {
     mocks.acquireLock.mockResolvedValue({ key: "rk:key:lock", token: "token" });
     mocks.readCache.mockResolvedValue(null);
     mocks.waitCache.mockResolvedValue(null);
-    mocks.assertBudget.mockResolvedValue({ capCents: 5_000, spentCents: 0 });
+
     mocks.consumeLimit.mockResolvedValue({ resetAt: Date.now() + 60_000, success: true });
-    mocks.fetchPage.mockResolvedValue(cacheEntry);
+    mocks.fetchPage.mockImplementation(observedPage(cacheEntry));
     mocks.prisma.$queryRaw.mockResolvedValue([]);
-    mocks.prisma.providerCostEntry.createMany.mockResolvedValue({ count: 1 });
+
     mocks.prisma.providerConnectionRate.findMany.mockResolvedValue([]);
     mocks.releaseLock.mockResolvedValue(undefined);
     mocks.writeCache.mockResolvedValue(true);
@@ -170,10 +197,10 @@ describe("ranked-keyword service", () => {
       ok: true,
       rows: [{ alreadyTracked: true }],
     });
-    expect(mocks.assertBudget).not.toHaveBeenCalled();
+    expect(testOwnAdmission.reserve).not.toHaveBeenCalled();
     expect(mocks.consumeLimit).not.toHaveBeenCalled();
     expect(mocks.fetchPage).not.toHaveBeenCalled();
-    expect(mocks.prisma.providerCostEntry.createMany).not.toHaveBeenCalled();
+    expect(testOwnAdmission.acknowledge).not.toHaveBeenCalled();
   });
 
   it("selects and returns only the public connection ID", async () => {
@@ -197,7 +224,7 @@ describe("ranked-keyword service", () => {
     mocks.withCache.mockResolvedValue({ cached: true, status: "success", value: cacheEntry });
     await expect(run()).resolves.toMatchObject({ cached: true, ok: true });
     expect(mocks.withCache).toHaveBeenCalledWith(expect.objectContaining({ key: "rk:key" }));
-    expect(mocks.prisma.providerCostEntry.createMany).not.toHaveBeenCalled();
+    expect(testOwnAdmission.acknowledge).not.toHaveBeenCalled();
   });
 
   it("checks the cache again after acquiring the lock to avoid duplicate spend", async () => {
@@ -206,7 +233,7 @@ describe("ranked-keyword service", () => {
     await expect(run()).resolves.toMatchObject({ cached: true, ok: true });
 
     expect(mocks.withCache).toHaveBeenCalledOnce();
-    expect(mocks.assertBudget).not.toHaveBeenCalled();
+    expect(testOwnAdmission.reserve).not.toHaveBeenCalled();
     expect(mocks.consumeLimit).not.toHaveBeenCalled();
     expect(mocks.fetchPage).not.toHaveBeenCalled();
   });
@@ -220,47 +247,43 @@ describe("ranked-keyword service", () => {
     await expect(run({ fresh: true })).resolves.toMatchObject({ cached: false, ok: true });
     expect(mocks.withCache).toHaveBeenCalledWith(expect.objectContaining({ fresh: true }));
     expect(mocks.fetchPage).toHaveBeenCalledOnce();
-    // The ledger write is idempotent now: one row through createMany with
-    // skipDuplicates, so a retried call cannot double-charge.
-    expect(mocks.prisma.providerCostEntry.createMany).toHaveBeenCalledWith({
-      data: [
-        expect.objectContaining({
+    expect(mocks.evidenceRows).toEqual([
+      expect.objectContaining({
+        connectionId: "connection_1",
+        projectId: "project_1",
+        feature: "ranked_keywords",
+        source: APP_REQUEST_ORIGIN.source,
+        measurementStatus: "recorded",
+        receipt: expect.objectContaining({
+          costCents: "2.0000",
+          quantity: "1.000000",
           cached: false,
-          connectionId: "connection_1",
-          costCents: 2,
           failed: false,
-          feature: "ranked_keywords",
-          projectId: "project_1",
-          provider: "dataforseo",
-          source: APP_REQUEST_ORIGIN.source,
-          trigger: "manual",
         }),
-      ],
-      skipDuplicates: true,
-    });
+      }),
+    ]);
+    expect(testOwnAdmission.acknowledge).toHaveBeenCalledOnce();
   });
 
-  it("threads the paying request origin through the paid call into the ledger", async () => {
+  it("threads the paying request origin through the paid call into retained Meter evidence", async () => {
     await expect(
-      run({
-        origin: {
-          credential: { id: "key_1", kind: "project_key" },
-          source: "mcp",
-        },
-      }),
+      run({ origin: { credential: { id: "key_1", kind: "project_key" }, source: "mcp" } }),
     ).resolves.toMatchObject({ ok: true });
-
-    expect(mocks.prisma.providerCostEntry.createMany).toHaveBeenCalledWith({
-      data: [
-        expect.objectContaining({
-          credentialId: "key_1",
-          credentialKind: "project_key",
-          source: "mcp",
-          trigger: "manual",
+    expect(mocks.evidenceRows).toEqual([
+      expect.objectContaining({
+        credentialId: "key_1",
+        credentialKind: "project_key",
+        source: "mcp",
+      }),
+    ]);
+    expect(mocks.fetchPage).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        attribution: expect.objectContaining({
+          context: expect.objectContaining({ source: "mcp", trigger: "manual" }),
         }),
-      ],
-      skipDuplicates: true,
-    });
+      }),
+    );
   });
 
   it("does not return a stale cache page when fresh contends on a lock", async () => {
@@ -274,7 +297,7 @@ describe("ranked-keyword service", () => {
   });
 
   it("caches empty successful pages", async () => {
-    mocks.fetchPage.mockResolvedValue({ costCents: 2, rows: [], totalCount: 100 });
+    mocks.fetchPage.mockImplementation(observedPage({ ...cacheEntry, rows: [], totalCount: 100 }));
     await expect(run({ offset: 100 })).resolves.toMatchObject({ ok: true, rows: [] });
     expect(mocks.withCache).toHaveBeenCalledWith(expect.objectContaining({ key: "rk:key" }));
   });
@@ -313,12 +336,14 @@ describe("ranked-keyword service", () => {
     expect(mocks.fetchPage).toHaveBeenCalledOnce();
   });
 
-  it("uses the provider rate table for the budget estimate", async () => {
+  it("uses the provider rate table for the retained Meter reservation estimate", async () => {
     await run();
-    expect(mocks.assertBudget).toHaveBeenCalledWith("project_1", expect.any(Date), {
-      capCents: 5_000,
-      estimatedCostCents: 2.4,
-    });
+    expect(mocks.evidenceRows).toEqual([
+      expect.objectContaining({
+        estimate: expect.objectContaining({ cents: "2.4000", units: "1" }),
+      }),
+    ]);
+    expect(testOwnAdmission.reserve).toHaveBeenCalledOnce();
   });
 
   it("refuses the paid call when the page estimate exceeds max_cost_cents", async () => {
@@ -329,7 +354,7 @@ describe("ranked-keyword service", () => {
     });
     expect(mocks.fetchPage).not.toHaveBeenCalled();
     expect(mocks.consumeLimit).not.toHaveBeenCalled();
-    expect(mocks.prisma.providerCostEntry.createMany).not.toHaveBeenCalled();
+    expect(testOwnAdmission.acknowledge).not.toHaveBeenCalled();
   });
 
   it("proceeds when the page estimate is within max_cost_cents", async () => {
@@ -337,11 +362,63 @@ describe("ranked-keyword service", () => {
     expect(mocks.fetchPage).toHaveBeenCalledOnce();
   });
 
-  it("surfaces a failed ledger write instead of reporting unrecorded usage as success", async () => {
-    mocks.prisma.providerCostEntry.createMany.mockRejectedValue(new Error("database unavailable"));
+  it("never uses a cheap pooled feature average to pass the maximum cost guard", async () => {
+    mocks.prisma.$queryRaw.mockResolvedValue(
+      Array.from({ length: 5 }, () => ({
+        cached: false,
+        failed: false,
+        costCents: "0.001",
+        unitCostCents: "0.001",
+        feature: "ranked_keywords",
+        createdAt: new Date("2026-10-10"),
+      })),
+    );
+    await expect(run({ maxCostCents: 1 })).resolves.toMatchObject({
+      ok: false,
+      reason: "cost_limit_exceeded",
+      estimatedCostCents: 2.4,
+    });
+    expect(mocks.fetchPage).not.toHaveBeenCalled();
+    expect(mocks.prisma.providerConnectionRate.findMany).not.toHaveBeenCalled();
+  });
 
-    await expect(run()).rejects.toThrow("database unavailable");
+  it("uses a canonical manual zero for the maximum cost guard", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialSource: "own",
+      credentialsEncrypted: "encrypted",
+      projectId: project.id,
+      provider: "dataforseo",
+      project: { ownerId: "owner_1" },
+      enabled: true,
+      status: "connected",
+      rates: [{ amountCents: "0" }],
+    });
+    await expect(run({ maxCostCents: 0 })).resolves.toMatchObject({ ok: true });
     expect(mocks.fetchPage).toHaveBeenCalledOnce();
+    expect(mocks.evidenceRows).toEqual([
+      expect.objectContaining({ estimate: expect.objectContaining({ cents: "0.0000" }) }),
+    ]);
+  });
+
+  it("surfaces failed Meter evidence persistence instead of reporting unrecorded usage as success", async () => {
+    mocks.prisma.meteringUsageEvidence.update.mockRejectedValueOnce(
+      new Error("database unavailable"),
+    );
+    const error = await run().catch((error: unknown) => error);
+    expect(error).toBeInstanceOf(ProviderUsagePersistenceError);
+    expect(error).toMatchObject({
+      phase: "settlement",
+      cause: expect.objectContaining({ message: "database unavailable" }),
+    });
+    expect(mocks.fetchPage).toHaveBeenCalledOnce();
+    expect(testOwnAdmission.acknowledge).not.toHaveBeenCalled();
+    expect(mocks.evidenceRows).toEqual([expect.objectContaining({ measurementStatus: "unknown" })]);
+  });
+
+  it("refuses a successful billable transport result without retained accounting evidence", async () => {
+    mocks.fetchPage.mockResolvedValue(cacheEntry);
+    await expect(run()).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
+    expect(testOwnAdmission.acknowledge).not.toHaveBeenCalled();
   });
 
   it("rejects a connection id that is not eligible", async () => {
@@ -385,19 +462,33 @@ describe("ranked-keyword service", () => {
   });
 
   it.each([
-    ["budget_exhausted", Object.assign(new Error("budget"), { name: "BudgetExhaustedError" })],
+    [
+      "budget_exhausted",
+      new BudgetExhaustedError({ projectId: "project_1", capCents: 5_000, spentCents: 5_000 }),
+    ],
     ["needs_reauth", new ProviderAuthError("dataforseo")],
     ["unsupported_location", new DataForSeoUnsupportedLocationError()],
   ] as const)("maps %s outcomes", async (reason, error) => {
-    if (reason === "budget_exhausted") mocks.assertBudget.mockRejectedValue(error);
+    if (reason === "budget_exhausted") testOwnAdmission.reserve.mockRejectedValue(error);
     else mocks.fetchPage.mockRejectedValue(error);
     await expect(run()).resolves.toMatchObject({ ok: false, reason });
-    expect(mocks.prisma.providerCostEntry.createMany).not.toHaveBeenCalled();
+    expect(testOwnAdmission.acknowledge).not.toHaveBeenCalled();
   });
 
   it("maps provider rate limits before the lookup", async () => {
     mocks.consumeLimit.mockResolvedValue({ resetAt: 123, success: false });
     await expect(run()).resolves.toEqual({ ok: false, reason: "rate_limited", resetAt: 123 });
     expect(mocks.fetchPage).not.toHaveBeenCalled();
+  });
+
+  it("passes consent to admission and maps a price change to a cost-limit outcome", async () => {
+    testOwnAdmission.reserve.mockRejectedValueOnce(new ProviderCostLimitError(4, 3));
+    await expect(run({ maxCostCents: 3 })).resolves.toMatchObject({
+      ok: false,
+      reason: "cost_limit_exceeded",
+      estimatedCostCents: 4,
+    });
+    expect(testOwnAdmission.reserve.mock.calls[0]?.[1][0]).toMatchObject({ maxCostCents: "3" });
+    expect(mocks.evidenceRows).toHaveLength(0);
   });
 });

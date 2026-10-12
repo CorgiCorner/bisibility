@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { frozenUsageResponse } from "./canonical-query.test-fixture";
 
 const mocks = vi.hoisted(() => ({
+  allocations: vi.fn(),
   availability: new Map<string, unknown>(),
   connectionUsage: vi.fn(),
   lookups: vi.fn(),
   prisma: {
+    $queryRaw: vi.fn(),
     instanceSetting: { findUnique: vi.fn().mockResolvedValue(null) },
     project: { findUnique: vi.fn() },
     providerCostEntry: { groupBy: vi.fn() },
@@ -15,6 +18,9 @@ const mocks = vi.hoisted(() => ({
   settingsUsage: vi.fn(),
 }));
 
+vi.mock("@/lib/provider-allocations/repository", () => ({
+  readProjectProviderAllocations: mocks.allocations,
+}));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/provider-usage/connection-usage", () => ({
@@ -47,6 +53,14 @@ async function load(now = new Date("2026-08-20T12:00:00.000Z")) {
 describe("loadProjectProviderSpend surfaces", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$queryRaw.mockImplementation((query) =>
+      frozenUsageResponse(query, mocks.prisma.providerCostEntry),
+    );
+    mocks.allocations.mockImplementation(async () => {
+      const stored = await mocks.prisma.project.findUnique();
+      const { fixtureAllocations } = await import("./provider-spend-test-fixtures");
+      return fixtureAllocations(stored.providerConnections);
+    });
     mocks.availability = new Map();
     mocks.connectionUsage.mockImplementation(async (_db, input) => ({
       requestCount: 0,

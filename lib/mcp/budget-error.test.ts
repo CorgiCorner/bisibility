@@ -10,7 +10,7 @@ vi.mock("@/lib/api/router", () => ({
   handleMcpPreauthenticatedApiRequest: vi.fn(),
 }));
 
-import { budgetExhaustedMessage, isBudgetExhaustedProblem } from "./result";
+import { budgetExhaustedMessage, isBudgetExhaustedProblem, restFailureToolError } from "./result";
 import { createBisibilityMcpServer } from "./server";
 
 const budgetProblem = {
@@ -161,5 +161,22 @@ describe("MCP budget-exhausted tool errors", () => {
     expect((result.structuredContent as { error: { message: string } }).error.message).toContain(
       path,
     );
+  });
+});
+
+it("explains that a missing project budget needs configuration instead of waiting", () => {
+  expect(budgetExhaustedMessage({ ...budgetProblem, details: { reason: "budget_missing" } })).toBe(
+    "Project spending budget is missing. Ask the project owner to configure a monthly budget in Settings > Usage.",
+  );
+});
+
+it("preserves missing-budget details in the MCP tool error", () => {
+  const payload = { ...budgetProblem, details: { reason: "budget_missing" } };
+  expect(restFailureToolError(payload, 429)).toMatchObject({
+    code: "budget_exhausted",
+    status: 429,
+    payload,
+    message:
+      "Project spending budget is missing. Ask the project owner to configure a monthly budget in Settings > Usage.",
   });
 });

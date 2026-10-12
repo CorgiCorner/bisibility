@@ -1,12 +1,13 @@
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
 import { providerUsageFailureDetails } from "@/lib/providers/usage-failure-details";
+import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { serpApiProvider } from "./serpapi";
 import { requestJson, SERP_API_SEARCH_TIMEOUT_MS } from "./serpapi-request";
 
 const input = {
-  credentials: { apiKey: "fixture-key" },
+  credentials: { apiKey: "fixture-key", usageObserver: testUsageObserver },
   device: "desktop" as const,
   domain: "example.com",
   keyword: "rank tracker",

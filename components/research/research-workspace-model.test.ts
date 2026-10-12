@@ -243,3 +243,15 @@ describe("research workspace model", () => {
     });
   });
 });
+
+it("budget regression: maps the missing-budget reason to its own state", () => {
+  expect(
+    researchFailureState({ ok: false, reason: "budget_exhausted", budgetReason: "budget_missing" }),
+  ).toBe("budget_missing");
+});
+
+it("preserves the wallet budget state", () => {
+  expect(researchFailureState({ costCents: 0, ok: false, reason: "wallet_budget_exhausted" })).toBe(
+    "wallet_budget_exhausted",
+  );
+});

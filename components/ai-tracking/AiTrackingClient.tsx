@@ -1,4 +1,5 @@
 "use client";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { getAiResearchCatalogAction } from "@/lib/actions/ai-research";
 import {
   aiTrackingRunAction,
@@ -17,29 +18,33 @@ import {
   previewAiTrackingSuggestionsAction,
 } from "@/lib/actions/ai-tracking-suggestions";
 import { downloadTrackingEvidence } from "@/lib/ai-tracking/exports/browser";
-import { unwrapTrackingGenerationActionResult } from "@/lib/ai-tracking/projections/generation-result";
+import {
+  type TrackingGenerationActionResult,
+  unwrapTrackingGenerationActionResult,
+} from "@/lib/ai-tracking/projections/generation-result";
 import type { TrackingWorkspaceData } from "@/lib/ai-tracking/projections/workspace";
 import { AiTrackingWorkspace } from "./AiTrackingWorkspace";
 export function AiTrackingClient({
   projectId,
   data,
 }: Readonly<{ projectId: string; data: TrackingWorkspaceData }>) {
+  const errors = useSharedErrorMessages();
+  function actionValue<T>(result: TrackingGenerationActionResult<T>): T {
+    if (!result.ok && result.error.code === "budget_missing")
+      throw new Error(errors.budgetMissing());
+    return unwrapTrackingGenerationActionResult(result);
+  }
   return (
     <AiTrackingWorkspace
       initialData={data}
       shellOwnsHeading
       actions={{
         generation: {
-          review: async () =>
-            unwrapTrackingGenerationActionResult(
-              await getAiTrackingSuggestionReviewAction(projectId),
-            ),
+          review: async () => actionValue(await getAiTrackingSuggestionReviewAction(projectId)),
           preview: async (input) =>
-            unwrapTrackingGenerationActionResult(
-              await previewAiTrackingSuggestionsAction(projectId, input),
-            ),
+            actionValue(await previewAiTrackingSuggestionsAction(projectId, input)),
           generate: async (preview, idempotencyKey) =>
-            unwrapTrackingGenerationActionResult(
+            actionValue(
               await generateAiTrackingSuggestionsAction(
                 projectId,
                 { preview, consent: true },
@@ -50,18 +55,20 @@ export function AiTrackingClient({
         catalog: () => getAiResearchCatalogAction(projectId),
         save: (resource, method, input, member) =>
           mutateAiTrackingAction(projectId, resource, method, input, member),
-        preview: (promptIds, configurations) =>
-          previewAiTrackingAction(projectId, { promptIds, configurations }),
+        preview: async (promptIds, configurations) =>
+          actionValue(await previewAiTrackingAction(projectId, { promptIds, configurations })),
         launch: async (promptIds, preview) => {
-          await launchAiTrackingAction(projectId, {
-            ...preview,
-            promptIds,
-            consent: true,
-            idempotencyKey: crypto.randomUUID(),
-            origin: "manual",
-            entrySource: "app",
-            deadline: new Date(Date.now() + 86_400_000).toISOString(),
-          });
+          actionValue(
+            await launchAiTrackingAction(projectId, {
+              ...preview,
+              promptIds,
+              consent: true,
+              idempotencyKey: crypto.randomUUID(),
+              origin: "manual",
+              entrySource: "app",
+              deadline: new Date(Date.now() + 86_400_000).toISOString(),
+            }),
+          );
           return getAiTrackingPage(projectId);
         },
         compare: (current, previous) => getAiTrackingTrendsAction(projectId, current, previous),

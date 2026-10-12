@@ -104,6 +104,10 @@
         "websiteDomain": {
           "label": "ウェブサイトのドメイン",
           "keywords": "ウェブサイト URL ドメインの変更"
+        },
+        "projectContext": {
+          "label": "プロジェクトのコンテキスト",
+          "keywords": "事業 対象顧客 製品 目標 エージェント コンテキスト"
         }
       }
     },
@@ -117,7 +121,8 @@
       "general": "一般",
       "notifications": "通知",
       "team": "チーム",
-      "tracking": "追跡"
+      "tracking": "追跡",
+      "context": "プロジェクトのコンテキスト"
     }
   }
 }

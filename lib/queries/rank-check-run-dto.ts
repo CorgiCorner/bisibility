@@ -45,7 +45,7 @@ export const rankCheckRunSelect = {
   parentRelation: true,
   parentRun: { select: { publicId: true } },
   plannedFor: true,
-  project: { select: { budgetCapCents: true, defaults: { select: { serpDepth: true } } } },
+  project: { select: { defaults: { select: { serpDepth: true } } } },
   projectId: true,
   publicId: true,
   requestedBy: { select: { email: true, image: true, name: true } },

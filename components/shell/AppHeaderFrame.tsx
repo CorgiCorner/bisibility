@@ -55,7 +55,7 @@ export function AppHeaderFrame({
   workspaces,
 }: Readonly<AppHeaderFrameProps>) {
   return (
-    <header className="relative z-40 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center justify-between gap-2.5 sm:flex sm:flex-nowrap border-b border-border bg-bg px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5">
+    <header className="relative z-40 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center justify-between gap-2.5 sm:flex sm:flex-nowrap border-b border-border bg-bg-sidebar px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5">
       <div className="contents sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:gap-3 sm:overflow-hidden">
         <MobileNav
           activeProjectId={activeProjectId}
@@ -73,7 +73,7 @@ export function AppHeaderFrame({
           version={version}
           workspaces={workspaces}
         />
-        <div className="col-start-2 row-start-1 flex min-w-0 items-center gap-2 sm:gap-3">
+        <div className="col-span-3 col-start-1 row-start-2 flex min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
           <AppHeaderTitle setupCompleted={setupCompleted} setupTotalCount={setupTotalCount} />
           {/* The context group must be allowed to shrink: `flex-none` held the market and device
             selectors at their intrinsic width, so a locale with longer labels (es-ES at 390px)

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
 import { resolveExpectedUrlForKeyword } from "@/lib/expected-url/keyword";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
-import { type ProviderCredential, surfaceOf } from "@/lib/provider-usage/surface";
+import type { ProviderCredential } from "@/lib/provider-usage/surface";
 import {
   createProviderRequestAttribution,
   type ProviderRequestAttribution,
@@ -19,7 +19,6 @@ import {
   resolveSerpStopOnMatch,
   type SerpDepth,
 } from "@/lib/serp/constants";
-import { assertRankCheckConnectionAllocation } from "./allocation-enforcement";
 import { findComparablePredecessor } from "./comparable-history";
 import { fallbackAttempt } from "./fallback-attempt";
 import { keywordRankLocation, locationForProvider } from "./fallback-location";
@@ -122,15 +121,6 @@ export async function runCheckWithFallback(
           reservationConnection: input.connections[0],
           source: input.source ?? "app",
         });
-        await assertRankCheckConnectionAllocation(
-          {
-            connection: liveConnection,
-            depth: input.depth ?? 100,
-            projectId: input.projectId,
-            surface: surfaceOf(input.source),
-          },
-          prisma,
-        );
       }
       const result = await runCheck({
         comparisonAllowed: input.comparisonAllowed,

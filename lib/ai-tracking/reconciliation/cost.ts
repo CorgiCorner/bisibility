@@ -1,6 +1,7 @@
 import type { CostReceipt, SamplePlan } from "@/lib/ai-tracking/contract";
 import type { TrackingEnvelope } from "@/lib/ai-tracking/providers/envelope";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { meterOperationReference, receiptOperationId } from "@/lib/metering/operation-reference";
 
 export function usd(value: unknown): string | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0
@@ -16,8 +17,11 @@ export function trackingCostReceipt(input: {
 }): CostReceipt {
   const task = input.envelope.tasks?.[0];
   const cost = usd(task?.cost);
+  const operationId = input.ledgerId ?? receiptOperationId(input.previous);
   const base = {
-    providerCostEntryId: input.ledgerId ?? input.previous?.providerCostEntryId ?? null,
+    providerCostEntryId: null,
+    operationRef:
+      input.previous?.operationRef ?? (operationId ? meterOperationReference(operationId) : null),
   };
   if (input.retrieval && cost === "0") {
     const spent = task?.result?.[0]?.money_spent;
@@ -29,9 +33,14 @@ export function trackingCostReceipt(input: {
           .toFixed(),
         state: "derived",
       };
-    return input.previous ?? { ...base, amountUsd: null, state: "unknown" };
+    return input.previous
+      ? { ...input.previous, ...base }
+      : { ...base, amountUsd: null, state: "unknown" };
   }
-  if (cost === null) return input.previous ?? { ...base, amountUsd: null, state: "unknown" };
+  if (cost === null)
+    return input.previous
+      ? { ...input.previous, ...base }
+      : { ...base, amountUsd: null, state: "unknown" };
   return {
     ...base,
     amountUsd: cost,

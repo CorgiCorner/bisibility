@@ -26,6 +26,14 @@ export const dataMigrationManifest: readonly DataMigrationManifestEntry[] = [
     lifecycle: "active",
     prerequisiteSchemaMigrationId: "20260902030000_rank_check_runs",
   },
+  {
+    checksum: "f3d9874cf0e546515b3d0a6a8947b1ad8670d270b5a7e83d50584a6b8b7d2b28",
+    contractMigrationId: "20261011050000_drop_project_spending_cap",
+    execution: "deploy-blocking",
+    id: "20261011021000_accounting_history",
+    lifecycle: "active",
+    prerequisiteSchemaMigrationId: "20261011020000_accounting_history_snapshot",
+  },
 ];
 
 export function activeDataMigrationManifest() {

@@ -53,7 +53,6 @@ async function loadProject(projectId: string) {
 
   const project = await prisma.project.findFirst({
     select: {
-      budgetCapCents: true,
       domain: true,
       id: true,
       isSample: true,

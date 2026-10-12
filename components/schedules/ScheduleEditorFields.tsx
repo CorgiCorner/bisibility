@@ -2,7 +2,6 @@
 
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { Input } from "@/components/ui/Input";
-import { compactInputGeometryClassName } from "@/components/ui/input-styles";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Switch } from "@/components/ui/Switch";
@@ -40,9 +39,8 @@ type ScheduleEditorFieldsProps = {
 };
 
 const labelClass = "text-[12px] font-semibold text-fg";
-const fieldClass = cn(compactInputGeometryClassName, "px-2.5 text-[12.5px] font-normal");
-const triggerClass =
-  "min-h-[34px] w-full justify-between rounded-control border-border-control bg-transparent px-2.5 py-[7px] text-[12.5px] font-normal normal-case tracking-normal";
+const fieldClass = "";
+const triggerClass = "normal-case tracking-normal";
 
 export function ScheduleEditorFields({
   defaultScheduleName,
@@ -123,91 +121,95 @@ export function ScheduleEditorFields({
         />
       </div>
 
-      {frequency === "custom_cron" ? (
-        <div className="flex flex-col gap-1.5">
-          <FieldLabel
-            className={labelClass}
-            htmlFor="schedule-cron"
-            label={t("editor.cronExpression")}
-          />
-          <Input
-            aria-label={t("editor.cronExpression")}
-            className={cn(fieldClass, "font-mono")}
-            id="schedule-cron"
-            {...register("cronExpression")}
-            onChange={(event) => setCadenceValue("cronExpression", event.currentTarget.value)}
-          />
-          {previewDetail ? (
-            <span className="text-[11.5px] leading-5 text-fg-muted">{previewDetail}</span>
-          ) : null}
-          {previewRuns ? (
-            <span className="text-[11.5px] leading-5 text-fg">
-              {t("editor.nextThree", { runs: previewRuns.join(", "), timeZone: previewTimeZone })}
-            </span>
-          ) : null}
-          <ScheduleEditorErrorText text={errors.cronExpression?.message} />
-        </div>
-      ) : null}
-
-      <div className="flex flex-wrap gap-3.5">
-        {frequency === "weekly" ? (
-          <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
-            <FieldLabel className={labelClass} label={t("weekday")} />
-            <input type="hidden" {...register("weekday")} />
-            <MenuSelect
-              ariaLabel={t("weekday")}
-              onChange={(value) =>
-                setCadenceValue("weekday", value as ScheduleEditorValues["weekday"])
-              }
-              options={weekdays.map((value) => ({ label: t(`weekdays.${value}`), value }))}
-              triggerClassName={triggerClass}
-              value={watch("weekday")}
+      <div className="h-[210px] sm:h-[180px]" data-testid="schedule-cadence-fields">
+        {frequency === "custom_cron" ? (
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel
+              className={labelClass}
+              htmlFor="schedule-cron"
+              label={t("editor.cronExpression")}
             />
-          </div>
-        ) : null}
-        {frequency === "monthly" ? (
-          <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
-            <FieldLabel className={labelClass} label={t("dayOfMonth")} />
-            <input type="hidden" {...register("dayOfMonth")} />
-            <MenuSelect
-              ariaLabel={t("dayOfMonth")}
-              onChange={(value) =>
-                setCadenceValue("dayOfMonth", value as ScheduleEditorValues["dayOfMonth"])
-              }
-              options={monthDays.map((value) => ({ label: value, value }))}
-              triggerClassName={triggerClass}
-              value={watch("dayOfMonth")}
-            />
-          </div>
-        ) : null}
-        {frequency !== "custom_cron" ? (
-          <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
-            <FieldLabel className={labelClass} htmlFor="schedule-time" label={t("time")} />
             <Input
-              aria-label={t("editor.time24")}
-              className={fieldClass}
-              id="schedule-time"
-              inputMode="numeric"
-              placeholder={t("editor.noFixedTime")}
-              {...register("timeOfDay")}
-              onChange={(event) => setCadenceValue("timeOfDay", event.currentTarget.value)}
+              aria-label={t("editor.cronExpression")}
+              className={cn(fieldClass, "font-mono")}
+              id="schedule-cron"
+              {...register("cronExpression")}
+              onChange={(event) => setCadenceValue("cronExpression", event.currentTarget.value)}
             />
-            <span className="text-[11px] text-fg-muted">
-              {watch("timeOfDay")
-                ? t("editor.thirtyMinuteSteps")
-                : frequency === "daily"
-                  ? t("editor.noFixedDaily")
-                  : t("editor.noFixedInterval")}
-            </span>
-            <ScheduleEditorErrorText text={errors.timeOfDay?.message} />
+            {previewDetail ? (
+              <span className="text-[11.5px] leading-5 text-fg-muted">{previewDetail}</span>
+            ) : null}
+            {previewRuns ? (
+              <span className="text-[11.5px] leading-5 text-fg">
+                {t("editor.nextThree", { runs: previewRuns.join(", "), timeZone: previewTimeZone })}
+              </span>
+            ) : null}
+            <ScheduleEditorErrorText text={errors.cronExpression?.message} />
           </div>
         ) : null}
-      </div>
 
+        <div className="grid grid-cols-2 gap-3.5">
+          {frequency === "weekly" ? (
+            <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
+              <FieldLabel className={labelClass} label={t("weekday")} />
+              <input type="hidden" {...register("weekday")} />
+              <MenuSelect
+                size="input"
+                ariaLabel={t("weekday")}
+                onChange={(value) =>
+                  setCadenceValue("weekday", value as ScheduleEditorValues["weekday"])
+                }
+                options={weekdays.map((value) => ({ label: t(`weekdays.${value}`), value }))}
+                triggerClassName={triggerClass}
+                value={watch("weekday")}
+              />
+            </div>
+          ) : null}
+          {frequency === "monthly" ? (
+            <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
+              <FieldLabel className={labelClass} label={t("dayOfMonth")} />
+              <input type="hidden" {...register("dayOfMonth")} />
+              <MenuSelect
+                size="input"
+                ariaLabel={t("dayOfMonth")}
+                onChange={(value) =>
+                  setCadenceValue("dayOfMonth", value as ScheduleEditorValues["dayOfMonth"])
+                }
+                options={monthDays.map((value) => ({ label: value, value }))}
+                triggerClassName={triggerClass}
+                value={watch("dayOfMonth")}
+              />
+            </div>
+          ) : null}
+          {frequency !== "custom_cron" ? (
+            <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
+              <FieldLabel className={labelClass} htmlFor="schedule-time" label={t("time")} />
+              <Input
+                aria-label={t("editor.time24")}
+                className={fieldClass}
+                id="schedule-time"
+                inputMode="numeric"
+                placeholder={t("editor.noFixedTime")}
+                {...register("timeOfDay")}
+                onChange={(event) => setCadenceValue("timeOfDay", event.currentTarget.value)}
+              />
+              <span className="text-[11px] text-fg-muted">
+                {watch("timeOfDay")
+                  ? t("editor.thirtyMinuteSteps")
+                  : frequency === "daily"
+                    ? t("editor.noFixedDaily")
+                    : t("editor.noFixedInterval")}
+              </span>
+              <ScheduleEditorErrorText text={errors.timeOfDay?.message} />
+            </div>
+          ) : null}
+        </div>
+      </div>
       <div className="flex flex-col gap-1.5">
         <FieldLabel className={labelClass} label={t("timeZone")} />
         <input type="hidden" {...register("timezone")} />
         <MenuSelect
+          size="input"
           ariaLabel={t("timeZone")}
           onChange={(value) =>
             setValue("timezone", value, { shouldDirty: true, shouldValidate: true })

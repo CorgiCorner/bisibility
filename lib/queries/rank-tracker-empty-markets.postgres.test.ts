@@ -140,7 +140,7 @@ describe("registered empty market scopes", () => {
               });
               expect(result.locations).toContainEqual({
                 count: 0,
-                displayName: "Spain",
+                displayName: "Spain / Spanish",
                 id: "ES:es",
                 kind: "country",
               });
@@ -195,5 +195,66 @@ describe("registered empty market scopes", () => {
         expect(result.matchedTargetCount).toBe(1);
       },
     );
+  });
+});
+
+it("distinguishes equal-count Spain scopes and filters by opaque keys in both query modes", async () => {
+  const fixture = groupedFilterFixture();
+  const locations = [
+    {
+      ...emptyLocation,
+      id: "english",
+      canonicalKey: "opaque-a",
+      hl: "en",
+      languageLabel: "English",
+    },
+    { ...emptyLocation, id: "spanish", canonicalKey: "opaque-b", languageLabel: "Spanish" },
+    { ...emptyLocation, id: "empty", canonicalKey: "opaque-c", hl: "fr", languageLabel: "French" },
+  ];
+  const targets = locations.slice(0, 2).map((location, index) => ({
+    ...fixture.targets[0],
+    location,
+    internalId: `target_${index}`,
+    publicId: `kw_${index}`,
+    rankChecks: [],
+  }));
+  await withGroupedFilterDatabase("project_empty", locations, targets, async (client) => {
+    await client.query(`CREATE TEMP TABLE keyword_schedules ("keywordId" text, frequency text) ON COMMIT DROP;
+      CREATE TEMP TABLE project_defaults ("projectId" text, frequency text) ON COMMIT DROP;`);
+    for (const grouped of [false, true]) {
+      for (const locationId of [null, "opaque-a", "opaque-b", "opaque-c"]) {
+        const query = {
+          ...defaultRankTrackerQueryState,
+          grouped,
+          lens: { device: "all" as const, locationId },
+        };
+        const statement = grouped
+          ? buildRankTrackerGroupedSql("project_empty", query)
+          : buildRankTrackerListSql("project_empty", query);
+        const result = (await client.query(statement.text, statement.values)).rows[0];
+        expect(result.locations).toEqual([
+          { count: 1, displayName: "Spain / English", id: "opaque-a", kind: "country" },
+          { count: 1, displayName: "Spain / Spanish", id: "opaque-b", kind: "country" },
+          { count: 0, displayName: "Spain / French", id: "opaque-c", kind: "country" },
+        ]);
+        expect(result.matchedTargetCount).toBe(
+          locationId === null ? 2 : locationId === "opaque-c" ? 0 : 1,
+        );
+        const ids = grouped
+          ? result.groups.flatMap((group: { members: { id: string }[] }) =>
+              group.members.map((member) => member.id),
+            )
+          : result.keywordIds;
+        expect(ids).toEqual(
+          locationId === null
+            ? ["target_1", "target_0"]
+            : locationId === "opaque-a"
+              ? ["target_0"]
+              : locationId === "opaque-b"
+                ? ["target_1"]
+                : [],
+        );
+      }
+    }
   });
 });

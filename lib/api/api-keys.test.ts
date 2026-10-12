@@ -70,14 +70,29 @@ function addedColumns(sql: string, source: string): AddedColumn[] {
 function migrationColumnMismatches(schema: string, migrations: Array<[string, string]>) {
   const columnsByTable = prismaColumnsByTable(schema);
   const additions = migrations.flatMap(([source, sql]) => addedColumns(sql, source));
+  const retiredTables = new Set<string>();
+  const retiredColumns = new Set<string>();
+  for (const [, sql] of migrations) {
+    for (const match of sql.matchAll(/\bDROP\s+TABLE(?:\s+IF\s+EXISTS)?\s+"?([\w]+)"?/gi))
+      retiredTables.add(match[1]);
+    for (const match of sql.matchAll(
+      /\bALTER\s+TABLE(?:\s+IF\s+EXISTS)?\s+"?([\w]+)"?\s+([\s\S]*?);/gi,
+    )) {
+      for (const column of match[2].matchAll(/\bDROP\s+COLUMN(?:\s+IF\s+EXISTS)?\s+"?([\w]+)"?/gi))
+        retiredColumns.add(`${match[1]}:${column[1]}`);
+    }
+  }
   const mismatches = additions.filter(
-    ({ column, table }) => !columnsByTable.get(table)?.has(column),
+    ({ column, table }) =>
+      !retiredTables.has(table) &&
+      !retiredColumns.has(`${table}:${column}`) &&
+      !columnsByTable.get(table)?.has(column),
   );
 
   return { additions, mismatches };
 }
 
-function source(path: string) {
+function _source(path: string) {
   return readFileSync(resolve(process.cwd(), path), "utf8");
 }
 

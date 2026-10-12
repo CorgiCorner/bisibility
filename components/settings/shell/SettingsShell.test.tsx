@@ -181,6 +181,29 @@ describe("SettingsShell", () => {
     expect(inactiveLink).not.toHaveClass("hover:bg-nav-active");
   });
 
+  it("opens Project Context from settings and keeps its existing route active", async () => {
+    const user = userEvent.setup();
+    render(
+      <SettingsShell activeSection="context" projectRef={projectRef}>
+        <div>Context fields</div>
+      </SettingsShell>,
+    );
+    const contextLink = screen.getByRole("link", { name: "Project Context" });
+    expect(contextLink).toHaveAttribute("href", `/app/${projectRef}/context`);
+    expect(contextLink).toHaveAttribute("aria-current", "page");
+    await user.click(screen.getByRole("button", { name: "Settings section" }));
+    await user.click(screen.getByRole("menuitem", { name: "Project Context" }));
+    expect(routerMock.push).toHaveBeenCalledWith(`/app/${projectRef}/context`);
+  });
+
+  it("finds Project Context through settings search without changing the route", async () => {
+    const user = userEvent.setup();
+    render(<Shell />);
+    await user.type(screen.getAllByRole("searchbox", { name: "Search settings" })[0], "audience");
+    const contextLink = screen.getByRole("link", { name: /Project Context/ });
+    expect(contextLink).toHaveAttribute("href", `/app/${projectRef}/context`);
+  });
+
   it("uses the inset accent outline for keyboard focus instead of a ring", () => {
     render(<Shell />);
 

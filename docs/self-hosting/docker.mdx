@@ -53,7 +53,8 @@ to build web and worker from source. The migration job uses the same web image.
 
 The default stack starts PostgreSQL, Valkey, `db-migrations`, and the web app.
 The one-shot migration service runs `npm run db:migrate`. It applies the Prisma
-tree, then active deploy-blocking data migrations. No operator migration job is
+schema migrations before guarded contracts, active deploy-blocking data migrations,
+then the remaining schema contracts. No operator migration job is
 required. The server, worker, and `/api/v1/health` require finished rows with
 exact manifest checksums. With `DEMO_FIXED_OTP=1`, migrations also seed local
 demo data.
@@ -62,8 +63,25 @@ Compose uses the version-pinned Docker Hub web image for migrations and the app.
 For source testing, override complete references with `BISIBILITY_IMAGE` and
 `BISIBILITY_WORKER_IMAGE`.
 
-If a migration fails partway, run `npm run db:migrate` again. Completed steps
-are skipped; only the failed step retries. Docker Compose keeps the app and
+If a data migration fails partway, run `npm run db:migrate` again to resume its
+completed batches; an unresolved failed schema migration blocks this with P3009
+before data work.
+Any failure of `20261011050000_drop_project_spending_cap`, including its guard,
+a lock timeout, conflicting provenance or an inconsistent Store budget, rolls back
+the transaction but leaves a failed `_prisma_migrations` row; every later
+`npm run db:migrate` stops with P3009 before data migrations.
+Direct `prisma migrate deploy` reports only `current transaction is aborted`
+without a P-code; inspect the PostgreSQL log for the real cause.
+
+Fix the cause first, then run
+`npx prisma migrate resolve --rolled-back 20261011050000_drop_project_spending_cap`
+and `npm run db:migrate`, in that order; resolving without fixing the cause fails
+again (see [cap-drop recovery](/self-hosting/upgrades#accounting-migration)).
+Exception: if the history guard failed only because direct `prisma migrate deploy`
+skipped the data migrations, resolving the failed row and then running
+`npm run db:migrate` is itself the fix, importing and verifying history before
+the cap drop.
+Docker Compose keeps the app and
 worker stopped until the one-shot migration service exits successfully.
 
 `services.migrations: "ready"` requires all bundled Prisma migrations, finished

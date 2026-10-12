@@ -1,5 +1,6 @@
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { KeywordIdentityImmutableError } from "@/lib/keywords/identity";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { describe, expect, it } from "vitest";
 import {
   actionFailureResult,
@@ -156,4 +157,12 @@ describe("unwrapActionFailureResult", () => {
       }),
     );
   });
+});
+
+it("leaves server-only budget classification to individual action boundaries", () => {
+  expect(
+    mapActionFailure(
+      new DeploymentAdmissionExhaustedError("budget", { budgetReason: "budget_missing" }),
+    ),
+  ).toBeNull();
 });

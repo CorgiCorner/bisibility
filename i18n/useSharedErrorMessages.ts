@@ -8,6 +8,8 @@ export function useSharedErrorMessages(): SharedErrorMessages {
   const t = useTranslations("shared.errors");
 
   return {
+    budgetMissing: () => t("budgetMissing"),
+    usageReconciliationRequired: () => t("usageReconciliationRequired"),
     genericFallback: () => t("genericFallback"),
     rateLimited: () => t("rateLimited"),
     serverComponentDigest: ({ digest }) => t("serverComponentDigest", { digest }),

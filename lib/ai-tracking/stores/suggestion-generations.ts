@@ -3,6 +3,8 @@ import { boundedRaw, boundedUtf8, payloadHash } from "@/lib/ai-tracking/identity
 import { suggestionGenerationPreviewSchema } from "@/lib/ai-tracking/suggestions/generation-schema";
 import { makePublicId } from "@/lib/db/public-id-resources";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { receiptOperationId } from "@/lib/metering/operation-reference";
+import { canonicalReceipt } from "@/lib/metering/usage-read";
 import type {
   PersistSuggestionGenerationInput,
   ProveGenerationNoDispatchInput,
@@ -105,7 +107,7 @@ export function recordGenerationUsageTag(
   id: string,
   input: RecordGenerationUsageTagInput,
 ) {
-  if (!input.usageTag || !input.receipt.providerCostEntryId)
+  if (!input.usageTag || !receiptOperationId(input.receipt))
     throw new Error("Native usage tag and ledger receipt required before dispatch.");
   return prisma.$transaction(async (tx) => {
     await lockTrackingProject(tx, projectId);
@@ -113,7 +115,12 @@ export function recordGenerationUsageTag(
       where: { projectId, id, attemptId: input.attemptId, state: input.expectedState },
     });
     if (!row) return null;
-    await validateReceipt(tx, projectId, row.credentialConnectionId, input.receipt);
+    const operationRef = await validateReceipt(
+      tx,
+      projectId,
+      row.credentialConnectionId,
+      input.receipt,
+    );
     const preview = suggestionGenerationPreviewSchema.parse(row.preview);
     if (input.receipt.credentialVersion !== preview.credentialVersion)
       throw new Error("Generation credential version conflict.");
@@ -122,8 +129,11 @@ export function recordGenerationUsageTag(
       data: {
         state: "submission_started",
         usageTag: input.usageTag,
-        receipt: jsonInput(input.receipt),
-        providerCostEntryId: input.receipt.providerCostEntryId,
+        receipt: jsonInput({
+          ...input.receipt,
+          providerCostEntryId: null,
+          operationRef,
+        }),
       },
     });
     return changed.count
@@ -144,30 +154,38 @@ export function proveNoDispatch(
     });
     if (!row) return null;
     if (row.state === "submission_started") {
-      const ledger = row.providerCostEntryId
-        ? await tx.providerCostEntry.findFirst({
-            where: { projectId, id: row.providerCostEntryId },
-          })
-        : null;
+      const retainedId = receiptOperationId(row.receipt);
+      const ledger = retainedId ? await canonicalReceipt(tx, projectId, retainedId) : null;
       if (
         input.receipt?.amountUsd !== "0" ||
         input.receipt.state !== "confirmed" ||
-        (ledger && (ledger.measurementStatus !== "recorded" || !ledger.costCents.isZero()))
+        (ledger && (ledger.measurementStatus !== "recorded" || !ledger.costCents?.isZero()))
       )
         throw new Error("Submission barrier requires native zero-cost cancellation proof.");
-      if (ledger && input.receipt.providerCostEntryId !== ledger.id)
+      if (
+        ledger &&
+        ![ledger.id, ledger.id.replace(/^legacy:/, "")].includes(
+          receiptOperationId(input.receipt) ?? "",
+        )
+      )
         throw new Error("Cancellation ledger conflict.");
     }
-    if (input.receipt)
-      await validateReceipt(tx, projectId, row.credentialConnectionId, input.receipt);
+    const operationRef = input.receipt
+      ? await validateReceipt(tx, projectId, row.credentialConnectionId, input.receipt)
+      : null;
     const changed = await tx.aiTrackingSuggestionGeneration.updateMany({
       where: { projectId, id, attemptId: input.attemptId, state: input.expectedState },
       data: {
         state: "failed",
         finishedAt: new Date(),
         evidence: jsonInput({ noDispatch: true, reason: input.reason.slice(0, 4000) }),
-        receipt: input.receipt ? jsonInput(input.receipt) : undefined,
-        providerCostEntryId: input.receipt?.providerCostEntryId,
+        receipt: input.receipt
+          ? jsonInput({
+              ...input.receipt,
+              providerCostEntryId: null,
+              operationRef,
+            })
+          : undefined,
       },
     });
     return changed.count
@@ -186,8 +204,16 @@ export function persistSuggestionGeneration(
       where: { projectId, id, attemptId: input.attemptId, state: input.expectedState },
     });
     if (!row) return null;
-    await validateReceipt(tx, projectId, row.credentialConnectionId, input.receipt);
-    if (row.providerCostEntryId && input.receipt.providerCostEntryId !== row.providerCostEntryId)
+    const operationRef = await validateReceipt(
+      tx,
+      projectId,
+      row.credentialConnectionId,
+      input.receipt,
+    );
+    if (
+      receiptOperationId(row.receipt) &&
+      operationRef?.operationId !== receiptOperationId(row.receipt)
+    )
       throw new Error("Generation native ledger identity is immutable.");
     if (input.state === "completed" && (!input.result || !input.evidence || !row.usageTag))
       throw new Error("Completed generation requires native usage evidence and drafts.");
@@ -237,8 +263,11 @@ export function persistSuggestionGeneration(
         resultHash: result ? payloadHash(result) : undefined,
         evidence: evidence ? jsonInput(evidence) : undefined,
         actualModel: input.actualModel ?? input.evidence?.actualModel,
-        receipt: jsonInput(input.receipt),
-        providerCostEntryId: input.receipt.providerCostEntryId,
+        receipt: jsonInput({
+          ...input.receipt,
+          providerCostEntryId: null,
+          operationRef,
+        }),
         finishedAt: input.state === "submission_unknown" ? null : new Date(),
       },
     });

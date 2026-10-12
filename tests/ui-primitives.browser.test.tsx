@@ -9,10 +9,13 @@ import { applyTheme } from "@/lib/theme/browser-theme";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { userEvent } from "vitest/browser";
+import { cdp, userEvent } from "vitest/browser";
 
 // CSS geometry and transitions need a layout engine; jsdom cannot verify these contracts.
-afterEach(cleanup);
+afterEach(async () => {
+  cleanup();
+  await cdp().send("Emulation.setEmulatedMedia", { features: [] });
+});
 function color(element: HTMLElement, token: string) {
   const probe = document.createElement("span");
   probe.style.color = `var(${token})`;
@@ -61,6 +64,7 @@ describe("Native control style contracts", () => {
           <>
             <Button href="/connect">Connect</Button>
             <Button variant="secondary">Secondary</Button>
+            <Button variant="outline">Outline</Button>
             <Button variant="destructive">Delete</Button>
             <Button variant="ghost">Ghost</Button>
           </>,
@@ -68,7 +72,8 @@ describe("Native control style contracts", () => {
       );
       for (const [name, role, bg, fg] of [
         ["Connect", "link", "--accent-solid", "--accent-on-solid"],
-        ["Secondary", "button", "--bg-elev", "--fg"],
+        ["Secondary", "button", "--button-secondary-bg", "--fg"],
+        ["Outline", "button", "--bg-elev", "--fg"],
         ["Delete", "button", "--red", "--error-contrast"],
       ] as const) {
         const control = screen.getByRole(role, { name });
@@ -82,7 +87,7 @@ describe("Native control style contracts", () => {
     },
   );
 
-  it.each(["primary", "secondary", "destructive", "ghost"] as const)(
+  it.each(["primary", "secondary", "outline", "destructive", "ghost"] as const)(
     "preserves %s paint and borders while loading",
     (variant) => {
       const view = render(sharedMessagesElement(<Button variant={variant}>Save</Button>));
@@ -133,7 +138,7 @@ describe("Native control style contracts", () => {
     await userEvent.tab({ shift: true });
     expect(button.matches(":focus-visible")).toBe(true);
     expect(getComputedStyle(button).outlineWidth).toBe("2px");
-    const focusColor = color(button, "--bg-sunken");
+    const focusColor = color(button, "--button-secondary-bg");
     await waitFor(() => expect(getComputedStyle(button).backgroundColor).toBe(focusColor));
   });
 
@@ -168,6 +173,9 @@ describe("Native control style contracts", () => {
 
 describe("Dialog browser lifecycle", () => {
   it("traps focus, retains content through exit, and restores the trigger after the animation", async () => {
+    await cdp().send("Emulation.setEmulatedMedia", {
+      features: [{ name: "prefers-reduced-motion", value: "no-preference" }],
+    });
     const exited = vi.fn();
     function Harness() {
       const [open, setOpen] = useState(false);
@@ -184,6 +192,7 @@ describe("Dialog browser lifecycle", () => {
     const trigger = screen.getByRole("button", { name: "Open panel" });
     await userEvent.click(trigger);
     const dialog = screen.getByRole("dialog", { name: "Edit settings" });
+    await waitFor(() => expect(getComputedStyle(dialog).animationName).not.toBe("none"));
     expect(dialog.contains(document.activeElement)).toBe(true);
     await userEvent.tab({ shift: true });
     expect(dialog.contains(document.activeElement)).toBe(true);

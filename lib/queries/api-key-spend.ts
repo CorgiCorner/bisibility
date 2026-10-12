@@ -1,31 +1,22 @@
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
-import { monthUtcRange } from "@/lib/rank-check/budget";
+import { Prisma } from "@/lib/generated/prisma/client";
+import type { UsageReadClient } from "@/lib/metering/usage-read";
+import { canonicalUsageSql } from "@/lib/metering/usage-sql";
+import { monthUtcRange } from "@/lib/metering/utc-window";
 
-type ApiKeySpendClient = Pick<typeof prisma, "providerCostEntry">;
-
-/** Maps each internal API key id to its recorded provider cost for the current UTC month. */
 export async function monthlySpendByApiKey(
   projectId: string,
   now = new Date(),
-  options: { client?: ApiKeySpendClient } = {},
+  options: { client?: UsageReadClient } = {},
 ): Promise<Map<string, number>> {
-  const client = options.client ?? prisma;
-  const groups = await client.providerCostEntry.groupBy({
-    _sum: { costCents: true },
-    by: ["credentialId"],
-    where: {
-      cached: false,
-      measurementStatus: "recorded",
-      createdAt: monthUtcRange(now),
-      credentialKind: "project_key",
-      projectId,
-    },
-  });
-  return new Map(
-    groups.flatMap((group) =>
-      group.credentialId ? [[group.credentialId, Number(group._sum.costCents ?? 0)] as const] : [],
-    ),
-  );
+  const range = monthUtcRange(now);
+  const rows = await (options.client ?? prisma).$queryRaw<
+    { credentialId: string; total: unknown }[]
+  >(Prisma.sql`
+    SELECT "credentialId",COALESCE(SUM("budgetCents"),0) AS total FROM (${canonicalUsageSql()}) u
+    WHERE "projectId"=${projectId} AND NOT cached AND "credentialKind"='project_key'
+      AND "credentialId" IS NOT NULL AND "createdAt">=${range.gte} AND "createdAt"<${range.lt}
+    GROUP BY "credentialId"`);
+  return new Map(rows.map((row) => [row.credentialId, Number(row.total)]));
 }

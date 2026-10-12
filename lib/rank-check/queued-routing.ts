@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { queuedDeploymentCredentialsAvailable } from "@/lib/providers/execution-extension";
 import { isRankCheckDispatcherEnabled } from "./dispatcher-config";
@@ -14,7 +15,8 @@ export type QueuedRankCheckRoute =
   | { mode: "queued"; provider: "dataforseo" };
 
 export async function queuedRankCheckRoute(
-  group: ClaimedRankCheckGroup,
+  group: Pick<ClaimedRankCheckGroup, "projectId">,
+  client: Pick<Prisma.TransactionClient, "project"> = prisma,
 ): Promise<QueuedRankCheckRoute> {
   if (!isRankCheckDispatcherEnabled()) {
     return { mode: "legacy", reason: "dispatcher_disabled" };
@@ -23,7 +25,7 @@ export async function queuedRankCheckRoute(
   if (!config.enabled) {
     return { mode: "legacy", reason: "queued_dataforseo_disabled" };
   }
-  const project = await prisma.project.findUnique({
+  const project = await client.project.findUnique({
     include: {
       owner: { select: { deactivatedAt: true } },
       providerConnections: {

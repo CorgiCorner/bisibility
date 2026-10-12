@@ -1,5 +1,5 @@
 # GENERATED - do not edit directly.
-# Source hash: d5d87a6507a16365a7ea85c355d5ed25838a9ee2662f5843f032f4383f0e5cb6
+# Source hash: 69a5f1a002f366606fa83824b73254826de338670af5dcb62c62b43df5611fe9
 name: CI
 
 on:
@@ -23,6 +23,9 @@ concurrency:
 
 permissions:
   contents: read
+
+env:
+  GOMEMLIMIT: 4GiB
 
 jobs:
   static:
@@ -61,9 +64,19 @@ jobs:
           node-version-file: .nvmrc
       # Docker Hub returns rate limits, auth timeouts and 5xx to shared runners; warm the
       # third-party images with bounded retries so the smoke tests only see local images.
-      - name: Pull third-party Compose images
+      - name: Pull Temporal bootstrap images
         run: |
-          images="$(sed -nE 's/^[[:space:]]*image:[[:space:]]*([^$[:space:]]+)[[:space:]]*$/\1/p' compose.yaml compose.worker.yaml compose.temporal.yaml | sort -u)"
+          set -euo pipefail
+          images="$(awk '
+            /^  [a-zA-Z0-9_-]+:$/ { service = $1; sub(/:$/, "", service) }
+            /^    image:/ && (service == "temporal-postgres" || service == "temporal-schema" ||
+                             service == "temporal" || service == "temporal-namespace") {
+              if (NF != 2 || $2 !~ /^[a-zA-Z0-9][a-zA-Z0-9._:\/@-]*$/ || seen[service]++) exit 1
+              print $2
+              count++
+            }
+            END { if (count != 4) exit 1 }
+          ' compose.temporal.yaml | sort -u)"
           test -n "$images"
           for image in $images; do
             for attempt in 1 2 3 4 5; do

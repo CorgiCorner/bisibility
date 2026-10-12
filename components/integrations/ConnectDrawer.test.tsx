@@ -13,6 +13,17 @@ import { ConnectDrawer } from "./ConnectDrawer";
 import { ActionNotice, ActivityList, ConnectionOkBanner } from "./ConnectDrawerControls";
 import { integrationCategories } from "./integrations-fixtures";
 
+// The rate panel has its own suite; the drawer only places it and passes the connection state.
+vi.mock("@/components/provider-management/ConnectionRatePanel", () => ({
+  ConnectionRatePanel: (props: { connected: boolean; readOnlyRates?: boolean }) => (
+    <section
+      data-connected={String(props.connected)}
+      data-read-only={String(props.readOnlyRates === true)}
+      data-testid="provider-rates"
+    />
+  ),
+}));
+
 const actions = {
   connectProvider: vi.fn(async () => undefined),
   disconnectProvider: vi.fn(async () => undefined),
@@ -214,17 +225,25 @@ describe("ConnectDrawer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
 
     const alert = await screen.findByRole("alert");
-    const providerRates = screen.getByText("Provider rates").closest("section");
     const recentActivity = screen.getByText("Recent activity").closest("section");
 
     expect(credentialFields.nextElementSibling).toBe(alert);
-    expect(alert.compareDocumentPosition(providerRates as Node)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
     expect(alert.compareDocumentPosition(recentActivity as Node)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
     expect(screen.getAllByRole("alert")).toHaveLength(1);
+  });
+
+  it("keeps rates and recent activity outside the connection form", () => {
+    renderDrawer(connectedDataForSeo());
+    const form = screen.getByLabelText("API login").closest("form");
+    const rates = screen.getByTestId("provider-rates");
+    // Each rate saves through its own form, which cannot sit inside the connection form.
+    expect(rates).toHaveAttribute("data-connected", "true");
+    expect(rates).toHaveAttribute("data-read-only", "false");
+    expect(form).not.toContainElement(rates);
+    expect(form).not.toContainElement(screen.getByText("Recent activity"));
+    expect(form?.compareDocumentPosition(rates)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it("keeps fallback controls out of individual provider drawers", () => {
@@ -320,7 +339,8 @@ describe("ConnectDrawer", () => {
   it("submits a blank cost field as undefined without a validation error", async () => {
     renderDrawer(connectableSerpApi());
 
-    expect(screen.getByText("Provider rates")).toBeInTheDocument();
+    // A connect flow has no connection yet, so it has no rates to show or edit.
+    expect(screen.getByTestId("provider-rates")).toHaveAttribute("data-connected", "false");
     expect(screen.queryByText("Cost estimate per check (USD)")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("API key"), { target: { value: "serp-key" } });
     fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
@@ -333,28 +353,6 @@ describe("ConnectDrawer", () => {
       expect.objectContaining({ costPerCheck: undefined, providerId: "serpapi" }),
     );
     expect(screen.queryByText(/expected number|received nan/i)).not.toBeInTheDocument();
-  });
-
-  it("renders an unresolved drawer rate as Not set instead of zero", () => {
-    const provider = connectedDataForSeo();
-    renderDrawer({
-      ...provider,
-      drawer: {
-        ...provider.drawer,
-        rates: [
-          {
-            feature: "ranked_keywords",
-            label: "Ranked keywords",
-            source: "unknown",
-            unit: "calls",
-          },
-        ],
-      },
-    });
-
-    expect(screen.getByText("Not set")).toBeInTheDocument();
-    expect(screen.getByText("no rate yet")).toBeInTheDocument();
-    expect(screen.queryByText("$0.00")).not.toBeInTheDocument();
   });
 
   it("requires a new tested key for a hosted connection and keeps rates read-only", async () => {
@@ -371,7 +369,7 @@ describe("ConnectDrawer", () => {
       },
     });
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
-    expect(screen.queryByRole("button", { name: /Edit rate/i })).toBeNull();
+    expect(screen.getByTestId("provider-rates")).toHaveAttribute("data-read-only", "true");
     fireEvent.change(screen.getByLabelText("API login"), {
       target: { value: "new-user@example.com" },
     });

@@ -1,5 +1,6 @@
-import type { PrismaClient } from "@/lib/generated/prisma/client";
-import { byokTestEvidence } from "@/lib/provider-usage/byok-test-evidence";
+import { testOwnAdmission } from "@/lib/provider-usage/byok-test-evidence";
+import { byokTestJournal } from "@/lib/provider-usage/byok-test-journal";
+import { requestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { ProviderRequestAttribution, ProviderRequestSource } from "@/lib/provider-usage/tag";
 import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
 import { describe, expect, it, vi } from "vitest";
@@ -7,57 +8,8 @@ import { createProviderRequestJournal } from "./request-journal";
 
 type LedgerRow = Record<string, unknown> & { id: string };
 
-function matchesWhere(row: LedgerRow, where: Record<string, unknown> = {}): boolean {
-  return Object.entries(where).every(([key, value]) => {
-    if (key === "OR") {
-      return (value as Array<Record<string, unknown>>).some((clause) => matchesWhere(row, clause));
-    }
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      if ("notIn" in value) return !(value as { notIn: unknown[] }).notIn.includes(row[key]);
-      if ("in" in value) return (value as { in: unknown[] }).in.includes(row[key]);
-      if ("not" in value) return row[key] !== (value as { not: unknown }).not;
-    }
-    if (value === null) return row[key] == null;
-    return row[key] === value;
-  });
-}
-
-/** Small persistent fake ledger: the journal runs its real SQL-shaped logic against it. */
 function createFakeLedger(seed: LedgerRow[] = []) {
-  const rows: LedgerRow[] = seed.map((row) => ({ ...row }));
-  const table = {
-    findFirst: vi.fn(
-      async ({ where }: { where: Record<string, unknown> }) =>
-        rows.find((row) => matchesWhere(row, where)) ?? null,
-    ),
-    createMany: vi.fn(async ({ data }: { data: LedgerRow[] }) => {
-      for (const entry of data) rows.push({ ...entry });
-      return { count: data.length };
-    }),
-    update: vi.fn(async ({ where, data }: { where: { id: string }; data: LedgerRow }) => {
-      const row = rows.find((candidate) => candidate.id === where.id);
-      if (!row) throw Object.assign(new Error("Record not found."), { code: "P2025" });
-      Object.assign(row, data);
-      return row;
-    }),
-    deleteMany: vi.fn(async ({ where }: { where: Record<string, unknown> }) => {
-      const victims = rows.filter((row) => matchesWhere(row, where));
-      for (const victim of victims) rows.splice(rows.indexOf(victim), 1);
-      return { count: victims.length };
-    }),
-  };
-  const db = {
-    ...byokTestEvidence("serpapi"),
-    providerCostEntry: {
-      ...table,
-      updateMany: vi.fn(async (args: Parameters<typeof table.update>[0]) => {
-        await table.update(args);
-        return { count: 1 };
-      }),
-    },
-    $transaction: vi.fn(async (run: (tx: unknown) => Promise<unknown>) => run(db)),
-  };
-  return { db: db as unknown as PrismaClient, rows, table };
+  return byokTestJournal("serpapi", seed);
 }
 
 function attribution(source: ProviderRequestSource = "app"): ProviderRequestAttribution {
@@ -103,6 +55,59 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 describe("createProviderRequestJournal", () => {
+  it.each([undefined, "P2002"])(
+    "blocks a different journal sharing consent after settlement fails (%s)",
+    async (code) => {
+      const ledger = createFakeLedger();
+      const costLimit = requestCostLimit(5);
+      const sharedJournal = (correlationId: string) =>
+        createProviderRequestJournal(ledger.db, {
+          attribution: {
+            ...attribution(),
+            context: { ...attribution().context, correlationId },
+          },
+          connectionId: "connection_1",
+          projectId: "project_1",
+          provider: "serpapi",
+          unit: "units",
+          estimate: { cents: "2", units: "1" },
+          costLimit,
+        });
+      const first = sharedJournal("first");
+      const id = await first.observer.begin();
+      ledger.table.update.mockRejectedValue(Object.assign(new Error("unavailable"), { code }));
+      await expect(first.observer.settle(id, successReceipt)).rejects.toBeInstanceOf(
+        ProviderUsagePersistenceError,
+      );
+      expect(() => costLimit.remaining()).toThrow("unconfirmed");
+      await expect(sharedJournal("second").observer.begin()).rejects.toBeInstanceOf(
+        ProviderUsagePersistenceError,
+      );
+      expect(ledger.rows).toHaveLength(1);
+    },
+  );
+
+  it("preserves the original pending consent when an attempt-key replay fails", async () => {
+    const ledger = createFakeLedger();
+    const costLimit = requestCostLimit(3);
+    const usage = createProviderRequestJournal(ledger.db, {
+      attribution: attribution(),
+      connectionId: "connection_1",
+      projectId: "project_1",
+      provider: "serpapi",
+      unit: "units",
+      estimate: { cents: "2", units: "1" },
+      costLimit,
+    });
+    await usage.observer.begin({ attemptKey: "stable" });
+    expect(costLimit.remaining()).toBe("1");
+    testOwnAdmission.reserve.mockRejectedValueOnce(new Error("replay failed"));
+    await expect(usage.observer.begin({ attemptKey: "stable" })).rejects.toBeInstanceOf(
+      ProviderUsagePersistenceError,
+    );
+    expect(costLimit.remaining()).toBe("1");
+  });
+
   it("settling the same attempt twice does not double its totals", async () => {
     const ledger = createFakeLedger();
     const usage = journal(ledger);
@@ -128,6 +133,7 @@ describe("createProviderRequestJournal", () => {
     await usage.observer.settle(await usage.observer.begin(), successReceipt);
     expect(ledger.rows).toEqual([
       expect.objectContaining({ id: "older", measurementStatus: "recorded", usageQuantity: 1 }),
+      expect.objectContaining({ canonicalId: "older", usageQuantity: 0 }),
     ]);
   });
 
@@ -249,11 +255,9 @@ describe("createProviderRequestJournal", () => {
     await observer.settle(id, { ...successReceipt });
 
     // The new attempt row is withdrawn; the earlier recorded receipt survives.
-    expect(ledger.rows.map((row) => row.id)).toEqual(["existing"]);
+    expect(ledger.rows.map((row) => row.id)).toEqual(["existing", id]);
     expect(ledger.rows[0]).toMatchObject({ measurementStatus: "recorded", usageQuantity: 1 });
-    expect(ledger.table.deleteMany).toHaveBeenCalledWith({
-      where: { id, measurementStatus: "unknown" },
-    });
+    expect(ledger.rows[1]).toMatchObject({ canonicalId: "existing", usageQuantity: 0 });
   });
 
   it("retains a charge on settlement after a P2002 once the retry settles", async () => {
@@ -410,3 +414,7 @@ describe("createProviderRequestJournal", () => {
     ]);
   });
 });
+
+vi.mock("@/lib/provider-usage/admission-extension", async () => ({
+  ownAdmission: (await import("@/lib/provider-usage/byok-test-evidence")).testOwnAdmission,
+}));

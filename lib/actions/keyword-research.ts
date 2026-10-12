@@ -7,6 +7,7 @@ import { ProviderCallError } from "@/lib/providers/call-error";
 import { canonicalKeySchema } from "@/lib/schemas/keyword";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
+import { withLookupBudgetResult } from "./lookup-budget-result";
 
 const researchKeywordsActionSchema = z.object({
   connectionId: z
@@ -36,12 +37,14 @@ export async function researchKeywordsAction(input: unknown) {
   const project = await requireProjectScope(actor, "create", data.projectId, { type: "keyword" });
 
   try {
-    return await researchKeywords({
-      ...data,
-      actorId: actor.id,
-      origin: APP_REQUEST_ORIGIN,
-      projectId: project.id,
-    });
+    return await withLookupBudgetResult(() =>
+      researchKeywords({
+        ...data,
+        actorId: actor.id,
+        origin: APP_REQUEST_ORIGIN,
+        projectId: project.id,
+      }),
+    );
   } catch (error) {
     if (error instanceof ProviderCallError && error.code === "provider_account_restricted") {
       return {

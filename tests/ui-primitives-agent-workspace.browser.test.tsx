@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import "@/app/globals.css";
+import "@/.storybook/preview-fonts.css";
 import { AgentReportHistory } from "@/components/agent-reports/AgentReportHistory";
 import {
   AgentReportsLayout,
@@ -9,13 +10,15 @@ import {
 import { AgentWorkspaceAccessProvider } from "@/components/agent-reports/AgentWorkspaceAccessProvider";
 import { ProjectContextForm } from "@/components/project-context/ProjectContextForm";
 import { ProjectContextLoading } from "@/components/project-context/ProjectContextLayout";
-import { PageContent } from "@/components/shell/PageContent";
+import { SettingsRouteLoading } from "@/components/settings/shell/SettingsRouteLoading";
+import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { featureMessagesElement } from "@/i18n/test-support/render-with-feature-messages";
 import { emptyProjectContext } from "@/lib/project-context/model";
 import { applyTheme } from "@/lib/theme/browser-theme";
 import messages from "@/messages/core/en/agent-workspace.json";
+import settings from "@/messages/core/en/project-settings-shell.json";
 import shared from "@/messages/core/en/shared.json";
 import { cleanup, render } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -39,7 +42,7 @@ function measure(view: ReactNode, writable: boolean, workspaceMessages = message
       <AgentWorkspaceAccessProvider value={{ canCreate: writable, canEdit: writable }}>
         {view}
       </AgentWorkspaceAccessProvider>,
-      { messages: { ...shared, ...workspaceMessages } },
+      { messages: { ...shared, ...settings, ...workspaceMessages } },
     ),
   );
   const root = bounds(result.container.firstElementChild);
@@ -63,21 +66,21 @@ describe.each([390, 768, 1440])("Agent workspace geometry at %ipx", (width) => {
     };
     for (const writable of [true, false]) {
       const loading = measure(
-        <PageContent variant="form">
+        <SettingsRouteLoading activeSection="context" withSearch>
           <ProjectContextLoading />
-        </PageContent>,
+        </SettingsRouteLoading>,
         writable,
         localized,
       );
       const settled = measure(
-        <PageContent variant="form">
+        <SettingsShell activeSection="context" projectRef={projectRef}>
           <ProjectContextForm
             projectId={projectRef}
             context={emptyProjectContext}
             canEdit={writable}
             saveAction={async () => emptyProjectContext}
           />
-        </PageContent>,
+        </SettingsShell>,
         writable,
         localized,
       );
@@ -95,9 +98,9 @@ describe.each([390, 768, 1440])("Agent workspace geometry at %ipx", (width) => {
       await page.viewport(width, 1000);
       applyTheme(theme);
       const loading = measure(
-        <PageContent variant="form">
+        <SettingsRouteLoading activeSection="context" withSearch>
           <ProjectContextLoading />
-        </PageContent>,
+        </SettingsRouteLoading>,
         writable,
       );
       for (const context of [
@@ -105,14 +108,14 @@ describe.each([390, 768, 1440])("Agent workspace geometry at %ipx", (width) => {
         { ...emptyProjectContext, business: "Independent retail inventory software." },
       ]) {
         const settled = measure(
-          <PageContent variant="form">
+          <SettingsShell activeSection="context" projectRef={projectRef}>
             <ProjectContextForm
               projectId={projectRef}
               context={context}
               canEdit={writable}
               saveAction={async () => context}
             />
-          </PageContent>,
+          </SettingsShell>,
           writable,
         );
         expect(settled).toEqual(loading);

@@ -59,7 +59,10 @@ function Harness({
 
 async function defineSpain(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Country" }));
-  await user.type(screen.getByRole("textbox", { name: "Search countries" }), "Spain");
+  // Prepare the country query once; keyboard entry is covered by first-market and city cases.
+  fireEvent.change(screen.getByRole("textbox", { name: "Search countries" }), {
+    target: { value: "Spain" },
+  });
   await user.click(await screen.findByRole("menuitem", { name: "Spain" }));
   await user.click(screen.getByRole("button", { name: "Language" }));
   await user.click(screen.getByRole("menuitem", { name: "Spanish" }));
@@ -111,6 +114,10 @@ describe("OnboardingMarketDefinition", () => {
     await user.click(screen.getByRole("button", { name: "Another market" }));
 
     await user.click(screen.getByRole("button", { name: "Country" }));
+    // Keep duplicate validation focused; country keyboard entry has separate coverage.
+    fireEvent.change(screen.getByRole("textbox", { name: "Search countries" }), {
+      target: { value: "United States" },
+    });
     await user.click(screen.getByRole("menuitem", { name: "United States" }));
     await user.click(screen.getByRole("button", { name: "Language" }));
     await user.click(screen.getByRole("menuitem", { name: "English" }));

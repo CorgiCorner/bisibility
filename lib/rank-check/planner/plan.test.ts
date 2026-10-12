@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   isBudgetExhausted: vi.fn(),
   loadChain: vi.fn(),
   makePublicId: vi.fn(),
+  nativeCosts: vi.fn(),
+  queuedRoute: vi.fn(),
   upsert: vi.fn(),
   skipEmpty: vi.fn(),
 }));
@@ -61,6 +63,10 @@ vi.mock("@/lib/db/public-id", () => ({ makePublicId: mocks.makePublicId }));
 vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.loadChain,
 }));
+vi.mock("@/lib/provider-rates/native-rank-request", () => ({
+  loadNativeRankRequestCosts: mocks.nativeCosts,
+}));
+vi.mock("@/lib/rank-check/queued-routing", () => ({ queuedRankCheckRoute: mocks.queuedRoute }));
 vi.mock("@/lib/rank-check/budget", () => ({
   assertBudgetAvailable: mocks.assertBudget,
   isBudgetExhaustedError: mocks.isBudgetExhausted,
@@ -95,9 +101,7 @@ function schedule(
     ],
     project: {
       markets: [{ locationId: "location_active" }],
-      budgetCapCents: 1_000,
       defaults: { serpDepth: 20, timezone: "UTC" },
-      providerAllocationsInitializedAt: null,
     },
     projectId: "project_1",
     providerPolicy: null,
@@ -131,6 +135,8 @@ describe("rank-check run planner", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.nativeCosts.mockResolvedValue(undefined);
+    mocks.queuedRoute.mockResolvedValue({ mode: "legacy", reason: "dispatcher_disabled" });
     mocks.existingKeys.clear();
     mocks.currentSchedule.mockResolvedValue({ id: "schedule" });
     let sequence = 0;
@@ -225,11 +231,9 @@ describe("rank-check run planner", () => {
   it("uses the project provider when a schedule follows the project default", async () => {
     await scheduleAdmission(
       {
-        keywords: [{ id: "keyword_1" }],
+        keywords: [{ id: "keyword_1", text: "plain" }],
         project: {
-          budgetCapCents: 1_000,
           defaults: { serpDepth: 20 },
-          providerAllocationsInitializedAt: null,
         },
         projectId: "project_1",
         providerPolicy: "project",
@@ -238,7 +242,7 @@ describe("rank-check run planner", () => {
       new Date("2026-09-02T00:00:00.000Z"),
     );
 
-    expect(mocks.loadChain).toHaveBeenCalledWith("project_1", undefined);
+    expect(mocks.loadChain).toHaveBeenCalledWith("project_1", undefined, undefined);
   });
 
   it("keeps a schedule blocked until the access gate allows the project again", async () => {
@@ -246,11 +250,9 @@ describe("rank-check run planner", () => {
 
     const admission = await scheduleAdmission(
       {
-        keywords: [{ id: "keyword_1" }],
+        keywords: [{ id: "keyword_1", text: "plain" }],
         project: {
-          budgetCapCents: 1_000,
           defaults: { serpDepth: 20 },
-          providerAllocationsInitializedAt: null,
         },
         projectId: "project_1",
         providerPolicy: "project",
@@ -264,5 +266,90 @@ describe("rank-check run planner", () => {
     expect(admission.blockedReason).toBe("operation_unavailable");
     expect(mocks.loadChain).not.toHaveBeenCalled();
     expect(mocks.assertBudget).not.toHaveBeenCalled();
+  });
+
+  it("uses actual keyword quotes for the schedule budget", async () => {
+    mocks.loadChain.mockResolvedValue([
+      {
+        id: "connection_1",
+        provider: "dataforseo",
+        credentialSource: "own",
+        credentialsEncrypted: "encrypted",
+      },
+    ]);
+    mocks.nativeCosts.mockResolvedValue([0.2, 1]);
+    const input = {
+      keywords: [
+        { id: "a", text: "plain" },
+        { id: "b", text: "site:example.com" },
+      ],
+      project: { defaults: { serpDepth: 10 } },
+      projectId: "project_1",
+      providerPolicy: "project",
+      serpDepth: null,
+    };
+    const result = await scheduleAdmission(input, new Date());
+    expect(result.itemCosts).toEqual([0.2, 1]);
+    expect(result.estimatedCostCents).toBe(2);
+    expect(mocks.nativeCosts).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: "connection_1" }),
+      [
+        { keyword: "plain", depth: 10 },
+        { keyword: "site:example.com", depth: 10 },
+      ],
+      expect.any(Date),
+    );
+  });
+
+  it("does not treat a partly unknown schedule price as zero", async () => {
+    mocks.nativeCosts.mockResolvedValue([null]);
+    const result = await scheduleAdmission(
+      {
+        keywords: [{ id: "a", text: "plain" }],
+        project: { defaults: { serpDepth: 10 } },
+        projectId: "project_1",
+        providerPolicy: "project",
+        serpDepth: null,
+      },
+      new Date(),
+    );
+    expect(result.blockedReason).toBe("pricing_unavailable");
+    expect(mocks.assertBudget).not.toHaveBeenCalled();
+  });
+
+  it("quotes the selected queued priority when dispatch will use the queue", async () => {
+    vi.stubEnv("DATAFORSEO_QUEUE_PRIORITY", "normal");
+    try {
+      mocks.queuedRoute.mockResolvedValue({ mode: "queued", provider: "dataforseo" });
+      mocks.loadChain.mockResolvedValue([
+        {
+          id: "connection_1",
+          provider: "dataforseo",
+          credentialSource: "own",
+          credentialsEncrypted: "encrypted",
+        },
+      ]);
+      mocks.nativeCosts.mockResolvedValue([0.3]);
+      const result = await scheduleAdmission(
+        {
+          keywords: [{ id: "a", text: "site:example.com" }],
+          project: { defaults: { serpDepth: 10 } },
+          projectId: "project_1",
+          providerPolicy: "project",
+          serpDepth: null,
+        },
+        new Date(),
+      );
+      expect(result.itemCosts).toEqual([0.3]);
+      expect(mocks.nativeCosts).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        [{ keyword: "site:example.com", depth: 10, priority: "normal" }],
+        expect.any(Date),
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });

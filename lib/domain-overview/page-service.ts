@@ -1,3 +1,4 @@
+import { requestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { RankedKeywordsPage, RelevantPagesResult } from "@/lib/providers/types";
 import { domainOverviewCacheKey, domainOverviewFailure, loadDomainOverviewModule } from "./cache";
 import { requireDomainOverviewSource } from "./context";
@@ -41,7 +42,7 @@ async function loadDomainPage<T extends "keywords" | "pages">(
     })[module];
     const common = {
       ...input,
-      budgetCapCents: project.budgetCapCents,
+      costLimit: requestCostLimit(options.maxCostCents),
       origin: context.origin,
       projectId: project.id,
       source,

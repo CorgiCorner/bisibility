@@ -1,5 +1,6 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import type {
@@ -14,6 +15,7 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import type { RunSelectionSpec } from "@/lib/rank-check/runs/selection";
 import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
+import { presentBudgetDenial } from "@/lib/ui/action-error";
 import { useTranslations } from "next-intl";
 import { useId, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -93,6 +95,7 @@ export function PreflightDialog({
   scope,
   spec,
 }: Readonly<PreflightDialogProps>) {
+  const errors = useSharedErrorMessages();
   const t = useTranslations("shared.rankPreflight");
   const formId = useId();
   const form = useForm<PreflightFormInput>({
@@ -168,7 +171,12 @@ export function PreflightDialog({
           await refreshPreview({}, t("previewChanged"));
           return;
         }
-        if (result.code === "no_provider" || result.code === "budget_exhausted") {
+        if (
+          result.code === "no_provider" ||
+          result.code === "budget_exhausted" ||
+          result.code === "budget_missing" ||
+          result.code === "usage_reconciliation_required"
+        ) {
           setActionBlock(result.code);
         }
         setPreviewError(result.code === "sample_project" ? t("sampleProject") : t("couldNotStart"));
@@ -203,7 +211,11 @@ export function PreflightDialog({
   const footer = (
     <div className="flex w-full flex-wrap items-center justify-between gap-2.5">
       <p className="m-0 min-w-0 text-[11.5px] tabular-nums text-fg-muted">
-        {decisionLine(preview, t("budgetBlocked"), leftAfterLabel)}
+        {decisionLine(
+          preview,
+          presentBudgetDenial(preview.budget.reason, errors, t("budgetBlocked")),
+          leftAfterLabel,
+        )}
       </p>
       <div className="flex items-center gap-2">
         <Button disabled={submitting} onClick={onClose} type="button" variant="secondary">

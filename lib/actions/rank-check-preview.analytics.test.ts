@@ -1,3 +1,6 @@
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { BudgetExhaustedError } from "@/lib/rank-check/budget";
+import { LaunchRankCheckRunError as BudgetLaunchError } from "@/lib/rank-check/runs/launch-types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -67,6 +70,26 @@ describe("runFirstCheckPreview analytics", () => {
   });
 
   afterEach(() => vi.restoreAllMocks());
+
+  it.each([
+    new BudgetExhaustedError({
+      projectId: "project_1",
+      capCents: 0,
+      spentCents: 0,
+      reason: "budget_missing",
+    }),
+    new DeploymentAdmissionExhaustedError("budget", { budgetReason: "budget_missing" }),
+    new BudgetLaunchError("budget_exhausted", undefined, "budget_missing"),
+  ])("returns missing budget guidance across the action boundary", async (error) => {
+    mocks.launchSingleRankCheckRun.mockRejectedValueOnce(error);
+    await expect(
+      runFirstCheckPreview({ keywordId: "kw_abcdefghijklmnopqrstuvwx" }),
+    ).resolves.toMatchObject({
+      code: "budget_missing",
+      status: "failed",
+      message: expect.stringContaining("configure a monthly budget"),
+    });
+  });
 
   it("emits the queued preview result with exact funnel properties", async () => {
     await expect(

@@ -6,6 +6,7 @@ import {
   proveNoDispatch,
 } from "@/lib/ai-tracking/stores/suggestion-generations";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { nativeGenerationReceipt } from "./generation-receipt";
 import { SuggestionGenerationError } from "./generation-schema";
 import type { GenerationExecutionState } from "./model-execution";
@@ -42,12 +43,20 @@ export async function failSuggestionGeneration(
           : {}),
       });
       if (!proof) throw new Error("No-dispatch proof lost its durable claim.");
+      const budget = budgetFailureResult(error);
+      const refusal = budget?.code !== "budget_exhausted" ? budget : null;
       throw new SuggestionGenerationError(
         error instanceof SuggestionGenerationError ? error.status : 409,
-        error instanceof SuggestionGenerationError ? error.reason : "generation_refused",
-        error instanceof SuggestionGenerationError
-          ? error.message
-          : "Generation was refused before transport. Review provider availability, budget and shared capacity.",
+        refusal
+          ? refusal.code
+          : error instanceof SuggestionGenerationError
+            ? error.reason
+            : "generation_refused",
+        refusal
+          ? refusal.message
+          : error instanceof SuggestionGenerationError
+            ? error.message
+            : "Generation was refused before transport. Review provider availability, budget and shared capacity.",
         row.publicId,
       );
     }

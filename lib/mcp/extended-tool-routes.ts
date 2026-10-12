@@ -79,6 +79,19 @@ function storedReportQuery(input: JsonObject, kind: string) {
   return query(input, keys);
 }
 
+/**
+ * Build the request body for connect_provider and update_provider_settings,
+ * translating the deprecated `primary` compatibility alias into `priority`
+ * before the API drops the unknown field. `primary: true` promotes priority 0
+ * (unless the caller already set an explicit priority); `primary: false` is a
+ * legacy no-op and never writes priority on its own.
+ */
+export function providerSettingsBody(input: JsonObject) {
+  const base = body(input, ["project_id", "provider_id", "primary"]);
+  if (input.primary === true && base.priority === undefined) base.priority = 0;
+  return base;
+}
+
 export function dispatchExtendedToolRoute(name: string, input: JsonObject): RestCall | null {
   switch (name) {
     case "getCloudImportCompatibility":
@@ -199,7 +212,10 @@ export function dispatchExtendedToolRoute(name: string, input: JsonObject): Rest
     case "setProviderPriority":
       return call(input, provider(input), "PATCH", { priority: input.priority });
     case "setPrimaryProvider":
-      return call(input, provider(input), "PATCH", { priority: 0 });
+      // Deprecated compatibility alias: primary=true promotes priority 0;
+      // primary=false (and only false) is a legacy no-op. Default when the
+      // field is omitted matches the legacy promote-to-primary semantics.
+      return call(input, provider(input), "PATCH", input.primary === false ? {} : { priority: 0 });
     case "listStoredReports":
       return call(input, project(input, "research/reports"), "GET");
     case "getStoredReport": {

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { parsePublicationProof, verifyImagePublication } from "./verify-image-publication.mjs";
+import { nativePublicCiJobs } from "./verify-public-release-source.mjs";
 
 const sha = "a".repeat(40);
 const tag = "v0.3.1";
@@ -24,9 +25,12 @@ function fixture(mutate = () => {}) {
       id: 7, run_attempt: 2, head_sha: sha, head_branch: candidateTag,
       path: ".github/workflows/ci.yml", event: "push", status: "completed", conclusion: "success",
     }] };
-    else if (path === "/actions/runs/7/attempts/2/jobs?per_page=100") result = { jobs: [{
-      name: "ci-ok", head_sha: sha, run_attempt: 2, status: "completed", conclusion: "success",
-    }] };
+    else if (path === "/actions/runs/7/attempts/2/jobs?per_page=100") result = {
+      total_count: nativePublicCiJobs.length,
+      jobs: nativePublicCiJobs.map((name, index) => ({ id: index + 1,
+        name, head_sha: sha, run_attempt: 2, status: "completed", conclusion: "success",
+      })),
+    };
     else throw new Error(`Unexpected API path ${path}`);
     mutate(path, result);
     return result;
@@ -37,6 +41,14 @@ test("publication requires matching signed refs and current receipt-bound native
   const result = await verifyImagePublication({ api: fixture(), sha, tag });
   assert.equal(result.state, "success");
   assert.equal(result.run.run_attempt, 2);
+});
+
+test("signed tags and successful ci-ok cannot replace missing full public coverage", async () => {
+  await assert.rejects(verifyImagePublication({ sha, tag, api: fixture((path, value) => {
+    if (!path.endsWith("/jobs?per_page=100")) return;
+    value.jobs = value.jobs.filter((job) => job.name !== "coverage");
+    value.total_count = value.jobs.length;
+  }) }), /Public CI failed/);
 });
 
 for (const ref of [tag, candidateTag]) {

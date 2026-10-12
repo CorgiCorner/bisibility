@@ -21,7 +21,7 @@ import { zodResolver } from "@/lib/forms/zod-resolver";
 import { presentWaitlistFailure } from "@/lib/ui/action-error";
 import { useHumanVerification } from "@/lib/verification/human-verification-client";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { authErrorMessage, isEmailCapacityError } from "./login-errors";
 
@@ -76,6 +76,15 @@ export function LoginForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [capacityMiss, setCapacityMiss] = useState<SignInCapacityMiss>(initialCapacityMiss);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+      cooldownTimer.current = null;
+    };
+  }, []);
   const form = useForm<LoginFormValues>({
     defaultValues: { email: demoEmail ?? "", otp: emptyOtpDigits(), verificationToken: undefined },
     mode: "onSubmit",
@@ -139,6 +148,7 @@ export function LoginForm({
       email: values.email,
       verificationToken: humanVerificationRequired ? (verification.token ?? undefined) : undefined,
     }).catch((): RequestLoginCodeResult => ({ code: "delivery_failed", ok: false }));
+    if (!mounted.current) return;
     verification.reset();
 
     if (result.ok) {
@@ -161,9 +171,7 @@ export function LoginForm({
   }
 
   async function signInWithProvider(provider: OAuthProvider) {
-    if (socialProvider) {
-      return;
-    }
+    if (socialProvider) return;
 
     if (!enabledProviders[provider]) {
       setFormError(t("login.status.methodUnavailable"));
@@ -180,14 +188,15 @@ export function LoginForm({
         callbackURL: destination,
         errorCallbackURL: loginErrorReturnTo(destination),
       });
+      if (!mounted.current) return;
 
       if (response.error) {
         setFormError(authErrorMessage(response.error, socialErrorMessages));
       }
     } catch (error) {
-      setFormError(authErrorMessage(error, socialErrorMessages));
+      if (mounted.current) setFormError(authErrorMessage(error, socialErrorMessages));
     } finally {
-      setSocialProvider(null);
+      if (mounted.current) setSocialProvider(null);
     }
   }
 
@@ -218,6 +227,7 @@ export function LoginForm({
       email: parsed.data.email,
       otp,
     });
+    if (!mounted.current) return;
 
     if (response.error) {
       handleOtpFailure();
@@ -247,6 +257,7 @@ export function LoginForm({
       email: form.getValues("email").trim(),
       verificationToken,
     });
+    if (!mounted.current) return;
 
     if (!result.ok) {
       setResentCode(false);

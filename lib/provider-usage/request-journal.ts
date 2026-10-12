@@ -2,16 +2,22 @@ import "server-only";
 
 import { createHash, randomUUID } from "node:crypto";
 import { Prisma, type PrismaClient } from "@/lib/generated/prisma/client";
-import { beginUsageEntry, syncUsageEntry } from "@/lib/metering/entry-sync";
+import {
+  BudgetExhaustedError,
+  ProviderAllocationExhaustedError,
+} from "@/lib/metering/admission-errors";
+import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import {
   type ProviderUsageObserver,
   ProviderUsagePersistenceError,
   type ProviderUsageReceipt,
 } from "@/lib/providers/usage";
+import { formatQuantity } from "@usagekit/core";
+import type { ProviderRequest } from "@usagekit/providers";
 import { type OwnAttemptGrant, ownAdmission } from "./admission-extension";
 import { captureByokEvidence, discardByokEvidence, recordByokEvidence } from "./byok-evidence";
-import { recordProviderUsage } from "./recorder";
+import { type RequestCostLimit, requestCostLimit } from "./request-cost-limit";
 import type { ProviderRequestAttribution } from "./tag";
 
 type JournalInput = {
@@ -24,23 +30,28 @@ type JournalInput = {
   estimate?: { cents: string; units: string };
   queued?: boolean;
   credentialVersion?: string | null;
+  maxCostCents?: number;
+  costLimit?: RequestCostLimit;
 };
 
 export function createProviderRequestJournal(db: PrismaClient, input: JournalInput) {
+  const consent = input.costLimit ?? requestCostLimit(input.maxCostCents);
   let started = 0;
   let quantity: number | null = 0;
   let costCents: number | null = 0;
   const measurements = new Map<string, ProviderUsageReceipt>();
-  let beginQueue = Promise.resolve();
   const inFlight = new Set<string>();
   const grants = new Map<string, OwnAttemptGrant>();
   const observer: ProviderUsageObserver = {
+    async prepare(attempt) {
+      const next = consent.admit(() => begin(attempt.attemptKey, attempt.request));
+      const attemptId = await next;
+      const request = grants.get(attemptId)?.pricedRequest;
+      if (!request) throw new Error("Priced request grant is unavailable");
+      return { attemptId, request };
+    },
     async begin(attempt) {
-      const next = beginQueue.then(() => begin(attempt?.attemptKey));
-      beginQueue = next.then(
-        () => undefined,
-        () => undefined,
-      );
+      const next = consent.admit(() => begin(attempt?.attemptKey));
       return next;
     },
     async settle(id, receipt) {
@@ -56,6 +67,7 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
             /* Keep the durable unknown row. */
           }
         }
+        consent.settle(id, null);
         throw new ProviderUsagePersistenceError({ cause, phase: "settlement", attemptId: id });
       } finally {
         inFlight.delete(id);
@@ -63,18 +75,20 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
     },
     async beforeDispatch(id) {
       const grant = grants.get(id);
-      if (grant) await ownAdmission.fence(db, [grant]);
+      if (!grant) throw new Error("Paid transport grant is unavailable");
+      await ownAdmission.fence(db, [grant]);
     },
     async cancel(id) {
       await db.$transaction(async (tx) => {
         await ownAdmission.cancel(tx, [id]);
-        await tx.providerCostEntry.deleteMany({ where: { id, measurementStatus: "unknown" } });
         await discardByokEvidence(tx, [id]);
       });
+      consent.cancel(id);
+      inFlight.delete(id);
     },
   };
 
-  async function begin(attemptKey?: string) {
+  async function begin(attemptKey?: string, providerRequest?: ProviderRequest) {
     const id = attemptKey
       ? createHash("sha256")
           .update(
@@ -98,47 +112,55 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
           id: { notIn: [...inFlight] },
         },
       };
-      const unresolved =
-        (await db.providerCostEntry.findFirst(query)) ??
-        (await db.meteringUsageEvidence.findFirst({
-          ...query,
-          where: { ...query.where, discarded: false },
-        }));
+      const unresolved = await db.meteringUsageEvidence.findFirst({
+        ...query,
+        where: { ...query.where, discarded: false },
+      });
       if (unresolved)
         throw new ProviderUsagePersistenceError({ phase: "admission", attemptId: unresolved.id });
-      await db.$transaction(async (tx) => {
-        const evidence = await captureByokEvidence(tx, input, id);
+      const reserved = await db.$transaction(async (tx) => {
+        await captureByokEvidence(tx, input, id);
         const lockedQuery = {
           ...query,
           where: { ...query.where, id: { notIn: [...inFlight, id] } },
         };
-        const pending =
-          (await tx.providerCostEntry.findFirst(lockedQuery)) ??
-          (await tx.meteringUsageEvidence.findFirst({
-            ...lockedQuery,
-            where: { ...lockedQuery.where, discarded: false },
-          }));
+        const pending = await tx.meteringUsageEvidence.findFirst({
+          ...lockedQuery,
+          where: { ...lockedQuery.where, discarded: false },
+        });
         if (pending)
           throw new ProviderUsagePersistenceError({ phase: "admission", attemptId: pending.id });
-        await recordProviderUsage(tx, {
-          ...input,
-          id,
-          createdAt: evidence.createdAt,
-          costCents: 0,
-          failed: false,
-          measurementStatus: "unknown",
-        });
-        for (const grant of await ownAdmission.reserve(tx, [
-          { id, credentialVersion: input.credentialVersion ?? null, queued: input.queued },
-        ]))
-          grants.set(id, grant);
+        return ownAdmission.reserve(tx, [
+          {
+            id,
+            credentialVersion: input.credentialVersion ?? null,
+            queued: input.queued,
+            ...(providerRequest ? { providerRequest } : {}),
+            maxCostCents: consent.remaining(),
+            attribution: {
+              tag: input.attribution.tag,
+              trigger: input.attribution.context.trigger,
+              ...(input.keywordId ? { keywordId: input.keywordId } : {}),
+            },
+          },
+        ]);
       });
-      await beginUsageEntry(id, input.estimate ?? { cents: "0", units: "1" }, input.queued);
+      // Publish consent only after commit; a failed replay must retain the original hold.
+      for (const grant of reserved) {
+        grants.set(id, grant);
+        consent.reserve(id, grant.pricedRequest?.estimate, input.estimate?.cents ?? "0");
+      }
       started += 1;
       inFlight.add(id);
       return id;
     } catch (cause) {
-      if (cause instanceof DeploymentAdmissionExhaustedError) throw cause;
+      if (
+        cause instanceof ProviderCostLimitError ||
+        cause instanceof DeploymentAdmissionExhaustedError ||
+        cause instanceof BudgetExhaustedError ||
+        cause instanceof ProviderAllocationExhaustedError
+      )
+        throw cause;
       throw new ProviderUsagePersistenceError({
         cause,
         phase: "admission",
@@ -152,10 +174,10 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
       if (value !== null && (!Number.isFinite(value) || value < 0))
         throw new RangeError("Provider usage receipt must be nonnegative.");
     }
-    const measured = input.unit === "cents" ? receipt.costCents : receipt.quantity;
     const providerRequestId = receipt.cached ? undefined : receipt.providerRequestId;
     const duplicate = await db.$transaction(async (tx) => {
       if (providerRequestId) {
+        await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${JSON.stringify(["own-native", input.connectionId, providerRequestId])},0))`;
         const retained = await tx.meteringUsageEvidence.findFirst({
           where: {
             connectionId: input.connectionId,
@@ -163,11 +185,7 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
             id: { not: id },
           },
         });
-        const existing = await tx.providerCostEntry.findFirst({
-          select: { id: true, measurementStatus: true },
-          where: { connectionId: input.connectionId, providerRequestId, id: { not: id } },
-        });
-        const canonical = retained?.canonicalId ?? retained?.id ?? existing?.id;
+        const canonical = retained?.canonicalId ?? retained?.id;
         if (canonical && canonical !== id) {
           await tx.$queryRaw(
             Prisma.sql`SELECT id FROM metering_usage_evidence WHERE id IN (${Prisma.join([canonical, id])}) ORDER BY id FOR UPDATE`,
@@ -191,43 +209,21 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
             input.unit === "cents" ? completed.costCents : completed.quantity;
           if (original?.measurementStatus === "unknown" && canonicalMeasured !== null)
             await recordByokEvidence(tx, canonical, completed, null);
-          if (
-            existing &&
-            (known || existing.measurementStatus === "unknown") &&
-            canonicalMeasured !== null
-          ) {
-            await tx.providerCostEntry.update({
-              where: { id: existing.id },
-              data: {
-                cached: completed.cached,
-                costCents: completed.costCents ?? 0,
-                failed: completed.failed,
-                measurementStatus: "recorded",
-                usageQuantity: completed.quantity,
-              },
-            });
-          }
-          await tx.providerCostEntry.deleteMany({ where: { id, measurementStatus: "unknown" } });
           await recordByokEvidence(tx, id, receipt, canonical);
           return canonical;
         }
       }
       await recordByokEvidence(tx, id, receipt, null);
-      await tx.providerCostEntry.updateMany({
-        where: { id },
-        data: {
-          cached: receipt.cached,
-          costCents: receipt.costCents ?? 0,
-          failed: receipt.failed,
-          measurementStatus: measured === null ? "unknown" : "recorded",
-          providerRequestId,
-          usageQuantity: receipt.quantity,
-        },
-      });
       return null;
     });
-    await syncUsageEntry(duplicate ?? id);
-    if (duplicate) await syncUsageEntry(id);
+    const budget = grants.get(id)?.pricedRequest?.estimate.find((q) => q.unit === "budget_cents");
+    const valued =
+      input.provider === "serpapi" && budget
+        ? receipt.quantity === null
+          ? null
+          : new Prisma.Decimal(formatQuantity(budget)).times(receipt.quantity).toNumber()
+        : receipt.costCents;
+    consent.settle(id, duplicate ? 0 : valued);
     if (!duplicate) {
       measurements.set(id, receipt);
       const receipts = [...measurements.values()];

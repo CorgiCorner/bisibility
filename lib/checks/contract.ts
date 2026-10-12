@@ -190,7 +190,12 @@ export type CheckRunsView = {
   spendCents: number;
 };
 
-export type UpcomingBlockReason = "no_provider" | "migration_hold" | "budget_exhausted";
+export type UpcomingBlockReason =
+  | "no_provider"
+  | "migration_hold"
+  | "budget_exhausted"
+  | "budget_missing"
+  | "usage_reconciliation_required";
 
 export type UpcomingBlockedGroup = {
   reason: UpcomingBlockReason;

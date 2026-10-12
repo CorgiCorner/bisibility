@@ -1,10 +1,17 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { createAgentReport } from "@/lib/agent-reports/service";
+import { isBudgetExhaustedError } from "@/lib/metering/admission-errors";
+import {
+  budgetDenialReason,
+  MISSING_PROJECT_BUDGET_MESSAGE,
+  UNRESOLVED_USAGE_MESSAGE,
+} from "@/lib/metering/budget-denial";
 import { withProviderLookupCache } from "@/lib/provider-lookups/cache";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type { ProviderRequestTrigger } from "@/lib/provider-usage/tag";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import {
   ACTUAL_COST_ASSUMPTIONS,
   ACTUAL_COST_EXCLUSIONS,
@@ -132,7 +139,7 @@ async function run(
     load: async () => {
       const admitted = await admission();
       const { estimate } = admitted;
-      if (estimate > input.max_cost_cents!)
+      if (input.max_cost_cents !== undefined && estimate > input.max_cost_cents)
         throw new ProviderLookupSignal({
           ok: false,
           reason: "cost_limit_exceeded",
@@ -201,11 +208,36 @@ async function outcome(load: () => Promise<AiResearchOutcome>): Promise<AiResear
       return {
         ok: false,
         ...refusal,
-        reason: error.outcome.reason,
+        reason: budgetDenialReason(error.outcome) ?? error.outcome.reason,
+        ...(budgetDenialReason(error.outcome) === "usage_reconciliation_required"
+          ? { retryBlocked: true }
+          : {}),
         message:
-          error.outcome.reason === "no_source"
-            ? "Connect a compatible data provider in Integrations."
-            : `Analysis unavailable: ${error.outcome.reason}.`,
+          budgetDenialReason(error.outcome) === "budget_missing"
+            ? MISSING_PROJECT_BUDGET_MESSAGE
+            : budgetDenialReason(error.outcome) === "usage_reconciliation_required"
+              ? UNRESOLVED_USAGE_MESSAGE
+              : error.outcome.reason === "no_source"
+                ? "Connect a compatible data provider in Integrations."
+                : `Analysis unavailable: ${error.outcome.reason}.`,
+      };
+    if (
+      safe &&
+      budgetDenialReason(error) &&
+      (isBudgetExhaustedError(error) ||
+        (error instanceof DeploymentAdmissionExhaustedError && error.reason === "budget"))
+    )
+      return {
+        ok: false,
+        reason: budgetDenialReason(error) ?? "budget_missing",
+        message:
+          budgetDenialReason(error) === "usage_reconciliation_required"
+            ? UNRESOLVED_USAGE_MESSAGE
+            : MISSING_PROJECT_BUDGET_MESSAGE,
+        ...refusal,
+        ...(budgetDenialReason(error) === "usage_reconciliation_required"
+          ? { retryBlocked: true }
+          : {}),
       };
     if (safe)
       return {

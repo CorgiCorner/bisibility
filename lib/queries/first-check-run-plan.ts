@@ -4,8 +4,8 @@ import type { FirstCheckRunPlan } from "@/lib/actions/rank-check-preview-result"
 import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
 import { unitCostCentsFor } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
-import { monthlySpendCents, projectBudgetCapCents } from "@/lib/rank-check/budget";
-import { monthlyBudgetExhausted } from "@/lib/rank-check/budget-contract";
+import { projectBudgetCapCents, projectBudgetStatus } from "@/lib/metering/project-budget-read";
+import { monthlySpendCents } from "@/lib/metering/usage-read";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { activeMarketLocationIds, runnableKeywordWhere } from "@/lib/rank-check/runnable";
 import {
@@ -15,6 +15,7 @@ import {
   serpDepthValues,
 } from "@/lib/serp/constants";
 import { keywordMarketSelect, projectDefaultSerpMarket } from "@/lib/serp/default-market";
+import { formatQuantity } from "@usagekit/core";
 
 function previewSerpDepth(value: number | null | undefined) {
   return serpDepthValues.find((depth) => depth === value) ?? DEFAULT_SERP_DEPTH;
@@ -28,25 +29,27 @@ function previewSerpDepth(value: number | null | undefined) {
 export async function buildFirstCheckRunPlan(projectId: string): Promise<FirstCheckRunPlan> {
   const activeLocationIds = await activeMarketLocationIds(projectId, prisma);
   const runnable = runnableKeywordWhere(activeLocationIds);
-  const [readyCount, connections, defaults, keywords, spentCents, capCents] = await Promise.all([
-    prisma.keyword.count({
-      where: { ...runnable, projectId, rankChecks: { none: { status: "completed" } } },
-    }),
-    loadSerpProviderChain(projectId),
-    prisma.projectDefaults.findUnique({ where: { projectId } }),
-    prisma.keyword.findMany({
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-      select: {
-        ...keywordMarketSelect,
-        checkSchedule: { select: { serpDepth: true } },
-        rankChecks: { select: { id: true }, take: 1, where: { status: "completed" } },
-        schedule: { select: { serpDepth: true } },
-      },
-      where: { ...runnable, projectId },
-    }),
-    monthlySpendCents(projectId),
-    projectBudgetCapCents(projectId),
-  ]);
+  const [readyCount, connections, defaults, keywords, spentCents, capCents, budgetStatus] =
+    await Promise.all([
+      prisma.keyword.count({
+        where: { ...runnable, projectId, rankChecks: { none: { status: "completed" } } },
+      }),
+      loadSerpProviderChain(projectId),
+      prisma.projectDefaults.findUnique({ where: { projectId } }),
+      prisma.keyword.findMany({
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        select: {
+          ...keywordMarketSelect,
+          checkSchedule: { select: { serpDepth: true } },
+          rankChecks: { select: { id: true }, take: 1, where: { status: "completed" } },
+          schedule: { select: { serpDepth: true } },
+        },
+        where: { ...runnable, projectId },
+      }),
+      monthlySpendCents(projectId),
+      projectBudgetCapCents(projectId),
+      projectBudgetStatus(projectId),
+    ]);
   const market = projectDefaultSerpMarket(defaults, keywords);
   const providers = connections.map((connection) => connection.provider);
   const depth = previewSerpDepth(defaults?.serpDepth);
@@ -69,7 +72,22 @@ export async function buildFirstCheckRunPlan(projectId: string): Promise<FirstCh
     nativeEstimate: estimateRankUsage(readyDepths, nativeRate),
     firstTargetEstimate: estimateRankUsage(readyDepths.slice(0, 1), nativeRate),
     budget: { capCents, spentCents },
-    budgetExhausted: monthlyBudgetExhausted(capCents, spentCents),
+    budgetReason: !budgetStatus
+      ? "budget_missing"
+      : budgetStatus.uncertain
+        ? "usage_reconciliation_required"
+        : undefined,
+    budgetExhausted:
+      !budgetStatus ||
+      budgetStatus.uncertain ||
+      (budgetStatus.budget.limit !== null &&
+        Number(formatQuantity(budgetStatus.budget.limit)) <=
+          spentCents +
+            Number(
+              formatQuantity(
+                budgetStatus.reserved ?? { unit: "budget_cents", value: 0n, scale: 0 },
+              ),
+            )),
     estimatedCostPerCheckCents: unitCostCentsFor(nativeRate, depth),
     isSampleProject: false,
     providerReady: providers.length > 0,

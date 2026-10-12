@@ -42,7 +42,7 @@ export const Idle: Story = {
     addKeywordsAction: async () => ({ created: 0, keywords: [], warning: null }),
     canDeleteSavedKeywords: true,
     checkHealth: {
-      budget: { capCents: 5000, exhausted: false, spentCents: 1280 },
+      budget: { reason: undefined, capCents: 5000, exhausted: false, spentCents: 1280 },
       currentFailures: { count: 0, latestCheckId: null },
       failed24h: { count: 0, latest: null },
       providerConnected: true,
@@ -88,7 +88,7 @@ export const BudgetExhausted: Story = {
     ...Idle.args,
     checkHealth: {
       ...Idle.args?.checkHealth,
-      budget: { capCents: 5000, exhausted: true, spentCents: 5000 },
+      budget: { reason: undefined, capCents: 5000, exhausted: true, spentCents: 5000 },
     } as never,
   },
 };

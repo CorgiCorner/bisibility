@@ -180,6 +180,7 @@
       "budgetReached": "Presupuesto agotado",
       "checksThisMonth": "Comprobaciones este mes",
       "description": "Cómo se recogen las posiciones de este proyecto",
+      "providerCostUnknown": "Desconocido",
       "estimateProviderCost": "Coste est. del proveedor",
       "failedChecks": "Fallidas (24 h)",
       "lastCheck": "Última comprobación",

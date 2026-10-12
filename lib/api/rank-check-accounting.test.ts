@@ -128,14 +128,14 @@ describe("rank-check accounting wrapper", () => {
     });
   });
 
-  it("preserves measured legacy fields when the ledger has no receipts", async () => {
+  it("keeps actuals unknown without Meter receipts despite stored legacy values", async () => {
     const [resource] = await rankCheckResources("project_1", [
       checkRecord({ billingUnits: 2, costCents: 2 }),
     ]);
 
     expect(resource).toMatchObject({
-      cost_cents: 2,
-      usage: { quantity: 2, status: "confirmed", unit: "operations" },
+      cost_cents: null,
+      usage: { quantity: null, status: "unconfirmed", unit: "operations" },
     });
   });
 
@@ -146,8 +146,11 @@ describe("rank-check accounting wrapper", () => {
     expect(mocks.rankCheckLedgerActuals).not.toHaveBeenCalled();
   });
 
-  it("derives no override without receipts", () => {
-    expect(rankCheckAccountingOverride(checkRecord(), undefined)).toBeUndefined();
-    expect(rankCheckAccountingOverride(checkRecord(), ledger({ receiptCount: 0 }))).toBeUndefined();
+  it("overrides stored actuals without receipts, including an empty aggregate", () => {
+    const unknown = { costCents: null, usageQuantity: null };
+    expect(rankCheckAccountingOverride(checkRecord(), undefined)).toEqual(unknown);
+    expect(rankCheckAccountingOverride(checkRecord(), ledger({ receiptCount: 0 }))).toEqual(
+      unknown,
+    );
   });
 });

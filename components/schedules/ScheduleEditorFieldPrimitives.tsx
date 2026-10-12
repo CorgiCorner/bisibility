@@ -20,7 +20,14 @@ export function ScheduleEditorErrorText({ text }: Readonly<{ text?: string }>) {
               : text === scheduleEditorValidationCode.nameTooLong
                 ? t("editor.scheduleNameTooLong", { maximum: 80 })
                 : null;
-  return message ? <span className="text-[11px] leading-5 text-red-text">{message}</span> : null;
+  return (
+    <span
+      className="block h-10 overflow-y-auto text-[11px] leading-5 text-red-text"
+      role={message ? "alert" : undefined}
+    >
+      {message}
+    </span>
+  );
 }
 
 type ScheduleEditorSelectFieldProps = {
@@ -50,6 +57,7 @@ export function ScheduleEditorSelectField({
       <FieldLabel className={labelClass} label={label} />
       <input type="hidden" {...register(name)} />
       <MenuSelect
+        size="input"
         ariaLabel={ariaLabel}
         onChange={(value) =>
           setValue(name, value as ScheduleEditorValues[typeof name], {

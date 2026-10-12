@@ -180,6 +180,7 @@
       "budgetReached": "Budget reached",
       "checksThisMonth": "Checks this month",
       "description": "How rankings are collected for this project",
+      "providerCostUnknown": "Unknown",
       "estimateProviderCost": "Est. provider cost",
       "failedChecks": "Failed (24h)",
       "lastCheck": "Last check",

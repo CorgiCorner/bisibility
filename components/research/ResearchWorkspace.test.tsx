@@ -5,6 +5,7 @@ import {
 import { ToastProvider } from "@/components/ui/Toast";
 import { renderWithResearchMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ResearchKeywordsAction } from "@/lib/actions/keyword-research";
+import sharedMessages from "@/messages/core/en/shared.json";
 import { makeCostContext } from "@/tests/factories/cost-context";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
@@ -223,7 +224,7 @@ const context = {
 };
 
 const checkHealth = {
-  budget: { capCents: 5_000, exhausted: false, spentCents: 200 },
+  budget: { reason: undefined, capCents: 5_000, exhausted: false, spentCents: 200 },
   currentFailures: { count: 0, latestCheckId: null },
   failed24h: { count: 0, latest: null },
   providerConnected: true,
@@ -509,6 +510,24 @@ describe("ResearchWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
     await screen.findByText("Monthly provider budget reached");
     expect(screen.getByLabelText("research disabled")).toHaveTextContent("true");
+  });
+
+  it("budget regression: shows the missing-budget state and disabled-search tooltip", async () => {
+    const researchAction = vi
+      .fn()
+      .mockResolvedValue({ ok: false, reason: "budget_exhausted", budgetReason: "budget_missing" });
+    renderWorkspace(researchAction);
+    fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    expect(await screen.findByText(sharedMessages.shared.errors.budgetMissing)).toBeVisible();
+    const run = screen.getByRole("button", { name: "Run research" });
+    expect(run).toBeDisabled();
+    expect(screen.getByLabelText("research disabled")).toHaveTextContent("true");
+    const card = screen.getByLabelText("active connection").parentElement?.parentElement;
+    if (!card) throw new Error("Search card wrapper missing");
+    fireEvent.pointerMove(card, { pointerType: "mouse" });
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      sharedMessages.shared.errors.budgetMissing,
+    );
   });
 
   it("prefills an expired recent search and waits for the priced submit", async () => {

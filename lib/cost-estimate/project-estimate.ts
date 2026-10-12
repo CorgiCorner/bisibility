@@ -82,7 +82,11 @@ export function monthlyTrackingCostCents(
       keywordCount: count,
       locationCount: 1,
     },
-    { overrideCents: context.overrideCents, providerId: context.providerId },
+    {
+      overrideCents: context.overrideCents,
+      providerId: context.providerId,
+      rateContext: context.rateContext,
+    },
   );
 }
 

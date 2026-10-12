@@ -4,6 +4,7 @@ import type { KeywordMetrics } from "@/lib/providers/types";
 export type KeywordResearchMode = "auto" | "ideas" | "related" | "suggestions";
 export type KeywordResearchSource = "idea" | "related" | "suggestion";
 export type KeywordResearchSourceReason =
+  | "wallet_budget_exhausted"
   | "budget_exhausted"
   | "cost_limit"
   | "in_progress"

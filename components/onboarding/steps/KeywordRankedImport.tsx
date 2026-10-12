@@ -1,5 +1,7 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { WalletBudgetNotice } from "@/components/i18n/WalletBudgetNotice";
 import { feedbackClass, keywordLines } from "@/components/onboarding/onboarding-form-utils";
 import { Button } from "@/components/ui/Button";
 import { MenuSelect } from "@/components/ui/MenuSelect";
@@ -68,7 +70,10 @@ export function KeywordRankedImport({
 }: Readonly<Props>) {
   const [connectionId, setConnectionId] = useState(connections[0]?.id ?? "");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [error, setError] = useState<RankedKeywordError | null>(null);
+  const [error, setError] = useState<{
+    reason: RankedKeywordError;
+    budgetReason?: "budget_missing" | "usage_reconciliation_required";
+  } | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [pages, setPages] = useState<RankedKeywordsPage[]>([]);
@@ -109,7 +114,7 @@ export function KeywordRankedImport({
         projectId,
       });
       if ("reason" in result) {
-        setError(result.reason);
+        setError(result);
         return;
       }
       setPages((existing) => (offset === 0 ? [result] : [...existing, result]));
@@ -173,7 +178,14 @@ export function KeywordRankedImport({
             : ` ${messages.drawer.aboutPage({ cost: pageCostCents / 100 })}`}
         </Button>
       </div>
-      {error ? <ErrorMessage messages={messages} projectRef={projectId} reason={error} /> : null}
+      {error ? (
+        <ErrorMessage
+          messages={messages}
+          projectRef={projectId}
+          reason={error.reason}
+          budgetReason={error.budgetReason}
+        />
+      ) : null}
       {feedback ? <p className={`m-0 mt-2 ${feedbackClass} text-fg-muted`}>{feedback}</p> : null}
       {pages.length > 0 ? (
         <RankedKeywordSuggestionDrawer
@@ -204,20 +216,29 @@ function ErrorMessage({
   messages,
   projectRef,
   reason,
+  budgetReason,
 }: Readonly<{
   messages: KeywordRankedImportMessages;
   projectRef: string;
   reason: RankedKeywordError;
+  budgetReason?: "budget_missing" | "usage_reconciliation_required";
 }>) {
-  const message = {
-    budget_exhausted: messages.budgetExhausted,
-    cost_limit_exceeded: messages.lookupFailed,
-    needs_reauth: messages.needsReauth,
-    no_domain: messages.noDomain,
-    no_source: messages.noSource,
-    rate_limited: messages.rateLimited,
-    unsupported_location: messages.unsupportedLocation,
-  }[reason];
+  const errors = useSharedErrorMessages();
+  if (reason === "wallet_budget_exhausted") return <WalletBudgetNotice />;
+  const message =
+    budgetReason === "budget_missing"
+      ? errors.budgetMissing()
+      : budgetReason === "usage_reconciliation_required"
+        ? errors.usageReconciliationRequired()
+        : {
+            budget_exhausted: messages.budgetExhausted,
+            cost_limit_exceeded: messages.lookupFailed,
+            needs_reauth: messages.needsReauth,
+            no_domain: messages.noDomain,
+            no_source: messages.noSource,
+            rate_limited: messages.rateLimited,
+            unsupported_location: messages.unsupportedLocation,
+          }[reason];
   return (
     <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>
       {message}
@@ -229,7 +250,7 @@ function ErrorMessage({
           {messages.reconnect}
         </Link>
       ) : null}
-      {reason === "budget_exhausted" ? (
+      {reason === "budget_exhausted" && !budgetReason ? (
         <Link
           className="ml-1 font-semibold text-accent-text"
           href={`${appPath(projectRef, "settings")}#provider-usage`}

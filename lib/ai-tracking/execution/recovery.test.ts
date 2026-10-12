@@ -1,4 +1,5 @@
 import type { TrackingEnvelope } from "@/lib/ai-tracking/providers/envelope";
+import { receiptOperationId } from "@/lib/metering/operation-reference";
 import { expect, it, vi } from "vitest";
 import { samplePlan } from "./fixture";
 import type { ExecutableSample, TrackingExecutionPorts } from "./ports";
@@ -54,7 +55,7 @@ function recoveryPorts() {
     }),
     collect: vi.fn(async () => envelope),
     settle: vi.fn(async (_plan, receipt) => {
-      ledger.set(receipt.providerCostEntryId ?? "missing", receipt.amountUsd);
+      ledger.set(receiptOperationId(receipt) ?? "missing", receipt.amountUsd);
     }),
     persist: vi.fn(async () => {
       row.dispatch = "terminal";

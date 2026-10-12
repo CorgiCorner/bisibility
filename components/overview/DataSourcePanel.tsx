@@ -76,7 +76,10 @@ export function DataSourceMetrics({ health }: Readonly<{ health: DataSourceHealt
     { label: t("checksThisMonth"), value: format.number(health.checksThisMonth) },
     {
       label: t("estimateProviderCost"),
-      value: format.number(health.providerCostCents / 100, { currency: "USD", style: "currency" }),
+      value:
+        health.providerCostCents === null
+          ? t("providerCostUnknown")
+          : format.number(health.providerCostCents / 100, { currency: "USD", style: "currency" }),
     },
   ];
 

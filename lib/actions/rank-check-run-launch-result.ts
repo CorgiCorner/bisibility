@@ -18,6 +18,8 @@ export const launchRankCheckRunActionSchema = z
 export type LaunchRankCheckRunActionInput = z.infer<typeof launchRankCheckRunActionSchema>;
 export type LaunchRankCheckRunActionFailure = {
   code:
+    | "usage_reconciliation_required"
+    | "budget_missing"
     | "budget_exhausted"
     | "cost_limit_exceeded"
     | "no_provider"

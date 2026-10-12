@@ -1,7 +1,4 @@
-import {
-  type MarketGridGroupRow,
-  marketGridDefaultsToGrouped,
-} from "@/lib/keywords/market-grid-model";
+import type { MarketGridGroupRow } from "@/lib/keywords/market-grid-model";
 import {
   type NextSearchParams,
   parseRankTrackerQuery,
@@ -34,14 +31,14 @@ export async function resolveRankTrackerPageQuery(projectRef: string, params: Ne
   const query = resolveRankTrackerQuery(parsed, requestedView?.config);
   return {
     activeView: requestedView,
-    groupedWasSpecified: parsed.present.has("grouped"),
     query: requestedView ? query : { ...query, savedViewId: null },
     malformedDevice: parsed.present.has("device") && parsed.issues.includes("device"),
+    explicitGrouping: parsed.present.has("grouped") && !parsed.issues.includes("grouped"),
     staleView: parsed.state.savedViewId !== null && requestedView === null,
   } satisfies {
     activeView: KeywordSavedView | null;
-    groupedWasSpecified: boolean;
     malformedDevice: boolean;
+    explicitGrouping: boolean;
     query: RankTrackerQueryState;
     staleView: boolean;
   };
@@ -50,30 +47,26 @@ export async function resolveRankTrackerPageQuery(projectRef: string, params: Ne
 export async function loadRankTrackerPageList(
   projectRef: string,
   query: RankTrackerQueryState,
-  groupedWasSpecified: boolean,
+  projectMarkets: readonly { id: string; status: "active" | "paused" }[],
+  options: { explicitGrouping?: boolean } = {},
 ): Promise<RankTrackerPageList> {
-  if (query.grouped) {
-    const result = await getRankTrackerGroupedList({ projectRef, query });
+  // The visible registry includes paused markets and excludes archived markets.
+  const effectiveQuery = {
+    ...query,
+    grouped: options.explicitGrouping ? query.grouped : projectMarkets.length > 1,
+  };
+  if (effectiveQuery.grouped) {
+    const result = await getRankTrackerGroupedList({ projectRef, query: effectiveQuery });
     return {
       ...result,
       mode: "grouped-server",
-      query: { ...query, lens: result.resolvedLens },
+      query: { ...effectiveQuery, lens: result.resolvedLens },
     };
   }
-  const flat = await getRankTrackerKeywordList({ projectRef, query });
-  const flatQuery = { ...query, lens: flat.resolvedLens };
-  if (!groupedWasSpecified && marketGridDefaultsToGrouped(flat.locations)) {
-    const groupedQuery = { ...flatQuery, grouped: true };
-    const result = await getRankTrackerGroupedList({ projectRef, query: groupedQuery });
-    return {
-      ...result,
-      mode: "grouped-server",
-      query: { ...groupedQuery, lens: result.resolvedLens },
-    };
-  }
+  const flat = await getRankTrackerKeywordList({ projectRef, query: effectiveQuery });
   return {
     ...flat,
     mode: "flat-server",
-    query: flatQuery,
+    query: { ...effectiveQuery, lens: flat.resolvedLens },
   };
 }

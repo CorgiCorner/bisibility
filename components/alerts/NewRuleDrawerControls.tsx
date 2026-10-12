@@ -1,24 +1,19 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
-import { inputClassName } from "@/components/ui/input-styles";
 import { MenuMultiSelect, MenuSelect } from "@/components/ui/MenuSelect";
+import { menuSelectInputClass } from "@/components/ui/menu-select-support";
 import type { AlertTargetOptions } from "@/lib/alerts/alert-data";
 import type { NewRuleForm, RuleTemplateId } from "@/lib/alerts/new-rule-data";
 import { ruleSeverityMeta, ruleTemplates } from "@/lib/alerts/new-rule-data";
 import { useTranslations } from "next-intl";
-import type {
-  FieldErrors,
-  UseFormRegister,
-  UseFormRegisterReturn,
-  UseFormSetValue,
-} from "react-hook-form";
+import type { FieldErrors, UseFormRegister, UseFormSetValue } from "react-hook-form";
+
+export { ConditionFields } from "./NewRuleConditionFields";
 
 const labelClass =
   "flex flex-col gap-[7px] font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted";
-const fieldClass = `${inputClassName} rounded-control px-3 py-2.5 text-[13px] font-medium`;
-const selectTriggerClass =
-  "min-h-10 w-full justify-between rounded-control border-border-control bg-transparent px-3 text-[13px] font-medium normal-case tracking-normal";
+const selectTriggerClass = "normal-case tracking-normal";
 export function conditionOptions(t: ReturnType<typeof useTranslations<"projectAlerts.drawer">>) {
   return [
     { label: t("conditionPositionDrop"), value: "position_drop" },
@@ -118,10 +113,13 @@ export function ScopeFields({
 
   return (
     <div className="grid gap-3.5 sm:grid-cols-2">
-      <div className={targetType === "all" ? `${labelClass} sm:col-span-2` : labelClass}>
+      <div
+        className={`${labelClass} sm:row-start-1 ${targetType === "all" ? "sm:col-span-2" : ""}`}
+      >
         <span>{t("scope")}</span>
         <input type="hidden" {...register("targetType")} />
         <MenuSelect
+          size="input"
           ariaLabel={t("scope")}
           onChange={(value) => updateTargetType(value as NewRuleForm["targetType"])}
           options={scopeOptions}
@@ -129,26 +127,32 @@ export function ScopeFields({
           value={targetType}
         />
       </div>
-      {targetType !== "all" ? (
-        <div className={labelClass}>
-          <span>{t("target")}</span>
-          <MenuSelect
-            ariaLabel={t("target")}
-            onChange={(value) =>
-              setValue("targetIds", value ? [value] : [], {
-                shouldDirty: true,
-                shouldValidate: true,
-              })
-            }
-            options={targetOptions}
-            triggerClassName={selectTriggerClass}
-            value={targetId}
-          />
-          {errors.targetIds ? (
-            <span className="text-red-text">{errors.targetIds.message}</span>
-          ) : null}
-        </div>
-      ) : null}
+      <div
+        className={`h-[100px] min-w-0 sm:col-start-2 sm:row-start-1 ${targetType === "all" ? "pointer-events-none" : ""}`}
+        data-alert-target-slot=""
+      >
+        {targetType !== "all" ? (
+          <div className={labelClass}>
+            <span>{t("target")}</span>
+            <MenuSelect
+              size="input"
+              ariaLabel={t("target")}
+              onChange={(value) =>
+                setValue("targetIds", value ? [value] : [], {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+              options={targetOptions}
+              triggerClassName={selectTriggerClass}
+              value={targetId}
+            />
+            {errors.targetIds ? (
+              <span className="text-red-text">{errors.targetIds.message}</span>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -178,113 +182,9 @@ export function RecipientFields({
         options={targets.members.map((member) => ({ label: member.label, value: member.id }))}
         placeholder={t("creatorDefault")}
         searchable
-        triggerClassName={selectTriggerClass}
+        triggerClassName={`${menuSelectInputClass} ${selectTriggerClass}`}
         values={recipientIds}
       />
     </div>
-  );
-}
-
-export function ConditionFields({
-  conditionType,
-  errors,
-  register,
-}: Readonly<{
-  conditionType: NewRuleForm["conditionType"];
-  errors: FieldErrors<NewRuleForm>;
-  register: UseFormRegister<NewRuleForm>;
-}>) {
-  const t = useTranslations("projectAlerts.drawer");
-
-  if (conditionType === "change_pct" || conditionType === "ctr_drop") {
-    return (
-      <NumberField
-        error={errors.changePct?.message}
-        label={conditionType === "ctr_drop" ? t("ctrDrop") : t("changePct")}
-        max={conditionType === "ctr_drop" ? 100 : undefined}
-        register={register("changePct")}
-        step={0.1}
-      />
-    );
-  }
-  if (conditionType === "threshold") {
-    return (
-      <NumberField
-        error={errors.thresholdPosition?.message}
-        label={t("thresholdPosition")}
-        register={register("thresholdPosition")}
-      />
-    );
-  }
-  if (conditionType === "position_drop") {
-    return (
-      <NumberField
-        error={errors.dropPositions?.message}
-        label={t("dropPositions")}
-        register={register("dropPositions")}
-      />
-    );
-  }
-  if (conditionType === "competitor_overtake") {
-    return (
-      <TextField
-        error={errors.competitorDomain?.message}
-        label={t("competitorDomain")}
-        register={register("competitorDomain")}
-      />
-    );
-  }
-  if (conditionType === "serp_feature") {
-    return (
-      <TextField
-        error={errors.serpFeature?.message}
-        label={t("serpFeature")}
-        register={register("serpFeature")}
-      />
-    );
-  }
-  if (conditionType === "url_mismatch" || conditionType === "downtrend") {
-    return null;
-  }
-  return <NumberField error={errors.topN?.message} label={t("topN")} register={register("topN")} />;
-}
-
-function NumberField({
-  error,
-  label,
-  max,
-  register,
-  step = 1,
-}: Readonly<{
-  error?: string;
-  label: string;
-  max?: number;
-  register: UseFormRegisterReturn;
-  step?: number;
-}>) {
-  return (
-    <label className={labelClass}>
-      {label}
-      <input className={fieldClass} max={max} min={1} step={step} type="number" {...register} />
-      {error ? <span className="text-red-text">{error}</span> : null}
-    </label>
-  );
-}
-
-function TextField({
-  error,
-  label,
-  register,
-}: Readonly<{
-  error?: string;
-  label: string;
-  register: UseFormRegisterReturn;
-}>) {
-  return (
-    <label className={labelClass}>
-      {label}
-      <input className={fieldClass} {...register} />
-      {error ? <span className="text-red-text">{error}</span> : null}
-    </label>
   );
 }

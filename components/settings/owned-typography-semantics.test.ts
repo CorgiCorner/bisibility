@@ -55,12 +55,14 @@ describe("owned product and settings typography", () => {
 
   it("uses Sans tabular numerals for representative product metrics", () => {
     const files = [
-      "components/cost-estimate/ProviderSpendMeter.tsx",
-      "components/search-insights/SearchInsightsRowsTable.tsx",
+      "components/usagekit/measurement-card.tsx",
+      "components/usagekit/usage-summary-cards.tsx",
+      "components/search-insights/SearchInsightsKpiRow.tsx",
       "components/domain-overview/DomainOverviewKeywordsTable.tsx",
     ];
     for (const file of files) {
       const source = readFileSync(file, "utf8");
+      expect(source).toContain("tabular-nums");
       expect(source).not.toMatch(/font-mono[^"'\n]*tabular-nums|tabular-nums[^"'\n]*font-mono/);
     }
   });

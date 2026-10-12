@@ -5,6 +5,7 @@ import { UnsupportedBacklinksTargetError } from "@/lib/backlinks/target";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { z } from "zod";
 import { getActionActor, parseActionInput, requireProjectScope } from "./_shared";
+import { withLookupBudgetResult } from "./lookup-budget-result";
 
 const analyzeBacklinksActionSchema = z.object({
   estimateOnly: z.boolean().default(false),
@@ -34,7 +35,7 @@ export type LoadMoreBacklinkRowsAction = typeof loadMoreBacklinkRowsAction;
 
 async function withTargetValidation<T>(run: () => Promise<T>) {
   try {
-    return await run();
+    return await withLookupBudgetResult(run);
   } catch (error) {
     if (!(error instanceof UnsupportedBacklinksTargetError)) throw error;
     return { ok: false as const, reason: "unsupported_target" as const, message: error.message };

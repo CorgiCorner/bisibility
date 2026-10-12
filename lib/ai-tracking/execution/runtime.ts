@@ -1,3 +1,4 @@
+import { receiptOperationId } from "@/lib/metering/operation-reference";
 import "server-only";
 import { trackingAdmissionContext } from "@/lib/ai-tracking/admission/context";
 import { recheckTrackingAdmission } from "@/lib/ai-tracking/admission/launch";
@@ -144,13 +145,13 @@ export const trackingExecutionPorts: TrackingExecutionPorts = {
     );
   },
   async settle(plan, receipt, failed, taskId) {
-    if (!receipt.providerCostEntryId)
-      throw new Error("Tracking receipt lacks its durable provider ledger entry.");
+    const operationId = receiptOperationId(receipt);
+    if (!operationId) throw new Error("Tracking receipt lacks its durable provider ledger entry.");
     const costCents = receipt.amountUsd === null ? null : Number(receipt.amountUsd) * 100;
     if (costCents !== null && (!Number.isFinite(costCents) || costCents > Number.MAX_SAFE_INTEGER))
       throw new Error("Tracking receipt exceeds the supported ledger amount range.");
     const { journal } = await trackingJournal(plan);
-    await journal.observer.settle(receipt.providerCostEntryId, {
+    await journal.observer.settle(operationId, {
       cached: false,
       costCents,
       failed,

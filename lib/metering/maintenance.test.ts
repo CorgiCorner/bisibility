@@ -1,70 +1,32 @@
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ query: vi.fn(), sync: vi.fn(), expire: vi.fn() }));
-vi.mock("@/lib/db/prisma", () => ({ prisma: { $queryRaw: mocks.query } }));
-vi.mock("./entry-sync", () => ({ syncUsageEntry: mocks.sync }));
+const mocks = vi.hoisted(() => ({ expire: vi.fn(), notify: vi.fn() }));
 vi.mock("./runtime", () => ({
   meteringNamespace: () => "test",
   meteringRuntime: async () => ({ meter: { expireReservations: mocks.expire } }),
 }));
+vi.mock("@/lib/ops/notify", () => ({ notifyOps: mocks.notify }));
+
+import { maintainMeteringReservations } from "./maintenance";
 
 beforeEach(() => {
-  vi.resetModules();
-  vi.clearAllMocks();
-  vi.stubEnv("METERING_SHADOW", "on");
-  vi.useFakeTimers();
-  vi.setSystemTime(new Date("2026-09-24T00:00:00Z"));
-});
-afterEach(() => {
-  vi.unstubAllEnvs();
-  vi.useRealTimers();
-});
-
-it("advances past a full page that could not be imported and retries it on the next sweep", async () => {
-  const oldRows = Array.from({ length: 100 }, (_, i) => ({
-    id: `old-${i}`,
-    createdAt: new Date("2026-09-01T00:00:00Z"),
-  }));
-  const newer = { id: "newer", createdAt: new Date("2026-09-02T00:00:00Z") };
-  mocks.query.mockImplementation(async (query: { values: unknown[] }) =>
-    query.values.includes("old-99") ? [newer] : oldRows,
-  );
-  // The safe synchronization seam returns normally even when no operation was persisted.
-  mocks.sync.mockResolvedValue(undefined);
-  const { maintainMeteringShadow } = await import("./maintenance");
-  await maintainMeteringShadow();
-  expect(mocks.sync).toHaveBeenCalledTimes(100);
-  await maintainMeteringShadow();
-  expect(mocks.sync).toHaveBeenCalledWith("newer");
-  expect(mocks.sync).toHaveBeenCalledTimes(101);
-  await maintainMeteringShadow();
-  expect(mocks.sync).toHaveBeenCalledTimes(201);
-  expect(mocks.expire).toHaveBeenCalledTimes(3);
-});
-
-it("keeps the sweep cutoff fixed when its pages cross a month boundary", async () => {
-  vi.setSystemTime(new Date("2026-09-30T23:59:59Z"));
-  mocks.query
-    .mockResolvedValueOnce(
-      Array.from({ length: 100 }, (_, i) => ({
-        id: `row-${i}`,
-        createdAt: new Date("2026-09-29T00:00:00Z"),
-      })),
-    )
-    .mockResolvedValue([]);
-  const { maintainMeteringShadow } = await import("./maintenance");
-  await maintainMeteringShadow();
-  vi.setSystemTime(new Date("2026-10-01T00:00:01Z"));
-  await maintainMeteringShadow();
-  const dates = mocks.query.mock.calls[1]?.[0].values.filter((v: unknown) => v instanceof Date);
-  expect(dates).not.toContainEqual(new Date("2026-10-01T00:00:00Z"));
-  expect(dates).toContainEqual(new Date("2026-09-30T23:59:59Z"));
-});
-
-it("does not scan or expire reservations when disabled", async () => {
+  vi.resetAllMocks();
+  mocks.notify.mockResolvedValue(undefined);
   vi.stubEnv("METERING_SHADOW", "off");
-  const { maintainMeteringShadow } = await import("./maintenance");
-  await maintainMeteringShadow();
-  expect(mocks.query).not.toHaveBeenCalled();
-  expect(mocks.expire).not.toHaveBeenCalled();
+});
+it("expires one bounded authoritative page regardless of the retired shadow flag", async () => {
+  mocks.expire.mockResolvedValue({ outcome: "expired", count: 100, hasMore: true });
+  await expect(maintainMeteringReservations()).resolves.toEqual({ count: 100, hasMore: true });
+  expect(mocks.expire).toHaveBeenCalledWith({ namespace: "test", limit: 100 });
+});
+it("exposes accounting failure for activity retry and reports operational health", async () => {
+  mocks.expire.mockRejectedValue(new Error("Store unavailable"));
+  await expect(maintainMeteringReservations()).rejects.toThrow("Store unavailable");
+  expect(mocks.notify).toHaveBeenCalledWith(
+    expect.objectContaining({ severity: "error", kind: "metering_maintenance_failed" }),
+  );
+});
+it("rejects an unsuccessful Meter expiry result", async () => {
+  mocks.expire.mockResolvedValue({ outcome: "invalid", issues: [] });
+  await expect(maintainMeteringReservations()).rejects.toThrow("expiry refused");
 });

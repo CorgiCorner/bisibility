@@ -1,4 +1,5 @@
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   analyzeDomainOverviewAction,
@@ -48,6 +49,24 @@ const base = {
 };
 
 describe("domain overview actions", () => {
+  it.each([
+    [analyzeDomainOverviewAction, mocks.analyze],
+    [loadDomainHistoryAction, mocks.history],
+    [loadDomainKeywordsPageAction, mocks.keywords],
+    [loadDomainPagesPageAction, mocks.pages],
+  ])("resolves a hosted missing-budget refusal for %s", async (action, service) => {
+    service.mockRejectedValueOnce(
+      new DeploymentAdmissionExhaustedError("budget", { budgetReason: "budget_missing" }),
+    );
+    await expect(
+      action({ ...base, estimateOnly: false, maxCostCents: 5, limit: 100, offset: 0 }),
+    ).resolves.toMatchObject({
+      ok: false,
+      reason: "budget_exhausted",
+      budgetReason: "budget_missing",
+      costCents: 0,
+    });
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireScope.mockResolvedValue(mocks.project);

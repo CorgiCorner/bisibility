@@ -17,8 +17,7 @@ test("conformance cases reuse a schema with empty accounting tables", async () =
   const schema = first.schema;
   try {
     await transactions(first.client(), schema, first.counters).write((sql) =>
-      sql.execute(Prisma.sql`INSERT INTO metering_shadow(namespace,operation_id,project_id,connection_id,legacy,meter,settled)
-        VALUES('test','fixture','project','connection','allowed','reserved','pending')`),
+      sql.execute(Prisma.sql`INSERT INTO queued_rank_check_tasks(id) VALUES('fixture')`),
     );
   } finally {
     await first.close();
@@ -27,7 +26,9 @@ test("conformance cases reuse a schema with empty accounting tables", async () =
   try {
     expect(second.schema).toBe(schema);
     const [row] = await transactions(second.client(), schema, second.counters).read((sql) =>
-      sql.query<{ count: bigint }>(Prisma.sql`SELECT count(*) AS count FROM metering_shadow`),
+      sql.query<{ count: bigint }>(
+        Prisma.sql`SELECT count(*) AS count FROM queued_rank_check_tasks`,
+      ),
     );
     expect(row?.count).toBe(0n);
   } finally {

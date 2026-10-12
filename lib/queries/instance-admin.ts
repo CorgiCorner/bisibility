@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { monthStartUtc } from "@/lib/metering/utc-window";
 import { getOpsConfig } from "@/lib/ops/config";
 import {
   type AdminRankHeartbeat,
@@ -12,7 +13,6 @@ import { buildFailureBreakdown, buildProviderHealthMatrix } from "@/lib/ops/inst
 import { getWorkerLivenessDetails, type WorkerLiveness } from "@/lib/ops/liveness";
 import { getTemporalSnapshot } from "@/lib/ops/temporal-snapshot";
 import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
-import { monthStartUtc } from "@/lib/rank-check/budget";
 import { aggregateProviderReferenceUsage } from "@/lib/rank-check/reference-usage";
 import { schedulerDriver } from "@/lib/scheduler/driver";
 import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";

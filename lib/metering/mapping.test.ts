@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import type { HostedMeteringSnapshot } from "./hosted-snapshot";
-import { entryFromHostedEvidence } from "./hosted-sync";
-import { allocationBudgets, decimalQuantity, receiptFromEntry, reserveFromEntry } from "./mapping";
+import { decimalQuantity, receiptFromEntry, reserveFromEntry } from "./mapping";
 
 vi.mock("@/lib/providers/execution-extension", () => ({}));
-vi.mock("./queued-payload", () => ({}));
-vi.mock("./shadow-runtime", () => ({}));
 
 const entry = {
   id: "e1",
@@ -26,70 +22,6 @@ const entry = {
   failed: false,
 };
 describe("host metering mapping", () => {
-  it.each([
-    { costCents: "0.6250", usageQuantity: null, knownUnit: "cents", unknownUnit: "units" },
-    { costCents: null, usageQuantity: "1.000000", knownUnit: "units", unknownUnit: "cents" },
-  ])(
-    "maps independently known hosted $knownUnit without losing the acknowledged debit",
-    (proof) => {
-      const snapshot: HostedMeteringSnapshot = {
-        schemaVersion: 1,
-        namespace: "original",
-        operationKey: "hosted-execution",
-        ownerId: "original-owner",
-        walletId: "original-wallet",
-        projectId: "original-project",
-        connectionId: "original-connection",
-        provider: "dataforseo",
-        feature: "rank_check",
-        source: "app",
-        credentialKind: null,
-        credentialId: null,
-        correlationId: "original-correlation",
-        occurredAt: "2026-10-06T00:00:00.000Z",
-        estimatedCostCents: "0.6250",
-        estimatedPriceCents: "1.0000",
-        estimatedQuantity: "1.000000",
-        customerPriceVersion: "original-price",
-        platformPoolId: "original-pool",
-        providerCredentialVersion: "original-version",
-        providerCostOwner: "original-provider-account",
-      };
-      const mapped = entryFromHostedEvidence({
-        snapshot,
-        costCents: proof.costCents,
-        usageQuantity: proof.usageQuantity,
-        customerCents: "1.0000",
-        cached: false,
-        failed: false,
-      });
-      expect(mapped.measurementStatus).toBe("unknown");
-      expect(mapped.costMeasurement).toBe(proof.costCents === null ? "unknown" : "recorded");
-      expect(mapped.quantityMeasurement).toBe(
-        proof.usageQuantity === null ? "unknown" : "recorded",
-      );
-      const receipt = receiptFromEntry(mapped, new Date("2026-10-06T00:01:00.000Z"));
-      expect(receipt.measurements.find((value) => value.unit === proof.knownUnit)).toMatchObject({
-        certainty: "measured",
-      });
-      expect(receipt.measurements.find((value) => value.unit === proof.unknownUnit)).toEqual({
-        unit: proof.unknownUnit,
-        certainty: "unknown",
-        quantity: null,
-      });
-      expect(receipt.cost).toEqual(
-        proof.costCents === null
-          ? { certainty: "unknown", money: null }
-          : { certainty: "measured", money: { currency: "USD", units: 6250n } },
-      );
-      expect(receipt.measurements.find((value) => value.unit === "customer_cents")).toEqual({
-        unit: "customer_cents",
-        certainty: "measured",
-        quantity: { unit: "customer_cents", value: 10000n, scale: 4 },
-      });
-    },
-  );
-
   it("retains original namespace and independent cost/quantity certainty", () => {
     expect(
       reserveFromEntry("changed", { ...entry, namespace: "original" }, { cents: "1", units: "1" })
@@ -158,17 +90,6 @@ describe("host metering mapping", () => {
     );
     expect(unknown.cost).toEqual({ certainty: "unknown", money: null });
     expect(unknown.measurements.every((m) => m.certainty === "unknown")).toBe(true);
-  });
-  it("mirrors both surfaces as soft allowances in the provider native unit", () => {
-    const budgets = allocationBudgets(
-      "deployment",
-      { id: "c1", unit: "units", app: "100", programmatic: "200" },
-      3,
-    );
-    expect(budgets.map((b) => [b.surface, b.unit, b.limit?.value, b.onExceed])).toEqual([
-      ["app", "units", 100000000n, "allow"],
-      ["programmatic", "units", 200000000n, "allow"],
-    ]);
   });
   it("separates upstream corrections from the acknowledged customer charge", () => {
     const hosted = {

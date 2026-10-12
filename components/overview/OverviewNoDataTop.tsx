@@ -1,5 +1,4 @@
 "use client";
-
 import { FirstCheckBanner, FirstCheckBannerLink } from "@/components/rank-check/FirstCheckBanner";
 import {
   FirstCheckBannerAction,
@@ -9,6 +8,8 @@ import {
 } from "@/components/rank-check/FirstCheckBannerAction";
 import { Card } from "@/components/ui/Card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { useSharedErrorMessages } from "@/i18n/useSharedErrorMessages";
+import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { appPath } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
@@ -159,6 +160,7 @@ export function NoDataBanner({
 
 type NoDataKpiRowProps = {
   budgetExhausted: boolean;
+  budgetReason?: BudgetDenialReason;
   keywordCount: number;
   projectReadOnly: boolean;
   runningCheckCount: number;
@@ -184,7 +186,13 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
   const kpiT = useTranslations("projectDashboard.kpis");
   const dashboardT = useTranslations("projectDashboard.dashboard");
   const { keywordCount } = props;
-  const keywordSubline = trackedKeywordSubline(props, t);
+  const errors = useSharedErrorMessages();
+  const keywordSubline =
+    props.budgetReason === "budget_missing"
+      ? errors.budgetMissing()
+      : props.budgetReason === "usage_reconciliation_required"
+        ? errors.usageReconciliationRequired()
+        : trackedKeywordSubline(props, t);
 
   return (
     <section

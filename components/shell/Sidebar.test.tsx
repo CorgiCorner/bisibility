@@ -1,7 +1,7 @@
 import { applyTheme } from "@/components/shell/set-theme";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
 import { renderWithShellMessages as render } from "@/i18n/test-support/render-with-feature-messages";
-import type { NavContext } from "@/lib/nav/nav-items";
+import type { NavBadge, NavContext } from "@/lib/nav/nav-items";
 import { appPath, asMarketRef, marketPath } from "@/lib/routing/app-path";
 import { setNavigationState } from "@/tests/next-navigation";
 import { act, fireEvent, screen, within } from "@testing-library/react";
@@ -29,9 +29,7 @@ vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 // Nothing in the real rail carries the `new` tag yet, so its colour branch would otherwise be
 // dead code. The override map is empty unless a test fills it, so every other test in this file
 // still renders the real navigation data.
-const navBadgeOverrides = vi.hoisted(
-  () => ({}) as Record<string, "new" | "alpha" | "beta" | "experimental" | undefined>,
-);
+const navBadgeOverrides = vi.hoisted(() => ({}) as Record<string, NavBadge | undefined>);
 
 vi.mock("@/lib/nav/nav-items", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/nav/nav-items")>();
@@ -124,21 +122,20 @@ describe("Sidebar", () => {
       [
         "dashboard",
         "rank-tracker",
+        "ai-tracking",
         "competitors",
         "keyword-research",
         "domain-overview",
         "backlinks",
-        "search-console",
         "ai-visibility",
         "prompt-explorer",
-        "ai-tracking",
         "site-audit",
+        "search-console",
+        "agent-reports",
         "markets",
         "alerts",
         "runs",
         "integrations",
-        "context",
-        "agent-reports",
         "install",
         "settings",
       ].map((segment) => appPath(mockWorkspaces[0].publicId, segment)),
@@ -378,7 +375,9 @@ describe("Sidebar", () => {
 
     expect(screen.queryByText("ACTIVITY")).toBeNull();
     for (const [tag, firstRow] of [
-      ["MODULES", "Rank Tracker"],
+      ["TRACKING", "Rank Tracker"],
+      ["RESEARCH", "Keyword Research"],
+      ["DATA", "Search Console"],
       ["PROJECT", "Markets"],
     ] as const) {
       const tagNode = screen.getByText(tag);
@@ -459,12 +458,14 @@ describe("Sidebar", () => {
     const expandedDashboard = expanded.getByRole("link", { name: "Dashboard" });
     expect(expandedDashboard.closest("[data-tooltip]")).toHaveClass("w-full");
     expect(expandedDashboard).toHaveClass("w-full");
+    expect(expandedDashboard.closest("nav")).toHaveClass("-mr-3.5", "pr-3.5");
     expanded.unmount();
 
     const collapsed = render(shell(true));
     const collapsedDashboard = collapsed.getByRole("link", { name: "Dashboard" });
     expect(collapsedDashboard.closest("[data-tooltip]")).not.toHaveClass("w-full");
     expect(collapsedDashboard).not.toHaveClass("w-full");
+    expect(collapsedDashboard.closest("nav")).not.toHaveClass("-mr-3.5");
   });
 
   it("keeps the desktop switcher and navigation spacing intentional", () => {
@@ -545,7 +546,7 @@ describe("Sidebar", () => {
     expect(rankingIcon(collapsedIdle)).toHaveAttribute("data-weight", "regular");
   });
 
-  it("keeps Dashboard above the two headed groups in desktop and collapsed rails", () => {
+  it("keeps Dashboard above the purpose groups in desktop and collapsed rails", () => {
     function shell(collapsed: boolean) {
       return (
         <AppThemeRoot data-collapsed={collapsed ? "true" : "false"} defaultTheme="light">
@@ -560,9 +561,11 @@ describe("Sidebar", () => {
     }
 
     const expanded = render(shell(false));
-    const modules = expanded.getByText("Modules");
+    const modules = expanded.getByText("Tracking");
     expect(expanded.queryByText("Activity")).toBeNull();
-    expect(expanded.getByText("Modules")).toBeInTheDocument();
+    expect(expanded.getByText("Tracking")).toBeInTheDocument();
+    expect(expanded.getByText("Research & audits")).toBeInTheDocument();
+    expect(expanded.getByText("Data & reports")).toBeInTheDocument();
     expect(expanded.getByText("Project")).toBeInTheDocument();
     expect(modules.closest("a")).toBeNull();
     expect(modules).not.toHaveAttribute("tabindex");
@@ -585,52 +588,39 @@ describe("Sidebar", () => {
     // What scopes a group covers is in the heading's tooltip, never a subtitle under it.
     expect(modules.closest("[data-tooltip]")).toHaveAttribute(
       "data-tooltip",
-      "Market modules follow the selected market. The rest keep their own axis.",
+      "Track rankings and AI performance over time.",
     );
     expect(expanded.queryByText(/^ACTIVITY$/)).toBeNull();
 
-    // The pill lives inside the <a>. Without aria-hidden the row's accessible name becomes
-    // "Search Consolebeta", so this query is the guard, not a convenience.
     const gcsInsights = expanded.getByRole("link", { name: "Search Console" });
-    const beta = within(gcsInsights).getByText("beta");
-    expect(beta).toHaveAttribute("aria-hidden", "true");
-    expect(beta).toHaveClass(
-      "inline-flex",
-      "flex-none",
-      "rounded-full",
-      "px-[7px]",
-      "py-0.5",
-      "text-[9.5px]",
-      "font-semibold",
-      "bg-bg-sunken",
-      "text-fg-muted",
-    );
-    expect(beta).not.toHaveClass("font-mono");
+    expect(gcsInsights).toHaveTextContent("Search Console");
+    expect(expanded.queryAllByText(/^(alpha|beta)$/i)).toHaveLength(0);
     expanded.unmount();
 
     const collapsed = render(shell(true));
     expect(collapsed.queryByText("ACTIVITY")).toBeNull();
-    expect(collapsed.getByText("MODULES")).toBeInTheDocument();
+    expect(collapsed.getByText("TRACKING")).toBeInTheDocument();
+    expect(collapsed.getByText("RESEARCH")).toBeInTheDocument();
+    expect(collapsed.getByText("DATA")).toBeInTheDocument();
     expect(collapsed.getByText("PROJECT")).toBeInTheDocument();
     expect(collapsed.queryByText("Activity")).toBeNull();
     expect(collapsed.queryByText("beta")).toBeNull();
     expect(collapsed.getAllByRole("link").map((link) => link.getAttribute("aria-label"))).toEqual([
       "Dashboard",
       "Rank Tracker",
+      "AI Tracking",
       "Keyword Research",
       "Domain Overview",
       "Backlinks",
-      "Search Console",
       "AI Visibility",
       "Prompt Explorer",
-      "AI Tracking",
       "Site Audit",
+      "Search Console",
+      "Agent Reports",
       "Markets",
       "Alerts",
       "Runs",
       "Integrations",
-      "Project Context",
-      "Agent Reports",
       "Install",
       "Settings",
     ]);
@@ -712,7 +702,7 @@ describe("Sidebar", () => {
     expect(flask).toHaveAttribute("data-weight", "regular");
 
     const gcsInsights = screen.getByRole("link", { name: "Search Console" });
-    expect(within(gcsInsights).getByText("beta")).toHaveClass("bg-bg-sunken", "text-fg-muted");
+    expect(within(gcsInsights).queryByText("beta")).not.toBeInTheDocument();
     const dashboard = screen.getByRole("link", { name: "Dashboard" });
     expect(within(dashboard).getByText("new")).toHaveClass("bg-accent-soft", "text-accent-text");
   });

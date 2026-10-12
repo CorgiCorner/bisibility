@@ -2,15 +2,13 @@
 
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
+import { projectBudgetCapCents } from "@/lib/metering/project-budget-read";
+import { monthlySpendCents } from "@/lib/metering/usage-read";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { buildFirstCheckRunPlan } from "@/lib/queries/first-check-run-plan";
 import { firstCheckTargets } from "@/lib/queries/first-check-targets";
-import { monthlySpendCents, projectBudgetCapCents } from "@/lib/rank-check/budget";
 import { launchSingleRankCheckRun } from "@/lib/rank-check/runs/launch-single";
-import {
-  isLaunchRankCheckRunNothingToRun,
-  LaunchRankCheckRunError,
-} from "@/lib/rank-check/runs/launch-types";
+import { isLaunchRankCheckRunNothingToRun } from "@/lib/rank-check/runs/launch-types";
 import { isSampleProject } from "@/lib/sample-data/marker";
 import {
   getFirstCheckRunPlanSchema,
@@ -206,9 +204,6 @@ export async function runFirstCheckPreview(input: unknown): Promise<RunFirstChec
       revalidateRankCheckViews(keywordScope.publicId);
       return emitResult(result);
     } catch (error) {
-      if (error instanceof LaunchRankCheckRunError && error.code === "budget_exhausted") {
-        return emitResult(previewFailure("budget_exhausted", error.message));
-      }
       const expected = expectedPreviewFailure(error);
       if (!expected) throw error;
       return emitResult(expected);

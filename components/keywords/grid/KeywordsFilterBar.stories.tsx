@@ -73,7 +73,6 @@ function FilterBarStory() {
         { key: "tags", label: "Tag: branded" },
       ]}
       filterCount={3}
-      groupingControl={<ToolbarControl>Group: Tags</ToolbarControl>}
       id="filter-bar-story-table"
       onClearFilters={() => undefined}
       onColumnSizingChange={() => undefined}

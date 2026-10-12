@@ -21,9 +21,8 @@ import {
 } from "./project-estimate";
 import { PROVIDER_RATES } from "./provider-rates";
 
-// Characterization of the calculator maths captured on the tree before the cost-estimate
-// modules stopped importing the legacy market catalog. The inputs are literal on purpose:
-// the depth ladder must not be read from the module whose import these tests guard.
+// Characterize the adopted catalog prices across literal calculator inputs. Keep these
+// values independent of the implementation so another catalog update needs explicit review.
 const depths = [10, 20, 50, 100] as const;
 const deviceModes = [
   ["desktop", 1],
@@ -122,12 +121,12 @@ describe("cost calculator characterization", () => {
     ).toEqual({
       billingUnitsPerCheck: 2,
       checksPerRun: 100,
-      effectiveCostPerCheckCents: 0.35,
+      effectiveCostPerCheckCents: 0.4,
       exceedsLargestPlan: false,
       exceedsSelectedPlan: false,
       monthlyBillingUnits: 6000,
       monthlyChecks: 3000,
-      monthlyCostCents: 1050,
+      monthlyCostCents: 1200,
       selectedOption: "live",
       selectedPlan: null,
     });
@@ -142,7 +141,7 @@ describe("cost calculator characterization", () => {
       {
         monthlyBillingUnits: 60000,
         monthlyChecks: 6000,
-        monthlyCostCents: 2790,
+        monthlyCostCents: 3600,
         selectedOption: "standard",
       },
     ],
@@ -194,8 +193,8 @@ describe("cost calculator characterization", () => {
         exceedsLargestPlan: true,
         exceedsSelectedPlan: true,
         monthlyBillingUnits: 12000000,
-        monthlyCostCents: 27500,
-        selectedPlan: "bigdata",
+        monthlyCostCents: 275000,
+        selectedPlan: "infrastructure",
       },
     ],
     [
@@ -231,19 +230,19 @@ describe("cost calculator characterization", () => {
     ).toMatchObject({ billingUnitsPerCheck: 1, monthlyChecks: 3000, monthlyCostCents: 1500 });
   });
 
-  it("keeps the full pricing grid byte-identical", () => {
+  it("pins the adopted catalog pricing grid", () => {
     const rows = fullGrid();
     expect(rows).toHaveLength(1440);
     expect(createHash("sha256").update(JSON.stringify(rows)).digest("hex")).toBe(
-      "f33e6c468cf2ee008c929a3378c454a4b436d31d6114dd350f7e2c8e96c753d1",
+      "17db58d7ca74d692bb7b6e65e45169214b1f0b384a06db653df7871264e285ee",
     );
   });
 
   it.each([
     [10, { cron: 320, daily: 600, monthly: 20, weekly: 80 }],
-    [20, { cron: 560, daily: 1050, monthly: 35, weekly: 140 }],
-    [50, { cron: 1280, daily: 2400, monthly: 80, weekly: 320 }],
-    [100, { cron: 2480, daily: 4650, monthly: 155, weekly: 620 }],
+    [20, { cron: 640, daily: 1200, monthly: 40, weekly: 160 }],
+    [50, { cron: 1600, daily: 3000, monthly: 100, weekly: 400 }],
+    [100, { cron: 3200, daily: 6000, monthly: 200, weekly: 800 }],
   ] as const)("prices project schedules at top %s", (depth, expected) => {
     const monthly = (frequency: "daily" | "weekly" | "monthly") =>
       monthlyCostCentsFor({ ...hundredKeywords, depth, frequency }, dataForSeo);
@@ -266,7 +265,7 @@ describe("cost calculator characterization", () => {
 
   it("keeps run, volume and delta helpers", () => {
     const volume = { depth: 100, deviceCount: 2, keywordCount: 250, locationCount: 3 } as const;
-    expect(runCostCents([10, 20, 50, 100], dataForSeo)).toBe(2.9000000000000004);
+    expect(runCostCents([10, 20, 50, 100], dataForSeo)).toBe(3.6);
     expect(runCostCents([10, 20, 50, 100], { overrideCents: null, providerId: "serpapi" })).toBe(
       18,
     );
@@ -276,7 +275,7 @@ describe("cost calculator characterization", () => {
     ).toBe(12000);
     expect(
       frequencyDeltaCents({ ...hundredKeywords, depth: 50 }, "weekly", "daily", dataForSeo),
-    ).toBe(2080);
+    ).toBe(2600);
   });
 
   it("round-trips every depth through the calculator link", () => {

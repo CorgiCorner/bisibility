@@ -2,10 +2,6 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { assertOperationAccess } from "@/lib/operations/access-extension";
-import { surfaceOf } from "@/lib/provider-usage/surface";
-import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
-import { resolveSerpDepth } from "@/lib/serp/constants";
-import { assertQueuedRankCheckBatchAllocation } from "./allocation-enforcement";
 
 /** A prepared batch gets one claim; resumed submitting work cannot POST again. */
 export async function claimQueuedSubmission(batchId: string) {
@@ -39,21 +35,6 @@ export async function claimQueuedSubmission(batchId: string) {
     }
     // Access applies only to a new claim. Retrieval remains possible after a later denial.
     await assertOperationAccess(batch.projectId);
-    const connection = batch.connection;
-    if (connection && connection.credentialSource !== "hosted") {
-      await assertQueuedRankCheckBatchAllocation(
-        {
-          connection,
-          priority: batch.priority === "normal" ? "normal" : "high",
-          projectId: batch.projectId,
-          surface: surfaceOf(batch.source as ProviderRequestSource | null),
-          tasks: batch.tasks.map((task) => ({
-            depth: resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined),
-          })),
-        },
-        tx,
-      );
-    }
     const claimed = await tx.queuedRankCheckBatch.updateMany({
       data: { state: "submitting" },
       where: { id: batchId, state: "prepared" },

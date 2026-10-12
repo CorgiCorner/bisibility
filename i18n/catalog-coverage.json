@@ -212,6 +212,7 @@
     "components/alerts/DeliveryChannelsField.tsx",
     "components/alerts/new-rule-form-defaults.ts",
     "components/alerts/NewRuleAction.tsx",
+    "components/alerts/NewRuleConditionFields.tsx",
     "components/alerts/NewRuleDeliveryFields.tsx",
     "components/alerts/NewRuleDrawer.tsx",
     "components/alerts/NewRuleDrawerControls.tsx",
@@ -352,12 +353,7 @@
     "components/cost-estimate/CostEstimateLine.tsx",
     "components/cost-estimate/EstimateStatus.tsx",
     "components/cost-estimate/HeaderProviderSpend.tsx",
-    "components/cost-estimate/provider-spend-segments.ts",
-    "components/cost-estimate/ProviderSpendMeter.tsx",
     "components/cost-estimate/SessionSpendProvider.tsx",
-    "components/cost-estimate/spend-tone.ts",
-    "components/cost-estimate/SpendBar.tsx",
-    "components/cost-estimate/SpendMeterDocsInfo.tsx",
     "components/cost-estimate/useCostEstimate.ts",
     "components/dates/DateFormatProvider.tsx",
     "components/demo-research/StoredBacklinksView.tsx",
@@ -420,7 +416,10 @@
     "components/getting-started/Walkthrough.tsx",
     "components/i18n/EmergencyRecovery.tsx",
     "components/i18n/FeatureMessagesProvider.tsx",
+    "components/i18n/MissingBudgetNotice.tsx",
+    "components/i18n/UsageReconciliationNotice.tsx",
     "components/i18n/useSharedErrorMessages.ts",
+    "components/i18n/WalletBudgetNotice.tsx",
     "components/install/AgentInstallList.tsx",
     "components/install/ChatGptIconDownload.tsx",
     "components/install/CommandHighlight.tsx",
@@ -445,7 +444,8 @@
     "components/integrations/IntegrationsByoNote.tsx",
     "components/integrations/IntegrationsTabs.tsx",
     "components/integrations/IntegrationUsagePanel.tsx",
-    "components/integrations/MeterUsageCard.tsx",
+    "components/integrations/project-chain-labels.ts",
+    "components/integrations/ProjectSerpChain.tsx",
     "components/integrations/provider-auth.ts",
     "components/integrations/provider-card-config.ts",
     "components/integrations/provider-credentials.ts",
@@ -459,10 +459,7 @@
     "components/integrations/ProviderConsumerRows.tsx",
     "components/integrations/ProviderCredentialWarning.tsx",
     "components/integrations/ProviderDisconnectAction.tsx",
-    "components/integrations/ProviderRates.tsx",
     "components/integrations/ProviderSyncFailureAlert.tsx",
-    "components/integrations/RateSourceChip.tsx",
-    "components/integrations/SerpFallbackOrder.tsx",
     "components/integrations/useProviderTrafficSync.ts",
     "components/integrations/WebMcpTools.tsx",
     "components/invite/InviteSignInForm.tsx",
@@ -656,6 +653,7 @@
     "components/keywords/RankTrackerHeaderContext.tsx",
     "components/keywords/RankTrackerSearchDraft.tsx",
     "components/keywords/retrieved-results-picker-model.ts",
+    "components/keywords/retrieved-results-test-fixtures.tsx",
     "components/keywords/RetrievedResultsCard.tsx",
     "components/keywords/RetrievedResultsCompare.tsx",
     "components/keywords/RetrievedResultsHeader.tsx",
@@ -1067,13 +1065,9 @@
     "components/settings/tracking/TrackingSettingsLoading.tsx",
     "components/settings/tracking/TrackingSettingsSection.tsx",
     "components/settings/tracking/UrlInspectionCard.tsx",
-    "components/settings/usage/budget-edit-modal-model.ts",
-    "components/settings/usage/BudgetAmountField.tsx",
     "components/settings/usage/BudgetEditModal.tsx",
     "components/settings/usage/PlanCard.tsx",
     "components/settings/usage/ProviderUsageCard.tsx",
-    "components/settings/usage/ProviderUsageFeatureList.tsx",
-    "components/settings/usage/ProviderUsageRow.tsx",
     "components/settings/usage/UsageCard.tsx",
     "components/settings/usage/UsageLoading.tsx",
     "components/settings/webhooks/DeployHookCreateModal.tsx",
@@ -5023,57 +5017,7 @@
       },
       {
         "arguments": [],
-        "key": "instanceAdmin.metering.budgets",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.certainty",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.connection",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "instanceAdmin.metering.description",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.difference",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.disagreements",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.emptyBudgets",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.emptyExceptions",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.emptyUsage",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.exceptions",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.funding",
         "tags": []
       },
       {
@@ -5083,52 +5027,12 @@
       },
       {
         "arguments": [],
-        "key": "instanceAdmin.metering.legacy",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.meter",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "instanceAdmin.metering.month",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "instanceAdmin.metering.operation",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "instanceAdmin.metering.project",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.remaining",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.reserved",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.resetsAt",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.state",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.surface",
         "tags": []
       },
       {
@@ -5143,32 +5047,7 @@
       },
       {
         "arguments": [],
-        "key": "instanceAdmin.metering.unavailable",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "instanceAdmin.metering.unavailableNote",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.unlimited",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.updatedAt",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.usage",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "instanceAdmin.metering.used",
         "tags": []
       },
       {
@@ -7848,7 +7727,32 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.modelAlreadySelected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelNeedsActualPayment",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelNeedsOwnAccount",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.modelPolicyPending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelPricingUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.modelUnavailable",
         "tags": []
       },
       {
@@ -8027,6 +7931,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectAiResearch.showUnavailableModels",
+        "tags": []
+      },
+      {
         "arguments": [["answers", 2], ["citations", 2], ["mentions", 2]],
         "key": "projectAiResearch.summary",
         "tags": []
@@ -8039,6 +7948,11 @@
       {
         "arguments": [["max", 2], ["min", 2]],
         "key": "projectAiResearch.tokenBounds",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.unavailableModels",
         "tags": []
       },
       {
@@ -8289,6 +8203,16 @@
       {
         "arguments": [],
         "key": "projectAiTracking.contextDraftMethod",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.contextDraftReviewHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.contextMissingHint",
         "tags": []
       },
       {
@@ -9351,7 +9275,19 @@
         "tags": []
       },
       {
-        "arguments": [["domain", 1], ["template", 5]],
+        "arguments": [
+          ["changePct", 1],
+          ["competitorDomain", 1],
+          ["condition", 5],
+          ["domain", 1],
+          ["dropPositions", 1],
+          ["markets", 1],
+          ["nextPosition", 1],
+          ["serpFeature", 1],
+          ["targets", 1],
+          ["thresholdPosition", 1],
+          ["topN", 1]
+        ],
         "key": "projectAlerts.drawer.templatePreview",
         "tags": []
       },
@@ -12579,32 +12515,22 @@
       },
       {
         "arguments": [],
-        "key": "projectCostEstimate.providerSpend.capReached",
+        "key": "projectCostEstimate.providerSpend.headerAtLeastUnderOne",
         "tags": []
       },
       {
-        "arguments": [["cap", 1]],
-        "key": "projectCostEstimate.providerSpend.cardCap",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectCostEstimate.providerSpend.docs",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectCostEstimate.providerSpend.eyebrow",
-        "tags": []
-      },
-      {
-        "arguments": [["used", 1]],
-        "key": "projectCostEstimate.providerSpend.headerCapAria",
+        "arguments": [["percent", 1]],
+        "key": "projectCostEstimate.providerSpend.headerAtLeastUsed",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectCostEstimate.providerSpend.headerCapTooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectCostEstimate.providerSpend.headerExceeded",
         "tags": []
       },
       {
@@ -12618,13 +12544,8 @@
         "tags": []
       },
       {
-        "arguments": [["spent", 1]],
-        "key": "projectCostEstimate.providerSpend.headerNoCapAriaWithSpend",
-        "tags": []
-      },
-      {
-        "arguments": [["spent", 1]],
-        "key": "projectCostEstimate.providerSpend.headerNoCapWithSpend",
+        "arguments": [],
+        "key": "projectCostEstimate.providerSpend.headerNoLimit",
         "tags": []
       },
       {
@@ -12634,52 +12555,27 @@
       },
       {
         "arguments": [],
-        "key": "projectCostEstimate.providerSpend.headerUnderOnePercent",
+        "key": "projectCostEstimate.providerSpend.headerUnderOne",
         "tags": []
       },
       {
-        "arguments": [["percent", 2]],
+        "arguments": [["status", 1]],
+        "key": "projectCostEstimate.providerSpend.headerUsageAria",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectCostEstimate.providerSpend.headerUsageUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [["percent", 1]],
         "key": "projectCostEstimate.providerSpend.headerUsed",
         "tags": []
       },
       {
-        "arguments": [["spent", 1]],
-        "key": "projectCostEstimate.providerSpend.left",
-        "tags": []
-      },
-      {
-        "arguments": [["cap", 1], ["session", 1], ["spent", 1]],
-        "key": "projectCostEstimate.providerSpend.meterAria",
-        "tags": []
-      },
-      {
-        "arguments": [["spent", 1]],
-        "key": "projectCostEstimate.providerSpend.noCapAmount",
-        "tags": []
-      },
-      {
         "arguments": [],
-        "key": "projectCostEstimate.providerSpend.otherProvider",
-        "tags": []
-      },
-      {
-        "arguments": [["spent", 1]],
-        "key": "projectCostEstimate.providerSpend.pace",
-        "tags": []
-      },
-      {
-        "arguments": [["cap", 1], ["spent", 1]],
-        "key": "projectCostEstimate.providerSpend.segmentedAmount",
-        "tags": []
-      },
-      {
-        "arguments": [["spent", 1]],
-        "key": "projectCostEstimate.providerSpend.session",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectCostEstimate.providerSpend.thisMonth",
+        "key": "projectCostEstimate.providerSpend.headerWarning",
         "tags": []
       },
       {
@@ -12935,6 +12831,11 @@
       {
         "arguments": [],
         "key": "projectDashboard.dataSource.primaryProvider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.dataSource.providerCostUnknown",
         "tags": []
       },
       {
@@ -15960,8 +15861,8 @@
         "tags": []
       },
       {
-        "arguments": [["provider", 1]],
-        "key": "projectIntegrations.fallback.activate",
+        "arguments": [],
+        "key": "projectIntegrations.fallback.activateAction",
         "tags": []
       },
       {
@@ -15990,13 +15891,18 @@
         "tags": []
       },
       {
-        "arguments": [["provider", 1]],
-        "key": "projectIntegrations.fallback.moveDown",
+        "arguments": [],
+        "key": "projectIntegrations.fallback.invalid",
         "tags": []
       },
       {
-        "arguments": [["provider", 1]],
-        "key": "projectIntegrations.fallback.moveUp",
+        "arguments": [],
+        "key": "projectIntegrations.fallback.moveDownAction",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.fallback.moveUpAction",
         "tags": []
       },
       {
@@ -16006,17 +15912,12 @@
       },
       {
         "arguments": [],
-        "key": "projectIntegrations.fallback.notConnected",
+        "key": "projectIntegrations.fallback.notApplied",
         "tags": []
       },
       {
-        "arguments": [["provider", 1]],
-        "key": "projectIntegrations.fallback.orderControls",
-        "tags": []
-      },
-      {
-        "arguments": [["provider", 1]],
-        "key": "projectIntegrations.fallback.pause",
+        "arguments": [],
+        "key": "projectIntegrations.fallback.pauseAction",
         "tags": []
       },
       {
@@ -16031,17 +15932,27 @@
       },
       {
         "arguments": [],
+        "key": "projectIntegrations.fallback.reload",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.fallback.save",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.fallback.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectIntegrations.fallback.saving",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectIntegrations.fallback.title",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectIntegrations.fallback.updateError",
         "tags": []
       },
       {
@@ -16690,8 +16601,138 @@
         "tags": []
       },
       {
-        "arguments": [["label", 1]],
-        "key": "projectIntegrations.rates.editRate",
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.ambiguous",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.availableBalance",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.balance",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.balanceCannotApply",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.conflict",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.creditWallet",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.forbidden",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.observed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.providerAccount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.readOnly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.reconcile",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.reload",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.reserved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.searches",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.staleEvidence",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.providerManagement.unknownAuthority",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.applied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.applying",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.checked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.clearRate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.currency",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.funding",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.fundingCredits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.fundingOwn",
         "tags": []
       },
       {
@@ -16700,23 +16741,18 @@
         "tags": []
       },
       {
-        "arguments": [["maximum", 2], ["minimum", 2]],
-        "key": "projectIntegrations.rates.invalidRate",
-        "tags": []
-      },
-      {
-        "arguments": [["date", 1]],
-        "key": "projectIntegrations.rates.listPrice",
-        "tags": []
-      },
-      {
-        "arguments": [["count", 2], ["unit", 1]],
-        "key": "projectIntegrations.rates.measured",
+        "arguments": [],
+        "key": "projectIntegrations.rates.invalidPrice",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "projectIntegrations.rates.noRate",
+        "key": "projectIntegrations.rates.noEvidence",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.notApplied",
         "tags": []
       },
       {
@@ -16725,8 +16761,38 @@
         "tags": []
       },
       {
-        "arguments": [["label", 1]],
-        "key": "projectIntegrations.rates.rateUsd",
+        "arguments": [],
+        "key": "projectIntegrations.rates.operation",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.per",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.platformNote",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.platformTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.price",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.reload",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.samples",
         "tags": []
       },
       {
@@ -16736,12 +16802,32 @@
       },
       {
         "arguments": [],
-        "key": "projectIntegrations.rates.saveError",
+        "key": "projectIntegrations.rates.statusList",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.statusManual",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.statusMeasured",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.statusNone",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectIntegrations.rates.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.unknown",
         "tags": []
       },
       {
@@ -16756,7 +16842,12 @@
       },
       {
         "arguments": [],
-        "key": "projectIntegrations.rates.yourRate",
+        "key": "projectIntegrations.rates.version",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.rates.withoutYourRate",
         "tags": []
       },
       {
@@ -19192,6 +19283,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.firstCheck.viewCheckDetails",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.firstCheck.viewRuns",
         "tags": []
       },
       {
@@ -22468,7 +22564,17 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.filters.volumeMaximumAria",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordImport.management.filters.volumeMinimum",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.filters.volumeMinimumAria",
         "tags": []
       },
       {
@@ -22794,21 +22900,6 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordImport.management.grid.firstObservation",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectRankTracker.keywordImport.management.grid.flat",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectRankTracker.keywordImport.management.grid.grouped",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectRankTracker.keywordImport.management.grid.grouping",
         "tags": []
       },
       {
@@ -23629,6 +23720,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordImport.management.runConfirmation.viewDetails",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.runConfirmation.viewRuns",
         "tags": []
       },
       {
@@ -33277,6 +33373,16 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsShell.search.entries.projectContext.keywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsShell.search.entries.projectContext.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsShell.search.entries.projectManagement.keywords",
         "tags": []
       },
@@ -33418,6 +33524,11 @@
       {
         "arguments": [],
         "key": "projectSettingsShell.sections.competitors",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsShell.sections.context",
         "tags": []
       },
       {
@@ -34459,51 +34570,6 @@
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.meter.authority.active",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.authority.draining",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.authority.legacy",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.authority.mixed",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.authority.preparing",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.authority.unknown",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.blocks",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.byok",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.certainty",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectSettingsUsage.meter.certaintyValue.estimated",
         "tags": []
       },
@@ -34514,52 +34580,42 @@
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.meter.certaintyValue.unknown",
+        "key": "projectSettingsUsage.meter.detailsTitle",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.meter.connection",
+        "key": "projectSettingsUsage.meter.display.cents",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.meter.customerCharge",
+        "key": "projectSettingsUsage.meter.display.currency",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 2]],
+        "key": "projectSettingsUsage.meter.display.digits",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.meter.description",
-        "tags": []
-      },
-      {
-        "arguments": [["unit", 1], ["value", 1]],
-        "key": "projectSettingsUsage.meter.hardLimit",
+        "key": "projectSettingsUsage.meter.display.help",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.meter.limit",
+        "key": "projectSettingsUsage.meter.display.money",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.meter.limitsDescription",
+        "key": "projectSettingsUsage.meter.display.precision",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.meter.limitsTitle",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.noLimits",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.noObservations",
+        "key": "projectSettingsUsage.meter.display.title",
         "tags": []
       },
       {
@@ -34574,47 +34630,7 @@
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.meter.platform",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.project",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.providerCost",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.remaining",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.reserved",
-        "tags": []
-      },
-      {
-        "arguments": [["date", 1]],
-        "key": "projectSettingsUsage.meter.resetsAt",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectSettingsUsage.meter.restricted",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.retainedConnection",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.title",
         "tags": []
       },
       {
@@ -34629,22 +34645,7 @@
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.meter.units",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectSettingsUsage.meter.unknown",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.unknownOperations",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.unlimited",
         "tags": []
       },
       {
@@ -34653,23 +34654,8 @@
         "tags": []
       },
       {
-        "arguments": [["value", 1]],
-        "key": "projectSettingsUsage.meter.usdAmount",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.used",
-        "tags": []
-      },
-      {
         "arguments": [],
         "key": "projectSettingsUsage.meter.walletAuthority",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.meter.warns",
         "tags": []
       },
       {
@@ -34778,83 +34764,13 @@
         "tags": []
       },
       {
-        "arguments": [["source", 5]],
-        "key": "projectSettingsUsage.provider.activeSource",
+        "arguments": [["bound", 1], ["count", 2]],
+        "key": "projectSettingsUsage.provider.attentionBlocked",
         "tags": []
       },
       {
-        "arguments": [["allocation", 1], ["used", 1]],
-        "key": "projectSettingsUsage.provider.allocation",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.allocationNone",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.anotherProvider",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.apiBudgetHelp",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.appBudgetHelp",
-        "tags": []
-      },
-      {
-        "arguments": [["provider", 1]],
-        "key": "projectSettingsUsage.provider.appMeterLabel",
-        "tags": []
-      },
-      {
-        "arguments": [["allocation", 1], ["used", 1]],
-        "key": "projectSettingsUsage.provider.atLeastAllocation",
-        "tags": []
-      },
-      {
-        "arguments": [["provider", 1]],
-        "key": "projectSettingsUsage.provider.attentionApp",
-        "tags": []
-      },
-      {
-        "arguments": [["fallback", 1], ["provider", 1]],
-        "key": "projectSettingsUsage.provider.attentionFallback",
-        "tags": []
-      },
-      {
-        "arguments": [["count", 6]],
-        "key": "projectSettingsUsage.provider.attentionMany",
-        "tags": []
-      },
-      {
-        "arguments": [["provider", 1]],
-        "key": "projectSettingsUsage.provider.attentionPaused",
-        "tags": []
-      },
-      {
-        "arguments": [["provider", 1]],
-        "key": "projectSettingsUsage.provider.attentionProgrammatic",
-        "tags": []
-      },
-      {
-        "arguments": [["provider", 1]],
-        "key": "projectSettingsUsage.provider.attentionTopUp",
-        "tags": []
-      },
-      {
-        "arguments": [["amount", 1], ["relative", 1], ["reset", 1]],
-        "key": "projectSettingsUsage.provider.availability",
-        "tags": []
-      },
-      {
-        "arguments": [["amount", 1]],
-        "key": "projectSettingsUsage.provider.balance",
+        "arguments": [["bound", 1], ["count", 2]],
+        "key": "projectSettingsUsage.provider.attentionWarning",
         "tags": []
       },
       {
@@ -34890,6 +34806,11 @@
       {
         "arguments": [],
         "key": "projectSettingsUsage.provider.budgetDialog.cancel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.cents",
         "tags": []
       },
       {
@@ -34954,6 +34875,21 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.nativeBalance",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.nativeBalanceHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.notApplied",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsUsage.provider.budgetDialog.perMonth",
         "tags": []
       },
@@ -35009,7 +34945,27 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.refreshProviderBalance",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.reloadAllocations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.remaining",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsUsage.provider.budgetDialog.save",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.saved",
         "tags": []
       },
       {
@@ -35030,6 +34986,11 @@
       {
         "arguments": [],
         "key": "projectSettingsUsage.provider.budgetDialog.searchesAdornment",
+        "tags": []
+      },
+      {
+        "arguments": [["connection", 1], ["source", 1], ["surface", 1]],
+        "key": "projectSettingsUsage.provider.budgetDialog.sectionLabel",
         "tags": []
       },
       {
@@ -35069,6 +35030,21 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.used",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.useProgrammaticCreditBalance",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.useProgrammaticProviderBalance",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsUsage.provider.budgetDialog.useProviderBalance",
         "tags": []
       },
@@ -35083,18 +35059,8 @@
         "tags": []
       },
       {
-        "arguments": [["count", 2]],
-        "key": "projectSettingsUsage.provider.checksChip",
-        "tags": []
-      },
-      {
         "arguments": [],
         "key": "projectSettingsUsage.provider.connectionSettings",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.creditsSpent",
         "tags": []
       },
       {
@@ -35104,312 +35070,12 @@
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.provider.doesNotExpire",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectSettingsUsage.provider.editBudget",
-        "tags": []
-      },
-      {
-        "arguments": [["amount", 1], ["count", 2]],
-        "key": "projectSettingsUsage.provider.feature",
-        "tags": []
-      },
-      {
-        "arguments": [["count", 2]],
-        "key": "projectSettingsUsage.provider.featureCount",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.featureLabel.backlinks",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.featureLabel.domainOverview",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.featureLabel.keywordMetrics",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.featureLabel.keywordResearch",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.featureLabel.rankCheck",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.featureLabel.rankedKeywords",
-        "tags": []
-      },
-      {
-        "arguments": [["count", 2], ["searches", 2]],
-        "key": "projectSettingsUsage.provider.featureSearches",
-        "tags": []
-      },
-      {
-        "arguments": [["provider", 1]],
-        "key": "projectSettingsUsage.provider.meterLabel",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.noBudget",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.noUsage",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.paidToProviders",
-        "tags": []
-      },
-      {
-        "arguments": [["days", 6], ["range", 1]],
-        "key": "projectSettingsUsage.provider.period",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.primary",
-        "tags": []
-      },
-      {
-        "arguments": [["provider", 1]],
-        "key": "projectSettingsUsage.provider.programmaticMeterLabel",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.projectedSpend",
-        "tags": []
-      },
-      {
-        "arguments": [["date", 1], ["provider", 1]],
-        "key": "projectSettingsUsage.provider.projectionBy",
-        "tags": []
-      },
-      {
-        "arguments": [["date", 1], ["othersBelow", 5], ["provider", 1]],
-        "key": "projectSettingsUsage.provider.projectionPace",
-        "tags": []
-      },
-      {
-        "arguments": [["count", 2]],
-        "key": "projectSettingsUsage.provider.providerLeft",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.providerRequests",
-        "tags": []
-      },
-      {
-        "arguments": [["time", 1]],
-        "key": "projectSettingsUsage.provider.reconciledAt",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.reconciliationStale",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.reconnectRequired",
-        "tags": []
-      },
-      {
-        "arguments": [["amount", 1], ["hasSearches", 5], ["searches", 1]],
-        "key": "projectSettingsUsage.provider.recordedSpendValue",
-        "tags": []
-      },
-      {
-        "arguments": [["count", 6]],
-        "key": "projectSettingsUsage.provider.relative.daysAgo",
-        "tags": []
-      },
-      {
-        "arguments": [["count", 6]],
-        "key": "projectSettingsUsage.provider.relative.hoursAgo",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.relative.justNow",
-        "tags": []
-      },
-      {
-        "arguments": [["count", 6]],
-        "key": "projectSettingsUsage.provider.relative.minutesAgo",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.relative.yesterday",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.resetsBillingCycle",
-        "tags": []
-      },
-      {
-        "arguments": [["date", 1]],
-        "key": "projectSettingsUsage.provider.resetsDate",
-        "tags": []
-      },
-      {
-        "arguments": [["count", 2]],
-        "key": "projectSettingsUsage.provider.scheduledChip",
-        "tags": []
-      },
-      {
-        "arguments": [["count", 2]],
-        "key": "projectSettingsUsage.provider.searches",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.source.api",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.source.app",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.source.cli",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.source.mcp",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.source.sdk",
-        "tags": []
-      },
-      {
-        "arguments": [["provider", 1], ["source", 5]],
-        "key": "projectSettingsUsage.provider.sourceAppMeterLabel",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.sourceEmpty",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.sourceLabel.credits",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.sourceLabel.own",
-        "tags": []
-      },
-      {
-        "arguments": [["provider", 1], ["source", 5]],
-        "key": "projectSettingsUsage.provider.sourceProgrammaticMeterLabel",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.status.capped",
-        "tags": []
-      },
-      {
-        "arguments": [["state", 1]],
-        "key": "projectSettingsUsage.provider.status.default",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.status.fallback_active",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.status.no_allocation",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.status.ok",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.status.top_up_required",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.surface.app",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.surface.programmatic",
-        "tags": []
-      },
-      {
-        "arguments": [["percent", 1], ["provider", 1]],
-        "key": "projectSettingsUsage.provider.tightest",
-        "tags": []
-      },
-      {
-        "arguments": [["percent", 1], ["provider", 1], ["source", 5]],
-        "key": "projectSettingsUsage.provider.tightestSource",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectSettingsUsage.provider.title",
-        "tags": []
-      },
-      {
-        "arguments": [["count", 2]],
-        "key": "projectSettingsUsage.provider.unconfirmedChip",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.unreachable",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.usageAfterConnect",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.usageLagNotice",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectSettingsUsage.provider.withinLimits",
         "tags": []
       },
       {
@@ -36970,6 +36636,26 @@
       },
       {
         "arguments": [],
+        "key": "shared.controls.confirmation.deleteTimelineNoteBody",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.controls.confirmation.deleteTimelineNoteDangerLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.controls.confirmation.deleteTimelineNoteTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.controls.confirmation.deleteTimelineNoteToastMessage",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.controls.confirmation.deleteWebhookEndpointBody",
         "tags": []
       },
@@ -37740,6 +37426,11 @@
       },
       {
         "arguments": [],
+        "key": "shared.errors.budgetMissing",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.errors.genericFallback",
         "tags": []
       },
@@ -37760,7 +37451,17 @@
       },
       {
         "arguments": [],
+        "key": "shared.errors.usageReconciliationRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.errors.verificationFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.errors.walletBudgetExhausted",
         "tags": []
       },
       {
@@ -37886,6 +37587,11 @@
       {
         "arguments": [],
         "key": "shared.firstCheck.notices.raiseBudget",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.firstCheck.notices.reviewUsage",
         "tags": []
       },
       {
@@ -38963,6 +38669,591 @@
       },
       {
         "arguments": [],
+        "key": "shared.usageViews.budget.alert",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.allow",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.block",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.exceeded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.forbidden",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.hardLimit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.limit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.noReset",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.ok",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.redacted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.remaining",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.reserved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.resets",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.unlimited",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.used",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.warning",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.asOf",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.byok",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.costOwner",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.forbidden",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.funding",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.incomplete",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.platform",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.cost.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.dimensions.connection",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.dimensions.provider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.dimensions.source",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.dimensions.surface",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.age",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.first",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.forbidden",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.kind",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.lease_expired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.next",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.operation",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.pending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.principal",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.provider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.reservation_expired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.state",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.exceptions.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.measurement.cents",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.measurement.estimated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.measurement.measured",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.measurement.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.measurement.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.any",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.api",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.app",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.cli",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.mcp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.operation",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.programmatic",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.project",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.proxy",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.rank_check",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.retained",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.sdk",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.other.worker",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.overview.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.overview.exceeded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.overview.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.overview.ok",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.overview.partial",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.overview.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.overview.warning",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.states.dispatch_intended",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.states.pending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.states.released",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.states.reserved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.states.settled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.summary.asOf",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.summary.customerCharges",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.summary.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.summary.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.summary.forbidden",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.summary.incomplete",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.summary.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.summary.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.summary.unknownOperations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.byok",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.cents",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.certainty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.cost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.customerCharges",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.estimated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.first",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.forbidden",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.funding",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.measured",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.next",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.platform",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.table.unknownOperations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.units.budget_cents",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.units.cents",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.units.customer_cents",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.units.paid_attempts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.units.requests",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.units.units",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shell.backup.cancel",
         "tags": []
       },
@@ -39838,16 +40129,6 @@
       },
       {
         "arguments": [],
-        "key": "shell.navigation.badges.alpha",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.navigation.badges.beta",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "shell.navigation.badges.experimental",
         "tags": []
       },
@@ -39868,21 +40149,6 @@
       },
       {
         "arguments": [],
-        "key": "shell.navigation.groups.modules.label",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.navigation.groups.modules.tag",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.navigation.groups.modules.tooltip",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "shell.navigation.groups.project.label",
         "tags": []
       },
@@ -39894,6 +40160,51 @@
       {
         "arguments": [],
         "key": "shell.navigation.groups.project.tooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.groups.reports.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.groups.reports.tag",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.groups.reports.tooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.groups.research.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.groups.research.tag",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.groups.research.tooltip",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.groups.tracking.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.groups.tracking.tag",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.navigation.groups.tracking.tooltip",
         "tags": []
       },
       {

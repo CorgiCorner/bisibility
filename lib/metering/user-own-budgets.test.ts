@@ -1,5 +1,5 @@
 import { ownAllocationTag } from "@/lib/provider-usage/credential-version";
-import type { AccessContext, Budget } from "@usagekit/core";
+import type { AccessContext, Budget, Meter } from "@usagekit/core";
 import { createMeter } from "@usagekit/meter";
 import { createManualClock, createMemoryStore } from "@usagekit/store";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -90,8 +90,8 @@ beforeEach(async () => {
 afterEach(() => vi.useRealTimers());
 
 describe("owner BYOK budget projection", () => {
-  it("keeps real standard Meter tag redaction and never escalates the user's access", async () => {
-    const { meter } = await mocks.runtime();
+  it("keeps detail reads owner-scoped and shared admission decisions out of the DTO", async () => {
+    const { meter } = (await mocks.runtime()) as { meter: Meter };
     const direct = await meter.applicableBudgets(access, query);
     expect(direct.outcome).toBe("ok");
     if (direct.outcome === "ok")
@@ -104,18 +104,23 @@ describe("owner BYOK budget projection", () => {
     const applicable = vi.spyOn(meter, "applicableBudgets"),
       usage = vi.spyOn(meter, "usage");
     const data = await getProjectMeteringUsage("prj_public");
-    expect(data.budgets).toEqual([
+    expect(data.budgets).toMatchObject([
       expect.objectContaining({
-        provider: "dataforseo",
-        connection: publicConnection,
-        scope: "connection",
-        used: "0",
-        limit: "100.0000",
-        figuresKnown: true,
+        target: publicConnection,
+        kind: "connection",
+        used: expect.objectContaining({ text: "0" }),
+        limit: expect.objectContaining({ text: "100" }),
       }),
     ]);
-    for (const [passed] of [...applicable.mock.calls, ...usage.mock.calls])
-      expect(passed).toEqual(access);
+    for (const [passed] of usage.mock.calls) expect(passed).toEqual(access);
+    for (const [passed, scope] of applicable.mock.calls) {
+      expect(passed).toEqual({ ...access, readablePrincipals: passed.readablePrincipals });
+      if (passed.readablePrincipals === "*") {
+        expect(scope.scope.group).toBe("private-project");
+        expect(scope.scope.connection).toBe(connection);
+        expect(scope.scope.tags).toContain(tag);
+      } else expect(passed.readablePrincipals).toEqual(["owner"]);
+    }
     expect(JSON.stringify(data)).not.toMatch(
       new RegExp(`${tag}|private-connection|private-project|private-version|owner|own-connection`),
     );
@@ -133,11 +138,10 @@ describe("owner BYOK budget projection", () => {
     });
     const data = await getProjectMeteringUsage("prj_public");
     expect(data.budgets[0]).toMatchObject({
-      figuresKnown: false,
-      used: null,
-      reserved: null,
-      remaining: null,
-      limit: "100.0000",
+      used: "unavailable",
+      reserved: "unavailable",
+      remaining: "unavailable",
+      limit: expect.objectContaining({ text: "100" }),
     });
   });
   it("prefers the verified native tag bound over legacy native duplicates and preserves customer_cents", async () => {
@@ -182,9 +186,10 @@ describe("owner BYOK budget projection", () => {
         actor: { id: "owner", memberships: [{ projectId: "private-project", role }] },
         project: { id: "private-project", ownerId: "owner" },
       });
-      expect((await getProjectMeteringUsage("prj_public")).status).toBe("restricted");
+      const data = await getProjectMeteringUsage("prj_public");
+      expect(data).toMatchObject({ status: "restricted", budgets: [], detail: { rows: [] } });
       expect(mocks.own).not.toHaveBeenCalled();
-      expect(mocks.connections).not.toHaveBeenCalled();
+      expect(mocks.connections).toHaveBeenCalledWith(expect.objectContaining({ take: 50 }));
     },
   );
   it("omits redacted or unrelated shared tags even from the trusted port", async () => {
@@ -204,7 +209,38 @@ describe("owner BYOK budget projection", () => {
     expect(await getProjectMeteringUsage("prj_public")).toMatchObject({
       status: "unavailable",
       budgets: [],
-      rows: [],
+      detail: { rows: [] },
     });
   });
 });
+
+it.each(["owner", "member"])(
+  "reports a blocking tag allocation to %s without exposing shared figures",
+  async (role) => {
+    const { meter } = (await mocks.runtime()) as { meter: Meter };
+    const reserved = await meter.reserve({
+      operationId: "reserved-tag-budget",
+      scope: query.scope,
+      fundingSource: "byok",
+      costOwner: "owner",
+      surface: "app",
+      source: "app",
+      provider: "dataforseo",
+      operation: "rank_check",
+      estimate: [{ unit: "cents", scale: 4, value: 1000000n }],
+    });
+    expect(reserved.outcome).toBe("reserved");
+    mocks.auth.mockResolvedValue({
+      actor: { id: role, memberships: [{ projectId: "private-project", role }] },
+      project: { id: "private-project", ownerId: "owner" },
+    });
+    const data = await getProjectMeteringUsage("prj_public");
+    expect(data.paidWorkBlocked).toBe(true);
+    if (role === "member") {
+      expect(data.budgets).toEqual([]);
+      expect(data.summary.funding).toEqual([]);
+      expect(data.detail.rows).toEqual([]);
+    }
+    expect(JSON.stringify(data)).not.toContain(tag);
+  },
+);

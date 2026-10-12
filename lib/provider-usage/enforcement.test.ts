@@ -1,300 +1,155 @@
-import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
-import { describe, expect, it, vi } from "vitest";
-import { assertProviderAllocationAvailable, ProviderAllocationExhaustedError } from "./enforcement";
+import type { Budget, BudgetScope } from "@usagekit/core";
+import { beforeEach, expect, test, vi } from "vitest";
 
-vi.mock("@/lib/providers/execution-authority", () => ({
-  readDeploymentMeteringPreflightAuthority: vi.fn(async () => "legacy"),
+const state = vi.hoisted(() => ({ budgets: [] as Budget[], used: 0, reserved: 0, source: "own" }));
+vi.mock("@/lib/metering/store/budgets", () => ({
+  currentBudgets: async (
+    _sql: unknown,
+    _namespace: string,
+    scopes: BudgetScope[],
+    surface: string,
+  ) =>
+    state.budgets.filter(
+      (b) =>
+        scopes.some((s) => JSON.stringify(s) === JSON.stringify(b.scope)) &&
+        (b.surface === "any" || b.surface === surface),
+    ),
+  status: async (_sql: unknown, b: Budget) => ({
+    used: { value: BigInt(state.used), scale: 0 },
+    reserved: { value: BigInt(state.reserved), scale: 0 },
+    remaining: b.limit
+      ? {
+          ...b.limit,
+          value: b.limit.value - BigInt(state.used + state.reserved) * 10n ** BigInt(b.limit.scale),
+        }
+      : null,
+    epoch: { endsAt: "2026-11-01T00:00:00Z" },
+  }),
 }));
 
-const catalog = [
-  {
-    id: "metered",
-    allocation: {
-      allocationUnit: "cents",
-      billing: "metered",
-      kind: "billable",
-      quotaReset: "none",
-    },
-    label: "Metered",
-    kind: "serp",
-    defaultStatus: "ready",
+import { platformAllocationTag } from "@/lib/metering/paid-quote";
+import { meteringNamespace } from "@/lib/metering/runtime";
+import { ownAllocationTag } from "./credential-version";
+import { assertProviderAllocationAvailable } from "./enforcement";
+
+const db = {
+  $queryRaw: vi.fn(),
+  project: { findUnique: async () => ({ ownerId: "owner" }) },
+  providerConnection: { findFirst: async () => ({ credentialSource: state.source }) },
+};
+const input = {
+  catalog: [],
+  connectionId: "c",
+  projectId: "p",
+  provider: "serpapi",
+  estimatedCostCents: 2,
+  estimatedUsageQuantity: 1,
+  surface: "app" as const,
+};
+const budget = (
+  scope: BudgetScope,
+  unit: string,
+  limit: bigint | null,
+  surface: Budget["surface"] = "any",
+): Budget => ({
+  id: "fixture",
+  version: 1,
+  scope,
+  unit,
+  limit: limit === null ? null : { unit, value: limit, scale: 0 },
+  surface,
+  window: { kind: "calendar_month", timezone: "UTC" },
+  onExceed: "block",
+});
+beforeEach(() => {
+  state.budgets = [];
+  state.used = 0;
+  state.reserved = 0;
+  state.source = "own";
+});
+test("project cap constrains a connection even with ample connection headroom", async () => {
+  const namespace = meteringNamespace();
+  state.budgets = [
+    budget({ kind: "group", namespace, group: "p" }, "budget_cents", 1n),
+    budget({ kind: "tag", namespace, tag: ownAllocationTag("serpapi", "c") }, "units", 100n),
+  ];
+  await expect(assertProviderAllocationAvailable(input, db as never)).rejects.toMatchObject({
+    code: "budget_exhausted",
+  });
+});
+test.each(["app", "programmatic"] as const)(
+  "selects the %s surface without applying the other surface",
+  async (surface) => {
+    const namespace = meteringNamespace();
+    state.budgets = [
+      budget(
+        { kind: "tag", namespace, tag: ownAllocationTag("serpapi", "c") },
+        "units",
+        0n,
+        surface,
+      ),
+    ];
+    await expect(
+      assertProviderAllocationAvailable({ ...input, surface }, db as never),
+    ).rejects.toMatchObject({ surface });
+    await expect(
+      assertProviderAllocationAvailable(
+        { ...input, surface: surface === "app" ? "programmatic" : "app" },
+        db as never,
+      ),
+    ).resolves.toMatchObject({ remaining: null });
   },
-  {
-    id: "quota",
-    allocation: {
-      allocationUnit: "units",
-      billing: "quota",
-      kind: "billable",
-      quotaReset: "billing_cycle",
-    },
-    label: "Quota",
-    kind: "serp",
-    defaultStatus: "ready",
+);
+test.each(["group", "connection"] as const)(
+  "unknown cost blocks via the %s paid_attempts gate",
+  async (kind) => {
+    const namespace = meteringNamespace();
+    state.budgets = [
+      budget(
+        kind === "group" ? { kind, namespace, group: "p" } : { kind, namespace, connection: "c" },
+        "paid_attempts",
+        0n,
+      ),
+    ];
+    await expect(assertProviderAllocationAvailable(input, db as never)).rejects.toMatchObject({
+      code: kind === "group" ? "budget_exhausted" : "provider_allocation_exhausted",
+    });
   },
-] as const;
-function db(
-  project: object,
-  connection: object,
-  aggregate: object,
-  missingQuantityCount = 0,
-  groups: object[] = [],
-) {
-  return {
-    project: { findUnique: vi.fn().mockResolvedValue(project) },
-    providerConnection: { findFirst: vi.fn().mockResolvedValue(connection) },
-    providerCostEntry: {
-      aggregate: vi.fn().mockResolvedValue(aggregate),
-      count: vi.fn().mockResolvedValue(missingQuantityCount),
-      groupBy: vi.fn().mockResolvedValue(groups),
-    },
-  };
-}
-const initializedProject = { budgetCapCents: 50, providerAllocationsInitializedAt: new Date() };
-
-describe("provider allocation enforcement", () => {
-  it("defers uninitialized projects to the legacy dollar cap", async () => {
-    const legacy = vi.fn().mockResolvedValue(undefined);
-    const client = db({ budgetCapCents: 50, providerAllocationsInitializedAt: null }, {}, {});
-    await expect(
-      assertProviderAllocationAvailable(
-        {
-          catalog,
-          connectionId: "c1",
-          estimatedCostCents: 3,
-          legacyBudgetCheck: legacy,
-          projectId: "p1",
-          provider: "metered",
-          surface: "programmatic",
-        },
-        client,
-      ),
-    ).resolves.toMatchObject({ mode: "legacy" });
-    expect(legacy).toHaveBeenCalledWith(50, 3);
-    expect(client.providerCostEntry.aggregate).not.toHaveBeenCalled();
+);
+test("credits and own-key budgets on one connection stay isolated", async () => {
+  const namespace = meteringNamespace();
+  state.budgets = [
+    budget(
+      { kind: "tag", namespace, tag: platformAllocationTag("serpapi", "c") },
+      "customer_cents",
+      0n,
+    ),
+  ];
+  await expect(assertProviderAllocationAvailable(input, db as never)).resolves.toMatchObject({
+    remaining: null,
   });
-  it("keeps the project cap after a legacy connection reconnect", async () => {
-    const legacy = vi.fn().mockResolvedValue(undefined);
-    const client = db({ budgetCapCents: 75, providerAllocationsInitializedAt: null }, {}, {});
-    await assertProviderAllocationAvailable(
-      {
-        catalog,
-        connectionId: "reconnected",
-        estimatedCostCents: 4,
-        legacyBudgetCheck: legacy,
-        projectId: "p1",
-        provider: "metered",
-        surface: "app",
-      },
-      client,
-    );
-    expect(legacy).toHaveBeenCalledWith(75, 4);
+  state.source = "hosted";
+  await expect(assertProviderAllocationAvailable(input, db as never)).rejects.toMatchObject({
+    code: "provider_allocation_exhausted",
   });
-
-  it("blocks an initialized metered connection using recorded cost", async () => {
-    const client = db(
-      initializedProject,
-      {
-        allocationAmountPerMonth: 10,
-        allocationUnit: "cents",
-        credentialSource: "own",
-        programmaticAllocationAmountPerMonth: null,
-      },
-      { _count: { _all: 2 }, _sum: { costCents: 9, priceCents: null } },
-    );
-    await expect(
-      assertProviderAllocationAvailable(
-        {
-          catalog,
-          connectionId: "c1",
-          estimatedCostCents: 2,
-          projectId: "p1",
-          provider: "metered",
-          surface: "app",
-        },
-        client,
-      ),
-    ).rejects.toBeInstanceOf(ProviderAllocationExhaustedError);
+});
+test("outstanding Store reservations reduce available headroom", async () => {
+  const namespace = meteringNamespace();
+  state.budgets = [budget({ kind: "group", namespace, group: "p" }, "budget_cents", 10n)];
+  state.used = 7;
+  state.reserved = 2;
+  await expect(assertProviderAllocationAvailable(input, db as never)).rejects.toMatchObject({
+    budget: { spentCents: 7, reservedCents: 2 },
   });
-  it("does not consult the legacy cap after an explicit connection allocation", async () => {
-    const legacy = vi.fn().mockResolvedValue(undefined);
-    const client = db(
-      initializedProject,
-      { allocationAmountPerMonth: 10, allocationUnit: "cents", credentialSource: "own" },
-      { _count: { _all: 0 }, _sum: { costCents: 0, priceCents: null } },
-    );
-    await expect(
-      assertProviderAllocationAvailable(
-        {
-          catalog,
-          connectionId: "c1",
-          estimatedCostCents: 2,
-          legacyBudgetCheck: legacy,
-          projectId: "p1",
-          provider: "metered",
-          surface: "app",
-        },
-        client,
-      ),
-    ).resolves.toMatchObject({ mode: "allocation", remaining: 10, surface: "app" });
-    expect(legacy).not.toHaveBeenCalled();
+});
+test("a null limit remains unlimited while an explicit zero blocks", async () => {
+  const namespace = meteringNamespace();
+  state.budgets = [budget({ kind: "connection", namespace, connection: "c" }, "cents", null)];
+  await expect(assertProviderAllocationAvailable(input, db as never)).resolves.toMatchObject({
+    remaining: null,
   });
-
-  it("uses native quantity for quota providers and isolates provider ledgers", async () => {
-    const client = db(
-      initializedProject,
-      { allocationAmountPerMonth: 5, allocationUnit: "units" },
-      { _count: { _all: 2 }, _sum: { costCents: 100, usageQuantity: 4 } },
-    );
-    await expect(
-      assertProviderAllocationAvailable(
-        {
-          catalog,
-          connectionId: "quota-c",
-          estimatedCostCents: 999,
-          estimatedUsageQuantity: 2,
-          projectId: "p1",
-          provider: "quota",
-          surface: "app",
-        },
-        client,
-      ),
-    ).rejects.toBeInstanceOf(ProviderAllocationExhaustedError);
-    expect(client.providerCostEntry.aggregate).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ connectionId: "quota-c" }) }),
-    );
-  });
-  it("blocks uncertain legacy usage without guessing a quantity", async () => {
-    const client = db(
-      initializedProject,
-      { allocationAmountPerMonth: 5, allocationUnit: "units" },
-      { _count: { _all: 2 }, _sum: { costCents: 0, usageQuantity: 4 } },
-      1,
-    );
-    await expect(
-      assertProviderAllocationAvailable(
-        {
-          catalog,
-          connectionId: "c1",
-          estimatedCostCents: 0,
-          projectId: "p1",
-          provider: "quota",
-          surface: "app",
-        },
-        client,
-      ),
-    ).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
-    expect(client.providerCostEntry.count).toHaveBeenCalledWith({
-      where: expect.objectContaining({ connectionId: "c1", AND: expect.any(Array) }),
-    });
-  });
-
-  it("does not admit spending against an entirely unmeasured quota ledger", async () => {
-    const client = db(
-      initializedProject,
-      { allocationAmountPerMonth: 2, allocationUnit: "units" },
-      { _count: { _all: 2 }, _sum: { costCents: 0, usageQuantity: null } },
-      2,
-    );
-    await expect(
-      assertProviderAllocationAvailable(
-        {
-          catalog,
-          connectionId: "c1",
-          estimatedCostCents: 0,
-          projectId: "p1",
-          provider: "quota",
-          surface: "app",
-        },
-        client,
-      ),
-    ).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
-  });
-  it("rejects a recorded hosted cents row without a price instead of treating it as free", async () => {
-    const client = db(
-      initializedProject,
-      {
-        credentialSource: "hosted",
-        creditsAllocationAmountPerMonth: 10,
-      },
-      { _count: { _all: 0 }, _sum: { costCents: 0, priceCents: null } },
-      1,
-    );
-    await expect(
-      assertProviderAllocationAvailable(
-        {
-          catalog,
-          connectionId: "c1",
-          estimatedCostCents: 1,
-          projectId: "p1",
-          provider: "metered",
-          surface: "app",
-        },
-        client,
-      ),
-    ).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
-    expect(client.providerCostEntry.count).toHaveBeenCalledWith({
-      where: expect.objectContaining({
-        AND: [
-          { OR: [{ source: { in: ["app", "worker"] } }, { source: null }] },
-          {
-            OR: [
-              {
-                measurementStatus: "unknown",
-                OR: [expect.anything(), expect.anything()],
-              },
-              { measurementStatus: "recorded", priceCents: null },
-            ],
-          },
-        ],
-      }),
-    });
-  });
-
-  it("allows a recent active receipt protected by its existing launch reservation", async () => {
-    const client = db(
-      initializedProject,
-      { allocationAmountPerMonth: 10, allocationUnit: "units" },
-      { _count: { _all: 1 }, _sum: { costCents: 0, usageQuantity: 2 } },
-    );
-    client.providerCostEntry.count.mockResolvedValueOnce(1).mockResolvedValueOnce(0);
-    await expect(
-      assertProviderAllocationAvailable(
-        {
-          catalog,
-          connectionId: "c1",
-          estimatedCostCents: 0,
-          estimatedUsageQuantity: 2,
-          projectId: "p1",
-          provider: "quota",
-          surface: "app",
-        },
-        client,
-      ),
-    ).resolves.toMatchObject({ remaining: 8 });
-  });
-
-  it("allows initialized connections with no allocation for the requested surface", async () => {
-    const client = db(
-      initializedProject,
-      {
-        allocationAmountPerMonth: null,
-        allocationUnit: null,
-        programmaticAllocationAmountPerMonth: null,
-      },
-      { _count: { _all: 9 }, _sum: { costCents: 100, usageQuantity: 9 } },
-    );
-    await expect(
-      assertProviderAllocationAvailable(
-        {
-          catalog,
-          connectionId: "c1",
-          estimatedCostCents: 100,
-          projectId: "p1",
-          provider: "metered",
-          surface: "app",
-        },
-        client,
-      ),
-    ).resolves.toMatchObject({ mode: "allocation", remaining: null, surface: "app" });
+  state.budgets[0].limit = { unit: "cents", value: 0n, scale: 0 };
+  await expect(assertProviderAllocationAvailable(input, db as never)).rejects.toMatchObject({
+    code: "provider_allocation_exhausted",
   });
 });

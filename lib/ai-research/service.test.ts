@@ -1,3 +1,5 @@
+import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
+import { MISSING_PROJECT_BUDGET_MESSAGE } from "@/lib/metering/budget-denial";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -336,4 +338,41 @@ describe("AI research vertical contracts", () => {
     });
     expect(mocks.paid).not.toHaveBeenCalled();
   });
+});
+
+it.each([
+  new ProviderLookupSignal({
+    ok: false,
+    reason: "budget_exhausted",
+    budgetReason: "budget_missing",
+  }),
+  new DeploymentAdmissionExhaustedError("budget", { budgetReason: "budget_missing" }),
+  new BudgetExhaustedError({
+    projectId: "internal-project",
+    capCents: 0,
+    spentCents: 0,
+    reason: "budget_missing",
+  }),
+])("preserves a missing-budget pre-dispatch refusal: %s", async (error) => {
+  mocks.source.mockRejectedValueOnce(error);
+  await expect(
+    compareAiPrompts(context, {
+      brand: "Acme",
+      domain: "acme.com",
+      prompt: "q",
+      cost_policy: "provider_actual_cost",
+      actual_cost_acknowledgement: "non_guaranteed_estimate_v1",
+      estimated_cost_limit_cents: 10,
+      idempotency_key: "12345678-1234-4234-8234-123456789012",
+      estimate_credentials_ref: "a".repeat(64),
+    }),
+  ).resolves.toEqual({
+    ok: false,
+    reason: "budget_missing",
+    message: MISSING_PROJECT_BUDGET_MESSAGE,
+    retryBlocked: false,
+    safeToStartNewRequest: true,
+  });
+  expect(mocks.paid).not.toHaveBeenCalled();
+  expect(mocks.report).not.toHaveBeenCalled();
 });

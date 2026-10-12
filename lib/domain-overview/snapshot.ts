@@ -1,8 +1,8 @@
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
+import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type {
   DomainRankMetrics,
@@ -21,27 +21,22 @@ import { fetchDomainOverviewMetrics } from "./provider-call";
 import type { DomainOverviewResearchScope, DomainOverviewScope } from "./types";
 
 type Snapshot = Prisma.DomainOverviewSnapshotGetPayload<object>;
-
 type SnapshotKey = DomainOverviewResearchScope & {
   projectId: string;
   scope: DomainOverviewScope;
   target: string;
 };
-
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 }
-
 function number(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
-
 function nullableNumber(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
-
 export function snapshotMetrics(value: unknown): DomainRankMetrics | null {
   if (value === null) return null;
   const source = record(value);
@@ -241,6 +236,7 @@ export function persistDomainOverviewHistory(
 
 export async function resolveDomainOverviewSnapshot(
   input: SnapshotKey & {
+    costLimit?: RequestCostLimit;
     beforeLoad?: () => void;
     fresh?: boolean;
     key: string;
@@ -271,7 +267,7 @@ export async function resolveDomainOverviewSnapshot(
     load: async () => {
       input.beforeLoad?.();
       const result = await fetchDomainOverviewMetrics({
-        budgetCapCents: input.project.budgetCapCents,
+        costLimit: input.costLimit,
         languageCode: input.languageCode,
         origin: input.origin,
         locationCode: input.locationCode,

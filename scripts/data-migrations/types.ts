@@ -1,10 +1,7 @@
 import type { DataMigrationManifestEntry } from "@/lib/data-migrations/manifest";
 
 export type DataMigrationDatabase = {
-  query(
-    sql: string,
-    values?: readonly unknown[],
-  ): Promise<{ rows: Record<string, unknown>[] }>;
+  query(sql: string, values?: readonly unknown[]): Promise<{ rows: Record<string, unknown>[] }>;
 };
 
 export type DataMigrationContext = {
@@ -19,6 +16,8 @@ export type DataMigrationChecksumInput = {
 };
 
 export type DataMigrationImplementation = {
+  /** Explicit opt-in; the checksum and global migration lock still apply. */
+  replaySafe?: boolean;
   checksumInputs: readonly DataMigrationChecksumInput[];
   finalize?: (context: Pick<DataMigrationContext, "db" | "log">) => Promise<void>;
   id: string;
@@ -31,9 +30,7 @@ export type DataMigrationImplementation = {
  * DataMigrationImplementation and keep lifecycle metadata in the manifest.
  */
 export type DataMigrationDefinition = {
-  afterFinish?: (
-    context: Pick<DataMigrationContext, "db" | "log">,
-  ) => Promise<void>;
+  afterFinish?: (context: Pick<DataMigrationContext, "db" | "log">) => Promise<void>;
   blocking: boolean;
   blocksSchemaMigration: string;
   checksum: string;

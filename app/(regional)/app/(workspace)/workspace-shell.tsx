@@ -58,7 +58,6 @@ type WorkspaceShellProps = {
 };
 
 export async function WorkspaceShell({
-  activeProjectId,
   children,
   context,
   projectRef,
@@ -88,7 +87,7 @@ export async function WorkspaceShell({
     i18n,
   ] = await Promise.all([
     listWorkspaces(),
-    loadWorkspaceBudgetSummary(activeProjectId, now),
+    loadWorkspaceBudgetSummary(projectRef),
     isCloud && !isDemo ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
     getInstanceAdminSession(),
     loadSetupContext(projectRef),
@@ -211,13 +210,9 @@ export async function WorkspaceShell({
                   {accountNotice?.content}
                   <AppHeader
                     actions={
-                      <HeaderProviderSpend
-                        action={budgetSummary?.headerAction}
-                        projectRef={projectRef}
-                        recorded={budgetSummary?.recorded ?? null}
-                        tightest={budgetSummary?.tightest ?? null}
-                        usedPercent={budgetSummary?.maxUsedPercent ?? null}
-                      />
+                      active.role === "owner" ? (
+                        <HeaderProviderSpend summary={budgetSummary} projectRef={projectRef} />
+                      ) : undefined
                     }
                     activeProjectId={active.publicId}
                     canCreateWorkspace={canCreateWorkspace}

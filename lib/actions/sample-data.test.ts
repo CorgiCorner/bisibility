@@ -10,7 +10,8 @@ const mocks = vi.hoisted(() => {
     }
   }
   const tx = {
-    $executeRaw: vi.fn(),
+    $executeRaw: vi.fn(async () => 1),
+    $queryRaw: vi.fn(async () => []),
     auditLog: { create: vi.fn() },
     keyword: { create: vi.fn() },
     keywordTrafficSnapshot: { createMany: vi.fn() },

@@ -9,7 +9,7 @@ import {
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
-import { budgetExhaustedResult } from "@/lib/rank-check/budget-contract";
+import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { inlineRankCheckExecutionEnabled } from "@/lib/rank-check/inline-execution";
 import { launchSingleRankCheckRun } from "@/lib/rank-check/runs/launch-single";
 import {
@@ -61,9 +61,8 @@ export async function manualRunCheckNow(input: unknown): Promise<RunCheckNowResu
       trigger: "manual",
     });
   } catch (error) {
-    if (error instanceof LaunchRankCheckRunError && error.code === "budget_exhausted") {
-      return budgetExhaustedResult(error.message);
-    }
+    const budgetFailure = budgetFailureResult(error);
+    if (budgetFailure) return budgetFailure;
     if (error instanceof LaunchRankCheckRunError && error.code === "no_provider") {
       return { code: "no_provider", message: error.message, status: "not_started" };
     }
@@ -89,9 +88,26 @@ export async function manualRunCheckNow(input: unknown): Promise<RunCheckNowResu
         runPublicId: launched.publicId,
       });
     } catch (error) {
+      const budgetFailure = budgetFailureResult(error);
+      if (budgetFailure) {
+        revalidateRankCheckViews(keyword.publicId);
+        return budgetFailure;
+      }
       // The same refusal the launch makes, one step later: report it the same way rather than
       // letting it fall through as an unhandled failure.
-      if (!(error instanceof UnrunnableInlineRankCheckError)) throw error;
+      if (!(error instanceof UnrunnableInlineRankCheckError)) {
+        const item = await prisma.rankCheckRunItem.findFirst({
+          where: { keywordId: keyword.id, run: { publicId: launched.publicId } },
+          select: { status: true, rankCheck: { select: { errorCode: true } } },
+        });
+        if (item?.status !== "failed") throw error;
+        revalidateRankCheckViews(keyword.publicId);
+        return {
+          runId: launched.publicId,
+          status: "failed",
+          errorCode: item.rankCheck?.errorCode ?? null,
+        };
+      }
       revalidateRankCheckViews(keyword.publicId);
       return { code: error.reason, message: error.message, status: "not_started" };
     }

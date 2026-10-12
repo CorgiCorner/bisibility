@@ -6,14 +6,10 @@ import { prisma } from "../db/prisma";
 import { makePublicId } from "../db/public-id";
 import { resolveExpectedUrlForKeyword } from "../expected-url/keyword";
 import { publishOperationChanged } from "../notifications/realtime";
-import { loadProviderRateContext } from "../provider-rates/connection-context";
-import { LIST_PROVIDER_RATE_CONTEXT } from "../provider-rates/resolver";
 import { isProviderErrorCode } from "../providers/provider-error-code";
-import { estimatedRankCheckCostCents } from "../rank-check/default-cost";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
 import { RankCheckClosedBeforePersistenceError } from "../rank-check/persistence-errors";
 import { wrapLegacyRankCheck } from "../rank-check/planner/legacy-wrap";
-import { serpProviderChainOrderBy } from "../rank-check/provider-chain-order";
 import { persistFailedRankCheck } from "../rank-check/runner";
 import {
   applyRunItemTransition,
@@ -29,56 +25,13 @@ import type {
   DiscardRankCheckActivityInput,
   FailRankCheckActivityInput,
   FailRankCheckActivityResult,
-  RankCheckActivityInput,
   RunningRankCheckActivityResult,
 } from "./rank-check-activity-contract";
+import { runningReservation } from "./rank-check-activity-reservation";
 import { throwIfRunItemKeywordBusy } from "./rank-check-busy-keyword";
 import { notifyDeferredRankCheckOps, notifyFailedRankCheckOps } from "./rank-check-ops";
 
 class RunItemAlreadyClaimedError extends Error {}
-async function runningReservation(input: RankCheckActivityInput) {
-  const [connection, keyword] = await Promise.all([
-    prisma.providerConnection.findFirst({
-      orderBy: serpProviderChainOrderBy(),
-      // biome-ignore format: compact selection keeps this activity module under the line cap.
-      select: { costPerCheckCents: true, credentialSource: true, id: true, projectId: true, provider: true },
-      where: {
-        enabled: true,
-        kind: "serp",
-        project: { keywords: { some: { id: input.keywordId } } },
-        ...(input.providerId ? { provider: input.providerId } : {}),
-        status: "connected",
-      },
-    }),
-    prisma.keyword.findUnique({
-      select: {
-        projectId: true,
-        publicId: true,
-        project: {
-          select: {
-            defaults: { select: { serpDepth: true } },
-            providerAllocationsInitializedAt: true,
-          },
-        },
-        checkSchedule: { select: { serpDepth: true } },
-        schedule: { select: { serpDepth: true } },
-      },
-      where: { id: input.keywordId },
-    }),
-  ]);
-  // biome-ignore format: compact call keeps this activity module under the line cap.
-  const depth = resolveEffectiveSerpDepth({ projectDepth: keyword?.project.defaults?.serpDepth, requestedDepth: input.depth, checkScheduleDepth: keyword?.checkSchedule?.serpDepth, scheduleDepth: keyword?.schedule?.serpDepth });
-  if (!keyword) throw new Error("Keyword not found.");
-  const loadedRateContext = connection
-    ? await loadProviderRateContext(connection.id, "rank_check")
-    : LIST_PROVIDER_RATE_CONTEXT;
-  const rateContext =
-    connection?.credentialSource === "hosted"
-      ? { ...loadedRateContext, manualAmountCents: null }
-      : loadedRateContext;
-  // biome-ignore format: compact return keeps this activity module under the line cap.
-  return { allocationConnection: connection ? { credentialSource: connection.credentialSource, id: connection.id, provider: connection.provider } : null, estimatedCostCents: estimatedRankCheckCostCents(connection?.provider, depth, connection?.credentialSource === "hosted" ? null : connection?.costPerCheckCents, rateContext), depth, projectId: connection?.projectId ?? keyword.projectId, providerAllocationsInitializedAt: Boolean(keyword.project.providerAllocationsInitializedAt), keywordPublicId: keyword.publicId };
-}
 function automaticLegacySource(input: CreateRunningRankCheckActivityInput) {
   if (input.scheduleId === RANK_CHECK_DISPATCHER_SCHEDULE_ID) return true;
   return input.scheduleId === rankCheckWorkflowId(input.keywordId);
@@ -86,12 +39,11 @@ function automaticLegacySource(input: CreateRunningRankCheckActivityInput) {
 export async function createRunningRankCheckActivity(
   input: CreateRunningRankCheckActivityInput,
 ): Promise<RunningRankCheckActivityResult> {
-  const reservation = await runningReservation(input);
+  let projectId: string | undefined;
   const startedAt = new Date();
   // biome-ignore format: compact data keeps this activity module under the line cap.
   const data = {
     attemptCount: 0, checkedAt: new Date(), costCents: null, error: null,
-    estimatedCostCents: reservation.estimatedCostCents,
     degradedToCountry: false,
     keywordId: input.keywordId, normalizationVersion: null, position: null, previousPosition: null,
     provider: input.providerId ?? "primary",
@@ -99,7 +51,6 @@ export async function createRunningRankCheckActivity(
     startedAt, status: "running", trigger: input.trigger, viaFallback: false,
     workflowRunId: input.workflowRunId,
   };
-  const createData = { ...data, publicId: makePublicId("check") };
   let rankCheckId: string;
   try {
     rankCheckId = await prisma.$transaction(async (tx) => {
@@ -137,7 +88,13 @@ export async function createRunningRankCheckActivity(
         });
         if (replay?.runId) return replay.id;
       }
-      const rankCheckData = runId ? { ...data, runId } : data;
+      const reservation = await runningReservation(input, tx);
+      projectId = reservation.projectId;
+      const rankCheckData = {
+        ...data,
+        estimatedCostCents: reservation.estimatedCostCents,
+        ...(runId ? { runId } : {}),
+      };
       const persisted = input.rankCheckId
         ? await tx.rankCheck.update({
             data: rankCheckData,
@@ -145,7 +102,7 @@ export async function createRunningRankCheckActivity(
             where: { id: input.rankCheckId },
           })
         : await tx.rankCheck.create({
-            data: { ...createData, ...(runId ? { runId } : {}) },
+            data: { ...rankCheckData, publicId: makePublicId("check") },
             select: { id: true, publicId: true },
           });
       if (input.runItemId) {
@@ -195,7 +152,7 @@ export async function createRunningRankCheckActivity(
     }
     return { keywordId: input.keywordId, rankCheckId: item.rankCheckId };
   }
-  await publishOperationChanged({ projectId: reservation.projectId }).catch(() => undefined);
+  if (projectId) await publishOperationChanged({ projectId }).catch(() => undefined);
   return { keywordId: input.keywordId, rankCheckId };
 }
 

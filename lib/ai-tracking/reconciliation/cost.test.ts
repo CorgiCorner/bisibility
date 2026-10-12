@@ -1,4 +1,5 @@
 import { samplePlan } from "@/lib/ai-tracking/execution/fixture";
+import { meteringNamespace } from "@/lib/metering/runtime";
 import { expect, it } from "vitest";
 import { trackingCostReceipt, usd } from "./cost";
 
@@ -24,7 +25,12 @@ it("uses the live base fee when a retained live task is reconciled through free 
       ledgerId: "ledger",
       retrieval: true,
     }),
-  ).toEqual({ providerCostEntryId: "ledger", amountUsd: "0.0036", state: "derived" });
+  ).toEqual({
+    providerCostEntryId: null,
+    operationRef: { version: 1, namespace: meteringNamespace(), operationId: "ledger" },
+    amountUsd: "0.0036",
+    state: "derived",
+  });
 });
 it("retains a queue deposit on GET zero, then derives final base plus model cost", () => {
   const plan = samplePlan();
@@ -35,7 +41,8 @@ it("retains a queue deposit on GET zero, then derives final base plus model cost
     retrieval: false,
   });
   expect(deposit).toEqual({
-    providerCostEntryId: "ledger",
+    providerCostEntryId: null,
+    operationRef: { version: 1, namespace: meteringNamespace(), operationId: "ledger" },
     amountUsd: "0.0102",
     state: "refund_pending",
   });
@@ -54,5 +61,10 @@ it("retains a queue deposit on GET zero, then derives final base plus model cost
     previous: deposit,
     retrieval: true,
   });
-  expect(final).toEqual({ providerCostEntryId: "ledger", amountUsd: "0.0032", state: "derived" });
+  expect(final).toEqual({
+    providerCostEntryId: null,
+    operationRef: { version: 1, namespace: meteringNamespace(), operationId: "ledger" },
+    amountUsd: "0.0032",
+    state: "derived",
+  });
 });

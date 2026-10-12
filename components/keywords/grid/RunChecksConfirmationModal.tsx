@@ -50,6 +50,7 @@ function flowTitle(
 }
 
 const SAFE_IMMEDIATE_BLOCK_CODES = new Set([
+  "budget_missing",
   "budget_exhausted",
   "check_in_progress",
   "sample_project",
@@ -132,7 +133,10 @@ export function RunChecksConfirmationModal({
   const firstFailure = flow?.failures[0];
   const providerCode = flow ? dominantProviderCode(flow.failures) : null;
   const failurePresentation = providerFailurePresentation(providerCode);
-  const failureRunId = firstFailure?.rankCheckId ?? null;
+  const failureRunId =
+    flow?.failures.find(
+      (failure) => failure.rankCheckId && isPublicIdOfType(failure.rankCheckId, "rcr"),
+    )?.rankCheckId ?? null;
   const detailRunId = failureRunId && isPublicIdOfType(failureRunId, "rcr") ? failureRunId : null;
   const failureDetailsHref = detailRunId
     ? projectRunRankCheckPath(projectId, detailRunId)
@@ -175,7 +179,7 @@ export function RunChecksConfirmationModal({
           className="text-[13px] font-medium text-accent-text underline-offset-4 hover:underline"
           href={failureDetailsHref}
         >
-          {t("viewDetails")}
+          {t(detailRunId ? "viewDetails" : "viewRuns")}
         </Link>
         <div className="flex items-center justify-end gap-2">
           {showRetry ? (

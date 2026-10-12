@@ -1,3 +1,4 @@
+import { nativeProviderCatalog } from "@/lib/provider-rates/catalog-source";
 import { describe, expect, it, vi } from "vitest";
 import { createDataForSeoDomainMethods } from "./dataforseo-domain";
 import type { DataForSeoResponse } from "./dataforseo-payload";
@@ -71,6 +72,7 @@ describe("createDataForSeoDomainMethods", () => {
         target: "example.com",
         language_code: "en",
         location_code: 2840,
+        limit: 1,
       },
     );
   });
@@ -125,8 +127,28 @@ describe("createDataForSeoDomainMethods", () => {
     expect(request).toHaveBeenCalledWith(
       "https://api.dataforseo.com/v3/dataforseo_labs/google/domain_rank_overview/live",
       credentials,
-      { language_code: "pl", location_code: 2616, target: "example.com" },
+      { language_code: "pl", location_code: 2616, target: "example.com", limit: 1 },
     );
+  });
+
+  it("prices the actual overview payload as the single requested market", async () => {
+    const request = vi.fn().mockResolvedValue(response(overviewSuccess));
+    const { methods } = methodsWith(request);
+    await methods.fetchDomainRankOverview(credentials, {
+      target: "example.com",
+      includeSubdomains: true,
+      location,
+    });
+    const [url, , payload] = request.mock.calls[0] ?? [];
+    const match = nativeProviderCatalog.match("dataforseo", {
+      method: "POST",
+      url,
+      body: [payload],
+    });
+    expect(match).toMatchObject({
+      operation: { id: "dataforseo_labs.google.domain_rank_overview.live" },
+      options: { itemCount: "1" },
+    });
   });
 
   it("passes date_from/date_to only when present on history", async () => {

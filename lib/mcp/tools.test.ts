@@ -1276,4 +1276,73 @@ describe("MCP tool dispatch", () => {
       required: expect.arrayContaining(["frequency", "project_id"]),
     });
   });
+
+  it("forwards intent and topic filters on list_keywords", async () => {
+    const projectId = "prj_a00000000000000000000000";
+    const result = await dispatchMcpTool(
+      "list_keywords",
+      {
+        intent: "navigational",
+        project_id: projectId,
+        topic: "pricing",
+      },
+      "bsb_key_live_test",
+    );
+    const params = new URLSearchParams(result.payload.search);
+    expect(params.get("intent")).toBe("navigational");
+    expect(params.get("topic")).toBe("pricing");
+  });
+
+  it("set_primary_provider is a no-op when primary=false and promotes when primary=true", async () => {
+    const projectId = "prj_a00000000000000000000000";
+    const demote = await dispatchMcpTool(
+      "set_primary_provider",
+      { primary: false, project_id: projectId, provider_id: "dataforseo" },
+      "bsb_key_live_test",
+    );
+    expect(demote.payload).toMatchObject({
+      body: {},
+      method: "PATCH",
+      path: ["projects", projectId, "providers", "dataforseo"],
+    });
+    expect(demote.payload.body.priority).toBeUndefined();
+
+    const promote = await dispatchMcpTool(
+      "set_primary_provider",
+      { primary: true, project_id: projectId, provider_id: "dataforseo" },
+      "bsb_key_live_test",
+    );
+    expect(promote.payload).toMatchObject({
+      body: { priority: 0 },
+      method: "PATCH",
+    });
+  });
+
+  it("translates the deprecated primary=true alias into priority on connect/update", async () => {
+    const projectId = "prj_a00000000000000000000000";
+    const connect = await dispatchMcpTool(
+      "connect_provider",
+      { primary: true, project_id: projectId, provider_id: "dataforseo" },
+      "bsb_key_live_test",
+    );
+    expect(connect.payload.body).toMatchObject({ priority: 0 });
+    expect(connect.payload.body.primary).toBeUndefined();
+    const update = await dispatchMcpTool(
+      "update_provider_settings",
+      { primary: true, project_id: projectId, provider_id: "dataforseo" },
+      "bsb_key_live_test",
+    );
+    expect(update.payload).toMatchObject({
+      body: { priority: 0 },
+      method: "PATCH",
+    });
+    expect(update.payload.body.primary).toBeUndefined();
+    const nothing = await dispatchMcpTool(
+      "update_provider_settings",
+      { primary: false, project_id: projectId, provider_id: "dataforseo" },
+      "bsb_key_live_test",
+    );
+    expect(nothing.payload.body.priority).toBeUndefined();
+    expect(nothing.payload.body.primary).toBeUndefined();
+  });
 });

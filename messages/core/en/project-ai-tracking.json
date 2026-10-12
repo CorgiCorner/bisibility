@@ -102,10 +102,10 @@
     "exportCsv": "Export CSV",
     "exportJson": "Export JSON",
     "mentionDelta": "Project mention change: {delta} percentage points",
-    "denominators": "Expected {expected, number} \u00b7 eligible answers {eligible, number} \u00b7 coverage {coverage}% \u00b7 partial {partial, number} \u00b7 failed {failed, number} \u00b7 absent AIO {absent, number} \u00b7 unknown {unknown, number} \u00b7 missing {missing, number}",
+    "denominators": "Expected {expected, number} · eligible answers {eligible, number} · coverage {coverage}% · partial {partial, number} · failed {failed, number} · absent AIO {absent, number} · unknown {unknown, number} · missing {missing, number}",
     "trendMethod": "Project and competitor mentions are separate. Compare identical prompt revisions, source, model, locale and brand configuration, with 90% complete coverage in both periods.",
     "contextPromptDrafts": "Context prompt drafts",
-    "contextDraftMethod": "Draft neutral, comparative and branded questions from saved project context. Review each draft before accepting it. No model call or baseline starts automatically.",
+    "contextDraftMethod": "Draft questions from saved project context. Review and edit them before saving. Saving a prompt does not run an analysis.",
     "suggestFromContext": "Suggest from project context",
     "suggestionsUnavailable": "Prompt suggestions are unavailable. Enter a prompt manually.",
     "popularityUnknown": "Popularity unknown",
@@ -118,10 +118,10 @@
     "capabilitiesUnavailable": "Model capabilities are unavailable. Review the provider connection.",
     "modelCapabilitiesHint": "Only current models with verified prices and actual-cost support are selectable. Manual identifiers are checked again before provider submission.",
     "previewDescription": "{count, number} active prompts. Preview checks configuration and cost without submitting tasks.",
-    "advisoryEstimate": "Advisory estimate \u00b7 ${cost}",
+    "advisoryEstimate": "Advisory estimate · ${cost}",
     "editTopic": "Edit topic",
     "saveTopic": "Save topic",
-    "projectTrackingMeta": "{domain} \u00b7 {count, number} active prompts \u00b7 schedules disabled by default",
+    "projectTrackingMeta": "{domain} · {count, number} active prompts · schedules disabled by default",
     "promptCount": "{count, number} prompts",
     "savedConfigurationReview": "{count, number} saved prompts. The saved source, model, market and approval remain unchanged until you review a replacement.",
     "reviewReplacementConfiguration": "Review replacement configuration",
@@ -179,6 +179,8 @@
     "generationReconcileBeforeRetry": "This attempt is blocked from another submission. Review its durable result or reconcile its provider receipt before starting another generation. No retry is automatic.",
     "generationFailureId": "Generation requiring review: {id}",
     "observationTimeUnknown": "Observation time unknown",
-    "citedSources": "Cited sources"
+    "citedSources": "Cited sources",
+    "contextMissingHint": "Add project context or enter prompts manually. Saving prompts does not start an analysis.",
+    "contextDraftReviewHint": "Drafts use your saved context, not measured search demand. Review and edit them before saving."
   }
 }

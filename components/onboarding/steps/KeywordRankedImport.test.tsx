@@ -244,6 +244,18 @@ describe("KeywordRankedImport", () => {
     expect(onAppendQueries).toHaveBeenCalledWith(["new"]);
   });
 
+  it("preserves missing-budget guidance from a ranked-keyword action result", async () => {
+    renderCard(
+      vi.fn(async () => ({
+        reason: "budget_exhausted" as const,
+        budgetReason: "budget_missing" as const,
+      })),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Import from DataForSEO/ }));
+    expect(await screen.findByText(/project spending budget is missing/i)).toBeInTheDocument();
+    expect(screen.queryByText("Monthly rank-check budget reached.")).not.toBeInTheDocument();
+  });
+
   it.each([
     ["needs_reauth", "DataForSEO authorization has expired."],
     ["rate_limited", "Provider rate limit reached. Try again shortly."],
@@ -256,4 +268,11 @@ describe("KeywordRankedImport", () => {
     fireEvent.click(screen.getByRole("button", { name: /Import from DataForSEO/ }));
     await waitFor(() => expect(screen.getByText(message, { exact: false })).toBeInTheDocument());
   });
+});
+
+it("shows a wallet budget denial without a project settings link", async () => {
+  renderCard(vi.fn().mockResolvedValue({ reason: "wallet_budget_exhausted" }));
+  fireEvent.click(screen.getByRole("button", { name: /Import from DataForSEO/ }));
+  expect(await screen.findByText("Deployment spending budget is exhausted.")).toBeVisible();
+  expect(screen.queryByRole("link", { name: /raise.*budget/i })).not.toBeInTheDocument();
 });

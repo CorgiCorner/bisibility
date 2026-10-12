@@ -100,6 +100,13 @@
     "actualReplayHint": "Repetir una solicitud completada con el mismo identificador recupera su resultado guardado sin otra llamada al proveedor. Una nueva solicitud puede generar otro cargo, incluso con el mismo prompt. Los informes guardados siguen disponibles.",
     "requestedModel": "Modelo solicitado",
     "actualModel": "Modelo real",
-    "unknownModel": "Modelo desconocido"
+    "unknownModel": "Modelo desconocido",
+    "showUnavailableModels": "Mostrar modelos no disponibles",
+    "unavailableModels": "Modelos no disponibles",
+    "modelAlreadySelected": "Ya seleccionado como el otro modelo.",
+    "modelNeedsOwnAccount": "Conecta tu propia cuenta del proveedor en Integraciones y selecciona el coste real del proveedor.",
+    "modelNeedsActualPayment": "Selecciona el coste real del proveedor para usar este modelo con tu propia cuenta.",
+    "modelPricingUnavailable": "No se puede verificar el precio actual de este modelo. Inténtalo más tarde.",
+    "modelUnavailable": "Este modelo aún no admite análisis de prompts."
   }
 }

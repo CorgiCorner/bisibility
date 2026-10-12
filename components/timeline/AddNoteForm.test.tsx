@@ -46,3 +46,21 @@ describe("AddNoteForm", () => {
     expect(mocks.addSignalNote).not.toHaveBeenCalled();
   });
 });
+
+it("uses shared 40px form geometry for URL and Severity", async () => {
+  const user = userEvent.setup();
+  render(<AddNoteForm canCreate projectId="prj_1" />);
+  await user.click(screen.getByRole("button", { name: "Add note" }));
+  expect(screen.getByRole("textbox", { name: "URL" })).toHaveClass(
+    "min-h-10",
+    "px-[13px]",
+    "py-[9px]",
+    "font-medium",
+  );
+  expect(screen.getByRole("button", { name: "Severity" })).toHaveClass(
+    "min-h-10",
+    "px-[13px]",
+    "py-[9px]",
+    "font-medium",
+  );
+});

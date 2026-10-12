@@ -2,14 +2,10 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
-import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { surfaceOf } from "@/lib/provider-usage/surface";
 import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
-import { hostedRankCheckEstimatedCostCents } from "@/lib/providers/execution-extension";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import type { SerpDepth } from "@/lib/serp/constants";
-import { assertBudgetAvailable } from "./budget";
-import { estimatedRankCheckCostCents } from "./default-cost";
 import type { RankCheckConnectionInput } from "./runner";
 
 type PreflightInput = {
@@ -28,7 +24,7 @@ export async function assertLegacyLiveBudget(input: PreflightInput): Promise<voi
   await prisma.$transaction(async (tx) => {
     await lockProjectForProviderMutation(tx, input.projectId);
     const project = await tx.project.findUnique({
-      select: { budgetCapCents: true, providerAllocationsInitializedAt: true },
+      select: { id: true },
       where: { id: input.projectId },
     });
     const current = connection?.id
@@ -49,7 +45,6 @@ export async function assertLegacyLiveBudget(input: PreflightInput): Promise<voi
     }
     if (!project)
       throw new ProviderUsagePersistenceError({ cause: new Error("Project not found.") });
-    if (project?.providerAllocationsInitializedAt) return;
     if (input.rankCheckId) {
       await tx.$queryRaw`
         SELECT id FROM rank_checks WHERE id = ${input.rankCheckId} FOR UPDATE
@@ -93,19 +88,5 @@ export async function assertLegacyLiveBudget(input: PreflightInput): Promise<voi
         throw new ProviderUsagePersistenceError({ cause: new Error("Rank reservation mismatch.") });
       }
     }
-    await assertBudgetAvailable(input.projectId, input.now, {
-      capCents: project.budgetCapCents,
-      client: tx,
-      estimatedCostCents:
-        connection?.credentialSource === "hosted" && connection.provider === "serpapi"
-          ? hostedRankCheckEstimatedCostCents(connection.provider, input.depth)
-          : estimatedRankCheckCostCents(
-              connection?.provider,
-              input.depth,
-              connection?.costPerCheckCents,
-              connection?.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
-            ),
-      excludeRankCheckId: input.rankCheckId,
-    });
   });
 }

@@ -206,6 +206,7 @@ export function FiltersDrawer({
             </span>
           </div>
           <Slider
+            getAriaLabel={(index) => t(index === 0 ? "volumeMinimumAria" : "volumeMaximumAria")}
             max={50}
             min={0}
             onValueChange={(value) => {

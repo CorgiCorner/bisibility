@@ -24,7 +24,6 @@ const connection = {
   provider: "dataforseo",
 };
 const project = {
-  budgetCapCents: 500,
   id: "project_1",
   providerConnections: [connection],
   publicId: "prj_1",
@@ -41,7 +40,6 @@ describe("domain overview context", () => {
     await expect(domainOverviewProject("prj_1")).resolves.toEqual(project);
     expect(mocks.project.findFirst).toHaveBeenCalledWith({
       select: {
-        budgetCapCents: true,
         id: true,
         providerConnections: {
           orderBy: [{ priority: "asc" }, { provider: "asc" }],

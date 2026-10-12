@@ -10,6 +10,8 @@ const expected: Array<[ResearchState, RegExp]> = [
   ["idle", /research starts with a seed/i],
   ["loading", /research loading/i],
   ["no_provider", /connect dataforseo to research keywords/i],
+  ["usage_reconciliation_required", /provider usage is not fully confirmed/i],
+  ["budget_missing", /project spending budget is missing/i],
   ["budget_exhausted", /monthly provider budget reached/i],
   ["needs_reauth", /needs to be reconnected/i],
   ["lookup_failed", /lookup did not go through/i],
@@ -137,4 +139,12 @@ describe("ResearchStatePanel", () => {
     rerender(<ResearchStatePanel mode="auto" projectRef="prj_1" state="empty" />);
     expect(screen.queryByText(/switch mode to auto/i)).not.toBeInTheDocument();
   });
+});
+
+it("shows wallet budget copy without project settings", () => {
+  render(<ResearchStatePanel projectRef="prj_1" state="wallet_budget_exhausted" />, {
+    messages: researchFeatureTestMessages,
+  });
+  expect(screen.getByText("Deployment spending budget is exhausted.")).toBeVisible();
+  expect(screen.queryByRole("link")).not.toBeInTheDocument();
 });

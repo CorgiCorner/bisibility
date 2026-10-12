@@ -1,11 +1,11 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { continueAsNew, proxyActivities } from "@temporalio/workflow";
 import type { MeteringMaintenanceActivityResult } from "./metering-maintenance-activity";
 
 type MeteringMaintenanceActivities = {
-  maintainMeteringShadowActivity(): Promise<MeteringMaintenanceActivityResult>;
+  maintainMeteringReservationsActivity(): Promise<MeteringMaintenanceActivityResult>;
 };
 
-const { maintainMeteringShadowActivity } = proxyActivities<MeteringMaintenanceActivities>({
+const { maintainMeteringReservationsActivity } = proxyActivities<MeteringMaintenanceActivities>({
   retry: {
     backoffCoefficient: 2,
     initialInterval: "5 seconds",
@@ -15,6 +15,9 @@ const { maintainMeteringShadowActivity } = proxyActivities<MeteringMaintenanceAc
   startToCloseTimeout: "2 minutes",
 });
 
-export async function maintainMeteringShadowWorkflow(): Promise<MeteringMaintenanceActivityResult> {
-  return maintainMeteringShadowActivity();
+export async function maintainMeteringReservationsWorkflow(): Promise<MeteringMaintenanceActivityResult> {
+  const result = await maintainMeteringReservationsActivity();
+  if (result.status === "completed" && result.hasMore && result.count > 0)
+    return continueAsNew<typeof maintainMeteringReservationsWorkflow>();
+  return result;
 }

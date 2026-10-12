@@ -215,3 +215,54 @@ test("import snapshot waits for a concurrently committed native operation instea
     await f.close();
   }
 });
+
+test("BYOK invoice corrections revalue project spending in the original budget epoch", async () => {
+  const f = await fixture();
+  try {
+    const { projectAdmissionMeasurements } = await import("@/lib/metering/paid-measurements");
+    await f.store.putBudget({
+      id: "project:p:monthly",
+      version: 1,
+      scope: { kind: "group", namespace: "test", group: "p" },
+      surface: "any",
+      unit: "budget_cents",
+      limit: { unit: "budget_cents", value: 100n, scale: 0 },
+      onExceed: "block",
+      window: { kind: "calendar_month", timezone: "UTC" },
+    });
+    const req = {
+      ...request("valued"),
+      scope: { ...request().scope, group: "p" },
+      estimate: [
+        { unit: "requests", value: 1n, scale: 0 },
+        { unit: "budget_cents", value: 1n, scale: 0 },
+      ],
+    };
+    const reserved = await f.store.reserve(req);
+    if (reserved.outcome !== "reserved") throw new Error("fixture reserve");
+    const grant = await f.store.markDispatchIntent({
+      ...command(reserved.operation),
+      holder: "h",
+      leaseTtlMs: 60000,
+    });
+    if (!("granted" in grant) || !grant.granted) throw new Error("fixture intent");
+    await f.store.settle({
+      ...command(grant.operation),
+      authority: { kind: "lease", leaseId: grant.lease.leaseId },
+      receipt: projectAdmissionMeasurements(req, { ...receipt(), providerRequestId: "native-a" }),
+    });
+    expect((await f.store.importBilling(bill())).outcome).toBe("imported");
+    const op = await f.store.getOperation(ref(req));
+    expect(
+      op?.receipts.at(-1)?.measurements.find((m) => m.unit === "budget_cents")?.quantity,
+    ).toEqual({ unit: "budget_cents", value: 100n, scale: 4 });
+    const status = await f.store.applicableBudgets({
+      scope: req.scope,
+      surface: "app",
+      units: ["budget_cents"],
+    });
+    expect(status[0]?.used).toEqual({ unit: "budget_cents", value: 100n, scale: 4 });
+  } finally {
+    await f.close();
+  }
+});

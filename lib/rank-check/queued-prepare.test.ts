@@ -47,6 +47,7 @@ const mocks = vi.hoisted(() => {
         {
           archivedAt: null as Date | null,
           id: "keyword_1",
+          text: "site:example.com",
           locationId: "location_active",
           locationRef: {},
           publicId: "kw_abcdefghijklmnopqrstuvwx",
@@ -68,6 +69,7 @@ const mocks = vi.hoisted(() => {
         providerConnections: [
           {
             credentialsEncrypted: "encrypted",
+            credentialSource: "own",
             id: "connection_1",
             provider: "dataforseo",
           },
@@ -132,6 +134,7 @@ const mocks = vi.hoisted(() => {
   };
   return {
     assertQueuedRankCheckBatchAllocation: vi.fn(),
+    nativeCosts: vi.fn(),
     prisma,
     providerFacingCreate,
     publishOperationChanged: vi.fn(() => Promise.resolve()),
@@ -139,7 +142,14 @@ const mocks = vi.hoisted(() => {
   };
 });
 
+vi.mock("@/lib/rank-check/budget", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./budget")>()),
+  assertBudgetAvailable: vi.fn(async () => ({ capCents: 5000, spentCents: 0 })),
+}));
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/provider-rates/native-rank-request", () => ({
+  loadNativeRankRequestCosts: mocks.nativeCosts,
+}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("./allocation-enforcement", () => ({
   assertQueuedRankCheckBatchAllocation: mocks.assertQueuedRankCheckBatchAllocation,
@@ -173,6 +183,8 @@ function sqlText(query: unknown) {
 describe("queued rank-check run-item preparation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
+    mocks.nativeCosts.mockResolvedValue([0.725]);
     vi.stubEnv("DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED", "1");
     mocks.state.batches = [];
     mocks.state.item = {
@@ -216,6 +228,7 @@ describe("queued rank-check run-item preparation", () => {
         archivedAt,
         checkSchedule: null,
         id: "keyword_1",
+        text: "site:example.com",
         locationId: "location_active",
         locationRef: {},
         publicId: "kw_abcdefghijklmnopqrstuvwx",
@@ -248,6 +261,25 @@ describe("queued rank-check run-item preparation", () => {
     ]);
     await prepareQueuedRankCheckBatch(baseInput);
     expect(mocks.state.rankChecks[0]).toMatchObject({ requestedDepth: 20 });
+    expect(mocks.state.rankChecks[0]).toMatchObject({ estimatedCostCents: 0.725 });
+    expect(mocks.nativeCosts).toHaveBeenCalledWith(
+      mocks.prisma,
+      expect.objectContaining({ credentialSource: "own" }),
+      [{ keyword: "site:example.com", depth: 20, priority: "high" }],
+      expect.any(Date),
+    );
+  });
+
+  it("defers an unpriced native request instead of falling back to the list price", async () => {
+    mocks.nativeCosts.mockResolvedValueOnce([null]);
+    await expect(prepareQueuedRankCheckBatch(baseInput)).resolves.toMatchObject({
+      state: "deferred",
+    });
+    expect(mocks.state.rankChecks[0]).toMatchObject({
+      estimatedCostCents: null,
+      status: "deferred",
+    });
+    expect(mocks.assertQueuedRankCheckBatchAllocation).not.toHaveBeenCalled();
   });
 
   it("attributes a dispatcher batch without a run to the app surface as scheduled", async () => {

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ assertAllocation: vi.fn() }));
 
@@ -12,6 +12,9 @@ import {
 } from "./allocation-enforcement";
 
 describe("rank-check allocation enforcement surface forwarding", () => {
+  beforeEach(() => {
+    vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
+  });
   it("forwards the requested surface for a direct connection check", async () => {
     mocks.assertAllocation.mockResolvedValue({ mode: "allocation", remaining: 1 });
     const db = {} as never;
@@ -50,6 +53,26 @@ describe("rank-check allocation enforcement surface forwarding", () => {
     expect(mocks.assertAllocation).toHaveBeenCalledWith(
       expect.objectContaining({ connectionId: "connection_1", surface: "app" }),
       db,
+    );
+  });
+
+  it("checks the connection budget with the same per-task native quotes", async () => {
+    await assertQueuedRankCheckBatchAllocation(
+      {
+        connection: { id: "connection_1" },
+        priority: "high",
+        projectId: "project_1",
+        surface: "programmatic",
+        tasks: [
+          { depth: 10, estimatedCostCents: 0 },
+          { depth: 10, estimatedCostCents: 0.725 },
+        ],
+      },
+      {} as never,
+    );
+    expect(mocks.assertAllocation).toHaveBeenLastCalledWith(
+      expect.objectContaining({ estimatedCostCents: 0.725, estimatedUsageQuantity: 2 }),
+      expect.anything(),
     );
   });
 });

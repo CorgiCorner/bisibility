@@ -19,7 +19,7 @@ import { type ApiContext, notFound, requireApiActor } from "./context";
 import { ApiForbiddenError, ApiInputError } from "./errors";
 import { decodeCursor, encodeCursor } from "./pagination";
 import { requireApiPublicId } from "./public-id";
-import { listResponse, resourceResponse } from "./responses";
+import { dataResponse, listResponse } from "./responses";
 import { objectBody, scopedProject, snakeizeKeys } from "./surface";
 
 function access(ctx: ApiContext, mutation: boolean) {
@@ -53,13 +53,13 @@ export async function projectContextRoute(ctx: ApiContext, projectId: string) {
   if (scoped) return scoped;
   access(ctx, ctx.method === "PATCH");
   if (ctx.method === "GET")
-    return resourceResponse(snakeizeKeys(await getProjectContext(ctx.auth.project.id)), {
+    return dataResponse(snakeizeKeys(await getProjectContext(ctx.auth.project.id)), {
       headers: ctx.headers,
     });
   const raw = await boundedBody(ctx);
   const { agent_rules, ...fields } = objectBody(raw);
   const input = projectContextSchema.parse({ ...fields, agentRules: agent_rules });
-  return resourceResponse(snakeizeKeys(await saveProjectContext(ctx.auth.project.id, input)), {
+  return dataResponse(snakeizeKeys(await saveProjectContext(ctx.auth.project.id, input)), {
     headers: ctx.headers,
   });
 }
@@ -75,7 +75,7 @@ export async function agentReportsRoute(ctx: ApiContext, projectId: string) {
       projectId: ctx.auth.project.id,
       actorId: ctx.actorId,
     });
-    return resourceResponse(reportResponse(report), { headers: ctx.headers, status: 201 });
+    return dataResponse(reportResponse(report), { headers: ctx.headers, status: 201 });
   }
   const input = agentReportListSchema.parse({
     kind: ctx.url.searchParams.get("kind") ?? undefined,
@@ -114,6 +114,6 @@ export async function agentReportRoute(ctx: ApiContext, projectId: string, repor
   access(ctx, false);
   const report = await getAgentReport({ projectId: ctx.auth.project.id, reportId });
   return report
-    ? resourceResponse(reportResponse(report), { headers: ctx.headers })
+    ? dataResponse(reportResponse(report), { headers: ctx.headers })
     : notFound(ctx, "Agent report not found.");
 }

@@ -194,9 +194,6 @@
       "management": {
         "grid": {
           "tableAria": "Rank tracker keywords",
-          "grouping": "Keyword grouping",
-          "grouped": "Grouped",
-          "flat": "Flat",
           "deleteFailed": "The keyword could not be deleted.",
           "currentPage": "Current page: {summary}",
           "weeklySteady": "Positions held steady this week",
@@ -398,7 +395,8 @@
           "providerUnknown": "The rank check could not run because of a provider error. Try again, or view check details for more information.",
           "runningBody": "{count, plural, one {Check is running.} other {# checks are running.}} You can close this window - results will appear on this page.",
           "successBody": "{count, plural, one {# rank check has completed.} other {# rank checks have completed.}}",
-          "checksNeedAttention": "{count, plural, one {# check needs attention.} other {# checks need attention.}}"
+          "checksNeedAttention": "{count, plural, one {# check needs attention.} other {# checks need attention.}}",
+          "viewRuns": "View runs"
         },
         "schedule": {
           "title": "Set schedule for {count, plural, one {# keyword / # target} other {# keywords / # targets}}",
@@ -634,7 +632,9 @@
           "wrongUrl": "Wrong URL ranking",
           "wrongUrlDescription": "Ranking URL differs from target URL",
           "urlChanged": "Ranking URL changed",
-          "urlChangedDescription": "More than one URL ranked during the tracked history"
+          "urlChangedDescription": "More than one URL ranked during the tracked history",
+          "volumeMinimumAria": "Minimum monthly search volume",
+          "volumeMaximumAria": "Maximum monthly search volume"
         },
         "savedViews": {
           "allKeywords": "All keywords",

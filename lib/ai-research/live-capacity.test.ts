@@ -1,4 +1,5 @@
 import { ProviderCallError } from "@/lib/providers/call-error";
+import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const capacity = vi.hoisted(() => ({ reserve: vi.fn(), assert: vi.fn() }));
@@ -156,7 +157,11 @@ describe("research shared live Responses capacity", () => {
         }),
       ),
     );
-    await aiProviderRequest({ login: "fixture", password: "fixture" }, VISIBILITY_PATH, {});
+    await aiProviderRequest(
+      { login: "fixture", password: "fixture", usageObserver: testUsageObserver },
+      VISIBILITY_PATH,
+      {},
+    );
     expect(capacity.reserve).not.toHaveBeenCalled();
     expect(capacity.assert).not.toHaveBeenCalled();
   });

@@ -1,3 +1,4 @@
+import { useSharedErrorMessages } from "@/i18n/useSharedErrorMessages";
 import type { UpcomingBlockedGroup } from "@/lib/checks/contract";
 import { GaugeIcon as Gauge } from "@phosphor-icons/react/dist/ssr/Gauge";
 import { PauseIcon as Pause } from "@phosphor-icons/react/dist/ssr/Pause";
@@ -20,12 +21,15 @@ export function UpcomingBlockedAlerts({
   providerSettingsHref,
   timelineHref,
 }: Readonly<UpcomingBlockedAlertsProps>) {
+  const errors = useSharedErrorMessages();
   const t = useTranslations("projectRankTracker.checks");
   const noProvider = findBlockedGroup(blocked, "no_provider");
   const migrationHold = findBlockedGroup(blocked, "migration_hold");
   const budgetExhausted = findBlockedGroup(blocked, "budget_exhausted");
 
-  if (!noProvider && !migrationHold && !budgetExhausted) return null;
+  const missing = findBlockedGroup(blocked, "budget_missing");
+  const unresolved = findBlockedGroup(blocked, "usage_reconciliation_required");
+  if (!noProvider && !migrationHold && !budgetExhausted && !missing && !unresolved) return null;
 
   return (
     <section aria-label={t("blockedScheduledChecks")} className="space-y-2.5">
@@ -65,6 +69,16 @@ export function UpcomingBlockedAlerts({
         </div>
       ) : null}
 
+      {missing || unresolved ? (
+        <div className="rounded-card border border-yellow/35 bg-yellow/10 px-3.5 py-3">
+          <p className="m-0 text-xs text-fg-muted">
+            {missing ? errors.budgetMissing() : errors.usageReconciliationRequired()}
+          </p>
+          <Link className={actionClassName} href={providerSettingsHref}>
+            {t("review")}
+          </Link>
+        </div>
+      ) : null}
       {budgetExhausted ? (
         <div className="flex items-center gap-2.5 rounded-card border border-yellow/35 bg-yellow/10 px-3.5 py-3">
           <Gauge aria-hidden className="shrink-0 text-yellow-text" size={16} weight="regular" />

@@ -1,16 +1,14 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { ProviderUiProvider } from "@/components/provider-management/ProviderUiProvider";
 import { renderAccountUsageBudgetExtension } from "@/components/settings/AccountDataSourceExtension";
 import { ProviderUsageCard } from "@/components/settings/usage/ProviderUsageCard";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
-import { updateProviderConnectionAllocationAction } from "@/lib/actions/provider-allocation";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
-import { getResolvedDateFormat } from "@/lib/dates/request";
 import { getProjectMeteringUsage } from "@/lib/metering/user-data";
 import { requireReadableProject } from "@/lib/queries/_auth";
-import { getSettings } from "@/lib/queries/settings";
-import { MeterUsageCard } from "./MeterUsageCard";
+import { UsageSummary } from "./UsageSummary";
 
 export async function IntegrationUsagePanel({
   projectRef,
@@ -19,9 +17,7 @@ export async function IntegrationUsagePanel({
   projectRef: string;
   editBudget: boolean;
 }>) {
-  const { resolved: dateFormat } = await getResolvedDateFormat();
-  const [settings, access, runtime, metering] = await Promise.all([
-    getSettings(projectRef, { dateFormat }),
+  const [access, runtime, metering] = await Promise.all([
     requireReadableProject(projectRef),
     resolveRegionalDocumentLocale(),
     getProjectMeteringUsage(projectRef),
@@ -32,6 +28,7 @@ export async function IntegrationUsagePanel({
     "shared",
     "projectSettingsShell",
     "projectSettingsUsage",
+    "projectIntegrations",
   ]);
   const budgetExtension = await renderAccountUsageBudgetExtension({
     locale: runtime.locale,
@@ -40,28 +37,29 @@ export async function IntegrationUsagePanel({
     projectRef,
   });
   const role = getProjectRole(access.actor, access.project.id);
+  const canEditBudget =
+    access.project.writeMode === "active" &&
+    canProjectAction(role, "manage", "provider_connection");
   return (
     <FeatureMessagesProvider
       locale={runtime.locale}
       messages={messages}
       timeZone={runtime.timeZone}
     >
-      <div className="flex max-w-[760px] flex-col gap-4">
-        <ProviderUsageCard
-          budgetExplanation={budgetExtension?.description}
-          canEditBudget={
-            access.project.writeMode === "active" && canProjectAction(role, "manage", "project")
-          }
-          credits={budgetExtension?.credits ?? null}
-          initialBudgetEditOpen={editBudget}
-          projectId={settings.project.projectId}
-          projectRef={projectRef}
-          updateProviderAllocation={updateProviderConnectionAllocationAction}
-          usage={settings.usage}
-        />
-        <MeterUsageCard data={metering} />
-        {budgetExtension?.content}
-      </div>
+      <ProviderUiProvider projectId={projectRef}>
+        <div className="flex max-w-[760px] flex-col gap-4">
+          <ProviderUsageCard
+            budgetExplanation={budgetExtension?.description}
+            canEditBudget={canEditBudget}
+            initialBudgetEditOpen={editBudget}
+            projectId={projectRef}
+            projectRef={projectRef}
+            data={metering}
+          />
+          <UsageSummary data={metering} />
+          {budgetExtension?.content}
+        </div>
+      </ProviderUiProvider>
     </FeatureMessagesProvider>
   );
 }

@@ -41,6 +41,8 @@ const providerRef = { projectId: "prj_a00000000000000000000000", providerId: "gs
 function connectedAnalyticsConnection(overrides: Record<string, unknown> = {}) {
   return {
     enabled: true,
+    credentialSource: "own",
+    rates: [],
     firstSyncFinishedAt: null,
     firstSyncRequestedAt: null,
     firstSyncStartedAt: null,

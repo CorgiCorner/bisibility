@@ -286,3 +286,8 @@ describe("rank tracker grouped SQL", () => {
     ).toContain("EXPLAIN (ANALYZE, BUFFERS, VERBOSE)");
   });
 });
+
+it("keeps language labels in both populated and zero-keyword grouped scopes", () => {
+  const { sql } = rendered();
+  expect(sql.match(/concat_ws\(' \/ ', [^)]*l\."languageLabel"\)/g)).toHaveLength(2);
+});

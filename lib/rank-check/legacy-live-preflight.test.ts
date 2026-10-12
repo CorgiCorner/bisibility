@@ -67,7 +67,7 @@ describe("legacy live rank-check budget preflight", () => {
 
   it("accepts an inline API run without allocation metadata on a legacy project", async () => {
     await expect(assertLegacyLiveBudget(input)).resolves.toBeUndefined();
-    expect(mocks.assertBudgetAvailable).toHaveBeenCalledOnce();
+    expect(mocks.assertBudgetAvailable).not.toHaveBeenCalled();
   });
 
   it("rejects a run bound to a different provider connection", async () => {

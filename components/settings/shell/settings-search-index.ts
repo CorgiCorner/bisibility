@@ -30,6 +30,10 @@ function searchEntry(
 }
 
 export const settingsSearchEntries = [
+  searchEntry("context", "context", (t) => ({
+    label: t("search.entries.projectContext.label"),
+    keywords: t("search.entries.projectContext.keywords"),
+  })),
   searchEntry(
     "tracking",
     "settings/tracking",

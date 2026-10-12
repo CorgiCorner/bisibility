@@ -1,5 +1,4 @@
 import type { ActiveIntegrationKind } from "@/lib/integrations/category-copy";
-import type { ProviderRateFeature, ProviderRateSource } from "@/lib/provider-rates/resolver";
 import type { ProviderFailureClass } from "@/lib/providers/failure-class";
 import type {
   ConnectProviderInput,
@@ -89,23 +88,6 @@ export type ProviderConsumerStatuses = {
   trafficEnrichment: ProviderConsumerStatus;
 };
 
-type ProviderRateDataBase = {
-  amountCents?: number;
-  checkedAt?: string;
-  fallbackSource?: Exclude<ProviderRateSource, "manual" | "unknown">;
-  label: string;
-  sampleSize?: number;
-  source: ProviderRateSource;
-  unit: string;
-};
-
-export type ProviderRateData =
-  | (ProviderRateDataBase & { editable?: true; feature: ProviderRateFeature })
-  | (ProviderRateDataBase & {
-      editable: false;
-      feature: "domain_rank_overview" | "historical_rank_overview" | "relevant_pages";
-    });
-
 export type GooglePropertyOption = {
   kind: "domain" | "ga4" | "url-prefix";
   label: string;
@@ -166,7 +148,6 @@ export type IntegrationProviderData = ProviderConnectionReadState & {
     defaults: DrawerDefaults;
     envHint?: string;
     googleOAuth?: GoogleOAuthSetup;
-    rates?: readonly ProviderRateData[];
   };
   icon: ProviderIconName;
   id: string;

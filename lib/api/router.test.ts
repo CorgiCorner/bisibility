@@ -1094,7 +1094,7 @@ describe("public API router", () => {
     expect(response.status).toBe(201);
     expect(body).toMatchObject({
       connection_id: expect.stringMatching(/^conn_[a-z][a-z0-9]{23}$/),
-      cost_per_check_cents: 1,
+      cost_per_check_cents: "1",
       id: "serpapi",
       priority: 0,
       provider: "serpapi",

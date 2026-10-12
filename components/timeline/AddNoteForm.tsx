@@ -1,6 +1,8 @@
 "use client";
 
 import { AppDrawer } from "@/components/ui/AppDrawer";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Textarea } from "@/components/ui/Textarea";
 import { addSignalNote } from "@/lib/actions/signals";
@@ -26,8 +28,7 @@ const FORM_ID = "timeline-add-note-form";
 
 const labelClass =
   "font-sans tabular-nums text-[10.5px] font-semibold uppercase tracking-[0.5px] text-fg-muted";
-const severityTriggerClass =
-  "min-h-9 w-full justify-between rounded-control border-border-control bg-transparent px-3 font-sans tabular-nums text-[12px] font-semibold normal-case tracking-normal";
+const severityTriggerClass = "normal-case tracking-normal";
 
 const defaultValues = (projectId: string): CreateSignalNoteInput => ({
   note: "",
@@ -91,35 +92,22 @@ function AddNoteFormControls({
 
   return (
     <>
-      <button
-        className={`inline-flex ${compact ? "h-[34px]" : "min-h-9"} shrink-0 items-center justify-center gap-1.5 rounded-control border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid outline-none transition-opacity hover:opacity-90 focus-visible:opacity-90`}
-        onClick={() => setOpen(true)}
-        type="button"
-      >
+      <Button size={compact ? "sm" : "md"} onClick={() => setOpen(true)} type="button">
         <Plus aria-hidden size={14} weight="regular" />
         {t("addNote")}
-      </button>
+      </Button>
       <AppDrawer
         description={t("description")}
         footer={
           <div className="flex items-center justify-end gap-1.5">
-            <button
-              className="inline-flex h-9 items-center gap-1 rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted hover:border-accent hover:text-accent-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
-              onClick={close}
-              type="button"
-            >
+            <Button variant="secondary" size="sm" onClick={close} type="button">
               <X weight="regular" aria-hidden size={13} />
               {t("cancel")}
-            </button>
-            <button
-              className="inline-flex h-9 items-center gap-1 rounded-control border border-accent bg-accent-solid px-3 text-[12px] font-semibold text-accent-on-solid hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid disabled:cursor-not-allowed disabled:bg-bg-sunken disabled:text-fg-muted"
-              disabled={isPending}
-              form={FORM_ID}
-              type="submit"
-            >
+            </Button>
+            <Button size="sm" disabled={isPending} form={FORM_ID} type="submit">
               <NotePencil weight="regular" aria-hidden size={13} />
               {isPending ? t("saving") : t("save")}
-            </button>
+            </Button>
           </div>
         }
         onClose={close}
@@ -140,10 +128,11 @@ function AddNoteFormControls({
             />
           </label>
           <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_140px]">
-            <label className="grid gap-1.5">
+            <label className="grid gap-1.5" htmlFor="timeline-note-url">
               <span className={labelClass}>{t("url")}</span>
-              <input
-                className="h-9 min-w-0 rounded-control border border-border-control bg-transparent px-3 font-sans tabular-nums text-[12px] text-fg outline-none focus:border-accent"
+              <Input
+                id="timeline-note-url"
+                className="min-w-0"
                 placeholder={t("urlPlaceholder")}
                 type="url"
                 {...register("url")}
@@ -153,6 +142,7 @@ function AddNoteFormControls({
               <span className={labelClass}>{t("severity")}</span>
               <input type="hidden" {...register("severity")} />
               <MenuSelect
+                size="input"
                 ariaLabel={t("severity")}
                 onChange={(value) =>
                   setValue("severity", value as CreateSignalNoteInput["severity"], {

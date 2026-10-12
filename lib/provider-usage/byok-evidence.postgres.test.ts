@@ -1,14 +1,16 @@
 import { randomUUID } from "node:crypto";
 import { makePublicId } from "@/lib/db/public-id";
 import { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
-import { syncUsageEntry } from "@/lib/metering/entry-sync";
-import { maintainMeteringShadow } from "@/lib/metering/maintenance";
+import { canonicalFixture } from "@/lib/metering/canonical-query.test-fixture";
 import { receiptFromEntry } from "@/lib/metering/mapping";
+import { ensureProjectSpendingBudget } from "@/lib/metering/project-budget-bootstrap";
 import { meteringRuntime } from "@/lib/metering/runtime";
+import { reconcileProviderUsage } from "@/lib/provider-usage/reconcile";
 import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { captureByokEvidence, loadByokEvidence, recordByokEvidence } from "./byok-evidence";
+import { loadByokEvidence, recordByokEvidence } from "./byok-evidence";
+import { ownCredentialVersion } from "./credential-version";
 import { createProviderRequestJournal } from "./request-journal";
 import type { ProviderRequestAttribution } from "./tag";
 
@@ -63,14 +65,17 @@ beforeEach(async () => {
   [principal, nextPrincipal] = users.slice(-2) as [string, string];
   projectId = `byok-project-${randomUUID()}`;
   projects.push(projectId);
-  await db.project.create({
-    data: {
-      id: projectId,
-      ownerId: principal,
-      name: "BYOK fixture",
-      domain: `${randomUUID()}.example.com`,
-      publicId: makePublicId("prj"),
-    },
+  await db.$transaction(async (tx) => {
+    await tx.project.create({
+      data: {
+        id: projectId,
+        ownerId: principal,
+        name: "BYOK fixture",
+        domain: `${randomUUID()}.example.com`,
+        publicId: makePublicId("prj"),
+      },
+    });
+    await ensureProjectSpendingBudget(tx, namespace, projectId);
   });
   const connection = await db.providerConnection.create({
     data: {
@@ -79,6 +84,7 @@ beforeEach(async () => {
       kind: "serp",
       status: "connected",
       credentialSource: "own",
+      credentialsEncrypted: "retained-fixture-key",
       publicId: makePublicId("conn"),
     },
   });
@@ -92,6 +98,7 @@ afterEach(() => {
 });
 afterAll(async () => {
   for (const ns of namespaces) {
+    await db.$executeRaw`DELETE FROM metering_paid_attempt_context WHERE namespace=${ns}`;
     await db.$executeRaw`DELETE FROM metering_event WHERE namespace=${ns}`;
     await db.$executeRaw`DELETE FROM metering_measurement WHERE receipt_pk IN (SELECT receipt_pk FROM metering_receipt r JOIN metering_operation o ON o.operation_pk=r.operation_pk WHERE o.namespace=${ns})`;
     for (const table of ["metering_receipt", "metering_command"])
@@ -99,11 +106,12 @@ afterAll(async () => {
         Prisma.sql`DELETE FROM ${Prisma.raw(table)} WHERE operation_pk IN (SELECT operation_pk FROM metering_operation WHERE namespace=${ns})`,
       );
     for (const table of [
-      "metering_shadow",
       "metering_event",
       "metering_alert",
       "metering_budget_usage",
       "metering_budget",
+      "metering_history_reference",
+      "metering_history_import",
       "metering_operation",
       "metering_request_command",
       "metering_request_count",
@@ -130,6 +138,7 @@ function journal(correlationId = randomUUID()) {
     connectionId,
     provider: "dataforseo",
     unit: "cents",
+    credentialVersion: ownCredentialVersion("dataforseo", connectionId, "retained-fixture-key"),
     estimate: { cents: "0.625", units: "1" },
   });
 }
@@ -139,57 +148,10 @@ async function operation(id: string, originalNamespace = namespace) {
 }
 
 describe("immutable BYOK accounting evidence in real Postgres", () => {
-  it("retries prior-month late proof after failed synchronization and project deletion", async () => {
-    const id = randomUUID(),
-      occurredAt = new Date(
-        Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() - 1, 15),
-      );
-    const attribution: ProviderRequestAttribution = {
-      context: {
-        projectId,
-        source: "worker",
-        feature: "rank_check",
-        correlationId: randomUUID(),
-        trigger: "scheduled",
-      },
-      tag: "not-retained",
-    };
-    await db.$transaction((tx) =>
-      captureByokEvidence(
-        tx,
-        {
-          attribution,
-          projectId,
-          connectionId,
-          provider: "dataforseo",
-          unit: "cents",
-          estimate: { cents: "0.625", units: "1" },
-        },
-        id,
-        occurredAt,
-      ),
-    );
-    await db.project.delete({ where: { id: projectId } });
-    await db.$transaction((tx) => recordByokEvidence(tx, id, receipt, null));
-    await db.instanceSetting.update({
-      where: { key: `metering.shadow.project.${projectId}` },
-      data: { value: "off" },
-    });
-    await syncUsageEntry(id);
-    expect(await operation(id)).toBeNull();
-    await db.instanceSetting.update({
-      where: { key: `metering.shadow.project.${projectId}` },
-      data: { value: "on" },
-    });
-    await maintainMeteringShadow();
-    expect((await operation(id))?.receipts.at(-1)).toMatchObject({
-      occurredAt: occurredAt.toISOString(),
-      cost: { money: { units: 6250n } },
-    });
-  });
   it("retries changed proof on an already settled operation and preserves replay identity", async () => {
     const usage = journal(),
       id = await usage.observer.begin();
+    await usage.observer.beforeDispatch?.(id);
     await usage.observer.settle(id, receipt);
     const before = await db.meteringUsageEvidence.findUniqueOrThrow({ where: { id } });
     await usage.observer.settle(id, receipt);
@@ -201,17 +163,17 @@ describe("immutable BYOK accounting evidence in real Postgres", () => {
       where: { key: `metering.shadow.project.${projectId}` },
       data: { value: "off" },
     });
-    await syncUsageEntry(id);
-    expect((await operation(id))?.receipts.at(-1)?.cost.money?.units).toBe(6250n);
+    await reconcileProviderUsage(db);
+    expect((await operation(id))?.receipts.at(-1)?.cost.money?.units).toBe(9000n);
     await db.project.delete({ where: { id: projectId } });
     await db.instanceSetting.update({
       where: { key: `metering.shadow.project.${projectId}` },
       data: { value: "on" },
     });
-    await maintainMeteringShadow();
+    await reconcileProviderUsage();
     expect((await operation(id))?.receipts.at(-1)?.cost.money?.units).toBe(9000n);
     await db.$transaction((tx) => recordByokEvidence(tx, id, receipt, null));
-    await maintainMeteringShadow();
+    await reconcileProviderUsage();
     expect((await operation(id))?.receipts.at(-1)?.cost.money?.units).toBe(6250n);
     expect((await operation(id))?.receipts).toHaveLength(3);
   });
@@ -220,11 +182,12 @@ describe("immutable BYOK accounting evidence in real Postgres", () => {
       id = await usage.observer.begin({ attemptKey: "paid-request-1" });
     const original = await loadByokEvidence(db, id);
     expect((await operation(id))?.state).toBe("dispatch_intended");
+    await usage.observer.beforeDispatch?.(id);
     await db.project.update({ where: { id: projectId }, data: { ownerId: nextPrincipal } });
     vi.stubEnv("METERING_NAMESPACE", "changed-after-dispatch");
     expect(await loadByokEvidence(db, id)).toMatchObject({ ownerId: principal, namespace });
     await db.project.delete({ where: { id: projectId } });
-    expect(await db.providerCostEntry.count({ where: { id } })).toBe(0);
+    expect(await canonicalFixture(db).count({ where: { id } })).toBe(0);
     await usage.observer.settle(id, receipt);
     const evidence = await loadByokEvidence(db, id),
       op = await operation(id);
@@ -243,6 +206,17 @@ describe("immutable BYOK accounting evidence in real Postgres", () => {
     expect(
       JSON.stringify(await db.meteringUsageEvidence.findUnique({ where: { id } })),
     ).not.toContain("business-content");
+    expect(
+      JSON.stringify(op?.receipts, (_key, value) =>
+        typeof value === "bigint" ? value.toString() : value,
+      ),
+    ).not.toContain("business-content");
+    const [retained] = await db.$queryRaw<{ context: Record<string, unknown> }[]>`
+      SELECT context FROM metering_paid_attempt_context WHERE namespace=${namespace} AND operation_id=${id}`;
+    expect(retained?.context).toMatchObject({
+      tag: "business-content-must-not-enter-accounting-evidence",
+      trigger: "manual",
+    });
     await expect(
       db.meteringUsageEvidence.update({ where: { id }, data: { principal: nextPrincipal } }),
     ).rejects.toThrow("immutable");
@@ -250,8 +224,10 @@ describe("immutable BYOK accounting evidence in real Postgres", () => {
   it("retains both native duplicate attempts with one charged canonical proof and zero duplicate", async () => {
     const usage = journal(),
       first = await usage.observer.begin({ attemptKey: "request-1" });
+    await usage.observer.beforeDispatch?.(first);
     await usage.observer.settle(first, receipt);
     const second = await usage.observer.begin({ attemptKey: "request-2" });
+    await usage.observer.beforeDispatch?.(second);
     await usage.observer.settle(second, receipt);
     await usage.observer.settle(first, receipt);
     const rows = await db.meteringUsageEvidence.findMany({
@@ -274,7 +250,8 @@ describe("immutable BYOK accounting evidence in real Postgres", () => {
     });
     expect((await operation(second))?.receipts.at(-1)?.providerRequestId).toBeUndefined();
     expect(usage.costCents).toBe(0.625);
-    expect(await db.providerCostEntry.count({ where: { projectId } })).toBe(1);
+    expect(await canonicalFixture(db).count({ where: { projectId } })).toBe(2);
+    expect(await db.meteringOperation.count({ where: { namespace } })).toBe(2);
   });
   it.each([
     [0.625, null],
@@ -284,6 +261,7 @@ describe("immutable BYOK accounting evidence in real Postgres", () => {
     async (costCents, quantity) => {
       const usage = journal(),
         id = await usage.observer.begin();
+      await usage.observer.beforeDispatch?.(id);
       await usage.observer.settle(id, { ...receipt, costCents, quantity });
       const entry = await loadByokEvidence(db, id);
       expect(entry).not.toBeNull();
@@ -294,14 +272,18 @@ describe("immutable BYOK accounting evidence in real Postgres", () => {
         costCents === null ? "unknown" : "measured",
         quantity === null ? "unknown" : "measured",
       ]);
-      expect((await operation(id))?.receipts.at(-1)?.measurements.map((m) => m.certainty)).toEqual(
-        proof.measurements.map((m) => m.certainty),
-      );
+      expect(
+        (await operation(id))?.receipts
+          .at(-1)
+          ?.measurements.filter((m) => ["cents", "units"].includes(m.unit))
+          .sort((a, b) => a.unit.localeCompare(b.unit))
+          .map((m) => m.certainty),
+      ).toEqual(proof.measurements.map((m) => m.certainty));
     },
   );
   it("refuses historical attribution inference and missing pre-dispatch identity before HTTP", async () => {
     const oldId = randomUUID();
-    await db.providerCostEntry.create({
+    await canonicalFixture(db).create({
       data: {
         id: oldId,
         projectId,

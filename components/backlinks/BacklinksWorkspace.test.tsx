@@ -1,6 +1,7 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { renderWithBacklinksMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { AnalyzeBacklinksAction } from "@/lib/actions/backlinks";
+import sharedMessages from "@/messages/core/en/shared.json";
 import { act, fireEvent, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -397,4 +398,40 @@ describe("BacklinksWorkspace", () => {
       }),
     );
   });
+});
+
+it.each([
+  ["budget_missing", sharedMessages.shared.errors.budgetMissing],
+  [undefined, "Backlinks could not be loaded. Check the target, provider connection, and budget."],
+] as const)(
+  "budget regression: renders backlink failure copy for %s",
+  async (budgetReason, message) => {
+    const analyzeAction = vi.fn().mockResolvedValue({
+      ok: false,
+      reason: "budget_exhausted",
+      ...(budgetReason ? { budgetReason } : {}),
+    });
+    renderWorkspace({
+      analyzeAction: analyzeAction as AnalyzeBacklinksAction,
+      initialTarget: "example.com",
+      initialEstimate: { cached: false, costCents: 5, loading: false, valid: true },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Analyze ~$0.05" }));
+    expect(await screen.findByText(message)).toBeVisible();
+    expect(analyzeAction).toHaveBeenCalledWith(expect.objectContaining({ estimateOnly: false }));
+  },
+);
+
+it("shows a wallet budget denial without a project settings link", async () => {
+  const analyzeAction = vi
+    .fn()
+    .mockResolvedValue({ ok: false, reason: "wallet_budget_exhausted", costCents: 0 });
+  renderWorkspace({
+    analyzeAction,
+    initialTarget: "example.com",
+    initialEstimate: { cached: false, costCents: 5, loading: false, valid: true },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Analyze ~$0.05" }));
+  expect(await screen.findByText("Deployment spending budget is exhausted.")).toBeVisible();
+  expect(screen.queryByRole("link", { name: /raise.*budget/i })).not.toBeInTheDocument();
 });

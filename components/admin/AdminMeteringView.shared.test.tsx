@@ -1,0 +1,129 @@
+import { renderWithInstanceAdminMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import type { MeteringAdminData } from "@/lib/metering/admin-types";
+import { adminUsageFixture } from "@/lib/metering/shared-view-fixtures";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { beforeEach, expect, it, vi } from "vitest";
+import { AdminMeteringView } from "./AdminMeteringView";
+
+it("removes shadow and legacy comparison presentation", () => {
+  render(<AdminMeteringView data={adminUsageFixture()} />);
+  expect(screen.queryByText(/disagreement/i)).not.toBeInTheDocument();
+});
+
+const load = vi.hoisted(() => vi.fn());
+beforeEach(() => {
+  load.mockReset();
+});
+vi.mock("@/lib/actions/metering-admin", () => ({ loadMeteringAdminPageAction: load }));
+it("retries a failed page with its original sealed cursor", async () => {
+  const data = adminUsageFixture();
+  data.usage.nextCursor = "failed-page-cursor";
+  load.mockRejectedValueOnce(new Error("transport failed"));
+  render(<AdminMeteringView data={data} month="2026-10" />);
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+  const retry = await screen.findByRole("button", { name: "Try again" });
+  await waitFor(() => expect(retry).toBeEnabled());
+  load.mockResolvedValueOnce({ data });
+  fireEvent.click(retry);
+  await screen.findByRole("table", { name: "Usage detail" });
+  expect(load).toHaveBeenCalledTimes(2);
+  expect(load.mock.lastCall?.[0]).toMatchObject({ usageCursor: "failed-page-cursor" });
+});
+it("keeps both sealed cursor positions when either list advances or returns to first", async () => {
+  const initial: MeteringAdminData = adminUsageFixture();
+  initial.usage.nextCursor = "usage-2-sealed";
+  initial.exceptions.nextCursor = "exceptions-2-sealed";
+  load.mockImplementation(async () => ({ data: initial }));
+  render(<AdminMeteringView data={initial} month="2026-10" project="p" />);
+  // Paging stays disabled while a page loads, so each click waits for the previous load.
+  const click = async (name: string, index: number) => {
+    await waitFor(() => expect(screen.getAllByRole("button", { name })[index]).toBeEnabled());
+    fireEvent.click(screen.getAllByRole("button", { name })[index]);
+  };
+  await click("Next page", 0);
+  await waitFor(() => expect(load).toHaveBeenCalledTimes(1));
+  await click("Next page", 1);
+  await waitFor(() =>
+    expect(load).toHaveBeenLastCalledWith({
+      month: "2026-10",
+      project: "p",
+      usageCursor: "usage-2-sealed",
+      exceptionCursor: "exceptions-2-sealed",
+    }),
+  );
+  await click("First page", 0);
+  await waitFor(() =>
+    expect(load).toHaveBeenLastCalledWith({
+      month: "2026-10",
+      project: "p",
+      usageCursor: undefined,
+      exceptionCursor: "exceptions-2-sealed",
+    }),
+  );
+  await click("Next page", 0);
+  await click("First page", 1);
+  await waitFor(() =>
+    expect(load).toHaveBeenLastCalledWith({
+      month: "2026-10",
+      project: "p",
+      usageCursor: "usage-2-sealed",
+      exceptionCursor: undefined,
+    }),
+  );
+});
+
+it("distinguishes an empty Store page from unavailable accounting", () => {
+  const data: MeteringAdminData = adminUsageFixture();
+  data.usage = { ...data.usage, state: "empty", rows: [] };
+  const view = render(<AdminMeteringView data={data} />);
+  expect(screen.getByText("No usage in this period.")).toBeInTheDocument();
+  expect(screen.getByText("No exceptions in this period.")).toBeInTheDocument();
+  view.rerender(<AdminMeteringView data={null} />);
+  expect(screen.queryByText("No usage in this period.")).toBeNull();
+  expect(screen.getByRole("status")).toHaveTextContent("unavailable");
+});
+it("shows each exception kind with localized state beside current budgets and historical usage", () => {
+  const data: MeteringAdminData = adminUsageFixture();
+  data.exceptions = {
+    ...data.exceptions,
+    state: "ok",
+    rows: ["pending", "reservation_expired", "lease_expired"].map((kind, i) => ({
+      operationId: `operation-${i}`,
+      kind: kind as "pending" | "reservation_expired" | "lease_expired",
+      state: "pending" as const,
+      source: "app" as const,
+      connection: "conn_example",
+      since: "2026-09-01T00:00:00Z",
+      estimate: [],
+      provider: "dataforseo",
+      operation: "rank_check",
+      principal: "owner",
+      ageSeconds: 120,
+    })),
+  };
+  data.usage.asOf = "2026-09-30T23:59:59Z";
+  render(<AdminMeteringView data={data} month="2026-09" />);
+  for (const text of ["Pending evidence", "Reservation expired", "Lease expired", "100 Units"])
+    expect(screen.getByText(text)).toBeInTheDocument();
+  expect(screen.getByRole("table", { name: "Usage detail" })).toHaveTextContent("$0.12");
+  expect(screen.getAllByText("Pending")).toHaveLength(3);
+  expect(screen.getAllByText("Rank check")).toHaveLength(3);
+});
+it("keeps both tables busy while a page is pending and reports failed pages", async () => {
+  const data: MeteringAdminData = adminUsageFixture();
+  data.usage.nextCursor = "sealed-usage-next";
+  let rejectPage: (reason: Error) => void = () => {};
+  load.mockReturnValue(
+    new Promise((_resolve, reject) => {
+      rejectPage = reject;
+    }),
+  );
+  render(<AdminMeteringView data={data} month="2026-10" />);
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+  for (const table of screen.getAllByRole("table"))
+    expect(table).toHaveAttribute("aria-busy", "true");
+  expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+  await act(async () => rejectPage(new Error("page failed")));
+  expect(screen.getByRole("status")).toHaveTextContent("unavailable");
+  expect(screen.queryByText("page failed")).toBeNull();
+});

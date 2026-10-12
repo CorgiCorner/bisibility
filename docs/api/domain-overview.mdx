@@ -52,7 +52,10 @@ Content-Type: application/json
 ```
 
 History is a separately priced monthly index series for an active Domain
-Overview snapshot. A missing or expired snapshot returns the standard
+Overview snapshot, bounded to the previous six full UTC calendar months.
+The estimate and provider request use the same fixed date window; actual
+provider cost is recorded from its response. A missing or expired snapshot
+returns the standard
 `snapshot_expired` problem response. Use `max_cost_cents: 0` for a cache-only
 attempt.
 

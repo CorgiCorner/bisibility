@@ -18,13 +18,20 @@ const keywordActionImports = [
 const componentScanTimeoutMs = 15_000;
 
 type AliasEntry = { find: string | RegExp; replacement: string };
-type ViteConfigFixture = { resolve?: { alias?: AliasEntry[] | Record<string, string> } };
+type ViteConfigFixture = {
+  resolve?: { alias?: AliasEntry[] | Record<string, string> };
+  plugins?: { name: string; resolveId?: (source: string, importer?: string) => string | null }[];
+};
 
-async function configuredAliases() {
+async function configuredViteConfig() {
   const viteFinal = storybookConfig.viteFinal as unknown as (
     config: ViteConfigFixture,
   ) => Promise<ViteConfigFixture>;
-  const config = await viteFinal({});
+  return viteFinal({});
+}
+
+async function configuredAliases() {
+  const config = await configuredViteConfig();
   const aliases = config.resolve?.alias ?? {};
   if (!Array.isArray(aliases)) return new Map(Object.entries(aliases));
   return new Map(
@@ -95,5 +102,27 @@ describe("Storybook keyword action boundaries", () => {
     for (const actionImport of keywordActionImports) {
       expect(aliases.get(actionImport)).toMatch(/[\\/]\.storybook[\\/]keyword-action-stubs\.ts$/);
     }
+  });
+});
+
+describe("Storybook provider-management action boundary", () => {
+  it("aliases the verified provider context's server actions to readonly browser fixtures", async () => {
+    const aliases = await configuredAliases();
+    expect(aliases.get("@/lib/actions/provider-ui")).toMatch(
+      /[\\/]\.storybook[\\/]browser-runtime-stubs\.tsx$/,
+    );
+  });
+
+  it("intercepts provider actions before traversing their server implementation", async () => {
+    const config = await configuredViteConfig();
+    const plugin = config.plugins?.find(
+      (candidate) => candidate.name === "storybook-runtime-stubs",
+    );
+    expect(
+      plugin?.resolveId?.(
+        "@/lib/actions/provider-ui",
+        join(process.cwd(), "components/provider-management/ProviderUiProvider.tsx"),
+      ),
+    ).toMatch(/[\\/]\.storybook[\\/]browser-runtime-stubs\.tsx$/);
   });
 });

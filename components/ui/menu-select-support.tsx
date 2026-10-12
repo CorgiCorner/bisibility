@@ -6,7 +6,7 @@ import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles"
 import { cn } from "@/lib/ui/cn";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
-import { type ReactNode, useCallback, useId } from "react";
+import { type CSSProperties, type ReactNode, useCallback, useId } from "react";
 
 export type MenuSelectOption = {
   ariaLabel?: string;
@@ -165,7 +165,9 @@ export function MenuSearchField({
             if (event.key === "ArrowDown" || event.key === "ArrowUp") {
               const items = event.currentTarget
                 .closest('[role="menu"], [role="listbox"]')
-                ?.querySelectorAll<HTMLElement>("[data-menu-item]:not([data-disabled])");
+                ?.querySelectorAll<HTMLElement>(
+                  "[data-menu-item]:not([data-disabled]), [data-menu-item][data-disabled-help]",
+                );
               const item = event.key === "ArrowDown" ? items?.[0] : items?.[items.length - 1];
               if (item) {
                 event.preventDefault();
@@ -189,4 +191,40 @@ export function MenuSearchField({
       ) : null}
     </div>
   );
+}
+
+export function resolveMenuSelectPaperStyle({
+  anchorWidth,
+  compact,
+  matchTriggerWidth,
+  menuMaxHeight,
+  menuMinWidth,
+  menuWidth,
+}: {
+  anchorWidth: number;
+  compact: boolean;
+  matchTriggerWidth: boolean;
+  menuMaxHeight?: string;
+  menuMinWidth?: number;
+  menuWidth?: number;
+}): CSSProperties {
+  const minimum = matchTriggerWidth
+    ? anchorWidth
+    : (menuWidth ??
+      menuMinWidth ??
+      Math.max(compact ? 0 : anchorWidth, menuSelectPaperStyle.minWidth));
+  return {
+    ...menuSelectPaperStyle,
+    boxSizing: "border-box",
+    maxWidth: "calc(100vw - 32px)",
+    minWidth: `min(${minimum}px, calc(100vw - 32px))`,
+    width: matchTriggerWidth ? anchorWidth : (menuWidth ?? "max-content"),
+    maxHeight:
+      menuMaxHeight ??
+      (matchTriggerWidth
+        ? "min(360px, calc(100dvh - 84px), var(--radix-popper-available-height))"
+        : "min(360px, calc(100dvh - 84px))"),
+    overflowX: "hidden",
+    overflowY: "auto",
+  };
 }

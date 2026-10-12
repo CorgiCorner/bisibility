@@ -4,6 +4,7 @@ import { FacetBar } from "@/components/feeds/FacetBar";
 import { AddNoteForm } from "@/components/timeline/AddNoteForm";
 import { TimelineEmpty } from "@/components/timeline/TimelineEmpty";
 import { TimelineRow } from "@/components/timeline/TimelineRow";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { filterChipStateClassName } from "@/components/ui/filter-chip-styles";
 import { compactInputTypographyClassName } from "@/components/ui/input-styles";
@@ -221,12 +222,9 @@ export function TimelineFeed({
                 type="search"
               />
             </label>
-            <button
-              className="inline-flex h-[34px] shrink-0 items-center justify-center rounded-control border border-border-control bg-bg-elev px-3 text-[12px] font-semibold text-fg-muted outline-none transition-colors hover:border-accent hover:text-accent-text focus-visible:border-accent focus-visible:text-accent-text"
-              type="submit"
-            >
+            <Button variant="secondary" size="sm" type="submit">
               {t("search")}
-            </button>
+            </Button>
           </form>
           <AddNoteForm canCreate={canCreate} compact projectId={projectId} />
         </div>

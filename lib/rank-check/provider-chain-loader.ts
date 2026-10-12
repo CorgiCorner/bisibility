@@ -35,7 +35,10 @@ async function loadFromDatabase(
   );
   return connections.map((connection) => ({
     costPerCheckCents:
-      connection.credentialSource === "hosted" ? null : connection.costPerCheckCents,
+      connection.credentialSource === "hosted"
+        ? null
+        : (contexts.get(providerRateContextKey(connection.id, "rank_check"))?.manualAmountCents ??
+          null),
     credentialsEncrypted: connection.credentialsEncrypted,
     credentialSource: connection.credentialSource,
     id: connection.id,

@@ -1,9 +1,9 @@
 "use client";
 
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { ArrowRightIcon as ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { ClockCounterClockwiseIcon as History } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
 import { useTranslations } from "next-intl";
 import { KeywordCheckScope } from "./KeywordCheckScope";
@@ -23,33 +23,6 @@ type Props = {
   onSelectTo: (id: string) => void;
   selected: string;
 };
-
-function Segment({
-  active,
-  children,
-  onClick,
-  disabled = false,
-  title,
-}: Readonly<{
-  active: boolean;
-  children: string;
-  onClick: () => void;
-  disabled?: boolean;
-  title?: string;
-}>) {
-  return (
-    <button
-      aria-pressed={active}
-      disabled={disabled}
-      className={`rounded-control px-3 py-1.5 text-[12px] font-medium transition-colors ${active ? "border border-border-control bg-bg-sunken text-fg" : "border border-transparent text-fg-muted hover:text-fg"} disabled:cursor-not-allowed disabled:opacity-45`}
-      onClick={onClick}
-      title={title}
-      type="button"
-    >
-      {children}
-    </button>
-  );
-}
 
 function Eyebrow({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -79,59 +52,82 @@ export function RetrievedResultsHeader(props: Readonly<Props>) {
           ) : null}
           <p className="m-0 mt-2 text-[12.5px] leading-5 text-fg-muted">{t("description")}</p>
         </div>
-        <div className="inline-flex self-start rounded-control border border-border p-0.5">
-          <Segment active={mode === "one"} onClick={() => props.onMode("one")}>
-            {t("oneCheck")}
-          </Segment>
-          <Segment
-            active={mode === "compare"}
-            disabled={!props.compareEnabled}
-            onClick={() => props.onMode("compare")}
-            title={!props.compareEnabled ? t("needTwo") : undefined}
-          >
-            {t("compareTwo")}
-          </Segment>
-        </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-2 px-4 pb-4 sm:px-5">
-        {mode === "compare" ? (
-          <>
-            <Eyebrow>{t("from")}</Eyebrow>
-            <RetrievedResultsPicker
-              ariaLabel={t("earlierCheck")}
-              entries={props.entries}
-              formatDate={props.formatDate}
-              formatDateTime={props.formatDateTime}
-              onChange={props.onSelectFrom}
-              pickerRole="from"
-              selectedTo={props.selected}
-              value={props.compareFrom}
-            />
-            <ArrowRight aria-hidden className="shrink-0 text-fg-muted" size={14} weight="regular" />
-            <Eyebrow>{t("to")}</Eyebrow>
-          </>
-        ) : null}
-        <RetrievedResultsPicker
-          ariaLabel={mode === "compare" ? t("laterCheck") : t("storedChecks")}
-          entries={props.entries}
-          formatDate={props.formatDate}
-          formatDateTime={props.formatDateTime}
-          leadingIcon={
-            mode === "one" ? <History aria-hidden size={14} weight="regular" /> : undefined
-          }
-          onChange={props.onSelectTo}
-          pickerRole={mode === "compare" ? "to" : "one"}
-          selectedFrom={mode === "compare" ? props.compareFrom : undefined}
-          value={props.selected}
+        <SegmentedControl
+          ariaLabel={t("snapshot")}
+          className="self-start"
+          fitContent
+          onChange={props.onMode}
+          options={[
+            { label: t("oneCheck"), value: "one" },
+            {
+              disabled: !props.compareEnabled,
+              label: t("compareTwo"),
+              tooltip: !props.compareEnabled ? t("needTwo") : undefined,
+              value: "compare",
+            },
+          ]}
+          size="toolbar"
+          value={mode}
         />
-        {mode === "one" && props.current?.tier === "full" ? (
-          <span className="rounded-full border border-border px-2.5 py-1 font-sans tabular-nums text-[11px] text-fg-muted">
-            {t("retrieved", {
-              requested: props.current.requestedDepth ? String(props.current.requestedDepth) : "",
-              retrieved: props.current.retrievedPositions,
-            })}
-          </span>
-        ) : null}
+      </div>
+      <div className="px-4 pb-4 sm:px-5">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" data-testid="retrieved-picker-slots">
+          <div className="flex min-h-[34px] min-w-0 items-center gap-2 [&>button]:min-w-0">
+            {mode === "compare" ? (
+              <>
+                <Eyebrow>{t("from")}</Eyebrow>
+                <RetrievedResultsPicker
+                  ariaLabel={t("earlierCheck")}
+                  entries={props.entries}
+                  formatDate={props.formatDate}
+                  formatDateTime={props.formatDateTime}
+                  onChange={props.onSelectFrom}
+                  pickerRole="from"
+                  selectedTo={props.selected}
+                  value={props.compareFrom}
+                />
+              </>
+            ) : (
+              <RetrievedResultsPicker
+                ariaLabel={t("storedChecks")}
+                entries={props.entries}
+                formatDate={props.formatDate}
+                formatDateTime={props.formatDateTime}
+                leadingIcon={<History aria-hidden size={14} weight="regular" />}
+                onChange={props.onSelectTo}
+                pickerRole="one"
+                value={props.selected}
+              />
+            )}
+          </div>
+          <div className="flex min-h-[34px] min-w-0 items-center gap-2 [&>button]:min-w-0">
+            {mode === "compare" ? (
+              <>
+                <Eyebrow>{t("to")}</Eyebrow>
+                <RetrievedResultsPicker
+                  ariaLabel={t("laterCheck")}
+                  entries={props.entries}
+                  formatDate={props.formatDate}
+                  formatDateTime={props.formatDateTime}
+                  onChange={props.onSelectTo}
+                  pickerRole="to"
+                  selectedFrom={props.compareFrom}
+                  value={props.selected}
+                />
+              </>
+            ) : null}
+          </div>
+        </div>
+        <div className="mt-2 flex min-h-7 items-center">
+          {mode === "one" && props.current?.tier === "full" ? (
+            <span className="rounded-full border border-border px-2.5 py-1 font-sans tabular-nums text-[11px] text-fg-muted">
+              {t("retrieved", {
+                requested: props.current.requestedDepth ? String(props.current.requestedDepth) : "",
+                retrieved: props.current.retrievedPositions,
+              })}
+            </span>
+          ) : null}
+        </div>
       </div>
     </header>
   );

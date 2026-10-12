@@ -1,7 +1,9 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import type { KeywordDetailActions } from "@/components/keywords/action-utils";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
+import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 import { runCheckNowSchema } from "@/lib/schemas/keyword";
@@ -35,6 +37,8 @@ export function useKeywordRunChecks(
     rows?: Pick<KeywordRow, "id" | "projectSerpDepth" | "schedule">[];
   } = {},
 ) {
+  const errors = useSharedErrorMessages();
+  const [budgetReason, setBudgetReason] = useState<BudgetDenialReason>();
   const [checkFailed, setCheckFailed] = useState(false);
   const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(() => new Set());
   const [status, setStatus] = useState<RunChecksStatus>({ failed: 0, started: 0, state: "idle" });
@@ -45,12 +49,22 @@ export function useKeywordRunChecks(
     const ids = keywordIds.filter((keywordId) => !pendingIds.has(keywordId));
     if (ids.length === 0) return;
     setCheckFailed(false);
+    setBudgetReason(undefined);
     setPendingIds((previous) => new Set([...previous, ...ids]));
     setStatus({ failed: 0, started: ids.length, state: "running" });
     const results = await Promise.allSettled(
       ids.map((keywordId) =>
         runCheckNowAction(runCheckNowSchema.parse(depth ? { depth, keywordId } : { keywordId })),
       ),
+    );
+    setBudgetReason(
+      results.flatMap((result) =>
+        result.status === "fulfilled" &&
+        isBudgetExhaustedResult(result.value) &&
+        result.value.code !== "budget_exhausted"
+          ? [result.value.code]
+          : [],
+      )[0],
     );
     const failed = results.filter(
       (result) =>
@@ -73,6 +87,11 @@ export function useKeywordRunChecks(
     pendingIds,
     runChecks,
     running,
-    statusLabel: statusLabel(status),
+    statusLabel:
+      budgetReason === "budget_missing"
+        ? errors.budgetMissing()
+        : budgetReason === "usage_reconciliation_required"
+          ? errors.usageReconciliationRequired()
+          : statusLabel(status),
   };
 }

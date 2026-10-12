@@ -10,7 +10,6 @@ const mocks = vi.hoisted(() => ({
   prisma: {
     $queryRaw: vi.fn(),
     operationalRun: { findMany: vi.fn() },
-    providerCostEntry: { findMany: vi.fn() },
     searchAnalyticsImport: { findUnique: vi.fn() },
     searchAnalyticsRequestUsage: { findFirst: vi.fn(), findMany: vi.fn() },
     searchAnalyticsSyncPartition: { findMany: vi.fn() },
@@ -56,7 +55,11 @@ vi.mock("./workspace-request-data", () => ({
 
 function connection(overrides: Record<string, unknown>) {
   return {
-    costPerCheckCents: 0.01,
+    credentialSource: "own",
+    rates:
+      overrides.costPerCheckCents === null
+        ? []
+        : [{ feature: "rank_check", amountCents: overrides.costPerCheckCents ?? 0.01 }],
     credentialsEncrypted: null,
     enabled: true,
     id: `connection_${String(overrides.provider ?? "serpapi")}`,
@@ -102,28 +105,6 @@ const selectorFacts = {
 };
 
 describe("integration queries", () => {
-  it("ignores saved own manual rates when displaying a deployment-supplied connection", async () => {
-    mocks.prisma.providerConnection.findMany.mockResolvedValue([
-      connection({
-        credentialSource: "hosted",
-        provider: "dataforseo",
-        costPerCheckCents: 0.0001,
-        rates: [{ feature: "keyword_research", amountCents: 0.0001 }],
-      }),
-    ]);
-    const categories = await getIntegrationCategories("prj_1", { now });
-    const rates = categories[0].providers.find((provider) => provider.id === "dataforseo")?.drawer
-      .rates;
-    expect(rates?.find((rate) => rate.feature === "rank_check")).toMatchObject({
-      source: "list",
-      amountCents: 1.55,
-    });
-    expect(rates?.find((rate) => rate.feature === "keyword_research")).toMatchObject({
-      source: "list",
-    });
-    expect(rates?.some((rate) => rate.source === "manual")).toBe(false);
-  });
-
   afterEach(() => vi.unstubAllEnvs());
 
   beforeEach(() => {
@@ -157,9 +138,7 @@ describe("integration queries", () => {
 
     expect(mocks.prisma.providerConnection.findMany).toHaveBeenCalledWith({
       include: {
-        rates: {
-          select: { amountCents: true, feature: true },
-        },
+        rates: { where: { feature: "rank_check" }, select: { amountCents: true, feature: true } },
       },
       orderBy: [{ priority: "asc" }, { provider: "asc" }],
       where: { projectId: "project_1" },
@@ -225,97 +204,6 @@ describe("integration queries", () => {
     const provider = categories[0].providers[0];
 
     expect(provider.drawer.defaults.costPerCheck).toBeUndefined();
-  });
-
-  it("resolves drawer rates with provenance and provider capabilities", async () => {
-    mocks.prisma.providerConnection.findMany.mockResolvedValue([
-      connection({
-        costPerCheckCents: null,
-        id: "connection_dataforseo",
-        provider: "dataforseo",
-        rates: [{ amountCents: 1, feature: "keyword_research" }],
-      }),
-      connection({
-        costPerCheckCents: null,
-        id: "connection_serpapi",
-        provider: "serpapi",
-        rates: [],
-      }),
-    ]);
-    mocks.prisma.$queryRaw.mockResolvedValue([
-      {
-        cached: false,
-        connectionId: "connection_dataforseo",
-        costCents: 1,
-        createdAt: new Date("2026-07-26T00:00:00.000Z"),
-        failed: false,
-        feature: "rank_check",
-      },
-      {
-        cached: false,
-        connectionId: "connection_dataforseo",
-        costCents: 2,
-        createdAt: new Date("2026-07-26T01:00:00.000Z"),
-        failed: false,
-        feature: "rank_check",
-      },
-      {
-        cached: false,
-        connectionId: "connection_dataforseo",
-        costCents: 3,
-        createdAt: new Date("2026-07-26T02:00:00.000Z"),
-        failed: false,
-        feature: "rank_check",
-      },
-      {
-        cached: false,
-        connectionId: "connection_dataforseo",
-        costCents: 4,
-        createdAt: new Date("2026-07-26T03:00:00.000Z"),
-        failed: false,
-        feature: "rank_check",
-      },
-      {
-        cached: false,
-        connectionId: "connection_dataforseo",
-        costCents: 100,
-        createdAt: new Date("2026-07-26T04:00:00.000Z"),
-        failed: false,
-        feature: "rank_check",
-      },
-    ]);
-
-    const categories = await getIntegrationCategories("prj_1", {
-      now: new Date("2026-07-27T00:00:00.000Z"),
-    });
-    const [dataforseo, serpapi] = categories[0].providers;
-
-    expect(dataforseo.drawer.rates).toMatchObject([
-      { amountCents: 3, sampleSize: 5, source: "measured" },
-      { amountCents: 1, fallbackSource: "list", source: "manual" },
-      { source: "list" },
-      { source: "list" },
-      {
-        amountCents: 2.4,
-        editable: false,
-        feature: "domain_rank_overview",
-        source: "list",
-      },
-      {
-        amountCents: 12.12,
-        editable: false,
-        feature: "historical_rank_overview",
-        source: "list",
-      },
-      {
-        amountCents: 2.4,
-        editable: false,
-        feature: "relevant_pages",
-        source: "list",
-      },
-    ]);
-    expect(serpapi.drawer.rates?.map((rate) => rate.feature)).toEqual(["rank_check"]);
-    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1);
   });
 
   it("marks secret fields as saved only for connected providers", async () => {

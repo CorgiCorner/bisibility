@@ -17,10 +17,6 @@ import {
 } from "@/lib/providers/registry";
 import type { ProviderKind } from "@/lib/providers/types";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
-import {
-  aggregateObservedUsageForProvider,
-  type ObservedProviderCheckCost,
-} from "@/lib/rank-check/observed-usage";
 import { primaryProviderConnection } from "@/lib/rank-check/provider-chain-order";
 import type { SerpDepth } from "@/lib/serp/constants";
 import type {
@@ -52,13 +48,18 @@ type ProviderConnectionSummary = {
 
 function providerDetail(
   connection: ProviderConnectionSummary,
-  checks: readonly ObservedProviderCheckCost[],
+  _checks: readonly { provider: string; costCents?: unknown }[],
+  sourceUsage: readonly ConnectionSourceUsageInput[] = [],
 ) {
   if (connection.kind !== "serp") return "Connected data source";
-  const observedCost = aggregateObservedUsageForProvider(
-    checks,
-    connection.provider,
-  ).averageCostCents;
+  const rows = sourceUsage.filter(
+    (row) => row.connectionId === connection.id && row.feature === "rank_check",
+  );
+  const count = rows.reduce((sum, row) => sum + row.count, 0);
+  const observedCost =
+    count && !rows.some((row) => row.unrecordedCount > 0)
+      ? rows.reduce((sum, row) => sum + row.costCents, 0) / count
+      : null;
   return observedCost !== null && observedCost > 0
     ? `SERP rank data - $${centsToDollars(observedCost).toFixed(4)} / check`
     : "SERP rank data - Provider-billed";
@@ -66,13 +67,14 @@ function providerDetail(
 
 export function settingsProviderSummaries(
   connections: readonly ProviderConnectionSummary[],
-  checks: readonly ObservedProviderCheckCost[],
+  checks: readonly { provider: string; costCents?: unknown }[],
+  sourceUsage: readonly ConnectionSourceUsageInput[] = [],
 ): SettingsProviderSummary[] {
   return connections.map((connection) => {
     const provider = PROVIDER_CATALOG.find((entry) => entry.id === connection.provider);
     const primary = primaryProviderConnection(connections, connection.kind);
     return {
-      detail: providerDetail(connection, checks),
+      detail: providerDetail(connection, checks, sourceUsage),
       icon: providerIcon(connection.provider, connection.kind),
       logoDomain: provider?.logoDomain,
       name: provider?.label ?? connection.provider,
@@ -84,7 +86,8 @@ export function settingsProviderSummaries(
 }
 
 type ConnectionUsageInput = {
-  costPerCheckCents: number | { toString(): string } | null;
+  /** Optional compatibility projection from provider_connection_rates, never a stored column. */
+  costPerCheckCents?: unknown;
   enabled: boolean;
   id: string;
   publicId: string | null;
@@ -111,9 +114,11 @@ type ConnectionSourceUsageInput = {
   unrecordedCount: number;
 };
 
-type RecordedProviderCheckCost = ObservedProviderCheckCost & {
-  estimatedCostCents: number | { toString(): string } | null | undefined;
+type RecordedProviderCheckCost = {
+  provider: string;
   status: string;
+  costCents?: unknown;
+  estimatedCostCents?: unknown;
 };
 
 function requiredConnectionPublicId(value: string | null) {
@@ -146,7 +151,8 @@ function connectionCostPerCheck(
   const rateCents = estimatedRankCheckCostCents(
     connection.provider,
     serpDepth,
-    connection.costPerCheckCents,
+    rateContexts.get(providerRateContextKey(connection.id, "rank_check"))?.manualAmountCents ??
+      connection.costPerCheckCents,
     rateContexts.get(providerRateContextKey(connection.id, "rank_check")) ??
       LIST_PROVIDER_RATE_CONTEXT,
   );
@@ -252,17 +258,19 @@ export function settingsConnectionUsage(
   return connections
     .filter((connection) => connection.kind === "serp")
     .map((connection) => {
-      const observed = aggregateObservedUsageForProvider(checks, connection.provider);
+      const rows = sourceUsage.filter(
+        (row) => row.connectionId === connection.id && row.feature === "rank_check",
+      );
+      const count = rows.reduce((sum, row) => sum + row.count, 0);
+      const averageCostCents =
+        count && !rows.some((row) => row.unrecordedCount > 0)
+          ? rows.reduce((sum, row) => sum + row.costCents, 0) / count
+          : null;
       const availableAtProvider = availability.get(connection.id);
       return {
         ...(availableAtProvider == null ? {} : { availableAtProvider }),
         connectionId: requiredConnectionPublicId(connection.publicId),
-        costPerCheck: connectionCostPerCheck(
-          connection,
-          observed.averageCostCents,
-          serpDepth,
-          rateContexts,
-        ),
+        costPerCheck: connectionCostPerCheck(connection, averageCostCents, serpDepth, rateContexts),
         features: connectionFeatures(connection, checks, primaryConnectionId, sourceUsage),
         primary: connection.id === primaryConnectionId,
         provider:

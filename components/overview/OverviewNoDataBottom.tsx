@@ -88,7 +88,7 @@ export function ViewAllKeywordsButton({ projectRef }: Readonly<{ projectRef: str
         "--control-hover-color": "var(--accent-text)",
         gap: "7px",
       }}
-      variant="secondary"
+      variant="outline"
     >
       {t("viewAllKeywords")}
     </Button>

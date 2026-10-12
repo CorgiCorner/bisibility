@@ -1,5 +1,6 @@
 "use client";
 
+import { IconButton } from "@/components/ui/IconButton";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { cn } from "@/lib/ui/cn";
 import { CaretLeftIcon as CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
@@ -69,24 +70,28 @@ export function DataTableFooter({
             {t("pageRange", { end, start, total: rowCount })}
           </span>
           <div className="flex gap-1">
-            <button
+            <IconButton
+              variant="outline"
+              size="small"
               aria-label={t("previousPage")}
-              className="grid size-[30px] place-items-center rounded-full border border-border-control bg-transparent text-fg hover:bg-bg-sunken disabled:cursor-not-allowed disabled:text-fg-muted disabled:hover:bg-transparent"
+              className="size-7.5 min-h-7.5 p-0"
               disabled={page <= 1 || !onPaginationChange}
               onClick={() => onPaginationChange?.({ page: page - 1, pageSize })}
               type="button"
             >
               <CaretLeft aria-hidden size={12} weight="regular" />
-            </button>
-            <button
+            </IconButton>
+            <IconButton
+              variant="outline"
+              size="small"
               aria-label={t("nextPage")}
-              className="grid size-[30px] place-items-center rounded-full border border-border-control bg-transparent text-fg hover:bg-bg-sunken disabled:cursor-not-allowed disabled:text-fg-muted disabled:hover:bg-transparent"
+              className="size-7.5 min-h-7.5 p-0"
               disabled={page >= pageCount || !onPaginationChange}
               onClick={() => onPaginationChange?.({ page: page + 1, pageSize })}
               type="button"
             >
               <CaretRight aria-hidden size={12} weight="regular" />
-            </button>
+            </IconButton>
           </div>
         </div>
       ) : null}

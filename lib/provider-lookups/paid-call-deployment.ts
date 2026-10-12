@@ -1,11 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import {
-  beginHostedExecution,
-  type HostedMeteringObservation,
-  recordHostedExecution,
-} from "@/lib/metering/hosted-sync";
+import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { ProviderCredential } from "@/lib/provider-usage/surface";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import { chargedProviderCostCents, ProviderCallError } from "@/lib/providers/call-error";
@@ -44,6 +40,8 @@ export async function runDeploymentPaidCall<T extends { costCents: number }>(inp
   estimatedCostCents: number;
   estimatedQuantity: number;
   provider: string;
+  maxCostCents?: number;
+  costLimit?: RequestCostLimit;
 }): Promise<T> {
   const operationKey = randomUUID();
   const execution = await startDeploymentExecution({
@@ -54,28 +52,14 @@ export async function runDeploymentPaidCall<T extends { costCents: number }>(inp
     estimatedQuantity: deploymentEstimate(input.estimatedQuantity, 6),
     operationKey,
     provider: input.provider,
+    maxCostCents: input.maxCostCents,
+    costLimit: input.costLimit,
   });
   if (execution == null) {
     throw new ProviderUsagePersistenceError({
       cause: new Error("Deployment execution unavailable."),
     });
   }
-  const observation: HostedMeteringObservation = {
-    operationKey,
-    projectId: input.attribution.context.projectId,
-    connectionId: input.connectionId,
-    provider: input.provider,
-    feature: input.attribution.context.feature,
-    source: input.attribution.context.source,
-    credential: input.credential,
-    correlationId: input.attribution.context.correlationId,
-  };
-  // Shadow observation only; the hosted credit ledger remains authoritative.
-  await beginHostedExecution(observation, {
-    cents: deploymentEstimate(input.estimatedCostCents, 4),
-    units: deploymentEstimate(input.estimatedQuantity, 6),
-  });
-  let providerFailed = false;
   try {
     const gate = await consumeProviderLimit(input.provider, execution.credentials, {
       projectId: input.attribution.context.projectId,
@@ -87,7 +71,6 @@ export async function runDeploymentPaidCall<T extends { costCents: number }>(inp
     try {
       result = await input.call(execution.credentials, input.attribution);
     } catch (error) {
-      providerFailed = true;
       if (error instanceof ProviderUsagePersistenceError) throw error;
       const measured = execution.costCents;
       if (execution.started && measured === null)
@@ -113,12 +96,5 @@ export async function runDeploymentPaidCall<T extends { costCents: number }>(inp
     return { ...result, costCents: execution.costCents };
   } finally {
     await execution.finish();
-    if (execution.started) {
-      await recordHostedExecution(observation, {
-        costCents: execution.costCents,
-        usageQuantity: execution.quantity,
-        failed: providerFailed,
-      });
-    }
   }
 }

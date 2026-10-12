@@ -62,7 +62,7 @@ async function clickProviderContinue(page: Page, nextUrl: RegExp) {
 }
 
 export async function testAndSaveDataForSeo(page: Page) {
-  const status = page.getByRole("status");
+  const status = page.locator("#onboarding-step-form").getByRole("status");
   for (let attempt = 0; attempt < 2; attempt += 1) {
     await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
     await page.getByLabel("API login").fill("fake-login");
@@ -83,7 +83,7 @@ export async function testAndSaveDataForSeo(page: Page) {
   const saveButton = page.getByRole("button", { name: "Save connection", exact: true });
   await expect(saveButton).toBeEnabled();
   await saveButton.click();
-  await expect(page.getByRole("status")).toContainText("DataForSEO connected", {
+  await expect(status).toContainText("DataForSEO connected", {
     timeout: 15000,
   });
   await expect(page.getByRole("button", { name: "Continue", exact: true })).toBeEnabled();

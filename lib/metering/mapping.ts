@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { surfaceOf } from "@/lib/provider-usage/surface";
 import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
-import type { Budget, Measurement, Quantity, Receipt, ReserveInput } from "@usagekit/core";
+import type { Measurement, Quantity, Receipt, ReserveInput } from "@usagekit/core";
 
 export type UsageEntry = {
   namespace?: string;
@@ -153,35 +153,4 @@ export function receiptFromEntry(entry: UsageEntry, now: Date): Receipt {
     ...(entry.providerRequestId ? { providerRequestId: entry.providerRequestId } : {}),
     evidenceRef: entry.id,
   };
-}
-export function allocationBudgets(
-  namespace: string,
-  connection: {
-    id: string;
-    unit: "cents" | "units" | "customer_cents";
-    app: string | null;
-    programmatic: string | null;
-    allocationTag?: string;
-  },
-  version: number,
-): Budget[] {
-  return (["app", "programmatic"] as const).map((surface) => ({
-    id: `${connection.allocationTag ? "own-connection" : "connection"}:${connection.id}:${surface}`,
-    version,
-    scope: connection.allocationTag
-      ? { kind: "tag", namespace, tag: connection.allocationTag }
-      : { kind: "connection", namespace, connection: connection.id },
-    surface,
-    unit: connection.unit,
-    limit:
-      connection[surface] === null
-        ? null
-        : decimalQuantity(
-            connection[surface],
-            connection.unit,
-            connection.unit === "units" ? 6 : 4,
-          ),
-    window: { kind: "calendar_month", timezone: "UTC" },
-    onExceed: "allow",
-  }));
 }

@@ -23,10 +23,10 @@
     border: var(--control-border, 1px solid var(--button-border));
     border-color: var(--control-border-color, var(--button-border));
     transition:
-      background-color 0.16s ease,
-      border-color 0.16s ease,
-      color 0.16s ease,
-      transform var(--motion-press) ease;
+      background-color var(--motion-press) var(--ease-out),
+      border-color var(--motion-press) var(--ease-out),
+      color var(--motion-press) var(--ease-out),
+      transform var(--motion-press) var(--ease-out);
   }
   .primary {
     --button-bg: var(--accent-solid);
@@ -36,17 +36,23 @@
     --button-hover-border: var(--accent-solid-hover);
   }
   .secondary {
+    --button-bg: var(--button-secondary-bg);
+    --button-fg: var(--fg);
+    --button-border: transparent;
+    --button-hover-bg: var(--button-secondary-hover-bg);
+  }
+  .outline {
     --button-bg: var(--bg-elev);
     --button-fg: var(--fg);
     --button-border: var(--border-control);
-    --button-hover-bg: var(--bg-sunken);
+    --button-hover-bg: var(--button-secondary-hover-bg);
   }
   .ghost {
     border: var(--control-border, none);
     --button-bg: transparent;
-    --button-fg: var(--fg-muted);
+    --button-fg: var(--fg);
     --button-border: transparent;
-    --button-hover-bg: var(--bg-sunken);
+    --button-hover-bg: var(--button-secondary-bg);
     --button-hover-fg: var(--fg);
   }
   .destructive {
@@ -105,11 +111,11 @@
   .root[aria-disabled="true"] {
     cursor: default;
     pointer-events: none;
-    background-color: var(--control-disabled-background-color, var(--bg-sunken));
-    color: var(--control-disabled-color, var(--fg-muted));
-    border: var(--control-disabled-border, 1px solid var(--border-control));
-    border-color: var(--control-disabled-border-color, var(--border-control));
-    opacity: var(--control-disabled-opacity, 1);
+    background-color: var(--control-disabled-background-color, var(--button-bg));
+    color: var(--control-disabled-color, var(--button-fg));
+    border: var(--control-disabled-border, 1px solid var(--button-border));
+    border-color: var(--control-disabled-border-color, var(--button-border));
+    opacity: var(--control-disabled-opacity, 0.5);
   }
   .root[data-loading="true"] {
     background-color: var(--button-bg);
@@ -145,7 +151,7 @@
     );
   }
   .ghost {
-    --button-focus-bg: var(--bg-sunken);
+    --button-focus-bg: var(--button-secondary-bg);
     --button-focus-fg: var(--fg);
   }
   .root:hover:not(:disabled):not([aria-disabled="true"]) {

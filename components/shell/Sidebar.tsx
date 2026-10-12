@@ -13,6 +13,7 @@ import { navContextFromPathname, navItems } from "@/lib/nav/nav-items";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
 import { appPath } from "@/lib/routing/app-path";
 import type { ExperimentalModuleKey } from "@/lib/settings/experimental-modules";
+import { cn } from "@/lib/ui/cn";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -69,7 +70,7 @@ export function Sidebar({
     <aside
       data-collapsed={collapsed ? "true" : "false"}
       className={[
-        "sticky top-0 z-50 hidden h-dvh min-h-dvh flex-col overflow-hidden border-r border-border bg-bg-elev lg:flex",
+        "sticky top-0 z-50 hidden h-dvh min-h-dvh flex-col overflow-hidden border-r border-border bg-bg-sidebar lg:flex",
         // Collapsed drops the horizontal padding entirely: the 22px row margin, not the rail
         // padding, is what positions the tile column.
         collapsed ? "px-0 py-3.5" : "p-3.5",
@@ -115,7 +116,13 @@ export function Sidebar({
       {/* The nav region is the only part of the column allowed to give: on a short viewport it
           scrolls and everything around it keeps its size, so the brand, the switcher and the
           version line stay where the user reaches for them. */}
-      <nav className="mt-4 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]">
+      <nav
+        className={cn(
+          "mt-4 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]",
+          // The scrollbar sits on the column edge; the padding moves inside the scroll area.
+          !collapsed && "-mr-3.5 pr-3.5",
+        )}
+      >
         {showGettingStarted ? (
           <div className="flex flex-col gap-0.5">
             <GettingStartedNavLink

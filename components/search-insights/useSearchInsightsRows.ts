@@ -13,7 +13,7 @@ import {
 } from "@/lib/search-insights/queries/top-rows-sort";
 import { actionErrorMessage } from "@/lib/ui/action-error";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   nextSort,
   type PageRowsState,
@@ -104,6 +104,14 @@ export function useSearchInsightsRows({
   // A newer read owns its table: an old page cannot replace a newer one or clear its spinner.
   const latestRequest = useRef<Record<SearchInsightsRowKind, number>>({ pages: 0, queries: 0 });
   const searchTimers = useRef<Partial<Record<SearchInsightsRowKind, number>>>({});
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      for (const timer of Object.values(searchTimers.current)) window.clearTimeout(timer);
+    };
+  }, []);
 
   function beginRequest(kind: SearchInsightsRowKind) {
     latestRequest.current[kind] += 1;
@@ -111,7 +119,7 @@ export function useSearchInsightsRows({
   }
 
   function isLatestRequest(kind: SearchInsightsRowKind, revision: number) {
-    return latestRequest.current[kind] === revision;
+    return mounted.current && latestRequest.current[kind] === revision;
   }
 
   // Another window or property arrives as a new view through a soft navigation, which keeps
@@ -130,6 +138,7 @@ export function useSearchInsightsRows({
    * answered page, size and order back and keeps the typed search.
    */
   async function load(kind: SearchInsightsRowKind, query: RowsQuery, previous: RowsQuery) {
+    if (!mounted.current) return;
     const revision = beginRequest(kind);
     setLoading((current) => ({ ...current, [kind]: true }));
     try {
@@ -143,6 +152,7 @@ export function useSearchInsightsRows({
         search: query.search.trim() || undefined,
         sort: query.sort,
       });
+      if (!isLatestRequest(kind, revision)) return;
       setSnapshot((current) => {
         if (!isLatestRequest(kind, revision)) return current;
         // A window switch while the page was in flight wins: that page answers the old one.
@@ -158,9 +168,11 @@ export function useSearchInsightsRows({
       );
       showToast(actionErrorMessage(error, t("rowsFailed")), { severity: "error" });
     } finally {
-      setLoading((current) =>
-        isLatestRequest(kind, revision) ? { ...current, [kind]: false } : current,
-      );
+      if (isLatestRequest(kind, revision)) {
+        setLoading((current) =>
+          isLatestRequest(kind, revision) ? { ...current, [kind]: false } : current,
+        );
+      }
     }
   }
 

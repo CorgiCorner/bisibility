@@ -1,3 +1,5 @@
+vi.mock("@/lib/metering/store/budgets", () => ({ currentBudgets: async () => [] }));
+
 import type { PlanTrackingRunInput, SamplePlan } from "@/lib/ai-tracking/contract";
 import { samplePlan } from "@/lib/ai-tracking/execution/fixture";
 import { beforeEach, expect, it, vi } from "vitest";
@@ -25,6 +27,7 @@ vi.mock("@/lib/providers/crypto", () => ({
 }));
 vi.mock("@/lib/provider-usage/credential-version", () => ({
   ownCredentialVersion: () => "credential-version",
+  ownAllocationTag: () => "fixture-tag",
 }));
 vi.mock("@/lib/provider-lookups/paid-call-budget", () => ({ preflightProviderBudget: vi.fn() }));
 vi.mock("@/lib/ai-tracking/admission/pricing", () => ({

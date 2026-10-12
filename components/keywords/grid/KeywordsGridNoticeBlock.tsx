@@ -2,28 +2,15 @@
 import { AlertBanner } from "@/components/ui/AlertBanner";
 import type { MarketScope } from "@/lib/markets/market-scope";
 import type { KeywordCheckState } from "@/lib/queries/keyword-row";
-import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
 import { useTranslations } from "next-intl";
 import { KeywordsGridNotices } from "./KeywordsGridNotices";
 import type { KeywordsGridProps } from "./keywords-grid-types";
 import { MarketRunSliceStatus } from "./MarketRunSliceStatus";
 
-type Props = Pick<
-  KeywordsGridProps,
-  | "canManageProviders"
-  | "canUpdateKeyword"
-  | "deepLinkRunId"
-  | "checkHealth"
-  | "getFirstCheckRunPlanAction"
-  | "providerConnected"
-  | "projectId"
-  | "queueFirstChecksAction"
-  | "runCheckNowAction"
-> & {
+type Props = Pick<KeywordsGridProps, "deepLinkRunId" | "checkHealth" | "projectId"> & {
   emptyRankCheckStates: KeywordCheckState[];
   marketScope?: MarketScope | null;
-  rows: KeywordRow[];
 };
 export function KeywordsGridNoticeBlock(props: Props) {
   const t = useTranslations("projectRankTracker.keywordImport.management.grid");
@@ -36,8 +23,6 @@ export function KeywordsGridNoticeBlock(props: Props) {
         action={{ href: appPath(props.projectId, "markets"), label: t("manageMarkets") }}
       />
     );
-  const firstPendingKeywordId =
-    props.rows.find((row) => row.checkState === "never_checked")?.id ?? null;
   return (
     <>
       {props.marketScope && props.deepLinkRunId ? (
@@ -48,16 +33,9 @@ export function KeywordsGridNoticeBlock(props: Props) {
         />
       ) : null}
       <KeywordsGridNotices
-        canManageProviders={props.canManageProviders}
         checkHealth={props.checkHealth}
         checkStates={props.emptyRankCheckStates}
-        firstPendingKeywordId={firstPendingKeywordId}
-        getFirstCheckRunPlanAction={props.getFirstCheckRunPlanAction}
-        providerConnected={props.providerConnected}
         projectId={props.projectId}
-        queueFirstChecksAction={props.queueFirstChecksAction}
-        runCheckNowAction={props.canUpdateKeyword ? props.runCheckNowAction : undefined}
-        rowCount={props.rows.length}
       />
     </>
   );

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { receiptOperationId } from "@/lib/metering/operation-reference";
 import type { CostReceipt } from "../ai-tracking/contract";
 import { samplePlan } from "../ai-tracking/execution/fixture";
 import type { ExecutableSample, TrackingExecutionPorts } from "../ai-tracking/execution/ports";
@@ -57,7 +58,7 @@ export function trackingTemporalFixture() {
       };
     },
     settle: async (_plan, receipt) => {
-      receipts.set(receipt.providerCostEntryId ?? "missing", receipt);
+      receipts.set(receiptOperationId(receipt) ?? "missing", receipt);
     },
     persist: async () => {
       row.dispatch = "terminal";

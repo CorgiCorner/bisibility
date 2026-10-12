@@ -4,7 +4,8 @@ import {
   keywordResearchRate,
   type KeywordResearchSource as RateSource,
 } from "@/lib/cost-estimate/provider-rates";
-import { ProviderLookupSignal, requiredEstimatedCostCents } from "@/lib/provider-lookups/paid-call";
+import { requiredConnectionEstimate } from "@/lib/provider-lookups/connection-estimate";
+import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import type { ProviderRateContext } from "@/lib/provider-rates/connection-context";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type { ProviderCredentials, ResearchPage } from "@/lib/providers/types";
@@ -36,14 +37,16 @@ function sourceRate(selected: ResearchSelection, source: KeywordResearchSource) 
   return keywordResearchRate(selected.provider.id, sourceConfig(source).rate as RateSource);
 }
 
-export function sourceEstimate(input: {
+export async function sourceEstimate(input: {
   context: ProviderRateContext;
   includeClickstream: boolean;
   limit: number;
   selected: ResearchSelection;
   source: KeywordResearchSource;
 }) {
-  return requiredEstimatedCostCents({
+  return requiredConnectionEstimate({
+    connection: input.selected.connection,
+    feature: "keyword_research",
     context: input.context,
     includeClickstream: input.includeClickstream,
     itemCount: input.limit,
@@ -54,11 +57,11 @@ export function sourceEstimate(input: {
 
 export async function callResearchSource(input: {
   /** Cap from the already-loaded research project row; skips the budget-gate cap query. */
-  budgetCapCents?: number;
   includeClickstream: boolean;
   limit: number;
   location: Awaited<ReturnType<typeof researchLocation>>["value"];
   origin: ProviderRequestOrigin;
+  maxCostCents?: number;
   projectId: string;
   rateContext: ProviderRateContext;
   seed: string;
@@ -94,6 +97,7 @@ export async function callResearchSource(input: {
     includeClickstream: input.includeClickstream,
     itemCount: input.limit,
     projectId: input.projectId,
+    maxCostCents: input.maxCostCents,
     provider: input.selected.provider,
     rateContext: input.rateContext,
     rate: sourceRate(input.selected, input.source),

@@ -14,6 +14,16 @@ function renderDashboard(children: ReactNode) {
 }
 
 describe("data source status", () => {
+  it("shows unknown provider cost without formatting it as zero", () => {
+    renderDashboard(
+      createElement(DataSourcePanel, {
+        health: { ...overviewFixture.dataSource, providerCostCents: null },
+      }),
+    );
+    expect(screen.getByText("Unknown")).toBeVisible();
+    expect(screen.queryByText("$0.00")).not.toBeInTheDocument();
+  });
+
   it("maps semantic provider states to visual tones", () => {
     expect(dataSourceStatusColor("healthy")).toBe("var(--green)");
     expect(dataSourceStatusColor("notConnected")).toBe("var(--fg-muted)");

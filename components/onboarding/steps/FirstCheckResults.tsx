@@ -1,5 +1,6 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { feedbackClass } from "@/components/onboarding/onboarding-form-utils";
 import { Button } from "@/components/ui/Button";
 import { SEND_UNCONFIRMED_REASON } from "@/lib/rank-check/runs/contract";
@@ -91,6 +92,8 @@ function terminalResultText(
 function resultText(
   t: ReturnType<typeof useTranslations<"onboarding.firstCheck">>,
   row: FirstCheckResultRow,
+  budgetMissing: string,
+  unresolvedUsage: string,
 ) {
   switch (row.status) {
     case "ready":
@@ -116,6 +119,10 @@ function resultText(
     case "failed":
       if ("blockedReason" in row) return terminalResultText(t, row);
       switch (row.code) {
+        case "usage_reconciliation_required":
+          return unresolvedUsage;
+        case "budget_missing":
+          return budgetMissing;
         case "budget_exhausted":
           return t("results.failure.budgetExhausted");
         case "no_provider":
@@ -176,6 +183,7 @@ function resultsNote(
 }
 
 export function FirstCheckResults({ onRetryFailed, state }: Readonly<FirstCheckResultsProps>) {
+  const sharedErrors = useSharedErrorMessages();
   const t = useTranslations("onboarding.firstCheck");
   if (state.rows.length === 0 && !state.message) return null;
   const hasFailed = state.rows.some((row) => row.status === "failed");
@@ -219,7 +227,14 @@ export function FirstCheckResults({ onRetryFailed, state }: Readonly<FirstCheckR
                   }`}
                 >
                   <ResultIcon row={row} />
-                  <span className="truncate">{resultText(t, row)}</span>
+                  <span className="truncate">
+                    {resultText(
+                      t,
+                      row,
+                      sharedErrors.budgetMissing(),
+                      sharedErrors.usageReconciliationRequired(),
+                    )}
+                  </span>
                 </span>
               </div>
             </div>

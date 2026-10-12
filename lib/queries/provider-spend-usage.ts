@@ -1,6 +1,9 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
+import { Prisma } from "@/lib/generated/prisma/client";
+import { canonicalUsageSql } from "@/lib/metering/usage-sql";
+import { monthUtcRange } from "@/lib/metering/utc-window";
 import {
   aggregateConnectionUsage,
   type UsageCredentialSource,
@@ -8,7 +11,6 @@ import {
 import { PROVIDER_REQUEST_SOURCES, type ProviderRequestSource } from "@/lib/provider-usage/tag";
 import type { ProviderAllocationUnit } from "@/lib/providers/allocation-catalog";
 import type { ProviderCatalogEntry } from "@/lib/providers/types";
-import { monthUtcRange } from "@/lib/rank-check/budget";
 
 type ConnectionUsage = Awaited<ReturnType<typeof aggregateConnectionUsage>>;
 
@@ -43,95 +45,29 @@ export type ProviderCostSourceUsage = {
   unrecordedCount: number;
 };
 
-function groupKey(row: {
-  connectionId: string;
-  feature: string;
-  source: string | null;
-  trigger: string | null;
-}) {
-  return [row.connectionId, row.feature, row.source, row.trigger].join("\u0000");
-}
-
-function mergeSourceUsage(
-  confirmed: readonly {
-    _count: { _all: number };
-    _sum: { costCents: unknown; usageQuantity: unknown };
-    connectionId: string;
-    feature: string;
-    source: string | null;
-    trigger: string | null;
-  }[],
-  unrecorded: readonly {
-    _count: { _all: number };
-    connectionId: string;
-    feature: string;
-    source: string | null;
-    trigger: string | null;
-  }[],
-  unmeasured: readonly {
-    _count: { _all: number };
-    connectionId: string;
-    feature: string;
-    source: string | null;
-    trigger: string | null;
-  }[],
-): ProviderCostSourceUsage[] {
-  const unrecordedByKey = new Map<string, number>(
-    unrecorded.map((row) => [groupKey(row), row._count._all]),
-  );
-  const unmeasuredByKey = new Map<string, number>(
-    unmeasured.map((row) => [groupKey(row), row._count._all]),
-  );
-  const confirmedKeys = new Set(confirmed.map(groupKey));
-  const pendingOnly = unrecorded
-    .filter((row) => !confirmedKeys.has(groupKey(row)))
-    .map((row) => ({
-      ...row,
-      _count: { _all: 0 },
-      _sum: { costCents: 0, usageQuantity: null },
-    }));
-  return [...confirmed, ...pendingOnly].map((row) => {
-    const key = groupKey(row);
-    return {
-      connectionId: row.connectionId,
-      count: row._count._all,
-      costCents: Number(row._sum.costCents ?? 0),
-      feature: row.feature,
-      quantity: row._sum.usageQuantity == null ? null : Number(row._sum.usageQuantity),
-      scheduled: row.trigger === "scheduled" ? row._count._all : 0,
-      source: normalizedSource(row.source),
-      unmeasuredCount: unmeasuredByKey.get(key) ?? 0,
-      unrecordedCount: unrecordedByKey.get(key) ?? 0,
-    };
-  });
-}
-
-/** One month of provider cost rows bucketed by connection, feature, source and trigger. */
+/** Counts paid operations once and groups only their effective Store receipts. */
 export async function providerCostBySource(
   projectId: string,
   now = new Date(),
 ): Promise<ProviderCostSourceUsage[]> {
-  const by = ["connectionId", "feature", "source", "trigger"] as const;
-  const where = { cached: false, createdAt: monthUtcRange(now), projectId };
-  const [confirmed, unrecorded, unmeasured] = await Promise.all([
-    prisma.providerCostEntry.groupBy({
-      _count: { _all: true },
-      _sum: { costCents: true, usageQuantity: true },
-      by: [...by],
-      where: { ...where, measurementStatus: "recorded" },
-    }),
-    prisma.providerCostEntry.groupBy({
-      _count: { _all: true },
-      by: [...by],
-      where: { ...where, measurementStatus: { not: "recorded" } },
-    }),
-    prisma.providerCostEntry.groupBy({
-      _count: { _all: true },
-      by: [...by],
-      where: { ...where, measurementStatus: "recorded", usageQuantity: null },
-    }),
-  ]);
-  return mergeSourceUsage(confirmed, unrecorded, unmeasured);
+  const range = monthUtcRange(now);
+  const rows = await prisma.$queryRaw<Array<ProviderCostSourceUsage>>(Prisma.sql`
+    SELECT "connectionId",feature,source,
+      COUNT(*) FILTER(WHERE "costCents" IS NOT NULL)::int AS count,
+      COALESCE(SUM("costCents"),0) AS "costCents",
+      SUM("usageQuantity") FILTER(WHERE "costCents" IS NOT NULL) AS quantity,
+      COUNT(*) FILTER(WHERE "costCents" IS NOT NULL AND trigger='scheduled')::int AS scheduled,
+      COUNT(*) FILTER(WHERE "costCents" IS NULL)::int AS "unrecordedCount",
+      COUNT(*) FILTER(WHERE "costCents" IS NOT NULL AND "usageQuantity" IS NULL)::int AS "unmeasuredCount"
+    FROM (${canonicalUsageSql()}) u WHERE "projectId"=${projectId} AND NOT cached
+      AND "createdAt">=${range.gte} AND "createdAt"<${range.lt}
+    GROUP BY "connectionId",feature,source`);
+  return rows.map((row) => ({
+    ...row,
+    source: normalizedSource(row.source),
+    costCents: Number(row.costCents),
+    quantity: row.quantity == null ? null : Number(row.quantity),
+  }));
 }
 
 export type SourceSpendUsage = {
@@ -219,21 +155,11 @@ export async function loadProviderSpendUsage(input: {
  * spent (charged priceCents of credits rows). The two are never added together.
  */
 export async function recordedSpendBySource(projectId: string, now = new Date()) {
-  const groups = await prisma.providerCostEntry.groupBy({
-    _sum: { costCents: true, priceCents: true },
-    by: ["credentialSource"],
-    where: {
-      cached: false,
-      createdAt: monthUtcRange(now),
-      measurementStatus: "recorded",
-      projectId,
-    },
-  });
-  let ownCents = 0;
-  let creditsCents = 0;
-  for (const group of groups) {
-    if (group.credentialSource === "hosted") creditsCents += Number(group._sum.priceCents ?? 0);
-    else ownCents += Number(group._sum.costCents ?? 0);
-  }
-  return { creditsCents, ownCents };
+  const range = monthUtcRange(now);
+  const [row] = await prisma.$queryRaw<{ ownCents: unknown; creditsCents: unknown }[]>(Prisma.sql`
+    SELECT COALESCE(SUM("costCents") FILTER(WHERE "credentialSource"='own'),0) AS "ownCents",
+      COALESCE(SUM("priceCents") FILTER(WHERE "credentialSource"='hosted'),0) AS "creditsCents"
+    FROM (${canonicalUsageSql()}) u WHERE "projectId"=${projectId} AND NOT cached
+      AND "createdAt">=${range.gte} AND "createdAt"<${range.lt}`);
+  return { ownCents: Number(row?.ownCents ?? 0), creditsCents: Number(row?.creditsCents ?? 0) };
 }

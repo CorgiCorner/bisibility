@@ -1,3 +1,8 @@
+import {
+  type BudgetDenialReason,
+  MISSING_PROJECT_BUDGET_MESSAGE,
+  UNRESOLVED_USAGE_MESSAGE,
+} from "@/lib/metering/budget-denial";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import {
@@ -130,13 +135,18 @@ export class LaunchRankCheckRunError extends Error {
   constructor(
     readonly code: LaunchRankCheckRunErrorCode,
     readonly estimatedCostCents?: number,
+    readonly budgetReason?: BudgetDenialReason,
   ) {
     super(
-      code === "budget_exhausted"
-        ? "Rank check monthly budget reached."
-        : code === "cost_limit_exceeded"
-          ? "The estimated rank check cost exceeds max_cost_cents."
-          : "No connected rank data provider is available.",
+      budgetReason === "budget_missing"
+        ? MISSING_PROJECT_BUDGET_MESSAGE
+        : budgetReason === "usage_reconciliation_required"
+          ? UNRESOLVED_USAGE_MESSAGE
+          : code === "budget_exhausted"
+            ? "Rank check monthly budget reached."
+            : code === "cost_limit_exceeded"
+              ? "The estimated rank check cost exceeds max_cost_cents."
+              : "No connected rank data provider is available.",
     );
     this.name = "LaunchRankCheckRunError";
   }

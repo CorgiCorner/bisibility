@@ -9,7 +9,6 @@ export async function requireAiSource(projectId: string) {
     where: { id: projectId },
     select: {
       id: true,
-      budgetCapCents: true,
       providerConnections: {
         select: { id: true, provider: true, credentialsEncrypted: true, credentialSource: true },
         where: { ...providerChainWhere("serp"), provider: "dataforseo" },

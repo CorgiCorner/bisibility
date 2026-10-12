@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "./fixtures";
 import { rankTrackerBody, rankTrackerTable } from "./rank-tracker-data-table-helpers";
 import {
   cleanupRankTrackerGroupedServerFixture,
@@ -15,7 +15,7 @@ function hasQuery(path: string, expected: Record<string, string>): (url: URL) =>
 }
 
 function groupedUrl(path: string, params: Record<string, string>) {
-  return `${path}?${new URLSearchParams({ grouped: "1", pageSize: "25", ...params }).toString()}`;
+  return `${path}?${new URLSearchParams({ pageSize: "25", ...params }).toString()}`;
 }
 
 async function expectMountedTopLevelRows(body: Locator, logicalPageSize: number) {
@@ -34,7 +34,7 @@ async function expectFilteredGroup(
   leafCount = 4,
 ) {
   await page.goto(groupedUrl(trackerPath, params));
-  await expect(page).toHaveURL(hasQuery(trackerPath, { grouped: "1", pageSize: "25", ...params }));
+  await expect(page).toHaveURL(hasQuery(trackerPath, { pageSize: "25", ...params }));
   await expect(rankTrackerTable(page)).toHaveAttribute("aria-rowcount", "1");
   const group = rankTrackerBody(page)
     .locator('[role="row"][data-depth="0"]')
@@ -49,7 +49,9 @@ async function expectFilteredGroup(
   await expect(leaves).toContainText(Array(leafCount).fill(fixture.filterKeyword));
 }
 
-test("Rank Tracker serves grouped URL filters, counts, and matching leaves", async ({ page }) => {
+test("Rank Tracker groups registered markets automatically with full filters, counts, and matching leaves", async ({
+  page,
+}) => {
   test.setTimeout(240_000);
   const suffix = `rank-grouped-${Date.now().toString(36)}`;
   const email = `e2e-${suffix}@example.com`;
@@ -64,9 +66,7 @@ test("Rank Tracker serves grouped URL filters, counts, and matching leaves", asy
 
     await page.goto(groupedUrl(trackerPath, broadFilter));
     await expect(page.locator("html")).toHaveAttribute("data-hydrated", "true");
-    await expect(
-      page.getByRole("group", { name: "Keyword grouping" }).getByRole("radio", { name: "Grouped" }),
-    ).toBeChecked();
+    await expect(page.getByRole("group", { name: "Keyword grouping" })).toHaveCount(0);
     await expect(rankTrackerTable(page)).toHaveAttribute("aria-rowcount", "251");
     expect(fixture.targetCount).toBe(1_004);
     await expect(page.getByText("1,004 matching targets", { exact: true })).toBeVisible();
@@ -75,7 +75,7 @@ test("Rank Tracker serves grouped URL filters, counts, and matching leaves", asy
     await expect(page.getByText("1-25 of 251", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Next page" }).click();
     await expect(page).toHaveURL(
-      hasQuery(trackerPath, { ...broadFilter, grouped: "1", page: "2", pageSize: "25" }),
+      hasQuery(trackerPath, { ...broadFilter, page: "2", pageSize: "25" }),
     );
     await expectMountedTopLevelRows(rankTrackerBody(page), 25);
     await expect(page.getByText("26-50 of 251", { exact: true })).toBeVisible();

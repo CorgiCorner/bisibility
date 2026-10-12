@@ -217,8 +217,8 @@ export function registerAdditionalAuditDeclarations(
     before: strings("provider", "source"),
   });
   declare(["provider.update_rate"], {
-    after: { ...f.numbers("amountCents"), ...strings("feature", "provider") },
-    before: { ...f.numbers("amountCents"), ...strings("feature", "provider") },
+    after: { ...f.scalars("amountCents"), ...strings("feature", "provider") },
+    before: { ...f.scalars("amountCents"), ...strings("feature", "provider") },
   });
   declare(["provider.test"], {
     after: { ...f.booleans("ok"), ...strings("provider") },

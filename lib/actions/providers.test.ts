@@ -34,7 +34,7 @@ const mocks = vi.hoisted(() => {
   return {
     actor: { id: "user_1" },
     analyticsProvider,
-    backfillLegacyProjectAllocationInLockedTransaction: vi.fn(),
+    saveBudget: vi.fn(),
     cancelPendingGoogleOAuth: vi.fn(),
     completePendingGooglePropertySelection: vi.fn(),
     getPendingGoogleOAuthProvider: vi.fn(),
@@ -66,7 +66,6 @@ const mocks = vi.hoisted(() => {
     revalidatePath: vi.fn(),
     readAnalyticsSurfaceFromHeaders: vi.fn(),
     readConsentFromCookies: vi.fn(),
-    readAllocationAuthority: vi.fn(),
     trackServerEvent: vi.fn(),
     updateSearchSyncSettings: vi.fn(),
     saveStoredGoogleProperty: vi.fn(),
@@ -77,13 +76,8 @@ const mocks = vi.hoisted(() => {
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/providers/execution-extension", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/providers/execution-extension")>()),
-  readDeploymentMeteringAllocationAuthority: mocks.readAllocationAuthority,
-}));
-vi.mock("@/lib/provider-allocations/legacy-backfill", () => ({
-  backfillLegacyProjectAllocationInLockedTransaction:
-    mocks.backfillLegacyProjectAllocationInLockedTransaction,
+vi.mock("@/lib/metering/spending-limit-store", () => ({
+  putSpendingBudget: mocks.saveBudget,
 }));
 
 vi.mock("@/lib/analytics/server", () => ({
@@ -181,7 +175,8 @@ vi.mock("./_shared", () => ({
 
 function connection(overrides: Record<string, unknown> = {}) {
   return {
-    costPerCheckCents: 0.01,
+    credentialSource: "own",
+    rates: [{ feature: "rank_check", amountCents: 0.01 }],
     credentialsEncrypted: null,
     enabled: true,
     id: "conn_1",
@@ -215,11 +210,7 @@ function nonPlainConnection(overrides: Record<string, unknown> = {}) {
 describe("provider actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.readAllocationAuthority.mockResolvedValue("legacy");
-    mocks.backfillLegacyProjectAllocationInLockedTransaction.mockResolvedValue({
-      internalPrimaryConnectionId: null,
-      status: "already_backfilled",
-    });
+    mocks.saveBudget.mockResolvedValue(undefined);
     resetRateLimitStateForTests();
     clearProviderRateLimitState();
     process.env.REDIS_URL = "";
@@ -456,12 +447,28 @@ describe("provider actions", () => {
     });
     expect(mocks.prisma.providerConnection.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        create: expect.objectContaining({ costPerCheckCents: 1.23, enabled: true, priority: 0 }),
-        update: expect.objectContaining({ costPerCheckCents: 1.23 }),
+        create: expect.objectContaining({ enabled: true, priority: 0 }),
       }),
     );
     expect(result).toEqual({ ok: true });
-    expect(mocks.backfillLegacyProjectAllocationInLockedTransaction).toHaveBeenCalledOnce();
+    expect(mocks.saveBudget).toHaveBeenCalledTimes(2);
+    for (const surface of ["app", "programmatic"]) {
+      expect(mocks.saveBudget).toHaveBeenCalledWith(
+        mocks.prisma,
+        expect.objectContaining({
+          id: `own-connection:conn_1:${surface}`,
+          onExceed: "block",
+          surface,
+          unit: "cents",
+          version: 1,
+        }),
+      );
+    }
+    expect(mocks.prisma.providerConnectionRate.upsert).toHaveBeenCalledWith({
+      create: { amountCents: 1.23, connectionId: "conn_1", feature: "rank_check" },
+      update: { amountCents: 1.23 },
+      where: { connectionId_feature: { connectionId: "conn_1", feature: "rank_check" } },
+    });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         after: expect.objectContaining({ costPerCheck: 0.0123 }),
@@ -509,7 +516,8 @@ describe("provider actions", () => {
     });
 
     const call = mocks.prisma.providerConnection.upsert.mock.calls[0][0];
-    expect(call.create.costPerCheckCents).toBeNull();
+    expect(call.create).not.toHaveProperty("costPerCheckCents");
+    expect(mocks.prisma.providerConnectionRate.upsert).not.toHaveBeenCalled();
     expect(call.update).not.toHaveProperty("costPerCheckCents");
     expect(
       monthlyCostCentsFor(
@@ -520,9 +528,9 @@ describe("provider actions", () => {
           keywordCount: 1,
           locationCount: 1,
         },
-        { overrideCents: call.create.costPerCheckCents, providerId: "dataforseo" },
+        { overrideCents: null, providerId: "dataforseo" },
       ),
-    ).toBe(46.5);
+    ).toBe(60);
   });
 
   it("keeps a stored secret when a non-secret provider field is updated", async () => {
@@ -650,6 +658,14 @@ describe("provider actions", () => {
     expect(tx.$queryRaw).toHaveBeenCalledOnce();
     expect(tx.providerConnection.findMany).toHaveBeenCalledOnce();
     expect(tx.providerConnection.upsert).toHaveBeenCalledOnce();
+    expect(mocks.saveBudget).toHaveBeenCalledTimes(2);
+    expect(mocks.saveBudget).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({ id: "own-connection:conn_tx:app", unit: "units" }),
+    );
+    expect(mocks.saveBudget.mock.invocationCallOrder[1]).toBeLessThan(
+      mocks.writeAudit.mock.invocationCallOrder[0] ?? 0,
+    );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "provider.connect",
@@ -994,33 +1010,62 @@ describe("provider actions", () => {
     expect(mocks.prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.prisma.providerConnection.delete.mock.invocationCallOrder[0] ?? 0,
     );
-    expect(mocks.readAllocationAuthority).toHaveBeenCalledWith(
-      mocks.prisma,
-      expect.any(String),
-      "conn_2",
+    const calls = mocks.prisma.$queryRaw.mock.calls;
+    expect(calls[0][0].join("?")).toContain('FROM "projects"');
+    expect(calls[0][0].join("?")).toContain("FOR UPDATE");
+    expect(calls[0][1]).toBe("project_1");
+    expect(calls[1][0].join("?")).toContain("FROM provider_connections");
+    expect(calls[1][0].join("?")).toContain("FOR UPDATE");
+    expect(calls[1][1]).toBe("conn_2");
+    expect(calls[2][0].join("?")).toContain("metering_paid_attempt_context");
+    expect(calls[2][0].join("?")).toContain(
+      "o.state IN ('reserved','dispatch_intended','pending')",
     );
-    expect(mocks.readAllocationAuthority.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(calls[2][1]).toBe("conn_2");
+    expect(mocks.prisma.$queryRaw.mock.invocationCallOrder[2]).toBeLessThan(
       mocks.prisma.providerConnection.delete.mock.invocationCallOrder[0] ?? 0,
     );
+    expect(mocks.saveBudget).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ["active", "Active metering funding source cannot change before rollback"],
-    ["draining", "Metering allocation mutation awaits rollback reconciliation"],
-  ])(
-    "refuses disconnect under %s authority before deleting credentials",
-    async (state, message) => {
-      mocks.readAllocationAuthority.mockResolvedValue(state);
+  it.each(["reserved", "dispatch_intended", "pending"])(
+    "refuses disconnect with a retained %s operation before deleting credentials",
+    async (state) => {
+      mocks.prisma.$queryRaw.mockImplementation(async (query: TemplateStringsArray) => {
+        const sql = query.join("?");
+        if (!sql.includes("metering_paid_attempt_context")) return [];
+        expect(sql).toContain(`'${state}'`);
+        return [{ count: 1n }];
+      });
       mocks.prisma.providerConnection.findUnique.mockResolvedValue(connection({ id: "conn_2" }));
 
       await expect(
         disconnectProvider({ projectId: "prj_a00000000000000000000000", providerId: "serpapi" }),
-      ).rejects.toThrow(message);
+      ).rejects.toThrow("Provider credential custody has unresolved paid operations");
 
       expect(mocks.prisma.providerConnection.delete).not.toHaveBeenCalled();
       expect(mocks.writeAudit).not.toHaveBeenCalled();
+      expect(mocks.saveBudget).not.toHaveBeenCalled();
     },
   );
+
+  it.each(["settled", "released"])("allows disconnect with only %s history", async (state) => {
+    mocks.prisma.$queryRaw.mockImplementation(async (query: TemplateStringsArray) => {
+      const sql = query.join("?");
+      if (!sql.includes("metering_paid_attempt_context")) return [];
+      expect(sql).not.toContain(`'${state}'`);
+      return [{ count: 0n }];
+    });
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue(connection({ id: "conn_2" }));
+    await expect(
+      disconnectProvider({ projectId: mocks.project.publicId, providerId: "serpapi" }),
+    ).resolves.toEqual({ ok: true });
+    expect(mocks.prisma.providerConnection.delete).toHaveBeenCalledWith({
+      where: { id: "conn_2" },
+    });
+    expect(mocks.writeAudit).toHaveBeenCalledOnce();
+    expect(mocks.saveBudget).not.toHaveBeenCalled();
+  });
 
   it("updates settings without promoting a nonzero priority", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue(connection({ id: "conn_2" }));
@@ -1131,7 +1176,7 @@ describe("provider actions", () => {
 
     expect(result).toEqual({ ok: true });
     expect(mocks.prisma.providerConnection.update).toHaveBeenCalledWith({
-      data: { costPerCheckCents: 50 },
+      data: { updatedAt: expect.any(Date) },
       where: { id: "conn_3" },
     });
     expect(mocks.prisma.providerConnectionRate.upsert).toHaveBeenCalledWith({
@@ -1188,7 +1233,10 @@ describe("provider actions", () => {
         },
       },
     });
-    expect(mocks.prisma.providerConnection.update).not.toHaveBeenCalled();
+    expect(mocks.prisma.providerConnection.update).toHaveBeenCalledWith({
+      data: { updatedAt: expect.any(Date) },
+      where: { id: "conn_3" },
+    });
 
     await updateProviderRate({
       costPerUnit: null,
@@ -1200,7 +1248,7 @@ describe("provider actions", () => {
       where: { connectionId: "conn_3", feature: "rank_check" },
     });
     expect(mocks.prisma.providerConnection.update).toHaveBeenCalledWith({
-      data: { costPerCheckCents: null },
+      data: { updatedAt: expect.any(Date) },
       where: { id: "conn_3" },
     });
   });

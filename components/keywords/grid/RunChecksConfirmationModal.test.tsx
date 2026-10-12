@@ -188,7 +188,7 @@ describe("RunChecksConfirmationModal failures", () => {
     const dialog = screen.getByRole("dialog", { name: "Checks failed" });
     const footer = dialog.querySelector("footer");
     if (!footer) throw new Error("Expected a modal footer.");
-    expect(within(footer).getByRole("link", { name: "View check details" })).toHaveAttribute(
+    expect(within(footer).getByRole("link", { name: "View runs" })).toHaveAttribute(
       "href",
       "/app/prj_demo/runs",
     );
@@ -265,7 +265,7 @@ describe("RunChecksConfirmationModal failures", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Deferred neutral copy");
     expect(screen.queryByText(/because of a provider error/)).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Open integrations" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View check details" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View runs" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
   });
 
@@ -279,7 +279,7 @@ describe("RunChecksConfirmationModal failures", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "The rank check was deferred and did not complete.",
     );
-    expect(screen.getByRole("link", { name: "View check details" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View runs" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Open integrations" })).not.toBeInTheDocument();
   });

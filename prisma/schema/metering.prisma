@@ -20,6 +20,9 @@ model MeteringOperation {
   receipts               MeteringReceipt[]
   commands               MeteringCommand[]
   events                 MeteringEvent[]
+  paidAttemptContext     MeteringPaidAttemptContext?
+  historyImports         MeteringHistoryImport[] @ignore
+  historyReferences      MeteringHistoryReference[] @ignore
 
   @@unique([namespace, operation_id])
   @@index([namespace, state, reservation_expires_at], map: "metering_operation_expiry_idx")
@@ -125,27 +128,6 @@ model MeteringMetadata {
   @@map("metering_metadata")
 }
 
-model MeteringShadow {
-  namespace String
-  operation_id String
-  project_id String
-  connection_id String
-  funding_source String @default("byok")
-  legacy String
-  meter String
-  settled String
-  duration_ms Float @default(0)
-  failures Int @default(0)
-  handoff_lease_id String?
-  handoff_kind String?
-  handoff_expires_at DateTime? @db.Timestamptz
-  created_at DateTime @default(now()) @db.Timestamptz
-  updated_at DateTime @default(now()) @db.Timestamptz
-  @@id([namespace, operation_id])
-  @@index([namespace, project_id, created_at], map: "metering_shadow_project_created")
-  @@map("metering_shadow")
-}
-
 model MeteringAlert {
   alert_key String @id
   namespace String
@@ -206,4 +188,19 @@ model MeteringUsageEvidence {
   @@index([projectId, principal, createdAt], map: "metering_usage_evidence_project_principal_idx")
   @@index([connectionId, correlationId, measurementStatus], map: "metering_usage_evidence_pending_idx")
   @@map("metering_usage_evidence")
+}
+
+// Immutable attribution and send fence survive project/connection deletion; amounts live in Store.
+model MeteringPaidAttemptContext {
+  namespace         String
+  operation_id      String
+  principal         String
+  context           Json
+  dispatch_lease_id String?
+  fenced_at         DateTime? @db.Timestamptz
+  debit_id          String?
+  operation         MeteringOperation @relation(fields: [namespace, operation_id], references: [namespace, operation_id], onDelete: NoAction, onUpdate: NoAction, map: "metering_paid_attempt_operation_fk")
+
+  @@id([namespace, operation_id])
+  @@map("metering_paid_attempt_context")
 }

@@ -12,6 +12,9 @@ type ContentOpenGraphImage = {
   label: string;
   title: string;
   description?: string;
+  footerLabels?: readonly [string, string];
+  fonts?: NonNullable<ConstructorParameters<typeof ImageResponse>[1]>["fonts"];
+  compact?: boolean;
 };
 
 function titleSize(title: string) {
@@ -24,7 +27,14 @@ function titleSize(title: string) {
   return 66;
 }
 
-export function createContentOpenGraphImage({ description, label, title }: ContentOpenGraphImage) {
+export function createContentOpenGraphImage({
+  description,
+  label,
+  title,
+  footerLabels = ["Signals timeline", "BYO SERP provider"],
+  fonts,
+  compact = false,
+}: ContentOpenGraphImage) {
   return new ImageResponse(
     <div
       style={{
@@ -34,7 +44,7 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
         display: "flex",
         height: "100%",
         justifyContent: "center",
-        padding: "72px",
+        padding: compact ? "52px" : "72px",
         width: "100%",
       }}
     >
@@ -44,10 +54,10 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
           borderRadius: UI_RADIUS_ROLES.card,
           display: "flex",
           flexDirection: "column",
-          gap: "30px",
+          gap: compact ? "20px" : "30px",
           height: "100%",
           justifyContent: "space-between",
-          padding: "52px",
+          padding: compact ? "40px" : "52px",
           width: "100%",
         }}
       >
@@ -74,7 +84,7 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
             style={{
               display: "flex",
               flexDirection: "column",
-              fontSize: titleSize(title),
+              fontSize: compact ? Math.min(titleSize(title), 58) : titleSize(title),
               fontWeight: 800,
               letterSpacing: 0,
               lineHeight: 1.06,
@@ -84,7 +94,14 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
             {title}
           </div>
           {description ? (
-            <div style={{ color: "#6b6657", fontSize: 28, lineHeight: 1.35, maxWidth: 850 }}>
+            <div
+              style={{
+                color: "#6b6657",
+                fontSize: compact ? 23 : 28,
+                lineHeight: 1.35,
+                maxWidth: 850,
+              }}
+            >
               {description}
             </div>
           ) : null}
@@ -95,18 +112,18 @@ export function createContentOpenGraphImage({ description, label, title }: Conte
             alignItems: "center",
             color: "#6b6657",
             display: "flex",
-            fontSize: 26,
+            fontSize: compact ? 22 : 26,
             gap: "18px",
           }}
         >
           <span>{LICENSE}</span>
           <span style={{ color: "#f1511c" }}>|</span>
-          <span>Signals timeline</span>
+          <span>{footerLabels[0]}</span>
           <span style={{ color: "#f1511c" }}>|</span>
-          <span>BYO SERP provider</span>
+          <span>{footerLabels[1]}</span>
         </div>
       </div>
     </div>,
-    ogImageSize,
+    { ...ogImageSize, ...(fonts ? { fonts } : {}) },
   );
 }

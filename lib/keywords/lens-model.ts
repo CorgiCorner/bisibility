@@ -75,7 +75,14 @@ export function lensLocationOptions(rows: KeywordRow[]): LensLocationOption[] {
     if (existing) {
       existing.count += 1;
     } else {
-      byId.set(id, { count: 1, displayName, id, kind });
+      byId.set(id, {
+        count: 1,
+        displayName: row.location.languageLabel
+          ? `${displayName} / ${row.location.languageLabel}`
+          : displayName,
+        id,
+        kind,
+      });
     }
   }
   return [...byId.values()].sort(

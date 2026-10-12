@@ -1,14 +1,14 @@
 /** Literal palette for data and exports; rendered charts use the semantic CSS variables below. */
 export const chartColors = {
-  accent: "#f1511c",
+  accent: "#171717",
   green: "#3c9a63",
   greenMuted: "#7fb36b",
   yellow: "#e0a93b",
   orange: "#e08a4e",
   blue: "#4f86e8",
   blueText: "#315eac",
-  red: "#c8463a",
-  border: "#ddd8cc",
+  red: "#b7352b",
+  border: "#d0d0d0",
 } as const;
 
 /**

@@ -7,6 +7,7 @@ import {
   revalidateBudgetViews,
 } from "@/lib/actions/_shared";
 import { requireApiPublicId } from "@/lib/api/public-id";
+import { AuthorizationError } from "@/lib/auth/authorize";
 import { setProviderConnectionAllocation } from "@/lib/provider-allocations/service";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { loadProjectProviderSpend } from "@/lib/queries/provider-spend";
@@ -66,6 +67,9 @@ export async function updateProviderConnectionAllocationAction(
   });
   revalidateBudgetViews();
 
+  // Managing a cap does not grant access to the payer's spend or native account balance.
+  if (project.ownerId !== actor.id) return { connectionId: data.connectionId };
+
   const providerSpend = await loadProjectProviderSpend({
     catalog: PROVIDER_CATALOG,
     now: new Date(),
@@ -87,6 +91,7 @@ export async function refreshProviderConnectionBudgetAction(
   const project = await requireProjectScope(actor, "manage", projectPublicId, {
     type: "provider_connection",
   });
+  if (project.ownerId !== actor.id) throw new AuthorizationError("forbidden");
   const spend = await loadProjectProviderSpend({
     catalog: PROVIDER_CATALOG,
     now: new Date(),

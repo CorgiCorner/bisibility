@@ -13,8 +13,9 @@ import {
 } from "@/lib/ai-research/legacy";
 import { useTranslations } from "next-intl";
 import { Controller } from "react-hook-form";
+import { AiModelSelect } from "./AiCostPolicyFields";
 import type { AiResearchForm } from "./AiVisibilityFields";
-import { legacyModelOptions, legacyResearchInput } from "./ai-research-presets";
+import { legacyResearchInput } from "./ai-research-presets";
 
 export function AiPromptFields({
   form,
@@ -132,52 +133,13 @@ export function AiPromptFields({
       {[0, 1].map((index) => (
         <div className="grid gap-2 text-ui-body" key={index}>
           <span>{t(index === 0 ? "firstModel" : "secondModel")}</span>
-          <MenuSelect
-            ariaLabel={t(index === 0 ? "firstModel" : "secondModel")}
-            size="input"
-            searchable
+          <AiModelSelect
+            catalog={catalog}
+            actual={actual}
             disabled={disabled}
-            value={models[index] ?? ""}
+            index={index}
+            models={models}
             onChange={(value) => chooseModel(index, value)}
-            groups={[
-              {
-                id: "existing-preset",
-                label: t("legacyPreset"),
-                options: [
-                  ...(index ? [{ label: t("noSecondModel"), value: "" }] : []),
-                  ...legacyModelOptions.map((model) => ({
-                    ...model,
-                    disabled: models[1 - index] === model.value,
-                  })),
-                ],
-              },
-              {
-                id: "live-catalog",
-                label: t("liveCatalog"),
-                options: (catalog?.models ?? [])
-                  .filter((model) => !LEGACY_MODELS.some((id) => id === model.id))
-                  .map((model) => ({
-                    label: model.label,
-                    value: model.id,
-                    secondary: model.reasoning ? t("reasoningModel") : undefined,
-                    disabled:
-                      (actual
-                        ? !model.actualCostEnabled || !catalog?.actualCostAvailable
-                        : !model.priceAvailable || !model.admissionEnabled) ||
-                      models[1 - index] === model.id,
-                    tooltip: actual
-                      ? !model.actualCostEnabled
-                        ? t("modelPolicyPending")
-                        : undefined
-                      : !model.priceAvailable
-                        ? t("unknownPrice")
-                        : !model.admissionEnabled
-                          ? t("modelPolicyPending")
-                          : undefined,
-                    searchText: model.id,
-                  })),
-              },
-            ]}
           />
         </div>
       ))}

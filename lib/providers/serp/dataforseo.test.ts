@@ -1,14 +1,26 @@
 import type { Location } from "@/lib/generated/prisma/client";
+import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { type SerpRankLocation, serpRankLocation } from "@/lib/serp/location";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProviderCallError } from "../call-error";
 import { dataForSeoProvider } from "./dataforseo";
 
 function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    headers: { "Content-Type": "application/json" },
-    status,
-  });
+  return new Response(
+    JSON.stringify(
+      typeof body === "object" &&
+        body !== null &&
+        !("cost" in body) &&
+        (!("tasks" in body) ||
+          !(body.tasks as Array<{ cost?: unknown }>).some((task) => task.cost !== undefined))
+        ? { cost: 0, ...body }
+        : body,
+    ),
+    {
+      headers: { "Content-Type": "application/json" },
+      status,
+    },
+  );
 }
 
 function serpEnvelope(items: unknown[], cost = 0.0006) {
@@ -44,7 +56,11 @@ function rankInput(
   } = {},
 ) {
   return {
-    credentials: { login: "login", password: input.password ?? "secret" },
+    credentials: {
+      login: "login",
+      password: input.password ?? "secret",
+      usageObserver: testUsageObserver,
+    },
     depth: input.depth,
     device: input.device ?? ("desktop" as const),
     domain: input.domain ?? "example.com",
@@ -87,7 +103,7 @@ describe("dataForSeoProvider", () => {
       if (!fetchRelated) throw new Error("Related keyword research is unavailable.");
       await expect(
         fetchRelated(
-          { login: "login", password: "secret" },
+          { login: "login", password: "secret", usageObserver: testUsageObserver },
           { includeClickstream: false, limit: 100, location: location(), seed: "rank tracker" },
         ),
       ).rejects.toMatchObject({
@@ -665,18 +681,18 @@ describe("dataForSeoProvider", () => {
     });
   });
 
-  it("retries fetch rejections and maps them to a DataForSEO request failure", async () => {
+  it("retains a network failure as unknown without paid retry", async () => {
     const fetchMock = vi.fn().mockRejectedValue(new TypeError("network down"));
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
-      message: "DataForSEO request failed.",
-      name: "DataForSeoError",
+      phase: "request",
+      name: "ProviderUsagePersistenceError",
     });
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("retries once when the SERP request times out, then returns the rank", async () => {
+  it("does not retry a timed out paid SERP request", async () => {
     const fetchMock = vi
       .fn()
       .mockRejectedValueOnce(abortError())
@@ -695,21 +711,21 @@ describe("dataForSeoProvider", () => {
       );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(dataForSeoProvider.fetchRank(rankInput())).resolves.toMatchObject({
-      billingUnits: 1,
+    await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
+      phase: "request",
     });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("fails with a timeout error after one retry when the request keeps timing out", async () => {
+  it("retains a paid timeout as unknown", async () => {
     const fetchMock = vi.fn().mockRejectedValue(abortError());
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
-      message: "DataForSEO request timed out.",
-      name: "DataForSeoError",
+      phase: "request",
+      name: "ProviderUsagePersistenceError",
     });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("uses a 30s abort timeout for SERP rank checks and 10s for the connection test", async () => {
@@ -726,7 +742,11 @@ describe("dataForSeoProvider", () => {
       "fetch",
       vi.fn().mockResolvedValue(jsonResponse({ status_code: 20000, tasks: [] })),
     );
-    await dataForSeoProvider.testConnection({ login: "login", password: "secret" });
+    await dataForSeoProvider.testConnection({
+      login: "login",
+      password: "secret",
+      usageObserver: testUsageObserver,
+    });
     const testDelays = setTimeoutSpy.mock.calls.map((call) => call[1]);
     expect(testDelays).toContain(10_000);
     expect(testDelays).not.toContain(30_000);
@@ -765,10 +785,18 @@ describe("dataForSeoProvider", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
-      dataForSeoProvider.testConnection({ login: "login", password: "secret" }),
+      dataForSeoProvider.testConnection({
+        login: "login",
+        password: "secret",
+        usageObserver: testUsageObserver,
+      }),
     ).resolves.toEqual({ balance: 4.5, message: "Connected.", ok: true });
     await expect(
-      dataForSeoProvider.testConnection({ login: "login", password: "secret" }),
+      dataForSeoProvider.testConnection({
+        login: "login",
+        password: "secret",
+        usageObserver: testUsageObserver,
+      }),
     ).resolves.toEqual({
       balance: 2,
       message: "DataForSEO connection test failed.",
@@ -817,7 +845,7 @@ describe("dataForSeoProvider", () => {
 
     await expect(
       dataForSeoProvider.fetchRankedKeywords?.(
-        { login: "login", password: "secret" },
+        { login: "login", password: "secret", usageObserver: testUsageObserver },
         {
           domain: "https://www.Example.com/docs",
           limit: 100,
@@ -872,7 +900,7 @@ describe("dataForSeoProvider", () => {
 
     await expect(
       dataForSeoProvider.fetchDomainRankOverview?.(
-        { login: "login", password: "secret" },
+        { login: "login", password: "secret", usageObserver: testUsageObserver },
         {
           includeSubdomains: false,
           location: location(),
@@ -897,7 +925,7 @@ describe("dataForSeoProvider", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await dataForSeoProvider.fetchRankedKeywords?.(
-      { login: "login", password: "secret" },
+      { login: "login", password: "secret", usageObserver: testUsageObserver },
       {
         domain: "example.com",
         limit: 100,
@@ -933,7 +961,7 @@ describe("dataForSeoProvider", () => {
 
     await expect(
       dataForSeoProvider.fetchRankedKeywords?.(
-        { login: "login", password: "secret" },
+        { login: "login", password: "secret", usageObserver: testUsageObserver },
         { domain: "example.com", limit: 100, location: location(), offset: 0 },
       ),
     ).rejects.toMatchObject({ name: "ProviderAuthError", providerId: "dataforseo" });
@@ -961,7 +989,7 @@ describe("dataForSeoProvider", () => {
 
     await expect(
       dataForSeoProvider.fetchRankedKeywords?.(
-        { login: "login", password: "secret" },
+        { login: "login", password: "secret", usageObserver: testUsageObserver },
         { domain: "example.com", limit: 100, location: location(), offset: 0 },
       ),
     ).rejects.toMatchObject({ name: "DataForSeoUnsupportedLocationError" });
@@ -980,7 +1008,7 @@ describe("dataForSeoProvider", () => {
 
     await expect(
       dataForSeoProvider.fetchRankedKeywords?.(
-        { login: "login", password: "secret" },
+        { login: "login", password: "secret", usageObserver: testUsageObserver },
         { domain: "example.com", limit: 100, location: location(), offset: 0 },
       ),
     ).rejects.toMatchObject({ name: "DataForSeoUnsupportedLocationError" });
@@ -1001,7 +1029,7 @@ describe("dataForSeoProvider", () => {
 
       await expect(
         dataForSeoProvider.fetchRankedKeywords?.(
-          { login: "login", password: "secret" },
+          { login: "login", password: "secret", usageObserver: testUsageObserver },
           { domain: "example.com", limit: 100, location: location(), offset: 0 },
         ),
       ).rejects.toMatchObject({ name: "DataForSeoUnsupportedLocationError" });
@@ -1021,7 +1049,7 @@ describe("dataForSeoProvider", () => {
 
     await expect(
       dataForSeoProvider.fetchRankedKeywords?.(
-        { login: "login", password: "secret" },
+        { login: "login", password: "secret", usageObserver: testUsageObserver },
         { domain: "example.com", limit: 100, location: location(), offset: 0 },
       ),
     ).rejects.toMatchObject({ name: "DataForSeoError" });
@@ -1044,7 +1072,7 @@ describe("dataForSeoProvider", () => {
     if (!providerMethod) throw new Error(`${method} is unavailable.`);
 
     await providerMethod(
-      { login: "login", password: "secret" },
+      { login: "login", password: "secret", usageObserver: testUsageObserver },
       {
         includeClickstream: true,
         limit: 300,
@@ -1088,7 +1116,7 @@ describe("dataForSeoProvider", () => {
 
     await expect(
       metrics(
-        { login: "login", password: "secret" },
+        { login: "login", password: "secret", usageObserver: testUsageObserver },
         {
           includeClickstream: false,
           keywords: Array.from({ length: 701 }, (_, index) => `keyword ${index}`),
@@ -1099,7 +1127,7 @@ describe("dataForSeoProvider", () => {
     expect(fetchMock).not.toHaveBeenCalled();
 
     await metrics(
-      { login: "login", password: "secret" },
+      { login: "login", password: "secret", usageObserver: testUsageObserver },
       {
         includeClickstream: false,
         keywords: Array.from({ length: 700 }, (_, index) => `keyword ${index}`),
@@ -1116,7 +1144,7 @@ describe("dataForSeoProvider", () => {
 
     await expect(
       metrics(
-        { login: "login", password: "secret" },
+        { login: "login", password: "secret", usageObserver: testUsageObserver },
         { includeClickstream: false, keywords: ["rank tracker"], location: location() },
       ),
     ).rejects.toMatchObject({ name: "ProviderAuthError", providerId: "dataforseo" });
@@ -1202,7 +1230,9 @@ describe("dataForSeoProvider error classification", () => {
   it("maps HTTP 402 to provider_billing with a single non-retryable fetch", async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(new Response('{"status_message":"Payment Required"}', { status: 402 }));
+      .mockResolvedValue(
+        new Response('{"cost":0,"status_message":"Payment Required"}', { status: 402 }),
+      );
     vi.stubGlobal("fetch", fetchMock);
     await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
       code: "provider_billing",
@@ -1213,7 +1243,11 @@ describe("dataForSeoProvider error classification", () => {
   it("maps HTTP 401 to provider_auth", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(new Response('{"status_message":"Unauthorized"}', { status: 401 })),
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response('{"cost":0,"status_message":"Unauthorized"}', { status: 401 }),
+        ),
     );
     await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
       code: "provider_auth",
@@ -1223,7 +1257,11 @@ describe("dataForSeoProvider error classification", () => {
   it("maps HTTP 403 to provider_auth", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(new Response('{"status_message":"Forbidden"}', { status: 403 })),
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response('{"cost":0,"status_message":"Forbidden"}', { status: 403 }),
+        ),
     );
     await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
       code: "provider_auth",
@@ -1235,7 +1273,10 @@ describe("dataForSeoProvider error classification", () => {
       "fetch",
       vi
         .fn()
-        .mockResolvedValue(new Response('{"status_message":"Too Many Requests"}', { status: 429 })),
+        .mockImplementation(
+          async () =>
+            new Response('{"cost":0,"status_message":"Too Many Requests"}', { status: 429 }),
+        ),
     );
     await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({
       code: "provider_rate_limited",
@@ -1247,8 +1288,9 @@ describe("dataForSeoProvider error classification", () => {
       "fetch",
       vi
         .fn()
-        .mockResolvedValue(
-          new Response('{"status_message":"Internal Server Error"}', { status: 500 }),
+        .mockImplementation(
+          async () =>
+            new Response('{"cost":0,"status_message":"Internal Server Error"}', { status: 500 }),
         ),
     );
     await expect(dataForSeoProvider.fetchRank(rankInput())).rejects.toMatchObject({

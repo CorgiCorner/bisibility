@@ -24,7 +24,7 @@ const reservation = {
 };
 
 describe("legacy scheduled run allocation", () => {
-  it("admits only one concurrent legacy scheduled check into one initialized unit", async () => {
+  it("keeps scheduling independent of paid Meter reservations", async () => {
     mocks.assertAllocation.mockResolvedValue({ mode: "allocation", remaining: 1, unit: "units" });
     const persisted: Array<{ estimatedCostCents: number; selectionSpec: unknown }> = [];
     let connectionTail = Promise.resolve();
@@ -66,19 +66,18 @@ describe("legacy scheduled run allocation", () => {
 
     const results = await Promise.allSettled([wrap("keyword_1"), wrap("keyword_2")]);
 
-    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
-    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
-    expect(persisted).toEqual([
-      {
-        estimatedCostCents: 1,
-        selectionSpec: {
-          kind: "legacy_schedule",
-          keywordId: "kw_1",
-          providerAllocationQuantity: 1,
-          providerConnectionId: "connection_1",
-          v: 1,
-        },
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(2);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(0);
+    expect(persisted).toHaveLength(2);
+    expect(persisted[0]).toEqual({
+      estimatedCostCents: 1,
+      selectionSpec: {
+        kind: "legacy_schedule",
+        keywordId: "kw_1",
+        providerAllocationQuantity: 1,
+        providerConnectionId: "connection_1",
+        v: 1,
       },
-    ]);
+    });
   });
 });

@@ -112,6 +112,16 @@ function renderDrawer(
 describe("NewRuleDrawer", () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it("uses the shared form geometry for the rule name and selectors", () => {
+    renderDrawer({ createAlertRuleAction: vi.fn(), updateAlertRuleAction: vi.fn() });
+    expect(screen.getByRole("textbox", { name: "Rule name" })).toHaveClass(
+      "min-h-10",
+      "px-[13px]",
+      "py-[9px]",
+      "text-ui-body",
+    );
+  });
+
   it("submits the valid default all-keywords rule", async () => {
     const createAlertRuleAction = vi.fn().mockResolvedValue({ id: "rule_1" });
     const onClose = renderDrawer({ createAlertRuleAction, updateAlertRuleAction: vi.fn() });
@@ -310,4 +320,24 @@ describe("NewRuleDrawer", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Name the rule.");
     expect(createAlertRuleAction).not.toHaveBeenCalled();
   });
+});
+
+it("previews the live condition thresholds and the selected market rather than template defaults", () => {
+  const create = vi.fn();
+  renderDrawer({ createAlertRuleAction: create, updateAlertRuleAction: vi.fn() }, vi.fn(), {
+    ...targets,
+    markets: [{ id: "pmkt_spain", canonicalKey: "ES@es", label: "Spain / Spanish" }],
+  });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Top N" }), { target: { value: "20" } });
+  fireEvent.click(screen.getByRole("button", { name: "Spain / Spanish" }));
+  expect(screen.getByText(/positions 1-20 to 21\+/)).toHaveTextContent("Spain / Spanish");
+  expect(screen.queryByText(/Google US Desktop/)).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole("combobox", { name: "Condition" }), {
+    target: { value: "position_drop" },
+  });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Drop positions" }), {
+    target: { value: "8" },
+  });
+  expect(screen.getByText(/drops by 8 or more positions/)).toHaveTextContent("Spain / Spanish");
+  expect(create).not.toHaveBeenCalled();
 });

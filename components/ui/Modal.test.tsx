@@ -37,6 +37,13 @@ describe("Modal keyboard shortcuts", () => {
     const close = screen.getByRole("button", { name: "Close modal" });
     expect(close).toHaveClass("duration-(--motion-press)");
     expect(close).toHaveClass("motion-safe:active:not-focus-visible:scale-[0.97]");
+    expect(close).toHaveClass(
+      "focus-visible:outline-solid",
+      "focus-visible:outline-2",
+      "focus-visible:outline-accent-solid",
+      "focus-visible:outline-offset-2",
+      "motion-reduce:transition-none",
+    );
   });
 
   it("calls onClose on Escape and prevents default", () => {

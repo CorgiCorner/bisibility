@@ -1,7 +1,15 @@
 import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
+import type { PricedRequest, ProviderRequest } from "@usagekit/providers";
 
-export type OwnAttemptGrant = { attemptId: string; leaseId: string };
-export type OwnAttemptInput = { id: string; credentialVersion: string | null; queued?: boolean };
+export type OwnAttemptGrant = { attemptId: string; leaseId: string; pricedRequest?: PricedRequest };
+export type OwnAttemptInput = {
+  id: string;
+  credentialVersion: string | null;
+  queued?: boolean;
+  providerRequest?: ProviderRequest;
+  maxCostCents?: string;
+  attribution?: { tag: string; trigger: string; keywordId?: string };
+};
 export type OwnAdmissionPort = {
   reserve(
     tx: Prisma.TransactionClient,

@@ -1,10 +1,10 @@
 "use client";
-
 import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { displayProvider } from "@/components/onboarding/onboarding-form-utils";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { useSharedErrorMessages } from "@/i18n/useSharedErrorMessages";
 import type { FirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { hasMonthlyBudgetCap } from "@/lib/rank-check/budget-contract";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
@@ -47,7 +47,12 @@ function estimateCurrency(
   return currency(cents / 100);
 }
 
-function guardNotices(plan: FirstCheckRunPlan, projectRef: ProjectRef, t: FirstCheckTranslations) {
+function guardNotices(
+  plan: FirstCheckRunPlan,
+  projectRef: ProjectRef,
+  t: FirstCheckTranslations,
+  errors: ReturnType<typeof useSharedErrorMessages>,
+) {
   const notices: { content: ReactNode; id: string }[] = [];
   if (!plan.providerReady) {
     notices.push({ content: t("notices.providerMissing"), id: "provider" });
@@ -59,12 +64,16 @@ function guardNotices(plan: FirstCheckRunPlan, projectRef: ProjectRef, t: FirstC
     notices.push({
       content: (
         <>
-          {t("notices.budgetExhausted")}{" "}
+          {plan.budgetReason === "budget_missing"
+            ? errors.budgetMissing()
+            : plan.budgetReason === "usage_reconciliation_required"
+              ? errors.usageReconciliationRequired()
+              : t("notices.budgetExhausted")}{" "}
           <Link
             className="font-semibold text-fg underline decoration-fg underline-offset-3"
             href={`${appPath(projectRef, "settings")}#provider-usage`}
           >
-            {t("notices.raiseBudget")}
+            {plan.budgetReason ? t("notices.reviewUsage") : t("notices.raiseBudget")}
           </Link>
         </>
       ),
@@ -146,7 +155,8 @@ function FirstCheckRunPlanBody({
   }
 >) {
   const t = useTranslations("shared.firstCheck");
-  const notices = guardNotices(plan, projectRef, t);
+  const errors = useSharedErrorMessages();
+  const notices = guardNotices(plan, projectRef, t, errors);
   // biome-ignore format: compact options list keeps this module under the project line cap.
   const options = [{ label: t("scope.firstKeyword"), value: "first" }, { disabled: plan.readyCount <= 1, label: t("scope.allReady", { count: plan.readyCount }), value: "all" }] as const;
 

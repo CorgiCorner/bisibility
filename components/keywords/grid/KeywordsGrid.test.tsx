@@ -1,6 +1,5 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
-import { appPath } from "@/lib/routing/app-path";
 import { stubBlobDownload } from "@/tests/blob-download";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { stubResizeObserver } from "@/tests/observers";
@@ -79,12 +78,9 @@ describe("KeywordsGrid pending state", () => {
   it("renders pending keywords in the normal management grid", async () => {
     renderPendingGrid({}, null, true);
 
-    expect(screen.getByText("No rankings yet")).toBeInTheDocument();
-    expect(screen.getByText("2 keywords are ready for the first rank check.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /connect provider/i })).toHaveAttribute(
-      "href",
-      appPath("prj_1", "integrations"),
-    );
+    expect(screen.queryByText("No rankings yet")).not.toBeInTheDocument();
+    expect(screen.queryByText(/ready for the first rank check/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: /Grouped|Flat/ })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Device scope" })).toHaveTextContent("All devices");
     expect(screen.queryByRole("radio", { name: /device scope/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /all keywords/i })).toBeInTheDocument();

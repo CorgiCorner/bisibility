@@ -1,9 +1,11 @@
+import { Prisma } from "@/lib/generated/prisma/client";
 import { redirect } from "@/tests/next-navigation";
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import OnboardingPage from "./page";
 
 const mocks = vi.hoisted(() => ({
+  projectBudgetCapCents: vi.fn(async (_projectId: string) => 5000),
   existingOnboardingPlaceLocationKeys: vi.fn(),
   explicitDeploymentDataRegionLabel: vi.fn(),
   getIntegrationCategories: vi.fn(),
@@ -19,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   listFirstCheckCandidates: vi.fn(async () => ({ candidates: [] as unknown[] })),
   completeProjectOnboarding: vi.fn(),
   prisma: {
+    $queryRaw: vi.fn(),
     apiKey: { findFirst: vi.fn() },
     providerConnection: { findUnique: vi.fn() },
   },
@@ -59,6 +62,10 @@ vi.mock("@/lib/deployment/deployment", () => ({
 }));
 vi.mock("@/i18n/document-locale.server", () => ({
   resolveRegionalDocumentLocale: async () => ({ locale: "en", timeZone: "UTC" }),
+}));
+vi.mock("@/lib/auth/audit", () => ({
+  requiredPublicAuditId: (id: string) => id,
+  writeAudit: vi.fn(),
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/providers/analytics/google-client", () => ({
@@ -101,6 +108,10 @@ vi.mock("./actions", () => ({
   saveOnboardingMarkets: vi.fn(),
 }));
 
+vi.mock("@/lib/metering/project-budget-read", () => ({
+  projectBudgetCapCents: mocks.projectBudgetCapCents,
+}));
+
 const project = {
   budgetCapCents: 5_000,
   domain: "example.com",
@@ -110,6 +121,51 @@ const project = {
 };
 
 describe("OnboardingPage", () => {
+  it("shows each settings change from the Store instead of the stale project column", async () => {
+    const { usageReadFixture } = await import("@/lib/metering/read.test-fixture");
+    const { setProjectSpendingLimit } = await import("@/lib/metering/project-spending-limit");
+    const { projectBudgetCapCents } = await vi.importActual<
+      typeof import("@/lib/metering/project-budget-read")
+    >("@/lib/metering/project-budget-read");
+    const fixture = await usageReadFixture();
+    try {
+      await fixture.db.exec(`ALTER TABLE metering_budget ADD COLUMN scope_kind text,
+        ADD COLUMN unit text, ADD COLUMN limit_value numeric, ADD COLUMN limit_scale int,
+        ADD COLUMN "window" jsonb, ADD COLUMN on_exceed text;
+        CREATE TABLE projects(id text); INSERT INTO projects VALUES('project_1');`);
+      const query = (sql: Prisma.Sql | TemplateStringsArray, ...values: unknown[]) =>
+        fixture.query(Array.isArray(sql) ? Prisma.sql(sql, ...values) : (sql as Prisma.Sql));
+      mocks.prisma.$queryRaw.mockImplementation(query);
+      const tx = {
+        $queryRaw: query,
+        $executeRaw: async (sql: Prisma.Sql) => {
+          await fixture.db.query(sql.text, sql.values);
+          return 1;
+        },
+        project: {
+          findUnique: async () => project,
+          findUniqueOrThrow: async () => ({
+            ...project,
+            publicId: "prj_abcdefghijklmnopqrstuvwx",
+            isSample: false,
+            writeMode: "active",
+          }),
+        },
+      } as unknown as Prisma.TransactionClient;
+      for (const capCents of [777, 222]) {
+        await setProjectSpendingLimit(tx, {
+          actor: { id: "owner", memberships: [{ projectId: project.id, role: "owner" }] },
+          projectPublicId: "prj_abcdefghijklmnopqrstuvwx",
+          capCents,
+        });
+        mocks.projectBudgetCapCents.mockImplementationOnce(projectBudgetCapCents);
+        render(await OnboardingPage({ searchParams: Promise.resolve({ step: "2" }) }));
+        expect(mocks.wizard.mock.calls.at(-1)?.[0]).toMatchObject({ monthlyCapCents: capCents });
+      }
+    } finally {
+      await fixture.db.close();
+    }
+  }, 15000);
   it.each([
     ["actor_mismatch", "Sign back in to the account that started the connection"],
     ["credentials_decrypt", "Remove app access in your Google account and reconnect"],

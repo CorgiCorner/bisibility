@@ -1,5 +1,7 @@
 import { suggestionGenerationPreviewSchema } from "@/lib/ai-tracking/suggestions/generation-schema";
-import { Prisma } from "@/lib/generated/prisma/client";
+import type { Prisma } from "@/lib/generated/prisma/client";
+import { meterOperationReference, receiptOperationId } from "@/lib/metering/operation-reference";
+import { canonicalReceipt } from "@/lib/metering/usage-read";
 import { z } from "zod";
 import { jsonInput, lockTrackingProject, prisma, type TrackingTransaction } from "./shared";
 
@@ -7,7 +9,10 @@ const actorCredentialSchema = z
   .object({ id: z.string(), kind: z.enum(["project_key", "personal_token", "oauth_client"]) })
   .nullable();
 const retainedReceiptSchema = z.object({
-  providerCostEntryId: z.string(),
+  providerCostEntryId: z.string().nullable(),
+  operationRef: z
+    .object({ version: z.literal(1), namespace: z.string(), operationId: z.string() })
+    .optional(),
   connectionId: z.string(),
   credentialVersion: z.string(),
 });
@@ -20,27 +25,21 @@ export async function reconcileGenerationInTransaction(
   const row = await tx.aiTrackingSuggestionGeneration.findFirst({
     where: { projectId, id, state: "submission_unknown" },
   });
-  if (!row?.providerCostEntryId || !row.usageTag) return null;
-  await tx.$queryRaw(
-    Prisma.sql`SELECT id FROM provider_cost_entries WHERE id = ${row.providerCostEntryId} AND "projectId" = ${projectId} FOR SHARE`,
-  );
-  const ledger = await tx.providerCostEntry.findFirst({
-    where: {
-      id: row.providerCostEntryId,
-      projectId,
-      connectionId: row.credentialConnectionId,
-      measurementStatus: "recorded",
-    },
-  });
-  if (!ledger || ledger.costCents.isNegative()) return null;
+  const operationId = receiptOperationId(row?.receipt);
+  if (!row || !operationId || !row.usageTag) return null;
+  const ledger = await canonicalReceipt(tx, projectId, operationId, row.credentialConnectionId);
+  if (!ledger?.costCents || ledger.costCents.isNegative()) return null;
   const preview = suggestionGenerationPreviewSchema.safeParse(row.preview);
   const retained = retainedReceiptSchema.safeParse(row.receipt);
   const credential = actorCredentialSchema.safeParse(row.actorCredential);
   if (!preview.success || !retained.success || !credential.success) return null;
   if (
-    retained.data.providerCostEntryId !== ledger.id ||
+    ![ledger.id, ledger.id.replace(/^legacy:/, "")].includes(
+      receiptOperationId(retained.data) ?? "",
+    ) ||
     retained.data.connectionId !== ledger.connectionId ||
     retained.data.credentialVersion !== preview.data.credentialVersion ||
+    ledger.providerCredentialVersion !== preview.data.credentialVersion ||
     ledger.provider !== "dataforseo" ||
     ledger.feature !== "ai_tracking" ||
     ledger.credentialSource !== "own" ||
@@ -51,33 +50,13 @@ export async function reconcileGenerationInTransaction(
     ledger.credentialId !== (credential.data?.id ?? null)
   )
     return null;
-  await tx.$queryRaw(
-    Prisma.sql`SELECT id FROM metering_usage_evidence WHERE id = ${ledger.id} FOR SHARE`,
-  );
-  const evidence = await tx.meteringUsageEvidence.findUnique({ where: { id: ledger.id } });
-  if (
-    !evidence ||
-    evidence.discarded ||
-    evidence.projectId !== projectId ||
-    evidence.connectionId !== row.credentialConnectionId ||
-    evidence.provider !== ledger.provider ||
-    evidence.feature !== "ai_tracking" ||
-    evidence.correlationId !== row.attemptId ||
-    evidence.source !== row.entrySource ||
-    evidence.credentialKind !== ledger.credentialKind ||
-    evidence.credentialId !== ledger.credentialId
-  )
-    return null;
-  const estimate = z.object({ credentialVersion: z.string() }).safeParse(evidence.estimate);
-  if (!estimate.success || estimate.data.credentialVersion !== preview.data.credentialVersion)
-    return null;
   const changed = await tx.aiTrackingSuggestionGeneration.updateMany({
     where: {
       projectId,
       id,
       attemptId: row.attemptId,
       state: "submission_unknown",
-      providerCostEntryId: ledger.id,
+
       receipt: { equals: jsonInput(row.receipt) },
     },
     data: {
@@ -85,6 +64,7 @@ export async function reconcileGenerationInTransaction(
       finishedAt: new Date(),
       receipt: jsonInput({
         ...(row.receipt as Prisma.JsonObject),
+        operationRef: meterOperationReference(ledger.id, ledger.namespace),
         amountUsd: ledger.costCents.div(100).toString(),
         state: "confirmed",
         providerRequestId: ledger.providerRequestId,
@@ -113,7 +93,6 @@ export async function reconcileProjectGenerations(
       projectId,
       state: "submission_unknown",
       ...(exceptId ? { id: { not: exceptId } } : {}),
-      providerCostEntry: { is: { measurementStatus: "recorded" } },
     },
     select: { id: true },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],

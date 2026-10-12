@@ -10,6 +10,7 @@ import {
   LAST_MARKET_COOKIE_OPTIONS,
   lastMarketCookieWrite,
 } from "@/lib/markets/last-market-cookie";
+import { appAnchorRedirect, legacyKeywordPathRedirect } from "@/lib/routing/app-route-redirects";
 import { type NextRequest, NextResponse } from "next/server";
 import {
   createMarkdownForRequest,
@@ -17,7 +18,7 @@ import {
   shouldServeMarkdown,
   shouldVaryOnAccept,
 } from "./lib/agent-ready/markdown-negotiation";
-import { ANCHOR_PARAM, RETURN_TO_REQUEST_HEADER, validateAnchor } from "./lib/auth/return-to";
+import { RETURN_TO_REQUEST_HEADER } from "./lib/auth/return-to";
 import { SESSION_HINT_COOKIE, SESSION_HINT_COOKIE_OPTIONS } from "./lib/auth/session-hint";
 
 const sessionCookieNames = ["better-auth.session_token", "__Secure-better-auth.session_token"];
@@ -152,22 +153,6 @@ function canonicalSurfaceRedirect(request: NextRequest) {
   return NextResponse.redirect(destination, 308);
 }
 
-function legacyKeywordPathRedirect(request: NextRequest) {
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    return null;
-  }
-
-  const { pathname } = request.nextUrl;
-  const match = pathname.match(/^\/app\/([^/]+)\/keywords\/([^/]+)$/);
-  if (!match) {
-    return null;
-  }
-
-  const destination = request.nextUrl.clone();
-  destination.pathname = `/app/${match[1]}/rank-tracker/${match[2]}`;
-  return NextResponse.redirect(destination, 302);
-}
-
 // A locale prefix has exactly one canonical spelling: lowercase and language-only. Case variants
 // and the internal locale code keep their inbound links alive as permanent redirects rather than
 // competing with the canonical URL for the same content.
@@ -185,22 +170,6 @@ function localePrefixRedirect(request: NextRequest) {
   const destination = request.nextUrl.clone();
   destination.pathname = rest.length === 0 ? `/${canonical}` : `/${canonical}/${rest.join("/")}`;
   return NextResponse.redirect(destination, 308);
-}
-
-// Middleware covers every app route and restores the anchor before rendering without a client effect.
-function appAnchorRedirect(request: NextRequest) {
-  if (
-    !matchesPathSegment(request.nextUrl.pathname, "/app") ||
-    !request.nextUrl.searchParams.has(ANCHOR_PARAM)
-  ) {
-    return null;
-  }
-
-  const destination = request.nextUrl.clone();
-  const anchor = validateAnchor(destination.searchParams.get(ANCHOR_PARAM));
-  destination.searchParams.delete(ANCHOR_PARAM);
-  destination.hash = anchor ?? "";
-  return NextResponse.redirect(destination);
 }
 
 function withAcceptVary(response: NextResponse) {

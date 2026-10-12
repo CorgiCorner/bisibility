@@ -1,7 +1,7 @@
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
 
-export type KeywordRunCheckOutcome = "blocked" | "completed" | "running";
+export type KeywordRunCheckOutcome = "blocked" | "completed" | "failed" | "running";
 
 function resultCode(result: unknown) {
   if (!result || typeof result !== "object" || !("code" in result)) return null;
@@ -26,6 +26,7 @@ export function keywordRunCheckOutcome(result: unknown): KeywordRunCheckOutcome 
   ) {
     return "blocked";
   }
+  if (resultStatus(result) === "failed") return "failed";
   return resultStatus(result) === "completed" ? "completed" : "running";
 }
 

@@ -201,3 +201,18 @@ describe("lensHref", () => {
     );
   });
 });
+
+it("distinguishes same-country languages while retaining location counts and filtering", () => {
+  const spanish = row({
+    location: loc({ id: "ES@es", displayName: "Spain", hl: "es", languageLabel: "Spanish" }),
+  });
+  const english = row({
+    location: loc({ id: "ES@en", displayName: "Spain", hl: "en", languageLabel: "English" }),
+  });
+  expect(lensLocationOptions([spanish, spanish, english])).toEqual([
+    expect.objectContaining({ id: "ES@es", displayName: "Spain / Spanish", count: 2 }),
+    expect.objectContaining({ id: "ES@en", displayName: "Spain / English", count: 1 }),
+  ]);
+  expect(applyLens([spanish, english], { device: "all", locationId: "ES@es" })).toEqual([spanish]);
+  expect(applyLens([spanish, english], { device: "all", locationId: "ES@en" })).toEqual([english]);
+});

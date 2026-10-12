@@ -129,7 +129,7 @@ export async function listRankCheckRuns(projectId: string, url: URL) {
       page.map((row) => row.id),
     ),
   ]);
-  const budget = budgetForRuns(
+  const budget = await budgetForRuns(
     page,
     page.some((row) => row.blockedReason === "budget_exhausted")
       ? await getRequestMonthlySpendCents(projectId)
@@ -181,7 +181,7 @@ export async function getRankCheckRun(projectId: string, publicId: string) {
     rankCheckRunUsageGroups([row.id]),
     rankCheckRunLedgerActuals(projectId, [row.id]),
   ]);
-  const budget = budgetForRuns(
+  const budget = await budgetForRuns(
     [row],
     row.blockedReason === "budget_exhausted" ? await getRequestMonthlySpendCents(projectId) : null,
   );

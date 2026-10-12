@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { presentAdminActionError } from "./admin-action-error";
 
 const messages: SharedErrorMessages = {
+  usageReconciliationRequired: () => "Wymagane uzgodnienie użycia.",
+  budgetMissing: () => "Configure a project budget.",
   genericFallback: () => "generic",
   rateLimited: () => "limited",
   serverComponentDigest: ({ digest }) => `digest ${digest}`,

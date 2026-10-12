@@ -3,6 +3,11 @@ import { payloadHash } from "@/lib/ai-tracking/identity";
 import type { SuggestionGenerationPreview } from "@/lib/ai-tracking/suggestions/generation-schema";
 import { requirePublicId } from "@/lib/db/public-id-resources";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
+import {
+  correctCanonicalUsage,
+  seedCanonicalUsage,
+} from "@/lib/metering/canonical-postgres.test-fixture";
+import { meteringNamespace } from "@/lib/metering/runtime";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { isolatedTrackingDatabase, trackingProject } from "./fixtures.postgres-test-support";
 
@@ -84,9 +89,7 @@ describe("original native generation receipt reconciliation", () => {
       credentialId: "original-key",
       correlationId: row.attemptId,
     };
-    const ledger = await db.client.providerCostEntry.create({
-      data: { ...identity, tag: "original-usage-tag", costCents: 0, measurementStatus: "unknown" },
-    });
+    const ledger = { id: identity.id };
     await db.client.meteringUsageEvidence.create({
       data: {
         ...identity,
@@ -96,6 +99,17 @@ describe("original native generation receipt reconciliation", () => {
         createdAt: new Date(),
       },
     });
+    await seedCanonicalUsage(
+      db.client,
+      {
+        ...identity,
+        tag: "original-usage-tag",
+        costCents: "0",
+        measurementStatus: "unknown",
+        createdAt: new Date().toISOString(),
+      },
+      { principal: project.project.ownerId, providerCredentialVersion: nativeVersion },
+    );
     const receipt = {
       providerCostEntryId: ledger.id,
       connectionId: project.connection.id,
@@ -137,25 +151,26 @@ describe("original native generation receipt reconciliation", () => {
       where: { id: f.row.id },
     });
     expect(await reconcileSuggestionGeneration(f.project.id, f.row.id)).toBeNull();
-    await db.client.providerCostEntry.update({
-      where: { id: f.ledger.id },
-      data: {
-        measurementStatus: "recorded",
-        costCents: "0.1234",
-        providerRequestId: "confirmed-original",
-      },
+    await correctCanonicalUsage(db.client, f.ledger.id, {
+      measurementStatus: "recorded",
+      costCents: "0.1234",
+      providerRequestId: "confirmed-original",
     });
     const other = await trackingProject(db.client, `foreign-${randomUUID()}`);
     expect(await reconcileSuggestionGeneration(other.project.id, f.row.id)).toBeNull();
     const after = await reconcileSuggestionGeneration(f.project.id, f.row.id);
     expect(after).toMatchObject({
       state: "failed",
-      providerCostEntryId: f.ledger.id,
       receipt: {
         state: "confirmed",
         amountUsd: "0.001234",
         credentialVersion: "original-v1",
-        providerCostEntryId: f.ledger.id,
+        providerCostEntryId: null,
+        operationRef: {
+          version: 1,
+          namespace: meteringNamespace(),
+          operationId: `legacy:${f.ledger.id}`,
+        },
       },
     });
     expect(after?.evidence).toEqual(before.evidence);
@@ -167,24 +182,21 @@ describe("original native generation receipt reconciliation", () => {
   });
   it("blocks forged credential/version/feature substitutions and automatically reconciles only verified native identity", async () => {
     const f = await fixture();
-    await db.client.providerCostEntry.update({
-      where: { id: f.ledger.id },
-      data: { measurementStatus: "recorded", credentialId: "other-key" },
+    await correctCanonicalUsage(db.client, f.ledger.id, {
+      measurementStatus: "recorded",
+      credentialId: "other-key",
     });
     expect(await reconcileSuggestionGeneration(f.project.id, f.row.id)).toBeNull();
     await expect(f.start("blocked-new-key")).rejects.toMatchObject({
       status: 409,
       reason: "usage_reconciliation_required",
     });
-    await db.client.providerCostEntry.update({
-      where: { id: f.ledger.id },
-      data: { credentialId: "original-key", feature: "ranked_keywords" },
+    await correctCanonicalUsage(db.client, f.ledger.id, {
+      credentialId: "original-key",
+      feature: "ranked_keywords",
     });
     expect(await reconcileSuggestionGeneration(f.project.id, f.row.id)).toBeNull();
-    await db.client.providerCostEntry.update({
-      where: { id: f.ledger.id },
-      data: { feature: "ai_tracking" },
-    });
+    await correctCanonicalUsage(db.client, f.ledger.id, { feature: "ai_tracking" });
     await expect(
       db.client.meteringUsageEvidence.update({
         where: { id: f.ledger.id },
@@ -197,19 +209,13 @@ describe("original native generation receipt reconciliation", () => {
     ).toMatchObject({ state: "failed" });
   });
   it("refuses a confirmed ledger whose native credential version differs from frozen consent", async () => {
-    const f = await fixture(true, "different-version");
-    await db.client.providerCostEntry.update({
-      where: { id: f.ledger.id },
-      data: { measurementStatus: "recorded", costCents: 1 },
-    });
-    expect(await reconcileSuggestionGeneration(f.project.id, f.row.id)).toBeNull();
-    await expect(f.start("different-version-new-key")).rejects.toMatchObject({ status: 409 });
+    await expect(fixture(true, "different-version")).rejects.toThrow("credential version");
   });
   it("keeps active submission_started blocked even if its ledger has a known receipt", async () => {
     const f = await fixture(false);
-    await db.client.providerCostEntry.update({
-      where: { id: f.ledger.id },
-      data: { measurementStatus: "recorded", costCents: 1 },
+    await correctCanonicalUsage(db.client, f.ledger.id, {
+      measurementStatus: "recorded",
+      costCents: "1",
     });
     expect(await reconcileSuggestionGeneration(f.project.id, f.row.id)).toBeNull();
     await expect(f.start("active-new-key")).rejects.toMatchObject({ status: 409 });

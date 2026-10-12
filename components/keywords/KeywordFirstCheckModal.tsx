@@ -1,5 +1,6 @@
 "use client";
 
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { RankCheckRunModal } from "@/components/keywords/RankCheckRunModal";
 import { Button } from "@/components/ui/Button";
 import { isPublicIdOfType } from "@/lib/db/public-id";
@@ -175,6 +176,7 @@ export function KeywordFirstCheckModal({
   step,
 }: Readonly<KeywordFirstCheckModalProps>) {
   const t = useTranslations("projectRankTracker.keywordDetail.firstCheck");
+  const errors = useSharedErrorMessages();
   const successDepth = requestedDepth ?? depth;
   const isRunning = step === "running";
   const isFailed = step === "failed";
@@ -192,7 +194,7 @@ export function KeywordFirstCheckModal({
       <div className="flex w-full flex-wrap items-center justify-end gap-2">
         {confirmError ? (
           <p className="m-0 mb-1 w-full text-[12px] leading-5 text-red-text" role="alert">
-            {t("couldNotStart")}
+            {errorCode === "budget_missing" ? errors.budgetMissing() : t("couldNotStart")}
           </p>
         ) : null}
         <Button disabled={confirming} onClick={onClose} type="button" variant="secondary">
@@ -216,7 +218,7 @@ export function KeywordFirstCheckModal({
       <div className="flex w-full flex-wrap items-center justify-end gap-2">
         {failedCopy.showViewCheckDetails ? (
           <Button href={checksHref} type="button" variant="secondary">
-            {t("viewCheckDetails")}
+            {t(detailRunId ? "viewCheckDetails" : "viewRuns")}
           </Button>
         ) : null}
         {failedCopy.showTryAgain ? (

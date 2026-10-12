@@ -1,4 +1,5 @@
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { testUsageObserver } from "@/lib/providers/usage-test-observer";
 import { describe, expect, it, vi } from "vitest";
 import {
   dataForSeoBillingStatusCode,
@@ -95,10 +96,15 @@ describe("DataForSEO account verification receipts", () => {
       vi.stubGlobal("fetch", fetchMock);
       try {
         await expect(
-          requestEnvelope("https://api.dataforseo.com/fixture", { method: "POST" }, {}),
+          requestEnvelope(
+            "https://api.dataforseo.com/fixture",
+            { method: "POST" },
+            { usageObserver: testUsageObserver },
+          ),
         ).rejects.toMatchObject({
-          code: "provider_account_restricted",
-          costCents: cost === undefined ? null : cost * 100,
+          ...(cost === undefined
+            ? { phase: "measurement" }
+            : { code: "provider_account_restricted", costCents: cost * 100 }),
         });
         expect(fetchMock).toHaveBeenCalledOnce();
       } finally {
@@ -129,4 +135,30 @@ describe("DataForSEO account verification receipts", () => {
       vi.unstubAllGlobals();
     }
   });
+});
+
+it("preserves a shared BYOK project-cap refusal without HTTP", async () => {
+  const { BudgetExhaustedError } = await import("@/lib/metering/admission-errors");
+  const denied = new BudgetExhaustedError({ projectId: "project", capCents: 1, spentCents: 1 });
+  const request = vi.fn();
+  vi.stubGlobal("fetch", request);
+  try {
+    await expect(
+      requestEnvelope(
+        "https://api.dataforseo.com/fixture",
+        { method: "POST" },
+        {
+          usageObserver: {
+            begin: async () => {
+              throw denied;
+            },
+            settle: async () => {},
+          },
+        },
+      ),
+    ).rejects.toBe(denied);
+    expect(request).not.toHaveBeenCalled();
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });

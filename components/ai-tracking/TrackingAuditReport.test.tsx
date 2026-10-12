@@ -92,7 +92,7 @@ describe("retained evidence saved audit workflow", () => {
       projectId,
     );
     expect(createdResponse.status).toBe(201);
-    const created = await createdResponse.json();
+    const created = (await createdResponse.json()).data;
     const listed = await (
       await agentReportsRoute(
         context("GET", `/projects/${projectId}/agent-reports?kind=ai_visibility_audit`),
@@ -107,7 +107,7 @@ describe("retained evidence saved audit workflow", () => {
       projectId,
       created.id,
     );
-    const saved = await response.json();
+    const saved = (await response.json()).data;
     expect(saved.body.limits).toMatchObject({
       complete: false,
       expectedSamples: 5,

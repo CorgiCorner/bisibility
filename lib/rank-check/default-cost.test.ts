@@ -18,9 +18,9 @@ describe("defaultCostPerCheckCents", () => {
 
   it.each([
     [10, 0.2],
-    [20, 0.35],
-    [50, 0.8],
-    [100, 1.55],
+    [20, 0.4],
+    [50, 1],
+    [100, 2],
   ] as const)("returns the DataForSEO Live top-%i estimate", (depth, expected) => {
     expect(defaultCostPerCheckCents("dataforseo", depth)).toBe(expected);
   });

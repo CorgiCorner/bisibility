@@ -38,6 +38,28 @@ describe("retired market catalog guard", () => {
     expect(createSourceFile).not.toHaveBeenCalled();
   });
 
+  it("avoids building an AST for unrelated regular expressions and escaped strings", () => {
+    expect(
+      check({
+        "app/escaped-text.ts": String.raw`export const lines = "one\ntwo"; export const pattern = /\d+\s*/;`,
+      }),
+    ).toEqual([]);
+    expect(createSourceFile).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    String.raw`import "@/lib/serp/mar\x6bets";`,
+    String.raw`import "@/lib/serp/mar\u{6b}ets";`,
+    String.raw`import "@/lib/serp/mar\u{00000006b}ets";`,
+    String.raw`import "@/lib/serp/m\arkets";`,
+    String.raw`import "@/lib/serp/\155arkets";`,
+    'import "@/lib/serp/mar\\\nkets";',
+    'import "@/lib/serp/mar\\\r\nkets";',
+  ])("still parses alternate escapes in catalog dependencies: %s", (source) => {
+    expect(check({ "app/escaped-import.ts": source })).toEqual(["app/escaped-import.ts:1"]);
+    expect(createSourceFile).toHaveBeenCalledTimes(1);
+  });
+
   it("still parses escaped module specifiers and retired export identifiers", () => {
     expect(
       check({

@@ -162,7 +162,7 @@ export default async function KeywordsPage({
   const requestedAction = parseRankTrackerAction(paramValue(params?.action));
   const {
     activeView,
-    groupedWasSpecified,
+    explicitGrouping,
     malformedDevice,
     query: requestedQuery,
     staleView,
@@ -173,6 +173,7 @@ export default async function KeywordsPage({
         lens: { ...requestedQuery.lens, locationId: marketLocationKey },
       }
     : requestedQuery;
+  const projectMarketsPromise = getProjectMarkets(publicId);
   const [
     list,
     savedViews,
@@ -186,7 +187,9 @@ export default async function KeywordsPage({
     preferences,
     searchConsoleConnected,
   ] = await Promise.all([
-    loadRankTrackerPageList(publicId, scopedQuery, groupedWasSpecified),
+    projectMarketsPromise.then(({ markets }) =>
+      loadRankTrackerPageList(publicId, scopedQuery, markets, { explicitGrouping }),
+    ),
     listSavedViews(publicId),
     requireReadableProject(publicId),
     getCheckHealth(publicId),
@@ -194,7 +197,7 @@ export default async function KeywordsPage({
     getKeywordTagSuggestions(publicId),
     getKeywordDefaultMarket(publicId),
     savedKeywordCount(publicId),
-    getProjectMarkets(publicId),
+    projectMarketsPromise,
     getPreferences(),
     isProviderConnected(publicId, "gsc"),
   ]);

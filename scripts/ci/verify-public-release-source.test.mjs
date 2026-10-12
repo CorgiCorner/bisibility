@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { verifyPublicReleaseSource } from "./verify-public-release-source.mjs";
+import { nativePublicCiJobs, verifyPublicReleaseSource } from "./verify-public-release-source.mjs";
 
 const sha = "a".repeat(40);
 
@@ -13,6 +13,7 @@ function apiFixture({
   ref = "main",
   runOverrides = {},
   gateOverrides = {},
+  transformJobs = (jobs) => jobs,
 } = {}) {
   return async (path) => {
     if (path === "/git/ref/heads/main") return { object: { sha: mainSha } };
@@ -26,13 +27,17 @@ function apiFixture({
         head_sha: sha, event: "push", path: ".github/workflows/ci.yml", head_branch: ref, run_attempt: 2, ...runOverrides }] };
     }
     if (path === "/actions/runs/7/attempts/2/jobs?per_page=100") {
-      return { jobs: [{ conclusion, name: "ci-ok", status, head_sha: sha, run_attempt: 2, ...gateOverrides }] };
+      const jobs = transformJobs(nativePublicCiJobs.map((name, index) => ({
+        id: index + 1, conclusion, name, status, head_sha: sha, run_attempt: 2,
+        ...(name === "ci-ok" ? gateOverrides : {}),
+      })));
+      return { jobs, total_count: jobs.length };
     }
     throw new Error(`Unexpected API path: ${path}`);
   };
 }
 
-test("accepts an exact main, tag, workflow run, and ci-ok job", async () => {
+test("accepts exact main, tag, workflow run, and every native public full-suite job", async () => {
   const result = await verifyPublicReleaseSource({
     api: apiFixture(),
     originSha: sha,
@@ -41,6 +46,36 @@ test("accepts an exact main, tag, workflow run, and ci-ok job", async () => {
     wait: false,
   });
   assert.equal(result.state, "success");
+});
+
+for (const name of nativePublicCiJobs.filter((job) => job !== "ci-ok")) {
+  for (const invalid of ["missing", "failed", "skipped", "stale-attempt", "foreign-sha"]) {
+    test(`successful ci-ok cannot hide ${invalid} ${name}`, async () => {
+      const transformJobs = (jobs) => jobs.flatMap((job) => {
+        if (job.name !== name) return [job];
+        if (invalid === "missing") return [];
+        if (invalid === "stale-attempt") return [{ ...job, run_attempt: 1 }];
+        if (invalid === "foreign-sha") return [{ ...job, head_sha: "b".repeat(40) }];
+        return [{ ...job, conclusion: invalid === "failed" ? "failure" : "skipped" }];
+      });
+      await assert.rejects(verifyPublicReleaseSource({
+        api: apiFixture({ transformJobs }), originSha: sha, sha,
+      }), /Public CI failed/);
+    });
+  }
+}
+
+test("rejects duplicate jobs and a truncated native job page", async () => {
+  await assert.rejects(verifyPublicReleaseSource({
+    api: apiFixture({ transformJobs: (jobs) => [...jobs, jobs[0]] }), originSha: sha, sha,
+  }), /Public CI failed/);
+  const fixture = apiFixture();
+  await assert.rejects(verifyPublicReleaseSource({
+    api: async (path) => {
+      const result = await fixture(path);
+      return result.jobs ? { ...result, total_count: result.total_count + 1 } : result;
+    }, originSha: sha, sha,
+  }), /Public CI failed/);
 });
 
 test("validates native public RC CI without requiring promotion to main", async () => {

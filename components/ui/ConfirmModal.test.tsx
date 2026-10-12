@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { coreMessages } from "@/i18n/core-messages";
 import {
   renderWithFeatureMessages,
@@ -84,11 +86,13 @@ describe("ConfirmModal keyboard shortcut", () => {
 
     const confirm = screen.getByRole("button", { name: "Delete keyword" });
     expect(confirm.querySelector("svg")).toBeNull();
-    expect(confirm).toHaveClass("duration-[var(--motion-press)]");
-    expect(confirm).toHaveClass("motion-safe:active:not-focus-visible:scale-[0.97]");
-    expect(screen.getByRole("button", { name: "Cancel" })).not.toHaveClass(
-      "motion-safe:active:not-focus-visible:scale-[0.97]",
-    );
+    expect(confirm).toHaveAttribute("data-variant", "destructive");
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveAttribute("data-variant", "ghost");
+    const css = readFileSync(resolve(import.meta.dirname, "Button.module.css"), "utf8");
+    expect(css).toContain("transform var(--motion-press) var(--ease-out)");
+    expect(css).toContain("@media (prefers-reduced-motion: no-preference)");
+    expect(css).toContain(".root:not(.ghost):active:not(:focus-visible):not(:disabled)");
+    expect(css).toContain("transform: scale(var(--control-press-scale, 0.97))");
   });
 
   it("confirms on Cmd+Enter when the action is enabled", () => {
@@ -321,4 +325,13 @@ describe("ConfirmModal toast suppression", () => {
     await act(async () => {});
     expect(screen.queryByText("Keyword deleted")).not.toBeInTheDocument();
   });
+});
+
+it("uses shared buttons with visible focus treatment for both confirmation actions", () => {
+  renderConfirmModal("deleteTimelineNote");
+  expect(screen.getByRole("button", { name: "Cancel" })).toHaveAttribute("data-slot", "button");
+  expect(screen.getByRole("button", { name: "Delete note" })).toHaveAttribute(
+    "data-variant",
+    "destructive",
+  );
 });

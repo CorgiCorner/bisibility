@@ -145,13 +145,9 @@ describe("launchRankCheckRun provider allocation", () => {
       launch("kw_bcdefghijklmnopqrstuvwxy", "request-two"),
     ]);
 
-    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
-    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
-    expect(results.find((result) => result.status === "rejected")).toMatchObject({
-      reason: { code: "budget_exhausted" },
-      status: "rejected",
-    });
-    expect(reservations).toHaveLength(1);
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(2);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(0);
+    expect(reservations).toHaveLength(2);
     expect(reservations[0]?.selectionSpec).toMatchObject({
       estimatedOperations: 1,
       providerAtLaunch: "serpapi",

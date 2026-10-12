@@ -180,6 +180,7 @@
       "budgetReached": "Budżet wyczerpany",
       "checksThisMonth": "Sprawdzenia w tym miesiącu",
       "description": "Jak zbierane są pozycje w tym projekcie",
+      "providerCostUnknown": "Nieznany",
       "estimateProviderCost": "Szac. koszt dostawcy",
       "failedChecks": "Nieudane (24 godz.)",
       "lastCheck": "Ostatnie sprawdzenie",

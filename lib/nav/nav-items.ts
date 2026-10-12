@@ -29,7 +29,7 @@ import { SparkleIcon as Sparkle } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import { SquaresFourIcon as SquaresFour } from "@phosphor-icons/react/dist/ssr/SquaresFour";
 import { UsersThreeIcon as UsersThree } from "@phosphor-icons/react/dist/ssr/UsersThree";
 import type { Icon } from "@phosphor-icons/react/lib";
-import { researchModuleNavEntries, researchProjectNavEntries } from "./research-nav";
+import { agentReportsNavEntry, aiTrackingNavEntry, researchModuleNavEntries } from "./research-nav";
 
 /**
  * One icon size for every tile in the sidebar rail. The logo mark, the workspace tile and the
@@ -38,12 +38,12 @@ import { researchModuleNavEntries, researchProjectNavEntries } from "./research-
  */
 export const RAIL_ICON_SIZE = 18;
 
-export type NavBadge = "new" | "alpha" | "beta" | "experimental";
+export type NavBadge = "new" | "experimental";
 
 /**
  * Headed rail groups. Dashboard intentionally stays outside them at the top of every rail.
  */
-export type NavItemGroup = "modules" | "project";
+export type NavItemGroup = "tracking" | "research" | "reports" | "project";
 
 /**
  * What a destination is scoped to.
@@ -63,6 +63,7 @@ export type NavItem = {
   icon: Icon;
   scope: NavScope;
   badge?: NavBadge;
+  activeHrefs?: readonly string[];
   external?: boolean;
 };
 
@@ -117,16 +118,28 @@ export type NavItemGroupDescriptor = {
 
 export const navItemGroups = [
   {
-    id: "modules",
-    label: "Modules",
-    tag: "MODULES",
-    tooltip: "Market modules follow the selected market. The rest keep their own axis.",
+    id: "tracking",
+    label: "Tracking",
+    tag: "TRACKING",
+    tooltip: "Track rankings and AI performance over time.",
+  },
+  {
+    id: "research",
+    label: "Research & audits",
+    tag: "RESEARCH",
+    tooltip: "Explore keywords, websites and AI responses.",
+  },
+  {
+    id: "reports",
+    label: "Data & reports",
+    tag: "DATA",
+    tooltip: "Review connected search data and saved reports.",
   },
   {
     id: "project",
     label: "Project",
     tag: "PROJECT",
-    tooltip: "Project-wide configuration. A market never narrows it.",
+    tooltip: "Project configuration and shared operations.",
   },
 ] as const satisfies readonly NavItemGroupDescriptor[];
 
@@ -134,12 +147,7 @@ export type NavEntry = Omit<NavItem, "href"> & { segment: string };
 
 type RailNavEntry = NavEntry & { experimentalModule?: ExperimentalModuleKey };
 
-/**
- * Where the rail points once a market level exists.
- *
- * `marketSegments` comes from `navContextFromPathname`, which reads the current URL through the
- * shared route parser. With no market context every row resolves to its project route.
- */
+/** Market context comes from the current URL; absent context keeps project routes. */
 export type NavContext = {
   marketSegments?: readonly string[];
 };
@@ -181,14 +189,15 @@ const railNavEntries = [
     icon: SquaresFour,
   },
   {
-    group: "modules",
+    group: "tracking",
     label: "Rank Tracker",
     scope: "market",
     segment: "rank-tracker",
     icon: Ranking,
   },
+  aiTrackingNavEntry,
   {
-    group: "modules",
+    group: "tracking",
     label: "Competitors",
     scope: "market",
     segment: "competitors",
@@ -197,29 +206,29 @@ const railNavEntries = [
     experimentalModule: "competitors",
   },
   {
-    group: "modules",
+    group: "research",
     label: "Keyword Research",
     scope: "own-axis",
     segment: "keyword-research",
     icon: Binoculars,
   },
   {
-    group: "modules",
+    group: "research",
     label: "Domain Overview",
     scope: "own-axis",
     segment: "domain-overview",
     icon: Globe,
   },
-  { group: "modules", label: "Backlinks", scope: "own-axis", segment: "backlinks", icon: Link },
+  { group: "research", label: "Backlinks", scope: "own-axis", segment: "backlinks", icon: Link },
+  ...researchModuleNavEntries,
   {
-    group: "modules",
+    group: "reports",
     label: "Search Console",
     scope: "own-axis",
     segment: SEARCH_CONSOLE_SEGMENT,
     icon: ChartLineUp,
-    badge: "beta",
   },
-  ...researchModuleNavEntries,
+  agentReportsNavEntry,
   { group: "project", label: "Markets", scope: "project", segment: "markets", icon: MapTrifold },
   {
     group: "project",
@@ -227,7 +236,6 @@ const railNavEntries = [
     scope: "project",
     segment: "alerts",
     icon: Siren,
-    badge: "alpha",
   },
   { group: "project", label: "Runs", scope: "project", segment: "runs", icon: PlayCircle },
   {
@@ -237,7 +245,6 @@ const railNavEntries = [
     segment: "integrations",
     icon: PuzzlePiece,
   },
-  ...researchProjectNavEntries,
   { group: "project", label: "Install", scope: "project", segment: "install", icon: Sparkle },
   { group: "project", label: "Settings", scope: "project", segment: "settings", icon: GearSix },
 ] as const satisfies readonly RailNavEntry[];
@@ -263,6 +270,7 @@ export function navItems(
       const { experimentalModule: _experimentalModule, segment, ...item } = entry as RailNavEntry;
       return {
         ...item,
+        ...(segment === "settings" ? { activeHrefs: [appPath(projectRef, "context")] } : {}),
         href: navItemHref({ scope: item.scope, segment }, projectRef, context),
       };
     });

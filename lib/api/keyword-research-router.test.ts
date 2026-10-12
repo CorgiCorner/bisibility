@@ -121,6 +121,23 @@ describe("keyword research router", () => {
     expect(budget.headers.get("Retry-After")).toBeTruthy();
   });
 
+  it("keeps missing budget details in a lookup response without retry timing", async () => {
+    mocks.research.mockResolvedValueOnce({
+      ok: false,
+      reason: "budget_exhausted",
+      budgetReason: "budget_missing",
+    });
+    const response = await handleApiRequest(
+      request("GET", "/projects/prj_a00000000000000000000000/keyword-research?seed=test"),
+      ["projects", "prj_a00000000000000000000000", "keyword-research"],
+    );
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBeNull();
+    const body = await response.json();
+    expect(body.details.reason).toBe("budget_missing");
+    expect(body.detail).toContain("configure a monthly budget");
+  });
+
   it("enriches only the authenticated owner's matching admission at the API boundary", async () => {
     const path = ["projects", project.publicId, "keyword-research"];
     const req = request("GET", `/projects/${project.publicId}/keyword-research?seed=test`);

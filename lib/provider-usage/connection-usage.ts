@@ -1,51 +1,15 @@
-import "server-only";
-
-import type { PrismaClient } from "@/lib/generated/prisma/client";
+import { Prisma } from "@/lib/generated/prisma/client";
+import type { UsageReadClient } from "@/lib/metering/usage-read";
+import { canonicalUsageSql } from "@/lib/metering/usage-sql";
+import { monthUtcRange } from "@/lib/metering/utc-window";
 import type { ProviderAllocationUnit } from "@/lib/providers/allocation-catalog";
-import { monthUtcRange } from "@/lib/rank-check/budget";
-import { type ProviderRequestSurface, SOURCES_BY_SURFACE } from "./surface";
+import type { ProviderRequestSurface } from "./surface";
 
-type ConnectionUsageClient = {
-  providerCostEntry: Pick<PrismaClient["providerCostEntry"], "aggregate" | "count">;
-};
-
-export type ConnectionUsage = {
-  /** Requests in scope that have not settled a confirmed measurement yet. */
-  unconfirmedCount: number;
-  /** All non-cached requests in scope, confirmed or not. */
-  requestCount: number;
-  /** Confirmed usage only: settled cost cents, or measured native quantity. */
-  used: number;
-};
-
-function number(value: unknown) {
-  return Number(value ?? 0);
-}
-
-function surfaceSourceFilter(surface: ProviderRequestSurface | undefined) {
-  if (!surface) return undefined;
-  if (surface === "app") {
-    // Legacy rows without a source belong to the app surface.
-    return { OR: [{ source: { in: [...SOURCES_BY_SURFACE.app] } }, { source: null }] };
-  }
-  return { source: { in: [...SOURCES_BY_SURFACE.programmatic] } };
-}
-
-/** Which paying credential a budget and its usage belong to. */
+export type ConnectionUsageClient = Partial<UsageReadClient>;
 export type UsageCredentialSource = "own" | "hosted";
+export type ConnectionUsage = { requestCount: number; unconfirmedCount: number; used: number };
 
-/**
- * Confirmed usage comes only from settled ledger rows. A row counts as
- * confirmed when its measurement settled ("recorded") and, for native units,
- * it carries a measured quantity. Everything else is reported separately as
- * unconfirmed so callers never present a partial sum as complete.
- *
- * Own keys and credits are always counted apart, never added together: rows
- * recorded with the project's own key consume the provider costCents in the
- * catalog unit, and rows recorded on credits consume their charged priceCents
- * (always cents). A recorded credits row without a price is unconfirmed, never
- * zero and never the provider cost. A known price of zero is confirmed.
- */
+/** Actuals are effective Store measurements, with unknown coverage counted independently. */
 export async function aggregateConnectionUsage(
   db: ConnectionUsageClient,
   input: {
@@ -57,72 +21,52 @@ export async function aggregateConnectionUsage(
     unit: ProviderAllocationUnit;
   },
 ): Promise<ConnectionUsage> {
-  const sourceFilter = surfaceSourceFilter(input.surface);
-  const where = {
-    cached: false,
-    connectionId: input.connectionId,
-    createdAt: monthUtcRange(input.now),
-    credentialSource: input.credentialSource,
-    projectId: input.projectId,
-    ...(sourceFilter ?? {}),
-  };
-  if (input.credentialSource === "hosted") {
-    const [confirmed, unconfirmedCount] = await Promise.all([
-      db.providerCostEntry.aggregate({
-        _count: { _all: true },
-        _sum: { priceCents: true },
-        where: { ...where, measurementStatus: "recorded", priceCents: { not: null } },
-      }),
-      db.providerCostEntry.count({
-        where: {
-          ...where,
-          AND: [{ OR: [{ measurementStatus: { not: "recorded" } }, { priceCents: null }] }],
-        },
-      }),
-    ]);
-    return {
-      requestCount: confirmed._count._all + unconfirmedCount,
-      unconfirmedCount,
-      used: number(confirmed._sum.priceCents),
-    };
-  }
-  if (input.unit === "units") {
-    const [confirmed, unconfirmedCount] = await Promise.all([
-      db.providerCostEntry.aggregate({
-        _count: { _all: true },
-        _sum: { costCents: true, usageQuantity: true },
-        where: { ...where, measurementStatus: "recorded", usageQuantity: { not: null } },
-      }),
-      db.providerCostEntry.count({
-        where: {
-          ...where,
-          AND: [
-            {
-              OR: [{ measurementStatus: { not: "recorded" } }, { usageQuantity: null }],
-            },
-          ],
-        },
-      }),
-    ]);
-    return {
-      requestCount: confirmed._count._all + unconfirmedCount,
-      unconfirmedCount,
-      used: number(confirmed._sum.usageQuantity),
-    };
-  }
-  const [confirmed, unconfirmedCount] = await Promise.all([
-    db.providerCostEntry.aggregate({
-      _count: { _all: true },
-      _sum: { costCents: true },
-      where: { ...where, measurementStatus: "recorded" },
-    }),
-    db.providerCostEntry.count({
-      where: { ...where, measurementStatus: { not: "recorded" } },
-    }),
-  ]);
+  if (!db.$queryRaw) throw new Error("Canonical usage reader is unavailable");
+  const range = monthUtcRange(input.now);
+  const column = Prisma.raw(
+    input.credentialSource === "hosted"
+      ? '"priceCents"'
+      : input.unit === "units"
+        ? '"usageQuantity"'
+        : '"costCents"',
+  );
+  const [row] = await db.$queryRaw<
+    { requestCount: number; unconfirmedCount: number; used: unknown }[]
+  >(Prisma.sql`
+    SELECT COUNT(*)::int AS "requestCount",COUNT(*) FILTER(WHERE ${column} IS NULL)::int AS "unconfirmedCount",
+      COALESCE(SUM(${column}),0) AS used FROM (${canonicalUsageSql()}) u
+    WHERE "projectId"=${input.projectId} AND "connectionId"=${input.connectionId}
+      AND "credentialSource"=${input.credentialSource} AND NOT cached
+      AND "createdAt">=${range.gte} AND "createdAt"<${range.lt}
+      ${input.surface ? Prisma.sql`AND surface=${input.surface}` : Prisma.empty}`);
   return {
-    requestCount: confirmed._count._all + unconfirmedCount,
-    unconfirmedCount,
-    used: number(confirmed._sum.costCents),
+    requestCount: row?.requestCount ?? 0,
+    unconfirmedCount: row?.unconfirmedCount ?? 0,
+    used: Number(row?.used ?? 0),
   };
+}
+
+/** Preserves the advisory stale/failed distinction while removing its legacy ledger read. */
+export async function unresolvedConnectionUsage(
+  db: ConnectionUsageClient,
+  input: {
+    connectionId: string;
+    projectId: string;
+    credentialSource: UsageCredentialSource;
+    unit: ProviderAllocationUnit;
+    surface: ProviderRequestSurface;
+    now?: Date;
+  },
+) {
+  if (!db.$queryRaw) throw new Error("Canonical usage reader is unavailable");
+  const range = monthUtcRange(input.now);
+  const staleBefore = new Date((input.now ?? new Date()).getTime() - 15 * 60_000);
+  const [row] = await db.$queryRaw<
+    { count: number }[]
+  >(Prisma.sql`SELECT COUNT(*)::int AS count FROM (${canonicalUsageSql()}) u
+    WHERE "projectId"=${input.projectId} AND "connectionId"=${input.connectionId} AND "credentialSource"=${input.credentialSource}
+      AND NOT cached AND surface=${input.surface} AND "createdAt">=${range.gte} AND "createdAt"<${range.lt}
+      AND (("measurementStatus"<>'recorded' AND (failed OR "createdAt"<${staleBefore}))
+        OR ("measurementStatus"='recorded' AND ${input.credentialSource === "hosted" ? Prisma.sql`"priceCents" IS NULL` : input.unit === "units" ? Prisma.sql`"usageQuantity" IS NULL` : Prisma.sql`false`}))`);
+  return row?.count ?? 0;
 }

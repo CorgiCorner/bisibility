@@ -1,3 +1,4 @@
+import { dataforseo, serpapi } from "@usagekit/providers";
 import type { ProviderRate } from "./estimate";
 import {
   estimatedFeatureCostCents,
@@ -11,66 +12,71 @@ export {
   type ProviderFeatureRate,
 } from "./provider-feature-rates";
 
-export const DATAFORSEO_LIVE_RANK_CHECK_COST_CENTS = 0.2;
+function serpPrice(priority?: string) {
+  const operation = priority
+    ? "serp.google.organic.task_post"
+    : "serp.google.organic.live.advanced";
+  const row = dataforseo.descriptor.prices.find(
+    (price) => price.operation === operation && (!priority || price.option?.priority === priority),
+  );
+  if (row?.unit !== "cents" || row.calculation?.kind !== "additional_pages")
+    throw new Error("Provider list price is unavailable");
+  return row;
+}
+const livePrice = serpPrice();
+function queueOption(key: string, label: string, turnaround: string, priority?: string) {
+  const price = serpPrice(priority);
+  if (price.calculation?.kind !== "additional_pages") throw new Error("Missing page formula");
+  const base = Number(price.perUnit);
+  return {
+    key,
+    label,
+    shortLabel: key === "standard" ? "Standard" : key === "priority" ? "Priority" : "Live",
+    turnaround,
+    unitCostCents: base,
+    additionalPageCostCents: Number(
+      (base * Number(price.calculation.additionalPageFactor)).toFixed(6),
+    ),
+  };
+}
+
+export const DATAFORSEO_LIVE_RANK_CHECK_COST_CENTS = Number(livePrice.perUnit);
 
 export const PROVIDER_RATES: ProviderRate[] = [
   {
-    providerId: "dataforseo",
-    label: "DataForSEO",
+    providerId: dataforseo.descriptor.id,
+    label: dataforseo.descriptor.label,
     pricingModel: "flat",
-    sourceUrl: "https://dataforseo.com/pricing/serp/google-organic-serp-api",
-    checkedAt: "2026-10-01",
+    sourceUrl: dataforseo.descriptor.docs.pricing,
+    checkedAt: livePrice.checkedAt,
     notes:
-      "Pay-as-you-go; the first SERP page (top 10) is billed at the base rate and each additional page at 75% of it. The app records the provider-reported actual cost per check. $50 minimum account top-up.",
+      "Reserve the full base rate for each requested SERP page. Actual provider receipts determine the final cost.",
     options: [
-      {
-        additionalPageCostCents: 0.045,
-        key: "standard",
-        label: "Standard queue",
-        shortLabel: "Standard",
-        turnaround: "~5 min",
-        unitCostCents: 0.06,
-      },
-      {
-        additionalPageCostCents: 0.09,
-        key: "priority",
-        label: "Priority queue",
-        shortLabel: "Priority",
-        turnaround: "~1 min",
-        unitCostCents: 0.12,
-      },
-      {
-        additionalPageCostCents: 0.15,
-        key: "live",
-        label: "Live",
-        shortLabel: "Live",
-        turnaround: "~6 s",
-        unitCostCents: DATAFORSEO_LIVE_RANK_CHECK_COST_CENTS,
-      },
+      queueOption("standard", "Standard queue", "~5 min", "normal"),
+      queueOption("priority", "Priority queue", "~1 min", "high"),
+      queueOption("live", "Live", "~6 s"),
     ],
   },
   {
-    providerId: "serpapi",
-    label: "SerpApi",
+    providerId: serpapi.descriptor.id,
+    label: serpapi.descriptor.label,
     pricingModel: "plan",
-    sourceUrl: "https://serpapi.com/pricing",
-    checkedAt: "2026-10-01",
+    sourceUrl: serpapi.descriptor.docs.pricing,
+    checkedAt: serpapi.descriptor.prices[0]?.checkedAt ?? "",
     notes:
       "Subscription plans; only successful searches count; unused searches do not roll over. Enterprise tier not modeled.",
-    plans: [
-      { planKey: "free", label: "Free", monthlyPriceCents: 0, includedChecks: 250 },
-      { planKey: "starter", label: "Starter", monthlyPriceCents: 2500, includedChecks: 1000 },
-      { planKey: "developer", label: "Developer", monthlyPriceCents: 7500, includedChecks: 5000 },
-      {
-        planKey: "production",
-        label: "Production",
-        monthlyPriceCents: 15000,
-        includedChecks: 15000,
-      },
-      { planKey: "bigdata", label: "Big Data", monthlyPriceCents: 27500, includedChecks: 30000 },
-    ],
+    plans: (serpapi.descriptor.plans ?? []).flatMap((plan) => {
+      if (!plan.subscription || !plan.allowance) return [];
+      return [
+        {
+          planKey: plan.id,
+          label: plan.label,
+          monthlyPriceCents: Number(plan.subscription.fee.units) / 10000,
+          includedChecks: Number(plan.allowance.value),
+        },
+      ];
+    }),
   },
-  // Kept last so that a `rates[0]` fallback never lands on the self-hosted provider.
   {
     providerId: "local-sequence",
     label: "Local sequence",
@@ -179,4 +185,4 @@ export function domainOverviewListEstimate(
   };
 }
 
-export const SERP_RATES_CHECKED_AT = "2026-10-01";
+export const SERP_RATES_CHECKED_AT = livePrice.checkedAt;

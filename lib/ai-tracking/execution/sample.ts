@@ -3,6 +3,7 @@ import { assertTrackingDeadline } from "@/lib/ai-tracking/providers/dispatch-err
 import { type TrackingEnvelope, taskOutcome } from "@/lib/ai-tracking/providers/envelope";
 import { normalizeTrackingResponse } from "@/lib/ai-tracking/providers/normalize";
 import { trackingCostReceipt } from "@/lib/ai-tracking/reconciliation/cost";
+import { meterOperationReference, receiptOperationId } from "@/lib/metering/operation-reference";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { TrackingDispatchDeniedError, type TrackingExecutionPorts } from "./ports";
 
@@ -63,7 +64,7 @@ export async function executeTrackingSample(
     const receipt = trackingCostReceipt({
       plan,
       envelope,
-      ledgerId: sample.receipt?.providerCostEntryId ?? null,
+      ledgerId: receiptOperationId(sample.receipt),
       previous: sample.receipt,
       retrieval: true,
     });
@@ -97,7 +98,13 @@ export async function executeTrackingSample(
       ...result,
       measurement: "unavailable",
       observations: [],
-      receipt: { providerCostEntryId: null, amountUsd: "0", state: "confirmed" },
+      receipt: {
+        noDispatch: true,
+        providerCostEntryId: null,
+        operationRef: null,
+        amountUsd: "0",
+        state: "confirmed",
+      },
       attemptId: plan.attemptId,
       expectedDispatch: "claimed",
     });
@@ -109,7 +116,8 @@ export async function executeTrackingSample(
   } catch (error) {
     if (error instanceof ProviderUsagePersistenceError && error.attemptId) {
       await ports.transition(plan, "claimed", "submission_unknown", undefined, {
-        providerCostEntryId: error.attemptId,
+        providerCostEntryId: null,
+        operationRef: meterOperationReference(error.attemptId),
         amountUsd: null,
         state: "unknown",
       });
@@ -117,7 +125,12 @@ export async function executeTrackingSample(
     }
     throw error;
   }
-  const unknown: CostReceipt = { providerCostEntryId: ledgerId, amountUsd: null, state: "unknown" };
+  const unknown: CostReceipt = {
+    providerCostEntryId: null,
+    operationRef: meterOperationReference(ledgerId),
+    amountUsd: null,
+    state: "unknown",
+  };
   try {
     await prepared.observer.beforeDispatch?.(ledgerId);
     if (!(await ports.transition(plan, "claimed", "submission_started", undefined, unknown))) {
@@ -145,7 +158,12 @@ export async function executeTrackingSample(
         ...result,
         measurement: "unavailable",
         observations: [],
-        receipt: { providerCostEntryId: ledgerId, amountUsd: "0", state: "confirmed" },
+        receipt: {
+          providerCostEntryId: null,
+          operationRef: meterOperationReference(ledgerId),
+          amountUsd: "0",
+          state: "confirmed",
+        },
         attemptId: plan.attemptId,
         expectedDispatch: "submission_started",
       });
@@ -159,7 +177,7 @@ export async function executeTrackingSample(
   if (plan.endpoint.endsWith("task_post") && taskId && taskOutcome(envelope) !== "failed") {
     if (!(await ports.transition(plan, "submission_started", "submitted", taskId, receipt)))
       return "deferred";
-    // Update the original ledger row with the purchase; GET may later correct its refund.
+    // Settle the original operation with the purchase; GET may later correct its refund.
     await ports.settle(plan, receipt, false, taskId);
     return "submitted";
   }

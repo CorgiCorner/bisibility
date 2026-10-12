@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { presentCloudBackupActionError } from "./cloud-backup-action-error";
 
 const sharedErrors = {
+  usageReconciliationRequired: () => "Wymagane uzgodnienie użycia.",
+  budgetMissing: () => "Configure a project budget.",
   genericFallback: () => "Shared fallback",
   rateLimited: () => "Rate limited",
   serverComponentDigest: ({ digest }: { digest: string }) => `Server reference ${digest}`,

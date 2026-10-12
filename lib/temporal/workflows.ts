@@ -142,7 +142,7 @@ export {
   syncPresenceWorkflow,
   syncSitemapsWorkflow,
 } from "./maintenance-workflows";
-export { maintainMeteringShadowWorkflow } from "./metering-maintenance-workflow";
+export { maintainMeteringReservationsWorkflow } from "./metering-maintenance-workflow";
 export { opsHeartbeatWorkflow } from "./ops-workflows";
 export { reconcileProviderUsageWorkflow } from "./provider-usage-reconcile-workflow";
 export { queuedRankCheckBatchWorkflow } from "./queued-rank-check-workflow";

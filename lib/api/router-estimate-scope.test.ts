@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   preflightBudget: vi.fn(),
   prisma: {
     $transaction: vi.fn(),
+    $queryRaw: vi.fn(async () => []),
+    providerConnection: { findUnique: vi.fn() },
     backlinkSnapshot: { findFirst: vi.fn() },
     project: { findFirst: vi.fn() },
   },
@@ -145,6 +147,17 @@ const researchPath = `/projects/${projectPublicId}/keyword-research`;
 describe("estimate-only scope for the two GET estimate operations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialSource: "own",
+      credentialsEncrypted: "secret",
+      projectId: "project_1",
+      provider: "dataforseo",
+      enabled: true,
+      status: "connected",
+      rates: [],
+      project: { ownerId: "owner_1" },
+    });
     authenticate(["read"]);
     mocks.prisma.project.findFirst.mockResolvedValue(project);
     mocks.prisma.backlinkSnapshot.findFirst.mockResolvedValue(null);
@@ -202,7 +215,7 @@ describe("estimate-only scope for the two GET estimate operations", () => {
     const backlinks = await route(`${backlinksPath}?target=example.com&estimate_only=true`);
     expect(backlinks.status).toBe(200);
     await expect(backlinks.json()).resolves.toMatchObject({
-      data: { estimate: true, estimated_cost_cents: 2.4 + (2.4 + 100 * 0.0036) + 2.4 },
+      data: { estimate: true, estimated_cost_cents: 7.6068 },
     });
 
     const research = await route(`${researchPath}?seed=test&estimate_only=true`);

@@ -29,8 +29,9 @@ true`, `estimated_cost_cents`, `cost_cents`, `cached`, `cached_until`, `provider
 and the normalized target) without calling the provider, consuming budget, or
 writing the cost ledger. A dry run never carries `summary`, `history`, `rows`,
 or `fetched_at`, so it cannot be mistaken for an empty backlink profile.
-`max_cost_cents` is a best-effort guard applied to the pre-estimate; the monthly
-provider budget remains the hard stop.
+`max_cost_cents` limits admitted cost estimates across summary, history, rows
+and retries. The provider budget also applies. An unconfirmed charge stops
+further calls in the same analysis.
 
 A successful snapshot's `data` carries `target`, `target_scope`, `include_subdomains`,
 `provider`, `fetched_at`, `cached`, `cached_until`, `cost_cents`,
@@ -39,7 +40,10 @@ A successful snapshot's `data` carries `target`, `target_scope`, `include_subdom
 broken backlink and page counts, and provider-lifetime `new_backlinks`,
 `lost_backlinks`, `new_referring_domains`, and `lost_referring_domains`.
 When available, `history` contains monthly `{month, new_links, lost_links}`
-entries. Page-scope analyses do not request history. An empty history array
+entries for the previous twelve full UTC calendar months. The estimate and
+provider request use the same fixed date window. Page-scope analyses do not
+request history. The subdomain setting affects the summary and link rows;
+historical trends use the provider's domain-level history. An empty history array
 does not establish that every month had zero new or lost links.
 
 Each row carries `source_domain`, `source_url`, `anchor`, `target_url`,
@@ -59,9 +63,10 @@ For a site analysis, a typed transient history failure with a known, finite,
 nonnegative provider cost can produce a successful snapshot with the completed
 summary and fetched rows. The optional snapshot field `historyUnavailable`
 appears as `history_unavailable: true` in REST and MCP output, with
-`history: []`. Site snapshots without this explicit flag must contain exactly
-12 history months. Empty site history without the flag, an 11- or 13-month
-normal history, and a nonempty history marked unavailable are invalid. Page
+`history: []`. Successful site history contains the months actually returned
+within the requested twelve-month window, from zero to twelve months. Fewer
+months are a valid provider result and do not set the unavailable flag. More than
+twelve months, or a nonempty history marked unavailable, are invalid. Page
 scope still permits empty history because it does not request the history endpoint.
 Treat unavailable trends as unavailable, not as twelve months of zeros.
 The snapshot's `cost_cents` includes the known cost of the failed history call

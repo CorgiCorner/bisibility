@@ -1,10 +1,11 @@
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   assertDomainOverviewMaxCost,
   domainOverviewCostReservation,
   domainOverviewEstimate,
+  fetchDomainHistory,
   fetchDomainKeywords,
   fetchDomainOverviewMetrics,
   preflightDomainOverview,
@@ -47,6 +48,7 @@ const researchScope = {
 };
 
 describe("domain overview provider calls", () => {
+  afterEach(() => vi.useRealTimers());
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.paidCall.mockImplementation(
@@ -54,14 +56,42 @@ describe("domain overview provider calls", () => {
     );
   });
 
-  it("estimates module costs from the measured list rates", () => {
+  it("estimates module costs from the shared catalog", () => {
     const estimate = domainOverviewEstimate({ keywordLimit: 100, pageLimit: 100, source });
 
-    expect(estimate.overview).toBe(2.4);
-    expect(estimate.history).toBeCloseTo(12.12);
+    expect(estimate.overview).toBe(1.212);
+    expect(estimate.history).toBeCloseTo(12.72);
     expect(estimate.keywords).toBe(2.4);
     expect(estimate.pages).toBe(2.4);
     expect(estimate.core).toBeCloseTo(estimate.overview + estimate.keywords + estimate.pages);
+  });
+
+  it("prices six full months and dispatches its frozen bounds across a month boundary", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-30T23:59:59.000Z"));
+    provider.fetchHistoricalRankOverview.mockResolvedValue({ costCents: 12.5, rows: [] });
+    mocks.paidCall.mockImplementationOnce(({ call }) => {
+      vi.setSystemTime(new Date("2026-10-01T00:00:01.000Z"));
+      return call({ apiKey: "test" });
+    });
+    await fetchDomainHistory({
+      ...researchScope,
+      origin: APP_REQUEST_ORIGIN,
+      projectId: "project_1",
+      scope: "root",
+      source,
+      target: "example.com",
+    });
+    expect(mocks.paidCall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itemCount: 6,
+        historyWindow: { dateFrom: "2026-03-01", dateTo: "2026-08-31" },
+      }),
+    );
+    expect(provider.fetchHistoricalRankOverview).toHaveBeenCalledWith(
+      { apiKey: "test" },
+      expect.objectContaining({ dateFrom: "2026-03-01", dateTo: "2026-08-31" }),
+    );
   });
 
   it("rejects an estimate above the caller max cost", () => {
@@ -94,7 +124,6 @@ describe("domain overview provider calls", () => {
     };
 
     await preflightDomainOverview({
-      budgetCapCents: 500,
       connectionId: "connection_1",
       estimatedCostCents: 6,
       estimatedUsageQuantity: 3,
@@ -104,7 +133,6 @@ describe("domain overview provider calls", () => {
     });
 
     expect(mocks.preflightBudget).toHaveBeenCalledWith({
-      budgetCapCents: 500,
       connectionId: "connection_1",
       estimatedCostCents: 6,
       estimatedUsageQuantity: 3,
@@ -124,7 +152,6 @@ describe("domain overview provider calls", () => {
 
     await fetchDomainOverviewMetrics({
       ...researchScope,
-      budgetCapCents: 500,
       origin: APP_REQUEST_ORIGIN,
       projectId: "project_1",
       scope: "root",
@@ -164,7 +191,6 @@ describe("domain overview provider calls", () => {
 
     await fetchDomainKeywords({
       ...researchScope,
-      budgetCapCents: 500,
       limit: 25,
       offset: 50,
       origin: APP_REQUEST_ORIGIN,
@@ -200,7 +226,6 @@ describe("domain overview provider calls", () => {
 
     await fetchDomainOverviewMetrics({
       ...researchScope,
-      budgetCapCents: 500,
       origin,
       projectId: "project_1",
       scope: "root",
@@ -209,7 +234,6 @@ describe("domain overview provider calls", () => {
     });
     await fetchDomainKeywords({
       ...researchScope,
-      budgetCapCents: 500,
       limit: 25,
       offset: 0,
       origin,

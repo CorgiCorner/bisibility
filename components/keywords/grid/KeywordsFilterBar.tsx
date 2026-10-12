@@ -1,6 +1,7 @@
 "use client";
 
 import type { LocalizedKeywordFilterChip } from "@/components/keywords/filters/keyword-filter-presentation";
+import { Button } from "@/components/ui/Button";
 import type {
   DataTableColumn,
   DataTableDensity,
@@ -8,7 +9,6 @@ import type {
 import { Pill } from "@/components/ui/Pill";
 import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { cn } from "@/lib/ui/cn";
 import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useTranslations } from "next-intl";
@@ -23,7 +23,6 @@ type KeywordsFilterBarProps = {
   density: DataTableDensity;
   filterChips: LocalizedKeywordFilterChip[];
   filterCount: number;
-  groupingControl?: ReactNode;
   id: string;
   onAddKeyword?: () => void;
   onClearFilters: () => void;
@@ -50,7 +49,6 @@ export function KeywordsFilterBar({
   density,
   filterChips,
   filterCount,
-  groupingControl,
   id,
   onAddKeyword,
   onClearFilters,
@@ -70,15 +68,11 @@ export function KeywordsFilterBar({
   scopeControl,
 }: Readonly<KeywordsFilterBarProps>) {
   const t = useTranslations("projectRankTracker.list.filterBar");
-  const hasChips = Boolean(scopeChip) || filterChips.length > 0;
   const hasFilters = filterCount > 0 || Boolean(searchValue.trim());
-  const hasContextControls = Boolean(scopeControl || groupingControl || savedViewControl);
-  // The scope chip is mobile-only (sm:hidden), so a row holding nothing else
-  // would render as bare vertical space on desktop.
-  const scopeChipOnly = Boolean(scopeChip) && filterChips.length === 0 && !hasFilters;
+  const hasContextControls = Boolean(scopeControl || savedViewControl);
 
   return (
-    <div className="border-b border-border px-4 py-3.5">
+    <div className="px-4 py-3.5" data-keywords-toolbar="">
       <div className="grid gap-3">
         {hasContextControls ? (
           <div
@@ -89,7 +83,6 @@ export function KeywordsFilterBar({
             {scopeControl ? (
               <div className="flex min-w-0 flex-wrap items-center gap-2">{scopeControl}</div>
             ) : null}
-            {groupingControl ? <div className="flex-none">{groupingControl}</div> : null}
             {savedViewControl ? (
               <span className="hidden flex-none sm:inline-flex">{savedViewControl}</span>
             ) : null}
@@ -110,7 +103,7 @@ export function KeywordsFilterBar({
             />
           </div>
         ) : null}
-        <div className="order-1 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 lg:order-2 lg:grid-cols-[minmax(220px,1fr)_auto] xl:grid-cols-[minmax(320px,1fr)_auto]">
+        <div className="order-1 grid min-w-0 grid-cols-1 items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto] lg:order-2 lg:grid-cols-[minmax(220px,1fr)_auto] xl:grid-cols-[minmax(320px,1fr)_auto]">
           <ToolbarSearch
             className="min-w-0"
             id="keywords-filter"
@@ -137,12 +130,10 @@ export function KeywordsFilterBar({
           />
         </div>
       </div>
-      {hasChips || hasFilters ? (
+      {hasFilters || scopeChip ? (
         <div
-          className={cn(
-            "mt-3 flex min-w-0 flex-wrap items-center gap-2",
-            scopeChipOnly && "lg:hidden",
-          )}
+          className={`mt-3 min-h-7 min-w-0 items-center gap-2 overflow-x-auto px-1 [&>*]:shrink-0 ${hasFilters ? "flex" : "flex lg:hidden"}`}
+          data-keywords-filter-chips=""
         >
           {hasFilters ? (
             <span className="mr-1 font-sans tabular-nums text-[10px] font-semibold uppercase tracking-[0.6px] text-fg-muted">
@@ -163,14 +154,15 @@ export function KeywordsFilterBar({
             </Pill>
           ))}
           {hasFilters ? (
-            <button
+            <Button
+              variant="ghost"
+              size="xs"
               aria-label={t("clearAllAriaLabel")}
-              className="min-h-7 rounded-full px-2.5 text-[12px] font-semibold text-fg-muted transition-colors hover:bg-bg-sunken hover:text-accent-text"
               onClick={onClearFilters}
               type="button"
             >
               {t("clearAll")}
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : null}

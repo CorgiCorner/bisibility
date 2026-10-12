@@ -44,7 +44,7 @@ export function dispatchAiTrackingTool(name: string, input: JsonObject): RestCal
   if (action) path += `/${action}`;
   const query = new URLSearchParams();
   if (method === "GET")
-    for (const key of ["limit", "cursor", "run_id", "previous_run_id"]) {
+    for (const key of ["limit", "cursor", "run_id", "previous_run_id", "format"]) {
       const value = input[key];
       if (key === member) continue;
       if (typeof value === "string" || typeof value === "number") query.set(key, String(value));

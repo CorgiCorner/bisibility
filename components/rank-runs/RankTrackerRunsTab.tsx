@@ -7,7 +7,6 @@ import { getRankCheckRunCount, listRankCheckRuns } from "@/lib/queries/rank-chec
 import { savedKeywordCount } from "@/lib/queries/saved-keywords";
 import { loadWorkspaceBudgetSummary } from "@/lib/queries/workspace-budget-summary";
 import { appPath } from "@/lib/routing/app-path";
-import { isBudgetExhausted } from "./budget-notices-model";
 import { RunsSection } from "./RunsSection";
 
 function rankRunsUrl(projectRef: string, segment: "history" | "planned") {
@@ -26,7 +25,7 @@ export async function RankTrackerRunsTab({
     getRankCheckRunCount(projectId),
     getKeywordCount(projectRef),
     savedKeywordCount(projectRef),
-    loadWorkspaceBudgetSummary(projectId),
+    loadWorkspaceBudgetSummary(projectRef),
   ]);
   return (
     <PageContent>
@@ -40,16 +39,13 @@ export async function RankTrackerRunsTab({
             trackedCount={trackedCount}
           />
           <RunsSection
-            budgetExhausted={isBudgetExhausted({
-              hasAllocation: budgetSummary?.hasAllocation ?? false,
-              maxUsedPercent: budgetSummary?.maxUsedPercent ?? null,
-            })}
+            budgetExhausted={budgetSummary.paidWorkBlocked === true}
             budgetSettingsHref={`/app/${projectRef}/integrations?tab=usage&budget=edit`}
             initialHistory={history}
             initialPlanned={planned}
             notices={exhaustedBudgetNotices({
-              hasAllocation: budgetSummary?.hasAllocation ?? false,
-              maxUsedPercent: budgetSummary?.maxUsedPercent ?? null,
+              hasAllocation: budgetSummary.paidWorkBlocked === true,
+              maxUsedPercent: budgetSummary.paidWorkBlocked === true ? 100 : null,
               projectId: projectRef,
             })}
             projectRef={projectRef}

@@ -206,8 +206,6 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         {...props}
         emptyRankCheckStates={emptyRankCheckStates}
         marketScope={marketScope}
-        rows={targetRows}
-        runCheckNowAction={props.canUpdateKeyword ? props.runCheckNowAction : undefined}
       />
       {marketScope && props.canUpdateKeyword ? (
         <div className="flex justify-end">
@@ -267,13 +265,15 @@ export function KeywordsGrid(props: KeywordsGridProps) {
         rows={rows}
         searchValue={searchValue}
         scopeChip={
-          <KeywordsGridScopeChip
-            activeViewId={activeViewId}
-            keywordsPath={keywordsPath}
-            lens={query.lens}
-            locationOptions={locations}
-            query={query}
-          />
+          !marketContext.market && query.lens.locationId ? (
+            <KeywordsGridScopeChip
+              activeViewId={activeViewId}
+              keywordsPath={keywordsPath}
+              lens={query.lens}
+              locationOptions={locations}
+              query={query}
+            />
+          ) : undefined
         }
         scopeControl={scopeView.control}
         updateKeywordAction={updateKeywordAction}

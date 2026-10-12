@@ -40,11 +40,14 @@
       "title": "Wybory prywatności"
     },
     "errors": {
+      "walletBudgetExhausted": "Budżet wydatków dla tej instalacji został wyczerpany.",
+      "budgetMissing": "Brakuje budżetu wydatków projektu. Poproś właściciela projektu o skonfigurowanie miesięcznego budżetu w Ustawieniach > Zużycie.",
       "genericFallback": "Nie udało się wykonać tej operacji.",
       "rateLimited": "Zbyt wiele żądań. Spróbuj ponownie później.",
       "serverComponentDigest": "Sprawdzenie nie powiodło się po naszej stronie (ref. {digest}). Ponów za chwilę.",
       "staleDeployment": "bisibility zostało zaktualizowane, gdy ta strona była otwarta. Odśwież aplikację, aby kontynuować. Niezapisane zmiany zostaną utracone.",
-      "verificationFailed": "Weryfikacja nie powiodła się. Spróbuj ponownie."
+      "verificationFailed": "Weryfikacja nie powiodła się. Spróbuj ponownie.",
+      "usageReconciliationRequired": "Koszt użycia dostawcy nie jest w pełni potwierdzony. Sprawdź i uzgodnij historię użycia przed kolejnym płatnym żądaniem."
     },
     "emergencyRecovery": {
       "error": {
@@ -300,7 +303,8 @@
         "noneReady": "Żadne słowo kluczowe nie jest gotowe do pierwszego sprawdzenia.",
         "providerMissing": "Połącz dostawcę SERP, zanim uruchomisz sprawdzenia.",
         "raiseBudget": "Zwiększ budżet",
-        "sampleProject": "Projekty przykładowe nie wykonują prawdziwych sprawdzeń."
+        "sampleProject": "Projekty przykładowe nie wykonują prawdziwych sprawdzeń.",
+        "reviewUsage": "Sprawdź użycie"
       },
       "scope": {
         "allReady": "Wszystkie gotowe ({count, number})",
@@ -415,7 +419,11 @@
         "transferProjectOwnershipBody": "Czyni tę osobę właścicielem projektu. Twoja rola w projekcie zmieni się na administratora, a ponownie przenieść własność będzie mógł tylko nowy właściciel.",
         "transferProjectOwnershipDangerLabel": "Przenieś własność",
         "transferProjectOwnershipTitle": "Przenieść własność projektu?",
-        "transferProjectOwnershipToastMessage": "Przeniesiono własność projektu"
+        "transferProjectOwnershipToastMessage": "Przeniesiono własność projektu",
+        "deleteTimelineNoteBody": "Usunąć tę notatkę z osi czasu? Tej operacji nie można cofnąć.",
+        "deleteTimelineNoteDangerLabel": "Usuń notatkę",
+        "deleteTimelineNoteTitle": "Usunąć notatkę z osi czasu?",
+        "deleteTimelineNoteToastMessage": "Usunięto notatkę z osi czasu."
       },
       "copy": {
         "action": "Kopiuj",
@@ -677,6 +685,147 @@
           "label": "Status niedostępny",
           "description": "Aplikacja nie może teraz odczytać bieżącego stanu importu."
         }
+      }
+    },
+    "usageViews": {
+      "summary": {
+        "asOf": "Stan na",
+        "title": "Wykorzystanie",
+        "customerCharges": "Opłaty klienta",
+        "loading": "Wczytywanie podsumowania.",
+        "empty": "Brak użycia w tym okresie.",
+        "forbidden": "Nie masz dostępu do tego użycia.",
+        "failed": "Podsumowanie jest teraz niedostępne.",
+        "incomplete": "Podsumowanie nie obejmuje całego okresu. Wybierz krótszy okres.",
+        "unknownOperations": "Operacje z nieznanymi pomiarami"
+      },
+      "cost": {
+        "asOf": "Stan na",
+        "title": "Koszt dostawcy",
+        "description": "Opłaty dostawcy za zarejestrowane użycie w tym okresie.",
+        "loading": "Wczytywanie kosztów.",
+        "empty": "Brak kosztów w tym okresie.",
+        "forbidden": "Nie masz dostępu do kosztów.",
+        "failed": "Podsumowanie kosztów jest niedostępne.",
+        "incomplete": "Nie podsumowano całego okresu. Koszt jest niedostępny.",
+        "byok": "Własny klucz",
+        "platform": "Kredyty konta",
+        "costOwner": "Płatnik",
+        "funding": "Według źródła finansowania"
+      },
+      "table": {
+        "title": "Szczegóły użycia",
+        "funding": "Źródło finansowania",
+        "byok": "Własny klucz",
+        "platform": "Kredyty konta",
+        "cost": "Koszt",
+        "customerCharges": "Opłaty klienta",
+        "cents": "centy USD",
+        "certainty": "Pewność",
+        "unknownOperations": "Nieznane operacje",
+        "measured": "Zmierzone",
+        "estimated": "Szacowane",
+        "unknown": "Nieznane",
+        "unavailable": "Niedostępne",
+        "loading": "Wczytywanie użycia.",
+        "empty": "Brak użycia w tym okresie.",
+        "forbidden": "Nie masz dostępu do tego użycia.",
+        "failed": "Użycie jest niedostępne.",
+        "next": "Następna strona",
+        "first": "Pierwsza strona"
+      },
+      "exceptions": {
+        "title": "Wymaga uwagi",
+        "next": "Następna strona",
+        "first": "Pierwsza strona",
+        "operation": "Operacja",
+        "provider": "Dostawca",
+        "principal": "Podmiot",
+        "kind": "Wyjątek",
+        "state": "Stan",
+        "age": "Wiek",
+        "reservation_expired": "Rezerwacja wygasła",
+        "lease_expired": "Dzierżawa wygasła",
+        "pending": "Oczekuje na potwierdzenie",
+        "loading": "Wczytywanie wyjątków.",
+        "empty": "Brak wyjątków w tym okresie.",
+        "forbidden": "Nie masz dostępu do tych operacji.",
+        "failed": "Wyjątki są niedostępne."
+      },
+      "budget": {
+        "used": "Wykorzystano",
+        "reserved": "Zarezerwowano",
+        "remaining": "Pozostało",
+        "limit": "Limit",
+        "hardLimit": "Limit bezwzględny",
+        "alert": "Alert",
+        "resets": "Reset",
+        "noReset": "Bez resetu",
+        "unlimited": "Bez limitu",
+        "unavailable": "Niedostępne",
+        "unknown": "Nieznane",
+        "redacted": "Ten budżet obowiązuje, ale jego wartości są ukryte.",
+        "block": "Blokuje po osiągnięciu limitu",
+        "allow": "Pozwala przekroczyć limit",
+        "ok": "W ramach budżetu",
+        "warning": "Ostrzeżenie",
+        "exceeded": "Limit przekroczony",
+        "loading": "Wczytywanie budżetów.",
+        "empty": "Brak obowiązujących budżetów.",
+        "forbidden": "Nie masz dostępu do budżetów.",
+        "failed": "Budżety są niedostępne."
+      },
+      "overview": {
+        "unknown": "Użycie nieznane",
+        "empty": "Brak połączeń.",
+        "ok": "W ramach budżetu",
+        "warning": "Blisko limitu",
+        "exceeded": "Limit przekroczony",
+        "partial": "Pomiar w toku",
+        "loading": "Wczytywanie użycia."
+      },
+      "measurement": {
+        "measured": "Zmierzone",
+        "estimated": "Szacowane",
+        "unknown": "Nieznane",
+        "unavailable": "Niedostępne",
+        "cents": "centy USD"
+      },
+      "units": {
+        "cents": "centy USD",
+        "customer_cents": "centy kredytów",
+        "units": "Jednostki",
+        "requests": "Żądania",
+        "budget_cents": "centy USD",
+        "paid_attempts": "Płatne próby"
+      },
+      "dimensions": {
+        "connection": "Połączenie",
+        "provider": "Dostawca",
+        "surface": "Obszar",
+        "source": "Źródło"
+      },
+      "other": {
+        "project": "Projekt",
+        "retained": "Zachowane połączenie",
+        "app": "Aplikacja i harmonogram",
+        "programmatic": "API i agenci",
+        "any": "Cały ruch",
+        "rank_check": "Sprawdzenie pozycji",
+        "operation": "Inna operacja",
+        "worker": "Harmonogram",
+        "api": "API",
+        "sdk": "SDK",
+        "cli": "CLI",
+        "mcp": "MCP",
+        "proxy": "Proxy"
+      },
+      "states": {
+        "reserved": "Zarezerwowana operacja",
+        "dispatch_intended": "Wysyłanie zaplanowane",
+        "pending": "Oczekuje",
+        "settled": "Rozliczone",
+        "released": "Zwolnione"
       }
     }
   }

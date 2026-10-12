@@ -82,3 +82,31 @@ Treat rendered samples as one of four classes:
 
 See [Versioning and support](/versioning) for app versus API versus client
 versions.
+
+## README presentation
+
+Put the brand banner in its own paragraph, with a clear gap before the separate
+badge rows. Keep navigation and capability badges
+near the top. Preserve the clear demo link, short benefits and separate demo,
+hosted and self-host paths. Place the application screenshot farther down as a
+dashboard reference, at 560 pixels wide on desktop and shrinking on narrow screens.
+Describe shipped capabilities and provider costs precisely; the demo link does
+not imply signup-free access or included provider data.
+
+The dynamic `CI gate` badge reads the `ci-ok` check run for the current public
+`main` commit through the GitHub branch check-runs endpoint. A release-candidate
+tag can run the check on that same commit. Link the badge to the public Actions
+workflow so readers can inspect individual jobs; its label describes `ci-ok`,
+whose dependencies define the gate. Status and status color come from the check
+result. A security-policy link is not a security certification, and release
+badges refer to published releases.
+
+The `public/brand/readme-banner.svg` banner uses the standard mark and outlined
+Geist lettering, with aligned product copy and a subtle decorative dashboard.
+Its 1200 by 400 canvas displays at 900 by 300 pixels on desktop and scales down
+on mobile. Preserve its aspect ratio, descriptive alt text and neutral palette.
+The opaque white canvas uses the same monochrome treatment in light and dark
+backgrounds: graphite lettering and subtle gray artwork. Every artwork color
+has equal red, green and blue channels; avoid warm tints, colored shadows or
+filters. The illustration communicates the interface without claiming
+customer results.

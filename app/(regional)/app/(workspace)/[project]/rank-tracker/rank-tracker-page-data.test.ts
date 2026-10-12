@@ -50,31 +50,64 @@ describe("loadRankTrackerPageList", () => {
     mocks.grouped.mockResolvedValue(grouped);
   });
 
-  it("uses the server grouped list for an explicit grouped URL", async () => {
-    const result = await loadRankTrackerPageList("prj_1", { ...query, grouped: true }, true);
+  function markets(count: number) {
+    return Array.from({ length: count }, (_, index) => ({
+      id: `mkt_${index}`,
+      status: index === 0 ? ("active" as const) : ("paused" as const),
+    }));
+  }
 
+  it.each([
+    [1, true],
+    [2, false],
+  ] as const)("honors %s-market explicit grouped=%s", async (count, groupedChoice) => {
+    const result = await loadRankTrackerPageList(
+      "prj_1",
+      { ...query, grouped: groupedChoice },
+      markets(count),
+      { explicitGrouping: true },
+    );
+    expect(result.query.grouped).toBe(groupedChoice);
+    expect(result.mode).toBe(groupedChoice ? "grouped-server" : "flat-server");
+  });
+
+  it.each([0, 1, 2])(
+    "derives grouping from %i project markets despite a stale manual URL",
+    async (count) => {
+      const result = await loadRankTrackerPageList(
+        "prj_1",
+        { ...query, grouped: count <= 1 },
+        markets(count),
+      );
+      expect(result.mode).toBe(count > 1 ? "grouped-server" : "flat-server");
+      expect(result.query.grouped).toBe(count > 1);
+      expect(count > 1 ? mocks.grouped : mocks.flat).toHaveBeenCalledOnce();
+      expect(count > 1 ? mocks.flat : mocks.grouped).not.toHaveBeenCalled();
+    },
+  );
+
+  it("keeps multi-market grouping with one filtered market and one paginated row", async () => {
+    mocks.grouped.mockResolvedValue({ ...grouped, matchedTargetCount: 1, page: 3, pageCount: 4 });
+    const filtered = {
+      ...query,
+      page: 3,
+      savedViewId: "viw_old",
+      lens: { ...query.lens, locationId: "country:us@en" },
+    };
+    const result = await loadRankTrackerPageList("prj_1", filtered, markets(2));
     expect(result.mode).toBe("grouped-server");
     expect(mocks.grouped).toHaveBeenCalledWith({
       projectRef: "prj_1",
-      query: expect.objectContaining({ grouped: true }),
+      query: { ...filtered, grouped: true },
     });
     expect(mocks.flat).not.toHaveBeenCalled();
   });
 
-  it("defaults from raw locations and preserves an explicit flat choice", async () => {
-    mocks.flat.mockResolvedValue({
-      ...flat,
-      locations: [
-        { count: 1, displayName: "Spain", id: "country:es@es", kind: "country" },
-        { count: 1, displayName: "United States", id: "country:us@en", kind: "country" },
-      ],
-    });
-
-    const defaulted = await loadRankTrackerPageList("prj_1", query, false);
-    const explicitFlat = await loadRankTrackerPageList("prj_1", query, true);
-
-    expect(defaulted.mode).toBe("grouped-server");
-    expect(explicitFlat.mode).toBe("flat-server");
-    expect(mocks.grouped).toHaveBeenCalledTimes(1);
+  it("updates grouping when a market is added or archived, even with empty list facets", async () => {
+    expect((await loadRankTrackerPageList("prj_1", query, markets(1))).mode).toBe("flat-server");
+    expect((await loadRankTrackerPageList("prj_1", query, markets(2))).mode).toBe("grouped-server");
+    expect(
+      (await loadRankTrackerPageList("prj_1", { ...query, grouped: true }, markets(1))).mode,
+    ).toBe("flat-server");
   });
 });

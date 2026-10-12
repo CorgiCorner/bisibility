@@ -4,12 +4,11 @@ import { requireApiPublicId } from "@/lib/api/public-id";
 import { rankedKeywordPageRate } from "@/lib/cost-estimate/provider-rates";
 import { prisma } from "@/lib/db/prisma";
 import { normalizeDomain } from "@/lib/domains/normalize";
-import {
-  ProviderLookupSignal,
-  paidProviderCall,
-  requiredEstimatedCostCents,
-} from "@/lib/provider-lookups/paid-call";
+import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
+import { requiredConnectionEstimate } from "@/lib/provider-lookups/connection-estimate";
+import { ProviderLookupSignal, paidProviderCall } from "@/lib/provider-lookups/paid-call";
 import { loadProviderRateContext } from "@/lib/provider-rates/connection-context";
+import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import { getSerpProvider } from "@/lib/providers/registry";
 import type { RankedKeywordRow, SerpProvider } from "@/lib/providers/types";
@@ -38,10 +37,12 @@ export type RankedKeywordsSuccess = {
 export type RankedKeywordsOutcome =
   | ({ ok: true } & RankedKeywordsSuccess)
   | {
+      budgetReason?: BudgetDenialReason;
       estimatedCostCents?: number;
       ok: false;
       provider?: string;
       reason:
+        | "wallet_budget_exhausted"
         | "budget_exhausted"
         | "cost_limit_exceeded"
         | "needs_reauth"
@@ -73,7 +74,6 @@ function isUnknownSerpProviderError(error: unknown) {
 async function projectState(projectId: string) {
   return prisma.project.findFirst({
     select: {
-      budgetCapCents: true,
       defaults: { include: { locationRef: true } },
       domain: true,
       id: true,
@@ -193,11 +193,13 @@ export async function fetchRankedKeywords(input: {
       fresh: input.fresh,
       key,
       load: async () => {
-        const rateContext = await loadProviderRateContext(
-          selected.connection.id,
-          "ranked_keywords",
-        );
-        const estimatedCostCents = requiredEstimatedCostCents({
+        const rateContext =
+          selected.provider.id === "dataforseo"
+            ? LIST_PROVIDER_RATE_CONTEXT
+            : await loadProviderRateContext(selected.connection.id, "ranked_keywords");
+        const estimatedCostCents = await requiredConnectionEstimate({
+          connection: selected.connection,
+          feature: "ranked_keywords",
           context: rateContext,
           itemCount: input.limit,
           providerId: selected.provider.id,
@@ -225,6 +227,7 @@ export async function fetchRankedKeywords(input: {
           feature: "ranked_keywords",
           itemCount: input.limit,
           projectId: project.id,
+          maxCostCents: input.maxCostCents,
           provider: selected.provider,
           rate: rankedKeywordPageRate(selected.provider.id),
           rateContext,
@@ -247,6 +250,8 @@ export async function fetchRankedKeywords(input: {
     );
   } catch (error) {
     if (error instanceof ProviderLookupSignal) {
+      if (error.outcome.reason === "cost_limit_exceeded")
+        return { ...error.outcome, reason: "cost_limit_exceeded" };
       if (
         error.outcome.reason === "budget_exhausted" ||
         error.outcome.reason === "needs_reauth" ||
@@ -256,6 +261,9 @@ export async function fetchRankedKeywords(input: {
         return {
           ok: false,
           reason: error.outcome.reason,
+          ...(error.outcome.reason === "budget_exhausted"
+            ? { budgetReason: error.outcome.budgetReason }
+            : {}),
           ...(error.outcome.reason === "budget_exhausted" && error.outcome.provider !== undefined
             ? { provider: error.outcome.provider }
             : {}),

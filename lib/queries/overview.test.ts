@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     rankCheck: { findFirst: vi.fn(), findMany: vi.fn() },
     tag: { findMany: vi.fn() },
   },
+  ledger: vi.fn(),
   fetchProjectKeywordVolumes: vi.fn(),
   fetchOverviewMarketChecks: vi.fn(),
   requireReadableProject: vi.fn(),
@@ -21,6 +22,7 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/providers/analytics/google-client", () => ({
   isGoogleOAuthConfigured: () => true,
 }));
+vi.mock("./rank-check-run-accounting", () => ({ rankCheckLedgerActuals: mocks.ledger }));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
 vi.mock("./keyword-metrics-query", () => ({
   fetchProjectKeywordVolumes: mocks.fetchProjectKeywordVolumes,
@@ -79,6 +81,7 @@ function keyword(overrides: Record<string, unknown>) {
 describe("overview query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.ledger.mockResolvedValue(new Map());
     mocks.requireReadableProject.mockResolvedValue({ project });
     mocks.fetchProjectKeywordVolumes.mockResolvedValue(new Map());
     mocks.fetchOverviewMarketChecks.mockResolvedValue(new Map());
@@ -245,7 +248,13 @@ describe("overview query", () => {
       prefix: "bsb_key_live_abcd",
     });
     mocks.prisma.keyword.count.mockResolvedValue(5);
-    mocks.prisma.rankCheck.findMany.mockResolvedValue([{ costCents: 123 }, { costCents: 0 }]);
+    mocks.prisma.rankCheck.findMany.mockResolvedValue([{ id: "check1" }, { id: "check2" }]);
+    mocks.ledger.mockResolvedValue(
+      new Map([
+        ["check1", { costCents: 123 }],
+        ["check2", { costCents: 0 }],
+      ]),
+    );
     mocks.prisma.rankCheck.findFirst.mockResolvedValue({
       checkedAt: new Date("2026-06-28T10:00:00.000Z"),
       provider: "serpapi",
@@ -566,7 +575,7 @@ describe("overview query", () => {
     );
     expect(mocks.prisma.rankCheck.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        select: { costCents: true },
+        select: { id: true },
         where: expect.objectContaining({
           checkedAt: {
             gte: new Date("2026-06-01T00:00:00.000Z"),
@@ -608,7 +617,8 @@ describe("overview query", () => {
   });
 
   it("queries checks this month with an exclusive next-month upper bound", async () => {
-    mocks.prisma.rankCheck.findMany.mockResolvedValue([{ costCents: 25 }]);
+    mocks.prisma.rankCheck.findMany.mockResolvedValue([{ id: "check" }]);
+    mocks.ledger.mockResolvedValue(new Map([["check", { costCents: 25 }]]));
 
     const result = await getOverview("prj_1", {
       now: new Date("2026-06-30T23:59:59.999Z"),
@@ -616,7 +626,7 @@ describe("overview query", () => {
 
     expect(mocks.prisma.rankCheck.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        select: { costCents: true },
+        select: { id: true },
         where: expect.objectContaining({
           checkedAt: {
             gte: new Date("2026-06-01T00:00:00.000Z"),
@@ -629,6 +639,39 @@ describe("overview query", () => {
     );
     expect(result.dataSource.checksThisMonth).toBe(1);
     expect(result.dataSource.providerCostCents).toBe(25);
+  });
+
+  it.each([false, true])(
+    "includes proved cached zero in monthly spend (paid: %s)",
+    async (paid) => {
+      mocks.prisma.rankCheck.findMany.mockResolvedValue([
+        { id: "cached" },
+        ...(paid ? [{ id: "paid" }] : []),
+      ]);
+      mocks.ledger.mockResolvedValue(
+        new Map([
+          ["cached", { costCents: 0 }],
+          ...(paid ? [["paid", { costCents: 25 }] as const] : []),
+        ]),
+      );
+      const result = await getOverview("prj_1", { now });
+      expect(result.dataSource.checksThisMonth).toBe(paid ? 2 : 1);
+      expect(result.dataSource.providerCostCents).toBe(paid ? 25 : 0);
+      expect(result.estimatedProviderCostCents).toBe(paid ? 25 : 0);
+    },
+  );
+
+  it.each([null, "missing"])("keeps monthly spend unknown for %s evidence", async (cost) => {
+    mocks.prisma.rankCheck.findMany.mockResolvedValue([{ id: "known" }, { id: "unknown" }]);
+    mocks.ledger.mockResolvedValue(
+      new Map<string, { costCents: number | null }>([
+        ["known", { costCents: 25 }],
+        ...(cost === null ? [["unknown", { costCents: null }] as const] : []),
+      ]),
+    );
+    const result = await getOverview("prj_1", { now });
+    expect(result.dataSource.providerCostCents).toBeNull();
+    expect(result.estimatedProviderCostCents).toBeNull();
   });
 
   it("places position distribution edges into exact buckets", async () => {

@@ -4,6 +4,8 @@ import { normalizeSchedule } from "@/lib/actions/_schedule";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
+import { ensureProjectSpendingBudget } from "@/lib/metering/project-budget-bootstrap";
+import { meteringNamespace } from "@/lib/metering/runtime";
 import type { createProjectSchema } from "@/lib/schemas/project";
 import type { z } from "zod";
 import { projectAuditResource } from "./audit-resources";
@@ -42,6 +44,8 @@ export async function createProjectRecord(data: CreateProjectData, ownerId: stri
       },
       select: projectSelect,
     });
+
+    await ensureProjectSpendingBudget(tx, meteringNamespace(), project.id);
 
     await writeAudit(
       {

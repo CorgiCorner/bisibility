@@ -173,7 +173,8 @@
         "runningTitle": "Comprobación en curso",
         "completeTitle": "Comprobación completada",
         "failedTitle": "La comprobación ha fallado",
-        "couldNotStart": "No se ha podido iniciar la comprobación de posiciones."
+        "couldNotStart": "No se ha podido iniciar la comprobación de posiciones.",
+        "viewRuns": "Ver ejecuciones"
       },
       "traffic": {
         "noData": "Sin datos",

@@ -42,21 +42,29 @@
       "collapseSidebar": "Zwiń panel boczny",
       "expandSidebar": "Rozwiń panel boczny",
       "badges": {
-        "alpha": "alfa",
-        "beta": "beta",
         "experimental": "Eksperymentalne",
         "new": "nowe"
       },
       "groups": {
-        "modules": {
-          "label": "Moduły",
-          "tag": "Moduły",
-          "tooltip": "Moduły rynkowe podążają za wybranym rynkiem. Pozostałe mają własną oś."
+        "tracking": {
+          "label": "Monitorowanie",
+          "tag": "MONITOROWANIE",
+          "tooltip": "Śledź pozycje i wyniki AI w czasie."
+        },
+        "research": {
+          "label": "Badania i audyty",
+          "tag": "BADANIA",
+          "tooltip": "Badaj słowa kluczowe, witryny i odpowiedzi AI."
+        },
+        "reports": {
+          "label": "Dane i raporty",
+          "tag": "DANE",
+          "tooltip": "Przeglądaj dane z połączonych źródeł i zapisane raporty."
         },
         "project": {
           "label": "Projekt",
-          "tag": "Projekt",
-          "tooltip": "Konfiguracja całego projektu. Rynek nigdy jej nie zawęża."
+          "tag": "PROJEKT",
+          "tooltip": "Konfiguracja projektu i wspólna historia operacji."
         }
       },
       "items": {

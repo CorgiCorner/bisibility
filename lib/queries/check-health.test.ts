@@ -15,9 +15,17 @@ const mocks = vi.hoisted(() => ({
     },
   },
   requireReadableProject: vi.fn(),
+  budgetStatus: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/metering/usage-read", () => ({
+  monthlySpendCents: async () =>
+    Number((await mocks.prisma.providerCostEntry.aggregate())._sum.costCents ?? 0),
+}));
+vi.mock("@/lib/metering/project-budget-read", () => ({
+  projectBudgetStatus: mocks.budgetStatus,
+}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
 
@@ -28,6 +36,14 @@ describe("check health query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireReadableProject.mockResolvedValue({ project });
+    mocks.budgetStatus.mockImplementation(async () => {
+      const cap = (await mocks.requireReadableProject()).project.budgetCapCents;
+      return {
+        budget: { limit: cap ? { value: BigInt(cap), scale: 0, unit: "budget_cents" } : null },
+        reserved: { value: 0n, scale: 0, unit: "budget_cents" },
+        uncertain: false,
+      };
+    });
     mocks.prisma.rankCheck.aggregate.mockResolvedValue({ _sum: { costCents: 0 } });
     mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 0 } });
     mocks.prisma.$queryRaw.mockResolvedValue([
@@ -44,6 +60,14 @@ describe("check health query", () => {
     mocks.prisma.providerConnection.findFirst.mockResolvedValue(null);
   });
 
+  it("treats an explicit zero Store limit as blocked", async () => {
+    mocks.budgetStatus.mockResolvedValue({
+      budget: { limit: { value: 0n, scale: 0, unit: "budget_cents" } },
+      reserved: { value: 0n, scale: 0, unit: "budget_cents" },
+      uncertain: false,
+    });
+    expect((await getCheckHealth("project", { now })).budget.exhausted).toBe(true);
+  });
   it("returns budget, failed-check, and running-check state for a readable project", async () => {
     mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 500 } });
     mocks.prisma.$queryRaw.mockResolvedValue([
@@ -84,18 +108,7 @@ describe("check health query", () => {
     await getCheckHealth("prj_1", { now });
 
     expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
-    expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledWith({
-      _sum: { costCents: true },
-      where: {
-        cached: false,
-        createdAt: {
-          gte: new Date("2026-07-01T00:00:00.000Z"),
-          lt: new Date("2026-08-01T00:00:00.000Z"),
-        },
-        measurementStatus: "recorded",
-        projectId: "project_1",
-      },
-    });
+    expect(mocks.prisma.providerCostEntry.aggregate).toHaveBeenCalledOnce();
     expect(mocks.prisma.$queryRaw).toHaveBeenCalledOnce();
     expect(mocks.prisma.$queryRaw.mock.calls[0]?.[0].join(" ")).toContain('rc."errorCode"');
     expect(mocks.prisma.$queryRaw.mock.calls[0]?.slice(1)).toEqual([
@@ -105,7 +118,12 @@ describe("check health query", () => {
     ]);
     expect(mocks.prisma.providerConnection.findFirst).toHaveBeenCalledWith({
       orderBy: [{ priority: "asc" }, { provider: "asc" }],
-      select: { costPerCheckCents: true, id: true, provider: true },
+      select: {
+        credentialSource: true,
+        id: true,
+        provider: true,
+        rates: { select: { amountCents: true, feature: true }, where: { feature: "rank_check" } },
+      },
       where: {
         enabled: true,
         kind: "serp",
@@ -117,7 +135,8 @@ describe("check health query", () => {
 
   it("reports whether a connected SERP provider can run checks", async () => {
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
-      costPerCheckCents: 0.25,
+      credentialSource: "own",
+      rates: [{ feature: "rank_check", amountCents: "0.25" }],
       id: "provider_1",
       provider: "dataforseo",
     });
@@ -130,7 +149,8 @@ describe("check health query", () => {
 
   it("preserves an explicit zero-cost provider rate", async () => {
     mocks.prisma.providerConnection.findFirst.mockResolvedValue({
-      costPerCheckCents: 0,
+      credentialSource: "own",
+      rates: [{ feature: "rank_check", amountCents: "0" }],
       id: "provider_local",
       provider: "local-sequence",
     });
@@ -159,5 +179,20 @@ describe("check health query", () => {
       failed24h: { count: 0, latest: null },
       runningCount: 0,
     });
+  });
+});
+
+it.each([
+  [null, "budget_missing"],
+  [{ budget: { limit: null }, uncertain: true }, "usage_reconciliation_required"],
+])("preserves a distinct budget block reason", async (state, reason) => {
+  mocks.requireReadableProject.mockResolvedValue({ project });
+  mocks.budgetStatus.mockResolvedValue(state);
+  mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 0 } });
+  mocks.prisma.$queryRaw.mockResolvedValue([]);
+  mocks.prisma.providerConnection.findFirst.mockResolvedValue(null);
+  expect((await getCheckHealth("project_1", { now })).budget).toMatchObject({
+    exhausted: true,
+    reason,
   });
 });

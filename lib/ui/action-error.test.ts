@@ -11,6 +11,8 @@ import {
 } from "./action-error";
 
 const localizedMessages = {
+  usageReconciliationRequired: () => "Wymagane uzgodnienie użycia.",
+  budgetMissing: () => "Skonfiguruj miesięczny budżet projektu.",
   genericFallback: () => "Nie można ukończyć działania.",
   rateLimited: () => "Zbyt wiele żądań. Spróbuj ponownie później.",
   serverComponentDigest: ({ digest }: { digest: string }) =>
@@ -204,4 +206,13 @@ describe("waitlistErrorMessage", () => {
     ).toBe(fallback);
     expect(presentWaitlistError({ detail: "secret" }, localizedMessages, fallback)).toBe(fallback);
   });
+});
+
+it.each([
+  { details: { reason: "budget_missing" } },
+  { payload: { details: { reason: "budget_missing" } } },
+  { problem: { details: { reason: "budget_missing" } } },
+])("preserves the owned message for unsupported error details: %j", (details) => {
+  const error = Object.assign(new Error("Owned feature message."), details);
+  expect(presentActionError(error, localizedMessages)).toBe("Owned feature message.");
 });

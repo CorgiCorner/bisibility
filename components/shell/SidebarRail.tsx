@@ -25,7 +25,9 @@ export function SidebarRailRow({
   item,
   onNavigate,
 }: Readonly<SidebarRailRowProps>) {
-  const active = currentHref === item.href || currentHref.startsWith(`${item.href}/`);
+  const active = [item.href, ...(item.activeHrefs ?? [])].some(
+    (href) => currentHref === href || currentHref.startsWith(`${href}/`),
+  );
   const Icon = item.icon;
 
   return (
@@ -65,7 +67,7 @@ export function SidebarRailRow({
       >
         {/* Current-page dot. Always in the DOM with only opacity changing, so navigation never
             relayouts the column. --accent-solid, not --accent: as a non-text indicator it needs
-            3:1 (SC 1.4.11) and holds 4.28:1 over the hover fill. It sits in a gutter beside the
+            3:1 (SC 1.4.11) over the navigation and hover surfaces. It sits in a gutter beside the
             row, never on it: on the fill it read as part of the hover instead of as the page
             marker. */}
         <span
@@ -133,12 +135,11 @@ function SidebarRailBadge({
 
   return (
     <span
-      // Decorative status, and the row's accessible name is the label alone: without this the
-      // expanded link announces as "Search Consolebeta".
+      // The decorative tag must not change the row's accessible name.
       aria-hidden
       className={[
         "inline-flex flex-none items-center rounded-full px-[7px] py-0.5 text-[9.5px] font-semibold",
-        badge === "new" ? "bg-accent-soft text-accent-text" : "bg-bg-sunken text-fg-muted",
+        "bg-accent-soft text-accent-text",
       ].join(" ")}
     >
       {label}

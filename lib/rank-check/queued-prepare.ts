@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { publishOperationChanged } from "@/lib/notifications/realtime";
+import { ProviderQuoteUnavailableError } from "@/lib/provider-rates/native-quote";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { queuedDeploymentCredentialsAvailable } from "@/lib/providers/execution-extension";
 import { resolveEffectiveSerpDepth } from "@/lib/serp/constants";
@@ -13,7 +14,7 @@ import { queuedBatchBudgetDeferral, queuedBatchOrigin } from "./queued-attributi
 import { queuedRankCheckConfig } from "./queued-config";
 import { unrunnableBatchReason } from "./queued-eligibility";
 import { writeQueuedRunningAudit } from "./queued-prepare-audit";
-import { dataForSeoQueuedEstimate } from "./queued-pricing";
+import { queuedRequestCosts } from "./queued-request-costs";
 import { applyRunItemTransition } from "./runs/items";
 import { sha256Hex } from "./sha256";
 
@@ -132,6 +133,7 @@ function preparedKeyword(keyword: PreparedKeyword, defaults: EffectiveSchedule |
   });
   return {
     depth,
+    keyword: keyword.text,
   };
 }
 function terminalExpiry(now: Date) {
@@ -162,23 +164,36 @@ export async function prepareQueuedRankCheckBatch(
       preparedKeyword(keyword, context.project.defaults),
     );
     const allScheduled = prepared.every((keyword) => keyword !== null);
-    const estimated = prepared.reduce(
-      (sum, item) => sum + (item ? dataForSeoQueuedEstimate(config.priority, item.depth) : 0),
-      0,
-    );
     let deferredReason: string | null = !config.enabled
       ? "Queued DataForSEO rank checks were disabled before batch preparation."
       : (context.eligibilityReason ??
         (allScheduled ? null : "Keyword schedule no longer permits automatic work."));
+    let costs: number[] = [];
+    if (!deferredReason && context.connection) {
+      try {
+        costs = await queuedRequestCosts(
+          context.connection,
+          prepared.filter((item) => item !== null),
+          config.priority,
+          tx,
+          now,
+        );
+      } catch (error) {
+        if (!(error instanceof ProviderQuoteUnavailableError)) throw error;
+        deferredReason = error.message;
+      }
+    }
+    const estimated = costs.reduce((sum, amount) => sum + amount, 0);
     const origin = await queuedBatchOrigin(tx, runItems.runId);
     if (!deferredReason && context.connection?.credentialSource !== "hosted") {
       deferredReason = await queuedBatchBudgetDeferral(
         {
           connectionId: context.connection?.id,
           estimatedCostCents: estimated,
-          project: context.project,
           source: origin.source,
-          tasks: prepared.flatMap((item) => (item ? [{ depth: item.depth }] : [])),
+          tasks: prepared.flatMap((item, index) =>
+            item ? [{ depth: item.depth, estimatedCostCents: costs[index] }] : [],
+          ),
         },
         { now, priority: config.priority, projectId: input.projectId },
         tx,
@@ -203,7 +218,7 @@ export async function prepareQueuedRankCheckBatch(
     for (const [index, keyword] of context.keywords.entries()) {
       const details = prepared[index];
       const runItem = runItems.byKeyword.get(keyword.id);
-      const estimate = details ? dataForSeoQueuedEstimate(config.priority, details.depth) : 0;
+      const estimate = costs[index];
       const publicId = makePublicId("check");
       const rankCheck = await tx.rankCheck.create({
         data: {

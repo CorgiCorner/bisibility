@@ -1,11 +1,11 @@
 import "server-only";
-
 import { monthlyTrackingCostCents } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
 import { MAX_PROJECT_MARKETS } from "@/lib/markets/limits";
 import type { MarketsPageRow } from "@/lib/markets/page-model";
 import { listArchivedProjectMarkets } from "@/lib/markets/registry";
 import { type MarketScheduleContext, marketScheduleContext } from "@/lib/markets/schedule-context";
+import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
 import {
   type ProviderChainEntry,
   primaryProviderConnection,
@@ -57,13 +57,14 @@ type MarketCostSchedule = {
 
 type MarketCostInput = {
   defaults: MarketCostSchedule | null;
-  providerConnections: (ProviderChainEntry & { costPerCheckCents: unknown })[];
+  providerConnections: (ProviderChainEntry & Parameters<typeof withRankCheckManualRate>[0])[];
 };
 
 type MarketCostKeyword = { schedule: MarketCostSchedule | null };
 
 function marketMonthlyCostCents(keywords: readonly MarketCostKeyword[], project: MarketCostInput) {
-  const primary = primaryProviderConnection(project.providerConnections, "serp");
+  const selected = primaryProviderConnection(project.providerConnections, "serp");
+  const primary = selected ? withRankCheckManualRate(selected) : null;
   let total = 0;
   for (const keyword of keywords) {
     const schedule = keyword.schedule ?? project.defaults;
@@ -116,7 +117,7 @@ export async function getProjectMarkets(projectRef: string): Promise<ProjectMark
           orderBy: [{ createdAt: "asc" }, { id: "asc" }],
           where: { status: { in: ["active", "paused"] } },
         },
-        providerConnections: true,
+        providerConnections: { include: { rates: rankCheckRateSelection } },
       },
       where: { id: project.id },
     }),
@@ -254,7 +255,10 @@ export async function getArchivedProjectMarkets(
   const [archived, projectCost] = await Promise.all([
     listArchivedProjectMarkets(project.id),
     prisma.project.findUnique({
-      include: { defaults: true, providerConnections: true },
+      include: {
+        defaults: true,
+        providerConnections: { include: { rates: rankCheckRateSelection } },
+      },
       where: { id: project.id },
     }),
   ]);

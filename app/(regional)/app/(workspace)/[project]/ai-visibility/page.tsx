@@ -21,7 +21,7 @@ export default async function AiVisibilityPage({
       messages={messages}
       timeZone={runtime.timeZone}
     >
-      <PageContent>
+      <PageContent variant="section">
         <AiResearchWorkspace
           projectId={project}
           mode="visibility"

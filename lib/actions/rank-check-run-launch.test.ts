@@ -1,3 +1,6 @@
+import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { BudgetExhaustedError } from "@/lib/rank-check/budget";
+import { LaunchRankCheckRunError as BudgetLaunchError } from "@/lib/rank-check/runs/launch-types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const PROJECT_ID = "prj_abcdefghijklmnopqrstuvwx";
@@ -44,6 +47,24 @@ describe("launchRankCheckRunAction", () => {
       publicId: "rcr_abcdefghijklmnopqrstuvwx",
       status: "queued",
       targetCount: 1,
+    });
+  });
+
+  it.each([
+    new BudgetExhaustedError({
+      projectId: "project_1",
+      capCents: 0,
+      spentCents: 0,
+      reason: "budget_missing",
+    }),
+    new DeploymentAdmissionExhaustedError("budget", { budgetReason: "budget_missing" }),
+    new BudgetLaunchError("budget_exhausted", undefined, "budget_missing"),
+  ])("returns missing budget guidance across the action boundary", async (error) => {
+    mocks.launch.mockRejectedValueOnce(error);
+    await expect(launchRankCheckRunAction(input)).resolves.toMatchObject({
+      code: "budget_missing",
+      status: "not_started",
+      message: expect.stringContaining("configure a monthly budget"),
     });
   });
 

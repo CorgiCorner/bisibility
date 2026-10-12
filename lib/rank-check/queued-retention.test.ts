@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
     id: `batch_${String(index).padStart(3, "0")}`,
   })),
   prisma: {
+    $queryRaw: vi.fn(),
     queuedRankCheckBatch: {
       deleteMany: vi.fn(),
       findMany: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 describe("queued batch retention", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$queryRaw.mockImplementation(async () => mocks.batches.slice(0, 101));
     mocks.batches.splice(
       0,
       mocks.batches.length,
@@ -67,4 +69,12 @@ describe("queued batch retention", () => {
       pageSize: 100,
     });
   });
+});
+
+it("retains terminal batches whose original accounting operation is unresolved or missing", async () => {
+  vi.clearAllMocks();
+
+  mocks.prisma.$queryRaw.mockResolvedValue([]);
+  expect(await purgeExpiredQueuedRankCheckBatches()).toMatchObject({ deleted: 0 });
+  expect(mocks.prisma.queuedRankCheckBatch.deleteMany).not.toHaveBeenCalled();
 });

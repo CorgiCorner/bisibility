@@ -8,6 +8,8 @@ import {
   RankCheckFrequency,
   Role,
 } from "@/lib/generated/prisma/client";
+import { ensureProjectSpendingBudget } from "@/lib/metering/project-budget-bootstrap";
+import { meteringNamespace } from "@/lib/metering/runtime";
 import { seedKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
 import { CURRENT_RANK_NORMALIZATION_VERSION } from "@/lib/rank-check/normalization-version";
 import type { SampleSignalFixture } from "./fixture-types";
@@ -95,6 +97,8 @@ async function installSampleDatasetInTransaction(
     },
     select: { domain: true, id: true, name: true, publicId: true },
   });
+
+  await ensureProjectSpendingBudget(tx, meteringNamespace(), project.id);
 
   await tx.tag.createMany({
     data: dataset.tags.map((tag) => ({

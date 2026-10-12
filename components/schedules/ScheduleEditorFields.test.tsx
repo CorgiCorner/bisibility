@@ -4,8 +4,10 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useForm } from "react-hook-form";
 import { describe, expect, it } from "vitest";
+import { ScheduleEditorErrorText } from "./ScheduleEditorFieldPrimitives";
 import { ScheduleEditorFields } from "./ScheduleEditorFields";
 import type { ScheduleEditorValues } from "./ScheduleEditorModel";
+import { scheduleEditorValidationCode } from "./ScheduleEditorModel";
 
 function ScheduleEditorFieldsHarness() {
   const form = useForm<ScheduleEditorValues>({
@@ -37,7 +39,7 @@ function ScheduleEditorFieldsHarness() {
 }
 
 describe("ScheduleEditorFields", () => {
-  it("uses the compact control height for every frequency-dependent control", async () => {
+  it("uses the shared form control height for every frequency-dependent control", async () => {
     const user = userEvent.setup();
     render(<ScheduleEditorFieldsHarness />);
 
@@ -54,7 +56,7 @@ describe("ScheduleEditorFields", () => {
     await user.click(screen.getByRole("radio", { name: "Custom cron" }));
     heights.push(heightClass(screen.getByLabelText("Cron expression")));
 
-    expect(heights).toEqual(["min-h-[34px]", "min-h-[34px]", "min-h-[34px]", "min-h-[34px]"]);
+    expect(heights).toEqual(["min-h-10", "min-h-10", "min-h-10", "min-h-10"]);
   });
 
   it("offers each schema depth in order", async () => {
@@ -91,4 +93,34 @@ describe("ScheduleEditorFields", () => {
     expect(screen.getByRole("menuitem", { name: "Project default (Top 20)" })).toBeVisible();
     expect(screen.getByRole("menuitem", { name: "Always Top 20" })).toBeVisible();
   });
+});
+
+it("retains one reserved cadence footprint while changing all four frequencies", async () => {
+  const user = userEvent.setup();
+  render(<ScheduleEditorFieldsHarness />);
+  const footprint = screen.getByTestId("schedule-cadence-fields");
+  const timezone = screen.getByRole("button", { name: "Time zone" });
+  for (const cadence of ["Weekly", "Monthly", "Custom cron", "Daily"]) {
+    await user.click(screen.getByRole("radio", { name: cadence }));
+    expect(screen.getByTestId("schedule-cadence-fields")).toBe(footprint);
+    expect(footprint).toHaveClass("h-[210px]", "sm:h-[180px]");
+    expect(footprint).not.toContainElement(timezone);
+  }
+});
+
+it("reserves the same two-line error slot for empty, invalid and cleared fields", () => {
+  const { container, rerender } = render(<ScheduleEditorErrorText />);
+  const slot = container.querySelector("span");
+  expect(slot).toHaveClass("h-10", "overflow-y-auto");
+  expect(slot).toBeEmptyDOMElement();
+  for (const text of Object.values(scheduleEditorValidationCode)) {
+    rerender(<ScheduleEditorErrorText text={text} />);
+    expect(container.querySelector("span")).toBe(slot);
+    expect(slot).toHaveClass("h-10");
+    expect(slot).toHaveAttribute("role", "alert");
+    expect(slot?.textContent).not.toBe("");
+  }
+  rerender(<ScheduleEditorErrorText />);
+  expect(container.querySelector("span")).toBe(slot);
+  expect(slot).toBeEmptyDOMElement();
 });

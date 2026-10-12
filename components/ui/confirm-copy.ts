@@ -16,6 +16,7 @@ type ConfirmMessageKey =
   | "deleteKeyword"
   | "deleteProject"
   | "deleteRun"
+  | "deleteTimelineNote"
   | "deleteWebhookEndpoint"
   | "reactivateAccount"
   | "removeIntegration"
@@ -97,6 +98,13 @@ export const CONFIRM: Record<ConfirmMessageKey, ConfirmConfig> = {
     dangerLabelKey: "deleteRunDangerLabel",
     titleKey: "deleteRunTitle",
     toastMessageKey: "deleteRunToastMessage",
+  },
+  deleteTimelineNote: {
+    icon: Trash,
+    bodyKey: "deleteTimelineNoteBody",
+    dangerLabelKey: "deleteTimelineNoteDangerLabel",
+    titleKey: "deleteTimelineNoteTitle",
+    toastMessageKey: "deleteTimelineNoteToastMessage",
   },
   deleteWebhookEndpoint: {
     icon: Trash,

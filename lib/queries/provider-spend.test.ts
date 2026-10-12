@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { frozenUsageResponse } from "./canonical-query.test-fixture";
 
 const mocks = vi.hoisted(() => ({
+  allocations: vi.fn(),
   availability: new Map<string, unknown>(),
   freshness: vi.fn(),
   connectionUsage: vi.fn(),
   lookups: vi.fn(),
   prisma: {
+    $queryRaw: vi.fn(),
     project: { findUnique: vi.fn() },
     providerCostEntry: { groupBy: vi.fn() },
     rankCheck: { findMany: vi.fn() },
@@ -15,6 +18,9 @@ const mocks = vi.hoisted(() => ({
   settingsUsage: vi.fn(),
 }));
 
+vi.mock("@/lib/provider-allocations/repository", () => ({
+  readProjectProviderAllocations: mocks.allocations,
+}));
 vi.mock("@/lib/provider-usage/usage-freshness", () => ({
   providerUsageFreshness: mocks.freshness,
 }));
@@ -50,6 +56,14 @@ async function load(now = new Date("2026-08-20T12:00:00.000Z")) {
 describe("loadProjectProviderSpend", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$queryRaw.mockImplementation((query) =>
+      frozenUsageResponse(query, mocks.prisma.providerCostEntry),
+    );
+    mocks.allocations.mockImplementation(async () => {
+      const stored = await mocks.prisma.project.findUnique();
+      const { fixtureAllocations } = await import("./provider-spend-test-fixtures");
+      return fixtureAllocations(stored.providerConnections);
+    });
     mocks.freshness.mockResolvedValue({
       lastReconciledAt: "2026-08-20T11:55:00.000Z",
       status: "fresh",
@@ -69,7 +83,7 @@ describe("loadProjectProviderSpend", () => {
     );
   });
 
-  it("uses the legacy project cap only for the primary eligible metered connection", async () => {
+  it("reads connection limits independently from the project cap", async () => {
     const primary = connection("metered_1", "metered", { priority: 0 });
     const quota = connection("quota_1", "quota", { priority: 1 });
     mocks.prisma.project.findUnique.mockResolvedValue({
@@ -78,6 +92,7 @@ describe("loadProjectProviderSpend", () => {
     });
 
     const result = await load();
+    expect(mocks.allocations).toHaveBeenCalledWith("project_1", catalog);
     expect(result.connections[0].reconciliation).toEqual({
       lastReconciledAt: "2026-08-20T11:55:00.000Z",
       status: "fresh",
@@ -86,8 +101,8 @@ describe("loadProjectProviderSpend", () => {
     expect(result.connections).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          allocation: { amountPerMonth: 1_000, unit: "cents" },
-          allocationSource: "legacy_project",
+          allocation: null,
+          allocationSource: "none",
           connectionId: "conn_metered_1",
         }),
         expect.objectContaining({
@@ -163,6 +178,43 @@ describe("loadProjectProviderSpend", () => {
       unconfirmedCount: 1,
       used: 0,
     });
+  });
+
+  it.each([
+    { name: "unconfirmed-only", requestCount: 1, unconfirmedCount: 1, used: 0 },
+    { name: "mixed confirmed and unconfirmed", requestCount: 2, unconfirmedCount: 1, used: 500 },
+    { name: "confirmed zero", requestCount: 1, unconfirmedCount: 0, used: 0 },
+  ])("preserves $name coverage in the project summary", async (observation) => {
+    mocks.prisma.project.findUnique.mockResolvedValue(
+      project([
+        connection("metered_1", "metered", {
+          allocationAmountPerMonth: 1_000,
+          allocationUnit: "cents",
+        }),
+      ]),
+    );
+    mocks.connectionUsage.mockImplementation(async (_db, input) =>
+      input.credentialSource === "own" && input.surface === "app"
+        ? observation
+        : { requestCount: 0, unconfirmedCount: 0, used: 0 },
+    );
+    mocks.prisma.providerCostEntry.groupBy.mockImplementation(async (query: { by?: string[] }) =>
+      query.by?.includes("credentialSource")
+        ? [{ credentialSource: "own", _sum: { costCents: observation.used, priceCents: null } }]
+        : [],
+    );
+
+    const { summary } = await load();
+
+    expect(summary.requestCount).toBe(observation.requestCount);
+    expect(summary.recorded).toEqual({ cents: observation.used, creditsCents: 0, units: 0 });
+    expect(summary.maxUsedPercent).toBe(observation.used / 10);
+    if (observation.unconfirmedCount) {
+      expect(summary.projected).not.toEqual({ kind: "no_usage" });
+      expect(summary).toMatchObject({ unconfirmedCount: observation.unconfirmedCount });
+    } else {
+      expect(summary.projected).toEqual({ kind: "no_usage" });
+    }
   });
 
   it("reports no allocation without treating it as zero percent", async () => {

@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { projectTestBudget, usageReadFixture } from "@/lib/metering/read.test-fixture";
+import { seedTestUsage } from "@/lib/metering/usage.test-fixture";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getFirstCheckRunPlan, listFirstCheckCandidates } from "./rank-check-preview";
 
 const KEYWORD_PUBLIC_ID = "kw_abcdefghijklmnopqrstuvwx";
@@ -19,8 +21,8 @@ function keywordRow(id: string, publicId: string, text: string, device: "desktop
 const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
   loadSerpProviderChain: vi.fn(),
-  monthlySpendCents: vi.fn(),
   prisma: {
+    $queryRaw: vi.fn(),
     keyword: { count: vi.fn(), findMany: vi.fn() },
     keywordTrafficSnapshot: { findMany: vi.fn() },
     project: { findFirst: vi.fn(), findUnique: vi.fn() },
@@ -35,17 +37,16 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/auth/authorize", () => ({ authorize: mocks.authorize }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/rank-check/budget", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/rank-check/budget")>()),
-  monthlySpendCents: mocks.monthlySpendCents,
-}));
 vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.loadSerpProviderChain,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+let store: Awaited<ReturnType<typeof usageReadFixture>>;
+afterEach(async () => store.db.close());
+
 describe("rank check preview read actions", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     mocks.requireSession.mockResolvedValue({ user: { id: "user_1" } });
     mocks.prisma.user.findUnique.mockResolvedValue({
@@ -63,7 +64,9 @@ describe("rank check preview read actions", () => {
     });
     mocks.loadSerpProviderChain.mockResolvedValue([]);
     mocks.prisma.projectMarket.findMany.mockResolvedValue([{ locationId: "loc_us" }]);
-    mocks.monthlySpendCents.mockResolvedValue(0);
+    store = await usageReadFixture();
+    mocks.prisma.$queryRaw.mockImplementation(store.query);
+    await store.budget(projectTestBudget());
     mocks.prisma.keyword.count.mockResolvedValue(2);
     mocks.prisma.keyword.findMany.mockReset().mockResolvedValue([]);
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
@@ -275,7 +278,7 @@ describe("rank check preview read actions", () => {
   it("short-circuits run plans for sample projects", async () => {
     // biome-ignore format: compact fixture keeps this test under the project line cap.
     mocks.prisma.project.findFirst.mockResolvedValueOnce({ id: "project_1", isSample: true, ownerId: "user_1", publicId: SAMPLE_PROJECT_PUBLIC_ID, writeMode: "active" });
-    mocks.monthlySpendCents.mockResolvedValueOnce(42);
+    await seedTestUsage(store.db, { costCents: 42 });
     const result = await getFirstCheckRunPlan({ projectId: SAMPLE_PROJECT_PUBLIC_ID });
     // biome-ignore format: compact assertion keeps this test under the project line cap.
     expect(result).toMatchObject({ budget: { capCents: 100, spentCents: 42 }, budgetExhausted: false, estimatedCostPerCheckCents: null, isSampleProject: true, providerReady: false, providers: [], readyCount: 0, scope: { depth: 100 } });
@@ -283,8 +286,9 @@ describe("rank check preview read actions", () => {
   });
 
   it("reports exhausted budget when monthly spend reaches the cap", async () => {
-    mocks.monthlySpendCents.mockResolvedValueOnce(100);
+    await seedTestUsage(store.db, { costCents: 100 });
     await expect(getFirstCheckRunPlan({ projectId: PROJECT_PUBLIC_ID })).resolves.toMatchObject({
+      budget: { capCents: 100, spentCents: 100 },
       budgetExhausted: true,
     });
   });

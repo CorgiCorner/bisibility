@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./fixtures";
 import { completeOnboarding } from "./workspace";
 
 const otpFile = process.env.BISIBILITY_E2E_OTP_FILE;

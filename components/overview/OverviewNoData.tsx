@@ -3,6 +3,7 @@ import type {
   QueueFirstChecksAction,
   RunFirstCheckAction,
 } from "@/components/rank-check/FirstCheckBannerAction";
+import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { ByMarketRollup } from "./ByMarketRollup";
 import { DataSourceNoDataPanel } from "./OverviewNoDataBottom";
@@ -11,6 +12,7 @@ import type { OverviewView } from "./types";
 
 export type OverviewNoDataProps = {
   budgetExhausted: boolean;
+  budgetReason?: BudgetDenialReason;
   canCreateKeyword?: boolean;
   canManageProviders?: boolean;
   canRunChecks?: boolean;
@@ -25,6 +27,7 @@ export type OverviewNoDataProps = {
 
 export function OverviewNoData({
   budgetExhausted,
+  budgetReason,
   canCreateKeyword = true,
   canManageProviders = true,
   canRunChecks = true,
@@ -62,6 +65,7 @@ export function OverviewNoData({
       />
       <NoDataKpiRow
         budgetExhausted={budgetExhausted}
+        budgetReason={budgetReason}
         keywordCount={keywordCount}
         projectReadOnly={overview.projectReadOnly}
         runningCheckCount={runningCheckCount}

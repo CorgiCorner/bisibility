@@ -30,12 +30,12 @@ describe("run operation usage", () => {
   it("keeps failed unrecorded requests unknown while recovering the depth estimate", () => {
     expect(runUsage(run, [group])).toEqual({ actual: null, estimated: 4, unit: "operations" });
   });
-  it("uses recorded operations, including early-stop usage, instead of cost or depth", () => {
+  it("keeps recorded legacy units unknown without Meter receipts", () => {
     expect(
       runUsage(run, [
         { ...group, _count: { _all: 2, billingUnits: 2 }, _sum: { billingUnits: 3 } },
       ]),
-    ).toEqual({ actual: 3, estimated: 4, unit: "operations" });
+    ).toEqual({ actual: null, estimated: 4, unit: "operations" });
   });
   it("does not present a partial aggregate as total actual usage", () => {
     expect(
@@ -54,7 +54,7 @@ describe("run operation usage", () => {
         },
         [],
       ),
-    ).toEqual({ actual: 0, estimated: 6, unit: "operations" });
+    ).toEqual({ actual: null, estimated: 6, unit: "operations" });
   });
   it("does not let an early-stopped actual mutate the persisted launch estimate", () => {
     expect(
@@ -64,6 +64,7 @@ describe("run operation usage", () => {
           selectionSpec: { estimatedOperations: 4, providerId: "serpapi" },
         },
         [{ ...group, _count: { _all: 2, billingUnits: 2 }, _sum: { billingUnits: 3 } }],
+        { ...confirmedLedger, units: 3 },
       ),
     ).toEqual({ actual: 3, estimated: 4, unit: "operations" });
   });
@@ -111,7 +112,7 @@ describe("run operation usage", () => {
       )?.actual,
     ).toBeNull();
   });
-  it("falls back to measured check aggregates while the ledger has no receipts", () => {
+  it("keeps actuals unknown when the Meter aggregate has no receipts", () => {
     const legacy: RunLedgerActual = {
       costCents: 0,
       receiptCount: 0,
@@ -125,6 +126,6 @@ describe("run operation usage", () => {
         [{ ...group, _count: { _all: 2, billingUnits: 2 }, _sum: { billingUnits: 3 } }],
         legacy,
       ),
-    ).toEqual({ actual: 3, estimated: 4, unit: "operations" });
+    ).toEqual({ actual: null, estimated: 4, unit: "operations" });
   });
 });

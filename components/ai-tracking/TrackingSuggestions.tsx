@@ -36,7 +36,13 @@ export function TrackingSuggestions({
                 setError(null);
                 const result = await onSuggest();
                 setDrafts(result.drafts);
-                setLimitations(result.limitations);
+                setLimitations(
+                  result.method === "manual_fallback"
+                    ? [t("contextMissingHint")]
+                    : result.method === "context_template_heuristic"
+                      ? [t("contextDraftReviewHint")]
+                      : result.limitations,
+                );
               } catch (cause) {
                 setError(cause instanceof Error ? cause.message : t("suggestionsUnavailable"));
               }

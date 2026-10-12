@@ -140,7 +140,7 @@ export async function analyzeBacklinks(
       load: async () => {
         const result = await fetchBacklinksAnalysis({
           ...input,
-          budgetCapCents: project.budgetCapCents,
+          maxCostCents: options.maxCostCents,
           origin: context.origin,
           projectId: project.id,
           source,
@@ -220,7 +220,6 @@ export async function loadMoreBacklinkRows(
   try {
     const page = await fetchMoreBacklinksRows({
       ...input,
-      budgetCapCents: project.budgetCapCents,
       mode: snapshotMode(snapshot.summary),
       origin: context.origin,
       offset: snapshot.fetchedRowCount,

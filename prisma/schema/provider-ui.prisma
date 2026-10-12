@@ -1,0 +1,19 @@
+// Neutral, content-free UI command results retain exact replay identity.
+model ProviderUiAuthority {
+  id         String @id
+  instanceId String @unique
+
+  @@map("provider_ui_authority")
+}
+
+model ProviderUiCommand {
+  scope     String
+  principal String
+  commandId String
+  bodyHash  String
+  result    Json
+  createdAt DateTime @default(now())
+
+  @@id([scope, principal, commandId])
+  @@map("provider_ui_commands")
+}

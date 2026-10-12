@@ -1,27 +1,19 @@
 {
   "projectCostEstimate": {
     "providerSpend": {
-      "docs": "How budgets work",
-      "eyebrow": "MONTHLY BUDGET",
-      "noCapAmount": "{spent} this month",
-      "meterAria": "Provider spend: {spent} of {cap} this month{session, select, none {} other {, {session} this session}}",
-      "segmentedAmount": "{spent} of {cap} used",
-      "cardCap": "of {cap} cap",
-      "thisMonth": "this month",
-      "capReached": "cap reached",
-      "session": "{spent} this session",
-      "pace": "on pace ~{spent}/mo",
-      "left": "{spent} left",
-      "otherProvider": "Other",
-      "headerUnavailable": "Spend unavailable",
-      "headerCapTooltip": "Monthly provider budget.",
+      "headerUnavailable": "Usage unavailable",
+      "headerUsageUnknown": "Usage unknown",
+      "headerCapTooltip": "Budget usage, including reservations. Open Usage for details.",
       "headerNoCap": "No budget · Set one",
-      "headerNoCapWithSpend": "{spent} · no budget · Set one",
       "headerNoCapAria": "No budget, set one",
-      "headerNoCapAriaWithSpend": "{spent} spent with no budget, set one",
-      "headerUnderOnePercent": "<1% used",
-      "headerUsed": "{percent, number}% used",
-      "headerCapAria": "Monthly cap {used}"
+      "headerUsed": "{percent}% used",
+      "headerAtLeastUsed": "At least {percent}% used",
+      "headerUnderOne": "Less than 1% used",
+      "headerAtLeastUnderOne": "At least some usage",
+      "headerExceeded": "Budget exceeded",
+      "headerUsageAria": "Budget usage: {status}. View details",
+      "headerNoLimit": "No limit",
+      "headerWarning": "Budget warning"
     },
     "status": {
       "unavailable": "Estimate unavailable.",

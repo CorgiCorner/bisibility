@@ -9,6 +9,7 @@ const updatedAt = new Date("2026-07-27T11:00:00.000Z");
 const mocks = vi.hoisted(() => {
   const prisma = {
     $executeRaw: vi.fn(),
+    $queryRaw: vi.fn(async () => []),
     $transaction: vi.fn(),
     keyword: { count: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
     project: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },

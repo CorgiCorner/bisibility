@@ -30,7 +30,7 @@ it("uses the database URL schema for runtime metering transactions", async () =>
       schema: string;
     }[];
     expect(raw?.schema).toBe(f.schema);
-    expect(await scoped.$queryRaw`SELECT 1 FROM metering_shadow LIMIT 1`).toEqual([]);
+    expect(await scoped.$queryRaw`SELECT 1 FROM metering_operation LIMIT 1`).toEqual([]);
 
     const { meteringRuntime, meteringSchema } = await import("./runtime");
     expect(meteringSchema()).toBe(f.schema);

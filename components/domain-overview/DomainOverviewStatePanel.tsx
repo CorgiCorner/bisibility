@@ -1,6 +1,9 @@
 "use client";
 
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
+import { MissingBudgetNotice } from "@/components/i18n/MissingBudgetNotice";
+import { UsageReconciliationNotice } from "@/components/i18n/UsageReconciliationNotice";
+import { WalletBudgetNotice } from "@/components/i18n/WalletBudgetNotice";
 import { AccentCtaLink } from "@/components/ui/AccentCtaLink";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -116,6 +119,9 @@ export function DomainOverviewStatePanel({
       />
     );
   }
+  if (state === "wallet_budget_exhausted") return <WalletBudgetNotice />;
+  if (state === "usage_reconciliation_required") return <UsageReconciliationNotice />;
+  if (state === "budget_missing") return <MissingBudgetNotice />;
   if (state === "budget_exhausted") {
     return (
       <EmptyState

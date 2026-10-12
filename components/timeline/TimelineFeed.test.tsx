@@ -1,3 +1,4 @@
+import buttonStyles from "@/components/ui/Button.module.css";
 import { renderWithTimelineMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import type { Role } from "@/lib/generated/prisma/client";
@@ -73,7 +74,7 @@ describe("TimelineFeed empty state", () => {
     expect(controls).toContainElement(addNote);
     expect(controls).toContainElement(allFilter);
     expect(filterRegion).toHaveClass("border-t", "border-border", "pt-3");
-    expect(search).toHaveClass("h-[34px]");
+    expect(search).toHaveClass(buttonStyles.sm);
     expect(addNote).toHaveClass("h-[34px]");
     expect(search.compareDocumentPosition(addNote) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     const timelineInput = screen.getByRole("searchbox", { name: "Search timeline" });

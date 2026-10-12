@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
 import { hashApiKey, verifyApiKey } from "@/lib/providers/crypto";
 import { DENSE_CHECK_COUNT } from "@/lib/sample-data/dense-position-series";
 import { seed } from "@/prisma/seed";
@@ -18,15 +19,32 @@ const mocks = vi.hoisted(() => {
   };
 
   const apiKeys: ApiKeyRow[] = [];
+  const providerRates = new Map<string, { amountCents: string; feature: string }>();
   const projectIds: Record<string, string> = {
     prj_a62b9be6d88a6fd296b50d56: "project_newsite",
     prj_a82e5b164885df2735e01312: "project_acme",
   };
 
+  const project = {
+    upsert: vi.fn(({ create, update, where }) =>
+      Promise.resolve({
+        ...create,
+        ...update,
+        id: projectIds[where.publicId] ?? `project_${where.publicId}`,
+        publicId: where.publicId,
+      }),
+    ),
+  };
+
   return {
     apiKeys,
+    providerRates,
+    readBudgets: vi.fn(),
+    writeBudget: vi.fn(),
+    transaction: { project },
     prisma: {
       $disconnect: vi.fn(() => Promise.resolve()),
+      $transaction: vi.fn(),
       apiKey: {
         upsert: vi.fn(({ create, update, where }) => {
           const existing = apiKeys.find((row) => row.hashedKey === where.hashedKey);
@@ -50,17 +68,14 @@ const mocks = vi.hoisted(() => {
       },
       membership: { upsert: vi.fn(() => Promise.resolve({ id: "membership_1" })) },
       oauthClient: { upsert: vi.fn(() => Promise.resolve({ id: "oc_bisibility_cli" })) },
-      project: {
-        upsert: vi.fn(({ create, update, where }) =>
-          Promise.resolve({
-            ...create,
-            ...update,
-            id: projectIds[where.publicId] ?? `project_${where.publicId}`,
-            publicId: where.publicId,
-          }),
+      projectDefaults: {
+        upsert: vi.fn(
+          (_input: {
+            create: { enabledExperimentalModules?: string[] };
+            update: { enabledExperimentalModules?: string[] };
+          }) => Promise.resolve({ id: "defaults_1" }),
         ),
       },
-      projectDefaults: { upsert: vi.fn(() => Promise.resolve({ id: "defaults_1" })) },
       projectMarket: {
         deleteMany: vi.fn(() => Promise.resolve({ count: 0 })),
         updateMany: vi.fn(() => Promise.resolve({ count: 0 })),
@@ -70,7 +85,20 @@ const mocks = vi.hoisted(() => {
       },
       providerConnection: {
         deleteMany: vi.fn(() => Promise.resolve({ count: 0 })),
-        upsert: vi.fn(() => Promise.resolve({ id: "provider_connection_1" })),
+        upsert: vi.fn(
+          (_input: { create: Record<string, unknown>; update: Record<string, unknown> }) =>
+            Promise.resolve({ credentialSource: "own", id: "provider_connection_1" }),
+        ),
+      },
+      providerConnectionRate: {
+        upsert: vi.fn(({ create, update, where }) => {
+          const { connectionId, feature } = where.connectionId_feature;
+          const key = `${connectionId}:${feature}`;
+          const existing = providerRates.get(key);
+          const rate = existing ? { ...existing, ...update } : { ...create };
+          providerRates.set(key, rate);
+          return Promise.resolve(rate);
+        }),
       },
       rankCheck: {
         createMany: vi.fn(
@@ -91,6 +119,11 @@ const mocks = vi.hoisted(() => {
     },
   };
 });
+
+vi.mock("@/lib/metering/spending-limit-store", () => ({
+  readSpendingBudgets: mocks.readBudgets,
+  putSpendingBudget: mocks.writeBudget,
+}));
 
 vi.mock("@/lib/generated/prisma/client", () => ({
   Device: { desktop: "desktop" },
@@ -121,6 +154,56 @@ describe("database seed", () => {
     vi.clearAllMocks();
     vi.unstubAllEnvs();
     mocks.apiKeys.length = 0;
+    mocks.providerRates.clear();
+    mocks.readBudgets.mockResolvedValue([]);
+    mocks.prisma.$transaction.mockImplementation((run) => run(mocks.transaction));
+  });
+
+  it("bootstraps both workspace budgets and preserves an existing settings revision", async () => {
+    vi.stubEnv("METERING_NAMESPACE", "seed-fixture");
+    mocks.readBudgets.mockResolvedValueOnce([{ id: "project:project_acme:monthly", version: 7 }]);
+
+    await seed();
+
+    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(2);
+    expect(mocks.transaction.project.upsert).toHaveBeenCalledTimes(2);
+    expect(
+      mocks.readBudgets.mock.calls.map(([, namespace, scopes]) => [namespace, scopes]),
+    ).toEqual([
+      ["seed-fixture", [{ kind: "group", namespace: "seed-fixture", group: "project_acme" }]],
+      ["seed-fixture", [{ kind: "group", namespace: "seed-fixture", group: "project_newsite" }]],
+    ]);
+    // The public-id extension wraps each transaction; reads and writes must share that client.
+    const budgetTransaction = mocks.readBudgets.mock.calls[1][0];
+    expect(budgetTransaction).not.toBe(mocks.prisma);
+    expect(budgetTransaction).toMatchObject({ project: { upsert: expect.any(Function) } });
+    expect(mocks.writeBudget).toHaveBeenCalledExactlyOnceWith(
+      budgetTransaction,
+      expect.objectContaining({ id: "project:project_newsite:monthly", version: 1 }),
+    );
+  });
+
+  it("opts both demo projects into Timeline without populating the empty project", async () => {
+    await seed();
+    const defaults = mocks.prisma.projectDefaults.upsert.mock.calls.map(([input]) => input);
+    expect(defaults).toHaveLength(2);
+    for (const input of defaults) {
+      expect(input.create.enabledExperimentalModules).toContain("timeline");
+      expect(input.update.enabledExperimentalModules).toContain("timeline");
+    }
+    expect(
+      mocks.prisma.keyword.upsert.mock.calls.every(
+        ([input]) => input.create.projectId === "project_acme",
+      ),
+    ).toBe(true);
+  });
+
+  it("opts both demo projects into Competitors", async () => {
+    await seed();
+    for (const [input] of mocks.prisma.projectDefaults.upsert.mock.calls) {
+      expect(input.create.enabledExperimentalModules).toContain("competitors");
+      expect(input.update.enabledExperimentalModules).toContain("competitors");
+    }
   });
 
   it("does not create the env-seeded API key when the env var is unset", async () => {
@@ -175,12 +258,12 @@ describe("database seed", () => {
 
     await seed();
 
-    expect(mocks.prisma.project.upsert).toHaveBeenCalledWith(
+    expect(mocks.transaction.project.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { publicId: seededProjectId },
       }),
     );
-    expect(mocks.prisma.project.upsert.mock.calls[0][0].create).not.toHaveProperty(
+    expect(mocks.transaction.project.upsert.mock.calls[0][0].create).not.toHaveProperty(
       "providerAllocationsInitializedAt",
     );
   });
@@ -194,6 +277,66 @@ describe("database seed", () => {
         update: expect.objectContaining({ credentialsEncrypted: null }),
       }),
     );
+  });
+
+  it("seeds native rank pricing through the current rate authority", async () => {
+    await seed();
+
+    const [input] = mocks.prisma.providerConnection.upsert.mock.calls[0];
+    expect(input.create).not.toHaveProperty("costPerCheckCents");
+    expect(input.update).not.toHaveProperty("costPerCheckCents");
+    expect(input.create.credentialSource).toBe("own");
+    expect(mocks.prisma.providerConnectionRate.upsert).toHaveBeenCalledExactlyOnceWith({
+      create: {
+        amountCents: "1.5500",
+        connectionId: "provider_connection_1",
+        feature: "rank_check",
+      },
+      update: { amountCents: "1.5500" },
+      where: {
+        connectionId_feature: { connectionId: "provider_connection_1", feature: "rank_check" },
+      },
+    });
+  });
+
+  it("keeps native rank pricing idempotent without replacing other feature rates", async () => {
+    mocks.providerRates.set("provider_connection_1:backlinks", {
+      amountCents: "9.0000",
+      feature: "backlinks",
+    });
+    await seed();
+    await seed();
+
+    expect(mocks.providerRates.size).toBe(2);
+    expect(mocks.providerRates.get("provider_connection_1:backlinks")?.amountCents).toBe("9.0000");
+    expect(
+      withRankCheckManualRate({ credentialSource: "own", rates: [...mocks.providerRates.values()] })
+        .costPerCheckCents,
+    ).toBe("1.5500");
+  });
+
+  it("preserves hosted source and its retained native override without repricing it", async () => {
+    mocks.prisma.providerConnection.upsert.mockResolvedValueOnce({
+      credentialSource: "hosted",
+      id: "provider_connection_1",
+    });
+    mocks.providerRates.set("provider_connection_1:rank_check", {
+      amountCents: "7.0000",
+      feature: "rank_check",
+    });
+    await seed();
+
+    expect(mocks.prisma.providerConnection.upsert.mock.calls[0][0].update).not.toHaveProperty(
+      "credentialSource",
+    );
+    expect(mocks.prisma.providerConnectionRate.upsert).not.toHaveBeenCalled();
+    expect(mocks.providerRates.get("provider_connection_1:rank_check")?.amountCents).toBe("7.0000");
+    expect(
+      withRankCheckManualRate({
+        credentialSource: "hosted",
+        rates: [...mocks.providerRates.values()],
+      }).costPerCheckCents,
+    ).toBeNull();
   });
 
   it("seeds a repeatable validation-ready active project", async () => {

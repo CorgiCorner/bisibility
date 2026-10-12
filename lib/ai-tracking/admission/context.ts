@@ -2,8 +2,11 @@ import "server-only";
 import { payloadHash } from "@/lib/ai-tracking/identity";
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
+import { meteringNamespace } from "@/lib/metering/runtime";
+import { currentBudgets } from "@/lib/metering/store/budgets";
+import { createSql } from "@/lib/metering/store/sql";
 import { assertOperationAccess } from "@/lib/operations/access-extension";
-import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
+import { ownAllocationTag, ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { decryptProviderCredentials } from "@/lib/providers/crypto";
 
 export async function trackingAdmissionContext(
@@ -14,7 +17,7 @@ export async function trackingAdmissionContext(
   if (!purchased) await assertOperationAccess(projectId);
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { id: true, writeMode: true, budgetCapCents: true },
+    select: { id: true, writeMode: true },
   });
   if (!purchased) assertProjectWritable(project);
   const connection = await prisma.providerConnection.findFirst({
@@ -37,10 +40,16 @@ export async function trackingAdmissionContext(
     connection.credentialsEncrypted,
   );
   if (!credentialVersion) throw new Error("Tracking requires a versioned stored credential.");
-  const budgetRevision = payloadHash([
-    project.budgetCapCents,
-    connection.allocationAmountPerMonth,
-    connection.programmaticAllocationAmountPerMonth,
-  ]);
+  const namespace = meteringNamespace();
+  const budgets = await currentBudgets(
+    createSql(prisma, { statements: 0, changes: 0n, rowsRead: 0 }),
+    namespace,
+    [
+      { kind: "group", namespace, group: projectId },
+      { kind: "connection", namespace, connection: connection.id },
+      { kind: "tag", namespace, tag: ownAllocationTag(connection.provider, connection.id) },
+    ],
+  );
+  const budgetRevision = payloadHash(budgets.map((b) => [b.id, b.version]).sort());
   return { project, connection, credentials, credentialVersion, budgetRevision };
 }

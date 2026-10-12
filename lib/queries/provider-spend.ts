@@ -1,11 +1,11 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import { resolveEffectiveAllocations } from "@/lib/provider-allocations/compatibility";
+import { monthStartUtc, monthUtcRange } from "@/lib/metering/utc-window";
+import { readProjectProviderAllocations } from "@/lib/provider-allocations/repository";
 import { loadProviderRateContexts } from "@/lib/provider-rates/connection-context";
 import { providerUsageFreshness } from "@/lib/provider-usage/usage-freshness";
 import type { ProviderCatalogEntry } from "@/lib/providers/types";
-import { monthStartUtc, monthUtcRange } from "@/lib/rank-check/budget";
 import {
   primaryProviderConnection,
   providerChainOrderBy,
@@ -14,6 +14,8 @@ import { resolveSerpDepth } from "@/lib/serp/constants";
 import { loadProviderAvailability } from "./provider-availability";
 import {
   monthLabel,
+  providerSpendProjection,
+  providerSpendUnconfirmed,
   surfaceSpend,
   surfaceTightestEntries,
   worseSurfaceState,
@@ -85,9 +87,7 @@ export async function loadProjectProviderSpend(input: {
 }): Promise<ProjectProviderSpend> {
   const project = await prisma.project.findUnique({
     select: {
-      budgetCapCents: true,
       defaults: { select: { serpDepth: true } },
-      providerAllocationsInitializedAt: true,
       providerConnections: { orderBy: providerChainOrderBy() },
     },
     where: { id: input.projectId },
@@ -119,7 +119,7 @@ export async function loadProjectProviderSpend(input: {
         input.now,
       ),
       prisma.rankCheck.findMany({
-        select: { costCents: true, estimatedCostCents: true, provider: true, status: true },
+        select: { provider: true, status: true },
         where: {
           checkedAt: monthUtcRange(input.now),
           keyword: { projectId: input.projectId },
@@ -141,11 +141,10 @@ export async function loadProjectProviderSpend(input: {
     ).map((connection) => [connection.connectionId, [...connection.features]]),
   );
   const allocations = new Map(
-    resolveEffectiveAllocations({
-      catalog: input.catalog,
-      connections: allocationConnections,
-      project,
-    }).map((resolved) => [resolved.internalConnectionId, resolved]),
+    (await readProjectProviderAllocations(input.projectId, input.catalog)).map((resolved) => [
+      resolved.internalConnectionId,
+      resolved,
+    ]),
   );
   const usage = await loadProviderSpendUsage({
     catalog: input.catalog,
@@ -255,11 +254,7 @@ export async function loadProjectProviderSpend(input: {
       left.provider.localeCompare(right.provider) ||
       left.surface.localeCompare(right.surface),
   )[0];
-  const exhaustion = connectionsWithStates
-    .filter((connection) => connection.projectedExhaustionAt !== null)
-    .sort((left, right) =>
-      (left.projectedExhaustionAt ?? "").localeCompare(right.projectedExhaustionAt ?? ""),
-    )[0];
+  const unconfirmedCount = providerSpendUnconfirmed(connectionsWithStates);
   const monthEnd = new Date(Date.UTC(input.now.getUTCFullYear(), input.now.getUTCMonth() + 1, 1));
   const monthStart = monthStartUtc(input.now);
 
@@ -279,17 +274,7 @@ export async function loadProjectProviderSpend(input: {
         monthLabel: monthLabel(monthStart),
         startsAt: monthStart.toISOString(),
       },
-      projected: connectionsWithStates.every(
-        (connection) => connection.own.used === 0 && connection.credits.used === 0,
-      )
-        ? { kind: "no_usage" }
-        : exhaustion
-          ? {
-              at: exhaustion.projectedExhaustionAt as string,
-              kind: "cap_by",
-              provider: exhaustion.provider,
-            }
-          : { kind: "within_limits" },
+      projected: providerSpendProjection(connectionsWithStates, unconfirmedCount),
       recorded: {
         cents: recordedSpend.ownCents,
         creditsCents: recordedSpend.creditsCents,
@@ -301,6 +286,7 @@ export async function loadProjectProviderSpend(input: {
         (sum, connection) => sum + connection.own.requestCount + connection.credits.requestCount,
         0,
       ),
+      unconfirmedCount,
       tightest: tightest ?? null,
     },
   };

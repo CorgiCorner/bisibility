@@ -4,6 +4,10 @@ import {
   trackingProject,
 } from "@/lib/ai-tracking/stores/fixtures.postgres-test-support";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
+import { Prisma } from "@/lib/generated/prisma/client";
+import { receiptOperationId } from "@/lib/metering/operation-reference";
+import { meteringNamespace } from "@/lib/metering/runtime";
+import { readCanonicalUsage } from "@/lib/metering/usage-read";
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({ client: null as PrismaClient | null }));
@@ -16,13 +20,8 @@ vi.mock("@/lib/metering/entry-sync", () => ({
   beginUsageEntry: vi.fn(async () => undefined),
   syncUsageEntry: vi.fn(async () => undefined),
 }));
-vi.mock("@/lib/provider-usage/admission-extension", () => ({
-  ownAdmission: {
-    reserve: vi.fn(async () => []),
-    fence: vi.fn(async () => undefined),
-    cancel: vi.fn(async () => undefined),
-    acknowledge: vi.fn(async () => undefined),
-  },
+vi.mock("@/lib/provider-usage/admission-extension", async () => ({
+  ownAdmission: (await import("@/lib/metering/own-admission.test-fixture")).fixtureOwnAdmission,
 }));
 
 import { TrackingDeadlineError } from "@/lib/ai-tracking/providers/dispatch-error";
@@ -150,7 +149,7 @@ function ports(plan: SamplePlan, submit: () => Promise<unknown>) {
     }),
     collect: vi.fn(async () => result),
     settle: async (_plan, receipt, failed, taskId) =>
-      journal(plan).observer.settle(receipt.providerCostEntryId ?? "missing", {
+      journal(plan).observer.settle(receiptOperationId(receipt) ?? "missing", {
         cached: false,
         costCents: receipt.amountUsd === null ? null : Number(receipt.amountUsd) * 100,
         quantity: receipt.amountUsd === null ? null : 1,
@@ -168,10 +167,13 @@ it("replacement worker GET reuses real provider ledger and native proof after se
   const post = vi.fn(async () => undefined);
   const first = ports(plan, post);
   await executeTrackingSample(first, plan.projectId, plan.sampleId);
-  const deposit = await database.client.providerCostEntry.findFirstOrThrow({
-    where: { correlationId: plan.attemptId },
-  });
-  expect(deposit.costCents.toString()).toBe("1.02");
+  const deposit = (
+    await readCanonicalUsage(
+      Prisma.sql`"projectId"=${plan.projectId} AND "correlationId"=${plan.attemptId}`,
+      database.client,
+    )
+  )[0]!;
+  expect(deposit.costCents?.toString()).toBe("1.02");
   vi.mocked(first.persist).mockRejectedValueOnce(new Error("crash after real journal settlement"));
   await expect(executeTrackingSample(first, plan.projectId, plan.sampleId)).rejects.toThrow(
     /crash/,
@@ -184,19 +186,20 @@ it("replacement worker GET reuses real provider ledger and native proof after se
   expect(post).toHaveBeenCalledTimes(1);
   expect(first.collect).toHaveBeenCalledTimes(1);
   expect(replacement.collect).toHaveBeenCalledTimes(1);
-  const entries = await database.client.providerCostEntry.findMany({
-    where: { correlationId: plan.attemptId },
-  });
+  const entries = await readCanonicalUsage(
+    Prisma.sql`"projectId"=${plan.projectId} AND "correlationId"=${plan.attemptId}`,
+    database.client,
+  );
   expect(entries).toHaveLength(1);
   expect(entries[0].id).toBe(deposit.id);
-  expect(entries[0].costCents.toString()).toBe("0.32");
+  expect(entries[0].costCents?.toString()).toBe("0.32");
   expect(entries[0].usageQuantity?.toString()).toBe("1");
   expect(
     (await database.client.meteringUsageEvidence.findUniqueOrThrow({ where: { id: deposit.id } }))
       .proofVersion,
   ).toBe(proof.proofVersion);
   const retained = await getTrackingSample(plan.projectId, plan.sampleId);
-  expect(retained?.providerCostEntryId).toBe(deposit.id);
+  expect(receiptOperationId(retained?.receipt)).toBe(deposit.id);
   expect(retained?.dispatch).toBe("terminal");
 });
 it("ambiguous POST retains real unknown usage and replacement never repeats the paid call", async () => {
@@ -211,9 +214,10 @@ it("ambiguous POST retains real unknown usage and replacement never repeats the 
     "submission_unknown",
   );
   expect(post).toHaveBeenCalledTimes(1);
-  const entries = await database.client.providerCostEntry.findMany({
-    where: { correlationId: plan.attemptId },
-  });
+  const entries = await readCanonicalUsage(
+    Prisma.sql`"projectId"=${plan.projectId} AND "correlationId"=${plan.attemptId}`,
+    database.client,
+  );
   expect(entries).toHaveLength(1);
   expect(entries[0].measurementStatus).toBe("unknown");
   await expect(journal(plan).observer.begin({ attemptKey: plan.attemptId })).rejects.toThrow(
@@ -235,16 +239,20 @@ it.each(["revocation", "deadline"])(
     });
     expect(await executeTrackingSample(execution, plan.projectId, plan.sampleId)).toBe("blocked");
     expect(post).not.toHaveBeenCalled();
-    const entry = await database.client.providerCostEntry.findFirstOrThrow({
-      where: { correlationId: plan.attemptId },
-    });
+    const entry = (
+      await readCanonicalUsage(
+        Prisma.sql`"projectId"=${plan.projectId} AND "correlationId"=${plan.attemptId}`,
+        database.client,
+      )
+    )[0]!;
     expect(entry.measurementStatus).toBe("recorded");
-    expect(entry.costCents.toString()).toBe("0");
+    expect(entry.costCents?.toString()).toBe("0");
     expect(entry.usageQuantity?.toString()).toBe("0");
     const retained = await getTrackingSample(plan.projectId, plan.sampleId);
     expect(retained?.dispatch).toBe("terminal");
     expect(retained?.receipt).toEqual({
-      providerCostEntryId: entry.id,
+      providerCostEntryId: null,
+      operationRef: { version: 1, namespace: meteringNamespace(), operationId: entry.id },
       amountUsd: "0",
       state: "confirmed",
     });

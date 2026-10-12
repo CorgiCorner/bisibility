@@ -7,13 +7,24 @@ export function buildNodeOptions(current = "") {
   return applyPinnedNodeOptions(current);
 }
 
-export function runBuild() {
-  const command = process.platform === "win32" ? "npm.cmd" : "npm";
-  const result = spawnSync(command, ["run", "build"], {
-    env: {
-      ...process.env,
-      NODE_OPTIONS: buildNodeOptions(process.env.NODE_OPTIONS),
-    },
+export function buildEnvironment(current = {}) {
+  return {
+    ...current,
+    NODE_OPTIONS: buildNodeOptions(current.NODE_OPTIONS),
+    // TypeScript 7 runs in Go and does not observe the Node heap ceiling.
+    // The cold project peaks near 6 GiB; a lower Go target doubles GC CPU.
+    // Keep room for the parent and OS on the standard 8 GB runner.
+    GOMEMLIMIT: "6GiB",
+    GOMAXPROCS: "2",
+  };
+}
+
+export function runBuild({ spawn = spawnSync, env = process.env, platform = process.platform } = {}) {
+  const command = platform === "win32" ? "npm.cmd" : "npm";
+  // The webpack worker exits before native type checking. Turbopack retains
+  // its worker through that phase, overlapping both heaps on 8 GB runners.
+  const result = spawn(command, ["run", "build", "--", "--webpack"], {
+    env: buildEnvironment(env),
     stdio: "inherit",
   });
   if (result.error) throw result.error;

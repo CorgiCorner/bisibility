@@ -937,36 +937,13 @@ export type CoreMessages = {
     readonly metering: {
       readonly allProjects: "All projects";
       readonly budgetNote: "Budgets show the current cycle, independently of the selected usage month.";
-      readonly budgets: "Current budgets";
-      readonly certainty: "Certainty";
-      readonly connection: "Connection";
-      readonly description: "Compare recorded provider costs without changing admission decisions. Amounts are exact cents unless a unit is shown.";
-      readonly difference: "Difference";
-      readonly disagreements: "Disagreements in the last 7 days";
-      readonly emptyBudgets: "No mirrored budgets for this selection.";
-      readonly emptyExceptions: "No pending work or shadow errors.";
-      readonly emptyUsage: "No recorded usage for this selection.";
-      readonly exceptions: "Exceptions";
-      readonly funding: "Funding";
-      readonly heading: "Shadow comparison";
-      readonly legacy: "Legacy cost";
-      readonly meter: "Meter cost";
+      readonly description: "Recorded usage, current budgets and unresolved operations.";
+      readonly heading: "Metering";
       readonly month: "Month";
-      readonly operation: "Operation";
       readonly project: "Project";
-      readonly remaining: "Remaining";
-      readonly reserved: "Reserved";
-      readonly resetsAt: "Resets at";
-      readonly state: "State";
-      readonly surface: "Surface";
       readonly title: "Metering";
       readonly truncated: "Showing a bounded selection. Filter by project to narrow the results.";
-      readonly unavailable: "Unavailable";
       readonly unavailableNote: "Metering data is unavailable. Amounts and counts are unknown.";
-      readonly unlimited: "Unlimited";
-      readonly updatedAt: "Updated at";
-      readonly usage: "Usage and legacy totals";
-      readonly used: "Used";
     };
     readonly navigation: {
       readonly administration: "Administration";
@@ -1653,7 +1630,12 @@ export type CoreMessages = {
     readonly liveCatalog: "Live provider catalog";
     readonly locationCode: "Location code";
     readonly marketCoverageHint: "Only countries and languages supported by the selected platform’s dataset are available.";
+    readonly modelAlreadySelected: "Already selected as the other model.";
+    readonly modelNeedsActualPayment: "Select actual provider cost to use this model with your own provider account.";
+    readonly modelNeedsOwnAccount: "Connect your own provider account in Integrations and select actual provider cost.";
     readonly modelPolicyPending: "This model is awaiting a BYOK and cost-policy decision. Its published price does not enable execution.";
+    readonly modelPricingUnavailable: "Current pricing cannot be verified for this model. Try again later.";
+    readonly modelUnavailable: "This model is not supported for prompt runs yet.";
     readonly newRequest: "Start a new request";
     readonly noAnswer: "No answer text returned.";
     readonly noBrandMention: "No brand mention";
@@ -1689,9 +1671,11 @@ export type CoreMessages = {
     readonly searchCountryHint: "A country hint for web search, not a measurement of consumer traffic.";
     readonly searchFor: "Search for";
     readonly secondModel: "Second model (optional)";
+    readonly showUnavailableModels: "Show unavailable models";
     readonly summary: "{answers, number} answers · {mentions, number} brand mentions · {citations, number} domain citations";
     readonly syntheticTest: "Synthetic prompt test";
     readonly tokenBounds: "Allowed range: {min, number} to {max, number} tokens.";
+    readonly unavailableModels: "Unavailable models";
     readonly unknownCost: "{cost} cents confirmed subtotal; total usage unknown";
     readonly unknownModel: "Unknown model";
     readonly unknownPrice: "A bounded cost is unavailable for this model. Runs are blocked.";
@@ -1743,7 +1727,9 @@ export type CoreMessages = {
     readonly consumerScraper: "Consumer scraper";
     readonly consumerScraperModelAPIAndGoogleAIOverview: "Consumer scraper, Model API, and Google AI Overview measurements are separate sources. A saved prompt is never an automatic baseline.";
     readonly consumerScrapersMeasureTheConsumerSurfaceModelAPI: "Consumer scrapers measure the consumer surface. Model API answers are a different source. Provider datasets are not live tracker samples. Actual model and locale may remain unknown.";
-    readonly contextDraftMethod: "Draft neutral, comparative and branded questions from saved project context. Review each draft before accepting it. No model call or baseline starts automatically.";
+    readonly contextDraftMethod: "Draft questions from saved project context. Review and edit them before saving. Saving a prompt does not run an analysis.";
+    readonly contextDraftReviewHint: "Drafts use your saved context, not measured search demand. Review and edit them before saving.";
+    readonly contextMissingHint: "Add project context or enter prompts manually. Saving prompts does not start an analysis.";
     readonly contextPromptDrafts: "Context prompt drafts";
     readonly cost: "Cost";
     readonly costUnknown: "Cost unknown";
@@ -1959,7 +1945,7 @@ export type CoreMessages = {
       readonly templateEvaluation: "{template, select, downtrend {Trend / starts after 5 checks} ctr {Stored 7 days vs prior 28 days (~3-day lag)} other {Each completed check}}";
       readonly templateLabel: "{template, select, positiondrop {Dropped more than N positions} slipped {Slipped from top 10} top3 {Entered top 3} wrongurl {Wrong URL ranking} downtrend {Sustained downtrend} competitor {Competitor overtook} ctr {CTR drop (GSC)} other {Alert rule}}";
       readonly templateName: "{template, select, positiondrop {Dropped more than 5 positions} slipped {Slipped out of top 10} top3 {Jumped into top 3} wrongurl {Wrong URL ranking} downtrend {Sustained downtrend} competitor {Competitor overtook us} ctr {CTR drop} other {Alert rule}}";
-      readonly templatePreview: "{template, select, positiondrop {Notify me when any keyword drops by 5 or more positions between completed checks.} slipped {Notify me when any keyword drops from positions 1-10 to 11+ on Google US Desktop.} top3 {Notify me when any keyword moves up into the top 3 on Google US Desktop.} wrongurl {Notify me when Google ranks a URL that differs from the keyword's target URL.} downtrend {Notify me when a keyword moves down in 3 of the last 5 completed checks.} competitor {Notify me when a competitor ranks above {domain} for a tracked keyword.} ctr {Notify me when stored CTR drops by 20% or more versus the prior 28 days while average rank stays within one position. Search Console data has an approximately 3-day lag and requires traffic sync plus a connected GSC account.} other {Review this alert rule.}}";
+      readonly templatePreview: "{condition, select, position_drop {Notify me when a keyword drops by {dropPositions} or more positions between completed checks.} exits_top_n {Notify me when a keyword drops from positions 1-{topN} to {nextPosition}+.} enters_top_n {Notify me when a keyword moves up into the top {topN}.} threshold {Notify me when a keyword crosses below position {thresholdPosition}.} change_pct {Notify me when a keyword position worsens by {changePct}% or more.} url_mismatch {Notify me when the ranking URL differs from the target URL.} downtrend {Notify me when a keyword moves down in 3 of the last 5 completed checks.} competitor_overtake {Notify me when {competitorDomain} starts ranking above {domain}.} serp_feature {Notify me when the {serpFeature} SERP feature appears.} ctr_drop {Notify me when stored CTR drops by {changePct}% or more versus the prior 28 days while average rank stays within one position. Search Console data has an approximately 3-day lag and requires traffic sync plus a connected GSC account.} other {Review this alert condition.}} Scope: {targets}. Markets: {markets}.";
       readonly templateRequirement: "Requires GSC";
       readonly thresholdPosition: "Threshold position";
       readonly topN: "Top N";
@@ -2668,27 +2654,19 @@ export type CoreMessages = {
   };
   readonly projectCostEstimate: {
     readonly providerSpend: {
-      readonly capReached: "cap reached";
-      readonly cardCap: "of {cap} cap";
-      readonly docs: "How budgets work";
-      readonly eyebrow: "MONTHLY BUDGET";
-      readonly headerCapAria: "Monthly cap {used}";
-      readonly headerCapTooltip: "Monthly provider budget.";
+      readonly headerAtLeastUnderOne: "At least some usage";
+      readonly headerAtLeastUsed: "At least {percent}% used";
+      readonly headerCapTooltip: "Budget usage, including reservations. Open Usage for details.";
+      readonly headerExceeded: "Budget exceeded";
       readonly headerNoCap: "No budget · Set one";
       readonly headerNoCapAria: "No budget, set one";
-      readonly headerNoCapAriaWithSpend: "{spent} spent with no budget, set one";
-      readonly headerNoCapWithSpend: "{spent} · no budget · Set one";
-      readonly headerUnavailable: "Spend unavailable";
-      readonly headerUnderOnePercent: "<1% used";
-      readonly headerUsed: "{percent, number}% used";
-      readonly left: "{spent} left";
-      readonly meterAria: "Provider spend: {spent} of {cap} this month{session, select, none {} other {, {session} this session}}";
-      readonly noCapAmount: "{spent} this month";
-      readonly otherProvider: "Other";
-      readonly pace: "on pace ~{spent}/mo";
-      readonly segmentedAmount: "{spent} of {cap} used";
-      readonly session: "{spent} this session";
-      readonly thisMonth: "this month";
+      readonly headerNoLimit: "No limit";
+      readonly headerUnavailable: "Usage unavailable";
+      readonly headerUnderOne: "Less than 1% used";
+      readonly headerUsageAria: "Budget usage: {status}. View details";
+      readonly headerUsageUnknown: "Usage unknown";
+      readonly headerUsed: "{percent}% used";
+      readonly headerWarning: "Budget warning";
     };
     readonly spendInfo: {
       readonly aria: "About provider spend";
@@ -2752,6 +2730,7 @@ export type CoreMessages = {
       readonly note: "Provider billing remains direct between you and the provider.";
       readonly pausedMigrationHold: "Paused - migration hold";
       readonly primaryProvider: "Primary provider";
+      readonly providerCostUnknown: "Unknown";
       readonly providerFailed: "Failed";
       readonly providerHealthy: "Healthy";
       readonly providerNeedsAttention: "Needs attention";
@@ -3493,23 +3472,25 @@ export type CoreMessages = {
       readonly verified: "Verified";
     };
     readonly fallback: {
-      readonly activate: "Activate {provider}";
+      readonly activateAction: "Activate";
       readonly active: "Active";
       readonly activeCount: "{count, number} active";
       readonly description: "If a provider fails or is rate-limited, the next active provider is used.";
       readonly empty: "Connect a SERP provider above to configure fallback order.";
       readonly first: "First provider";
-      readonly moveDown: "Move {provider} down";
-      readonly moveUp: "Move {provider} up";
+      readonly invalid: "The complete connected provider list is required.";
+      readonly moveDownAction: "Move down";
+      readonly moveUpAction: "Move up";
       readonly next: "Fallback #{position, number}";
-      readonly notConnected: "Not connected";
-      readonly orderControls: "{provider} order controls";
-      readonly pause: "Pause {provider}";
+      readonly notApplied: "The previous order change was not applied.";
+      readonly pauseAction: "Pause";
       readonly paused: "Paused · not used for rank checks";
       readonly pausedState: "Paused";
+      readonly reload: "Reload order";
+      readonly save: "Save fallback order";
+      readonly saved: "Fallback order saved.";
       readonly saving: "Saving order...";
       readonly title: "SERP fallback order";
-      readonly updateError: "Could not update the fallback order.";
     };
     readonly meta: {
       readonly labels: {
@@ -3652,21 +3633,59 @@ export type CoreMessages = {
       readonly trafficUpdated: "{keywords, number} keyword and {pages, number} page snapshots updated.";
       readonly unknownTime: "unknown time";
     };
+    readonly providerManagement: {
+      readonly ambiguous: "The save could not be confirmed. Check its status before making another change.";
+      readonly availableBalance: "Available balance";
+      readonly balance: "Balance";
+      readonly balanceCannotApply: "Scoped usage and reservations are not confirmed. Enter a budget manually.";
+      readonly conflict: "These settings changed. Reload before editing again.";
+      readonly creditWallet: "Credit wallet";
+      readonly forbidden: "You do not have permission to change provider settings.";
+      readonly loading: "Verifying provider access...";
+      readonly observed: "Observed";
+      readonly providerAccount: "Provider account";
+      readonly readOnly: "Provider settings are read-only.";
+      readonly reconcile: "Check save status";
+      readonly reload: "Reload settings";
+      readonly reserved: "Reserved";
+      readonly searches: "searches";
+      readonly staleEvidence: "Stale evidence";
+      readonly unavailable: "Provider settings could not be confirmed.";
+      readonly unknownAuthority: "Unknown authority";
+    };
     readonly rates: {
-      readonly editRate: "Edit {label} rate";
-      readonly help: "Set a rate to override any of these. Providers bill you directly.";
-      readonly invalidRate: "Enter a rate from {minimum, number} to {maximum, number}.";
-      readonly listPrice: "list price, {date}";
-      readonly measured: "{count, number} {unit}";
-      readonly noRate: "no rate yet";
+      readonly applied: "Rate saved.";
+      readonly applying: "Saving the rate...";
+      readonly checked: "Checked";
+      readonly clearRate: "Clear your rate";
+      readonly currency: "USD";
+      readonly empty: "No rates are available.";
+      readonly funding: "Funding";
+      readonly fundingCredits: "Credits";
+      readonly fundingOwn: "Your keys";
+      readonly help: "Set manual rate coefficients below. Read-only request examples include base charges and the shown quantity; their measured or catalog prices also apply at admission. Providers bill you directly.";
+      readonly invalidPrice: "Enter a price in dollars with up to six decimal places.";
+      readonly noEvidence: "No rate evidence is available yet.";
+      readonly notApplied: "The previous save was not applied.";
       readonly notSet: "Not set";
-      readonly rateUsd: "{label} rate in USD";
+      readonly operation: "Operation";
+      readonly per: "/";
+      readonly platformNote: "Customer prices are set by the host: provider cost plus margin, with a minimum price per unit. Manual rates apply only to your own keys.";
+      readonly platformTitle: "Credits price list";
+      readonly price: "Price";
+      readonly reload: "Reload rates";
+      readonly samples: "Samples";
       readonly save: "Save";
-      readonly saveError: "Rate could not be saved.";
+      readonly statusList: "List price";
+      readonly statusManual: "Your rate";
+      readonly statusMeasured: "Measured";
+      readonly statusNone: "No rate yet";
       readonly title: "Provider rates";
+      readonly unknown: "Unknown";
       readonly useList: "Use list price";
       readonly useMeasured: "Use measured rate";
-      readonly yourRate: "your rate";
+      readonly version: "Version";
+      readonly withoutYourRate: "Without your rate";
     };
     readonly tabs: {
       readonly aria: "Integrations sections";
@@ -4180,6 +4199,7 @@ export type CoreMessages = {
         readonly unavailable: "Unavailable";
         readonly unknown: "The rank check could not run because of a provider error. Try again, or view check details for more information.";
         readonly viewCheckDetails: "View check details";
+        readonly viewRuns: "View runs";
       };
       readonly header: {
         readonly ariaLabel: "Keyword check metadata";
@@ -4912,7 +4932,9 @@ export type CoreMessages = {
           readonly urlChangedDescription: "More than one URL ranked during the tracked history";
           readonly urls: "URLs";
           readonly volumeMaximum: "50k+";
+          readonly volumeMaximumAria: "Maximum monthly search volume";
           readonly volumeMinimum: "0";
+          readonly volumeMinimumAria: "Minimum monthly search volume";
           readonly volumeRange: "{minimum, number}k - {isCapped, select, yes {50k+} other {{maximum, number}k}}";
           readonly wrongUrl: "Wrong URL ranking";
           readonly wrongUrlDescription: "Ranking URL differs from target URL";
@@ -4980,9 +5002,6 @@ export type CoreMessages = {
           readonly filterSerpSitelinks: "Sitelinks";
           readonly filterSerpVideo: "Video";
           readonly firstObservation: "First observation";
-          readonly flat: "Flat";
-          readonly grouped: "Grouped";
-          readonly grouping: "Keyword grouping";
           readonly hoursAgo: "{count, number}h ago";
           readonly inlineDevice: "Device";
           readonly inlineDeviceHelp: "Desktop and mobile results often differ - each device is checked separately.";
@@ -5155,6 +5174,7 @@ export type CoreMessages = {
           readonly tryAgain: "Try again";
           readonly unavailable: "Unavailable";
           readonly viewDetails: "View check details";
+          readonly viewRuns: "View runs";
         };
         readonly saved: {
           readonly actions: "Actions";
@@ -7358,6 +7378,10 @@ export type CoreMessages = {
           readonly keywords: "email slack webhook alerts digest";
           readonly label: "Notification channels";
         };
+        readonly projectContext: {
+          readonly keywords: "business audience products goals agents context";
+          readonly label: "Project Context";
+        };
         readonly projectManagement: {
           readonly keywords: "backup export migration self host delete project audit history";
           readonly label: "Project management";
@@ -7412,6 +7436,7 @@ export type CoreMessages = {
       readonly advanced: "Advanced";
       readonly billing: "Billing";
       readonly competitors: "Competitors";
+      readonly context: "Project Context";
       readonly dataSources: "Data sources";
       readonly developers: "Developers";
       readonly experimental: "Experimental";
@@ -7654,53 +7679,28 @@ export type CoreMessages = {
   readonly projectSettingsUsage: {
     readonly meter: {
       readonly asOf: "Read at {date} (UTC). This timestamp does not confirm provider billing freshness.";
-      readonly authority: {
-        readonly active: "This period is fully covered by ledger admission authority. Provider billing and the credit wallet retain their own balances.";
-        readonly draining: "Earlier accounting operations are still being resolved. This period is not a complete ledger total.";
-        readonly legacy: "Current accounting remains authoritative. Ledger entries are supplemental observations.";
-        readonly mixed: "This period spans accounting authorities. Ledger observations do not represent the full period.";
-        readonly preparing: "A change in accounting is being prepared. This period is not fully covered by ledger authority.";
-        readonly unknown: "Accounting coverage for this period could not be verified. Do not treat these observations as complete totals.";
-      };
-      readonly blocks: "Configured to block requests above the limit when ledger admission is active.";
-      readonly byok: "Your provider account";
-      readonly certainty: "Evidence";
       readonly certaintyValue: {
         readonly estimated: "Estimated";
         readonly measured: "Measured";
-        readonly unknown: "Unknown";
       };
-      readonly connection: "Connection";
-      readonly customerCharge: "Acknowledged account charge";
-      readonly description: "Project-scoped usage observations and budget constraints for the current UTC month.";
-      readonly hardLimit: "Hard limit: {value} {unit}.";
-      readonly limit: "Limit";
-      readonly limitsDescription: "These are configured project and connection limits. Observed figures may cover only part of the period. Account, credential and shared capacity limits can also apply. Listing limits does not reserve capacity.";
-      readonly limitsTitle: "Project constraints";
-      readonly noLimits: "No project or connection constraints were returned.";
-      readonly noObservations: "No ledger observations exist for this period. Usage is unavailable, not a confirmed zero.";
+      readonly detailsTitle: "Usage details";
+      readonly display: {
+        readonly cents: "Cents";
+        readonly currency: "Currency";
+        readonly digits: "{count, number}";
+        readonly help: "Saved in this browser. Display rounding does not change recorded amounts or budgets.";
+        readonly money: "Amounts";
+        readonly precision: "Decimal places";
+        readonly title: "Display options";
+      };
       readonly oldest: "Oldest unresolved operation: {date} (UTC).";
       readonly period: "{from} to {to} (UTC)";
-      readonly platform: "Account credits";
-      readonly project: "Project";
-      readonly providerCost: "Observed provider cost";
-      readonly remaining: "Remaining";
-      readonly reserved: "Reserved";
-      readonly resetsAt: "Resets at {date} (UTC).";
-      readonly restricted: "Only the project owner can view financial ledger details.";
-      readonly retainedConnection: "Retained connection";
-      readonly title: "Usage ledger";
+      readonly restricted: "Only the project owner can view recorded usage.";
       readonly truncated: "This view is bounded. Some connections, usage rows or unresolved operations are omitted.";
-      readonly unavailable: "Usage ledger is unavailable. Current provider usage and account balances remain available above.";
-      readonly units: "Units";
+      readonly unavailable: "Recorded usage is unavailable right now.";
       readonly unknown: "Unknown";
-      readonly unknownOperations: "Operations with unknown exposure";
-      readonly unlimited: "Unlimited";
       readonly unresolved: "{count, plural, one {# unresolved operation.} other {# unresolved operations.}}";
-      readonly usdAmount: "USD {value}";
-      readonly used: "Used";
       readonly walletAuthority: "Your provider account or account credit wallet remains the balance authority. These limits do not represent an available balance.";
-      readonly warns: "Configured to warn above the limit without blocking requests.";
     };
     readonly plan: {
       readonly answered: "Thanks, your answer helps us set the price.";
@@ -7726,22 +7726,8 @@ export type CoreMessages = {
       readonly title: "Plan";
     };
     readonly provider: {
-      readonly activeSource: "Active: {source, select, credits {Credits} other {Your keys}}";
-      readonly allocation: "{used} of {allocation} used";
-      readonly allocationNone: "No cap";
-      readonly anotherProvider: "another provider";
-      readonly apiBudgetHelp: "Requests from API, MCP, SDK and CLI. Set this budget to protect against runaway agents.";
-      readonly appBudgetHelp: "Checks you start in the app, plus automatic scheduled checks.";
-      readonly appMeterLabel: "{provider} app and schedules budget used";
-      readonly atLeastAllocation: "At least {used} of {allocation} used";
-      readonly attentionApp: "App and schedules budget for {provider} reached; API, MCP and SDK requests continue.";
-      readonly attentionFallback: "{provider} hit its budget - checks are falling back to {fallback}.";
-      readonly attentionMany: "{count, plural, one {# provider needs attention. Check the provider settings.} other {# providers need attention. Check the provider settings.}}";
-      readonly attentionPaused: "{provider} hit its budget - checks are paused.";
-      readonly attentionProgrammatic: "API, MCP and SDK budget for {provider} reached; app checks continue.";
-      readonly attentionTopUp: "{provider} needs a top up before checks can continue.";
-      readonly availability: "{amount} ({relative}) · {reset}";
-      readonly balance: "Balance {amount}";
+      readonly attentionBlocked: "Requests are blocked by a budget: {bound}. Affected budgets: {count, number}.";
+      readonly attentionWarning: "Budget warning: {bound}. Affected budgets: {count, number}.";
       readonly budgetDialog: {
         readonly activeSource: "Active: {source, select, credits {Credits} other {Your keys}}";
         readonly appBudget: "App & schedules";
@@ -7750,6 +7736,7 @@ export type CoreMessages = {
         readonly balanceIncompatible: "This provider does not report a compatible balance. Enter a budget manually.";
         readonly balanceUnavailable: "A positive provider balance is unavailable. Enter a budget manually.";
         readonly cancel: "Cancel";
+        readonly cents: "cents";
         readonly connect: "Connect a provider";
         readonly consequence: "When a budget is reached, the requests of that surface stop until next month; the other surface keeps running.";
         readonly creditBalanceUnavailable: "A positive credit balance is unavailable. Enter a budget manually.";
@@ -7762,6 +7749,9 @@ export type CoreMessages = {
         readonly invalidBudget: "Enter a valid monthly budget.";
         readonly invalidDecimal: "Enter a positive amount with up to two decimals.";
         readonly monthlyBudget: "{provider} monthly budget";
+        readonly nativeBalance: "Native provider balance";
+        readonly nativeBalanceHelp: "This is the provider account balance, not scoped usage or a monthly budget.";
+        readonly notApplied: "The change was not applied.";
         readonly perMonth: "Budget / month";
         readonly placeholder: "No budget";
         readonly positiveBudget: "Enter a positive monthly budget.";
@@ -7773,11 +7763,16 @@ export type CoreMessages = {
         readonly providerColumn: "Provider";
         readonly refreshError: "Provider balance could not be refreshed. Enter a budget manually.";
         readonly refreshing: "Refreshing...";
+        readonly refreshProviderBalance: "Refresh provider balance";
+        readonly reloadAllocations: "Reload allocations";
+        readonly remaining: "Remaining";
         readonly save: "Save";
+        readonly saved: "Saved";
         readonly saveError: "Provider budget could not be saved.";
         readonly saving: "Saving";
         readonly searches: "{count, number} searches";
         readonly searchesAdornment: "searches";
+        readonly sectionLabel: "{connection}: {source}, {surface}";
         readonly sourceCredits: "Credits";
         readonly sourceOwn: "Your keys";
         readonly splitNotice: "Your previous budget now applies to each of the two separately. Adjust if you want a different split.";
@@ -7785,88 +7780,17 @@ export type CoreMessages = {
         readonly title: "Provider budgets";
         readonly tooLargeBudget: "Enter a monthly budget at or below {maximum}.";
         readonly useCreditBalance: "Use credit balance";
+        readonly used: "Used";
+        readonly useProgrammaticCreditBalance: "Use credit balance for API & agents";
+        readonly useProgrammaticProviderBalance: "Use provider balance for API & agents";
         readonly useProviderBalance: "Use provider balance";
         readonly wholeUnits: "Enter a whole number of searches.";
       };
       readonly budgetUsed: "Budget used";
-      readonly checksChip: "Checks: {count, number}";
       readonly connectionSettings: "Connection settings";
-      readonly creditsSpent: "Credits spent";
       readonly description: "Set how much each provider can spend in this project each month.";
-      readonly doesNotExpire: "does not expire";
       readonly editBudget: "Edit budgets";
-      readonly feature: "{count, number} - {amount}";
-      readonly featureCount: "{count, number}";
-      readonly featureLabel: {
-        readonly backlinks: "Backlinks";
-        readonly domainOverview: "Domain overview";
-        readonly keywordMetrics: "Keyword metrics";
-        readonly keywordResearch: "Keyword research";
-        readonly rankCheck: "Rank checks";
-        readonly rankedKeywords: "Ranked keywords";
-      };
-      readonly featureSearches: "{count, number} - {searches, number} searches";
-      readonly meterLabel: "{provider} budget used";
-      readonly noBudget: "No budget set";
-      readonly noUsage: "No usage yet";
-      readonly paidToProviders: "Paid to providers";
-      readonly period: "{range} (UTC) - {days, plural, one {resets in # day} other {resets in # days}}";
-      readonly primary: "Primary";
-      readonly programmaticMeterLabel: "{provider} API, MCP and SDK budget used";
-      readonly projectedSpend: "Projected spend";
-      readonly projectionBy: "{provider} budget by {date}";
-      readonly projectionPace: "on pace to hit {provider} budget {date}{othersBelow, select, true { - other providers below 40%} other {}}";
-      readonly providerLeft: "{count, number} left at provider";
-      readonly providerRequests: "Provider requests (mo)";
-      readonly reconciledAt: "Last reconciliation: {time}.";
-      readonly reconciliationStale: "Usage reconciliation is delayed. Displayed totals may be incomplete.";
-      readonly reconnectRequired: "Reconnect required";
-      readonly recordedSpendValue: "{amount}{hasSearches, select, true { + {searches}} other {}}";
-      readonly relative: {
-        readonly daysAgo: "{count, plural, one {#d ago} other {#d ago}}";
-        readonly hoursAgo: "{count, plural, one {#h ago} other {#h ago}}";
-        readonly justNow: "just now";
-        readonly minutesAgo: "{count, plural, one {#m ago} other {#m ago}}";
-        readonly yesterday: "yesterday";
-      };
-      readonly resetsBillingCycle: "resets at billing cycle";
-      readonly resetsDate: "resets {date}";
-      readonly scheduledChip: "Scheduled: {count, number}";
-      readonly searches: "{count, number} searches";
-      readonly source: {
-        readonly api: "API";
-        readonly app: "App";
-        readonly cli: "CLI";
-        readonly mcp: "MCP";
-        readonly sdk: "SDK";
-      };
-      readonly sourceAppMeterLabel: "{provider} {source, select, credits {credits} other {your keys}} app and schedules budget used";
-      readonly sourceEmpty: "No budget, no usage";
-      readonly sourceLabel: {
-        readonly credits: "Credits";
-        readonly own: "Your keys";
-      };
-      readonly sourceProgrammaticMeterLabel: "{provider} {source, select, credits {credits} other {your keys}} API, MCP and SDK budget used";
-      readonly status: {
-        readonly capped: "budget reached";
-        readonly default: "{state}";
-        readonly fallback_active: "fallback active";
-        readonly no_allocation: "no budget";
-        readonly ok: "connected";
-        readonly top_up_required: "top up required";
-      };
-      readonly surface: {
-        readonly app: "App & schedules";
-        readonly programmatic: "API & agents";
-      };
-      readonly tightest: "tightest: {provider} - {percent}%";
-      readonly tightestSource: "tightest: {provider} ({source, select, credits {credits} other {your keys}}) - {percent}%";
       readonly title: "Budgets";
-      readonly unconfirmedChip: "Unconfirmed requests: {count, number}";
-      readonly unreachable: "Could not reach provider";
-      readonly usageAfterConnect: "Usage appears once a provider is connected.";
-      readonly usageLagNotice: "Usage may take up to 15 minutes to update.";
-      readonly withinLimits: "within budgets";
     };
   };
   readonly projectSiteAudit: {
@@ -8256,6 +8180,10 @@ export type CoreMessages = {
         readonly deleteRunDangerLabel: "Delete run";
         readonly deleteRunTitle: "Delete run";
         readonly deleteRunToastMessage: "Run deleted";
+        readonly deleteTimelineNoteBody: "Delete this timeline note? This cannot be undone.";
+        readonly deleteTimelineNoteDangerLabel: "Delete note";
+        readonly deleteTimelineNoteTitle: "Delete timeline note?";
+        readonly deleteTimelineNoteToastMessage: "Timeline note deleted.";
         readonly deleteWebhookEndpointBody: "Stop future deliveries to this endpoint and remove its delivery history association. This cannot be undone.";
         readonly deleteWebhookEndpointDangerLabel: "Delete endpoint";
         readonly deleteWebhookEndpointTitle: "Delete webhook endpoint";
@@ -8459,11 +8387,14 @@ export type CoreMessages = {
       };
     };
     readonly errors: {
+      readonly budgetMissing: "Project spending budget is missing. Ask the project owner to configure a monthly budget in Settings > Usage.";
       readonly genericFallback: "The action could not be completed.";
       readonly rateLimited: "Too many requests. Please try again later.";
       readonly serverComponentDigest: "Check failed on our side (ref {digest}). Retry in a moment.";
       readonly staleDeployment: "bisibility was updated while this page was open. Refresh the app to continue. Any unsaved changes will be lost.";
+      readonly usageReconciliationRequired: "Provider usage is not fully confirmed. Review and reconcile the usage history before starting another paid request.";
       readonly verificationFailed: "Verification failed. Please try again.";
+      readonly walletBudgetExhausted: "Deployment spending budget is exhausted.";
     };
     readonly firstCheck: {
       readonly action: "Run first check";
@@ -8498,6 +8429,7 @@ export type CoreMessages = {
         readonly noneReady: "No keywords are ready for a first check.";
         readonly providerMissing: "Connect a SERP provider before running checks.";
         readonly raiseBudget: "Raise the budget";
+        readonly reviewUsage: "Review usage";
         readonly sampleProject: "Sample projects don't run real checks.";
       };
       readonly providerOrder: "Provider fallback order";
@@ -8805,6 +8737,147 @@ export type CoreMessages = {
       readonly githubStars: "{count, number} stars on GitHub";
       readonly remove: "Remove {value}";
     };
+    readonly usageViews: {
+      readonly budget: {
+        readonly alert: "Alert";
+        readonly allow: "Allows overage";
+        readonly block: "Blocks at the limit";
+        readonly empty: "No budgets apply.";
+        readonly exceeded: "Over limit";
+        readonly failed: "Budgets are unavailable right now.";
+        readonly forbidden: "You cannot view these budgets.";
+        readonly hardLimit: "Hard limit";
+        readonly limit: "Limit";
+        readonly loading: "Loading budgets.";
+        readonly noReset: "No reset";
+        readonly ok: "Within budget";
+        readonly redacted: "This shared budget applies, but its figures are hidden from you.";
+        readonly remaining: "Remaining";
+        readonly reserved: "Reserved";
+        readonly resets: "Resets";
+        readonly unavailable: "Unavailable";
+        readonly unknown: "Unknown";
+        readonly unlimited: "Unlimited";
+        readonly used: "Used";
+        readonly warning: "Warning";
+      };
+      readonly cost: {
+        readonly asOf: "As of";
+        readonly byok: "Own key";
+        readonly costOwner: "Cost owner";
+        readonly description: "Provider charges for tracked usage in this period.";
+        readonly empty: "No tracked costs in this period.";
+        readonly failed: "Cost summary is unavailable right now.";
+        readonly forbidden: "You cannot view costs for this scope.";
+        readonly funding: "By funding source";
+        readonly incomplete: "The whole period could not be summarized. Cost is unavailable.";
+        readonly loading: "Loading cost summary.";
+        readonly platform: "Platform funded";
+        readonly title: "Provider cost";
+      };
+      readonly dimensions: {
+        readonly connection: "Connection";
+        readonly provider: "Provider";
+        readonly source: "Source";
+        readonly surface: "Surface";
+      };
+      readonly exceptions: {
+        readonly age: "Age";
+        readonly empty: "No exceptions in this period.";
+        readonly failed: "Exceptions are unavailable right now.";
+        readonly first: "First page";
+        readonly forbidden: "You cannot view operations for this scope.";
+        readonly kind: "Exception";
+        readonly lease_expired: "Lease expired";
+        readonly loading: "Loading exceptions.";
+        readonly next: "Next page";
+        readonly operation: "Operation";
+        readonly pending: "Pending evidence";
+        readonly principal: "Principal";
+        readonly provider: "Provider";
+        readonly reservation_expired: "Reservation expired";
+        readonly state: "State";
+        readonly title: "Needs attention";
+      };
+      readonly measurement: {
+        readonly cents: "cents";
+        readonly estimated: "Estimated";
+        readonly measured: "Measured";
+        readonly unavailable: "Unavailable";
+        readonly unknown: "Unknown";
+      };
+      readonly other: {
+        readonly any: "Any traffic";
+        readonly api: "API";
+        readonly app: "App and schedules";
+        readonly cli: "CLI";
+        readonly mcp: "MCP";
+        readonly operation: "Other operation";
+        readonly programmatic: "API and agents";
+        readonly project: "Project";
+        readonly proxy: "Proxy";
+        readonly rank_check: "Rank check";
+        readonly retained: "Retained connection";
+        readonly sdk: "SDK";
+        readonly worker: "Scheduled worker";
+      };
+      readonly overview: {
+        readonly empty: "No connections yet.";
+        readonly exceeded: "Over limit";
+        readonly loading: "Loading usage.";
+        readonly ok: "Within budget";
+        readonly partial: "Still measuring";
+        readonly unknown: "Usage unknown";
+        readonly warning: "Near limit";
+      };
+      readonly states: {
+        readonly dispatch_intended: "Dispatch intended";
+        readonly pending: "Pending";
+        readonly released: "Released";
+        readonly reserved: "Reserved operation";
+        readonly settled: "Settled";
+      };
+      readonly summary: {
+        readonly asOf: "As of";
+        readonly customerCharges: "Customer charges";
+        readonly empty: "No usage in this period.";
+        readonly failed: "Usage summary is unavailable right now.";
+        readonly forbidden: "You cannot view usage for this scope.";
+        readonly incomplete: "The summary could not cover the whole period. Narrow the period and try again.";
+        readonly loading: "Loading usage summary.";
+        readonly title: "Usage";
+        readonly unknownOperations: "Operations with unknown measurements";
+      };
+      readonly table: {
+        readonly byok: "Own key";
+        readonly cents: "cents";
+        readonly certainty: "Certainty";
+        readonly cost: "Cost";
+        readonly customerCharges: "Customer charges";
+        readonly empty: "No usage in this period.";
+        readonly estimated: "Estimated";
+        readonly failed: "Usage is unavailable right now.";
+        readonly first: "First page";
+        readonly forbidden: "You cannot view usage for this scope.";
+        readonly funding: "Funding source";
+        readonly loading: "Loading usage.";
+        readonly measured: "Measured";
+        readonly next: "Next page";
+        readonly platform: "Platform funded";
+        readonly title: "Usage detail";
+        readonly unavailable: "Unavailable";
+        readonly unknown: "Unknown";
+        readonly unknownOperations: "Unknown operations";
+      };
+      readonly units: {
+        readonly budget_cents: "cents";
+        readonly cents: "cents";
+        readonly customer_cents: "credit cents";
+        readonly paid_attempts: "Paid attempts";
+        readonly requests: "Requests";
+        readonly units: "Units";
+      };
+    };
   };
   readonly shell: {
     readonly backup: {
@@ -9052,23 +9125,31 @@ export type CoreMessages = {
     };
     readonly navigation: {
       readonly badges: {
-        readonly alpha: "alpha";
-        readonly beta: "beta";
         readonly experimental: "Experimental";
         readonly new: "new";
       };
       readonly collapseSidebar: "Collapse sidebar";
       readonly expandSidebar: "Expand sidebar";
       readonly groups: {
-        readonly modules: {
-          readonly label: "Modules";
-          readonly tag: "MODULES";
-          readonly tooltip: "Market modules follow the selected market. The rest keep their own axis.";
-        };
         readonly project: {
           readonly label: "Project";
           readonly tag: "PROJECT";
-          readonly tooltip: "Project-wide configuration. A market never narrows it.";
+          readonly tooltip: "Project configuration and shared operations.";
+        };
+        readonly reports: {
+          readonly label: "Data & reports";
+          readonly tag: "DATA";
+          readonly tooltip: "Review connected search data and saved reports.";
+        };
+        readonly research: {
+          readonly label: "Research & audits";
+          readonly tag: "RESEARCH";
+          readonly tooltip: "Explore keywords, websites and AI responses.";
+        };
+        readonly tracking: {
+          readonly label: "Tracking";
+          readonly tag: "TRACKING";
+          readonly tooltip: "Track rankings and AI performance over time.";
         };
       };
       readonly items: {

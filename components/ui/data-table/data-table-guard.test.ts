@@ -23,7 +23,11 @@ import {
 const temporaryMigrationPaths = new Set<string>();
 
 const exemptions: TableOwnershipExemptions = {
-  permanentStaticPaths: new Set(["app/(static)/(marketing)/alternatives/[slug]/page.tsx"]),
+  // The Usagekit table primitive is the one adapter behind the registry's summary tables.
+  permanentStaticPaths: new Set([
+    "app/(static)/(marketing)/alternatives/[slug]/page.tsx",
+    "components/usagekit/primitives/table.tsx",
+  ]),
   permanentStaticRoots: ["components/marketing"],
   temporaryMigrationPaths,
 };

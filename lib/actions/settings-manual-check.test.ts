@@ -134,3 +134,15 @@ describe("manual project checks from settings", () => {
     );
   });
 });
+
+it("preserves missing budgets in the settings action result", async () => {
+  settingsActionMocks.prisma.keyword.findMany.mockResolvedValue([{ publicId: "kw_1" }]);
+  settingsActionMocks.runCheckNow.mockResolvedValue({
+    code: "budget_missing",
+    message: "Configure a monthly budget.",
+    status: "not_started",
+  });
+  await expect(
+    actions.runManualProjectCheck({ projectId: "prj_abcdefghijklmnopqrstuvwx" }),
+  ).resolves.toEqual({ failed: 1, queued: 0, total: 1, reason: "budget_missing" });
+});

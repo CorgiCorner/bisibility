@@ -107,6 +107,8 @@ export type CompetitorContent = {
   tagline: string;
   category: string;
   lead: string;
+  headline: string;
+  quickComparison: readonly { label: string; bisibility: string; competitor: string }[];
   indexDetails: {
     bestFor: string;
     hosting: string;

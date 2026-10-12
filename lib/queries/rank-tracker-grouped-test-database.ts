@@ -7,6 +7,7 @@ export type TemporaryGroupedLocation = {
   hl: string;
   id: string;
   kind: string;
+  languageLabel?: string;
   marketStatus?: "active" | "paused" | "removed";
 };
 export type TemporaryGroupedRankCheck = {
@@ -93,7 +94,7 @@ async function createTemporarySchema(client: Client) {
     CREATE TYPE pg_temp."Device" AS ENUM ('desktop', 'mobile');
     CREATE TEMP TABLE locations (
       id text PRIMARY KEY, "canonicalKey" text NOT NULL, "displayName" text NOT NULL,
-      hl text NOT NULL, kind text NOT NULL
+      hl text NOT NULL, kind text NOT NULL, "languageLabel" text
     ) ON COMMIT DROP;
     CREATE TEMP TABLE keywords (
       id text PRIMARY KEY, "publicId" text NOT NULL, "projectId" text NOT NULL,
@@ -165,9 +166,17 @@ export async function seedTemporaryGroupedFixture(
 ) {
   for (const location of locations) {
     await client.query(
-      `INSERT INTO locations (id, "canonicalKey", "displayName", hl, kind)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [location.id, location.canonicalKey, location.displayName, location.hl, location.kind],
+      `INSERT INTO locations (id, "canonicalKey", "displayName", hl, kind, "languageLabel")
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        location.id,
+        location.canonicalKey,
+        location.displayName,
+        location.hl,
+        location.kind,
+        location.languageLabel ??
+          new Intl.DisplayNames(["en"], { type: "language" }).of(location.hl),
+      ],
     );
     await client.query(
       'INSERT INTO project_markets ("projectId", "locationId", status) VALUES ($1, $2, $3)',

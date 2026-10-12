@@ -11,6 +11,8 @@ describe("FiltersDrawer localization boundary", () => {
   it("maps position, change, status, and SERP IDs to injected copy instead of facet labels", () => {
     const messages = structuredClone(projectRankTrackerFeatureTestMessages);
     const filters = messages.projectRankTracker.keywordImport.management.filters;
+    filters.volumeMinimumAria = "Minimalna liczba wyszukiwań";
+    filters.volumeMaximumAria = "Maksymalna liczba wyszukiwań";
     filters.filterPositionTop3 = "Pierwsza trójka";
     filters.filterChangeAny = "Dowolna zmiana";
     filters.filterLastCheckFailed = "Nieudane";
@@ -39,6 +41,14 @@ describe("FiltersDrawer localization boundary", () => {
       { locale: "pl", messages },
     );
 
+    expect(screen.getByRole("slider", { name: "Minimalna liczba wyszukiwań" })).toHaveAttribute(
+      "aria-valuenow",
+      "0",
+    );
+    expect(screen.getByRole("slider", { name: "Maksymalna liczba wyszukiwań" })).toHaveAttribute(
+      "aria-valuenow",
+      "50",
+    );
     expect(screen.getByRole("button", { name: "Pierwsza trójka3" })).toHaveTextContent("3");
     expect(screen.getByRole("radio", { name: "Dowolna zmiana" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Nieudane" })).toBeInTheDocument();

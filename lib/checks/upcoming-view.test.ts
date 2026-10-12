@@ -19,7 +19,7 @@ describe("upcoming checks view", () => {
   it("groups the next seven days in the project timezone and estimates default costs", () => {
     const view = buildUpcomingView({
       blockedReason: null,
-      budgetCapCents: 100,
+      monthlyCapCents: 100,
       now: NOW,
       projectTimezone: "Europe/Warsaw",
       providers: [
@@ -38,10 +38,10 @@ describe("upcoming checks view", () => {
       view.days.map((day) => ({ cost: day.estimatedCostCents, key: day.key, label: day.label })),
     ).toEqual([
       { cost: 0.2, key: "2026-07-25", label: "Today" },
-      { cost: 0.35, key: "2026-07-26", label: "Tomorrow" },
+      { cost: 0.4, key: "2026-07-26", label: "Tomorrow" },
       { cost: 0.2, key: "2026-07-27", label: "Mon, Jul 27" },
     ]);
-    expect(view.forecast?.next48hCents).toBeCloseTo(0.55);
+    expect(view.forecast?.next48hCents).toBeCloseTo(0.6);
     expect(view.forecast?.capLastsUntil).not.toBeNull();
     expect(view.providerSummary).toBe("DataForSEO +1 fallback");
     expect(view.timeZone).toBe("Europe/Warsaw");
@@ -51,7 +51,7 @@ describe("upcoming checks view", () => {
     const schedules = ["1", "2", "3", "4"].map((id) => schedule(id, "2026-07-30T10:00:00.000Z"));
     const view = buildUpcomingView({
       blockedReason: "no_provider",
-      budgetCapCents: 100,
+      monthlyCapCents: 100,
       now: NOW,
       projectTimezone: "UTC",
       providers: [],
@@ -76,7 +76,7 @@ describe("upcoming checks view", () => {
   it("omits zero-sized blocker groups when no next occurrences are scheduled", () => {
     const view = buildUpcomingView({
       blockedReason: "no_provider",
-      budgetCapCents: 100,
+      monthlyCapCents: 100,
       now: NOW,
       projectTimezone: "UTC",
       providers: [],
@@ -90,7 +90,7 @@ describe("upcoming checks view", () => {
   it("does not forecast a cap exhaustion date when the legacy cap is zero", () => {
     const view = buildUpcomingView({
       blockedReason: null,
-      budgetCapCents: 0,
+      monthlyCapCents: 0,
       now: NOW,
       projectTimezone: "UTC",
       providers: [{ provider: "dataforseo", providerLabel: "DataForSEO" }],
@@ -104,7 +104,7 @@ describe("upcoming checks view", () => {
   it("estimates upper-bound operations per day for a quota provider, never plan dollars", () => {
     const view = buildUpcomingView({
       blockedReason: null,
-      budgetCapCents: 100,
+      monthlyCapCents: 100,
       now: NOW,
       projectTimezone: "Europe/Warsaw",
       providers: [{ provider: "serpapi", providerLabel: "SerpApi" }],
@@ -130,7 +130,7 @@ describe("upcoming checks view", () => {
   it("keeps an unknown provider unknown instead of pricing it", () => {
     const view = buildUpcomingView({
       blockedReason: null,
-      budgetCapCents: 100,
+      monthlyCapCents: 100,
       now: NOW,
       projectTimezone: "UTC",
       providers: [{ provider: "unrecognized", providerLabel: "Unrecognized" }],
@@ -155,7 +155,7 @@ describe("upcoming checks view", () => {
   it("keeps metered cents native and never mixes them with quota operations", () => {
     const view = buildUpcomingView({
       blockedReason: null,
-      budgetCapCents: 100,
+      monthlyCapCents: 100,
       now: NOW,
       projectTimezone: "UTC",
       providers: [{ provider: "dataforseo", providerLabel: "DataForSEO" }],
@@ -166,7 +166,7 @@ describe("upcoming checks view", () => {
       spentCents: 0,
     });
 
-    expect(view.days[0]?.nativeEstimate).toMatchObject({ quantity: 0.55, unit: "cents" });
-    expect(view.forecast?.next48hNative).toMatchObject({ quantity: 0.55, unit: "cents" });
+    expect(view.days[0]?.nativeEstimate).toMatchObject({ quantity: 0.6, unit: "cents" });
+    expect(view.forecast?.next48hNative).toMatchObject({ quantity: 0.6, unit: "cents" });
   });
 });

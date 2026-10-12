@@ -29,6 +29,9 @@ const mocks = vi.hoisted(() => ({
   writeAudit: vi.fn(),
 }));
 
+vi.mock("@/lib/metering/project-budget-bootstrap", () => ({
+  ensureProjectSpendingBudget: vi.fn(),
+}));
 vi.mock("./auth", () => ({
   ApiAuthError: class ApiAuthError extends Error {},
   authenticateBearer: mocks.authenticateBearer,

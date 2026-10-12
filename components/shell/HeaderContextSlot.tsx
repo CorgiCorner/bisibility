@@ -44,7 +44,11 @@ export function HeaderContextSlot({
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: a labelled grouping in the header, not a fieldset of form controls
-    <div aria-label={t("changeContext")} className="flex min-w-0 items-center gap-1" role="group">
+    <div
+      aria-label={t("changeContext")}
+      className="flex min-w-0 max-w-full flex-wrap items-center gap-1 sm:flex-nowrap"
+      role="group"
+    >
       {contexts.length === 0 && (state.kind === "market" || state.kind === "all-markets") ? (
         <span className="flex h-8 flex-none items-center px-2 text-[13px] font-medium text-fg-muted">
           {t("noMarkets")}

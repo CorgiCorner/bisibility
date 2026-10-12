@@ -3,17 +3,20 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { Prisma, type PrismaClient } from "@/lib/generated/prisma/client";
 import type { ProviderCostFeature } from "@/lib/generated/prisma/enums";
+import { canonicalUsageSql } from "@/lib/metering/usage-sql";
+import { loadNativeRankContexts } from "./native-rank-context";
 import {
+  MAX_PROVIDER_RATE_SAMPLES,
   PROVIDER_RATE_FEATURES,
+  PROVIDER_RATE_TRAILING_DAYS,
+  type ProviderRateContext,
   type ProviderRateEntry,
   type ProviderRateFeature,
-  type ResolveProviderRateInput,
 } from "./resolver";
+import { providerRateSampleEvidence } from "./sample-evidence";
 
-const TRAILING_DAYS = 30;
-export const MAX_PROVIDER_RATE_SAMPLES = 50;
-
-export type ProviderRateContext = Pick<ResolveProviderRateInput, "entries" | "manualAmountCents">;
+export type { ProviderRateContext } from "./resolver";
+export { MAX_PROVIDER_RATE_SAMPLES };
 export type ProviderRateContextMap = ReadonlyMap<string, ProviderRateContext>;
 
 export function providerRateContextKey(
@@ -55,17 +58,13 @@ export async function loadRecentProviderRateEntries(
         "unitCostCents",
         ROW_NUMBER() OVER (
           PARTITION BY "connectionId", "feature"
-          ORDER BY "createdAt" DESC
+          ORDER BY "createdAt" DESC, e.id
         ) AS "sampleRank"
-      FROM "provider_cost_entries"
+      FROM (${canonicalUsageSql()}) e
       WHERE
         "cached" = FALSE
         AND "connectionId" IN (${Prisma.join(connectionIds)})
-        AND EXISTS (
-          SELECT 1 FROM "provider_connections" connection
-          WHERE connection.id = "provider_cost_entries"."connectionId"
-            AND connection."credentialSource" = "provider_cost_entries"."credentialSource"
-        )
+        AND ${providerRateSampleEvidence}
         AND "costCents" > 0
         AND "createdAt" >= ${cutoff}
         AND "failed" = FALSE
@@ -80,11 +79,14 @@ export async function loadProviderRateContexts(
   connectionIds: readonly string[],
   features: readonly ProviderRateFeature[] = PROVIDER_RATE_FEATURES,
   now = new Date(),
-  client: Pick<PrismaClient, "$queryRaw" | "providerConnectionRate"> = prisma,
+  client: Pick<
+    PrismaClient,
+    "$queryRaw" | "providerConnectionRate" | "providerConnection"
+  > = prisma,
 ): Promise<ProviderRateContextMap> {
   const uniqueConnectionIds = [...new Set(connectionIds)];
   const uniqueFeatures = [...new Set(features)];
-  const cutoff = new Date(now.getTime() - TRAILING_DAYS * 24 * 60 * 60 * 1000);
+  const cutoff = new Date(now.getTime() - PROVIDER_RATE_TRAILING_DAYS * 24 * 60 * 60 * 1000);
   const manualRates =
     uniqueConnectionIds.length === 0 || uniqueFeatures.length === 0
       ? []
@@ -121,6 +123,14 @@ export async function loadProviderRateContexts(
     const context = contexts.get(key) ?? { entries: [], manualAmountCents: null };
     contexts.set(key, { ...context, entries: [...context.entries, entry] });
   }
+  if (uniqueFeatures.includes("rank_check")) {
+    const native = await loadNativeRankContexts(client, uniqueConnectionIds, now);
+    for (const [connectionId, nativeRankCosts] of native) {
+      const key = providerRateContextKey(connectionId, "rank_check");
+      const context = contexts.get(key);
+      if (context) contexts.set(key, { ...context, entries: [], nativeRankCosts });
+    }
+  }
   return contexts;
 }
 
@@ -128,8 +138,9 @@ export async function loadProviderRateContext(
   connectionId: string,
   feature: ProviderRateFeature,
   now = new Date(),
+  client: Parameters<typeof loadProviderRateContexts>[3] = prisma,
 ): Promise<ProviderRateContext> {
-  const contexts = await loadProviderRateContexts([connectionId], [feature], now);
+  const contexts = await loadProviderRateContexts([connectionId], [feature], now, client);
   return (
     contexts.get(providerRateContextKey(connectionId, feature)) ?? {
       entries: [],

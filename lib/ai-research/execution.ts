@@ -36,11 +36,11 @@ export async function executeResearch({
   const estimate = admitted.estimate;
   const limit =
     "prompt" in input && input.cost_policy === "provider_actual_cost"
-      ? input.estimated_cost_limit_cents!
-      : input.max_cost_cents!;
+      ? input.estimated_cost_limit_cents
+      : input.max_cost_cents;
+  if (limit === undefined) throw new Error("Research cost limit is required.");
   const evidence = kind === "ai_visibility" ? "observed_dataset" : "synthetic_prompt_test";
   await preflightProviderBudget({
-    budgetCapCents: source.project.budgetCapCents,
     connectionId: source.connection.id,
     projectId: context.projectId,
     provider: source.provider.id,

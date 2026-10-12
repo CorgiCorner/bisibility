@@ -3,6 +3,7 @@
 import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/command-registry";
 import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
 import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
@@ -176,13 +177,9 @@ export function SavedKeywordsBulkBar({
           ) : null}
         </Button>
       ) : null}
-      <button
-        className="cursor-pointer border-0 bg-transparent p-0 text-[13px] text-fg-muted hover:text-fg"
-        onClick={onClear}
-        type="button"
-      >
+      <Button variant="ghost" size="xs" onClick={onClear} type="button">
         {t("clear")}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -222,24 +219,26 @@ export function SavedKeywordsFooter({
           {t("range", { end, start, total })}
         </span>
         <div className="flex gap-1">
-          <button
+          <IconButton
+            variant="secondary"
+            size="small"
             aria-label={t("previousPage")}
-            className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-control bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-muted"
             disabled={!hasPrevious}
             onClick={() => onPageChange(page - 1)}
             type="button"
           >
             <CaretLeft size={12} weight="regular" />
-          </button>
-          <button
+          </IconButton>
+          <IconButton
+            variant="secondary"
+            size="small"
             aria-label={t("nextPage")}
-            className="grid h-[30px] w-[30px] place-items-center rounded-full border border-border-control bg-transparent text-fg disabled:cursor-not-allowed disabled:text-fg-muted"
             disabled={!hasNext}
             onClick={() => onPageChange(page + 1)}
             type="button"
           >
             <CaretRight size={12} weight="regular" />
-          </button>
+          </IconButton>
         </div>
       </div>
     </div>
