@@ -5,7 +5,7 @@ import {
   matchingScopes,
   saveBudget,
 } from "@/lib/metering/store/budgets";
-import { createSql, Prisma as SQL } from "@/lib/metering/store/sql";
+import { createSql, Prisma as SQL } from "@/lib/metering/store/host-sql";
 import type { Operation } from "@usagekit/core";
 import { finalReceiptJoin, unknownAccounting } from "./reconcile-state";
 

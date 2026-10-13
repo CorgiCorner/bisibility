@@ -9,7 +9,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/usagekit/primitives/card";
-import { providerFeedbackLabels } from "@/components/usagekit/provider-feedback";
+import {
+  ProviderReadFeedback,
+  providerFeedbackLabels,
+} from "@/components/usagekit/provider-feedback";
 import type {
   ProjectChainProps,
   ProviderChainLabels,
@@ -33,14 +36,24 @@ export function ProjectChainEditor(props: ProjectChainProps & { labels: Provider
   const state = useProjectChainController(props);
   const labels = props.labels;
   const feedback = { ...providerFeedbackLabels, ...props.feedbackLabels };
+  if (!state.draft.length && !state.pending && !state.ambiguous)
+    return (
+      <ProviderReadFeedback
+        state="empty"
+        labels={props.feedbackLabels}
+        refresh={() => void state.reload()}
+      />
+    );
   const Surface = props.variant === "plain" ? "div" : Card;
   const showControls = props.showControls !== false;
   const changed = JSON.stringify(state.draft) !== JSON.stringify(state.base.entries);
   const move = (i: number, delta: number) => {
     const rows = [...state.draft];
     const other = i + delta;
-    if (!rows[other] || rows[other].enabled !== rows[i]?.enabled) return;
-    [rows[i], rows[other]] = [rows[other]!, rows[i]!];
+    const current = rows[i];
+    const neighbor = rows[other];
+    if (!current || !neighbor || neighbor.enabled !== current.enabled) return;
+    [rows[i], rows[other]] = [neighbor, current];
     state.change(rows);
   };
   const outcome = state.result?.outcome ?? state.notice;

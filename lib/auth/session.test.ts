@@ -24,6 +24,7 @@ vi.mock("next/server", () => ({ connection: mocks.connection }));
 
 import { RETURN_TO_REQUEST_HEADER } from "./return-to";
 import { enforceActiveSession, getSession, getSessionReference, requireSession } from "./session";
+import { isTransientSessionDatabaseError } from "./session-retry";
 
 const session = {
   session: { id: "session_1", userId: "user_1" },
@@ -135,6 +136,47 @@ describe("enforceActiveSession", () => {
 
     expect(mocks.getAuthSession).toHaveBeenCalledTimes(2);
     expect(mocks.findUnique).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    new Error("timeout exceeded when trying to connect"),
+    new Error("Failed to get session", {
+      cause: new Error("timeout exceeded when trying to connect"),
+    }),
+  ])("recognizes the actual pool checkout timeout through the error chain", (error) => {
+    expect(isTransientSessionDatabaseError(error)).toBe(true);
+  });
+
+  it("does not classify an unrelated operation timeout as a session database timeout", () => {
+    expect(isTransientSessionDatabaseError(new Error("provider operation timeout exceeded"))).toBe(
+      false,
+    );
+  });
+
+  it("recovers a session after one pool checkout timeout", async () => {
+    mocks.getAuthSession
+      .mockRejectedValueOnce(
+        new Error("Failed to get session", {
+          cause: new Error("timeout exceeded when trying to connect"),
+        }),
+      )
+      .mockResolvedValueOnce(session);
+    mocks.findUnique.mockResolvedValueOnce({ deactivatedAt: null });
+
+    await expect(getSession()).resolves.toBe(session);
+    expect(mocks.getAuthSession).toHaveBeenCalledTimes(2);
+    expect(mocks.findUnique).toHaveBeenCalledOnce();
+  });
+
+  it("fails closed after exactly two pool checkout timeouts", async () => {
+    mocks.getAuthSession
+      .mockReset()
+      .mockRejectedValue(new Error("timeout exceeded when trying to connect"));
+
+    await expect(getSession()).resolves.toBeNull();
+    expect(mocks.getAuthSession).toHaveBeenCalledTimes(2);
+    expect(mocks.findUnique).not.toHaveBeenCalled();
+    expect(mocks.deleteMany).not.toHaveBeenCalled();
   });
 
   it("preserves the established unauthenticated session result", async () => {

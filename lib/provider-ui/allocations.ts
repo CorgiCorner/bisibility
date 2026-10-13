@@ -27,6 +27,33 @@ export function allocationRows(state: ProviderUiState): ProviderAllocationRow[] 
         );
         const known = budget !== undefined && budget.unit === unit;
         const limit = budget?.limit;
+        const own = state.ownEvidence?.find(
+          (entry) =>
+            entry.binding.connection === connection.id &&
+            entry.binding.publicConnection === connection.publicId &&
+            entry.binding.provider === connection.provider &&
+            entry.binding.unit === unit &&
+            connection.credentialSource === "own" &&
+            entry.binding.principal === state.actor.id &&
+            entry.binding.group === state.project.id &&
+            entry.binding.principal === state.project.ownerId,
+        );
+        const native = own?.budgets.find(
+          ({ status: value, figuresKnown }) =>
+            figuresKnown &&
+            !value.redacted &&
+            budget !== undefined &&
+            budget.scope.kind === "tag" &&
+            budget.scope.namespace === own.binding.namespace &&
+            budget.scope.tag === own.binding.tag &&
+            value.budget.id === budget.id &&
+            value.budget.version === budget.version &&
+            value.budget.scope.namespace === own.binding.namespace &&
+            value.budget.scope.kind === "tag" &&
+            value.budget.scope.tag === own.binding.tag &&
+            value.budget.surface === surface &&
+            value.budget.unit === unit,
+        )?.status;
         const evidence =
           fundingSource === "platform"
             ? state.platformEvidence.find(
@@ -36,16 +63,27 @@ export function allocationRows(state: ProviderUiState): ProviderAllocationRow[] 
         return {
           id: `${connection.publicId}:${fundingSource}:${surface}`,
           connectionId: connection.publicId,
-          label: `${provider.label} · ${connection.publicId}`,
+          label: [provider.label, state.projectLabel].filter(Boolean).join(" · "),
           revision: connectionRevision(state, connection),
           fundingSource,
           surface: surface as "app" | "programmatic",
           unit,
           limit: known && limit ? measuredFigure(formatQuantity(limit), unit) : unknownFigure(unit),
           unlimited: known && limit === null,
-          used: evidence?.used ?? unknownFigure(unit),
-          reserved: evidence?.reserved ?? unknownFigure(unit),
-          remaining: unknownFigure(unit),
+          used:
+            evidence?.used ??
+            (fundingSource === "byok" && native?.used
+              ? measuredFigure(formatQuantity(native.used), unit)
+              : unknownFigure(unit)),
+          reserved:
+            evidence?.reserved ??
+            (fundingSource === "byok" && native?.reserved
+              ? measuredFigure(formatQuantity(native.reserved), unit)
+              : unknownFigure(unit)),
+          remaining:
+            fundingSource === "byok" && native?.remaining
+              ? measuredFigure(formatQuantity(native.remaining), unit)
+              : unknownFigure(unit),
           ...(evidence
             ? { available: evidence.available, availabilityBasis: "after_reservations" as const }
             : {}),

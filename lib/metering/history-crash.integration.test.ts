@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
-import { runHistoricalImport, verifyHistoricalImport } from "./history-migration";
 import { source } from "./history-test-data";
+import { runHistoricalImport, verifyHistoricalImport } from "./host-history-migration";
 import { killAtBarrier } from "./store/crash-test-child";
-import { Prisma, transactions } from "./store/sql";
+import { Prisma, transactions } from "./store/host-sql";
 import { fixture } from "./store/test-fixture";
 
 test.each(["history_batch", "history_reference", "history_verification"])(

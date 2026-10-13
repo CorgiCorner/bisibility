@@ -1,7 +1,7 @@
 import type { Store } from "@usagekit/store";
 import { runStoreConformance } from "@usagekit/store/conformance";
 import { afterAll, expect, test } from "vitest";
-import { Prisma } from "./sql";
+import { Prisma } from "./host-sql";
 import { closeConformanceFixturePool, createConformanceFixture } from "./test-fixture";
 import { createTransactionBoundStore } from "./transactional";
 

@@ -131,7 +131,11 @@ export function OtpStep({
             <span>{authErrorMessage}</span>
           </div>
         ) : null}
-        {formError ? <p className="mt-2 mb-0 text-[13px] text-red-text">{formError}</p> : null}
+        {formError ? (
+          <p className="mt-2 mb-0 text-[13px] text-red-text" role="alert">
+            {formError}
+          </p>
+        ) : null}
 
         <Button
           disabled={submitting || !otpComplete}

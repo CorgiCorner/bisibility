@@ -24,7 +24,15 @@ const request = {
   estimate: [],
 } satisfies ReserveInput;
 function transaction(stored: PaidAttemptContext & { chargeReplayed?: boolean }) {
-  const query = vi.fn().mockResolvedValue([{ principal: "owner", context: stored }]);
+  const query = vi.fn().mockResolvedValue([
+    {
+      principal: "owner",
+      context: stored,
+      transportFenced: false,
+      fenced_at_iso: null,
+      transportFenceEpochMs: null,
+    },
+  ]);
   const execute = vi.fn();
   return {
     tx: { $queryRaw: query, $executeRaw: execute } as unknown as Prisma.TransactionClient,

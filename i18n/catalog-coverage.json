@@ -259,6 +259,7 @@
     "components/auth/RememberedWebsiteCue.tsx",
     "components/auth/SignInCapacity.tsx",
     "components/auth/TwoFactorChallengeForm.tsx",
+    "components/auth/use-auth-error-messages.ts",
     "components/auth/useOAuthConsentCountdown.ts",
     "components/backlinks/AnalyzeCard.tsx",
     "components/backlinks/AnalyzePricingPopover.tsx",
@@ -352,6 +353,7 @@
     "components/cost-estimate/cost-estimate-store.ts",
     "components/cost-estimate/CostEstimateLine.tsx",
     "components/cost-estimate/EstimateStatus.tsx",
+    "components/cost-estimate/header-budget-summary.ts",
     "components/cost-estimate/HeaderProviderSpend.tsx",
     "components/cost-estimate/SessionSpendProvider.tsx",
     "components/cost-estimate/useCostEstimate.ts",
@@ -711,6 +713,10 @@
     "components/markets/sheet/NewMarketScheduleEditor.tsx",
     "components/markets/sheet/NewMarketSheet.tsx",
     "components/markets/sheet/NewMarketSheetFooter.tsx",
+    "components/metering/usage-number-format.ts",
+    "components/metering/UsageDisplayControls.tsx",
+    "components/metering/use-usage-display-settings.ts",
+    "components/metering/use-usage-presentation.ts",
     "components/onboarding/CloudImportWorkspaceButton.tsx",
     "components/onboarding/MatchingScopeFields.tsx",
     "components/onboarding/onboarding-fixtures.ts",
@@ -2812,6 +2818,11 @@
       },
       {
         "arguments": [],
+        "key": "auth.login.status.accountInactive",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "auth.login.status.codeSendFailed",
         "tags": []
       },
@@ -2853,6 +2864,11 @@
       {
         "arguments": [],
         "key": "auth.login.status.resendRateLimited",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "auth.login.status.sessionBlocked",
         "tags": []
       },
       {
@@ -15656,6 +15672,16 @@
         "tags": []
       },
       {
+        "arguments": [["provider", 1]],
+        "key": "projectIntegrations.drawer.connectionSaved",
+        "tags": []
+      },
+      {
+        "arguments": [["provider", 1]],
+        "key": "projectIntegrations.drawer.connectionSavedTraffic",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectIntegrations.drawer.connectionTestFailed",
         "tags": []
@@ -15833,6 +15859,11 @@
       {
         "arguments": [],
         "key": "projectIntegrations.drawer.testing",
+        "tags": []
+      },
+      {
+        "arguments": [["action", 1]],
+        "key": "projectIntegrations.drawer.testPassedUnsavedMessage",
         "tags": []
       },
       {

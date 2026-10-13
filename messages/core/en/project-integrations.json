@@ -58,7 +58,10 @@
       "credentialClientSecretPlaceholder": "OAuth client secret",
       "credentialSavedSecret": "Saved and encrypted. Leave blank to keep the current value, or enter a new one to replace it.",
       "costEstimate": "Cost estimate per check (USD)",
-      "costHelp": "Optional USD cost of one rank check at your configured depth - for DataForSEO Live, Top 10 is about 0.002 and Top 100 is about 0.0155."
+      "costHelp": "Optional USD cost of one rank check at your configured depth - for DataForSEO Live, Top 10 is about 0.002 and Top 100 is about 0.0155.",
+      "testPassedUnsavedMessage": "Test passed. Click {action} to save the connection.",
+      "connectionSaved": "{provider} connection saved.",
+      "connectionSavedTraffic": "{provider} connection saved. Traffic sync is queued."
     },
     "oauth": {
       "loadPropertiesError": "Properties could not be loaded. Try again or reconnect the account.",

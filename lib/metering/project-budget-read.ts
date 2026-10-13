@@ -6,7 +6,7 @@ import { formatQuantity } from "@usagekit/core";
 import { BudgetExhaustedError } from "./admission-errors";
 import { meteringNamespace } from "./runtime";
 import { currentBudgets, status } from "./store/budgets";
-import { createSql } from "./store/sql";
+import { createSql } from "./store/host-sql";
 
 type BudgetClient = Pick<Prisma.TransactionClient, "$queryRaw">;
 async function readProjectBudgets(projectId: string, client: BudgetClient) {

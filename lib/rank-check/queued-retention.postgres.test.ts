@@ -2,7 +2,7 @@ import { type Prisma, PrismaClient } from "@/lib/generated/prisma/client";
 import { historicalOperation } from "@/lib/metering/history-mapping";
 import { source } from "@/lib/metering/history-test-data";
 import { paidFixture } from "@/lib/metering/paid-attempt-test-fixture";
-import { importHistoricalEvidence } from "@/lib/metering/store/history";
+import { importHistoricalEvidence } from "@/lib/metering/store/host-history";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { expect, test, vi } from "vitest";
 import { purgeExpiredQueuedRankCheckBatches } from "./queued-retention";

@@ -7,8 +7,8 @@ import { createManualClock } from "@usagekit/store";
 import type { ScalingFixture, StoreFactory } from "@usagekit/store/conformance";
 import { saveBudget } from "./budgets";
 import { encode } from "./codec";
+import { Prisma, transactions } from "./host-sql";
 import { createPostgresStore } from "./index";
-import { Prisma, transactions } from "./sql";
 
 export function testDatabaseUrl() {
   const value = process.env.METERING_TEST_DATABASE_URL;
@@ -19,15 +19,20 @@ export function testDatabaseUrl() {
     throw new Error("Metering integration requires an isolated local or CI database");
   return value;
 }
-export async function fixture(options?: {
-  schema: string;
-  pooledClient: PrismaClient;
-  resetOnClose: () => Promise<void>;
-}) {
+export async function fixture(
+  options?: {
+    schema: string;
+    pooledClient: PrismaClient;
+    resetOnClose: () => Promise<void>;
+  },
+  session?: { timeZone: "Europe/Warsaw" | "America/New_York" | "UTC" },
+) {
   const url = testDatabaseUrl(),
     schema = options?.schema ?? `metering_${randomUUID().replaceAll("-", "")}`;
+  const ingress = new URL(url);
+  if (session) ingress.searchParams.set("options", `-c TimeZone=${session.timeZone}`);
   const connect = () =>
-    new PrismaClient({ adapter: new PrismaPg({ connectionString: url, max: 5 }) });
+    new PrismaClient({ adapter: new PrismaPg({ connectionString: ingress.toString(), max: 5 }) });
   let prisma = options?.pooledClient ?? connect();
   if (!options) {
     await prisma.$executeRaw(Prisma.sql`CREATE SCHEMA ${Prisma.raw(schema)}`);
@@ -40,6 +45,7 @@ export async function fixture(options?: {
       "../../../prisma/migrations/20261006075800_metering_imports/migration.sql",
       "../../../prisma/migrations/20261011010000_shared_paid_attempt_context/migration.sql",
       "../../../prisma/migrations/20261011020000_accounting_history_snapshot/migration.sql",
+      "../../../prisma/migrations/20261012001000_metering_utc_writers/migration.sql",
     ].map((path) => readFileSync(new URL(path, import.meta.url), "utf8"));
     await prisma.$transaction(async (tx) => {
       await tx.$executeRaw(Prisma.sql`SET LOCAL search_path TO ${Prisma.raw(schema)}`);

@@ -52,6 +52,27 @@ function renderSingle(content = "Tip", semantics?: "description") {
   return screen.getByText("T");
 }
 
+it("can disable an explanation without replacing its trigger or retaining its description", () => {
+  const view = render(
+    <Tooltip content="Test required" semantics="description">
+      <button type="button">Save</button>
+    </Tooltip>,
+  );
+  const trigger = screen.getByRole("button", { name: "Save" });
+  expect(trigger).toHaveAccessibleDescription("Test required");
+  open(trigger);
+  expect(screen.getByRole("tooltip")).toHaveTextContent("Test required");
+  view.rerender(
+    <Tooltip content="Test required" semantics="description" disabled>
+      <button type="button">Save</button>
+    </Tooltip>,
+  );
+  act(() => vi.advanceTimersByTime(MOTION_TOOLTIP));
+  expect(screen.getByRole("button", { name: "Save" })).toBe(trigger);
+  expect(trigger).not.toHaveAttribute("aria-describedby");
+  expect(screen.queryByRole("tooltip")).toBeNull();
+});
+
 function controlFocusVisible(el: HTMLElement) {
   const realMatches = el.matches.bind(el);
   let visible = true;

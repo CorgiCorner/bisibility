@@ -139,9 +139,15 @@ export function LoginEmailStep({
   const emailBinding = capacity?.emailCodes?.binding ?? "daily";
 
   const consent = <LegalConsent includeBetaEmails={Boolean(capacity)} links={legalConsentLinks} />;
+  const errorMessage = formError ? (
+    <p className="mt-3 mb-0 text-[13px] text-red-text" role="alert">
+      {formError}
+    </p>
+  ) : null;
   if (allFull) {
     return (
       <div className="w-full max-w-[380px]">
+        {errorMessage}
         <FullCapacityCard emailBinding={emailBinding} />
         {consent}
       </div>
@@ -154,6 +160,7 @@ export function LoginEmailStep({
       </h1>
       <p className="mt-2 mb-0 text-[14px] text-fg-muted">{t("login.form.description")}</p>
       <DataResidencyNote className="mt-4" message={dataResidencyMessage} />
+      {errorMessage}
 
       {hasOAuthSection ? (
         <>
@@ -254,12 +261,6 @@ export function LoginEmailStep({
               </p>
             ) : null}
             {humanVerificationField ? <div className="mt-3">{humanVerificationField}</div> : null}
-            {formError ? (
-              <p className="mt-2 mb-0 text-[13px] text-red-text" role="alert">
-                {formError}
-              </p>
-            ) : null}
-
             <Button
               disabled={isSubmitting || !verificationReady}
               endIcon={<CaretRight size={16} weight="regular" />}

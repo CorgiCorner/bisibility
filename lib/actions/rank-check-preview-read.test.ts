@@ -1,4 +1,9 @@
-import { projectTestBudget, usageReadFixture } from "@/lib/metering/read.test-fixture";
+import {
+  adoptedTimestampQuery,
+  projectTestBudget,
+  usageReadFixture,
+  utcTimestampControl,
+} from "@/lib/metering/read.test-fixture";
 import { seedTestUsage } from "@/lib/metering/usage.test-fixture";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getFirstCheckRunPlan, listFirstCheckCandidates } from "./rank-check-preview";
@@ -22,6 +27,8 @@ const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
   loadSerpProviderChain: vi.fn(),
   prisma: {
+    $executeRaw: vi.fn(),
+    $queryRawUnsafe: vi.fn(),
     $queryRaw: vi.fn(),
     keyword: { count: vi.fn(), findMany: vi.fn() },
     keywordTrafficSnapshot: { findMany: vi.fn() },
@@ -48,6 +55,8 @@ afterEach(async () => store.db.close());
 describe("rank check preview read actions", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
+    mocks.prisma.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
+    mocks.prisma.$executeRaw.mockImplementation(utcTimestampControl);
     mocks.requireSession.mockResolvedValue({ user: { id: "user_1" } });
     mocks.prisma.user.findUnique.mockResolvedValue({
       memberships: [{ projectId: "project_1", role: "admin" }],

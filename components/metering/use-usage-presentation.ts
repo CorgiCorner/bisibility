@@ -60,7 +60,9 @@ export function useUsagePresentation(options: UsagePresentationOptions = {}) {
           : value;
   const bound = (row: BudgetRow) =>
     [
-      row.kind === "group" ? other.project : row.target,
+      row.kind === "group"
+        ? [other.project, row.target !== "project" ? row.target : null].filter(Boolean).join(" · ")
+        : row.target,
       row.traffic.kind === "any"
         ? other.any
         : row.traffic.kind === "surface"

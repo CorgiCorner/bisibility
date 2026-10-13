@@ -592,6 +592,32 @@ describe("provider actions", () => {
     expect(mocks.revalidatePath).not.toHaveBeenCalledWith("/app/rank-tracker");
   });
 
+  it("requests a fresh sync after saving verified credentials on an already-connected analytics provider", async () => {
+    const previousRequest = new Date("2026-07-01T00:00:00.000Z");
+    const before = connection({
+      kind: "analytics",
+      provider: "plausible",
+      firstSyncRequestedAt: previousRequest,
+      firstSyncFinishedAt: new Date("2026-07-01T01:00:00.000Z"),
+      credentialsEncrypted: encryptSecret(
+        JSON.stringify({ apiKey: "old-key", login: "example.com" }),
+      ),
+    });
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue(before);
+    await connectProvider({
+      credentials: { apiKey: "new-key", login: "example.com" },
+      projectId: "prj_a00000000000000000000000",
+      providerId: "plausible",
+    });
+    const updated = mocks.prisma.providerConnection.upsert.mock.calls[0][0].update;
+    expect(updated).toMatchObject({
+      firstSyncRequestedAt: expect.any(Date),
+      firstSyncStartedAt: null,
+      firstSyncFinishedAt: null,
+    });
+    expect(updated.firstSyncRequestedAt).not.toEqual(previousRequest);
+  });
+
   it("rolls back the analytics connection together with its first sync intent", async () => {
     let committedConnection: Record<string, unknown> | null = null;
     let attemptedConnection: Record<string, unknown> | null = null;
@@ -893,6 +919,32 @@ describe("provider actions", () => {
     });
 
     expect(mocks.prisma.providerConnection.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("queues a fresh analytics sync when a successful stored-key test restores authorization", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue(
+      connection({
+        kind: "analytics",
+        provider: "plausible",
+        status: "needs_reauth",
+        credentialsEncrypted: encryptSecret(
+          JSON.stringify({ apiKey: "stored-key", login: "example.com" }),
+        ),
+      }),
+    );
+    await testConnection({
+      projectId: "prj_a00000000000000000000",
+      providerId: "plausible",
+    });
+    expect(mocks.prisma.providerConnection.updateMany).toHaveBeenCalledWith({
+      data: {
+        status: "connected",
+        firstSyncRequestedAt: expect.any(Date),
+        firstSyncStartedAt: null,
+        firstSyncFinishedAt: null,
+      },
+      where: { id: "conn_1", status: "needs_reauth" },
+    });
   });
 
   it("rejects missing required credentials before calling the provider", async () => {

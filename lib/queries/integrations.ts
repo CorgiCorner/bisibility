@@ -188,7 +188,11 @@ async function categoriesForProject(
   const failuresByConnection = new Map<string, SyncFailure>();
   for (const connection of connections) {
     if (connection.kind !== "analytics") continue;
-    const connectionRuns = runs.filter((run) => run.connectionId === connection.id);
+    const connectionRuns = runs.filter(
+      (run) =>
+        run.connectionId === connection.id &&
+        (!connection.firstSyncRequestedAt || run.startedAt >= connection.firstSyncRequestedAt),
+    );
     if (connectionRuns[0]?.status !== "failed") continue;
     const firstNonFailure = connectionRuns.findIndex((run) => run.status !== "failed");
     const failedRuns =

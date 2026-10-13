@@ -91,8 +91,8 @@ async function prepareSessionCreation(session: SessionCreationInput) {
   return addAuthPublicId(demoSession, "sid");
 }
 
-// Throw instead of returning false because some provider routes would still set cookies;
-// keep the error generic to avoid disclosing deactivation state.
+// Throw instead of returning false because some provider routes would still set cookies.
+// This hook runs after authentication, so an inactive identity can receive recovery guidance.
 export async function preventDeactivatedSessionCreation(session: SessionCreationInput) {
   if (isPendingFirstRunUser(session.userId)) {
     return;
@@ -105,7 +105,7 @@ export async function preventDeactivatedSessionCreation(session: SessionCreation
 
   if (!user || user.deactivatedAt) {
     throw new APIError("UNAUTHORIZED", {
-      code: "SESSION_CREATION_BLOCKED",
+      code: user?.deactivatedAt ? "ACCOUNT_DEACTIVATED" : "SESSION_CREATION_BLOCKED",
       message: "Unable to create session.",
     });
   }

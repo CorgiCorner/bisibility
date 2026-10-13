@@ -68,3 +68,13 @@ const paused = {
 export const Paused: Story = {
   args: { snapshot: paused, evidence: paused, onReload: async () => paused },
 };
+
+const removable = { ...snapshot, identity: "storybook-project-last-removed" };
+export const RemovedAfterReload: Story = {
+  args: {
+    snapshot: removable,
+    evidence: removable,
+    onReload: async () => ({ ...removable, revision: "empty", entries: [] }),
+    feedbackLabels: { empty: "Connect a SERP provider above to configure fallback order." },
+  },
+};

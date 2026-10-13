@@ -444,6 +444,38 @@ describe("integration queries", () => {
     expect(JSON.stringify(categories)).not.toContain("redacted");
   });
 
+  it("starts the displayed failure streak at the latest reconnect sync request", async () => {
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      connection({
+        id: "connection_plausible",
+        kind: "analytics",
+        provider: "plausible",
+        firstSyncRequestedAt: new Date("2026-06-28T11:45:00.000Z"),
+      }),
+    ]);
+    const oldFailure = {
+      connectionId: "connection_plausible",
+      errorClass: "auth",
+      startedAt: new Date("2026-06-28T11:30:00.000Z"),
+      status: "failed",
+    };
+    mocks.prisma.operationalRun.findMany.mockResolvedValue([oldFailure]);
+    const read = async () =>
+      (await getIntegrationCategories("prj_1", { now }))
+        .find((category) => category.id === "analytics")
+        ?.providers.find((provider) => provider.id === "plausible");
+    expect((await read())?.syncFailure).toBeUndefined();
+    mocks.prisma.operationalRun.findMany.mockResolvedValue([
+      { ...oldFailure, startedAt: new Date("2026-06-28T11:50:00.000Z") },
+      oldFailure,
+    ]);
+    expect((await read())?.syncFailure).toEqual({
+      consecutiveFailures: 1,
+      errorClass: "auth",
+      since: "2026-06-28T11:50:00.000Z",
+    });
+  });
+
   it("surfaces unreadable current ciphertext without changing connection status", async () => {
     vi.stubEnv("BISIBILITY_SECRETS_KEY", secretsKey(1));
     const credentialsEncrypted = encryptSecret(JSON.stringify({ login: "dfs-user@example.com" }));

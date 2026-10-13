@@ -1,6 +1,6 @@
 import { runStoreConformance, runStoreScalingConformance } from "@usagekit/store/conformance";
 import { afterAll, expect, test, vi } from "vitest";
-import { Prisma, transactions } from "./sql";
+import { Prisma, transactions } from "./host-sql";
 import {
   closeConformanceFixturePool,
   createConformanceFixture,

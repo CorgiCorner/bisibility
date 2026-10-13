@@ -7,19 +7,23 @@ function errorCodes(error: unknown) {
 }
 
 export type AuthErrorMessages = {
+  accountInactive: string;
   emailUnavailable: string;
   fallback: string;
   methodUnavailable: string;
   providerEmailUnavailable: string;
   providerEmailUnverified: string;
   providerProfileUnavailable: string;
+  sessionBlocked: string;
 };
 
 const messageKeyByKnownSocialError = {
+  ACCOUNT_DEACTIVATED: "accountInactive",
   EMAIL_NOT_CONFIGURED: "emailUnavailable",
   EMAIL_NOT_VERIFIED: "providerEmailUnverified",
   FAILED_TO_GET_USER_INFO: "providerProfileUnavailable",
   PROVIDER_NOT_FOUND: "methodUnavailable",
+  SESSION_CREATION_BLOCKED: "sessionBlocked",
   USER_EMAIL_NOT_FOUND: "providerEmailUnavailable",
 } as const satisfies Record<string, keyof AuthErrorMessages>;
 
@@ -39,6 +43,14 @@ export function authErrorMessage(error: unknown, messages: AuthErrorMessages) {
   }
 
   return messages.fallback;
+}
+
+export function isSessionCreationBlocked(error: unknown) {
+  return errorCodes(error).some(
+    (value) =>
+      typeof value === "string" &&
+      ["ACCOUNT_DEACTIVATED", "SESSION_CREATION_BLOCKED"].includes(value.toUpperCase()),
+  );
 }
 
 export function isEmailCapacityError(error: unknown) {

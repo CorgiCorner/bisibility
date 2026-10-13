@@ -14,6 +14,7 @@ const TRANSIENT_DATABASE_MESSAGES = [
   /connection timeout/i,
   /server closed the connection unexpectedly/i,
   /timeout acquiring a connection/i,
+  /^timeout exceeded when trying to connect$/i,
 ];
 const MAX_SESSION_READ_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 25;

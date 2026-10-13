@@ -122,3 +122,8 @@ it("formats budget amounts without replacing original figures or geometry", () =
   expect(p.bound(source)).not.toContain("cents");
   expect(p.bound(source)).not.toMatch(/ · $/);
 });
+
+it("keeps project name context in budget labels", () => {
+  const row = { ...budgetFixture(), target: "webscraping" };
+  expect(useUsagePresentation().bound(row)).toContain("webscraping");
+});

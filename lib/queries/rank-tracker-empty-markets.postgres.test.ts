@@ -247,7 +247,9 @@ it("distinguishes equal-count Spain scopes and filters by opaque keys in both qu
           : result.keywordIds;
         expect(ids).toEqual(
           locationId === null
-            ? ["target_1", "target_0"]
+            ? grouped
+              ? ["target_0", "target_1"]
+              : ["target_1", "target_0"]
             : locationId === "opaque-a"
               ? ["target_0"]
               : locationId === "opaque-b"

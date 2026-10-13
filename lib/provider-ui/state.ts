@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import { type Actor, AuthorizationError, authorize } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { Prisma, type Role } from "@/lib/generated/prisma/client";
+import { readOwnConnectionBudgetSnapshot } from "@/lib/metering/own-budget-read";
+import type { OwnBudgetRead } from "@/lib/metering/own-budget-read-types";
 import { platformAllocationTag } from "@/lib/metering/paid-quote";
 import { meteringNamespace } from "@/lib/metering/runtime";
 import { readSpendingBudgets } from "@/lib/metering/spending-limit-store";
@@ -35,7 +37,10 @@ export async function loadProviderUiState(
   publicId: string,
   mode: "read" | "mutation" = "mutation",
 ) {
-  const reference = await tx.project.findUnique({ where: { publicId }, select: { id: true } });
+  const reference = await tx.project.findUnique({
+    where: { publicId },
+    select: { id: true, name: true },
+  });
   if (!reference) throw new AuthorizationError("forbidden");
   if (mode === "mutation") await lockProjectForProviderMutation(tx, reference.id);
   const rowLock = mode === "mutation" ? Prisma.sql`FOR SHARE` : Prisma.empty;
@@ -85,6 +90,26 @@ export async function loadProviderUiState(
     ],
     mode,
   );
+  const displayEvidence: { projectLabel?: string; ownEvidence?: OwnBudgetRead[] } = {
+    projectLabel: reference.name,
+    ownEvidence: [],
+  };
+  if (
+    mode === "read" &&
+    actor.id === project.ownerId &&
+    canProjectAction(grant.role, "read", "billing")
+  ) {
+    for (const connection of candidates) {
+      if (connection.credentialSource !== "own") continue;
+      const evidence = await readOwnConnectionBudgetSnapshot(tx, {
+        namespace,
+        actorId: actor.id,
+        projectId: project.id,
+        connectionId: connection.id,
+      });
+      if (evidence) displayEvidence.ownEvidence?.push(evidence);
+    }
+  }
   const budgetVersions = budgets.map((b) => [b.id, b.version]);
   // An old connection without a public alias cannot become a browser command target.
   const connections = candidates.filter((connection) => connection.publicId);
@@ -124,6 +149,7 @@ export async function loadProviderUiState(
       !project.isSample,
   };
   return {
+    ...displayEvidence,
     project,
     budgets,
     actor: currentActor,

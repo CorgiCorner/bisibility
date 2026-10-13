@@ -1,9 +1,18 @@
 import { LoginForm } from "@/components/auth/LoginForm";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import messages from "@/messages/core/en/auth.json";
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
   title: "Auth/LoginForm",
   component: LoginForm,
+  decorators: [
+    (Story) => (
+      <FeatureMessagesProvider locale="en" messages={messages} timeZone="UTC">
+        <Story />
+      </FeatureMessagesProvider>
+    ),
+  ],
   args: {
     dataResidencyMessage: "Your data is stored and processed in the EU.",
     legalConsentLinks: { privacyHref: "/privacy", termsHref: "/terms" },
@@ -32,6 +41,10 @@ const cloudArgs = {
 
 export const CloudAvailable: Story = {
   args: cloudArgs,
+};
+
+export const InactiveAccount: Story = {
+  args: { ...cloudArgs, initialErrorCode: "ACCOUNT_DEACTIVATED" },
 };
 
 export const GoogleFull: Story = {

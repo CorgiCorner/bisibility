@@ -130,6 +130,7 @@ export async function connectProviderConnection(
       before,
       { enabled, kind: item.kind, status: "connected" },
       new Date(),
+      true,
     );
     const connection = await client.providerConnection.upsert({
       create: {

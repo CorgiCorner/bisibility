@@ -2,7 +2,7 @@ import type { BillingImportInput } from "@usagekit/core";
 import type { State } from "@usagekit/store/reference";
 import { key } from "./codec";
 import { load } from "./command-state";
-import { lock, Prisma, type Sql } from "./sql";
+import { lock, Prisma, type Sql } from "./host-sql";
 
 /** The connection accounting gate prevents request/receipt phantoms during this snapshot. */
 export async function loadBillingCandidates(sql: Sql, state: State, input: BillingImportInput) {

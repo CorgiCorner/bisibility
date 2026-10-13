@@ -8,6 +8,7 @@ import { input, required } from "@/lib/metering/paid-attempt-test-fixture";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { createManualClock } from "@usagekit/store";
 import { createPostgresStore } from "./index";
+import { interceptExecute } from "./intercept-execute.test-fixture.ts";
 import { command, receipt, request } from "./test-data";
 
 const url = process.env.METERING_TEST_DATABASE_URL;
@@ -71,17 +72,11 @@ const db = new Proxy(prisma, {
       return Reflect.get(target, key);
     return <T>(body: (tx: Prisma.TransactionClient) => Promise<T>) =>
       prisma.$transaction(async (tx) => {
-        const execute = tx.$executeRaw.bind(tx);
         return body(
-          new Proxy(tx, {
-            get(target, key) {
-              if (key !== "$executeRaw") return Reflect.get(target, key);
-              return async (query: Prisma.Sql) => {
-                const result = await execute(query);
-                if (query.sql.includes("INSERT INTO metering_operation")) await barrier();
-                return result;
-              };
-            },
+          interceptExecute(tx, async (text, execute) => {
+            const result = await execute();
+            if (text.includes("INSERT INTO metering_operation")) await barrier();
+            return result;
           }),
         );
       });

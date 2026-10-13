@@ -2,6 +2,7 @@ import {
   authFeatureTestMessages,
   renderWithFeatureMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
+import polishAuthMessages from "@/messages/core/pl/auth.json";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
@@ -44,6 +45,75 @@ describe("LoginForm capacity errors", () => {
     vi.clearAllMocks();
     mocks.signInRedirectUrl.mockReturnValue("#two-factor");
     window.history.replaceState(null, "", "/login");
+  });
+
+  it("explains an inactive account after the Google callback even without email sign-in", () => {
+    render(
+      <LoginForm
+        dataResidencyMessage=""
+        emailSignInUnavailable
+        enabledProviders={{ github: false, google: true }}
+        initialErrorCode="ACCOUNT_DEACTIVATED"
+        legalConsentLinks={null}
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Your account is inactive. Contact the instance administrator to restore access.",
+    );
+    expect(screen.queryByText("ACCOUNT_DEACTIVATED")).toBeNull();
+  });
+
+  it("keeps unknown callback diagnostics out of the login message", () => {
+    render(
+      <LoginForm
+        dataResidencyMessage=""
+        initialErrorCode="private provider diagnostic"
+        legalConsentLinks={null}
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Something went wrong. Try again.");
+    expect(screen.queryByText("private provider diagnostic")).toBeNull();
+  });
+
+  it("uses the account-recovery guidance from the selected locale", () => {
+    render(
+      <LoginForm
+        dataResidencyMessage=""
+        initialErrorCode="ACCOUNT_DEACTIVATED"
+        legalConsentLinks={null}
+      />,
+      { locale: "pl", messages: { ...authFeatureTestMessages, ...polishAuthMessages } },
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Twoje konto jest nieaktywne. Skontaktuj się z administratorem, aby przywrócić dostęp.",
+    );
+  });
+
+  it("directs a verified inactive email account to the administrator instead of retrying its code", async () => {
+    mocks.requestLoginCode.mockResolvedValue({ ok: true });
+    mocks.emailOtpSignIn.mockResolvedValue({ error: { code: "ACCOUNT_DEACTIVATED" } });
+    const user = userEvent.setup();
+    render(<LoginForm dataResidencyMessage="" legalConsentLinks={null} />);
+
+    await user.type(screen.getByLabelText("Email"), "person@example.com");
+    await user.click(screen.getByRole("button", { name: /send login code/i }));
+    await screen.findByLabelText("Code");
+    for (const [index, digit] of [..."123456"].entries()) {
+      await user.type(
+        screen.getByLabelText(index === 0 ? "Code" : `Code digit ${index + 1}`),
+        digit,
+      );
+    }
+    await user.click(screen.getByRole("button", { name: "Verify and continue" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Your account is inactive. Contact the instance administrator to restore access.",
+    );
+    expect(screen.queryByText("That code is incorrect or expired. Try again.")).toBeNull();
+    expect(mocks.signInRedirectUrl).not.toHaveBeenCalled();
   });
 
   it("keeps the browser fragment out of OAuth callback fields", async () => {
