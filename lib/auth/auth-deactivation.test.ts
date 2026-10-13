@@ -149,13 +149,13 @@ describe("deactivated account session creation", () => {
   });
 
   it.each([
-    ["deactivated", { deactivatedAt: new Date("2026-07-18T00:30:00.000Z") }],
-    ["missing", null],
-  ])("denies session creation for a %s account", async (_state, user) => {
+    ["deactivated", { deactivatedAt: new Date("2026-07-18T00:30:00.000Z") }, "ACCOUNT_DEACTIVATED"],
+    ["missing", null, "SESSION_CREATION_BLOCKED"],
+  ])("denies session creation for a %s account", async (_state, user, code) => {
     mocks.findUnique.mockResolvedValueOnce(user);
 
     await expect(preventDeactivatedSessionCreation(session)).rejects.toMatchObject({
-      body: { code: "SESSION_CREATION_BLOCKED", message: "Unable to create session." },
+      body: { code, message: "Unable to create session." },
       status: "UNAUTHORIZED",
       statusCode: 401,
     });

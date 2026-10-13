@@ -1,8 +1,8 @@
 import type { BillingImportInput, Operation } from "@usagekit/core";
 import type { Store } from "@usagekit/store";
 import { expect, test } from "vitest";
+import { Prisma, transactions } from "./host-sql";
 import { createPostgresStore } from "./index";
-import { Prisma, transactions } from "./sql";
 import { command, receipt, ref, request } from "./test-data";
 import { fixture } from "./test-fixture";
 import { createTransactionBoundStore } from "./transactional";

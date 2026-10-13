@@ -10,7 +10,7 @@ import {
 import { claimPaidAttemptRecovery, settlePaidAttempt } from "@/lib/metering/settlement";
 import { expect, test } from "vitest";
 import { killAtBarrier } from "./crash-test-child";
-import { Prisma } from "./sql";
+import { Prisma } from "./host-sql";
 import { command, receipt, ref, request } from "./test-data";
 import { fixture } from "./test-fixture";
 

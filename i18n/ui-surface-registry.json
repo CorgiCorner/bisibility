@@ -4715,6 +4715,11 @@
     },
     {
       "kind": "ui-data",
+      "path": "components/auth/use-auth-error-messages.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
       "path": "components/auth/useOAuthConsentCountdown.ts",
       "status": "migrated"
     },

@@ -49,7 +49,7 @@ export async function acknowledgeOwnTransport(tx: Prisma.TransactionClient, id: 
   const receipt = await composeOwnReceipt(tx, operation, native);
   if (operation.receipts.some((r) => r.id === native.id)) return true;
   const context = await paidContext(tx, ref);
-  if (!context.fenced_at) throw new Error("Native paid proof requires a transport fence");
+  if (!context.transportFenced) throw new Error("Native paid proof requires a transport fence");
   const previous = operation.receipts.at(-1);
   let authority: import("@usagekit/core").Authority;
   if (operation.state === "pending" || operation.state === "settled")

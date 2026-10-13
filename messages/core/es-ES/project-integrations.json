@@ -58,7 +58,10 @@
       "credentialClientSecretPlaceholder": "Secreto de cliente de OAuth",
       "credentialSavedSecret": "Guardado y cifrado. Déjalo en blanco para conservar el valor actual o introduce uno nuevo para sustituirlo.",
       "costEstimate": "Coste estimado por comprobación (USD)",
-      "costHelp": "Coste opcional en USD de una comprobación de posiciones con la profundidad que has configurado: en DataForSEO Live, Top 10 cuesta unos 0,002 y Top 100 unos 0,0155."
+      "costHelp": "Coste opcional en USD de una comprobación de posiciones con la profundidad que has configurado: en DataForSEO Live, Top 10 cuesta unos 0,002 y Top 100 unos 0,0155.",
+      "testPassedUnsavedMessage": "Prueba superada. Haz clic en {action} para guardar la conexión.",
+      "connectionSaved": "Se ha guardado la conexión con {provider}.",
+      "connectionSavedTraffic": "Se ha guardado la conexión con {provider}. La sincronización de tráfico está en cola."
     },
     "oauth": {
       "loadPropertiesError": "No se han podido cargar las propiedades. Inténtalo de nuevo o vuelve a conectar la cuenta.",

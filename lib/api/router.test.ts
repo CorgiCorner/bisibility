@@ -1,3 +1,4 @@
+import { adoptedTimestampQuery } from "@/lib/metering/read.test-fixture";
 import { hashApiKey } from "@/lib/providers/crypto";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { ProviderChainError } from "@/lib/rank-check/provider-chain-error";
@@ -30,6 +31,7 @@ const mocks = vi.hoisted(() => {
     prisma: {
       $executeRaw: vi.fn(),
       $transaction: vi.fn(),
+      $queryRawUnsafe: vi.fn(),
       $queryRaw: vi.fn(),
       apiKey: { create: vi.fn(), findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
       auditLog: { create: vi.fn() },
@@ -241,6 +243,7 @@ async function call(req: Request, path: string) {
 describe("public API router", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
     mocks.keywordStore.clear();
     mocks.resetPublicIds();
     resetRateLimitStateForTests();

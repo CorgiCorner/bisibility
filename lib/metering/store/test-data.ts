@@ -1,5 +1,5 @@
 import type { Budget, Operation, Receipt, ReserveInput } from "@usagekit/core";
-export const request = (operationId = crypto.randomUUID()): ReserveInput => ({
+export const request = (operationId: string = crypto.randomUUID()): ReserveInput => ({
   operationId,
   scope: { namespace: "test", principal: "u1", connection: "c1" },
   fundingSource: "byok",

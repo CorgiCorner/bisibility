@@ -23,7 +23,8 @@ import { useHumanVerification } from "@/lib/verification/human-verification-clie
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { authErrorMessage, isEmailCapacityError } from "./login-errors";
+import { authErrorMessage, isEmailCapacityError, isSessionCreationBlocked } from "./login-errors";
+import { useAuthErrorMessages } from "./use-auth-error-messages";
 
 type LoginStep = "email" | "otp";
 type AuthStatus = "idle" | "verifying" | "error";
@@ -39,6 +40,7 @@ type LoginFormProps = {
   emailSignInUnavailable?: boolean;
   enabledProviders?: EnabledOAuthProviders;
   humanVerificationRequired?: boolean;
+  initialErrorCode?: string | null;
   legalConsentLinks: LegalConsentLinks | null;
   returnTo?: string;
 };
@@ -52,19 +54,13 @@ export function LoginForm({
   emailSignInUnavailable = false,
   enabledProviders = disabledOAuthProviders,
   humanVerificationRequired = false,
+  initialErrorCode = null,
   legalConsentLinks,
   returnTo,
 }: Readonly<LoginFormProps>) {
   const t = useTranslations("auth");
   const sharedErrors = useSharedErrorMessages();
-  const socialErrorMessages = {
-    emailUnavailable: t("emailUnavailable.description"),
-    fallback: t("login.status.genericError"),
-    methodUnavailable: t("login.status.methodUnavailable"),
-    providerEmailUnavailable: t("login.status.providerEmailUnavailable"),
-    providerEmailUnverified: t("login.status.providerEmailUnverified"),
-    providerProfileUnavailable: t("login.status.providerProfileUnavailable"),
-  };
+  const errorMessages = useAuthErrorMessages();
   const verification = useHumanVerification();
   const [emailStepKey, setEmailStepKey] = useState(0);
   const [step, setStep] = useState<LoginStep>("email");
@@ -73,7 +69,9 @@ export function LoginForm({
   const [authAttempts, setAuthAttempts] = useState(0);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [resentCode, setResentCode] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(() =>
+    initialErrorCode ? authErrorMessage({ code: initialErrorCode }, errorMessages) : null,
+  );
   const [capacityMiss, setCapacityMiss] = useState<SignInCapacityMiss>(initialCapacityMiss);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const mounted = useRef(true);
@@ -126,9 +124,11 @@ export function LoginForm({
     form.setValue("otp", emptyOtpDigits(), { shouldDirty: true, shouldValidate: false });
   }
 
-  function handleOtpFailure() {
-    setFormError(null);
-    setAuthStatus("error");
+  function handleOtpFailure(error: unknown) {
+    const blocked = isSessionCreationBlocked(error);
+    setFormError(blocked ? authErrorMessage(error, errorMessages) : null);
+    setAuthStatus(blocked ? "idle" : "error");
+    if (blocked) return;
     setAuthAttempts((attempts) => attempts + 1);
     form.clearErrors("otp");
     form.setValue("otp", emptyOtpDigits(), { shouldDirty: true, shouldValidate: false });
@@ -191,10 +191,10 @@ export function LoginForm({
       if (!mounted.current) return;
 
       if (response.error) {
-        setFormError(authErrorMessage(response.error, socialErrorMessages));
+        setFormError(authErrorMessage(response.error, errorMessages));
       }
     } catch (error) {
-      if (mounted.current) setFormError(authErrorMessage(error, socialErrorMessages));
+      if (mounted.current) setFormError(authErrorMessage(error, errorMessages));
     } finally {
       if (mounted.current) setSocialProvider(null);
     }
@@ -230,7 +230,7 @@ export function LoginForm({
     if (!mounted.current) return;
 
     if (response.error) {
-      handleOtpFailure();
+      handleOtpFailure(response.error);
       return;
     }
 

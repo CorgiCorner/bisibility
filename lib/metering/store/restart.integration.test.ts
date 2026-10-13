@@ -1,7 +1,7 @@
 import { fork } from "node:child_process";
 import { once } from "node:events";
 import { expect, test } from "vitest";
-import { Prisma } from "./sql";
+import { Prisma } from "./host-sql";
 import { bound, command, receipt, ref, request } from "./test-data";
 import { fixture } from "./test-fixture";
 

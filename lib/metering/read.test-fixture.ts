@@ -48,3 +48,38 @@ export function projectTestBudget(limit = 100): Budget {
     onExceed: "block",
   };
 }
+
+/** Unit doubles model an already-adopted ledger; all business SQL keeps its existing port. */
+export async function adoptedTimestampQuery(text: string, ...values: unknown[]) {
+  if (
+    text.includes("FROM pg_trigger t") &&
+    text.includes("t.tgname='metering_utc_writer'") &&
+    text.includes("f.tgname='metering_transport_fence'")
+  )
+    return [
+      {
+        tables: [
+          "metering_event",
+          "metering_history_progress",
+          "metering_import",
+          "metering_operation",
+          "metering_paid_attempt_context",
+          "metering_receipt",
+        ],
+      },
+    ];
+  if (
+    text === "SELECT value FROM metering_metadata WHERE key=$1" &&
+    values.length === 1 &&
+    values[0] === "bisibility.utc_timestamp_contract"
+  )
+    return [{ value: "utc-core-v2-fence-presence-v1" }];
+  throw new Error("Unexpected timestamp-contract fixture query");
+}
+
+/** Read-only unit clients support only the host executor's transaction-local UTC control. */
+export async function utcTimestampControl(query: { text?: string }) {
+  if (query.text !== "SET LOCAL TIME ZONE 'UTC'")
+    throw new Error("Unexpected timestamp-control fixture statement");
+  return 0;
+}

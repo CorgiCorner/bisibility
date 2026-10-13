@@ -10,7 +10,7 @@ import {
 import { verifyPaidBinding } from "./paid-binding";
 import { lockPaidOperation, retainPaidContext } from "./paid-context";
 import { lockScopes, matchingScopes } from "./store/budgets";
-import { createSql } from "./store/sql";
+import { createSql } from "./store/host-sql";
 import { createTransactionMeter, paidAttemptClock } from "./transaction-meter";
 
 /** Throw on any denied child so the caller rolls back the complete durable taskset. */

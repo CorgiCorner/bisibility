@@ -1,15 +1,12 @@
-import { randomBytes } from "node:crypto";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
-import type { Budget } from "@usagekit/core";
-import type { Clock, Store } from "@usagekit/store";
+import type { Clock } from "@usagekit/store";
+import {
+  createPrismaPostgresDriver,
+  createPostgresStore as createSharedPostgresStore,
+} from "@usagekit/store-postgres";
 import { billingImports } from "./billing";
-import { currentBudgets, matchingScopes, saveBudget, status } from "./budgets";
-import { commands } from "./commands";
-import { requestCounters } from "./counters";
-import { operationsReader } from "./operations";
-import { usageReader } from "./reads";
-import { find } from "./records";
-import { type Counters, Prisma, transactions } from "./sql";
+import { type Counters, transactions } from "./host-sql";
+import { utcPostgresDriver } from "./timestamp-policy";
 
 export async function createPostgresStore({
   prisma,
@@ -24,46 +21,18 @@ export async function createPostgresStore({
   counters?: Counters;
   testHooks?: { afterOperationWrite?: () => void };
 }) {
-  const tx = transactions(prisma, schema, counters);
-  const secret = await tx.write(async (sql) => {
-    await sql.execute(
-      Prisma.sql`INSERT INTO metering_metadata(key,value) VALUES('cursor_key',${randomBytes(32).toString("hex")}) ON CONFLICT(key) DO NOTHING`,
-    );
-    const [row] = await sql.query<{ value: string }>(
-      Prisma.sql`SELECT value FROM metering_metadata WHERE key='cursor_key'`,
-    );
-    if (!row) throw new Error("Missing metering cursor key");
-    return row.value;
-  });
-  const aggregate = usageReader(clock, secret);
-  const operations = operationsReader(clock, secret);
-  const store: Store = {
-    ...billingImports(tx, clock, testHooks?.afterOperationWrite),
-    ...commands(tx, clock, testHooks?.afterOperationWrite),
-    ...requestCounters(tx, clock),
-    listOperations: (query) => tx.read((sql) => operations(sql, query)),
-    getOperation: (ref) => tx.read(async (sql) => (await find(sql, ref))?.op ?? null),
-    aggregate: (query) => tx.read((sql) => aggregate(sql, query)),
-    definedBudgets: (query) =>
-      tx.read((sql) => currentBudgets(sql, query.scope.namespace, [query.scope])),
-    applicableBudgets: (query) =>
-      tx.read(async (sql) => {
-        const budgets = await currentBudgets(
-          sql,
-          query.scope.namespace,
-          matchingScopes(query),
-          query.surface,
-          query.source,
-        );
-        const result = [];
-        for (const budget of budgets) result.push(await status(sql, budget, clock.now()));
-        return result;
-      }),
-  };
-  return {
-    ...store,
-    putBudget: (budget: Budget) => tx.write((sql) => saveBudget(sql, budget)),
-    listBudgets: (namespace: string) => tx.read((sql) => currentBudgets(sql, namespace)),
+  const store = await createSharedPostgresStore({
+    driver: utcPostgresDriver(createPrismaPostgresDriver(prisma), schema),
+    clock,
+    schema,
     counters,
-  };
+    testHooks,
+  });
+  // Invoice corrections retain the host's funding-specific budget measurement.
+  const { importBilling } = billingImports(
+    transactions(prisma, schema, counters),
+    clock,
+    testHooks?.afterOperationWrite,
+  );
+  return { ...store, importBilling };
 }

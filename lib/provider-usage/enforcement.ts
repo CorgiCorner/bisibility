@@ -7,7 +7,7 @@ import {
 import { platformAllocationTag } from "@/lib/metering/paid-quote";
 import { meteringNamespace } from "@/lib/metering/runtime";
 import { currentBudgets, status } from "@/lib/metering/store/budgets";
-import { createSql } from "@/lib/metering/store/sql";
+import { createSql } from "@/lib/metering/store/host-sql";
 import type { ProviderCatalogEntry } from "@/lib/providers/types";
 import { ownAllocationTag } from "./credential-version";
 import type { ProviderRequestSurface } from "./surface";

@@ -4,6 +4,7 @@ import type { PendingAction } from "@/components/integrations/ConnectDrawerSchem
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { useTranslations } from "next-intl";
 
@@ -44,6 +45,19 @@ export function ConnectDrawerFooter({
 
   if (oauthOnly) return null;
 
+  const saveButton = (
+    <Button
+      className="flex-1"
+      disabled={readOnly || busy || saveDisabled}
+      form={formId}
+      loading={pendingAction === "save"}
+      loadingLabel={t("saving")}
+      type="submit"
+    >
+      {isManage ? t("saveChanges") : t("connectProvider")}
+    </Button>
+  );
+
   return (
     <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
       <ProjectReadOnlyTooltip>
@@ -60,16 +74,19 @@ export function ConnectDrawerFooter({
         </Button>
       </ProjectReadOnlyTooltip>
       <ProjectReadOnlyTooltip className="inline-flex flex-1">
-        <Button
-          className="flex-1"
-          disabled={readOnly || busy || saveDisabled}
-          form={formId}
-          loading={pendingAction === "save"}
-          loadingLabel={t("saving")}
-          type="submit"
+        <Tooltip
+          content={t("testRequiredTitle")}
+          disabled={!saveDisabled || busy || readOnly}
+          semantics="description"
+          wrapperClassName="flex-1"
         >
-          {isManage ? t("saveChanges") : t("connectProvider")}
-        </Button>
+          <span
+            className="inline-flex flex-1"
+            tabIndex={saveDisabled && !busy && !readOnly ? 0 : undefined}
+          >
+            {saveButton}
+          </span>
+        </Tooltip>
       </ProjectReadOnlyTooltip>
     </div>
   );

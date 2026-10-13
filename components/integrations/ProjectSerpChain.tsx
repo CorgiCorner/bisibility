@@ -78,9 +78,22 @@ function BoundChain({ binding, ...props }: Props & { binding: SharedProviderMana
   const router = useRouter();
   const scope = identity(binding.binding);
   const journalScope = journalIdentity(binding.binding);
+  const roster = JSON.stringify(
+    props.providers
+      .filter((row) => row.kind === "serp")
+      .map((row) => [
+        row.id,
+        row.connectionId,
+        row.connectionUpdatedAt,
+        row.status,
+        row.enabled,
+        row.priority,
+        row.credentialSource,
+      ]),
+  );
   const [accessState, setAccessState] = useState<"ready" | "forbidden" | "unavailable">("ready");
   const query = useQuery({
-    queryKey: ["serp-project-chain", props.projectId, scope],
+    queryKey: ["serp-project-chain", props.projectId, scope, roster],
     enabled: status.state === "ready",
     retry: false,
     queryFn: async (): Promise<ProjectChainSnapshot> => {
@@ -178,7 +191,7 @@ function BoundChain({ binding, ...props }: Props & { binding: SharedProviderMana
     <ChainSurface
       {...copy}
       mode="project"
-      snapshot={snapshot}
+      snapshot={query.data ?? snapshot}
       readState={readState}
       evidence={readState === "ok" ? (query.data ?? null) : null}
       showControls={props.canManageProviders && (readOnly || status.managementAllowed === true)}

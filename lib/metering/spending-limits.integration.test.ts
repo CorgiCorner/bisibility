@@ -1,15 +1,66 @@
 import { PrismaClient } from "@/lib/generated/prisma/client";
+import { fixture } from "@/lib/metering/store/test-fixture";
+import { timestampContractKey } from "@/lib/metering/store/timestamp-history";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { expect, test, vi } from "vitest";
 import { reservePaidAttempts } from "./admission";
 import { input, paidFixture } from "./paid-attempt-test-fixture";
+import { ensureProjectSpendingBudget } from "./project-budget-bootstrap";
 import { setProjectSpendingLimit } from "./project-spending-limit";
-import { putSpendingBudget } from "./spending-limit-store";
-import { fundingSpendingBudgets, unresolvedSpendingGate } from "./spending-limits";
-import { Prisma } from "./store/sql";
+import { putSpendingBudget, readSpendingBudgets } from "./spending-limit-store";
+import {
+  fundingSpendingBudgets,
+  projectSpendingBudget,
+  unresolvedSpendingGate,
+} from "./spending-limits";
+import { Prisma } from "./store/host-sql";
 
 const actor = { id: "owner", memberships: [{ projectId: "project", role: "owner" as const }] };
 const projectPublicId = "prj_abcdefghijklmnopqrstuvwx";
+
+test.each(["project creation", "budget command"] as const)(
+  "%s adopts a fresh ledger before budget access while pure reads remain unable to adopt",
+  async (kind) => {
+    const f = await fixture();
+    const scopes = [{ kind: "group" as const, namespace: "test", group: "project" }];
+    const run = <T>(body: (tx: Prisma.TransactionClient) => Promise<T>, readOnly = false) =>
+      f.client().$transaction(async (tx) => {
+        if (readOnly) await tx.$executeRaw`SET TRANSACTION READ ONLY`;
+        await tx.$executeRaw(Prisma.sql`SET LOCAL search_path TO ${Prisma.raw(f.schema)}`);
+        return body(tx);
+      });
+    try {
+      // A migration-only database has none of the Store fixture's adoption metadata.
+      await run(
+        (tx) =>
+          tx.$executeRaw`DELETE FROM metering_metadata WHERE key IN (${timestampContractKey},'bisibility.transport_fence_audit')`,
+      );
+      await expect(
+        run((tx) => readSpendingBudgets(tx, "test", scopes, "read"), true),
+      ).rejects.toThrow("read path requires prior UTC write adoption");
+      expect(
+        await run(
+          (tx) =>
+            tx.$queryRaw`SELECT value FROM metering_metadata WHERE key=${timestampContractKey}`,
+        ),
+      ).toEqual([]);
+      await run(async (tx) => {
+        if (kind === "project creation") await ensureProjectSpendingBudget(tx, "test", "project");
+        else await putSpendingBudget(tx, projectSpendingBudget("test", "project", "100", 1));
+      });
+      const budgets = await f.store.listBudgets("test");
+      expect(budgets).toHaveLength(1);
+      expect(budgets[0]).toMatchObject({ id: "project:project:monthly", version: 1 });
+      await run((tx) => ensureProjectSpendingBudget(tx, "test", "project"));
+      expect(await f.store.listBudgets("test")).toEqual(budgets);
+      expect(await run((tx) => readSpendingBudgets(tx, "test", scopes, "read"), true)).toEqual(
+        budgets,
+      );
+    } finally {
+      await f.close();
+    }
+  },
+);
 
 test("project cap commands persist alongside both funding budgets on initialized projects", async () => {
   const f = await paidFixture();

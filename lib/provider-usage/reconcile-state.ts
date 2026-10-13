@@ -1,5 +1,5 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { Prisma as SQL } from "@/lib/metering/store/sql";
+import { Prisma as SQL } from "@/lib/metering/store/host-sql";
 
 // Both health and uncertainty gates read the final receipt, never a business projection.
 export const unknownAccounting = SQL.sql`(o.state IN ('pending','dispatch_intended') OR

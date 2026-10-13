@@ -1,10 +1,17 @@
-import { projectTestBudget, usageReadFixture } from "@/lib/metering/read.test-fixture";
+import {
+  adoptedTimestampQuery,
+  projectTestBudget,
+  usageReadFixture,
+  utcTimestampControl,
+} from "@/lib/metering/read.test-fixture";
 import { seedTestUsage } from "@/lib/metering/usage.test-fixture";
 import { ownAllocationTag } from "@/lib/provider-usage/credential-version";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    $executeRaw: vi.fn(),
+    $queryRawUnsafe: vi.fn(),
     $queryRaw: vi.fn(),
     project: { findUnique: vi.fn() },
     providerConnection: { findFirst: vi.fn() },
@@ -20,6 +27,8 @@ import { preflightProviderBudget } from "./paid-call-budget";
 let store: Awaited<ReturnType<typeof usageReadFixture>>;
 beforeEach(async () => {
   vi.clearAllMocks();
+  mocks.prisma.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
+  mocks.prisma.$executeRaw.mockImplementation(utcTimestampControl);
   store = await usageReadFixture();
   mocks.prisma.$queryRaw.mockImplementation(store.query);
   await store.budget(projectTestBudget(10000));

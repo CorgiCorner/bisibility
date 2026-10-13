@@ -6,6 +6,7 @@ import {
   ActivityList,
   ConnectionOkBanner,
   CredentialFields,
+  useConnectionTestMessage,
 } from "@/components/integrations/ConnectDrawerControls";
 import { ConnectDrawerFooter } from "@/components/integrations/ConnectDrawerFooter";
 import { ConnectDrawerOauth } from "@/components/integrations/ConnectDrawerOauth";
@@ -24,7 +25,6 @@ import {
   providerAuthMode,
   providerCredentialFields,
   providerMode,
-  testSuccessPresentation,
 } from "@/components/integrations/provider-auth";
 import {
   credentialFieldsSignature,
@@ -33,6 +33,7 @@ import {
 import { ConnectionRatePanel } from "@/components/provider-management/ConnectionRatePanel";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Sheet } from "@/components/ui/Sheet";
+import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type {
   IntegrationProviderData,
@@ -77,30 +78,13 @@ export function ConnectDrawer({
   searchSyncPlan,
 }: Readonly<ConnectDrawerProps>) {
   const t = useTranslations("projectIntegrations.drawer");
+  const { showToast } = useToast();
   const [notice, setNotice] = useState<Notice | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [testedCredentialSignature, setTestedCredentialSignature] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<ProviderTestResult | null>(null);
   const [testState, setTestState] = useState<"idle" | "ok" | "testing">("idle");
-  const successPresentation = testSuccessPresentation(provider.id, testResult);
-  const successMessage =
-    successPresentation.kind === "verified"
-      ? t("connectionVerified")
-      : successPresentation.kind === "application_connection"
-        ? t("connectionVerifiedWithDetail", { detail: successPresentation.message ?? "" })
-        : (successPresentation.message ?? "");
-  const testSuccessMessage =
-    successPresentation.balance?.kind === "currency"
-      ? t("testResultBalance", {
-          balance: successPresentation.balance.value,
-          message: successMessage,
-        })
-      : successPresentation.balance?.kind === "searches"
-        ? t("testResultSearches", {
-            count: successPresentation.balance.value,
-            message: successMessage,
-          })
-        : successMessage;
+  const testSuccessMessage = useConnectionTestMessage(provider.id, testResult);
   const { readOnly } = useProjectWriteMode();
   const formId = `connect-${provider.id}`;
   const mode = providerMode(provider);
@@ -182,6 +166,12 @@ export function ConnectDrawer({
       setTestedCredentialSignature(null);
       setTestResult(null);
       setTestState("idle");
+      showToast(
+        t(provider.kind === "analytics" ? "connectionSavedTraffic" : "connectionSaved", {
+          provider: provider.name,
+        }),
+        { severity: "success" },
+      );
       onClose();
       return null;
     }),
@@ -276,7 +266,12 @@ export function ConnectDrawer({
             </>
           )}
           {requiresSuccessfulTest && hasCurrentSuccessfulTest && testState === "ok" ? (
-            <ConnectionOkBanner message={testSuccessMessage} />
+            <ConnectionOkBanner
+              message={testSuccessMessage}
+              detail={t("testPassedUnsavedMessage", {
+                action: isManage ? t("saveChanges") : t("connectProvider"),
+              })}
+            />
           ) : null}
         </form>
         {/* Each rate saves through its own form, which cannot sit inside the connection form. */}

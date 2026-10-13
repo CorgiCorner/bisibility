@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
+import { Prisma } from "./host-sql";
 import { createPostgresStore } from "./index";
-import { Prisma } from "./sql";
 import { bound, command, receipt, request } from "./test-data";
 import { fixture } from "./test-fixture";
 

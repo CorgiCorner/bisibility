@@ -6,7 +6,11 @@ import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
-import { projectTestBudget } from "@/lib/metering/read.test-fixture";
+import {
+  adoptedTimestampQuery,
+  projectTestBudget,
+  utcTimestampControl,
+} from "@/lib/metering/read.test-fixture";
 import { encode } from "@/lib/metering/store/codec";
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { type byokTestEvidence, testOwnAdmission } from "@/lib/provider-usage/byok-test-evidence";
@@ -25,6 +29,8 @@ const mocks = vi.hoisted(() => ({
     meteringUsageEvidence: undefined as unknown as ReturnType<
       typeof byokTestEvidence
     >["meteringUsageEvidence"],
+    $executeRaw: vi.fn(),
+    $queryRawUnsafe: vi.fn(),
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     project: { findUnique: vi.fn() },
@@ -236,7 +242,9 @@ describe("paid provider lookup", () => {
         target: "example.com",
       }).catch((error: unknown) => error);
       invalidWindow?.mockRestore();
-      expect(failure).toBeInstanceOf(BacklinksHistoryEvidenceError);
+      expect(failure, failure instanceof Error ? failure.stack : undefined).toBeInstanceOf(
+        BacklinksHistoryEvidenceError,
+      );
       expect(failure).toMatchObject({
         knownSummaryCostCents: 1.2,
         summary: { backlinksTotal: 12 },
@@ -332,6 +340,8 @@ describe("paid provider lookup", () => {
     expect(() => deploymentEstimate(1000000000000, 6)).toThrow(RangeError);
   });
   beforeEach(() => {
+    mocks.prisma.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
+    mocks.prisma.$executeRaw.mockImplementation(utcTimestampControl);
     vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
     const fixture = byokTestJournal("dataforseo");
     mocks.prisma.meteringUsageEvidence = fixture.table;

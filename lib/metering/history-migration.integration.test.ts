@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import { historicalOperation } from "./history-mapping";
-import { runHistoricalImport, verifyHistoricalImport } from "./history-migration";
 import { source } from "./history-test-data";
-import { importHistoricalEvidence } from "./store/history";
-import { Prisma, transactions } from "./store/sql";
+import { runHistoricalImport, verifyHistoricalImport } from "./host-history-migration";
+import { importHistoricalEvidence } from "./store/host-history";
+import { Prisma, transactions } from "./store/host-sql";
 import { fixture } from "./store/test-fixture";
 
 test("bounded migration translates namespaced references, resumes and verifies all historical months", async () => {

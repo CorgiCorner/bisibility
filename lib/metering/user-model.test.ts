@@ -1,6 +1,7 @@
 import type { BudgetStatus } from "@usagekit/core";
+import { headerStatusFromBudgets } from "@usagekit/views";
 import { describe, expect, it } from "vitest";
-import { projectBudgetRow } from "./user-model";
+import { projectBudgetFiguresKnown, projectBudgetRow } from "./user-model";
 
 const budget: BudgetStatus = {
   budget: {
@@ -24,7 +25,72 @@ const budget: BudgetStatus = {
   remaining: { value: -6000n, scale: 4, unit: "cents" },
 };
 
+const unusedProjectBudget: BudgetStatus = {
+  ...budget,
+  budget: {
+    ...budget.budget,
+    surface: "any",
+    unit: "budget_cents",
+    limit: { value: 50000000n, scale: 4, unit: "budget_cents" },
+    hardLimit: undefined,
+    onExceed: "block",
+  },
+  used: { value: 0n, scale: 4, unit: "budget_cents" },
+  reserved: { value: 0n, scale: 4, unit: "budget_cents" },
+  remaining: { value: 50000000n, scale: 4, unit: "budget_cents" },
+};
+
 describe("project Meter display boundary", () => {
+  it("shows an authoritative unused project cap in both the card and header", () => {
+    const known = projectBudgetFiguresKnown(unusedProjectBudget, [], "owner", true);
+    expect(known).toBe(true);
+    const row = projectBudgetRow(unusedProjectBudget, null, known);
+    expect(row).toMatchObject({
+      used: { text: "0" },
+      reserved: { text: "0" },
+      remaining: { text: "5000" },
+      level: "ok",
+    });
+    expect(
+      headerStatusFromBudgets({ state: "ok", rows: row ? [row] : [], problem: null }),
+    ).toMatchObject({
+      hidden: 0,
+      bounds: [{ remaining: { text: "5000" }, level: "ok" }],
+    });
+  });
+  it("requires a complete epoch read to show an unused project cap", () => {
+    expect(projectBudgetFiguresKnown(unusedProjectBudget, [], "owner", false)).toBe(false);
+  });
+  it.each([
+    { used: null },
+    { reserved: null },
+    { used: { value: 1n, scale: 4, unit: "budget_cents" } },
+    { reserved: { value: 1n, scale: 4, unit: "budget_cents" } },
+    { used: { value: 0n, scale: 4, unit: "cents" } },
+    { reserved: { value: 0n, scale: 4, unit: "cents" } },
+    { redacted: true as const },
+  ])("keeps missing, nonzero or redacted counters unknown (case %#)", (change) => {
+    expect(
+      projectBudgetFiguresKnown({ ...unusedProjectBudget, ...change }, [], "owner", true),
+    ).toBe(false);
+  });
+  it("keeps unobserved provider usage and connection allocations unknown", () => {
+    expect(projectBudgetFiguresKnown(budget, [], "owner", true)).toBe(false);
+    expect(
+      projectBudgetFiguresKnown(
+        {
+          ...unusedProjectBudget,
+          budget: {
+            ...unusedProjectBudget.budget,
+            scope: { kind: "connection", namespace: "n", connection: "private" },
+          },
+        },
+        [],
+        "owner",
+        true,
+      ),
+    ).toBe(false);
+  });
   it("preserves negative budget remainder and distinguishes warning from hard limit", () => {
     expect(projectBudgetRow(budget, "prc_public", true)).toMatchObject({
       kind: "group",

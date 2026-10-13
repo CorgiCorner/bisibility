@@ -32,6 +32,11 @@ const actions = {
   updateProviderSettings: vi.fn(async () => undefined),
 } satisfies ProviderActionHandlers;
 
+const feedback = vi.hoisted(() => ({ toast: vi.fn() }));
+vi.mock("@/components/ui/toast-context", () => ({
+  useToast: () => ({ showToast: feedback.toast }),
+}));
+
 function connectableDataForSeo(): IntegrationProviderData {
   const provider = integrationCategories[0].providers[0];
 
@@ -459,6 +464,38 @@ describe("ConnectDrawer", () => {
         credentials: { apiKey: "stats-token", login: "example.com" },
         providerId: "plausible",
       }),
+    );
+  });
+
+  it("explains why saving is disabled before a successful test", async () => {
+    renderDrawer(connectablePlausible());
+    const save = screen.getByRole("button", { name: "Connect provider" });
+    expect(save).toBeDisabled();
+    if (!save.parentElement) throw new Error("Expected the disabled-button wrapper");
+    await userEvent.hover(save.parentElement);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Connection test required");
+  });
+
+  it("distinguishes tested credentials from a saved analytics connection and confirms saving", async () => {
+    actions.testProviderConnection.mockResolvedValueOnce({
+      message: "Connected · example.com.",
+      ok: true,
+    });
+    const { onClose } = renderDrawer(connectablePlausible());
+    fireEvent.change(screen.getByLabelText("Site domain"), { target: { value: "example.com" } });
+    fireEvent.change(screen.getByLabelText("API token"), { target: { value: "stats-token" } });
+    fireEvent.click(screen.getByRole("button", { name: "Test connection" }));
+    expect(
+      await screen.findByText("Test passed. Click Connect provider to save the connection."),
+    ).toBeVisible();
+    expect(actions.connectProvider).not.toHaveBeenCalled();
+    expect(feedback.toast).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Connect provider" }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(feedback.toast).toHaveBeenCalledWith(
+      "Plausible Analytics connection saved. Traffic sync is queued.",
+      { severity: "success" },
     );
   });
 

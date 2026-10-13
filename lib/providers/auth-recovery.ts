@@ -5,6 +5,8 @@ import { lockProjectForProviderMutation } from "@/lib/provider-allocations/proje
 import { resolveProviderCredentialsWithOverrides } from "@/lib/providers/credentials";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import type { TestProviderConnectionInput } from "@/lib/schemas/provider";
+import { firstSyncIntentOnConnect } from "@/lib/traffic/first-sync-intent-state";
+import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
 
 export async function credentialsForProviderTest(
   projectId: string,
@@ -50,11 +52,18 @@ export async function restoreProviderAfterSuccessfulTest(input: {
     });
     if (current?.status !== "needs_reauth") return { count: 0 };
     if (current.credentialSource === "hosted") return { count: 0 };
+    const syncIntent = firstSyncIntentOnConnect(
+      current,
+      { ...current, status: "connected" },
+      new Date(),
+    );
     const result = await tx.providerConnection.updateMany({
-      data: { status: "connected" },
+      data: { status: "connected", ...syncIntent },
       where: { id: current.id, status: "needs_reauth" },
     });
-    return result;
+    return { ...result, shouldWake: result.count > 0 && "firstSyncRequestedAt" in syncIntent };
   });
+  if ("shouldWake" in restored && restored.shouldWake)
+    void publishWorkerIntent("traffic_first_sync").catch(() => undefined);
   return restored.count > 0;
 }

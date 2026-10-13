@@ -5,7 +5,7 @@ import { historicalOperation } from "./history-mapping";
 import { source } from "./history-test-data";
 import type { HistoricalIdentity, LegacyUsageSource } from "./history-types";
 import { meteringNamespace } from "./runtime";
-import { importHistoricalEvidence } from "./store/history";
+import { importHistoricalEvidence } from "./store/host-history";
 
 /** Owned fixtures retain imported evidence even when their project is deleted. */
 export async function seedCanonicalUsage(
@@ -58,7 +58,7 @@ export async function correctCanonicalUsage(
   changes: Partial<LegacyUsageSource>,
 ) {
   const { appendReceipt } = await import("./store/records");
-  const { createSql } = await import("./store/sql");
+  const { createSql } = await import("./store/host-sql");
   await client.$transaction(async (tx) => {
     const [row] = await tx.$queryRaw<
       {

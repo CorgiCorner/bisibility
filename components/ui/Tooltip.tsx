@@ -40,6 +40,7 @@ export type TooltipPlacement =
 export type TooltipProps = {
   children: ReactNode;
   content: ReactNode;
+  disabled?: boolean;
   placement?: TooltipPlacement;
   arrow?: boolean;
   interactive?: boolean;
@@ -81,10 +82,12 @@ function TooltipContent({
   interactive = false,
   semantics = "label",
   wrapperClassName,
+  disabled = false,
 }: Readonly<TooltipProps>) {
   const { beginClose, beginOpen } = useTooltipContext();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
-  const [open, setOpen] = useState(false);
+  const [requestedOpen, setOpen] = useState(false);
+  const open = requestedOpen && !disabled;
   const [warmCycle, setWarmCycle] = useState(false);
 
   const isDescription = semantics === "description";
@@ -174,7 +177,9 @@ function TooltipContent({
 
   if (isDescription) {
     childElement = cloneElement(childElement as ReactElement<Record<string, unknown>>, {
-      "aria-describedby": [childProps["aria-describedby"], descriptionId].filter(Boolean).join(" "),
+      "aria-describedby": disabled
+        ? childProps["aria-describedby"]
+        : [childProps["aria-describedby"], descriptionId].filter(Boolean).join(" "),
       "aria-label": childProps["aria-label"],
       "aria-labelledby": childProps["aria-labelledby"],
     });
@@ -238,7 +243,7 @@ function TooltipContent({
           </Primitive.TooltipContent>
         </Primitive.TooltipPortal>
       </Primitive.Tooltip>
-      {isDescription ? (
+      {isDescription && !disabled ? (
         <span id={descriptionId} style={visuallyHidden}>
           {content}
         </span>

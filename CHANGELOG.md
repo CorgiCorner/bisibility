@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.32.0] - 2026-10-13
+
+### Changed
+
+- **Breaking:** Usage history storage has changed. Stop the old app and worker, check existing usage dates, and follow the upgrade guide before restarting.
+
+### Fixed
+
+- Spending limits now show project and provider names and retain confirmed zero usage and reservations.
+
+- Clarified connection testing and saving, refreshed fallback lists and removed extra empty-state borders, and cleared outdated sync errors after reconnecting.
+
+- Improved inactive-account sign-in guidance, temporary session recovery and error-page styling when app styles cannot load.
+
+- Fixed project creation on fresh databases by initializing the checked usage ledger before budget writes.
+
 ## [0.31.0] - 2026-10-12
 
 ### Changed

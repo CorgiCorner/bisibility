@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { binding, connection, legacy, mount, reply } from "./project-chain-fixtures";
+import { ProjectSerpChain } from "./ProjectSerpChain";
+import { binding, connection, legacy, mount, providers, reply } from "./project-chain-fixtures";
 
 const host = vi.hoisted(() => ({
   readOnly: false,
@@ -42,6 +43,42 @@ beforeEach(() => {
 });
 
 describe("project SERP chain adoption", () => {
+  it.each(["disconnect", "pause"])(
+    "refreshes the fallback after a provider card %s without Reload",
+    async (change) => {
+      const projectId = `prj_chain_card_${change}`;
+      const view = mount(projectId);
+      await screen.findByRole("button", { name: "Pause: DataForSEO" });
+      host.read.mockResolvedValue(
+        reply(
+          change === "disconnect"
+            ? [connection(1)]
+            : [{ ...connection(0), enabled: false }, connection(1)],
+          "b".repeat(64),
+        ),
+      );
+      const updated = providers.map((provider, index) =>
+        index === 0
+          ? {
+              ...provider,
+              status: change === "disconnect" ? ("ready" as const) : provider.status,
+              enabled: false,
+              connectionUpdatedAt: "2026-10-13T10:00:00.000Z",
+            }
+          : provider,
+      );
+      view.rerender(
+        <ProjectSerpChain projectId={projectId} providers={updated} canManageProviders />,
+      );
+      await waitFor(() => expect(host.read).toHaveBeenCalledTimes(2));
+      await waitFor(() => {
+        expect(screen.queryByRole("button", { name: "Pause: DataForSEO" })).toBeNull();
+        if (change === "disconnect") expect(screen.getAllByRole("listitem")).toHaveLength(1);
+        else expect(screen.getByRole("button", { name: "Activate: DataForSEO" })).toBeVisible();
+      });
+      expect(host.execute).not.toHaveBeenCalled();
+    },
+  );
   it("fences writes while the project is in a migration hold", async () => {
     host.readOnly = true;
     host.binding.mockImplementation(async (id: string) => ({ ...binding(id), canManage: false }));
@@ -169,6 +206,20 @@ describe("project SERP chain adoption", () => {
     expect(host.execute).not.toHaveBeenCalled();
     expect(legacy.testProviderConnection).not.toHaveBeenCalled();
     expect(legacy.updateProviderSettings).not.toHaveBeenCalled();
+  });
+
+  it("uses the same empty surface after Reload removes the final provider", async () => {
+    const view = mount("prj_chain_last_removed");
+    fireEvent.click(await screen.findByRole("button", { name: "Reload order" }));
+    await waitFor(() => expect(host.read).toHaveBeenCalledTimes(2));
+    host.read.mockResolvedValue(reply([], "b".repeat(64)));
+    fireEvent.click(screen.getByRole("button", { name: "Reload order" }));
+    expect(
+      await screen.findByText("Connect a SERP provider above to configure fallback order."),
+    ).toBeVisible();
+    expect(view.container.querySelector("ol")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Save fallback order" })).toBeNull();
+    expect(screen.getAllByRole("status")).toHaveLength(1);
   });
 
   it("keeps a failed Reload draft, then rebases explicitly to fresh row revisions", async () => {

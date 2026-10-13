@@ -1,9 +1,9 @@
 import { expect, test, vi } from "vitest";
-import { runHistoricalImport, verifyHistoricalImport } from "./history-migration";
 import { source } from "./history-test-data";
+import { runHistoricalImport, verifyHistoricalImport } from "./host-history-migration";
 import { disposablePostgres } from "./store/disposable-postgres-test";
-import { importHistoricalEvidence } from "./store/history";
-import { Prisma, transactions } from "./store/sql";
+import { importHistoricalEvidence } from "./store/host-history";
+import { Prisma, transactions } from "./store/host-sql";
 import { command, receipt, request } from "./store/test-data";
 import { fixture } from "./store/test-fixture";
 

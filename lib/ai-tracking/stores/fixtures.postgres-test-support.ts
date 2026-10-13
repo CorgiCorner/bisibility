@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { makePublicId } from "@/lib/db/public-id-resources";
 import { PrismaClient } from "@/lib/generated/prisma/client";
 import { ensureProjectSpendingBudget } from "@/lib/metering/project-budget-bootstrap";
+import { createPostgresStore } from "@/lib/metering/store";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Client } from "pg";
 
@@ -48,6 +49,12 @@ export async function isolatedTrackingDatabase() {
         { schema },
       ),
     });
+    try {
+      await createPostgresStore({ prisma: client, schema, clock: { now: () => new Date() } });
+    } catch (error) {
+      await client.$disconnect();
+      throw error;
+    }
     return {
       client,
       schema,

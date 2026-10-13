@@ -2,6 +2,7 @@ import "server-only";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { prisma } from "@/lib/db/prisma";
+import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import type { AccessContext } from "@usagekit/core";
 import type { BudgetRow } from "@usagekit/views";
@@ -127,6 +128,16 @@ const projectBudgetState = perRequestCache(async (projectRef: string) => {
           result.connection?.publicId ?? null,
           projectBudgetFiguresKnown(status, operations, project.ownerId, completeProvenance),
           result.connection?.provider ?? null,
+          undefined,
+          result.connection
+            ? [
+                PROVIDER_CATALOG.find((p) => p.id === result.connection?.provider)?.label ??
+                  result.connection.provider,
+                project.name,
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            : project.name,
         );
         if (row) budgets.push(row);
       }
@@ -148,6 +159,13 @@ const projectBudgetState = perRequestCache(async (projectRef: string) => {
           figuresKnown,
           result.binding.provider,
           result.binding,
+          [
+            PROVIDER_CATALOG.find((p) => p.id === result.binding.provider)?.label ??
+              result.binding.provider,
+            project.name,
+          ]
+            .filter(Boolean)
+            .join(" · "),
         );
         if (row) budgets.push(row);
       }

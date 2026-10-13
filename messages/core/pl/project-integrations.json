@@ -58,7 +58,10 @@
       "credentialClientSecretPlaceholder": "Klucz tajny klienta OAuth",
       "credentialSavedSecret": "Zapisano i zaszyfrowano. Zostaw puste, aby zachować bieżącą wartość, lub wpisz nową, aby ją zastąpić.",
       "costEstimate": "Szacowany koszt sprawdzenia (USD)",
-      "costHelp": "Opcjonalny koszt jednego sprawdzenia pozycji w USD przy ustawionej głębokości – w DataForSEO Live Top 10 to około 0,002, a Top 100 około 0,0155."
+      "costHelp": "Opcjonalny koszt jednego sprawdzenia pozycji w USD przy ustawionej głębokości – w DataForSEO Live Top 10 to około 0,002, a Top 100 około 0,0155.",
+      "testPassedUnsavedMessage": "Test zakończony pomyślnie. Kliknij {action}, aby zapisać połączenie.",
+      "connectionSaved": "Połączenie z {provider} zostało zapisane.",
+      "connectionSavedTraffic": "Połączenie z {provider} zostało zapisane. Synchronizacja ruchu czeka w kolejce."
     },
     "oauth": {
       "loadPropertiesError": "Nie udało się wczytać usług. Spróbuj ponownie lub połącz konto ponownie.",

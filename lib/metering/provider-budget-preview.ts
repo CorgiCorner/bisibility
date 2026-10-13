@@ -7,7 +7,7 @@ import { formatQuantity } from "@usagekit/core";
 import { platformAllocationTag } from "./paid-quote";
 import { meteringNamespace } from "./runtime";
 import { currentBudgets, status } from "./store/budgets";
-import { createSql } from "./store/sql";
+import { createSql } from "./store/host-sql";
 
 type Client = Pick<Prisma.TransactionClient, "$queryRaw" | "project" | "providerConnection">;
 /** Advisory only: an allowed preview never grants a paid transport capability. */

@@ -1,3 +1,4 @@
+import { adoptedTimestampQuery } from "@/lib/metering/read.test-fixture";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
 import { meteringNamespace } from "../metering/runtime";
@@ -41,6 +42,7 @@ const mocks = vi.hoisted(() => ({
   resolveExpectedUrlForKeyword: vi.fn(),
   prisma: {
     $executeRaw: vi.fn(),
+    $queryRawUnsafe: vi.fn(),
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
@@ -111,6 +113,7 @@ function runningInput(
 describe("rank-check activities", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
     mocks.nativeCosts.mockResolvedValue(undefined);
     mocks.prisma.$executeRaw.mockResolvedValue(1);
     mocks.prisma.$queryRaw.mockResolvedValue([]);
@@ -640,6 +643,7 @@ describe("rank-check activities", () => {
 
   it("audits the running transition in the same transaction", async () => {
     const tx = {
+      $queryRawUnsafe: adoptedTimestampQuery,
       $queryRaw: vi.fn(),
       keyword: mocks.prisma.keyword,
       providerConnection: mocks.prisma.providerConnection,
@@ -695,6 +699,7 @@ describe("rank-check activities", () => {
     vi.setSystemTime(new Date("2026-01-01T06:01:00.000Z"));
     const estimatedCostCents = { toString: () => "0.75" };
     const tx = {
+      $queryRawUnsafe: adoptedTimestampQuery,
       $queryRaw: vi.fn(),
       auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
       rankCheck: {

@@ -1,3 +1,4 @@
+import { loadWorkspaceBudgetSummary } from "@/lib/queries/workspace-budget-summary";
 import type { Budget, Meter } from "@usagekit/core";
 import { createMeter } from "@usagekit/meter";
 import { createManualClock, createMemoryStore } from "@usagekit/store";
@@ -58,9 +59,9 @@ const budgets: Budget[] = [
   },
 ];
 
-function fixture(additionalBudgets: Budget[] = []) {
+function fixture(additionalBudgets: Budget[] = [], baseBudgets: Budget[] = budgets) {
   const clock = createManualClock(occurredAt);
-  const store = createMemoryStore({ clock, budgets: [...budgets, ...additionalBudgets] });
+  const store = createMemoryStore({ clock, budgets: [...baseBudgets, ...additionalBudgets] });
   const meter = createMeter({
     store,
     clock,
@@ -159,7 +160,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.access.mockResolvedValue({
     actor: { id: "owner", memberships: [{ projectId: "project", role: "owner" }] },
-    project: { id: "project", ownerId: "owner" },
+    project: { id: "project", ownerId: "owner", name: "webscraping" },
   });
   mocks.connections.mockResolvedValue([
     { id: "connection", publicId: "prc_public", provider: "dataforseo" },
@@ -170,6 +171,37 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("verified project Meter queries", () => {
+  it("shows zero spending-cap counters and a full header remainder before the first operation", async () => {
+    fixture(
+      [],
+      [
+        {
+          ...budgets[0],
+          unit: "budget_cents",
+          limit: { unit: "budget_cents", scale: 4, value: 50000000n },
+        },
+      ],
+    );
+    const data = await getProjectMeteringUsage("prj_public");
+    expect(data).toMatchObject({
+      status: "available",
+      paidWorkBlocked: false,
+      detail: { state: "empty", rows: [] },
+      budgets: [
+        {
+          used: { text: "0" },
+          reserved: { text: "0" },
+          remaining: { text: "5000" },
+          level: "ok",
+        },
+      ],
+    });
+    expect(await loadWorkspaceBudgetSummary("prj_public")).toMatchObject({
+      eligible: true,
+      paidWorkBlocked: false,
+      status: { hidden: 0, bounds: [{ remaining: { text: "5000" }, level: "ok" }] },
+    });
+  });
   it("runs real scoped Meter reads, omits same-owner other-project usage, and includes source-specific limits once", async () => {
     const f = fixture();
     await record(f.meter, "project-op", "project");
@@ -288,7 +320,8 @@ describe("verified project Meter queries", () => {
     ]);
     const data = await getProjectMeteringUsage("prj_public");
     expect(data.summary.state).toBe("ok");
-    expect(data.budgets.find((budget) => budget.target === "prc_empty")).toMatchObject({
+    expect(data.budgets.find((budget) => budget.id.startsWith("prc_empty:"))).toMatchObject({
+      target: "SerpApi · webscraping",
       used: "unavailable",
       reserved: "unavailable",
       remaining: "unavailable",
@@ -300,7 +333,7 @@ describe("verified project Meter queries", () => {
       fixture();
       mocks.access.mockResolvedValue({
         actor: { id: "member", memberships: [{ projectId: "project", role }] },
-        project: { id: "project", ownerId: "owner" },
+        project: { id: "project", ownerId: "owner", name: "webscraping" },
       });
       expect(await getProjectMeteringUsage("prj_public")).toMatchObject({
         status: "restricted",
@@ -369,7 +402,7 @@ it.each(["restricted admin", "Meter failure", "21st connection"])(
     if (scenario === "restricted admin")
       mocks.access.mockResolvedValue({
         actor: { id: "admin", memberships: [{ projectId: "project", role: "admin" }] },
-        project: { id: "project", ownerId: "owner" },
+        project: { id: "project", ownerId: "owner", name: "webscraping" },
       });
     if (scenario === "Meter failure")
       mocks.runtime.mockRejectedValue(new Error("private failure detail"));
@@ -428,7 +461,7 @@ it.each(["member", "owner"])(
     if (role === "member")
       mocks.access.mockResolvedValue({
         actor: { id: "member", memberships: [{ projectId: "project", role: "member" }] },
-        project: { id: "project", ownerId: "owner" },
+        project: { id: "project", ownerId: "owner", name: "webscraping" },
       });
     const reads = vi.spyOn(f.meter, "listOperations");
     if (role === "owner")
@@ -465,7 +498,7 @@ it.each(["owner", "member"])(
     );
     mocks.access.mockResolvedValue({
       actor: { id: role, memberships: [{ projectId: "project", role }] },
-      project: { id: "project", ownerId: "owner" },
+      project: { id: "project", ownerId: "owner", name: "webscraping" },
     });
     expect(await getProjectMeteringUsage("prj_public")).toMatchObject({
       paidWorkBlocked: null,

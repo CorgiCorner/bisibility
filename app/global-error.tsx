@@ -1,5 +1,7 @@
 "use client";
 
+import { emergencyRecoveryStyles } from "@/components/i18n/EmergencyRecovery";
+import { Button } from "@/components/ui/Button";
 import { type AppLocale, DEFAULT_LOCALE, htmlLanguage } from "@/i18n/config";
 import { EmergencyMessagesProvider } from "@/i18n/EmergencyMessagesProvider";
 import type { EmergencyCatalogs } from "@/i18n/emergency-locale";
@@ -20,17 +22,19 @@ function GlobalErrorContent() {
   const t = useTranslations("shared.globalError");
 
   return (
-    <main className="grid min-h-screen place-items-center bg-bg px-6 text-center">
-      <div className="max-w-md">
-        <h1 className="font-sans text-2xl font-semibold text-fg">{t("title")}</h1>
-        <p className="mt-3 text-sm leading-6 text-fg-muted">{t("description")}</p>
-        <button
-          className="mt-6 rounded-control bg-accent-solid px-4 py-2 text-sm font-semibold text-accent-contrast"
-          onClick={() => window.location.reload()}
-          type="button"
-        >
-          {t("retry")}
-        </button>
+    <main style={emergencyRecoveryStyles.main}>
+      <div style={emergencyRecoveryStyles.content}>
+        <h1 style={emergencyRecoveryStyles.title}>{t("title")}</h1>
+        <p style={emergencyRecoveryStyles.description}>{t("description")}</p>
+        <div style={emergencyRecoveryStyles.actions}>
+          <Button
+            style={{ ...emergencyRecoveryStyles.button, ...emergencyRecoveryStyles.primary }}
+            onClick={() => window.location.reload()}
+            type="button"
+          >
+            {t("retry")}
+          </Button>
+        </div>
       </div>
     </main>
   );
@@ -55,7 +59,7 @@ export function GlobalErrorBoundaryContent({
 export default function GlobalError({ error }: Readonly<GlobalErrorProps>) {
   return (
     <html lang={htmlLanguage(DEFAULT_LOCALE)}>
-      <body>
+      <body style={{ margin: 0 }}>
         <GlobalErrorBoundaryContent error={error} />
       </body>
     </html>

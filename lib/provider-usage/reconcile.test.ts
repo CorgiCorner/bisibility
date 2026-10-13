@@ -9,6 +9,27 @@ function fixture(
 ) {
   const queries: string[] = [];
   const tx = {
+    $queryRawUnsafe: vi.fn(async (text: string) => {
+      if (text.includes("FROM pg_trigger"))
+        return [
+          {
+            tables: [
+              "metering_event",
+              "metering_history_progress",
+              "metering_import",
+              "metering_operation",
+              "metering_paid_attempt_context",
+              "metering_receipt",
+            ],
+          },
+        ];
+      if (text.includes("SELECT value FROM metering_metadata"))
+        return [{ value: "utc-core-v2-fence-presence-v1" }];
+      throw new Error(`Unexpected timestamp guard query: ${text}`);
+    }),
+    $executeRawUnsafe: async () => {
+      throw new Error("Verify-only reconciliation attempted adoption");
+    },
     $queryRaw: vi.fn(async (query: { sql: string }) => {
       queries.push(query.sql);
       if (query.sql.includes("provider_cost_entries")) throw new Error("legacy ledger accessed");
@@ -59,6 +80,20 @@ it("does not stamp a successful watermark when accounting recovery fails", async
   f.tx.$queryRaw.mockRejectedValue(new Error("Store unavailable"));
   await expect(reconcileProviderUsage(f.client as never)).rejects.toThrow("Store unavailable");
   expect(f.tx.instanceSetting.upsert).not.toHaveBeenCalled();
+});
+
+it("refuses unadopted accounting without writing recovery progress or a successful watermark", async () => {
+  const f = fixture();
+  const original = f.tx.$queryRawUnsafe.getMockImplementation();
+  f.tx.$queryRawUnsafe.mockImplementation(async (text: string) =>
+    text.includes("SELECT value FROM metering_metadata") ? [] : (original?.(text) ?? []),
+  );
+  await expect(reconcileProviderUsage(f.client as never)).rejects.toThrow(
+    "requires prior UTC write adoption",
+  );
+  expect(f.tx.instanceSetting.upsert).not.toHaveBeenCalled();
+  expect(f.tx.$queryRaw).not.toHaveBeenCalled();
+  expect(f.tx.$executeRaw).toHaveBeenCalledTimes(1);
 });
 
 afterEach(() => vi.useRealTimers());

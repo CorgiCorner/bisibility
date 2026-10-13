@@ -180,6 +180,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
             emailSignInUnavailable={emailSignInUnavailable}
             enabledProviders={editableOwnerSignIn ? undefined : ENABLED_SOCIAL_PROVIDERS}
             humanVerificationRequired={isCloud}
+            initialErrorCode={capacityMiss ? null : (error ?? null)}
             legalConsentLinks={legalConsentLinks()}
             returnTo={returnTo}
           />

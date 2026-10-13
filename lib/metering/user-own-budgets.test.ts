@@ -57,7 +57,7 @@ beforeEach(async () => {
   vi.setSystemTime(now);
   mocks.auth.mockResolvedValue({
     actor: { id: "owner", memberships: [{ projectId: "private-project", role: "owner" }] },
-    project: { id: "private-project", ownerId: "owner" },
+    project: { id: "private-project", ownerId: "owner", name: "Synthetic project" },
   });
   mocks.connections.mockResolvedValue([
     { id: connection, publicId: publicConnection, provider: "dataforseo" },
@@ -106,7 +106,8 @@ describe("owner BYOK budget projection", () => {
     const data = await getProjectMeteringUsage("prj_public");
     expect(data.budgets).toMatchObject([
       expect.objectContaining({
-        target: publicConnection,
+        id: `${publicConnection}:app:cents`,
+        target: "DataForSEO · Synthetic project",
         kind: "connection",
         used: expect.objectContaining({ text: "0" }),
         limit: expect.objectContaining({ text: "100" }),

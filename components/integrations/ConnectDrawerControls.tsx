@@ -6,10 +6,11 @@ import { useProviderMetaCopy } from "@/components/integrations/provider-meta-cop
 import { Button } from "@/components/ui/Button";
 import { inputClassName } from "@/components/ui/input-styles";
 import { PasswordInput } from "@/components/ui/PasswordInput";
-import type { IntegrationProviderData } from "@/lib/integrations/types";
+import type { IntegrationProviderData, ProviderTestResult } from "@/lib/integrations/types";
 import { CheckCircleIcon as CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { useTranslations } from "next-intl";
 import type { FieldErrors, UseFormReturn } from "react-hook-form";
+import { testSuccessPresentation } from "./provider-auth";
 
 type FormProps = {
   form: UseFormReturn<ConnectFormValues>;
@@ -181,11 +182,36 @@ export function ActionNotice({ notice }: Readonly<{ notice: Notice }>) {
   );
 }
 
-export function ConnectionOkBanner({ message }: Readonly<{ message: string }>) {
+export function ConnectionOkBanner({
+  message,
+  detail,
+}: Readonly<{ message: string; detail?: string }>) {
   return (
-    <div className="flex items-center gap-2.5 rounded-control border border-green bg-bg-sunken px-3.5 py-[11px] text-[12.5px] font-medium text-green-text [background:color-mix(in_srgb,var(--green)_8%,transparent)]">
+    <div
+      role="status"
+      className="flex items-center gap-2.5 rounded-control border border-green bg-bg-sunken px-3.5 py-[11px] text-[12.5px] font-medium text-green-text [background:color-mix(in_srgb,var(--green)_8%,transparent)]"
+    >
       <CheckCircle aria-hidden size={16} weight="regular" />
-      {message}
+      <div>
+        <p className="m-0">{message}</p>
+        {detail && <p className="m-0 mt-1 text-fg-muted">{detail}</p>}
+      </div>
     </div>
   );
+}
+
+export function useConnectionTestMessage(providerId: string, result: ProviderTestResult | null) {
+  const t = useTranslations("projectIntegrations.drawer");
+  const presentation = testSuccessPresentation(providerId, result);
+  const message =
+    presentation.kind === "verified"
+      ? t("connectionVerified")
+      : presentation.kind === "application_connection"
+        ? t("connectionVerifiedWithDetail", { detail: presentation.message ?? "" })
+        : (presentation.message ?? "");
+  if (presentation.balance?.kind === "currency")
+    return t("testResultBalance", { balance: presentation.balance.value, message });
+  if (presentation.balance?.kind === "searches")
+    return t("testResultSearches", { count: presentation.balance.value, message });
+  return message;
 }

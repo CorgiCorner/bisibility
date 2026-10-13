@@ -24,8 +24,10 @@ export function firstSyncIntentOnConnect(
   before: FirstSyncConnectionState | null,
   after: FirstSyncConnectionState,
   now = new Date(),
+  refresh = false,
 ): FirstSyncIntentFields | Record<never, never> {
-  if (!isEnabledConnectedAnalytics(after) || isEnabledConnectedAnalytics(before)) return {};
+  if (!isEnabledConnectedAnalytics(after) || (isEnabledConnectedAnalytics(before) && !refresh))
+    return {};
   return {
     firstSyncFinishedAt: null,
     firstSyncRequestedAt: now,

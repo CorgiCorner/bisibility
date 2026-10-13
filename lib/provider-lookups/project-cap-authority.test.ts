@@ -3,12 +3,13 @@ import { Prisma } from "@/lib/generated/prisma/client";
 import { ensureProjectSpendingBudget } from "@/lib/metering/project-budget-bootstrap";
 import { projectBudgetCapCents } from "@/lib/metering/project-budget-read";
 import { setProjectSpendingLimit } from "@/lib/metering/project-spending-limit";
-import { usageReadFixture } from "@/lib/metering/read.test-fixture";
+import { adoptedTimestampQuery, usageReadFixture } from "@/lib/metering/read.test-fixture";
 import { getUpcomingView } from "@/lib/queries/upcoming-view";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    $queryRawUnsafe: vi.fn(),
     $queryRaw: vi.fn(),
     $executeRaw: vi.fn(),
     keyword: { findMany: vi.fn(async () => []) },
@@ -38,6 +39,7 @@ const actor = { id: "owner", memberships: [{ projectId: "project_1", role: "owne
 const request = { projectId: "project_1", surface: "app" as const, estimatedCostCents: 5 };
 beforeEach(async () => {
   vi.clearAllMocks();
+  mocks.prisma.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
   store = await usageReadFixture();
   await store.db.exec(`ALTER TABLE metering_budget ADD COLUMN scope_kind text,
     ADD COLUMN unit text, ADD COLUMN limit_value numeric, ADD COLUMN limit_scale int,

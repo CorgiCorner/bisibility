@@ -2,8 +2,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import type { OperationsPage, OperationsQuery } from "@usagekit/core";
 import { type Clock, InvalidInput } from "@usagekit/store";
 import { canonical } from "./codec";
+import { Prisma, type Sql } from "./host-sql";
 import { hydrate, type OperationRow } from "./records";
-import { Prisma, type Sql } from "./sql";
 
 type Cursor = { query: string; watermark: string; offset: number; asOf: string; expiresAt: number };
 export function operationsReader(clock: Clock, secret: string) {
@@ -27,6 +27,7 @@ export function operationsReader(clock: Clock, secret: string) {
     }
   };
   return async (sql: Sql, q: OperationsQuery): Promise<OperationsPage> => {
+    await sql.verifyTimestampContract();
     const { cursor, ...query } = q,
       identity = canonical(query);
     const [watermark] = cursor

@@ -60,6 +60,7 @@ type LoginFormProps = {
   devOtpCode: string | null;
   emailSignInUnavailable: boolean;
   enabledProviders: { github: boolean; google: boolean };
+  initialErrorCode: string | null;
   legalConsentLinks: {
     privacyHref: string | null;
     termsHref: string | null;
@@ -124,6 +125,21 @@ afterEach(() => {
 });
 
 describe("login page runtime rendering", () => {
+  it("passes the callback error code without rendering the upstream description", async () => {
+    const { props, html } = await renderLoginPage(
+      {},
+      {
+        error: ["ACCOUNT_DEACTIVATED", "PROVIDER_NOT_FOUND"],
+        error_description: "private provider diagnostic",
+        next: "/app/settings",
+      },
+    );
+
+    expect(props.initialErrorCode).toBe("ACCOUNT_DEACTIVATED");
+    expect(props.returnTo).toBe("/app/settings");
+    expect(html).not.toContain("private provider diagnostic");
+  });
+
   it.each([
     [
       "/app/prj_abcdefghijklmnopqrstuvwx/keyword-research?seed=raw%26value%3D1",

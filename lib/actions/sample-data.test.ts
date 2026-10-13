@@ -1,3 +1,4 @@
+import { adoptedTimestampQuery } from "@/lib/metering/read.test-fixture";
 import { installSampleDataset } from "@/lib/sample-data/install";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { installSampleData, removeSampleData } from "./sample-data";
@@ -11,6 +12,7 @@ const mocks = vi.hoisted(() => {
   }
   const tx = {
     $executeRaw: vi.fn(async () => 1),
+    $queryRawUnsafe: vi.fn(),
     $queryRaw: vi.fn(async () => []),
     auditLog: { create: vi.fn() },
     keyword: { create: vi.fn() },
@@ -110,6 +112,7 @@ describe("sample-data actions", () => {
   );
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.tx.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
     mockActor("member", true);
     mockInstallTransaction();
     mocks.authorize.mockReturnValue({ actorId: "user_1", role: "owner" });

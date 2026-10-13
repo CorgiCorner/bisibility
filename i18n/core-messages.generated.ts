@@ -397,6 +397,7 @@ export type CoreMessages = {
       };
       readonly rememberedWebsite: "Setting up tracking for";
       readonly status: {
+        readonly accountInactive: "Your account is inactive. Contact the instance administrator to restore access.";
         readonly codeSendFailed: "Could not send a login code. Try again.";
         readonly emailCapacity: "Email sign-in capacity is temporarily full. Try again later.";
         readonly genericError: "Something went wrong. Try again.";
@@ -406,6 +407,7 @@ export type CoreMessages = {
         readonly providerProfileUnavailable: "We could not retrieve your account from this sign-in provider. Try again.";
         readonly resendFailed: "Could not send a new code. Try again.";
         readonly resendRateLimited: "Too many requests. Please try again later.";
+        readonly sessionBlocked: "Sign-in is blocked for this account. Contact the instance administrator for help.";
         readonly verificationFailed: "Verification failed. Please try again.";
       };
       readonly tryDemo: "Try the demo";
@@ -3429,6 +3431,8 @@ export type CoreMessages = {
       readonly accountBalance: "Balance: {balance, number, ::currency/USD .0000}";
       readonly appUpdateRequired: "App update required";
       readonly connected: "Connected.";
+      readonly connectionSaved: "{provider} connection saved.";
+      readonly connectionSavedTraffic: "{provider} connection saved. Traffic sync is queued.";
       readonly connectionTestFailed: "Connection test failed";
       readonly connectionTestPassed: "Connection test passed";
       readonly connectionVerified: "Connection verified.";
@@ -3465,6 +3469,7 @@ export type CoreMessages = {
       readonly searchesRemaining: "{count, number} searches remaining";
       readonly testConnection: "Test connection";
       readonly testing: "Testing…";
+      readonly testPassedUnsavedMessage: "Test passed. Click {action} to save the connection.";
       readonly testRequiredMessage: "Test connection before saving.";
       readonly testRequiredTitle: "Connection test required";
       readonly testResultBalance: "{message} - Account balance: {balance, number, ::currency/USD .0000}";

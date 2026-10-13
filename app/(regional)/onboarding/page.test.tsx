@@ -1,4 +1,5 @@
 import { Prisma } from "@/lib/generated/prisma/client";
+import { adoptedTimestampQuery, utcTimestampControl } from "@/lib/metering/read.test-fixture";
 import { redirect } from "@/tests/next-navigation";
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -21,6 +22,8 @@ const mocks = vi.hoisted(() => ({
   listFirstCheckCandidates: vi.fn(async () => ({ candidates: [] as unknown[] })),
   completeProjectOnboarding: vi.fn(),
   prisma: {
+    $executeRaw: vi.fn(),
+    $queryRawUnsafe: vi.fn(),
     $queryRaw: vi.fn(),
     apiKey: { findFirst: vi.fn() },
     providerConnection: { findUnique: vi.fn() },
@@ -137,6 +140,7 @@ describe("OnboardingPage", () => {
         fixture.query(Array.isArray(sql) ? Prisma.sql(sql, ...values) : (sql as Prisma.Sql));
       mocks.prisma.$queryRaw.mockImplementation(query);
       const tx = {
+        $queryRawUnsafe: adoptedTimestampQuery,
         $queryRaw: query,
         $executeRaw: async (sql: Prisma.Sql) => {
           await fixture.db.query(sql.text, sql.values);
@@ -218,6 +222,8 @@ describe("OnboardingPage", () => {
   );
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
+    mocks.prisma.$executeRaw.mockImplementation(utcTimestampControl);
     mocks.explicitDeploymentDataRegionLabel.mockReturnValue(null);
     mocks.getInstanceAdminSession.mockResolvedValue(null);
     redirect.mockImplementation((href: string) => {

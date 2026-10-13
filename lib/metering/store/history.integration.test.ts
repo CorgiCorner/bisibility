@@ -4,8 +4,8 @@ import { source } from "@/lib/metering/history-test-data";
 import { input } from "@/lib/metering/paid-attempt-test-fixture";
 import { projectSpendingBudget } from "@/lib/metering/spending-limits";
 import { expect, test } from "vitest";
-import { importHistoricalEvidence } from "./history";
-import { Prisma, transactions } from "./sql";
+import { importHistoricalEvidence } from "./host-history";
+import { Prisma, transactions } from "./host-sql";
 import { fixture } from "./test-fixture";
 
 const cutover = "2026-10-10T00:00:00.000Z";

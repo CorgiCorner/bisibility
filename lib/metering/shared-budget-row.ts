@@ -7,6 +7,7 @@ export function sharedBudgetRow(
   status: BudgetStatus,
   connection: string | null,
   figuresKnown: boolean,
+  displayLabel?: string,
 ): BudgetRow | undefined {
   if (status.redacted) return undefined;
   const target = connection ?? "project";
@@ -21,7 +22,8 @@ export function sharedBudgetRow(
     },
     epoch: { ...status.epoch, epoch: status.epoch.startsAt },
   };
-  const row = budgetsViewFromStatuses([display]).rows[0];
+  const projected = budgetsViewFromStatuses([display]).rows[0];
+  const row = projected && displayLabel ? { ...projected, target: displayLabel } : projected;
   if (!row || figuresKnown) return row;
   return {
     ...row,

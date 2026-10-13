@@ -1,4 +1,5 @@
 import { createKeywordAfterDefault } from "@/lib/api/keyword-create-test-harness";
+import { adoptedTimestampQuery } from "@/lib/metering/read.test-fixture";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { completeProjectOnboarding, createProject, updateProjectDefaults } from "./project";
 
@@ -9,6 +10,7 @@ const updatedAt = new Date("2026-07-27T11:00:00.000Z");
 const mocks = vi.hoisted(() => {
   const prisma = {
     $executeRaw: vi.fn(),
+    $queryRawUnsafe: vi.fn(),
     $queryRaw: vi.fn(async () => []),
     $transaction: vi.fn(),
     keyword: { count: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
@@ -64,6 +66,7 @@ function mockActor() {
 describe("project actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
     mocks.prisma.$executeRaw.mockResolvedValue(0);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mockActor();
@@ -175,6 +178,17 @@ describe("project actions", () => {
       }),
       mocks.prisma,
     );
+  });
+
+  it("refuses budget initialization when UTC writer enforcement is missing", async () => {
+    mocks.prisma.$queryRawUnsafe.mockImplementation(async (text, ...values) =>
+      text.includes("FROM pg_trigger t") ? [] : adoptedTimestampQuery(text, ...values),
+    );
+    await expect(createProject({ domain: "example.com", name: "Example" })).rejects.toThrow(
+      "UTC writer migration is missing or disabled",
+    );
+    expect(mocks.prisma.$queryRaw).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 
   it("defaults tracking scope to country when callers omit it", async () => {

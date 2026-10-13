@@ -2,9 +2,9 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { decimalQuantity, receiptFromEntry, reserveFromEntry } from "@/lib/metering/mapping";
 import { projectAdmissionMeasurements } from "@/lib/metering/paid-measurements";
 import { canonical, effective, hash } from "@/lib/metering/store/codec";
-import { importHistoricalEvidence } from "@/lib/metering/store/history";
+import { importHistoricalEvidence } from "@/lib/metering/store/host-history";
+import { createSql, Prisma as SQL } from "@/lib/metering/store/host-sql";
 import { hydrate, operationRow } from "@/lib/metering/store/records";
-import { createSql, Prisma as SQL } from "@/lib/metering/store/sql";
 import { createTransactionMeter, readPaidOperation } from "@/lib/metering/transaction-meter";
 import { recoverOwnTransport } from "@/lib/metering/transport-own-recovery";
 import { acknowledgeOwnTransport } from "@/lib/metering/transport-own-settlement";
@@ -110,10 +110,11 @@ async function recoverOperation(
   if (original?.providerRequestId && original.providerRequestId !== proof.native)
     throw new Error("Original native queued identity conflicts");
   const [binding] = await tx.$queryRaw<
-    { correlationId: string; fenced_at: Date | null }[]
-  >`SELECT context->>'correlationId' AS "correlationId",fenced_at FROM metering_paid_attempt_context WHERE namespace=${namespace} AND operation_id=${id} AND principal=${operation.scope.principal}`;
+    { correlationId: string; transportFenced: boolean }[]
+  >`SELECT context->>'correlationId' AS "correlationId",(fenced_at IS NOT NULL) AS "transportFenced" FROM metering_paid_attempt_context WHERE namespace=${namespace} AND operation_id=${id} AND principal=${operation.scope.principal}`;
   if (binding) {
-    if (!binding.fenced_at) throw new Error("Queued acceptance has no retained transport fence");
+    if (!binding.transportFenced)
+      throw new Error("Queued acceptance has no retained transport fence");
     await recoverOwnTransport(tx, operation.scope.connection, binding.correlationId, {
       cached: false,
       failed: false,

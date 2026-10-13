@@ -10,7 +10,7 @@ import {
   persist,
   projectUsage,
 } from "@/lib/metering/store/command-state";
-import { createSql, lock } from "@/lib/metering/store/sql";
+import { createSql, lock } from "@/lib/metering/store/host-sql";
 import type { CorrectionInput, Receipt, SettleResult } from "@usagekit/core";
 import type { State } from "@usagekit/store/reference";
 import * as reference from "@usagekit/store/reference";
@@ -33,6 +33,7 @@ export async function correctComposedNativeEvidence(
   now: Date,
 ): Promise<SettleResult> {
   const sql = createSql(tx, { statements: 0, changes: 0n, rowsRead: 0 });
+  await sql.verifyTimestampContract();
   await lockOperationAccounting(sql, input);
   await lock(sql, `metering:operation:${key(input.namespace, input.operationId)}`);
   const state = newState({ now: () => now });

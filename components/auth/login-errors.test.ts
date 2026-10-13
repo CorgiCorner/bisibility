@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { type AuthErrorMessages, authErrorMessage } from "./login-errors";
+import { type AuthErrorMessages, authErrorMessage, isSessionCreationBlocked } from "./login-errors";
 
 const messages: AuthErrorMessages = {
+  accountInactive:
+    "Your account is inactive. Contact the instance administrator to restore access.",
+  sessionBlocked:
+    "Sign-in is blocked for this account. Contact the instance administrator for help.",
   emailUnavailable: "Email delivery is not configured.",
   fallback: "Something went wrong. Try again.",
   methodUnavailable: "This sign-in method is not configured.",
@@ -21,6 +25,8 @@ describe("authErrorMessage", () => {
   });
 
   it.each([
+    ["ACCOUNT_DEACTIVATED", "accountInactive"],
+    ["SESSION_CREATION_BLOCKED", "sessionBlocked"],
     ["PROVIDER_NOT_FOUND", "methodUnavailable"],
     ["USER_EMAIL_NOT_FOUND", "providerEmailUnavailable"],
     ["EMAIL_NOT_VERIFIED", "providerEmailUnverified"],
@@ -34,4 +40,19 @@ describe("authErrorMessage", () => {
       messages.fallback,
     );
   });
+});
+
+describe("isSessionCreationBlocked", () => {
+  it.each([
+    { code: "ACCOUNT_DEACTIVATED" },
+    { body: { code: "ACCOUNT_DEACTIVATED" } },
+    { code: "session_creation_blocked" },
+  ])("recognizes a blocked session after identity verification", (error) => {
+    expect(isSessionCreationBlocked(error)).toBe(true);
+  });
+
+  it.each([null, { code: "INVALID_OTP" }, { message: "provider outage details" }])(
+    "does not turn unrelated failures into account-state messages",
+    (error) => expect(isSessionCreationBlocked(error)).toBe(false),
+  );
 });

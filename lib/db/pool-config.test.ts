@@ -33,12 +33,12 @@ describe("databasePoolConfig", () => {
         {},
         "postgresql://user:secret@db/bisibility?schema=bisibility_preview_pr_446",
       ),
-    ).toEqual({
+    ).toMatchObject({
       application_name: "bisibility-ssr",
       connectionTimeoutMillis: 15_000,
       idleTimeoutMillis: 10_000,
       max: 3,
-      options: '-c search_path="bisibility_preview_pr_446"',
+      options: '-c search_path="bisibility_preview_pr_446" -c TimeZone=UTC',
     });
   });
 
@@ -81,7 +81,20 @@ describe("databaseSchemaFromUrl", () => {
 });
 
 describe("databaseConnectionConfig", () => {
-  it("keeps pg behavior unchanged when the URL has no schema", () => {
-    expect(databaseConnectionConfig("postgresql://user:secret@db/bisibility")).toEqual({});
+  it("enforces UTC for a URL without a schema", () => {
+    expect(databaseConnectionConfig("postgresql://user:secret@db/bisibility").options).toBe(
+      "-c TimeZone=UTC",
+    );
+  });
+
+  it("preserves other startup options and overrides URL timezone before pg reparses the URL", () => {
+    const url = new URL("postgresql://user:secret@db/bisibility?schema=preview");
+    url.searchParams.set("options", "-c statement_timeout=15000 -c TimeZone=Europe/Warsaw");
+    const config = databaseConnectionConfig(url.toString());
+    expect(config.options).toBe(
+      '-c statement_timeout=15000 -c TimeZone=Europe/Warsaw -c search_path="preview" -c TimeZone=UTC',
+    );
+    if (!config.connectionString) throw new Error("URL options were not canonicalized");
+    expect(new URL(config.connectionString).searchParams.get("options")).toBe(config.options);
   });
 });

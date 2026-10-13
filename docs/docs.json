@@ -448,6 +448,7 @@
               "self-hosting/temporal",
               "self-hosting/operations",
               "self-hosting/upgrades",
+              "self-hosting/store-0-32",
               "self-hosting/backup-restore",
               "guides/operations",
               "guides/migration"
