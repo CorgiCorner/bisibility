@@ -20,7 +20,7 @@ vi.mock("./runtime", () => ({ meteringNamespace: () => "test", meteringRuntime: 
 import { readMeteringAdmin } from "./admin-data";
 import { receiptFromEntry, reserveFromEntry, type UsageEntry } from "./mapping";
 import { fundingSpendingBudgets } from "./spending-limits";
-import { type Prisma, transactions } from "./store/sql";
+import { type Prisma, transactions } from "./store/host-sql";
 import { fixture } from "./store/test-fixture";
 
 it("reads canonical admin usage, current budget headroom, and durable exceptions from Postgres", async () => {

@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { runHistoricalImport } from "./history-migration";
-import { createSql } from "./store/sql";
+import { runHistoricalImport } from "./host-history-migration";
+import { createSql } from "./store/host-sql";
 
 const url = process.env.METERING_TEST_DATABASE_URL;
 const schema = process.env.METERING_TEST_SCHEMA;
@@ -19,6 +19,7 @@ await prisma.$transaction(async (tx) => {
   }
   await runHistoricalImport(
     {
+      ...sql,
       async execute(query) {
         const result = await sql.execute(query);
         if (

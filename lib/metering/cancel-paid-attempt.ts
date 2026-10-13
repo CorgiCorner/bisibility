@@ -12,7 +12,8 @@ export async function cancelUnsentPaidAttempt(tx: Prisma.TransactionClient, ref:
   await lockPaidOperation(tx, await readPaidOperation(meter, ref));
   const context = await paidContext(tx, ref);
   const operation = await readPaidOperation(meter, ref);
-  if (context.fenced_at) throw new Error("Possible paid acceptance cannot be cancelled as zero");
+  if (context.transportFenced)
+    throw new Error("Possible paid acceptance cannot be cancelled as zero");
   if (operation.state === "released") return;
   if (operation.state === "reserved") {
     await releasePaidAttempt(tx, {

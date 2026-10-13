@@ -34,7 +34,7 @@ export async function markPaidAttemptDispatch(
   await verifyPaidBinding(tx, operation, context.context, options);
   await lockPaidOperation(tx, operation);
   const retained = await paidContext(tx, ref(operation));
-  if (retained.dispatch_lease_id || retained.fenced_at)
+  if (retained.dispatch_lease_id || retained.transportFenced)
     throw new Error("Paid dispatch intent already exists");
   const result = await meter.markDispatchIntent({
     ...ref(operation),
@@ -77,7 +77,7 @@ export async function fencePaidAttemptsInTransaction(
     const operation = await readPaidOperation(meter, ref(original));
     const context = await paidContext(tx, ref(operation));
     if (
-      context.fenced_at ||
+      context.transportFenced ||
       context.dispatch_lease_id !== grant.lease.leaseId ||
       operation.state !== "dispatch_intended" ||
       operation.lease?.leaseId !== grant.lease.leaseId ||
@@ -86,7 +86,10 @@ export async function fencePaidAttemptsInTransaction(
       throw new Error("Paid transport holder is fenced out");
     if (new Date(operation.lease.expiresAt) <= clock.now())
       throw new Error("Paid transport lease expired");
-    await tx.$executeRaw`UPDATE metering_paid_attempt_context SET fenced_at=${clock.now()} WHERE namespace=${operation.scope.namespace} AND operation_id=${operation.operationId}`;
+    const fencedAt = clock.now();
+    await tx.$executeRaw`UPDATE metering_paid_attempt_context
+      SET fenced_at=${fencedAt}, fenced_at_iso=${fencedAt.toISOString()}
+      WHERE namespace=${operation.scope.namespace} AND operation_id=${operation.operationId}`;
   }
 }
 export async function fencePaidAttempt(

@@ -93,7 +93,7 @@ x-app-env: &app-env
 
 services:
   db-migrations:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.31.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.32.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     command: >
       sh -c 'npm run db:migrate
@@ -104,7 +104,7 @@ services:
         condition: service_healthy
 
   app:
-    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.31.0}
+    image: ${BISIBILITY_IMAGE:-docker.io/corgicorner/bisibility:0.32.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     ports:

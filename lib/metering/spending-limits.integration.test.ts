@@ -6,7 +6,7 @@ import { input, paidFixture } from "./paid-attempt-test-fixture";
 import { setProjectSpendingLimit } from "./project-spending-limit";
 import { putSpendingBudget } from "./spending-limit-store";
 import { fundingSpendingBudgets, unresolvedSpendingGate } from "./spending-limits";
-import { Prisma } from "./store/sql";
+import { Prisma } from "./store/host-sql";
 
 const actor = { id: "owner", memberships: [{ projectId: "project", role: "owner" as const }] };
 const projectPublicId = "prj_abcdefghijklmnopqrstuvwx";

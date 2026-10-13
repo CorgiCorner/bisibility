@@ -127,7 +127,7 @@ export async function fixtureBudgetAmount(
 ) {
   const { fundingBudgetId } = await import("./spending-limits");
   const { currentBudgets } = await import("./store/budgets");
-  const { createSql } = await import("./store/sql");
+  const { createSql } = await import("./store/host-sql");
   const budgets = await currentBudgets(
     createSql(db, { statements: 0, changes: 0n, rowsRead: 0 }),
     meteringNamespace(),

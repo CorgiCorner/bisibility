@@ -14,7 +14,7 @@ import { projectAdmissionMeasurements } from "./current-paid-measurements";
 import type { PaidAttemptOptions } from "./paid-attempt-types";
 import { lockPaidOperation, paidContext } from "./paid-context";
 import { lockScopes, matchingScopes } from "./store/budgets";
-import { createSql } from "./store/sql";
+import { createSql } from "./store/host-sql";
 import { createTransactionMeter, paidAttemptClock, readPaidOperation } from "./transaction-meter";
 
 async function settlementContext(
@@ -97,7 +97,7 @@ export async function settlePaidAttempt(
 ) {
   input = structuredClone(input);
   const { meter, operation, context } = await settlementContext(tx, input, options);
-  if (!context.fenced_at)
+  if (!context.transportFenced)
     throw new Error("Paid settlement requires retained transport fence evidence");
   const receipt = await settlementReceipt(
     tx,
@@ -120,7 +120,7 @@ export async function correctPaidAttempt(
 ) {
   input = structuredClone(input);
   const { meter, operation, context } = await settlementContext(tx, input, options);
-  if (!context.fenced_at)
+  if (!context.transportFenced)
     throw new Error("Paid correction requires retained transport fence evidence");
   const receipt = await settlementReceipt(
     tx,
@@ -141,7 +141,8 @@ export async function releasePaidAttempt(
   options: PaidAttemptOptions = {},
 ) {
   const { meter, context } = await settlementContext(tx, input, options);
-  if (context.fenced_at) throw new Error("Possible paid acceptance cannot be cancelled as zero");
+  if (context.transportFenced)
+    throw new Error("Possible paid acceptance cannot be cancelled as zero");
   const result = await meter.releaseUndispatched(input);
   if (result.outcome !== "released") throw new Error("Paid release refused");
   await reconcileSpendingGates(tx, result.operation);

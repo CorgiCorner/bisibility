@@ -1,11 +1,11 @@
 import { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
 import { historicalOperation } from "@/lib/metering/history-mapping";
-import { historyMigrationId } from "@/lib/metering/history-migration";
 import { source } from "@/lib/metering/history-test-data";
+import { historyMigrationId } from "@/lib/metering/host-history-migration";
 import { receiptFromEntry } from "@/lib/metering/mapping";
 import { paidFixture } from "@/lib/metering/paid-attempt-test-fixture";
 import { projectSpendingBudget } from "@/lib/metering/spending-limits";
-import { importHistoricalEvidence } from "@/lib/metering/store/history";
+import { importHistoricalEvidence } from "@/lib/metering/store/host-history";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { expect, test, vi } from "vitest";
 import { loadByokEvidence, persistByokEvidence } from "./byok-evidence-storage";

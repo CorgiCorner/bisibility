@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.32.0] - 2026-10-13
+
+### Changed
+
+- **Breaking:** Usage history now uses the shared PostgreSQL Store. Drain old writers and run the UTC audit before restarting the app and worker.
+
 ## [0.31.0] - 2026-10-12
 
 ### Changed

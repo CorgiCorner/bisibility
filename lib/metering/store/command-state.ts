@@ -12,8 +12,8 @@ import {
   usage,
 } from "./budgets";
 import { canonical, decode, encode, hash, identity, key, plus } from "./codec";
+import { lock, Prisma, type Sql } from "./host-sql";
 import { appendReceipt, event, hydrate, insert, operationRow, update } from "./records";
-import { lock, Prisma, type Sql } from "./sql";
 
 export const newState = (clock: Clock): State => ({
   clock,

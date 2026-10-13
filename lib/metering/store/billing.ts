@@ -14,7 +14,7 @@ import { recordBillingAlerts } from "./billing-alerts";
 import { loadBillingCandidates } from "./billing-candidates";
 import { decode, encode, key } from "./codec";
 import { lockAccounting, newState, persist, projectUsage } from "./command-state";
-import { lock, Prisma, type transactions } from "./sql";
+import { lock, Prisma, type transactions } from "./host-sql";
 
 export function billingImports(
   tx: ReturnType<typeof transactions>,

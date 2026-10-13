@@ -1,7 +1,7 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { Budget, Receipt } from "@usagekit/core";
 import type { PaidAttemptInput } from "./paid-attempt-types";
-import { Prisma as SqlPrisma } from "./store/sql";
+import { Prisma as SqlPrisma } from "./store/host-sql";
 import { fixture } from "./store/test-fixture";
 
 export const input = (

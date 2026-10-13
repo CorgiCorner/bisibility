@@ -1,0 +1,28 @@
+---
+title: "PostgreSQL Store upgrade in0.32"
+description: "Preserve accounting identity and audit historical timestamps before opening traffic."
+---
+
+Before upgrading, back up and restore-test the complete accounting database,
+close paid entry points and drain accepted work using its original credentials.
+Stop old web and worker writers and prevent their automatic restart. Preserve
+the current database, schema and metering namespace.
+
+Apply the normal migrations, then run `npm run db:metering:adopt-utc -- --legacy-writers-drained`
+with the intended database credentials before starting read traffic. The command
+requires a complete timestamp audit; it never repairs or shifts historical dates.
+An unresolved operation, lease or receipt timestamp stops adoption. Resolve its
+independent original evidence before reopening, rather than bypassing the audit.
+
+A retained transport fence means a request may have been sent. Old fence instants
+without independent ISO evidence remain explicitly unknown; their physical values
+and original identities are preserved. Unknown time never permits another send
+or cancellation as free. New fences atomically retain the original ISO and the
+database checks it against the physical instant. Settlement and replay continue
+using the same operation, receipt and original transport identity.
+
+Inspect the adoption result and verify the new app and worker against the same
+schema before reopening. The report separates audited temporal fields from the
+count of legacy fences with unknown instants. Do not interpret a successful core
+audit as proof of a historical fence time, or a settled status as proof that the
+request never reached its provider.

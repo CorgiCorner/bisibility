@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
-import { runHistoricalImport, verifyHistoricalImport } from "./history-migration";
 import { source } from "./history-test-data";
+import { runHistoricalImport, verifyHistoricalImport } from "./host-history-migration";
 import { fundingSpendingBudgets } from "./spending-limits";
 import { currentBudgets, saveBudget } from "./store/budgets";
-import { Prisma, transactions } from "./store/sql";
+import { Prisma, transactions } from "./store/host-sql";
 import { fixture } from "./store/test-fixture";
 
 const connection = {

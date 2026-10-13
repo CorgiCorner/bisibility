@@ -198,6 +198,7 @@ model MeteringPaidAttemptContext {
   context           Json
   dispatch_lease_id String?
   fenced_at         DateTime? @db.Timestamptz
+  fenced_at_iso     String?
   debit_id          String?
   operation         MeteringOperation @relation(fields: [namespace, operation_id], references: [namespace, operation_id], onDelete: NoAction, onUpdate: NoAction, map: "metering_paid_attempt_operation_fk")
 

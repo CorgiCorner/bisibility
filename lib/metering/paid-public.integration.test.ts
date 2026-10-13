@@ -10,7 +10,7 @@ import {
 import { budget, input, nativeReceipt, paidFixture, required } from "./paid-attempt-test-fixture";
 import { ensureProjectSpendingBudget } from "./project-budget-bootstrap";
 import { settlePaidAttempt } from "./settlement";
-import { Prisma } from "./store/sql";
+import { Prisma } from "./store/host-sql";
 
 test("public default BYOK binding admits without private tables and fences credential rotation", async () => {
   const f = await paidFixture();

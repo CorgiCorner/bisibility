@@ -2,7 +2,7 @@ import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { Budget, BudgetScope } from "@usagekit/core";
 import { currentBudgets, lockScopes, saveBudget } from "./store/budgets";
-import { createSql } from "./store/sql";
+import { createSql } from "./store/host-sql";
 
 const sqlFor = (tx: Pick<Prisma.TransactionClient, "$queryRaw" | "$executeRaw">) =>
   createSql(tx as Prisma.TransactionClient, { statements: 0, changes: 0n, rowsRead: 0 });

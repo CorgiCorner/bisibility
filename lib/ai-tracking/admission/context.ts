@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
 import { meteringNamespace } from "@/lib/metering/runtime";
 import { currentBudgets } from "@/lib/metering/store/budgets";
-import { createSql } from "@/lib/metering/store/sql";
+import { createSql } from "@/lib/metering/store/host-sql";
 import { assertOperationAccess } from "@/lib/operations/access-extension";
 import { ownAllocationTag, ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { decryptProviderCredentials } from "@/lib/providers/crypto";
