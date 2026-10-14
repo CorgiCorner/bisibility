@@ -423,6 +423,9 @@
       "subtitle": "セルフホストに復元できる {projectName} の完全なコピー",
       "success": "パッケージをエクスポートしてダウンロードしました。",
       "title": "プロジェクトデータをエクスポート"
+    },
+    "announcements": {
+      "learnMore": "詳細を見る"
     }
   }
 }

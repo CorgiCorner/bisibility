@@ -1,6 +1,21 @@
+import { recordedDefinitionQueryFixture } from "./recorded-worker-definition.test-fixture";
+
+vi.mock("@/lib/measurement-definitions/worker-session", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/measurement-definitions/worker-session")>();
+  const { recordedLiveWorkerDefinition } = await import(
+    "@/lib/rank-check/recorded-worker-definition.test-fixture"
+  );
+  return {
+    ...actual,
+    liveWorkerDefinition: recordedLiveWorkerDefinition(actual.workerDefinitionOwner),
+  };
+});
+
 import { errorFromUnknown } from "@/lib/api/error-mapper";
 import { resetRateLimitStateForTests } from "@/lib/api/ratelimit";
 import { ProviderAllocationExhaustedError } from "@/lib/metering/admission-errors";
+import { observationEvidencePolicy } from "@/lib/observation/evidence-metadata";
 import type { ObservationRunInput } from "@/lib/observation/types";
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { byokTestEvidence, testOwnAdmission } from "@/lib/provider-usage/byok-test-evidence";
@@ -83,13 +98,20 @@ const mocks = vi.hoisted(() => ({
       findMany: vi.fn(),
       groupBy: vi.fn(),
     },
-    rankCheck: { create: vi.fn(), findFirst: vi.fn() },
+    rankCheck: {
+      create: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      updateMany: vi.fn(),
+    },
     signal: { create: vi.fn() },
   },
 }));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/operations/access-extension", () => ({
+  assertOperationAccessInTransaction: vi.fn(),
   assertOperationAccess: mocks.assertOperationAccess,
 }));
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
@@ -124,6 +146,7 @@ beforeEach(() => {
   );
   mocks.prisma.providerConnectionRate.findMany.mockResolvedValue([]);
   mocks.prisma.project.findUnique.mockResolvedValue({
+    publicId: "prj_abcdefghijklmnopqrstuvwx",
     budgetCapCents: 500,
     providerAllocationsInitializedAt: null,
   });
@@ -144,7 +167,17 @@ beforeEach(() => {
       provider: /quota|secondary|serpapi|connection_2/.test(where.id) ? "serpapi" : "dataforseo",
     }),
   );
-  mocks.prisma.$queryRaw.mockResolvedValue([]);
+  mocks.prisma.$queryRaw.mockImplementation(recordedDefinitionQueryFixture());
+  let persisted: Record<string, unknown> = {};
+  mocks.prisma.rankCheck.updateMany.mockImplementation(async ({ data }) => {
+    persisted = data;
+    return { count: 1 };
+  });
+  mocks.prisma.rankCheck.findUniqueOrThrow.mockImplementation(async ({ where }) => ({
+    id: where.id,
+    publicId: "check_abcdefghijklmnopqrstuvwx",
+    ...persisted,
+  }));
   mocks.prisma.providerCostEntry.create.mockResolvedValue({ id: "cost_1" });
   mocks.prisma.providerCostEntry.createMany.mockResolvedValue({ count: 1 });
   mocks.prisma.providerCostEntry.groupBy.mockImplementation(async () => {
@@ -152,6 +185,11 @@ beforeEach(() => {
     return [{ credentialSource: "own", _count: result._count, _sum: result._sum }];
   });
   mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
+  mocks.prisma.rankCheck.findUnique.mockResolvedValue({
+    keywordId: "keyword_1",
+    status: "running",
+    provider: "primary",
+  });
 });
 
 function provider(id: string, fetchRank: SerpProvider["fetchRank"]): SerpProvider {
@@ -266,6 +304,7 @@ describe("runCheckWithFallback", () => {
     );
     const secondary = provider("dataforseo", vi.fn().mockResolvedValue(ranked(4)));
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 5000,
       providerAllocationsInitializedAt: new Date(),
     });
@@ -312,6 +351,7 @@ describe("runCheckWithFallback", () => {
     );
     const secondary = provider("serpapi", vi.fn().mockResolvedValue(ranked(4)));
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 5000,
       providerAllocationsInitializedAt: new Date(),
     });
@@ -365,6 +405,7 @@ describe("runCheckWithFallback", () => {
     );
     const secondary = provider("serpapi", vi.fn().mockResolvedValue(ranked(4)));
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 5000,
       providerAllocationsInitializedAt: new Date(),
     });
@@ -820,6 +861,7 @@ describe("runKeywordCheckWithFallback", () => {
     );
 
     await runKeywordCheckWithFallback({
+      rankCheckId: "rank_1",
       credential: { id: "key_1", kind: "project_key" },
       keywordId: "keyword_1",
       resolveProvider: () => dataForSeoProvider,
@@ -898,6 +940,7 @@ describe("runKeywordCheckWithFallback", () => {
     );
 
     await runKeywordCheckWithFallback({
+      rankCheckId: "rank_1",
       keywordId: "keyword_1",
       resolveProvider: () => serpApiProvider,
     });
@@ -906,7 +949,8 @@ describe("runKeywordCheckWithFallback", () => {
       fetchMock.mock.calls.filter(([url]) => hasRequestHostname(url, "serpapi.com")),
     ).toHaveLength(1);
     expect(mocks.assertBudgetAvailable).not.toHaveBeenCalled();
-    expect(mocks.prisma.rankCheck.create).toHaveBeenCalledWith({
+    expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({
+      where: { id: "rank_1", status: "running" },
       data: expect.objectContaining({
         costCents: 0,
         billingUnits: 1,
@@ -956,7 +1000,10 @@ describe("runKeywordCheckWithFallback", () => {
       provider: "serpapi",
       surface: "web_serp",
       engine: "google",
-      requestPolicy: { depth: 10, stopOnMatch: false, forcedAiOverview: false },
+      requestPolicy: observationEvidencePolicy(
+        { depth: 10, stopOnMatch: true, forcedAiOverview: false },
+        "serpapi-observation-v1",
+      ),
       completeness: "complete",
       configuredScope: { location: "United States", language: "en", device: "desktop" },
       executedAt: new Date("2026-01-01T06:00:00.000Z"),
@@ -1003,6 +1050,7 @@ describe("runKeywordCheckWithFallback", () => {
     );
 
     await runKeywordCheckWithFallback({
+      rankCheckId: "rank_1",
       keywordId: "keyword_1",
       resolveProvider: () => capturing,
     });
@@ -1104,7 +1152,11 @@ describe("runKeywordCheckWithFallback", () => {
         Promise.resolve({ id: "rank_1", ...data }),
       );
 
-      await runKeywordCheckWithFallback({ keywordId: "keyword_1", resolveProvider: () => primary });
+      await runKeywordCheckWithFallback({
+        rankCheckId: "rank_1",
+        keywordId: "keyword_1",
+        resolveProvider: () => primary,
+      });
 
       expect(fetchRank).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1113,7 +1165,8 @@ describe("runKeywordCheckWithFallback", () => {
           stopOnMatch: expectedStopOnMatch,
         }),
       );
-      expect(mocks.prisma.rankCheck.create).toHaveBeenCalledWith({
+      expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({
+        where: { id: "rank_1", status: "running" },
         data: expect.objectContaining({ requestedDepth: expectedDepth }),
       });
     },
@@ -1274,7 +1327,11 @@ describe("runKeywordCheckWithFallback", () => {
       Promise.resolve({ id: "rank_1", ...data }),
     );
 
-    await runKeywordCheckWithFallback({ keywordId: "keyword_1", resolveProvider: () => codeBased });
+    await runKeywordCheckWithFallback({
+      rankCheckId: "rank_1",
+      keywordId: "keyword_1",
+      resolveProvider: () => codeBased,
+    });
 
     // Degraded to the country name (reconstructed from gl) so the name fallback can
     // match; gl/hl are preserved as localization hints.
@@ -1397,6 +1454,7 @@ describe("runKeywordCheckWithFallback", () => {
       },
     ]);
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 10,
       providerAllocationsInitializedAt: new Date("2026-08-01T00:00:00.000Z"),
     });
@@ -1457,6 +1515,7 @@ describe("runKeywordCheckWithFallback", () => {
       new BudgetExhaustedError({ capCents: 10, projectId: "project_1", spentCents: 9.5 }),
     );
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 10,
       providerAllocationsInitializedAt: null,
     });

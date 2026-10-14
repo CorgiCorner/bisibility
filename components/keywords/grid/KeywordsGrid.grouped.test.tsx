@@ -135,7 +135,14 @@ describe("KeywordsGrid pending state", () => {
       .querySelectorAll<HTMLElement>('[role="row"][data-depth="1"]');
     fireEvent.click(children[0] as HTMLElement);
     const detailPaths = rows[0]?.subRows?.map((row) => appPath("prj_1", "rank-tracker", row.id));
-    expect(detailPaths).toContain(routerMock.push.mock.calls.at(-1)?.[0]);
+    const navigated = new URL(
+      String(routerMock.push.mock.calls.at(-1)?.[0]),
+      "https://example.com",
+    );
+    expect(detailPaths).toContain(navigated.pathname);
+    const returnedScope = new URLSearchParams(navigated.searchParams.get("listScope") ?? "");
+    expect(returnedScope.get("grouped")).toBe("1");
+    expect(returnedScope.get("device")).toBe("all");
     expect(screen.queryByRole("radio", { name: "Flat" })).not.toBeInTheDocument();
     expect(screen.queryByRole("radio", { name: "Grouped" })).not.toBeInTheDocument();
   });

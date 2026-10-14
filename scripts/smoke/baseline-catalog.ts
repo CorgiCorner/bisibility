@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { readdir } from "node:fs/promises";
+import pg from "pg";
 import { databaseConnectionConfig } from "../../lib/db/pool-config.ts";
 import {
   makePublicId,
   PUBLIC_ID_RESOURCE_REGISTRY,
   type PublicIdPrefix,
 } from "../../lib/db/public-id-resources.ts";
-import pg from "pg";
 
 const { Client } = pg;
 const BASELINE_ID = "20260806000000_squashed_migrations";
@@ -14,6 +14,11 @@ const databaseUrl = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DIRECT_URL or DATABASE_URL is required.");
 
 const publicIdTables = {
+  biz: "business_locations",
+  lmr: "local_measurement_runs",
+  lmj: "local_monitor_launch_intents",
+  lmn: "local_monitors",
+  lmt: "local_measurement_targets",
   agr: "agent_reports",
   ait: "ai_topics",
   aip: "ai_prompts",
@@ -84,7 +89,10 @@ const db = new Client({
 
 await db.connect();
 try {
-  assert.deepEqual(Object.keys(publicIdTables).sort(), Object.keys(PUBLIC_ID_RESOURCE_REGISTRY).sort());
+  assert.deepEqual(
+    Object.keys(publicIdTables).sort(),
+    Object.keys(PUBLIC_ID_RESOURCE_REGISTRY).sort(),
+  );
 
   const baseline = await db.query<{ count: number }>(
     `SELECT COUNT(*)::int AS "count"
@@ -119,7 +127,11 @@ try {
   // every scenario. It passed only while the baseline was the sole migration in the ledger.
   const historicalRowsSetting = process.env.EXPECT_HISTORICAL_MIGRATION_ROWS?.trim();
   const expectedHistoricalRows = Number(historicalRowsSetting);
-  if (historicalRowsSetting && Number.isInteger(expectedHistoricalRows) && expectedHistoricalRows >= 0) {
+  if (
+    historicalRowsSetting &&
+    Number.isInteger(expectedHistoricalRows) &&
+    expectedHistoricalRows >= 0
+  ) {
     const ledger = await db.query<{ historical: number; total: number }>(
       `SELECT COUNT(*)::int AS "total",
               COUNT(*) FILTER (WHERE "migration_name" <> $1)::int AS "historical"
@@ -286,6 +298,35 @@ try {
       [`baseline-valid-${suffix}`, validPublicId, `baseline-valid-${suffix}@example.invalid`],
     );
     assert.equal(inserted.rows[0]?.publicId, validPublicId);
+    const projectId = `baseline-project-${suffix}`;
+    await db.query(
+      `INSERT INTO projects (id, "publicId", name, "ownerId", "updatedAt")
+       VALUES ($1, $2, 'Baseline probe', $3, NOW())`,
+      [projectId, makePublicId("prj"), `baseline-valid-${suffix}`],
+    );
+    const insertBusiness = `INSERT INTO business_locations
+      (id, "publicId", "projectId", role, "updatedAt") VALUES ($1, $2, $3, 'subject', NOW())`;
+    assert.equal(
+      (
+        await db.query(insertBusiness, [
+          `baseline-business-${suffix}`,
+          makePublicId("biz"),
+          projectId,
+        ])
+      ).rowCount,
+      1,
+    );
+    await db.query("SAVEPOINT business_namespace_probe");
+    await assert.rejects(
+      db.query(insertBusiness, [`baseline-wrong-business-${suffix}`, validPublicId, projectId]),
+      (error: unknown) =>
+        error instanceof Error &&
+        "code" in error &&
+        error.code === "23514" &&
+        "constraint" in error &&
+        error.constraint === "business_locations_public_id_contract_format",
+    );
+    await db.query("ROLLBACK TO SAVEPOINT business_namespace_probe");
   } finally {
     await db.query("ROLLBACK");
   }

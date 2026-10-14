@@ -32,6 +32,7 @@ describe("capabilities catalog", () => {
     expect(body.authentication).toEqual(capabilitiesCatalogMetadata.authentication);
     expect(body.description).toBe(capabilitiesCatalogMetadata.description);
     expect(body.authentication).toEqual({ scheme: "bearer", scope: "read write admin" });
+    expect(body.features).toEqual({ reviewed_project_defaults: "v1" });
   });
 
   it("keeps api_key out of every tool input schema", () => {

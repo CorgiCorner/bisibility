@@ -69,7 +69,7 @@ export type CompetitorShare = {
   initials: string;
   kind: CompetitorKind;
   label: string;
-  shareOfVoice: number;
+  shareOfVoice: number | null;
   sharedKeywords: number;
 };
 
@@ -97,9 +97,12 @@ export type CompetitorObservation = {
   ranks: Record<string, number | null>;
   tags: string[];
   volume: number | null;
+  /** Minimized qualification of the same immutable observation, not raw provider evidence. */
+  quality?: import("@/lib/rank-measurements/competitor-share").CompetitorScoreRow["quality"];
 };
 
 export type CompetitorMarketDataState =
+  | "quality_unknown"
   | "no_completed_checks"
   | "completed_unranked"
   | "filter_excludes_all"
@@ -141,6 +144,10 @@ export type CompetitorMarketOption = {
 };
 
 export type CompetitorMarket = CompetitorMarketData & {
+  quality: Omit<
+    ReturnType<typeof import("@/lib/rank-measurements/competitor-share").competitorShareOfVoice>,
+    "scores" | "counts" | "shares" | "total"
+  >;
   checkedKeywordCount: number;
   columns: CompetitorColumn[];
   dataState: CompetitorMarketDataState;

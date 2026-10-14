@@ -5,6 +5,7 @@ import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
+import type { NativeRequestGuard } from "@/lib/metering/paid-attempt-types";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import type { ProviderRequest } from "@usagekit/providers";
@@ -15,6 +16,7 @@ import { type ByokEvidenceInput, captureByokEvidence } from "./byok-evidence";
 export async function beginProviderTaskset(
   db: PrismaClient,
   inputs: readonly (ByokEvidenceInput & { keywordId: string; providerRequest?: ProviderRequest })[],
+  beforeReserve?: ReadonlyMap<string, NativeRequestGuard>,
 ) {
   const identities = structuredClone(inputs).map((input) => ({
     input,
@@ -28,10 +30,24 @@ export async function beginProviderTaskset(
       )
       .digest("hex"),
   }));
+  if (
+    beforeReserve &&
+    identities.some(({ input }) => !beforeReserve.has(input.attribution.context.correlationId))
+  )
+    throw new ProviderUsagePersistenceError({ phase: "admission" });
   const grants = await db
     .$transaction(async (tx) => {
+      for (const { input, id } of [...identities].sort((a, b) =>
+        a.input.keywordId.localeCompare(b.input.keywordId),
+      ))
+        await beforeReserve
+          ?.get(input.attribution.context.correlationId)
+          ?.lockBusiness(tx, id, input.providerRequest);
       for (const { input, id } of identities) {
         await captureByokEvidence(tx, input, id);
+        await beforeReserve
+          ?.get(input.attribution.context.correlationId)
+          ?.assertRequest(tx, id, input.providerRequest);
         const query = {
           select: { id: true },
           where: {

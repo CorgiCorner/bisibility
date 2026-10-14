@@ -1,3 +1,18 @@
+import { definitionClaimQueryFixture } from "./definition-claim.test-fixture";
+import { recordedDefinitionQueryFixture } from "./recorded-worker-definition.test-fixture";
+
+vi.mock("@/lib/measurement-definitions/worker-session", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/measurement-definitions/worker-session")>();
+  const { recordedLiveWorkerDefinition } = await import(
+    "./recorded-worker-definition.test-fixture"
+  );
+  return {
+    ...actual,
+    liveWorkerDefinition: recordedLiveWorkerDefinition(actual.workerDefinitionOwner),
+  };
+});
+
 import { usageReadFixture } from "@/lib/metering/read.test-fixture";
 import { seedTestUsage } from "@/lib/metering/usage.test-fixture";
 import { testOwnAdmission } from "@/lib/provider-usage/byok-test-evidence";
@@ -184,7 +199,9 @@ describe("single rank-check request intent", () => {
     mocks.requireKeywordScope.mockResolvedValue(keyword);
     mocks.launchSingleRankCheckRun.mockResolvedValue(run);
     mocks.prisma.$executeRaw.mockResolvedValue(1);
-    mocks.prisma.$queryRaw.mockResolvedValue([]);
+    mocks.prisma.$queryRaw.mockImplementation(
+      recordedDefinitionQueryFixture(definitionClaimQueryFixture()),
+    );
     const evidence = byokTestJournal("serpapi");
     Object.assign(mocks.prisma, { meteringUsageEvidence: evidence.table });
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
@@ -212,6 +229,7 @@ describe("single rank-check request intent", () => {
       isSample: false,
     });
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       ownerId: "owner_1",
       budgetCapCents: null,
       providerAllocationsInitializedAt: checkedAt,
@@ -235,7 +253,11 @@ describe("single rank-check request intent", () => {
       projectId: "project_1",
       provider: "serpapi",
     });
-    mocks.prisma.rankCheck.create.mockResolvedValue(rankCheck);
+    let checkSequence = 0;
+    mocks.prisma.rankCheck.create.mockImplementation(async () => ({
+      ...rankCheck,
+      id: "rank_check_" + ++checkSequence,
+    }));
     mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
     mocks.prisma.rankCheck.findUnique.mockResolvedValue({
       trigger: "manual",
@@ -285,13 +307,34 @@ describe("single rank-check request intent", () => {
     mocks.evaluateKeywordAlerts.mockResolvedValue([{ id: "alert_1" }]);
     mocks.findComparablePredecessor.mockResolvedValue(null);
     mocks.notifyRankCheckCompleted.mockResolvedValue(undefined);
-    mocks.provider.fetchRank.mockImplementation(async ({ credentials }) => {
-      const observer = credentials.usageObserver;
-      const attemptId = await observer.begin({ attemptKey: "fixture" });
-      await observer.beforeDispatch?.(attemptId);
-      await observer.settle(attemptId, { costCents: 1, quantity: 1, cached: false, failed: false });
-      return { billingUnits: 1, checkedAt, costCents: 1, position: 3, rankingUrl: null };
-    });
+    mocks.provider.fetchRank.mockImplementation(
+      async ({ credentials, keyword: query, device, location }) => {
+        const observer = credentials.usageObserver;
+        const url = new URL("https://serpapi.com/search.json");
+        for (const [key, value] of Object.entries({
+          engine: "google",
+          q: query,
+          device,
+          gl: location.gl,
+          hl: location.hl,
+          location: location.secondaryGeoName,
+          nfpr: "1",
+        }))
+          url.searchParams.set(key, value);
+        const attemptId = await observer.begin({
+          attemptKey: "fixture",
+          request: { method: "GET", url: url.toString() },
+        });
+        await observer.beforeDispatch?.(attemptId);
+        await observer.settle(attemptId, {
+          costCents: 1,
+          quantity: 1,
+          cached: false,
+          failed: false,
+        });
+        return { billingUnits: 1, checkedAt, costCents: 1, position: 3, rankingUrl: null };
+      },
+    );
     mocks.publishOperationChanged.mockResolvedValue(undefined);
     mocks.writeAudit.mockResolvedValue(undefined);
   });
@@ -445,10 +488,11 @@ describe("single rank-check request intent", () => {
     );
     for (const costCents of [0.625, 0.625, 0.25])
       await seedTestUsage(store.db, { costCents, usageQuantity: 1, rankCheckId: "rank_check_1" });
-    mocks.prisma.$queryRaw.mockImplementation((query: { text?: string; values: unknown[] }) =>
+    const claimQuery = recordedDefinitionQueryFixture(definitionClaimQueryFixture());
+    mocks.prisma.$queryRaw.mockImplementation((query, ...values) =>
       query.text?.includes("metering_operation")
         ? store.query(query as { text: string; values: unknown[] })
-        : [],
+        : claimQuery(query, ...values),
     );
 
     const api = await requestRankCheck(context(), {}, scopedKeyword());

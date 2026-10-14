@@ -1,8 +1,11 @@
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import type { OnboardingFlowState } from "@/components/onboarding/onboarding-fixtures";
+import type {
+  PreviewDefaults,
+  SaveDefaults,
+} from "@/components/settings/tracking/use-reviewed-defaults";
 import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
 import type { AddKeywordsMatrixInput } from "@/lib/schemas/keyword";
-import type { ProjectDefaultsInput } from "@/lib/schemas/project";
 import type { SharedErrorMessages } from "@/lib/ui/action-error";
 import { classifyActionError, presentActionError } from "@/lib/ui/action-error";
 import type { FetchRankedKeywordSuggestionsAction } from "./KeywordRankedImport";
@@ -50,7 +53,8 @@ export type StepAddKeywordsProps = {
   rankedKeywordConnections?: RankedKeywordConnection[];
   saveMarketsAction?: SaveOnboardingMarketsAction;
   trackingDefaults?: OnboardingTrackingDefaultsInput;
-  updateProjectDefaultsAction?: (input: ProjectDefaultsInput) => Promise<unknown>;
+  previewProjectDefaultsAction?: PreviewDefaults;
+  updateProjectDefaultsAction?: SaveDefaults;
 };
 
 export function keywordSetupActionError(

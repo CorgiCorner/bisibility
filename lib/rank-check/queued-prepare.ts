@@ -1,141 +1,30 @@
+import { loadContext, preparedKeyword } from "./queued-prepare-context";
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
-import type { Prisma } from "@/lib/generated/prisma/client";
+import { sameDefinitionBytes } from "@/lib/measurement-definitions/canonical";
+import {
+  definitionWorkerInvocation,
+  queuedDefinitionPermit,
+} from "@/lib/measurement-definitions/worker-claim";
+import { queuedDefinitionRequests } from "@/lib/measurement-definitions/worker-queued";
+import { captureWorkerDefinition } from "@/lib/measurement-definitions/worker-session";
 import { publishOperationChanged } from "@/lib/notifications/realtime";
 import { ProviderQuoteUnavailableError } from "@/lib/provider-rates/native-quote";
-import { resolveProviderCredentials } from "@/lib/providers/credentials";
-import { queuedDeploymentCredentialsAvailable } from "@/lib/providers/execution-extension";
-import { resolveEffectiveSerpDepth } from "@/lib/serp/constants";
 import type { QueuedRankCheckWorkflowInput } from "@/lib/temporal/queued-rank-check-contract";
-import { serpProviderChainOrderBy } from "./provider-chain-order";
 import { queuedBatchBudgetDeferral, queuedBatchOrigin } from "./queued-attribution";
 import { queuedRankCheckConfig } from "./queued-config";
-import { unrunnableBatchReason } from "./queued-eligibility";
+import { queuedDefinitionLegacyRun } from "./queued-definition-run";
 import { writeQueuedRunningAudit } from "./queued-prepare-audit";
+import { resolveRunItems } from "./queued-prepare-items";
 import { queuedRequestCosts } from "./queued-request-costs";
+import { preparedRankRecoveryContext } from "./recovery-context";
 import { applyRunItemTransition } from "./runs/items";
 import { sha256Hex } from "./sha256";
 
 const TERMINAL_RETENTION_DAYS = 30;
-const AUTOMATIC_FREQUENCIES = new Set(["daily", "weekly", "monthly", "custom_cron"]);
-type PreparedKeyword = Awaited<ReturnType<typeof loadContext>>["keywords"][number];
-type EffectiveSchedule = {
-  frequency: string;
-  serpDepth: number | null;
-};
-type ResolvedRunItem = { id: string; keywordId: string; runId: string };
-async function resolveRunItems(tx: Prisma.TransactionClient, input: QueuedRankCheckWorkflowInput) {
-  if (input.runItemIds && input.runItemIds.length !== input.keywordIds.length) {
-    throw new Error("runItemIds must align with keywordIds.");
-  }
-  if (input.runItemIds && new Set(input.runItemIds).size !== input.runItemIds.length) {
-    throw new Error("runItemIds must be unique.");
-  }
-  if (!input.runItemIds && !input.runId) {
-    return { byKeyword: new Map<string, ResolvedRunItem>(), runId: undefined };
-  }
-  const rows = await tx.rankCheckRunItem.findMany({
-    select: { id: true, keywordId: true, runId: true },
-    where: input.runItemIds
-      ? { id: { in: input.runItemIds } }
-      : input.runId
-        ? { keywordId: { in: input.keywordIds }, runId: input.runId }
-        : { id: { in: [] } },
-  });
-  if (input.runItemIds && rows.length !== input.runItemIds.length) {
-    throw new Error("Queued rank-check run item no longer exists.");
-  }
-  const byId = new Map(rows.map((item) => [item.id, item]));
-  const byKeyword = new Map<string, ResolvedRunItem>();
-  for (const [index, keywordId] of input.keywordIds.entries()) {
-    const itemId = input.runItemIds?.[index];
-    const item = itemId ? byId.get(itemId) : rows.find((row) => row.keywordId === keywordId);
-    if (!item) continue;
-    if (item.keywordId !== keywordId || (input.runId && item.runId !== input.runId)) {
-      throw new Error("Queued rank-check run item does not match its keyword or run.");
-    }
-    byKeyword.set(keywordId, item);
-  }
-  const runIds = new Set(rows.map((item) => item.runId));
-  if (runIds.size > 1) throw new Error("Queued rank-check batch spans multiple runs.");
-  return { byKeyword, runId: rows[0]?.runId };
-}
-async function loadContext(tx: Prisma.TransactionClient, input: QueuedRankCheckWorkflowInput) {
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`rank-check-budget:${input.projectId}`}))`;
-  const project = await tx.project.findUnique({
-    include: {
-      defaults: true,
-      owner: { select: { deactivatedAt: true } },
-      providerConnections: {
-        orderBy: serpProviderChainOrderBy(),
-        where: { enabled: true, kind: "serp", status: "connected" },
-      },
-    },
-    where: { id: input.projectId },
-  });
-  const keywords = await tx.keyword.findMany({
-    include: {
-      locationRef: true,
-      rankChecks: {
-        orderBy: { checkedAt: "desc" },
-        take: 1,
-        where: { status: "completed" },
-      },
-      checkSchedule: { select: { serpDepth: true } },
-      schedule: true,
-    },
-    orderBy: { id: "asc" },
-    where: { id: { in: input.keywordIds }, projectId: input.projectId },
-  });
-  if (!project) throw new Error("Queued rank-check project no longer exists.");
-  if (keywords.length !== input.keywordIds.length) {
-    throw new Error("Queued rank-check batch contains missing or duplicate keywords.");
-  }
-  const connection = project.providerConnections[0];
-  let eligibilityReason = input.preflightDeferredReason ?? null;
-  if (!eligibilityReason && (project.owner.deactivatedAt || project.writeMode !== "active")) {
-    eligibilityReason = "Project state no longer permits scheduled rank checks.";
-  }
-  eligibilityReason ??= await unrunnableBatchReason(tx, input.projectId, keywords);
-  if (!eligibilityReason && connection?.provider !== "dataforseo") {
-    eligibilityReason = "DataForSEO is no longer the effective primary SERP provider.";
-  }
-  if (!eligibilityReason && connection) {
-    try {
-      if (connection.credentialSource === "hosted") {
-        if (!queuedDeploymentCredentialsAvailable("dataforseo")) {
-          eligibilityReason = "DataForSEO credentials are unavailable.";
-        }
-      } else {
-        const credentials = resolveProviderCredentials(
-          connection.provider,
-          connection.credentialsEncrypted,
-        );
-        if (!credentials.login || !credentials.password) {
-          eligibilityReason = "DataForSEO credentials are unavailable.";
-        }
-      }
-    } catch {
-      eligibilityReason = "DataForSEO credentials are unavailable.";
-    }
-  }
-  return { connection, eligibilityReason, keywords, project };
-}
-function preparedKeyword(keyword: PreparedKeyword, defaults: EffectiveSchedule | null) {
-  const schedule = keyword.schedule ?? defaults;
-  if (!schedule || !AUTOMATIC_FREQUENCIES.has(schedule.frequency)) return null;
-  const depth = resolveEffectiveSerpDepth({
-    projectDepth: defaults?.serpDepth,
-    checkScheduleDepth: keyword.checkSchedule?.serpDepth,
-    scheduleDepth: keyword.schedule?.serpDepth,
-  });
-  return {
-    depth,
-    keyword: keyword.text,
-  };
-}
+
 function terminalExpiry(now: Date) {
   return new Date(now.getTime() + TERMINAL_RETENTION_DAYS * 86_400_000);
 }
@@ -143,6 +32,9 @@ export async function prepareQueuedRankCheckBatch(
   input: QueuedRankCheckWorkflowInput & { batchId: string; workflowRunId: string },
 ) {
   const config = queuedRankCheckConfig();
+  const invocation = definitionWorkerInvocation();
+  if (input.workflowRunId !== invocation.workflowRunId)
+    throw new Error("Queued preparation workflow changed.");
   const existing = await prisma.queuedRankCheckBatch.findUnique({ where: { id: input.batchId } });
   if (existing) {
     return {
@@ -159,8 +51,8 @@ export async function prepareQueuedRankCheckBatch(
   const now = new Date();
   const result = await prisma.$transaction(async (tx) => {
     const context = await loadContext(tx, input);
-    const runItems = await resolveRunItems(tx, input);
-    const prepared = context.keywords.map((keyword) =>
+    let runItems = await resolveRunItems(tx, input);
+    let prepared = context.keywords.map((keyword) =>
       preparedKeyword(keyword, context.project.defaults),
     );
     const allScheduled = prepared.every((keyword) => keyword !== null);
@@ -168,6 +60,23 @@ export async function prepareQueuedRankCheckBatch(
       ? "Queued DataForSEO rank checks were disabled before batch preparation."
       : (context.eligibilityReason ??
         (allScheduled ? null : "Keyword schedule no longer permits automatic work."));
+    const requests = !deferredReason
+      ? await queuedDefinitionRequests(
+          tx,
+          input.projectId,
+          context.keywords.map((keyword) => keyword.id),
+          runItems.runId ? runItems.byKeyword : undefined,
+        )
+      : null;
+    if (requests)
+      prepared = prepared.map((entry, index) =>
+        entry
+          ? {
+              depth: requests.get(context.keywords[index].id)!.depth,
+              keyword: requests.get(context.keywords[index].id)!.keyword,
+            }
+          : null,
+      );
     let costs: number[] = [];
     if (!deferredReason && context.connection) {
       try {
@@ -184,6 +93,16 @@ export async function prepareQueuedRankCheckBatch(
       }
     }
     const estimated = costs.reduce((sum, amount) => sum + amount, 0);
+    if (!deferredReason && !runItems.runId && context.connection && requests) {
+      runItems = await queuedDefinitionLegacyRun(
+        tx,
+        { ...input, keywordIds: context.keywords.map((keyword) => keyword.id) },
+        context.connection,
+        requests,
+        costs,
+        now,
+      );
+    }
     const origin = await queuedBatchOrigin(tx, runItems.runId);
     if (!deferredReason && context.connection?.credentialSource !== "hosted") {
       deferredReason = await queuedBatchBudgetDeferral(
@@ -215,6 +134,8 @@ export async function prepareQueuedRankCheckBatch(
         terminalAt: deferredReason ? now : null,
       },
     });
+    if (!deferredReason)
+      await tx.$executeRaw`UPDATE queued_rank_check_batches SET "definitionWorkflowId"=${invocation.workflowId},"definitionWorkflowRunId"=${invocation.workflowRunId} WHERE id=${batch.id}`;
     for (const [index, keyword] of context.keywords.entries()) {
       const details = prepared[index];
       const runItem = runItems.byKeyword.get(keyword.id);
@@ -238,7 +159,7 @@ export async function prepareQueuedRankCheckBatch(
           scheduledAt: new Date(input.claimedAt),
           startedAt: now,
           status: deferredReason ? "deferred" : "running",
-          trigger: "scheduled",
+          trigger: origin.trigger,
           workflowRunId: input.workflowRunId,
         },
       });
@@ -249,6 +170,8 @@ export async function prepareQueuedRankCheckBatch(
             id: runItem.id,
             keywordId: keyword.id,
             rankCheckId: null,
+            claimAttempts: runItem.claimAttempts,
+            claimExpiresAt: runItem.claimExpiresAt,
             status: "running",
           },
         });
@@ -264,9 +187,27 @@ export async function prepareQueuedRankCheckBatch(
           id: taskId,
           keywordId: keyword.id,
           rankCheckId: rankCheck.id,
+          recoveryContextHash: preparedRankRecoveryContext(
+            keyword,
+            context.project.domain,
+            details?.depth,
+          ),
           state: deferredReason ? "deferred" : "prepared",
         },
       });
+      if (!deferredReason && context.connection) {
+        const permit = await queuedDefinitionPermit(tx, rankCheck.id, true);
+        const definition = await captureWorkerDefinition(tx, {
+          permit,
+          projectId: input.projectId,
+          keywordId: keyword.id,
+          connection: context.connection,
+          depth: details?.depth,
+          queuedTaskId: taskId,
+        });
+        if (!sameDefinitionBytes(definition.binding.request, requests?.get(keyword.id)))
+          throw new Error("Prepared request changed before capture.");
+      }
       await writeQueuedRunningAudit(tx, {
         deferredReason,
         estimatedCostCents: estimate,

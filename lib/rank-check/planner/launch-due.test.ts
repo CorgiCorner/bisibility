@@ -1,3 +1,8 @@
+import {
+  admittedDefinitionSourceFixture,
+  definitionQueryFixture,
+} from "@/lib/rank-check/definition-policy.test-fixture";
+
 vi.mock("@/lib/provider-usage/enforcement", async (load) => ({
   ...(await load<typeof import("@/lib/provider-usage/enforcement")>()),
   assertProviderAllocationAvailable: vi.fn(async () => ({
@@ -136,6 +141,7 @@ describe("planned run launching", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.nativeCosts.mockResolvedValue(undefined);
+    mocks.queryRaw.mockImplementation(definitionQueryFixture());
     mocks.queuedRoute.mockResolvedValue({ mode: "legacy", reason: "dispatcher_disabled" });
     mocks.activeLocationIds = ["location_active"];
     mocks.archived.clear();
@@ -296,6 +302,11 @@ describe("planned run launching", () => {
     expect(mocks.createMany).toHaveBeenCalledWith({
       data: [
         {
+          definitionIntent: {
+            version: 1,
+            depth: 20,
+            source: admittedDefinitionSourceFixture("project_1", "keyword_1"),
+          },
           estimatedCostCents: 2,
           keywordId: "keyword_1",
           notBefore: now,

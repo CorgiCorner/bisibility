@@ -4,6 +4,7 @@ import { whereExecutedChecks } from "@/lib/checks/status";
 import { prisma } from "@/lib/db/prisma";
 import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
 import { trackedProjectDomain } from "@/lib/schemas/project";
+import { keywordCheckSelect as rankCheckSelect } from "./keyword-check-select";
 import { fetchKeywordMetricsByIds } from "./keyword-metrics-query";
 import { type KeywordRow, mapKeyword } from "./keyword-row";
 import { keywordCheckScheduleSelect } from "./keyword-row-types";
@@ -11,21 +12,7 @@ import { fetchProjectKeywordTraffic } from "./keyword-traffic";
 import { getRequestProjectDefaults } from "./workspace-request-data";
 
 const EMPTY_METRICS = { cpc: null, difficulty: null, serpFeatures: [], volume: null };
-const rankCheckSelect = {
-  checkedAt: true,
-  degradedToCountry: true,
-  errorCode: true,
-  expectedUrlAtCheck: true,
-  id: true,
-  normalizationVersion: true,
-  observationRun: { select: { completeness: true } },
-  position: true,
-  previousPosition: true,
-  provider: true,
-  requestedDepth: true,
-  rankingUrl: true,
-  status: true,
-} as const;
+
 const locationRefSelect = {
   canonicalKey: true,
   cityName: true,

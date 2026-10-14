@@ -6,6 +6,7 @@ import type { SnapshotExtensionReason } from "@/lib/serp/snapshot-extension";
 import messages from "@/messages/core/en/project-rank-tracker-keyword-detail.json";
 import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
+import type { ComponentProps } from "react";
 
 const now = new Date().toISOString();
 function data(
@@ -68,9 +69,15 @@ const entry: StoredResultsIndexEntry = {
   stoppedAtResult: false,
   degradedToCountry: false,
 };
+function LegacyStory(
+  props: Exclude<ComponentProps<typeof RetrievedResultsCard>, { history: unknown }>,
+) {
+  return <RetrievedResultsCard {...props} />;
+}
+
 const meta = {
   title: "Keywords/SnapshotExtension",
-  component: RetrievedResultsCard,
+  component: LegacyStory,
   decorators: [
     (Story) => (
       <FeatureMessagesProvider
@@ -97,7 +104,7 @@ const meta = {
     loadResults: async () => [data("available", true)],
     extendSnapshotAction: async () => ({ ok: true as const }),
   },
-} satisfies Meta<typeof RetrievedResultsCard>;
+} satisfies Meta<typeof LegacyStory>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Available: Story = {};

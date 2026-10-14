@@ -1,19 +1,16 @@
 import "server-only";
-import { monthlyTrackingCostCents } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
 import { MAX_PROJECT_MARKETS } from "@/lib/markets/limits";
 import type { MarketsPageRow } from "@/lib/markets/page-model";
 import { listArchivedProjectMarkets } from "@/lib/markets/registry";
 import { type MarketScheduleContext, marketScheduleContext } from "@/lib/markets/schedule-context";
-import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
-import {
-  type ProviderChainEntry,
-  primaryProviderConnection,
-} from "@/lib/rank-check/provider-chain-order";
-import { resolveEffectiveSerpDepth } from "@/lib/serp/constants";
+import { rankCheckRateSelection } from "@/lib/provider-rates/manual-rate";
 import { supportsResearchScope } from "@/lib/serp/research-capability";
-import type { RankCheckFrequency } from "@/lib/settings/options";
 import { requireReadableProject } from "./_auth";
+import { readLegacyOverviewQuality } from "./legacy-overview-quality";
+import { type MarketCostKeyword, marketMonthlyCostCents } from "./project-market-cost";
+import { legacyMarketTopThree } from "./project-market-quality";
+import type { RankTrackerReportOptions } from "./rank-tracker-report-model";
 
 export type ProjectMarketsView = {
   /**
@@ -49,162 +46,149 @@ export type ProjectMarketsView = {
   projectId: string;
 };
 
-type MarketCostSchedule = {
-  cronExpression: string | null;
-  frequency: RankCheckFrequency;
-  serpDepth: number | null;
-};
-
-type MarketCostInput = {
-  defaults: MarketCostSchedule | null;
-  providerConnections: (ProviderChainEntry & Parameters<typeof withRankCheckManualRate>[0])[];
-};
-
-type MarketCostKeyword = { schedule: MarketCostSchedule | null };
-
-function marketMonthlyCostCents(keywords: readonly MarketCostKeyword[], project: MarketCostInput) {
-  const selected = primaryProviderConnection(project.providerConnections, "serp");
-  const primary = selected ? withRankCheckManualRate(selected) : null;
-  let total = 0;
-  for (const keyword of keywords) {
-    const schedule = keyword.schedule ?? project.defaults;
-    const estimate = monthlyTrackingCostCents(1, {
-      cronExpression: schedule?.cronExpression ?? null,
-      depth: resolveEffectiveSerpDepth({
-        projectDepth: project.defaults?.serpDepth,
-        scheduleDepth: keyword.schedule?.serpDepth,
-      }),
-      overrideCents: primary?.costPerCheckCents == null ? null : Number(primary.costPerCheckCents),
-      providerId: primary?.provider ?? null,
-      rawFrequency: schedule?.frequency ?? "manual",
-    });
-    if (estimate == null) return null;
-    total += Number(estimate);
-  }
-  return total;
-}
-
-export async function getProjectMarkets(projectRef: string): Promise<ProjectMarketsView> {
-  const { project } = await requireReadableProject(projectRef);
-  const [data, registry] = await Promise.all([
-    prisma.project.findUnique({
-      include: {
-        checkSchedules: {
-          where: { archivedAt: null },
-          orderBy: [{ isDefault: "desc" }, { name: "asc" }, { publicId: "asc" }],
-          select: { enabled: true, frequency: true, isDefault: true, name: true, publicId: true },
-        },
-        defaults: true,
-        keywords: {
-          select: {
-            archivedAt: true,
-            device: true,
-            locationId: true,
-            rankChecks: {
-              orderBy: { checkedAt: "desc" },
-              select: { position: true },
-              take: 1,
-              where: { status: "completed" },
+export async function getProjectMarkets(
+  projectRef: string,
+  options: { now?: Date; report?: RankTrackerReportOptions } = {},
+): Promise<ProjectMarketsView> {
+  const scope = await requireReadableProject(projectRef);
+  const { project } = scope;
+  const now = options.now ?? new Date();
+  return prisma.$transaction(
+    async (tx) => {
+      const [data, registry] = await Promise.all([
+        tx.project.findUnique({
+          include: {
+            checkSchedules: {
+              where: { archivedAt: null },
+              orderBy: [{ isDefault: "desc" }, { name: "asc" }, { publicId: "asc" }],
+              select: {
+                enabled: true,
+                frequency: true,
+                isDefault: true,
+                name: true,
+                publicId: true,
+              },
             },
-            schedule: {
-              select: { cronExpression: true, frequency: true, serpDepth: true },
+            defaults: true,
+            keywords: {
+              select: {
+                id: true,
+                publicId: true,
+                createdAt: true,
+                archivedAt: true,
+                device: true,
+                locationId: true,
+                schedule: {
+                  select: { cronExpression: true, frequency: true, serpDepth: true },
+                },
+                text: true,
+              },
             },
-            text: true,
+            markets: {
+              include: { location: true },
+              orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+              where: { status: { in: ["active", "paused"] } },
+            },
+            providerConnections: { include: { rates: rankCheckRateSelection } },
           },
-        },
-        markets: {
-          include: { location: true },
+          where: { id: project.id },
+        }),
+        tx.projectMarket.findMany({
+          include: { location: { select: { canonicalKey: true } } },
           orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-          where: { status: { in: ["active", "paused"] } },
-        },
-        providerConnections: { include: { rates: rankCheckRateSelection } },
-      },
-      where: { id: project.id },
-    }),
-    prisma.projectMarket.findMany({
-      include: { location: { select: { canonicalKey: true } } },
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-      where: { projectId: project.id },
-    }),
-  ]);
-  if (!data) throw new Error("Project not found.");
+          where: { projectId: project.id },
+        }),
+      ]);
+      if (!data) throw new Error("Project not found.");
 
-  const markets: ProjectMarketsView["markets"] = data.markets.map((market) => {
-    const marketKeywords = data.keywords.filter(
-      (keyword) => keyword.locationId === market.locationId,
-    );
-    const activeKeywords = marketKeywords.filter((keyword) => keyword.archivedAt === null);
-    const completed = activeKeywords.flatMap((keyword) => keyword.rankChecks);
-    const hasCompleteRollup =
-      activeKeywords.length > 0 && completed.length === activeKeywords.length;
-    const topThreeCount = hasCompleteRollup
-      ? completed.filter((check) => check.position !== null && check.position <= 3).length
-      : null;
-    return {
-      activeKeywordCount: activeKeywords.length,
-      canonicalKey: market.location.canonicalKey,
-      countryCode: market.location.countryCode,
-      currentVisibility:
-        topThreeCount === null
-          ? null
-          : Number(((topThreeCount / activeKeywords.length) * 100).toFixed(1)),
-      displayName: market.location.displayName,
-      futureKeywordDevices: market.futureKeywordDevices,
-      id: market.publicId,
-      keywordCount: marketKeywords.length,
-      languageCode: market.location.languageCode,
-      languageLabel: market.location.languageLabel,
-      locationId: market.locationId,
-      monthlyCostCents: marketMonthlyCostCents(activeKeywords, data),
-      name: market.name,
-      researchAvailable: supportsResearchScope(
-        market.location.countryCode,
-        market.location.languageCode,
-      ),
-      status: market.status === "active" ? "active" : "paused",
-      topThreeCount,
-    };
-  });
-  const monthlyCosts = markets
-    .filter((market) => market.status === "active")
-    .map((market) => market.monthlyCostCents);
-  const monthlyCostCents = monthlyCosts.some((cost) => cost == null)
-    ? null
-    : monthlyCosts.reduce<number>((total, cost) => total + (cost ?? 0), 0);
-  const perMarketChecks = Math.max(0, ...markets.map((market) => market.activeKeywordCount ?? 0));
+      const quality = await readLegacyOverviewQuality(
+        tx,
+        scope,
+        data.keywords.filter(
+          (keyword) =>
+            keyword.archivedAt === null &&
+            data.markets.some((market) => market.locationId === keyword.locationId),
+        ),
+        { now, horizon: 3, report: options.report },
+      );
 
-  return {
-    marketCreation: {
-      scheduleContext: marketScheduleContext({
-        ...data,
-        checkSchedules: data.checkSchedules ?? [],
-      }),
-      registry: registry.map((market) => ({
-        canonicalKey: market.location.canonicalKey,
-        id: market.publicId,
-        status: market.status === "removed" ? "archived" : "active",
-      })),
-      schedules: (data.checkSchedules ?? [])
-        .filter((schedule) => schedule.enabled)
-        .map((schedule) => ({
-          frequency: schedule.frequency,
-          id: schedule.publicId,
-          name: schedule.name,
-        })),
-      sources: markets
+      const markets: ProjectMarketsView["markets"] = data.markets.map((market) => {
+        const marketKeywords = data.keywords.filter(
+          (keyword) => keyword.locationId === market.locationId,
+        );
+        const activeKeywords = marketKeywords.filter((keyword) => keyword.archivedAt === null);
+        const rollup = legacyMarketTopThree(
+          activeKeywords.map((keyword) => keyword.publicId),
+          quality.resolutions,
+        );
+        return {
+          activeKeywordCount: activeKeywords.length,
+          canonicalKey: market.location.canonicalKey,
+          countryCode: market.location.countryCode,
+          currentVisibility: rollup.currentVisibility,
+          displayName: market.location.displayName,
+          futureKeywordDevices: market.futureKeywordDevices,
+          id: market.publicId,
+          keywordCount: marketKeywords.length,
+          languageCode: market.location.languageCode,
+          languageLabel: market.location.languageLabel,
+          locationId: market.locationId,
+          monthlyCostCents: marketMonthlyCostCents(activeKeywords, data),
+          name: market.name,
+          researchAvailable: supportsResearchScope(
+            market.location.countryCode,
+            market.location.languageCode,
+          ),
+          status: market.status === "active" ? "active" : "paused",
+          topThreeCount: rollup.topThreeCount,
+        };
+      });
+      const monthlyCosts = markets
         .filter((market) => market.status === "active")
-        .map((market) => ({
-          id: market.id,
-          keywordCount: market.keywordCount ?? 0,
-          name: market.name ?? "Unnamed market",
-        })),
+        .map((market) => market.monthlyCostCents);
+      const monthlyCostCents = monthlyCosts.some((cost) => cost == null)
+        ? null
+        : monthlyCosts.reduce<number>((total, cost) => total + (cost ?? 0), 0);
+      const perMarketChecks = Math.max(
+        0,
+        ...markets.map((market) => market.activeKeywordCount ?? 0),
+      );
+
+      return {
+        marketCreation: {
+          scheduleContext: marketScheduleContext({
+            ...data,
+            checkSchedules: data.checkSchedules ?? [],
+          }),
+          registry: registry.map((market) => ({
+            canonicalKey: market.location.canonicalKey,
+            id: market.publicId,
+            status: market.status === "removed" ? "archived" : "active",
+          })),
+          schedules: (data.checkSchedules ?? [])
+            .filter((schedule) => schedule.enabled)
+            .map((schedule) => ({
+              frequency: schedule.frequency,
+              id: schedule.publicId,
+              name: schedule.name,
+            })),
+          sources: markets
+            .filter((market) => market.status === "active")
+            .map((market) => ({
+              id: market.id,
+              keywordCount: market.keywordCount ?? 0,
+              name: market.name ?? "Unnamed market",
+            })),
+        },
+        markets,
+        maxMarkets: MAX_PROJECT_MARKETS,
+        monthlyCostCents,
+        perMarketChecks,
+        projectId: data.publicId,
+      };
     },
-    markets,
-    maxMarkets: MAX_PROJECT_MARKETS,
-    monthlyCostCents,
-    perMarketChecks,
-    projectId: data.publicId,
-  };
+    { isolationLevel: "RepeatableRead" },
+  );
 }
 
 /** A market as a chrome surface offers it: the name the reader knows, and its URL ref. */

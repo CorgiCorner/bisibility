@@ -45,6 +45,7 @@ describe("migration readiness", () => {
       },
       { id: "20260904210000_run_start_semantics", lifecycle: "active" },
       { id: "20261011021000_accounting_history", lifecycle: "active" },
+      { id: "20261013000000_legacy_web_policy", lifecycle: "active" },
     ]);
   });
 

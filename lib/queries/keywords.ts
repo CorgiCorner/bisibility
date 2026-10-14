@@ -1,3 +1,4 @@
+import { keywordCheckSelect as rankCheckSelect } from "./keyword-check-select";
 import "server-only";
 
 import {
@@ -53,21 +54,7 @@ const EMPTY_METRICS: Metrics = {
   serpFeatures: [],
   volume: null,
 };
-const rankCheckSelect = {
-  checkedAt: true,
-  degradedToCountry: true,
-  errorCode: true,
-  expectedUrlAtCheck: true,
-  id: true,
-  normalizationVersion: true,
-  observationRun: { select: { completeness: true } },
-  position: true,
-  provider: true,
-  previousPosition: true,
-  requestedDepth: true,
-  rankingUrl: true,
-  status: true,
-} as const;
+
 const pendingQueuedRankCheckTaskSelect = {
   select: { state: true },
   take: 1,

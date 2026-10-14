@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.33.0] - 2026-10-14
+
+### Added
+
+- Added personal views, configurable dashboards, ranking reports and optional Local monitoring; recurring scans stay off by default.
+
+- Added administrator task recovery with explicit spending consent and configurable announcement banners with mobile scrolling.
+
+### Changed
+
+- **Breaking:** Organic history repair now requires a project and time window, defaults to dry-run and retains versioned provenance.
+
+- Improved measurement consent, comparisons and exports, identity review, dashboard controls and help, and project-wide display settings.
+
+### Fixed
+
+- Fixed stream reconnection, table layout, onboarding saves, API access, container migrations, business controls and conflicting local identity confirmations.
+
 ## [0.32.0] - 2026-10-13
 
 ### Changed

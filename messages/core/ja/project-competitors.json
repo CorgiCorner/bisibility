@@ -159,7 +159,10 @@
       "viewName": "ビュー名",
       "viewNamePlaceholder": "例: US モバイルのコアセット",
       "why": "理由",
-      "you": "自社"
+      "you": "自社",
+      "sovQualityUnknown": "現在の比較は利用できません。保存された計測では、有効な定義、データの新しさ、または検索範囲を確認できません。",
+      "sovCoverageUnknown": "不明",
+      "sovQuality": "{expected} 件中 {measured} 件のキーワードが条件を満たしています。不明: {unknown} 件。最新データのカバレッジ: {coverage}。"
     }
   }
 }

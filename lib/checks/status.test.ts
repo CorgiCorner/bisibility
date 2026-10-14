@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { fixtureScope } from "@/lib/rank-measurements/fixtures";
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   checkStatusLabel,
   comparableCompletedWindow,
@@ -9,6 +11,18 @@ import {
   whereCompletedChecks,
   whereExecutedChecks,
 } from "./status";
+
+function comparable(normalizationVersion: string, requestedDepth = 100) {
+  const scope = { ...fixtureScope, targetId: "target" };
+  return recordedFixture(3, {
+    normalizationVersion,
+    requestedDepth,
+    configuredScope: scope,
+    effectiveScope: scope,
+  });
+}
+
+beforeEach(() => vi.setSystemTime(new Date("2026-10-12T12:00:00Z")));
 
 describe("rank-check status policy", () => {
   it("uses skipped as the deferred UI label", () => {
@@ -51,30 +65,22 @@ describe("rank-check status policy", () => {
   });
 
   it("returns the newest contiguous comparable segment and its visible boundary", () => {
+    const first = comparable("v2"),
+      second = comparable("v2"),
+      boundary = comparable("v1");
     const window = comparableCompletedWindow([
-      { normalizationVersion: "v2", requestedDepth: 100, status: "completed" },
-      { normalizationVersion: null, requestedDepth: 100, status: "failed" },
-      { normalizationVersion: "v2", requestedDepth: 100, status: "completed" },
-      { normalizationVersion: "v1", requestedDepth: 100, status: "completed" },
-      { normalizationVersion: "v2", requestedDepth: 100, status: "completed" },
+      first,
+      { ...first, normalizationVersion: null, status: "failed" },
+      second,
+      boundary,
+      comparable("v2"),
     ]);
-
-    expect(window).toEqual({
-      boundary: { normalizationVersion: "v1", requestedDepth: 100, status: "completed" },
-      checks: [
-        { normalizationVersion: "v2", requestedDepth: 100, status: "completed" },
-        { normalizationVersion: "v2", requestedDepth: 100, status: "completed" },
-      ],
-      hasBoundary: true,
-    });
+    expect(window).toEqual({ boundary, checks: [first, second], hasBoundary: true });
   });
 
   it("does not mark a window that contains only one comparison contract", () => {
-    expect(
-      comparableCompletedWindow([
-        { normalizationVersion: "v1", requestedDepth: 50, status: "completed" },
-        { normalizationVersion: "v1", requestedDepth: 50, status: "completed" },
-      ]),
-    ).toMatchObject({ hasBoundary: false });
+    expect(comparableCompletedWindow([comparable("v1", 50), comparable("v1", 50)])).toMatchObject({
+      hasBoundary: false,
+    });
   });
 });

@@ -112,7 +112,13 @@
         "cents": "Cents",
         "precision": "Decimal places",
         "digits": "{count, number}",
-        "help": "Saved in this browser. Display rounding does not change recorded amounts or budgets."
+        "help": "Shared by everyone in this project across usage, budgets and the header. Only display rounding changes; accounting values stay exact. Currency uses the recorded unit, without currency conversion.",
+        "readOnly": "Project editors can change these shared display settings.",
+        "saving": "Saving project display settings...",
+        "conflict": "Another editor changed these settings. Their saved values are now shown; review your change and try again.",
+        "forbidden": "You can no longer edit this project. Your change was not saved.",
+        "invalid": "Choose an available amount format and decimal precision.",
+        "failed": "Display settings could not be saved. The previous values are still shown."
       }
     }
   }

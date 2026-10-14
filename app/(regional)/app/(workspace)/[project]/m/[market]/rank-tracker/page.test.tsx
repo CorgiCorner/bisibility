@@ -2,6 +2,7 @@ import { KeywordHeaderContextBoundary } from "@/components/keywords/KeywordHeade
 import { RankTrackerFeatureBoundary } from "@/components/rank-tracker/RankTrackerFeatureBoundary";
 import { HEADER_CONTEXT_LABEL } from "@/components/shell/HeaderContextSlot";
 import { shellMessagesElement } from "@/i18n/test-support/render-with-feature-messages";
+import { generalPreference } from "@/lib/project-surface-preferences/model";
 import { asMarketRef, asProjectRef, marketPath } from "@/lib/routing/app-path";
 import { permanentRedirect, redirect, setNavigationState } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
@@ -78,6 +79,7 @@ vi.mock("@/lib/markets/market-context", () => ({
 }));
 vi.mock("@/lib/queries/_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
+  getQueryActor: async () => ({ id: "user_1" }),
   resolveProjectAccess: mocks.resolveProjectAccess,
 }));
 vi.mock("@/lib/queries/account", () => ({ getPreferences: mocks.getPreferences }));
@@ -97,6 +99,17 @@ vi.mock("@/lib/queries/rank-check-runs", () => ({
 }));
 vi.mock("@/lib/queries/saved-keywords", () => ({ savedKeywordCount: mocks.savedKeywordCount }));
 vi.mock("@/lib/queries/saved-views", () => ({ listSavedViews: mocks.listSavedViews }));
+vi.mock("@/lib/project-usage-display/store", async () => {
+  const { defaultUsageDisplayOptions } = await import("@/lib/project-usage-display/schema");
+  return {
+    readProjectUsageDisplaySettings: vi.fn(async (projectId: string) => ({
+      projectId,
+      revision: 0,
+      canEdit: false,
+      options: defaultUsageDisplayOptions,
+    })),
+  };
+});
 vi.mock("./../../../rank-tracker/rank-tracker-page-data", () => ({
   loadRankTrackerPageList: mocks.loadRankTrackerPageList,
   resolveRankTrackerPageQuery: mocks.resolveRankTrackerPageQuery,
@@ -205,6 +218,13 @@ describe("market Rank Tracker route composition", () => {
     mocks.resolveProjectAccess.mockResolvedValue({ projectId: "project_1", publicId: PROJECT });
     mocks.resolveRankTrackerPageQuery.mockResolvedValue({
       activeView: null,
+      status: "ready",
+      personalPreferences: {
+        views: [],
+        preference: generalPreference(PROJECT, "keywords"),
+        presentation: null,
+        scopeKey: "synthetic-market-scope",
+      },
       malformedDevice: false,
       query: pageQuery(null),
       staleView: false,

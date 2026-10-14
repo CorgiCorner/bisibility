@@ -204,6 +204,7 @@ describe("rank-check persistence update path", () => {
 
   it("persists observations inside the rank-check transaction", async () => {
     const tx = {
+      $queryRaw: vi.fn(async () => []),
       auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
       keywordSchedule: { update: vi.fn() },
       observationItem: { createMany: vi.fn(() => Promise.resolve({ count: 1 })) },
@@ -272,6 +273,7 @@ describe("rank-check persistence update path", () => {
 
   it("persists observations for an already running rank check", async () => {
     const tx = {
+      $queryRaw: vi.fn(async () => []),
       auditLog: { create: vi.fn(() => Promise.resolve({ id: "audit_1" })) },
       keywordSchedule: { update: vi.fn() },
       observationItem: { createMany: vi.fn(() => Promise.resolve({ count: 1 })) },

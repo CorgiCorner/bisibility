@@ -76,6 +76,13 @@
     border-style: solid;
   }
 
+  /* Preflight is disabled; native cell spacing exposes the canvas between filled
+     headers and prevents row borders from painting. Explicit variants override this layer. */
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
   /* Keep the anchor reset in the base layer so utilities such as `text-white`
      can set the foreground of links that are presented as buttons. */
   a {

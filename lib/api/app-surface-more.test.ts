@@ -2,6 +2,7 @@ import {
   buildCompetitorMarket,
   emptyCompetitorFilter,
 } from "@/lib/competitors/competitor-market-model";
+import { emptySavedViewConfig } from "@/lib/keywords/saved-view-model";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handleApiRequest } from "./router";
 
@@ -118,6 +119,20 @@ const project = {
   updatedAt: new Date("2026-01-02T00:00:00.000Z"),
 };
 
+function savedViewResource(name: string) {
+  return {
+    canDelete: true,
+    config: emptySavedViewConfig,
+    definition: emptySavedViewConfig,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    id: ids.savedView,
+    name,
+    surface: "keywords" as const,
+    visibility: "project" as const,
+    revision: 1,
+  };
+}
+
 const apiActor = { id: project.ownerId, memberships: [{ projectId: project.id, role: "admin" }] };
 const mutationContext = { actor: apiActor, auditActorId: null };
 
@@ -153,9 +168,7 @@ describe("public API remaining app surface routes", () => {
       },
       project,
     });
-    mocks.queries.listSavedViews.mockResolvedValue([
-      { createdById: "user_db_1", id: ids.savedView, name: "All" },
-    ]);
+    mocks.queries.listSavedViews.mockResolvedValue([savedViewResource("All")]);
     mocks.queries.getCompetitorsApiView.mockResolvedValue({
       managedCompetitors: [
         {
@@ -191,6 +204,14 @@ describe("public API remaining app surface routes", () => {
                 id: ids.keyword,
                 keyword: "rank tracker",
                 ranked: true,
+                quality: {
+                  "example.com": { evidence: "positive", freshness: "fresh", reason: null },
+                  "competitor.example.com": {
+                    evidence: "positive",
+                    freshness: "fresh",
+                    reason: null,
+                  },
+                },
                 ranks: { "competitor.example.com": 1, "example.com": 3 },
                 tags: [],
                 volume: 1_000,
@@ -226,6 +247,7 @@ describe("public API remaining app surface routes", () => {
       importJob: { id: ids.job, state: "idle" },
     });
     for (const fn of Object.values(mocks.actions)) fn.mockResolvedValue({ id: "ok_1" });
+    mocks.actions.createSavedView.mockResolvedValue(savedViewResource("Mine"));
     mocks.tokenService.assertMintRateLimit.mockResolvedValue(undefined);
     mocks.tokenService.mint.mockResolvedValue({
       createdAt: "2026-01-01T00:00:00.000Z",

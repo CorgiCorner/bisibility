@@ -6,12 +6,20 @@ import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { BudgetExhaustedError } from "@/lib/rank-check/budget";
 import { LaunchRankCheckRunError } from "@/lib/rank-check/runs/launch-types";
+import { SavedViewConflictError } from "@/lib/saved-views/errors";
 import { errorFromUnknown } from "./error-mapper";
 
 const headers = new Headers();
 const url = new URL("https://example.com/api/v1/keywords/kw_a00000000000000000000000/checks");
 
 describe("errorFromUnknown", () => {
+  it("returns a controlled409 for a saved-view revision conflict", async () => {
+    const response = errorFromUnknown(new SavedViewConflictError(), headers, url);
+    expect(response.status).toBe(409);
+    expect((await response.json()).type).toBe(
+      "https://bisibility.com/problems/saved_view_conflict",
+    );
+  });
   it("preserves project budget surface and the authoritative reset", async () => {
     const resetAt = new Date(Date.now() + 60_000);
     const response = errorFromUnknown(

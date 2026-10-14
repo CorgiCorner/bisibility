@@ -6,6 +6,7 @@ import {
 } from "@/i18n/test-support/render-with-feature-messages";
 import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import type { DefaultsData } from "@/lib/settings/options";
+import { reviewedDefaultsPreview } from "@/lib/settings/reviewed-defaults.test-fixture";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -59,13 +60,14 @@ function renderCard(
   overrides: Partial<DefaultsData> = {},
   initialCronPreview: CronPreviewResult = readyPreview,
 ) {
-  const updateDefaults = vi.fn(async () => ({}));
+  const updateDefaults = vi.fn(async () => ({ kind: "saved" }));
   const previewCron = vi.fn(async () => readyPreview);
   render(
     <TrackingDefaultsCard
       canEdit
       defaults={{ ...defaults, ...overrides }}
       initialCronPreview={initialCronPreview}
+      previewDefaults={reviewedDefaultsPreview}
       previewCron={previewCron}
       projectId="prj_1"
       updateDefaults={updateDefaults}
@@ -106,11 +108,17 @@ describe("TrackingDefaultsCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Timezone" }));
     fireEvent.click(screen.getByRole("menuitem", { name: /UTC/ }));
 
-    expect(screen.getByRole("button", { name: "Save" })).not.toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("button", { name: "Review changes" })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Review changes" }));
 
+    expect(updateDefaults).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole("checkbox", { name: /reviewed these exact/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm reviewed save" }));
     await waitFor(() => expect(updateDefaults).toHaveBeenCalledTimes(1));
-    expect(updateDefaults).toHaveBeenCalledWith(expect.objectContaining({ timezone: "UTC" }));
+    expect(updateDefaults).toHaveBeenCalledWith(
+      expect.objectContaining({ timezone: "UTC" }),
+      expect.objectContaining({ confirmed: true }),
+    );
   });
 
   it("surfaces an invalid stored timezone before save and does not submit it", async () => {
@@ -128,7 +136,7 @@ describe("TrackingDefaultsCard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Frequency" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Daily" }));
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review changes" }));
 
     expect(await screen.findByText("Select a valid time zone.")).toBeInTheDocument();
     expect(updateDefaults).not.toHaveBeenCalled();
@@ -140,6 +148,7 @@ describe("TrackingDefaultsCard", () => {
         canEdit
         defaults={{ ...defaults, schedule: { ...defaults.schedule, timezone: "Etc/GMT+5" } }}
         initialCronPreview={readyPreview}
+        previewDefaults={reviewedDefaultsPreview}
         previewCron={vi.fn(async () => readyPreview)}
         projectId="prj_1"
         updateDefaults={vi.fn(async () => ({}))}
@@ -248,6 +257,7 @@ describe("TrackingDefaultsCard", () => {
           },
         }}
         initialCronPreview={readyPreview}
+        previewDefaults={reviewedDefaultsPreview}
         previewCron={previewCron}
         projectId="prj_1"
         updateDefaults={vi.fn(async () => ({}))}
@@ -272,11 +282,15 @@ describe("TrackingDefaultsCard", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
 
     expect(screen.getByText(/ranking past 20/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    fireEvent.click(screen.getByRole("button", { name: "Review changes" }));
 
+    expect(updateDefaults).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole("checkbox", { name: /reviewed these exact/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm reviewed save" }));
     await waitFor(() => expect(updateDefaults).toHaveBeenCalledTimes(1));
     expect(updateDefaults).toHaveBeenCalledWith(
       expect.objectContaining({ projectId: "prj_1", serpDepth: 20, timezone: "Europe/Warsaw" }),
+      expect.objectContaining({ confirmed: true }),
     );
   });
 
@@ -299,6 +313,7 @@ describe("TrackingDefaultsCard", () => {
         canEdit={false}
         defaults={defaults}
         initialCronPreview={readyPreview}
+        previewDefaults={reviewedDefaultsPreview}
         previewCron={vi.fn(async () => readyPreview)}
         projectId="prj_1"
         updateDefaults={vi.fn(async () => ({}))}
@@ -310,7 +325,7 @@ describe("TrackingDefaultsCard", () => {
     expect(screen.getByText("Europe/Warsaw")).toBeInTheDocument();
     expect(screen.getByText("Top 100")).toBeInTheDocument();
     expect(screen.getByText("Desktop")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Review changes" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Timezone" })).not.toBeInTheDocument();
   });
 
@@ -320,6 +335,7 @@ describe("TrackingDefaultsCard", () => {
         canEdit={false}
         defaults={defaults}
         initialCronPreview={readyPreview}
+        previewDefaults={reviewedDefaultsPreview}
         previewCron={vi.fn(async () => readyPreview)}
         projectId="prj_1"
         updateDefaults={vi.fn(async () => ({}))}

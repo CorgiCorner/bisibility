@@ -9,6 +9,7 @@ describe("data migration registry metadata", () => {
       "20260902033000_keyword_schedules_to_check_schedules",
       "20260904210000_run_start_semantics",
       "20261011021000_accounting_history",
+      "20261013000000_legacy_web_policy",
     ]);
     expect(dataMigrationManifest).toEqual([
       expect.objectContaining({
@@ -30,6 +31,12 @@ describe("data migration registry metadata", () => {
         lifecycle: "active",
         prerequisiteSchemaMigrationId: "20261011020000_accounting_history_snapshot",
       }),
+      expect.objectContaining({
+        execution: "deploy-blocking",
+        id: "20261013000000_legacy_web_policy",
+        lifecycle: "active",
+        prerequisiteSchemaMigrationId: "20261012200600_measurement_definition_authority",
+      }),
     ]);
     await expect(
       resolveActiveDataMigrations(dataMigrationManifest, activeDataMigrationImplementations),
@@ -43,6 +50,7 @@ describe("data migration registry metadata", () => {
         id: "20260904210000_run_start_semantics",
       }),
       expect.objectContaining({ id: "20261011021000_accounting_history", replaySafe: true }),
+      expect.objectContaining({ id: "20261013000000_legacy_web_policy", replaySafe: true }),
     ]);
   });
 });

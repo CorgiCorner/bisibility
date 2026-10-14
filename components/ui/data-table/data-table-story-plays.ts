@@ -123,7 +123,7 @@ export async function playGroupingAndSelection({ canvasElement }: StoryPlayConte
 export async function playSections({ canvasElement }: StoryPlayContext) {
   const canvas = within(canvasElement);
   const section = canvas.getByText("Priority markets").closest<HTMLElement>('[role="row"]');
-  expect(section).toHaveAttribute("aria-level", "1");
+  expect(section).not.toHaveAttribute("aria-level");
   expect(within(section as HTMLElement).queryByRole("button")).not.toBeInTheDocument();
   expect(canvas.getByText("technical seo audit").closest('[role="row"]')).toHaveAttribute(
     "data-depth",

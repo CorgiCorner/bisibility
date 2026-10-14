@@ -6,6 +6,7 @@ import { stubResizeObserver } from "@/tests/observers";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { pendingRows, renderPendingGrid } from "./KeywordsGrid.test-helpers";
+import { rankPoint, rankQualityRow } from "./keyword-rank-quality.test-fixture";
 
 const mocks = vi.hoisted(() => ({ exportKeywords: vi.fn() }));
 
@@ -67,9 +68,17 @@ describe("KeywordsGrid pending state", () => {
   }, 15_000);
 
   it("labels the first completed observation as new", async () => {
+    const row = rankQualityRow();
+    row.rankQuality = {
+      ...row.rankQuality,
+      baseline: null,
+      comparison: "unavailable",
+      event: "first",
+      movement: null,
+    };
     renderPendingGrid({
       providerConnected: true,
-      rows: [{ ...keywordRows[0], positionBaseline: null, previousPosition: null }],
+      rows: [{ ...row, positionBaseline: null, previousPosition: null }],
     });
 
     expect(await screen.findByText("New")).toHaveAttribute("aria-label", "First observation");
@@ -102,18 +111,24 @@ describe("KeywordsGrid pending state", () => {
     );
     expect(await screen.findByText(keywordRows[0].keyword)).toBeInTheDocument();
     expect(
-      await screen.findAllByRole("cell", { name: "Not checked" }, { timeout: 10_000 }),
+      await screen.findAllByText("Recorded time unavailable", {}, { timeout: 10_000 }),
     ).toHaveLength(2);
     expect(screen.queryByText("No data")).not.toBeInTheDocument();
   }, 15_000);
 
-  it("labels a completed check with no result as not found in top 100", async () => {
-    const [row] = pendingRows(1);
+  it("labels a completed check with proven absence without a synthetic position", async () => {
+    const row = rankQualityRow();
+    row.rankQuality.current = rankPoint({
+      evidence: "known_absent",
+      position: null,
+      reportedPosition: null,
+    });
     renderPendingGrid({
-      rows: [{ ...row, hasRankData: true, lastCheckStatus: "completed", position: 101 }],
+      rows: [{ ...row, hasRankData: false, lastCheckStatus: "completed", position: 101 }],
     });
 
-    expect(await screen.findByText("Not found in top 100")).toBeInTheDocument();
+    expect(await screen.findByText("Not found in measured scope")).toBeInTheDocument();
+    expect(screen.queryByText("#101")).not.toBeInTheDocument();
   });
 
   it("refreshes RSC data without navigating or clearing table search state", () => {

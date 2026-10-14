@@ -128,6 +128,32 @@
       "readOnly": "Solo lectura",
       "saveValidation": "Revisa los ajustes destacados antes de guardar.",
       "saveError": "No se ha podido guardar el límite de inspección de URL."
+    },
+    "measurementPolicy": {
+      "title": "Política de medición",
+      "description": "Elige cuándo los datos de posiciones guardados están actualizados. Guardar no ejecuta comprobaciones.",
+      "manual": "Vigencia de comprobaciones manuales (segundos)",
+      "grace": "Margen del calendario (segundos)",
+      "manualHelp": "Deja vacío para mantener la vigencia desconocida. Cero es un período explícito de cero.",
+      "graceHelp": "Se suma al intervalo real del calendario. Vacío mantiene la vigencia desconocida.",
+      "unknown": "Desconocido",
+      "seconds": "{value} segundos",
+      "effect": "Los cambios requieren una nueva vista previa antes de ejecutar comprobaciones. Las observaciones anteriores se conservan.",
+      "save": "Guardar política",
+      "configure": "Configurar política",
+      "states": {
+        "ready": "La política de medición está configurada.",
+        "unconfigured": "Configura la política de medición antes de nuevas comprobaciones.",
+        "unsupported": "Revisa y guarda la política para los adaptadores admitidos actualmente.",
+        "authority_unavailable": "El almacenamiento de políticas no está disponible. Pide al administrador que complete la actualización."
+      },
+      "notices": {
+        "saved": "Política guardada. Revisa una nueva vista previa antes de ejecutar.",
+        "conflict": "La política cambió en otro lugar. Revisa los valores actualizados antes de guardar.",
+        "unavailable": "No se pudo configurar la política. Actualiza o consulta al administrador.",
+        "invalid": "Introduce un tiempo no negativo con hasta tres decimales o deja el campo vacío.",
+        "error": "No se pudo guardar la política. Actualiza e inténtalo de nuevo."
+      }
     }
   }
 }

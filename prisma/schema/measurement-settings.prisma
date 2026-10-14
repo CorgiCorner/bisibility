@@ -1,0 +1,19 @@
+/// Diagnostic committed settings intent, independent of all native usage/accounting owners.
+model MeasurementSettingsMutation {
+  id                 String   @id @default(uuid())
+  projectId          String
+  actorId            String?
+  actorScopeHash     String   @db.Char(64)
+  operation          String
+  keyHash            String   @db.Char(64)
+  bodyHash           String   @db.Char(64)
+  previousSourceHash String   @db.Char(64)
+  resultSourceHash   String   @db.Char(64)
+  result             Json
+  createdAt          DateTime @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(3)
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  actor              User?    @relation(fields: [actorId], references: [id], onUpdate: NoAction)
+
+  @@unique([projectId, operation, keyHash], map: "measurement_settings_mutation_key")
+  @@map("measurement_settings_mutations")
+}

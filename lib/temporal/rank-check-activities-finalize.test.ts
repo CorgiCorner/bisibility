@@ -1,7 +1,13 @@
+import {
+  definitionActivityContextFixture,
+  definitionClaimQueryFixture,
+} from "@/lib/rank-check/definition-claim.test-fixture";
 import { describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    $queryRaw: vi.fn(),
+    $transaction: vi.fn(),
     $executeRaw: vi.fn(),
     keyword: { findUnique: vi.fn() },
     projectMarket: { findMany: vi.fn() },
@@ -24,6 +30,9 @@ describe("runRankCheckActivity", () => {
   it("finalizes a run when a refused paid-call fence blocks its last item", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-04T00:13:16.000Z"));
+    definitionActivityContextFixture();
+    mocks.prisma.$queryRaw.mockImplementation(definitionClaimQueryFixture({ allowed: false }));
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.$executeRaw.mockResolvedValue(0);
     mocks.prisma.keyword.findUnique.mockResolvedValue({
       archivedAt: null,

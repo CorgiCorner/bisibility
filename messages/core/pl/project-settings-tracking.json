@@ -128,6 +128,32 @@
       "readOnly": "Tylko do odczytu",
       "saveValidation": "Sprawdź wyróżnione ustawienia przed zapisaniem.",
       "saveError": "Nie udało się zapisać limitu sprawdzania adresów URL."
+    },
+    "measurementPolicy": {
+      "title": "Polityka pomiarów",
+      "description": "Wybierz, kiedy zapisane pomiary pozycji są świeże. Zapis nie uruchamia sprawdzeń.",
+      "manual": "Świeżość pomiarów ręcznych (sekundy)",
+      "grace": "Zapas czasu harmonogramu (sekundy)",
+      "manualHelp": "Puste pole zachowuje nieznaną świeżość. Zero oznacza jawnie zerowy okres.",
+      "graceHelp": "Dodawany do rzeczywistego odstępu harmonogramu. Puste pole zachowuje nieznaną świeżość.",
+      "unknown": "Nieznane",
+      "seconds": "{value} s",
+      "effect": "Po zmianie polityki potrzebny jest nowy podgląd przed sprawdzeniem. Zapisane obserwacje pozostają bez zmian.",
+      "save": "Zapisz politykę",
+      "configure": "Skonfiguruj politykę",
+      "states": {
+        "ready": "Polityka pomiarów jest skonfigurowana.",
+        "unconfigured": "Skonfiguruj politykę pomiarów przed nowymi sprawdzeniami.",
+        "unsupported": "Sprawdź i zapisz politykę dla obecnie obsługiwanych adapterów.",
+        "authority_unavailable": "Przechowywanie polityki pomiarów jest niedostępne. Poproś administratora instancji o dokończenie aktualizacji."
+      },
+      "notices": {
+        "saved": "Polityka zapisana. Przejrzyj nowy podgląd przed sprawdzeniem.",
+        "conflict": "Polityka zmieniła się w innym miejscu. Sprawdź odświeżone wartości przed zapisem.",
+        "unavailable": "Nie udało się skonfigurować polityki. Odśwież lub poproś administratora instancji.",
+        "invalid": "Podaj nieujemny czas z najwyżej trzema miejscami po przecinku albo pozostaw puste pole.",
+        "error": "Nie udało się zapisać polityki. Odśwież i spróbuj ponownie."
+      }
     }
   }
 }

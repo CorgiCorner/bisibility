@@ -30,6 +30,7 @@ export default async function AiVisibilityPage({
           canRun={data.canRun}
           catalog={data.catalog}
           catalogError={data.catalogError}
+          catalogFailure={data.catalogFailure}
         />
       </PageContent>
     </FeatureMessagesProvider>

@@ -29,6 +29,21 @@ vi.mock("@temporalio/workflow", () => ({
   startChild: mocks.startChild,
 }));
 
+function runItemClaimFixture(
+  count: number,
+  prefix = "item",
+  expiresAt = "2026-07-29T00:05:00.000Z",
+) {
+  return {
+    runItemIds: Array.from({ length: count }, (_, index) => `${prefix}_${index + 1}`),
+    runItemClaims: Array.from({ length: count }, (_, index) => ({
+      id: `${prefix}_${index + 1}`,
+      claimAttempts: index + 1,
+      claimExpiresAt: expiresAt,
+    })),
+  };
+}
+
 describe("dispatchDueRankChecksWorkflow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -251,6 +266,7 @@ describe("dispatchDueRankChecksWorkflow", () => {
           locationId: "location_1",
           projectId: "project_1",
           runId: "run_1",
+          ...runItemClaimFixture(100),
         },
       ],
       metrics: {
@@ -332,7 +348,7 @@ describe("dispatchDueRankChecksWorkflow", () => {
           locationId: "location_1",
           projectId: "project_1",
           runId: "run_1",
-          runItemIds: ["item_1", "item_2"],
+          ...runItemClaimFixture(2, "item", "2026-09-02T08:05:00.000Z"),
         },
       ],
       metrics: {
@@ -356,7 +372,7 @@ describe("dispatchDueRankChecksWorkflow", () => {
     expect(queued?.[1].args[0]).toMatchObject({
       keywordIds: ["keyword_1", "keyword_2"],
       runId: "run_1",
-      runItemIds: ["item_1", "item_2"],
+      ...runItemClaimFixture(2, "item", "2026-09-02T08:05:00.000Z"),
     });
     expect(
       mocks.startChild.mock.calls.filter(([workflowType]) => workflowType === "rankCheckWorkflow"),
@@ -375,6 +391,7 @@ describe("dispatchDueRankChecksWorkflow", () => {
           locationId: "location_1",
           projectId: "project_1",
           runId: "run_1",
+          ...runItemClaimFixture(13, "desktop_item"),
         },
         {
           device: "mobile",
@@ -383,6 +400,7 @@ describe("dispatchDueRankChecksWorkflow", () => {
           locationId: "location_2",
           projectId: "project_1",
           runId: "run_2",
+          ...runItemClaimFixture(12, "mobile_item"),
         },
       ],
       metrics: {

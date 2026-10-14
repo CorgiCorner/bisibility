@@ -2,10 +2,8 @@ import { defaultRankTrackerQueryState } from "@/lib/keywords/rank-tracker-query"
 import { marketManualRunSelection } from "@/lib/markets/manual-run-selection";
 import { describe, expect, it, vi } from "vitest";
 import { groupedFilterFixture } from "./rank-tracker-grouped-filter-fixtures";
-import { getRankTrackerGroupedList } from "./rank-tracker-grouped-list";
 import { buildRankTrackerGroupedSql } from "./rank-tracker-grouped-sql";
 import { withGroupedFilterDatabase } from "./rank-tracker-grouped-test-database";
-import { getRankTrackerKeywordList } from "./rank-tracker-list";
 import { buildRankTrackerListSql } from "./rank-tracker-list-sql";
 import { resolveRankTrackerExportKeywordIdsForProject } from "./rank-tracker-selection-core";
 
@@ -126,25 +124,7 @@ describe("registered empty market scopes", () => {
               ...defaultRankTrackerQueryState,
               lens: { device: "all" as const, locationId: emptyLocation.canonicalKey },
             };
-            for (const grouped of [false, true]) {
-              const input = { projectRef: "prj_empty", query: { ...query, grouped } };
-              const result = await (grouped
-                ? getRankTrackerGroupedList(input)
-                : getRankTrackerKeywordList(input));
-              expect(result.resolvedLens).toEqual(query.lens);
-              expect(result).toMatchObject({
-                matchedTargetCount: 0,
-                page: 1,
-                pageCount: 0,
-                totalCount: targets.length,
-              });
-              expect(result.locations).toContainEqual({
-                count: 0,
-                displayName: "Spain / Spanish",
-                id: "ES:es",
-                kind: "country",
-              });
-            }
+            // The actual authorized wrapper contract lives in rank-tracker-report-whole-scope.postgres.test.ts.
             // Exact filters and bulk/export candidate scans must not widen an empty scope either.
             for (const statement of [
               buildRankTrackerListSql("project_empty", query, {
@@ -162,8 +142,6 @@ describe("registered empty market scopes", () => {
               expect(result.matchedTargetCount).toBe(0);
               expect(result.keywordIds ?? result.groups).toEqual([]);
             }
-            expect(mocks.hydrate).toHaveBeenCalledTimes(2);
-            for (const call of mocks.hydrate.mock.calls) expect(call[1]).toEqual([]);
           },
         );
       });

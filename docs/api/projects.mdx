@@ -38,15 +38,22 @@ Self-hosters may cap the number of projects owned by one user with
 `getProjectOverview` returns numeric health aggregates without paginating the
 keyword list. `range` defaults to `28d` and accepts `7d`, `28d`, or `90d`.
 `device` defaults to `all` and also accepts `desktop` or `mobile`. `tag` is an
-optional exact tag name.
+optional exact tag name. The comparison uses the latest qualified observation at
+or before the start of that range, within the retained policy tolerance; it is
+not a period average. Missing or incompatible baseline evidence returns `null`.
+
+The endpoint uses the authenticated project key or personal token and requires
+no browser session. Credential and project access are checked again when reading
+measurement definitions. It reads retained observations without starting checks.
 
 Positive `average_position_delta` means the average rank improved. Visibility
 measures volume-weighted ranking strength in Google's Top 20. A value of 100
 means every measured keyword ranks #1. Rankings below #20 do not add Visibility,
 and shallow or failed checks are not treated as lost rankings.
 `visibility_delta` is measured in percentage points. Rank aggregates and
-distribution counts are `null` before the project has check data; a completed
-check with no keyword in a bucket returns the real count `0`.
+distribution counts are `null` when no qualified observations are available.
+A proven absence within a complete checked range contributes a real count `0`;
+missing, failed or incomplete observations do not establish absence.
 
 ## Project defaults
 

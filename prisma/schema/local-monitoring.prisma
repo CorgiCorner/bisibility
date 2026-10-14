@@ -1,0 +1,141 @@
+// Same-project ownership, immutable axes and first-send custody are enforced by the additive migration.
+model LocalMeasurementPoint {
+  id String @id @default(cuid())
+  projectId String
+  revisionKey String
+  contentHash String
+  point Json
+  actorId String?
+  createdAt DateTime @default(now())
+  @@unique([projectId,revisionKey])
+  @@unique([projectId,id])
+  @@map("local_measurement_points")
+
+  users                     User?                    @relation(fields: [actorId], references: [id], onUpdate: NoAction, map: "local_points_actor_fk")
+  projects                  Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "local_points_project_fk")
+  local_measurement_targets LocalMeasurementTarget[]
+  local_monitor_grid_points LocalMonitorGridPoint[]
+}
+
+model LocalMeasurementTarget {
+  id String @id @default(cuid())
+  publicId String @unique
+  projectId String
+  keywordId String?
+  pointId String
+  targetKey String
+  target Json
+  keywordSnapshot Json
+  keywordSourceHash String
+  actorId String?
+  createdAt DateTime @default(now())
+  @@unique([projectId,targetKey])
+  @@unique([projectId,id])
+  @@map("local_measurement_targets")
+
+  local_measurement_run_items     LocalMeasurementRunItem[]
+  local_measurement_target_owners LocalMeasurementTargetOwner[]
+  users                           User?                        @relation(fields: [actorId], references: [id], onUpdate: NoAction, map: "local_targets_actor_fk")
+  keywords                        Keyword?                     @relation(fields: [projectId, keywordId], references: [projectId, id], onDelete: SetNull, onUpdate: NoAction, map: "local_targets_keyword_fk")
+  local_measurement_points        LocalMeasurementPoint        @relation(fields: [projectId, pointId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction, map: "local_targets_point_fk")
+  projects                        Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "local_targets_project_fk")
+  local_monitor_retry_members     LocalMonitorRetryMember[]
+}
+
+model LocalMeasurementRun {
+  id String @id @default(cuid())
+  publicId String @unique
+  projectId String
+  operation String
+  keyHash String
+  bodyHash String
+  actorId String?
+  quote Json
+  quoteHash String
+  expectedTargetKeys String[]
+  source String
+  trigger String
+  cancellationRequested Boolean @default(false)
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([projectId,operation,keyHash])
+  @@unique([projectId,id])
+  @@map("local_measurement_runs")
+
+  local_measurement_run_items    LocalMeasurementRunItem[]
+  users                          User?                        @relation(fields: [actorId], references: [id], onUpdate: NoAction, map: "local_runs_actor_fk")
+  projects                       Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "local_runs_project_fk")
+  local_monitor_launch_intents   LocalMonitorLaunchIntent[]
+  local_monitor_occurrences      LocalMonitorOccurrence[]
+  local_monitor_retry_selections LocalMonitorRetrySelection[]
+}
+
+model LocalMeasurementRunItem {
+  id String @id @default(cuid())
+  projectId String
+  runId String
+  targetId String
+  operationKey String @unique
+  bodyHash String
+  record Json
+  version Int @default(0)
+  connectionId String
+  provider String
+  credentialVersion String
+  correlationId String
+  namespace String
+  preparedAttemptId String?
+  preparedLeaseId String?
+  requestHash String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([runId,targetId])
+  @@unique([projectId,id])
+  @@unique([projectId,targetId,id])
+  @@map("local_measurement_run_items")
+
+  provider_connections            ProviderConnection           @relation(fields: [projectId, connectionId], references: [projectId, id], onDelete: NoAction, onUpdate: NoAction, map: "local_items_connection_fk")
+  projects                        Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "local_items_project_fk")
+  local_measurement_runs          LocalMeasurementRun          @relation(fields: [projectId, runId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction, map: "local_items_run_fk")
+  local_measurement_targets       LocalMeasurementTarget       @relation(fields: [projectId, targetId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction, map: "local_items_target_fk")
+  local_measurement_target_owners LocalMeasurementTargetOwner[]
+  local_monitor_retry_members     LocalMonitorRetryMember[]
+  local_original_submit_proofs    LocalOriginalSubmitProof[]
+  observation_runs                ObservationRun[]
+}
+
+model LocalMeasurementTargetOwner {
+  projectId String
+  targetId String
+  itemId String
+  version Int @default(0)
+  workerToken String?
+  workerExpiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@id([projectId,targetId])
+  @@map("local_measurement_target_owners")
+
+  local_measurement_run_items LocalMeasurementRunItem @relation(fields: [projectId, targetId, itemId], references: [projectId, targetId, id], onDelete: Cascade, onUpdate: NoAction, map: "local_owners_item_fk")
+  local_measurement_targets   LocalMeasurementTarget  @relation(fields: [projectId, targetId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction, map: "local_owners_target_fk")
+}
+
+// Internal original response custody. SQL owns composite foreign keys and deletion/immutability guards.
+model LocalOriginalSubmitProof {
+  namespace String
+  attemptId String
+  projectId String
+  itemId String
+  bodyHash String
+  proof Json
+  receivedAt DateTime @db.Timestamptz(6)
+  @@id([namespace,attemptId])
+  @@unique([projectId,itemId])
+  @@map("local_original_submit_proofs")
+
+  local_measurement_run_items   LocalMeasurementRunItem    @relation(fields: [projectId, itemId], references: [projectId, id], onDelete: NoAction, onUpdate: NoAction, map: "local_submit_item_fk")
+  metering_usage_evidence       MeteringUsageEvidence      @relation(fields: [attemptId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "local_submit_native_fk")
+  metering_paid_attempt_context MeteringPaidAttemptContext @relation(fields: [namespace, attemptId], references: [namespace, operation_id], onDelete: NoAction, onUpdate: NoAction, map: "local_submit_paid_fk")
+  projects                      Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "local_submit_project_fk")
+}

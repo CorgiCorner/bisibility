@@ -100,7 +100,27 @@ describe("OpenAPI document", () => {
         "migration",
       ].map((name) => expect.objectContaining({ name })),
     );
-    expect(operations).toHaveLength(141);
+    expect(operations).toHaveLength(148);
+    expect(
+      Object.entries(doc.paths)
+        .filter(([path]) => path.includes("/local-monitors/"))
+        .flatMap(([, item]) => Object.values(item))
+        .every((operation) => operation.tags?.[0] === "rank-checks"),
+    ).toBe(true);
+    // These existing rank-run reads were registered after the original 141-operation fixture.
+    expect(
+      operations.filter(({ operationId }) =>
+        ["listRankCheckRuns", "getRankCheckRun"].includes(operationId ?? ""),
+      ),
+    ).toHaveLength(2);
+    expect(doc.paths["/projects/{project_id}/rank-check-runs"].get).toMatchObject({
+      summary: "List rank-check runs",
+      description: "Read rank-check runs including cancelled or deferred outcomes without a check.",
+    });
+    expect(doc.paths["/projects/{project_id}/rank-check-runs/{run_id}"].get).toMatchObject({
+      summary: "Get a rank-check run",
+      description: "Read an existing run without launching a measurement.",
+    });
     expect(operations.every((operation) => operation.tags?.length === 1)).toBe(true);
     expect(
       operations.every(
@@ -213,8 +233,18 @@ describe("OpenAPI document", () => {
           minItems: 1,
           type: "array",
         },
+        features: {
+          properties: { reviewed_project_defaults: { const: "v1", type: "string" } },
+          required: ["reviewed_project_defaults"],
+        },
       },
-      required: ["apiVersions", "data", "rank_check_scheduler_mode", "scheduler_driver"],
+      required: [
+        "apiVersions",
+        "data",
+        "features",
+        "rank_check_scheduler_mode",
+        "scheduler_driver",
+      ],
     });
   });
 

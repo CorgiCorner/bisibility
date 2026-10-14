@@ -21,7 +21,7 @@ export function Sparkline({
   valueFormatter,
   width = 92,
 }: Readonly<SparklineProps>) {
-  const points = data.flatMap((value, index) => (value == null ? [] : [{ index, value }]));
+  const points = data.map((value, index) => ({ index, value }));
 
   return (
     <span
@@ -44,11 +44,33 @@ export function Sparkline({
           <XAxis dataKey="index" type="number" domain={["dataMin", "dataMax"]} hide />
           <YAxis domain={["dataMin", "dataMax"]} hide />
           <Line
+            connectNulls={false}
             dataKey="value"
             type="linear"
             stroke={color}
             strokeWidth={2}
-            dot={false}
+            dot={({ cx, cy, index }) => {
+              if (
+                data[index] == null ||
+                data[index - 1] != null ||
+                data[index + 1] != null ||
+                !Number.isFinite(cx) ||
+                !Number.isFinite(cy)
+              )
+                return null;
+              return (
+                <circle
+                  className="recharts-line-dot"
+                  cx={cx}
+                  cy={cy}
+                  r={2}
+                  fill={color}
+                  stroke={color}
+                  strokeWidth={2}
+                />
+              );
+            }}
+            activeDot={{ r: 3, fill: color, stroke: color }}
             isAnimationActive={false}
           />
           <Tooltip

@@ -1,0 +1,43 @@
+model LocalMonitorRecurringApproval {
+ id String @id
+ projectId String
+ monitorId String
+ scheduleIntentId String @unique
+ definitionRevisionId String
+ monitorVersion Int
+ actorId String?
+ snapshot Json
+ contentHash String
+ approvalDigest String
+ approvedAt DateTime
+ validUntil DateTime
+ @@unique([projectId,id])
+ @@map("local_monitor_recurring_approvals")
+
+  local_monitor_launch_intents    LocalMonitorLaunchIntent[]
+  local_monitor_revisions         LocalMonitorRevision         @relation(fields: [projectId, monitorId, definitionRevisionId], references: [projectId, monitorId, id], onDelete: NoAction, onUpdate: NoAction, map: "local_monitor_recurring_appro_projectId_monitorId_definiti_fkey")
+  local_monitor_schedule_intents  LocalMonitorScheduleIntent   @relation(fields: [projectId, monitorId, scheduleIntentId], references: [projectId, monitorId, id], onDelete: NoAction, onUpdate: NoAction, map: "local_monitor_recurring_appro_projectId_monitorId_schedule_fkey")
+  users                           User?                        @relation(fields: [actorId], references: [id], onUpdate: NoAction)
+  projects                        Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  local_monitor_recurring_cursors LocalMonitorRecurringCursor[]
+}
+model LocalMonitorRecurringCursor {
+ approvalId String @id
+ projectId String
+ nextOccurrenceKey String
+ nextDueAt DateTime
+ lastOccurrenceKey String?
+ lastOutcome String?
+ usedCents Decimal @default(0) @db.Decimal(60,18)
+ issuedOccurrences Int @default(0)
+ state String @default("active")
+ reason String?
+ version Int @default(0)
+ createdAt DateTime @default(now())
+  updatedAt                         DateTime                      @default(now()) @updatedAt
+ @@index([state,nextDueAt,approvalId],map:"local_monitor_recurring_due")
+ @@map("local_monitor_recurring_cursors")
+
+  local_monitor_recurring_approvals LocalMonitorRecurringApproval @relation(fields: [projectId, approvalId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+  projects                          Project                       @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}

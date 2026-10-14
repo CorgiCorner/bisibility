@@ -19,8 +19,14 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-
-export type UpdateTrackingDefaults = (input: TrackingDefaultsForm) => Promise<unknown>;
+import { ReviewedDefaultsPanel } from "./ReviewedDefaultsPanel";
+import { useDefaultsFormReview } from "./use-defaults-form-review";
+import {
+  type PreviewDefaults,
+  type SaveDefaults,
+  useReviewedDefaults,
+} from "./use-reviewed-defaults";
+export type UpdateTrackingDefaults = SaveDefaults;
 export type PreviewTrackingCron = (input: {
   cronExpression: string;
   projectId: string;
@@ -33,6 +39,7 @@ type TrackingDefaultsCardProps = {
   domain?: string | null;
   initialCronPreview: CronPreviewResult;
   previewCron: PreviewTrackingCron;
+  previewDefaults: PreviewDefaults;
   projectId: string;
   updateDefaults: UpdateTrackingDefaults;
 };
@@ -43,12 +50,15 @@ export function TrackingDefaultsCard({
   domain = null,
   initialCronPreview,
   previewCron,
+  previewDefaults,
   projectId,
   updateDefaults,
 }: Readonly<TrackingDefaultsCardProps>) {
   const router = useRouter();
   const sharedErrors = useSharedErrorMessages();
   const t = useTranslations("projectSettingsTracking.checkDefaults");
+  const reviewed = useReviewedDefaults(previewDefaults, updateDefaults);
+  const reviewT = useTranslations("shared.reviewedDefaults");
   const [preview, setPreview] = useState(initialCronPreview);
   const [previewPending, startPreviewTransition] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -57,6 +67,8 @@ export function TrackingDefaultsCard({
     mode: "onChange",
     resolver: zodResolver(projectDefaultsSchema),
   });
+
+  useDefaultsFormReview(form, reviewed.invalidate);
 
   function requestPreview(cronExpression: string, timezone: string) {
     startPreviewTransition(async () => {
@@ -127,11 +139,13 @@ export function TrackingDefaultsCard({
     const values = form.getValues();
     setSaveError(null);
     try {
-      await updateDefaults(values);
+      const outcome = await reviewed.submit(values);
+      if (outcome === "review") throw new Error("Review pending");
       form.reset(values);
       router.refresh();
     } catch (error: unknown) {
-      setSaveError(presentActionError(error, sharedErrors, t("saveError")));
+      if (!(error instanceof Error && error.message === "Review pending"))
+        setSaveError(presentActionError(error, sharedErrors, t("saveError")));
       throw error;
     }
   }
@@ -141,11 +155,18 @@ export function TrackingDefaultsCard({
       className={trackingCardGeometryClassNames.checkDefaults}
       description={t("description")}
       onSave={saveDefaults}
+      saveLabel={
+        reviewed.locked
+          ? reviewT("retry")
+          : reviewed.quote
+            ? reviewT("confirmSave")
+            : reviewT("review")
+      }
       title={t("title")}
     >
       {({ markDirty }) => (
         <form onSubmit={(event) => event.preventDefault()}>
-          <fieldset className="contents" disabled={!canEdit}>
+          <fieldset className="contents" disabled={!canEdit || reviewed.pending || reviewed.locked}>
             <TrackingScheduleFields
               form={form}
               onCronBlur={() =>
@@ -181,6 +202,12 @@ export function TrackingDefaultsCard({
               markDirty={markDirty}
             />
           </fieldset>
+          <ReviewedDefaultsPanel
+            quote={reviewed.quote}
+            acknowledged={reviewed.acknowledged}
+            onAcknowledged={reviewed.setAcknowledged}
+            locked={reviewed.locked}
+          />
           {saveError ? <p className="m-0 mt-3 text-[12px] text-red-text">{saveError}</p> : null}
         </form>
       )}

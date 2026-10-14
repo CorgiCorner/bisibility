@@ -1,4 +1,5 @@
 import { type AuditPayloadPolicy, auditFields as f } from "@/lib/auth/audit-payload-policy";
+import { reviewedConsentPolicy } from "./audit-field-declarations-consent";
 
 type Declare = (actions: readonly string[], policy?: AuditPayloadPolicy) => void;
 
@@ -14,6 +15,7 @@ export function registerRankCheckRunAuditDeclarations(declare: Declare) {
     after: {
       ...f.numbers("estimatedCostCents", "keywordCount", "targetCount"),
       ...f.strings("publicId", "selectionKind", "trigger"),
+      consent: reviewedConsentPolicy,
     },
   });
   declare(["rank_check_run.delete"], { before: f.strings("status") });

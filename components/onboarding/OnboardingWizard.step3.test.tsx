@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { project, renderWizard } from "./OnboardingWizard.test-utils";
+import { confirmDefaultsFixture } from "./reviewed-defaults-test-fixture";
 
 describe("OnboardingWizard keyword step", () => {
   it("initializes step 3 Continue as disabled from an empty draft", () => {
@@ -143,6 +144,7 @@ describe("OnboardingWizard keyword step", () => {
     );
     expect(screen.getByText("2 unique keywords")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await confirmDefaultsFixture();
     await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
     const saving = screen.getByRole("button", { name: "Saving keywords..." });
     expect(saving).toBeDisabled();
@@ -162,6 +164,7 @@ describe("OnboardingWizard keyword step", () => {
       "rank tracker\nseo api",
     );
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await confirmDefaultsFixture();
     expect(await screen.findByText("Not in top 50")).toBeInTheDocument();
     expect(list).toHaveBeenCalledTimes(2);
     expect(run).not.toHaveBeenCalled();
@@ -192,6 +195,7 @@ describe("OnboardingWizard keyword step", () => {
       target: { value: "rank tracker" },
     });
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+    await confirmDefaultsFixture();
 
     await waitFor(() =>
       expect(syncProjectTrafficAction).toHaveBeenCalledWith({

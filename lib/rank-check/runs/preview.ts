@@ -1,24 +1,22 @@
-import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import { prisma } from "@/lib/db/prisma";
+import { launchPolicyBlock } from "@/lib/measurement-definitions/host-launch-policy";
+import { readHostPolicySnapshot } from "@/lib/measurement-definitions/host-policy-snapshot";
 import { budgetDenialReason } from "@/lib/metering/budget-denial";
-import {
-  type ProviderRequestOrigin,
-  type ProviderRequestSurface,
-  surfaceOf,
-} from "@/lib/provider-usage/surface";
+import { surfaceOf } from "@/lib/provider-usage/surface";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { activeMarketLocationIds, unrunnableKeywordReason } from "@/lib/rank-check/runnable";
-import type { UnrunnableReason } from "@/lib/rank-check/runnable-reasons";
-import type { SerpDepth } from "@/lib/serp/constants";
+import { appPath } from "@/lib/routing/app-path";
+import { resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
 import { ACTIVE_RUN_STATUSES } from "./contract";
-import { type RankCheckRunProject, requireRankCheckRunProject } from "./launch-types";
+import { requireRankCheckRunProject } from "./launch-types";
 import { quoteRunRows } from "./native-quotes";
 import { allocationBudget } from "./preview-budget";
-import { findRankCheckRunOverlaps, type RankCheckRunOverlap } from "./preview-overlaps";
+import { findRankCheckRunOverlaps } from "./preview-overlaps";
+import { previewSourceHash } from "./preview-source-hash";
 import { createPreviewToken } from "./preview-token";
+import type { RankCheckRunPreview, RankCheckRunPreviewInput } from "./preview-types";
 import {
-  type RunLaunchTrigger,
   type RunSelectionKeyword,
   type RunSelectionSpec,
   resolveRunSelection,
@@ -26,59 +24,7 @@ import {
   runSelectionKeywordSelect,
 } from "./selection";
 
-export type RankCheckRunExclusionReason =
-  | "paused"
-  | "manual"
-  | "in_progress"
-  | "no_provider"
-  | "other_project"
-  | UnrunnableReason;
-export type RankCheckRunPreview = {
-  budget: {
-    blocked: boolean;
-    capCents: number | null;
-    mode: "allocation" | "legacy";
-    reason:
-      | "budget_missing"
-      | "budget_exhausted"
-      | "usage_reconciliation_required"
-      | "duplicate"
-      | "no_provider"
-      | null;
-    remainingAfterCents: number | null;
-    spentCents: number | null;
-    surface?: ProviderRequestSurface;
-  };
-  estimate: {
-    native?: NativeUsageEstimate;
-    costCents: number | null;
-    perTargetCents: number | null;
-    unknownCostTargets: number;
-  };
-  excluded: Array<{ keywordId: string; reason: RankCheckRunExclusionReason }>;
-  executable: number;
-  expiresAt: string;
-  keywordCount: number;
-  matched: number;
-  /** Other runs that also check some of these keywords; reported for manual previews only. */
-  overlapRunCount: number;
-  overlaps: RankCheckRunOverlap[];
-  previewToken: string;
-  selectionHash: string;
-  targetCount: number;
-};
-
-export type RankCheckRunPreviewInput = {
-  depth?: SerpDepth;
-  origin: ProviderRequestOrigin;
-  project: RankCheckRunProject;
-  providerId?: string;
-  spec: RunSelectionSpec;
-  /** The launch this preview signs for. Defaults to the protective API rule. */
-  trigger?: RunLaunchTrigger;
-};
 type KeywordRow = RunSelectionKeyword & { publicId: string };
-
 // API launches refuse a repeat of an active scope; blocked runs retain their reservation.
 const duplicateRunStatuses = [...ACTIVE_RUN_STATUSES, "blocked"];
 
@@ -147,7 +93,9 @@ export async function previewRankCheckRun(
   const [project, rows, connections, duplicate] = await Promise.all([
     prisma.project.findUnique({
       select: {
-        defaults: { select: { serpDepth: true } },
+        domain: true,
+        publicId: true,
+        defaults: { select: { serpDepth: true, serpStopOnMatch: true } },
       },
       where: { id: input.project.id },
     }),
@@ -252,16 +200,40 @@ export async function previewRankCheckRun(
       spentCents: projectBudget.spentCents,
     };
   }
+  const measurementPolicy = await prisma.$transaction(
+    (tx) => readHostPolicySnapshot(tx, input.project.id),
+    { isolationLevel: "RepeatableRead" },
+  );
+  const policyBlock = launchPolicyBlock(
+    measurementPolicy,
+    connections[0]?.provider,
+    executableRows,
+    estimate.depths,
+  );
+  if (policyBlock && connections[0]) budget = { ...budget, blocked: true, reason: policyBlock };
   const signed = createPreviewToken({
     depth: input.depth ?? null,
     estimateCents: estimate.costCents ?? -1,
     projectId: input.project.id,
     providerId: input.providerId ?? null,
     selectionHash: resolved.selectionHash,
+    sourceHash: previewSourceHash({
+      domain: project.domain,
+      stopOnMatch: resolveSerpStopOnMatch(project.defaults?.serpStopOnMatch),
+      rows: executableRows,
+      depths: estimate.depths,
+      provider: connections[0] ?? null,
+      measurementPolicy,
+    }),
     trigger,
   });
   return {
     budget,
+    measurementPolicy: {
+      state: measurementPolicy.state,
+      policyEpoch: measurementPolicy.policyEpoch,
+      configurationHref: `${appPath(project.publicId, "settings", "tracking")}#measurement-policy`,
+    },
     estimate: {
       native: "native" in estimate ? estimate.native : undefined,
       costCents: estimate.costCents,
@@ -280,3 +252,9 @@ export async function previewRankCheckRun(
     targetCount: executableRows.length,
   };
 }
+
+export {
+  type RankCheckRunExclusionReason,
+  type RankCheckRunPreview,
+  type RankCheckRunPreviewInput,
+} from "./preview-types";

@@ -1,0 +1,200 @@
+---
+title: "Understand measurement evidence"
+description: "Interpret ranks, coverage, time and provider costs in SEO reports."
+---
+
+A report identifies its metric and definition version. Read its scope, observation time and data coverage alongside the value. A missing or incompatible baseline means no comparison. Showing help, changing a view or exporting retained data does not launch a measurement.
+
+## Compare saved results
+
+Rank Tracker shows one saved result for each keyword. **Compare: 7 days earlier** compares
+that result with the last eligible result from at least seven days earlier. It
+does not calculate a weekly average. Missing or incompatible earlier data leaves
+the change unavailable.
+
+Use the calendar to choose a date and time in UTC. Canceling the calendar discards
+unapplied changes. Changing the date uses the current keyword list; it does not
+restore an older list. The comparison date moves with the selected date: a date
+three weeks ago with a seven-day comparison uses an earlier result from about
+four weeks ago. The information icon beside each control explains its
+scope without requiring a dialog.
+
+<span id="measurement-visibility-top20" />
+<h2 id="measurement-organic-visibility-top20">Organic visibility</h2>
+
+A versioned index of organic results in the first 20 positions.
+
+Read the index with observed coverage, fresh determinate counts, and comparable targets.
+
+This is not traffic or leads. Unknown results are not confirmed absence; changing coverage alone does not prove improvement.
+
+<h2 id="measurement-organic-top10-rate">Organic Top 10 rate</h2>
+
+The share of eligible determinate targets confirmed in the organic Top 10.
+
+Read the rate alongside expected, measured, and ranked counts in the same scope.
+
+Unknown targets are not ranked or absent. The same percentage can describe different coverage; comparisons require a comparable cohort.
+
+<h2 id="measurement-organic-rank">Organic position</h2>
+
+The confirmed position of an organic link on its declared rank scale.
+
+Compare positions only within compatible search scope and methodology.
+
+A business slot, Maps listing, or feature presence is not an organic position. Unknown or absent results have no synthetic position.
+
+<h2 id="measurement-feature-presence">Search feature presence</h2>
+
+Whether a search-results block was observed, such as Local Google results: businesses with a map in regular Google results.
+
+A visible block and a confirmed target within that block are separate observations.
+
+No observed block, no confirmed business, unknown identity, and unsupported measurement mean different things.
+
+<h2 id="measurement-business-slot">Local Google results</h2>
+
+Businesses with a map in regular Google results; a business slot refers to the explicitly confirmed branch.
+
+The branch's stable identity and the original block, page, and slot identify the observation.
+
+A shared domain or similar name is only a candidate. Promoted or unknown promotion results are not organic-eligible; Maps and Local Finder use separate scales.
+
+<h2 id="measurement-maps-rank">Maps position</h2>
+
+The confirmed listing position on the Google Maps surface, on its own rank scale.
+
+Keep Maps observations separate from regular Google results and Local Finder.
+
+This explanation does not mean Maps measurement is available. Unsupported measurement is not a missing business or zero rank.
+
+<h2 id="measurement-local-finder-rank">Local Finder position</h2>
+
+The confirmed listing position in Google's expanded local-results view, on its own scale.
+
+Keep Local Finder observations separate from business slots in regular results and from Maps.
+
+This explanation does not enable Local Finder measurement. Unknown or unsupported observations do not prove absence.
+
+<h2 id="measurement-average-ranked-position">Average ranked position</h2>
+
+Average position among targets with a confirmed positive rank in one compatible scope and rank scale.
+
+Read ranked count and coverage alongside the average.
+
+Absent and unknown targets receive no zero or 101 position. Losing observations alone does not prove improvement.
+
+<h2 id="measurement-observation-time">Observation time</h2>
+
+When the search result was observed, not when the report or cache was read.
+
+Requested time, recorded time, observation time, and report as-of time have different meanings.
+
+Reading a cached result does not create a new observation or make old data fresh. Missing historical timestamps stay unknown.
+
+<h2 id="measurement-data-quality">Data quality and coverage</h2>
+
+Observed coverage describes determinate retained observations; fresh coverage additionally requires an explicit freshness policy.
+
+Read expected, observed, fresh determinate, unknown, and comparable counts separately. Comparable count describes paired targets, not coverage.
+
+Unknown freshness is not fresh. A failed attempt can coexist with a retained successful observation; quality counts are not necessarily disjoint.
+
+<h2 id="measurement-rank-movement">Comparable change</h2>
+
+A change between observations with compatible scope, methodology, identity, and evidence.
+
+Read the paired comparable count and original observation dates. Percentage-point change differs from relative percent change.
+
+Missing baseline, changed scope, entry, exit, or re-entry is not an ordinary numeric movement. A change in membership alone does not prove improvement.
+
+<h2 id="measurement-ranking-url">Observed and desired URL</h2>
+
+The observed URL is the page actually found in that observation; the desired URL is the configured target.
+
+Use each historical check's observed URL when reading its result.
+
+Today's URL or the desired URL cannot fill a missing historical observed URL. Missing evidence remains unavailable.
+
+<h2 id="measurement-provider-cost">Provider usage and cost</h2>
+
+An estimate before execution is distinct from confirmed provider usage or cost after settlement.
+
+Read amounts in their native unit. Provider cost, customer charge, and application credits are separate measures.
+
+Search quota is not USD. An unknown charge is not zero; a cached read is not a new paid request. Help does not fetch current prices or run checks.
+
+<h2 id="measurement-measurement-depth">Result depth</h2>
+
+The requested result horizon is distinct from the horizon proven complete by the observation.
+
+Interpret a missing target using the observed scope, result kind, rank scale, and completeness evidence.
+
+Requested depth alone does not prove absence. Unknown completeness remains unknown; organic completeness does not prove local-block completeness.
+
+<h2 id="measurement-search-location">Search location</h2>
+
+Where the search is simulated; this is different from the business address or branch identity.
+
+Read the configured and effective search scope when a provider substitutes a location.
+
+One city observation does not cover every point in that city. A country fallback is not evidence for the requested city.
+
+<h2 id="measurement-refresh-schedule">Schedule and refresh</h2>
+
+The schedule requests new observations; refreshing the view reads stored report data.
+
+Read the original observation time and explicit freshness policy independently of when the view was refreshed.
+
+Opening help or reading a widget does not launch a provider check, change the schedule, or turn a cached observation into a new one.
+
+## Observed data and freshness
+
+Measured evidence can include a retained observation alongside a failed latest attempt. The metric denominator excludes observations that its policy marks stale. If the cadence, grace period or observation time is unknown, fresh coverage stays unknown; observed coverage does not imply freshness. Unknown results receive no invented rank or zero. Historical metadata is filled only from retained evidence, never from current project settings.
+
+## Local surfaces
+
+Local Google results are business results with a map in ordinary Google web search. Feature presence does not prove that the selected branch owns a slot. Maps and Local Finder are separate surfaces. A grid measures sampled search points, not area, population or leads. Availability requires a proved product adapter and a separate measurement preview and launch.
+
+<h2 id="measurement-competitor-share-of-voice-top10">Competitor share of voice</h2>
+
+`bisibility-sov-top10-v2` uses the existing linear Top 10 scores and a common qualified keyword cohort for every selected domain. Unknown search volumes receive the selected cohort's median known volume; when every volume is unknown, each receives weight 1. A known zero remains zero. A zero score denominator produces no percentage.
+
+This definition changes the legacy treatment of missing volumes and incomplete observations. Keep its definition version with exports and comparisons; do not interpret a difference from legacy totals as ranking movement. Read observed coverage and fresh coverage separately. This is a relative index for the selected domains, not market share, traffic or leads.
+
+## Review future defaults before saving
+
+Changing **Check defaults** first shows the exact location, language, device,
+depth, stop-on-match choice and cadence. Confirm that review to save. This changes
+future defaults; it does not move existing targets or start a paid measurement.
+Unknown future usage stays unknown, and each paid run still needs its own review.
+Schedule-derived values and explicit selections are shown separately. A changed
+scope or depth does not make old observations comparable to the new definition.
+
+If another change invalidates the review, load a fresh preview. If the response is
+lost, use **Recover same save** before editing: it retries the original command,
+not a newly priced or silently changed one. Read-only or revoked access still
+prevents a save. Missing location, provider or measurement policy links to the
+corresponding settings; simply opening that screen does not configure or launch it.
+
+Before either a preview or a reviewed save, API clients must read `/capabilities`
+and require `features.reviewed_project_defaults` to equal `"v1"`. Older servers
+may ignore `preview_only` and save the supplied settings, so a missing or different
+marker must stop this flow before any PATCH. The marker advertises protocol
+support; it does not grant settings permissions.
+
+API clients use `PATCH /projects/{project_id}/defaults?preview_only=true` with the
+intended patch. The reply includes the effective draft, string revision, source
+hash, opaque preview token and expiry. Send the same patch to the same route with
+`review.expected_revision`, `review.expected_source_hash`, `review.preview_token`,
+a stable `review.idempotency_key` and `review.confirmed: true`. The successful save
+keeps the existing defaults response shape. Missing review returns `428`; changed
+or expired review returns `409`. Keep the revision as a string, including values
+larger than JavaScript's safe integer range. The served MCP defaults tool forwards
+`preview_only` and the same review object; client versions must expose those fields.
+
+Reviewed settings saves retain the verified consent in the existing transactional audit entry: the operation, source and selection digests, exact policy revision when available, and the captured impact or native schedule estimates. Unknown estimates remain unknown. Raw preview tokens, credentials and target addresses are excluded. Recovering the original committed response with the same key does not add another audit entry. This records a settings save; it does not prove that a measurement ran.
+
+The migration runner admits only the shared receipt metadata (`scopeSources` and `nextRun`), preserving existing receipt fields and immutability. Apply migrations before upgrading a settings writer; older receipts remain valid and unknown metadata is rejected.
+
+A confirmed manual launch retains its verified quote digest, source and selection digests, reviewed target count and native estimates in the existing atomic run audit. This records a queued measurement, not a completed provider call. Estimates that were unavailable during review remain unknown; raw quote tokens, credentials and target identities are omitted. Replaying a committed launch retains the original audit without adding another entry.

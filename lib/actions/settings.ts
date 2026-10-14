@@ -1,5 +1,4 @@
 "use server";
-import { normalizeSchedule } from "@/lib/actions/_schedule";
 import {
   getActionActor,
   parseActionInput,
@@ -11,21 +10,13 @@ import {
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { isBudgetExhaustedResult } from "@/lib/rank-check/budget-contract";
-import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
 import {
   createProjectSchema,
   normalizeTrackingScope,
-  projectDefaultsSchema,
   trackingScopeSchema,
 } from "@/lib/schemas/project";
-import { keywordMarketSelect, projectDefaultSerpMarket } from "@/lib/serp/default-market";
-import { resolveProjectDefaultMarket } from "@/lib/serp/project-default-market";
-import {
-  projectDefaultsConfig,
-  publicProjectDefaults,
-} from "@/lib/settings/project-defaults-config";
-import { projectDefaultsUpsertArgs } from "@/lib/settings/project-defaults-write";
 import { z } from "zod";
+import { saveReviewedDefaultSettings, saveReviewedFrequencyDefaults } from "./defaults-reviewed";
 
 const idSchema = z.string().trim().min(1).max(120);
 const projectDetailsSchema = createProjectSchema.pick({ name: true }).extend({
@@ -155,90 +146,11 @@ export async function updateProjectTrackingScope(input: unknown) {
     trackingScope: normalizeTrackingScope(updated.trackingScope),
   };
 }
-export async function updateDefaultRankCheckSettings(input: unknown) {
-  const data = parseActionInput(projectDefaultsSchema, input);
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "update", data.projectId, {
-    type: "project_defaults",
-  });
-  const [beforeDefaults, keywords] = await Promise.all([
-    prisma.projectDefaults.findUnique({ where: { projectId: project.id } }),
-    prisma.keyword.findMany({
-      select: keywordMarketSelect,
-      where: { projectId: project.id },
-    }),
-  ]);
-  const schedule = normalizeSchedule(data);
-  const resolvedDefault = await resolveProjectDefaultMarket({ ...data, projectId: project.id });
-  const market = {
-    city: resolvedDefault.city,
-    country: resolvedDefault.country,
-    device: resolvedDefault.device,
-    locationKey: resolvedDefault.locationKey,
-  };
-  const currentMarket = projectDefaultSerpMarket(beforeDefaults, keywords);
-  const defaults = await prisma.$transaction(async (tx) => {
-    const stored = await tx.projectDefaults.upsert(
-      projectDefaultsUpsertArgs({
-        defaults: { ...schedule, ...market },
-        projectId: project.id,
-        serpStopOnMatch: data.serpStopOnMatch,
-      }),
-    );
-    await refreshKeywordDispatchStates({ inheritedProjectId: project.id }, tx);
-    return stored;
-  });
-  await writeAudit({
-    action: "settings.defaults.update",
-    actorId: actor.id,
-    after: {
-      market,
-      schedule: projectDefaultsConfig(defaults),
-    },
-    before: {
-      market: currentMarket,
-      schedule: beforeDefaults ? projectDefaultsConfig(beforeDefaults) : null,
-    },
-    projectId: project.id,
-    targetId: project.publicId,
-    targetType: "project_defaults",
-  });
-  revalidateSettingsViews();
-  const { getOnboardingNextCheckAt } = await import("@/lib/queries/onboarding");
-  const nextCheckAt = await getOnboardingNextCheckAt(project.publicId);
-  return {
-    ...publicProjectDefaults(defaults, project.publicId),
-    nextCheckAt: nextCheckAt?.toISOString() ?? null,
-  };
+export async function updateDefaultRankCheckSettings(input: unknown, review?: unknown) {
+  return saveReviewedDefaultSettings(input, review);
 }
-export async function updateRankCheckFrequency(input: unknown) {
-  const data = parseActionInput(projectDefaultsSchema, input);
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "update", data.projectId, {
-    type: "project_defaults",
-  });
-  const before = await prisma.projectDefaults.findUnique({ where: { projectId: project.id } });
-  const schedule = normalizeSchedule(data);
-  const defaults = await prisma.$transaction(async (tx) => {
-    const stored = await tx.projectDefaults.upsert({
-      create: { ...schedule, projectId: project.id },
-      update: schedule,
-      where: { projectId: project.id },
-    });
-    await refreshKeywordDispatchStates({ inheritedProjectId: project.id }, tx);
-    return stored;
-  });
-  await writeAudit({
-    action: "settings.rank_check_frequency.update",
-    actorId: actor.id,
-    after: projectDefaultsConfig(defaults),
-    before: before ? projectDefaultsConfig(before) : null,
-    projectId: project.id,
-    targetId: project.publicId,
-    targetType: "project_defaults",
-  });
-  revalidateSettingsViews();
-  return publicProjectDefaults(defaults, project.publicId);
+export async function updateRankCheckFrequency(input: unknown, review?: unknown) {
+  return saveReviewedFrequencyDefaults(input, review);
 }
 export async function runManualProjectCheck(input: unknown) {
   const data = parseActionInput(runProjectCheckSchema, input);

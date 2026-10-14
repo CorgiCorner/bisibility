@@ -25,6 +25,8 @@ export type AiResearchCatalog = {
   fetchedAt: string;
   actualCostAvailable?: boolean;
 };
+export type AiCatalogFailureReason = "no_source" | "provider_unavailable" | "contended";
+
 export type AiCatalogOutcome =
   | { ok: true; catalog: AiResearchCatalog }
-  | { ok: false; message: string };
+  | { ok: false; message: string; reason?: AiCatalogFailureReason };

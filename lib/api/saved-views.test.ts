@@ -1,3 +1,4 @@
+import { keywordViewFixture } from "@/lib/saved-views/view-test-fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApiContext } from "./context";
 import { createProjectSavedView, listProjectSavedViews } from "./saved-views";
@@ -40,6 +41,9 @@ function context(method: string, body?: unknown) {
 }
 
 const view = {
+  canDelete: true,
+  revision: 3,
+  visibility: "project" as const,
   config: {
     filters: { change: "any", position: ["top10"], serp: [], tags: [], wrongUrl: false },
     lens: { device: "all", locationId: null },
@@ -57,8 +61,8 @@ const view = {
 describe("saved view REST resources", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.listSavedViews.mockResolvedValue([view]);
-    mocks.createSavedView.mockResolvedValue(view);
+    mocks.listSavedViews.mockResolvedValue([{ ...view, definition: view.config }]);
+    mocks.createSavedView.mockResolvedValue({ ...view, definition: view.config });
   });
 
   it("never serializes the raw saved-view creator from list or create responses", async () => {
@@ -77,5 +81,62 @@ describe("saved view REST resources", () => {
     expect(createBody).toMatchObject({ id: savedViewPublicId });
     expect(JSON.stringify(listBody)).not.toContain(rawUserId);
     expect(JSON.stringify(createBody)).not.toContain(rawUserId);
+    expect(listBody.data[0]).toMatchObject({ revision: 3, visibility: "project" });
   });
+});
+
+it("whitelists full shared definition without leaking owner IDs or mutation capabilities", async () => {
+  const definition = keywordViewFixture();
+  definition.presentation.columnOrder = ["rankingUrl"];
+  definition.presentation.sizing = { rankingUrl: 240 };
+  definition.presentation.visibility = { rankingUrl: false };
+  mocks.listSavedViews.mockResolvedValue([
+    {
+      ...view,
+      definition,
+      ownerId: "private-owner",
+      canEdit: true,
+      projectId: "internal-project",
+      requestId: "internal-request",
+    },
+  ]);
+  const body = await (await listProjectSavedViews(context("GET"), projectPublicId)).json();
+  expect(body.data[0]).toMatchObject({
+    config: { version: 1 },
+    definition: { version: 2, page_size: 100 },
+    revision: 3,
+    visibility: "project",
+  });
+  expect(body.data[0].definition.presentation).toMatchObject({
+    column_order: ["rankingUrl"],
+    sizing: { rankingUrl: 240 },
+    visibility: { rankingUrl: false },
+  });
+  expect(JSON.stringify(body)).not.toMatch(
+    /private-owner|internal-project|internal-request|owner_id|created_by_id|can_edit/,
+  );
+});
+
+it("rejects another project before reading saved views", async () => {
+  mocks.listSavedViews.mockClear();
+  const response = await listProjectSavedViews(context("GET"), "prj_bbbbbbbbbbbbbbbbbbbbbbbb");
+  expect(response.status).toBe(403);
+  expect(mocks.listSavedViews).not.toHaveBeenCalled();
+});
+
+it("does not let project credentials request private or v2 writes through the legacy creation transport", async () => {
+  mocks.createSavedView.mockClear();
+  await expect(
+    createProjectSavedView(
+      context("POST", { config: view.config, name: view.name, visibility: "private" }),
+      projectPublicId,
+    ),
+  ).rejects.toThrow();
+  await expect(
+    createProjectSavedView(
+      context("POST", { config: keywordViewFixture(), name: view.name }),
+      projectPublicId,
+    ),
+  ).rejects.toThrow();
+  expect(mocks.createSavedView).not.toHaveBeenCalled();
 });

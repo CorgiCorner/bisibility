@@ -1,7 +1,10 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
 import type { AppLocale } from "@/i18n/config";
+import { summarizeVisibility } from "@/lib/queries/visibility";
 import messages from "@/messages/core/en/project-dashboard.json";
-import { render, screen } from "@testing-library/react";
+import sharedMessages from "@/messages/core/en/shared.json";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { KpiCard } from "./KpiCard";
@@ -23,13 +26,69 @@ const reorderedMessages = {
 
 function renderKpi(children: ReactNode, customMessages = messages, locale: AppLocale = "en") {
   return render(
-    <FeatureMessagesProvider locale={locale} messages={customMessages} timeZone="UTC">
+    <FeatureMessagesProvider
+      locale={locale}
+      messages={mergeMessageCatalogs(sharedMessages, customMessages)}
+      timeZone="UTC"
+    >
       {children}
     </FeatureMessagesProvider>,
   );
 }
 
 describe("KpiCard", () => {
+  it("opens help from the emitted visibility version and never turns a future version into the current definition", () => {
+    const report = summarizeVisibility([], {
+      asOf: new Date("2026-10-13T12:00:00Z"),
+      eligibleTotal: 3,
+    }).report;
+    renderKpi(
+      <KpiCard
+        delta={{ kind: "awaitingFirstCheck" }}
+        deltaTone="neutral"
+        id="visibility"
+        qualityReport={{ ...report, definitionVersion: "future-visibility-version" }}
+        value={null}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Explain: Organic visibility" }));
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      sharedMessages.shared.measurementHelp.unknownVersion,
+    );
+    expect(screen.getByRole("dialog")).not.toHaveTextContent(
+      sharedMessages.shared.measurementHelp.entries.visibility_top20.versions["visibility-top20-v1"]
+        .definition,
+    );
+  });
+
+  it("does not invent a visibility definition when no report is available", () => {
+    renderKpi(
+      <KpiCard
+        delta={{ kind: "percentagePointChange", value: 0 }}
+        deltaTone="neutral"
+        id="visibility"
+        value={null}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /Explain:/ })).not.toBeInTheDocument();
+  });
+
+  it("explains the average concept without borrowing the visibility denominator", () => {
+    renderKpi(
+      <KpiCard
+        delta={{ kind: "noRankedPositions" }}
+        deltaTone="neutral"
+        id="averagePosition"
+        value={null}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Explain: Average ranked position" }));
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Absent and unknown targets receive no zero or 101 position.",
+    );
+    expect(screen.getByRole("dialog").querySelector("dl")).toBeNull();
+  });
+
   it("formats visibility coverage from the semantic numeric payload", () => {
     renderKpi(
       <KpiCard

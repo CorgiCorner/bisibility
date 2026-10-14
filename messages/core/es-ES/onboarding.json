@@ -94,7 +94,8 @@
           "sampleProject": "Los proyectos de ejemplo no ejecutan comprobaciones reales.",
           "sendUnconfirmed": "No se ha podido confirmar que esta comprobación se haya enviado, así que no se ha reintentado. Vuelve a ejecutarla si la necesitas.",
           "skipped": "Esta comprobación se ha omitido.",
-          "unexpected": "La comprobación ha fallado por nuestra parte. Inténtalo de nuevo en un momento."
+          "unexpected": "La comprobación ha fallado por nuestra parte. Inténtalo de nuevo en un momento.",
+          "measurementPolicy": "Configura la política de medición antes de nuevas comprobaciones."
         },
         "live": "Las comprobaciones en directo suelen responder en menos de un minuto.",
         "notChecked": "Todavía sin comprobar",

@@ -1,10 +1,18 @@
+import { AuthorizationError } from "@/lib/auth/authorize";
 import { computeNextCheckAt } from "@/lib/rank-check/schedule";
+import { fixtureScope } from "@/lib/rank-measurements/fixtures";
+import { recordedMeasurement } from "@/lib/rank-measurements/recorded-check";
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { API_VERSION_HEADER } from "./api-versions";
 import { handleApiRequest } from "./router";
 
 const mocks = vi.hoisted(() => ({
   authenticateBearer: vi.fn(),
+  loadOverviewMetricData: vi.fn(),
+  getQueryActor: vi.fn(() => {
+    throw new Error("API must not request a browser session");
+  }),
   fetchProjectKeywordVolumes: vi.fn(),
   prisma: {
     keyword: { count: vi.fn(), findMany: vi.fn() },
@@ -12,6 +20,11 @@ const mocks = vi.hoisted(() => ({
     rankCheck: { findFirst: vi.fn() },
   },
 }));
+
+vi.mock("@/lib/queries/overview-data", () => ({
+  loadOverviewMetricData: mocks.loadOverviewMetricData,
+}));
+vi.mock("@/lib/queries/_auth", () => ({ getQueryActor: mocks.getQueryActor }));
 
 vi.mock("./auth", () => ({
   ApiAuthError: class ApiAuthError extends Error {},
@@ -40,6 +53,14 @@ const now = new Date("2026-07-27T12:00:00.000Z");
 
 function rankCheck(position: number | null, previousPosition: number | null, checkedAt: Date) {
   return {
+    ...recordedFixture(position, {
+      observedAt: checkedAt,
+      recordedAt: checkedAt,
+      configuredScope: { ...fixtureScope, projectId: project.id },
+      effectiveScope: { ...fixtureScope, projectId: project.id },
+    }),
+    publicId: "chk_aaaaaaaaaaaaaaaaaaaaaaaa",
+    updatedAt: checkedAt,
     checkedAt,
     normalizationVersion: "v2",
     position,
@@ -54,9 +75,11 @@ function keyword(id: string, device: "desktop" | "mobile", checks: ReturnType<ty
   return {
     _count: { rankChecks: checks.length },
     createdAt: new Date("2026-07-01T00:00:00.000Z"),
+    projectId: project.id,
+    locationRef: { displayName: "City A", languageCode: "en", languageLabel: "English" },
     device,
     id,
-    publicId: `kw_${id}`,
+    publicId: `kw_${id.padEnd(24, "a")}`,
     rankChecks: checks,
     schedule: null,
     text: id,
@@ -78,6 +101,28 @@ describe("project overview API", () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(now);
+    mocks.loadOverviewMetricData.mockImplementation(async (_projectId, _filters, asOf) => ({
+      keywords: (await mocks.prisma.keyword.findMany()).map(
+        (value: ReturnType<typeof keyword>) => ({
+          ...value,
+          measurementPolicy: {
+            asOf,
+            expectedScope: value.rankChecks[0]
+              ? recordedMeasurement(value.rankChecks[0], value.publicId).effectiveScope
+              : null,
+            freshForMs: 8 * 86_400_000,
+            baselineBefore: new Date(asOf.getTime() - 7 * 86_400_000),
+            baselineNotBefore: new Date(asOf.getTime() - 8 * 86_400_000),
+            requireCurrentScope: true,
+          },
+        }),
+      ),
+      filteredKeywordCount: await mocks.prisma.keyword.count(),
+      addedThisMonth: await mocks.prisma.keyword.count(),
+      projectDefaults: await mocks.prisma.projectDefaults.findUnique(),
+      latestCheck: await mocks.prisma.rankCheck.findFirst(),
+      keywordVolumes: new Map(),
+    }));
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
       apiKey: {
@@ -219,25 +264,22 @@ describe("project overview API", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.prisma.keyword.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        select: expect.objectContaining({
-          rankChecks: expect.objectContaining({
-            where: expect.objectContaining({
-              checkedAt: { gte: new Date("2026-06-28T00:00:00.000Z") },
-            }),
-          }),
-        }),
-        where: {
-          device: "mobile",
-          locationRef: {
-            projectMarkets: { some: { projectId: "project_1", status: "active" } },
+    expect(mocks.loadOverviewMetricData).toHaveBeenCalledWith(
+      project.id,
+      { device: "mobile", range: "7d", tag: "Docs" },
+      now,
+      {
+        report: expect.objectContaining({
+          context: {
+            actor: expect.any(Object),
+            transport: "project_key",
+            credentialId: "key_1",
+            credential: { kind: "project_key", id: "key_1" },
           },
-          projectId: "project_1",
-          tags: { some: { tag: { name: "Docs" } } },
-        },
-      }),
+        }),
+      },
     );
+    expect(mocks.getQueryActor).not.toHaveBeenCalled();
 
     const invalid = await call("/projects/prj_a00000000000000000000000/overview?range=30d");
     expect(invalid.status).toBe(400);
@@ -250,6 +292,33 @@ describe("project overview API", () => {
     await expect(response.json()).resolves.toMatchObject({
       detail: "API key is not scoped to this project.",
     });
+    expect(mocks.loadOverviewMetricData).not.toHaveBeenCalled();
+  });
+
+  it("renews the verified key inside the metadata transaction and refuses revoked credentials", async () => {
+    mocks.prisma.keyword.count.mockResolvedValue(0);
+    mocks.prisma.keyword.findMany.mockResolvedValue([]);
+    await call("/projects/prj_a00000000000000000000000/overview");
+    const report = mocks.loadOverviewMetricData.mock.calls[0][3].report;
+    const apiKey = {
+      findFirst: vi.fn(async () => ({ revokedAt: now, expiresAt: null, scopes: ["read"] })),
+    };
+    const query = vi.fn(async () => []);
+    const tx = { apiKey, $queryRaw: query };
+    await expect(report.loadMetadata(tx, project, [], now)).rejects.toThrow("authorized");
+    expect(apiKey.findFirst).toHaveBeenCalledWith({
+      where: { id: "key_1", projectId: project.id },
+      select: { revokedAt: true, expiresAt: true, scopes: true },
+    });
+    expect(query).not.toHaveBeenCalled();
+    expect(mocks.getQueryActor).not.toHaveBeenCalled();
+  });
+
+  it("returns a forbidden response when access is revoked during the definition read", async () => {
+    mocks.loadOverviewMetricData.mockRejectedValueOnce(new AuthorizationError("forbidden"));
+    const response = await call("/projects/prj_a00000000000000000000000/overview");
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({ status: 403, title: "Forbidden" });
     expect(mocks.prisma.keyword.findMany).not.toHaveBeenCalled();
   });
 

@@ -1,0 +1,178 @@
+// Same-project composite ownership and append-only constraints are enforced by the additive migration.
+
+model BusinessLocation {
+  id String @id @default(cuid())
+  publicId String @unique
+  projectId String
+  role String
+  state String @default("active")
+  version Int @default(0)
+  currentRevisionId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([projectId, id], map: "business_locations_scope_0")
+  @@map("business_locations")
+
+  business_identity_revisions_business_identity_revisions_projectId_entityIdTobusiness_locations             BusinessIdentityRevision[] @relation("business_identity_revisions_projectId_entityIdTobusiness_locations")
+  business_identity_revisions_business_locations_projectId_id_currentRevisionIdTobusiness_identity_revisions BusinessIdentityRevision?  @relation("business_locations_projectId_id_currentRevisionIdTobusiness_identity_revisions", fields: [projectId, id, currentRevisionId], references: [projectId, entityId, id], onDelete: NoAction, map: "business_location_current_fk")
+  projects                                                                                                   Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "business_locations_project_fk")
+  business_match_heads                                                                                       BusinessMatchHead[]
+}
+
+model BusinessIdentityRevision {
+  id String @id @default(cuid())
+  projectId String
+  entityId String
+  revision Int
+  previousRevisionId String?
+  effectiveFrom DateTime
+  normalizerVersion String
+  actorId String?
+  reason String
+  snapshot Json
+  @@unique([projectId, entityId, id], map: "business_identity_revisions_scope_0")
+  @@unique([entityId, revision], map: "business_identity_revisions_scope_1")
+  @@unique([projectId, id], map: "business_identity_revisions_scope_2")
+  @@map("business_identity_revisions")
+
+  business_assignment_revisions                                                                     BusinessAssignmentRevision[]
+  business_identifier_claims                                                                        BusinessIdentifierClaim[]
+  business_locations_business_identity_revisions_projectId_entityIdTobusiness_locations             BusinessLocation             @relation("business_identity_revisions_projectId_entityIdTobusiness_locations", fields: [projectId, entityId], references: [projectId, id], onDelete: Cascade, map: "business_identity_entity_fk")
+  business_identity_revisions                                                                       BusinessIdentityRevision?    @relation("business_identity_revisionsTobusiness_identity_revisions", fields: [projectId, entityId, previousRevisionId], references: [projectId, entityId, id], onDelete: NoAction, map: "business_identity_previous_fk")
+  other_business_identity_revisions                                                                 BusinessIdentityRevision[]   @relation("business_identity_revisionsTobusiness_identity_revisions")
+  users                                                                                             User?                        @relation(fields: [actorId], references: [id], map: "business_identity_revisions_actorId_fk")
+  projects                                                                                          Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "business_identity_revisions_project_fk")
+  business_locations_business_locations_projectId_id_currentRevisionIdTobusiness_identity_revisions BusinessLocation[]            @relation("business_locations_projectId_id_currentRevisionIdTobusiness_identity_revisions")
+  business_match_decisions                                                                          BusinessMatchDecision[]
+  local_monitor_revisions                                                                           LocalMonitorRevision[]
+}
+
+model BusinessIdentifierClaim {
+  id String @id @default(cuid())
+  projectId String
+  entityId String
+  identityRevisionId String
+  namespace String
+  engine String
+  type String
+  value String
+  @@unique([projectId, namespace, engine, type, value], map: "business_identifier_claims_scope_0")
+  @@index([projectId, entityId], map: "business_identifier_claims_lookup_0")
+  @@map("business_identifier_claims")
+
+  business_identity_revisions BusinessIdentityRevision @relation(fields: [projectId, entityId, identityRevisionId], references: [projectId, entityId, id], onDelete: Cascade, map: "business_claim_identity_fk")
+  projects                    Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "business_identifier_claims_project_fk")
+}
+
+model BusinessMatchHead {
+  id String @id @default(cuid())
+  projectId String
+  entityId String
+  observationRunId String
+  itemId String
+  version Int @default(0)
+  currentDecisionId String?
+  @@unique([projectId, entityId, itemId], map: "business_match_heads_scope_0")
+  @@unique([projectId, entityId, observationRunId, itemId, id], map: "business_match_heads_scope_1")
+  @@map("business_match_heads")
+
+  business_match_decisions_business_match_decisions_projectId_entityId_observationRunId_itemId_headIdTobusiness_match_heads               BusinessMatchDecision[] @relation("business_match_decisions_projectId_entityId_observationRunId_itemId_headIdTobusiness_match_heads")
+  business_locations                                                                                                                      BusinessLocation        @relation(fields: [projectId, entityId], references: [projectId, id], onDelete: Cascade, map: "business_head_entity_fk")
+  observation_items                                                                                                                       ObservationItem         @relation(fields: [itemId, observationRunId], references: [id, observationRunId], onDelete: Cascade, map: "business_head_item_fk")
+  observation_runs                                                                                                                        ObservationRun          @relation(fields: [projectId, observationRunId], references: [projectId, id], onDelete: Cascade, map: "business_head_run_fk")
+  business_match_decisions_business_match_heads_projectId_entityId_observationRunId_itemId_id_currentDecisionIdTobusiness_match_decisions BusinessMatchDecision?  @relation("business_match_heads_projectId_entityId_observationRunId_itemId_id_currentDecisionIdTobusiness_match_decisions", fields: [projectId, entityId, observationRunId, itemId, id, currentDecisionId], references: [projectId, entityId, observationRunId, itemId, headId, id], onDelete: NoAction, map: "business_match_current_fk")
+  projects                                                                                                                                Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "business_match_heads_project_fk")
+}
+
+model BusinessMatchDecision {
+  id String @id @default(cuid())
+  headId String
+  projectId String
+  entityId String
+  identityRevisionId String
+  observationRunId String
+  itemId String
+  decisionRevision Int
+  previousDecisionId String?
+  status String
+  matchedBy String?
+  reason String
+  source String
+  confirmedBy String?
+  reviewReason String?
+  observedAt DateTime
+  recordedAt DateTime @default(now())
+  matcherVersion String
+  evidence Json
+  @@unique([headId, decisionRevision], map: "business_match_decisions_scope_0")
+  @@unique([projectId, entityId, observationRunId, itemId, headId, id], map: "business_match_decisions_scope_1")
+  @@map("business_match_decisions")
+
+  business_match_heads_business_match_decisions_projectId_entityId_observationRunId_itemId_headIdTobusiness_match_heads               BusinessMatchHead        @relation("business_match_decisions_projectId_entityId_observationRunId_itemId_headIdTobusiness_match_heads", fields: [projectId, entityId, observationRunId, itemId, headId], references: [projectId, entityId, observationRunId, itemId, id], onDelete: Cascade, map: "business_decision_head_fk")
+  business_identity_revisions                                                                                                         BusinessIdentityRevision @relation(fields: [projectId, entityId, identityRevisionId], references: [projectId, entityId, id], onDelete: Cascade, map: "business_decision_identity_fk")
+  business_match_decisions                                                                                                            BusinessMatchDecision?   @relation("business_match_decisionsTobusiness_match_decisions", fields: [projectId, entityId, observationRunId, itemId, headId, previousDecisionId], references: [projectId, entityId, observationRunId, itemId, headId, id], onDelete: NoAction, map: "business_decision_previous_fk")
+  other_business_match_decisions                                                                                                      BusinessMatchDecision[]  @relation("business_match_decisionsTobusiness_match_decisions")
+  users                                                                                                                               User?                    @relation(fields: [confirmedBy], references: [id], map: "business_match_decisions_confirmedBy_fk")
+  projects                                                                                                                            Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "business_match_decisions_project_fk")
+  business_match_heads_business_match_heads_projectId_entityId_observationRunId_itemId_id_currentDecisionIdTobusiness_match_decisions BusinessMatchHead[]       @relation("business_match_heads_projectId_entityId_observationRunId_itemId_id_currentDecisionIdTobusiness_match_decisions")
+}
+
+model BusinessAssignmentHead {
+  id String @id @default(cuid())
+  projectId String
+  scopeType String
+  scopeId String
+  keywordId String?
+  marketId String?
+  version Int @default(0)
+  currentRevisionId String?
+  @@unique([projectId, scopeType, scopeId], map: "business_assignment_heads_scope_0")
+  @@unique([projectId, id], map: "business_assignment_heads_scope_1")
+  @@map("business_assignment_heads")
+
+  business_assignment_revisions_business_assignment_heads_projectId_id_currentRevisionIdTobusiness_assignment_revisions BusinessAssignmentRevision?  @relation("business_assignment_heads_projectId_id_currentRevisionIdTobusiness_assignment_revisions", fields: [projectId, id, currentRevisionId], references: [projectId, headId, id], onDelete: NoAction, map: "business_assignment_current_fk")
+  projects                                                                                                              Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "business_assignment_heads_project_fk")
+  keywords                                                                                                              Keyword?                     @relation(fields: [projectId, keywordId], references: [projectId, id], onDelete: Cascade, map: "business_assignment_keyword_fk")
+  project_markets                                                                                                       ProjectMarket?               @relation(fields: [projectId, marketId], references: [projectId, id], onDelete: Cascade, map: "business_assignment_market_fk")
+  business_assignment_revisions_business_assignment_revisions_projectId_headIdTobusiness_assignment_heads               BusinessAssignmentRevision[] @relation("business_assignment_revisions_projectId_headIdTobusiness_assignment_heads")
+}
+
+model BusinessAssignmentRevision {
+  id String @id @default(cuid())
+  headId String
+  projectId String
+  revision Int
+  previousRevisionId String?
+  entityId String?
+  identityRevisionId String?
+  effectiveFrom DateTime
+  actorId String?
+  reason String
+  @@unique([headId, revision], map: "business_assignment_revisions_scope_0")
+  @@unique([projectId, headId, id], map: "business_assignment_revisions_scope_1")
+  @@map("business_assignment_revisions")
+
+  business_assignment_heads_business_assignment_heads_projectId_id_currentRevisionIdTobusiness_assignment_revisions BusinessAssignmentHead[]      @relation("business_assignment_heads_projectId_id_currentRevisionIdTobusiness_assignment_revisions")
+  business_assignment_heads_business_assignment_revisions_projectId_headIdTobusiness_assignment_heads               BusinessAssignmentHead       @relation("business_assignment_revisions_projectId_headIdTobusiness_assignment_heads", fields: [projectId, headId], references: [projectId, id], onDelete: Cascade, map: "business_assignment_head_fk")
+  business_identity_revisions                                                                                       BusinessIdentityRevision?    @relation(fields: [projectId, entityId, identityRevisionId], references: [projectId, entityId, id], onDelete: NoAction, map: "business_assignment_identity_fk")
+  business_assignment_revisions                                                                                     BusinessAssignmentRevision?  @relation("business_assignment_revisionsTobusiness_assignment_revisions", fields: [projectId, headId, previousRevisionId], references: [projectId, headId, id], onDelete: NoAction, map: "business_assignment_previous_fk")
+  other_business_assignment_revisions                                                                               BusinessAssignmentRevision[] @relation("business_assignment_revisionsTobusiness_assignment_revisions")
+  users                                                                                                             User?                        @relation(fields: [actorId], references: [id], map: "business_assignment_revisions_actorId_fk")
+  projects                                                                                                          Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "business_assignment_revisions_project_fk")
+}
+
+model BusinessLocationMutation {
+  id String @id @default(cuid())
+  projectId String
+  operation String
+  keyHash String
+  actorId String?
+  bodyHash String
+  result Json
+  createdAt DateTime @default(now())
+  @@unique([projectId, operation, keyHash], map: "business_location_mutations_scope_0")
+  @@map("business_location_mutations")
+
+  users     User?    @relation(fields: [actorId], references: [id], map: "business_location_mutations_actorId_fk")
+  projects  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "business_location_mutations_project_fk")
+}

@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  announcements: vi.fn(),
   adminSession: vi.fn(),
   budgetSummary: vi.fn(),
   cookies: vi.fn(),
@@ -92,6 +93,9 @@ vi.mock("@/components/shell/CommandPalette", () => ({
     mocks.paletteProps(props);
     return props.children;
   },
+}));
+vi.mock("@/lib/instance-announcements/store", () => ({
+  listEnabledInstanceAnnouncements: mocks.announcements,
 }));
 vi.mock("@/components/shell/AccountNoticeExtension", () => ({
   renderAccountNoticeExtension: mocks.noticeExtension,
@@ -217,6 +221,7 @@ describe("workspace layout", () => {
     ]);
     mocks.experimentalModules.mockResolvedValue([]);
     mocks.noticeExtension.mockResolvedValue(null);
+    mocks.announcements.mockResolvedValue([]);
     mocks.workerLiveness.mockResolvedValue({
       alertDeliveryTaskQueue: null,
       namespace: null,
@@ -224,6 +229,31 @@ describe("workspace layout", () => {
       status: "unknown",
       taskQueue: null,
     });
+  });
+
+  it("reads current enabled announcements again when rendering a refreshed page", async () => {
+    const props = {
+      activeProjectId: "project_1",
+      projectRef: "prj_f00000000000000000000000",
+      children: <div>Workspace</div>,
+    };
+    const before = renderToStaticMarkup(await WorkspaceShell(props));
+    expect(before).not.toContain("instance-announcement");
+    mocks.announcements.mockResolvedValue([
+      {
+        id: "notice",
+        title: "Service issue",
+        message: "Investigating",
+        href: "",
+        linkLabel: "",
+        enabled: true,
+        revision: "revision",
+      },
+    ]);
+    const after = renderToStaticMarkup(await WorkspaceShell(props));
+    expect(after).toContain("Service issue");
+    expect(after).toContain("instance-announcement");
+    expect(mocks.announcements).toHaveBeenCalledTimes(2);
   });
 
   it("owns the workspace shell independently from the admin route group", async () => {

@@ -1,11 +1,12 @@
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
-import type { Location } from "@/lib/generated/prisma/client";
+import type { Location, Prisma } from "@/lib/generated/prisma/client";
 import {
   canonicalKey,
   countrySeed,
   type LocationCandidate,
+  type LocationDescription,
   LocationInputError,
   type LocationKind,
   type LocationStore,
@@ -61,7 +62,7 @@ function handleNamesConflict(persisted: string, candidate: string, countryCode: 
   );
 }
 
-function assertCompatibleHandles(location: ResolvedLocation, candidate: LocationCandidate) {
+function assertCompatibleHandles(location: LocationDescription, candidate: LocationCandidate) {
   if (
     location.primaryGeoCode !== null &&
     candidate.primaryGeoCode !== null &&
@@ -83,7 +84,7 @@ function assertCompatibleHandles(location: ResolvedLocation, candidate: Location
   }
 }
 
-function matchesCandidate(location: ResolvedLocation, candidate: LocationCandidate) {
+function matchesCandidate(location: LocationDescription, candidate: LocationCandidate) {
   return (
     location.kind === candidate.kind &&
     location.countryCode.toUpperCase() === candidate.countryCode.toUpperCase() &&
@@ -99,7 +100,10 @@ function matchesCandidate(location: ResolvedLocation, candidate: LocationCandida
   );
 }
 
-function handleUpdate(location: ResolvedLocation, candidate: LocationCandidate) {
+export function locationCandidateUpdate(
+  location: LocationDescription,
+  candidate: LocationCandidate,
+) {
   if (!matchesCandidate(location, candidate)) return null;
   assertCompatibleHandles(location, candidate);
 
@@ -126,47 +130,52 @@ function handleUpdate(location: ResolvedLocation, candidate: LocationCandidate) 
   return Object.keys(data).length ? data : null;
 }
 
-export const prismaLocationStore: LocationStore = {
-  async findByKey(canonicalKey: string): Promise<ResolvedLocation | null> {
-    const row = await prisma.location.findUnique({ where: { canonicalKey } });
-    return row ? toResolvedLocation(row) : null;
-  },
+export function createPrismaLocationStore(
+  database: Pick<Prisma.TransactionClient, "location">,
+): LocationStore {
+  return {
+    async findByKey(canonicalKey: string): Promise<ResolvedLocation | null> {
+      const row = await database.location.findUnique({ where: { canonicalKey } });
+      return row ? toResolvedLocation(row) : null;
+    },
 
-  // Empty-update upserts return the authoritative canonicalKey winner without
-  // overwriting handles resolved by another writer.
-  async create(row: Omit<ResolvedLocation, "id">): Promise<ResolvedLocation> {
-    const persisted = await prisma.location.upsert({
-      create: row,
-      update: {},
-      where: { canonicalKey: row.canonicalKey },
-    });
-    return toResolvedLocation(persisted);
-  },
+    // Empty-update upserts return the authoritative canonicalKey winner without
+    // overwriting handles resolved by another writer.
+    async create(row: Omit<ResolvedLocation, "id">): Promise<ResolvedLocation> {
+      const persisted = await database.location.upsert({
+        create: row,
+        update: {},
+        where: { canonicalKey: row.canonicalKey },
+      });
+      return toResolvedLocation(persisted);
+    },
 
-  async enrich(
-    location: ResolvedLocation,
-    candidate: LocationCandidate,
-  ): Promise<ResolvedLocation> {
-    const data = handleUpdate(location, candidate);
-    if (!data) return location;
+    async enrich(
+      location: ResolvedLocation,
+      candidate: LocationCandidate,
+    ): Promise<ResolvedLocation> {
+      const data = locationCandidateUpdate(location, candidate);
+      if (!data) return location;
 
-    await prisma.location.updateMany({
-      data,
-      where: {
-        canonicalKey: location.canonicalKey,
-        countryCode: location.countryCode,
-        id: location.id,
-        kind: location.kind,
-        primaryGeoCode: location.primaryGeoCode,
-        primaryGeoName: location.primaryGeoName,
-        secondaryGeoName: location.secondaryGeoName,
-      },
-    });
-    const refreshed = await this.findByKey(location.canonicalKey);
-    if (!refreshed) {
-      throw new LocationInputError("canonicalKey", "Cached location could not be verified.");
-    }
-    assertCompatibleHandles(refreshed, candidate);
-    return refreshed;
-  },
-};
+      await database.location.updateMany({
+        data,
+        where: {
+          canonicalKey: location.canonicalKey,
+          countryCode: location.countryCode,
+          id: location.id,
+          kind: location.kind,
+          primaryGeoCode: location.primaryGeoCode,
+          primaryGeoName: location.primaryGeoName,
+          secondaryGeoName: location.secondaryGeoName,
+        },
+      });
+      const refreshed = await this.findByKey(location.canonicalKey);
+      if (!refreshed) {
+        throw new LocationInputError("canonicalKey", "Cached location could not be verified.");
+      }
+      assertCompatibleHandles(refreshed, candidate);
+      return refreshed;
+    },
+  };
+}
+export const prismaLocationStore = createPrismaLocationStore(prisma);

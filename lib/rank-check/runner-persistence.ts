@@ -15,6 +15,7 @@ import { emitSignal } from "@/lib/signals/emit";
 import { signalsForRankCheck } from "@/lib/signals/rank-check";
 import { enqueueAlertDeliveries } from "@/lib/temporal/alert-delivery-client";
 import { positiveCostCents } from "./cost";
+import { consumeRankResult, retainRankResult } from "./recovery-evidence";
 import { updateRunningRankCheck, writeRankCheckAudit } from "./runner-persistence-shared";
 import type {
   RankCheckFailureTarget as BaseRankCheckFailureTarget,
@@ -42,6 +43,10 @@ export async function persistRankCheck(
   result: RankCheckResult,
   dependencies: PersistRankCheckDependencies = defaultDependencies,
 ) {
+  const retained = await retainRankResult(target, result).catch(() => {
+    console.error("[rank-check] result recovery retention failed");
+    return false;
+  });
   const { observation, ...rankCheckFields } = result.rankCheck;
   const attempts = target.attempts?.length
     ? target.attempts.map(({ message, provider }) => ({ message, provider }))
@@ -72,7 +77,13 @@ export async function persistRankCheck(
     const persisted =
       existing?.rankCheck ??
       (await tx.rankCheck.create({ data: { ...data, publicId: makePublicId("check") } }));
-    await persistRankCheckObservation(tx, observation, target.projectId, persisted.id);
+    await persistRankCheckObservation(
+      tx,
+      observation,
+      target.projectId,
+      persisted.id,
+      result.definitionBindingId,
+    );
     await applyRunItemTransition(tx, { rankCheckId: persisted.id, to: "completed" });
     if (target.hasSchedule) {
       await tx.keywordSchedule.update({
@@ -123,6 +134,7 @@ export async function persistRankCheck(
       await emitSignal(signal, tx);
     }
     await target.persistenceFinalize?.(tx);
+    if (retained) await consumeRankResult(tx, persisted.id);
     return persisted;
   }, target.transactionOptions);
   await publishOperationChanged({ projectId: target.projectId }).catch(() => undefined);

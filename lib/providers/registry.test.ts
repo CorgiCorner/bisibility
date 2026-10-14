@@ -88,6 +88,15 @@ describe("local sequence provider gating", () => {
     expect(registry.getSerpProvider("local-sequence").id).toBe("local-sequence");
   });
 
+  it("preserves generic fake wrapping outside the isolated local review authority", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("BISIBILITY_FAKE_PROVIDER", "1");
+    vi.resetModules();
+    const { getSerpProvider: provider } = await import("./registry");
+    vi.stubEnv("DATABASE_URL", "postgresql://localhost/ordinary-development");
+    expect(provider("local-sequence").label).toBe("Local rank test (fake)");
+  });
+
   it("does not register the adapter in production even when explicitly requested", async () => {
     vi.stubEnv("BISIBILITY_DEV_SERP_PROVIDER", "1");
     vi.stubEnv("NODE_ENV", "production");

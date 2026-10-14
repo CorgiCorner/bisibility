@@ -55,7 +55,7 @@ async function executePaidProviderCall<
   connection: { credentialsEncrypted: string | null; id: string; provider: string };
   credential?: ProviderCredential;
   correlationId?: string;
-  feature: Exclude<ProviderCostFeature, "rank_check">;
+  feature: Exclude<ProviderCostFeature, "rank_check" | "local_scan">;
   includeClickstream?: boolean;
   historyWindow?: ProviderHistoryWindow;
   itemCount: number;

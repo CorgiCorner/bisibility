@@ -12,6 +12,11 @@ export { platformAllocationTag } from "./paid-quote";
 
 const id = z.string().min(1).max(256);
 const contextSchema = historicalContext.extend({
+  recoveryGrantExpiresAt: z.iso.datetime().optional(),
+  recoveryMaxCostCents: z
+    .string()
+    .regex(/^\d+(\.\d+)?$/)
+    .optional(),
   maxCustomerCostCents: z
     .string()
     .regex(/^-?\d+(\.\d+)?$/)
@@ -42,9 +47,14 @@ const contextSchema = historicalContext.extend({
 
 /** Keep checksum-covered historical migration inputs immutable as live admission evolves. */
 export function preparePaidAttempt(input: PaidAttemptInput): ReserveInput {
-  const { feature, requestPricing, maxCustomerCostCents, ...context } = contextSchema.parse(
-    input.context,
-  );
+  const {
+    feature,
+    requestPricing,
+    maxCustomerCostCents,
+    recoveryGrantExpiresAt: _recoveryExpiry,
+    recoveryMaxCostCents,
+    ...context
+  } = contextSchema.parse(input.context);
   const request = input.reservation;
   if (
     requestPricing &&
@@ -72,16 +82,33 @@ export function preparePaidAttempt(input: PaidAttemptInput): ReserveInput {
       !request.estimate?.some((q) => q.unit === "units" && q.value === 1n && q.scale === 0)
     )
       throw new Error("Search budget valuation disagrees with native units");
-    return {
-      ...result,
-      estimate: [
-        ...result.estimate.filter((q) => q.unit !== "budget_cents"),
-        decimalQuantity(valuation.perUnitCents, "budget_cents"),
-      ],
-    };
+    return enforceRecoveryQuote(
+      {
+        ...result,
+        estimate: [
+          ...result.estimate.filter((q) => q.unit !== "budget_cents"),
+          decimalQuantity(valuation.perUnitCents, "budget_cents"),
+        ],
+      },
+      recoveryMaxCostCents,
+    );
   }
-  if (request.fundingSource !== "platform") return result;
+  if (request.fundingSource !== "platform")
+    return enforceRecoveryQuote(result, recoveryMaxCostCents);
   // Customer prices have their own authority and cannot carry BYOK provider provenance.
   const { estimateSource: _providerSource, ...customerPrice } = result;
-  return customerPrice;
+  return enforceRecoveryQuote(customerPrice, recoveryMaxCostCents);
+}
+function enforceRecoveryQuote(result: ReserveInput, maximum?: string): ReserveInput {
+  if (maximum === undefined) return result;
+  const unit =
+    result.fundingSource === "platform"
+      ? "customer_cents"
+      : result.estimate.some((q) => q.unit === "budget_cents")
+        ? "budget_cents"
+        : "cents";
+  const estimate = result.estimate.find((q) => q.unit === unit);
+  if (!estimate) throw new Error("Recovery requires the original cost quote");
+  assertProviderCostLimit([{ ...estimate, unit: "cents" }], maximum);
+  return result;
 }

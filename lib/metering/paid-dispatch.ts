@@ -8,6 +8,7 @@ import type {
 } from "./paid-attempt-types";
 import { verifyPaidBinding } from "./paid-binding";
 import { lockPaidOperation, paidContext } from "./paid-context";
+import { readPaidFenceReference } from "./paid-fence-references";
 import { createTransactionMeter, paidAttemptClock, readPaidOperation } from "./transaction-meter";
 
 const ref = (operation: Operation) => ({
@@ -56,23 +57,38 @@ export async function fencePaidAttemptsInTransaction(
 ) {
   if (!grants.length || grants.length > 100) throw new RangeError("Invalid paid transport taskset");
   const clock = options.clock ?? paidAttemptClock;
-  const meter = await createTransactionMeter(tx, clock);
   const ordered = [...grants].sort(
     (a, b) =>
       a.operation.scope.connection.localeCompare(b.operation.scope.connection) ||
       a.operation.operationId.localeCompare(b.operation.operationId),
   );
   const operations = [];
+  const recoveryChecks = new Set<string>();
   for (const grant of ordered) {
-    const operation = await readPaidOperation(meter, ref(grant.operation));
-    const [row] = await tx.$queryRaw<
-      { context: import("./paid-attempt-types").PaidAttemptContext }[]
-    >`SELECT context FROM metering_paid_attempt_context WHERE namespace=${operation.scope.namespace} AND operation_id=${operation.operationId}`;
-    if (!row) throw new Error("Paid fence context is unavailable");
-    await verifyPaidBinding(tx, operation, row.context, options);
-    operations.push({ grant, operation });
+    const reference = await readPaidFenceReference(tx, ref(grant.operation));
+    if (reference.context.recoveryGrantExpiresAt) {
+      const target = JSON.stringify([
+        reference.context.rankCheckRunId,
+        reference.context.keywordId,
+      ]);
+      if (recoveryChecks.has(target))
+        throw new Error("Original run recovery attempt limit reached");
+      recoveryChecks.add(target);
+    }
+    operations.push({ grant, operation: reference.operation, context: reference.context });
   }
+  // Acquire semantic business locks before native binding/accounting locks; no request/grant is minted here.
+  const references = operations.map(({ grant, operation, context }) => ({
+    operation,
+    lease: grant.lease,
+    context,
+  }));
+  await options.beforeFence?.lockBusiness(tx, references);
+  const meter = await createTransactionMeter(tx, clock);
+  for (const { operation, context } of operations)
+    await verifyPaidBinding(tx, operation, context, options);
   for (const { operation } of operations) await lockPaidOperation(tx, operation);
+  const verified = [];
   for (const { grant, operation: original } of operations) {
     const operation = await readPaidOperation(meter, ref(original));
     const context = await paidContext(tx, ref(operation));
@@ -86,6 +102,10 @@ export async function fencePaidAttemptsInTransaction(
       throw new Error("Paid transport holder is fenced out");
     if (new Date(operation.lease.expiresAt) <= clock.now())
       throw new Error("Paid transport lease expired");
+    verified.push({ operation, lease: grant.lease, context: context.context });
+  }
+  await options.beforeFence?.assertDispatch(tx, verified);
+  for (const { operation } of verified) {
     const fencedAt = clock.now();
     await tx.$executeRaw`UPDATE metering_paid_attempt_context
       SET fenced_at=${fencedAt}, fenced_at_iso=${fencedAt.toISOString()}

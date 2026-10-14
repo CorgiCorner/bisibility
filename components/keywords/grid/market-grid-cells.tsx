@@ -1,12 +1,13 @@
 import { Tooltip } from "@/components/ui/Tooltip";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keywords";
+import type { RankTrackerQualityRow } from "@/lib/queries/rank-tracker-report-model";
 import { appPath } from "@/lib/routing/app-path";
 import * as rankDepth from "@/lib/serp/rank-depth";
-import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/csr/ClockCountdown";
 import { MapPinIcon as MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
+import { KeywordRankValue } from "./KeywordRankValue";
 import { rankTrackerKeywordLinkClassName } from "./keyword-link-styles";
 
 const noDataClassName = "font-sans tabular-nums text-xs font-semibold text-fg-muted";
@@ -48,7 +49,8 @@ export function NoDataValue({
 export function MarketKeywordCell({
   projectRef,
   row,
-}: Readonly<{ projectRef: string; row: KeywordRow }>) {
+  href,
+}: Readonly<{ projectRef: string; row: KeywordRow; href?: string }>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.marketCells");
   const parent = marketGridParent(row);
   if (parent) {
@@ -77,7 +79,7 @@ export function MarketKeywordCell({
     <Tooltip content={row.keyword} wrapperClassName="w-full min-w-0">
       <Link
         className={`bv-keyword-title block w-full min-w-0 truncate text-[13.5px] ${rankTrackerKeywordLinkClassName} group-hover:underline`}
-        href={appPath(projectRef, "rank-tracker", row.id)}
+        href={href ?? appPath(projectRef, "rank-tracker", row.id)}
         onClick={(event) => event.stopPropagation()}
       >
         {row.keyword}
@@ -86,40 +88,8 @@ export function MarketKeywordCell({
   );
 }
 
-export function MarketPositionCell({ row }: Readonly<{ row: KeywordRow }>) {
-  const t = useTranslations("projectRankTracker.keywordImport.management.marketCells");
-  const parent = marketGridParent(row);
-  if (
-    rankDepth.hasIncompleteObservation(row.observationCompleteness) &&
-    !rankDepth.hasTrackedPosition(row)
-  )
-    return <NoDataValue className="text-[13px]" label={noRankLabel(row, t)} />;
-  if (!row.hasRankData) return <NoDataValue className="text-[13px]" label={noRankLabel(row, t)} />;
-  if (rankDepth.isPositionOutsideTrackedDepth(row.position, row.trackedDepth))
-    return <span>{t("notFoundInTop", { depth: row.trackedDepth ?? 100 })}</span>;
-
-  const value = (
-    <span className="font-sans tabular-nums text-[13.5px] font-semibold text-fg">
-      {t("position", { position: row.position })}
-    </span>
-  );
-  return parent ? (
-    <Tooltip content={t("bestPosition", { count: parent.aggregate.activeTargetCount })}>
-      <span className="inline-flex items-center gap-1.5">
-        {value}
-        {parent.aggregate.stale ? (
-          <ClockCountdown
-            weight="regular"
-            aria-label={t("includesStaleTarget")}
-            className="text-yellow-text"
-            size={14}
-          />
-        ) : null}
-      </span>
-    </Tooltip>
-  ) : (
-    value
-  );
+export function MarketPositionCell({ row }: Readonly<{ row: KeywordRow | RankTrackerQualityRow }>) {
+  return <KeywordRankValue row={row} />;
 }
 
 export function MarketLocationCell({ row }: Readonly<{ row: KeywordRow }>) {

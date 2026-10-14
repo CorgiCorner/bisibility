@@ -1,0 +1,43 @@
+// Immutable paid-retry lineage. Composite scope and captured original item authority are SQL-owned.
+model LocalMonitorRetrySelection {
+ id String @id
+ projectId String
+ monitorId String
+ parentRunId String
+ parentOccurrenceId String
+ definitionRevisionId String
+ scheduleIntentId String
+ parentExpectedCount Int
+ sourceHash String
+ selectedProofHash String
+ createdAt DateTime @default(now())
+ @@unique([projectId,id])
+ @@map("local_monitor_retry_selections")
+
+  local_monitor_retry_members    LocalMonitorRetryMember[]
+  local_monitor_revisions        LocalMonitorRevision       @relation(fields: [projectId, definitionRevisionId], references: [projectId, id], onDelete: NoAction, onUpdate: NoAction, map: "local_monitor_retry_selection_projectId_definitionRevision_fkey")
+  local_monitor_schedule_intents LocalMonitorScheduleIntent @relation(fields: [projectId, monitorId, scheduleIntentId], references: [projectId, monitorId, id], onDelete: NoAction, onUpdate: NoAction, map: "local_monitor_retry_selection_projectId_monitorId_schedule_fkey")
+  local_monitor_occurrences      LocalMonitorOccurrence     @relation(fields: [projectId, parentOccurrenceId], references: [projectId, id], onDelete: NoAction, onUpdate: NoAction, map: "local_monitor_retry_selection_projectId_parentOccurrenceId_fkey")
+  projects                       Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  local_monitor_launch_intents   LocalMonitorLaunchIntent   @relation(fields: [projectId, id], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+  local_monitors                 LocalMonitor               @relation(fields: [projectId, monitorId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+  local_measurement_runs         LocalMeasurementRun        @relation(fields: [projectId, parentRunId], references: [projectId, id], onDelete: NoAction, onUpdate: NoAction)
+}
+model LocalMonitorRetryMember {
+ selectionId String
+ projectId String
+ parentItemId String
+ targetId String
+ targetKey String
+ recordVersion Int
+ recordSnapshot Json
+ nativeState String
+ nativeProof String
+ @@id([selectionId,targetId])
+ @@unique([selectionId,parentItemId])
+ @@map("local_monitor_retry_members")
+
+  local_measurement_run_items    LocalMeasurementRunItem    @relation(fields: [projectId, parentItemId], references: [projectId, id], onDelete: NoAction, onUpdate: NoAction)
+  local_monitor_retry_selections LocalMonitorRetrySelection @relation(fields: [projectId, selectionId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+  local_measurement_targets      LocalMeasurementTarget     @relation(fields: [projectId, targetId], references: [projectId, id], onDelete: NoAction, onUpdate: NoAction)
+}

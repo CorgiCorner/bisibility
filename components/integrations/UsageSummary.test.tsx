@@ -1,9 +1,12 @@
 import { renderWithUsageSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { budgetFixture, projectUsageFixture } from "@/lib/metering/shared-view-fixtures";
 import { emptyProjectUsage } from "@/lib/metering/user-views";
-import { screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
+
+afterEach(() => vi.unstubAllGlobals());
+
 import { UsageSummary } from "./UsageSummary";
 
 it("hides recorded usage when the actor has no access", () => {
@@ -46,6 +49,8 @@ it("retains the usage anchor and collapsed details, with source-specific currenc
   };
   const { container } = render(<UsageSummary data={data} />);
   expect(container.querySelector("#meter-usage")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Amounts" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Decimal places" })).toBeNull();
   expect(screen.getByText("$1.23")).toBeInTheDocument();
   expect(container.querySelector("details")).not.toHaveAttribute("open");
   await userEvent.click(screen.getByText("Usage details"));
@@ -70,7 +75,7 @@ it("distinguishes confirmed zero measurements from unknown measurements", () => 
   expect(screen.getAllByText("Unknown").length).toBeGreaterThan(0);
   expect(screen.queryByText("No usage in this period.")).toBeNull();
 });
-it("shows empty state without inventing observations for configured limits", () => {
+it("shows empty state without duplicating project budget cards", () => {
   const data = emptyProjectUsage();
   data.status = "available";
   data.summary.state = "empty";
@@ -85,8 +90,7 @@ it("shows empty state without inventing observations for configured limits", () 
   ];
   render(<UsageSummary data={data} />);
   expect(screen.getByText("No usage in this period.")).toBeInTheDocument();
-  expect(screen.getByText("100 Units")).toBeInTheDocument();
-  expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
+  expect(screen.queryByText("100 Units")).toBeNull();
   expect(screen.queryByText("0")).toBeNull();
 });
 it("discloses incomplete coverage and truncated details without summing the visible page", async () => {
@@ -101,4 +105,42 @@ it("discloses incomplete coverage and truncated details without summing the visi
   await userEvent.click(screen.getByText("Usage details"));
   expect(screen.getByText(/This view is bounded/)).toBeInTheDocument();
   expect(screen.getByRole("table")).toHaveTextContent("$0.12");
+});
+
+it("shows both ends of retained connection IDs and copies the full identifier", async () => {
+  const data = projectUsageFixture();
+  const connection = "conn_adbea2c178b319ecf9687a76";
+  data.connections = [];
+  data.detail.rows = data.detail.rows.map((row) => ({
+    ...row,
+    dimensions: { ...row.dimensions, connection },
+  }));
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  vi.stubGlobal("navigator", { clipboard: { writeText } });
+  render(<UsageSummary data={data} />);
+  await act(async () => {
+    fireEvent.click(screen.getByText("Usage details"));
+  });
+  const table = screen.getByRole("table");
+  expect(within(table).getByText("conn_adbea…687a76").parentElement).toHaveAttribute(
+    "title",
+    connection,
+  );
+  expect(within(table).queryByText(connection)).toBeNull();
+  await act(async () => {
+    fireEvent.click(within(table).getByRole("button", { name: "Copy ID" }));
+  });
+  expect(writeText).toHaveBeenCalledExactlyOnceWith(connection);
+  expect(data.detail.rows[0].dimensions.connection).toBe(connection);
+});
+
+it("keeps a connection without an identifier as a plain retained label", async () => {
+  const data = projectUsageFixture();
+  data.detail.rows = data.detail.rows.map((row) => ({
+    ...row,
+    dimensions: { ...row.dimensions, connection: "" },
+  }));
+  render(<UsageSummary data={data} />);
+  await userEvent.click(screen.getByText("Usage details"));
+  expect(within(screen.getByRole("table")).queryByRole("button", { name: "Copy ID" })).toBeNull();
 });

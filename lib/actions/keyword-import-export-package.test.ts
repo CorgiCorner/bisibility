@@ -6,6 +6,9 @@ const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
   cookies: vi.fn(),
   prisma: {
+    $queryRaw: vi.fn(),
+    $transaction: vi.fn(),
+    rankCheck: { count: vi.fn(), findMany: vi.fn() },
     alertRule: { findMany: vi.fn() },
     competitor: { findMany: vi.fn() },
     keyword: { findMany: vi.fn() },
@@ -72,6 +75,30 @@ describe("keyword export packages", () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-28T12:00:00.000Z"));
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
+    mocks.prisma.$queryRaw.mockImplementation(async (query: TemplateStringsArray) => {
+      const sql = query.join("?");
+      if (sql.includes("FROM users")) return [{ id: "user_1" }];
+      if (sql.includes("FROM memberships")) return [{ role: "admin" }];
+      if (sql.includes("AS tables")) return [{ tables: 0, source: false, guard: false }];
+      return [];
+    });
+    const retainedCheck = {
+      ...keyword().rankChecks[0],
+      attemptCount: 1,
+      createdAt: new Date("2026-06-20T10:00:00.000Z"),
+      updatedAt: new Date("2026-06-20T10:00:00.000Z"),
+      keywordId: "keyword_1",
+      observationRun: null,
+      publicId: "check_abcdefghijklmnopqrstuvwx",
+      status: "completed",
+    };
+    mocks.prisma.rankCheck.count.mockImplementation(async ({ where }) =>
+      where.keywordId.in.includes("keyword_1") ? 1 : 0,
+    );
+    mocks.prisma.rankCheck.findMany.mockImplementation(async ({ where }) =>
+      where.keywordId.in.includes("keyword_1") ? [retainedCheck] : [],
+    );
     mocks.cookies.mockResolvedValue({ get: vi.fn() });
     mocks.requireSession.mockResolvedValue({ user: { id: "user_1" } });
     mocks.prisma.user.findUnique.mockResolvedValue({
@@ -88,7 +115,9 @@ describe("keyword export packages", () => {
       name: "Example",
       publicId: ids.project,
     });
-    mocks.prisma.keyword.findMany.mockResolvedValue([keyword()]);
+    mocks.prisma.keyword.findMany.mockImplementation(async ({ where }) =>
+      where.publicId?.in?.length === 0 ? [] : [keyword()],
+    );
     mocks.prisma.alertRule.findMany.mockResolvedValue([
       {
         changePct: null,
@@ -317,7 +346,12 @@ describe("keyword export packages", () => {
       scope: "current",
     });
     expect(JSON.parse(result.content)).toMatchObject({ keywords: [] });
-    expect(mocks.prisma.keyword.findMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.keyword.findMany).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ projectId: "project_1", publicId: { in: [] } }),
+      }),
+    );
+    expect(mocks.prisma.rankCheck.findMany).not.toHaveBeenCalled();
   });
 
   it("fails clearly when the package would exceed the import limit", async () => {

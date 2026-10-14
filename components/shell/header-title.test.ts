@@ -7,6 +7,21 @@ import { describe, expect, it } from "vitest";
 
 const routeCases = [
   {
+    path: appPath("prj_1", "settings", "business-locations"),
+    pattern: appPath("[project]", "settings", "business-locations"),
+    title: "Settings",
+  },
+  {
+    path: appPath("prj_1", "settings", "business-locations", "monitors"),
+    pattern: appPath("[project]", "settings", "business-locations", "monitors"),
+    title: "Settings",
+  },
+  {
+    path: appPath("prj_1", "settings", "business-locations", "monitors", "mon_test"),
+    pattern: appPath("[project]", "settings", "business-locations", "monitors", "[monitor]"),
+    title: "Settings",
+  },
+  {
     path: appPath("prj_1", "ai-tracking"),
     pattern: appPath("[project]", "ai-tracking"),
     title: "AI Tracking",
@@ -58,6 +73,11 @@ const routeCases = [
     title: "Instance administration",
   },
   { path: "/app/admin/metering", pattern: "/app/admin/metering", title: "Instance administration" },
+  {
+    path: "/app/admin/metering/recovery",
+    pattern: "/app/admin/metering/recovery",
+    title: "Instance administration",
+  },
   { path: "/app/overview", pattern: "/app/overview", title: "Overview" },
   {
     path: appPath("prj_1", "alerts"),

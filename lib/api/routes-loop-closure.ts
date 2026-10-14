@@ -4,6 +4,17 @@ export function loopClosureRoutes(ctx: ApiContext) {
   const [first, projectId, resource, memberId, action] = ctx.path;
   if (first !== "projects" || !projectId) return null;
 
+  if (resource === "rank-check-runs" && ctx.method === "GET") {
+    if (ctx.path.length === 3)
+      return import("./rank-check-runs").then((routes) =>
+        routes.listProjectRankCheckRuns(ctx, projectId),
+      );
+    if (memberId && ctx.path.length === 4)
+      return import("./rank-check-runs").then((routes) =>
+        routes.getProjectRankCheckRun(ctx, projectId, memberId),
+      );
+  }
+
   if (
     resource === "exports" &&
     memberId === "rank-history" &&

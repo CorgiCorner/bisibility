@@ -1,11 +1,29 @@
 import { useMarketContext } from "@/components/markets/MarketContextProvider";
+import { useUsageDisplaySettings } from "@/components/metering/use-usage-display-settings";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ listHeaderMarkets: vi.fn(), resolveProjectAccess: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  listHeaderMarkets: vi.fn(),
+  resolveProjectAccess: vi.fn(),
+  getQueryActor: vi.fn(),
+  readUsageDisplay: vi.fn(),
+}));
 
-vi.mock("@/lib/queries/_auth", () => ({ resolveProjectAccess: mocks.resolveProjectAccess }));
+vi.mock("@/lib/queries/_auth", () => ({
+  resolveProjectAccess: mocks.resolveProjectAccess,
+  getQueryActor: mocks.getQueryActor,
+}));
+vi.mock("@/lib/project-usage-display/store", () => ({
+  readProjectUsageDisplaySettings: mocks.readUsageDisplay,
+}));
+vi.mock("@/lib/actions/project-usage-display", () => ({ updateProjectUsageDisplay: vi.fn() }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+  usePathname: () => "/app",
+  useSearchParams: () => new URLSearchParams(),
+}));
 // Stubbed only so this can watch for a caller. The layout must not have one.
 vi.mock("@/lib/queries/header-markets", () => ({ listHeaderMarkets: mocks.listHeaderMarkets }));
 
@@ -30,8 +48,9 @@ const PROJECT_REF = `prj_${"a".repeat(24)}`;
 
 function ContextProbe({ id }: Readonly<{ id: string }>) {
   const { market, projectRef } = useMarketContext();
+  const { options } = useUsageDisplaySettings();
   return (
-    <span data-testid={id}>
+    <span data-testid={id} data-money-display={options.moneyDisplay}>
       {projectRef || "no-project"}:{market?.ref ?? "none"}
     </span>
   );
@@ -50,6 +69,13 @@ async function renderLayout(context: ReactNode = <span data-testid="context-slot
 describe("project layout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getQueryActor.mockResolvedValue({ id: "actor" });
+    mocks.readUsageDisplay.mockResolvedValue({
+      projectId: PROJECT_REF,
+      revision: 0,
+      canEdit: false,
+      options: { moneyDisplay: "currency", moneyFractionDigits: 2, quantityFractionDigits: 2 },
+    });
     mocks.resolveProjectAccess.mockResolvedValue({
       isSample: false,
       mode: "member",
@@ -82,6 +108,20 @@ describe("project layout", () => {
     await renderLayout();
 
     expect(screen.getByTestId("shell")).toContainElement(screen.getByTestId("context-slot"));
+  });
+
+  it("provides the same server-authorized usage options to shell, context and page", async () => {
+    mocks.readUsageDisplay.mockResolvedValue({
+      projectId: PROJECT_REF,
+      revision: 1,
+      canEdit: false,
+      options: { moneyDisplay: "raw-unit", moneyFractionDigits: 4, quantityFractionDigits: 4 },
+    });
+    await renderLayout(<ContextProbe id="slot" />);
+    for (const id of ["chrome", "slot", "body"]) {
+      expect(screen.getByTestId(id)).toHaveAttribute("data-money-display", "raw-unit");
+    }
+    expect(mocks.readUsageDisplay).toHaveBeenCalledWith(PROJECT_REF, { id: "actor" });
   });
 
   it("never reads the market list, which most project routes cannot show", async () => {

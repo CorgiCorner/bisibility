@@ -1,3 +1,7 @@
+import {
+  confirmDefaultsFixture,
+  previewDefaultsFixture,
+} from "@/components/onboarding/reviewed-defaults-test-fixture";
 import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -151,13 +155,14 @@ describe("StepAddKeywords schedule summary", () => {
 
   it("saves tracking defaults with keywords and keeps language inside market chips", async () => {
     const onComplete = vi.fn();
-    const updateProjectDefaultsAction = vi.fn(async () => undefined);
+    const updateProjectDefaultsAction = vi.fn(async () => ({ kind: "saved" }));
     render(
       <>
         <StepAddKeywords
           flowState={{ projectId: "prj_1", providerId: "serpapi" }}
           onComplete={onComplete}
           updateProjectDefaultsAction={updateProjectDefaultsAction}
+          previewProjectDefaultsAction={previewDefaultsFixture}
         />
         <button form={onboardingFormId} type="submit">
           Continue
@@ -169,20 +174,25 @@ describe("StepAddKeywords schedule summary", () => {
     expect(screen.queryByLabelText("Language")).not.toBeInTheDocument();
     fireEvent.change(keywordBox(), { target: { value: "rank tracker" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(updateProjectDefaultsAction).not.toHaveBeenCalled();
+    await confirmDefaultsFixture();
 
     await waitFor(() =>
-      expect(updateProjectDefaultsAction).toHaveBeenCalledWith({
-        city: null,
-        country: "United States",
-        cronExpression: "0 6 * * *",
-        device: "mobile",
-        frequency: "manual",
-        jitterMinutes: 60,
-        locationKey: "US",
-        projectId: "prj_1",
-        serpDepth: 20,
-        timezone: "UTC",
-      }),
+      expect(updateProjectDefaultsAction).toHaveBeenCalledWith(
+        {
+          city: null,
+          country: "United States",
+          cronExpression: "0 6 * * *",
+          device: "mobile",
+          frequency: "manual",
+          jitterMinutes: 60,
+          locationKey: "US",
+          projectId: "prj_1",
+          serpDepth: 20,
+          timezone: "UTC",
+        },
+        expect.objectContaining({ confirmed: true, previewToken: "synthetic-reviewed-defaults" }),
+      ),
     );
     expect(onComplete).toHaveBeenCalledWith(
       expect.objectContaining({ keywords: "rank tracker" }),

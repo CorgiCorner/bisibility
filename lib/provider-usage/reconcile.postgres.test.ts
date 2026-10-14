@@ -154,8 +154,35 @@ test("a conflicting proof is reported durably without starving later recovery", 
     await f.add("a", "1", "conflicting-native");
     await f.add("b", "2");
     expect(await f.reconcile()).toMatchObject({ reconciled: 1, failed: 1, unconfirmed: 1 });
+    const incidents = () =>
+      f.run(
+        (tx) => tx.$queryRaw<{ incident: Record<string, unknown> }[]>`
+      SELECT value::jsonb AS incident FROM metering_metadata
+      WHERE key LIKE 'authoritative-reconciliation-error:%'`,
+      );
+    expect((await incidents())[0]?.incident).toMatchObject({
+      code: "native_identity_conflict",
+      attempts: 1,
+      firstFailedAt: expect.any(String),
+      failedAt: expect.any(String),
+    });
     await f.restart();
     expect(await f.reconcile()).toMatchObject({ reconciled: 0, failed: 1, unconfirmed: 1 });
+    expect((await incidents())[0]?.incident).toMatchObject({
+      code: "native_identity_conflict",
+      attempts: 2,
+    });
+    const [health] = await f.run(
+      (tx) => tx.$queryRaw<{ health: Record<string, unknown> }[]>`
+      SELECT value::jsonb AS health FROM metering_metadata
+      WHERE key='authoritative-reconciliation-health:test'`,
+    );
+    expect(health?.health).toMatchObject({
+      failed: 1,
+      lastCompletedAt: expect.any(String),
+      lastActivityAt: expect.any(String),
+    });
+    expect(health?.health.lastCleanAt).toBeUndefined();
     await f.run(
       (tx) =>
         tx.$executeRaw`UPDATE queued_rank_check_tasks SET "providerTaskId"='conflicting-native' WHERE id='a'`,

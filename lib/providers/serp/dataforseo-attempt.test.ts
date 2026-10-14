@@ -1,3 +1,17 @@
+import { resetRecordedWorkerDefinition } from "@/lib/rank-check/recorded-worker-definition.test-fixture";
+
+vi.mock("@/lib/measurement-definitions/worker-session", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/measurement-definitions/worker-session")>();
+  const { recordedLiveWorkerDefinition } = await import(
+    "@/lib/rank-check/recorded-worker-definition.test-fixture"
+  );
+  return {
+    ...actual,
+    liveWorkerDefinition: recordedLiveWorkerDefinition(actual.workerDefinitionOwner),
+  };
+});
+
 import { resetRateLimitStateForTests } from "@/lib/api/ratelimit";
 import { clearProviderRateLimitState } from "@/lib/providers/rate-limit";
 import { testUsageObserver } from "@/lib/providers/usage-test-observer";
@@ -16,6 +30,7 @@ const LOCATION: SerpRankLocation = {
 
 describe("DataForSEO fallback attempts", () => {
   beforeEach(() => {
+    resetRecordedWorkerDefinition();
     resetRateLimitStateForTests();
     clearProviderRateLimitState();
     process.env.BISIBILITY_PROVIDER_RATE_LIMIT_DISABLED = "1";

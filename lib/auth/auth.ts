@@ -11,7 +11,7 @@ import {
   emailOtpTwoFactorPlugin,
   socialOAuthTwoFactorPlugin,
 } from "@/lib/auth/email-otp-two-factor";
-import { firstRunCreationState, isPendingFirstRunUser } from "@/lib/auth/first-run-context";
+import { firstRunCreationState } from "@/lib/auth/first-run-context";
 import { loginCodeGuardPlugin, withOtpEmailRequest } from "@/lib/auth/login-code-guard";
 import { oauthConsentGuard } from "@/lib/auth/oauth-consent-guard";
 import {
@@ -21,22 +21,20 @@ import {
 } from "@/lib/auth/oauth-policy";
 import { oidcScopes } from "@/lib/auth/oidc-scopes";
 import { sendOtpEmail } from "@/lib/auth/otp-email";
-import { addAuthPublicId } from "@/lib/auth/public-id-hooks";
 import {
   DEMO_FIXED_OTP_ACKNOWLEDGED,
   DEMO_FIXED_OTP_ENABLED,
   FIXED_OTP_ENABLED,
 } from "@/lib/auth/runtime-config";
 import { resolveAuthSecret, resolveAuthSecrets } from "@/lib/auth/secret";
+import { prepareSessionCreation } from "@/lib/auth/session-creation";
 import { recordSignInAudit } from "@/lib/auth/sign-in-audit";
 import { enforceGoogleSignupCapacity } from "@/lib/auth/signin-capacity";
 import { twoFactorRouteGuard } from "@/lib/auth/two-factor-route-guard";
 import { prepareUserCreation } from "@/lib/auth/user-creation";
 import { handleCreatedUser } from "@/lib/auth/welcome-signup";
-import { prisma } from "@/lib/db/prisma";
 import { readOnlyDemoPlugin } from "@/lib/demo/auth-plugin";
 import { readDemoConfig, readOnlyDemoConfig } from "@/lib/demo/config";
-import { prepareDemoSessionCreation } from "@/lib/demo/session-policy";
 import {
   normalizeAuthorizationServerOrigin,
   resolveMcpResourceUrl,
@@ -44,7 +42,7 @@ import {
 import { oauthProvider } from "@better-auth/oauth-provider";
 import { type BetterAuthOptions, type BetterAuthPlugin, betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { APIError, createAuthMiddleware } from "better-auth/api";
+import { createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { emailOTP, jwt, twoFactor } from "better-auth/plugins";
 
@@ -84,32 +82,7 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
   };
 }
 
-type SessionCreationInput = { expiresAt: Date; userId: string };
-async function prepareSessionCreation(session: SessionCreationInput) {
-  const demoSession = await prepareDemoSessionCreation(session);
-  await preventDeactivatedSessionCreation(demoSession);
-  return addAuthPublicId(demoSession, "sid");
-}
-
-// Throw instead of returning false because some provider routes would still set cookies.
-// This hook runs after authentication, so an inactive identity can receive recovery guidance.
-export async function preventDeactivatedSessionCreation(session: SessionCreationInput) {
-  if (isPendingFirstRunUser(session.userId)) {
-    return;
-  }
-
-  const user = await prisma.user.findUnique({
-    select: { deactivatedAt: true },
-    where: { id: session.userId },
-  });
-
-  if (!user || user.deactivatedAt) {
-    throw new APIError("UNAUTHORIZED", {
-      code: user?.deactivatedAt ? "ACCOUNT_DEACTIVATED" : "SESSION_CREATION_BLOCKED",
-      message: "Unable to create session.",
-    });
-  }
-}
+export { preventDeactivatedSessionCreation } from "@/lib/auth/session-creation";
 
 type SignInPayload = {
   user?: {

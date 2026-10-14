@@ -1,9 +1,9 @@
 import "server-only";
-
 import { createHash } from "node:crypto";
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { captureDefinitionItemIntent } from "@/lib/measurement-definitions/worker-intent";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import {
   hostedRankCheckEstimatedCostCents,
@@ -82,7 +82,14 @@ export async function wrapLegacyRankCheck(
   if (reservation.allocationConnection?.credentialSource === "hosted" && !rankQuote) {
     throw new Error("Hosted run reservation unavailable.");
   }
+  const definitionIntent = await captureDefinitionItemIntent(
+    tx,
+    reservation.projectId,
+    input.keywordId,
+    reservation.depth,
+  );
   const item = {
+    definitionIntent,
     estimatedCostCents:
       reservation.estimatedCostCents === null ? null : Math.ceil(reservation.estimatedCostCents),
     keywordId: input.keywordId,

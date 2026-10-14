@@ -1,6 +1,4 @@
 "use server";
-
-import { normalizeSchedule } from "@/lib/actions/_schedule";
 import {
   getActionActor,
   parseActionInput,
@@ -10,19 +8,12 @@ import {
 import { getProjectDepthDecreaseWarning } from "@/lib/alerts/depth-conflict.server";
 import { readConsentFromCookies, trackServerEvent } from "@/lib/analytics/server";
 import { createProjectRecord } from "@/lib/api/project-service";
-import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { authorize } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
-import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
-import { createProjectSchema, projectDefaultsSchema } from "@/lib/schemas/project";
-import { keywordMarketSelect, projectDefaultSerpMarket } from "@/lib/serp/default-market";
-import { resolveProjectDefaultMarket } from "@/lib/serp/project-default-market";
-import {
-  projectDefaultsConfig,
-  publicProjectDefaults,
-} from "@/lib/settings/project-defaults-config";
-import { projectDefaultsUpsertArgs } from "@/lib/settings/project-defaults-write";
+import { createProjectSchema } from "@/lib/schemas/project";
+import { serpDepthSchema } from "@/lib/schemas/serp-depth";
 import { z } from "zod";
+import { saveReviewedProjectDefaults } from "./defaults-reviewed";
 
 const completeProjectOnboardingSchema = z.object({
   projectId: z.string().trim().min(1).max(120),
@@ -75,59 +66,16 @@ export async function completeProjectOnboarding(input: unknown) {
   return { completed: result.count === 1 };
 }
 
-export async function updateProjectDefaults(input: unknown) {
-  const data = parseActionInput(projectDefaultsSchema, input);
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "update", data.projectId, {
-    type: "project_defaults",
+export async function updateProjectDefaults(input: unknown, review?: unknown) {
+  const result = await saveReviewedProjectDefaults(input, review);
+  if (result.kind !== "saved") return result;
+  const project = await prisma.project.findUniqueOrThrow({
+    where: { publicId: result.projectId },
+    select: { id: true },
   });
-  const [before, keywords] = await Promise.all([
-    prisma.projectDefaults.findUnique({
-      where: { projectId: project.id },
-    }),
-    prisma.keyword.findMany({
-      select: keywordMarketSelect,
-      where: { projectId: project.id },
-    }),
-  ]);
-  const schedule = normalizeSchedule(data);
-  const warning = await getProjectDepthDecreaseWarning(project.id, data.serpDepth);
-  const resolvedDefault = await resolveProjectDefaultMarket({ ...data, projectId: project.id });
-  const market = {
-    city: resolvedDefault.city,
-    country: resolvedDefault.country,
-    device: resolvedDefault.device,
-    locationKey: resolvedDefault.locationKey,
-  };
-  const currentMarket = projectDefaultSerpMarket(before, keywords);
-  const defaults = await prisma.$transaction(async (tx) => {
-    const stored = await tx.projectDefaults.upsert(
-      projectDefaultsUpsertArgs({
-        defaults: { ...schedule, ...market },
-        projectId: project.id,
-        serpStopOnMatch: data.serpStopOnMatch,
-      }),
-    );
-    await refreshKeywordDispatchStates({ inheritedProjectId: project.id }, tx);
-    return stored;
-  });
-
-  await writeAudit({
-    action: "project_defaults.update",
-    actorId: actor.id,
-    after: {
-      market,
-      schedule: projectDefaultsConfig(defaults),
-    },
-    before: {
-      market: currentMarket,
-      schedule: before ? projectDefaultsConfig(before) : null,
-    },
-    projectId: project.id,
-    targetId: requiredPublicAuditId(project.publicId, "prj", "Project"),
-    targetType: "project_defaults",
-  });
-  revalidateSettingsViews();
-
-  return { ...publicProjectDefaults(defaults, project.publicId), warning };
+  const warning = await getProjectDepthDecreaseWarning(
+    project.id,
+    serpDepthSchema.parse(result.serpDepth),
+  );
+  return { ...result, warning };
 }

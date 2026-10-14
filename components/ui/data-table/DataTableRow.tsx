@@ -90,7 +90,6 @@ export function DataTableRow<TRow extends DataTableRowBase>({
     return (
       // biome-ignore lint/a11y/useSemanticElements: Virtualized rows require a div-based ARIA row.
       <div
-        aria-level={1}
         aria-rowindex={rowIndex}
         className={cn(
           "group flex border-b border-border-soft",

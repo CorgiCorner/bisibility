@@ -5,12 +5,23 @@ import {
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import {
   type KeywordSavedView,
-  normalizeSavedViewConfig,
   type SavedViewConfig,
   savedViewConfigSchema,
   savedViewNameSchema,
 } from "@/lib/keywords/saved-view-model";
 import { z } from "zod";
+import { viewRevisionSchema } from "./canonical-model";
+import {
+  legacyProjectViewScope,
+  normalizeStoredViewConfig,
+  type ProjectViewConfig,
+  savedViewSurfaceSchema,
+} from "./config-model";
+
+export type { SavedViewSurface } from "./config-model";
+export { inferSavedViewSurface, savedViewSurfaceSchema, savedViewSurfaces } from "./config-model";
+
+import type { SavedViewSurface } from "./config-model";
 
 const idSchema = z.string().trim().min(1);
 
@@ -19,14 +30,17 @@ export const projectSavedViewConfigSchema = z.union([
   savedViewConfigSchema,
 ]);
 
-export const createProjectSavedViewSchema = savedViewNameSchema.extend({
-  config: projectSavedViewConfigSchema,
-  projectId: idSchema,
-});
-
-export const savedViewSurfaces = ["keywords", "competitors"] as const;
-export const savedViewSurfaceSchema = z.enum(savedViewSurfaces);
-export type SavedViewSurface = z.infer<typeof savedViewSurfaceSchema>;
+export const createProjectSavedViewSchema = savedViewNameSchema
+  .extend({
+    config: projectSavedViewConfigSchema,
+    projectId: idSchema,
+    surface: savedViewSurfaceSchema.optional(),
+  })
+  .strict()
+  .refine((input) => input.surface === undefined || input.surface === input.config.surface, {
+    message: "Saved view surface must match its config",
+    path: ["surface"],
+  });
 export type CreateProjectSavedViewInput = z.infer<typeof createProjectSavedViewSchema>;
 
 export type CompetitorSavedView = {
@@ -38,7 +52,16 @@ export type CompetitorSavedView = {
   surface: "competitors";
 };
 
-export type SavedViewResource = KeywordSavedView | CompetitorSavedView;
+export type SavedViewResource = {
+  [Surface in SavedViewSurface]: Extract<
+    KeywordSavedView | CompetitorSavedView,
+    { surface: Surface }
+  > & {
+    definition: Extract<ProjectViewConfig, { surface: Surface }>;
+    revision: number;
+    visibility: "project";
+  };
+}[SavedViewSurface];
 
 export type NormalizedProjectSavedView = {
   config: CompetitorSavedViewConfig | SavedViewConfig;
@@ -53,6 +76,9 @@ type SavedViewRecord = {
   name: string;
   publicId: string | null;
   surface: string;
+  ownerId: string | null;
+  revision: number;
+  visibility: "private" | "project";
 };
 
 function requiredPublicId(value: string | null) {
@@ -66,12 +92,22 @@ export function mapSavedViewRecord(
   view: SavedViewRecord,
   canDelete: boolean,
 ): SavedViewResource | null {
-  const normalized = normalizeProjectSavedView(view.config, view.surface);
-  if (!normalized) return null;
-  if (normalized.surface === "competitors") {
+  if (
+    view.visibility !== "project" ||
+    view.ownerId !== null ||
+    !viewRevisionSchema.safeParse(view.revision).success
+  )
+    return null;
+  const definition = normalizeStoredViewConfig(view.config, view.surface);
+  if (!definition) return null;
+  const normalized = { config: legacyProjectViewScope(definition), surface: definition.surface };
+  if (definition.surface === "competitors") {
     return normalized.config.surface === "competitors"
       ? {
           canDelete,
+          definition,
+          revision: view.revision,
+          visibility: "project",
           config: normalized.config,
           createdAt: view.createdAt.toISOString(),
           id: requiredPublicId(view.publicId),
@@ -80,9 +116,12 @@ export function mapSavedViewRecord(
         }
       : null;
   }
-  if (normalized.config.surface !== "keywords") return null;
+  if (definition.surface !== "keywords" || normalized.config.surface !== "keywords") return null;
   return {
     canDelete,
+    definition,
+    revision: view.revision,
+    visibility: "project",
     config: normalized.config,
     createdAt: view.createdAt.toISOString(),
     id: requiredPublicId(view.publicId),
@@ -91,42 +130,12 @@ export function mapSavedViewRecord(
   };
 }
 
-export function inferSavedViewSurface(config: unknown, explicit?: unknown): SavedViewSurface {
-  const parsed = savedViewSurfaceSchema.safeParse(explicit);
-  if (parsed.success) return parsed.data;
-  if (config && typeof config === "object" && !Array.isArray(config)) {
-    const embedded = savedViewSurfaceSchema.safeParse((config as Record<string, unknown>).surface);
-    if (embedded.success) return embedded.data;
-  }
-  return "keywords";
-}
-
-function legacyKeywordConfig(config: unknown) {
-  if (!config || typeof config !== "object" || Array.isArray(config)) return config;
-  const raw = config as Record<string, unknown>;
-  return {
-    filters: raw.filters,
-    lens: raw.lens,
-    search: raw.search,
-    surface: "keywords",
-    version: 1,
-  };
-}
-
 export function normalizeProjectSavedView(
   config: unknown,
   explicitSurface?: unknown,
 ): NormalizedProjectSavedView | null {
-  const surface = inferSavedViewSurface(config, explicitSurface);
-  if (surface === "competitors") {
-    const raw =
-      config && typeof config === "object" && !Array.isArray(config)
-        ? (config as Record<string, unknown>)
-        : null;
-    const parsed = competitorSavedViewConfigSchema.safeParse(
-      raw ? { ...raw, surface, version: raw.version ?? 1 } : config,
-    );
-    return parsed.success ? { config: parsed.data, surface } : null;
-  }
-  return { config: normalizeSavedViewConfig(legacyKeywordConfig(config)), surface };
+  const decoded = normalizeStoredViewConfig(config, explicitSurface);
+  if (!decoded) return null;
+  const scope = legacyProjectViewScope(decoded);
+  return { config: scope, surface: scope.surface };
 }

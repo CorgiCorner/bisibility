@@ -24,6 +24,16 @@ const metricsCost = metricsRate
   : "a paid metrics lookup";
 
 export const descriptions: Record<string, string> = {
+  listLocalMonitorRuns:
+    "Read immutable admitted Local run history. No provider request or launch occurs.",
+  getLocalMonitorRunResults:
+    "Read retained sampled Local points, grid quality and honest financial state.",
+  listLocalMonitorPointListings:
+    "Read retained normalized Local listings with exact stable IDs and source axes.",
+  listLocalMonitorPointHistory:
+    "Read signed history of the original captured target and selected interval.",
+  exportLocalMonitorRun:
+    "Download the retained Local sampled-point report as JSON. CSV is available through REST and SDKs.",
   bulkUpdateKeywords: "Bulk mutate keywords by tags, frequency, target URL, or deletion.",
   createPersonalToken:
     "Create a personal access token (personal-token auth only; admin scope). The raw token is returned once.",

@@ -4,6 +4,7 @@ import {
   canonicalKey,
   countrySeed,
   type LocationCandidate,
+  type LocationDescription,
   type LocationLookup,
   type LocationSelector,
   type LocationStore,
@@ -16,22 +17,22 @@ import {
 // go through a provider catalog and are cached by canonicalKey. An unresolved
 // granular location degrades to country; create/edit callers reject that result.
 
-export type LocationResolution = {
-  location: ResolvedLocation;
+export type LocationResolution<T extends LocationDescription = ResolvedLocation> = {
+  location: T;
   degraded: boolean;
   warning: string | null;
 };
 
-export type ResolveDeps = {
-  store: LocationStore;
+export type ResolveDeps<T extends LocationDescription = ResolvedLocation> = {
+  store: LocationStore<T>;
   lookup?: LocationLookup;
   trustedCandidate?: LocationCandidate;
 };
 
-export async function resolveLocation(
+export async function resolveLocation<T extends LocationDescription>(
   selector: LocationSelector,
-  deps: ResolveDeps,
-): Promise<LocationResolution> {
+  deps: ResolveDeps<T>,
+): Promise<LocationResolution<T>> {
   const countryCode = selector.countryCode.trim().toUpperCase();
   const seed = countrySeed(countryCode);
   if (!seed) {
@@ -118,12 +119,12 @@ function matchesSelector(
   );
 }
 
-async function getOrCreateCountry(
+async function getOrCreateCountry<T extends LocationDescription>(
   countryCode: string,
   seed: CountrySeed,
   language: SerpLanguage,
-  store: LocationStore,
-): Promise<ResolvedLocation> {
+  store: LocationStore<T>,
+): Promise<T> {
   const key = canonicalKey({ countryCode, languageCode: language.code });
   const cached = await store.findByKey(key);
   if (cached) {
@@ -150,10 +151,10 @@ async function getOrCreateCountry(
 
 // Concurrent resolutions can race on unique canonicalKey; re-read the winner
 // instead of surfacing the losing create as a conflict.
-async function persist(
-  store: LocationStore,
-  row: Omit<ResolvedLocation, "id">,
-): Promise<ResolvedLocation> {
+async function persist<T extends LocationDescription>(
+  store: LocationStore<T>,
+  row: LocationDescription,
+): Promise<T> {
   try {
     return await store.create(row);
   } catch (error) {

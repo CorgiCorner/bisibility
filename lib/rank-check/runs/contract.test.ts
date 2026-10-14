@@ -1,3 +1,7 @@
+import {
+  definitionKeywordScopeFixture,
+  definitionQueryFixture,
+} from "@/lib/rank-check/definition-policy.test-fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   gscImportOperationSchema,
@@ -236,12 +240,13 @@ describe("concurrent rank-check run launches", () => {
       selectionHash: "a".repeat(64),
     });
     launchMocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 5_000,
       defaults: { serpDepth: 100 },
       providerAllocationsInitializedAt: null,
     });
     launchMocks.loadProviderChain.mockResolvedValue([
-      { costPerCheckCents: 25, id: "connection_1", provider: "provider-a" },
+      { costPerCheckCents: 25, id: "connection_1", provider: "serpapi" },
     ]);
   });
 
@@ -263,6 +268,7 @@ describe("concurrent rank-check run launches", () => {
         await bothReadsCompleted;
         return [
           {
+            ...definitionKeywordScopeFixture(),
             archivedAt: null,
             id: "keyword_1",
             locationId: "location_active",
@@ -294,7 +300,7 @@ describe("concurrent rank-check run launches", () => {
             sourceLocksAcquired += 1;
             return 1;
           }),
-          $queryRaw: vi.fn(async () => [{ id: "project_1" }]),
+          $queryRaw: vi.fn(definitionQueryFixture(async () => [{ id: "project_1" }])),
           project: { findUnique: launchMocks.prisma.project.findUnique },
           projectMarket: { findMany: vi.fn(async () => [{ locationId: "location_active" }]) },
           rankCheckRun: {
@@ -322,6 +328,7 @@ describe("concurrent rank-check run launches", () => {
       });
       launchMocks.lockSelectionRows.mockImplementation(async () => [
         {
+          ...definitionKeywordScopeFixture(),
           archivedAt: null,
           id: "keyword_1",
           locationId: "location_active",

@@ -1,0 +1,617 @@
+{
+  "result": {
+    "data": {
+      "version": 1,
+      "project_id": "prj_abcdefghijklmnopqrstuvwx",
+      "monitor_id": "lmn_abcdefghijklmnopqrstuvwx",
+      "run_id": "lmr_abcdefghijklmnopqrstuvwx",
+      "as_of": "2026-10-12T12:00:00.000Z",
+      "created_at": "2026-10-12T11:00:00.000Z",
+      "definition_revision_id": "definition-r1",
+      "definition_revision": 1,
+      "identity_revision_id": "identity-revision-1",
+      "subject": "Synthetic original business",
+      "protocol": {
+        "geometry": "sphere-r6371000-v1",
+        "matcher": "business-match-maps-v1",
+        "normalizer_versions": ["dataforseo-maps-task-v2"],
+        "metric_definition": "sampled-grid-top-n-v1"
+      },
+      "financial_basis": "current_accounting_state",
+      "freshness_policy": {
+        "basis": "manual_ttl",
+        "fresh_for_ms": 3600000,
+        "freshness_reason": null,
+        "policy_epoch": "8",
+        "configuration_revision": "synthetic-fresh-v1",
+        "semantics": "current_project_policy_with_original_intent"
+      },
+      "receipt": {
+        "id": "lmr_abcdefghijklmnopqrstuvwx",
+        "version": 1,
+        "cancellation_requested": false,
+        "expected_count": 1,
+        "items": [
+          {
+            "target_id": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+            "status": "accepted",
+            "version": 4,
+            "acceptance": "accepted",
+            "known_accepted_task_count": 1,
+            "collected": true,
+            "cancellation_requested": true,
+            "financial_state": "settled",
+            "owner_retained": false,
+            "resolution": "complete",
+            "accounting_pending": false,
+            "reconciliation_reason": null
+          }
+        ],
+        "counts": {
+          "items": 1,
+          "complete": 1,
+          "acceptance_unresolved": 0,
+          "accounting_pending": 0,
+          "unavailable": 0,
+          "retained_owners": 0
+        }
+      },
+      "points": [
+        {
+          "id": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+          "keyword_id": "kw_abcdefghijklmnopqrstuvwx",
+          "keyword": "Synthetic dentist",
+          "ordinal": 0,
+          "row": 0,
+          "column": 0,
+          "latitude": "52.0000000",
+          "longitude": "-21.0000000",
+          "surface": "maps",
+          "cutoff": 20,
+          "zoom": 14,
+          "language": "en",
+          "device": "desktop",
+          "operating_system": "windows",
+          "observed_at": "2026-10-12T11:58:00.000Z",
+          "recorded_at": "2026-10-12T11:59:00.000Z",
+          "position": 3,
+          "observed_position": 3,
+          "evidence": "positive",
+          "reason": null,
+          "freshness": "fresh",
+          "freshness_reason": "policy_unavailable",
+          "identity_match": "confirmed",
+          "scope_class": "coordinate_seed",
+          "receipt": {
+            "target_id": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+            "status": "accepted",
+            "version": 4,
+            "acceptance": "accepted",
+            "known_accepted_task_count": 1,
+            "collected": true,
+            "cancellation_requested": true,
+            "financial_state": "settled",
+            "owner_retained": false,
+            "resolution": "complete",
+            "accounting_pending": false,
+            "reconciliation_reason": null
+          }
+        }
+      ],
+      "grids": [
+        {
+          "keyword_id": "kw_abcdefghijklmnopqrstuvwx",
+          "keyword": "Synthetic dentist",
+          "grid_revision_key": "grid-revision-v1:6057fb9de728abf70ef0000982483fe1b6d168186565174ba2aa4b076c5a0ff0",
+          "identity_revision_id": "identity-revision-1",
+          "top_n": 3,
+          "size": 1,
+          "point_ids": ["lmt_aaaaaaaaaaaaaaaaaaaaaaa0"],
+          "expected": 1,
+          "observed_rate": 1,
+          "observed_coverage": 1,
+          "data_coverage": 1,
+          "sample_bounds": [1, 1],
+          "counts": {
+            "expected": 1,
+            "measured": 1,
+            "metric_eligible": 1,
+            "ranked": 1,
+            "stale": 0,
+            "unknown": 0,
+            "known_absent": 0,
+            "failed": 0,
+            "never_checked": 0,
+            "unsupported": 0,
+            "fresh_determinate": 1,
+            "unknown_freshness": 0,
+            "comparable": 0
+          },
+          "freshness": "fresh",
+          "comparison": "unavailable",
+          "scope": "sampled_points"
+        }
+      ]
+    }
+  },
+  "history": {
+    "data": {
+      "version": 1,
+      "project_id": "prj_abcdefghijklmnopqrstuvwx",
+      "monitor_id": "lmn_abcdefghijklmnopqrstuvwx",
+      "as_of": "2026-10-12T12:00:00.000Z",
+      "window": {
+        "from": null,
+        "to": "2026-10-12T12:00:00.000Z",
+        "time_basis": "occurrence_created_at"
+      },
+      "eligible_total": 1,
+      "items": [
+        {
+          "run_id": "lmr_abcdefghijklmnopqrstuvwx",
+          "created_at": "2026-10-12T11:00:00.000Z",
+          "definition_revision": 1,
+          "mode": "manual"
+        }
+      ],
+      "next_cursor": null
+    }
+  },
+  "listings": {
+    "data": [
+      {
+        "id": "item-0-listing-0",
+        "name": "Synthetic Branch A",
+        "rank_group": 3,
+        "rank_absolute": 1,
+        "promotion": "organic",
+        "observed_at": "2026-10-12T11:58:00.000Z",
+        "matched": "confirmed",
+        "cid": "9007199254740993123",
+        "place_id": "OpaquePlace_A",
+        "source_page": null,
+        "source_block_id": null,
+        "source_ordinal": 0,
+        "rank_scale": "maps_organic"
+      },
+      {
+        "id": "item-0-listing-1",
+        "name": "Synthetic ad",
+        "rank_group": 1,
+        "rank_absolute": 2,
+        "promotion": "promoted",
+        "observed_at": "2026-10-12T11:58:00.000Z",
+        "matched": "unavailable",
+        "cid": null,
+        "place_id": null,
+        "source_page": null,
+        "source_block_id": null,
+        "source_ordinal": 1,
+        "rank_scale": null
+      },
+      {
+        "id": "item-0-listing-2",
+        "name": "Synthetic Branch B",
+        "rank_group": 9,
+        "rank_absolute": 3,
+        "promotion": "organic",
+        "observed_at": "2026-10-12T11:58:00.000Z",
+        "matched": "rejected",
+        "cid": "9007199254740993124",
+        "place_id": null,
+        "source_page": null,
+        "source_block_id": null,
+        "source_ordinal": 2,
+        "rank_scale": "maps_organic"
+      }
+    ]
+  },
+  "point_history": {
+    "data": {
+      "version": 1,
+      "as_of": "2026-10-12T12:00:00.000Z",
+      "target_id": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+      "scope": "exact_captured_target",
+      "limit": 20,
+      "has_more": false,
+      "window": {
+        "from": null,
+        "to": "2026-10-12T12:00:00.000Z",
+        "time_basis": "occurrence_created_at"
+      },
+      "eligible_total": 1,
+      "next_cursor": null,
+      "policy_epoch": "8",
+      "freshness_configuration_revision": "synthetic-fresh-v1",
+      "items": [
+        {
+          "id": "item-0",
+          "run_id": "lmr_abcdefghijklmnopqrstuvwx",
+          "created_at": "2026-10-12T11:00:00.000Z",
+          "observed_at": "2026-10-12T11:58:00.000Z",
+          "position": 3,
+          "evidence": "positive",
+          "reason": null,
+          "freshness": "fresh",
+          "freshness_reason": "policy_unavailable"
+        }
+      ]
+    }
+  },
+  "export_json": {
+    "version": 1,
+    "report": "local-point-report-v1",
+    "projectId": "prj_abcdefghijklmnopqrstuvwx",
+    "monitorId": "lmn_abcdefghijklmnopqrstuvwx",
+    "runId": "lmr_abcdefghijklmnopqrstuvwx",
+    "asOf": "2026-10-12T12:00:00.000Z",
+    "definitionRevisionId": "definition-r1",
+    "identityRevisionId": "identity-revision-1",
+    "subject": "Synthetic original business",
+    "scope": "sampled_points",
+    "coordinateProof": "acknowledged_query_seed_or_unknown",
+    "protocol": {
+      "geometry": "sphere-r6371000-v1",
+      "matcher": "business-match-maps-v1",
+      "normalizerVersions": ["dataforseo-maps-task-v2"],
+      "metricDefinition": "sampled-grid-top-n-v1"
+    },
+    "financialBasis": "current_accounting_state",
+    "freshnessPolicy": {
+      "basis": "manual_ttl",
+      "freshForMs": 3600000,
+      "freshnessReason": null,
+      "policyEpoch": "8",
+      "configurationRevision": "synthetic-fresh-v1",
+      "semantics": "current_project_policy_with_original_intent"
+    },
+    "comparison": "unavailable",
+    "grids": [
+      {
+        "keywordId": "kw_abcdefghijklmnopqrstuvwx",
+        "keyword": "Synthetic dentist",
+        "gridRevisionKey": "grid-revision-v1:6057fb9de728abf70ef0000982483fe1b6d168186565174ba2aa4b076c5a0ff0",
+        "identityRevisionId": "identity-revision-1",
+        "topN": 3,
+        "size": 1,
+        "pointIds": ["lmt_aaaaaaaaaaaaaaaaaaaaaaa0"],
+        "expected": 1,
+        "observedRate": 1,
+        "observedCoverage": 1,
+        "dataCoverage": 1,
+        "sampleBounds": [1, 1],
+        "counts": {
+          "expected": 1,
+          "measured": 1,
+          "metricEligible": 1,
+          "ranked": 1,
+          "knownAbsent": 0,
+          "unknown": 0,
+          "neverChecked": 0,
+          "failed": 0,
+          "stale": 0,
+          "unsupported": 0,
+          "freshDeterminate": 1,
+          "unknownFreshness": 0,
+          "comparable": 0
+        },
+        "freshness": "fresh",
+        "comparison": "unavailable",
+        "scope": "sampled_points"
+      }
+    ],
+    "points": [
+      {
+        "id": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+        "keywordId": "kw_abcdefghijklmnopqrstuvwx",
+        "keyword": "Synthetic dentist",
+        "ordinal": 0,
+        "row": 0,
+        "column": 0,
+        "latitude": "52.0000000",
+        "longitude": "-21.0000000",
+        "surface": "maps",
+        "cutoff": 20,
+        "zoom": 14,
+        "language": "en",
+        "device": "desktop",
+        "operatingSystem": "windows",
+        "observedAt": "2026-10-12T11:58:00.000Z",
+        "recordedAt": "2026-10-12T11:59:00.000Z",
+        "position": 3,
+        "observedPosition": 3,
+        "evidence": "positive",
+        "reason": null,
+        "freshness": "fresh",
+        "freshnessReason": "policy_unavailable",
+        "identityMatch": "confirmed",
+        "scopeClass": "coordinate_seed",
+        "receipt": {
+          "targetId": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+          "status": "accepted",
+          "version": 4,
+          "acceptance": "accepted",
+          "knownAcceptedTaskCount": 1,
+          "collected": true,
+          "cancellationRequested": true,
+          "financialState": "settled",
+          "ownerRetained": false,
+          "resolution": "complete",
+          "accountingPending": false,
+          "reconciliationReason": null
+        }
+      }
+    ]
+  },
+  "result_unknown": {
+    "data": {
+      "version": 1,
+      "project_id": "prj_abcdefghijklmnopqrstuvwx",
+      "monitor_id": "lmn_abcdefghijklmnopqrstuvwx",
+      "run_id": "lmr_abcdefghijklmnopqrstuvwx",
+      "as_of": "2026-10-12T12:00:00.000Z",
+      "created_at": "2026-10-12T11:00:00.000Z",
+      "definition_revision_id": "definition-r1",
+      "definition_revision": 1,
+      "identity_revision_id": "identity-revision-1",
+      "subject": "Synthetic original business",
+      "protocol": {
+        "geometry": "sphere-r6371000-v1",
+        "matcher": "business-match-maps-v1",
+        "normalizer_versions": ["dataforseo-maps-task-v2"],
+        "metric_definition": "sampled-grid-top-n-v1"
+      },
+      "financial_basis": "current_accounting_state",
+      "freshness_policy": {
+        "basis": "manual_ttl",
+        "fresh_for_ms": 3600000,
+        "freshness_reason": null,
+        "policy_epoch": "8",
+        "configuration_revision": "synthetic-fresh-v1",
+        "semantics": "current_project_policy_with_original_intent"
+      },
+      "receipt": {
+        "id": "lmr_abcdefghijklmnopqrstuvwx",
+        "version": 1,
+        "cancellation_requested": false,
+        "expected_count": 1,
+        "items": [
+          {
+            "target_id": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+            "status": "accepted",
+            "version": 4,
+            "acceptance": "accepted",
+            "known_accepted_task_count": 1,
+            "collected": true,
+            "cancellation_requested": true,
+            "financial_state": "settled",
+            "owner_retained": false,
+            "resolution": "complete",
+            "accounting_pending": false,
+            "reconciliation_reason": null
+          }
+        ],
+        "counts": {
+          "items": 1,
+          "complete": 1,
+          "acceptance_unresolved": 0,
+          "accounting_pending": 0,
+          "unavailable": 0,
+          "retained_owners": 0
+        }
+      },
+      "points": [
+        {
+          "id": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+          "keyword_id": "kw_abcdefghijklmnopqrstuvwx",
+          "keyword": "Synthetic dentist",
+          "ordinal": 0,
+          "row": 0,
+          "column": 0,
+          "latitude": "52.0000000",
+          "longitude": "-21.0000000",
+          "surface": "maps",
+          "cutoff": 20,
+          "zoom": 14,
+          "language": "en",
+          "device": "desktop",
+          "operating_system": "windows",
+          "observed_at": "2026-10-12T11:58:00.000Z",
+          "recorded_at": "2026-10-12T11:59:00.000Z",
+          "position": null,
+          "observed_position": 3,
+          "evidence": "unknown",
+          "reason": "missing_scope",
+          "freshness": "fresh",
+          "freshness_reason": "policy_unavailable",
+          "identity_match": "confirmed",
+          "scope_class": "unavailable",
+          "receipt": {
+            "target_id": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+            "status": "accepted",
+            "version": 4,
+            "acceptance": "accepted",
+            "known_accepted_task_count": 1,
+            "collected": true,
+            "cancellation_requested": true,
+            "financial_state": "settled",
+            "owner_retained": false,
+            "resolution": "complete",
+            "accounting_pending": false,
+            "reconciliation_reason": null
+          }
+        }
+      ],
+      "grids": [
+        {
+          "keyword_id": "kw_abcdefghijklmnopqrstuvwx",
+          "keyword": "Synthetic dentist",
+          "grid_revision_key": "grid-revision-v1:6057fb9de728abf70ef0000982483fe1b6d168186565174ba2aa4b076c5a0ff0",
+          "identity_revision_id": "identity-revision-1",
+          "top_n": 3,
+          "size": 1,
+          "point_ids": ["lmt_aaaaaaaaaaaaaaaaaaaaaaa0"],
+          "expected": 1,
+          "observed_rate": null,
+          "observed_coverage": 0,
+          "data_coverage": 0,
+          "sample_bounds": [0, 1],
+          "counts": {
+            "expected": 1,
+            "measured": 0,
+            "metric_eligible": 0,
+            "ranked": 0,
+            "stale": 0,
+            "unknown": 1,
+            "known_absent": 0,
+            "failed": 0,
+            "never_checked": 0,
+            "unsupported": 0,
+            "fresh_determinate": 0,
+            "unknown_freshness": 0,
+            "comparable": 0
+          },
+          "freshness": "fresh",
+          "comparison": "unavailable",
+          "scope": "sampled_points"
+        }
+      ]
+    }
+  },
+  "result_stale": {
+    "data": {
+      "version": 1,
+      "project_id": "prj_abcdefghijklmnopqrstuvwx",
+      "monitor_id": "lmn_abcdefghijklmnopqrstuvwx",
+      "run_id": "lmr_abcdefghijklmnopqrstuvwx",
+      "as_of": "2026-10-12T14:00:00.000Z",
+      "created_at": "2026-10-12T11:00:00.000Z",
+      "definition_revision_id": "definition-r1",
+      "definition_revision": 1,
+      "identity_revision_id": "identity-revision-1",
+      "subject": "Synthetic original business",
+      "protocol": {
+        "geometry": "sphere-r6371000-v1",
+        "matcher": "business-match-maps-v1",
+        "normalizer_versions": ["dataforseo-maps-task-v2"],
+        "metric_definition": "sampled-grid-top-n-v1"
+      },
+      "financial_basis": "current_accounting_state",
+      "freshness_policy": {
+        "basis": "manual_ttl",
+        "fresh_for_ms": 3600000,
+        "freshness_reason": null,
+        "policy_epoch": "8",
+        "configuration_revision": "synthetic-fresh-v1",
+        "semantics": "current_project_policy_with_original_intent"
+      },
+      "receipt": {
+        "id": "lmr_abcdefghijklmnopqrstuvwx",
+        "version": 1,
+        "cancellation_requested": false,
+        "expected_count": 1,
+        "items": [
+          {
+            "target_id": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+            "status": "accepted",
+            "version": 4,
+            "acceptance": "accepted",
+            "known_accepted_task_count": 1,
+            "collected": true,
+            "cancellation_requested": true,
+            "financial_state": "settled",
+            "owner_retained": false,
+            "resolution": "complete",
+            "accounting_pending": false,
+            "reconciliation_reason": null
+          }
+        ],
+        "counts": {
+          "items": 1,
+          "complete": 1,
+          "acceptance_unresolved": 0,
+          "accounting_pending": 0,
+          "unavailable": 0,
+          "retained_owners": 0
+        }
+      },
+      "points": [
+        {
+          "id": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+          "keyword_id": "kw_abcdefghijklmnopqrstuvwx",
+          "keyword": "Synthetic dentist",
+          "ordinal": 0,
+          "row": 0,
+          "column": 0,
+          "latitude": "52.0000000",
+          "longitude": "-21.0000000",
+          "surface": "maps",
+          "cutoff": 20,
+          "zoom": 14,
+          "language": "en",
+          "device": "desktop",
+          "operating_system": "windows",
+          "observed_at": "2026-10-12T11:58:00.000Z",
+          "recorded_at": "2026-10-12T11:59:00.000Z",
+          "position": 3,
+          "observed_position": 3,
+          "evidence": "positive",
+          "reason": null,
+          "freshness": "stale",
+          "freshness_reason": "policy_unavailable",
+          "identity_match": "confirmed",
+          "scope_class": "coordinate_seed",
+          "receipt": {
+            "target_id": "lmt_aaaaaaaaaaaaaaaaaaaaaaa0",
+            "status": "accepted",
+            "version": 4,
+            "acceptance": "accepted",
+            "known_accepted_task_count": 1,
+            "collected": true,
+            "cancellation_requested": true,
+            "financial_state": "settled",
+            "owner_retained": false,
+            "resolution": "complete",
+            "accounting_pending": false,
+            "reconciliation_reason": null
+          }
+        }
+      ],
+      "grids": [
+        {
+          "keyword_id": "kw_abcdefghijklmnopqrstuvwx",
+          "keyword": "Synthetic dentist",
+          "grid_revision_key": "grid-revision-v1:6057fb9de728abf70ef0000982483fe1b6d168186565174ba2aa4b076c5a0ff0",
+          "identity_revision_id": "identity-revision-1",
+          "top_n": 3,
+          "size": 1,
+          "point_ids": ["lmt_aaaaaaaaaaaaaaaaaaaaaaa0"],
+          "expected": 1,
+          "observed_rate": null,
+          "observed_coverage": 1,
+          "data_coverage": 0,
+          "sample_bounds": [0, 1],
+          "counts": {
+            "expected": 1,
+            "measured": 1,
+            "metric_eligible": 0,
+            "ranked": 1,
+            "stale": 1,
+            "unknown": 0,
+            "known_absent": 0,
+            "failed": 0,
+            "never_checked": 0,
+            "unsupported": 0,
+            "fresh_determinate": 0,
+            "unknown_freshness": 0,
+            "comparable": 0
+          },
+          "freshness": "stale",
+          "comparison": "unavailable",
+          "scope": "sampled_points"
+        }
+      ]
+    }
+  },
+  "export_csv": "report_manifest,\"{\"\"version\"\":1,\"\"report\"\":\"\"local-point-report-v1\"\",\"\"projectId\"\":\"\"prj_abcdefghijklmnopqrstuvwx\"\",\"\"monitorId\"\":\"\"lmn_abcdefghijklmnopqrstuvwx\"\",\"\"runId\"\":\"\"lmr_abcdefghijklmnopqrstuvwx\"\",\"\"asOf\"\":\"\"2026-10-12T12:00:00.000Z\"\",\"\"definitionRevisionId\"\":\"\"definition-r1\"\",\"\"identityRevisionId\"\":\"\"identity-revision-1\"\",\"\"subject\"\":\"\"Synthetic original business\"\",\"\"scope\"\":\"\"sampled_points\"\",\"\"coordinateProof\"\":\"\"acknowledged_query_seed_or_unknown\"\",\"\"protocol\"\":{\"\"geometry\"\":\"\"sphere-r6371000-v1\"\",\"\"matcher\"\":\"\"business-match-maps-v1\"\",\"\"normalizerVersions\"\":[\"\"dataforseo-maps-task-v2\"\"],\"\"metricDefinition\"\":\"\"sampled-grid-top-n-v1\"\"},\"\"financialBasis\"\":\"\"current_accounting_state\"\",\"\"freshnessPolicy\"\":{\"\"basis\"\":\"\"manual_ttl\"\",\"\"freshForMs\"\":3600000,\"\"freshnessReason\"\":null,\"\"policyEpoch\"\":\"\"8\"\",\"\"configurationRevision\"\":\"\"synthetic-fresh-v1\"\",\"\"semantics\"\":\"\"current_project_policy_with_original_intent\"\"},\"\"comparison\"\":\"\"unavailable\"\",\"\"grids\"\":[{\"\"keywordId\"\":\"\"kw_abcdefghijklmnopqrstuvwx\"\",\"\"keyword\"\":\"\"Synthetic dentist\"\",\"\"gridRevisionKey\"\":\"\"grid-revision-v1:6057fb9de728abf70ef0000982483fe1b6d168186565174ba2aa4b076c5a0ff0\"\",\"\"identityRevisionId\"\":\"\"identity-revision-1\"\",\"\"topN\"\":3,\"\"size\"\":1,\"\"pointIds\"\":[\"\"lmt_aaaaaaaaaaaaaaaaaaaaaaa0\"\"],\"\"expected\"\":1,\"\"observedRate\"\":1,\"\"observedCoverage\"\":1,\"\"dataCoverage\"\":1,\"\"sampleBounds\"\":[1,1],\"\"counts\"\":{\"\"expected\"\":1,\"\"measured\"\":1,\"\"metricEligible\"\":1,\"\"ranked\"\":1,\"\"knownAbsent\"\":0,\"\"unknown\"\":0,\"\"neverChecked\"\":0,\"\"failed\"\":0,\"\"stale\"\":0,\"\"unsupported\"\":0,\"\"freshDeterminate\"\":1,\"\"unknownFreshness\"\":0,\"\"comparable\"\":0},\"\"freshness\"\":\"\"fresh\"\",\"\"comparison\"\":\"\"unavailable\"\",\"\"scope\"\":\"\"sampled_points\"\"}]}\"\r\ntargetId,keyword,point,row,column,latitude,longitude,surface,language,device,operatingSystem,cutoff,zoom,observedAt,recordedAt,qualifiedPosition,observedPosition,evidence,reason,freshness,identityMatch,scopeClass,resolution,accountingPending\r\nlmt_aaaaaaaaaaaaaaaaaaaaaaa0,Synthetic dentist,1,1,1,\"52.0000000\",\"-21.0000000\",maps,en,desktop,windows,20,14,2026-10-12T11:58:00.000Z,2026-10-12T11:59:00.000Z,3,3,positive,,fresh,confirmed,coordinate_seed,complete,false"
+}

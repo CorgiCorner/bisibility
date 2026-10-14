@@ -26,6 +26,7 @@ export type RankCheckPersistTarget = {
   providerRequestId?: string;
   providerUsage?: ProviderRequestAttribution;
   existingRankCheckId?: string;
+  queuedTaskId?: string;
   previousRaw?: Prisma.JsonValue | null;
   previousRankingUrl?: string | null;
   expectedUrlAtCheck?: string | null;

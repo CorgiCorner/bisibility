@@ -1,4 +1,5 @@
 import type { BacklinksRow } from "@/lib/backlinks/types";
+import { csvRowWithNumberFormat } from "@/lib/ui/csv";
 import {
   aggregateBacklinksView,
   type BacklinksSlice,
@@ -7,13 +8,10 @@ import {
   visibleBacklinkRows,
 } from "./backlinks-table-model";
 
-function csvField(value: string | number) {
-  const text = String(value);
-  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
-function csvLine(values: readonly (string | number)[]) {
-  return values.map(csvField).join(",");
+function backlinkCsvRow(values: readonly (number | string)[], spamColumn: number) {
+  return csvRowWithNumberFormat(values, (value, index) =>
+    index === spamColumn ? value.toFixed(1) : String(value),
+  );
 }
 
 function aggregateHeader(view: Exclude<BacklinksView, "backlinks">) {
@@ -28,32 +26,38 @@ function aggregateCsv(
   now: Date,
 ) {
   const lines = aggregateBacklinksView(view, rows, now).map((row) =>
-    csvLine([
-      row.label,
-      row.coverageCount,
-      row.domainAuthority,
-      row.spamScore.toFixed(1),
-      row.linksCount,
-      row.firstSeen ?? "",
-    ]),
+    backlinkCsvRow(
+      [
+        row.label,
+        row.coverageCount,
+        row.domainAuthority,
+        row.spamScore,
+        row.linksCount,
+        row.firstSeen ?? "",
+      ],
+      3,
+    ),
   );
   return [`${aggregateHeader(view)},da,spam,links,first_seen`, ...lines].join("\n");
 }
 
 function domainCsv(rows: readonly BacklinksRow[], now: Date) {
   const lines = groupBacklinksByDomain(rows, now).map((group) =>
-    csvLine([
-      group.sourceDomain,
-      group.anchor || "(image)",
-      `${group.linksCount} links -> ${group.targetCount} target pages`,
-      group.flags.join(";"),
-      group.domainAuthority,
-      group.spamScore.toFixed(1),
-      group.linksCount,
-      group.firstSeen ?? "",
-      group.status,
-      group.lostAt ?? "",
-    ]),
+    backlinkCsvRow(
+      [
+        group.sourceDomain,
+        group.anchor || "(image)",
+        `${group.linksCount} links -> ${group.targetCount} target pages`,
+        group.flags.join(";"),
+        group.domainAuthority,
+        group.spamScore,
+        group.linksCount,
+        group.firstSeen ?? "",
+        group.status,
+        group.lostAt ?? "",
+      ],
+      5,
+    ),
   );
   return [
     "source,anchor_target,coverage,flags,da,spam,links,first_seen,status,lost_at",
@@ -63,18 +67,21 @@ function domainCsv(rows: readonly BacklinksRow[], now: Date) {
 
 function linksCsv(rows: readonly BacklinksRow[], now: Date) {
   const lines = visibleBacklinkRows(rows, now).map((row) =>
-    csvLine([
-      row.sourceUrl,
-      row.anchor || "(image)",
-      row.targetUrl,
-      row.flags.join(";"),
-      row.domainAuthority,
-      row.spamScore.toFixed(1),
-      row.linksCount,
-      row.firstSeen ?? "",
-      row.status,
-      row.lostAt ?? "",
-    ]),
+    backlinkCsvRow(
+      [
+        row.sourceUrl,
+        row.anchor || "(image)",
+        row.targetUrl,
+        row.flags.join(";"),
+        row.domainAuthority,
+        row.spamScore,
+        row.linksCount,
+        row.firstSeen ?? "",
+        row.status,
+        row.lostAt ?? "",
+      ],
+      5,
+    ),
   );
   return ["source,anchor,target,flags,da,spam,links,first_seen,status,lost_at", ...lines].join(
     "\n",

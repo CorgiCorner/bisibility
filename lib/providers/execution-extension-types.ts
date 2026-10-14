@@ -1,4 +1,5 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
+import type { NativeRequestGuard, PaidFenceHook } from "@/lib/metering/paid-attempt-types";
 import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { ProviderCredential } from "@/lib/provider-usage/surface";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
@@ -6,6 +7,8 @@ import type { ProviderCredentials } from "./types";
 import type { ProviderUsageReceipt } from "./usage";
 
 export type DeploymentExecutionInput = {
+  beforeFence?: PaidFenceHook;
+  beforeReserve?: NativeRequestGuard;
   /** Shared logical-call consent, applied to the frozen customer price before each dispatch. */
   costLimit?: RequestCostLimit;
   maxCostCents?: number;
@@ -47,7 +50,9 @@ export type DeploymentExecution = {
 };
 
 /** Neutral queued transport boundary; private builds attach a durable credit session. */
+import type { ProviderRequest } from "@usagekit/providers";
 export type QueuedDeploymentTask = {
+  providerRequest?: ProviderRequest;
   correlationId: string;
   keywordId: string;
   tag: string;
@@ -63,12 +68,14 @@ export type QueuedDeploymentReceipt = {
 export type QueuedDeploymentExecution = {
   credentials: ProviderCredentials;
   begin(tasks: readonly QueuedDeploymentTask[]): Promise<void>;
-  transportStarted(): void | Promise<void>;
+  transportStarted(beforeFence?: PaidFenceHook): void | Promise<void>;
   record(receipts: readonly QueuedDeploymentReceipt[]): Promise<void>;
   abort(): Promise<void>;
   finish(): Promise<void>;
 };
 export type QueuedDeploymentRecovery = {
+  /** Current original-account custody, rechecked before each GET, never a fresh paid admission. */
+  assertRetrieval(): Promise<void>;
   credentials: ProviderCredentials;
   reconcile(): Promise<void>;
   bindReadyTask(taskId: string, tag: string, providerTaskId: string): Promise<void>;

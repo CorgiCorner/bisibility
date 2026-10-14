@@ -1,3 +1,19 @@
+import { resetRecordedWorkerDefinition } from "@/lib/rank-check/recorded-worker-definition.test-fixture";
+
+vi.mock("@/lib/measurement-definitions/worker-session", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/measurement-definitions/worker-session")>();
+  const { recordedLiveWorkerDefinition } = await import(
+    "@/lib/rank-check/recorded-worker-definition.test-fixture"
+  );
+  return {
+    ...actual,
+    liveWorkerDefinition: recordedLiveWorkerDefinition(actual.workerDefinitionOwner),
+  };
+});
+
+import { DefinitionUnavailableError } from "@/lib/measurement-definitions/errors";
+import * as workerDefinitions from "@/lib/measurement-definitions/worker-session";
 import type { SerpProvider } from "@/lib/providers/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -13,6 +29,7 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: { providerConnection: { findUnique: mocks.connection } },
 }));
 vi.mock("@/lib/operations/access-extension", () => ({
+  assertOperationAccessInTransaction: vi.fn(),
   assertOperationAccess: vi.fn(),
 }));
 vi.mock("@/lib/providers/execution-extension", () => ({
@@ -77,6 +94,7 @@ const provider: SerpProvider = {
 };
 
 beforeEach(() => {
+  resetRecordedWorkerDefinition();
   vi.clearAllMocks();
   mocks.attribution.mockResolvedValue(attribution);
   mocks.hostedRankEstimate.mockReturnValue(null);
@@ -84,6 +102,16 @@ beforeEach(() => {
 });
 
 describe("live rank deployment boundary", () => {
+  it("refuses a missing captured definition before any paid provider or deployment call", async () => {
+    vi.spyOn(workerDefinitions, "liveWorkerDefinition").mockRejectedValueOnce(
+      new DefinitionUnavailableError(),
+    );
+    await expect(runCheck(input(provider))).rejects.toBeInstanceOf(DefinitionUnavailableError);
+    expect(mocks.fetchRank).not.toHaveBeenCalled();
+    expect(mocks.startExecution).not.toHaveBeenCalled();
+    expect(mocks.attribution).not.toHaveBeenCalled();
+  });
+
   it("uses own credentials without calling the private execution port", async () => {
     mocks.connection.mockResolvedValue({
       credentialSource: "own",

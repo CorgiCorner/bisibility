@@ -2,6 +2,8 @@ import type { KeywordFilters } from "@/lib/keywords/keyword-filter-model";
 import type { ActiveLens, LensLocationOption } from "@/lib/keywords/lens-model";
 import type { MarketGridGroupRow } from "@/lib/keywords/market-grid-model";
 import type { KeywordRow } from "@/lib/queries/keyword-row-types";
+import type { ReportSummary } from "@/lib/rank-reports/model";
+import type { RankTrackerReportScope } from "./rank-tracker-report-scope-model";
 
 export const RANK_TRACKER_SORT_FIELDS = [
   "keyword",
@@ -37,9 +39,15 @@ export type RankTrackerQueryField =
   | "page"
   | "pageSize"
   | "grouped"
-  | "savedViewId";
+  | "savedViewId"
+  | "reportView"
+  | "localSubject"
+  | "comparisonDays"
+  | "asOf";
 
 export type RankTrackerQueryState = {
+  /** Omitted only by legacy in-process callers; normalized reads always receive General. */
+  reportScope?: RankTrackerReportScope;
   filters: KeywordFilters;
   grouped: boolean;
   lens: ActiveLens;
@@ -68,6 +76,7 @@ export type RankTrackerListFacets = {
 };
 export type RankTrackerListQueryInput = { projectRef: string; query: RankTrackerQueryState };
 export type RankTrackerListResult = {
+  evaluation?: "shared_kernel";
   facets: RankTrackerListFacets;
   locations: LensLocationOption[];
   matchedTargetCount: number;
@@ -75,7 +84,10 @@ export type RankTrackerListResult = {
   pageCount: number;
   pageSize: RankTrackerQueryState["pageSize"];
   resolvedLens: ActiveLens;
+  report?: ReportSummary;
   rows: KeywordRow[];
+  selectedKeywordIds?: string[];
+  selectionDigest?: string;
   totalCount: number;
 };
 

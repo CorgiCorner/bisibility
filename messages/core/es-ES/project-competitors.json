@@ -159,7 +159,10 @@
       "viewName": "Nombre de la vista",
       "viewNamePlaceholder": "p. ej., conjunto principal de móvil en EE. UU.",
       "why": "¿Por qué?",
-      "you": "Tú"
+      "you": "Tú",
+      "sovQualityUnknown": "La comparación actual no está disponible. Las mediciones conservadas no acreditan la definición activa, la vigencia o el alcance de la búsqueda.",
+      "sovCoverageUnknown": "desconocida",
+      "sovQuality": "{measured} de {expected} palabras clave cumplen los criterios. {unknown} desconocidas. Cobertura con datos recientes: {coverage}."
     }
   }
 }

@@ -1,29 +1,34 @@
+import { fixtureScope } from "@/lib/rank-measurements/fixtures";
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
 import { describe, expect, it } from "vitest";
 import { buildHighlights, buildOverviewMetrics, snapshotFor } from "./overview-builders";
 import { buildTrend, buildTrendTakeaway, type Check, type Keyword } from "./overview-trend";
 
 const now = new Date("2026-07-22T12:00:00Z");
-function check(daysAgo: number, position: number | null, hour = 12): Check {
+function check(daysAgo: number, position: number | null, hour = 12) {
   const checkedAt = new Date(now.getTime() - daysAgo * 86_400_000);
   checkedAt.setUTCHours(hour);
+  const scope = { ...fixtureScope, targetId: "kw_audit", location: "Example" };
   return {
-    checkedAt,
-    position,
-    previousPosition: null,
-    normalizationVersion: "v2",
-    requestedDepth: 100,
+    ...recordedFixture(position, {
+      id: `audit-${checkedAt.toISOString()}`,
+      configuredScope: scope,
+      effectiveScope: scope,
+      observedAt: checkedAt,
+      recordedAt: checkedAt,
+    }),
     rankingUrl: position === null ? null : "https://example.com/",
-    status: "completed",
   };
 }
 function keyword(rankChecks: Check[]): Keyword {
   return {
+    projectId: fixtureScope.projectId,
     id: "kw_audit",
     publicId: "kw_audit",
     text: "example keyword",
     createdAt: new Date("2026-01-01"),
     device: "desktop",
-    locationRef: { displayName: "Example", languageLabel: "English" },
+    locationRef: { displayName: "Example", languageLabel: "English", languageCode: "en" },
     _count: { rankChecks: rankChecks.length },
     rankChecks,
     schedule: null,
@@ -32,8 +37,8 @@ function keyword(rankChecks: Check[]): Keyword {
 describe("overview latest daily observation regressions", () => {
   it("clears a prior top-ten rank from headline metrics after a completed not-found observation", () => {
     const row = keyword([check(0, null), check(1, 3)]);
-    const snapshot = snapshotFor(row);
-    const metrics = buildOverviewMetrics([snapshot]);
+    const snapshot = snapshotFor(row, null, now);
+    const metrics = buildOverviewMetrics([snapshot], { asOf: now });
     const trend = buildTrend([row]);
     const attention = buildHighlights([snapshot], now).find((list) => list.kind === "attention");
     expect(metrics).toMatchObject({
@@ -59,8 +64,24 @@ describe("overview latest daily observation regressions", () => {
 it.each(["unknown", "truncated_by_stop_on_match"])(
   "discloses %s coverage in dashboard attention without claiming absence",
   (completeness) => {
-    const row = keyword([{ ...check(0, null), observationRun: { completeness } }, check(1, 3)]);
-    const snapshot = snapshotFor(row);
+    const unknown = check(0, null);
+    const row = keyword([
+      {
+        ...unknown,
+        observationRun: {
+          ...unknown.observationRun,
+          completeness,
+          requestPolicy: {
+            evidence: {
+              ...unknown.observationRun.requestPolicy.evidence,
+              completeThrough: { organic_result: null },
+            },
+          },
+        },
+      },
+      check(1, 3),
+    ]);
+    const snapshot = snapshotFor(row, null, now);
     const attention = buildHighlights([snapshot], now).find((list) => list.kind === "attention");
     expect(attention?.rows[0]).toMatchObject({
       positionState: "noData",

@@ -3,76 +3,31 @@
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import type {
-  LaunchRankCheckRunActionInput,
-  LaunchRankCheckRunActionResult,
-} from "@/lib/actions/rank-check-run-launch-result";
-import type {
-  PreviewRankCheckRunActionInput,
-  PreviewRankCheckRunActionResult,
-} from "@/lib/actions/rank-check-run-preview-result";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
-import type { RunSelectionSpec } from "@/lib/rank-check/runs/selection";
-import { type SerpDepth, serpDepthValues } from "@/lib/serp/constants";
+import { appPath } from "@/lib/routing/app-path";
 import { presentBudgetDenial } from "@/lib/ui/action-error";
 import { useTranslations } from "next-intl";
 import { useId, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import {
+  type PreflightDialogProps,
+  type PreflightFormInput,
+  preflightFormSchema,
+} from "./preflight-contracts";
+
+export type { PreflightDialogProps } from "./preflight-contracts";
+
 import { PreflightBlockNotice } from "./PreflightBlockNotice";
 import { PreflightOptionGroups } from "./PreflightOptionGroups";
-import { type CancelOverlappingRunAction, PreflightOverlapNotice } from "./PreflightOverlapNotice";
+import { PreflightOverlapNotice } from "./PreflightOverlapNotice";
 import {
   blockCodeFor,
   decisionLine,
   idempotencyKey,
   isNotStarted,
   type PreflightBlockCode,
-  type PreflightProvider,
-  type PreflightScope,
 } from "./preflight-presentation";
-
-const preflightFormSchema = z
-  .object({
-    depth: z.union(serpDepthValues.map((depth) => z.literal(depth))).optional(),
-    providerId: z.string().trim().min(1).max(120).optional(),
-  })
-  .strict();
-
-type PreflightFormInput = z.infer<typeof preflightFormSchema>;
-
-type PreflightActions = {
-  launchAction: (input: LaunchRankCheckRunActionInput) => Promise<LaunchRankCheckRunActionResult>;
-  previewAction: (
-    input: PreviewRankCheckRunActionInput,
-  ) => Promise<PreviewRankCheckRunActionResult>;
-};
-
-export type PreflightDialogProps = PreflightActions & {
-  budgetHref: string;
-  cancelRunAction?: CancelOverlappingRunAction;
-  duplicateDetail?: string;
-  duplicateRunHref: string;
-  initialDepth?: SerpDepth;
-  initialPreview: RankCheckRunPreview;
-  initialProviderId?: string;
-  integrationsHref: string;
-  leftAfterLabel?: string;
-  onClose: () => void;
-  onStarted?: (
-    result: Exclude<
-      LaunchRankCheckRunActionResult,
-      { status: "not_started" } | { outcome: "nothing_to_run" }
-    >,
-  ) => void;
-  open: boolean;
-  projectId: PreviewRankCheckRunActionInput["projectId"];
-  providers: readonly PreflightProvider[];
-  providerFallbackNote?: string;
-  scope: PreflightScope | ((preview: RankCheckRunPreview) => PreflightScope);
-  spec: RunSelectionSpec;
-};
 
 export function PreflightDialog({
   budgetHref,
@@ -172,6 +127,8 @@ export function PreflightDialog({
           return;
         }
         if (
+          result.code === "measurement_policy_unconfigured" ||
+          result.code === "measurement_policy_unsupported" ||
           result.code === "no_provider" ||
           result.code === "budget_exhausted" ||
           result.code === "budget_missing" ||
@@ -259,6 +216,7 @@ export function PreflightDialog({
           budgetHref={budgetHref}
           duplicateRunHref={duplicateRunHref}
           integrationsHref={integrationsHref}
+          policyHref={`${appPath(projectId, "settings", "tracking")}#measurement-policy`}
         />
 
         {preview.overlaps.length > 0 ? (

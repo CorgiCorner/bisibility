@@ -1,4 +1,6 @@
 export const VISIBILITY_HORIZON = 20;
+export const VISIBILITY_METRIC_ID_V1 = "visibility_top20";
+export const VISIBILITY_DEFINITION_VERSION_V1 = "visibility-top20-v1";
 
 // Frozen on 2026-09-01. The original source is unrecorded and predates commit 082311834.
 // Only ratios to entry zero affect the score, so rescaling the whole curve is a no-op.

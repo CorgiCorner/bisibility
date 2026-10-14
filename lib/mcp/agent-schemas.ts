@@ -1,3 +1,4 @@
+import { localMonitorToolSchemas } from "./local-monitor-tools";
 import { mcpPublicIdSchema } from "./public-id-schema";
 
 type JsonObject = Record<string, unknown>;
@@ -10,9 +11,16 @@ function objectSchema(properties: JsonObject = {}, required: string[] = []) {
 }
 
 export const agentMcpSchemas = {
+  ...localMonitorToolSchemas,
   exportRankHistory: objectSchema(
     {
-      cursor: stringSchema,
+      cursor: { type: "string", minLength: 1, maxLength: 8192 },
+      version: { enum: ["1", "2"], type: "string" },
+      stream: { enum: ["observations", "attempts"], type: "string" },
+      basis: { enum: ["observed_at", "recorded_at"], type: "string" },
+      from: { type: "string", format: "date-time" },
+      to: { type: "string", format: "date-time" },
+      aggregation: { const: "none", type: "string" },
       granularity: { enum: ["daily", "weekly"], type: "string" },
       keyword_ids: { items: mcpPublicIdSchema("kw"), maxItems: 500, type: "array" },
       limit: { maximum: 200, minimum: 1, type: "integer" },

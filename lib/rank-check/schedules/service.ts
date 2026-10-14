@@ -1,3 +1,6 @@
+import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { assertDefinitionActor } from "@/lib/measurement-definitions/access";
+import type { ReviewedConsentSummary } from "@/lib/measurement-settings/host/reviewed-consent";
 import "server-only";
 
 import { normalizeSchedule } from "@/lib/actions/_schedule";
@@ -120,76 +123,88 @@ export async function createSchedule(
   );
 }
 
+export async function updateScheduleInTransaction(
+  tx: Prisma.TransactionClient,
+  actorId: string,
+  projectId: string,
+  data: UpdateCheckScheduleInput,
+  consent?: ReviewedConsentSummary,
+) {
+  await assertDefinitionActor(tx, actorId, projectId, "update", "check_schedule");
+  await lockProjectForProviderMutation(tx, projectId);
+  const project = await tx.project.findUnique({
+    where: { id: projectId },
+    select: { writeMode: true },
+  });
+  if (!project || project.writeMode !== "active") throw new ProjectReadOnlyError(projectId);
+  const before = await requireSchedule(tx, projectId, data.scheduleId);
+  const storedTimezone = data.timezone === undefined ? before.timezone : data.timezone;
+  const resolvedTimezone = storedTimezone ?? (await projectTimezone(tx, projectId));
+  const cadence = normalizeSchedule({
+    cronExpression: data.cronExpression === undefined ? before.cronExpression : data.cronExpression,
+    frequency: data.frequency ?? before.frequency,
+    jitterMinutes: data.jitterMinutes ?? before.jitterMinutes,
+    timezone: resolvedTimezone,
+  });
+  const frequency = data.frequency ?? before.frequency;
+  const inputCronExpression =
+    data.cronExpression === undefined ? before.cronExpression : data.cronExpression;
+  const cronExpression = storedCronExpression(
+    frequency,
+    inputCronExpression,
+    cadence.cronExpression,
+  );
+  const schedule = await tx.checkSchedule.update({
+    data: {
+      ...(data.enabled === undefined ? {} : { enabled: data.enabled }),
+      ...(data.name === undefined ? {} : { name: data.name }),
+      ...(data.providerPolicy === undefined ? {} : { providerPolicy: data.providerPolicy }),
+      ...(data.serpDepth === undefined ? {} : { serpDepth: data.serpDepth }),
+      ...(data.timeOfDay === undefined ? {} : { timeOfDay: data.timeOfDay }),
+      ...(data.timezone === undefined ? {} : { timezone: data.timezone }),
+      cronExpression,
+      frequency: cadence.frequency,
+      jitterMinutes: cadence.jitterMinutes,
+    },
+    select: checkScheduleSelect,
+    where: { id: before.id },
+  });
+  if (cadenceChanged(before, schedule)) {
+    const members = await tx.keyword.findMany({
+      select: { id: true },
+      where: { checkScheduleId: schedule.id },
+    });
+    await mirrorScheduleToKeywords(
+      tx,
+      projectId,
+      schedule,
+      members.map((keyword) => keyword.id),
+    );
+    await reconcilePlannedRunsForSchedule(schedule.id, tx);
+  }
+  await writeAudit(
+    {
+      action: "check_schedule.update",
+      actorId,
+      after: { ...checkScheduleAudit(schedule), ...(consent ? { consent } : {}) },
+      before: checkScheduleAudit(before),
+      projectId,
+      targetId: requiredPublicAuditId(schedule.publicId, "sch", "Check schedule"),
+      targetType: "check_schedule",
+    },
+    tx,
+  );
+  return { publicId: schedule.publicId };
+}
 export async function updateSchedule(
   actorId: string,
   projectId: string,
   data: UpdateCheckScheduleInput,
 ) {
-  return prisma.$transaction(
-    async (tx) => {
-      await lockProjectForProviderMutation(tx, projectId);
-      const before = await requireSchedule(tx, projectId, data.scheduleId);
-      const storedTimezone = data.timezone === undefined ? before.timezone : data.timezone;
-      const resolvedTimezone = storedTimezone ?? (await projectTimezone(tx, projectId));
-      const cadence = normalizeSchedule({
-        cronExpression:
-          data.cronExpression === undefined ? before.cronExpression : data.cronExpression,
-        frequency: data.frequency ?? before.frequency,
-        jitterMinutes: data.jitterMinutes ?? before.jitterMinutes,
-        timezone: resolvedTimezone,
-      });
-      const frequency = data.frequency ?? before.frequency;
-      const inputCronExpression =
-        data.cronExpression === undefined ? before.cronExpression : data.cronExpression;
-      const cronExpression = storedCronExpression(
-        frequency,
-        inputCronExpression,
-        cadence.cronExpression,
-      );
-      const schedule = await tx.checkSchedule.update({
-        data: {
-          ...(data.enabled === undefined ? {} : { enabled: data.enabled }),
-          ...(data.name === undefined ? {} : { name: data.name }),
-          ...(data.providerPolicy === undefined ? {} : { providerPolicy: data.providerPolicy }),
-          ...(data.serpDepth === undefined ? {} : { serpDepth: data.serpDepth }),
-          ...(data.timeOfDay === undefined ? {} : { timeOfDay: data.timeOfDay }),
-          ...(data.timezone === undefined ? {} : { timezone: data.timezone }),
-          cronExpression,
-          frequency: cadence.frequency,
-          jitterMinutes: cadence.jitterMinutes,
-        },
-        select: checkScheduleSelect,
-        where: { id: before.id },
-      });
-      if (cadenceChanged(before, schedule)) {
-        const members = await tx.keyword.findMany({
-          select: { id: true },
-          where: { checkScheduleId: schedule.id },
-        });
-        await mirrorScheduleToKeywords(
-          tx,
-          projectId,
-          schedule,
-          members.map((keyword) => keyword.id),
-        );
-        await reconcilePlannedRunsForSchedule(schedule.id, tx);
-      }
-      await writeAudit(
-        {
-          action: "check_schedule.update",
-          actorId,
-          after: checkScheduleAudit(schedule),
-          before: checkScheduleAudit(before),
-          projectId,
-          targetId: requiredPublicAuditId(schedule.publicId, "sch", "Check schedule"),
-          targetType: "check_schedule",
-        },
-        tx,
-      );
-      return { publicId: schedule.publicId };
-    },
-    { maxWait: 10_000, timeout: 60_000 },
-  );
+  return prisma.$transaction((tx) => updateScheduleInTransaction(tx, actorId, projectId, data), {
+    maxWait: 10_000,
+    timeout: 60_000,
+  });
 }
 
 export async function setDefaultSchedule(actorId: string, projectId: string, scheduleId: string) {

@@ -141,7 +141,10 @@ export async function dispatchDueRankChecksWorkflow(): Promise<DispatchDueRankCh
         locationId: group.locationId,
         projectId: group.projectId,
         ...(group.runId ? { runId: group.runId } : {}),
-        ...(group.runItemIds ? { runItemIds: group.runItemIds } : {}),
+        ...(group.runItemIds
+          ? { runItemIds: group.runItemIds, runItemClaims: group.runItemClaims }
+          : {}),
+        ...(!group.runItemIds ? { dispatchClaims: group.claims } : {}),
       });
       for (const chunk of chunks) {
         const outcome = await startQueuedBatchChild({

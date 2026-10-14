@@ -1,7 +1,7 @@
 "use client";
 
+import { LocalizedMeasurementHelp } from "@/components/measurement-help/LocalizedMeasurementHelp";
 import { Card } from "@/components/ui/Card";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
@@ -10,6 +10,7 @@ import type { KpiDeltaTone, OverviewKpi, OverviewView } from "./types";
 export type KpiCardProps = OverviewKpi & {
   projectRef?: string;
   visibilityCoverage?: OverviewView["visibilityCoverage"];
+  qualityReport?: OverviewView["qualityReport"];
 };
 
 const deltaToneClassName = {
@@ -67,6 +68,7 @@ export function KpiCard({
   id,
   projectRef,
   visibilityCoverage,
+  qualityReport,
 }: Readonly<KpiCardProps>) {
   const format = useFormatter();
   const t = useTranslations("projectDashboard.kpis");
@@ -92,9 +94,24 @@ export function KpiCard({
 
   return (
     <Card className="min-w-0 rounded-card px-4.5 py-4" size="md">
-      <div className="flex min-h-6 items-center gap-1 font-sans tabular-nums text-[10.5px] uppercase tracking-[0.8px] text-fg-muted">
+      <div className="flex min-h-11 items-center sm:min-h-7 gap-1 font-sans tabular-nums text-[10.5px] uppercase tracking-[0.8px] text-fg-muted">
         <span className="truncate">{label}</span>
-        {id === "visibility" ? <InfoTooltip text={t("visibilityDescription")} /> : null}
+        {id === "visibility" && qualityReport ? (
+          <span className="inline-flex">
+            <LocalizedMeasurementHelp
+              metricId={qualityReport.metricId}
+              definitionVersion={qualityReport.definitionVersion}
+              report={qualityReport}
+            />
+          </span>
+        ) : id === "averagePosition" ? (
+          <span className="inline-flex">
+            <LocalizedMeasurementHelp
+              metricId="average_ranked_position"
+              definitionVersion="help-v1"
+            />
+          </span>
+        ) : null}
       </div>
       <div className="mt-[9px] flex items-end gap-3">
         <span className="min-w-0">

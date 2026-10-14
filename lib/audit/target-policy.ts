@@ -1,4 +1,4 @@
-import type { PublicIdPrefix } from "@/lib/db/public-id";
+import type { PublicIdPrefix } from "@/lib/db/public-id-resources";
 
 type PublicAuditTargetPolicy = {
   mode: "public";
@@ -17,6 +17,9 @@ export const AUDIT_TARGET_POLICIES = {
   api_key: { mode: "public", prefix: "key", resource: "API key" },
   authentication: { mode: "opaque" },
   authorization: { mode: "opaque" },
+  business_location: { mode: "public", prefix: "biz", resource: "Business location" },
+  entity_match: { mode: "public", prefix: "biz", resource: "Business match" },
+  business_assignment: { mode: "public", prefix: "prj", resource: "Business assignment" },
   check_schedule: { mode: "public", prefix: "sch", resource: "Check schedule" },
   cloud_import_job: { mode: "public", prefix: "imp", resource: "Instance import job" },
   competitor: { mode: "public", prefix: "cmp", resource: "Competitor" },
@@ -25,6 +28,9 @@ export const AUDIT_TARGET_POLICIES = {
   invite: { mode: "public", prefix: "inv", resource: "Invite" },
   keyword: { mode: "public", prefix: "kw", resource: "Keyword" },
   keyword_schedule: { mode: "public", prefix: "kw", resource: "Keyword schedule" },
+  local_monitor: { mode: "public", prefix: "lmn", resource: "Local monitor" },
+  local_measurement_target: { mode: "public", prefix: "lmt", resource: "Local measurement target" },
+  local_measurement_run: { mode: "public", prefix: "lmr", resource: "Local measurement run" },
   membership: { mode: "public", prefix: "mbr", resource: "Membership" },
   migration_token: { mode: "public", prefix: "ferry", resource: "Migration token" },
   notification: { mode: "public", prefix: "ntf", resource: "Notification" },

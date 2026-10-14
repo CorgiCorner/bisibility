@@ -21,6 +21,8 @@ import {
   POLL_INTERVAL_MS,
   RECONCILIATION_INTERVAL_MS,
   RECONNECT_RETRY_MS,
+  ROTATION_RETRY_MS,
+  STREAM_LIFETIME_MS,
   SUBSCRIBER_READY_TIMEOUT_MS,
   sseEvent,
   streamHeaders,
@@ -42,6 +44,7 @@ function notificationVisible(scope: NotificationFeedScope, event: NotificationRe
 }
 
 export async function GET(req: NextRequest) {
+  const deadline = performance.now() + STREAM_LIFETIME_MS;
   const projectRef = new URL(req.url).searchParams.get("project");
   if (!projectRef) return new Response("Project is required", { status: 400 });
 
@@ -82,6 +85,11 @@ export async function GET(req: NextRequest) {
     return temporarilyUnavailable();
   }
 
+  const remainingLifetime = deadline - performance.now();
+  if (remainingLifetime <= 0) {
+    return new Response(`retry: ${ROTATION_RETRY_MS}\n\n`, { headers: streamHeaders() });
+  }
+
   try {
     const encoder = new TextEncoder();
     let closeStream = () => {};
@@ -96,6 +104,7 @@ export async function GET(req: NextRequest) {
       start(controller) {
         let closed = false;
         let heartbeat: ReturnType<typeof setInterval> | null = null;
+        let lifetimeTimer: ReturnType<typeof setTimeout> | null = null;
         let notificationSignature = notificationFeedSignature(initial.feed);
         let notificationQueue = Promise.resolve();
         let operationSignature = JSON.stringify(initial.operations);
@@ -123,6 +132,7 @@ export async function GET(req: NextRequest) {
           closed = true;
           req.signal?.removeEventListener("abort", close);
           if (heartbeat) clearInterval(heartbeat);
+          if (lifetimeTimer) clearTimeout(lifetimeTimer);
           if (poll) clearInterval(poll);
           if (reconciliation) clearInterval(reconciliation);
           if (subscriberReadyTimer) clearTimeout(subscriberReadyTimer);
@@ -208,6 +218,10 @@ export async function GET(req: NextRequest) {
         try {
           closeStream = close;
           req.signal?.addEventListener("abort", close, { once: true });
+          lifetimeTimer = setTimeout(() => {
+            enqueue(`retry: ${ROTATION_RETRY_MS}\n\n`);
+            close();
+          }, remainingLifetime);
           enqueue(`retry: ${RECONNECT_RETRY_MS}\n\n`);
           enqueue(": connected\n\n");
           enqueue(sseEvent("notification", { feed: initial.feed }));
@@ -217,12 +231,15 @@ export async function GET(req: NextRequest) {
             const notificationSubscription = subscribeToNotificationEvents(scope.userId, {
               onError: degradeToPolling,
               onEvent: (event) => {
-                if (notificationVisible(scope, event)) notificationInvalidation.schedule();
+                if (!closed && notificationVisible(scope, event))
+                  notificationInvalidation.schedule();
               },
             });
             const operationSubscription = subscribeToOperationEvents(access.projectId, {
               onError: degradeToPolling,
-              onEvent: () => operationInvalidation.schedule(),
+              onEvent: () => {
+                if (!closed) operationInvalidation.schedule();
+              },
             });
             if (notificationSubscription) subscriptions.push(notificationSubscription);
             if (operationSubscription) subscriptions.push(operationSubscription);

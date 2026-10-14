@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   exploreDemo: vi.fn(),
   getGitHubStars: vi.fn(),
   getSession: vi.fn(),
+  readTestAuthIdentity: vi.fn(),
   isEmailConfigured: vi.fn(),
   isFirstRun: vi.fn(),
   getSignInCapacity: vi.fn(),
@@ -30,6 +31,9 @@ vi.mock("@/lib/auth/signin-capacity", () => ({
 }));
 vi.mock("@/lib/site/github-stars", () => ({ getGitHubStars: mocks.getGitHubStars }));
 vi.mock("@/lib/auth/session", () => ({ getSession: mocks.getSession }));
+vi.mock("@/lib/auth/test-auth-extension", () => ({
+  readTestAuthIdentity: mocks.readTestAuthIdentity,
+}));
 vi.mock("@/lib/auth/first-run", () => ({ isFirstRun: mocks.isFirstRun }));
 vi.mock("@/lib/email/registry", () => ({ isEmailConfigured: mocks.isEmailConfigured }));
 vi.mock("@/lib/auth/auth", () => {
@@ -66,6 +70,7 @@ type LoginFormProps = {
     termsHref: string | null;
   } | null;
   returnTo: string;
+  humanVerificationRequired: boolean;
 };
 
 type LoginSearchParams = Record<string, string | string[] | undefined> & {
@@ -114,6 +119,7 @@ async function renderLoginPage(
 }
 
 beforeEach(() => {
+  mocks.readTestAuthIdentity.mockResolvedValue(null);
   mocks.getSession.mockResolvedValue(null);
   mocks.isEmailConfigured.mockReturnValue(true);
   mocks.isFirstRun.mockResolvedValue(false);
@@ -140,6 +146,21 @@ describe("login page runtime rendering", () => {
     expect(html).not.toContain("private provider diagnostic");
   });
 
+  it("omits the challenge only for the server-confirmed test identity", async () => {
+    mocks.readTestAuthIdentity.mockResolvedValue({
+      email: "demo@acme.dev",
+      userId: "synthetic-internal",
+    });
+    const { props } = await renderLoginPage({ DEPLOYMENT_MODE: "cloud" });
+    expect(props.humanVerificationRequired).toBe(false);
+    expect(props).not.toHaveProperty("userId");
+    expect(props).not.toHaveProperty("test_identity");
+  });
+
+  it("does not let a query parameter turn off normal cloud verification", async () => {
+    const { props } = await renderLoginPage({ DEPLOYMENT_MODE: "cloud" }, { test_auth: "1" });
+    expect(props.humanVerificationRequired).toBe(true);
+  });
   it.each([
     [
       "/app/prj_abcdefghijklmnopqrstuvwx/keyword-research?seed=raw%26value%3D1",

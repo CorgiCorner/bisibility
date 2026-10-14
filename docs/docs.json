@@ -51,7 +51,15 @@
           },
           {
             "group": "Track rankings",
-            "pages": ["guides/runs", "guides/schedules", "guides/competitors", "serp-observations"]
+            "pages": [
+              "guides/rank-measurements",
+              "guides/runs",
+              "guides/schedules",
+              "guides/competitors",
+              "serp-observations",
+              "local-monitor-recurring",
+              "local-monitor-retry"
+            ]
           },
           {
             "group": "Research",
@@ -80,6 +88,7 @@
               "guides/project-context",
               "guides/agent-reports",
               "guides/saved-views",
+              "guides/business-locations",
               "guides/teams",
               "audit-log"
             ]
@@ -270,7 +279,14 @@
               "POST /keywords/{id}/checks",
               "GET /keywords/{id}/rank-checks",
               "GET /rank-checks/{check_id}",
-              "GET /projects/{project_id}/exports/rank-history"
+              "GET /projects/{project_id}/exports/rank-history",
+              "GET /projects/{project_id}/local-monitors/{monitor_id}/runs",
+              "GET /projects/{project_id}/local-monitors/{monitor_id}/runs/{run_id}/export",
+              "GET /projects/{project_id}/local-monitors/{monitor_id}/runs/{run_id}/points/{target_id}/history",
+              "GET /projects/{project_id}/local-monitors/{monitor_id}/runs/{run_id}/points/{target_id}/listings",
+              "GET /projects/{project_id}/local-monitors/{monitor_id}/runs/{run_id}/results",
+              "GET /projects/{project_id}/rank-check-runs",
+              "GET /projects/{project_id}/rank-check-runs/{run_id}"
             ]
           },
           {
@@ -451,7 +467,8 @@
               "self-hosting/store-0-32",
               "self-hosting/backup-restore",
               "guides/operations",
-              "guides/migration"
+              "guides/migration",
+              "self-hosting/evidence-replay"
             ]
           },
           {

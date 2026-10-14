@@ -6,168 +6,33 @@ import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import type { ProviderCredential } from "@/lib/provider-usage/surface";
 import {
   createProviderRequestAttribution,
-  type ProviderRequestAttribution,
   type ProviderRequestSource,
   type ProviderRequestTrigger,
 } from "@/lib/provider-usage/tag";
-import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
-import { getSerpProvider } from "@/lib/providers/registry";
 import type { SerpProvider } from "@/lib/providers/types";
-import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import {
   resolveEffectiveSerpDepth,
   resolveSerpStopOnMatch,
   type SerpDepth,
 } from "@/lib/serp/constants";
 import { findComparablePredecessor } from "./comparable-history";
-import { fallbackAttempt } from "./fallback-attempt";
-import { keywordRankLocation, locationForProvider } from "./fallback-location";
-import { assertLegacyLiveBudget } from "./legacy-live-preflight";
+import { runCheckWithFallback } from "./fallback-chain";
+import { keywordRankLocation } from "./fallback-location";
 import { CURRENT_RANK_NORMALIZATION_VERSION } from "./normalization-version";
-import {
-  fallbackSchedule,
-  PROVIDER_NOT_CONNECTED_MESSAGE,
-  persistRankCheck,
-  type RankCheckConnectionInput,
-  type RankCheckKeywordInput,
-  runCheck,
-} from "./runner";
+import { rankRecoveryContext } from "./recovery-context";
+import { fallbackSchedule, persistRankCheck } from "./runner";
 import { RankCheckRunnerError } from "./runner-error";
-import type { RankCheckScheduleInput } from "./schedule";
 
 export type { KeywordRankLocation } from "./fallback-location";
 export { keywordRankLocation } from "./fallback-location";
 
-export type RunCheckChainInput = {
-  comparisonAllowed?: boolean;
-  keyword: RankCheckKeywordInput;
-  schedule: RankCheckScheduleInput;
-  depth?: SerpDepth;
-  stopOnMatch?: boolean;
-  connections: RankCheckConnectionInput[];
-  previousPosition?: number | null;
-  completedCheckCount?: number;
-  now?: Date;
-  projectId?: string;
-  providerUsage?: ProviderRequestAttribution;
-  rankCheckId?: string;
-  locationGranular?: boolean;
-  resolveProvider?: (id: string) => SerpProvider;
-  source?: ProviderRequestSource;
-};
-
-export type RunCheckChainResult = {
-  result: Awaited<ReturnType<typeof runCheck>>;
-  provider: string;
-  attempts: FallbackAttempt[];
-};
-
-import {
-  type FallbackAttempt,
-  loadFreshSerpProviderConnection,
-  loadSerpProviderChain,
-  ProviderChainError,
-} from "./provider-chain-loader";
+import type { DefinitionExecutionPermit } from "@/lib/measurement-definitions/worker-claim";
+import { loadSerpProviderChain, ProviderChainError } from "./provider-chain-loader";
 
 export { loadSerpProviderChain, ProviderChainError };
 
-export async function runCheckWithFallback(
-  input: RunCheckChainInput,
-): Promise<RunCheckChainResult> {
-  if (input.connections.length === 0) {
-    throw new RankCheckRunnerError("no_provider_connected", PROVIDER_NOT_CONNECTED_MESSAGE);
-  }
-
-  const resolveProvider = input.resolveProvider ?? getSerpProvider;
-  const attempts: FallbackAttempt[] = [];
-  let admissionExhaustion:
-    | import("@/lib/providers/execution-extension-errors").DeploymentAdmissionExhaustedError
-    | undefined;
-  let rateLimitedOnly = true;
-
-  for (const connection of input.connections) {
-    const currentConnection =
-      input.projectId && connection.id
-        ? await loadFreshSerpProviderConnection(input.projectId, connection.id, connection.provider)
-        : null;
-    const liveConnection = input.projectId && connection.id ? currentConnection : connection;
-    if (!liveConnection) {
-      throw new ProviderUsagePersistenceError({ cause: new Error("Provider connection changed.") });
-    }
-    let provider: SerpProvider;
-
-    try {
-      provider = resolveProvider(connection.provider);
-    } catch (error) {
-      const fallback = fallbackAttempt(error, connection.provider, input.source);
-      if (fallback) {
-        attempts.push(fallback.attempt);
-        admissionExhaustion = fallback.admission;
-        if (!fallback.rateLimited) rateLimitedOnly = false;
-        continue;
-      }
-      throw error;
-    }
-
-    try {
-      if (input.projectId && liveConnection.credentialSource !== "hosted") {
-        await assertLegacyLiveBudget({
-          connection: liveConnection,
-          depth: input.depth ?? 100,
-          keywordId: input.keyword.id,
-          now: input.now ?? new Date(),
-          projectId: input.projectId,
-          rankCheckId: input.rankCheckId,
-          reservationConnection: input.connections[0],
-          source: input.source ?? "app",
-        });
-      }
-      const result = await runCheck({
-        comparisonAllowed: input.comparisonAllowed,
-        connection: liveConnection,
-        depth: input.depth,
-        stopOnMatch: input.stopOnMatch,
-        keyword: {
-          ...input.keyword,
-          location: locationForProvider(
-            provider.id,
-            input.keyword.location,
-            input.locationGranular ?? false,
-          ),
-        },
-        now: input.now,
-        previousPosition: input.previousPosition,
-        completedCheckCount: input.completedCheckCount,
-        projectId: input.projectId,
-        providerUsage: input.providerUsage,
-        rankCheckId: input.rankCheckId,
-        provider,
-        schedule: input.schedule,
-      });
-
-      return { attempts, provider: provider.id, result };
-    } catch (error) {
-      const fallback = fallbackAttempt(error, connection.provider, input.source);
-      if (fallback) {
-        attempts.push(fallback.attempt);
-        admissionExhaustion = fallback.admission;
-        if (!fallback.rateLimited) rateLimitedOnly = false;
-        continue;
-      }
-
-      throw error;
-    }
-  }
-
-  if (rateLimitedOnly) {
-    const chainMsg = `All SERP providers rate limited: ${attempts.map((a) => `${a.provider} (${a.message})`).join("; ")}`;
-    throw new ProviderRateLimitedError(input.connections[0].provider, { message: chainMsg });
-  }
-
-  throw new ProviderChainError(attempts, admissionExhaustion);
-}
-
 export type RunKeywordCheckWithFallbackInput = {
+  definitionPermit?: DefinitionExecutionPermit;
   credential?: ProviderCredential;
   depth?: SerpDepth;
   keywordId: string;
@@ -203,7 +68,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
   });
   const stopOnMatch = resolveSerpStopOnMatch(keyword.project.defaults?.serpStopOnMatch);
   const connections = await loadSerpProviderChain(keyword.projectId, input.providerId);
-  const previous = await findComparablePredecessor(keyword.id, {
+  let previous = await findComparablePredecessor(keyword.id, {
     normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
     requestedDepth: depth,
   });
@@ -228,6 +93,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
     input.credential,
   );
   const outcome = await runCheckWithFallback({
+    definitionPermit: input.definitionPermit,
     comparisonAllowed,
     connections,
     depth,
@@ -255,7 +121,30 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
     select: { id: true },
     where: { kind: "serp", projectId: keyword.projectId, provider: outcome.provider },
   });
-  const expectedUrl = await resolveExpectedUrlForKeyword(keyword.id);
+  if (outcome.result.definitionBindingId) {
+    previous = outcome.result.comparisonPredecessorId
+      ? await prisma.rankCheck.findUnique({ where: { id: outcome.result.comparisonPredecessorId } })
+      : null;
+  }
+  const expectedUrl = outcome.result.definitionBindingId
+    ? {
+        url: await retainedTargetUrl(
+          outcome.result.definitionBindingId,
+          keyword.projectId,
+          input.rankCheckId,
+        ),
+      }
+    : await resolveExpectedUrlForKeyword(keyword.id);
+  outcome.result.recoveryContextHash = rankRecoveryContext(
+    {
+      text: keyword.text,
+      device: keyword.device,
+      domain: projectDomain,
+      location: keyword.locationRef,
+      revision: keyword.updatedAt,
+    },
+    depth,
+  );
 
   const rankCheck = await persistRankCheck(
     {
@@ -267,7 +156,9 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
       keywordId: keyword.id,
       keywordPublicId: keyword.publicId,
       expectedUrlAtCheck: expectedUrl.url,
-      keywordTargetUrl: keyword.targetUrl ?? null,
+      keywordTargetUrl: outcome.result.definitionBindingId
+        ? expectedUrl.url
+        : (keyword.targetUrl ?? null),
       previousRaw: previous?.raw ?? null,
       previousRankingUrl: previous?.rankingUrl ?? null,
       projectId: keyword.projectId,
@@ -278,3 +169,17 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
 
   return { attempts: outcome.attempts, keyword, provider: outcome.provider, rankCheck };
 }
+
+async function retainedTargetUrl(bindingId: string, projectId: string, rankCheckId?: string) {
+  const rows = await prisma.$queryRaw<
+    Array<{ targetUrl: string | null }>
+  >`SELECT request->>'targetUrl' AS "targetUrl" FROM measurement_execution_bindings WHERE id=${bindingId} AND "projectId"=${projectId} AND "rankCheckId"=${rankCheckId ?? ""}`;
+  if (rows.length !== 1) throw new Error("Original winning request is unavailable.");
+  return rows[0].targetUrl;
+}
+
+export {
+  type RunCheckChainInput,
+  type RunCheckChainResult,
+  runCheckWithFallback,
+} from "./fallback-chain";

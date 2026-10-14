@@ -51,20 +51,27 @@ export async function findHistoryRunRows(
   statuses: readonly string[] | undefined,
   cursor: { id: string; timestamp: Date } | null,
   take: number,
+  includeUnlaunched = false,
+  db: Pick<typeof prisma, "$queryRaw" | "rankCheckRun"> = prisma,
 ) {
-  const instant = Prisma.sql`COALESCE("launchedAt", "finishedAt")`;
+  const instant = includeUnlaunched
+    ? Prisma.sql`"createdAt"`
+    : Prisma.sql`COALESCE("launchedAt", "finishedAt")`;
+  const launchedFilter = includeUnlaunched
+    ? Prisma.empty
+    : Prisma.sql`AND ("launchedAt" IS NOT NULL OR ("status" = 'cancelled' AND "finishedAt" IS NOT NULL))`;
   const statusFilter = statuses?.length
     ? Prisma.sql`AND "status" IN (${Prisma.join(statuses)})`
     : Prisma.empty;
   const cursorFilter = cursor
     ? Prisma.sql`AND (${instant} < ${cursor.timestamp} OR (${instant} = ${cursor.timestamp} AND "publicId" < ${cursor.id}))`
     : Prisma.empty;
-  const ids = await prisma.$queryRaw<Array<{ publicId: string }>>(Prisma.sql`
+  const ids = await db.$queryRaw<Array<{ publicId: string }>>(Prisma.sql`
     SELECT "publicId"
     FROM "rank_check_runs"
     WHERE "projectId" = ${projectId}
       AND "deletedAt" IS NULL
-      AND ("launchedAt" IS NOT NULL OR ("status" = 'cancelled' AND "finishedAt" IS NOT NULL))
+      ${launchedFilter}
       ${statusFilter}
       ${cursorFilter}
     ORDER BY ${instant} DESC, "publicId" DESC
@@ -72,7 +79,7 @@ export async function findHistoryRunRows(
   `);
   if (ids.length === 0) return [];
 
-  const rows = await prisma.rankCheckRun.findMany({
+  const rows = await db.rankCheckRun.findMany({
     select: rankCheckRunSelect,
     where: { projectId, deletedAt: null, publicId: { in: ids.map(({ publicId }) => publicId) } },
   });

@@ -21,6 +21,35 @@ export type NativeRankRequest = {
   priority?: "normal" | "high";
 };
 
+/** Exact existing request variant, shared by admission and display-only forecasts. */
+export function nativeRankRequestDescriptor(provider: string, request: NativeRankRequest) {
+  const search = provider === "serpapi";
+  const units = search ? pagesPerCheck(request.depth) : 1;
+  const matched = nativeProviderCatalog.match(
+    provider,
+    search
+      ? {
+          method: "GET",
+          url: `https://serpapi.com/search.json?q=${encodeURIComponent(request.keyword)}`,
+        }
+      : {
+          method: "POST",
+          url: request.priority
+            ? "/v3/serp/google/organic/task_post"
+            : "/v3/serp/google/organic/live/advanced",
+          body: [
+            {
+              keyword: request.keyword,
+              depth: request.depth,
+              search_param: "&nfpr=1",
+              ...(request.priority ? { priority: request.priority === "high" ? 2 : 1 } : {}),
+            },
+          ],
+        },
+  );
+  return { search, units, matched };
+}
+
 /** Requests sharing only price-relevant options share a quote, never their search content. */
 export async function loadNativeRankRequestCosts(
   db: Database,
@@ -63,30 +92,7 @@ export async function loadNativeRankRequestCosts(
   const quotes = new Map<string, number | null>();
   const costs: (number | null)[] = [];
   for (const request of requests) {
-    const search = connection.provider === "serpapi";
-    const units = search ? pagesPerCheck(request.depth) : 1;
-    const matched = nativeProviderCatalog.match(
-      connection.provider,
-      search
-        ? {
-            method: "GET",
-            url: `https://serpapi.com/search.json?q=${encodeURIComponent(request.keyword)}`,
-          }
-        : {
-            method: "POST",
-            url: request.priority
-              ? "/v3/serp/google/organic/task_post"
-              : "/v3/serp/google/organic/live/advanced",
-            body: [
-              {
-                keyword: request.keyword,
-                depth: request.depth,
-                search_param: "&nfpr=1",
-                ...(request.priority ? { priority: request.priority === "high" ? 2 : 1 } : {}),
-              },
-            ],
-          },
-    );
+    const { search, units, matched } = nativeRankRequestDescriptor(connection.provider, request);
     if (matched.operation === "unknown") {
       costs.push(null);
       continue;

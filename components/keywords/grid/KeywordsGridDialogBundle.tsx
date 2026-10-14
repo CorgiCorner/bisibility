@@ -23,6 +23,7 @@ type Props = Pick<
 > & {
   addDraft: AddKeywordDraft;
   exportTarget: KeywordExportTarget | null;
+  exportSupported?: boolean;
   marketScope?: MarketScope | null;
   onExport: () => void;
   onFilter: () => void;
@@ -86,6 +87,7 @@ export function KeywordsGridDialogBundle(props: Props) {
         canCreateKeyword={canCreateKeyword}
         canUpdateKeyword={canUpdateKeyword}
         initialAction={initialAction ?? null}
+        exportSupported={props.exportSupported}
         marketScope={marketScope}
         onAdd={openAddDrawer}
         onExport={onExport}

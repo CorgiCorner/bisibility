@@ -2,14 +2,15 @@
 import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
 import { BudgetEditModal } from "@/components/settings/usage/BudgetEditModal";
 import { Button } from "@/components/ui/Button";
-import { UsageCapPill, usageCapFromBudget } from "@/components/usagekit/usage-cap-pill";
-import { UsageOverviewCard } from "@/components/usagekit/usage-overview-card";
+import { Card } from "@/components/ui/Card";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { ProjectUsageViews } from "@/lib/metering/user-views";
 import { appPath } from "@/lib/routing/app-path";
 import { useProviderAction } from "@usagekit/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
+import { ProviderBudgetRow } from "./ProviderBudgetRow";
 
 export function ProviderUsageCard({
   budgetExplanation,
@@ -29,40 +30,9 @@ export function ProviderUsageCard({
   const t = useTranslations("projectSettingsUsage.provider");
   const common = useTranslations("projectIntegrations.providerManagement");
   const p = useUsagePresentation();
+  const budgetScope = p.bound;
   const action = useProviderAction();
   const [open, setOpen] = useState(initialBudgetEditOpen && canEditBudget);
-  const bounds = data.budgets.map((row) =>
-    usageCapFromBudget(row, {
-      formatBound: p.bound,
-      formatFigure: p.figure,
-      formatUnit: p.unit,
-      labels: p.budget,
-    }),
-  );
-  const rank = (index: number) =>
-    data.budgets[index].limit === "unlimited"
-      ? 0
-      : bounds[index].state === "unavailable" || bounds[index].percent === null
-        ? 2
-        : 1;
-  const headlineIndex = bounds.reduce<number>((selected, bound, index) => {
-    if (selected < 0 || rank(index) > rank(selected)) return index;
-    if (rank(index) < rank(selected)) return selected;
-    return (bound.percent ?? 0) > (bounds[selected].percent ?? 0) ? index : selected;
-  }, -1);
-  const headline = bounds[headlineIndex];
-  const unavailable =
-    data.status !== "available" ||
-    data.budgets.some(
-      (row) =>
-        row.redacted ||
-        row.level === "unavailable" ||
-        [row.used, row.reserved, row.limit].some(
-          (value) =>
-            value === "unavailable" || (typeof value !== "string" && value.certainty === "unknown"),
-        ),
-    );
-  const redacted = data.budgets.some((row) => row.redacted);
   const attentionRows = data.budgets.filter(
     (row) => row.level === "warning" || row.level === "exceeded",
   );
@@ -72,7 +42,7 @@ export function ProviderUsageCard({
   const attention = attentionRows.length > 0;
   const attentionMessage = attention
     ? t(blocked ? "attentionBlocked" : "attentionWarning", {
-        bound: p.bound(blocked ?? attentionRows[0]),
+        bound: budgetScope(blocked ?? attentionRows[0]),
         count: attentionRows.length,
       })
     : "";
@@ -93,64 +63,44 @@ export function ProviderUsageCard({
       {data.status === "restricted" ? (
         <div className="flex justify-end">{budgetAction}</div>
       ) : (
-        <UsageOverviewCard
-          id="provider-usage"
-          size="md"
-          title={t("title")}
-          description={t("description")}
-          labels={p.overview}
-          metrics={[]}
-          budget={{
-            label: t("budgetUsed"),
-            value:
-              data.status === "available"
-                ? data.budgets.length
-                  ? redacted
-                    ? p.budget.redacted
-                    : headline?.state === "unavailable"
-                      ? p.budget.unavailable
-                      : (headline?.label ?? p.overview.unknown)
-                  : p.budget.empty
-                : p.budget.unavailable,
-            percent: null,
-            partial: !data.summary.complete,
-            status: unavailable
-              ? p.overview.unknown
-              : !data.budgets.length
-                ? p.budget.empty
-                : attention
-                  ? p.budget.warning
-                  : p.budget.ok,
-          }}
-          introduction={budgetExplanation}
-          action={budgetAction}
-          notice={
-            attention
-              ? {
-                  message: attentionMessage,
-                  action: (
-                    <Link href={appPath(projectRef, "integrations")}>
-                      {t("connectionSettings")}
-                    </Link>
-                  ),
-                }
-              : undefined
-          }
-        >
-          {data.budgets.map((row) => (
-            <div key={row.id} className="py-2">
-              <UsageCapPill
-                {...usageCapFromBudget(row, {
-                  formatBound: p.bound,
-                  formatFigure: p.figure,
-                  formatUnit: p.unit,
-                  labels: p.budget,
-                })}
-                labels={{ unknown: p.overview.unknown, unavailable: p.budget.unavailable }}
-              />
+        <Card id="provider-usage" className="min-w-0 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1 space-y-1">
+              <SectionTitle>{t("title")}</SectionTitle>
+              <p className="text-xs leading-relaxed text-fg-muted">{t("description")}</p>
             </div>
-          ))}
-        </UsageOverviewCard>
+            {budgetAction}
+          </div>
+          {attention && (
+            <div
+              role="alert"
+              className={`space-y-1 rounded-lg border p-3 text-sm ${blocked ? "border-red/30 bg-red/5" : "border-yellow/30 bg-yellow/5"}`}
+            >
+              <p>{attentionMessage}</p>
+              <Link href={appPath(projectRef, "integrations")}>{t("connectionSettings")}</Link>
+            </div>
+          )}
+          {data.status !== "available" ? (
+            <p role="status" className="text-sm text-fg-muted">
+              {p.budget.unavailable}
+            </p>
+          ) : !data.budgets.length ? (
+            <p role="status" className="text-sm text-fg-muted">
+              {p.budget.empty}
+            </p>
+          ) : (
+            <ul className="m-0 min-w-0 list-none divide-y divide-border p-0">
+              {data.budgets.map((row) => (
+                <ProviderBudgetRow key={row.id} row={row} />
+              ))}
+            </ul>
+          )}
+          {budgetExplanation && (
+            <div className="border-t border-border pt-3 text-xs text-fg-muted">
+              {budgetExplanation}
+            </div>
+          )}
+        </Card>
       )}
       {open && (
         <BudgetEditModal

@@ -1,4 +1,6 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { MeasurementPolicySettingsSection } from "@/components/measurement-settings/MeasurementPolicySettingsSection";
+import { MeasurementSettingsHostSection } from "@/components/measurement-settings/MeasurementSettingsHostSection";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import { TrackingSettingsSection } from "@/components/settings/tracking/TrackingSettingsSection";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
@@ -37,6 +39,15 @@ export default async function TrackingSettingsPage({
         timeZone={runtime.timeZone}
       >
         <div className="space-y-5" data-settings-section-slot="tracking">
+          <MeasurementPolicySettingsSection
+            actor={access.actor}
+            canEdit={canEdit}
+            projectId={access.project.publicId}
+          />
+          <MeasurementSettingsHostSection
+            actor={access.actor}
+            projectId={access.project.publicId}
+          />
           <TrackingSettingsSection
             canEdit={canEdit}
             defaults={settings.defaults}

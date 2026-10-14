@@ -1,4 +1,6 @@
-import { Prisma } from "@/lib/generated/prisma/client";
+import { join } from "node:path";
+import type { Prisma } from "@/lib/generated/prisma/client";
+import { bindingBudgetFixture } from "@/lib/metering/binding-budget-test-fixture";
 import { adoptedTimestampQuery, utcTimestampControl } from "@/lib/metering/read.test-fixture";
 import { redirect } from "@/tests/next-navigation";
 import { render } from "@testing-library/react";
@@ -22,9 +24,10 @@ const mocks = vi.hoisted(() => ({
   listFirstCheckCandidates: vi.fn(async () => ({ candidates: [] as unknown[] })),
   completeProjectOnboarding: vi.fn(),
   prisma: {
+    $queryRaw: vi.fn(),
     $executeRaw: vi.fn(),
     $queryRawUnsafe: vi.fn(),
-    $queryRaw: vi.fn(),
+    $executeRawUnsafe: vi.fn(),
     apiKey: { findFirst: vi.fn() },
     providerConnection: { findUnique: vi.fn() },
   },
@@ -125,27 +128,21 @@ const project = {
 
 describe("OnboardingPage", () => {
   it("shows each settings change from the Store instead of the stale project column", async () => {
-    const { usageReadFixture } = await import("@/lib/metering/read.test-fixture");
     const { setProjectSpendingLimit } = await import("@/lib/metering/project-spending-limit");
     const { projectBudgetCapCents } = await vi.importActual<
       typeof import("@/lib/metering/project-budget-read")
     >("@/lib/metering/project-budget-read");
-    const fixture = await usageReadFixture();
+    // DOM transformation rewrites import.meta asset URLs; pin the real repository migrations.
+    const fixture = await bindingBudgetFixture("own", {
+      migrationsRoot: join(process.cwd(), "prisma", "migrations"),
+    });
     try {
-      await fixture.db.exec(`ALTER TABLE metering_budget ADD COLUMN scope_kind text,
-        ADD COLUMN unit text, ADD COLUMN limit_value numeric, ADD COLUMN limit_scale int,
-        ADD COLUMN "window" jsonb, ADD COLUMN on_exceed text;
-        CREATE TABLE projects(id text); INSERT INTO projects VALUES('project_1');`);
-      const query = (sql: Prisma.Sql | TemplateStringsArray, ...values: unknown[]) =>
-        fixture.query(Array.isArray(sql) ? Prisma.sql(sql, ...values) : (sql as Prisma.Sql));
-      mocks.prisma.$queryRaw.mockImplementation(query);
+      mocks.prisma.$queryRaw.mockImplementation(fixture.tx.$queryRaw);
+      mocks.prisma.$executeRaw.mockImplementation(fixture.tx.$executeRaw);
+      mocks.prisma.$queryRawUnsafe.mockImplementation(fixture.tx.$queryRawUnsafe);
+      mocks.prisma.$executeRawUnsafe.mockImplementation(fixture.tx.$executeRawUnsafe);
       const tx = {
-        $queryRawUnsafe: adoptedTimestampQuery,
-        $queryRaw: query,
-        $executeRaw: async (sql: Prisma.Sql) => {
-          await fixture.db.query(sql.text, sql.values);
-          return 1;
-        },
+        ...fixture.tx,
         project: {
           findUnique: async () => project,
           findUniqueOrThrow: async () => ({
@@ -167,7 +164,7 @@ describe("OnboardingPage", () => {
         expect(mocks.wizard.mock.calls.at(-1)?.[0]).toMatchObject({ monthlyCapCents: capCents });
       }
     } finally {
-      await fixture.db.close();
+      await fixture.close();
     }
   }, 15000);
   it.each([

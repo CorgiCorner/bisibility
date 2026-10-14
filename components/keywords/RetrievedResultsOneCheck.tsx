@@ -95,6 +95,18 @@ function CompactState({
   );
 }
 
+function RetainedUrl({ url }: Readonly<{ url: string | null }>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.results");
+  return url ? (
+    <p
+      data-testid="retrieved-retained-url"
+      className="m-0 break-all border-b border-border px-4 py-3 text-[12px] text-fg-muted sm:px-5"
+    >
+      {t("yourResult")}: {url}
+    </p>
+  ) : null;
+}
+
 export function RetrievedResultsOneCheck({
   competitors = [],
   rankingUrl,
@@ -104,9 +116,21 @@ export function RetrievedResultsOneCheck({
 }: Readonly<Props>) {
   const t = useTranslations("projectRankTracker.keywordDetail.results");
   const trackedRef = useRef<HTMLLIElement | null>(null);
-  if (results.tier === "none") return <EmptyState formatDate={formatDate} results={results} />;
-  if (results.tier === "compact") return <CompactState results={results} />;
-  const url = rankingUrl ?? results.rows.find((row) => row.tracked)?.url;
+  if (results.tier === "none")
+    return (
+      <div>
+        <RetainedUrl url={rankingUrl} />
+        <EmptyState formatDate={formatDate} results={results} />
+      </div>
+    );
+  if (results.tier === "compact")
+    return (
+      <div>
+        <RetainedUrl url={rankingUrl} />
+        <CompactState results={results} />
+      </div>
+    );
+  const url = rankingUrl;
   return (
     <div>
       <FeatureRow features={results.features} />

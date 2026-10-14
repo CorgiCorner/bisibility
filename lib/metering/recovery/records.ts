@@ -1,0 +1,47 @@
+import type { Prisma } from "@/lib/generated/prisma/client";
+import type { RecoveryCaseKind, TriageStatus } from "./contract";
+
+export type RecoveryRecord = {
+  key: string;
+  kind: RecoveryCaseKind;
+  id: string;
+  namespace: string;
+  version: number;
+  provider: string;
+  feature: string;
+  funding: string | null;
+  projectId: string | null;
+  projectPublicId: string | null;
+  connectionId: string | null;
+  connectionPublicId: string | null;
+  rankCheckId: string | null;
+  runId: string | null;
+  rankStatus: string | null;
+  rankUpdatedAt: Date | null;
+  projectExists: boolean;
+  historical: boolean;
+  accountingUnknown: boolean;
+  nativeId: string | null;
+  binding: boolean;
+  fenced: boolean;
+  state: string;
+  leaseExpiresAt: Date | null;
+  createdAt: Date;
+  receipt: Prisma.JsonValue | null;
+  proof: boolean;
+  spendingBlocked?: { project: boolean; connection: boolean };
+  resultExpiresAt: Date | null;
+  resultBlockedCode?: string | null;
+  resumeAuthorized?: boolean;
+  originalAuthorization?: { maxCostCents: string; targets: number; maxAttempts: number } | null;
+  error: Prisma.JsonValue | null;
+  activeError: boolean;
+  triageVersion: number | null;
+  triageBasis: string | null;
+  triageStatus: TriageStatus | null;
+  triageReason: string | null;
+  assigneeId: string | null;
+  snoozedUntil: Date | null;
+};
+
+export type RecoveryIdentity = Pick<RecoveryRecord, "kind" | "id">;

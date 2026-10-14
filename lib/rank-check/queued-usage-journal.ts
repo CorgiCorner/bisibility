@@ -1,5 +1,6 @@
 import "server-only";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
+import type { NativeRequestGuard, PaidFenceHook } from "@/lib/metering/paid-attempt-types";
 import { ownAdmission } from "@/lib/provider-usage/admission-extension";
 import { beginProviderTaskset } from "@/lib/provider-usage/batch-request-journal";
 import { discardByokEvidence } from "@/lib/provider-usage/byok-evidence";
@@ -76,6 +77,8 @@ export async function beginQueuedTaskUsageJournal(input: {
   tasks: QueuedTaskUsageInput[];
   credentialVersion?: string | null;
   providerRequests?: readonly ProviderRequest[];
+  beforeFence?: PaidFenceHook;
+  beforeReserve?: ReadonlyMap<string, NativeRequestGuard>;
 }): Promise<QueuedTaskUsageJournal> {
   if (input.providerRequests && input.providerRequests.length !== input.tasks.length)
     throw new Error("Queued taskset pricing requires one request per task");
@@ -91,6 +94,7 @@ export async function beginQueuedTaskUsageJournal(input: {
       credentialVersion: input.credentialVersion,
       ...(input.providerRequests ? { providerRequest: input.providerRequests[index] } : {}),
     })),
+    input.beforeReserve,
   );
   try {
     for (const { input: task, id } of taskset.identities) {
@@ -121,6 +125,6 @@ export async function beginQueuedTaskUsageJournal(input: {
       : {}),
     discard: () => discardPending(input.client, entries),
     settle: (outcome) => settleKnown(entries, outcome),
-    transportStarted: () => ownAdmission.fence(input.client, taskset.grants),
+    transportStarted: () => ownAdmission.fence(input.client, taskset.grants, input.beforeFence),
   };
 }

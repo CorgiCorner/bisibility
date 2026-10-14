@@ -190,7 +190,7 @@ export async function exportSectionsChunk({ projectId, userId }: ExportSectionsC
     prisma.savedView.findMany({
       orderBy: { createdAt: "desc" },
       select: { config: true, name: true, publicId: true, surface: true },
-      where: { projectId },
+      where: { projectId, visibility: "project" },
     }),
     prisma.notificationPreference.findUnique({
       select: preferenceSelect,

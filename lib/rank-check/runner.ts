@@ -2,32 +2,22 @@ import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
+import type { RunCheckInput } from "./runner-input";
+import { credentialsFromConnection, isProviderThrottleError, rankCheckRaw } from "./runner-support";
 import "server-only";
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { prisma } from "@/lib/db/prisma";
-import type { Prisma } from "@/lib/generated/prisma/client";
 import { assertOperationAccess } from "@/lib/operations/access-extension";
-import {
-  LIST_PROVIDER_RATE_CONTEXT,
-  type ResolveProviderRateInput,
-} from "@/lib/provider-rates/resolver";
+import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
-import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
-import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { consumeProviderLimit, writeCooldown } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
-import type {
-  ProviderCredentials,
-  SerpDevice,
-  SerpProvider,
-  SerpRankResult,
-} from "@/lib/providers/types";
+import type { ProviderCredentials, SerpRankResult } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
-import { DEFAULT_SERP_DEPTH, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
-import type { SerpRankLocation } from "@/lib/serp/location";
+import { DEFAULT_SERP_DEPTH, resolveSerpStopOnMatch } from "@/lib/serp/constants";
 import { rankCheckCostCents } from "./cost";
 import { estimatedRankCheckCostCents } from "./default-cost";
 import { CURRENT_RANK_NORMALIZATION_VERSION } from "./normalization-version";
@@ -44,90 +34,20 @@ export type {
 } from "./runner-persistence";
 export { persistFailedRankCheck, persistRankCheck } from "./runner-persistence";
 
-import { computeNextCheckAt, type RankCheckScheduleInput } from "./schedule";
-
-export const PROVIDER_NOT_CONNECTED_MESSAGE = "Connect a SERP provider before running rank checks.";
-
-export type RankCheckKeywordInput = {
-  id: string;
-  text: string;
-  location: SerpRankLocation;
-  device: SerpDevice;
-  domain: string;
-};
-
-export type RankCheckConnectionInput = {
-  id?: string;
-  provider: string;
-  costPerCheckCents?: unknown;
-  credentials?: ProviderCredentials;
-  credentialsEncrypted?: string | null;
-  credentialSource?: string;
-  updatedAt?: Date;
-  rateContext?: Pick<ResolveProviderRateInput, "entries" | "manualAmountCents">;
-};
-
-export type RunCheckInput = {
-  comparisonAllowed?: boolean;
-  keyword: RankCheckKeywordInput;
-  schedule: RankCheckScheduleInput;
-  connection: RankCheckConnectionInput;
-  depth?: SerpDepth;
-  stopOnMatch?: boolean;
-  provider?: SerpProvider;
-  previousPosition?: number | null;
-  completedCheckCount?: number;
-  now?: Date;
-  /** Owning project id; only used as the provider rate-limit fallback key. */
-  projectId?: string;
-  providerUsage?: ProviderRequestAttribution;
-  rankCheckId?: string;
-};
-
-// Classify provider errors carrying HTTP 429 signals as cooldown deferrals, not
-// generic provider failures.
-function isProviderThrottleError(error: unknown) {
-  const message = error instanceof Error ? error.message.toLowerCase() : "";
-  return /\b429\b|too many requests|rate.?limit/.test(message);
-}
+import { loadDefinitionComparablePrevious } from "@/lib/measurement-definitions/worker-comparable";
+import { configuredWorkerObservation } from "@/lib/measurement-definitions/worker-session";
+import { prepareRunnerDefinition } from "./runner-definition";
+import { computeNextCheckAt } from "./schedule";
 
 export type { RankCheckRunnerErrorCode } from "./runner-error";
 export { RankCheckRunnerError } from "./runner-error";
 
-export function fallbackSchedule(): RankCheckScheduleInput {
-  return {
-    cronExpression: null,
-    frequency: "manual",
-    jitterMinutes: 0,
-    timezone: "UTC",
-  };
-}
-
-function credentialsFromConnection(connection: RankCheckConnectionInput) {
-  if (connection.credentials) {
-    return connection.credentials;
-  }
-
-  return resolveProviderCredentials(connection.provider, connection.credentialsEncrypted);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value && typeof value === "object" && !Array.isArray(value));
-}
-
-function rankCheckRaw(rank: SerpRankResult, connectionId?: string) {
-  if (!isRecord(rank.raw)) return null;
-  const json = structuredClone(rank.raw) as unknown;
-  if (isRecord(json) && isRecord(json.snapshotContinuation) && connectionId) {
-    json.snapshotContinuation.connectionId = connectionId;
-  }
-  return isRecord(json) ? (json as Prisma.InputJsonObject) : null;
-}
-
 export function runCheck(input: RunCheckInput): Promise<RankCheckRunResult> {
   return runCheckScoped(input);
 }
-async function runCheckScoped(input: RunCheckInput): Promise<RankCheckRunResult> {
+async function runCheckScoped(original: RunCheckInput): Promise<RankCheckRunResult> {
+  const selectedProvider = original.provider ?? getSerpProvider(original.connection.provider);
+  const { input, definition } = await prepareRunnerDefinition(original, selectedProvider.id);
   // Final guard for every caller, including the legacy scheduled path: a
   // denial must escape before credentials, the rate limit, or any provider
   // fetch. A trusted owning project is required; without one there is no
@@ -186,6 +106,8 @@ async function runCheckScoped(input: RunCheckInput): Promise<RankCheckRunResult>
     allocation?.kind === "billable"
       ? createProviderRequestJournal(prisma, {
           attribution: providerUsage,
+          beforeFence: input.definitionFence,
+          beforeReserve: input.definitionBeforeReserve,
           connectionId: input.connection.id,
           projectId: input.projectId,
           provider: provider.id,
@@ -261,9 +183,21 @@ async function runCheckScoped(input: RunCheckInput): Promise<RankCheckRunResult>
     throw new ProviderUsagePersistenceError();
   const reportedCostCents = execution?.costCents ?? Number(rank.costCents);
 
+  const definitionPrevious = definition
+    ? await loadDefinitionComparablePrevious(
+        definition.binding,
+        rank.observation?.surface === "web_serp" ? rank.observation : null,
+        rank.position,
+        checkedAt,
+      )
+    : null;
   return {
+    comparisonPredecessorId: definition ? (definitionPrevious?.id ?? null) : undefined,
+    definitionBindingId: definition?.binding.id ?? null,
     usageRecorded: execution?.started ?? journal?.started ?? false,
-    comparisonAllowed: input.comparisonAllowed ?? false,
+    comparisonAllowed: definition
+      ? definitionPrevious !== null
+      : (input.comparisonAllowed ?? false),
     providerCostCents:
       Number.isFinite(reportedCostCents) && reportedCostCents > 0 ? reportedCostCents : undefined,
     providerUsage,
@@ -276,7 +210,9 @@ async function runCheckScoped(input: RunCheckInput): Promise<RankCheckRunResult>
       keywordId: input.keyword.id,
       organicRanks: rank.raw ? organicDomainRanksFromV2Results(rank.raw.organic_results) : null,
       position: rank.position,
-      previousPosition: input.previousPosition ?? null,
+      previousPosition: definition
+        ? (definitionPrevious?.position ?? null)
+        : (input.previousPosition ?? null),
       rankingUrl: rank.rankingUrl,
       requestedDepth,
       checkedAt,
@@ -293,7 +229,7 @@ async function runCheckScoped(input: RunCheckInput): Promise<RankCheckRunResult>
               input.connection.rateContext ?? LIST_PROVIDER_RATE_CONTEXT,
             ),
       normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
-      observation: rank.observation ?? null,
+      observation: configuredWorkerObservation(rank.observation, definition),
       raw: rankCheckRaw(rank, input.connection.id),
     },
     scheduleUpdate: {
@@ -302,3 +238,10 @@ async function runCheckScoped(input: RunCheckInput): Promise<RankCheckRunResult>
     },
   };
 }
+
+export {
+  type RankCheckConnectionInput,
+  type RankCheckKeywordInput,
+  type RunCheckInput,
+} from "./runner-input";
+export { fallbackSchedule, PROVIDER_NOT_CONNECTED_MESSAGE } from "./runner-support";

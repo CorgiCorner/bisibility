@@ -2,6 +2,8 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
+import { snapshotDefinitionSession } from "@/lib/measurement-definitions/snapshot-dispatch";
+import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { createProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import { serpApiProvider } from "@/lib/providers/serp/serpapi";
 import { fetchSerpApiSnapshotPage } from "@/lib/providers/serp/serpapi-snapshot";
@@ -10,7 +12,7 @@ import { runCheckWithFallback } from "@/lib/rank-check/fallback";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { fallbackSchedule } from "@/lib/rank-check/runner";
 import { mergeSnapshotPage } from "./snapshot-extension";
-import { readSnapshotContinuation } from "./snapshot-extension-state";
+import { readSnapshotContinuation, readSnapshotPageEvidence } from "./snapshot-extension-state";
 import { claimSnapshotExtension, finishSnapshotExtension } from "./snapshot-extension-store";
 
 export async function extendSnapshot(input: {
@@ -26,6 +28,15 @@ export async function extendSnapshot(input: {
       (connection) =>
         connection.id === claim.context.connectionId && connection.credentialSource === "own",
     );
+    if (connections.length !== 1 || !connections[0].id || !connections[0].credentialsEncrypted)
+      throw new Error("Original snapshot connection is unavailable.");
+    const credentialVersion = ownCredentialVersion(
+      "serpapi",
+      connections[0].id,
+      connections[0].credentialsEncrypted,
+    );
+    if (!credentialVersion) throw new Error("Original snapshot credential version is unavailable.");
+    const definitionContinuation = snapshotDefinitionSession(claim.definition, credentialVersion);
     const attribution = await createProviderRequestAttribution({
       correlationId: claim.check.id,
       feature: "rank_check",
@@ -35,6 +46,8 @@ export async function extendSnapshot(input: {
     });
     const outcome = await runCheckWithFallback({
       projectId: input.projectId,
+      rankCheckId: claim.check.id,
+      definitionContinuation,
       providerUsage: attribution,
       connections,
       depth: 10,
@@ -86,6 +99,7 @@ export async function extendSnapshot(input: {
             start: claim.state.nextStart,
             fetchedAt: outcome.result.rankCheck.checkedAt.toISOString(),
             ...merged,
+            evidence: readSnapshotPageEvidence(raw),
           },
         ],
       },

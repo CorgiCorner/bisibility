@@ -35,7 +35,9 @@ describe("PositionTrendCard", () => {
   });
 
   it("plots a single recorded day instead of asking for another check", () => {
-    renderTrend({ data: [{ label: null, value: 1 }] });
+    renderTrend({
+      data: [{ comparisonKey: "synthetic-series", dateKey: "2026-06-18", label: null, value: 1 }],
+    });
 
     expect(screen.queryByText("Trend appears after the next check")).not.toBeInTheDocument();
     expect(screen.getByTestId("line-chart")).toBeInTheDocument();
@@ -53,8 +55,8 @@ describe("PositionTrendCard", () => {
     };
     renderTrend({
       data: [
-        { dateKey: "2026-07-16", label: "2026-07-16", value: 3 },
-        { dateKey: "2026-07-17", label: null, value: 2 },
+        { comparisonKey: "synthetic-series", dateKey: "2026-07-16", label: "2026-07-16", value: 3 },
+        { comparisonKey: "synthetic-series", dateKey: "2026-07-17", label: null, value: 2 },
       ],
       takeaway,
     });
@@ -104,8 +106,8 @@ describe("PositionTrendCard", () => {
   it("renders no takeaway line without a takeaway or enough history", () => {
     const { container, rerender } = renderTrend({
       data: [
-        { label: "2026-07-16", value: 3 },
-        { label: null, value: 2 },
+        { comparisonKey: "synthetic-series", dateKey: "2026-07-16", label: "2026-07-16", value: 3 },
+        { comparisonKey: "synthetic-series", dateKey: "2026-07-17", label: null, value: 2 },
       ],
     });
 
@@ -119,7 +121,9 @@ describe("PositionTrendCard", () => {
     rerender(
       withMessages(
         <PositionTrendCard
-          data={[{ label: null, value: 2 }]}
+          data={[
+            { comparisonKey: "synthetic-series", dateKey: "2026-07-17", label: null, value: 2 },
+          ]}
           takeaway={{ days: 21, kind: "slipped", value: 0.8, window: "firstTrackedDays" }}
         />,
       ),
@@ -132,8 +136,8 @@ describe("PositionTrendCard", () => {
   it("renders the takeaway loading treatment below the title", () => {
     const { container } = renderTrend({
       data: [
-        { label: "2026-07-16", value: 3 },
-        { label: "now", value: 2 },
+        { comparisonKey: "synthetic-series", dateKey: "2026-07-16", label: "2026-07-16", value: 3 },
+        { comparisonKey: "synthetic-series", dateKey: "2026-07-17", label: "now", value: 2 },
       ],
       takeawayLoading: true,
     });

@@ -2,7 +2,9 @@ import { registerAccountAuditDeclarations } from "@/lib/auth/audit-field-declara
 import { registerAiTrackingAuditDeclarations } from "@/lib/auth/audit-field-declarations-ai-tracking";
 import { registerCompetitorAuditDeclarations } from "@/lib/auth/audit-field-declarations-competitors";
 import { registerAdditionalAuditDeclarations } from "@/lib/auth/audit-field-declarations-extra";
+import { registerInstanceAdminAuditDeclarations } from "@/lib/auth/audit-field-declarations-instance-admin";
 import { registerMailAuditDeclarations } from "@/lib/auth/audit-field-declarations-mail";
+import { registerRecoveryAuditDeclarations } from "@/lib/auth/audit-field-declarations-recovery";
 import { registerRankCheckRunAuditDeclarations } from "@/lib/auth/audit-field-declarations-runs";
 import {
   type AuditFieldPolicy,
@@ -114,7 +116,7 @@ declare(["onboarding.matching_scope.set"], {
 });
 declare(["user.ui_locale.update"], { after: strings("uiLocale"), before: strings("uiLocale") });
 
-declare(["instance_admin.delete_blocked"], { before: f.booleans("isInstanceAdmin") });
+registerInstanceAdminAuditDeclarations(declare);
 
 declare(["alert_rule.create"], { after: alertRule });
 declare(["alert_rule.delete"], { before: alertRule });
@@ -191,50 +193,7 @@ declare(["ingest_hook.disable", "ingest_hook.rotate"], {
   before: ingestHook,
 });
 
-declare(
-  [
-    "instance_admin.account_deactivate_failed",
-    "instance_admin.account_deactivate_rate_limited",
-    "instance_admin.account_limits_reset_failed",
-    "instance_admin.account_limits_reset_rate_limited",
-    "instance_admin.account_reactivate_failed",
-    "instance_admin.account_reactivate_rate_limited",
-  ],
-  { after: strings("requestedTarget") },
-);
-declare(["instance_admin.account_deactivate_blocked"], {
-  before: { ...f.dates("deactivatedAt"), ...f.booleans("isInstanceAdmin") },
-});
-declare(["instance_admin.account_deactivated", "instance_admin.account_reactivated"], {
-  after: { ...f.dates("deactivatedAt"), ...f.numbers("revokedTokenCount") },
-  before: f.dates("deactivatedAt"),
-});
-declare(["instance_admin.account_limits_reset"], {
-  after: {
-    ...f.booleans("budgetReset"),
-    ...f.numbers("clearedBuckets"),
-    ...strings("requestedTarget"),
-  },
-});
 registerMailAuditDeclarations(declare);
-declare(["instance_admin.metering_viewed"], { after: strings("month", "project") });
-declare(["instance_admin.account_viewed"], { after: strings("result") });
-declare(
-  [
-    "instance_admin.ops_sweep.failed",
-    "instance_admin.ops_sweep.rate_limited",
-    "instance_admin.ops_sweep.run",
-  ],
-  { after: { ...f.numbers("attempted", "delivered"), ...strings("result") } },
-);
-declare(
-  [
-    "instance_admin.ops_test.failed",
-    "instance_admin.ops_test.rate_limited",
-    "instance_admin.ops_test.send",
-  ],
-  { after: strings("result") },
-);
 
 declare(["keyword.bulk_delete"], { before: keywordRows });
 declare(["keyword.bulk_clear_target", "keyword.bulk_set_target"], {
@@ -300,6 +259,7 @@ registerAdditionalAuditDeclarations(declare, {
 registerAccountAuditDeclarations(declare, { projectCounts });
 registerRankCheckRunAuditDeclarations(declare);
 registerAiTrackingAuditDeclarations(declare);
+registerRecoveryAuditDeclarations(declare);
 
 export function auditPayloadPolicy(action: string) {
   return declarations.get(action) ?? auditPayloadPolicyExtension(action) ?? undefined;

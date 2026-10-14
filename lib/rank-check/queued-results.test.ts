@@ -1,7 +1,24 @@
+import { frozenRequest } from "@/lib/measurement-definitions/canonical";
+import {
+  definitionHeadFixture,
+  definitionSourceFixture,
+} from "@/lib/measurement-definitions/fixtures";
+import { hostDefinitionAdapters } from "@/lib/measurement-definitions/host-adapters";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { persistReadyQueuedRankCheckTasks } from "./queued-results";
 import { QUEUED_DEADLINE_REASON } from "./queued-timeouts";
+
+function retainedSourceFixture(projectId: string, keywordId: string) {
+  const source = definitionSourceFixture();
+  source.projectId = projectId;
+  source.keywordId = keywordId;
+  source.target.domain = "example.com";
+  source.target.targetUrl = null;
+  if (!source.policy.config) throw new Error("Synthetic policy configuration is required.");
+  source.policy.config.adapters = hostDefinitionAdapters();
+  return source;
+}
 
 const mocks = vi.hoisted(() => {
   type Task = ReturnType<typeof makeTask>;
@@ -87,45 +104,90 @@ const mocks = vi.hoisted(() => {
     makeTask("failure", "provider_failed", "one task was rejected"),
   ];
   const prisma = {
-    $queryRaw: vi.fn(async (query: { strings?: string[]; values?: unknown[] }) => {
-      const sql = query.strings?.join("?") ?? "";
-      const values = query.values ?? [];
-      if (sql.includes("\"state\" = 'persisting'")) {
-        const databaseNow = new Date();
-        const owner = String(values[1]);
-        const taskId = String(values[2]);
-        const task = tasks.find((candidate) => candidate.id === taskId);
-        if (
-          !task ||
-          !(
-            (task.persistenceLeaseExpiresAt === null &&
-              task.persistenceLeaseOwner === null &&
-              ["provider_failed", "ready"].includes(task.state)) ||
-            (task.persistenceLeaseExpiresAt !== null &&
-              task.persistenceLeaseOwner !== null &&
-              task.persistenceLeaseExpiresAt <= databaseNow &&
-              task.state === "persisting")
-          )
-        ) {
-          return [];
+    $queryRaw: vi.fn(
+      async (
+        query: { strings?: string[]; values?: unknown[] } | TemplateStringsArray,
+        ...parameters: unknown[]
+      ) => {
+        const sql = (
+          Array.isArray(query) ? query : ((query as { strings?: string[] }).strings ?? [])
+        ).join("?");
+        const values = Array.isArray(query)
+          ? parameters
+          : ((query as { values?: unknown[] }).values ?? []);
+        if (sql.includes("FROM measurement_execution_bindings")) {
+          const task = tasks.find((candidate) => candidate.rankCheckId === values[2]);
+          if (!task) return [];
+          const source = retainedSourceFixture(task.keyword.projectId, task.keywordId);
+          const head = definitionHeadFixture(source);
+          return [
+            {
+              id: `binding-${task.id}`,
+              projectId: source.projectId,
+              keywordId: source.keywordId,
+              targetRevision: head.targetRevision,
+              policyRevision: head.policyRevision,
+              owner: {
+                rankCheckId: task.rankCheckId,
+                executionKey: `queued-definition:${task.id}`,
+                queuedTaskId: task.id,
+              },
+              source,
+              request: frozenRequest(source, "dataforseo"),
+              capturedAt: new Date("2026-06-01T00:00:00Z"),
+            },
+          ];
         }
-        task.persistenceLeaseOwner = owner;
-        task.persistenceLeaseExpiresAt = new Date(databaseNow.getTime() + Number(values[0]));
-        task.state = "persisting";
-        return [{ expiresAt: task.persistenceLeaseExpiresAt }];
-      }
-      const hasError = sql.includes('"error" =');
-      const nextState = String(values[0]);
-      const taskId = String(values[hasError ? 2 : 1]);
-      const owner = values[hasError ? 3 : 2];
-      const from = values.slice(hasError ? 4 : 3).map(String);
-      const task = tasks.find((candidate) => candidate.id === taskId);
-      if (!task || task.persistenceLeaseOwner !== owner || !from.includes(task.state)) return [];
-      task.state = nextState;
-      task.persistenceLeaseOwner = null;
-      task.persistenceLeaseExpiresAt = null;
-      return [{ state: nextState }];
-    }),
+        if (
+          sql.trimStart().startsWith('SELECT "id"') &&
+          sql.includes('FROM "queued_rank_check_tasks"')
+        ) {
+          const task = tasks.find((candidate) => candidate.id === String(values[0]));
+          return task &&
+            task.state === "persisting" &&
+            task.persistenceLeaseOwner === values[1] &&
+            task.persistenceLeaseExpiresAt &&
+            task.persistenceLeaseExpiresAt > new Date()
+            ? [{ id: task.id }]
+            : [];
+        }
+        if (sql.includes("\"state\" = 'persisting'")) {
+          const databaseNow = new Date();
+          const owner = String(values[1]);
+          const taskId = String(values[2]);
+          const task = tasks.find((candidate) => candidate.id === taskId);
+          if (
+            !task ||
+            !(
+              (task.persistenceLeaseExpiresAt === null &&
+                task.persistenceLeaseOwner === null &&
+                ["provider_failed", "ready"].includes(task.state)) ||
+              (task.persistenceLeaseExpiresAt !== null &&
+                task.persistenceLeaseOwner !== null &&
+                task.persistenceLeaseExpiresAt <= databaseNow &&
+                task.state === "persisting")
+            )
+          ) {
+            return [];
+          }
+          task.persistenceLeaseOwner = owner;
+          task.persistenceLeaseExpiresAt = new Date(databaseNow.getTime() + Number(values[0]));
+          task.state = "persisting";
+          return [{ expiresAt: task.persistenceLeaseExpiresAt }];
+        }
+        const hasError = sql.includes('"error" =');
+        const nextState = String(values[0]);
+        const taskId = String(values[hasError ? 2 : 1]);
+        const owner = values[hasError ? 3 : 2];
+        const from = values.slice(hasError ? 4 : 3).map(String);
+        const task = tasks.find((candidate) => candidate.id === taskId);
+        if (!task || task.persistenceLeaseOwner !== owner || !from.includes(task.state)) return [];
+        task.state = nextState;
+        task.persistenceLeaseOwner = null;
+        task.persistenceLeaseExpiresAt = null;
+        return [{ state: nextState }];
+      },
+    ),
     $transaction: vi.fn(async (callback: (tx: unknown) => unknown) => callback(prisma)),
     queuedRankCheckBatch: {
       findUnique: vi.fn(async () => ({ state: "submitted" })),
@@ -345,6 +407,65 @@ describe("queued result persistence", () => {
     },
   );
 
+  it("uses the retained request domain after the project's current domain changes", async () => {
+    mocks.tasks.splice(1);
+    mocks.tasks[0].keyword.project.domain = "changed.example.com";
+    await persistReadyQueuedRankCheckTasks("batch_1");
+    expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
+    expect(mocks.persistRankCheck.mock.calls[0]?.[1]).toMatchObject({
+      comparisonAllowed: false,
+      rankCheck: { position: 3, rankingUrl: "https://example.com/new" },
+    });
+  });
+
+  it("looks up only the retained target predecessor when response scope and time are proven", async () => {
+    mocks.tasks.splice(1);
+    mocks.fetchResult.mockResolvedValue({
+      status_code: 20000,
+      tasks: [
+        {
+          status_code: 20000,
+          cost: 0.012,
+          data: {
+            location_name: "Synthetic",
+            language_code: "en",
+            device: "desktop",
+            stop_crawl_on_match: [],
+          },
+          result: [
+            {
+              datetime: new Date().toISOString(),
+              location_name: "Synthetic",
+              language_code: "en",
+              device: "desktop",
+              items: [
+                {
+                  type: "organic",
+                  domain: "example.com",
+                  rank_group: 3,
+                  rank_absolute: 4,
+                  url: "https://example.com/new",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    await persistReadyQueuedRankCheckTasks("batch_1");
+    expect(mocks.prisma.rankCheck.findFirst).toHaveBeenCalledWith({
+      include: { observationRun: true },
+      orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
+      where: {
+        keywordId: "keyword_success",
+        status: "completed",
+        id: { not: "rank_check_success" },
+      },
+    });
+    // The previous row itself remains legacy unknown, despite the current response proof.
+    expect(mocks.persistRankCheck.mock.calls[0]?.[1]).toMatchObject({ comparisonAllowed: false });
+  });
+
   it("recovers a persisting task, isolates partial failure, and records actual cost once", async () => {
     await expect(persistReadyQueuedRankCheckTasks("batch_1")).resolves.toEqual({
       completed: 1,
@@ -356,7 +477,8 @@ describe("queued result persistence", () => {
     expect(mocks.persistRankCheck).toHaveBeenCalledOnce();
     expect(mocks.persistRankCheck.mock.calls[0]?.[1]).toMatchObject({
       providerCostCents: 1.2,
-      comparisonAllowed: true,
+      // The retained predecessor has a rank only, without immutable scope/quality proof.
+      comparisonAllowed: false,
       rankCheck: {
         billingUnits: 1,
         costCents: 1.2,
@@ -372,15 +494,8 @@ describe("queued result persistence", () => {
         },
       },
     });
-    expect(mocks.prisma.rankCheck.findFirst).toHaveBeenCalledWith({
-      orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
-      where: {
-        keywordId: "keyword_success",
-        normalizationVersion: "v2",
-        requestedDepth: 100,
-        status: "completed",
-      },
-    });
+    // No scope echo or observation time: a legacy rank cannot become a comparable baseline.
+    expect(mocks.prisma.rankCheck.findFirst).not.toHaveBeenCalled();
     expect(mocks.persistFailed).toHaveBeenCalledOnce();
     expect(mocks.persistFailed).toHaveBeenCalledWith(
       expect.objectContaining({

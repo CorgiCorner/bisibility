@@ -2,6 +2,7 @@ import { TrackingSettingsContent } from "@/components/settings/tracking/Tracking
 import { TrackingSettingsLoading } from "@/components/settings/tracking/TrackingSettingsLoading";
 import { trackingCardGeometryClassNames } from "@/components/settings/tracking/tracking-settings-layout";
 import { renderWithSharedMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { reviewedDefaultsPreview } from "@/lib/settings/reviewed-defaults.test-fixture";
 import { describe, expect, it, vi } from "vitest";
 
 const defaults = {
@@ -37,6 +38,7 @@ describe("TrackingSettingsLoading", () => {
           defaults={defaults}
           domain="example.com"
           initialCronPreview={{ message: null, runs: [], status: "idle", timezone: null }}
+          previewDefaults={reviewedDefaultsPreview}
           previewCron={vi.fn()}
           projectId="prj_1"
           updateDefaults={vi.fn()}
@@ -62,6 +64,7 @@ describe("TrackingSettingsLoading", () => {
         defaults={defaults}
         domain="example.com"
         initialCronPreview={{ message: null, runs: [], status: "idle", timezone: null }}
+        previewDefaults={reviewedDefaultsPreview}
         previewCron={vi.fn()}
         projectId="prj_1"
         updateDefaults={vi.fn()}
@@ -79,6 +82,7 @@ describe("TrackingSettingsLoading", () => {
           defaults={defaults}
           domain="example.com"
           initialCronPreview={{ message: null, runs: [], status: "idle", timezone: null }}
+          previewDefaults={reviewedDefaultsPreview}
           previewCron={vi.fn()}
           projectId="prj_1"
           updateDefaults={vi.fn()}

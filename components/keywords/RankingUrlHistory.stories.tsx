@@ -2,10 +2,17 @@ import { KeywordDetailStoryThemes } from "@/components/keyword-detail/shared/sto
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import { RankingUrlHistory } from "@/components/keywords/RankingUrlHistory";
 import type { Meta, StoryObj } from "@storybook/react";
+import type { ComponentProps } from "react";
+
+function LegacyStory(
+  props: Exclude<ComponentProps<typeof RankingUrlHistory>, { history: unknown }>,
+) {
+  return <RankingUrlHistory {...props} />;
+}
 
 const meta = {
   title: "Keywords/RankingUrlHistory",
-  component: RankingUrlHistory,
+  component: LegacyStory,
   decorators: [
     (Story) => (
       <KeywordDetailStoryThemes>
@@ -16,7 +23,7 @@ const meta = {
     ),
   ],
   parameters: { chromatic: { viewports: [390, 768, 1440] } },
-} satisfies Meta<typeof RankingUrlHistory>;
+} satisfies Meta<typeof LegacyStory>;
 
 export default meta;
 

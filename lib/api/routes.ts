@@ -20,6 +20,7 @@ import { analyticsProjectRoute } from "./routes-analytics";
 import { backlinksRoute } from "./routes-backlinks";
 import { domainOverviewRoute } from "./routes-domain-overview";
 import { keywordResearchRoute } from "./routes-keyword-research";
+import { localMonitorReadRoute } from "./routes-local-monitors";
 import { loopClosureRoutes } from "./routes-loop-closure";
 import { topLevelMemberRoutes } from "./routes-members";
 import { providerMemberRoutes } from "./routes-providers";
@@ -284,6 +285,7 @@ export function dispatchRoute(ctx: ApiContext) {
     researchWorkspaceRoute(ctx) ??
     existingRoutes(ctx) ??
     loopClosureRoutes(ctx) ??
+    localMonitorReadRoute(ctx) ??
     projectCollectionRoutes(ctx) ??
     projectMemberRoutes(ctx) ??
     topLevelMemberRoutes(ctx)

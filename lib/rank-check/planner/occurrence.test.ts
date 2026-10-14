@@ -96,6 +96,20 @@ describe("planned occurrences", () => {
     ]);
   });
 
+  it.each([
+    ["* * * * *", 60_000],
+    ["*/2 * * * *", 120_000],
+  ])("recovers the exact frequent cron occurrence for %s", (cronExpression, intervalMs) => {
+    const schedule = { ...base, cronExpression, frequency: "custom_cron" as const };
+    const occurrenceKey = "2026-09-02T12:00:00.000Z";
+    expect(plannedOccurrenceForKey(schedule, occurrenceKey)).toEqual({
+      occurrenceKey,
+      plannedFor: new Date(occurrenceKey),
+      intervalMs,
+    });
+    expect(plannedOccurrenceForKey(schedule, "2026-09-02T12:00:00.001Z")).toBeNull();
+  });
+
   it("uses a persisted monthly cron for the selected 15th", () => {
     const occurrences = plannedOccurrences(
       { ...base, cronExpression: "0 6 15 * *", frequency: "monthly", timeOfDay: "06:00" },

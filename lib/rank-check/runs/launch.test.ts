@@ -1,4 +1,8 @@
 import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
+import {
+  definitionKeywordScopeFixture,
+  definitionQueryFixture,
+} from "@/lib/rank-check/definition-policy.test-fixture";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RunSelectionSpec } from "./selection";
 
@@ -95,6 +99,7 @@ const input = {
 
 function keyword(id: string, text: string, status = "completed") {
   return {
+    ...definitionKeywordScopeFixture(),
     archivedAt: null as Date | null,
     id,
     locationId: "location_active",
@@ -144,17 +149,19 @@ describe("launchRankCheckRun", () => {
       selectionHash: "a".repeat(64),
     });
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 5_000,
       defaults: { serpDepth: 100 },
       providerAllocationsInitializedAt: null,
     });
     mocks.tx.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 5_000,
       defaults: { serpDepth: 100 },
       providerAllocationsInitializedAt: null,
     });
     mocks.tx.$executeRaw.mockResolvedValue(1);
-    mocks.tx.$queryRaw.mockResolvedValue([]);
+    mocks.tx.$queryRaw.mockImplementation(definitionQueryFixture());
     mocks.tx.rankCheckRun.findUnique.mockResolvedValue(null);
     mocks.prisma.keyword.findMany.mockResolvedValue([
       keyword("keyword_1", "one"),
@@ -166,7 +173,7 @@ describe("launchRankCheckRun", () => {
       ),
     );
     mocks.loadProviderChain.mockResolvedValue([
-      { costPerCheckCents: 25, id: "connection_1", provider: "provider-a" },
+      { costPerCheckCents: 25, id: "connection_1", provider: "serpapi" },
     ]);
     mocks.estimatedCost.mockReturnValue(25);
     mocks.prisma.projectMarket.findMany.mockResolvedValue([{ locationId: "location_active" }]);
@@ -189,7 +196,11 @@ describe("launchRankCheckRun", () => {
 
       await expect(launchRankCheckRun(input)).rejects.toMatchObject({ code });
       expect(mocks.tx.rankCheckRun.create).not.toHaveBeenCalled();
-      expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+      expect(mocks.prisma.$transaction).toHaveBeenCalledExactlyOnceWith(expect.any(Function), {
+        isolationLevel: "RepeatableRead",
+      });
+      expect(mocks.tx.$executeRaw).not.toHaveBeenCalled();
+      expect(mocks.tx.rankCheckRunItem.createMany).not.toHaveBeenCalled();
     },
   );
 
@@ -380,7 +391,11 @@ describe("launchRankCheckRun", () => {
     mocks.prisma.rankCheckRun.findUnique
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(existing);
-    mocks.prisma.$transaction.mockRejectedValueOnce({ code: "P2002" });
+    mocks.prisma.$transaction.mockImplementation((callback, options) =>
+      options?.isolationLevel === "RepeatableRead"
+        ? callback(mocks.tx)
+        : Promise.reject({ code: "P2002" }),
+    );
 
     await expect(launchRankCheckRun(input)).resolves.toEqual(existing);
     expect(mocks.publishWorkerIntent).not.toHaveBeenCalled();
@@ -428,7 +443,14 @@ describe("launchRankCheckRun", () => {
         estimatedCostCents: 50,
       }),
     );
-    expect(mocks.prisma.$transaction).toHaveBeenCalledOnce();
+    expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(2);
+    expect(mocks.prisma.$transaction).toHaveBeenNthCalledWith(1, expect.any(Function), {
+      isolationLevel: "RepeatableRead",
+    });
+    expect(mocks.prisma.$transaction).toHaveBeenNthCalledWith(2, expect.any(Function), {
+      maxWait: 10_000,
+      timeout: 60_000,
+    });
   });
 
   it("asks the database only for runnable rows of the project", async () => {
@@ -603,13 +625,13 @@ describe("launchRankCheckRun", () => {
           selectionSpec: expect.objectContaining({
             kind: relation,
             nativeEstimate: {
-              providerId: "provider-a",
-              quantity: null,
-              unit: null,
-              unknownTargets: 1,
+              providerId: "serpapi",
+              quantity: 5,
+              unit: "units",
+              unknownTargets: 0,
             },
             parentRunId: parentRun.publicId,
-            providerAtLaunch: "provider-a",
+            providerAtLaunch: "serpapi",
             v: 1,
           }),
           trigger: "retry",

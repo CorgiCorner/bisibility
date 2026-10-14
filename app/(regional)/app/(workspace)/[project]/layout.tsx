@@ -1,7 +1,9 @@
 import { WorkspaceShell } from "@/app/(regional)/app/(workspace)/workspace-shell";
 import { RankTrackerSearchDraftProvider } from "@/components/keywords/RankTrackerSearchDraft";
 import { MarketContextProvider } from "@/components/markets/MarketContextProvider";
-import { resolveProjectAccess } from "@/lib/queries/_auth";
+import { UsageDisplaySettingsProvider } from "@/components/metering/UsageDisplaySettingsProvider";
+import { readProjectUsageDisplaySettings } from "@/lib/project-usage-display/store";
+import { getQueryActor, resolveProjectAccess } from "@/lib/queries/_auth";
 import type { ReactNode } from "react";
 
 type ProjectLayoutProps = {
@@ -23,6 +25,10 @@ export default async function ProjectLayout({
 }: Readonly<ProjectLayoutProps>) {
   const { project } = await params;
   const access = await resolveProjectAccess(project);
+  const usageDisplay = await readProjectUsageDisplaySettings(
+    access.publicId,
+    await getQueryActor(),
+  );
 
   return (
     // The project level, wrapping the SHELL and not just the page. The chrome - header, rail,
@@ -30,15 +36,17 @@ export default async function ProjectLayout({
     // could not read the context at all. A market route nests its own provider inside this one,
     // around the page body it renders.
     <MarketContextProvider market={null} projectRef={access.publicId}>
-      <RankTrackerSearchDraftProvider>
-        <WorkspaceShell
-          activeProjectId={access.projectId}
-          context={context}
-          projectRef={access.publicId}
-        >
-          {children}
-        </WorkspaceShell>
-      </RankTrackerSearchDraftProvider>
+      <UsageDisplaySettingsProvider initial={usageDisplay} key={access.publicId}>
+        <RankTrackerSearchDraftProvider>
+          <WorkspaceShell
+            activeProjectId={access.projectId}
+            context={context}
+            projectRef={access.publicId}
+          >
+            {children}
+          </WorkspaceShell>
+        </RankTrackerSearchDraftProvider>
+      </UsageDisplaySettingsProvider>
     </MarketContextProvider>
   );
 }

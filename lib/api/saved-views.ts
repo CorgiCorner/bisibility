@@ -20,11 +20,33 @@ import {
   snakeizeKeys,
 } from "./surface";
 
+function savedDefinition(view: SavedViewResource) {
+  const definition = objectBody(snakeizeKeys(view.definition));
+  if (view.definition.version === 2) {
+    const presentation = view.definition.presentation;
+    definition.presentation = {
+      column_order: [...presentation.columnOrder],
+      registry_version: presentation.registryVersion,
+      sizing: { ...presentation.sizing },
+      version: presentation.version,
+      visibility: { ...presentation.visibility },
+    };
+  }
+  return definition;
+}
+
 function savedViewApiResource(view: SavedViewResource) {
-  const { createdById: _createdById, ...resource } = view as SavedViewResource & {
-    createdById?: string;
+  return {
+    can_delete: view.canDelete,
+    config: snakeizeKeys(view.config),
+    created_at: view.createdAt,
+    definition: savedDefinition(view),
+    id: view.id,
+    name: view.name,
+    revision: view.revision,
+    surface: view.surface,
+    visibility: view.visibility,
   };
-  return resource;
 }
 
 export async function listProjectSavedViews(ctx: ApiContext, projectId: string) {
@@ -38,7 +60,7 @@ export async function listProjectSavedViews(ctx: ApiContext, projectId: string) 
       : await runDomain(() => listSavedViewsFor(requireApiActor(ctx), projectId, "keywords"));
   const { nextCursor, page } = paginateArray(ctx.url, views);
 
-  return listResponse(page.map(savedViewApiResource).map(snakeizeKeys), nextCursor, {
+  return listResponse(page.map(savedViewApiResource), nextCursor, {
     headers: ctx.headers,
   });
 }
@@ -63,7 +85,7 @@ export async function createProjectSavedView(ctx: ApiContext, projectId: string)
   });
   const view = await runDomain(() => createSavedViewFor(input, apiMutationContext(ctx)));
 
-  return resourceResponse(snakeizeKeys(savedViewApiResource(view)), {
+  return resourceResponse(savedViewApiResource(view), {
     headers: ctx.headers,
     status: 201,
   });

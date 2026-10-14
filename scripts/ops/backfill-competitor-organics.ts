@@ -1,141 +1,44 @@
-#!/usr/bin/env -S node --experimental-transform-types
+#!/usr/bin/env -S node --experimental-transform-types --import ./lib/temporal/register-loader.mjs
 
-import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
 import pg from "pg";
-import { databaseConnectionConfig } from "../../lib/db/pool-config.ts";
-import { organicDomainRanksFromRaw } from "../../lib/rank-check/organic-ranks.ts";
+import { databaseConnectionConfig } from "@/lib/db/pool-config";
+import { parseEvidenceReplayOptions } from "@/lib/evidence-replay/cli-options";
+import { replayCodeHash } from "@/lib/evidence-replay/hash";
+import { applyEvidenceReplayBatch, prepareEvidenceReplay } from "@/lib/evidence-replay/service";
+import { stopEvidenceReplay } from "@/lib/evidence-replay/stop";
+import type { ReplayDatabase } from "@/lib/evidence-replay/model";
 
-const { Client } = pg;
+export { parseEvidenceReplayOptions as parseBackfillOptions } from "@/lib/evidence-replay/cli-options";
+export { prepareEvidenceReplay, applyEvidenceReplayBatch } from "@/lib/evidence-replay/service";
 
-type BackfillDatabase = {
-  query: (
-    sql: string,
-    values?: readonly unknown[],
-  ) => Promise<{ rows: Array<Record<string, unknown>> }>;
-};
-
-type BackfillOptions = {
-  batchSize: number;
-  onBatch?: (result: BackfillResult) => void;
-};
-
-export type BackfillResult = {
-  scanned: number;
-  skipped: number;
-  updated: number;
-};
-
-function batchSizeFrom(value: string | undefined) {
-  const batchSize = Number(value ?? 200);
-  if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 2_000) {
-    throw new Error("--batch-size must be an integer between 1 and 2000.");
-  }
-  return batchSize;
-}
-
-export function parseBackfillOptions(args: string[] = process.argv.slice(2)): BackfillOptions {
-  const parsed = parseArgs({
-    args,
-    options: { "batch-size": { type: "string" } },
-    strict: true,
-  });
-  return { batchSize: batchSizeFrom(parsed.values["batch-size"]) };
-}
-
-export async function backfillLatestOrganicRanks(
-  db: BackfillDatabase,
-  options: BackfillOptions,
-) {
-  const totals: BackfillResult = { scanned: 0, skipped: 0, updated: 0 };
-  let keywordCursor: string | null = null;
-
-  while (true) {
-    const batch = await db.query(
-      `WITH latest AS (
-         SELECT DISTINCT ON ("keywordId")
-           "id", "keywordId", "organicRanks", "raw"
-         FROM "rank_checks"
-         WHERE "status" = 'completed'
-           AND ($1::text IS NULL OR "keywordId" > $1)
-         ORDER BY "keywordId" ASC, "checkedAt" DESC, "id" DESC
-       )
-       SELECT "id", "keywordId", "raw"
-       FROM latest
-       WHERE "organicRanks" IS NULL
-       ORDER BY "keywordId" ASC
-       LIMIT $2`,
-      [keywordCursor, options.batchSize],
-    );
-    if (batch.rows.length === 0) break;
-
-    const current: BackfillResult = { scanned: batch.rows.length, skipped: 0, updated: 0 };
-    await db.query("BEGIN");
-    try {
-      for (const row of batch.rows) {
-        const snapshot = organicDomainRanksFromRaw(row.raw);
-        if (snapshot === null) {
-          current.skipped += 1;
-          continue;
-        }
-        await db.query(
-          `UPDATE "rank_checks"
-           SET "organicRanks" = $2::jsonb, "updatedAt" = NOW()
-           WHERE "id" = $1 AND "organicRanks" IS NULL`,
-          [String(row.id), JSON.stringify(snapshot)],
-        );
-        current.updated += 1;
-      }
-      await db.query("COMMIT");
-    } catch (error) {
-      await db.query("ROLLBACK");
-      throw error;
-    }
-
-    totals.scanned += current.scanned;
-    totals.skipped += current.skipped;
-    totals.updated += current.updated;
-    options.onBatch?.(current);
-    keywordCursor = String(batch.rows.at(-1)?.keywordId);
-    if (batch.rows.length < options.batchSize) break;
-  }
-
-  return totals;
-}
-
-function requireDatabaseUrl(env: Record<string, string | undefined> = process.env) {
-  const databaseUrl = env.DATABASE_URL?.trim();
-  if (!databaseUrl) throw new Error("DATABASE_URL is required.");
-  return databaseUrl;
-}
-
-async function main() {
-  const options = parseBackfillOptions();
-  const databaseUrl = requireDatabaseUrl();
-  const db = new Client({
-    connectionString: databaseUrl,
-    ...databaseConnectionConfig(databaseUrl),
-  });
-  await db.connect();
+/** Protected process env only. No dotenv loading, URL arguments, provider initialization or raw diagnostics. */
+export async function runEvidenceReplayCli(args = process.argv.slice(2), env = process.env) {
+  const options = parseEvidenceReplayOptions(args);
+  const url = env.DATABASE_URL?.trim();
+  if (!url) throw new Error("evidence_replay_database_unavailable");
+  const client = new pg.Client({ connectionString: url, ...databaseConnectionConfig(url), connectionTimeoutMillis: 15_000, application_name: "bisibility-evidence-replay" });
+  const db: ReplayDatabase = { query: async (sql, values) => client.query(sql, values ? [...values] : []) };
+  const authority = { kind: "database_operator" as const }, codeHash = await replayCodeHash();
+  await client.connect();
   try {
-    const result = await backfillLatestOrganicRanks(db as BackfillDatabase, {
-      ...options,
-      onBatch: (batch) =>
-        console.log(
-          `Processed ${batch.scanned} latest checks: ${batch.updated} updated, ${batch.skipped} unavailable.`,
-        ),
-    });
-    console.log(
-      `Backfill complete: ${result.scanned} scanned, ${result.updated} updated, ${result.skipped} unavailable.`,
-    );
-  } finally {
-    await db.end();
-  }
+    if (options.stop) return stopEvidenceReplay(db, authority, options.projectId, options.stop, codeHash);
+    const prepared = options.request ? await prepareEvidenceReplay(db, authority, options.request, codeHash, !options.execute) : null;
+    if (!options.execute) return { mode: "dry_run", expected: prepared?.expected, manifestHash: prepared?.manifestHash };
+    const runId = options.resume ?? prepared?.run?.id;
+    if (!runId) throw new Error("evidence_replay_run_unavailable");
+    let current;
+    for (let index = 0; index < options.maxBatches; index++) {
+      current = await applyEvidenceReplayBatch(db, authority, options.projectId, runId, codeHash, options.batchSize);
+      if (current.state !== "running") break;
+    }
+    return { mode: "execute", runId, state: current?.state, counts: current?.counts, cursor: current?.cursor, revision: current?.revision };
+  } finally { await client.end(); }
 }
-
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((error) => {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exitCode = 1;
+  runEvidenceReplayCli().then(result => console.log(JSON.stringify(result))).catch(error => {
+    const named = error instanceof Error && /^evidence_replay_[a-z_]+$/u.test(error.message) ? error.message : "evidence_replay_failed";
+    const code = typeof error === "object" && error && "code" in error && typeof error.code === "string" && /^[A-Z0-9]{5}$/u.test(error.code) ? error.code : undefined;
+    console.error(JSON.stringify({ status: "FAIL", category: named, sqlState: code })); process.exitCode = 1;
   });
 }

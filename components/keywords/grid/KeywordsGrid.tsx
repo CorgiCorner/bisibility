@@ -144,7 +144,10 @@ export function KeywordsGrid(props: KeywordsGridProps) {
       addDraft={addDraft}
       exportTarget={exportTarget}
       marketScope={marketScope}
-      onExport={() => setExportTarget(buildExportTarget())}
+      exportSupported={!props.local}
+      onExport={() => {
+        if (!props.local) setExportTarget(buildExportTarget());
+      }}
       onFilter={() => {
         setDraftFilters(query.filters);
         setFiltersOpen(true);

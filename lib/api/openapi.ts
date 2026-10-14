@@ -3,9 +3,12 @@ import { analyticsPaths } from "./openapi-analytics";
 import { apiKeyPaths } from "./openapi-api-keys";
 import { backlinksPaths, backlinksSchemas } from "./openapi-backlinks";
 import { ref, schemas } from "./openapi-components";
+import { reviewedDefaultsPaths } from "./openapi-defaults-review";
 import { domainOverviewPaths, domainOverviewSchemas } from "./openapi-domain-overview";
 import { keywordResearchPaths } from "./openapi-keyword-research";
 import { keywordPaths } from "./openapi-keywords";
+import { localMonitorResultPaths } from "./openapi-local-monitor-paths";
+import { localMonitorResultSchemas } from "./openapi-local-monitor-results";
 import { locationSearchPaths } from "./openapi-locations";
 import { loopClosurePaths } from "./openapi-loop-closure";
 import { migrationPaths, migrationSecuritySchemes } from "./openapi-migration";
@@ -103,6 +106,7 @@ export function getOpenApiDocument() {
         ...backlinksSchemas,
         ...domainOverviewSchemas,
         ...researchReportsSchemas,
+        ...localMonitorResultSchemas,
         ...aiTrackingSchemaComponents(),
       },
       securitySchemes: {
@@ -142,6 +146,7 @@ export function getOpenApiDocument() {
           ...locationSearchPaths({ bearer: bearerOperation, ref }),
           ...keywordResearchPaths({ bearer: bearerOperation, ref }),
           ...loopClosurePaths({ bearer: bearerOperation, ref }),
+          ...localMonitorResultPaths(bearerOperation),
           ...migrationPaths,
           "/keywords/{id}/checks": {
             post: runRankCheckOperation({
@@ -179,19 +184,7 @@ export function getOpenApiDocument() {
             get: bearerOperation("Get one project", "getProject", ref("Project")),
             patch: bearerOperation("Update a project", "updateProject", ref("Project")),
           },
-          "/projects/{project_id}/defaults": {
-            get: bearerOperation(
-              "Get project defaults",
-              "getProjectDefaults",
-              ref("ProjectDefaults"),
-            ),
-            patch: bearerOperation(
-              "Update project defaults",
-              "updateProjectDefaults",
-              ref("ProjectDefaults"),
-              ref("ProjectDefaultsPatch"),
-            ),
-          },
+          ...reviewedDefaultsPaths({ bearer: bearerOperation, ref, response, problemResponses }),
           ...keywordPaths({
             bearer: bearerOperation,
             keywordListParameters,

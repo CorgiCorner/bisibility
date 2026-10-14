@@ -1,0 +1,136 @@
+// Immutable web definitions; SQL owns composite constraints and trigger invariants.
+model MeasurementTargetRevision {
+  keyword   Keyword                     @relation(fields: [projectId, keywordId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction, map: "measurement_target_keyword_fk")
+  policies MeasurementPolicyRevision[]
+  id        String @id
+  projectId String
+  keywordId String
+  source    Json
+  epochs    Json
+  createdAt DateTime                    @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+  @@unique([projectId, keywordId, id])
+  @@map("measurement_target_revisions")
+}
+model MeasurementPolicyRevision {
+  keyword          Keyword                       @relation(fields: [projectId, keywordId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction, map: "measurement_policy_keyword_fk")
+  target           MeasurementTargetRevision     @relation(fields: [projectId, keywordId, targetRevisionId], references: [projectId, keywordId, id], onDelete: Cascade, onUpdate: NoAction, map: "measurement_policy_target_fk")
+  heads MeasurementDefinitionHead[]
+  bindings MeasurementExecutionBinding[]
+  id               String @id
+  projectId        String
+  keywordId        String
+  targetRevisionId String
+  source           Json
+  epochs           Json
+  createdAt        DateTime                      @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+  @@unique([projectId, keywordId, targetRevisionId, id])
+  @@map("measurement_policy_revisions")
+}
+model MeasurementDefinitionHead {
+  keyword           Keyword                   @relation(fields: [projectId, keywordId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction, map: "measurement_head_keyword_fk")
+  policy            MeasurementPolicyRevision @relation(fields: [projectId, keywordId, targetRevisionId, policyRevisionId], references: [projectId, keywordId, targetRevisionId, id], onDelete: Cascade, onUpdate: NoAction, map: "measurement_head_policy_fk")
+  projectId         String
+  keywordId         String
+  targetRevisionId  String
+  policyRevisionId  String
+  generation        BigInt
+  epochs            Json
+  sourceFingerprint String
+  capturedAt        DateTime                  @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+  @@id([projectId, keywordId])
+  @@map("measurement_definition_heads")
+}
+model MeasurementExecutionBinding {
+  nativeRequests MeasurementNativeRequestProof[]
+  snapshotRequests MeasurementSnapshotRequestBinding[]
+  keyword          Keyword                             @relation(fields: [projectId, keywordId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction, map: "measurement_binding_keyword_fk")
+  rankCheck        RankCheck                           @relation(fields: [keywordId, rankCheckId], references: [keywordId, id], onDelete: Cascade, onUpdate: NoAction, map: "measurement_binding_check_fk")
+  // SQL detaches only queuedTaskId; original owner JSON stays immutable.
+  queuedTask       QueuedRankCheckTask?                @relation(fields: [keywordId, queuedTaskId], references: [keywordId, id], onDelete: SetNull, onUpdate: NoAction, map: "measurement_binding_queue_fk")
+  policy           MeasurementPolicyRevision           @relation(fields: [projectId, keywordId, targetRevisionId, policyRevisionId], references: [projectId, keywordId, targetRevisionId, id], onDelete: Cascade, onUpdate: NoAction, map: "measurement_binding_policy_fk")
+  observations ObservationRun[]
+  id               String @id
+  projectId        String
+  keywordId        String
+  rankCheckId      String
+  executionKey     String
+  queuedTaskId     String?
+  targetRevisionId String
+  policyRevisionId String
+  owner            Json
+  request          Json
+  source           Json
+  capturedAt       DateTime                            @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+  @@unique([projectId,id])
+  @@unique([projectId, keywordId, rankCheckId, executionKey], map: "measurement_execution_binding_projectId_keywordId_rankCheck_key")
+  @@map("measurement_execution_bindings")
+}
+
+// SQL owns append-only checks and the native Store operation foreign keys.
+model MeasurementNativeRequestProof {
+  binding     MeasurementExecutionBinding      @relation(fields: [bindingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  dispatches MeasurementNativeDispatchProof[]
+  bindingId String
+  operationId String
+  proof Json
+  createdAt   DateTime                         @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+  @@id([bindingId, operationId])
+  @@map("measurement_native_request_proofs")
+}
+
+model MeasurementNativeDispatchProof {
+  prepared           MeasurementNativeRequestProof @relation(fields: [bindingId, operationId], references: [bindingId, operationId], onDelete: Cascade, onUpdate: NoAction, map: "measurement_native_prepared_fk")
+  namespace String
+  principal String
+  operationId String
+  leaseId String
+  bindingId String
+  createdAt          DateTime                      @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+  @@id([namespace, operationId])
+  @@map("measurement_native_dispatch_proofs")
+
+  metering_operation MeteringOperation             @relation(fields: [namespace, operationId], references: [namespace, operation_id], onDelete: NoAction, onUpdate: NoAction, map: "measurement_native_operation_fk")
+}
+
+model MeasurementSnapshotRequestBinding {
+  keyword           Keyword                             @relation(fields: [projectId, keywordId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction, map: "measurement_snapshot_keyword_fk")
+  rankCheck         RankCheck                           @relation(fields: [keywordId, rankCheckId], references: [keywordId, id], onDelete: Cascade, onUpdate: NoAction, map: "measurement_snapshot_check_fk")
+  // The corresponding SQL foreign key is deferred to preserve cascade ordering.
+  originalBinding   MeasurementExecutionBinding?        @relation(fields: [projectId, originalBindingId], references: [projectId, id], onDelete: NoAction, onUpdate: NoAction, map: "measurement_snapshot_original_fk")
+  attempts MeasurementSnapshotRequestAttempt[]
+  id String @id
+  projectId String
+  keywordId String
+  rankCheckId String
+  connectionId String
+  originalBindingId String?
+  binding Json
+  createdAt         DateTime                            @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+  @@unique([projectId, id])
+  @@map("measurement_snapshot_request_bindings")
+}
+
+model MeasurementSnapshotRequestAttempt {
+  request            MeasurementSnapshotRequestBinding  @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  dispatches MeasurementSnapshotDispatchProof[]
+  requestId String
+  operationId String
+  requestFingerprint String
+  createdAt          DateTime                           @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+  @@id([requestId, operationId])
+  @@map("measurement_snapshot_request_attempts")
+}
+
+model MeasurementSnapshotDispatchProof {
+  prepared           MeasurementSnapshotRequestAttempt @relation(fields: [requestId, operationId], references: [requestId, operationId], onDelete: Cascade, onUpdate: NoAction, map: "measurement_snapshot_prepared_fk")
+  requestId String
+  namespace String
+  principal String
+  operationId String
+  leaseId String
+  createdAt          DateTime                          @default(dbgenerated("clock_timestamp()")) @db.Timestamptz(6)
+  @@id([namespace, operationId])
+  @@map("measurement_snapshot_dispatch_proofs")
+
+  metering_operation MeteringOperation                 @relation(fields: [namespace, operationId], references: [namespace, operation_id], onDelete: NoAction, onUpdate: NoAction, map: "measurement_snapshot_native_fk")
+}

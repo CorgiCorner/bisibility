@@ -1,3 +1,7 @@
+import {
+  definitionKeywordScopeFixture,
+  definitionQueryFixture,
+} from "@/lib/rank-check/definition-policy.test-fixture";
 import { describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -57,6 +61,7 @@ const project = { domain: "example.com", id: "project_1", isSample: false };
 
 function keyword(id: string) {
   return {
+    ...definitionKeywordScopeFixture(),
     archivedAt: null,
     id,
     locationId: "location_active",
@@ -84,6 +89,7 @@ describe("launchRankCheckRun provider allocation", () => {
       keywordIds.map((id: string) => keyword(id)),
     );
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 5_000,
       defaults: { serpDepth: 10 },
       providerAllocationsInitializedAt: new Date(),
@@ -100,15 +106,22 @@ describe("launchRankCheckRun provider allocation", () => {
         $executeRaw: vi.fn(async () => 1),
         project: { findUnique: mocks.prisma.project.findUnique },
         projectMarket: { findMany: vi.fn(async () => [{ locationId: "location_active" }]) },
-        $queryRaw: vi.fn(async (strings: TemplateStringsArray) => {
-          if (strings[0]?.includes('"projects"')) return 1;
-          const previous = connectionLock;
-          connectionLock = new Promise((resolve) => {
-            releaseConnectionLock = resolve;
-          });
-          await previous;
-          return 1;
-        }),
+        $queryRaw: vi.fn(
+          definitionQueryFixture(async (query) => {
+            const sql = (
+              Array.isArray(query)
+                ? query
+                : (query as import("@/lib/generated/prisma/client").Prisma.Sql).strings
+            ).join("?");
+            if (!sql.includes('"provider_connections"')) return [];
+            const previous = connectionLock;
+            connectionLock = new Promise((resolve) => {
+              releaseConnectionLock = resolve;
+            });
+            await previous;
+            return 1;
+          }),
+        ),
         auditLog: { create: vi.fn() },
         rankCheckRun: {
           create: vi.fn(async ({ data }) => {
@@ -172,6 +185,7 @@ describe("launchRankCheckRun provider allocation", () => {
       keywordIds.map((id: string) => keyword(id)),
     );
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 5_000,
       defaults: { serpDepth: 10 },
       providerAllocationsInitializedAt: new Date(),
@@ -195,7 +209,7 @@ describe("launchRankCheckRun provider allocation", () => {
         $executeRaw: vi.fn(async () => 1),
         project: { findUnique: mocks.prisma.project.findUnique },
         projectMarket: { findMany: vi.fn(async () => [{ locationId: "location_active" }]) },
-        $queryRaw: vi.fn(async () => 1),
+        $queryRaw: vi.fn(definitionQueryFixture(async () => [])),
         auditLog: { create: vi.fn() },
         rankCheckRun: {
           create: vi.fn(async ({ data }) => {

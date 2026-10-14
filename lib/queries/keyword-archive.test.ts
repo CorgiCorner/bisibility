@@ -1,3 +1,4 @@
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getKeywordCount,
@@ -107,6 +108,7 @@ function hasActiveFilter(where: Record<string, unknown> | undefined) {
 describe("archived keyword queries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.setSystemTime(new Date("2026-09-05T12:00:00.000Z"));
     mocks.requireReadableProject.mockResolvedValue({ project: mocks.project });
     mocks.fetchProjectKeywordMetrics.mockResolvedValue(new Map());
     mocks.fetchProjectKeywordTraffic.mockResolvedValue(new Map());
@@ -201,6 +203,10 @@ describe("archived keyword queries", () => {
       project: { defaults: null, domain: "example.com", providerConnections: [] },
       rankChecks: [
         {
+          ...recordedFixture(8, {
+            observedAt: new Date("2026-09-03T08:00:00.000Z"),
+            recordedAt: new Date("2026-09-03T08:00:00.000Z"),
+          }),
           checkedAt: new Date("2026-09-03T08:00:00.000Z"),
           degradedToCountry: false,
           errorCode: null,

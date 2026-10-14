@@ -112,7 +112,13 @@
         "cents": "Centavos",
         "precision": "Decimales",
         "digits": "{count, number}",
-        "help": "Se guarda en este navegador. El redondeo visual no cambia los importes registrados ni los presupuestos."
+        "help": "Compartido por todos en el proyecto en uso, presupuestos y encabezado. Solo cambia el redondeo de la visualización; los importes contables siguen siendo exactos. La moneda corresponde a la unidad registrada, sin conversión de divisas.",
+        "readOnly": "Los editores del proyecto pueden cambiar estos ajustes compartidos.",
+        "saving": "Guardando los ajustes de visualización del proyecto...",
+        "conflict": "Otro editor cambió los ajustes. Ahora se muestran sus valores guardados; revisa tu cambio e inténtalo de nuevo.",
+        "forbidden": "Ya no puedes editar este proyecto. El cambio no se ha guardado.",
+        "invalid": "Elige un formato de importe y una precisión decimal disponibles.",
+        "failed": "No se pudieron guardar los ajustes. Se siguen mostrando los valores anteriores."
       }
     }
   }

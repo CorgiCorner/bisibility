@@ -425,9 +425,9 @@
     }
   },
   {
-    "name": "update_project_defaults",
-    "title": "Update project defaults",
-    "description": "Update the project default rank-check schedule, SERP depth, and SERP market. The schedule is replaced as a whole: omitted schedule fields (frequency, cron_expression, jitter_minutes, timezone) reset to their defaults (jitter 60, timezone UTC, no cron). serp_depth and serp_stop_on_match are independent of the schedule and keep their stored values when omitted. Provide country and device together, or a location_key, to move the default SERP market. Use search_locations and pass its location_key verbatim to preserve the exact location-language pair.",
+    "name": "preview_project_defaults",
+    "title": "Preview project defaults",
+    "description": "Preview the exact current defaults draft, source revision and impact without saving or provider work. Requires the server's settings permission. Review the returned draft before explicitly confirming it with update_project_defaults; do not fabricate or automatically confirm review fields.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -507,7 +507,143 @@
           "maxLength": 80
         }
       },
-      "required": ["frequency", "project_id"]
+      "required": ["frequency", "project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "update_project_defaults",
+    "title": "Update project defaults",
+    "description": "Confirm a preview_project_defaults draft using its exact source hash, revision, token and stable command key in review (confirmed:true). Missing review is refused by current servers; stale/expired review requires a new preview. Never auto-confirm. Update the project default rank-check schedule, SERP depth, and SERP market. The schedule is replaced as a whole: omitted schedule fields (frequency, cron_expression, jitter_minutes, timezone) reset to their defaults (jitter 60, timezone UTC, no cron). serp_depth and serp_stop_on_match are independent of the schedule and keep their stored values when omitted. Provide country and device together, or a location_key, to move the default SERP market. Use search_locations and pass its location_key verbatim to preserve the exact location-language pair.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "review": {
+          "type": "object",
+          "properties": {
+            "expected_source_hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "description": "Exact source hash returned by the reviewed preview."
+            },
+            "expected_revision": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$",
+              "description": "Opaque decimal revision string from preview; never convert to a number."
+            },
+            "preview_token": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8192,
+              "description": "Unmodified issuer-bound preview token."
+            },
+            "idempotency_key": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "description": "Stable command key; reuse with the exact body after a lost response."
+            },
+            "confirmed": {
+              "type": "boolean",
+              "const": true,
+              "description": "True only after the caller explicitly approves the displayed draft and impact."
+            }
+          },
+          "required": [
+            "expected_source_hash",
+            "expected_revision",
+            "preview_token",
+            "idempotency_key",
+            "confirmed"
+          ],
+          "additionalProperties": false
+        },
+        "city": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "country": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "cron_expression": {
+          "description": "Cron expression used when frequency is custom_cron; otherwise null.",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "device": {
+          "type": "string",
+          "enum": ["desktop", "mobile"],
+          "description": "Device whose search or ranking data is being selected."
+        },
+        "frequency": {
+          "type": "string",
+          "enum": ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
+          "description": "Schedule frequency that determines when rank checks run."
+        },
+        "jitter_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 120
+        },
+        "location_key": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}(\\/[^/@]{1,80}){0,2}(@[a-z]{2,3}(-[a-z0-9]{2,8})?)?$",
+          "description": "Canonical country, region, or city key. Append @language for a non-default language pair; an unqualified key uses the country's default language."
+        },
+        "project_id": {
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "serp_depth": {
+          "description": "Default number of SERP results to scan per rank check (10, 20, 50, or 100). Omitted keeps the stored depth.",
+          "type": "integer",
+          "enum": [10, 20, 50, 100]
+        },
+        "serp_stop_on_match": {
+          "description": "Set false to fetch the full configured depth for competitor snapshots.",
+          "type": "boolean"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      },
+      "required": ["frequency", "project_id"],
+      "additionalProperties": false
     },
     "annotations": {
       "destructiveHint": false,
@@ -2174,27 +2310,29 @@
   {
     "name": "export_rank_history",
     "title": "Export project rank history",
-    "description": "Export project rank history as cursor-paginated JSON for reports and analysis. For full streamed CSV dumps, use the REST endpoint directly.",
+    "description": "Export project rank history as cursor-paginated JSON. Version 1 preserves legacy rows; version 2 retains raw observations/attempts, frozen scope/time and quality metadata. For full streamed CSV dumps, use the REST endpoint directly.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
         "cursor": {
+          "description": "Opaque continuation from this export; preserve all selected options.",
           "type": "string",
           "minLength": 1,
-          "maxLength": 512
+          "maxLength": 8192
         },
         "limit": {
           "type": "integer",
           "minimum": 1,
           "maximum": 200
         },
-        "granularity": {
+        "project_id": {
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
-          "enum": ["daily", "weekly"]
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
         "keyword_ids": {
-          "description": "Tracked keyword ids to include in the export.",
+          "description": "Tracked keyword public IDs to include in the export.",
           "maxItems": 500,
           "type": "array",
           "items": {
@@ -2203,17 +2341,304 @@
             "pattern": "^kw_[a-z][a-z0-9]{23}$"
           }
         },
+        "granularity": {
+          "type": "string",
+          "enum": ["daily", "weekly"]
+        },
+        "range": {
+          "type": "string",
+          "enum": ["30", "90", "all"]
+        },
+        "version": {
+          "description": "1 retains legacy rows; 2 returns frozen report records and quality metadata.",
+          "type": "string",
+          "enum": ["1", "2"]
+        },
+        "stream": {
+          "description": "Version 2 normalized observations or logical checks plus retained run/item outcomes; this never launches a check.",
+          "type": "string",
+          "enum": ["observations", "attempts"]
+        },
+        "basis": {
+          "description": "Timestamp selecting version 2 records. Attempts require recorded_at.",
+          "type": "string",
+          "enum": ["observed_at", "recorded_at"]
+        },
+        "from": {
+          "description": "Inclusive version 2 window start, supplied together with to.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "to": {
+          "description": "Inclusive version 2 window end, supplied together with from.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "aggregation": {
+          "description": "Version 2 exports raw records without aggregation.",
+          "type": "string",
+          "const": "none"
+        }
+      },
+      "required": ["project_id"]
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_local_monitor_runs",
+    "title": "List local monitor runs",
+    "description": "Read original retained Local evidence and honest quality/cost uncertainty. This never launches provider work, schedules, or accounting writes.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
         "project_id": {
           "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
-        "range": {
+        "monitor_id": {
+          "description": "Public identifier of the retained Local monitor.",
           "type": "string",
-          "enum": ["30", "90", "all"]
+          "pattern": "^lmn_[a-z][a-z0-9]{23}$"
+        },
+        "as_of": {
+          "description": "Frozen UTC selection time with milliseconds.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+        },
+        "from": {
+          "description": "Inclusive occurrence-created window start.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+        },
+        "to": {
+          "description": "Inclusive occurrence-created window end, no later than as_of.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+        },
+        "cursor": {
+          "description": "Opaque signed history cursor; preserve selection and original point scope.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8000
         }
       },
-      "required": ["project_id"]
+      "required": ["project_id", "monitor_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_local_monitor_run_results",
+    "title": "Get local monitor run results",
+    "description": "Read original retained Local evidence and honest quality/cost uncertainty. This never launches provider work, schedules, or accounting writes.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "monitor_id": {
+          "description": "Public identifier of the retained Local monitor.",
+          "type": "string",
+          "pattern": "^lmn_[a-z][a-z0-9]{23}$"
+        },
+        "as_of": {
+          "description": "Frozen UTC selection time with milliseconds.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+        },
+        "run_id": {
+          "description": "Public identifier of the original retained Local run.",
+          "type": "string",
+          "pattern": "^lmr_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "monitor_id", "run_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_local_monitor_point_listings",
+    "title": "List local monitor point listings",
+    "description": "Read original retained Local evidence and honest quality/cost uncertainty. This never launches provider work, schedules, or accounting writes.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "monitor_id": {
+          "description": "Public identifier of the retained Local monitor.",
+          "type": "string",
+          "pattern": "^lmn_[a-z][a-z0-9]{23}$"
+        },
+        "as_of": {
+          "description": "Frozen UTC selection time with milliseconds.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+        },
+        "run_id": {
+          "description": "Public identifier of the original retained Local run.",
+          "type": "string",
+          "pattern": "^lmr_[a-z][a-z0-9]{23}$"
+        },
+        "target_id": {
+          "description": "Public identifier of the original captured Local measurement target.",
+          "type": "string",
+          "pattern": "^lmt_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "monitor_id", "run_id", "target_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "list_local_monitor_point_history",
+    "title": "List local monitor point history",
+    "description": "Read original retained Local evidence and honest quality/cost uncertainty. This never launches provider work, schedules, or accounting writes.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "monitor_id": {
+          "description": "Public identifier of the retained Local monitor.",
+          "type": "string",
+          "pattern": "^lmn_[a-z][a-z0-9]{23}$"
+        },
+        "as_of": {
+          "description": "Frozen UTC selection time with milliseconds.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+        },
+        "run_id": {
+          "description": "Public identifier of the original retained Local run.",
+          "type": "string",
+          "pattern": "^lmr_[a-z][a-z0-9]{23}$"
+        },
+        "target_id": {
+          "description": "Public identifier of the original captured Local measurement target.",
+          "type": "string",
+          "pattern": "^lmt_[a-z][a-z0-9]{23}$"
+        },
+        "from": {
+          "description": "Inclusive occurrence-created window start.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+        },
+        "to": {
+          "description": "Inclusive occurrence-created window end, no later than as_of.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+        },
+        "cursor": {
+          "description": "Opaque signed history cursor; preserve selection and original point scope.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8000
+        }
+      },
+      "required": ["project_id", "monitor_id", "run_id", "target_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "export_local_monitor_run",
+    "title": "Export local monitor run",
+    "description": "Read original retained Local evidence and honest quality/cost uncertainty. This never launches provider work, schedules, or accounting writes.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "monitor_id": {
+          "description": "Public identifier of the retained Local monitor.",
+          "type": "string",
+          "pattern": "^lmn_[a-z][a-z0-9]{23}$"
+        },
+        "as_of": {
+          "description": "Frozen UTC selection time with milliseconds.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}(?:Z))$"
+        },
+        "run_id": {
+          "description": "Public identifier of the original retained Local run.",
+          "type": "string",
+          "pattern": "^lmr_[a-z][a-z0-9]{23}$"
+        },
+        "version": {
+          "description": "Local point report version 1; returns normalized retained JSON only.",
+          "type": "string",
+          "const": "1"
+        }
+      },
+      "required": ["project_id", "monitor_id", "run_id"],
+      "additionalProperties": false
     },
     "annotations": {
       "destructiveHint": false,

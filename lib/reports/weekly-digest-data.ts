@@ -1,171 +1,50 @@
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
 import { trackedProjectDomain } from "@/lib/schemas/project";
+import { loadRankTrackerReportCandidates } from "@/lib/queries/rank-tracker-report-database";
+import { loadRankTrackerMetadataBatches } from "@/lib/queries/rank-tracker-metadata-batches";
+import { consumerReportOptions } from "@/lib/queries/consumer-report-options";
+import { loadRetainedRankReportTargets } from "@/lib/rank-reports/database";
+import type { ReportSummary } from "@/lib/rank-reports/model";
+import { weeklyDigestQuality } from "./weekly-digest-quality";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const completedStatus = "completed";
-const failedStatus = "failed";
-
 export type WeeklyDigestData = {
-  projectName: string;
-  projectDomain: string;
-  rangeStart: Date;
-  rangeEnd: Date;
-  topMovers: Array<{
-    keyword: string;
-    publicId: string;
-    from: number | null;
-    to: number | null;
-    delta: number;
-  }>;
-  avgPositionDelta: number | null;
-  failedChecksCount: number;
-  checkedKeywords: number;
+  projectName: string; projectDomain: string; rangeStart: Date; rangeEnd: Date;
+  topMovers: Array<{ keyword: string; publicId: string; from: number | null; to: number | null; delta: number }>;
+  avgPositionDelta: number | null; failedChecksCount: number; checkedKeywords: number;
+  quality: ReportSummary;
+  membership: { archived: "excluded"; pausedMarkets: "excluded"; pausedSchedules: "include_retained" };
 };
 
-type WindowCheck = {
-  checkedAt: Date;
-  id: string;
-  keyword: { publicId: string; text: string };
-  keywordId: string;
-  position: number | null;
-  status: string;
-};
-
-type PreviousKeyword = {
-  id: string;
-  rankChecks: Array<{ position: number | null }>;
-};
-
-function weeklyRangeStart(now: Date) {
-  return new Date(now.getTime() - WEEK_MS);
-}
-
-function latestCompletedByKeyword(checks: WindowCheck[]) {
-  const latest = new Map<string, WindowCheck>();
-
-  // Caller passes DB-ordered checks: checkedAt desc, id desc.
-  for (const check of checks) {
-    if (check.status === completedStatus && !latest.has(check.keywordId)) {
-      latest.set(check.keywordId, check);
-    }
-  }
-
-  return latest;
-}
-
-function average(values: number[]) {
-  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
-}
-
-function previousByKeyword(keywords: PreviousKeyword[]) {
-  const previous = new Map<string, number | null>();
-
-  for (const keyword of keywords) {
-    previous.set(keyword.id, keyword.rankChecks[0]?.position ?? null);
-  }
-
-  return previous;
-}
-
-function buildMovers(latest: Map<string, WindowCheck>, previousKeywords: PreviousKeyword[]) {
-  const previous = previousByKeyword(previousKeywords);
-  const movers = [...latest.values()].flatMap((check) => {
-    const from = previous.get(check.keywordId) ?? null;
-    const to = check.position;
-    if (from === null || to === null) {
-      return [];
-    }
-
-    return [
-      {
-        delta: from - to,
-        from,
-        keyword: check.keyword.text,
-        publicId: check.keyword.publicId,
-        to,
-      },
-    ];
-  });
-
-  movers.sort(
-    (a, b) =>
-      Math.abs(b.delta) - Math.abs(a.delta) ||
-      b.delta - a.delta ||
-      a.keyword.localeCompare(b.keyword),
-  );
-  return movers;
-}
-
-async function projectFor(projectId: string) {
-  return prisma.project.findFirst({
-    select: { domain: true, id: true, name: true },
-    where: { OR: [{ id: projectId }, { publicId: projectId }] },
-  });
-}
-
-export async function collectWeeklyDigestData(
-  projectId: string,
-  now: Date,
-): Promise<WeeklyDigestData | null> {
-  const project = await projectFor(projectId);
-  if (!project) {
-    return null;
-  }
-
-  const rangeEnd = new Date(now);
-  const rangeStart = weeklyRangeStart(rangeEnd);
-  const windowChecks = await prisma.rankCheck.findMany({
-    orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
-    select: {
-      checkedAt: true,
-      id: true,
-      keyword: { select: { publicId: true, text: true } },
-      keywordId: true,
-      position: true,
-      status: true,
-    },
-    where: {
-      checkedAt: { gte: rangeStart, lt: rangeEnd },
-      keyword: { projectId: project.id },
-      status: { in: [completedStatus, failedStatus] },
-    },
-  });
-  const failedChecksCount = windowChecks.filter((check) => check.status === failedStatus).length;
-  const latest = latestCompletedByKeyword(windowChecks);
-
-  if (latest.size === 0 && failedChecksCount === 0) {
-    return null;
-  }
-
-  const previousKeywords = latest.size
-    ? await prisma.keyword.findMany({
-        select: {
-          id: true,
-          rankChecks: {
-            orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
-            select: { position: true },
-            take: 1,
-            where: { checkedAt: { lt: rangeStart }, status: completedStatus },
-          },
-        },
-        where: {
-          id: { in: [...latest.keys()] },
-          projectId: project.id,
-        },
-      })
-    : [];
-  const movers = buildMovers(latest, previousKeywords);
-
-  return {
-    avgPositionDelta: average(movers.map((mover) => mover.delta)),
-    checkedKeywords: latest.size,
-    failedChecksCount,
-    projectDomain: trackedProjectDomain(project.domain) ?? "",
-    projectName: project.name,
-    rangeEnd,
-    rangeStart,
-    topMovers: movers.slice(0, 5),
-  };
+/** Trusted scheduled internal read. It has no User actor and never changes settings or calls providers. */
+export function collectWeeklyDigestData(projectId: string, now: Date): Promise<WeeklyDigestData | null> {
+  if (!Number.isFinite(now.getTime())) throw new Error("Invalid digest time.");
+  return prisma.$transaction(async (tx) => {
+    const project = await tx.project.findFirst({ select: { domain: true, id: true, publicId: true, name: true },
+      where: { OR: [{ id: projectId }, { publicId: projectId }] } });
+    if (!project) return null;
+    const report = consumerReportOptions(new Date(now.getTime() - 1), async (current, selected) => {
+      // Renew the scheduled service's exact project binding; never accept a caller-supplied actor/role.
+      if (selected.id !== project.id || selected.publicId !== project.publicId ||
+        !await current.project.findFirst({ where: { id: project.id, publicId: project.publicId }, select: { id: true } })) {
+        throw new Error("Digest project is unavailable.");
+      }
+    });
+    const candidates = await loadRankTrackerReportCandidates(tx, project.id, report.limits, "include_retained");
+    const targets = candidates.rows.map(({ id, publicId, createdAt }) => ({ id, publicId, createdAt }));
+    const rangeEnd = new Date(now), rangeStart = new Date(now.getTime() - WEEK_MS);
+    const metadata = await loadRankTrackerMetadataBatches(report.loadMetadata, tx, project, targets, report.asOf);
+    // Email window is half-open; an observation exactly at the next window is not this week.
+    const policy = { ...report.policyAt(report.asOf), currentNotBefore: rangeStart };
+    const retained = await loadRetainedRankReportTargets(tx, { project, keywords: targets }, policy, report.limits, metadata, false);
+    const activity = retained.flatMap((target) => target.checks).filter((check) => check.checkedAt >= rangeStart && check.checkedAt < rangeEnd);
+    const failedChecksCount = activity.filter((check) => check.status === "failed").length;
+    if (!activity.some((check) => check.status === "completed") && !failedChecksCount) return null;
+    const result = weeklyDigestQuality(retained, policy, project.id, new Map(candidates.rows.map((row) => [row.publicId, row.text])));
+    return { avgPositionDelta: result.avgPositionDelta, checkedKeywords: result.checkedKeywords,
+      failedChecksCount, projectDomain: trackedProjectDomain(project.domain) ?? "", projectName: project.name,
+      rangeEnd, rangeStart, topMovers: result.movers.slice(0, 5), quality: result.report,
+      membership: { archived: "excluded", pausedMarkets: "excluded", pausedSchedules: "include_retained" } };
+  }, { isolationLevel: "RepeatableRead" });
 }

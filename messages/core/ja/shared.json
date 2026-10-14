@@ -135,7 +135,11 @@
       "startUnconfirmed": "開始の応答を受信できませんでした。再試行すると、重複して開始せずに同じ実行を取得します。",
       "refreshEstimate": "見積もりを更新",
       "marketInactive": "このマーケットは有効ではありません。チェックを開始する前に再開してください。",
-      "keywordsArchived": "これらのキーワードはアーカイブされました。ページを更新して別の範囲を選択してください。"
+      "keywordsArchived": "これらのキーワードはアーカイブされました。ページを更新して別の範囲を選択してください。",
+      "measurementPolicy": "計測ポリシー",
+      "configureMeasurementPolicy": "ポリシーを設定",
+      "measurementPolicyUnconfigured": "新しいチェックの前に計測ポリシーを設定してください。",
+      "measurementPolicyUnsupported": "現在のアダプターとポリシーが一致しません。確認して再設定してください。"
     },
     "globalError": {
       "description": "アプリはこのページを表示できませんでした。再読み込みしてもう一度お試しください。",
@@ -593,6 +597,10 @@
       },
       "toolbarSearch": {
         "clear": "{label} をクリア"
+      },
+      "noticeMotion": {
+        "pause": "スクロールを一時停止",
+        "resume": "スクロールを再開"
       }
     },
     "nativeUsage": {
@@ -827,6 +835,1197 @@
         "settled": "確定済み",
         "released": "解放済み"
       }
+    },
+    "measurementHelp": {
+      "explain": "説明: {title}",
+      "close": "閉じる",
+      "glossary": "詳しい説明: {title}",
+      "unknownVersion": "このバージョンの詳細な定義は利用できません。",
+      "neutralDefinition": "レポートは測定を指定していますが、詳細な定義は利用できません。",
+      "contextLoading": "レポートの補足情報を読み込んでいます。定義は引き続き利用できます。",
+      "contextError": "レポートの補足情報は利用できません。結果がゼロという意味ではありません。",
+      "unknownValue": "不明",
+      "counts": {
+        "expected": "予定対象数",
+        "measured": "判定済みの観測対象数",
+        "ranked": "順位確認数",
+        "knownAbsent": "不在確認数",
+        "unknown": "不明な結果数",
+        "neverChecked": "未観測数",
+        "failed": "失敗した試行数",
+        "stale": "古い観測数",
+        "unsupported": "未対応数",
+        "freshDeterminate": "新鮮で判定済みの対象数",
+        "comparable": "比較可能な対象の組数",
+        "metricEligible": "指標の集計対象数",
+        "unknownFreshness": "鮮度が不明な対象数"
+      },
+      "entries": {
+        "organic_visibility_top20": {
+          "title": "オーガニック可視性",
+          "versions": {
+            "v1": {
+              "definition": "上位20位までのオーガニック検索結果を表す、定義バージョン付きの指標です。",
+              "interpretation": "観測のカバー率、新鮮で判定済みの結果数、比較可能な対象数と合わせて確認してください。",
+              "limitation": "トラフィックや問い合わせ数ではありません。不明な結果は不在の確認ではなく、カバー率の変化だけでは改善を示しません。"
+            }
+          }
+        },
+        "organic_top10_rate": {
+          "title": "オーガニック上位10位の割合",
+          "versions": {
+            "qualified-v1": {
+              "definition": "判定済みで集計対象となる項目のうち、オーガニック検索の上位10位に確認された割合です。",
+              "interpretation": "同じ範囲の予定対象数、測定数、順位確認数と合わせて確認してください。",
+              "limitation": "不明な対象は順位確認済みでも不在でもありません。同じ割合でもカバー率は異なり、比較には比較可能な集団が必要です。"
+            }
+          }
+        },
+        "organic_rank": {
+          "title": "オーガニック順位",
+          "versions": {
+            "help-v1": {
+              "definition": "指定された順位尺度で確認したオーガニックリンクの位置です。",
+              "interpretation": "検索範囲と測定方法が互換性を持つ場合のみ順位を比較してください。",
+              "limitation": "店舗の位置、Mapsの結果、検索機能の表示はオーガニック順位ではありません。不明や不在に架空の順位を付けません。"
+            }
+          }
+        },
+        "feature_presence": {
+          "title": "検索機能の表示",
+          "versions": {
+            "help-v1": {
+              "definition": "通常のGoogle検索に地図と店舗が表示されるGoogleローカル検索結果など、結果ブロックを観測したかを示します。",
+              "interpretation": "ブロックの表示と、その中で対象店舗を確認することは別の観測です。",
+              "limitation": "未観測のブロック、未確認の店舗、不明な店舗識別、未対応の測定はそれぞれ異なります。"
+            }
+          }
+        },
+        "business_slot": {
+          "title": "Googleローカル検索結果",
+          "versions": {
+            "help-v1": {
+              "definition": "通常のGoogle検索に表示される地図付きの店舗結果です。店舗の位置は明示的に確認された支店を指します。",
+              "interpretation": "支店の安定した識別情報と、元のブロック、ページ、表示位置で観測を特定します。",
+              "limitation": "同じドメインや似た名称だけでは候補にすぎません。広告または広告状態が不明な結果はオーガニック集計対象外です。MapsとLocal Finderは別の順位尺度です。"
+            }
+          }
+        },
+        "maps_rank": {
+          "title": "Mapsの順位",
+          "versions": {
+            "help-v1": {
+              "definition": "Google Maps上で確認した掲載位置です。独自の順位尺度を使います。",
+              "interpretation": "Mapsの観測は通常のGoogle検索結果やLocal Finderと分けて扱ってください。",
+              "limitation": "この説明はMaps測定が利用可能であることを意味しません。未対応の測定は店舗の不在や順位ゼロではありません。"
+            }
+          }
+        },
+        "local_finder_rank": {
+          "title": "Local Finderの順位",
+          "versions": {
+            "help-v1": {
+              "definition": "Googleの拡張されたローカル結果画面で確認した掲載位置です。独自の順位尺度を使います。",
+              "interpretation": "Local Finderの観測は通常の検索結果の店舗位置やMapsと分けて扱ってください。",
+              "limitation": "この説明はLocal Finder測定を有効にしません。不明または未対応の観測は不在を示しません。"
+            }
+          }
+        },
+        "average_ranked_position": {
+          "title": "順位確認済み対象の平均順位",
+          "versions": {
+            "help-v1": {
+              "definition": "互換性のある同じ範囲と順位尺度で、正の順位が確認された対象の平均位置です。",
+              "interpretation": "順位確認数とカバー率を合わせて確認してください。",
+              "limitation": "不在や不明の対象に0位や101位を与えません。観測が失われただけでは改善を示しません。"
+            }
+          }
+        },
+        "observation_time": {
+          "title": "観測時刻",
+          "versions": {
+            "help-v1": {
+              "definition": "検索結果を観測した時刻です。レポートやキャッシュの読み取り時刻ではありません。",
+              "interpretation": "リクエスト時刻、記録時刻、観測時刻、レポートの基準時刻は異なる意味を持ちます。",
+              "limitation": "キャッシュを読んでも新しい観測は生まれず、古いデータは新鮮になりません。不明な過去の時刻は不明のままです。"
+            }
+          }
+        },
+        "data_quality": {
+          "title": "データ品質とカバー率",
+          "versions": {
+            "help-v1": {
+              "definition": "観測カバー率は保持された判定済みの観測を表します。新鮮なデータのカバー率には明示的な鮮度ポリシーも必要です。",
+              "interpretation": "予定数、観測数、新鮮で判定済みの数、不明数、比較可能数を別々に確認してください。比較可能数は対象の組数であり、カバー率ではありません。",
+              "limitation": "鮮度が不明なデータは新鮮とはいえません。失敗した試行と以前の成功した観測は共存でき、品質の各数は重なる場合があります。"
+            }
+          }
+        },
+        "rank_movement": {
+          "title": "比較可能な変化",
+          "versions": {
+            "help-v1": {
+              "definition": "検索範囲、方法、識別情報、根拠に互換性のある観測同士の変化です。",
+              "interpretation": "比較可能な組数と元の観測日を確認してください。パーセントポイントの変化は相対的な割合の変化とは異なります。",
+              "limitation": "基準の欠如、範囲の変更、新規出現、消失、再出現は通常の数値変動ではありません。対象構成の変化だけでは改善を示しません。"
+            }
+          }
+        },
+        "ranking_url": {
+          "title": "観測URLと希望URL",
+          "versions": {
+            "help-v1": {
+              "definition": "観測URLはその観測で実際に見つかったページです。希望URLは設定した目標ページです。",
+              "interpretation": "過去の結果は、その確認時に観測したURLで読んでください。",
+              "limitation": "現在のURLや希望URLで欠けた過去の観測URLを補えません。根拠がない場合は利用不可のままです。"
+            }
+          }
+        },
+        "provider_cost": {
+          "title": "プロバイダーの使用量と費用",
+          "versions": {
+            "help-v1": {
+              "definition": "実行前の見積もりは、精算後に確認された使用量や費用とは異なります。",
+              "interpretation": "値は元の単位で確認してください。プロバイダー費用、顧客への請求、アプリのクレジットは別の指標です。",
+              "limitation": "検索枠は米ドルではありません。不明な請求額はゼロではなく、キャッシュの読み取りは新たな有料リクエストではありません。ヘルプは価格取得や確認処理を実行しません。"
+            }
+          }
+        },
+        "measurement_depth": {
+          "title": "結果の取得深度",
+          "versions": {
+            "help-v1": {
+              "definition": "要求した取得範囲と、観測から完全性が確認された範囲は異なります。",
+              "interpretation": "対象が見つからない場合は、観測範囲、結果の種類、順位尺度、完全性の根拠から判断してください。",
+              "limitation": "要求した深度だけでは不在を証明できません。完全性が不明なら不明のままで、オーガニック結果の完全性はローカルブロックの完全性を示しません。"
+            }
+          }
+        },
+        "search_location": {
+          "title": "検索地点",
+          "versions": {
+            "help-v1": {
+              "definition": "検索をシミュレーションする場所です。店舗の住所や支店の識別情報とは異なります。",
+              "interpretation": "プロバイダーが地点を変更した場合は、設定した検索範囲と実際の範囲を確認してください。",
+              "limitation": "市の観測1件では市内のすべての地点をカバーできません。国への代替は要求した市の根拠にはなりません。"
+            }
+          }
+        },
+        "refresh_schedule": {
+          "title": "スケジュールと更新",
+          "versions": {
+            "help-v1": {
+              "definition": "スケジュールは新しい観測を要求します。画面の更新は保存済みのレポートを読み取ります。",
+              "interpretation": "画面を更新した時刻とは別に、元の観測時刻と明示的な鮮度ポリシーを確認してください。",
+              "limitation": "ヘルプやウィジェットを開いてもプロバイダーへの確認は実行されず、スケジュールは変わらず、キャッシュから新しい観測は生まれません。"
+            }
+          }
+        },
+        "visibility_top20": {
+          "title": "オーガニック可視性",
+          "versions": {
+            "visibility-top20-v1": {
+              "definition": "上位20位までのオーガニック検索結果を表す、定義バージョン付きの指標です。",
+              "interpretation": "観測のカバー率、新鮮で判定済みの結果数、比較可能な対象数と合わせて確認してください。",
+              "limitation": "トラフィックや問い合わせ数ではありません。不明な結果は不在の確認ではなく、カバー率の変化だけでは改善を示しません。"
+            }
+          }
+        },
+        "competitor_share_of_voice_top10": {
+          "title": "競合ドメイン間の可視性シェア",
+          "versions": {
+            "bisibility-sov-top10-v2": {
+              "definition": "選択したドメイン全体の検索ボリュームで重み付けした上位10位の線形スコアに対する、対象ドメインの割合です。",
+              "interpretation": "すべてのドメインで同じ適格なキーワード群と重みを使用します。割合とともに、観測データと新鮮なデータのカバー率を確認してください。",
+              "limitation": "選択したドメイン間の相対指数であり、市場シェア、トラフィック、見込み顧客数ではありません。不明または古い観測は除外し、合計スコアがゼロの場合は割合を表示しません。バージョン2では、ボリューム欠損と不完全な観測の従来の扱いを変更しています。"
+            }
+          }
+        }
+      }
+    },
+    "personalViews": {
+      "latestRevision": "最新リビジョン",
+      "openLatest": "新しいタブで最新ビューを開く",
+      "reloadLatest": "最新リビジョンを再読み込み",
+      "reviewLatest": "下書きを保持して最新リビジョンを使う",
+      "cancel": "キャンセル",
+      "conflict": "ビューが変更されました。保存前に最新の内容を確認してください。",
+      "delete": "ビューを削除",
+      "discard": "変更を破棄",
+      "failed": "ビューを保存できませんでした。変更内容は保持されています。",
+      "general": "General",
+      "modified": "未保存の変更",
+      "name": "名前",
+      "personal": "個人用",
+      "project": "プロジェクト共有",
+      "saveAs": "名前を付けて保存",
+      "saved": "保存済み",
+      "saveChanges": "変更を保存",
+      "saving": "保存中",
+      "setDefault": "自分の既定に設定",
+      "unavailableDefault": "既定のビューを利用できません。Generalを表示します。",
+      "unavailableView": "このビューを利用できません。範囲を変更する場合はGeneralを選んでください。",
+      "visibility": "公開範囲",
+      "unavailable_scope": "この範囲を利用できません。別のビューを選ぶか、利用できないフィルターを削除してください。",
+      "invalid_url": "リンクのフィルターが無効です。リンクを修正するかGeneralを選んでください。",
+      "unavailable_view": "このビューを利用できません。範囲を変更する場合はGeneralを選んでください。",
+      "columnOrder": "列の順序",
+      "moveUp": "上に移動",
+      "moveDown": "下に移動",
+      "privateUnavailable": "非公開ビューはまだ利用できません。",
+      "privateSharing": "「プロジェクト」を選択すると、このビューをプロジェクトで共有できます。"
+    },
+    "businessLocations": {
+      "locations": "ビジネス拠点",
+      "locationsHelp": "同じサイトを共有していても、各支店の識別情報は別々です。この一覧での選択は測定対象の割り当てではありません。",
+      "locationVisibility": "表示する拠点",
+      "noLocations": "この状態の拠点はありません。",
+      "readOnly": "拠点を閲覧できます。編集はできません。",
+      "createLocation": "拠点を追加",
+      "editIdentity": "識別情報を編集",
+      "archive": "アーカイブ",
+      "restore": "復元",
+      "identityRevision": "識別情報のリビジョン {revision}",
+      "identityVersionHelp": "保存すると識別情報の新しいリビジョンが作成されます。過去の観測は変わりません。",
+      "identityHelp": "CID と Place ID は文字列のまま入力してください。サイトは弱い手がかりであり、支店の識別子ではありません。Maps URL にはアクセスしません。",
+      "save": "識別情報を保存",
+      "cancel": "キャンセル",
+      "saving": "保存中…",
+      "saved": "保存しました。",
+      "conflict": "保存が競合しました。続行前に現在のデータを確認してください。下書きは保持されています。",
+      "saveError": "保存できませんでした。下書きは保持されています。再試行してください。",
+      "selectionChanged": "選択したリソースが変わりました。編集画面を閉じ、現在の選択を開いてください。",
+      "currentUnavailable": "現在のデータを取得できません。競合を確認する前に、権限を確認した再読み込みを要求してください。",
+      "reviewCurrent": "現在のデータを確認",
+      "reviewChangedFields": "現在の値と下書きを比較してください。変更を保持すると、変更していないフィールドも最新の値になります。",
+      "current": "現在の値",
+      "yourDraft": "下書き",
+      "notProvided": "未入力",
+      "keepChangedFields": "変更したフィールドを保持",
+      "useCurrent": "現在の値を使用",
+      "editConflictingIdentity": "競合する識別情報を確認して編集",
+      "unavailableBranch": "利用できない拠点",
+      "archiveHelp": "アーカイブしても識別情報と照合の履歴は保持されます。アーカイブ済みの対象は利用できず、復元時に有効な識別子を再確認します。",
+      "archiveConfirmation": "割り当て済みの測定対象への影響を確認しました。",
+      "currentState": "現在の状態: {state}、バージョン {version}。",
+      "reviewState": "確認した状態のバージョンを使用",
+      "confirmAction": "状態の変更を確定",
+      "assignSubject": "ローカル測定対象を割り当て",
+      "assignmentHelp": "このキーワードまたは市場の対象として、有効な拠点と現在の識別情報リビジョンを明示的に選んでください。自動選択はありません。",
+      "staleAssignment": "割り当てた識別情報はアーカイブ済みか古いリビジョンです。利用できる拠点のリビジョンを選ぶか、割り当てを解除してください。",
+      "subject": "対象拠点",
+      "noSubject": "対象の割り当てなし",
+      "saveSubject": "対象の割り当てを保存",
+      "currentAssignment": "現在の対象: {name}、割り当てリビジョン {revision}。",
+      "reviewAssignmentKeepChoice": "確認した割り当てリビジョンを使用し、選択を保持",
+      "reviewCandidate": "候補を確認",
+      "candidateBranch": "拠点: {name}",
+      "candidateItem": "観測したビジネス",
+      "candidateDomain": "観測したサイト",
+      "surface": "Google の結果面",
+      "matchStatus": "照合状態",
+      "matchReason": "照合の理由",
+      "observedAt": "観測日時",
+      "promotion": "広告の判定",
+      "sourceSlot": "元のスロット",
+      "sourcePage": "元のページ",
+      "sourceOrdinal": "元のアイテム順序",
+      "confirmationBlocked": "このアイテムを弱い候補として手動確認することはできません。識別子の競合や確認情報の不足は未解決のままです。",
+      "reviewOnlyThisItem": "確認はこの保存済みアイテムだけに適用されます。将来の結果を確認したり、不明や広告のアイテムをオーガニック結果に変えたりしません。",
+      "reviewAction": "確認操作",
+      "confirmCandidate": "この候補を確認",
+      "rejectCandidate": "このアイテムを却下",
+      "candidateConfirmation": "この拠点と、この観測アイテムを確認しました。",
+      "saveReview": "アイテムの確認を保存",
+      "candidateConflictHelp": "判定または識別情報が変わりました。保存済みの証拠を再読み込みまたは再照合し、新しい判定を確認してください。",
+      "reviewLatestDecision": "最新の判定を確認",
+      "rematch": "保存済みの結果を再照合",
+      "rematchHelp": "選択した保存済みの観測と、指定された現在の判定だけを再評価します。プロバイダーへのリクエストや過去の判定の変更は行いません。",
+      "missingRetainedEvidence": "必要な保存済みの証拠がありません。再照合はできません。",
+      "rematchConfirmation": "選択した保存済みの観測と、現在の判定を確認しました。",
+      "confirmRematch": "保存済みの観測を再照合",
+      "fields": {
+        "name": "拠点名",
+        "address": "住所",
+        "domain": "サイトのドメイン",
+        "cid": "Google CID（文字列）",
+        "placeId": "Google Place ID（文字列）",
+        "mapsUrl": "Google Maps URL",
+        "latitude": "緯度",
+        "longitude": "経度",
+        "reason": "理由",
+        "role": "拠点の用途"
+      },
+      "roles": {
+        "subject": "測定対象",
+        "competitor": "競合"
+      },
+      "states": {
+        "active": "有効",
+        "archived": "アーカイブ済み"
+      },
+      "surfaces": {
+        "web_serp": "Google ウェブ検索結果",
+        "maps": "Google Maps",
+        "local_finder": "Google Local Finder"
+      },
+      "matchStates": {
+        "confirmed": "確認済み",
+        "candidate": "候補",
+        "rejected": "却下済み",
+        "unresolved": "未解決"
+      },
+      "promotions": {
+        "organic": "オーガニック",
+        "promoted": "広告",
+        "unknown": "不明"
+      },
+      "validation": {
+        "name": "有効な拠点名を入力してください。",
+        "address": "住所は 500 文字以内で入力してください。",
+        "domain": "有効なサイトのドメインを入力してください。",
+        "cid": "CID は数字の文字列として入力し、数値に変換しないでください。",
+        "placeId": "空白を含まない有効な Place ID の文字列を入力してください。",
+        "mapsUrl": "認証情報を含まない、対応した HTTPS Google Maps URL を入力してください。",
+        "coordinates": "両方の有限な座標を入力してください。緯度は −90〜90、経度は −180〜180 です。",
+        "reason": "理由を 1〜500 文字で入力してください。",
+        "confirmed": "操作を確認して承認してください。",
+        "noChange": "リビジョンを保存する前に識別情報のフィールドを変更してください。"
+      },
+      "reasons": {
+        "exact_identifier": "同一の安定識別子",
+        "stable_identifier_conflict": "安定識別子の競合",
+        "contradictory_identifiers": "矛盾する識別子",
+        "ambiguous_exact_items": "完全一致するアイテムが複数",
+        "ambiguous_registry_identity": "一致する拠点が複数",
+        "invalid_identifier": "不正な識別子",
+        "unsafe_numeric_identifier": "精度が保証できない数値識別子",
+        "invalid_ordinals": "不正な元の位置",
+        "duplicate_observation_identity": "重複する観測識別情報",
+        "weak_name": "似た名称",
+        "weak_domain": "共通のサイト",
+        "weak_name_and_domain": "似た名称と共通のサイト",
+        "insufficient_evidence": "証拠が不足",
+        "manually_confirmed_item": "このアイテムを手動で確認",
+        "manually_rejected_item": "このアイテムを手動で却下"
+      },
+      "chooseAssignmentScope": "キーワードまたは市場を選択",
+      "assignmentScopeKind": "割り当て範囲",
+      "keywordScope": "キーワード",
+      "marketScope": "市場",
+      "searchScope": "検索",
+      "noScopes": "一致する有効なキーワードまたは市場がありません。",
+      "nextScopes": "次の結果",
+      "scopeSelectionHelp": "検索して範囲を明示的に選択してください。上の店舗を選択しても割り当ては変更されません。",
+      "readError": "現在のデータを読み取れませんでした。選択は保持されています。",
+      "loading": "読み込み中…",
+      "devices": {
+        "desktop": "デスクトップ",
+        "mobile": "モバイル"
+      },
+      "retainedMatches": "保存済みの照合",
+      "chooseRetainedObservation": "既存の観測を選択して店舗の照合を確認します。読み取りと再照合には保存済みデータを使用します。",
+      "readObservations": "保存済みの観測を読み取る",
+      "recordedAt": "記録日時",
+      "noRetainedObservations": "利用可能な保存済みのローカル観測はありません。",
+      "retainedBatch": "このバッチでは正規化された{total}件のうち{included}件を確認しています。",
+      "noMatchDecisions": "このバッチには照合の決定がありません。保存済みデータを再照合して評価してください。",
+      "identityHistory": "識別情報の履歴",
+      "identityHistoryHelp": "以前の識別情報は保存されます。バージョンを読み取っても観測の解釈は変更されません。",
+      "readIdentityHistory": "識別情報の履歴を読み取る",
+      "identityEffectiveFrom": "適用開始",
+      "identifierClaimed": "別の有効な支店がこのCIDまたはPlaceIDを使用しています。識別子を修正するか、既存の割り当てを解決してから再試行してください。",
+      "mapsIdentifierConflict": "Maps URLのCIDまたはPlaceIDがこの識別情報と一致しません。保存前に両方を確認してください。",
+      "invalidMapsIdentifier": "Maps URLに無効または矛盾した識別子があります。対応する明示的なMaps URLを使用してください。",
+      "idempotencyConflict": "このコマンドキーは別のリクエストで使われました。確認画面を閉じて新しい操作を開始してください。",
+      "decisionSource": "判定の出典",
+      "decisionRecordedAt": "判定の記録日時",
+      "matcherVersion": "照合バージョン",
+      "sourceGroup": "元のMapsグループ",
+      "sourceScale": "元の順位尺度",
+      "reviewSnapshotAt": "確認スナップショット",
+      "previousCandidates": "前の候補バッチ",
+      "nextCandidates": "次の候補バッチ",
+      "decisionSources": {
+        "automatic": "元の自動照合",
+        "manual": "手動確認",
+        "rematch": "派生した再照合"
+      },
+      "locationsSummary": "支店の識別情報とアーカイブ済みの拠点を管理します。",
+      "scopeSelectionSummary": "支店を割り当てる対象を選択します。",
+      "identitySummary": "この支店の情報を最新に保ちます。",
+      "assignmentSummary": "このキーワードまたは市場に対応する支店を選択します。",
+      "helpLabel": "{section}について"
+    },
+    "measurementSettings": {
+      "title": "測定設定",
+      "displayHelp": "この画面の編集、閲覧、非表示化では、測定の開始やスケジュールの変更は行われません。",
+      "readOnly": "設定を確認できます。測定やスケジュールの変更はできません。",
+      "manualOnly": "手動測定のみです。この画面ではスケジュールを作成しません。",
+      "enabled": "有効",
+      "paused": "一時停止",
+      "unavailable": "利用できない選択肢",
+      "invalidSettings": "表示された設定を確認してください。対応する時刻、タイムゾーン、カレンダー項目と、0〜120 分のジッターを指定してください。",
+      "preview": "測定の見積もりを確認",
+      "cancel": "キャンセル",
+      "selectionChanged": "選択した範囲が変わりました。この画面を閉じて開き直してください。",
+      "quoteReview": "見積もりと範囲の確認",
+      "scopeReview": "設定した範囲と有効範囲",
+      "configured": "設定した範囲",
+      "effective": "有効範囲",
+      "effectiveUnknown": "有効範囲は不明です。設定した範囲は、プロバイダーの位置情報の証明にはなりません。",
+      "geoHelp": "都市や地点はクエリの範囲を指定するもので、地域全体のカバレッジではありません。拠点の住所と検索場所は別の情報です。",
+      "counts": "キーワード: {keywords}、対象: {targets}、実行可能な対象: {eligible}。",
+      "overlaps": "同じ範囲を含む他の実行中の処理: {count}。",
+      "manualEstimate": "手動測定 1 回の推定使用量",
+      "amountUnknown": "量は不明",
+      "estimateHelp": "各プロバイダーの固有単位での見積もりであり、確定した使用量ではありません。部分的な値は判明した対象のみを含み、不明はゼロではありません。通貨や単位を合算しません。",
+      "scheduleForecast": "スケジュールの予測",
+      "calendarWindow": "サーバーのカレンダーによる実行予定は、{start}〜{end}（{timezone}）に {count} 回です。",
+      "nextRun": "次の実行予定: {time}（{timezone}）。",
+      "nextRunUnknown": "次の実行予定は確定していません。",
+      "noScheduleForecast": "スケジュールの予測はありません。",
+      "quoteMetadata": "機能バージョン {capability}、料金バージョン {rate}、見積もりの有効期限 {expiry}。",
+      "budgetRecheck": "開始時に予算と実行条件を再確認します。見積もりは予約や確定請求ではありません。",
+      "scheduleDraft": "今後のスケジュール",
+      "scheduleHelp": "下書きの編集では現在のスケジュールは変わりません。保存すると今後の実行予定を変更しますが、直ちにスキャンは開始しません。",
+      "manualLaunch": "手動測定を開始",
+      "manualConsent": "この範囲と固有単位での見積もりを確認し、手動測定を 1 回要求します。",
+      "launch": "手動測定を要求",
+      "saveSchedule": "今後のスケジュールの意図を保存",
+      "scheduleConsent": "カレンダーと見積もりを確認し、この変更を今後の実行予定に適用します。",
+      "saveScheduleButton": "今後のスケジュールを保存",
+      "recoverLaunch": "同じ開始要求を復旧",
+      "recoverSchedule": "同じスケジュール保存を復旧",
+      "actionFailed": "操作結果を確認できませんでした。下書きは保持されています。",
+      "revisionConflict": "設定のリビジョンが変わりました。下書き {base}、現在 {current}。",
+      "reviewConflictHelp": "現在の設定と下書きを比較してください。下書きを保持すると確認したリビジョンを採用し、新しい見積もりが必要になります。",
+      "reviewCurrent": "現在の設定を再読み込み",
+      "keepDraftNewRevision": "確認したリビジョンで下書きを保持",
+      "current": "現在の設定",
+      "yourDraft": "下書き",
+      "fields": {
+        "provider": "プロバイダー",
+        "surface": "Google の検索結果",
+        "geo": "検索場所",
+        "language": "検索言語",
+        "device": "デバイス",
+        "depth": "要求する深度",
+        "enabled": "今後の定期測定を有効化",
+        "frequency": "頻度",
+        "timezone": "スケジュールのタイムゾーン",
+        "timeOfDay": "現地時刻（HH:mm）",
+        "jitter": "ジッター（分）",
+        "weekday": "曜日",
+        "dayOfMonth": "月の日付",
+        "cron": "カスタム cron 式"
+      },
+      "devices": {
+        "desktop": "デスクトップ",
+        "mobile": "モバイル"
+      },
+      "surfaces": {
+        "web_serp": "Google ウェブ検索結果",
+        "maps": "Google Maps",
+        "local_finder": "Google Local Finder"
+      },
+      "geoKinds": {
+        "country": "国",
+        "region": "地域",
+        "city": "都市",
+        "point": "地点"
+      },
+      "cadences": {
+        "daily": "毎日",
+        "weekly": "毎週",
+        "monthly": "毎月",
+        "custom_cron": "カスタム cron"
+      },
+      "weekdays": {
+        "Monday": "月曜日",
+        "Tuesday": "火曜日",
+        "Wednesday": "水曜日",
+        "Thursday": "木曜日",
+        "Friday": "金曜日",
+        "Saturday": "土曜日",
+        "Sunday": "日曜日"
+      },
+      "units": {
+        "cents": "セント",
+        "searches": "検索",
+        "test": "テスト単位"
+      },
+      "certainty": {
+        "estimate": "見積もり",
+        "partial": "判明分の小計、不明な対象: {count}",
+        "unknown": "見積もり不明、対象: {count}"
+      },
+      "sources": {
+        "project": "プロジェクトから継承",
+        "schedule": "スケジュールから継承",
+        "keyword": "キーワードから継承",
+        "explicit": "明示的な指定",
+        "unknown": "出所不明"
+      },
+      "degradation": {
+        "none": "範囲の縮退は報告されていません。将来の結果の完全性を保証するものではありません。",
+        "location_coarsened": "有効な場所は設定より広い範囲でした。指定した都市や地点として比較できません。",
+        "location_unverified": "プロバイダーの場所は検証されていません。",
+        "language_unverified": "有効な検索言語は検証されていません。",
+        "device_unverified": "有効なデバイスは検証されていません。",
+        "point_unverified": "有効な地点は証明されていません。正確な地点のカバレッジを推測しないでください。",
+        "scope_unknown": "有効範囲は不明です。"
+      },
+      "phases": {
+        "previewing": "見積もりを読み込み中…",
+        "launching": "測定を要求中…",
+        "saving_schedule": "スケジュールの意図を保存中…",
+        "launch_unknown": "開始結果は不明です。同じ要求を保持し、同じキーで復旧してください。別の有料リクエストを作成しないでください。",
+        "schedule_unknown": "保存結果は不明です。次の保存を行う前に、同じ要求を保持して復旧してください。",
+        "started": "測定を要求しました。プロバイダーの使用量が確定したわけではありません。",
+        "saved": "今後のスケジュールを保存しました。手動スキャンは開始していません。",
+        "error": "見積もりを読み込めませんでした。下書きは保持されています。",
+        "conflict": "設定の競合があります。現在のデータを確認してください。",
+        "blocked": "操作はブロックされています。",
+        "saving_intent": "今後の既定値を保存中…",
+        "intent_unknown": "保存を確認できませんでした。範囲を変更する前に同じ操作の結果を確認してください。"
+      },
+      "blocks": {
+        "no_provider": "利用できる接続済みプロバイダーがありません。",
+        "provider_disabled": "設定した接続は無効です。",
+        "needs_reauth": "設定した接続には認証が必要です。",
+        "unsupported_surface": "実装済みのアダプターは、選択した結果面に対応していません。",
+        "capability_changed": "機能バージョンが変わりました。プロバイダーと結果面を確認し、見積もりを再読み込みしてください。",
+        "unsupported_device": "選択したデバイスは対応していません。",
+        "unsupported_geo": "選択した場所は対応していません。",
+        "unsupported_language": "選択した検索言語は対応していません。",
+        "unsupported_depth": "選択した深度は対応していません。",
+        "ambiguous_capability": "機能情報が曖昧です。選択肢を自動的に決定しません。",
+        "settings_conflict": "設定が変わりました。現在のリビジョンを確認し、再度見積もりを取得してください。",
+        "preview_required": "先に現在の見積もりを取得し、確認してください。",
+        "invalid_quote": "見積もりの範囲、費用、カレンダーの情報が無効です。再読み込みしてください。",
+        "preview_expired": "見積もりが失効しました。再読み込みしてください。",
+        "preview_mismatch": "範囲または価格が変わりました。再読み込みしてください。",
+        "rate_changed": "料金バージョンが変わりました。再読み込みしてください。",
+        "rate_unavailable": "現在の料金バージョンを取得できません。価格を仮定しません。",
+        "budget_missing": "必要な予算がありません。",
+        "budget_exhausted": "現在の予算を使い切っています。",
+        "usage_reconciliation_required": "有料処理の前に使用量の照合が必要です。",
+        "duplicate": "実行中の測定がこの範囲をすでに含んでいます。",
+        "budget_blocked": "予算により開始がブロックされています。",
+        "nothing_eligible": "この手動測定で実行できる対象がありません。",
+        "cost_limit_exceeded": "操作の見積もりが費用上限を超えています。",
+        "sample_project": "サンプルプロジェクトでは有料測定を開始できません。",
+        "preview_failed": "見積もりを読み込めませんでした。下書きは保持されています。",
+        "action_failed": "操作結果を確認できませんでした。",
+        "invalid_settings": "サーバーは設定を保存せずに拒否しました。",
+        "forbidden": "この設定を変更する権限がありません。",
+        "unsupported_capability": "サーバーが未対応の機能を拒否しました。",
+        "measurement_policy_unconfigured": "新しいチェックの前に計測ポリシーを設定してください。",
+        "measurement_policy_unsupported": "現在のアダプターとポリシーが一致しません。確認して再設定してください。",
+        "save_intent_first": "場所、言語、端末の既定値を先に保存してからスケジュールを再確認してください。",
+        "scheduler_calendar_unavailable": "現在のスケジューラー方式の予測は利用できません。手動実行やスケジュールの明示的な停止は可能です。"
+      },
+      "basis": {
+        "resolved_request": "有効なオプションは解決済みのリクエスト予定を示し、Google の位置情報が検証されたという意味ではありません。",
+        "retained_observation": "有効範囲は保存済みの観測の証拠を示すもので、次の測定の証明ではありません。",
+        "unknown": "有効範囲の証拠はありません。"
+      },
+      "effectiveAt": "範囲の証拠の観測日時: {time}。",
+      "recoverIntent": "同じ保存の結果を確認",
+      "hostSchedule": "確認するスケジュール",
+      "intentConsent": "今後の既定値と不明な見積もりを確認しました。",
+      "scheduleScope": "スケジュール全体：キーワード {keywords} 件、対象 {targets} 件、場所 {locations} 件、言語 {languages} 件、端末 {devices} 種。",
+      "hostUnavailable": {
+        "measurement_policy_unconfigured": "実行の確認前に計測ポリシーを設定してください。",
+        "measurement_policy_unsupported": "保存したポリシーは現在のアダプター向けに確認が必要です。",
+        "source_unavailable": "対象またはプロバイダーの現在の設定を利用できません。",
+        "settings_revision_unavailable": "現在の設定リビジョンはこの操作画面で表現できません。",
+        "default_geo_unavailable": "既定の地域は有効な市場にありません。",
+        "defaults_missing": "プロジェクトの既定値が未設定です。",
+        "needs_reauth": "提供元の再認証が必要です。",
+        "provider_disabled": "提供元の接続が無効です。",
+        "provider_disconnected": "準備済みの接続がありません。",
+        "provider_missing": "提供元の接続がありません。",
+        "unsupported_capability": "選択したアダプター機能は利用できません。"
+      },
+      "intentScopeHelp": "既存の対象は作成も変更もされません。{count} 件の対象がプロジェクト深度を継承します。",
+      "intentHelp": "場所、言語、端末は新しい対象に適用されます。深度は既定値を継承する計測に適用されます。保存しても既存対象の識別情報は変わらず、計測も開始されません。プロバイダーは手動実行または選択したスケジュールに適用されます。",
+      "existingCalendar": "現在のスケジュール位相",
+      "intentForecastUnknown": "継承する深度の変更による今後の定期使用量は不明です。手動実行と選択したスケジュールの見積もりは別です。",
+      "readFailed": "現在の設定を読み込めませんでした。下書きは保持されています。",
+      "configurePolicy": "計測ポリシーを設定",
+      "saveIntent": "プロジェクトの既定値を保存",
+      "quoteExpires": "見積もりの有効期限：{expiry}。",
+      "saveIntentButton": "既定値を保存",
+      "defaultDepthReview": "現在のプロジェクト深度：{current}。この既定値を保存すると {chosen} になります。",
+      "capabilityEvidence": {
+        "title": "アダプターが保持できる証明",
+        "retained_provider_ids": "安定した提供元IDは保持結果に含まれる場合だけ利用できます。",
+        "unavailable": "このアダプターは安定した場所IDを提供しません。",
+        "organic_group_and_provider_axes_when_retained": "自然検索グループ順位と提供元の位置軸を分けて保持します。",
+        "organic_group": "自然検索グループ順位を提供します。",
+        "coverage": "結果種類ごとに記録された観測メタデータで網羅性を証明します。",
+        "pagination": "不在の判断には記録された完全な先頭範囲が必要です。要求した深さだけでは不十分です。",
+        "freshness": "鮮度には記録されたポリシーと提供元の時刻が必要です。証明がなければ不明です。"
+      },
+      "excluded": {
+        "paused": "日程停止",
+        "manual": "手動のみ",
+        "in_progress": "既に実行中",
+        "no_provider": "提供元未準備",
+        "other_project": "他プロジェクト",
+        "keyword_archived": "アーカイブ済み",
+        "market_inactive": "市場が無効"
+      },
+      "excludedTitle": "除外された対象",
+      "impact": {
+        "scope_changed": "地域・言語・端末・種類の変更には、履歴比較の前に独立した定義の証明が必要です。過去の観測は保持されます。",
+        "policy_changed": "深さまたは提供元のポリシーが変わりました。比較可能性は保持された定義で判断し、この確認だけでは判断しません。",
+        "cadence_only": "日程だけが変わりました。対象範囲は保持され、履歴の品質は記録された定義に基づきます。",
+        "unchanged": "範囲と日程は基準と一致します。履歴の品質は記録された定義に基づきます。"
+      },
+      "recovery": {
+        "provider": "提供元の接続を確認",
+        "market": "有効な市場を確認",
+        "defaults": "プロジェクトの既定値を確認",
+        "policy": "測定ポリシーを構成",
+        "review": "現在の設定を再読込"
+      },
+      "runAccepted": "{keywords} 語、{targets} 対象の実行を保持しました。",
+      "runReceipt": "保持された実行記録",
+      "runReceiptHelp": "待機中は観測完了を意味しません。実行記録で受理・停止・延期された項目を確認してください。",
+      "runStatuses": {
+        "planned": "計画済み",
+        "blocked": "停止",
+        "queued": "待機中",
+        "running": "実行中",
+        "cancelling": "取消要求済み",
+        "completed": "完了",
+        "cancelled": "取消済み"
+      },
+      "viewRun": "実行結果を開く"
+    },
+    "dashboardLayout": {
+      "title": "ダッシュボードをカスタマイズ",
+      "presentationOnly": "個人の表示設定のみです。スケジュールや有料の確認処理は変わりません。",
+      "preset": "ダッシュボードのプリセット",
+      "show": "{title}を表示",
+      "hide": "{title}を非表示",
+      "moveUp": "{title}を上に移動",
+      "moveDown": "{title}を下に移動",
+      "reorder": "{title} の順序を変更",
+      "reorderHint": "ハンドルをドラッグするか、矢印キー、Home、End で順序を変更します。",
+      "widgetHelp": "{title} について",
+      "save": "保存",
+      "cancel": "キャンセル",
+      "saving": "表示設定を保存しています。",
+      "conflict": "設定が別の場所で変更されました。下書きは保持されています。保存前に現在のレイアウトを確認してください。",
+      "saveError": "保存できませんでした。下書きと以前の既定レイアウトは保持されています。",
+      "saved": "表示設定を保存しました。",
+      "moved": "{title}を{position}番目に移動しました。",
+      "shellUnavailable": "補足情報は利用できません。ゼロという意味ではありません。",
+      "widgetUnavailable": "このセクションの保存済みレポートは利用できません。",
+      "widgetLoading": "保存済みレポートを読み込んでいます。",
+      "widgetError": "このセクションを読み取れませんでした。他のセクションは引き続き利用できます。",
+      "span": "{title}の幅",
+      "widgets": {
+        "organic_kpis": {
+          "label": "オーガニック指標",
+          "description": "保存済みのオーガニック指標を、定義バージョン、カバー率、比較可能な集団と合わせて確認します。"
+        },
+        "position_trend": {
+          "label": "順位履歴",
+          "description": "元の観測日と互換性のある正の順位を確認します。欠測は空白のまま残します。"
+        },
+        "position_distribution": {
+          "label": "順位分布",
+          "description": "確認済みのオーガニック順位を分類します。不明な結果に架空の順位を与えません。"
+        },
+        "recent_targets": {
+          "label": "最近追加された対象",
+          "description": "確定した検索範囲で最近追加された対象を表示します。"
+        },
+        "data_source": {
+          "label": "データソース",
+          "description": "保存済みの接続情報とプロバイダー情報を読み取ります。表示しても確認処理は実行しません。"
+        },
+        "by_market": {
+          "label": "市場別",
+          "description": "共通の期間とフィルターの範囲で、市場別のレポートを読み取ります。"
+        },
+        "movers": {
+          "label": "順位の変化",
+          "description": "比較可能な変化を読み取り、新規出現、消失、不明を別々に扱います。"
+        },
+        "local_business_results": {
+          "label": "Googleローカル検索結果",
+          "description": "明示的に選択した確認済み支店について、通常のGoogle検索に表示される地図付きの店舗結果です。"
+        },
+        "competitor_comparison": {
+          "label": "競合比較",
+          "description": "明示的に選択した競合集合を読み取ります。市場全体を表すものではありません。"
+        },
+        "visibility_history": {
+          "label": "可視性の履歴",
+          "description": "互換性のあるレポートが利用可能な場合に、保存済みの可視性履歴を定義バージョンとともに読み取ります。"
+        },
+        "contributors": {
+          "label": "対象の寄与",
+          "description": "正式なレポートから対象の寄与を読み取ります。クライアントでは計算しません。"
+        },
+        "quality_history": {
+          "label": "品質の履歴",
+          "description": "保存済みの品質レポートから、観測数、新鮮な結果数、比較可能数を別々に読み取ります。"
+        }
+      },
+      "reasons": {
+        "missing_project_access": "プロジェクトの読み取り権限が必要です。",
+        "preset_mismatch": "このセクションは別のプリセットの範囲を使います。",
+        "missing_competitors_access": "競合の読み取り権限が必要です。",
+        "missing_local_subject": "ローカルSEOでは店舗識別情報のリビジョンを明示的に選択してください。",
+        "foreign_local_subject": "選択した店舗はこのプロジェクトに属していません。",
+        "missing_competitor_scope": "競合比較の範囲を明示的に選択してください。",
+        "foreign_competitor_scope": "競合の範囲はこのプロジェクトに属していません。",
+        "missing_capability": "このセクションに必要な保存済みデータの機能は利用できません。"
+      },
+      "shell": {
+        "scope": "共通の検索範囲",
+        "mode": "プロジェクトのモード",
+        "health": "確認処理の状態",
+        "budget": "予算の状態",
+        "coverage": "データのカバー率"
+      },
+      "presets": {
+        "general": "全般",
+        "local": "ローカルSEO",
+        "competitors": "競合"
+      },
+      "spans": {
+        "standard": "標準",
+        "wide": "幅広"
+      },
+      "setDefault": "自分の既定に設定",
+      "defaultSaved": "既定のダッシュボードを保存しました。",
+      "reviewCurrent": "現在保存されている配置を確認",
+      "keepDraft": "下書きを保持",
+      "useCurrent": "現在の配置を使用",
+      "readOnly": "読み取り専用のプロジェクトです。表示設定は個人ごとに保存されます。",
+      "healthClear": "過去24時間に失敗した計測はありません。",
+      "budgetBlocked": "現在の予算により有料計測が停止されています。",
+      "budgetReadOnly": "保存済みレポートの閲覧では有料計測は実行されません。",
+      "coverageSummary": "対象{expected}件中{measured}件を判定済み。比較可能な組は{comparable}件です。",
+      "freshnessUnknown": "新しいデータのカバレッジは不明です。",
+      "freshCoverage": "新しい判定済み対象: {count}件。",
+      "invalidPreset": "この表示セットは利用できません。利用可能なセットを選んでください。",
+      "scopeNotMeasured": "対象範囲が未確定のため、順位指標は計算していません。",
+      "widgetLoadOnSave": "このセクションのデータを読み込むには、レイアウトを保存してください。",
+      "healthUnknown": "チェック状態を取得できません。失敗がゼロという意味ではありません。",
+      "budgetUnknown": "予算状態は不明です。このビューでは有料チェックを開始しません。",
+      "preferenceUnavailable": "保存されたダッシュボードレイアウトはこのバージョンでは利用できません。",
+      "preferencePreserved": "保存済みレイアウトと下書きは保持されます。互換性のある現在のリビジョンを確認するまで保存できません。",
+      "reloadPreference": "保存済みレイアウトを再読み込み",
+      "preferenceReloadFailed": "レイアウトを読み込めませんでした。下書きは保持されます。",
+      "preferenceRevision": "現在のレイアウトリビジョン: {revision}",
+      "unsavedDraft": "未保存のレイアウト下書きです。保存済みレイアウトは変更されていません。",
+      "viewDetails": "このビューについて",
+      "viewHelp": "このビューには保存済みの結果が表示されます。新しい計測は実行しません。",
+      "viewHelpClose": "閉じる"
+    },
+    "localMonitors": {
+      "title": "ローカルモニター",
+      "create": "モニターを作成",
+      "edit": "モニターを編集",
+      "definition": "モニター設定",
+      "subject": "ビジネス拠点",
+      "manageSubjects": "拠点を管理",
+      "reviewIntegrations": "連携を確認",
+      "setupOnly": "保存は設定のみを記録します。チェックの実行や課金は発生しません。",
+      "noSubjects": "有効な拠点を追加し、明示的に選択してください。",
+      "moreSubjects": "他の拠点",
+      "useCurrentIdentity": "現在の拠点情報を使用",
+      "keywords": "キーワード",
+      "searchKeywords": "既存のキーワードを検索",
+      "search": "検索",
+      "selectedKeywords": "{count} 件選択（最大20件）",
+      "noKeywords": "このページにキーワードはありません。別の検索をお試しください。",
+      "moreKeywords": "他のキーワード",
+      "targetCount": "キーワードと地点の組み合わせ: {count}（最大100）",
+      "validation": "名前、所在地、キーワード、座標、対応言語、オペレーティングシステム、地図のズーム、最大100対象を確認してください。",
+      "save": "設定を保存",
+      "saving": "保存中…",
+      "cancel": "キャンセル",
+      "status": "状態",
+      "points": "地点",
+      "revision": "リビジョン",
+      "visibility": "モニターの表示",
+      "activeOnly": "有効なモニター",
+      "includingArchived": "アーカイブを含める",
+      "moreMonitors": "他のモニター",
+      "empty": "モニターはありません。既存の拠点を選んで作成してください。",
+      "readOnly": "設定を閲覧できます。変更にはプロジェクトの編集権限が必要です。",
+      "readError": "保存済みデータを読み込めませんでした。もう一度お試しください。",
+      "back": "モニター一覧に戻る",
+      "archive": "アーカイブ",
+      "archiveConfirm": "このモニターをアーカイブしますか？設定と履歴は保持されます。",
+      "confirmArchive": "アーカイブを確定",
+      "mode": "保存済みスケジュール設定",
+      "launchUnavailable": "このモニターからのチェック実行はまだ利用できません。連携でプロバイダーの対応状況を確認してください。",
+      "configuredPoints": "設定済みの地点",
+      "pointHelp": "保存済みの測定座標です。このリビジョンに実行が明示的に関連付けられるまで結果は表示できません。",
+      "point": "地点",
+      "row": "行",
+      "column": "列",
+      "result": "記録された結果",
+      "resultUnavailable": "利用不可",
+      "definitionHistory": "設定履歴",
+      "revisionNumber": "リビジョン {revision}",
+      "showHistory": "保存済みリビジョンを表示",
+      "moreHistory": "以前のリビジョン",
+      "axesHelp": "Maps のオペレーティングシステムと地図のズームを選択してください。設定の変更を保存すると新しいリビジョンが作成されます。実行前に費用を確認し、もう一度承認してください。",
+      "fields": {
+        "name": "名前",
+        "latitude": "中心の緯度",
+        "longitude": "中心の経度",
+        "language": "検索言語コード",
+        "spacing": "地点間隔（メートル）",
+        "cutoff": "地点ごとの最大結果数",
+        "surface": "検索の種類",
+        "device": "端末",
+        "grid": "グリッドの大きさ",
+        "subjectReference": "ビジネス拠点の参照ID",
+        "identityRevision": "拠点情報のリビジョン",
+        "engine": "検索エンジン",
+        "resultKind": "結果の種類",
+        "rankScale": "順位の尺度",
+        "operatingSystem": "オペレーティングシステム",
+        "zoom": "地図のズーム",
+        "calendarReference": "カレンダーの参照ID",
+        "calendarEpoch": "カレンダーのバージョン",
+        "frequency": "頻度",
+        "cron": "cron 式",
+        "timeOfDay": "時刻",
+        "timezone": "カレンダーのタイムゾーン",
+        "jitter": "実行時刻のゆらぎ",
+        "configuredDepth": "保存されたカレンダーの取得深度",
+        "providerPolicy": "保存されたプロバイダーポリシー",
+        "retainedGrid": "7 × 7（保持された履歴）",
+        "gridPilotHelp": "試験導入では1 × 1、3 × 3、5 × 5を使用できます。より大きいグリッドには範囲と予算の個別承認が必要です。"
+      },
+      "surfaces": {
+        "maps": "Mapsの結果",
+        "local_finder": "Local Finderの結果"
+      },
+      "devices": {
+        "desktop": "デスクトップ",
+        "mobile": "モバイル",
+        "unknown": "不明な端末"
+      },
+      "states": {
+        "active": "有効",
+        "archived": "アーカイブ済み"
+      },
+      "modes": {
+        "manual": "手動",
+        "paused": "一時停止",
+        "scheduled": "保存済みスケジュール",
+        "unknown": "不明"
+      },
+      "readiness": {
+        "archived": "このモニターはアーカイブされています。",
+        "subject_changed": "拠点情報が変わりました。確認して新しいリビジョンを保存してください。",
+        "keyword_changed": "選択したキーワードが変更されたか利用できません。選択を確認してください。",
+        "manual": "定期実行は有効になっていません。",
+        "paused": "保存済みスケジュールは一時停止中です。",
+        "definition_changed": "スケジュールは以前の設定を参照しています。",
+        "calendar_changed": "カレンダーが変更されたか利用できません。予約前に確認してください。"
+      },
+      "errors": {
+        "conflict": "設定が変わりました。再読み込みして確認してから保存してください。",
+        "invalid": "無効な項目があります。フォームを確認してください。",
+        "forbidden": "このプロジェクトを変更する権限がありません。",
+        "unavailable": "拠点またはモニターを利用できません。再読み込みしてお試しください。"
+      },
+      "reload": "現在の設定を再読み込み",
+      "capturedScope": "保存された計測範囲",
+      "capturedCalendar": "保存されたカレンダー",
+      "noSavedCalendar": "この設定にはカレンダーが保存されていません。",
+      "unrestricted": "制限なし",
+      "notSet": "未設定",
+      "metres": "{count} m",
+      "minutes": "{count} 分",
+      "resultKinds": {
+        "local_pack": "ローカルパック",
+        "map_listing": "Maps のリスティング",
+        "listing": "Local Finder のリスティング"
+      },
+      "rankScales": {
+        "pack_slot": "ローカルパック内の順位",
+        "maps_organic": "Maps のオーガニック順位",
+        "finder_organic": "Local Finder のオーガニック順位"
+      },
+      "frequencies": {
+        "daily": "毎日",
+        "weekly": "毎週",
+        "monthly": "毎月",
+        "custom_cron": "カスタム cron"
+      },
+      "manual": {
+        "title": "このモニターを実行",
+        "help": "接続を選び、タスク総数とプロバイダー料金を確認してから承認してください。このパネルの表示や保存済み状態の更新では、プロバイダーに接続しません。",
+        "connection": "プロバイダー接続",
+        "chooseConnection": "接続を選択",
+        "noConnection": "このモニターを実行するには、連携設定で対応プロバイダーを接続してください。",
+        "preview": "実行内容を確認",
+        "consent": "プロバイダー料金を確認",
+        "taskCount": "この実行では、キーワードと地点の組み合わせを {count} 件送信します。",
+        "expires": "見積もりの有効期限: {time}",
+        "consentHelp": "承認は今回の実行のみに適用されます。スケジュールは有効になりません。",
+        "confirmLaunch": "承認して実行",
+        "refreshRecorded": "保存済み状態を更新",
+        "noRun": "保存済みの実行はありません。",
+        "recordedRun": "最新の保存済み実行",
+        "progress": "{total} 件中 {complete} 件完了",
+        "receiptHelp": "受付不明の状態は未解決のまま表示されます。更新しても再送信やプロバイダー結果の取得は行いません。",
+        "keyword": "キーワード",
+        "point": "地点",
+        "coordinate": "座標",
+        "status": "保存済み状態",
+        "pointNumber": "地点 {number}",
+        "unknown": "不明",
+        "nativeCents": "米セント",
+        "errors": {
+          "forbidden": "このモニターを実行する権限がありません。",
+          "invalid": "選択した実行設定を確認してください。",
+          "conflict": "モニターまたは接続が変更されました。実行内容を再確認してください。",
+          "expired": "見積もりの有効期限が切れました。実行内容を再確認してください。",
+          "unavailable": "現在この実行は利用できません。再試行する前に保存済み状態を更新してください。"
+        },
+        "unavailable": {
+          "capability_unregistered": "このローカル検索機能は登録されていません。対応する設定を選択してください。",
+          "connection_unavailable": "この接続は利用できません。連携設定を確認してください。",
+          "unsupported": "プロバイダーはこの設定に対応していません。検索設定を編集してください。",
+          "pricing_unavailable": "プロバイダー料金の合計が不明なため、有料実行を開始できません。",
+          "worker_unavailable": "実行ワーカーが無効です。キューに追加する前に有効にしてください。"
+        },
+        "states": {
+          "awaiting_dispatch": "開始待ち",
+          "cancelled": "キャンセル済み",
+          "needs_provider_evidence": "プロバイダーの受付状況不明",
+          "pending_reconciliation": "証拠の確認が必要",
+          "accounting_pending": "プロバイダー料金の確認中",
+          "awaiting_collection": "受付済み・結果待ち",
+          "owner_release_pending": "結果の保存を完了中",
+          "complete": "完了",
+          "unavailable": "利用不可"
+        },
+        "queue": {
+          "queued": "実行をキューに保存しました。ワーカーが承認済みの範囲と料金を再確認してから開始します。",
+          "running": "ワーカーが処理しています。",
+          "blocked": "この実行には確認が必要です。保存済み結果と未確定の料金は保持されます。",
+          "complete": "ワーカーの処理が終了しました。"
+        },
+        "loadingRecorded": "保存済みの状態を読み込み中…"
+      },
+      "recurring": {
+        "title": "Local の定期計測",
+        "loading": "保存された予定を読み込み中…",
+        "unavailable": "予定を確認できません。権限、情報の変更、worker の設定を確認してください。",
+        "disabled": "自動 Local 計測は無効です。承認前に運用担当者が既存 worker を明示的に有効にする必要があります。保存済み結果は閲覧できます。",
+        "calendar": "カレンダー",
+        "chooseCalendar": "既存のカレンダーを選択",
+        "projectTimezone": "プロジェクトの時間帯",
+        "connection": "自己所有キーの接続",
+        "chooseConnection": "接続を選択",
+        "perOccurrence": "計測1回の上限 (USD)",
+        "total": "発行済み見積の合計上限 (USD)",
+        "maximumOccurrences": "計測回数の上限",
+        "validUntil": "同意の終了（現地時間）",
+        "invalid": "必須項目と上限を確認してください。",
+        "policy": "このグリッドとカレンダーを承認します。各計測には保存した価格版と上限に基づく新しい見積を使用します。終了した期間はスキップし、受付結果が不明な作業は再購入しません。送信されなかった場合も発行済み見積は保守的に合計上限から差し引きます。",
+        "review": "定期計測の同意を確認",
+        "next": "次の設定済み予定",
+        "validThrough": "同意の終了",
+        "issuedCeiling": "発行済み見積の権限",
+        "status": "保存済み状態",
+        "noApproval": "この予定の版に有料定期計測の有効な同意はありません。",
+        "tooManyChoices": "選択肢がフォームの範囲を超えています。カレンダーか接続を整理してください。",
+        "pause": "今後の計測を一時停止",
+        "reviewNotice": "指定した終了日と上限まで今後の計測を承認します。今すぐプロバイダーへ送信しません。",
+        "capturedCalendar": "カレンダー: {frequency}、{timezone}",
+        "quoted": "現在の正確な見積",
+        "approve": "定期計測を承認",
+        "cancel": "キャンセル",
+        "states": {
+          "active": "有効な権限",
+          "blocked": "ブロック中。再確認してください",
+          "finished": "権限終了"
+        },
+        "frequencies": {
+          "daily": "毎日",
+          "weekly": "毎週",
+          "monthly": "毎月",
+          "custom_cron": "独自カレンダー"
+        }
+      },
+      "results": {
+        "title": "実行結果",
+        "history": "実行履歴",
+        "rank": "検証済みの店舗順位",
+        "unknown": "不明",
+        "evidence": "証拠",
+        "freshness": "鮮度",
+        "observedAt": "観測日時",
+        "receipt": "記録の状態",
+        "points": "測定地点",
+        "grid": "標本地点のグリッド",
+        "business": "店舗",
+        "nativeGroup": "ネイティブグループ順位",
+        "nativeAbsolute": "ネイティブ絶対順位",
+        "promotion": "広告区分",
+        "identityMatch": "識別情報の一致",
+        "pointEvidence": "地点の保存済みリスト",
+        "scope": "取得時の範囲",
+        "reason": "品質の理由",
+        "none": "なし",
+        "observedRank": "範囲検証前の観測順位",
+        "loading": "保存済み証拠を読み込み中…",
+        "seedHelp": "座標は提供元が確認した検索の起点であり、観測者の正確な位置を証明しません。確認がない場合は不明です。",
+        "unavailable": "選択したプロジェクト、モニター、日時では保存済み実行を表示できません。",
+        "empty": "保存済み実行はありません。実行には明示的なプレビューと費用の確認が必要です。",
+        "asOf": "レポート基準日時",
+        "accountingHelp": "証拠はレポート基準日時で選択します。記録と会計の状態は現在の状態です。",
+        "topN": "観測済みトップ {n}",
+        "observedCoverage": "観測カバレッジ",
+        "dataCoverage": "新しいデータのカバレッジ",
+        "bounds": "標本の上下限",
+        "comparisonHelp": "鮮度は現在のプロジェクト方針と保存された元の設定に基づきます。比較には互換性のある範囲が必要です。",
+        "exportCsv": "ローカル CSV v1 をエクスポート",
+        "exportJson": "ローカル JSON v1 をエクスポート",
+        "pointHistory": "地点の履歴",
+        "pointHistoryHelp": "選択した期間に保存された、同じ地点、キーワード、識別情報、測定方針の試行履歴です。範囲を変更すると別の履歴になります。",
+        "pointHistoryMore": "以前の試行を読み込む",
+        "evidenceStates": {
+          "positive": "確認済みの順位",
+          "known_absent": "確認済みの不在",
+          "unknown": "不明",
+          "unsupported": "非対応",
+          "not_observed": "未観測"
+        },
+        "freshnessStates": {
+          "fresh": "新しい",
+          "stale": "古い",
+          "unknown": "不明"
+        },
+        "matchStates": {
+          "confirmed": "確認済み",
+          "candidate": "候補",
+          "rejected": "拒否",
+          "unavailable": "利用不可"
+        },
+        "promotionStates": {
+          "organic": "自然検索",
+          "promoted": "広告",
+          "unknown": "不明"
+        },
+        "reasonStates": {
+          "not_completed": "未完了",
+          "unsupported": "範囲が非対応",
+          "missing_scope": "範囲の証拠がありません",
+          "scope_mismatch": "範囲が異なります",
+          "missing_normalization": "正規化の証拠がありません",
+          "invalid_position": "ネイティブ順位が無効",
+          "insufficient_depth": "取得深度が不足",
+          "current_scope_unavailable": "現在の範囲は利用不可",
+          "unproven_absence": "不在は未確認",
+          "future_observation": "未来の観測",
+          "missing_observation_time": "観測日時がありません"
+        },
+        "historyWindow": "履歴の期間",
+        "allHistory": "保持されているすべての履歴",
+        "historyDays": "過去{days}日間",
+        "customHistory": "指定した期間",
+        "historyWindowHelp": "期間は保存されたレポート時刻までで、1日を24時間として計算します。日付はレポートのタイムゾーンで表示します。履歴の閲覧でスキャンは実行されません。",
+        "historyBounds": "{from}から{to}まで",
+        "historyCount": "{count, plural, other {この期間の保存済み測定は#件です}}"
+      },
+      "retry": {
+        "title": "失敗した地点を選択して再試行",
+        "help": "拒否または未送信が確認された元のタスクのみ選択できます。新しい見積もりによる有料実行です。受付済みまたは未解決のタスクは元の実行で結果取得・照合を続けてください。",
+        "parentCount": "元の実行: {count} 件。",
+        "childScope": "選択した再試行: 元の {parent} 件中 {selected} 件。カバレッジは選択範囲のみを示します。",
+        "selection": "元の地点",
+        "point": "地点 {point}",
+        "confirm": "選択範囲の有料再試行を確認",
+        "queued": "再試行を登録: {id}",
+        "reasons": {
+          "eligible_rejected": "拒否を確認済み",
+          "eligible_unsent": "未送信を確認済み",
+          "accepted_original": "受付済み: 元のタスクの結果を取得",
+          "unknown_acceptance": "受付未解決: 元のタスクを照合",
+          "in_progress": "元のタスクは進行中",
+          "accounting_pending": "会計処理待ち",
+          "reconciliation_pending": "照合待ち",
+          "owner_retained": "元の所有権を保持中",
+          "proof_unavailable": "ネイティブ完了証拠がありません"
+        }
+      }
+    },
+    "dashboardComparison": {
+      "selection": "競合比較",
+      "choose": "保存済みの比較を選択",
+      "remember": "この比較を記憶",
+      "clear": "記憶した比較を解除",
+      "saved": "比較を記憶しました。既定のダッシュボードは変更されていません。",
+      "cleared": "記憶した比較を解除しました。",
+      "conflict": "設定が変更されました。参照を保存する前に再読み込みしてください。",
+      "saveError": "比較を記憶できませんでした。以前の設定は保持されます。",
+      "desktop": "デスクトップ",
+      "mobile": "モバイル",
+      "title": "競合の表示シェア",
+      "unknown": "不明",
+      "domain": "ドメイン",
+      "current": "現在",
+      "baseline": "基準",
+      "change": "変化",
+      "percentagePoints": "{value} pp",
+      "fixedCohort": "両期間で同じ{count}件の選択対象と固定された検索量の重みを使用します。",
+      "comparisonCoverage": "比較可能な対象: {comparable} / {expected}。選択した全対象を比較できない場合、変化は不明です。",
+      "scope": "{location} / {language} / {device}",
+      "coverage": "確定: {measured} / {expected}。観測カバレッジ: {observed}。新鮮なデータのカバレッジ: {fresh}。",
+      "asOf": "レポート基準日時:",
+      "baselineAsOf": "要求した比較基準日時:",
+      "providerConnected": "順位プロバイダーが接続されています。この読み取りでチェックは開始しません。",
+      "providerMissing": "順位プロバイダーは接続されていません。保存済みの観測は読み取れます。",
+      "state": {
+        "missing": "保存済みの比較を選択して結果を表示します。",
+        "invalid": "この比較リンクは無効です。保存済みの比較を選択してください。",
+        "unavailable": "この保存済みの比較は利用できません。別の比較を選択してください。",
+        "capacity": "この比較の対象が多すぎます。対象の少ない保存済みの比較を選択してください。"
+      },
+      "reloadRevision": "現在の設定リビジョンを確認",
+      "reloadUnavailable": "互換性のある新しい設定は利用できません。ページを再読み込みして範囲を確認してください。",
+      "reviewRevision": "リビジョン {revision} を読み込みました。比較を確認してから、記憶または解除を明示的に選択してください。",
+      "emptyTitle": "保存済みの比較がありません",
+      "emptyDescription": "競合ページで比較を設定して保存すると、ここで使用できます。",
+      "configureComparison": "比較を設定"
+    },
+    "reviewedDefaults": {
+      "title": "今後の既定設定を確認",
+      "scope": "{place}、{language}、{device}。深さ {depth}。",
+      "cadence": "{frequency}、{timezone}、cron {cron}、ずれ {jitter} 分。",
+      "impact": "既存対象の識別情報を変更せず、新規対象も作成しません。{count} 件がプロジェクトの深さを継承します。",
+      "estimateUnknown": "深さ変更後の定期使用量は不明です。有料測定は別途確認してください。",
+      "estimateUnchanged": "継承する深さの使用量は変わりません。保存で測定は開始しません。",
+      "policyUnknown": "測定ポリシーは利用できません。今後の設定を保存してもポリシーの構成や有料実行の有効化は行いません。",
+      "expiry": "確認の有効期限: {time}。",
+      "consent": "この正確な設定と不明な使用量を確認しました。",
+      "recover": "保存結果は未確認です。編集前に同じ操作を復旧してください。",
+      "retry": "同じ保存を復旧",
+      "review": "変更を確認",
+      "confirmSave": "確認した保存を確定",
+      "stopAtMatch": "対象が見つかったら停止します。",
+      "scanFullDepth": "確認した深さ全体を確認します。"
     }
   }
 }

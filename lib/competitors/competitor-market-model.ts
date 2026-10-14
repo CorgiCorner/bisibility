@@ -1,3 +1,5 @@
+import { competitorShareOfVoice } from "@/lib/rank-measurements/competitor-share";
+import { positivePosition } from "@/lib/rank-measurements/qualify";
 import type {
   CompetitorColumn,
   CompetitorFilter,
@@ -32,13 +34,8 @@ export const emptyCompetitorFilter: CompetitorFilter = {
 // biome-ignore format: compact helper keeps this model module tidy.
 export function competitorDomainInitials(domain: string) { return domain.split(/[.-]/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join(""); }
 
-function visibilityScore(position: number) {
-  return position <= 10 ? 11 - position : 0;
-}
-
 function rankOf(observation: CompetitorObservation, domain: string) {
-  const rank = observation.ranks[domain];
-  return typeof rank === "number" && rank > 0 ? rank : null;
+  return positivePosition(observation.ranks[domain]);
 }
 
 function inPositionBucket(position: number | null, bucket: CompetitorPositionBucket) {
@@ -60,21 +57,6 @@ export function filterCompetitorObservations(data: CompetitorMarketData, filter:
       inPositionBucket(rankOf(observation, ownDomain), filter.position) &&
       (!filter.tag || observation.tags.includes(filter.tag)),
   );
-}
-
-function domainScores(observations: CompetitorObservation[], domains: string[]) {
-  const counts = new Map<string, number>();
-  const scores = new Map<string, number>();
-  for (const observation of observations) {
-    for (const domain of domains) {
-      const rank = rankOf(observation, domain);
-      if (!rank) continue;
-      counts.set(domain, (counts.get(domain) ?? 0) + 1);
-      const volume = Math.max(0, observation.volume ?? 0);
-      scores.set(domain, (scores.get(domain) ?? 0) + visibilityScore(rank) * volume);
-    }
-  }
-  return { counts, scores };
 }
 
 function orderColumns(
@@ -107,7 +89,7 @@ function buildShare(
     initials: competitorDomainInitials(column.domain),
     kind: column.kind,
     label: column.label,
-    shareOfVoice: total > 0 ? Math.round((score / total) * 100) : 0,
+    shareOfVoice: total > 0 ? (score / total) * 100 : null,
     sharedKeywords: counts.get(column.domain) ?? 0,
   };
 }
@@ -143,9 +125,14 @@ export function buildCompetitorMarket(
   const filteredObservations = filterCompetitorObservations(data, filter);
   const observations = filteredObservations.filter((observation) => observation.completed);
   const domains = data.allColumns.map((column) => column.domain);
-  const { counts, scores } = domainScores(observations, domains);
+  const {
+    counts,
+    scores,
+    shares: _shares,
+    total,
+    ...quality
+  } = competitorShareOfVoice(filteredObservations, domains);
   const allColumns = orderColumns(data.allColumns, scores, counts);
-  const total = domains.reduce((sum, domain) => sum + (scores.get(domain) ?? 0), 0);
   const managedDomains = allColumns.slice(1).map((column) => column.domain);
   const hasCompletedChecks = data.observations.some((observation) => observation.completed);
   const hasRankData = observations.some((observation) => observation.ranked);
@@ -155,13 +142,16 @@ export function buildCompetitorMarket(
     ? "no_completed_checks"
     : filterActive && observations.length === 0
       ? "filter_excludes_all"
-      : hasRankData
-        ? total > 0
-          ? "ranked"
-          : "no_volume_data"
-        : "completed_unranked";
+      : quality.measured === 0 && filteredObservations.length > 0
+        ? "quality_unknown"
+        : hasRankData
+          ? total > 0
+            ? "ranked"
+            : "no_volume_data"
+          : "completed_unranked";
   return {
     ...data,
+    quality,
     allColumns,
     checkedKeywordCount: observations.length,
     columns: allColumns,

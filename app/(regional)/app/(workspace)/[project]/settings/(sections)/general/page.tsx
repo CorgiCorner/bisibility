@@ -1,4 +1,5 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { UsageDisplayControls } from "@/components/metering/UsageDisplayControls";
 import { GeneralSettingsSection } from "@/components/settings/general/GeneralSettingsSection";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
@@ -22,6 +23,7 @@ export default async function GeneralSettingsPage({ params }: Readonly<GeneralSe
     "shared",
     "projectSettingsShell",
     "projectSettingsGeneral",
+    "projectSettingsUsage",
   ]);
   const projectRole = getProjectRole(access.actor, access.project.id);
   const writable = settings.project.writeMode === "active";
@@ -44,6 +46,9 @@ export default async function GeneralSettingsPage({ params }: Readonly<GeneralSe
             project={settings.project}
             tags={settings.tags}
           />
+          <div className="mt-5 max-w-[640px]">
+            <UsageDisplayControls />
+          </div>
         </FeatureMessagesProvider>
       </div>
     </SettingsShell>

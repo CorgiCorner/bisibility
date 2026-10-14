@@ -102,6 +102,7 @@ describe("onboarding setup-first gate", () => {
       "auth",
       "onboarding",
       "projectCostEstimate",
+      "projectSettingsTracking",
     ]);
     expect(mocks.supportWidget).toHaveBeenCalledOnce();
     expect(mocks.supportWidget).toHaveBeenCalledWith({

@@ -7,6 +7,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { withPreDataMigrations } from "./pre-data-migrations";
 import { runDataMigrations } from "../data-migrations/run";
 import { completedDataMigrations } from "./completed-data-migrations";
+import { activeDataMigrationManifest } from "../../lib/data-migrations/manifest";
+import { runStagedMigrationPipeline } from "./staged-data-migrations";
 
 type PrismaRuntime = {
   cli: string;
@@ -81,10 +83,11 @@ export async function runMigrationPipeline(pipeline: MigrationPipeline) {
 export async function runMigrations() {
   const projectRoot = dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
   const runtime = await resolvePrismaRuntime(projectRoot);
-  const completed = await completedDataMigrations();
-  await runMigrationPipeline({
-    prisma: () => withPreDataMigrations(projectRoot, (path) => runPrismaMigrateDeploy(runtime, projectRoot, path), completed),
-    runData: runDataMigrations,
+  await runStagedMigrationPipeline({
+    activeIds: activeDataMigrationManifest().map((migration) => migration.id),
+    completed: completedDataMigrations,
+    prisma: (completed) => withPreDataMigrations(projectRoot, (path) => runPrismaMigrateDeploy(runtime, projectRoot, path), completed),
+    runData: () => runDataMigrations({ deferUnready: true }),
     contracts: () => runPrismaMigrateDeploy(runtime, projectRoot),
   });
 }

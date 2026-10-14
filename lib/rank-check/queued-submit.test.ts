@@ -1,3 +1,17 @@
+import { resetRecordedWorkerDefinition } from "@/lib/rank-check/recorded-worker-definition.test-fixture";
+
+vi.mock("@/lib/measurement-definitions/worker-queued", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/measurement-definitions/worker-queued")>();
+  const { recordedQueuedWorkerSessions } = await import(
+    "./recorded-worker-definition.test-fixture"
+  );
+  const { workerDefinitionOwner } = await vi.importActual<
+    typeof import("@/lib/measurement-definitions/worker-session")
+  >("@/lib/measurement-definitions/worker-session");
+  return { ...actual, queuedWorkerSessions: recordedQueuedWorkerSessions(workerDefinitionOwner) };
+});
+
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { submitQueuedRankCheckBatch } from "./queued-submit";
@@ -48,6 +62,7 @@ const mocks = vi.hoisted(() => {
       {
         id: "qtask_1",
         keywordId: "keyword_1",
+        rankCheckId: "rank_1",
         keyword: {
           device: "desktop",
           locationRef: {
@@ -152,6 +167,7 @@ vi.mock("@/lib/provider-rates/native-rank-request", () => ({
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/operations/access-extension", () => ({
+  assertOperationAccessInTransaction: vi.fn(),
   assertOperationAccess: mocks.assertOperationAccess,
 }));
 vi.mock("./allocation-enforcement", () => ({
@@ -186,6 +202,7 @@ vi.mock("./queued-usage-journal", () => ({
 
 describe("queued paid-call fence", () => {
   beforeEach(() => {
+    resetRecordedWorkerDefinition();
     vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
     vi.clearAllMocks();
     mocks.nativeCosts.mockResolvedValue([0.725]);
@@ -363,6 +380,10 @@ describe("queued paid-call fence", () => {
     await submitQueuedRankCheckBatch("batch_1");
 
     expect(mocks.beginJournal).toHaveBeenCalledWith({
+      beforeFence: { lockBusiness: expect.any(Function), assertDispatch: expect.any(Function) },
+      beforeReserve: new Map([
+        ["qtask_1", { lockBusiness: expect.any(Function), assertRequest: expect.any(Function) }],
+      ]),
       client: mocks.prisma,
       connectionId: "connection_1",
       credentialVersion: expect.stringMatching(/^[a-f0-9]{64}$/),

@@ -4,7 +4,8 @@ import { isDeepStrictEqual } from "node:util";
 import { LEGACY_DEFAULT_MARKET_NAME } from "@/lib/api/legacy-market-input";
 import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { normalizeProjectSavedView } from "@/lib/saved-views/model";
+import { normalizeStoredViewConfig } from "@/lib/saved-views/config-model";
+import { SavedViewConflictError } from "@/lib/saved-views/errors";
 import { DEFAULT_SERP_DEVICE } from "@/lib/serp/constants";
 import type { KeywordMaps } from "./importers";
 import { keywordKey } from "./importers";
@@ -57,25 +58,26 @@ export async function importSavedViews(
   let imported = 0;
   let skipped = 0;
   for (const view of savedViews) {
-    const normalized = normalizeProjectSavedView(view.config, view.surface);
+    const normalized = normalizeStoredViewConfig(view.config, view.surface);
     if (!normalized) {
       skipped += 1;
       continue;
     }
     const existing = await client.savedView.findFirst({
-      select: { config: true, id: true },
-      where: { name: view.name, projectId, surface: normalized.surface },
+      select: { config: true, id: true, revision: true },
+      where: { name: view.name, projectId, surface: normalized.surface, visibility: "project" },
     });
-    const config = normalized.config as Prisma.InputJsonValue;
+    const config = normalized as Prisma.InputJsonValue;
     if (existing) {
       if (isDeepStrictEqual(existing.config, config)) {
         skipped += 1;
         continue;
       }
-      await client.savedView.update({
-        data: { config, surface: normalized.surface },
-        where: { id: existing.id },
+      const updated = await client.savedView.updateMany({
+        data: { config, revision: { increment: 1 } },
+        where: { id: existing.id, projectId, visibility: "project", revision: existing.revision },
       });
+      if (updated.count !== 1) throw new SavedViewConflictError();
     } else {
       await client.savedView.create({
         data: {
@@ -84,6 +86,8 @@ export async function importSavedViews(
           projectId,
           publicId: makePublicId("viw"),
           surface: normalized.surface,
+          visibility: "project",
+          ownerId: null,
         },
       });
     }

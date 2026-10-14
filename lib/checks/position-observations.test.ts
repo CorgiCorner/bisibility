@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { fixtureScope } from "@/lib/rank-measurements/fixtures";
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { observationSeries, positionObservations } from "./position-observations";
 
 const check = (
@@ -6,13 +8,21 @@ const check = (
   position: number | null,
   depth: number | null = 20,
   version: string | null = "v2",
-) => ({
-  checkedAt: new Date(`2026-09-${String(day).padStart(2, "0")}T12:00:00Z`),
-  normalizationVersion: version,
-  requestedDepth: depth,
-  position,
-  status: "completed",
-});
+) => {
+  const at = new Date(`2026-09-${String(day).padStart(2, "0")}T12:00:00Z`);
+  const scope = { ...fixtureScope, targetId: "target", policyRevision: `depth-${depth}` };
+  return recordedFixture(position, {
+    normalizationVersion: version,
+    requestedDepth: depth,
+    completeThrough: depth,
+    configuredScope: scope,
+    effectiveScope: scope,
+    observedAt: at,
+    recordedAt: at,
+  });
+};
+
+beforeEach(() => vi.setSystemTime(new Date("2026-10-12T12:00:00Z")));
 
 describe("recorded position history", () => {
   it("preserves earlier segments and breaks lines at unknown or changed contracts", () => {

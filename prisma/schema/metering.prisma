@@ -27,6 +27,9 @@ model MeteringOperation {
   @@unique([namespace, operation_id])
   @@index([namespace, state, reservation_expires_at], map: "metering_operation_expiry_idx")
   @@map("metering_operation")
+
+  measurement_native_dispatch_proofs   MeasurementNativeDispatchProof[]
+  measurement_snapshot_dispatch_proofs MeasurementSnapshotDispatchProof[]
 }
 
 model MeteringReceipt {
@@ -188,6 +191,8 @@ model MeteringUsageEvidence {
   @@index([projectId, principal, createdAt], map: "metering_usage_evidence_project_principal_idx")
   @@index([connectionId, correlationId, measurementStatus], map: "metering_usage_evidence_pending_idx")
   @@map("metering_usage_evidence")
+
+  local_original_submit_proofs LocalOriginalSubmitProof[]
 }
 
 // Immutable attribution and send fence survive project/connection deletion; amounts live in Store.
@@ -204,4 +209,6 @@ model MeteringPaidAttemptContext {
 
   @@id([namespace, operation_id])
   @@map("metering_paid_attempt_context")
+
+  local_original_submit_proofs LocalOriginalSubmitProof[]
 }

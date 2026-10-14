@@ -35,7 +35,9 @@ export const Empty: Story = {
 };
 
 export const FirstCheck: Story = {
-  args: { data: [{ label: null, value: 3 }] },
+  args: {
+    data: [{ comparisonKey: "synthetic-series", dateKey: "2026-06-28", label: null, value: 3 }],
+  },
 };
 
 export const Slipped: Story = {

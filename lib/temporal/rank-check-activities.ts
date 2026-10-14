@@ -3,7 +3,6 @@ import "server-only";
 import { ApplicationFailure } from "@temporalio/common";
 import { prisma } from "../db/prisma";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
-import { Prisma } from "../generated/prisma/client";
 import { isOperationAccessDeniedError } from "../operations/access-error";
 import { ProjectDomainRequiredError } from "../projects/tracked-domain";
 import { DeploymentAdmissionExhaustedError } from "../providers/execution-extension-errors";
@@ -44,15 +43,16 @@ export {
 export { authorizeRankCheckExecutionActivity } from "./rank-check-mode-activities";
 export const PROVIDER_BILLING_FAILURE = "provider_billing";
 export const PROVIDER_AUTH_FAILURE = "provider_auth";
+
+import { claimDefinitionPaidCall } from "@/lib/measurement-definitions/worker-claim";
+
 const PAID_CALL_ALREADY_ATTEMPTED_FAILURE = "rank_check_paid_call_already_attempted";
 
-async function claimPaidCall(rankCheckId: string) {
-  const claimed = await prisma.$executeRaw(Prisma.sql`
-    UPDATE "rank_checks"
-    SET "attemptCount" = 1, "updatedAt" = CURRENT_TIMESTAMP
-    WHERE id = ${rankCheckId} AND status = 'running' AND "attemptCount" = 0
-  `);
-  if (claimed === 1) return;
+async function claimPaidCall(rankCheckId: string, inline: boolean) {
+  const permit = await prisma.$transaction((tx) =>
+    claimDefinitionPaidCall(tx, rankCheckId, inline),
+  );
+  if (permit) return permit;
   const now = new Date();
   const blocked = await prisma.rankCheckRunItem.updateMany({
     data: {
@@ -144,11 +144,13 @@ export async function runRankCheckActivity(
   // Inline manual checks remain deliberate operator actions. Queued run items, including manual
   // and API runs, must pass this shared gate before a provider call regardless of their source.
   await guardPaidCall(input);
-  if (input.rankCheckId) await claimPaidCall(input.rankCheckId);
+  if (!input.rankCheckId) throw new Error("Rank check must be prepared before paid I/O.");
+  const definitionPermit = await claimPaidCall(input.rankCheckId, input.inline === true);
   const attribution = await resolveRankCheckAttribution(input, prisma);
   let outcome: Awaited<ReturnType<typeof runKeywordCheckWithFallback>>;
   try {
     outcome = await runKeywordCheckWithFallback({
+      definitionPermit,
       credential: attribution.credential,
       depth: input.depth,
       keywordId: input.keywordId,

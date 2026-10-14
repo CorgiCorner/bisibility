@@ -1,17 +1,15 @@
+import { fixtureScope } from "@/lib/rank-measurements/fixtures";
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
 import { describe, expect, it } from "vitest";
 import { buildTrend, buildTrendTakeaway, type Check, type Keyword } from "./overview-trend";
 
 const now = new Date("2026-07-22T12:00:00.000Z");
 
 function check(daysAgo: number, position: number): Check {
+  const at = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
   return {
-    checkedAt: new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000),
-    normalizationVersion: "v2",
-    position,
-    previousPosition: null,
+    ...recordedFixture(position, { id: `at-${at.toISOString()}`, observedAt: at, recordedAt: at }),
     rankingUrl: null,
-    requestedDepth: 100,
-    status: "completed",
   };
 }
 
@@ -21,7 +19,8 @@ function keyword(text: string, start: number, end: number, historyDays = 30): Ke
     _count: { rankChecks: 6 },
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     device: "desktop",
-    id: text,
+    id: `kw_${text}`,
+    projectId: "project-a",
     locationRef: { displayName: "United States", languageLabel: "English" },
     publicId: `kw_${text}`,
     rankChecks: [
@@ -31,14 +30,32 @@ function keyword(text: string, start: number, end: number, historyDays = 30): Ke
       check(lastDay - 2, start),
       check(lastDay - 1, start),
       check(lastDay, start),
-    ],
+    ].map((value) => {
+      const scope = { ...fixtureScope, targetId: `kw_${text}`, location: "United States" };
+      return {
+        ...value,
+        observationRun: value.observationRun
+          ? { ...value.observationRun, configuredScope: scope, effectiveScope: scope }
+          : null,
+      };
+    }),
     schedule: null,
     text,
   };
 }
 
+function captured(id: string, checks: Check[]): Check[] {
+  const scope = { ...fixtureScope, targetId: id, location: "United States" };
+  return checks.map((value) => ({
+    ...value,
+    observationRun: value.observationRun
+      ? { ...value.observationRun, configuredScope: scope, effectiveScope: scope }
+      : null,
+  }));
+}
+
 describe("buildTrendTakeaway", () => {
-  it("uses three-day bookends and click-volume tie-breaking for improvement", () => {
+  it("uses captured comparable positive pairs and click-volume tie-breaking for improvement", () => {
     const keywords = [
       keyword("headless cms", 5, 3),
       keyword("alpha", 10, 8),
@@ -46,7 +63,7 @@ describe("buildTrendTakeaway", () => {
       keyword("gamma", 12, 10),
       keyword("delta", 13, 12),
     ];
-    const volumes = new Map(keywords.map(({ id }) => [id, id === "headless cms" ? 200 : 100]));
+    const volumes = new Map(keywords.map(({ id }) => [id, id === "kw_headless cms" ? 200 : 100]));
 
     expect(buildTrendTakeaway(keywords, now, volumes)).toEqual({
       days: 30,
@@ -54,6 +71,7 @@ describe("buildTrendTakeaway", () => {
       leader: "headless cms",
       value: 1.8,
       window: "lastThirtyDays",
+      comparableCount: 5,
     });
   });
 
@@ -63,23 +81,27 @@ describe("buildTrendTakeaway", () => {
       kind: "slipped",
       leader: "react data grid",
       value: 3,
+      comparableCount: 1,
       window: "lastThirtyDays",
     });
     expect(buildTrendTakeaway([keyword("steady", 6, 6)], now)).toEqual({
       days: 30,
       kind: "steady",
+      comparableCount: 1,
       window: "lastThirtyDays",
     });
     expect(buildTrendTakeaway([keyword("new", 9, 7, 10)], now)).toEqual({
       days: 10,
       kind: "improved",
       value: 2,
+      comparableCount: 1,
       window: "firstTrackedDays",
     });
     expect(buildTrendTakeaway([keyword("new", 7, 9, 10)], now)).toEqual({
       days: 10,
       kind: "slipped",
       value: 2,
+      comparableCount: 1,
       window: "firstTrackedDays",
     });
   });
@@ -110,8 +132,9 @@ describe("buildTrend", () => {
       { ...check(1, 5), requestedDepth: 20 },
       { ...check(2, 6), requestedDepth: null, normalizationVersion: null },
     ];
+    row.rankChecks = captured(row.publicId, row.rankChecks);
     const trend = buildTrend([row]);
-    expect(trend.map((point) => point.value)).toEqual([6, 5, null]);
+    expect(trend.map((point) => point.value)).toEqual([null, 5, null]);
     expect(buildTrendTakeaway([row], now)).toBeNull();
   });
 
@@ -123,6 +146,8 @@ describe("buildTrend", () => {
     ];
     const second = keyword("second", 6, 5);
     second.rankChecks = [check(0, 20)];
+    first.rankChecks = captured(first.publicId, first.rankChecks);
+    second.rankChecks = captured(second.publicId, second.rankChecks);
     expect(buildTrend([first, second]).at(-1)?.value).toBe(15);
   });
   it("preserves UTC calendar keys for client-side locale formatting", () => {
@@ -136,6 +161,6 @@ describe("buildTrend", () => {
       "2026-07-21",
       "2026-07-22",
     ]);
-    expect(trend.at(-1)?.label).toBeNull();
+    expect(trend.at(-1)?.label).toBe("2026-07-22");
   });
 });

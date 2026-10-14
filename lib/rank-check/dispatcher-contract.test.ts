@@ -92,8 +92,17 @@ describe("dispatcher persistence contract", () => {
     for (const path of creationPaths) {
       expect(readFileSync(path, "utf8"), path).toMatch(/createKeywordBatch(?:Set)?/);
     }
-    for (const path of [...schedulePaths, ...defaultsPaths]) {
+    for (const path of schedulePaths) {
       expect(readFileSync(path, "utf8"), path).toContain("refreshKeywordDispatchStates");
     }
+    const reviewedDefaults = readFileSync("lib/actions/defaults-reviewed.ts", "utf8");
+    const defaultsHost = readFileSync("lib/measurement-settings/host/defaults.ts", "utf8");
+    const defaultsService = readFileSync("lib/settings/project-defaults-service.ts", "utf8");
+    expect(defaultsService).toContain("refreshKeywordDispatchStates");
+    expect(defaultsHost).toContain("updateProjectDefaultsInTransaction");
+    expect(reviewedDefaults).toContain("saveDefaultsHost");
+    expect(readFileSync(defaultsPaths[0], "utf8")).toContain("saveReviewedProjectDefaults");
+    expect(readFileSync(defaultsPaths[1], "utf8")).toContain("saveReviewedDefaultSettings");
+    expect(readFileSync(defaultsPaths[2], "utf8")).toContain("saveDefaultsHost");
   });
 });

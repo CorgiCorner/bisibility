@@ -1,5 +1,6 @@
 import { ApiInputError } from "@/lib/api/errors";
 import { isPublicIdOfType, type PublicIdPrefix } from "@/lib/db/public-id-resources";
+import { isLocalMonitorTool } from "./local-monitor-tools";
 import type { JsonObject } from "./types";
 
 const publicIdInputs = {
@@ -32,10 +33,16 @@ function requireMcpPublicId(value: string, prefix: PublicIdPrefix) {
 }
 
 export function validateMcpPublicIds(name: string, input: JsonObject) {
+  const local = isLocalMonitorTool(name);
   for (const [key, prefix] of Object.entries(publicIdInputs)) {
     const value = input[key];
-    if (typeof value === "string") requireMcpPublicId(value, prefix);
+    if (typeof value === "string")
+      requireMcpPublicId(
+        value,
+        local && key === "monitor_id" ? "lmn" : local && key === "run_id" ? "lmr" : prefix,
+      );
   }
+  if (local && typeof input.target_id === "string") requireMcpPublicId(input.target_id, "lmt");
   if (Array.isArray(input.keyword_ids)) {
     for (const value of input.keyword_ids) {
       if (typeof value !== "string")

@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { consume } from "@/lib/api/ratelimit";
 import { withVerifiedLoginCodeRequest } from "@/lib/auth/login-code-request-context";
 import { EMAIL_CAPACITY_EXHAUSTED } from "@/lib/auth/signin-capacity-types";
+import { assertTestAuthEmail } from "@/lib/auth/test-auth-extension";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { resolveClientIp } from "@/lib/http/client-ip";
 import { verificationTokenSchema } from "@/lib/landing/waitlist-schema";
@@ -57,7 +58,8 @@ export async function resendSignInOtp(input: unknown): Promise<ResendOtpResult> 
   const parsed = resendSchema.safeParse(input);
   if (!parsed.success) return { code: "invalid_input", ok: false, retryAfter: 0 };
   const requestHeaders = await headers();
-  if (deploymentMode() === "cloud") {
+  const testIdentity = await assertTestAuthEmail(parsed.data.email);
+  if (deploymentMode() === "cloud" && !testIdentity) {
     const rawIp = resolveClientIp(requestHeaders);
     const digest = createHash("sha256")
       .update(rawIp ?? "unidentified")

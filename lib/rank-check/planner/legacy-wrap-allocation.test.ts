@@ -1,3 +1,4 @@
+import { definitionQueryFixture } from "@/lib/rank-check/definition-policy.test-fixture";
 import { describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ assertAllocation: vi.fn() }));
@@ -31,14 +32,22 @@ describe("legacy scheduled run allocation", () => {
     const wrap = async (rankCheckId: string) => {
       let release!: () => void;
       const tx = {
-        $queryRaw: vi.fn(async () => {
-          const previous = connectionTail;
-          connectionTail = new Promise((done) => {
-            release = done;
-          });
-          await previous;
-          return [];
-        }),
+        $queryRaw: vi.fn(
+          definitionQueryFixture(async (query) => {
+            const sql = (
+              Array.isArray(query)
+                ? query
+                : (query as import("@/lib/generated/prisma/client").Prisma.Sql).strings
+            ).join("?");
+            if (!sql.includes('"provider_connections"')) return [];
+            const previous = connectionTail;
+            connectionTail = new Promise((done) => {
+              release = done;
+            });
+            await previous;
+            return [];
+          }),
+        ),
         rankCheck: { update: vi.fn() },
         rankCheckRun: {
           create: vi.fn(async ({ data }) => {

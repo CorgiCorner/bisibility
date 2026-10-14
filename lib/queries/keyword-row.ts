@@ -1,16 +1,17 @@
+import { keywordCheckState } from "./keyword-check-state";
+
+export { keywordCheckState } from "./keyword-check-state";
+
 import { alertPositionThreshold } from "@/lib/alerts/depth-conflict";
 import { positionObservations } from "@/lib/checks/position-observations";
 import { comparableCompletedWindow } from "@/lib/checks/status";
-import type { ExpectedUrlResolution } from "@/lib/expected-url/types";
 import { deriveRankingUrlPeriods } from "@/lib/keyword-detail/ranking-url-history";
 import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
-import { earlierDayPosition } from "@/lib/keywords/position-history";
-import { type KeywordLocation, locationView } from "@/lib/queries/keyword-location";
+import { locationView } from "@/lib/queries/keyword-location";
 import type { Metrics } from "@/lib/queries/keyword-metrics";
 import { deviceLabel, pathFromUrl } from "@/lib/queries/keyword-row-format";
 import { comparablePositionPoints, urlPresenceView } from "@/lib/queries/keyword-row-history";
 import type {
-  KeywordCheckState,
   KeywordRow,
   KeywordSchedule,
   KeywordTrafficSummary,
@@ -18,8 +19,9 @@ import type {
   LatestAttemptHealth,
 } from "@/lib/queries/keyword-row-types";
 import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
+import { resolveRecordedChecks } from "@/lib/rank-measurements/check-resolution";
 import { resolveSerpDepth } from "@/lib/serp/constants";
-import { hasIncompleteObservation, normalizedObservationCompleteness } from "@/lib/serp/rank-depth";
+import { normalizedObservationCompleteness } from "@/lib/serp/rank-depth";
 
 export type {
   CompletedComparableCheck,
@@ -35,78 +37,9 @@ export type {
   UrlPresenceView,
 } from "@/lib/queries/keyword-row-types";
 
-type ScheduleSource = {
-  cronExpression: string | null;
-  frequency: KeywordSchedule["frequency"];
-  jitterMinutes: number;
-  lastCheckedAt: Date | null;
-  nextCheckAt: Date | null;
-  serpDepth?: number | null;
-  timezone: string;
-};
-type CheckScheduleSource = { name: string; publicId: string; serpDepth?: number | null };
+import type { KeywordProject, KeywordRowInput, ScheduleSource } from "./keyword-row-input";
 
-type KeywordProject = { defaults: ScheduleSource | null; domain: string };
-type UrlPresenceSource = {
-  canonicalOk: boolean | null;
-  checkedAt: Date;
-  coverageState: string | null;
-  lastCrawlAt: Date | null;
-  url: string;
-  verdict: string | null;
-};
-export type KeywordRowInput = {
-  alertTargets?: {
-    rule: {
-      conditionType: string;
-      enabled: boolean;
-      thresholdPosition: number | null;
-      topN: number | null;
-      updatedAt: Date;
-    };
-  }[];
-  createdAt: Date;
-  checkSchedule?: CheckScheduleSource | null;
-  device: string;
-  id: string;
-  intent: string | null;
-  location: string;
-  locationRef: {
-    canonicalKey: string;
-    cityName: string | null;
-    countryCode: string;
-    displayName: string;
-    gl: string;
-    hl: string;
-    id: string;
-    kind: KeywordLocation["kind"];
-    languageLabel?: string;
-  };
-  publicId: string;
-  expectedUrlResolution?: ExpectedUrlResolution;
-  queuedRankCheckTasks?: { state: string }[];
-  rankChecks: {
-    checkedAt: Date;
-    degradedToCountry?: boolean;
-    errorCode: string | null;
-    expectedUrlAtCheck?: string | null;
-    id: string;
-    normalizationVersion: string | null;
-    observationRun?: { completeness: string } | null;
-    position: number | null;
-    provider: string;
-    previousPosition: number | null;
-    rankingUrl: string | null;
-    requestedDepth: number | null;
-    status?: string;
-  }[];
-  schedule: ScheduleSource | null;
-  tags: { tag: { name: string } }[];
-  targetUrl: string | null;
-  text: string;
-  topic: string | null;
-  urlPresence?: UrlPresenceSource | null;
-};
+export type { KeywordRowInput } from "./keyword-row-input";
 export function iso(date: Date | null | undefined) {
   return date ? date.toISOString() : null;
 }
@@ -151,22 +84,6 @@ export function latestAttemptHealth(
   if (queuedTasks.some((task) => ACTIVE_QUEUED_TASK_STATES.includes(task.state))) return "running";
   return check?.status === "failed" ? "failed" : "ok";
 }
-export function keywordCheckState(
-  check: Pick<
-    KeywordRowInput["rankChecks"][number],
-    "position" | "status" | "observationRun"
-  > | null,
-  queuedTasks: ReadonlyArray<{ state: string }>,
-): KeywordCheckState {
-  if (check?.status === "running") return "running";
-  if (check?.status === "failed") return "failed";
-  if (check?.status && check.status !== "completed") return "never_checked";
-  if (queuedTasks.some((task) => ACTIVE_QUEUED_TASK_STATES.includes(task.state))) return "running";
-  if (!check) return "never_checked";
-  if (check.position === null && hasIncompleteObservation(check.observationRun?.completeness))
-    return "unknown";
-  return check.position === null ? "not_ranked" : "ranked";
-}
 export function mapKeyword(
   row: KeywordRowInput,
   project: KeywordProject,
@@ -174,6 +91,7 @@ export function mapKeyword(
   traffic?: KeywordTrafficSummary,
 ) {
   const visibleChecks = row.rankChecks.filter((check) => check.status !== "deferred");
+  const quality = resolveRecordedChecks(visibleChecks, row.id);
   const comparableWindow = comparableCompletedWindow(visibleChecks);
   const completedChecks = comparableWindow.checks;
   const completedUrlHistory = visibleChecks.filter(isCompletedCheck);
@@ -185,8 +103,8 @@ export function mapKeyword(
   const trackedDepth = resolveSerpDepth(latest?.requestedDepth ?? configuredDepth);
   const positions = checks.flatMap((check) => (check.position === null ? [] : [check.position]));
   const position = latest?.position ?? 101;
-  const previousPosition = latest?.previousPosition ?? null;
-  const positionBaseline = earlierDayPosition(completedChecks, latest);
+  const previousPosition = quality.movement !== null ? (quality.baseline?.position ?? null) : null;
+  const positionBaseline = previousPosition;
   const rankingUrl = latest?.rankingUrl ?? null;
   const expectedUrlAtCheck = latest?.expectedUrlAtCheck ?? null;
   const currentExpectedUrl = row.expectedUrlResolution?.url ?? row.targetUrl;

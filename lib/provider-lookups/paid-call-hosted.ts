@@ -24,7 +24,7 @@ export async function runHostedPaidProviderCall<
   connection: { credentialsEncrypted: string | null; id: string; provider: string };
   credential?: ProviderCredential;
   correlationId?: string;
-  feature: Exclude<ProviderCostFeature, "rank_check">;
+  feature: Exclude<ProviderCostFeature, "rank_check" | "local_scan">;
   itemCount: number;
   projectId: string;
   provider: SerpProvider;

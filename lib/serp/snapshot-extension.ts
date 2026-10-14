@@ -17,7 +17,23 @@ export type SerpSnapshotContinuation = {
   connectionId?: string;
 };
 
+import type { ObservationScope } from "@/lib/observation/types";
+
+export type SnapshotPageEvidence = {
+  version: 1;
+  adapterVersion: "serpapi-observation-v1";
+  nextStart: number;
+  requestDepth: 10;
+  observedAt: string | null;
+  observedThrough: string | null;
+  configuredScope: ObservationScope;
+  effectiveScope: ObservationScope | null;
+  /** Mixed-time extensions cannot enlarge the original observation's historical prefix. */
+  completeThrough: null;
+  completeness: "unknown";
+};
 export type SnapshotExtensionPage = {
+  evidence?: SnapshotPageEvidence | null;
   start: number;
   fetchedAt: string;
   skippedDuplicates: number;

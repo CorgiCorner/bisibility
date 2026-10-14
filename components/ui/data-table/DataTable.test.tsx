@@ -63,6 +63,7 @@ describe("DataTable", () => {
 
     const table = screen.getByRole("table", { name: "Example rows" });
     expect(table).toHaveAttribute("aria-colcount", "2");
+    expect(screen.getByText("Section").closest('[role="row"]')).not.toHaveAttribute("aria-level");
     expect(screen.getByText("Section leaf")).toBeInTheDocument();
     expect(screen.queryByText("Group leaf A")).not.toBeInTheDocument();
 

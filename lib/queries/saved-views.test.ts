@@ -1,3 +1,4 @@
+import { keywordViewFixture } from "@/lib/saved-views/view-test-fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getSavedView, listSavedViews } from "./saved-views";
 
@@ -27,6 +28,9 @@ vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject
 
 function savedView(overrides: Record<string, unknown> = {}) {
   return {
+    ownerId: null,
+    revision: 1,
+    visibility: "project",
     config: {
       filters: { tags: ["Product"], volMax: 20, volMin: 5 },
       search: "rank",
@@ -64,7 +68,7 @@ describe("saved view queries", () => {
     expect(mocks.prisma.savedView.findMany).toHaveBeenCalledWith({
       orderBy: [{ name: "asc" }, { createdAt: "asc" }],
       select: expect.objectContaining({ config: true, id: true, name: true }),
-      where: { projectId: "project_1", surface: "keywords" },
+      where: { projectId: "project_1", surface: "keywords", visibility: "project" },
     });
     expect(views).toEqual([
       expect.objectContaining({
@@ -92,6 +96,7 @@ describe("saved view queries", () => {
         projectId: "project_1",
         publicId: VIEW_PUBLIC_ID_2,
         surface: "keywords",
+        visibility: "project",
       },
     });
     expect(view).toMatchObject({ canDelete: true, id: VIEW_PUBLIC_ID_2 });
@@ -100,7 +105,7 @@ describe("saved view queries", () => {
 
   it("keeps legacy keyword views visible while normalizing known fields", async () => {
     mocks.prisma.savedView.findMany.mockResolvedValue([
-      savedView({ config: { extra: true, search: "legacy rank", version: 2 } }),
+      savedView({ config: { extra: true, search: "legacy rank", version: 1 } }),
     ]);
 
     const views = await listSavedViews("prj_abcdefghijklmnopqrstuvwx");
@@ -136,8 +141,46 @@ describe("saved view queries", () => {
     const views = await listSavedViews("prj_abcdefghijklmnopqrstuvwx", "competitors");
 
     expect(mocks.prisma.savedView.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { projectId: "project_1", surface: "competitors" } }),
+      expect.objectContaining({
+        where: { projectId: "project_1", surface: "competitors", visibility: "project" },
+      }),
     );
     expect(views[0]).toMatchObject({ name: "Q3", surface: "competitors" });
+  });
+
+  it("does not reinterpret an incomplete v2 as a legacy all-scope view", async () => {
+    mocks.prisma.savedView.findMany.mockResolvedValue([
+      savedView({ config: { search: "legacy rank", version: 2 } }),
+    ]);
+    expect(await listSavedViews("prj_abcdefghijklmnopqrstuvwx")).toEqual([]);
+  });
+
+  it("rejects private records in the legacy projection even if a DAO unexpectedly supplies one", async () => {
+    mocks.prisma.savedView.findMany.mockResolvedValue([savedView({ visibility: "private" })]);
+    expect(await listSavedViews("prj_abcdefghijklmnopqrstuvwx")).toEqual([]);
+  });
+});
+
+it("retains a shared v2 definition/revision while preserving the legacy scope and excluding private or corrupt resources", async () => {
+  const definition = keywordViewFixture();
+  mocks.prisma.savedView.findMany.mockResolvedValue([
+    savedView({ config: definition, revision: 8 }),
+    savedView({ visibility: "private", ownerId: "user_1", name: "Secret" }),
+    savedView({ ownerId: "unexpected-owner", name: "Corrupt shared" }),
+    savedView({ revision: 0, name: "Unproved revision" }),
+  ]);
+  const [view, ...rest] = await listSavedViews("prj_abcdefghijklmnopqrstuvwx");
+  expect(rest).toEqual([]);
+  expect(view).toMatchObject({
+    revision: 8,
+    visibility: "project",
+    definition,
+    config: { surface: "keywords", version: 1, search: definition.search },
+  });
+  expect(view).not.toHaveProperty("ownerId");
+  expect(view).not.toHaveProperty("createdById");
+  expect(mocks.prisma.savedView.findMany.mock.calls.at(-1)?.[0]).toMatchObject({
+    select: { revision: true, ownerId: true },
+    where: { projectId: "project_1", visibility: "project" },
   });
 });

@@ -1,5 +1,7 @@
 "use client";
 
+import type { ObservationHistoryPage } from "@/components/keyword-detail-history/history-contract";
+import { RecordedUrlHistory } from "@/components/keyword-detail-history/RecordedUrlHistory";
 import { Card } from "@/components/ui/Card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { SectionTitle } from "@/components/ui/SectionTitle";
@@ -58,7 +60,7 @@ function positionLabel(event: RankingUrlEvent) {
   }).label;
 }
 
-export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>) {
+function LegacyRankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>) {
   const t = useTranslations("projectRankTracker.keywordDetail.rankingUrl");
   const locale = useLocale();
   const timeline = buildTimeline(keyword.rankingUrlHistory);
@@ -147,4 +149,14 @@ export function RankingUrlHistory({ keyword }: Readonly<{ keyword: KeywordRow }>
       </div>
     </Card>
   );
+}
+
+type RankingHistoryProps =
+  | { keyword: KeywordRow }
+  | { keyword: KeywordRow; history: ObservationHistoryPage; timeZone: string };
+
+export function RankingUrlHistory(props: Readonly<RankingHistoryProps>) {
+  if ("history" in props)
+    return <RecordedUrlHistory page={props.history} timeZone={props.timeZone} />;
+  return <LegacyRankingUrlHistory keyword={props.keyword} />;
 }

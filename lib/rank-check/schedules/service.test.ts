@@ -67,14 +67,25 @@ const schedule = {
 
 describe("check schedule service", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     mocks.prisma.$transaction.mockImplementation(async (callback) => callback(mocks.tx));
     mocks.tx.checkSchedule.create.mockResolvedValue(schedule);
     mocks.tx.checkSchedule.updateMany.mockResolvedValue({ count: 1 });
     mocks.tx.checkSchedule.delete.mockResolvedValue(schedule);
     mocks.tx.keyword.updateMany.mockResolvedValue({ count: 1 });
     mocks.tx.$executeRaw.mockResolvedValue(0);
-    mocks.tx.project.findUnique.mockResolvedValue({ defaults: { timezone: "UTC" } });
+    mocks.tx.project.findUnique.mockResolvedValue({
+      writeMode: "active",
+      defaults: { timezone: "UTC" },
+    });
+    mocks.tx.$queryRaw.mockImplementation(async (parts: TemplateStringsArray) => {
+      const sql = parts.join("?");
+      if (sql.includes("FROM users")) return [{ id: "user_1" }];
+      if (sql.includes("FROM memberships")) return [{ role: "admin" }];
+      if (sql.includes('FROM "projects"')) return [{ id: "project_1" }];
+      throw new Error(`Unexpected schedule authority query: ${sql}`);
+    });
+    mocks.tx.keyword.findMany.mockResolvedValue([]);
     mocks.refresh.mockResolvedValue(0);
     mocks.reconcile.mockResolvedValue({ deleted: 0 });
     mocks.writeAudit.mockResolvedValue({});

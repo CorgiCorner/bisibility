@@ -128,6 +128,32 @@
       "readOnly": "Read-only",
       "saveValidation": "Check the highlighted settings before saving.",
       "saveError": "URL inspection limit could not be saved."
+    },
+    "measurementPolicy": {
+      "title": "Measurement policy",
+      "description": "Choose when retained ranking evidence is fresh. Saving does not run checks.",
+      "manual": "Manual freshness window (seconds)",
+      "grace": "Schedule grace (seconds)",
+      "manualHelp": "Leave blank to keep manual freshness unknown. Zero is an explicit zero-length window.",
+      "graceHelp": "Added to the actual schedule interval. Leave blank to keep scheduled freshness unknown.",
+      "unknown": "Unknown",
+      "seconds": "{value} seconds",
+      "effect": "Changed policy requires a new preview before running checks. Existing observations stay unchanged.",
+      "save": "Save policy",
+      "configure": "Configure policy",
+      "states": {
+        "ready": "Measurement policy is configured.",
+        "unconfigured": "Configure measurement policy before running new checks.",
+        "unsupported": "Review and save policy for the currently supported adapters.",
+        "authority_unavailable": "Measurement policy storage is unavailable. Ask the instance administrator to finish the upgrade."
+      },
+      "notices": {
+        "saved": "Policy saved. Review a new preview before running checks.",
+        "conflict": "Policy changed elsewhere. Review the refreshed values before saving again.",
+        "unavailable": "Policy could not be configured. Refresh or ask the instance administrator.",
+        "invalid": "Enter a non-negative duration with at most three decimal places, or leave blank.",
+        "error": "Policy could not be saved. Refresh and try again."
+      }
     }
   }
 }

@@ -7,6 +7,7 @@ import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { KeywordIdentityImmutableError } from "@/lib/keywords/identity";
 
 export type ActionFailure =
+  | { code: "private_view_creation_unavailable"; message: string; status: 403 }
   | {
       code: "usage_reconciliation_required" | "budget_missing" | "budget_exhausted";
       message: string;

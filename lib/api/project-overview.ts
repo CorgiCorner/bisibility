@@ -6,9 +6,11 @@ import {
 } from "@/lib/keywords/effective-schedule";
 import { buildOverviewMetrics, snapshotFor } from "@/lib/queries/overview-builders";
 import { loadOverviewMetricData } from "@/lib/queries/overview-data";
+import { historyExportReportOptions } from "@/lib/rank-history/export-host";
 import { z } from "zod";
 import type { ApiContext } from "./context";
 import { requireApiPublicId } from "./public-id";
+import { historyApiAuthority } from "./rank-history-export";
 import { resourceResponse } from "./responses";
 import { scopedProject } from "./surface";
 
@@ -35,11 +37,19 @@ export async function getProjectOverview(ctx: ApiContext, projectId: string) {
   const denied = scopedProject(ctx, projectId);
   if (denied) return denied;
 
-  const data = await loadOverviewMetricData(ctx.auth.project.id, queryInput(ctx));
-  const snapshots = data.keywords.map((keyword) =>
-    snapshotFor(keyword, data.keywordVolumes.get(keyword.id) ?? null),
+  const publicProjectId = requireApiPublicId(ctx.auth.project.publicId ?? "", "prj");
+  const filters = queryInput(ctx);
+  const asOf = new Date();
+  const report = historyExportReportOptions(
+    historyApiAuthority(ctx),
+    asOf,
+    { "7d": 7, "28d": 28, "90d": 90 }[filters.range],
   );
-  const metrics = buildOverviewMetrics(snapshots);
+  const data = await loadOverviewMetricData(ctx.auth.project.id, filters, asOf, { report });
+  const snapshots = data.keywords.map((keyword) =>
+    snapshotFor(keyword, data.keywordVolumes.get(keyword.id) ?? null, asOf),
+  );
+  const metrics = buildOverviewMetrics(snapshots, { asOf });
   const schedules = data.keywords.length
     ? data.keywords.map((keyword) =>
         resolveEffectiveSchedule(keyword.schedule, data.projectDefaults, keyword.id),
@@ -55,7 +65,7 @@ export async function getProjectOverview(ctx: ApiContext, projectId: string) {
       last_check_at: data.latestCheck?.checkedAt.toISOString() ?? null,
       next_check_at: nextCheckAt?.toISOString() ?? null,
       position_distribution: metrics.positionDistribution,
-      project_id: requireApiPublicId(ctx.auth.project.publicId ?? "", "prj"),
+      project_id: publicProjectId,
       top_3_count: metrics.top3Count,
       top_10_count: metrics.top10Count,
       top_10_delta: metrics.top10Delta,

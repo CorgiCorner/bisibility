@@ -9,6 +9,11 @@ import {
 // runtime resources here so new IDs preserve its parser and generator contract.
 export const PUBLIC_ID_RESOURCE_REGISTRY = {
   ...CORE_PUBLIC_ID_RESOURCE_REGISTRY,
+  biz: "businessLocation",
+  lmt: "localMeasurementTarget",
+  lmr: "localMeasurementRun",
+  lmn: "localMonitor",
+  lmj: "localMonitorLaunchIntent",
   agr: "agentReport",
   ait: "aiTopic",
   aip: "aiPrompt",

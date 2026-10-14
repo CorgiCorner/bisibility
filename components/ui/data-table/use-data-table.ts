@@ -11,6 +11,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useCallback, useMemo } from "react";
+import { resolveDataTableColumnOrder } from "./data-table-column-order";
 import { dataTableExpandedRecord } from "./data-table-expansion";
 import {
   dataTableColumnId,
@@ -81,6 +82,7 @@ export function clampDataTablePage(page: number, pageSize: number, rowCount: num
 
 export function useDataTable<TRow extends DataTableRowBase>(options: UseDataTableOptions<TRow>) {
   const {
+    columnOrder,
     columnPinning,
     columnSizing,
     columnVisibility,
@@ -246,6 +248,10 @@ export function useDataTable<TRow extends DataTableRowBase>(options: UseDataTabl
     [selection],
   );
   const data = useMemo(() => [...rows], [rows]);
+  const effectiveOrder = useMemo(
+    () => resolveDataTableColumnOrder(tableColumns, columnOrder),
+    [tableColumns, columnOrder],
+  );
   const table = useReactTable({
     autoResetPageIndex: false,
     columnResizeMode: "onChange",
@@ -275,6 +281,7 @@ export function useDataTable<TRow extends DataTableRowBase>(options: UseDataTabl
     onColumnVisibilityChange: commitVisibility,
     rowCount: paginationMode === "server" ? pagination?.rowCount : undefined,
     state: {
+      columnOrder: effectiveOrder,
       columnPinning: effectivePinning,
       columnSizing: resolvedSizing,
       columnVisibility: effectiveVisibility,

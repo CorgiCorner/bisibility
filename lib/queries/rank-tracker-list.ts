@@ -4,40 +4,39 @@ import type {
   RankTrackerListQueryInput,
   RankTrackerListResult,
 } from "@/lib/keywords/rank-tracker-query-types";
-import { loadKeywordRowsByInternalIds } from "./keyword-row-loader";
-import type { KeywordRow } from "./keyword-row-types";
-import { selectRankTrackerKeywords } from "./rank-tracker-selection";
+import { getQueryActor } from "./_auth";
+import {
+  RankTrackerReportConfigurationError,
+  type RankTrackerReportOptions,
+} from "./rank-tracker-report-model";
+import { selectRankTrackerReportKeywords } from "./rank-tracker-selection-core";
 
 export async function getRankTrackerKeywordList(
   input: RankTrackerListQueryInput,
+  options: RankTrackerReportOptions,
 ): Promise<RankTrackerListResult> {
   if (input.query.grouped) throw new Error("Rank tracker list query supports flat mode only.");
-  const {
-    exactRows,
-    project,
-    raw,
-    resolvedQuery: effectiveQuery,
-  } = await selectRankTrackerKeywords(input.projectRef, input.query);
-  let displayCount = raw.matchedTargetCount;
-  let rows: KeywordRow[];
-  if (exactRows) {
-    displayCount = exactRows.length;
-    const offset = (effectiveQuery.page - 1) * effectiveQuery.pageSize;
-    rows = exactRows.slice(offset, offset + effectiveQuery.pageSize);
-  } else {
-    rows = await loadKeywordRowsByInternalIds(project, raw.keywordIds);
-  }
-  const pageCount = Math.ceil(displayCount / effectiveQuery.pageSize);
-  const canonicalPage = pageCount === 0 ? 1 : Math.min(input.query.page, pageCount);
+  if (!options) throw new RankTrackerReportConfigurationError();
+  const context = options.context ?? {
+    actor: await getQueryActor(),
+    transport: "session" as const,
+  };
+  const selected = await selectRankTrackerReportKeywords(context, input, options);
+  const pageCount = Math.ceil(selected.rows.length / selected.query.pageSize);
+  const page = pageCount === 0 ? 1 : Math.min(selected.query.page, pageCount);
   return {
-    facets: raw.facets,
-    locations: raw.locations,
-    matchedTargetCount: displayCount,
-    page: canonicalPage,
+    evaluation: selected.evaluation,
+    facets: selected.facets,
+    locations: selected.locations,
+    matchedTargetCount: selected.selectedKeywordIds.length,
+    page,
     pageCount,
-    pageSize: input.query.pageSize,
-    resolvedLens: effectiveQuery.lens,
-    rows,
-    totalCount: raw.totalCount,
+    pageSize: selected.query.pageSize,
+    report: selected.report,
+    resolvedLens: selected.query.lens,
+    rows: selected.rows.slice((page - 1) * selected.query.pageSize, page * selected.query.pageSize),
+    selectedKeywordIds: selected.selectedKeywordIds,
+    selectionDigest: selected.selectionDigest,
+    totalCount: selected.totalCount,
   };
 }

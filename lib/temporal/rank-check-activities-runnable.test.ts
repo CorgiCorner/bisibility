@@ -1,3 +1,7 @@
+import {
+  definitionActivityContextFixture,
+  definitionClaimQueryFixture,
+} from "@/lib/rank-check/definition-claim.test-fixture";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AUTOMATIC_EXECUTION_DISABLED_FAILURE,
@@ -6,6 +10,8 @@ import {
 
 const mocks = vi.hoisted(() => ({
   prisma: {
+    $queryRaw: vi.fn(),
+    $transaction: vi.fn(),
     $executeRaw: vi.fn(),
     keyword: { findUnique: vi.fn() },
     projectMarket: { findMany: vi.fn() },
@@ -45,6 +51,9 @@ function checkInput(source: "dispatcher" | "legacy" | "manual") {
 describe("runRankCheckActivity runnable gate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    definitionActivityContextFixture();
+    mocks.prisma.$queryRaw.mockImplementation(definitionClaimQueryFixture());
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
     mocks.prisma.$executeRaw.mockResolvedValue(1);
     mocks.prisma.keyword.findUnique.mockResolvedValue(keywordRow());
@@ -123,7 +132,7 @@ describe("runRankCheckActivity runnable gate", () => {
       rankCheckId: "rank_running_1",
     });
 
-    expect(mocks.prisma.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(mocks.prisma.$queryRaw).toHaveBeenCalledTimes(1);
     expect(mocks.runKeywordCheckWithFallback).toHaveBeenCalledWith(
       expect.objectContaining({
         keywordId: "keyword_1",

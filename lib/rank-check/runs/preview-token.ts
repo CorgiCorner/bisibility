@@ -14,6 +14,10 @@ const tokenPayloadSchema = z
     projectId: z.string().min(1),
     providerId: z.string().min(1).nullable(),
     selectionHash: z.string().regex(/^[a-f0-9]{64}$/),
+    sourceHash: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/)
+      .optional(),
     // A manual preview admits rows an API launch leaves out; tokens from before the field are API.
     trigger: z.enum(["api", "manual"]).default("api"),
   })
@@ -25,6 +29,7 @@ export type PreviewTokenExpected = {
   projectId: string;
   providerId: string | null;
   selectionHash: string;
+  sourceHash?: string;
   trigger: RunLaunchTrigger;
 };
 export type PreviewTokenPayload = PreviewTokenExpected & { exp: number };
@@ -46,6 +51,7 @@ function canonicalPayload(payload: PreviewTokenPayload) {
     estimateCents: payload.estimateCents,
     exp: payload.exp,
     trigger: payload.trigger,
+    ...(payload.sourceHash === undefined ? {} : { sourceHash: payload.sourceHash }),
   });
 }
 
@@ -120,7 +126,8 @@ export function verifyPreviewToken(
     payload.depth !== expected.depth ||
     payload.providerId !== expected.providerId ||
     payload.estimateCents !== expected.estimateCents ||
-    payload.trigger !== expected.trigger
+    payload.trigger !== expected.trigger ||
+    (expected.sourceHash !== undefined && payload.sourceHash !== expected.sourceHash)
   ) {
     throw new PreviewTokenError("mismatch");
   }

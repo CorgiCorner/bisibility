@@ -71,7 +71,7 @@ export function MeasurementValue({
     <p className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
       <span
         key={formatFigure?.(value) ?? value.text}
-        className={`min-w-0 break-all font-semibold tabular-nums ${size === "lg" ? "text-3xl leading-none tracking-tight" : "text-base leading-snug"} ${usageMotion.enter}`}
+        className={`min-w-0 break-all font-semibold tabular-nums ${size === "lg" ? "text-2xl leading-none tracking-tight" : "text-base leading-snug"} ${usageMotion.enter}`}
       >
         {formatFigure?.(value) ?? value.text}
       </span>

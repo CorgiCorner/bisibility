@@ -17,6 +17,22 @@ describe("authorization failures over the API", () => {
     ).toThrow(ApiForbiddenError);
   });
 
+  it.each([
+    ["forbidden", 403, "Forbidden"],
+    ["unauthenticated", 401, "Unauthorized"],
+  ] as const)(
+    "maps a raw %s denial from retained measurement reads to %i",
+    async (code, status, title) => {
+      const response = errorFromUnknown(
+        new AuthorizationError(code),
+        new Headers(),
+        new URL("https://example.test/api/v1/projects/prj_1/overview"),
+      );
+      expect(response.status).toBe(status);
+      await expect(response.json()).resolves.toMatchObject({ status, title });
+    },
+  );
+
   it("renders the forbidden error as a 403 problem response", async () => {
     const response = errorFromUnknown(
       new ApiForbiddenError("Only the owner can change admins."),

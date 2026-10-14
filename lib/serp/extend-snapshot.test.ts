@@ -1,3 +1,5 @@
+import type { DefinitionTransaction } from "@/lib/measurement-definitions/model";
+import { captureSnapshotDefinition } from "@/lib/measurement-definitions/snapshot-binding";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { extendSnapshot } from "./extend-snapshot";
 
@@ -27,11 +29,11 @@ const input = {
 };
 const row = { rank: 1, url: "https://example.com/a", title: null, domain: "example.com" };
 const context = {
-  version: 1,
+  version: 1 as const,
   capturedAt: new Date().toISOString(),
   keyword: "sample",
   domain: "example.com",
-  device: "desktop",
+  device: "desktop" as const,
   connectionId: "connection-1",
   nextStart: 20,
   ended: false,
@@ -48,16 +50,53 @@ const claim = {
   check: { id: "internal-check", keywordId: "keyword-1" },
   context,
   raw: { organic_results: [row] },
-  state: { version: 1, state: "running", nextStart: 20, ended: false, pages: [] },
+  state: {
+    version: 1 as const,
+    state: "running" as const,
+    nextStart: 20,
+    ended: false,
+    pages: [],
+    requestId: "snapshot-request",
+    leaseUntil: new Date(Date.now() + 120_000).toISOString(),
+  },
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
-  mocks.claim.mockResolvedValue(claim);
+  const tx = {
+    $queryRaw: vi.fn(async (strings: TemplateStringsArray) => {
+      const sql = strings.join("?");
+      if (sql.includes("FROM users")) return [{ id: input.actorId }];
+      if (sql.includes("FROM memberships")) return [{ role: "member" }];
+      if (sql.includes("FROM rank_checks c LEFT JOIN"))
+        return [{ original: null, observedAt: null }];
+      throw new Error(`Unexpected fixture SQL: ${sql}`);
+    }),
+    $executeRaw: vi.fn(async () => 1),
+  } as unknown as DefinitionTransaction;
+  const definition = await captureSnapshotDefinition(tx, {
+    ...input,
+    id: claim.state.requestId,
+    keywordId: claim.check.keywordId,
+    rankCheckId: claim.check.id,
+    context,
+    state: claim.state,
+  });
+  mocks.claim.mockResolvedValue({ ...claim, definition });
   mocks.finish.mockResolvedValue(undefined);
   mocks.chain.mockResolvedValue([
-    { id: "connection-1", credentialSource: "own", provider: "serpapi" },
-    { id: "connection-2", credentialSource: "own", provider: "serpapi" },
+    {
+      id: "connection-1",
+      credentialSource: "own",
+      provider: "serpapi",
+      credentialsEncrypted: "synthetic-ciphertext",
+    },
+    {
+      id: "connection-2",
+      credentialSource: "own",
+      provider: "serpapi",
+      credentialsEncrypted: "synthetic-ciphertext",
+    },
   ]);
   mocks.attribution.mockResolvedValue({ context: { correlationId: "internal-check" } });
   mocks.run.mockResolvedValue({
@@ -84,7 +123,14 @@ describe("extend snapshot service", () => {
       expect.objectContaining({
         depth: 10,
         stopOnMatch: false,
-        connections: [{ id: "connection-1", credentialSource: "own", provider: "serpapi" }],
+        connections: [
+          {
+            id: "connection-1",
+            credentialSource: "own",
+            provider: "serpapi",
+            credentialsEncrypted: "synthetic-ciphertext",
+          },
+        ],
         projectId: input.projectId,
       }),
     );

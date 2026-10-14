@@ -159,7 +159,10 @@
       "viewName": "View name",
       "viewNamePlaceholder": "e.g. US mobile core set",
       "why": "why?",
-      "you": "You"
+      "you": "You",
+      "sovQualityUnknown": "Current comparison is unavailable. The retained checks do not prove the active definition, freshness or searched range.",
+      "sovCoverageUnknown": "unknown",
+      "sovQuality": "{measured} of {expected} keywords qualify. {unknown} unknown. Fresh coverage: {coverage}."
     }
   }
 }

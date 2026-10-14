@@ -1,14 +1,6 @@
+import { csvRow } from "@/lib/ui/csv";
 import { downloadTextFile } from "@/lib/ui/download";
 import type { CompetitorMarket } from "./types";
-
-function csvCell(value: number | string | null) {
-  const text = value === null ? "" : String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
-function csvRow(values: (number | string | null)[]) {
-  return values.map(csvCell).join(",");
-}
 
 export function competitorMarketCsv(market: CompetitorMarket) {
   const rows = [

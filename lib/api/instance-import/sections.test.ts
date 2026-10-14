@@ -109,7 +109,7 @@ describe("saved view import", () => {
           config: normalizeProjectSavedView({ search: "rank" }, "keywords")?.config,
           id: "view_1",
         }),
-        update: vi.fn(),
+        updateMany: vi.fn(),
       },
       tag: { findMany: vi.fn().mockResolvedValue([]) },
     };
@@ -141,7 +141,7 @@ describe("saved view import", () => {
     expect(client.alertRule.update).not.toHaveBeenCalled();
     expect(client.competitor.upsert).not.toHaveBeenCalled();
     expect(client.notificationPreference.upsert).not.toHaveBeenCalled();
-    expect(client.savedView.update).not.toHaveBeenCalled();
+    expect(client.savedView.updateMany).not.toHaveBeenCalled();
   });
 
   it("matches by project, surface, and name so surfaces cannot overwrite each other", async () => {
@@ -149,7 +149,7 @@ describe("saved view import", () => {
       savedView: {
         create: vi.fn().mockResolvedValue({}),
         findFirst: vi.fn().mockResolvedValue(null),
-        update: vi.fn(),
+        updateMany: vi.fn(),
       },
     };
     const views = [
@@ -179,8 +179,8 @@ describe("saved view import", () => {
       skipped: 0,
     });
     expect(client.savedView.findFirst.mock.calls.map(([input]) => input.where)).toEqual([
-      { name: "Q3", projectId: "project_1", surface: "keywords" },
-      { name: "Q3", projectId: "project_1", surface: "competitors" },
+      { name: "Q3", projectId: "project_1", surface: "keywords", visibility: "project" },
+      { name: "Q3", projectId: "project_1", surface: "competitors", visibility: "project" },
     ]);
     expect(client.savedView.create).toHaveBeenCalledTimes(2);
   });
@@ -196,7 +196,7 @@ describe("saved view import", () => {
       savedView: {
         create: vi.fn(),
         findFirst: vi.fn().mockResolvedValue({ config: existingConfig, id: "view_1" }),
-        update: vi.fn(),
+        updateMany: vi.fn(),
       },
     };
     const views = [
@@ -216,7 +216,7 @@ describe("saved view import", () => {
       imported: 0,
       skipped: 1,
     });
-    expect(client.savedView.update).not.toHaveBeenCalled();
+    expect(client.savedView.updateMany).not.toHaveBeenCalled();
   });
 
   it("updates a genuinely changed config with the same saved-view identity", async () => {
@@ -231,8 +231,9 @@ describe("saved view import", () => {
             version: 1,
           },
           id: "view_1",
+          revision: 3,
         }),
-        update: vi.fn().mockResolvedValue({}),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
     };
     const views = [
@@ -252,8 +253,11 @@ describe("saved view import", () => {
       imported: 1,
       skipped: 0,
     });
-    expect(client.savedView.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "view_1" } }),
+    expect(client.savedView.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "view_1", projectId: "project_1", visibility: "project", revision: 3 },
+        data: expect.objectContaining({ revision: { increment: 1 } }),
+      }),
     );
   });
 
@@ -262,11 +266,11 @@ describe("saved view import", () => {
       savedView: {
         create: vi.fn().mockResolvedValue({}),
         findFirst: vi.fn().mockResolvedValue(null),
-        update: vi.fn(),
+        updateMany: vi.fn(),
       },
     };
     const views = [
-      { config: { extra: true, search: "rank", version: 2 }, name: "Legacy" },
+      { config: { extra: true, search: "rank", version: 1 }, name: "Legacy" },
       { config: { surface: "competitors" }, name: "Broken", surface: "competitors" },
     ] as Parameters<typeof importSavedViews>[1];
 

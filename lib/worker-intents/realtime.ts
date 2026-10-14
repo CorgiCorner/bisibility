@@ -18,6 +18,7 @@ export const WORKER_INTENT_KINDS = [
   "welcome_followup",
   // Published by lib/rank-check/runs/launch.ts once a queued run row is committed.
   "rank_run",
+  "local_monitor",
 ] as const;
 
 export type WorkerIntentKind = (typeof WORKER_INTENT_KINDS)[number];

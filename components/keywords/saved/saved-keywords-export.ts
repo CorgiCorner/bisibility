@@ -1,14 +1,6 @@
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
+import { csvRow } from "@/lib/ui/csv";
 import { downloadTextFile } from "@/lib/ui/download";
-
-function csvCell(value: number | string | null) {
-  const text = value === null ? "" : String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
-function csvRow(values: (number | string | null)[]) {
-  return values.map(csvCell).join(",");
-}
 
 export function savedKeywordsCsv(rows: readonly SavedKeywordRow[]) {
   return [

@@ -536,3 +536,59 @@ it("keeps late continuation rows separate from the original rank and comparison 
   });
   expect(JSON.stringify(result)).not.toContain("private_connection");
 });
+
+it("retains each check URL across full, compact and missing raw tiers without reconstructing from rows", async () => {
+  const base = { checkedAt: CHECKED_AT, position: 3, provider: "dataforseo", requestedDepth: 10 };
+  mocks.prisma.rankCheck.findMany.mockResolvedValue([
+    {
+      ...base,
+      publicId: "full",
+      rankingUrl: "https://example.com/original",
+      organicRanks: null,
+      raw: {
+        organic_results: [
+          { domain: "example.com", rank: 3, url: "https://example.com/different-raw" },
+        ],
+      },
+    },
+    {
+      ...base,
+      publicId: "compact",
+      rankingUrl: "https://example.com/older",
+      raw: null,
+      organicRanks: [{ domain: "example.com", position: 3 }],
+    },
+    {
+      ...base,
+      publicId: "none",
+      rankingUrl: "https://example.com/oldest",
+      raw: null,
+      organicRanks: null,
+    },
+    {
+      ...base,
+      publicId: "unknown",
+      rankingUrl: null,
+      organicRanks: null,
+      raw: {
+        organic_results: [
+          { domain: "example.com", rank: 3, url: "https://example.com/unsafe-fallback" },
+        ],
+      },
+    },
+  ]);
+  const result = await loadRetrievedResultsForChecks({
+    projectId: PROJECT_ID,
+    checkIds: ["full", "compact", "none", "unknown"],
+  });
+  expect(result.map((check) => [check.checkId, check.rankingUrl])).toEqual([
+    ["full", "https://example.com/original"],
+    ["compact", "https://example.com/older"],
+    ["none", "https://example.com/oldest"],
+    ["unknown", null],
+  ]);
+  expect(mocks.prisma.rankCheck.findMany.mock.calls.at(-1)?.[0]).toMatchObject({
+    select: { rankingUrl: true },
+    where: { keyword: { projectId: PROJECT_ID }, status: "completed" },
+  });
+});

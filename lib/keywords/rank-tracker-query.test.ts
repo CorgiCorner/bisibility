@@ -9,9 +9,16 @@ import { emptySavedViewConfig } from "@/lib/keywords/saved-view-model";
 import { describe, expect, test } from "vitest";
 
 describe("rank tracker URL query contract", () => {
+  test("retains an explicit General choice across serialization and reload", () => {
+    const parsed = parseRankTrackerQuery({ view: "" });
+    expect(parsed.present.has("savedViewId")).toBe(true);
+    expect(serializeRankTrackerQuery(parsed).toString()).toBe("view=");
+    expect(parseRankTrackerQuery({ view: "" }).state.savedViewId).toBeNull();
+  });
   test("uses deterministic defaults", () => {
     const parsed = parseRankTrackerQuery({});
     expect(parsed.state).toEqual({
+      reportScope: { view: "general", subject: null, comparisonDays: 7, asOf: null },
       filters: emptyKeywordFilters,
       grouped: false,
       lens: { device: DEFAULT_LENS_DEVICE, locationId: null },
