@@ -1,4 +1,7 @@
 import { createHash } from "node:crypto";
+import type { CapturedObservation } from "@/lib/rank-measurements/recorded-check";
+
+export const DATA_TABLE_PERF_AS_OF = new Date("2026-09-05T12:00:00.000Z");
 
 export const DATA_TABLE_PERF_USER = {
   email: "data-table-perf@example.org",
@@ -37,6 +40,7 @@ export type DataTablePerfTarget = {
   publicId: string;
   rankHistory: Array<{
     checkedAt: string;
+    observationRun?: CapturedObservation | null;
     position: number;
     previousPosition: number | null;
     rankingUrl: string;

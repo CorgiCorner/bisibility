@@ -5,8 +5,7 @@ import type {
   SerpRankInput,
   SerpRankResult,
 } from "@/lib/providers/types";
-import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
-import type { SerpRankLocation } from "@/lib/serp/location";
+import { resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
 import { serpApiObservationRun } from "./observation-extract-serpapi";
 import { decideOrganicResult, type OrganicResultCandidate } from "./organic-result-decision";
 import { requireDeterminateOrganicResult } from "./payload-contract-error";
@@ -17,29 +16,13 @@ import {
   requireApiKey,
   SERP_API_SEARCH_TIMEOUT_MS,
   SerpApiError,
+  serpApiGoogleParams,
 } from "./serpapi-request";
 import { serpApiUsageReceipt } from "./usage-receipts";
 import type { SentWebPage } from "./web-local-proof";
 
 const ACCOUNT_URL = "https://serpapi.com/account.json";
 const GOOGLE_ORGANIC_PAGE_SIZE = 10;
-
-type SerpApiGoogleParams = { depth: SerpDepth; gl: string; hl: string; location: string };
-
-// SerpApi uses `secondaryGeoName` plus gl/hl; never combine `location` with
-// mutually exclusive uule/lat/lon parameters.
-function serpApiGoogleParams(input: {
-  depth?: number;
-  location: SerpRankLocation;
-}): SerpApiGoogleParams {
-  const { location } = input;
-  return {
-    depth: resolveSerpDepth(input.depth),
-    gl: location.gl,
-    hl: location.hl,
-    location: location.secondaryGeoName,
-  };
-}
 
 function nonnegativeFinite(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined;

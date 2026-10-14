@@ -1,7 +1,9 @@
 "use client";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { AiResearchCatalog } from "@/lib/ai-research/catalog-types";
 import type { promptSchema, visibilitySchema } from "@/lib/ai-research/schema";
+import { serpCountryForName } from "@/lib/serp/country-catalog";
 import { useTranslations } from "next-intl";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import type { z } from "zod";
@@ -99,6 +101,14 @@ export function AiVisibilityFields({
             <span>{t("country")}</span>
             <MenuSelect
               ariaLabel={t("country")}
+              leadingIcon={
+                current ? (
+                  <CountryFlag
+                    className="h-3 w-4 flex-none rounded-[2px] shadow-sm"
+                    code={serpCountryForName(current.countryName)?.countryCode ?? ""}
+                  />
+                ) : undefined
+              }
               size="input"
               searchable
               disabled={disabled || !markets.length}
@@ -108,10 +118,20 @@ export function AiVisibilityFields({
                 const market = markets.find((item) => item.locationCode === Number(next));
                 form.setValue("language_code", market?.languages[0]?.code ?? "en");
               }}
-              options={markets.map((market) => ({
-                label: market.countryName,
-                value: String(market.locationCode),
-              }))}
+              options={markets.map((market) => {
+                const country = serpCountryForName(market.countryName);
+                return {
+                  label: market.countryName,
+                  icon: (
+                    <CountryFlag
+                      className="h-3 w-4 flex-none rounded-[2px] shadow-sm"
+                      code={country?.countryCode ?? ""}
+                    />
+                  ),
+                  searchText: `${market.countryName} ${country?.countryCode ?? ""} ${country?.aliases.join(" ") ?? ""}`,
+                  value: String(market.locationCode),
+                };
+              })}
             />
           </div>
         )}

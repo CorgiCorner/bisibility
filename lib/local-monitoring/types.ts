@@ -32,7 +32,7 @@ export type GridRevision = Readonly<{
 }>;
 export type LocalSurface = "web_serp" | "maps" | "local_finder";
 export type LocalResultKind = "local_pack" | "map_listing" | "listing";
-export type LocalRankScale = "pack_slot" | "maps_organic" | "finder_organic";
+export type LocalRankScale = "pack_slot" | "maps_organic" | "finder_organic" | "finder_group";
 
 export type ExecutionTargetV1 = Readonly<{
   version: 1;

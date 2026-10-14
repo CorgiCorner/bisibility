@@ -8,8 +8,7 @@ const mocks = vi.hoisted(() => ({
   getExperimentalModules: vi.fn(),
   getProjectMarkets: vi.fn(),
   getQueryActor: vi.fn(),
-  getSavedView: vi.fn(),
-  listSavedViews: vi.fn(),
+  personalContext: vi.fn(),
   listWorkspaces: vi.fn(),
   resolveProjectAccess: vi.fn(),
 }));
@@ -40,9 +39,8 @@ vi.mock("@/lib/queries/experimental-modules", () => ({
 vi.mock("@/lib/queries/project-markets", () => ({
   getProjectMarkets: mocks.getProjectMarkets,
 }));
-vi.mock("@/lib/queries/saved-views", () => ({
-  getSavedView: mocks.getSavedView,
-  listSavedViews: mocks.listSavedViews,
+vi.mock("@/lib/queries/competitor-personal-context", () => ({
+  loadCompetitorPersonalContext: mocks.personalContext,
 }));
 vi.mock("@/lib/actions/keyword", () => ({ addKeywords: vi.fn() }));
 vi.mock("@/lib/actions/saved-views", () => ({
@@ -63,7 +61,15 @@ describe("CompetitorsPage", () => {
     });
     mocks.getQueryActor.mockResolvedValue({ id: "actor-1" });
     mocks.getExperimentalModules.mockResolvedValue(["competitors"]);
-    mocks.getSavedView.mockResolvedValue(null);
+    mocks.personalContext.mockResolvedValue({
+      activeView: null,
+      unavailable: false,
+      personal: {
+        views: [],
+        preference: { revision: 0, defaultTarget: { kind: "preset", presetId: "general" } },
+        scopeKey: "owned",
+      },
+    });
     mocks.getProjectMarkets.mockResolvedValue({
       markets: [],
       maxMarkets: 5,
@@ -71,7 +77,7 @@ describe("CompetitorsPage", () => {
       perMarketChecks: 0,
       projectId: "prj_abcdefghijklmnopqrstuvwx",
     });
-    mocks.listSavedViews.mockResolvedValue([]);
+
     mocks.listWorkspaces.mockResolvedValue([
       {
         domain: "example.com",
@@ -128,4 +134,30 @@ describe("CompetitorsPage", () => {
     expect(mocks.listWorkspaces).not.toHaveBeenCalled();
     expect(mocks.getCompetitorsView).not.toHaveBeenCalled();
   });
+});
+
+it("selects a personal competitor default with the canonical saved scope", async () => {
+  const scope = { device: "mobile", engine: "google", locationId: "krakow" };
+  mocks.personalContext.mockResolvedValue({
+    activeView: {
+      id: "viw_abcdefghijklmnopqrstuvwx",
+      config: { scope, filters: { excludedKeywordIds: [], position: "top3", tag: null } },
+    },
+    unavailable: false,
+    personal: { views: [], scopeKey: "owned" },
+  });
+  await CompetitorsPage({ params: Promise.resolve({ project: "prj_abcdefghijklmnopqrstuvwx" }) });
+  expect(mocks.getCompetitorsView).toHaveBeenCalledWith("prj_abcdefghijklmnopqrstuvwx", scope);
+});
+it("does not widen an inaccessible personal view to the default market", async () => {
+  mocks.personalContext.mockResolvedValue({
+    activeView: null,
+    unavailable: true,
+    personal: { views: [], scopeKey: "owned" },
+  });
+  await CompetitorsPage({
+    params: Promise.resolve({ project: "prj_abcdefghijklmnopqrstuvwx" }),
+    searchParams: Promise.resolve({ view: "viw_bbcdefghijklmnopqrstuvwx" }),
+  });
+  expect(mocks.getCompetitorsView).toHaveBeenCalledWith("prj_abcdefghijklmnopqrstuvwx", null);
 });

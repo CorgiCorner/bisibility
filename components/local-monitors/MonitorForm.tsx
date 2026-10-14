@@ -19,7 +19,10 @@ import {
 import { useFormatter, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { MonitorCenterPicker } from "./MonitorCenterPicker";
+import { MonitorField } from "./MonitorField";
 import { MonitorFields } from "./MonitorFields";
+import { MonitorGridPreview } from "./MonitorGridPreview";
 import { MonitorKeywordPicker } from "./MonitorKeywordPicker";
 
 export function MonitorForm({
@@ -134,20 +137,23 @@ export function MonitorForm({
     <Card component="section" className="space-y-4">
       <h2 className="font-semibold">{t(current ? "edit" : "create")}</h2>
       <p className="text-sm text-fg-muted">{t("setupOnly")}</p>
-      <form onSubmit={form.handleSubmit(submit)} className="space-y-5">
-        <MenuSelect
-          ariaLabel={t("subject")}
-          value={locationId}
-          disabled={blocked}
-          searchable
-          options={choices.subjects.map((row) => ({ value: row.id, label: row.name }))}
-          onChange={(value) => {
-            const next = choices.subjects.find((row) => row.id === value);
-            if (!next) return;
-            form.setValue("locationId", next.id, { shouldDirty: true });
-            form.setValue("identityRevisionId", next.identityRevisionId, { shouldDirty: true });
-          }}
-        />
+      <form onSubmit={form.handleSubmit(submit)} className="flex flex-col gap-5">
+        <MonitorField label={t("subject")}>
+          <MenuSelect
+            size="input"
+            ariaLabel={t("subject")}
+            value={locationId}
+            disabled={blocked}
+            searchable
+            options={choices.subjects.map((row) => ({ value: row.id, label: row.name }))}
+            onChange={(value) => {
+              const next = choices.subjects.find((row) => row.id === value);
+              if (!next) return;
+              form.setValue("locationId", next.id, { shouldDirty: true });
+              form.setValue("identityRevisionId", next.identityRevisionId, { shouldDirty: true });
+            }}
+          />
+        </MonitorField>
         {!choices.subjects.length ? (
           <p className="text-sm text-fg-muted">{t("noSubjects")}</p>
         ) : null}
@@ -175,7 +181,9 @@ export function MonitorForm({
             {t("useCurrentIdentity")}
           </Button>
         ) : null}
+        <MonitorCenterPicker form={form} subjects={choices.subjects} disabled={blocked} />
         <MonitorFields form={form} disabled={blocked} />
+        <MonitorGridPreview form={form} />
         <MonitorKeywordPicker
           projectId={projectId}
           choices={keywordChoices}
@@ -187,7 +195,7 @@ export function MonitorForm({
             form.setValue("keywordIds", values, { shouldDirty: true });
           }}
         />
-        <p className="text-sm text-fg-muted">
+        <p className="m-0 text-ui-xs text-fg-muted">
           {t("targetCount", { count: format.number(ids.length * size * size) })}
         </p>
         {Object.keys(form.formState.errors).length ? (

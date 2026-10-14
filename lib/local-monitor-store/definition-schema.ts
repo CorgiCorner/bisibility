@@ -1,6 +1,7 @@
 import { isPublicIdOfType } from "@/lib/db/public-id-resources";
 import { canonicalCoordinate } from "@/lib/local-monitoring/coordinates";
 import {
+  FINDER_REQUEST_SCOPE,
   localOperatingSystems,
   MAPS_REQUEST_SCOPE,
 } from "@/lib/local-monitoring/maps-request-scope";
@@ -33,7 +34,8 @@ export const monitorAxesSchema = createTargetSchema
     if (
       value.surface === "maps"
         ? value.resultKind !== "map_listing" || value.rankScale !== "maps_organic"
-        : value.resultKind !== "listing" || value.rankScale !== "finder_organic"
+        : value.resultKind !== "listing" ||
+          !["finder_organic", "finder_group"].includes(value.rankScale)
     ) {
       ctx.addIssue({ code: "custom", message: "Surface and rank semantics must agree." });
     }
@@ -74,7 +76,7 @@ export const definitionAuthoringSchema = definitionInputSchema.superRefine(
         path: ["grid", "size"],
         message: "Larger grids require a separate pilot approval.",
       });
-    if (axes.surface !== "maps") return;
+    const scope = axes.surface === "maps" ? MAPS_REQUEST_SCOPE : FINDER_REQUEST_SCOPE;
     const systems: readonly string[] = localOperatingSystems(axes.device);
     const checks = [
       ["operatingSystem", axes.operatingSystem !== null && systems.includes(axes.operatingSystem)],
@@ -82,11 +84,12 @@ export const definitionAuthoringSchema = definitionInputSchema.superRefine(
         "zoom",
         axes.zoom !== null &&
           Number.isSafeInteger(axes.zoom) &&
-          axes.zoom >= MAPS_REQUEST_SCOPE.zoomRange[0] &&
-          axes.zoom <= MAPS_REQUEST_SCOPE.zoomRange[1],
+          axes.zoom >= scope.zoomRange[0] &&
+          axes.zoom <= scope.zoomRange[1],
       ],
-      ["cutoff", axes.cutoff <= MAPS_REQUEST_SCOPE.maxCutoff],
-      ["language", MAPS_REQUEST_SCOPE.languages.some((language) => language === axes.language)],
+      ["cutoff", axes.cutoff <= scope.maxCutoff],
+      ["rankScale", axes.rankScale === scope.rankScale],
+      ["language", scope.languages.some((language) => language === axes.language)],
     ] as const;
     for (const [field, valid] of checks) {
       if (!valid)

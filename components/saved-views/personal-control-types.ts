@@ -52,6 +52,7 @@ export type PersonalSavedViewsControlProps = {
   labels: PersonalViewLabels;
   modified: boolean;
   onDiscard: () => void;
+  onClearDraft?: () => void;
   onRefresh: () => void;
   onSelect: (view: CanonicalSavedViewResource | null) => void;
   preference: EffectivePersonalPreference;
@@ -67,3 +68,30 @@ export type PersonalSavedViewsControlProps = {
   ) => Promise<ActionResult<CanonicalSavedViewResource>>;
   views: readonly CanonicalSavedViewResource[];
 };
+
+export const personalViewLabelKeys = [
+  "cancel",
+  "conflict",
+  "delete",
+  "discard",
+  "failed",
+  "general",
+  "modified",
+  "name",
+  "personal",
+  "privateUnavailable",
+  "privateSharing",
+  "project",
+  "latestRevision",
+  "openLatest",
+  "reloadLatest",
+  "reviewLatest",
+  "saveAs",
+  "saved",
+  "saveChanges",
+  "saving",
+  "setDefault",
+  "unavailableDefault",
+  "unavailableView",
+  "visibility",
+] as const;

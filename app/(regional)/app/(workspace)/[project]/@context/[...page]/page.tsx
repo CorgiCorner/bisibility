@@ -8,13 +8,13 @@ import { bulkDeleteKeywords } from "@/lib/actions/keyword-bulk";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { parsePublicId } from "@/lib/db/public-id";
-import { type NextSearchParams, parseRankTrackerQuery } from "@/lib/keywords/rank-tracker-query";
+import type { NextSearchParams } from "@/lib/keywords/rank-tracker-query";
 import { hasMarketRoute, sectionPathOf } from "@/lib/markets/market-route-sections";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { listHeaderMarkets } from "@/lib/queries/header-markets";
 import { getKeywordTargetContext } from "@/lib/queries/keyword-target-context";
 import { listOverviewHeaderMarkets } from "@/lib/queries/overview-header-markets";
-import { getSavedView } from "@/lib/queries/saved-views";
+import { loadRankTrackerPersonalContext } from "@/lib/queries/rank-tracker-personal-context";
 
 export default async function ProjectHeaderContext({
   params,
@@ -57,16 +57,24 @@ export default async function ProjectHeaderContext({
   const access = await resolveProjectAccess(project);
   const contexts = await listHeaderMarkets(access.publicId);
   const rankTracker = page.length === 1 && page[0] === "rank-tracker";
-  const viewId = rankTracker
-    ? parseRankTrackerQuery((await searchParams) ?? {}).state.savedViewId
+  const personal = rankTracker
+    ? await loadRankTrackerPersonalContext(access.publicId, (await searchParams) ?? {})
     : null;
-  const savedView = viewId ? await getSavedView(access.publicId, viewId) : null;
+  const savedView = personal
+    ? {
+        filters: personal.state.filters,
+        lens: personal.state.lens,
+        search: personal.state.search,
+        surface: "keywords" as const,
+        version: 1 as const,
+      }
+    : undefined;
   return rankTracker ? (
     <KeywordHeaderContextBoundary>
       <RankTrackerHeaderContext
         contexts={contexts}
         projectRef={access.publicId}
-        savedView={savedView?.config}
+        savedView={savedView}
       />
     </KeywordHeaderContextBoundary>
   ) : (

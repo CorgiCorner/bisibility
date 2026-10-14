@@ -75,7 +75,9 @@ export function projectRetainedBusinessObservation(run: RetainedObservation) {
     adapterVersion: referenceSchema.parse(evidence.adapterVersion),
     normalizationVersion:
       run.rankCheck?.normalizationVersion ??
-      (run.surface === "maps" ? referenceSchema.parse(evidence.adapterVersion) : null),
+      (["maps", "local_finder"].includes(run.surface)
+        ? referenceSchema.parse(evidence.adapterVersion)
+        : null),
   };
   const runTime = timestampSchema.safeParse(evidence.observedAt);
   const webIssues =
@@ -117,14 +119,17 @@ export function projectRetainedBusinessObservation(run: RetainedObservation) {
         block: row.blockPosition,
         slot: row.positionInBlock,
         absolute: row.rankAbsolute,
-        ...(run.surface === "maps"
+        ...(["maps", "local_finder"].includes(run.surface)
           ? {
               group: row.rankGroup,
-              scale: row.rankScale === "maps_organic" ? ("maps_organic" as const) : null,
+              scale:
+                row.rankScale === "maps_organic" || row.rankScale === "finder_group"
+                  ? row.rankScale
+                  : null,
             }
           : {}),
       },
-      ...(run.surface === "maps"
+      ...(["maps", "local_finder"].includes(run.surface)
         ? Number(object(run.requestPolicy)?.identityIssueCount ?? 0) > 0
           ? { identityIssue: "invalid_identifier" as const }
           : retainedIdentityIssue(row.rawFragment)

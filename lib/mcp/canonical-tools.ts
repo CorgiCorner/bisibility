@@ -45,6 +45,8 @@ export const MCP_TOOL_NAMES = [
   "list_local_monitor_point_listings",
   "list_local_monitor_point_history",
   "export_local_monitor_run",
+  "list_rank_check_runs",
+  "get_rank_check_run",
   "list_sitemap_monitors",
   "enable_sitemap_monitor",
   "disable_sitemap_monitor",

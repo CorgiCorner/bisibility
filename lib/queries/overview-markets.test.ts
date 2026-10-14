@@ -132,4 +132,29 @@ describe("overview markets", () => {
     expect(row?.trend.slice(0, -1)).toEqual(Array(7).fill(null));
     expect(row?.trend.at(-1)).toBe(row?.top10Share);
   });
+  it.each(["foreign project", "different location"])(
+    "retains a selected target but excludes its %s observation",
+    (mismatch) => {
+      const row = target("es-es-1", "loc_es_es", "Spain", "Spanish", 3, 18);
+      for (const check of row.rankChecks) {
+        const observation = check.observationRun;
+        if (!observation) throw new Error("Captured market fixture required");
+        if (mismatch === "foreign project") observation.projectId = "project_foreign";
+        else {
+          const scope = { ...fixtureScope, targetId: row.id, location: "Belgium", language: "es" };
+          observation.configuredScope = scope;
+          observation.effectiveScope = scope;
+        }
+      }
+      const [market] = buildOverviewMarkets([row], { now, range: "28d" });
+      expect(market).toMatchObject({
+        targetCount: 1,
+        top10Count: null,
+        top10Share: null,
+        deltaPoints: null,
+      });
+      expect(market.trend).toEqual(Array(8).fill(null));
+      expect(market.qualityReport.counts.unknown).toBe(1);
+    },
+  );
 });

@@ -49,9 +49,9 @@ export type OriginalOrdinals = Readonly<{
   block: number | null;
   slot: number | null;
   absolute: number | null;
-  /** Native Maps group; never a fabricated pack slot or absolute position. */
+  /** Native local result group; Finder preserves ad slots without renumbering. */
   group?: number | null;
-  scale?: "maps_organic" | null;
+  scale?: "maps_organic" | "finder_group" | null;
 }>;
 
 export type BusinessObservationItem = Readonly<{

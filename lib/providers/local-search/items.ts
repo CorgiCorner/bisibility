@@ -76,7 +76,8 @@ export function parseLocalItems(input: {
     items.push({
       resultKind: input.surface === "maps" ? "map_listing" : "listing",
       // Finder rank_group includes ads of the same type: no invented organic scale.
-      rankScale: mapsOrganic && promotion === "organic" ? "maps_organic" : null,
+      rankScale:
+        mapsOrganic && promotion === "organic" ? "maps_organic" : finder ? "finder_group" : null,
       promotion,
       sourcePage: null,
       sourceBlockId: null,

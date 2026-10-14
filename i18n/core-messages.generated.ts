@@ -9483,6 +9483,21 @@ export type CoreMessages = {
       readonly cancel: "Cancel";
       readonly capturedCalendar: "Saved calendar";
       readonly capturedScope: "Saved measurement scope";
+      readonly center: {
+        readonly choose: "Choose a saved location";
+        readonly empty: "No saved coordinates yet. Add them to a business location or enter them below.";
+        readonly help: "Choose a saved location to copy its coordinates. The tracked business stays the same.";
+        readonly manual: "Advanced: enter coordinates";
+        readonly missingCoordinates: "No saved coordinates";
+        readonly preview: "{count, plural, one {# planned point} other {# planned points}}";
+        readonly previewEmpty: "Choose a center to preview the measurement points.";
+        readonly previewHelp: "Point layout, north at the top. No results have been measured.";
+        readonly previewInvalid: "These settings cannot produce a grid. Check the coordinates and point spacing.";
+        readonly previewSpacing: "Point spacing: {metres} m";
+        readonly search: "Search name or address";
+        readonly showPoints: "View point coordinates";
+        readonly title: "Measurement center";
+      };
       readonly column: "Column";
       readonly configuredPoints: "Configured points";
       readonly confirmArchive: "Confirm archive";
@@ -9619,6 +9634,7 @@ export type CoreMessages = {
       readonly pointHelp: "These are the saved sampling coordinates. Results are unavailable until a run is explicitly linked to this monitor revision.";
       readonly points: "Points";
       readonly rankScales: {
+        readonly finder_group: "Local Finder listing group (includes ad slots)";
         readonly finder_organic: "Organic position in Local Finder";
         readonly maps_organic: "Organic position in Maps";
         readonly pack_slot: "Local pack slot";

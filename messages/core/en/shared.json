@@ -1762,7 +1762,8 @@
       "rankScales": {
         "pack_slot": "Local pack slot",
         "maps_organic": "Organic position in Maps",
-        "finder_organic": "Organic position in Local Finder"
+        "finder_organic": "Organic position in Local Finder",
+        "finder_group": "Local Finder listing group (includes ad slots)"
       },
       "frequencies": {
         "daily": "Daily",
@@ -1969,6 +1970,21 @@
           "owner_retained": "Original owner is retained",
           "proof_unavailable": "Native terminal proof is unavailable"
         }
+      },
+      "center": {
+        "title": "Measurement center",
+        "help": "Choose a saved location to copy its coordinates. The tracked business stays the same.",
+        "choose": "Choose a saved location",
+        "search": "Search name or address",
+        "missingCoordinates": "No saved coordinates",
+        "empty": "No saved coordinates yet. Add them to a business location or enter them below.",
+        "manual": "Advanced: enter coordinates",
+        "previewEmpty": "Choose a center to preview the measurement points.",
+        "preview": "{count, plural, one {# planned point} other {# planned points}}",
+        "previewSpacing": "Point spacing: {metres} m",
+        "previewHelp": "Point layout, north at the top. No results have been measured.",
+        "showPoints": "View point coordinates",
+        "previewInvalid": "These settings cannot produce a grid. Check the coordinates and point spacing."
       }
     },
     "dashboardComparison": {

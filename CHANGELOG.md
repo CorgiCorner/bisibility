@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.34.0] - 2026-10-14
+
+### Added
+
+- Added multilingual Maps and independently priced Local Finder scans with retained history and approved recurring schedules.
+
+- Added saved-location grid centers and point previews, aligned monitor controls, and country flags with searchable AI country selectors.
+
+### Fixed
+
+- Fixed inline rank checks to retain the original credential and matching user identity.
+
+- Fixed retained rank-check run tools in MCP and validation of their run IDs.
+
 ## [0.33.0] - 2026-10-14
 
 ### Added

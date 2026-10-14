@@ -15,7 +15,8 @@ If you want to keep untracked ideas from Research instead, see
 Open **Keywords**, choose your location/device scope, filters and sort, then
 configure the visible columns, order and widths. Use **Save as** to create a
 named view up to 48 characters. Choose personal or project visibility explicitly.
-A personal view is private to its owner; a project view requires the existing
+Personal **Save as**, editing, deletion and **Set as my default** are available in
+Keyword Tracking and Competitors, including for project viewers. A personal view is private to its owner; a project view requires the existing
 project write permission. Older project views retain their shared visibility.
 
 Changing a filter or layout leaves an unsaved draft. **Save changes** updates a
@@ -114,6 +115,12 @@ preference save and leaves the General default unchanged. A revision conflict
 requires an explicit review of the newer preference before another save. Clearing
 the reference does not delete the saved view or alter measurement schedules.
 
-Self-hosted operators must upgrade all application routes and processes together before
+Operators must upgrade all application routes and processes together before
 creating private saved views. Running older application routes against the upgraded
 database can expose private views or allow them to be removed by another project member.
+
+
+Hosted release operators must also confirm that every public custom domain targets
+an upgraded backend and that older immutable deployment URLs remain protected.
+Keep the visibility-aware backend when rolling back presentation. Reverting to a
+backend that predates private views is unsafe after the first personal view is saved.

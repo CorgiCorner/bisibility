@@ -1,7 +1,10 @@
 "use client";
 
 import { PersonalSavedViewsControl } from "@/components/saved-views/PersonalSavedViewsControl";
-import type { PersonalViewLabels } from "@/components/saved-views/personal-control-types";
+import {
+  type PersonalViewLabels,
+  personalViewLabelKeys,
+} from "@/components/saved-views/personal-control-types";
 import { createSavedViewV2, deleteSavedViewV2, updateSavedViewV2 } from "@/lib/actions/saved-views";
 import type { RankTrackerQueryState } from "@/lib/keywords/rank-tracker-query-types";
 import { rankTrackerScope } from "@/lib/keywords/rank-tracker-report-scope";
@@ -14,32 +17,6 @@ import type { TablePresentation } from "@/lib/saved-views/presentation-model";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-const labelKeys = [
-  "cancel",
-  "conflict",
-  "delete",
-  "discard",
-  "failed",
-  "general",
-  "modified",
-  "name",
-  "personal",
-  "privateUnavailable",
-  "privateSharing",
-  "project",
-  "latestRevision",
-  "openLatest",
-  "reloadLatest",
-  "reviewLatest",
-  "saveAs",
-  "saved",
-  "saveChanges",
-  "saving",
-  "setDefault",
-  "unavailableDefault",
-  "unavailableView",
-  "visibility",
-] as const;
 export function KeywordPersonalViewControl({
   context,
   presentation,
@@ -61,7 +38,9 @@ export function KeywordPersonalViewControl({
 }>) {
   const router = useRouter();
   const t = useTranslations("shared.personalViews");
-  const labels = Object.fromEntries(labelKeys.map((key) => [key, t(key)])) as PersonalViewLabels;
+  const labels = Object.fromEntries(
+    personalViewLabelKeys.map((key) => [key, t(key)]),
+  ) as PersonalViewLabels;
   const config = keywordSavedViewConfigV2({
     reportScope: rankTrackerScope(query),
     filters: query.filters,
@@ -101,6 +80,7 @@ export function KeywordPersonalViewControl({
       views={context.views}
       setDefaultAction={setPersonalDefault}
       onRefresh={() => router.refresh()}
+      onClearDraft={onDiscardLayout}
       onSelect={(view) =>
         router.push(canonicalSavedViewHref(projectId, "keywords", view?.id ?? null))
       }

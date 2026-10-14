@@ -80,6 +80,30 @@ const selection = {
   to: "2026-10-12T12:00:00Z",
 };
 
+it("verifies every scanner-exempt pagination value with the synthetic fixture key", () => {
+  const codec = createReportCursorCodec("synthetic-transport-fixture-key-only");
+  let cursors = 0;
+  function visit(value: unknown, key = "") {
+    if (typeof value === "string" && value.startsWith("eyJ") && value.includes(".")) {
+      expect(key).toBe("next_cursor");
+      expect(value.split(".")).toHaveLength(2);
+      const decoded = codec.decode(value);
+      expect(decoded).toMatchObject({
+        asOf: reportAsOf.toISOString(),
+        version: 1,
+      });
+      expect(codec.encode(decoded)).toBe(value);
+      cursors++;
+    } else if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+    } else if (value && typeof value === "object") {
+      for (const [name, item] of Object.entries(value)) visit(item, name);
+    }
+  }
+  visit(fixture);
+  expect(cursors).toBe(11);
+});
+
 it("serves the authoritative export schema and preserves the actual two streams, nested CID and project-only run", async () => {
   const f = await served();
   try {

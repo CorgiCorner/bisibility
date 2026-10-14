@@ -281,3 +281,41 @@ it("shows the private gate reason when an allowed stale page receives a typed de
   expect(await modal.findByRole("alert")).toHaveTextContent(props.labels.privateUnavailable);
   expect(modal.queryByText(props.labels.failed)).not.toBeInTheDocument();
 });
+
+it("can review a view conflict after the resource disappears without writing a General default", async () => {
+  const props = propsFixture();
+  props.updateAction = vi.fn(async () => ({
+    ok: false as const,
+    error: { code: "conflict" as const, message: "Conflict", status: 409 as const },
+  }));
+  const rendered = render(<PersonalSavedViewsControl {...props} />);
+  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  await screen.findByRole("alert");
+  fireEvent.click(screen.getByRole("button", { name: "Reload latest revision" }));
+  rendered.rerender(<PersonalSavedViewsControl {...props} views={[]} />);
+  expect(
+    screen.queryByRole("link", { name: "Open latest view in a new tab" }),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Keep draft and use latest revision" }));
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  expect(props.setDefaultAction).not.toHaveBeenCalled();
+  expect(props.onSelect).not.toHaveBeenCalled();
+});
+
+it("clears the source draft once after successful Save as before selecting its copy", async () => {
+  const clearDraft = vi.fn();
+  const props = { ...propsFixture(), onClearDraft: clearDraft };
+  render(<PersonalSavedViewsControl {...props} />);
+  fireEvent.click(screen.getByRole("button", { name: "Save as" }));
+  fireEvent.change(screen.getByRole("textbox", { name: "View name" }), {
+    target: { value: "My copy" },
+  });
+  const form = screen.getByRole("textbox", { name: "View name" }).closest("form");
+  if (!form) throw new Error("Expected the saved-view form");
+  fireEvent.submit(form);
+  await waitFor(() => expect(clearDraft).toHaveBeenCalledOnce());
+  expect(props.onSelect).toHaveBeenCalledOnce();
+  expect(clearDraft.mock.invocationCallOrder[0]).toBeLessThan(
+    vi.mocked(props.onSelect).mock.invocationCallOrder[0],
+  );
+});

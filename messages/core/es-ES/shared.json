@@ -1762,7 +1762,8 @@
       "rankScales": {
         "pack_slot": "Posición en el paquete local",
         "maps_organic": "Posición orgánica en Maps",
-        "finder_organic": "Posición orgánica en Local Finder"
+        "finder_organic": "Posición orgánica en Local Finder",
+        "finder_group": "Grupo de resultados Local Finder (incluye anuncios)"
       },
       "frequencies": {
         "daily": "Diaria",
@@ -1969,6 +1970,21 @@
           "owner_retained": "Bloqueo original conservado",
           "proof_unavailable": "Prueba nativa de finalización no disponible"
         }
+      },
+      "center": {
+        "title": "Centro de medición",
+        "help": "Elige una ubicación guardada para copiar sus coordenadas. La empresa que se sigue no cambia.",
+        "choose": "Elige una ubicación guardada",
+        "search": "Buscar por nombre o dirección",
+        "missingCoordinates": "Sin coordenadas guardadas",
+        "empty": "Aún no hay coordenadas guardadas. Añádelas a una ubicación o introdúcelas abajo.",
+        "manual": "Avanzado: introducir coordenadas",
+        "previewEmpty": "Elige un centro para ver los puntos de medición.",
+        "preview": "{count, plural, one {# punto planificado} other {# puntos planificados}}",
+        "previewSpacing": "Distancia entre puntos: {metres} m",
+        "previewHelp": "Distribución de puntos, con el norte arriba. Aún no se han medido resultados.",
+        "showPoints": "Ver coordenadas de los puntos",
+        "previewInvalid": "No se puede generar una cuadrícula con estos ajustes. Revisa las coordenadas y la distancia entre puntos."
       }
     },
     "dashboardComparison": {

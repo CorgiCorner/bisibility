@@ -810,6 +810,107 @@ describe("rank-check activities", () => {
     expect(item.status).toBe("completed");
   });
 
+  it("retains admitted failure domain and depth instead of changed current settings", async () => {
+    mocks.prisma.keyword.findUnique.mockResolvedValue({
+      id: "keyword_1",
+      projectId: "project_1",
+      publicId: "kw_a00000000000000000000000",
+      text: "changed query",
+      project: { domain: "example.org", defaults: { serpDepth: 50 } },
+      rankChecks: [{ position: 8 }],
+      schedule: null,
+    });
+    const source = admittedDefinitionSourceFixture("project_1", "keyword_1");
+    source.target.text = "admitted query";
+    source.target.domain = "example.com";
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([{ intent: { version: 1, depth: 20, source } }]);
+    mocks.persistFailedRankCheck.mockResolvedValue({
+      id: "rank_running_1",
+      provider: "primary",
+      attempts: [],
+    });
+    await failRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      message: "Provider failed",
+    });
+    expect(mocks.persistFailedRankCheck).toHaveBeenCalledWith(
+      expect.objectContaining({
+        keywordText: "admitted query",
+        projectDomain: "example.com",
+        requestedDepth: 20,
+        previousPosition: null,
+      }),
+    );
+  });
+
+  it("fails an uncaptured running row without inventing original measurement context", async () => {
+    const fullChainMessage = "All SERP providers failed: primary (Payment Required)";
+    mocks.prisma.keyword.findUnique.mockResolvedValue({
+      id: "keyword_1",
+      project: { defaults: { serpDepth: 50 }, domain: "example.com" },
+      projectId: "project_1",
+      publicId: "kw_a00000000000000000000000",
+      rankChecks: [{ position: 8 }],
+      schedule: { serpDepth: 20 },
+      text: "rank tracker",
+    });
+    mocks.prisma.rankCheck.findUnique.mockResolvedValue({
+      attempts: [{ message: "Payment Required", provider: "primary" }],
+      errorCode: "provider_billing",
+    });
+    mocks.persistFailedRankCheck.mockResolvedValue({
+      attempts: [{ message: "Payment Required", provider: "primary" }],
+      id: "rank_running_1",
+      provider: "primary",
+      scheduledAt: new Date("2026-01-01T06:00:00.000Z"),
+      startedAt: new Date("2026-01-01T06:00:05.000Z"),
+    });
+
+    await failRankCheckActivity({
+      keywordId: "keyword_1",
+      message: fullChainMessage,
+      rankCheckId: "rank_running_1",
+    });
+
+    expect(mocks.prisma.keyword.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          rankChecks: expect.objectContaining({ where: { status: "completed" } }),
+        }),
+      }),
+    );
+    expect(mocks.prisma.rankCheck.findUnique).toHaveBeenCalledWith({
+      select: { attempts: true, errorCode: true },
+      where: { id: "rank_running_1" },
+    });
+    expect(mocks.persistFailedRankCheck).toHaveBeenCalledWith({
+      error: fullChainMessage,
+      errorCode: "provider_billing",
+      attempts: [{ message: "Payment Required", provider: "primary" }],
+      existingRankCheckId: "rank_running_1",
+      expectedUrlAtCheck: null,
+      keywordId: "keyword_1",
+      keywordPublicId: "kw_a00000000000000000000000",
+      keywordText: "rank tracker",
+      previousPosition: null,
+      projectDomain: "",
+      projectId: "project_1",
+      provider: "primary",
+      requestedDepth: undefined,
+    });
+    expect(mocks.notifyFailedRankCheckOps).toHaveBeenCalledWith({
+      keywordId: "keyword_1",
+      keywordText: "rank tracker",
+      projectId: "project_1",
+      provider: "primary",
+      providerAttemptCount: 1,
+      scheduledAt: new Date("2026-01-01T06:00:00.000Z"),
+      startedAt: new Date("2026-01-01T06:00:05.000Z"),
+    });
+    expect(mocks.notifyFailedRankCheckOps).toHaveBeenCalledTimes(1);
+  });
+
   it("marks the running row failed through shared failure persistence", async () => {
     const fullChainMessage = "All SERP providers failed: primary (Payment Required)";
     mocks.prisma.keyword.findUnique.mockResolvedValue({

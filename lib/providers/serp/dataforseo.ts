@@ -12,7 +12,6 @@ import { createDataForSeoBacklinksMethods } from "./dataforseo-backlinks";
 import {
   DATA_FOR_SEO_OK_STATUS,
   dataForSeoBillingStatusCode,
-  dataForSeoGoogleParams,
   dataForSeoLabsLocationParams,
   envelopeMessage,
   envelopeOk,
@@ -38,17 +37,20 @@ import {
   dataForSeoRawPayload,
   dataForSeoResponseCostCents,
 } from "./dataforseo-payload";
+import {
+  dataForSeoRankRequest,
+  dataForSeoRankTask,
+  STOP_ON_MATCH_TYPE,
+} from "./dataforseo-rank-request";
 import { createDataForSeoResearchMethods } from "./dataforseo-research";
 import { dataForSeoObservationRun } from "./observation-extract-dataforseo";
 import { requireDeterminateOrganicResult } from "./payload-contract-error";
 import { dataForSeoSentScope } from "./web-local-proof";
 
 const USER_DATA_URL = "https://api.dataforseo.com/v3/appendix/user_data";
-const SERP_URL = "https://api.dataforseo.com/v3/serp/google/organic/live/advanced";
 const RANKED_KEYWORDS_URL =
   "https://api.dataforseo.com/v3/dataforseo_labs/google/ranked_keywords/live";
 const LABS_STATUS_URL = "https://api.dataforseo.com/v3/dataforseo_labs/status";
-const STOP_ON_MATCH_TYPE = "with_subdomains";
 // The synchronous SERP endpoint is slower than other calls; give it more headroom.
 const SERP_REQUEST_TIMEOUT_MS = 30_000;
 
@@ -94,35 +96,15 @@ const domainMethods = createDataForSeoDomainMethods({
 
 async function fetchDataForSeoRank(input: SerpRankInput) {
   const credentials = input.credentials ?? {};
-  const requestParams = dataForSeoGoogleParams({
-    depth: input.depth,
-    location: input.location,
-  });
   const stopOnMatch = resolveSerpStopOnMatch(input.stopOnMatch);
-  const stopTarget = normalizeDomain(input.domain) ?? input.domain;
-  const payload = {
-    ...requestParams,
-    keyword: input.keyword,
-    search_param: "&nfpr=1",
-    device: input.device,
-    ...(input.tag ? { tag: input.tag } : {}),
-    ...(stopOnMatch
-      ? {
-          find_targets_in: ["organic"],
-          stop_crawl_on_match: [{ match_type: STOP_ON_MATCH_TYPE, match_value: stopTarget }],
-        }
-      : {}),
-  };
+  const payload = dataForSeoRankTask(input);
+  const native = dataForSeoRankRequest(input);
   const sentScope = dataForSeoSentScope(payload, input.location);
   const data = await requestEnvelope(
-    SERP_URL,
+    native.url,
     {
-      method: "POST",
-      headers: {
-        Authorization: requireDataForSeoLogin(credentials),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify([payload]),
+      ...native,
+      headers: { ...native.headers, Authorization: requireDataForSeoLogin(credentials) },
     },
     credentials,
     SERP_REQUEST_TIMEOUT_MS,
@@ -155,7 +137,7 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
       ? task.result.flatMap((result) => result.items ?? [])
       : [null];
   // biome-ignore format: keep the provider module under its enforced line cap.
-  const decision = requireDeterminateOrganicResult("DataForSEO", dataForSeoOrganicDecision(items, input.domain, requestParams.depth));
+  const decision = requireDeterminateOrganicResult("DataForSEO", dataForSeoOrganicDecision(items, input.domain, payload.depth));
   const checkedAt = new Date();
 
   return {
@@ -183,7 +165,7 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
       executedAt: checkedAt,
       items,
       requestPolicy: {
-        depth: requestParams.depth,
+        depth: payload.depth,
         findTargetsIn: stopOnMatch ? STOP_ON_MATCH_TYPE : null,
         forcedAiOverview: false,
         stopOnMatch,

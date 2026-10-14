@@ -407,6 +407,12 @@ describe("queued result persistence", () => {
     },
   );
 
+  it("denies movement comparison when the original result has no scope/time proof", async () => {
+    mocks.tasks.splice(1);
+    await persistReadyQueuedRankCheckTasks("batch_1");
+    expect(mocks.persistRankCheck.mock.calls[0]?.[1]).toMatchObject({ comparisonAllowed: false });
+    expect(mocks.prisma.rankCheck.findFirst).not.toHaveBeenCalled();
+  });
   it("uses the retained request domain after the project's current domain changes", async () => {
     mocks.tasks.splice(1);
     mocks.tasks[0].keyword.project.domain = "changed.example.com";

@@ -17,7 +17,7 @@ export const createTargetSchema = z
     engine: z.literal("google"),
     surface: z.enum(["web_serp", "maps", "local_finder"]),
     resultKind: z.enum(["local_pack", "map_listing", "listing"]),
-    rankScale: z.enum(["pack_slot", "maps_organic", "finder_organic"]),
+    rankScale: z.enum(["pack_slot", "maps_organic", "finder_organic", "finder_group"]),
     language: localToken,
     device: z.enum(["desktop", "mobile"]),
     operatingSystem: localToken.nullable(),

@@ -28,6 +28,7 @@ async function transportFixture() {
     await tx.$executeRaw`CREATE TABLE provider_connections(id text primary key, "projectId" text, "publicId" text, provider text, "credentialSource" text, enabled boolean, status text, "credentialsEncrypted" text)`;
     await tx.$executeRaw`CREATE TABLE keywords(id text primary key, "projectId" text)`;
     await tx.$executeRaw`CREATE TABLE rank_checks(id text primary key, "keywordId" text, "runId" text)`;
+    await tx.$executeRaw`CREATE TABLE rank_check_run_items(id text primary key, "runId" text NOT NULL, "keywordId" text NOT NULL, "rankCheckId" text)`;
     await tx.$executeRaw`ALTER TABLE queued_rank_check_tasks ADD COLUMN "rankCheckId" text`;
     await tx.$executeRaw`INSERT INTO projects VALUES('project','owner',0)`;
     await ensureProjectSpendingBudget(tx, "test", "project");
@@ -145,6 +146,39 @@ test("public journal reserves, fences and settles without activation or legacy l
     );
     await expect(journal.observer.beforeDispatch?.(evidence.id)).rejects.toThrow();
     expect(sent).toBe(1);
+  } finally {
+    await f.close();
+  }
+});
+
+test("missing public run-item attribution schema refuses transport before HTTP and rolls back accounting", async () => {
+  const f = await transportFixture();
+  try {
+    await f.db.$executeRaw`DROP TABLE rank_check_run_items`;
+    const request = vi.fn(async () => new Response("{}"));
+    const measure = vi.fn(() => ({ costCents: 2, quantity: 1, cached: false, failed: false }));
+    const journal = createProviderRequestJournal(f.db, f.input());
+    await expect(
+      readObservedResponse({ observer: journal.observer, request, measure }),
+    ).rejects.toMatchObject({
+      name: "ProviderUsagePersistenceError",
+      phase: "admission",
+      cause: {
+        name: "ProviderUsagePersistenceError",
+        cause: {
+          code: "P2010",
+          meta: {
+            driverAdapterError: {
+              cause: { originalCode: "42P01", table: "rank_check_run_items" },
+            },
+          },
+        },
+      },
+    });
+    expect(request).not.toHaveBeenCalled();
+    expect(measure).not.toHaveBeenCalled();
+    expect(await f.db.meteringUsageEvidence.count()).toBe(0);
+    expect(await f.db.meteringOperation.count()).toBe(0);
   } finally {
     await f.close();
   }

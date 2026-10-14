@@ -2,7 +2,8 @@ import {
   buildCompetitorMarket,
   emptyCompetitorFilter,
 } from "@/lib/competitors/competitor-market-model";
-import { emptySavedViewConfig } from "@/lib/keywords/saved-view-model";
+import { cloneSavedViewConfig } from "@/lib/keywords/saved-view-model";
+import { mapSavedViewRecord } from "@/lib/saved-views/model";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handleApiRequest } from "./router";
 
@@ -119,18 +120,34 @@ const project = {
   updatedAt: new Date("2026-01-02T00:00:00.000Z"),
 };
 
-function savedViewResource(name: string) {
-  return {
-    canDelete: true,
-    config: emptySavedViewConfig,
-    definition: emptySavedViewConfig,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    id: ids.savedView,
-    name,
-    surface: "keywords" as const,
-    visibility: "project" as const,
-    revision: 1,
-  };
+function savedViewResource(
+  name: string,
+  surface: "keywords" | "competitors" = "keywords",
+  config: unknown = surface === "keywords"
+    ? cloneSavedViewConfig()
+    : {
+        version: 1,
+        surface: "competitors",
+        scope: { device: "desktop", engine: "google", locationId: "location_us" },
+      },
+) {
+  const view = mapSavedViewRecord(
+    {
+      config,
+      createdAt: project.createdAt,
+      createdById: "user_db_1",
+      id: "view_db_1",
+      publicId: ids.savedView,
+      name,
+      surface,
+      revision: 1,
+      visibility: "project",
+      ownerId: null,
+    },
+    true,
+  );
+  if (!view) throw new Error("Invalid saved-view resource fixture.");
+  return view;
 }
 
 const apiActor = { id: project.ownerId, memberships: [{ projectId: project.id, role: "admin" }] };
@@ -168,7 +185,9 @@ describe("public API remaining app surface routes", () => {
       },
       project,
     });
-    mocks.queries.listSavedViews.mockResolvedValue([savedViewResource("All")]);
+    mocks.queries.listSavedViews.mockImplementation(async (_actor, _project, surface) => [
+      savedViewResource("All", surface),
+    ]);
     mocks.queries.getCompetitorsApiView.mockResolvedValue({
       managedCompetitors: [
         {
@@ -247,7 +266,9 @@ describe("public API remaining app surface routes", () => {
       importJob: { id: ids.job, state: "idle" },
     });
     for (const fn of Object.values(mocks.actions)) fn.mockResolvedValue({ id: "ok_1" });
-    mocks.actions.createSavedView.mockResolvedValue(savedViewResource("Mine"));
+    mocks.actions.createSavedView.mockImplementation(async ({ surface, name, config }) =>
+      savedViewResource(name, surface, config),
+    );
     mocks.tokenService.assertMintRateLimit.mockResolvedValue(undefined);
     mocks.tokenService.mint.mockResolvedValue({
       createdAt: "2026-01-01T00:00:00.000Z",

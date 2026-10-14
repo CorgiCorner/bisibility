@@ -4607,6 +4607,11 @@
     },
     {
       "kind": "render",
+      "path": "components/competitors/CompetitorPersonalViewControl.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/competitors/CompetitorSavedViewsControl.tsx",
       "status": "migrated"
     },
@@ -6662,8 +6667,18 @@
     },
     {
       "kind": "render",
+      "path": "components/local-monitors/MonitorCenterPicker.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "components/local-monitors/MonitorDetail.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorField.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -6674,6 +6689,11 @@
       "kind": "render",
       "path": "components/local-monitors/MonitorForm.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorGridPreview.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -8334,6 +8354,11 @@
       "kind": "render",
       "path": "components/sample-data/SampleProjectBanner.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/saved-views/personal-control-types.ts",
+      "status": "pending"
     },
     {
       "kind": "render",

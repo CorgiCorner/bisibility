@@ -13,6 +13,7 @@ import {
 import { competitorScopeHref } from "@/lib/competitors/scope-model";
 import type { DeleteSavedViewInput } from "@/lib/keywords/saved-view-model";
 import type { ProjectRef } from "@/lib/routing/app-path";
+import type { KeywordPersonalViewContext } from "@/lib/saved-views/keyword-personal-context";
 import type {
   CompetitorSavedView,
   CreateProjectSavedViewInput,
@@ -25,6 +26,7 @@ import { TrashIcon as Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { CompetitorPersonalViewControl } from "./CompetitorPersonalViewControl";
 import { SaveCompetitorViewModal } from "./SaveCompetitorViewModal";
 
 type CompetitorSavedViewsControlProps = {
@@ -39,9 +41,29 @@ type CompetitorSavedViewsControlProps = {
   projectId: string;
   projectRef: ProjectRef;
   savedViews: CompetitorSavedView[];
+  personalViews?: KeywordPersonalViewContext;
+  canCreateSharedView?: boolean;
+  onClearDraft?: () => void;
 };
 
-export function CompetitorSavedViewsControl({
+export function CompetitorSavedViewsControl(props: Readonly<CompetitorSavedViewsControlProps>) {
+  if (props.personalViews)
+    return (
+      <CompetitorPersonalViewControl
+        context={props.personalViews}
+        config={props.config}
+        activeViewId={props.activeViewId}
+        projectId={props.projectId}
+        canCreateShared={props.canCreateSharedView ?? false}
+        modified={props.modified}
+        onDiscard={props.onDiscard}
+        onClearDraft={props.onClearDraft}
+      />
+    );
+  return <SharedCompetitorSavedViewsControl {...props} />;
+}
+
+function SharedCompetitorSavedViewsControl({
   activeViewId,
   config,
   createSavedViewAction,

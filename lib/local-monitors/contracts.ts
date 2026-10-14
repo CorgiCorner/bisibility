@@ -10,7 +10,13 @@ export type MonitorDetail = Awaited<ReturnType<typeof readLocalMonitor>>;
 export type MonitorPage = Awaited<ReturnType<typeof listLocalMonitors>>;
 export type MonitorHistoryPage = Awaited<ReturnType<typeof readLocalMonitorHistory>>;
 export type MonitorPermissions = Readonly<{ canRead: boolean; canWrite: boolean }>;
-export type SubjectChoice = Readonly<{ id: string; name: string; identityRevisionId: string }>;
+export type SubjectChoice = Readonly<{
+  id: string;
+  name: string;
+  identityRevisionId: string;
+  address?: string | null;
+  coordinates?: Readonly<{ latitude: number; longitude: number }> | null;
+}>;
 export type KeywordChoice = Readonly<{ id: string; text: string; device: string }>;
 export type SetupChoices = Readonly<{
   subjects: readonly SubjectChoice[];

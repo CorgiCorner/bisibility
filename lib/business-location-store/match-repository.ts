@@ -37,7 +37,7 @@ const proofSchema = z
         slot: ordinal,
         absolute: ordinal,
         group: ordinal.optional(),
-        scale: z.literal("maps_organic").nullable().optional(),
+        scale: z.enum(["maps_organic", "finder_group"]).nullable().optional(),
       })
       .strict(),
     promotion: z.enum(["organic", "promoted", "unknown"]),

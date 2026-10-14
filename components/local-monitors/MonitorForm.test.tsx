@@ -34,7 +34,7 @@ describe("monitor editor", () => {
           />
         </NextIntlClientProvider>,
       );
-      expect(screen.getByRole("button", { name: /save/i })).toBeDisabled();
+      expect(screen.getByRole("button", { name: "Save configuration" })).toBeDisabled();
       expect(save).not.toHaveBeenCalled();
       expect(search).not.toHaveBeenCalled();
       expect(fetch).not.toHaveBeenCalled();
@@ -145,7 +145,7 @@ describe("monitor editor", () => {
         />
       </NextIntlClientProvider>,
     );
-    await userEvent.setup().click(screen.getByRole("button", { name: /save/i }));
+    await userEvent.setup().click(screen.getByRole("button", { name: "Save configuration" }));
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(save).not.toHaveBeenCalled();
   });

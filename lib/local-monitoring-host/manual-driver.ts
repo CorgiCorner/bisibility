@@ -28,7 +28,7 @@ import { mapsSubmitTransport } from "./maps-transport";
 export const resolveManualLocalDriver: ManualLocalDriverFactory = async (tx, input) => {
   const { definition, scope } = input;
   const clock = () => new Date();
-  if (definition.axes.surface !== "maps" || definition.axes.language !== "en")
+  if (!["maps", "local_finder"].includes(definition.axes.surface))
     return { kind: "unavailable", reason: "unsupported" };
   if (!mapsPriceCurrent(clock())) return { kind: "unavailable", reason: "pricing_unavailable" };
   await assertMapsDefinition(tx, scope.project.id, definition);
@@ -222,7 +222,7 @@ export const resolveManualLocalDriver: ManualLocalDriverFactory = async (tx, inp
             ),
           ).toISOString(),
           effectiveOptions: {
-            surface: "maps",
+            surface: definition.axes.surface,
             priority: "normal",
             mode: "task",
             ...Object.fromEntries(

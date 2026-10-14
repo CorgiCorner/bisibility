@@ -66,10 +66,15 @@ export async function readMonitorSetupChoices(
       const subjects = await Promise.all(
         subjectRows.slice(0, 50).map(async (row) => {
           const value = await loadBusinessLocation(tx, scope.project.id, row.publicId);
+          const coordinate = value.location.currentRevision.snapshot.coordinates;
           return {
             id: row.publicId,
             name: value.location.currentRevision.snapshot.name,
             identityRevisionId: value.location.currentRevision.id,
+            address: value.location.currentRevision.snapshot.address ?? null,
+            coordinates: coordinate
+              ? { latitude: coordinate.latitude, longitude: coordinate.longitude }
+              : null,
           };
         }),
       );

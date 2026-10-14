@@ -54,7 +54,13 @@ export type ObservationRating = {
 };
 
 export type ObservationItemInput = {
-  rankScale?: "organic_group" | "pack_slot" | "maps_organic" | "finder_organic" | null;
+  rankScale?:
+    | "organic_group"
+    | "pack_slot"
+    | "maps_organic"
+    | "finder_organic"
+    | "finder_group"
+    | null;
   promotion?: "organic" | "promoted" | "unknown" | null;
   sourcePage?: number | null;
   sourceBlockId?: string | null;

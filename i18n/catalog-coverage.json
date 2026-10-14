@@ -42185,6 +42185,71 @@
       },
       {
         "arguments": [],
+        "key": "shared.localMonitors.center.choose",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.center.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.center.help",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.center.manual",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.center.missingCoordinates",
+        "tags": []
+      },
+      {
+        "arguments": [["count", 6]],
+        "key": "shared.localMonitors.center.preview",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.center.previewEmpty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.center.previewHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.center.previewInvalid",
+        "tags": []
+      },
+      {
+        "arguments": [["metres", 1]],
+        "key": "shared.localMonitors.center.previewSpacing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.center.search",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.center.showPoints",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.center.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.localMonitors.column",
         "tags": []
       },
@@ -42756,6 +42821,11 @@
       {
         "arguments": [],
         "key": "shared.localMonitors.points",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.rankScales.finder_group",
         "tags": []
       },
       {

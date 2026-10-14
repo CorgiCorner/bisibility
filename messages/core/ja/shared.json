@@ -1762,7 +1762,8 @@
       "rankScales": {
         "pack_slot": "ローカルパック内の順位",
         "maps_organic": "Maps のオーガニック順位",
-        "finder_organic": "Local Finder のオーガニック順位"
+        "finder_organic": "Local Finder のオーガニック順位",
+        "finder_group": "Local Finder の結果グループ（広告枠を含む）"
       },
       "frequencies": {
         "daily": "毎日",
@@ -1969,6 +1970,21 @@
           "owner_retained": "元の所有権を保持中",
           "proof_unavailable": "ネイティブ完了証拠がありません"
         }
+      },
+      "center": {
+        "title": "測定の中心",
+        "help": "保存済みの場所を選択すると座標がコピーされます。追跡対象の企業は変更されません。",
+        "choose": "保存済みの場所を選択",
+        "search": "名前または住所で検索",
+        "missingCoordinates": "保存された座標なし",
+        "empty": "保存された座標がありません。拠点に追加するか、以下に入力してください。",
+        "manual": "詳細設定: 座標を入力",
+        "previewEmpty": "中心を選択して測定地点を確認してください。",
+        "preview": "{count, plural, other {# 個の予定地点}}",
+        "previewSpacing": "地点間の距離: {metres} m",
+        "previewHelp": "地点の配置図です。上が北です。まだ測定されていません。",
+        "showPoints": "地点の座標を表示",
+        "previewInvalid": "この設定ではグリッドを生成できません。座標と地点間の距離を確認してください。"
       }
     },
     "dashboardComparison": {

@@ -1,8 +1,10 @@
 import { createPointRevision } from "@/lib/local-monitoring/geometry";
 import {
+  FINDER_REQUEST_SCOPE,
   localOperatingSystems,
   MAPS_REQUEST_SCOPE,
 } from "@/lib/local-monitoring/maps-request-scope";
+import { supportedLocalLanguage } from "@/lib/local-monitoring/search-languages";
 import { executionTargetKey } from "@/lib/local-monitoring/target-key";
 import { providerObservationTime } from "@/lib/observation/provider-metadata";
 import { hasAsciiControlCharacters } from "@/lib/validation/control-characters";
@@ -28,7 +30,7 @@ export function localSurface(binding: LocalProviderBinding): LocalProviderSurfac
   if (
     target.surface === "local_finder" &&
     target.resultKind === "listing" &&
-    target.rankScale === "finder_organic"
+    ["finder_organic", "finder_group"].includes(target.rankScale)
   )
     return "local_finder";
   throw new Error("Unsupported local surface or rank scale");
@@ -58,15 +60,14 @@ export function validateLocalBinding(binding: LocalProviderBinding) {
     [...keyword.text].length > 700
   )
     throw new Error("Invalid local keyword");
-  if (!/^[a-z]{2,3}(?:-[A-Za-z]{2,4})?$/.test(target.language))
-    throw new Error("Invalid local language code");
+  if (!supportedLocalLanguage(target.language)) throw new Error("Invalid local language code");
   if (
     !Number.isSafeInteger(target.cutoff) ||
     target.cutoff < 1 ||
     target.cutoff > PRODUCT_CUTOFF_LIMIT
   )
     throw new Error("Unsupported local cutoff");
-  const range = surface === "maps" ? MAPS_REQUEST_SCOPE.zoomRange : [4, 18];
+  const range = surface === "maps" ? MAPS_REQUEST_SCOPE.zoomRange : FINDER_REQUEST_SCOPE.zoomRange;
   if (
     target.zoom === null ||
     !Number.isSafeInteger(target.zoom) ||

@@ -198,3 +198,19 @@ Reviewed settings saves retain the verified consent in the existing transactiona
 The migration runner admits only the shared receipt metadata (`scopeSources` and `nextRun`), preserving existing receipt fields and immutability. Apply migrations before upgrading a settings writer; older receipts remain valid and unknown metadata is rejected.
 
 A confirmed manual launch retains its verified quote digest, source and selection digests, reviewed target count and native estimates in the existing atomic run audit. This records a queued measurement, not a completed provider call. Estimates that were unavailable during review remain unknown; raw quote tokens, credentials and target identities are omitted. Replaying a committed launch retains the original audit without adding another entry.
+
+
+## Choose a local measurement center
+
+For a Maps or Local Finder monitor, choose a saved business location as the
+measurement center. Search its name or saved address; selecting it copies the
+saved coordinates without changing the business being tracked. Locations without
+coordinates remain visible but cannot supply a center. Add their coordinates in
+business-location settings or use **Advanced: enter coordinates** in the monitor.
+
+The point layout previews the same ordered sampling coordinates used by the
+monitor, with north at the top. Expand the coordinate table to inspect each point.
+This is a layout preview, not a geographic basemap or measured ranking result.
+Changing the center, spacing or grid size updates the draft only. Saving and
+launching remain separate actions. The picker uses saved project data and does
+not contact an external geocoding service.
