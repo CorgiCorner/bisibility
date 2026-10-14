@@ -1,8 +1,6 @@
 import { preparePaidAttempt } from "@/lib/metering/current-paid-quote";
-import {
-  createDataForSeoMapsModule,
-  MAPS_POST_OPERATION,
-} from "@/lib/provider-rates/dataforseo-maps-module";
+import { createDataForSeoLocalModule } from "@/lib/provider-rates/dataforseo-finder-module";
+import { MAPS_POST_OPERATION } from "@/lib/provider-rates/dataforseo-maps-module";
 import { createMeter } from "@usagekit/meter";
 import { createCatalog, PricedRequest } from "@usagekit/providers";
 import { createMemoryStore } from "@usagekit/store";
@@ -10,14 +8,13 @@ import { MAPS_ADAPTER_VERSION, mapsCapability, mapsTaskRequest } from "./maps-ca
 import { localBindingFixture, nativeIds, receiptTime, settledRecord } from "./test-fixtures";
 
 export { nativeIds, receiptTime };
-export function mapsFixture() {
-  const binding = localBindingFixture();
+export function mapsFixture(binding = localBindingFixture()) {
   const capability = mapsCapability(receiptTime);
   const request = mapsTaskRequest(binding);
   const catalog = createCatalog({
-    providers: [createDataForSeoMapsModule(() => receiptTime)],
+    providers: [createDataForSeoLocalModule(() => new Date("2026-10-14T10:00:00.000Z"))],
     enabled: ["dataforseo"],
-    now: () => receiptTime,
+    now: () => new Date("2026-10-14T10:00:00.000Z"),
   });
   const match = catalog.match("dataforseo", request);
   if (match.operation === "unknown") throw new Error("Fixture is not a registered Maps operation.");
@@ -40,8 +37,12 @@ export function mapsFixture() {
   };
   return { binding, capability, request, catalog, quote, record };
 }
-export async function pricedMapsFixture(includeInternalUnit = false, includeHostCounters = false) {
-  const fixture = mapsFixture();
+export async function pricedMapsFixture(
+  includeInternalUnit = false,
+  includeHostCounters = false,
+  binding = localBindingFixture(),
+) {
+  const fixture = mapsFixture(binding);
   const clock = { now: () => receiptTime };
   const meter = createMeter({ store: createMemoryStore({ clock, budgets: [] }), clock });
   const request = await PricedRequest.price({
@@ -65,7 +66,10 @@ export async function pricedMapsFixture(includeInternalUnit = false, includeHost
       : meter,
     catalog: fixture.catalog,
     request: fixture.request,
-    expectedOperation: MAPS_POST_OPERATION,
+    expectedOperation:
+      fixture.binding.target.surface === "maps"
+        ? MAPS_POST_OPERATION
+        : "serp.google.local_finder.task_post",
     rejectUnknown: true,
     input: {
       operationId: "maps-test-operation",

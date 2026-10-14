@@ -1,9 +1,12 @@
 import { Buffer } from "node:buffer";
 import { defaultRankTrackerQueryState } from "@/lib/keywords/rank-tracker-query";
+import { fixtureScope } from "@/lib/rank-measurements/fixtures";
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
 import type { Client } from "pg";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildDataTablePerfFixture,
+  DATA_TABLE_PERF_AS_OF,
   DATA_TABLE_PERF_COUNTS,
   DATA_TABLE_PERF_PROJECT,
 } from "./rank-tracker-grouped-performance-fixtures";
@@ -162,6 +165,12 @@ async function normalizationIndex(client: Client) {
 }
 
 describe("rank tracker grouped query performance", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(DATA_TABLE_PERF_AS_OF);
+  });
+  afterAll(() => vi.useRealTimers());
+
   it.each([
     ["default position ascending", defaultRankTrackerQueryState.sort],
     ["keyword ascending", { direction: "asc" as const, field: "keyword" as const }],
@@ -261,6 +270,58 @@ describe("rank tracker grouped query performance", () => {
       ).toBe(true);
     });
   });
+
+  it.each(["missing capture", "scope mismatch", "missing observation time"])(
+    "retains raw observations but denies comparable payload history for %s",
+    async (missing) => {
+      await withTemporaryGroupedDatabase(async (client) => {
+        const fixture = await seedPerformanceFixture(client);
+        const selection = buildRankTrackerGroupedSql(DATA_TABLE_PERF_PROJECT.id, {
+          ...defaultRankTrackerQueryState,
+          grouped: true,
+          pageSize: 50,
+        });
+        const result = await client.query<GroupedResult>(selection.text, selection.values);
+        const page = result.rows[0];
+        const member = page?.groups[0]?.members[0];
+        const target = fixture.targets.find((candidate) => candidate.id === member?.id);
+        const location = fixture.locations.find((candidate) => candidate.id === target?.locationId);
+        if (!page || !target || !location) throw new Error("Selected performance target required");
+        const scope = {
+          ...fixtureScope,
+          projectId: DATA_TABLE_PERF_PROJECT.id,
+          targetId: target.id,
+          location: location.displayName,
+          language: location.hl,
+          device: target.device,
+        };
+        for (const check of target.rankHistory) {
+          const at = new Date(check.checkedAt);
+          check.observationRun =
+            missing === "missing capture"
+              ? null
+              : recordedFixture(check.position, {
+                  configuredScope: scope,
+                  effectiveScope:
+                    missing === "scope mismatch" ? { ...scope, language: "fr" } : scope,
+                  observedAt: missing === "missing observation time" ? null : at,
+                  recordedAt: at,
+                }).observationRun;
+        }
+        const rows = groupedPerformancePayload(fixture, page).flatMap((group) => group.subRows);
+        const row = rows.find((candidate) => candidate.id === target.publicId);
+        expect(row).toMatchObject({
+          positionHistory: [],
+          sparkline: [],
+          completedComparableChecks: [],
+          positionHistoryBoundaryAt: target.rankHistory.at(-1)?.checkedAt,
+        });
+        expect(row?.positionObservations?.map((check) => check.position)).toEqual(
+          target.rankHistory.map((check) => check.position),
+        );
+      });
+    },
+  );
 
   it("proves normalization-index selection for a realistic multi-project fixture", async () => {
     await withTemporaryGroupedDatabase(async (client) => {

@@ -52,11 +52,11 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
     conflictScope?.kind === "view"
       ? views.find((view) => view.id === conflictScope.id)?.revision
       : preference.revision;
+  const viewGone = conflictScope?.kind === "view" && latestRevision === undefined;
   const canReview =
     reloadRequested &&
     conflictScope !== null &&
-    latestRevision !== undefined &&
-    latestRevision > conflictScope.revision;
+    (viewGone || (latestRevision !== undefined && latestRevision > conflictScope.revision));
 
   async function perform(operation: () => Promise<unknown>, scope: ConflictScope) {
     if (!writable) return;
@@ -247,12 +247,12 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
           >
             {labels.reloadLatest}
           </Button>
-          {canReview ? (
+          {canReview && latestRevision !== undefined ? (
             <span className="self-center text-[12px] text-fg-muted">
               {labels.latestRevision}: {latestRevision}
             </span>
           ) : null}
-          {canReview && conflictScope.kind === "view" ? (
+          {canReview && conflictScope.kind === "view" && !viewGone ? (
             <Button
               href={canonicalSavedViewHref(props.projectId, props.config.surface, conflictScope.id)}
               target="_blank"
@@ -286,6 +286,7 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
           onClose={closeSave}
           onSaved={(view) => {
             closeSave();
+            props.onClearDraft?.();
             props.onSelect(view);
             props.onRefresh();
           }}

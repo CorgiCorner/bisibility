@@ -30,6 +30,8 @@ export const monitorChoiceFixture: SetupChoices = {
       id: monitorUiFixture.locationId,
       identityRevisionId: monitorUiFixture.identityRevisionId,
       name: "Synthetic branch",
+      address: "Example street 1",
+      coordinates: { latitude: 52.2297, longitude: 21.0122 },
     },
   ],
   keywords: [

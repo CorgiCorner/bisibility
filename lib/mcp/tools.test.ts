@@ -10,6 +10,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MCP_TOOL_NAMES } from "./canonical-tools";
 import { getMcpToolDefinitions } from "./definitions";
 import { dispatchMcpTool } from "./tools";
+import type { JsonObject } from "./types";
 
 const mocks = vi.hoisted(() => {
   const handler = async (req: Request, path: string[]) => {
@@ -30,7 +31,9 @@ const mocks = vi.hoisted(() => {
   return {
     authenticateBearer: vi.fn(),
     handleApiRequest: vi.fn(handler),
-    handleMcpPreauthenticatedApiRequest: vi.fn(handler),
+    handleMcpPreauthenticatedApiRequest: vi.fn(
+      (request: Request, path: string[], _context: { auth: unknown }) => handler(request, path),
+    ),
   };
 });
 
@@ -49,11 +52,11 @@ describe("MCP tool dispatch", () => {
     vi.clearAllMocks();
   });
 
-  it("publishes the canonical unprefixed 138-tool contract", () => {
+  it("publishes the canonical unprefixed 140-tool contract", () => {
     const definitions = getMcpToolDefinitions();
 
     expect(definitions.map((tool) => tool.name)).toEqual(MCP_TOOL_NAMES);
-    expect(definitions).toHaveLength(138);
+    expect(definitions).toHaveLength(140);
     expect(definitions.some((tool) => tool.name === "preview_project_defaults")).toBe(true);
     expect(definitions.every((tool) => /^[a-z][a-z0-9_]*$/.test(tool.name))).toBe(true);
     expect(definitions.some((tool) => tool.name.startsWith("bisibility_"))).toBe(false);
@@ -175,6 +178,145 @@ describe("MCP tool dispatch", () => {
       path: ["projects", "prj_a00000000000000000000000", "keywords"],
       search: "?limit=25&search=rank+tracker&tag=Product",
     });
+  });
+
+  it.each(["list_rank_check_runs", "get_rank_check_run"] as const)(
+    "%s reaches an authenticated retained-run GET through the public dispatcher",
+    async (name) => {
+      const project = "prj_a00000000000000000000000";
+      const run = "rcr_a00000000000000000000000";
+      const input: JsonObject =
+        name === "list_rank_check_runs"
+          ? {
+              project_id: project,
+              segment: "planned",
+              status: "blocked,cancelled",
+              limit: 25,
+              cursor: "opaque+cursor/=",
+            }
+          : { project_id: project, run_id: run };
+      const result = await dispatchMcpTool(name, input, "bsb_key_live_test");
+      expect(result).toMatchObject({
+        ok: true,
+        status: 200,
+        payload: {
+          authorization: "Bearer bsb_key_live_test",
+          body: null,
+          method: "GET",
+          path: [
+            "projects",
+            project,
+            "rank-check-runs",
+            ...(name === "get_rank_check_run" ? [run] : []),
+          ],
+        },
+      });
+      expect(mocks.handleApiRequest).toHaveBeenCalledOnce();
+      expect(mocks.handleMcpPreauthenticatedApiRequest).not.toHaveBeenCalled();
+      const [request] = mocks.handleApiRequest.mock.calls[0];
+      expect(request.headers.get("x-bisibility-project")).toBe(project);
+      expect(request.headers.get("x-bisibility-source")).toBe("mcp");
+      expect(request.headers.get("idempotency-key")).toBeNull();
+      expect(request.headers.get("prefer")).toBeNull();
+      const params = Object.fromEntries(new URL(request.url).searchParams);
+      expect(params).toEqual(
+        name === "list_rank_check_runs"
+          ? {
+              segment: "planned",
+              status: "blocked,cancelled",
+              limit: "25",
+              cursor: "opaque+cursor/=",
+            }
+          : {},
+      );
+    },
+  );
+
+  it.each(["list_rank_check_runs", "get_rank_check_run"] as const)(
+    "%s preserves preauthenticated read scope without forwarding an OAuth bearer",
+    async (name) => {
+      const project = "prj_a00000000000000000000000";
+      const input: JsonObject =
+        name === "list_rank_check_runs"
+          ? { project_id: project, segment: "history", limit: 10 }
+          : { project_id: project, run_id: "rcr_a00000000000000000000000" };
+      const auth = {
+        kind: "personal_token",
+        memberships: [],
+        token: {
+          id: "oauth:test",
+          name: "MCP OAuth",
+          prefix: "oauth",
+          publicId: null,
+          scopes: ["read"],
+          userId: "user_1",
+        },
+        user: {
+          email: "owner@example.com",
+          id: "user_1",
+          name: "Owner",
+          publicId: "usr_a00000000000000000000000",
+        },
+      } as const;
+      const result = await dispatchMcpTool(name, input, auth);
+      expect(result).toMatchObject({
+        ok: true,
+        status: 200,
+        payload: {
+          authorization: null,
+          body: null,
+          method: "GET",
+          path: [
+            "projects",
+            project,
+            "rank-check-runs",
+            ...(name === "get_rank_check_run" ? ["rcr_a00000000000000000000000"] : []),
+          ],
+        },
+      });
+      expect(mocks.handleMcpPreauthenticatedApiRequest).toHaveBeenCalledOnce();
+      const [request, , context] = mocks.handleMcpPreauthenticatedApiRequest.mock.calls[0];
+      expect(request.headers.get("authorization")).toBeNull();
+      expect(request.headers.get("x-bisibility-project")).toBe(project);
+      expect(request.headers.get("x-bisibility-source")).toBe("mcp");
+      expect(Object.fromEntries(new URL(request.url).searchParams)).toEqual(
+        name === "list_rank_check_runs" ? { segment: "history", limit: "10" } : {},
+      );
+      expect(context.auth).toBe(auth);
+      expect(mocks.handleApiRequest).not.toHaveBeenCalled();
+      expect(mocks.authenticateBearer).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["list_rank_check_runs", "get_rank_check_run"] as const)(
+    "%s rejects launch-shaped input before either REST path",
+    async (name) => {
+      const input: JsonObject = {
+        project_id: "prj_a00000000000000000000000",
+        force: true,
+        ...(name === "get_rank_check_run" ? { run_id: "rcr_a00000000000000000000000" } : {}),
+      };
+      await expect(dispatchMcpTool(name, input, "bsb_key_live_test")).rejects.toMatchObject({
+        name: "ZodError",
+      });
+      expect(mocks.handleApiRequest).not.toHaveBeenCalled();
+      expect(mocks.handleMcpPreauthenticatedApiRequest).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["air", "lmr"])("rejects a foreign %s run before REST", async (prefix) => {
+    await expect(
+      dispatchMcpTool(
+        "get_rank_check_run",
+        {
+          project_id: "prj_a00000000000000000000000",
+          run_id: `${prefix}_a00000000000000000000000`,
+        },
+        "bsb_key_live_test",
+      ),
+    ).rejects.toMatchObject({ code: "invalid_public_id" });
+    expect(mocks.handleApiRequest).not.toHaveBeenCalled();
+    expect(mocks.handleMcpPreauthenticatedApiRequest).not.toHaveBeenCalled();
   });
 
   it("passes OAuth authorization as internal context without forwarding the token", async () => {

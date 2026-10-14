@@ -7,6 +7,7 @@ import { dispatchKeywordResearchTool } from "./keyword-research-tools";
 import { dispatchLocalMonitorTool } from "./local-monitor-tools";
 import { dispatchLoopClosureTool } from "./loop-closure-tools";
 import { validateMcpPublicIds } from "./public-id-input";
+import { dispatchRankRunTool } from "./rank-run-tools";
 import { dispatchResearchWorkspaceTool } from "./research-workspace-tools";
 import { dispatchMcpRestCall, type McpApiAuthorization, type RestCall } from "./rest-call";
 import { dispatchSessionProfile } from "./session-profile";
@@ -39,6 +40,8 @@ function projectPath(input: ToolArgs, resource = "") {
 
 function dispatchToRest(name: string, input: ToolArgs): RestCall {
   validateMcpPublicIds(name, input);
+  const rankRunRoute = dispatchRankRunTool(name, input);
+  if (rankRunRoute) return rankRunRoute;
   const localRoute = dispatchLocalMonitorTool(name, input);
   if (localRoute) return localRoute;
   const trackingRoute = dispatchAiTrackingTool(name, input);

@@ -259,6 +259,38 @@ describe("keyword detail query", () => {
     });
   });
 
+  it.each(["captured scope", "depth coverage"])(
+    "keeps a completed null result unknown without %s proof",
+    async (missing) => {
+      mocks.prisma.keyword.findFirst.mockResolvedValue(
+        keyword({ rankChecks: [rankCheck({ position: null, rankingUrl: null })] }),
+      );
+      await expect(
+        getKeywordDetail("prj_a00000000000000000000000", "kw_d00000000000000000000000"),
+      ).resolves.toMatchObject({ checkState: "not_ranked", hasRankData: true });
+      mocks.prisma.rankCheck.aggregate.mockClear();
+      const check = rankCheck({
+        position: null,
+        rankingUrl: null,
+        ...(missing === "captured scope" ? { observationRun: null } : {}),
+      });
+      const observation = check.observationRun;
+      if (missing !== "captured scope") {
+        if (!observation) throw new Error("Captured query fixture required");
+        const policy = observation.requestPolicy;
+        observation.requestPolicy = {
+          ...policy,
+          evidence: { ...policy.evidence, completeThrough: { organic_result: null } },
+        };
+      }
+      mocks.prisma.keyword.findFirst.mockResolvedValue(keyword({ rankChecks: [check] }));
+      await expect(
+        getKeywordDetail("prj_a00000000000000000000000", "kw_d00000000000000000000000"),
+      ).resolves.toMatchObject({ checkState: "unknown", bestPosition: null, positionHistory: [] });
+      expect(mocks.prisma.rankCheck.aggregate).not.toHaveBeenCalled();
+    },
+  );
+
   it.each([
     ["running", "running"],
     ["failed", "failed"],

@@ -51,6 +51,30 @@ describe("rank tracker bounded history policy", () => {
     expect(window.boundary?.position).toBe(4);
   });
 
+  it.each(["captured scope", "observation time"])(
+    "does not create comparable history without %s proof",
+    (missing) => {
+      const control = check(25, 6);
+      expect(comparableCompletedWindow([control, check(24, 5)]).checks).toEqual([
+        control,
+        expect.objectContaining({ position: 5 }),
+      ]);
+      const current = check(25, 6, missing === "captured scope" ? { observationRun: null } : {});
+      const observation = current.observationRun;
+      if (missing !== "captured scope") {
+        if (!observation) throw new Error("Captured query fixture required");
+        const policy = observation.requestPolicy;
+        observation.requestPolicy = {
+          ...policy,
+          evidence: { ...policy.evidence, observedAt: null },
+        };
+      }
+      const window = comparableCompletedWindow(bounded([current, check(24, 5)]));
+      expect(window.checks).toEqual([]);
+      expect(window.boundary).toBe(current);
+    },
+  );
+
   it("excludes comparison and URL changes older than newest 12 non-deferred attempts", () => {
     const checks = Array.from({ length: 13 }, (_, index) => check(25 - index, index + 1));
     checks[12] = check(13, 13, { rankingUrl: "https://example.com/old" });

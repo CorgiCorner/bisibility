@@ -2,6 +2,7 @@ import { PROVIDER_CATALOG } from "./catalog-metadata";
 
 export { PROVIDER_CATALOG } from "./catalog-metadata";
 
+import { dataForSeoRankRequest } from "@/lib/providers/serp/dataforseo-rank-request";
 import { ga4AnalyticsProvider } from "./analytics/ga4";
 import { gscAnalyticsProvider } from "./analytics/gsc";
 import { plausibleAnalyticsProvider } from "./analytics/plausible";
@@ -19,6 +20,7 @@ import { syntheticSerpObservation } from "./serp/synthetic-observation";
 
 export { localSequenceProviderEnabled } from "./serp/synthetic-mode";
 
+import { serpApiRankRequest } from "@/lib/providers/serp/serpapi-request";
 import { serpApiProvider } from "./serp/serpapi";
 import type {
   AnalyticsProvider,
@@ -80,13 +82,24 @@ function fakeSerpProvider(id: string, label: string): SerpProvider {
       const position = stablePosition(input);
       const checkedAt = new Date("2026-06-19T00:00:00.000Z");
       const rankingUrl = `https://${input.domain}/rank-${position}`;
-      return syntheticProviderResult(input.credentials, () => ({
-        checkedAt,
-        observation: syntheticSerpObservation(id, input, { checkedAt, position, rankingUrl }),
-        costCents: 0,
-        position,
-        rankingUrl: `https://${input.domain}/rank-${position}`,
-      }));
+      const request = input.credentials?.usageObserver
+        ? id === "dataforseo"
+          ? dataForSeoRankRequest(input)
+          : id === "serpapi"
+            ? serpApiRankRequest(input)
+            : undefined
+        : undefined;
+      return syntheticProviderResult(
+        input.credentials,
+        () => ({
+          checkedAt,
+          observation: syntheticSerpObservation(id, input, { checkedAt, position, rankingUrl }),
+          costCents: 0,
+          position,
+          rankingUrl: `https://${input.domain}/rank-${position}`,
+        }),
+        request,
+      );
     },
     ...(id === "dataforseo"
       ? {

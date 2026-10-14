@@ -1,3 +1,4 @@
+import { supportedLocalLanguage } from "@/lib/local-monitoring/search-languages";
 import { dataforseo, type ProviderModule, type ProviderRequest } from "@usagekit/providers";
 
 export const MAPS_POST_OPERATION = "serp.google.maps.task_post";
@@ -57,14 +58,14 @@ export function mapsRequestOptions(request: ProviderRequest): Record<string, str
     Object.keys(row).some((key) => !fields.has(key)) ||
     typeof row.keyword !== "string" ||
     !keyword.length ||
-    keyword.length > 700 ||
+    [...keyword].length > 700 ||
     Array.from(keyword).some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127) ||
     operators.test(keyword) ||
     row.priority !== 1 ||
     !Number.isSafeInteger(row.depth) ||
     Number(row.depth) < 1 ||
     Number(row.depth) > 20 ||
-    row.language_code !== "en" ||
+    !supportedLocalLanguage(row.language_code) ||
     !os.includes(String(row.os)) ||
     row.search_this_area !== true ||
     row.search_places !== false ||

@@ -1,5 +1,6 @@
 import { localMonitorToolSchemas } from "./local-monitor-tools";
 import { mcpPublicIdSchema } from "./public-id-schema";
+import { rankRunToolSchemas } from "./rank-run-tools";
 
 type JsonObject = Record<string, unknown>;
 
@@ -12,6 +13,7 @@ function objectSchema(properties: JsonObject = {}, required: string[] = []) {
 
 export const agentMcpSchemas = {
   ...localMonitorToolSchemas,
+  ...rankRunToolSchemas,
   exportRankHistory: objectSchema(
     {
       cursor: { type: "string", minLength: 1, maxLength: 8192 },

@@ -56,6 +56,8 @@ export function buildMcpToolDefinitions(
     tool("listLocalMonitorPointListings", schemas.listLocalMonitorPointListings),
     tool("listLocalMonitorPointHistory", schemas.listLocalMonitorPointHistory),
     tool("exportLocalMonitorRun", schemas.exportLocalMonitorRun),
+    tool("listRankCheckRuns", schemas.listRankCheckRuns),
+    tool("getRankCheckRun", schemas.getRankCheckRun),
     tool("listSitemapMonitors", schemas.listSitemapMonitors),
     tool("enableSitemapMonitor", schemas.updateSitemapMonitor),
     tool("disableSitemapMonitor", schemas.updateSitemapMonitor),

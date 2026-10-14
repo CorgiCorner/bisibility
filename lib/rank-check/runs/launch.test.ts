@@ -187,6 +187,55 @@ describe("launchRankCheckRun", () => {
     mocks.prisma.rankCheckRun.updateMany.mockResolvedValue({ count: 1 });
   });
 
+  it("refuses admission when the persisted measurement policy has not been configured", async () => {
+    const original = mocks.tx.$queryRaw.getMockImplementation();
+    if (!original) throw new Error("Missing original definition fixture.");
+    mocks.tx.$queryRaw.mockImplementation(
+      async (strings: TemplateStringsArray, ...values: unknown[]) =>
+        strings.join("?").includes('"measurementPolicyConfig" AS config')
+          ? [{ epoch: "1", config: null }]
+          : original(strings, ...values),
+    );
+
+    await expect(launchRankCheckRun(input)).rejects.toMatchObject({
+      code: "measurement_policy_unconfigured",
+    });
+    expect(mocks.verifyToken).not.toHaveBeenCalled();
+    expect(mocks.tx.rankCheckRun.create).not.toHaveBeenCalled();
+    expect(mocks.tx.rankCheckRunItem.createMany).not.toHaveBeenCalled();
+  });
+
+  it("refuses admission when the installed storage authority cannot prove its invariants", async () => {
+    const original = mocks.tx.$queryRaw.getMockImplementation();
+    if (!original) throw new Error("Missing original definition fixture.");
+    mocks.tx.$queryRaw.mockImplementation(
+      async (strings: TemplateStringsArray, ...values: unknown[]) =>
+        strings.join("?").includes("SELECT measurement_definition_authority_intact()")
+          ? [{ intact: false }]
+          : original(strings, ...values),
+    );
+
+    await expect(launchRankCheckRun(input)).rejects.toMatchObject({
+      code: "measurement_definition_integrity",
+    });
+    expect(mocks.verifyToken).not.toHaveBeenCalled();
+    expect(mocks.tx.rankCheckRun.create).not.toHaveBeenCalled();
+    expect(mocks.tx.rankCheckRunItem.createMany).not.toHaveBeenCalled();
+  });
+
+  it("refuses admission for a provider without an implemented definition adapter", async () => {
+    mocks.loadProviderChain.mockResolvedValue([
+      { costPerCheckCents: 25, id: "connection_1", provider: "unsupported-provider" },
+    ]);
+
+    await expect(launchRankCheckRun(input)).rejects.toMatchObject({
+      code: "measurement_policy_unsupported",
+    });
+    expect(mocks.verifyToken).not.toHaveBeenCalled();
+    expect(mocks.tx.rankCheckRun.create).not.toHaveBeenCalled();
+    expect(mocks.tx.rankCheckRunItem.createMany).not.toHaveBeenCalled();
+  });
+
   it.each(["tampered", "expired", "mismatch"] as const)(
     "rejects a %s token before any database write",
     async (code) => {

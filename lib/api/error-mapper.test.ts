@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
+import { AuthorizationError } from "@/lib/auth/authorize";
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { BudgetExhaustedError } from "@/lib/rank-check/budget";
@@ -13,6 +14,34 @@ const headers = new Headers();
 const url = new URL("https://example.com/api/v1/keywords/kw_a00000000000000000000000/checks");
 
 describe("errorFromUnknown", () => {
+  it.each([
+    ["forbidden", 403, "forbidden"],
+    ["unauthenticated", 401, "unauthorized"],
+  ] as const)(
+    "maps a fresh %s authority refusal to its HTTP status",
+    async (code, status, type) => {
+      const error = new AuthorizationError(code);
+      const response = errorFromUnknown(
+        error,
+        new Headers({ "X-Request-Id": "synthetic-request" }),
+        url,
+      );
+      expect(response.status).toBe(status);
+      expect(response.headers.get("X-Request-Id")).toBe("synthetic-request");
+      expect(response.headers.get("Content-Type")).toBe("application/problem+json");
+      const body = await response.json();
+      expect(body).toMatchObject({
+        status,
+        detail: error.message,
+        instance: `urn:bisibility:api:v1:${url.pathname}`,
+      });
+      expect(new URL(body.type).pathname).toBe(`/problems/${type}`);
+    },
+  );
+
+  it("does not classify an arbitrary forbidden code as a trusted authorization error", () => {
+    expect(errorFromUnknown({ code: "forbidden" }, headers, url).status).toBe(500);
+  });
   it("returns a controlled409 for a saved-view revision conflict", async () => {
     const response = errorFromUnknown(new SavedViewConflictError(), headers, url);
     expect(response.status).toBe(409);

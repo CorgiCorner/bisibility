@@ -70,9 +70,9 @@ describe("local normalization into the shared ObservationRun contract", () => {
     expect(
       items.map((item) => [item.resultKind, item.rankGroup, item.promotion, item.rankScale]),
     ).toEqual([
-      ["listing", 1, "organic", null],
-      ["listing", 2, "promoted", null],
-      ["listing", 3, "unknown", null],
+      ["listing", 1, "organic", "finder_group"],
+      ["listing", 2, "promoted", "finder_group"],
+      ["listing", 3, "unknown", "finder_group"],
     ]);
     expect(items[0].placeId).toBeNull(); // Not documented for this Finder item kind.
     expect(result.payload.runs[0].requestPolicy.surface).toBe("local_finder");

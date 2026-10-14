@@ -2,16 +2,14 @@ import { CompetitorsMessagesBoundary } from "@/components/competitors/Competitor
 import { CompetitorsWorkspace } from "@/components/competitors/CompetitorsWorkspace";
 import { PageContent } from "@/components/shell/PageContent";
 import { addKeywords } from "@/lib/actions/keyword";
-import { deleteSavedView } from "@/lib/actions/saved-views";
-import { createProjectSavedView } from "@/lib/actions/saved-views-typed";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { emptyCompetitorFilter } from "@/lib/competitors/competitor-market-model";
 import { parseCompetitorScope } from "@/lib/competitors/scope-model";
 import { resolveProjectAccess } from "@/lib/queries/_auth";
+import { loadCompetitorPersonalContext } from "@/lib/queries/competitor-personal-context";
 import { getCompetitorsView } from "@/lib/queries/competitors";
 import { getExperimentalModules } from "@/lib/queries/experimental-modules";
 import { getProjectMarkets } from "@/lib/queries/project-markets";
-import { getSavedView, listSavedViews } from "@/lib/queries/saved-views";
 import { listWorkspaces } from "@/lib/queries/workspaces";
 import { hasExperimentalModule } from "@/lib/settings/experimental-modules";
 import { notFound } from "next/navigation";
@@ -43,12 +41,11 @@ export default async function CompetitorsPage({
   }
 
   const search = await searchParams;
-  const requestedViewId = paramValue(search?.view) ?? null;
-  const [savedViews, activeView, projectMarkets] = await Promise.all([
-    listSavedViews(active.id, "competitors"),
-    getSavedView(active.id, requestedViewId, "competitors"),
+  const [context, projectMarkets] = await Promise.all([
+    loadCompetitorPersonalContext(active.id, search ?? {}),
     getProjectMarkets(active.id),
   ]);
+  const activeView = context.activeView;
   const urlScope = parseCompetitorScope({
     device: paramValue(search?.device),
     engine: paramValue(search?.engine),
@@ -56,37 +53,30 @@ export default async function CompetitorsPage({
   });
   const view = await getCompetitorsView(
     active.id,
-    urlScope === undefined ? activeView?.config.scope : urlScope,
+    context.unavailable ? null : urlScope === undefined ? activeView?.config.scope : urlScope,
   );
   const canCreate = canProjectAction(active.role, "create", "competitor");
   const canDelete = canProjectAction(active.role, "delete", "competitor");
   const canUpdate = canProjectAction(active.role, "update", "competitor");
-  const deletableSavedViewIds = savedViews
-    .filter((savedView) => savedView.canDelete)
-    .map((savedView) => savedView.id);
 
   return (
     <PageContent>
       <CompetitorsMessagesBoundary>
         <CompetitorsWorkspace
-          activeViewId={activeView?.id ?? null}
+          activeViewId={activeView?.id ?? (context.unavailable ? context.requestedViewId : null)}
           addKeywordsAction={
             canProjectAction(active.role, "create", "keyword") ? addKeywords : undefined
           }
           canCreate={canCreate}
           canDelete={canDelete}
           canUpdate={canUpdate}
-          createSavedViewAction={
-            canProjectAction(active.role, "create", "saved_view")
-              ? createProjectSavedView
-              : undefined
-          }
-          deletableSavedViewIds={deletableSavedViewIds}
-          deleteSavedViewAction={deletableSavedViewIds.length > 0 ? deleteSavedView : undefined}
+          deletableSavedViewIds={[]}
+          personalViews={context.personal}
+          canCreateSharedView={canProjectAction(active.role, "create", "saved_view")}
           initialFilter={activeView?.config.filters ?? emptyCompetitorFilter}
           projectRef={access.publicId}
           projectMarkets={projectMarkets}
-          savedViews={savedViews}
+          savedViews={[]}
           view={view}
         />
       </CompetitorsMessagesBoundary>

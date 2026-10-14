@@ -1,10 +1,10 @@
 import { KeywordHeaderContextBoundary } from "@/components/keywords/KeywordHeaderContextBoundary";
 import { RankTrackerHeaderContext } from "@/components/keywords/RankTrackerHeaderContext";
 import { HeaderContextSlot } from "@/components/shell/HeaderContextSlot";
-import { type NextSearchParams, parseRankTrackerQuery } from "@/lib/keywords/rank-tracker-query";
+import type { NextSearchParams } from "@/lib/keywords/rank-tracker-query";
 import { resolveProjectAccess } from "@/lib/queries/_auth";
 import { listHeaderMarkets } from "@/lib/queries/header-markets";
-import { getSavedView } from "@/lib/queries/saved-views";
+import { loadRankTrackerPersonalContext } from "@/lib/queries/rank-tracker-personal-context";
 
 type HeaderContextRouteProps = {
   params: Promise<{ market: string; page: string[]; project: string }>;
@@ -37,16 +37,24 @@ export default async function HeaderContextRoute({
   const contexts = await listHeaderMarkets(access.publicId);
 
   const rankTracker = page.length === 1 && page[0] === "rank-tracker";
-  const viewId = rankTracker
-    ? parseRankTrackerQuery((await searchParams) ?? {}).state.savedViewId
+  const personal = rankTracker
+    ? await loadRankTrackerPersonalContext(access.publicId, (await searchParams) ?? {})
     : null;
-  const savedView = viewId ? await getSavedView(access.publicId, viewId) : null;
+  const savedView = personal
+    ? {
+        filters: personal.state.filters,
+        lens: personal.state.lens,
+        search: personal.state.search,
+        surface: "keywords" as const,
+        version: 1 as const,
+      }
+    : undefined;
   return rankTracker ? (
     <KeywordHeaderContextBoundary>
       <RankTrackerHeaderContext
         contexts={contexts}
         projectRef={access.publicId}
-        savedView={savedView?.config}
+        savedView={savedView}
       />
     </KeywordHeaderContextBoundary>
   ) : (

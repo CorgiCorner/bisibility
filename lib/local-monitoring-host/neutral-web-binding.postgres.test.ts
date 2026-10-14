@@ -146,12 +146,24 @@ suite("neutral Web point observation authority is separate from RankCheck defini
         },
       });
       await expect(
+        f.db.$executeRaw`UPDATE public.metering_paid_attempt_context SET context=context-'projectId'
+          WHERE namespace=${h.binding().namespace} AND operation_id=${h.binding().attemptId}`,
+      ).rejects.toThrow("Committed transport fence identity and evidence are immutable");
+      await expect(
         f.db.$transaction(async (tx) => {
+          // This database belongs only to this disposable fixture. Simulate already-corrupt custody,
+          // then restore its fence before exercising the separate neutral observation guard.
+          await tx.$executeRaw`ALTER TABLE public.metering_paid_attempt_context DISABLE TRIGGER metering_transport_fence`;
           await tx.$executeRaw`UPDATE public.metering_paid_attempt_context SET context=context-'projectId'
           WHERE namespace=${h.binding().namespace} AND operation_id=${h.binding().attemptId}`;
+          await tx.$executeRaw`ALTER TABLE public.metering_paid_attempt_context ENABLE TRIGGER metering_transport_fence`;
           await tx.$executeRaw`UPDATE public.observation_runs SET completeness=completeness WHERE id=${row.id}`;
         }),
       ).rejects.toThrow("neutral_observation_binding_mismatch");
+      const enabled = await f.client.query(
+        "SELECT tgenabled FROM pg_trigger WHERE tgname='metering_transport_fence' AND tgrelid='public.metering_paid_attempt_context'::regclass",
+      );
+      expect(enabled.rows).toEqual([{ tgenabled: "O" }]);
       expect(
         await f.db.meteringPaidAttemptContext.findUniqueOrThrow({
           where: {

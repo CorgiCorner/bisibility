@@ -5,7 +5,11 @@ import type { SubmissionRecord } from "@/lib/local-monitoring/execution-types";
 import { executionTargetKey } from "@/lib/local-monitoring/target-key";
 import type { ExecutionTargetV1, PointRevision } from "@/lib/local-monitoring/types";
 import { type LocalProjectScope, localProjectScope } from "@/lib/local-monitoring-store/access";
-import { localDigest } from "@/lib/local-monitoring-store/canonical";
+import {
+  localDigest,
+  localKeywordRevision,
+  localKeywordSourceHash,
+} from "@/lib/local-monitoring-store/canonical";
 import type { LocalDatabase, LocalTransaction } from "@/lib/local-monitoring-store/context";
 import { assertLocalCustody } from "@/lib/local-monitoring-store/custody";
 import { lockedLocalItem } from "@/lib/local-monitoring-store/repository";
@@ -47,7 +51,7 @@ export async function resolveMapsCollectionPorts(
   const taskId = record.outcome.taskIds[0];
   const acceptedAt = record.outcome.receivedAt;
   if (
-    target.surface !== "maps" ||
+    !["maps", "local_finder"].includes(target.surface) ||
     record.targetKey !== executionTargetKey(target) ||
     target.pointRevision !== point.revisionKey
   )
@@ -77,7 +81,19 @@ export async function resolveMapsCollectionPorts(
     localDigest(row.target) !== localDigest(target) ||
     !keyword ||
     keyword.id !== target.keywordId ||
-    typeof keyword.text !== "string"
+    typeof keyword.text !== "string" ||
+    keyword.device !== target.device ||
+    typeof keyword.locationId !== "string" ||
+    localKeywordRevision({
+      measurementTargetEpoch: keyword.measurementTargetEpoch,
+      measurementPolicyEpoch: keyword.measurementPolicyEpoch,
+    }) !== target.keywordRevision ||
+    localKeywordSourceHash({
+      id: target.keywordId,
+      text: keyword.text,
+      device: target.device,
+      locationId: keyword.locationId,
+    }) !== row.keywordSourceHash
   )
     throw new Error("Original Maps keyword is unavailable.");
   const binding = {
@@ -122,7 +138,7 @@ export async function resolveMapsCollectionPorts(
         await currentCustody();
       },
       async retrieveEnvelope(url) {
-        if (url !== localTaskGetUrl("maps", taskId))
+        if (url !== localTaskGetUrl(target.surface as "maps" | "local_finder", taskId))
           throw new Error("Maps retrieval endpoint changed.");
         const current = await currentCustody();
         const controller = new AbortController(),

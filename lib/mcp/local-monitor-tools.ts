@@ -2,12 +2,16 @@ import { z } from "zod";
 import { mcpPublicIdSchema } from "./public-id-schema";
 import type { JsonObject } from "./types";
 
-const id = (prefix: "prj" | "lmn" | "lmr" | "lmt") =>
-  z.string().regex(new RegExp(mcpPublicIdSchema(prefix).pattern));
+const ids = {
+  project: z.string().regex(new RegExp(mcpPublicIdSchema("prj").pattern)),
+  monitor: z.string().regex(new RegExp(mcpPublicIdSchema("lmn").pattern)),
+  run: z.string().regex(new RegExp(mcpPublicIdSchema("lmr").pattern)),
+  target: z.string().regex(new RegExp(mcpPublicIdSchema("lmt").pattern)),
+};
 const date = z.iso.datetime({ precision: 3 });
-const project = { project_id: id("prj"), monitor_id: id("lmn"), as_of: date.optional() };
-const run = { ...project, run_id: id("lmr") };
-const point = { ...run, target_id: id("lmt") };
+const project = { project_id: ids.project, monitor_id: ids.monitor, as_of: date.optional() };
+const run = { ...project, run_id: ids.run };
+const point = { ...run, target_id: ids.target };
 const history = {
   from: date.optional(),
   to: date.optional(),

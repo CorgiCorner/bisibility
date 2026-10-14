@@ -101,7 +101,7 @@ export function organicEligibility(
 ) {
   const slot =
     result.matcherVersion === mapsBusinessMatcherVersion
-      ? result.originalOrdinals.scale === "maps_organic"
+      ? ["maps_organic", "finder_group"].includes(result.originalOrdinals.scale ?? "")
         ? (result.originalOrdinals.group ?? null)
         : null
       : result.originalOrdinals.slot;

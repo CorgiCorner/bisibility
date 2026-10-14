@@ -20,6 +20,7 @@ export async function assertDefinitionRunCredential(
   if (!run.credentialId || !run.credentialKind) throw new DefinitionUnavailableError();
   const now = new Date();
   if (run.credentialKind === "project_key") {
+    if (run.requestedById !== null) throw new DefinitionUnavailableError();
     await tx.$queryRaw`SELECT id FROM api_keys WHERE id=${run.credentialId} FOR SHARE`;
     const key = await tx.apiKey.findFirst({
       where: { id: run.credentialId, projectId },

@@ -9,7 +9,7 @@ import { organicEligibility } from "@/lib/business-locations/match-evidence";
 import type { BusinessMatchDecision, Prisma } from "@/lib/generated/prisma/client";
 import { localDigest } from "@/lib/local-monitoring-store/canonical";
 import { unknownLocalObservationTime } from "@/lib/local-monitoring-store/unknown-observation-time";
-import { MAPS_ADAPTER_VERSION } from "@/lib/providers/local-search/maps-capability";
+import { acknowledgedLocalAdapter } from "@/lib/providers/local-search/maps-capability";
 import type {
   MeasurementEvidence,
   MeasurementReason,
@@ -162,7 +162,7 @@ export function localPointEvidence(
     identityRevision: identityRevisionId,
   };
   const acknowledged =
-    record.adapterVersion === MAPS_ADAPTER_VERSION &&
+    acknowledgedLocalAdapter(record.adapterVersion) &&
     policy.pointAcknowledgment?.known === true &&
     effective.success &&
     effective.data.scopeClass === "coordinate_seed" &&
@@ -216,7 +216,7 @@ export function localPointEvidence(
       listingMatches.set(value.itemId, match.status);
       return match;
     });
-  if (record.adapterVersion === MAPS_ADAPTER_VERSION && decisions.length !== retained.items.length)
+  if (acknowledgedLocalAdapter(record.adapterVersion) && decisions.length !== retained.items.length)
     throw new LocalResultUnavailableError();
   const confirmed = valid.filter(
       (value) =>
