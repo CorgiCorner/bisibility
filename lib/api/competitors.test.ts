@@ -1,11 +1,33 @@
 import type { ApiContext } from "@/lib/api/context";
 import {
-  buildCompetitorMarket,
   emptyCompetitorFilter,
+  buildCompetitorMarket as projectMarket,
 } from "@/lib/competitors/competitor-market-model";
 import type { CompetitorMarketData } from "@/lib/competitors/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { listProjectCompetitors } from "./competitors";
+
+// Explicit synthetic current proof; production legacy numbers alone remain unknown.
+const buildCompetitorMarket: typeof projectMarket = (data, filter) =>
+  projectMarket(
+    {
+      ...data,
+      observations: data.observations.map((row) => ({
+        ...row,
+        quality: Object.fromEntries(
+          data.allColumns.map(({ domain }) => [
+            domain,
+            {
+              evidence: row.ranks[domain] == null ? "known_absent" : "positive",
+              freshness: "fresh",
+              reason: null,
+            },
+          ]),
+        ),
+      })),
+    },
+    filter,
+  );
 
 const mocks = vi.hoisted(() => ({ getCompetitorsApiViewFor: vi.fn() }));
 
@@ -144,6 +166,7 @@ describe("competitors API projection", () => {
       "id",
       "measured_at",
       "observations",
+      "quality",
       "shared_keyword_count",
       "shares",
     ]);
@@ -201,7 +224,7 @@ describe("competitors API projection", () => {
     expect(shares[0]).toEqual({ domain: "example.com", share_of_voice: 0, shared_keywords: 0 });
   });
 
-  it("keeps the exact API fractions consistent with the rounded model percents", async () => {
+  it("keeps the exact API fractions consistent with the exact model percents", async () => {
     const response = await listProjectCompetitors(context(), "prj_1");
     const body = await response.json();
     const apiShares = body.meta.markets[0].shares as Array<{
@@ -217,9 +240,10 @@ describe("competitors API projection", () => {
     for (const modelShare of modelShares) {
       const apiShare = apiShares.find((share) => share.domain === modelShare.domain);
       expect(apiShare?.shared_keywords).toBe(modelShare.sharedKeywords);
-      expect(Math.round((apiShare?.share_of_voice ?? Number.NaN) * 100)).toBe(
-        modelShare.shareOfVoice,
-      );
+      expect(modelShare.shareOfVoice).not.toBeNull();
+      if (modelShare.shareOfVoice === null)
+        throw new Error("Expected a qualified synthetic share of voice");
+      expect((apiShare?.share_of_voice ?? Number.NaN) * 100).toBeCloseTo(modelShare.shareOfVoice);
     }
   });
 
@@ -245,7 +269,7 @@ describe("competitors API projection", () => {
     );
   });
 
-  it("nulls share of voice for every domain when there is no volume data", async () => {
+  it("nulls share of voice for every domain when volumes are real zero", async () => {
     mockView(
       baseObservations.map((observation, index) => ({
         ...observation,
@@ -280,7 +304,7 @@ describe("competitors API projection", () => {
         ranked: false,
         ranks: Object.fromEntries(columns.map((column) => [column.domain, null])),
         tags: [],
-        volume: null,
+        volume: 0,
       },
     ]);
 

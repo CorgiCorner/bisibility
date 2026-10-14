@@ -2,6 +2,9 @@ export const HEARTBEAT_INTERVAL_MS = 25_000;
 export const POLL_INTERVAL_MS = 4_000;
 export const RECONCILIATION_INTERVAL_MS = 30_000;
 export const RECONNECT_RETRY_MS = 15_000;
+export const ROTATION_RETRY_MS = 1_000;
+// Leave one minute for startup overhead and cleanup before the 300-second invocation cap.
+export const STREAM_LIFETIME_MS = 240_000;
 export const SNAPSHOT_COALESCE_MS = 250;
 export const SUBSCRIBER_READY_TIMEOUT_MS = 2_000;
 

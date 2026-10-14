@@ -1,3 +1,21 @@
+import type { Prisma } from "@/lib/generated/prisma/client";
+import { bindingBudgetFixture } from "@/lib/metering/binding-budget-test-fixture";
+
+vi.mock("@/lib/actions/defaults-reviewed", async () => {
+  const { reviewedDefaultsWriterFixture } = await import("./defaults-reviewed.test-fixture");
+  return {
+    saveReviewedDefaultSettings: (input: unknown) =>
+      reviewedDefaultsWriterFixture(input, "settings.defaults.update"),
+    saveReviewedFrequencyDefaults: (input: unknown) =>
+      reviewedDefaultsWriterFixture(input, "settings.rank_check_frequency.update"),
+    saveReviewedProjectDefaults: (input: unknown) =>
+      reviewedDefaultsWriterFixture(input, "project_defaults.update"),
+  };
+});
+vi.mock("@/lib/providers/crypto", () => ({
+  getPurposeSecretKeys: () => [Buffer.from("synthetic-writer-fixture-key-only-000")],
+}));
+
 import { createKeywordAfterDefault } from "@/lib/api/keyword-create-test-harness";
 import { adoptedTimestampQuery } from "@/lib/metering/read.test-fixture";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,10 +29,23 @@ const mocks = vi.hoisted(() => {
   const prisma = {
     $executeRaw: vi.fn(),
     $queryRawUnsafe: vi.fn(),
-    $queryRaw: vi.fn(async () => []),
+    $executeRawUnsafe: vi.fn(),
+    $queryRaw: vi.fn(
+      async (
+        _query: Prisma.Sql | TemplateStringsArray,
+        ..._values: unknown[]
+      ): Promise<unknown> => [],
+    ),
     $transaction: vi.fn(),
     keyword: { count: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
-    project: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },
+    project: {
+      count: vi.fn(),
+      create: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      updateMany: vi.fn(),
+    },
     projectDefaults: { findUnique: vi.fn(), upsert: vi.fn() },
     providerConnection: { count: vi.fn() },
     rankCheck: { findMany: vi.fn(async () => []), groupBy: vi.fn(async () => []) },
@@ -64,10 +95,26 @@ function mockActor() {
 }
 
 describe("project actions", () => {
-  beforeEach(() => {
+  let meter: Awaited<ReturnType<typeof bindingBudgetFixture>>;
+  beforeEach(async () => {
+    meter = await bindingBudgetFixture("own");
     vi.clearAllMocks();
     mocks.prisma.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
     mocks.prisma.$executeRaw.mockResolvedValue(0);
+    mocks.prisma.$queryRawUnsafe.mockImplementation(meter.tx.$queryRawUnsafe);
+    mocks.prisma.$executeRawUnsafe.mockImplementation(meter.tx.$executeRawUnsafe);
+    mocks.prisma.project.findUniqueOrThrow.mockResolvedValue({ id: "project_1" });
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      id: "project_1",
+      publicId: PROJECT_PUBLIC_ID,
+      writeMode: "active",
+      isSample: false,
+    });
+    mocks.prisma.$queryRaw.mockImplementation(async (query, ...values) => {
+      if ("text" in query) return meter.tx.$queryRaw(query, ...values);
+      return String(query).includes("memberships") ? [{ role: "member" }] : [{ id: "user_1" }];
+    });
+    mocks.prisma.$executeRaw.mockImplementation(meter.tx.$executeRaw);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mockActor();
     mocks.prisma.project.create.mockImplementation(({ data }) =>
@@ -84,7 +131,17 @@ describe("project actions", () => {
     mocks.writeAudit.mockResolvedValue({});
     mocks.getProjectDepthDecreaseWarning.mockResolvedValue(null);
     mocks.prisma.$transaction.mockImplementation(
-      async (callback: (tx: typeof mocks.prisma) => Promise<unknown>) => callback(mocks.prisma),
+      async (callback: (tx: typeof mocks.prisma) => Promise<unknown>) => {
+        await meter.db.exec("BEGIN");
+        try {
+          const result = await callback(mocks.prisma);
+          await meter.db.exec("COMMIT");
+          return result;
+        } catch (error) {
+          await meter.db.exec("ROLLBACK");
+          throw error;
+        }
+      },
     );
     mocks.prisma.keyword.findMany.mockResolvedValue([]);
     mocks.prisma.keyword.updateMany.mockResolvedValue({ count: 0 });
@@ -139,8 +196,9 @@ describe("project actions", () => {
     );
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     vi.unstubAllEnvs();
+    await meter?.close();
   });
 
   it("rejects invalid project input before reading the session", async () => {
@@ -327,6 +385,7 @@ describe("project actions", () => {
           }),
         }),
       }),
+      expect.anything(),
     );
     const audit = mocks.writeAudit.mock.calls.at(-1)?.[0];
     expect(JSON.stringify(audit)).not.toContain("defaults_1");
@@ -378,6 +437,7 @@ describe("project actions", () => {
       timezone: "Europe/Berlin",
     });
 
+    if (result.kind !== "saved") throw new Error("Reviewed writer fixture must save.");
     expect(result.warning).toContain("Affected alerts: Top 50");
     expect(mocks.getProjectDepthDecreaseWarning).toHaveBeenCalledWith("project_1", 20);
   });

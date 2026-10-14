@@ -64,6 +64,12 @@ export function requireApiPathPublicIds(path: string[]) {
     if (third === "saved-keywords") requirePathId(path, 3, "svkw");
     if (third === "saved-views") requirePathId(path, 3, "viw");
     if (third === "competitors") requirePathId(path, 3, "cmp");
+    if (third === "rank-check-runs") requirePathId(path, 3, "rcr");
+    if (third === "local-monitors") {
+      requirePathId(path, 3, "lmn");
+      if (path[4] === "runs") requirePathId(path, 5, "lmr");
+      if (path[6] === "points") requirePathId(path, 7, "lmt");
+    }
     if (third === "migration-tokens") requirePathId(path, 3, "ferry");
     if (third === "sitemap-monitors") requirePathId(path, 3, "prj");
     if (third === "team" && fourth === "members") requirePathId(path, 4, "mbr");

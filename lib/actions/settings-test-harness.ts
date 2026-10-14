@@ -17,6 +17,8 @@ const settingsActionMocks = vi.hoisted(() => {
   } as const;
   const prisma = {
     $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
+    $executeRaw: vi.fn(),
     keyword: { findMany: vi.fn(), updateMany: vi.fn() },
     project: { findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     projectDefaults: { findUnique: vi.fn(), upsert: vi.fn() },
@@ -54,7 +56,10 @@ vi.mock("@/lib/auth/authorize", () => ({
   authorize: settingsActionMocks.authorize,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: settingsActionMocks.revalidatePath }));
-vi.mock("@/lib/auth/audit", () => ({ writeAudit: settingsActionMocks.writeAudit }));
+vi.mock("@/lib/auth/audit", () => ({
+  writeAudit: settingsActionMocks.writeAudit,
+  requiredPublicAuditId: (id: string) => id,
+}));
 vi.mock("@/lib/auth/session", () => ({ requireSession: settingsActionMocks.requireSession }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: settingsActionMocks.prisma }));
 vi.mock("@/lib/serp/location-service", () => ({
@@ -75,6 +80,16 @@ export function mockSettingsActor(role: "admin" | "member" | "viewer" = "member"
 }
 
 function mockProject() {
+  settingsActionMocks.prisma.project.findUnique.mockResolvedValue({
+    id: "project_1",
+    publicId: "prj_abcdefghijklmnopqrstuvwx",
+    writeMode: "active",
+    isSample: false,
+  });
+  settingsActionMocks.prisma.$queryRaw.mockImplementation(async (strings) =>
+    String(strings).includes("memberships") ? [{ role: "member" }] : [{ id: "user_1" }],
+  );
+  settingsActionMocks.prisma.$executeRaw.mockResolvedValue(0);
   settingsActionMocks.prisma.project.findFirst.mockResolvedValue({
     id: "project_1",
     ownerId: "user_1",

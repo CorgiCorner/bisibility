@@ -1,0 +1,20 @@
+// Immutable link from a monitor definition/schedule intent to the already admitted Local run.
+model LocalMonitorOccurrence {
+  id String @id
+  projectId String
+  monitorId String
+  definitionRevisionId String
+  scheduleIntentId String
+  monitorVersion Int
+  actorId String?
+  mode String
+  keyHash String
+  bodyHash String
+  quoteHash String
+  runId String
+  createdAt DateTime @default(now())
+  @@unique([projectId,keyHash])
+  @@unique([projectId,runId])
+  @@index([projectId,monitorId,createdAt,id], map: "local_monitor_occurrences_history")
+  @@map("local_monitor_occurrences")
+}

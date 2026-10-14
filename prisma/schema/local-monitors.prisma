@@ -1,0 +1,87 @@
+// Composite same-project foreign keys and immutable-history triggers are owned by the additive SQL.
+model LocalMonitor {
+  id String @id @default(cuid())
+  publicId String @unique
+  projectId String
+  name String
+  state String @default("active")
+  version Int @default(0)
+  currentRevisionId String?
+  currentScheduleIntentId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([projectId,id])
+  @@index([projectId,state,publicId])
+  @@map("local_monitors")
+}
+model LocalMonitorRevision {
+  id String @id @default(cuid())
+  projectId String
+  monitorId String
+  previousRevisionId String?
+  revision Int
+  entityId String
+  identityRevisionId String
+  gridRevisionKey String
+  contentHash String
+  snapshot Json
+  actorId String?
+  createdAt DateTime @default(now())
+  @@unique([projectId,id])
+  @@unique([projectId,monitorId,id])
+  @@unique([monitorId,revision])
+  @@map("local_monitor_revisions")
+}
+model LocalMonitorGridPoint {
+  projectId String
+  revisionId String
+  pointId String
+  ordinal Int
+  row Int
+  column Int
+  @@id([revisionId,ordinal])
+  @@unique([revisionId,row,column])
+  @@unique([revisionId,pointId])
+  @@map("local_monitor_grid_points")
+}
+model LocalMonitorKeyword {
+  projectId String
+  revisionId String
+  keywordId String?
+  keywordPublicId String
+  ordinal Int
+  sourceHash String
+  @@id([revisionId,ordinal])
+  @@unique([revisionId,keywordPublicId])
+  @@map("local_monitor_keywords")
+}
+model LocalMonitorScheduleIntent {
+  id String @id @default(cuid())
+  projectId String
+  monitorId String
+  definitionRevisionId String
+  previousRevisionId String?
+  revision Int
+  mode String
+  scheduleId String?
+  snapshot Json?
+  approvalDigest String?
+  capabilityVersion String?
+  actorId String?
+  createdAt DateTime @default(now())
+  @@unique([projectId,monitorId,id])
+  @@unique([monitorId,revision])
+  @@map("local_monitor_schedule_intents")
+}
+model LocalMonitorMutation {
+  id String @id @default(cuid())
+  projectId String
+  operation String
+  keyHash String
+  bodyHash String
+  actorId String?
+  result Json
+  createdAt DateTime @default(now())
+  @@unique([projectId,operation,keyHash])
+  @@map("local_monitor_mutations")
+}

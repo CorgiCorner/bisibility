@@ -100,3 +100,24 @@ describe("auditEntriesToCsv", () => {
     expect(exported).not.toHaveProperty("hasRecordedUserAgent");
   });
 });
+
+it("protects downloadable audit text and CR while retaining the established JSON projection", () => {
+  const value: AuditEntry = {
+    ...entry,
+    actor: { ...entry.actor, email: "\uFEFF=mail" },
+    eventName: "  +event",
+    statusReason: "@reason",
+    metadata: { ...entry.metadata, user_agent: "first\rsecond" },
+  };
+  const before = structuredClone(value);
+  const csv = auditEntriesToCsv([value]);
+  expect(csv).toContain(",'\uFEFF=mail,'  +event,");
+  expect(csv).toContain('"first\rsecond"');
+  expect(csv).toContain(",'@reason");
+  expect(JSON.parse(auditEntriesToJson([value]))[0]).toMatchObject({
+    actor: { email: value.actor.email },
+    eventName: value.eventName,
+    statusReason: value.statusReason,
+  });
+  expect(value).toEqual(before);
+});

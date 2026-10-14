@@ -42,6 +42,7 @@ type SummaryRow = {
 };
 
 type CheckRow = {
+  rankingUrl: string | null;
   publicId: string;
   checkedAt: Date;
   provider: string;
@@ -143,6 +144,7 @@ function buildFullResult(
   return {
     aiOverview: aiOverviewState(check.provider, features),
     extension: snapshotExtensionView(check.provider, check.raw),
+    rankingUrl: check.rankingUrl ?? null,
     checkId: check.publicId,
     checkedAt: check.checkedAt.toISOString(),
     features,
@@ -168,6 +170,7 @@ function buildCompactResult(check: CheckRow, retentionDays: number | null): Retr
     domain: r.domain,
   }));
   return {
+    rankingUrl: check.rankingUrl ?? null,
     checkId: check.publicId,
     checkedAt: check.checkedAt.toISOString(),
     domains,
@@ -257,6 +260,7 @@ export async function loadRetrievedResultsForChecks(input: {
       position: true,
       provider: true,
       publicId: true,
+      rankingUrl: true,
       raw: true,
       requestedDepth: true,
     },
@@ -272,6 +276,7 @@ export async function loadRetrievedResultsForChecks(input: {
   return checks.map((check) => {
     const tier = classifyTier(check.raw, check.organicRanks);
     const base = {
+      rankingUrl: check.rankingUrl ?? null,
       checkId: check.publicId,
       checkedAt: check.checkedAt.toISOString(),
       provider: check.provider,

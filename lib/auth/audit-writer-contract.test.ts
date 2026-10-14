@@ -1,4 +1,5 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { extname, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -12,12 +13,38 @@ function sourceFiles(directory: string): string[] {
       if (entry.name === "generated") return [];
       return sourceFiles(path);
     }
-    if (![".ts", ".tsx"].includes(extname(entry.name)) || entry.name.includes(".test.")) return [];
+    if (
+      ![".ts", ".tsx"].includes(extname(entry.name)) ||
+      entry.name.includes(".test.") ||
+      /[.-]test-fixtures?\.[cm]?[jt]sx?$/u.test(entry.name)
+    )
+      return [];
     return [path];
   });
 }
 
 describe("audit writer contract", () => {
+  it("excludes explicit test fixtures while retaining production fixture-named writers", () => {
+    const directory = mkdtempSync(resolve(tmpdir(), "audit-scope-"));
+    try {
+      for (const name of [
+        "owned.postgres.test-fixture.ts",
+        "owned.test-fixtures.ts",
+        "postgres-test-fixture.ts",
+        "FixtureCard.tsx",
+        "fixture-writer.ts",
+        "business.test.ts",
+      ])
+        writeFileSync(resolve(directory, name), "export const write = () => auditLog.create({});");
+      expect(
+        sourceFiles(directory)
+          .map((path) => relative(directory, path))
+          .sort(),
+      ).toEqual(["FixtureCard.tsx", "fixture-writer.ts"]);
+    } finally {
+      rmSync(directory, { recursive: true });
+    }
+  });
   it("routes every application audit write through writeAudit", () => {
     const directWriters = sourceRoots
       .flatMap(sourceFiles)

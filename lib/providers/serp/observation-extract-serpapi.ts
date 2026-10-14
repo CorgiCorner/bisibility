@@ -1,3 +1,5 @@
+import { observationEvidencePolicy } from "@/lib/observation/evidence-metadata";
+import { serpApiCapturedMetadata } from "@/lib/observation/provider-metadata";
 import type {
   ObservationCompleteness,
   ObservationItemInput,
@@ -5,6 +7,9 @@ import type {
   ObservationRunInput,
   ObservationScope,
 } from "@/lib/observation/types";
+import { SERPAPI_OBSERVATION_ADAPTER_VERSION } from "./observation-adapter-versions";
+import { serpApiLocalPack } from "./serpapi-local-pack";
+import { localProofPolicy, type SentWebPage, serpApiEffectiveScope } from "./web-local-proof";
 
 type RecordValue = Record<string, unknown>;
 
@@ -14,29 +19,8 @@ function record(value: unknown): RecordValue | null {
     : null;
 }
 
-function finite(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
 function text(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
-}
-
-function stringValue(value: unknown) {
-  if (typeof value !== "string" && typeof value !== "number" && typeof value !== "bigint") {
-    return null;
-  }
-  const normalized = String(value).trim();
-  return normalized || null;
-}
-
-function websiteDomain(url: string | null) {
-  if (!url) return null;
-  try {
-    return new URL(url).hostname || null;
-  } catch {
-    return null;
-  }
 }
 
 function firstTextBlockTitle(values: readonly unknown[]) {
@@ -46,29 +30,6 @@ function firstTextBlockTitle(values: readonly unknown[]) {
     if (title) return title;
   }
   return null;
-}
-
-function localPackItem(item: RecordValue, index: number): ObservationItemInput {
-  const links = record(item.links);
-  const url = text(links?.website) ?? text(item.website);
-  const value = finite(item.rating);
-  const count = finite(item.reviews);
-  return {
-    blockPosition: null,
-    businessName: text(item.title),
-    cid: stringValue(item.data_cid),
-    domain: websiteDomain(url),
-    mapsUrl: text(links?.directions),
-    placeId: stringValue(item.place_id),
-    positionInBlock: index + 1,
-    rankAbsolute: null,
-    rankGroup: null,
-    rating: value === null && count === null ? null : { count, value },
-    rawFragment: item,
-    resultKind: "local_pack",
-    title: text(item.title),
-    url,
-  };
 }
 
 function aiOverviewItem(item: RecordValue): ObservationItemInput {
@@ -91,18 +52,9 @@ function aiOverviewItem(item: RecordValue): ObservationItemInput {
   };
 }
 
-function localResultBlocks(page: RecordValue) {
-  const local = page.local_results;
-  const fromLocal = Array.isArray(local) ? local : record(local)?.places;
-  const fromPlaces = page.places_results;
-  return [
-    ...(Array.isArray(fromLocal) ? [fromLocal] : []),
-    ...(Array.isArray(fromPlaces) ? [fromPlaces] : []),
-  ];
-}
-
 export function serpApiObservationRun(input: {
   pages: readonly unknown[];
+  sentPages?: readonly SentWebPage[];
   requestPolicy: ObservationRequestPolicy;
   completeness: ObservationCompleteness;
   configuredScope: ObservationScope;
@@ -110,23 +62,23 @@ export function serpApiObservationRun(input: {
   executedAt: Date;
 }): ObservationRunInput {
   const items: ObservationItemInput[] = [];
+  const captured = serpApiCapturedMetadata(input.pages);
+  const local = serpApiLocalPack(input.pages, input.sentPages);
+  const actual = serpApiEffectiveScope(input.pages, input.sentPages);
+  const policy = localProofPolicy(
+    observationEvidencePolicy(input.requestPolicy, SERPAPI_OBSERVATION_ADAPTER_VERSION),
+    local.identityIssues,
+    actual.source,
+  );
 
-  for (const value of input.pages) {
+  for (const [pageIndex, value] of input.pages.entries()) {
     const page = record(value);
     if (!page) continue;
-    for (const block of localResultBlocks(page)) {
-      const placeIds = new Set<string>();
-      let placeIndex = 0;
-      for (const placeValue of block) {
-        const place = record(placeValue);
-        if (!place) continue;
-        const placeId = stringValue(place.place_id);
-        if (placeId && placeIds.has(placeId)) continue;
-        if (placeId) placeIds.add(placeId);
-        items.push(localPackItem(place, placeIndex));
-        placeIndex += 1;
-      }
-    }
+    items.push(
+      ...local.items.filter((item) =>
+        item.sourceBlockId?.startsWith(`serpapi:response:${pageIndex}:`),
+      ),
+    );
 
     const aiOverview = record(page.ai_overview);
     if (aiOverview) items.push(aiOverviewItem(aiOverview));
@@ -136,12 +88,19 @@ export function serpApiObservationRun(input: {
   return {
     completeness: input.completeness,
     configuredScope: input.configuredScope,
-    effectiveScope: input.effectiveScope ?? null,
+    effectiveScope: input.effectiveScope ?? actual.scope,
     engine: "google",
     executedAt: input.executedAt,
     items,
     provider: "serpapi",
-    requestPolicy: input.requestPolicy,
+    requestPolicy: {
+      ...policy,
+      evidence: {
+        ...policy.evidence,
+        observedAt: captured.observedAt,
+        observedThrough: captured.observedThrough,
+      },
+    },
     surface: "web_serp",
   };
 }

@@ -821,6 +821,40 @@ export type CoreMessages = {
         readonly title: "Email provider not configured";
       };
     };
+    readonly announcements: {
+      readonly cancel: "Cancel";
+      readonly create: "New announcement";
+      readonly delete: "Delete";
+      readonly deleted: "Announcement deleted.";
+      readonly deleteDescription: "Delete “{title}”? If it is enabled, it will disappear when users refresh the page.";
+      readonly deleteTitle: "Delete announcement?";
+      readonly description: "Prepare several messages and choose which ones appear above workspace pages. New messages are saved with visibility off.";
+      readonly edit: "Edit";
+      readonly empty: "No announcements yet.";
+      readonly errors: {
+        readonly conflict: "Another administrator changed this announcement. Refresh the page before saving again.";
+        readonly forbidden: "Only an instance administrator can manage announcements.";
+        readonly invalid: "Check the announcement fields.";
+        readonly not_found: "This announcement no longer exists. Refresh the page.";
+        readonly unavailable: "The announcement could not be saved. Try again.";
+      };
+      readonly heading: "User announcements";
+      readonly href: "Link URL (optional)";
+      readonly learnMore: "Learn more";
+      readonly linkHelp: "Use an HTTP(S) address or an app path starting with /. Leave the URL empty for a message without a link.";
+      readonly linkLabel: "Link text (optional)";
+      readonly message: "Message";
+      readonly off: "Off: prepared";
+      readonly on: "On: visible to users";
+      readonly preview: "Banner preview";
+      readonly refreshHelp: "Users see changes after refreshing the page. All enabled messages are shown.";
+      readonly save: "Save";
+      readonly saved: "Announcement saved.";
+      readonly title: "Title";
+      readonly validationLink: "Enter a valid HTTP(S) URL or app path, and link text up to 80 characters.";
+      readonly validationText: "Enter a title (1–120 characters) and a message (1–2,000 characters).";
+      readonly visibilityLabel: "Show announcement: {title}";
+    };
     readonly audit: {
       readonly account: "Account";
       readonly action: "Action";
@@ -1010,6 +1044,169 @@ export type CoreMessages = {
       readonly stuck: "Stuck";
       readonly succeeded: "Succeeded";
     };
+    readonly recovery: {
+      readonly accounting: "Accounting";
+      readonly actions: {
+        readonly recover_proof: "Reconcile retained proof";
+        readonly restore_result: "Restore retained result";
+        readonly resume_queued_run: "Resume original queued run";
+      };
+      readonly allProviders: "All providers";
+      readonly approvedExposure: "Approved maximum: {cents} USD cents, {targets, number} targets, {attempts, number} attempt per target.";
+      readonly assign: "Assign to me";
+      readonly attempts: "Recovery attempts: {count, number}";
+      readonly batchLimit: "Up to {count, number} cases per command";
+      readonly blocked: {
+        readonly already_claimed: "Another worker holds this work.";
+        readonly authorization_required: "A new paid attempt needs project spending authority and normal admission.";
+        readonly project_unavailable: "The original project or work is no longer available.";
+        readonly proof_missing: "No sufficient retained provider proof. Keep the cost unknown and obtain native evidence.";
+        readonly request_not_linked: "No original request is linked.";
+        readonly result_context_changed: "The retained result cannot be restored to the current task context.";
+        readonly result_expired: "The retained result has expired.";
+        readonly wallet_coordination_required: "No verified original platform proof is available for coordinated settlement.";
+      };
+      readonly blockedScopes: "Spending blocked by uncertainty: {projects, number} projects, {connections, number} connections.";
+      readonly categories: {
+        readonly accounting: "Accounting uncertainty";
+        readonly all: "All cases";
+        readonly failed: "Failed recoveries";
+        readonly historical: "Historical accounting";
+        readonly unfinished: "Unfinished work";
+      };
+      readonly category: "Show";
+      readonly commandStates: {
+        readonly completed: "Recovery command finished";
+        readonly failed: "Recovery command stopped";
+        readonly queued: "Recovery queued";
+        readonly running: "Recovery in progress";
+      };
+      readonly commit: "Start recovery";
+      readonly connection: "Connection";
+      readonly connectionBlocked: "Connection spending is blocked by unresolved accounting.";
+      readonly counts: {
+        readonly failed: "Failed recoveries";
+        readonly historical: "Historical uncertainty";
+        readonly retainedResults: "Results ready to restore";
+        readonly unconfirmed: "Unconfirmed accounting";
+        readonly unfinished: "Unfinished work";
+      };
+      readonly created: "Created";
+      readonly description: "Check what was sent, what finished, and what remains unconfirmed.";
+      readonly details: "Details";
+      readonly dimensions: {
+        readonly other: "Native usage";
+        readonly provider_cost: "Provider cost";
+        readonly requests: "Requests";
+        readonly units: "Provider units";
+      };
+      readonly due: "Wait until";
+      readonly empty: "No cases match these filters.";
+      readonly errors: {
+        readonly case_changed: "This case changed or is no longer eligible. Refresh and review it again.";
+        readonly forbidden: "Administrator access is no longer available.";
+        readonly invalid: "Select a reason and a future waiting period.";
+        readonly rate_limited: "Too many actions. Try again shortly.";
+        readonly unavailable: "Recovery is temporarily unavailable. Refresh the command status before retrying.";
+      };
+      readonly excluded: "Skipped cases: {count, number}";
+      readonly expires: "Preview expires";
+      readonly failureCodes: {
+        readonly native_identity_conflict: "Native request identity conflicts";
+        readonly native_proof_ambiguous: "Provider proof is ambiguous";
+        readonly original_authority_missing: "Original evidence authority is unavailable";
+        readonly original_operation_missing: "Original accounting operation is missing";
+        readonly proof_import_conflict: "Retained evidence import conflicts";
+        readonly recovery_failed: "Recovery requires investigation";
+        readonly settlement_refused: "Accounting settlement refused";
+        readonly store_unavailable: "Accounting storage unavailable";
+        readonly transaction_conflict: "Concurrent recovery transaction conflict";
+        readonly transaction_timeout: "Recovery transaction timed out";
+        readonly transport_fence_missing: "No original transport fence";
+        readonly wallet_coordination_required: "Original wallet coordination is required";
+      };
+      readonly firstFailure: "First failure";
+      readonly firstPage: "First page";
+      readonly funding: "Funding";
+      readonly fundingSources: {
+        readonly byok: "Own provider account";
+        readonly platform: "Platform funded";
+        readonly unknown: "Unknown";
+      };
+      readonly groupBy: "Group this page";
+      readonly groups: {
+        readonly action: "By action";
+        readonly cause: "By cause";
+        readonly none: "No grouping";
+        readonly project: "By project";
+      };
+      readonly heading: "Task recovery";
+      readonly historical: "Historical accounting";
+      readonly hours: "{count, number} hours from now";
+      readonly lastActivityAt: "Worker last made progress";
+      readonly lastCleanAt: "Last fully clean scan";
+      readonly lastCompletedAt: "Last complete scan";
+      readonly lastFailure: "Last failure";
+      readonly lastResultActivityAt: "Result recovery worker last made progress";
+      readonly namespace: "Namespace";
+      readonly needsEvidence: "Evidence or authorization required";
+      readonly never: "Not recorded";
+      readonly newAttemptNote: "If there is no retained result and no positive proof that sending never began, ask a project member with spending authority to create a new run through the normal preview and budget checks. This may cost extra. The original charge still requires separate reconciliation.";
+      readonly nextPage: "Next page";
+      readonly noFailure: "No recovery failure";
+      readonly noSpend: "Proof reconciliation and result restoration make no provider requests and create no additional paid attempts. Restoring a result does not settle an unknown charge.";
+      readonly openIncidents: "Recovery cases";
+      readonly originalRunSpend: "Resume {count, number} original, unstarted runs under the owner’s retained authorization. Normal provider admission may send paid requests and use the existing run budget. No new run or duplicate paid attempt is created.";
+      readonly outcomes: "Recovered: {recovered, number}. Original runs queued: {queued, number}. Unchanged: {unchanged, number}. Failed: {failed, number}. Changed or skipped: {skipped, number}.";
+      readonly pageGrouping: "Grouping applies to this page. Filters and next page cover the full backlog.";
+      readonly preview: "Review recovery";
+      readonly previewCount: "Eligible cases: {count, number}";
+      readonly previewSelected: "Review selected ({count, number})";
+      readonly project: "Project";
+      readonly projectBlocked: "Project spending is blocked by unresolved accounting.";
+      readonly provider: "Provider";
+      readonly reason: "Reason";
+      readonly reasons: {
+        readonly investigating: "Investigating";
+        readonly missing_proof: "Missing native proof";
+        readonly none: "No reason selected";
+        readonly provider_support: "Provider support";
+        readonly waiting_export: "Waiting for provider export";
+      };
+      readonly recheckNote: "Each case and administrator permission will be checked again by the worker. Changed cases are skipped.";
+      readonly recommended: "Recommended action";
+      readonly refresh: "Refresh";
+      readonly retainedScope: "Retained or deleted scope";
+      readonly safetyNote: "A missing confirmation does not mean the request was never sent. Only positive evidence can prove acceptance or a safe no-send state. Historical accounting uncertainty is shown separately from unfinished work.";
+      readonly save: "Save follow-up";
+      readonly select: "Select";
+      readonly selectCase: "Select {project}, {provider}";
+      readonly send: "Provider request";
+      readonly states: {
+        readonly accepted: "Accepted";
+        readonly completed: "Completed";
+        readonly measured: "Measured";
+        readonly not_applicable: "No linked operation";
+        readonly not_started: "Not started";
+        readonly obsolete: "No longer applicable";
+        readonly possibly_sent: "Possibly sent";
+        readonly unfinished: "Unfinished";
+        readonly unknown: "Unknown";
+      };
+      readonly triage: "Follow-up";
+      readonly triageNote: "Follow-up status, assignment and waiting do not settle costs or lift spending restrictions. A changed case or expired waiting period reopens the case.";
+      readonly triageStates: {
+        readonly acknowledged: "Acknowledged";
+        readonly escalated: "Escalated";
+        readonly investigating: "Investigating";
+        readonly open: "Open";
+        readonly waiting_evidence: "Waiting for evidence";
+      };
+      readonly unavailable: "Recovery cases are temporarily unavailable. Refresh to try again.";
+      readonly unknownDimensions: "Unconfirmed dimensions";
+      readonly usageTab: "Usage and budgets";
+      readonly work: "Result";
+    };
     readonly shell: {
       readonly backToApp: "Back to app";
       readonly context: "Instance admin";
@@ -1194,6 +1391,7 @@ export type CoreMessages = {
           readonly client: "The sample check could not be started. Try again.";
           readonly deferred: "This check was deferred.";
           readonly failed: "We couldn't run this check. Try again in a moment.";
+          readonly measurementPolicy: "Configure measurement policy before running new checks.";
           readonly noProvider: "Connect a SERP provider before running checks.";
           readonly projectReadOnly: "This project is read-only right now.";
           readonly rateLimited: "Provider rate limit reached. Try again shortly.";
@@ -1598,8 +1796,10 @@ export type CoreMessages = {
     readonly brandMentioned: "Brand mentioned";
     readonly brandMentions: "Brand mentions";
     readonly cacheHint: "Uses your connected provider. Cached results remain available for 12 hours.";
+    readonly catalogHelp: "About available AI settings";
     readonly catalogUnavailable: "The provider catalog is unavailable. Check your compatible provider connection in Integrations. Saved reports remain readable.";
-    readonly catalogUnavailableLegacy: "The live catalog is unavailable. The existing mini/nano preset and ChatGPT United States/English dataset preset remain available. Extended settings need a verified fresh catalog.";
+    readonly catalogUnavailableLegacy: "Model list unavailable. The mini/nano preset is still available.";
+    readonly catalogUnavailableVisibility: "Market list unavailable. ChatGPT for the United States in English is still available.";
     readonly citedPages: "Cited pages";
     readonly conservativeBound: "Conservative admission bound: {cost} cents. This reserves the full documented model context plus bounded output because provider input overhead is unknown. Actual usage is recorded from the provider receipt.";
     readonly contentTruncated: "Answer excerpts are shortened to fit the saved report.";
@@ -1645,9 +1845,10 @@ export type CoreMessages = {
     readonly noDomainCitation: "No domain citation";
     readonly noObservations: "No matching observations";
     readonly noSecondModel: "Compare one model";
-    readonly noSource: "Connect a compatible data provider in Integrations.";
+    readonly noSource: "Connect DataForSEO in Integrations to estimate costs or run an analysis.";
     readonly observedAt: "Observed {date}";
     readonly observedDataset: "Observed provider dataset";
+    readonly openIntegrations: "Open Integrations";
     readonly openReport: "Open saved report";
     readonly outputTokens: "Maximum output tokens per model";
     readonly partialFailure: "The analysis could not be completed. Confirmed results are retained. Review provider usage before retrying.";
@@ -2622,10 +2823,13 @@ export type CoreMessages = {
       readonly showTopCompetitors: "Show top competitors";
       readonly source: "Source";
       readonly sovCompletedUnranked: "Rank checks have completed for this market, but no tracked domain ranked in the top 100.";
+      readonly sovCoverageUnknown: "unknown";
       readonly sovDefinition: "SOV = share of estimated top-10 visibility (rank x search volume).";
       readonly sovFilterExcludesAll: "No completed rank checks match the current filters. Adjust the filters to view available market data.";
       readonly sovNoCompletedChecks: "No completed rank checks exist for this market yet. Run a check to calculate share of voice from real positions.";
       readonly sovNoVolume: "No positive search volume is available for the compared keywords. Head-to-head ranks remain available below.";
+      readonly sovQuality: "{measured} of {expected} keywords qualify. {unknown} unknown. Fresh coverage: {coverage}.";
+      readonly sovQualityUnknown: "Current comparison is unavailable. The retained checks do not prove the active definition, freshness or searched range.";
       readonly sovScope: "Visibility across {tracked, number} tracked {tracked, plural, one {keyword} other {keywords}} / {location} / {language} / {device}{partial, select, true { · Partial data} other {}}";
       readonly sovScopeHint: "Compare the selected market and device.";
       readonly suggestedEvidence: "Suggested from persisted evidence.";
@@ -2900,10 +3104,52 @@ export type CoreMessages = {
       readonly visibilityDetail: "{measured, number} of {total, number}{limited, select, true { newest} other {}} keywords measured";
       readonly visibilityPercentage: "{value, number}%";
     };
+    readonly localReport: {
+      readonly average: "Average slot when found";
+      readonly choose: "Choose a business location";
+      readonly chooseDescription: "Choose a location and scope to see its local results.";
+      readonly clear: "Clear my saved selection";
+      readonly cleared: "Your saved selection was cleared.";
+      readonly comparisonUnavailable: "Change is unavailable: an independent historical assignment cohort has not been retained.";
+      readonly conditional: "Top 3 when a Local Pack is present";
+      readonly conflict: "This selection changed. Reload and choose its current version.";
+      readonly counts: "{measured} of {expected} targets measured; {unknown} unknown. {checks} retained checks. Average based on {found} found targets.";
+      readonly coverage: "Observed target coverage";
+      readonly definition: "Measurement definition";
+      readonly fresh: "Measured observations satisfy their captured freshness policies.";
+      readonly freshnessUnknown: "Freshness is unknown because no usable freshness policy was captured.";
+      readonly manageLocations: "Set up a business location";
+      readonly matchCoverage: "Business match coverage";
+      readonly presence: "Organic Local Pack presence";
+      readonly remember: "Remember my selection";
+      readonly saved: "Your selection was saved.";
+      readonly saveError: "The selection could not be saved. Try again.";
+      readonly scope: "Current active assignment cohort. Archived targets and paused markets are excluded; pausing checks alone keeps the target. Organic Local Pack slots only, excluding Maps, Local Finder and promoted or unclassified results.";
+      readonly selection: "Business location and assigned scope";
+      readonly setupDescription: "Assign a business location to keywords or a market to see local results here.";
+      readonly setupTitle: "Set up local tracking";
+      readonly stale: "Some observations are stale and are excluded from current metrics.";
+      readonly state: {
+        readonly capacity: "This scope exceeds the report read budget. Narrow the scope before loading it.";
+        readonly invalid: "The URL selection is invalid. Choose an available business location.";
+        readonly missing: "Choose an assigned business location to view Local results.";
+        readonly unavailable: "That assignment or business identity is no longer available. Choose a current selection.";
+      };
+      readonly title: "Local business results";
+      readonly top3: "Business in the top 3";
+      readonly unknown: "Unknown";
+      readonly versions: "Identity revision: {identity}. Matcher: {matcher}.";
+    };
     readonly markets: {
       readonly activeMarkets: "{count, number} active {count, plural, one {market} other {markets}} / paused markets excluded";
       readonly change: "Change";
+      readonly coverageUnknown: "Coverage unknown";
+      readonly determinateTargetsDescription: "{measured, number} determinate targets out of {expected, number} expected targets. Unknown observations are excluded from the top-10 denominator.";
+      readonly freshCoverage: "Fresh data coverage";
       readonly market: "Market";
+      readonly noComparison: "No comparison";
+      readonly noDeterminateData: "No data";
+      readonly observedCoverageOnly: "Observed coverage; freshness unknown";
       readonly openMarket: "Open market";
       readonly percentagePointChange: "{direction, select, positive {+{value, number}pp} negative {-{value, number}pp} other {{value, number}pp}}";
       readonly researchAvailability: "Research availability";
@@ -2922,6 +3168,7 @@ export type CoreMessages = {
       readonly top10Tooltip: "Top-10 share {direction, select, positive {+{change, number}pp} negative {-{change, number}pp} other {{change, number}pp}} vs {start} - {end}, the previous {days, number} {days, plural, one {day} other {days}}.";
       readonly top10TooltipDetail: "Targets of this market currently ranking in positions 1 to 10, out of {count, number} active {count, plural, one {target} other {targets}}.";
       readonly trend: "Trend";
+      readonly unknownObservation: "Unknown observation";
       readonly viewMarket: "View {market}";
     };
     readonly noData: {
@@ -2965,6 +3212,48 @@ export type CoreMessages = {
       readonly takeawaySteadyFirst: "Average position held steady over the first {days, number} {days, plural, one {day} other {days}} of tracking.";
       readonly takeawaySteadyLast: "Average position held steady over the last {days, number} {days, plural, one {day} other {days}}.";
       readonly title: "Position trend";
+    };
+    readonly reportWidgets: {
+      readonly contribution: "Contribution (pp)";
+      readonly contributionScope: "All {expected} selected targets at {asOf}. Change uses {comparable} comparable pairs and frozen weights.";
+      readonly contributors: "Keyword contributions";
+      readonly date: "Local date";
+      readonly device: "Device";
+      readonly excluded: "Excluded from metric";
+      readonly exclusionReasons: {
+        readonly current_scope_unavailable: "The current measurement definition is unavailable.";
+        readonly future_observation: "The observation is dated in the future.";
+        readonly insufficient_depth: "The requested depth is insufficient.";
+        readonly invalid_position: "The recorded position is invalid.";
+        readonly missing_normalization: "The normalization version is missing.";
+        readonly missing_observation_time: "The observation time is missing.";
+        readonly missing_scope: "Captured scope is missing.";
+        readonly not_completed: "The check did not complete.";
+        readonly not_observed: "No observation is available.";
+        readonly scope_mismatch: "Captured scope does not match.";
+        readonly stale: "The observation is stale.";
+        readonly unknown: "The exclusion reason is unavailable.";
+        readonly unproven_absence: "Absence has not been proven.";
+        readonly unsupported: "This measurement is unsupported.";
+      };
+      readonly freshCoverage: "Fresh coverage (%)";
+      readonly historyFreshness: "Historical freshness policy is unknown. Observed coverage describes evidence; gaps remain gaps.";
+      readonly historyScope: "Retained observations for the targets selected at {asOf}, using weights frozen at that time.";
+      readonly keyword: "Keyword";
+      readonly market: "Market";
+      readonly measured: "Determinate / selected";
+      readonly observedCoverage: "Observed coverage (%)";
+      readonly pairedChange: "Comparable change (pp)";
+      readonly qualityHistory: "Data quality history";
+      readonly ranked: "Ranked";
+      readonly resolved: "Resolved";
+      readonly status: "Status";
+      readonly sum: "Total contribution: {value} pp. Comparable change: {delta} pp.";
+      readonly timeZoneUnavailable: "Configure the report time zone to view calendar history.";
+      readonly undatedChecks: "{count, plural, one {# retained check has no proven observation time and is excluded from dated history.} other {# retained checks have no proven observation time and are excluded from dated history.}}";
+      readonly unknown: "Unknown";
+      readonly visibility: "Visibility (%)";
+      readonly visibilityHistory: "Visibility history";
     };
     readonly sampleProject: {
       readonly createProject: "Create your real project";
@@ -4338,6 +4627,29 @@ export type CoreMessages = {
         readonly today: "Today";
         readonly unrankedGaps: "Checks without a ranking are shown as gaps.";
       };
+      readonly quality: {
+        readonly asOf: "Snapshot as of";
+        readonly baseline: "Baseline";
+        readonly bestCount: "{count, number} qualified observations from all retained history";
+        readonly bestCurrentDefinition: "Best #{position, number} for the current definition";
+        readonly bestLastKnownDefinition: "Best #{position, number} for the last known definition";
+        readonly comparisonNotRequested: "Comparison not requested";
+        readonly comparisonUnavailable: "No comparable baseline";
+        readonly currentDefinition: "Current measurement definition";
+        readonly currentScopeUnavailable: "Current definition is unverified";
+        readonly currentUnknown: "Current rank unknown";
+        readonly dropped: "Dropped by {count, number}";
+        readonly improved: "Improved by {count, number}";
+        readonly lastKnown: "Last known #{position, number}";
+        readonly lastKnownUrl: "Last known URL";
+        readonly lastRecordedAttempt: "Last recorded attempt";
+        readonly observed: "Observed";
+        readonly recorded: "Recorded";
+        readonly reportCapacity: "This history exceeds the report limit. Return to the keyword list to view current data.";
+        readonly reportChanged: "The data changed while the report was loading. Refresh stored data to open a new snapshot.";
+        readonly reportUnavailable: "Report unavailable";
+        readonly unchanged: "Unchanged";
+      };
       readonly rankingUrl: {
         readonly currentPage: "Current page";
         readonly currentPeriod: "{start} - {now}";
@@ -4354,6 +4666,146 @@ export type CoreMessages = {
         readonly title: "Ranking URL history";
         readonly urlChanged: "URL changed";
         readonly urlSwitched: "URL switched";
+      };
+      readonly recordedHistory: {
+        readonly attemptCountMeaning: "Reported provider attempt count is saved check metadata, not a complete paid-call ledger.";
+        readonly attempts: "Attempts";
+        readonly attemptsTable: "Recorded logical attempts";
+        readonly baselineCheck: "Baseline check: {id}";
+        readonly basis: {
+          readonly observed_at: "observation time";
+          readonly recorded_at: "recorded time";
+        };
+        readonly chartAria: "Recorded position timeline";
+        readonly chartLoaded: "{loaded} of {total} observations loaded; {gaps} gaps; {boundaries} methodology boundaries";
+        readonly chartMeaning: "Dates use the chosen time basis. Lines join qualified observations only within the same captured methodology; missing data has no synthetic rank.";
+        readonly chartPartial: "Only loaded points are shown. Read all pages before connecting the complete window.";
+        readonly columns: {
+          readonly absoluteRank: "Absolute rank";
+          readonly capturedScope: "Captured scope";
+          readonly check: "Check";
+          readonly domain: "Domain";
+          readonly execution: "Execution";
+          readonly expected: "Recorded expectation";
+          readonly finished: "Finished at";
+          readonly groupRank: "Group rank";
+          readonly kernelMovement: "Comparable movement";
+          readonly kind: "Result kind";
+          readonly observed: "Observed at";
+          readonly position: "Recorded position";
+          readonly provider: "Provider";
+          readonly quality: "Quality";
+          readonly ranking: "Recorded ranking URL";
+          readonly recorded: "Recorded at";
+          readonly recordedUrls: "Per-check URLs";
+          readonly reportedAttempts: "Reported provider attempts";
+          readonly result: "Saved result";
+          readonly started: "Started at";
+        };
+        readonly coverage: "Coverage: {value}";
+        readonly coverageState: {
+          readonly complete: "complete";
+          readonly truncated: "partial";
+          readonly unknown: "unknown";
+        };
+        readonly depthMetadata: "Requested depth {requested}; complete through {through}";
+        readonly effectiveScope: "Effective captured scope";
+        readonly events: {
+          readonly entered: "Entered";
+          readonly exited: "Exited";
+          readonly first: "First observation";
+          readonly moved: "Moved";
+          readonly re_entered: "Re-entered";
+          readonly steady: "Unchanged";
+          readonly unknown: "Comparison unknown";
+        };
+        readonly evidence: {
+          readonly known_absent: "Confirmed absent in qualified scope";
+          readonly not_observed: "Not observed";
+          readonly positive: "Qualified rank";
+          readonly unknown: "Qualification unknown";
+          readonly unsupported: "Unsupported";
+        };
+        readonly excludedUnknownTime: "{count} records excluded because observation time is unknown; their date-window membership is unavailable.";
+        readonly execution: {
+          readonly completed: "Completed";
+          readonly deferred: "Deferred";
+          readonly failed: "Failed";
+          readonly running: "Running";
+        };
+        readonly expectedUrl: "Recorded expected URL: {value}";
+        readonly failure: {
+          readonly capacity: "The requested read exceeds the configured budget. No partial scope was substituted.";
+          readonly forbidden: "History access is unavailable.";
+          readonly snapshot_conflict: "Saved data changed. Reload history to start a new snapshot.";
+          readonly unavailable: "Saved history could not be read. Try again.";
+        };
+        readonly featureMeaning: "Presence and ownership are separate. Missing items, partial coverage or missing historical identity proof remain unknown.";
+        readonly featuresTitle: "Saved feature presence and ownership";
+        readonly featureUnknown: "Feature presence unavailable";
+        readonly freshness: {
+          readonly fresh: "Fresh";
+          readonly stale: "Stale";
+          readonly unknown: "Freshness unknown";
+        };
+        readonly itemsTable: "Normalized results from the selected saved check";
+        readonly loadedCount: "{loaded} of {total} records loaded";
+        readonly loadMore: "Load more history";
+        readonly methodology: "Methodology: {version}";
+        readonly movement: "Movement {value}";
+        readonly noPair: "No comparable pair";
+        readonly noQualifiedPoints: "No qualified position points in this loaded window";
+        readonly noRetainedItems: "No normalized result items were retained; the recorded position and history are preserved.";
+        readonly observations: "Observations";
+        readonly observationsTable: "Recorded observations";
+        readonly observedLabel: "Observed";
+        readonly openObservation: "Open saved observation {id}";
+        readonly openSnapshot: "Open saved check";
+        readonly otherResultKind: "Other result type (code: {value})";
+        readonly ownership: {
+          readonly competitor: "Ownership: competitor identity";
+          readonly own: "Ownership: tracked identity";
+          readonly third_party: "Ownership: other identity";
+          readonly unknown: "Ownership unknown";
+        };
+        readonly point: "Position {position}, {date}";
+        readonly presence: {
+          readonly present: "Present in the saved results";
+          readonly unknown: "Presence unknown";
+          readonly unsupported: "Not supported by the saved methodology";
+        };
+        readonly rank: "#{position}";
+        readonly rankingUrl: "Recorded ranking URL: {value}";
+        readonly reading: "Reading saved history";
+        readonly recordedLabel: "Recorded";
+        readonly reloadHistory: "Reload history";
+        readonly resultKinds: {
+          readonly ai_overview: "AI Overview";
+          readonly listing: "Business listing";
+          readonly local_pack: "Local business pack";
+          readonly map_listing: "Map result";
+          readonly organic_result: "Organic search result";
+        };
+        readonly retention: {
+          readonly expired: "Raw detail expired; normalized observations remain available.";
+          readonly not_stored: "Raw detail was not stored; normalized observations remain available.";
+          readonly retained: "Normalized retained results from this saved check.";
+        };
+        readonly revision: "Target revision: {value}";
+        readonly selectObservation: "Select a saved observation to read its retained results.";
+        readonly snapshotAsOf: "Snapshot as of";
+        readonly snapshotTitle: "Saved check {id}";
+        readonly streamControl: "History stream";
+        readonly title: "Recorded position history";
+        readonly unknown: "unknown";
+        readonly unknownScope: "Captured scope unavailable";
+        readonly unknownTime: "Time unavailable";
+        readonly unqualifiedStoredValue: "Stored value {value}; qualification unavailable";
+        readonly urlHistoryMeaning: "Each expected and ranking URL belongs to its saved check, without a fallback to today’s edited target.";
+        readonly urlHistoryTitle: "Recorded ranking URLs";
+        readonly urlsTable: "Per-check recorded URLs";
+        readonly window: "{from} to {to} / {basis}";
+        readonly windowControl: "History date window";
       };
       readonly results: {
         readonly aboveYou: "{count, number} above you";
@@ -4870,6 +5322,8 @@ export type CoreMessages = {
           readonly currentPositionsDescription: "One row per keyword, latest rank";
           readonly daily: "Daily";
           readonly data: "Data";
+          readonly evidenceReport: "Evidence report (v2)";
+          readonly evidenceReportDescription: "Recorded evidence with quality, scope, timestamps and a whole-selection summary. Raw records, without daily or weekly aggregation.";
           readonly export: "Export {format}";
           readonly exporting: "Exporting...";
           readonly failed: "Export could not be completed. Try again.";
@@ -4879,14 +5333,21 @@ export type CoreMessages = {
           readonly formatExcelDescription: "Formatted workbook with headers";
           readonly formatJsonDescription: "Structured data with ranking history";
           readonly granularityAria: "Export granularity";
+          readonly historyFormatAria: "History format";
           readonly historyLimitExceeded: "One or more keywords have too much history for this export. Switch to ranking history, then choose a shorter range or a coarser interval and try again.";
           readonly keywordAndPosition: "Keyword + Pos";
           readonly last30Days: "Last 30 days";
           readonly last90Days: "Last 90 days";
+          readonly legacyHistory: "Legacy history (v1)";
+          readonly legacyHistoryDescription: "Completed checks. Daily includes every check; weekly keeps the latest check in seven-day buckets starting January 1 UTC.";
           readonly limitExceeded: "This export exceeds the current download limit. Reduce the selection and try again.";
           readonly rangeAria: "Export range";
           readonly rankingHistory: "Ranking history";
           readonly rankingHistoryDescription: "Position over time, one row per day";
+          readonly reportAttempts: "Check attempts";
+          readonly reportFileFormatNote: "Report fields and metadata are included together. Unknown values stay unknown. Export reads stored evidence and does not request new measurements.";
+          readonly reportObservations: "Measurements";
+          readonly reportStreamAria: "Report records";
           readonly targetAll: "Export all keywords";
           readonly targetFiltered: "Export {count, plural, one {# filtered keyword} other {# filtered keywords}}";
           readonly targetSelected: "Export {count, plural, one {# selected keyword} other {# selected keywords}}";
@@ -5073,6 +5534,65 @@ export type CoreMessages = {
           readonly pageUnavailableDescription: "This page is beyond the available filtered results.";
           readonly pageUnavailableTitle: "Page no longer available";
           readonly pausedMigration: "Paused - migration hold";
+          readonly quality: {
+            readonly asOf: "As of {date}";
+            readonly baselineBefore: "Baseline before {date}";
+            readonly baselineWindow: "Baseline from {from} to before {to}";
+            readonly bestMeasuredPosition: "Best measured #{position}";
+            readonly bestRetainedPosition: "Best retained #{position} · date unavailable";
+            readonly capturedExpectedUrl: "Expected URL captured with this measurement";
+            readonly comparisonNotRequested: "Comparison not requested";
+            readonly comparisonUnavailable: "No comparable baseline";
+            readonly compositionChanges: "{added} added; {removed} removed";
+            readonly compositionUnknown: "Earlier scope membership unavailable";
+            readonly coverage: "Data coverage {data}; observed coverage {observed}";
+            readonly currentPosition: "#{position}";
+            readonly currentScopeUnavailable: "Current definition unavailable";
+            readonly currentSince: "Current window since {date}";
+            readonly currentUnknown: "Current position unknown";
+            readonly dateUnknown: "date unavailable";
+            readonly deferred: "Deferred";
+            readonly events: {
+              readonly entered: "Entered";
+              readonly exited: "Exited";
+              readonly re_entered: "Re-entered";
+            };
+            readonly expectedUrlProvenanceUnknown: "Expected URL provenance unavailable";
+            readonly freshness: {
+              readonly fresh: "Fresh";
+              readonly stale: "Stale";
+              readonly unknown: "Freshness unknown";
+            };
+            readonly groupAttemptHealth: "{failed} failed / {expected} targets";
+            readonly groupQuality: "{ranked} ranked / {expected} targets; {unknown} unknown";
+            readonly groupRankingUrls: "{count} retained ranking URLs";
+            readonly historyQualificationUnknown: "Stored history qualification unavailable";
+            readonly historyUnavailable: "Retained rank history unavailable";
+            readonly knownAbsent: "Not found in measured scope";
+            readonly lastKnownObserved: "Last known #{position} · observed {date}";
+            readonly lastKnownRecorded: "Last known #{position} · recorded {date}";
+            readonly lastKnownStored: "Last known #{position} · stored date {date}";
+            readonly lastKnownUndated: "Last known #{position} · date unavailable";
+            readonly measuredCount: "{measured} of {expected} measured";
+            readonly metric: "Measurement";
+            readonly metricDelta: "Metric change {delta}";
+            readonly movementDirections: "{improved} improved; {declined} declined";
+            readonly notObserved: "Not yet observed";
+            readonly observedAt: "Observed {date}";
+            readonly observedTimeUnknown: "Observation time unavailable";
+            readonly qualificationUnknown: "Qualification unavailable";
+            readonly qualityCounts: "{failed} failed; {stale} stale; {unsupported} unsupported; {comparable} comparable";
+            readonly recordedAt: "Recorded {date}";
+            readonly recordedTimeUnknown: "Recorded time unavailable";
+            readonly retainedHistory: "Retained rank history for {keyword}";
+            readonly retainedHistoryHelp: "Retained comparable observations describe history, not proof of the current definition.";
+            readonly retainedRankingUrl: "Retained ranking URL; current qualification unavailable";
+            readonly scopeSummary: "{title}: {value} · {expected} targets; {ranked} ranked, {absent} confirmed absent, {unknown} unknown";
+            readonly storedCheckAt: "Stored check date {date}";
+            readonly summaryUnavailable: "{expected} matching targets; full-scope measurement unavailable";
+            readonly unknown: "unknown";
+            readonly unsupported: "Unsupported result";
+          };
           readonly ranking: "Ranking";
           readonly running: "Running";
           readonly scopeChip: "Scope: {location}";
@@ -5516,6 +6036,89 @@ export type CoreMessages = {
         readonly importKeywords: "Import keywords";
         readonly importOrExport: "Import or export";
       };
+    };
+    readonly localList: {
+      readonly absent: "Proven absent";
+      readonly attempt: {
+        readonly completed: "Latest attempt completed";
+        readonly failed: "Latest attempt failed";
+        readonly running: "Latest attempt running";
+        readonly unknown: "Latest attempt status unknown";
+      };
+      readonly expandTargets: "Expand {count} targets";
+      readonly freshnessUnknown: "Freshness unknown";
+      readonly neverObserved: "Never observed";
+      readonly observationAttempt: "Observation / latest attempt";
+      readonly outside: "Proven outside the pack";
+      readonly presence: "Local Pack presence";
+      readonly present: "Present";
+      readonly slot: "Business slot";
+      readonly slotValue: "Slot #{position}";
+      readonly stale: "Stale retained observation";
+      readonly targetTimes: "Expand for target times";
+      readonly unknown: "Unknown";
+    };
+    readonly localSummary: {
+      readonly average: "Average slot when found";
+      readonly choose: "Choose a business location";
+      readonly clear: "Clear my saved selection";
+      readonly cleared: "Your saved selection was cleared.";
+      readonly comparisonUnavailable: "Change is unavailable: an independent historical assignment cohort has not been retained.";
+      readonly conditional: "Top 3 when a Local Pack is present";
+      readonly conflict: "This selection changed. Reload and choose its current version.";
+      readonly counts: "{measured} of {expected} targets measured; {unknown} unknown. {checks} retained checks. Average based on {found} found targets.";
+      readonly coverage: "Observed target coverage";
+      readonly definition: "Measurement definition";
+      readonly fresh: "Measured observations satisfy their captured freshness policies.";
+      readonly freshnessUnknown: "Freshness is unknown because no usable freshness policy was captured.";
+      readonly matchCoverage: "Business match coverage";
+      readonly presence: "Organic Local Pack presence";
+      readonly remember: "Remember my selection";
+      readonly saved: "Your selection was saved.";
+      readonly saveError: "The selection could not be saved. Try again.";
+      readonly scope: "Current active assignment cohort. Archived targets and paused markets are excluded; pausing checks alone keeps the target. Organic Local Pack slots only, excluding Maps, Local Finder and promoted or unclassified results.";
+      readonly selection: "Business location and assigned scope";
+      readonly stale: "Some observations are stale and are excluded from current metrics.";
+      readonly state: {
+        readonly capacity: "This scope exceeds the report read budget. Narrow the scope before loading it.";
+        readonly invalid: "The URL selection is invalid. Choose an available business location.";
+        readonly missing: "Choose an assigned business location to view Local results.";
+        readonly unavailable: "That assignment or business identity is no longer available. Choose a current selection.";
+      };
+      readonly title: "Local business results";
+      readonly top3: "Business in the top 3";
+      readonly unknown: "Unknown";
+      readonly versions: "Identity revision: {identity}. Matcher: {matcher}.";
+    };
+    readonly reportScope: {
+      readonly applyTime: "Apply time";
+      readonly asOfUtc: "Snapshot time (UTC)";
+      readonly chooseSubject: "Choose an assigned business";
+      readonly comparisonHelp: "Compares results for the selected date and at least {days} days earlier. This is not an average. If an appropriate earlier result is missing, no comparison is shown.";
+      readonly comparisonLabel: "Compare";
+      readonly days: "{days} days earlier";
+      readonly general: "General organic results";
+      readonly hour: "Hour";
+      readonly invalidTime: "Choose a valid UTC time at or before now.";
+      readonly latest: "Latest";
+      readonly local: "Local Google results";
+      readonly localScope: "Local results show the selected business. Comparison and Local export are not available yet.";
+      readonly membership: "The table uses your current keyword list. Changing the date shows older results, without restoring an older list.";
+      readonly minute: "Minute";
+      readonly period: "Comparison period";
+      readonly setupBusiness: "Manage businesses and assignments";
+      readonly snapshot: "Snapshot: {date} UTC";
+      readonly state: {
+        readonly capacity: "This Local scope exceeds the supported read capacity. Narrow the assignment.";
+        readonly invalid: "The Local subject is invalid. Choose it again.";
+        readonly missing: "Choose an explicit assigned business to read Local results.";
+        readonly ready: "Local subject is ready.";
+        readonly unavailable: "The selected business, identity or assignment is unavailable for this scope.";
+      };
+      readonly subject: "Business subject";
+      readonly title: "Report scope";
+      readonly unsupportedFilters: "Organic movement, URL and SERP feature filters are unavailable in Local. Clear them to show Local targets.";
+      readonly view: "View";
     };
     readonly tabs: {
       readonly navigationAriaLabel: "Rank Tracker views";
@@ -7330,6 +7933,12 @@ export type CoreMessages = {
       readonly save: "Save";
       readonly saved: "Saved";
     };
+    readonly groups: {
+      readonly administration: "Administration";
+      readonly measurement: "Measurements";
+      readonly project: "Project";
+      readonly team: "Team and billing";
+    };
     readonly mobileSectionLabel: "Settings section";
     readonly navigationLabel: "Settings sections";
     readonly search: {
@@ -7342,6 +7951,10 @@ export type CoreMessages = {
         readonly applicationPlan: {
           readonly keywords: "billing price subscription hosted beta self hosted";
           readonly label: "Application plan";
+        };
+        readonly businessLocations: {
+          readonly keywords: "business branch location cid place id local subject";
+          readonly label: "Business locations";
         };
         readonly checkFrequency: {
           readonly keywords: "schedule manual daily weekly monthly cron automatic";
@@ -7440,6 +8053,7 @@ export type CoreMessages = {
     readonly sections: {
       readonly advanced: "Advanced";
       readonly billing: "Billing";
+      readonly businessLocations: "Business locations";
       readonly competitors: "Competitors";
       readonly context: "Project Context";
       readonly dataSources: "Data sources";
@@ -7622,6 +8236,32 @@ export type CoreMessages = {
       readonly urlPrefixDescription: "Only counts pages under a specific path, for example {domain}/docs/.";
       readonly urlPrefixTitle: "URL prefix only";
     };
+    readonly measurementPolicy: {
+      readonly configure: "Configure policy";
+      readonly description: "Choose when retained ranking evidence is fresh. Saving does not run checks.";
+      readonly effect: "Changed policy requires a new preview before running checks. Existing observations stay unchanged.";
+      readonly grace: "Schedule grace (seconds)";
+      readonly graceHelp: "Added to the actual schedule interval. Leave blank to keep scheduled freshness unknown.";
+      readonly manual: "Manual freshness window (seconds)";
+      readonly manualHelp: "Leave blank to keep manual freshness unknown. Zero is an explicit zero-length window.";
+      readonly notices: {
+        readonly conflict: "Policy changed elsewhere. Review the refreshed values before saving again.";
+        readonly error: "Policy could not be saved. Refresh and try again.";
+        readonly invalid: "Enter a non-negative duration with at most three decimal places, or leave blank.";
+        readonly saved: "Policy saved. Review a new preview before running checks.";
+        readonly unavailable: "Policy could not be configured. Refresh or ask the instance administrator.";
+      };
+      readonly save: "Save policy";
+      readonly seconds: "{value} seconds";
+      readonly states: {
+        readonly authority_unavailable: "Measurement policy storage is unavailable. Ask the instance administrator to finish the upgrade.";
+        readonly ready: "Measurement policy is configured.";
+        readonly unconfigured: "Configure measurement policy before running new checks.";
+        readonly unsupported: "Review and save policy for the currently supported adapters.";
+      };
+      readonly title: "Measurement policy";
+      readonly unknown: "Unknown";
+    };
     readonly searchSync: {
       readonly actionError: "Search data sync action failed. Refresh the page and try again.";
       readonly configuredPace: "configured pace: {count, number} request sets/hour";
@@ -7691,11 +8331,17 @@ export type CoreMessages = {
       readonly detailsTitle: "Usage details";
       readonly display: {
         readonly cents: "Cents";
+        readonly conflict: "Another editor changed these settings. Their saved values are now shown; review your change and try again.";
         readonly currency: "Currency";
         readonly digits: "{count, number}";
-        readonly help: "Saved in this browser. Display rounding does not change recorded amounts or budgets.";
+        readonly failed: "Display settings could not be saved. The previous values are still shown.";
+        readonly forbidden: "You can no longer edit this project. Your change was not saved.";
+        readonly help: "Shared by everyone in this project across usage, budgets and the header. Only display rounding changes; accounting values stay exact. Currency uses the recorded unit, without currency conversion.";
+        readonly invalid: "Choose an available amount format and decimal precision.";
         readonly money: "Amounts";
         readonly precision: "Decimal places";
+        readonly readOnly: "Project editors can change these shared display settings.";
+        readonly saving: "Saving project display settings...";
         readonly title: "Display options";
       };
       readonly oldest: "Oldest unresolved operation: {date} (UTC).";
@@ -8120,6 +8766,188 @@ export type CoreMessages = {
       readonly signInDifferentAccount: "Sign in with a different account";
       readonly title: "Page not available";
     };
+    readonly businessLocations: {
+      readonly archive: "Archive";
+      readonly archiveConfirmation: "I reviewed the effect on assigned subjects.";
+      readonly archiveHelp: "Archiving preserves identity and match history. Archived subjects become unavailable; restoring rechecks active identifier claims.";
+      readonly assignmentHelp: "Choose an active subject branch and its current identity revision explicitly for this keyword or market. No branch is selected automatically.";
+      readonly assignmentScopeKind: "Assignment scope";
+      readonly assignmentSummary: "Choose a branch for this keyword or market.";
+      readonly assignSubject: "Assign local subject";
+      readonly cancel: "Cancel";
+      readonly candidateBranch: "Branch: {name}";
+      readonly candidateConfirmation: "I reviewed this branch and this specific observed item.";
+      readonly candidateConflictHelp: "The decision or identity changed. Refresh or rematch retained evidence, then review the new decision.";
+      readonly candidateDomain: "Observed website";
+      readonly candidateItem: "Observed business";
+      readonly chooseAssignmentScope: "Choose a keyword or market";
+      readonly chooseRetainedObservation: "Choose an existing observation to review this branch. Reading or rematching uses retained data.";
+      readonly confirmAction: "Confirm state change";
+      readonly confirmationBlocked: "This item cannot be manually confirmed as a weak candidate. Hard conflicts and missing review details remain unresolved.";
+      readonly confirmCandidate: "Confirm this candidate";
+      readonly confirmRematch: "Rematch retained observation";
+      readonly conflict: "The save conflicted. Review current data before continuing; your draft is retained.";
+      readonly createLocation: "Add business location";
+      readonly current: "Current";
+      readonly currentAssignment: "Current subject: {name}; assignment revision {revision}.";
+      readonly currentState: "Current state: {state}; version {version}.";
+      readonly currentUnavailable: "Current data is unavailable. Request an authorized refresh before reviewing the conflict.";
+      readonly decisionRecordedAt: "Decision recorded";
+      readonly decisionSource: "Decision source";
+      readonly decisionSources: {
+        readonly automatic: "Original automatic match";
+        readonly manual: "Manual review";
+        readonly rematch: "Derived rematch";
+      };
+      readonly devices: {
+        readonly desktop: "Desktop";
+        readonly mobile: "Mobile";
+      };
+      readonly editConflictingIdentity: "Review and edit conflicting identity";
+      readonly editIdentity: "Edit identity";
+      readonly fields: {
+        readonly address: "Address";
+        readonly cid: "Google CID (text)";
+        readonly domain: "Website domain";
+        readonly latitude: "Latitude";
+        readonly longitude: "Longitude";
+        readonly mapsUrl: "Google Maps URL";
+        readonly name: "Branch name";
+        readonly placeId: "Google Place ID (text)";
+        readonly reason: "Reason";
+        readonly role: "Business purpose";
+      };
+      readonly helpLabel: "About {section}";
+      readonly idempotencyConflict: "This command key was used for a different request. Close this review and begin a new action.";
+      readonly identifierClaimed: "Another active branch already claims this CID or PlaceID. Correct the identifiers or resolve that claim before retrying.";
+      readonly identityEffectiveFrom: "Effective from";
+      readonly identityHelp: "Keep CID and Place ID as text. A website is a weak signal, not a branch identifier. Maps URLs are not fetched.";
+      readonly identityHistory: "Identity history";
+      readonly identityHistoryHelp: "Previous identities remain recorded. Reading a revision does not reinterpret its observations.";
+      readonly identityRevision: "Identity revision {revision}";
+      readonly identitySummary: "Keep the details for this branch up to date.";
+      readonly identityVersionHelp: "Saving creates a new identity revision. Historical observations stay unchanged.";
+      readonly invalidMapsIdentifier: "The Maps URL contains invalid or conflicting identifiers. Use a supported explicit Maps URL.";
+      readonly keepChangedFields: "Keep my changed fields";
+      readonly keywordScope: "Keyword";
+      readonly loading: "Loading…";
+      readonly locations: "Business locations";
+      readonly locationsHelp: "Branches keep separate identities even when they share a website. Selecting a branch here does not assign a subject.";
+      readonly locationsSummary: "Manage branch identities and archived locations.";
+      readonly locationVisibility: "Show locations";
+      readonly mapsIdentifierConflict: "The Maps URL disagrees with this identity’s CID or PlaceID. Review both before saving.";
+      readonly marketScope: "Market";
+      readonly matcherVersion: "Matcher version";
+      readonly matchReason: "Match reason";
+      readonly matchStates: {
+        readonly candidate: "Candidate";
+        readonly confirmed: "Confirmed";
+        readonly rejected: "Rejected";
+        readonly unresolved: "Unresolved";
+      };
+      readonly matchStatus: "Match state";
+      readonly missingRetainedEvidence: "Required retained evidence is unavailable. Rematching is blocked.";
+      readonly nextCandidates: "Next candidate batch";
+      readonly nextScopes: "Next results";
+      readonly noLocations: "No locations in this state.";
+      readonly noMatchDecisions: "No match decisions for this batch. Rematch retained evidence to evaluate it.";
+      readonly noRetainedObservations: "No saved local observations are available.";
+      readonly noScopes: "No matching active keywords or markets.";
+      readonly noSubject: "No assigned subject";
+      readonly notProvided: "Not provided";
+      readonly observedAt: "Observed at";
+      readonly previousCandidates: "Previous candidate batch";
+      readonly promotion: "Promotion evidence";
+      readonly promotions: {
+        readonly organic: "Organic";
+        readonly promoted: "Promoted";
+        readonly unknown: "Unknown";
+      };
+      readonly readError: "Could not read current data. Your selection is retained.";
+      readonly readIdentityHistory: "Read identity history";
+      readonly readObservations: "Read saved observations";
+      readonly readOnly: "You can view these locations. Editing is unavailable.";
+      readonly reasons: {
+        readonly ambiguous_exact_items: "Multiple exact items";
+        readonly ambiguous_registry_identity: "Multiple matching branches";
+        readonly contradictory_identifiers: "Contradictory identifiers";
+        readonly duplicate_observation_identity: "Duplicate observation identity";
+        readonly exact_identifier: "Equal stable identifier";
+        readonly insufficient_evidence: "Insufficient evidence";
+        readonly invalid_identifier: "Malformed identifier";
+        readonly invalid_ordinals: "Invalid original positions";
+        readonly manually_confirmed_item: "This item was manually confirmed";
+        readonly manually_rejected_item: "This item was manually rejected";
+        readonly stable_identifier_conflict: "Conflicting stable identifier";
+        readonly unsafe_numeric_identifier: "Unsafe numeric identifier";
+        readonly weak_domain: "Shared website";
+        readonly weak_name: "Similar name";
+        readonly weak_name_and_domain: "Similar name and shared website";
+      };
+      readonly recordedAt: "Recorded";
+      readonly rejectCandidate: "Reject this item";
+      readonly rematch: "Rematch retained results";
+      readonly rematchConfirmation: "I reviewed the selected retained observation and decision heads.";
+      readonly rematchHelp: "Re-evaluate only the selected retained observation and exact current decision heads. This does not send a provider request or modify previous decisions.";
+      readonly restore: "Restore";
+      readonly retainedBatch: "Reviewing {included} of {total} normalized items in this batch.";
+      readonly retainedMatches: "Retained matches";
+      readonly reviewAction: "Review action";
+      readonly reviewAssignmentKeepChoice: "Use reviewed assignment revision and keep my choice";
+      readonly reviewCandidate: "Review candidate";
+      readonly reviewChangedFields: "Compare current values with your draft. Keeping changes also refreshes untouched fields.";
+      readonly reviewCurrent: "Review current data";
+      readonly reviewLatestDecision: "Review latest decision";
+      readonly reviewOnlyThisItem: "Confirmation applies only to this retained item. It never confirms future results or turns unknown/promoted items into organic results.";
+      readonly reviewSnapshotAt: "Review snapshot";
+      readonly reviewState: "Use reviewed state version";
+      readonly roles: {
+        readonly competitor: "Competitor";
+        readonly subject: "Subject";
+      };
+      readonly save: "Save identity";
+      readonly saved: "Saved.";
+      readonly saveError: "Saving failed. Your draft is retained; try again.";
+      readonly saveReview: "Save item review";
+      readonly saveSubject: "Save subject assignment";
+      readonly saving: "Saving…";
+      readonly scopeSelectionHelp: "Search and choose a scope explicitly. Selecting a location above does not assign it.";
+      readonly scopeSelectionSummary: "Choose where to assign a subject branch.";
+      readonly searchScope: "Search";
+      readonly selectionChanged: "The selected resource changed. Close this editor and open the current selection.";
+      readonly sourceGroup: "Original Maps group";
+      readonly sourceOrdinal: "Original item ordinal";
+      readonly sourcePage: "Original page";
+      readonly sourceScale: "Original rank scale";
+      readonly sourceSlot: "Original slot";
+      readonly staleAssignment: "This subject identity is archived or no longer current. Select an eligible branch revision or clear the assignment.";
+      readonly states: {
+        readonly active: "Active";
+        readonly archived: "Archived";
+      };
+      readonly subject: "Subject branch";
+      readonly surface: "Google result surface";
+      readonly surfaces: {
+        readonly local_finder: "Google Local Finder";
+        readonly maps: "Google Maps";
+        readonly web_serp: "Google web results";
+      };
+      readonly unavailableBranch: "Unavailable branch";
+      readonly useCurrent: "Use current values";
+      readonly validation: {
+        readonly address: "Use at most 500 address characters.";
+        readonly cid: "Enter CID as digits in text; never a numeric conversion.";
+        readonly confirmed: "Review and confirm this action.";
+        readonly coordinates: "Enter both finite coordinates: latitude −90 to 90, longitude −180 to 180.";
+        readonly domain: "Enter a valid website domain.";
+        readonly mapsUrl: "Use a supported HTTPS Google Maps URL without credentials.";
+        readonly name: "Enter a valid branch name.";
+        readonly noChange: "Change an identity field before saving a revision.";
+        readonly placeId: "Enter a valid opaque Place ID without whitespace.";
+        readonly reason: "Enter a reason of 1–500 characters.";
+      };
+      readonly yourDraft: "Your draft";
+    };
     readonly controls: {
       readonly alert: {
         readonly dismiss: "Dismiss alert";
@@ -8309,6 +9137,10 @@ export type CoreMessages = {
       readonly modal: {
         readonly close: "Close modal";
       };
+      readonly noticeMotion: {
+        readonly pause: "Pause scrolling";
+        readonly resume: "Resume scrolling";
+      };
       readonly password: {
         readonly hide: "Hide password";
         readonly show: "Show password";
@@ -8375,6 +9207,171 @@ export type CoreMessages = {
         readonly timeZone: "{time} ({timeZone})";
         readonly yourTime: "{time} (your time)";
       };
+    };
+    readonly dashboardComparison: {
+      readonly asOf: "Report as of:";
+      readonly baseline: "Baseline";
+      readonly baselineAsOf: "Requested baseline watermark:";
+      readonly change: "Change";
+      readonly choose: "Choose a saved comparison";
+      readonly clear: "Clear remembered comparison";
+      readonly cleared: "Remembered comparison cleared.";
+      readonly comparisonCoverage: "Comparable targets: {comparable} / {expected}. Changes are unavailable when the full selected cohort cannot be compared.";
+      readonly configureComparison: "Set up comparison";
+      readonly conflict: "Preferences changed. Reload before saving this reference.";
+      readonly coverage: "Determinate: {measured} / {expected}. Observed coverage: {observed}. Fresh coverage: {fresh}.";
+      readonly current: "Current";
+      readonly desktop: "Desktop";
+      readonly domain: "Domain";
+      readonly emptyDescription: "Set up and save a comparison on the Competitors page to use it here.";
+      readonly emptyTitle: "No saved comparisons";
+      readonly fixedCohort: "Same {count} selected targets and frozen volume weights in both periods.";
+      readonly mobile: "Mobile";
+      readonly percentagePoints: "{value} pp";
+      readonly providerConnected: "A ranking provider is connected. This read does not launch checks.";
+      readonly providerMissing: "No ranking provider is connected. Stored observations remain readable.";
+      readonly reloadRevision: "Review current preference revision";
+      readonly reloadUnavailable: "A newer compatible preference is unavailable. Reload the page to review its scope.";
+      readonly remember: "Remember this comparison";
+      readonly reviewRevision: "Revision {revision} loaded. Review your selected comparison and choose Remember or Clear to save explicitly.";
+      readonly saved: "Comparison remembered. Your dashboard default is unchanged.";
+      readonly saveError: "Could not remember the comparison. Your existing preference is preserved.";
+      readonly scope: "{location} / {language} / {device}";
+      readonly selection: "Competitor comparison";
+      readonly state: {
+        readonly capacity: "This comparison has too many targets. Choose a smaller saved comparison.";
+        readonly invalid: "This comparison link is invalid. Choose a saved comparison.";
+        readonly missing: "Choose a saved comparison to see its results.";
+        readonly unavailable: "This saved comparison is unavailable. Choose another comparison.";
+      };
+      readonly title: "Competitor Share of Voice";
+      readonly unknown: "Unknown";
+    };
+    readonly dashboardLayout: {
+      readonly budgetBlocked: "Paid checks are blocked by the current budget.";
+      readonly budgetReadOnly: "Viewing saved reports does not run a paid check.";
+      readonly budgetUnknown: "Budget status is unknown. No paid checks are launched by this view.";
+      readonly cancel: "Cancel";
+      readonly conflict: "Preferences changed elsewhere. Your draft is preserved; review the current layout before saving.";
+      readonly coverageSummary: "Resolved {measured} of {expected} targets; {comparable} comparable pairs.";
+      readonly defaultSaved: "Your default dashboard is saved.";
+      readonly freshCoverage: "Fresh resolved targets: {count}.";
+      readonly freshnessUnknown: "Freshness coverage is unknown.";
+      readonly healthClear: "No failed checks in the last 24 hours.";
+      readonly healthUnknown: "Check health is unavailable. This does not mean zero failures.";
+      readonly hide: "Hide {title}";
+      readonly invalidPreset: "This dashboard preset is unavailable. Choose an available preset.";
+      readonly keepDraft: "Keep my draft";
+      readonly moved: "Moved {title} to position {position}.";
+      readonly moveDown: "Move {title} down";
+      readonly moveUp: "Move {title} up";
+      readonly preferencePreserved: "Your stored layout and draft are preserved. Saving is blocked until a compatible current revision is reviewed.";
+      readonly preferenceReloadFailed: "The stored layout could not be reloaded. Your draft is preserved.";
+      readonly preferenceRevision: "Current layout revision: {revision}";
+      readonly preferenceUnavailable: "The stored dashboard layout is unavailable in this version.";
+      readonly presentationOnly: "Personal display only. Schedules and paid checks do not change.";
+      readonly preset: "Dashboard preset";
+      readonly presets: {
+        readonly competitors: "Competitors";
+        readonly general: "General";
+        readonly local: "Local SEO";
+      };
+      readonly readOnly: "Read-only project. Display preferences remain personal.";
+      readonly reasons: {
+        readonly foreign_competitor_scope: "The competitor scope does not belong to this project.";
+        readonly foreign_local_subject: "The selected business does not belong to this project.";
+        readonly missing_capability: "The stored data capability required by this section is unavailable.";
+        readonly missing_competitor_scope: "Select an explicit competitor comparison scope.";
+        readonly missing_competitors_access: "Competitor read access is required.";
+        readonly missing_local_subject: "Select an explicit business identity revision for Local SEO.";
+        readonly missing_project_access: "Project read access is required.";
+        readonly preset_mismatch: "This section uses a different preset scope.";
+      };
+      readonly reloadPreference: "Reload stored layout";
+      readonly reorder: "Reorder {title}";
+      readonly reorderHint: "Drag a handle, or use arrow keys, Home and End to reorder.";
+      readonly reviewCurrent: "Review the current saved layout";
+      readonly save: "Save";
+      readonly saved: "Display preferences saved.";
+      readonly saveError: "Could not save. Your draft and previous default are preserved.";
+      readonly saving: "Saving display preferences.";
+      readonly scopeNotMeasured: "This scope is not resolved. No ranking metric was calculated.";
+      readonly setDefault: "Set as my default";
+      readonly shell: {
+        readonly budget: "Budget status";
+        readonly coverage: "Data coverage";
+        readonly health: "Check health";
+        readonly mode: "Project mode";
+        readonly scope: "Shared search scope";
+      };
+      readonly shellUnavailable: "Context is unavailable. This does not mean zero.";
+      readonly show: "Show {title}";
+      readonly span: "Width of {title}";
+      readonly spans: {
+        readonly standard: "Standard";
+        readonly wide: "Wide";
+      };
+      readonly title: "Customize dashboard";
+      readonly unsavedDraft: "Unsaved layout draft. The stored layout has not changed.";
+      readonly useCurrent: "Use the current layout";
+      readonly viewDetails: "About this view";
+      readonly viewHelp: "This view shows saved results. It does not run checks.";
+      readonly viewHelpClose: "Close";
+      readonly widgetError: "This section could not be read. Other sections remain available.";
+      readonly widgetHelp: "About {title}";
+      readonly widgetLoading: "Loading stored report.";
+      readonly widgetLoadOnSave: "Save this layout to load the section data.";
+      readonly widgets: {
+        readonly by_market: {
+          readonly description: "Read separate market reports within the shared range and filters.";
+          readonly label: "By market";
+        };
+        readonly competitor_comparison: {
+          readonly description: "Read the explicitly selected competitor-set scope; this is not the whole market.";
+          readonly label: "Competitor comparison";
+        };
+        readonly contributors: {
+          readonly description: "Read target contributions from the authoritative report, not a client calculation.";
+          readonly label: "Contributors";
+        };
+        readonly data_source: {
+          readonly description: "Read stored connection and provider information; displaying it does not launch a check.";
+          readonly label: "Data source";
+        };
+        readonly local_business_results: {
+          readonly description: "Businesses with a map in regular Google results, for an explicitly selected confirmed branch.";
+          readonly label: "Local Google results";
+        };
+        readonly movers: {
+          readonly description: "Read comparable changes and separate entry, exit, and unknown states.";
+          readonly label: "Movers";
+        };
+        readonly organic_kpis: {
+          readonly description: "Read stored organic metrics with their version, coverage, and comparable cohort.";
+          readonly label: "Organic metrics";
+        };
+        readonly position_distribution: {
+          readonly description: "Group confirmed organic positions; unknown results are not synthetic positions.";
+          readonly label: "Position distribution";
+        };
+        readonly position_trend: {
+          readonly description: "Read original observation dates and compatible positive ranks, with gaps preserved.";
+          readonly label: "Position history";
+        };
+        readonly quality_history: {
+          readonly description: "Read observed, fresh, and comparable counts separately from stored quality reports.";
+          readonly label: "Quality history";
+        };
+        readonly recent_targets: {
+          readonly description: "Show recently added targets in the resolved search scope.";
+          readonly label: "Recent targets";
+        };
+        readonly visibility_history: {
+          readonly description: "Read versioned stored visibility history when a compatible report is available.";
+          readonly label: "Visibility history";
+        };
+      };
+      readonly widgetUnavailable: "This section's stored report is unavailable.";
     };
     readonly emergencyRecovery: {
       readonly error: {
@@ -8477,6 +9474,345 @@ export type CoreMessages = {
       readonly english: "English";
       readonly label: "Language";
     };
+    readonly localMonitors: {
+      readonly activeOnly: "Active monitors";
+      readonly archive: "Archive";
+      readonly archiveConfirm: "Archive this monitor? Its configuration and history will be retained.";
+      readonly axesHelp: "Choose an operating system and map zoom for Maps. Saving changed options creates a revision; review its cost and confirm again before running checks.";
+      readonly back: "Back to monitors";
+      readonly cancel: "Cancel";
+      readonly capturedCalendar: "Saved calendar";
+      readonly capturedScope: "Saved measurement scope";
+      readonly column: "Column";
+      readonly configuredPoints: "Configured points";
+      readonly confirmArchive: "Confirm archive";
+      readonly create: "Create monitor";
+      readonly definition: "Monitor configuration";
+      readonly definitionHistory: "Configuration history";
+      readonly devices: {
+        readonly desktop: "Desktop";
+        readonly mobile: "Mobile";
+        readonly unknown: "Unknown device";
+      };
+      readonly edit: "Edit monitor";
+      readonly empty: "No monitors yet. Create one using an existing business location.";
+      readonly errors: {
+        readonly conflict: "The saved configuration changed. Reload it and review before saving again.";
+        readonly forbidden: "You no longer have permission to change this project.";
+        readonly invalid: "Some configuration fields are invalid. Review the form.";
+        readonly unavailable: "The requested location or monitor is unavailable. Reload and try again.";
+      };
+      readonly fields: {
+        readonly calendarEpoch: "Calendar version";
+        readonly calendarReference: "Calendar reference";
+        readonly configuredDepth: "Configured calendar depth";
+        readonly cron: "Cron expression";
+        readonly cutoff: "Maximum results per point";
+        readonly device: "Device";
+        readonly engine: "Search engine";
+        readonly frequency: "Frequency";
+        readonly grid: "Grid size";
+        readonly gridPilotHelp: "The pilot supports 1 × 1, 3 × 3 and 5 × 5 grids. Larger grids require separate scope and budget approval.";
+        readonly identityRevision: "Location identity revision";
+        readonly jitter: "Schedule jitter";
+        readonly language: "Search language code";
+        readonly latitude: "Center latitude";
+        readonly longitude: "Center longitude";
+        readonly name: "Name";
+        readonly operatingSystem: "Operating system";
+        readonly providerPolicy: "Configured provider policy";
+        readonly rankScale: "Position scale";
+        readonly resultKind: "Result type";
+        readonly retainedGrid: "7 × 7 (retained history)";
+        readonly spacing: "Point spacing (metres)";
+        readonly subjectReference: "Business location reference";
+        readonly surface: "Search surface";
+        readonly timeOfDay: "Time of day";
+        readonly timezone: "Calendar timezone";
+        readonly zoom: "Map zoom";
+      };
+      readonly frequencies: {
+        readonly custom_cron: "Custom cron";
+        readonly daily: "Daily";
+        readonly monthly: "Monthly";
+        readonly weekly: "Weekly";
+      };
+      readonly includingArchived: "Include archived monitors";
+      readonly keywords: "Keywords";
+      readonly launchUnavailable: "Running checks from this monitor is not available yet. Review integrations for provider availability.";
+      readonly manageSubjects: "Manage business locations";
+      readonly manual: {
+        readonly chooseConnection: "Choose a connection";
+        readonly confirmLaunch: "Confirm and run";
+        readonly connection: "Provider connection";
+        readonly consent: "Confirm provider charge";
+        readonly consentHelp: "Confirmation authorizes only this run. It does not enable a schedule.";
+        readonly coordinate: "Coordinates";
+        readonly errors: {
+          readonly conflict: "The monitor or its connection changed. Review a fresh run.";
+          readonly expired: "The quote expired. Review a fresh run.";
+          readonly forbidden: "You cannot launch this monitor.";
+          readonly invalid: "Check the selected run settings.";
+          readonly unavailable: "This run is currently unavailable. Refresh saved status before trying again.";
+        };
+        readonly expires: "Quote expires: {time}";
+        readonly help: "Choose a connection, review the full task count and provider charge, then confirm. Opening this panel or refreshing saved status does not contact the provider.";
+        readonly keyword: "Keyword";
+        readonly loadingRecorded: "Loading saved status…";
+        readonly nativeCents: "US cents";
+        readonly noConnection: "Connect a supported provider in Integrations to run this monitor.";
+        readonly noRun: "No saved run yet.";
+        readonly point: "Point";
+        readonly pointNumber: "Point {number}";
+        readonly preview: "Review run";
+        readonly progress: "{complete} of {total} tasks complete";
+        readonly queue: {
+          readonly blocked: "This run needs review. Its saved results and unresolved charges are retained.";
+          readonly complete: "The worker has finished this run.";
+          readonly queued: "Run queued. The worker will recheck the approved scope and price before starting.";
+          readonly running: "The worker is processing this run.";
+        };
+        readonly receiptHelp: "Unknown acceptance stays unresolved. Refreshing never resubmits a task or collects provider results.";
+        readonly recordedRun: "Latest saved run";
+        readonly refreshRecorded: "Refresh saved status";
+        readonly states: {
+          readonly accounting_pending: "Confirming provider charge";
+          readonly awaiting_collection: "Accepted; results pending";
+          readonly awaiting_dispatch: "Waiting to start";
+          readonly cancelled: "Cancelled";
+          readonly complete: "Complete";
+          readonly needs_provider_evidence: "Provider acceptance is unknown";
+          readonly owner_release_pending: "Finalizing saved result";
+          readonly pending_reconciliation: "Evidence needs review";
+          readonly unavailable: "Unavailable";
+        };
+        readonly status: "Saved status";
+        readonly taskCount: "This run submits {count} keyword–point tasks.";
+        readonly title: "Run this monitor";
+        readonly unavailable: {
+          readonly capability_unregistered: "This local search capability is not registered. Choose a supported configuration.";
+          readonly connection_unavailable: "This connection is unavailable. Review it in Integrations.";
+          readonly pricing_unavailable: "The complete provider charge is unknown. A paid run cannot start.";
+          readonly unsupported: "The provider does not support this monitor configuration. Edit its search settings.";
+          readonly worker_unavailable: "The execution worker is disabled. Enable the worker before queuing a run.";
+        };
+        readonly unknown: "Unknown";
+      };
+      readonly metres: "{count} m";
+      readonly minutes: "{count} min";
+      readonly mode: "Saved schedule intent";
+      readonly modes: {
+        readonly manual: "Manual";
+        readonly paused: "Paused";
+        readonly scheduled: "Scheduled intent";
+        readonly unknown: "Unknown";
+      };
+      readonly moreHistory: "Earlier revisions";
+      readonly moreKeywords: "More keywords";
+      readonly moreMonitors: "More monitors";
+      readonly moreSubjects: "More business locations";
+      readonly noKeywords: "No keywords on this page. Try another search.";
+      readonly noSavedCalendar: "No calendar is saved for this intent.";
+      readonly noSubjects: "Add an active business location first, then choose it explicitly.";
+      readonly notSet: "Not set";
+      readonly point: "Point";
+      readonly pointHelp: "These are the saved sampling coordinates. Results are unavailable until a run is explicitly linked to this monitor revision.";
+      readonly points: "Points";
+      readonly rankScales: {
+        readonly finder_organic: "Organic position in Local Finder";
+        readonly maps_organic: "Organic position in Maps";
+        readonly pack_slot: "Local pack slot";
+      };
+      readonly readError: "The saved data could not be loaded. Try again.";
+      readonly readiness: {
+        readonly archived: "This monitor is archived.";
+        readonly calendar_changed: "The calendar changed or is unavailable. Review it before scheduling.";
+        readonly definition_changed: "The schedule refers to an earlier configuration.";
+        readonly keyword_changed: "A selected keyword changed or is unavailable. Review the selection.";
+        readonly manual: "No recurring execution is enabled.";
+        readonly paused: "The saved schedule intent is paused.";
+        readonly subject_changed: "The business location changed. Review and save a new revision.";
+      };
+      readonly readOnly: "You can read this configuration. A project editor can change it.";
+      readonly recurring: {
+        readonly approve: "Approve recurring measurements";
+        readonly calendar: "Calendar";
+        readonly cancel: "Cancel";
+        readonly capturedCalendar: "Calendar: {frequency}, {timezone}";
+        readonly chooseCalendar: "Choose an existing calendar";
+        readonly chooseConnection: "Choose a connection";
+        readonly connection: "Own-key connection";
+        readonly disabled: "Automatic Local execution is disabled on this deployment. An operator must explicitly enable the existing worker before approval. Stored runs remain readable.";
+        readonly frequencies: {
+          readonly custom_cron: "custom calendar";
+          readonly daily: "daily";
+          readonly monthly: "monthly";
+          readonly weekly: "weekly";
+        };
+        readonly invalid: "Review the required fields and limits.";
+        readonly issuedCeiling: "Issued quote authority";
+        readonly loading: "Loading stored schedule…";
+        readonly maximumOccurrences: "Maximum number of measurements";
+        readonly next: "Next configured occurrence";
+        readonly noApproval: "No paid recurring approval is active for this schedule intent.";
+        readonly pause: "Pause future measurements";
+        readonly perOccurrence: "Maximum per measurement (USD)";
+        readonly policy: "Approve this exact grid and calendar. Each due measurement gets a fresh quote under the captured price version and ceiling. Missed complete intervals are skipped; unknown accepted work prevents repurchase. Issued quotes count conservatively against the total ceiling, even if no task is sent.";
+        readonly projectTimezone: "Project timezone";
+        readonly quoted: "Current exact quote";
+        readonly review: "Review recurring approval";
+        readonly reviewNotice: "This confirmation authorizes future measurements until the chosen end and limits. It performs no provider request now.";
+        readonly states: {
+          readonly active: "Active authority";
+          readonly blocked: "Blocked; review again";
+          readonly finished: "Authority finished";
+        };
+        readonly status: "Stored status";
+        readonly title: "Recurring Local measurements";
+        readonly tooManyChoices: "The choices exceed this bounded form. Narrow or archive calendars/connections before review.";
+        readonly total: "Total issuance ceiling (USD)";
+        readonly unavailable: "The schedule could not be reviewed. Reload and check access, source changes or the worker configuration.";
+        readonly validThrough: "Approval ends";
+        readonly validUntil: "Approval end (your local time)";
+      };
+      readonly reload: "Reload current configuration";
+      readonly result: "Recorded result";
+      readonly resultKinds: {
+        readonly listing: "Local Finder listing";
+        readonly local_pack: "Local pack";
+        readonly map_listing: "Maps listing";
+      };
+      readonly results: {
+        readonly accountingHelp: "Evidence is selected as of the report time. Receipt and accounting states show their current state.";
+        readonly allHistory: "All retained history";
+        readonly asOf: "Report as of";
+        readonly bounds: "Sample bounds";
+        readonly business: "Business";
+        readonly comparisonHelp: "Freshness uses current project policy and the original saved monitor intent. Comparison requires compatible captured scopes.";
+        readonly customHistory: "Custom interval";
+        readonly dataCoverage: "Fresh data coverage";
+        readonly empty: "No saved runs yet. A run requires an explicit preview and cost confirmation.";
+        readonly evidence: "Evidence";
+        readonly evidenceStates: {
+          readonly known_absent: "Proven absent";
+          readonly not_observed: "Not observed";
+          readonly positive: "Confirmed positive rank";
+          readonly unknown: "Unknown";
+          readonly unsupported: "Unsupported";
+        };
+        readonly exportCsv: "Export Local CSV v1";
+        readonly exportJson: "Export Local JSON v1";
+        readonly freshness: "Freshness";
+        readonly freshnessStates: {
+          readonly fresh: "Fresh";
+          readonly stale: "Stale";
+          readonly unknown: "Unknown";
+        };
+        readonly grid: "Sampled point grid";
+        readonly history: "Run history";
+        readonly historyBounds: "From {from} to {to}";
+        readonly historyCount: "{count, plural, one {# saved run in this interval} other {# saved runs in this interval}}";
+        readonly historyDays: "Last {days} days";
+        readonly historyWindow: "History period";
+        readonly historyWindowHelp: "Periods end at the saved report time and use elapsed 24-hour days. Dates use your report timezone. Reading history does not run a scan.";
+        readonly identityMatch: "Identity match";
+        readonly loading: "Loading retained evidence…";
+        readonly matchStates: {
+          readonly candidate: "Candidate";
+          readonly confirmed: "Confirmed";
+          readonly rejected: "Rejected";
+          readonly unavailable: "Unavailable";
+        };
+        readonly nativeAbsolute: "Native absolute rank";
+        readonly nativeGroup: "Native group rank";
+        readonly none: "None";
+        readonly observedAt: "Observed at";
+        readonly observedCoverage: "Observed coverage";
+        readonly observedRank: "Observed rank before scope qualification";
+        readonly pointEvidence: "Retained point listings";
+        readonly pointHistory: "Point history";
+        readonly pointHistoryHelp: "Saved attempts for this exact point, keyword, identity and policy in the selected interval. Changed scope starts a separate history.";
+        readonly pointHistoryMore: "Load earlier attempts";
+        readonly points: "Measured points";
+        readonly promotion: "Promotion";
+        readonly promotionStates: {
+          readonly organic: "Organic";
+          readonly promoted: "Promoted";
+          readonly unknown: "Unknown";
+        };
+        readonly rank: "Qualified business rank";
+        readonly reason: "Quality reason";
+        readonly reasonStates: {
+          readonly current_scope_unavailable: "Current scope unavailable";
+          readonly future_observation: "Future observation";
+          readonly insufficient_depth: "Capture depth too small";
+          readonly invalid_position: "Invalid native position";
+          readonly missing_normalization: "Normalizer proof missing";
+          readonly missing_observation_time: "Observation time missing";
+          readonly missing_scope: "Scope proof missing";
+          readonly not_completed: "Not completed";
+          readonly scope_mismatch: "Scope differs";
+          readonly unproven_absence: "Absence unproven";
+          readonly unsupported: "Unsupported scope";
+        };
+        readonly receipt: "Receipt state";
+        readonly scope: "Captured scope";
+        readonly seedHelp: "Coordinates are query seeds acknowledged by the provider, not proof of exact observer geography. Missing acknowledgment stays unknown.";
+        readonly title: "Run results";
+        readonly topN: "Observed Top {n}";
+        readonly unavailable: "This saved run is unavailable for the selected project, monitor or time.";
+        readonly unknown: "Unknown";
+      };
+      readonly resultUnavailable: "Not available";
+      readonly retry: {
+        readonly childScope: "Selected retry: {selected} of {parent} original targets. Coverage describes this selection only.";
+        readonly confirm: "Confirm paid subset retry";
+        readonly help: "Choose only original tasks proven rejected or never sent. This is a new paid run with a fresh quote. Accepted or unresolved tasks must finish collection or reconciliation on their original run.";
+        readonly parentCount: "Original run: {count} targets.";
+        readonly point: "Point {point}";
+        readonly queued: "Retry queued: {id}";
+        readonly reasons: {
+          readonly accepted_original: "Accepted: collect original task";
+          readonly accounting_pending: "Accounting is pending";
+          readonly eligible_rejected: "Proven rejected";
+          readonly eligible_unsent: "Proven never sent";
+          readonly in_progress: "Original task is in progress";
+          readonly owner_retained: "Original owner is retained";
+          readonly proof_unavailable: "Native terminal proof is unavailable";
+          readonly reconciliation_pending: "Reconciliation is pending";
+          readonly unknown_acceptance: "Acceptance unresolved: reconcile original task";
+        };
+        readonly selection: "Original points";
+        readonly title: "Retry selected failed points";
+      };
+      readonly reviewIntegrations: "Review integrations";
+      readonly revision: "Revision";
+      readonly revisionNumber: "Revision {revision}";
+      readonly row: "Row";
+      readonly save: "Save configuration";
+      readonly saving: "Saving…";
+      readonly search: "Search";
+      readonly searchKeywords: "Search existing keywords";
+      readonly selectedKeywords: "{count} selected (maximum 20)";
+      readonly setupOnly: "Saving a monitor stores its configuration. It does not start checks or create charges.";
+      readonly showHistory: "Show saved revisions";
+      readonly states: {
+        readonly active: "Active";
+        readonly archived: "Archived";
+      };
+      readonly status: "Status";
+      readonly subject: "Business location";
+      readonly surfaces: {
+        readonly local_finder: "Local Finder results";
+        readonly maps: "Maps results";
+      };
+      readonly targetCount: "{count} keyword and point combinations (maximum 100)";
+      readonly title: "Local monitors";
+      readonly unrestricted: "Unrestricted";
+      readonly useCurrentIdentity: "Use the current location identity";
+      readonly validation: "Check the name, location, keywords, coordinates, supported language, operating system, map zoom and maximum of 100 targets.";
+      readonly visibility: "Monitor visibility";
+    };
     readonly markets: {
       readonly add: "Add {count, plural, one {market} other {# markets}}";
       readonly addMarkets: "Add markets";
@@ -8509,6 +9845,462 @@ export type CoreMessages = {
       readonly suggestedOnly: "Suggested only";
       readonly tracked: "Tracked";
       readonly trackedMarkets: "Tracked markets";
+    };
+    readonly measurementHelp: {
+      readonly close: "Close";
+      readonly contextError: "Report context is unavailable. This does not mean a zero result.";
+      readonly contextLoading: "Report context is loading. The definition remains available.";
+      readonly counts: {
+        readonly comparable: "Comparable paired targets";
+        readonly expected: "Expected targets";
+        readonly failed: "Failed attempts";
+        readonly freshDeterminate: "Fresh determinate targets";
+        readonly knownAbsent: "Confirmed absent";
+        readonly measured: "Determinate observed targets";
+        readonly metricEligible: "Metric-eligible targets";
+        readonly neverChecked: "Never observed";
+        readonly ranked: "Ranked targets";
+        readonly stale: "Stale observations";
+        readonly unknown: "Unknown results";
+        readonly unknownFreshness: "Targets with unknown freshness";
+        readonly unsupported: "Unsupported";
+      };
+      readonly entries: {
+        readonly average_ranked_position: {
+          readonly title: "Average ranked position";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "Average position among targets with a confirmed positive rank in one compatible scope and rank scale.";
+              readonly interpretation: "Read ranked count and coverage alongside the average.";
+              readonly limitation: "Absent and unknown targets receive no zero or 101 position. Losing observations alone does not prove improvement.";
+            };
+          };
+        };
+        readonly business_slot: {
+          readonly title: "Local Google results";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "Businesses with a map in regular Google results; a business slot refers to the explicitly confirmed branch.";
+              readonly interpretation: "The branch's stable identity and the original block, page, and slot identify the observation.";
+              readonly limitation: "A shared domain or similar name is only a candidate. Promoted or unknown promotion results are not organic-eligible; Maps and Local Finder use separate scales.";
+            };
+          };
+        };
+        readonly competitor_share_of_voice_top10: {
+          readonly title: "Competitor share of voice";
+          readonly versions: {
+            readonly "bisibility-sov-top10-v2": {
+              readonly definition: "The selected domain’s share of volume-weighted linear Top 10 scores across the selected domains.";
+              readonly interpretation: "All domains use the same qualified keyword cohort and weights. Read the observed coverage and fresh coverage alongside the percentage.";
+              readonly limitation: "This is a relative index of selected domains, not market share, traffic or leads. Unknown and stale observations are excluded; zero total scores produce no percentage. Version 2 changes the legacy treatment of missing volumes and incomplete observations.";
+            };
+          };
+        };
+        readonly data_quality: {
+          readonly title: "Data quality and coverage";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "Observed coverage describes determinate retained observations; fresh coverage additionally requires an explicit freshness policy.";
+              readonly interpretation: "Read expected, observed, fresh determinate, unknown, and comparable counts separately. Comparable count describes paired targets, not coverage.";
+              readonly limitation: "Unknown freshness is not fresh. A failed attempt can coexist with a retained successful observation; quality counts are not necessarily disjoint.";
+            };
+          };
+        };
+        readonly feature_presence: {
+          readonly title: "Search feature presence";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "Whether a search-results block was observed, such as Local Google results: businesses with a map in regular Google results.";
+              readonly interpretation: "A visible block and a confirmed target within that block are separate observations.";
+              readonly limitation: "No observed block, no confirmed business, unknown identity, and unsupported measurement mean different things.";
+            };
+          };
+        };
+        readonly local_finder_rank: {
+          readonly title: "Local Finder position";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "The confirmed listing position in Google's expanded local-results view, on its own scale.";
+              readonly interpretation: "Keep Local Finder observations separate from business slots in regular results and from Maps.";
+              readonly limitation: "This explanation does not enable Local Finder measurement. Unknown or unsupported observations do not prove absence.";
+            };
+          };
+        };
+        readonly maps_rank: {
+          readonly title: "Maps position";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "The confirmed listing position on the Google Maps surface, on its own rank scale.";
+              readonly interpretation: "Keep Maps observations separate from regular Google results and Local Finder.";
+              readonly limitation: "This explanation does not mean Maps measurement is available. Unsupported measurement is not a missing business or zero rank.";
+            };
+          };
+        };
+        readonly measurement_depth: {
+          readonly title: "Result depth";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "The requested result horizon is distinct from the horizon proven complete by the observation.";
+              readonly interpretation: "Interpret a missing target using the observed scope, result kind, rank scale, and completeness evidence.";
+              readonly limitation: "Requested depth alone does not prove absence. Unknown completeness remains unknown; organic completeness does not prove local-block completeness.";
+            };
+          };
+        };
+        readonly observation_time: {
+          readonly title: "Observation time";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "When the search result was observed, not when the report or cache was read.";
+              readonly interpretation: "Requested time, recorded time, observation time, and report as-of time have different meanings.";
+              readonly limitation: "Reading a cached result does not create a new observation or make old data fresh. Missing historical timestamps stay unknown.";
+            };
+          };
+        };
+        readonly organic_rank: {
+          readonly title: "Organic position";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "The confirmed position of an organic link on its declared rank scale.";
+              readonly interpretation: "Compare positions only within compatible search scope and methodology.";
+              readonly limitation: "A business slot, Maps listing, or feature presence is not an organic position. Unknown or absent results have no synthetic position.";
+            };
+          };
+        };
+        readonly organic_top10_rate: {
+          readonly title: "Organic Top 10 rate";
+          readonly versions: {
+            readonly "qualified-v1": {
+              readonly definition: "The share of eligible determinate targets confirmed in the organic Top 10.";
+              readonly interpretation: "Read the rate alongside expected, measured, and ranked counts in the same scope.";
+              readonly limitation: "Unknown targets are not ranked or absent. The same percentage can describe different coverage; comparisons require a comparable cohort.";
+            };
+          };
+        };
+        readonly organic_visibility_top20: {
+          readonly title: "Organic visibility";
+          readonly versions: {
+            readonly v1: {
+              readonly definition: "A versioned index of organic results in the first 20 positions.";
+              readonly interpretation: "Read the index with observed coverage, fresh determinate counts, and comparable targets.";
+              readonly limitation: "This is not traffic or leads. Unknown results are not confirmed absence; changing coverage alone does not prove improvement.";
+            };
+          };
+        };
+        readonly provider_cost: {
+          readonly title: "Provider usage and cost";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "An estimate before execution is distinct from confirmed provider usage or cost after settlement.";
+              readonly interpretation: "Read amounts in their native unit. Provider cost, customer charge, and application credits are separate measures.";
+              readonly limitation: "Search quota is not USD. An unknown charge is not zero; a cached read is not a new paid request. Help does not fetch current prices or run checks.";
+            };
+          };
+        };
+        readonly rank_movement: {
+          readonly title: "Comparable change";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "A change between observations with compatible scope, methodology, identity, and evidence.";
+              readonly interpretation: "Read the paired comparable count and original observation dates. Percentage-point change differs from relative percent change.";
+              readonly limitation: "Missing baseline, changed scope, entry, exit, or re-entry is not an ordinary numeric movement. A change in membership alone does not prove improvement.";
+            };
+          };
+        };
+        readonly ranking_url: {
+          readonly title: "Observed and desired URL";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "The observed URL is the page actually found in that observation; the desired URL is the configured target.";
+              readonly interpretation: "Use each historical check's observed URL when reading its result.";
+              readonly limitation: "Today's URL or the desired URL cannot fill a missing historical observed URL. Missing evidence remains unavailable.";
+            };
+          };
+        };
+        readonly refresh_schedule: {
+          readonly title: "Schedule and refresh";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "The schedule requests new observations; refreshing the view reads stored report data.";
+              readonly interpretation: "Read the original observation time and explicit freshness policy independently of when the view was refreshed.";
+              readonly limitation: "Opening help or reading a widget does not launch a provider check, change the schedule, or turn a cached observation into a new one.";
+            };
+          };
+        };
+        readonly search_location: {
+          readonly title: "Search location";
+          readonly versions: {
+            readonly "help-v1": {
+              readonly definition: "Where the search is simulated; this is different from the business address or branch identity.";
+              readonly interpretation: "Read the configured and effective search scope when a provider substitutes a location.";
+              readonly limitation: "One city observation does not cover every point in that city. A country fallback is not evidence for the requested city.";
+            };
+          };
+        };
+        readonly visibility_top20: {
+          readonly title: "Organic visibility";
+          readonly versions: {
+            readonly "visibility-top20-v1": {
+              readonly definition: "A versioned index of organic results in the first 20 positions.";
+              readonly interpretation: "Read the index with observed coverage, fresh determinate counts, and comparable targets.";
+              readonly limitation: "This is not traffic or leads. Unknown results are not confirmed absence; changing coverage alone does not prove improvement.";
+            };
+          };
+        };
+      };
+      readonly explain: "Explain: {title}";
+      readonly glossary: "Full explanation: {title}";
+      readonly neutralDefinition: "This report identifies a measurement, but its detailed definition is unavailable.";
+      readonly unknownValue: "Unknown";
+      readonly unknownVersion: "Detailed definition unavailable for this version.";
+    };
+    readonly measurementSettings: {
+      readonly actionFailed: "The action could not be confirmed. Your draft is retained.";
+      readonly amountUnknown: "Unknown amount";
+      readonly basis: {
+        readonly resolved_request: "Effective options describe the planned resolved request, not verified Google geolocation.";
+        readonly retained_observation: "Effective scope refers to retained observation evidence, not proof of the next run.";
+        readonly unknown: "No effective-scope evidence is available.";
+      };
+      readonly blocks: {
+        readonly action_failed: "The action could not be confirmed.";
+        readonly ambiguous_capability: "Capability evidence is ambiguous; no option is chosen automatically.";
+        readonly budget_blocked: "The budget blocks this launch.";
+        readonly budget_exhausted: "The current budget is exhausted.";
+        readonly budget_missing: "A required budget is missing.";
+        readonly capability_changed: "Capability version changed; explicitly review the provider/surface and preview again.";
+        readonly cost_limit_exceeded: "The estimated operation exceeds its cost limit.";
+        readonly duplicate: "An active run already covers this selection.";
+        readonly forbidden: "You are not authorized to change these settings.";
+        readonly invalid_quote: "The quote lacks valid scope/cost/calendar evidence. Preview again.";
+        readonly invalid_settings: "The server rejected these settings without saving them.";
+        readonly measurement_policy_unconfigured: "Configure measurement policy before running new checks.";
+        readonly measurement_policy_unsupported: "Measurement policy no longer matches the current adapters. Review and configure it again.";
+        readonly needs_reauth: "The configured connection needs authorization.";
+        readonly no_provider: "No connected provider is available.";
+        readonly nothing_eligible: "No targets are eligible for this manual run.";
+        readonly preview_expired: "The quote expired. Preview again.";
+        readonly preview_failed: "Could not read the quote. Your draft is retained.";
+        readonly preview_mismatch: "Scope or price changed. Preview again.";
+        readonly preview_required: "Request and review a current quote first.";
+        readonly provider_disabled: "The configured connection is disabled.";
+        readonly rate_changed: "Rate version changed. Preview again.";
+        readonly rate_unavailable: "Current rate version is unavailable. No price is assumed.";
+        readonly sample_project: "Sample projects cannot launch paid measurements.";
+        readonly save_intent_first: "Save location, language or device defaults first, then review the schedule again.";
+        readonly scheduler_calendar_unavailable: "A forecast for the current scheduler mode is unavailable. Manual runs and an explicit schedule pause remain available.";
+        readonly settings_conflict: "Settings changed; review the current revision and quote again.";
+        readonly unsupported_capability: "The server rejected an unsupported capability.";
+        readonly unsupported_depth: "The selected depth is unsupported.";
+        readonly unsupported_device: "The selected device is unsupported.";
+        readonly unsupported_geo: "The selected location is unsupported.";
+        readonly unsupported_language: "The selected search language is unsupported.";
+        readonly unsupported_surface: "This implemented adapter does not support the selected surface.";
+        readonly usage_reconciliation_required: "Usage reconciliation is required before paid work.";
+      };
+      readonly budgetRecheck: "Budget and execution checks are repeated at launch. A quote is not a reservation or settled charge.";
+      readonly cadences: {
+        readonly custom_cron: "Custom cron";
+        readonly daily: "Daily";
+        readonly monthly: "Monthly";
+        readonly weekly: "Weekly";
+      };
+      readonly calendarWindow: "{count} due occurrences from {start} to {end} ({timezone}), supplied by the server calendar.";
+      readonly cancel: "Cancel";
+      readonly capabilityEvidence: {
+        readonly coverage: "Coverage is proven separately for each result kind by captured observation metadata.";
+        readonly freshness: "Freshness requires captured policy and provider time. Missing proof stays unknown.";
+        readonly organic_group: "This adapter supplies organic group rank.";
+        readonly organic_group_and_provider_axes_when_retained: "Organic group rank and provider position axes remain distinct when retained.";
+        readonly pagination: "Absence requires a captured complete prefix; requested depth alone is insufficient.";
+        readonly retained_provider_ids: "Stable provider IDs are available only when present in retained results.";
+        readonly title: "What this adapter can retain";
+        readonly unavailable: "This adapter does not supply stable place IDs.";
+      };
+      readonly certainty: {
+        readonly estimate: "Estimate";
+        readonly partial: "Known subtotal; {count} targets remain unknown";
+        readonly unknown: "Estimate unknown for {count} targets";
+      };
+      readonly configured: "Configured scope";
+      readonly configurePolicy: "Configure measurement policy";
+      readonly counts: "{keywords} keywords; {targets} targets; {eligible} eligible targets.";
+      readonly current: "Current";
+      readonly defaultDepthReview: "Current project depth: {current}. Saving these defaults will use {chosen}.";
+      readonly degradation: {
+        readonly device_unverified: "Effective device was not verified.";
+        readonly language_unverified: "Effective search language was not verified.";
+        readonly location_coarsened: "Effective location was coarser than configured; it is not comparable as the configured city/point.";
+        readonly location_unverified: "Provider location was not verified.";
+        readonly none: "No named scope degradation was reported. This does not establish future result completeness.";
+        readonly point_unverified: "Effective point was not proved; do not infer precise point coverage.";
+        readonly scope_unknown: "Effective scope is unknown.";
+      };
+      readonly devices: {
+        readonly desktop: "Desktop";
+        readonly mobile: "Mobile";
+      };
+      readonly displayHelp: "Editing, reading or hiding this view does not launch a measurement or change a schedule.";
+      readonly effective: "Effective scope";
+      readonly effectiveAt: "Scope evidence observed at {time}.";
+      readonly effectiveUnknown: "Effective scope is unknown; the configured scope is not proof of provider geolocation.";
+      readonly enabled: "Enabled";
+      readonly estimateHelp: "These are estimates in each provider's native unit, not confirmed usage. Partial amounts cover known targets only; unknown is never zero. No currencies or units are combined.";
+      readonly excluded: {
+        readonly in_progress: "Already in progress";
+        readonly keyword_archived: "Archived keyword";
+        readonly manual: "Manual-only schedule";
+        readonly market_inactive: "Inactive market";
+        readonly no_provider: "No runnable provider";
+        readonly other_project: "Outside this project";
+        readonly paused: "Paused schedule";
+      };
+      readonly excludedTitle: "Excluded targets";
+      readonly existingCalendar: "Existing schedule phase";
+      readonly fields: {
+        readonly cron: "Custom cron expression";
+        readonly dayOfMonth: "Day of month";
+        readonly depth: "Requested depth";
+        readonly device: "Device";
+        readonly enabled: "Enable future scheduled measurements";
+        readonly frequency: "Cadence";
+        readonly geo: "Search location";
+        readonly jitter: "Jitter minutes";
+        readonly language: "Search language";
+        readonly provider: "Provider";
+        readonly surface: "Google results";
+        readonly timeOfDay: "Local time (HH:mm)";
+        readonly timezone: "Schedule time zone";
+        readonly weekday: "Weekday";
+      };
+      readonly geoHelp: "A city or point selects one query scope, not coverage of the whole area. The branch address and search location are separate.";
+      readonly geoKinds: {
+        readonly city: "City";
+        readonly country: "Country";
+        readonly point: "Point";
+        readonly region: "Region";
+      };
+      readonly hostSchedule: "Schedule to review";
+      readonly hostUnavailable: {
+        readonly default_geo_unavailable: "The default geography is not available in an active market.";
+        readonly defaults_missing: "Project defaults have not been configured.";
+        readonly measurement_policy_unconfigured: "Configure measurement policy before reviewing a run.";
+        readonly measurement_policy_unsupported: "The saved policy needs review for the current provider adapter.";
+        readonly needs_reauth: "The provider connection requires authentication again.";
+        readonly provider_disabled: "Provider connections are disabled.";
+        readonly provider_disconnected: "No provider connection is ready.";
+        readonly provider_missing: "No provider connection is configured.";
+        readonly settings_revision_unavailable: "The current settings revision cannot be represented by these controls.";
+        readonly source_unavailable: "Current target or provider settings are unavailable.";
+        readonly unsupported_capability: "The selected adapter capability is unavailable.";
+      };
+      readonly impact: {
+        readonly cadence_only: "Only cadence changed. The target scope is retained; historical quality still comes from the captured definitions.";
+        readonly policy_changed: "Depth or provider policy changed. Comparability depends on the retained definitions; it is not inferred from this preview.";
+        readonly scope_changed: "Location, language, device or surface changes require independent definition proof before historical comparison. Old observations are retained.";
+        readonly unchanged: "The selected scope and cadence match the baseline. Historical quality still comes from captured definitions.";
+      };
+      readonly intentConsent: "I reviewed the future defaults and any unknown estimate.";
+      readonly intentForecastUnknown: "Future recurring usage for the inherited-depth change is unknown. Manual and selected-schedule quotes are separate.";
+      readonly intentHelp: "Location, language and device apply to new targets. Depth applies where inherited. Saving preserves existing target identity and launches no scan. Provider selection belongs to the manual run or selected schedule.";
+      readonly intentScopeHelp: "This change creates or retargets no existing targets. {count} existing targets inherit the project depth.";
+      readonly invalidSettings: "Review the marked settings. Use a supported time, time zone, calendar choice and jitter from 0 to 120 minutes.";
+      readonly keepDraftNewRevision: "Keep draft with reviewed revision";
+      readonly launch: "Request manual run";
+      readonly manualConsent: "I reviewed this exact scope and native estimate; request one manual run.";
+      readonly manualEstimate: "Estimated usage for one manual run";
+      readonly manualLaunch: "Launch a manual measurement";
+      readonly manualOnly: "Manual measurements only; no schedule is created here.";
+      readonly nextRun: "Next planned occurrence: {time} ({timezone}).";
+      readonly nextRunUnknown: "No next occurrence was established.";
+      readonly noScheduleForecast: "No schedule forecast is available.";
+      readonly overlaps: "{count} other active runs overlap this selection.";
+      readonly paused: "Paused";
+      readonly phases: {
+        readonly blocked: "The action is blocked.";
+        readonly conflict: "A settings conflict requires current-data review.";
+        readonly error: "Could not read the quote. Your draft is retained.";
+        readonly intent_unknown: "The save could not be confirmed. Recover the same operation before changing scope.";
+        readonly launch_unknown: "Launch result is unknown. Keep this intent; recover with the same key. Do not create another paid request.";
+        readonly launching: "Requesting run…";
+        readonly previewing: "Reading quote…";
+        readonly saved: "Future schedule saved; no manual scan was started.";
+        readonly saving_intent: "Saving future defaults…";
+        readonly saving_schedule: "Saving schedule intent…";
+        readonly schedule_unknown: "Save result is unknown. Keep this intent and recover it before creating another save.";
+        readonly started: "Run requested; this is not confirmed provider usage.";
+      };
+      readonly preview: "Review measurement quote";
+      readonly quoteExpires: "Quote valid until {expiry}.";
+      readonly quoteMetadata: "Capability {capability}; rate {rate}; quote expires {expiry}.";
+      readonly quoteReview: "Quote and scope review";
+      readonly readFailed: "Current settings could not be loaded. Your draft is retained.";
+      readonly readOnly: "You can review settings. Measurement and schedule changes are unavailable.";
+      readonly recoverIntent: "Recover the same defaults save";
+      readonly recoverLaunch: "Recover the same launch intent";
+      readonly recoverSchedule: "Recover the same schedule save";
+      readonly recovery: {
+        readonly defaults: "Review project defaults";
+        readonly market: "Review active markets";
+        readonly policy: "Configure measurement policy";
+        readonly provider: "Review provider connection";
+        readonly review: "Reload current settings";
+      };
+      readonly reviewConflictHelp: "Compare current settings and your draft. Keeping the draft adopts the reviewed revision and requires a new quote.";
+      readonly reviewCurrent: "Refresh current settings";
+      readonly revisionConflict: "Settings revision changed: draft {base}, current {current}.";
+      readonly runAccepted: "Run retained for {keywords} keywords and {targets} targets.";
+      readonly runReceipt: "Retained run receipt";
+      readonly runReceiptHelp: "Queued work is not a completed observation. Open the retained run for accepted, blocked or deferred item outcomes.";
+      readonly runStatuses: {
+        readonly blocked: "Blocked";
+        readonly cancelled: "Cancelled";
+        readonly cancelling: "Cancellation requested";
+        readonly completed: "Completed";
+        readonly planned: "Planned";
+        readonly queued: "Queued";
+        readonly running: "Running";
+      };
+      readonly saveIntent: "Save project defaults";
+      readonly saveIntentButton: "Save defaults";
+      readonly saveSchedule: "Save future schedule intent";
+      readonly saveScheduleButton: "Save future schedule";
+      readonly scheduleConsent: "I reviewed the calendar and estimates; apply this change to future occurrences.";
+      readonly scheduleDraft: "Future schedule";
+      readonly scheduleForecast: "Schedule forecast";
+      readonly scheduleHelp: "Editing this draft leaves the current schedule unchanged. Saving changes future occurrences and never starts an immediate scan.";
+      readonly scheduleScope: "Whole schedule: {keywords} keywords, {targets} targets across {locations} locations, {languages} languages and {devices} devices.";
+      readonly scopeReview: "Configured and effective scope";
+      readonly selectionChanged: "The selected scope changed. Close and reopen these controls.";
+      readonly sources: {
+        readonly explicit: "Explicit override";
+        readonly keyword: "Inherited from keyword";
+        readonly project: "Inherited from project";
+        readonly schedule: "Inherited from schedule";
+        readonly unknown: "Source unknown";
+      };
+      readonly surfaces: {
+        readonly local_finder: "Google Local Finder";
+        readonly maps: "Google Maps";
+        readonly web_serp: "Google web results";
+      };
+      readonly title: "Measurement settings";
+      readonly unavailable: "Unavailable option";
+      readonly units: {
+        readonly cents: "cents";
+        readonly searches: "searches";
+        readonly test: "test units";
+      };
+      readonly viewRun: "Open run outcomes";
+      readonly weekdays: {
+        readonly Friday: "Friday";
+        readonly Monday: "Monday";
+        readonly Saturday: "Saturday";
+        readonly Sunday: "Sunday";
+        readonly Thursday: "Thursday";
+        readonly Tuesday: "Tuesday";
+        readonly Wednesday: "Wednesday";
+      };
+      readonly yourDraft: "Your draft";
     };
     readonly nativeUsage: {
       readonly belowCent: "< $0.01";
@@ -8574,6 +10366,38 @@ export type CoreMessages = {
         readonly worker: "Import worker status is delayed. Refresh to check again.";
       };
     };
+    readonly personalViews: {
+      readonly cancel: "Cancel";
+      readonly columnOrder: "Column order";
+      readonly conflict: "This view changed. Review the latest version before saving.";
+      readonly delete: "Delete view";
+      readonly discard: "Discard changes";
+      readonly failed: "Could not save the view. Your changes remain available.";
+      readonly general: "General";
+      readonly invalid_url: "The link contains invalid filters. Correct the link or choose General.";
+      readonly latestRevision: "Latest revision";
+      readonly modified: "Unsaved changes";
+      readonly moveDown: "Move down";
+      readonly moveUp: "Move up";
+      readonly name: "Name";
+      readonly openLatest: "Open latest view in a new tab";
+      readonly personal: "Personal";
+      readonly privateSharing: "Choose Project to share this view with the project.";
+      readonly privateUnavailable: "Private views are not available yet.";
+      readonly project: "Project";
+      readonly reloadLatest: "Reload latest revision";
+      readonly reviewLatest: "Keep draft and use latest revision";
+      readonly saveAs: "Save as";
+      readonly saveChanges: "Save changes";
+      readonly saved: "Saved";
+      readonly saving: "Saving";
+      readonly setDefault: "Set as my default";
+      readonly unavailable_scope: "This scope is unavailable. Choose another view or remove the unavailable filter.";
+      readonly unavailable_view: "This view is unavailable. Choose General explicitly to change scope.";
+      readonly unavailableDefault: "Your saved default is unavailable. General is shown.";
+      readonly unavailableView: "This view is unavailable. Choose General explicitly to change scope.";
+      readonly visibility: "Visibility";
+    };
     readonly projectItemNotFound: {
       readonly backToProjects: "Back to your projects";
       readonly description: "This project is open, but the page the link points to is not part of it. The item may have been deleted, or the address may be out of date.";
@@ -8589,6 +10413,7 @@ export type CoreMessages = {
       readonly cancellingRun: "Cancelling...";
       readonly cancelRun: "Cancel run";
       readonly configuredProvider: "{provider} is set as the primary provider.";
+      readonly configureMeasurementPolicy: "Configure policy";
       readonly couldNotCancel: "Could not cancel that run. Try again.";
       readonly couldNotLoad: "Could not load the run estimate. Try again.";
       readonly couldNotRefresh: "Could not update the estimate. Try again.";
@@ -8602,6 +10427,9 @@ export type CoreMessages = {
       readonly marketDescription: "Includes every tracked keyword and device in this market, regardless of table filters or page. Your tracking schedule stays the same.";
       readonly marketInactive: "This market is no longer active. Resume it before starting a check.";
       readonly markets: "{count, plural, one {# market} other {# markets}}";
+      readonly measurementPolicy: "Measurement policy";
+      readonly measurementPolicyUnconfigured: "Configure measurement policy before running new checks.";
+      readonly measurementPolicyUnsupported: "Measurement policy no longer matches the current adapters. Review and configure it again.";
       readonly noProvider: "No provider";
       readonly noProviderBlocked: "No provider connected, so there is nowhere to send these targets. Your own key, billed to you directly.";
       readonly nothingToCheck: "No keywords are available to check in this scope.";
@@ -8632,6 +10460,23 @@ export type CoreMessages = {
       readonly startRun: "Start run";
       readonly startUnconfirmed: "The start response was lost. Retry to recover the same run without starting it twice.";
       readonly topDepth: "Top {depth, number}";
+    };
+    readonly reviewedDefaults: {
+      readonly cadence: "{frequency}; {timezone}; cron {cron}; jitter {jitter} minutes.";
+      readonly confirmSave: "Confirm reviewed save";
+      readonly consent: "I reviewed these exact future defaults and any unknown usage.";
+      readonly estimateUnchanged: "Inherited depth usage is unchanged. This save launches no measurement.";
+      readonly estimateUnknown: "Future recurring usage for this depth change is unknown. Review each paid run separately.";
+      readonly expiry: "This review expires at {time}.";
+      readonly impact: "No existing targets are retargeted or created. {count} existing targets inherit the project depth.";
+      readonly policyUnknown: "Measurement policy is unavailable. Saving future intent does not configure it or enable paid execution.";
+      readonly recover: "The save outcome is not confirmed. Recover the same command before editing.";
+      readonly retry: "Recover same save";
+      readonly review: "Review changes";
+      readonly scanFullDepth: "Continue through the full reviewed depth.";
+      readonly scope: "{place}, {language}, {device}; depth {depth}.";
+      readonly stopAtMatch: "Stop when the target is found.";
+      readonly title: "Review future defaults";
     };
     readonly runStatuses: {
       readonly rank: {
@@ -8885,6 +10730,9 @@ export type CoreMessages = {
     };
   };
   readonly shell: {
+    readonly announcements: {
+      readonly learnMore: "Learn more";
+    };
     readonly backup: {
       readonly cancel: "Cancel";
       readonly duration: "Usually under a minute";

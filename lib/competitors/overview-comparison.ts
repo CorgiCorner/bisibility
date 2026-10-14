@@ -22,8 +22,8 @@ export function summarizeOverviewCompetitors(
   competitors: readonly CompetitorPolicy[],
   snapshots: readonly CompetitorSnapshot[],
 ): OverviewCompetitorRow[] {
-  return competitors
-    .flatMap((competitor) => {
+  return sortOverviewCompetitorRows(
+    competitors.flatMap((competitor) => {
       const eligible = snapshots.filter((snapshot) =>
         competitorAppliesToMarket(competitor, snapshot.locationId),
       );
@@ -56,11 +56,16 @@ export function summarizeOverviewCompetitors(
       }
       row.averagePosition = row.found ? Math.round((sum / row.found) * 10) / 10 : null;
       return [row];
-    })
-    .sort(
-      (left, right) =>
-        right.above - left.above ||
-        right.found - left.found ||
-        left.domain.localeCompare(right.domain),
-    );
+    }),
+  );
+}
+
+/** Shared legacy row order, independent of how a caller establishes evidence. */
+export function sortOverviewCompetitorRows(rows: OverviewCompetitorRow[]) {
+  return rows.sort(
+    (left, right) =>
+      right.above - left.above ||
+      right.found - left.found ||
+      left.domain.localeCompare(right.domain),
+  );
 }

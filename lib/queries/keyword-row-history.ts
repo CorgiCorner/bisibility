@@ -6,6 +6,7 @@ export function comparablePositionPoints(
     checkedAt: Date;
     degradedToCountry?: boolean;
     position: number | null;
+    rankingUrl?: string | null;
   }[],
 ) {
   return checks.flatMap((check) =>
@@ -17,6 +18,7 @@ export function comparablePositionPoints(
             ...(check.degradedToCountry ? { degradedToCountry: true } : {}),
             label: positionDateLabel(check.checkedAt),
             position: check.position,
+            rankingUrl: check.rankingUrl ?? null,
           },
         ],
   );

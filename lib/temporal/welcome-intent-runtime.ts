@@ -1,3 +1,4 @@
+import { startRecoveryProcessor } from "../metering/recovery/processor";
 import { collectTemporalHeartbeat } from "../ops/heartbeat-temporal";
 import { refreshWorkerLiveness, WORKER_LIVENESS_REFRESH_MS } from "../ops/liveness";
 import { publishTemporalSnapshot } from "../ops/temporal-snapshot";
@@ -45,10 +46,15 @@ export async function runWelcomeIntentRuntime({
 
   const workerIntentProcessor = startWorkerIntentProcessor();
   const workerExtensions = startWorkerExtensions();
+  const recoveryProcessor = startRecoveryProcessor();
   try {
     await Promise.all([worker.run(), deliveryWorker.run()]);
   } finally {
     clearInterval(livenessTimer);
-    await Promise.all([workerIntentProcessor.close(), workerExtensions.close()]);
+    await Promise.all([
+      workerIntentProcessor.close(),
+      workerExtensions.close(),
+      recoveryProcessor.close(),
+    ]);
   }
 }

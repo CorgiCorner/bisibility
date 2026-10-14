@@ -108,6 +108,10 @@
         "projectContext": {
           "label": "Kontekst projektu",
           "keywords": "firma odbiorcy produkty cele agenci kontekst"
+        },
+        "businessLocations": {
+          "label": "Placówki firmy",
+          "keywords": "firma oddział placówka cid place id lokalny podmiot"
         }
       }
     },
@@ -122,7 +126,14 @@
       "notifications": "Powiadomienia",
       "team": "Zespół",
       "tracking": "Monitorowanie",
-      "context": "Kontekst projektu"
+      "context": "Kontekst projektu",
+      "businessLocations": "Placówki firmy"
+    },
+    "groups": {
+      "project": "Projekt",
+      "measurement": "Pomiary",
+      "team": "Zespół i rozliczenia",
+      "administration": "Administracja"
     }
   }
 }

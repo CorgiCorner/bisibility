@@ -26,6 +26,12 @@ export const loopClosureToolInputSchemas = {
   exportRankHistory: {
     properties: {
       api_key: apiKey,
+      version: { enum: ["1", "2"], type: "string" },
+      stream: { enum: ["observations", "attempts"], type: "string" },
+      basis: { enum: ["observed_at", "recorded_at"], type: "string" },
+      from: { type: "string" },
+      to: { type: "string" },
+      aggregation: { enum: ["none"], type: "string" },
       cursor: { type: "string" },
       granularity: { enum: ["daily", "weekly"], type: "string" },
       keyword_ids: { items: { type: "string" }, maxItems: 500, type: "array" },

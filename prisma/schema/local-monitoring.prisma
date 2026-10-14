@@ -1,0 +1,104 @@
+// Same-project ownership, immutable axes and first-send custody are enforced by the additive migration.
+model LocalMeasurementPoint {
+  id String @id @default(cuid())
+  projectId String
+  revisionKey String
+  contentHash String
+  point Json
+  actorId String?
+  createdAt DateTime @default(now())
+  @@unique([projectId,revisionKey])
+  @@unique([projectId,id])
+  @@map("local_measurement_points")
+}
+
+model LocalMeasurementTarget {
+  id String @id @default(cuid())
+  publicId String @unique
+  projectId String
+  keywordId String?
+  pointId String
+  targetKey String
+  target Json
+  keywordSnapshot Json
+  keywordSourceHash String
+  actorId String?
+  createdAt DateTime @default(now())
+  @@unique([projectId,targetKey])
+  @@unique([projectId,id])
+  @@map("local_measurement_targets")
+}
+
+model LocalMeasurementRun {
+  id String @id @default(cuid())
+  publicId String @unique
+  projectId String
+  operation String
+  keyHash String
+  bodyHash String
+  actorId String?
+  quote Json
+  quoteHash String
+  expectedTargetKeys String[]
+  source String
+  trigger String
+  cancellationRequested Boolean @default(false)
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([projectId,operation,keyHash])
+  @@unique([projectId,id])
+  @@map("local_measurement_runs")
+}
+
+model LocalMeasurementRunItem {
+  id String @id @default(cuid())
+  projectId String
+  runId String
+  targetId String
+  operationKey String @unique
+  bodyHash String
+  record Json
+  version Int @default(0)
+  connectionId String
+  provider String
+  credentialVersion String
+  correlationId String
+  namespace String
+  preparedAttemptId String?
+  preparedLeaseId String?
+  requestHash String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([runId,targetId])
+  @@unique([projectId,id])
+  @@unique([projectId,targetId,id])
+  @@map("local_measurement_run_items")
+}
+
+model LocalMeasurementTargetOwner {
+  projectId String
+  targetId String
+  itemId String
+  version Int @default(0)
+  workerToken String?
+  workerExpiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@id([projectId,targetId])
+  @@map("local_measurement_target_owners")
+}
+
+// Internal original response custody. SQL owns composite foreign keys and deletion/immutability guards.
+model LocalOriginalSubmitProof {
+  namespace String
+  attemptId String
+  projectId String
+  itemId String
+  bodyHash String
+  proof Json
+  receivedAt DateTime @db.Timestamptz(6)
+  @@id([namespace,attemptId])
+  @@unique([projectId,itemId])
+  @@map("local_original_submit_proofs")
+}

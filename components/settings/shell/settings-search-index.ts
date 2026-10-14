@@ -30,6 +30,10 @@ function searchEntry(
 }
 
 export const settingsSearchEntries = [
+  searchEntry("business-locations", "settings/business-locations", (t) => ({
+    label: t("search.entries.businessLocations.label"),
+    keywords: t("search.entries.businessLocations.keywords"),
+  })),
   searchEntry("context", "context", (t) => ({
     label: t("search.entries.projectContext.label"),
     keywords: t("search.entries.projectContext.keywords"),

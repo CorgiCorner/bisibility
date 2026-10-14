@@ -1,5 +1,7 @@
-import { rateForProvider } from "@/lib/cost-estimate/provider-rates";
-import { PROVIDER_CATALOG } from "@/lib/providers/registry";
+import { providerLabel } from "./provider-label";
+
+export { providerLabel } from "./provider-label";
+
 import type { CheckAttempt, CheckAttemptOutcome } from "./contract";
 
 type JsonRecord = Record<string, unknown>;
@@ -29,20 +31,6 @@ function numberFor(...values: unknown[]) {
       Number.isFinite(Number(candidate)),
   );
   return value === undefined ? null : Number(value);
-}
-
-export function providerLabel(provider: string) {
-  const catalogProvider = PROVIDER_CATALOG.find((entry) => entry.id === provider);
-  if (catalogProvider) return catalogProvider.label;
-  const known = rateForProvider(provider);
-  if (known) return known.label;
-  return (
-    provider
-      .split(/[-_]/)
-      .filter(Boolean)
-      .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
-      .join(" ") || "Unknown"
-  );
 }
 
 function inferredOutcome(record: JsonRecord, detail: string | null): CheckAttemptOutcome {

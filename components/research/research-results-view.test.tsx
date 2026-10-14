@@ -46,3 +46,27 @@ describe("researchExportContent", () => {
     ]);
   });
 });
+
+it("protects downloaded keyword and variant text, preserves numbers and original JSON", () => {
+  const value = row({
+    keyword: "\uFEFF=1+1",
+    searchVolume: -3,
+    variants: [{ ...row().variants[0], keyword: "\rvariant" }],
+  });
+  const before = structuredClone(value);
+  expect(researchExportContent([value], "csv")).toBe(
+    "keyword,volume,kd,cpc_usd,intent,source,tracked,variants\n'\uFEFF=1+1,-3,30,1.25,commercial,related,no,\"'\rvariant\"",
+  );
+  expect(JSON.parse(researchExportContent([value], "json"))[0]).toMatchObject({
+    keyword: value.keyword,
+    variants: ["\rvariant"],
+    searchVolume: -3,
+  });
+  expect(value).toEqual(before);
+});
+
+it("retains fixed CPC precision for a numeric negative value without a text prefix", () => {
+  expect(researchExportContent([row({ cpcCents: -300 })], "csv")).toContain(
+    "seo tool,500,30,-3.00,commercial",
+  );
+});

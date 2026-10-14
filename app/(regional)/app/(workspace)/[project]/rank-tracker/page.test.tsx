@@ -2,10 +2,12 @@ import { permanentRedirect, redirect } from "@/tests/next-navigation";
 import {
   captured,
   getPageMocks,
+  getPageReportOptions,
   renderPage,
   renderPageAt,
   setupPageTest,
 } from "@/tests/rank-tracker-page";
+import { PAGE_PROJECT_ID } from "@/tests/rank-tracker-page-fixtures";
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -22,10 +24,10 @@ describe("KeywordsPage tabs", () => {
     expect(screen.queryByTestId("saved-workspace")).not.toBeInTheDocument();
     expect(captured.initialAction).toBeNull();
     expect(captured.initialDensity).toBe("standard");
-    expect(mocks.getRankTrackerKeywordList).toHaveBeenCalledWith({
-      projectRef: "prj_1",
-      query: expect.objectContaining({ grouped: false, page: 1 }),
-    });
+    expect(mocks.getRankTrackerKeywordList).toHaveBeenCalledWith(
+      { projectRef: "prj_1", query: expect.objectContaining({ grouped: false, page: 1 }) },
+      getPageReportOptions(),
+    );
     expect(mocks.getRankTrackerGroupedList).not.toHaveBeenCalled();
     expect(captured.gridProps.query).toMatchObject({ grouped: false });
     expect(mocks.getCheckHealth).toHaveBeenCalledWith("prj_1");
@@ -40,7 +42,10 @@ describe("KeywordsPage tabs", () => {
     await expect(renderPage({ market: "location_internal_1", tab: "saved" })).rejects.toThrow(
       "NEXT_REDIRECT:/app/prj_1/m/pmkt_one/rank-tracker?tab=saved",
     );
-    expect(mocks.resolveLegacyMarketRef).toHaveBeenCalledWith("project_1", "location_internal_1");
+    expect(mocks.resolveLegacyMarketRef).toHaveBeenCalledWith(
+      PAGE_PROJECT_ID,
+      "location_internal_1",
+    );
   });
 
   it("drops a legacy market value this project cannot resolve", async () => {
@@ -56,39 +61,46 @@ describe("KeywordsPage tabs", () => {
     expect(mocks.resolveLegacyMarketRef).not.toHaveBeenCalled();
   });
 
-  it("canonicalizes stale saved-view identity and preserves explicit and orthogonal state", async () => {
-    await expect(
-      renderPage({
-        action: "filter",
-        add: "1",
-        q: "",
-        tab: "tracked",
-        tags: "",
-        view: "viw_stale",
-      }),
-    ).rejects.toThrow("NEXT_REDIRECT:");
-    const href = String(redirect.mock.calls[0]?.[0]);
-    expect(href).not.toContain("view=");
-    expect(href).toContain("q=");
-    expect(href).toContain("tags=");
-    expect(href).toContain("tab=tracked");
-    expect(href).toContain("add=1");
-    expect(href).toContain("action=filter");
+  it("keeps an unavailable explicit saved view controlled without broadening its query", async () => {
+    const params = {
+      action: "filter",
+      add: "1",
+      q: "",
+      tab: "tracked",
+      tags: "",
+      view: "viw_stale",
+    };
+    await renderPage(params);
+    expect(screen.getByRole("status")).toHaveTextContent("unavailable_view");
+    expect(screen.getByRole("link", { name: "General" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/rank-tracker?view=",
+    );
+    expect(captured.notice).toMatchObject({ status: "unavailable_view" });
+    expect(redirect).not.toHaveBeenCalled();
+    expect(mocks.getRankTrackerKeywordList).not.toHaveBeenCalled();
+    expect(mocks.getRankTrackerGroupedList).not.toHaveBeenCalled();
+    expect(mocks.createSessionRankTrackerReportOptions).not.toHaveBeenCalled();
+    expect(params).toEqual({
+      action: "filter",
+      add: "1",
+      q: "",
+      tab: "tracked",
+      tags: "",
+      view: "viw_stale",
+    });
   });
 
-  it("canonicalizes a stale location once and accepts the canonical reload", async () => {
-    await expect(
-      renderPage({ action: "filter", location: "stale", q: "kept", tab: "tracked" }),
-    ).rejects.toThrow("NEXT_REDIRECT:");
-    const href = String(redirect.mock.calls[0]?.[0]);
-    expect(href).toContain("location=");
-    expect(href).not.toContain("location=stale");
-    expect(href).toContain("q=kept");
-    expect(href).toContain("tab=tracked");
-    expect(href).toContain("action=filter");
-
-    redirect.mockClear();
-    await renderPage(Object.fromEntries(new URL(href, "https://example.com").searchParams));
+  it("keeps an unavailable location until the user explicitly clears it", async () => {
+    await renderPage({ action: "filter", location: "stale", q: "kept", tab: "tracked" });
+    expect(screen.getByRole("status")).toHaveTextContent("unavailable_scope");
+    expect(captured.notice).toMatchObject({ status: "unavailable_scope" });
+    expect(redirect).not.toHaveBeenCalled();
+    expect(mocks.getRankTrackerKeywordList).not.toHaveBeenCalled();
+    expect(mocks.getRankTrackerGroupedList).not.toHaveBeenCalled();
+    await renderPage({ action: "filter", location: "", q: "kept", tab: "tracked" });
+    expect(captured.gridProps.query).toMatchObject({ search: "kept", lens: { locationId: null } });
+    expect(captured.initialAction).toBe("filter");
     expect(redirect).not.toHaveBeenCalled();
   });
 

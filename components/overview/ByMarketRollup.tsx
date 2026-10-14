@@ -43,7 +43,13 @@ function tableRows(
       const alphabetical = pairLabel(left).localeCompare(pairLabel(right));
       return sort === "alphabetical"
         ? alphabetical
-        : left.deltaPoints - right.deltaPoints || alphabetical;
+        : left.deltaPoints === null
+          ? right.deltaPoints === null
+            ? alphabetical
+            : 1
+          : right.deltaPoints === null
+            ? -1
+            : left.deltaPoints - right.deltaPoints || alphabetical;
     });
 }
 

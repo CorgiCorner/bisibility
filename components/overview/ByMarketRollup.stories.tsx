@@ -4,6 +4,7 @@ import type { OverviewMarketRow } from "@/lib/queries/overview-markets";
 import { getRouter } from "@storybook/nextjs-vite/navigation.mock";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
+import { unmeasuredOverviewReport } from "./quality-test-fixture";
 
 const rows: OverviewMarketRow[] = [
   {
@@ -15,6 +16,7 @@ const rows: OverviewMarketRow[] = [
     rangeDays: 28,
     researchAvailable: false,
     targetCount: 24,
+    qualityReport: unmeasuredOverviewReport(24),
     top10Count: 11,
     top10Share: 46,
     trend: [58, 54, 52, 49, 51, 48, 47, 46],
@@ -28,6 +30,7 @@ const rows: OverviewMarketRow[] = [
     rangeDays: 28,
     researchAvailable: true,
     targetCount: 18,
+    qualityReport: unmeasuredOverviewReport(18),
     top10Count: 10,
     top10Share: 56,
     trend: [60, 58, 61, 59, 57, 56, 55, 56],
@@ -41,6 +44,7 @@ const rows: OverviewMarketRow[] = [
     rangeDays: 28,
     researchAvailable: true,
     targetCount: 32,
+    qualityReport: unmeasuredOverviewReport(32),
     top10Count: 21,
     top10Share: 66,
     trend: [52, 54, 57, 58, 61, 63, 65, 66],

@@ -3,6 +3,12 @@
 import { CountryLevelBadge } from "@/components/checks/runs/CheckRunDetails";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import type {
+  ObservationHistoryPage,
+  RetainedHistorySnapshot,
+} from "@/components/keyword-detail-history/history-contract";
+import { validHistorySnapshot } from "@/components/keyword-detail-history/history-page-state";
+import { RetainedSnapshotCard } from "@/components/keyword-detail-history/RetainedSnapshotCard";
 import { Card } from "@/components/ui/Card";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
 import type { TrackedCompetitor } from "@/lib/competitors/serp-comparison";
@@ -30,12 +36,13 @@ type CardProps = {
   entries: readonly StoredResultsIndexEntry[];
   initialResults: RetrievedResults | null;
   loadResults: LoadResults;
-  rankingUrl: string | null;
+  /** Legacy caller metadata cannot replace the selected check URL. */
+  rankingUrl?: string | null;
   retentionDays: number | null;
   timeZone: string;
 };
 
-export function RetrievedResultsCard({
+function LegacyRetrievedResultsCard({
   projectRef,
   extendSnapshotAction,
   keyword,
@@ -44,7 +51,6 @@ export function RetrievedResultsCard({
   entries,
   initialResults,
   loadResults,
-  rankingUrl,
   retentionDays,
   timeZone,
 }: Readonly<CardProps>) {
@@ -180,7 +186,7 @@ export function RetrievedResultsCard({
           <RetrievedResultsOneCheck
             competitors={competitors}
             formatDate={format.date}
-            rankingUrl={rankingUrl}
+            rankingUrl={current.rankingUrl ?? null}
             results={current}
             retentionDays={retentionDays}
           />
@@ -203,4 +209,32 @@ export function RetrievedResultsCard({
       </section>
     </Card>
   );
+}
+
+type RecordedCardProps = {
+  history: { page: ObservationHistoryPage; snapshot: RetainedHistorySnapshot | null };
+  timeZone: string;
+};
+
+export function RetrievedResultsCard(props: Readonly<CardProps | RecordedCardProps>) {
+  if ("history" in props) return <RecordedResultsCard {...props} />;
+  return <LegacyRetrievedResultsCard {...props} />;
+}
+
+function RecordedResultsCard({ history, timeZone }: Readonly<RecordedCardProps>) {
+  const t = useTranslations("projectRankTracker.keywordDetail.recordedHistory");
+  const snapshot = history.snapshot;
+  if (!snapshot)
+    return (
+      <Card className="overflow-visible p-5" size="lg">
+        <p className="m-0 text-xs text-fg-muted">{t("selectObservation")}</p>
+      </Card>
+    );
+  if (!validHistorySnapshot(history.page, snapshot.observation.id, snapshot))
+    return (
+      <Card size="lg">
+        <p role="alert">{t("failure.snapshot_conflict")}</p>
+      </Card>
+    );
+  return <RetainedSnapshotCard snapshot={snapshot} timeZone={timeZone} />;
 }

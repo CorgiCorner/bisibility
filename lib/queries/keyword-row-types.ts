@@ -29,6 +29,7 @@ export type PositionPoint = {
   degradedToCountry?: boolean;
   label: string;
   position: number;
+  rankingUrl?: string | null;
 };
 export type CompletedComparableCheck = {
   observationCompleteness?: ObservationCompleteness | null;

@@ -21,8 +21,9 @@ const mocks = vi.hoisted(() => {
     update: "member",
   } as const;
   const prisma = {
-    project: { findFirst: vi.fn() },
-    savedView: { create: vi.fn(), delete: vi.fn(), findFirst: vi.fn() },
+    $queryRaw: vi.fn(),
+    project: { findFirst: vi.fn(), findUniqueOrThrow: vi.fn() },
+    savedView: { count: vi.fn(), create: vi.fn(), deleteMany: vi.fn(), findFirst: vi.fn() },
     user: { findUnique: vi.fn() },
   };
 
@@ -43,7 +44,7 @@ const mocks = vi.hoisted(() => {
       }
       return { actorId: actor.id, projectId: resource.projectId, role };
     }),
-    prisma,
+    prisma: { ...prisma, $transaction: vi.fn(async (body) => body(prisma)) },
     requireSession: vi.fn(),
     revalidatePath: vi.fn(),
     writeAudit: vi.fn(),
@@ -53,6 +54,10 @@ const mocks = vi.hoisted(() => {
 vi.mock("@/lib/auth/authorize", () => ({
   AuthorizationError: mocks.AuthorizationError,
   authorize: mocks.authorize,
+  getProjectRole: (
+    actor: { memberships?: Array<{ projectId: string; role: string }> },
+    id: string,
+  ) => actor.memberships?.find((membership) => membership.projectId === id)?.role ?? null,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
@@ -81,6 +86,9 @@ function mockActor(role: "admin" | "member" | "viewer" = "member") {
     memberships: [{ projectId: "project_1", role }],
     role,
   });
+  mocks.prisma.$queryRaw.mockImplementation(async (parts) =>
+    parts.join("").includes("SELECT role") ? [{ role }] : [{ id: "project_1" }],
+  );
 }
 
 function mockProject() {
@@ -88,6 +96,11 @@ function mockProject() {
     id: "project_1",
     ownerId: "user_1",
     publicId: "prj_abcdefghijklmnopqrstuvwx",
+  });
+  mocks.prisma.project.findUniqueOrThrow.mockResolvedValue({
+    id: "project_1",
+    publicId: "prj_abcdefghijklmnopqrstuvwx",
+    writeMode: "active",
   });
 }
 
@@ -98,6 +111,8 @@ describe("saved view actions", () => {
     mockProject();
     mocks.writeAudit.mockResolvedValue({});
     mocks.prisma.savedView.findFirst.mockResolvedValue(null);
+    mocks.prisma.savedView.count.mockResolvedValue(0);
+    mocks.prisma.savedView.deleteMany.mockResolvedValue({ count: 1 });
   });
 
   it("rejects invalid input before reading the session", async () => {
@@ -118,6 +133,9 @@ describe("saved view actions", () => {
         name: data.name,
         publicId: VIEW_PUBLIC_ID,
         surface: data.surface,
+        ownerId: null,
+        revision: 1,
+        visibility: "project",
       }),
     );
 
@@ -139,6 +157,7 @@ describe("saved view actions", () => {
     );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "saved_view.create", targetId: VIEW_PUBLIC_ID }),
+      expect.objectContaining({ savedView: mocks.prisma.savedView }),
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(appPath("[project]", "rank-tracker"), "page");
     expect(view).toMatchObject({
@@ -206,6 +225,8 @@ describe("saved view actions", () => {
       name: "Product top 10",
       publicId: VIEW_PUBLIC_ID,
       surface: "keywords",
+      visibility: "project",
+      revision: 1,
     });
 
     await expect(
@@ -216,12 +237,29 @@ describe("saved view actions", () => {
     ).resolves.toEqual({ deleted: true });
 
     expect(mocks.prisma.savedView.findFirst).toHaveBeenCalledWith({
-      select: { createdById: true, id: true, name: true, publicId: true, surface: true },
-      where: { projectId: "project_1", publicId: VIEW_PUBLIC_ID },
+      select: expect.objectContaining({
+        createdById: true,
+        id: true,
+        name: true,
+        publicId: true,
+        surface: true,
+        revision: true,
+        visibility: true,
+      }),
+      where: { projectId: "project_1", publicId: VIEW_PUBLIC_ID, visibility: "project" },
     });
-    expect(mocks.prisma.savedView.delete).toHaveBeenCalledWith({ where: { id: "view_1" } });
+    expect(mocks.prisma.savedView.deleteMany).toHaveBeenCalledWith({
+      where: {
+        id: "view_1",
+        projectId: "project_1",
+        publicId: VIEW_PUBLIC_ID,
+        revision: 1,
+        visibility: "project",
+      },
+    });
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "saved_view.delete", targetId: VIEW_PUBLIC_ID }),
+      expect.objectContaining({ savedView: mocks.prisma.savedView }),
     );
   });
 
@@ -232,6 +270,8 @@ describe("saved view actions", () => {
       name: "Shared view",
       publicId: VIEW_PUBLIC_ID_2,
       surface: "keywords",
+      visibility: "project",
+      revision: 1,
     });
 
     await expect(
@@ -241,7 +281,7 @@ describe("saved view actions", () => {
       }),
     ).rejects.toBeInstanceOf(mocks.AuthorizationError);
 
-    expect(mocks.prisma.savedView.delete).not.toHaveBeenCalled();
+    expect(mocks.prisma.savedView.deleteMany).not.toHaveBeenCalled();
     expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 
@@ -253,6 +293,8 @@ describe("saved view actions", () => {
       name: "Shared view",
       publicId: VIEW_PUBLIC_ID_2,
       surface: "keywords",
+      visibility: "project",
+      revision: 1,
     });
 
     await expect(
@@ -262,6 +304,14 @@ describe("saved view actions", () => {
       }),
     ).resolves.toEqual({ deleted: true });
 
-    expect(mocks.prisma.savedView.delete).toHaveBeenCalledWith({ where: { id: "view_2" } });
+    expect(mocks.prisma.savedView.deleteMany).toHaveBeenCalledWith({
+      where: {
+        id: "view_2",
+        projectId: "project_1",
+        publicId: VIEW_PUBLIC_ID_2,
+        revision: 1,
+        visibility: "project",
+      },
+    });
   });
 });

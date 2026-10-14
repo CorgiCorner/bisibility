@@ -9,6 +9,8 @@ export type OverviewFilters = {
 
 const rangeDays = { "7d": 7, "28d": 28, "90d": 90 } as const;
 
+export const overviewComparisonDays = (range: OverviewRange) => rangeDays[range];
+
 function dayStart(now: Date, days: number) {
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   start.setUTCDate(start.getUTCDate() - days + 1);
@@ -61,6 +63,7 @@ export function overviewCheckStart(now: Date, range: OverviewRange) {
 export function overviewKeywordWhere(projectId: string, filters: OverviewFilters) {
   return {
     projectId,
+    archivedAt: null,
     ...(filters.device === "all" ? {} : { device: filters.device }),
     ...(filters.marketIds.length ? { locationId: { in: filters.marketIds } } : {}),
     locationRef: {

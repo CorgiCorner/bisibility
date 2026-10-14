@@ -15,7 +15,7 @@ const input = {
 };
 
 describe("serpApiObservationRun", () => {
-  it("deduplicates local results by place ID and extracts durable local data", () => {
+  it("retains duplicate local IDs and extracts durable legacy local data", () => {
     const first = {
       data_cid: "18446744073709551615",
       links: {
@@ -41,22 +41,23 @@ describe("serpApiObservationRun", () => {
       pages: [{ local_results: { places: [first, duplicate, second] }, places_results: [third] }],
     });
 
-    expect(run.items).toHaveLength(3);
+    expect(run.items).toHaveLength(4);
     expect(run.items[0]).toMatchObject({
       blockPosition: null,
       cid: "18446744073709551615",
       domain: "www.example.com",
       mapsUrl: "https://maps.example.com/first",
-      positionInBlock: 1,
+      positionInBlock: 3,
       rating: { count: 88, value: 4.7 },
     });
     expect(run.items.map((item) => item.businessName)).toEqual([
       "First local business",
+      "Duplicate",
       "Second local business",
       "Third local business",
     ]);
-    expect(run.items.map((item) => item.positionInBlock)).toEqual([1, 2, 1]);
-    expect(run.items[2]?.mapsUrl).toBeNull();
+    expect(run.items.map((item) => item.positionInBlock)).toEqual([3, null, null, null]);
+    expect(run.items[3]?.mapsUrl).toBeNull();
     expect(run.items[0]?.rawFragment).toBe(first);
   });
 
@@ -67,7 +68,7 @@ describe("serpApiObservationRun", () => {
     expect(run.items).toEqual([
       expect.objectContaining({
         placeId: "place-array",
-        positionInBlock: 1,
+        positionInBlock: 2,
         title: "Array business",
       }),
     ]);

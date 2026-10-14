@@ -1185,7 +1185,7 @@ describe("DataForSEO observation capture", () => {
     expect(result.observation).toMatchObject({
       completeness: "complete",
       configuredScope: { device: "desktop", language: "en", location: "United States" },
-      effectiveScope: null,
+      effectiveScope: { device: "desktop", language: "en", location: "United States" },
       engine: "google",
       items: [expect.objectContaining({ resultKind: "local_pack", title: "Local business" })],
       provider: "dataforseo",
@@ -1220,7 +1220,8 @@ describe("DataForSEO observation capture", () => {
     const result = await dataForSeoProvider.fetchRank(rankInput({ stopOnMatch: true }));
 
     expect(result.observation?.completeness).toBe("truncated_by_stop_on_match");
-    expect(result.observation?.requestPolicy.findTargetsIn).toBe("with_subdomains");
+    if (result.observation?.surface !== "web_serp") throw new Error("Expected web observation");
+    expect(result.observation.requestPolicy.findTargetsIn).toBe("with_subdomains");
   });
 });
 
@@ -1447,7 +1448,8 @@ describe("DataForSEO observation completeness and policy", () => {
     const result = await dataForSeoProvider.fetchRank(rankInput({ stopOnMatch: true }));
 
     expect(result.observation?.completeness).toBe("truncated_by_stop_on_match");
-    expect(result.observation?.requestPolicy.findTargetsIn).toBe("with_subdomains");
+    if (result.observation?.surface !== "web_serp") throw new Error("Expected web observation");
+    expect(result.observation.requestPolicy.findTargetsIn).toBe("with_subdomains");
   });
 
   it("keeps an armed but unfired stop-on-match policy unknown", async () => {
@@ -1470,7 +1472,8 @@ describe("DataForSEO observation completeness and policy", () => {
     const result = await dataForSeoProvider.fetchRank(rankInput({ stopOnMatch: true }));
 
     expect(result.observation?.completeness).toBe("unknown");
-    expect(result.observation?.requestPolicy.findTargetsIn).toBe("with_subdomains");
+    if (result.observation?.surface !== "web_serp") throw new Error("Expected web observation");
+    expect(result.observation.requestPolicy.findTargetsIn).toBe("with_subdomains");
   });
 
   it("records a complete observation without a stop-on-match policy", async () => {
@@ -1493,6 +1496,7 @@ describe("DataForSEO observation completeness and policy", () => {
     const result = await dataForSeoProvider.fetchRank(rankInput({ stopOnMatch: false }));
 
     expect(result.observation?.completeness).toBe("complete");
-    expect(result.observation?.requestPolicy.findTargetsIn).toBeNull();
+    if (result.observation?.surface !== "web_serp") throw new Error("Expected web observation");
+    expect(result.observation.requestPolicy.findTargetsIn).toBeNull();
   });
 });

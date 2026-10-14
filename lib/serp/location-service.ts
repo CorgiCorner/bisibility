@@ -7,7 +7,9 @@ import {
 } from "./common-location-catalog";
 import {
   countryCodeForMarketName,
+  type LocationDescription,
   type LocationSelection,
+  type LocationStore,
   normalizeCanonicalLocationKey,
 } from "./location";
 import { type LocationResolution, resolveLocation } from "./location-resolver";
@@ -50,13 +52,14 @@ export type SuggestKeywordLocationsInput = {
 
 const sharedLocationLookup = createSharedLocationLookup();
 
-function resolveWithCatalog(
+function resolveWithCatalog<T extends LocationDescription>(
   selector: Parameters<typeof resolveLocation>[0],
+  store: LocationStore<T>,
   trustedCandidate?: Awaited<ReturnType<typeof findSharedLocationCandidateByCanonicalKey>>,
 ) {
   return resolveLocation(selector, {
     lookup: sharedLocationLookup,
-    store: prismaLocationStore,
+    store,
     ...(trustedCandidate ? { trustedCandidate } : {}),
   });
 }
@@ -67,18 +70,21 @@ function isSelectionInput(
   return "selection" in input;
 }
 
-async function resolveSelection(input: SelectionKeywordLocationInput): Promise<LocationResolution> {
+async function resolveSelection<T extends LocationDescription>(
+  input: SelectionKeywordLocationInput,
+  store: LocationStore<T>,
+): Promise<LocationResolution<T>> {
   if (input.selection.kind === "country") {
     if ("canonicalKey" in input.selection) {
       const normalized = normalizeCanonicalLocationKey(input.selection.canonicalKey, "country");
-      return resolveLocation(normalized.selector, { store: prismaLocationStore });
+      return resolveLocation(normalized.selector, { store });
     }
     return resolveLocation(
       {
         countryCode: input.selection.countryCode,
         languageCode: input.selection.languageCode,
       },
-      { store: prismaLocationStore },
+      { store },
     );
   }
 
@@ -91,15 +97,15 @@ async function resolveSelection(input: SelectionKeywordLocationInput): Promise<L
       normalized.canonicalKey,
       input.selection.kind,
     );
-    const cached = await prismaLocationStore.findByKey(normalized.canonicalKey);
+    const cached = await store.findByKey(normalized.canonicalKey);
     if (cached && !trustedCandidate) {
       return { degraded: false, location: cached, warning: null };
     }
     const selector = { ...normalized.selector, selectedCanonicalKey: normalized.canonicalKey };
     if (!selector.cityName && !selector.regionName && !selector.regionCode) {
-      return resolveLocation(selector, { store: prismaLocationStore });
+      return resolveLocation(selector, { store });
     }
-    const resolution = await resolveWithCatalog(selector, trustedCandidate);
+    const resolution = await resolveWithCatalog(selector, store, trustedCandidate);
     const canRetryAsRegion =
       input.selection.kind === "city" &&
       Boolean(normalized.selector.cityName) &&
@@ -118,29 +124,40 @@ async function resolveSelection(input: SelectionKeywordLocationInput): Promise<L
         regionName: normalized.selector.cityName,
         selectedCanonicalKey: normalized.canonicalKey,
       },
-      { lookup: sharedLocationLookup, store: prismaLocationStore },
+      { lookup: sharedLocationLookup, store },
     );
   }
 
-  return resolveWithCatalog({
-    countryCode: input.selection.countryCode,
-    kind: input.selection.kind,
-    languageCode: input.selection.languageCode,
-    regionCode: input.selection.kind === "region" ? input.selection.regionCode : undefined,
-    regionName: input.selection.regionName,
-    cityName: input.selection.kind === "city" ? input.selection.cityName : null,
-  });
+  return resolveWithCatalog(
+    {
+      countryCode: input.selection.countryCode,
+      kind: input.selection.kind,
+      languageCode: input.selection.languageCode,
+      regionCode: input.selection.kind === "region" ? input.selection.regionCode : undefined,
+      regionName: input.selection.regionName,
+      cityName: input.selection.kind === "city" ? input.selection.cityName : null,
+    },
+    store,
+  );
 }
 
 /**
  * @throws Error when the country is not a supported SERP market (create/edit-time,
  *   correctable). The runner/adapter path never calls this - it reads the joined row.
  */
-export async function resolveKeywordLocation(
+export function resolveKeywordLocation(
   input: ResolveKeywordLocationInput,
 ): Promise<LocationResolution> {
+  return resolveKeywordLocationUsingStore(input, prismaLocationStore);
+}
+
+/** Same offline resolver; callers choose whether a resolved description is persisted. */
+export async function resolveKeywordLocationUsingStore<T extends LocationDescription>(
+  input: ResolveKeywordLocationInput,
+  store: LocationStore<T>,
+): Promise<LocationResolution<T>> {
   if (isSelectionInput(input)) {
-    return resolveSelection(input);
+    return resolveSelection(input, store);
   }
 
   const countryCode = countryCodeForMarketName(input.country);
@@ -152,10 +169,10 @@ export async function resolveKeywordLocation(
   const languageCode = input.language?.trim() || undefined;
   // Country-only: deterministic, no provider lookup, no creds required.
   if (!cityName) {
-    return resolveLocation({ countryCode, languageCode }, { store: prismaLocationStore });
+    return resolveLocation({ countryCode, languageCode }, { store });
   }
 
-  return resolveWithCatalog({ cityName, countryCode, languageCode });
+  return resolveWithCatalog({ cityName, countryCode, languageCode }, store);
 }
 
 export async function suggestKeywordLocations({

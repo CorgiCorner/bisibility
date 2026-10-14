@@ -1,5 +1,5 @@
 import type { OperationCapability } from "./operation-capabilities";
-import type { ApiMethod, ProjectAccess } from "./operation-policy";
+import type { ApiMethod, ProjectAccess } from "./operation-policy-types";
 import type { ApiScope } from "./scope-policy";
 
 export type OperationPolicy = {

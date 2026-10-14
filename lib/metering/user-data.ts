@@ -5,11 +5,11 @@ import { prisma } from "@/lib/db/prisma";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { requireReadableProject } from "@/lib/queries/_auth";
 import type { AccessContext } from "@usagekit/core";
-import type { BudgetRow } from "@usagekit/views";
 import { cache } from "react";
 import { mapAdminQueries } from "./admin-batch";
 import { readOwnConnectionBudgets } from "./own-budget-read";
 import { readOwnerUsage } from "./owner-reads";
+import type { ProjectBudgetRow } from "./project-budget-display";
 import { readProjectBudgetStatuses } from "./project-budget-statuses";
 import { meteringNamespace, meteringRuntime } from "./runtime";
 import { projectBudgetFiguresKnown, projectBudgetRow } from "./user-model";
@@ -100,7 +100,7 @@ const projectBudgetState = perRequestCache(async (projectRef: string) => {
     if (provenance && provenance.outcome !== "ok") throw new Error("Meter provenance unavailable");
     const completeProvenance = provenance?.outcome === "ok" && !provenance.value.nextCursor;
     const operations = provenance?.outcome === "ok" ? provenance.value.operations : [];
-    const budgets: BudgetRow[] = [];
+    const budgets: ProjectBudgetRow[] = [];
     const seen = new Set<string>();
     for (const result of statuses)
       for (const status of result.statuses) {
@@ -138,6 +138,13 @@ const projectBudgetState = perRequestCache(async (projectRef: string) => {
                 .filter(Boolean)
                 .join(" · ")
             : project.name,
+          {
+            projectName: project.name,
+            providerLabel: result.connection
+              ? (PROVIDER_CATALOG.find((p) => p.id === result.connection?.provider)?.label ??
+                result.connection.provider)
+              : undefined,
+          },
         );
         if (row) budgets.push(row);
       }
@@ -166,6 +173,12 @@ const projectBudgetState = perRequestCache(async (projectRef: string) => {
           ]
             .filter(Boolean)
             .join(" · "),
+          {
+            projectName: project.name,
+            providerLabel:
+              PROVIDER_CATALOG.find((p) => p.id === result.binding.provider)?.label ??
+              result.binding.provider,
+          },
         );
         if (row) budgets.push(row);
       }

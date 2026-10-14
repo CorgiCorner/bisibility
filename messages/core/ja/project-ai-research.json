@@ -48,7 +48,7 @@
     "partialFailure": "分析を完了できませんでした。確認済み結果は保持されています。再試行前にプロバイダーの使用量を確認してください。",
     "contentTruncated": "保存レポートの上限に収まるよう回答の抜粋を短縮しています。",
     "readOnly": "このプロジェクトは読み取り専用か、有料分析を実行する権限がありません。保存済みレポートは開けます。",
-    "noSource": "連携設定で対応するデータプロバイダーを接続してください。",
+    "noSource": "費用の見積もりや分析を実行するには、連携設定でDataForSEOを接続してください。",
     "country": "国",
     "language": "言語",
     "firstModel": "最初のモデル",
@@ -77,7 +77,7 @@
     "restoreLegacyPreset": "既存の512トークンプリセットを使う",
     "legacyPromptLanguage": "元のプロンプトに従う",
     "legacyPromptLanguageHint": "既存のプリセットはプロンプトを変更せず、言語の指示を追加しません。",
-    "catalogUnavailableLegacy": "最新カタログを利用できません。既存のmini/nanoプリセットと米国の英語を対象とするChatGPTデータは引き続き利用できます。拡張設定には検証済みの最新カタログが必要です。",
+    "catalogUnavailableLegacy": "モデル一覧を取得できません。mini/nanoのプリセットは引き続き利用できます。",
     "pricingUnavailableLegacy": "拡張設定の最新の費用上限を確認できません。既存の512トークンmini/nanoプリセットは、確認日を明示した許可判定用料金で引き続き利用できます。",
     "modelPolicyPending": "このモデルはBYOKと費用ポリシーの決定待ちです。公開価格があっても実行は有効になりません。",
     "webSearchPolicyPending": "ウェブ検索には BYOK 実費モードへの明示的な同意が必要です。",
@@ -107,6 +107,9 @@
     "modelNeedsOwnAccount": "連携設定で自分のプロバイダーアカウントを接続し、実際のプロバイダー費用を選択してください。",
     "modelNeedsActualPayment": "自分のプロバイダーアカウントでこのモデルを使うには、実際のプロバイダー費用を選択してください。",
     "modelPricingUnavailable": "このモデルの現在の料金を確認できません。後でもう一度お試しください。",
-    "modelUnavailable": "このモデルはまだプロンプト分析に対応していません。"
+    "modelUnavailable": "このモデルはまだプロンプト分析に対応していません。",
+    "catalogUnavailableVisibility": "市場一覧を取得できません。米国・英語のChatGPTは引き続き利用できます。",
+    "catalogHelp": "利用できるAI設定について",
+    "openIntegrations": "連携設定を開く"
   }
 }

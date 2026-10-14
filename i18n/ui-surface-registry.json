@@ -25,38 +25,6 @@
       "text": "onboarding.layout.copyright"
     },
     {
-      "anchor": "function:OnboardingPage",
-      "fingerprint": "00d5ae99968b945b480f5ccd66c5442c01d11f1984bd9c78f7f12aa59c76515e",
-      "kind": "jsx-expression",
-      "path": "app/(regional)/onboarding/page.tsx",
-      "reason": "Current consumer function:OnboardingPage in app/(regional)/onboarding/page.tsx resolves the symbolic selector \"onboarding.page.title\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "onboarding.page.title"
-    },
-    {
-      "anchor": "function:OnboardingPage",
-      "fingerprint": "0e86a23d896e21a7c2157122a0c1da2f72a3dd1cb9ea578e7885200001303014",
-      "kind": "jsx-expression",
-      "path": "app/(regional)/onboarding/page.tsx",
-      "reason": "Current consumer function:OnboardingPage in app/(regional)/onboarding/page.tsx resolves the symbolic selector \"onboarding.page.description\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "onboarding.page.description"
-    },
-    {
-      "anchor": "function:generateMetadata",
-      "fingerprint": "1afa684491d5ebd7dd269943623d6e1b58857e711bb07bd64fe3dc99f0d36803",
-      "kind": "ui-property",
-      "path": "app/(regional)/setup/page.tsx",
-      "reason": "Current consumer function:generateMetadata in app/(regional)/setup/page.tsx resolves the symbolic selector \"setup.metadata.description\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "setup.metadata.description"
-    },
-    {
-      "anchor": "function:generateMetadata",
-      "fingerprint": "7351c373d778900b8034bbb2e9ec316f47849b6cace6cbe7a3ff01d9ae7067c3",
-      "kind": "ui-property",
-      "path": "app/(regional)/setup/page.tsx",
-      "reason": "Current consumer function:generateMetadata in app/(regional)/setup/page.tsx resolves the symbolic selector \"setup.metadata.title\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "setup.metadata.title"
-    },
-    {
       "anchor": "variable:providerMeta",
       "fingerprint": "125a3d2d0e17cfb87d08213d7b94096fabdbc598890fc5dd5cc74eede408aba6",
       "kind": "ui-property",
@@ -161,54 +129,6 @@
       "text": "webhook"
     },
     {
-      "anchor": "function:ActorEventCell",
-      "fingerprint": "0771ebd018ae78ecddf4a4904024d60cd331fa8df30131a5e4ead4bcb63f076f",
-      "kind": "accessible-attribute",
-      "path": "components/audit/audit-columns.tsx",
-      "reason": "Current consumer function:ActorEventCell in components/audit/audit-columns.tsx resolves the symbolic selector \"openEntry\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "openEntry"
-    },
-    {
-      "anchor": "function:auditColumns",
-      "fingerprint": "120e6cfe4096deb8eb49a7d1ee122078bce5bc2dbad1e7c23e8fbb255e80d3dd",
-      "kind": "ui-property",
-      "path": "components/audit/audit-columns.tsx",
-      "reason": "Current consumer function:auditColumns in components/audit/audit-columns.tsx resolves the symbolic selector \"resource\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "resource"
-    },
-    {
-      "anchor": "function:auditColumns",
-      "fingerprint": "1cc72e16a872becd0bda8f2b7f8135eabbd30151139f13382469db9fd31fc7ee",
-      "kind": "ui-property",
-      "path": "components/audit/audit-columns.tsx",
-      "reason": "Current consumer function:auditColumns in components/audit/audit-columns.tsx resolves the symbolic selector \"status\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "status"
-    },
-    {
-      "anchor": "function:auditColumns",
-      "fingerprint": "7e3da61110ec421ca2793e7d43634520536838ef7326c73fdd84b16e0af5eb7a",
-      "kind": "ui-property",
-      "path": "components/audit/audit-columns.tsx",
-      "reason": "Current consumer function:auditColumns in components/audit/audit-columns.tsx resolves the symbolic selector \"timestamp\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "timestamp"
-    },
-    {
-      "anchor": "function:auditColumns",
-      "fingerprint": "947c33c59ef76721bc93b3955c235799d46b1e56b9a89e3daf0f238139404e47",
-      "kind": "ui-property",
-      "path": "components/audit/audit-columns.tsx",
-      "reason": "Current consumer function:auditColumns in components/audit/audit-columns.tsx resolves the symbolic selector \"actorEvent\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "actorEvent"
-    },
-    {
-      "anchor": "function:auditColumns",
-      "fingerprint": "ca2730d7143a8ae3a775a1f348ffa506ea629a16e7042b8287dc466f61105dbb",
-      "kind": "ui-property",
-      "path": "components/audit/audit-columns.tsx",
-      "reason": "Current consumer function:auditColumns in components/audit/audit-columns.tsx resolves the symbolic selector \"operation\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "operation"
-    },
-    {
       "anchor": "function:UserAgentRow",
       "fingerprint": "9616e6992277b8134c4d09055b2180536e83a03d2ce0f364db9464216971ca92",
       "kind": "jsx-text",
@@ -265,38 +185,6 @@
       "text": "&middot;"
     },
     {
-      "anchor": "function:FlagsCell",
-      "fingerprint": "5d9e8ef018201a13d8d9e8f0f5299065062794e8a1f27986483fa962ae38c23e",
-      "kind": "jsx-expression",
-      "path": "components/backlinks/backlinks-table-columns.tsx",
-      "reason": "Current consumer function:FlagsCell in components/backlinks/backlinks-table-columns.tsx resolves the symbolic selector \"new\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "new"
-    },
-    {
-      "anchor": "function:SourceCell",
-      "fingerprint": "709b4783acbfe2c1c97b51719abd5af663c015adfd8cf895e0a47f64fdd0a9ab",
-      "kind": "jsx-expression",
-      "path": "components/backlinks/backlinks-table-columns.tsx",
-      "reason": "Current consumer function:SourceCell in components/backlinks/backlinks-table-columns.tsx resolves the symbolic selector \"sameFooterLink\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "sameFooterLink"
-    },
-    {
-      "anchor": "function:AnchorTargetCell",
-      "fingerprint": "a372f9ed35c3a9b250d58781b03739f2fb5ff8226501227c44e2519497142713",
-      "kind": "jsx-expression",
-      "path": "components/backlinks/backlinks-table-columns.tsx",
-      "reason": "Current consumer function:AnchorTargetCell in components/backlinks/backlinks-table-columns.tsx resolves the symbolic selector \"imageLink\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "imageLink"
-    },
-    {
-      "anchor": "function:SourceCell",
-      "fingerprint": "b86c24bc8597e6651ddda28aff54382cbc4848eb7562fa52d55c4728f04ced74",
-      "kind": "jsx-expression",
-      "path": "components/backlinks/backlinks-table-columns.tsx",
-      "reason": "Current consumer function:SourceCell in components/backlinks/backlinks-table-columns.tsx resolves the symbolic selector \"showAll\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "showAll"
-    },
-    {
       "anchor": "function:BacklinksAggregateTable",
       "fingerprint": "5b269e659e3933e9bd100d692ec02fa6decc7678ffd6b7336a00ecf4bb5071f6",
       "kind": "jsx-text",
@@ -305,148 +193,100 @@
       "text": "DA"
     },
     {
+      "anchor": "function:submit",
+      "fingerprint": "080a1f6215930e284c218cb3b680c2336ab718554274360b129aba0617666341",
+      "kind": "validation-message",
+      "path": "components/business-locations/BusinessIdentityEditor.tsx",
+      "reason": "Internal form error selector; BusinessIdentityEditor renders the separately translated validation.noChange message for the root error. Exact retained value: \"validation.noChange\".",
+      "text": "validation.noChange"
+    },
+    {
+      "anchor": "function:BusinessRevisionReview",
+      "fingerprint": "14e7ff75fdfb10d36767e8479259e696c6c75391f5edc156208e8c84ec896848",
+      "kind": "ui-property",
+      "path": "components/business-locations/BusinessRevisionReview.tsx",
+      "reason": "Immutable comparison label selector; BusinessRevisionReview renders it only through its proven BusinessTranslator t(label) and uses the original selector as a stable key. Exact retained value: \"current\".",
+      "text": "current"
+    },
+    {
+      "anchor": "function:BusinessRevisionReview",
+      "fingerprint": "d7ff62a2ec318d3ad50ff7ebc6fe2c9bc92815dfaee46d90d3553ecf468b692c",
+      "kind": "ui-property",
+      "path": "components/business-locations/BusinessRevisionReview.tsx",
+      "reason": "Immutable comparison label selector; BusinessRevisionReview renders it only through its proven BusinessTranslator t(label) and uses the original selector as a stable key. Exact retained value: \"yourDraft\".",
+      "text": "yourDraft"
+    },
+    {
+      "anchor": "variable:identityFormSchema",
+      "fingerprint": "03788d8f22cb8dfb84b748f5aa8a12550b4ba58e078572d51f7952cdcdf0a2c5",
+      "kind": "validation-message",
+      "path": "components/business-locations/identity-form.ts",
+      "reason": "Schema validation selector, not reader prose; IdentityFields renders every field error through the proven BusinessTranslator validation.<field> or validation.coordinates catalog key. Exact retained value: \"validation.domain\".",
+      "text": "validation.domain"
+    },
+    {
+      "anchor": "variable:identityFormSchema",
+      "fingerprint": "0fe4174c45d31d64c444b2954e666bb1a9c7bc4efa45ac3b7dca05e769e6099b",
+      "kind": "validation-message",
+      "path": "components/business-locations/identity-form.ts",
+      "reason": "Schema validation selector, not reader prose; IdentityFields renders every field error through the proven BusinessTranslator validation.<field> or validation.coordinates catalog key. Exact retained value: \"validation.coordinates\".",
+      "text": "validation.coordinates"
+    },
+    {
+      "anchor": "variable:identityFormSchema",
+      "fingerprint": "198cdb3d3db55b8a12e8ff32c67b373a6d820acbf09cb2bd2cbc6222e8693364",
+      "kind": "validation-message",
+      "path": "components/business-locations/identity-form.ts",
+      "reason": "Schema validation selector, not reader prose; IdentityFields renders every field error through the proven BusinessTranslator validation.<field> or validation.coordinates catalog key. Exact retained value: \"validation.cid\".",
+      "text": "validation.cid"
+    },
+    {
+      "anchor": "variable:identityFormSchema",
+      "fingerprint": "90a21dbddd3a47eb8888a8c3ba860aff721e17140a5e844e108f0da5ed62e8b9",
+      "kind": "validation-message",
+      "path": "components/business-locations/identity-form.ts",
+      "reason": "Schema validation selector, not reader prose; IdentityFields renders every field error through the proven BusinessTranslator validation.<field> or validation.coordinates catalog key. Exact retained value: \"validation.mapsUrl\".",
+      "text": "validation.mapsUrl"
+    },
+    {
+      "anchor": "variable:identityFormSchema",
+      "fingerprint": "c0602b012fdc5d9c8b0400e14afa6e6066422d42acbad23f07ebeece5ec7bfb1",
+      "kind": "validation-message",
+      "path": "components/business-locations/identity-form.ts",
+      "reason": "Schema validation selector, not reader prose; IdentityFields renders every field error through the proven BusinessTranslator validation.<field> or validation.coordinates catalog key. Exact retained value: \"validation.placeId\".",
+      "text": "validation.placeId"
+    },
+    {
+      "anchor": "variable:identityFormSchema",
+      "fingerprint": "fd91a8301394eb44400008615f10656e5005c76394937d275b24712089fcb6d4",
+      "kind": "validation-message",
+      "path": "components/business-locations/identity-form.ts",
+      "reason": "Schema validation selector, not reader prose; IdentityFields renders every field error through the proven BusinessTranslator validation.<field> or validation.coordinates catalog key. Exact retained value: \"validation.name\".",
+      "text": "validation.name"
+    },
+    {
+      "anchor": "variable:confirmedPromptSchema",
+      "fingerprint": "f3be77678c91efaf41437bcb39286da22144c96709052ad929354dbc453bde89",
+      "kind": "validation-message",
+      "path": "components/business-locations/prompt-form.ts",
+      "reason": "Confirmation validation selector; BusinessCandidateReview and BusinessRematchPrompt render the failed condition through the proven BusinessTranslator validation.confirmed catalog key. Exact retained value: \"validation.confirmed\".",
+      "text": "validation.confirmed"
+    },
+    {
+      "anchor": "variable:candidatePromptSchema",
+      "fingerprint": "f853507d431a2b767d6926b9eb6e90ee03eb2d66eea0f2cbdcb71e0319d09bd0",
+      "kind": "validation-message",
+      "path": "components/business-locations/prompt-form.ts",
+      "reason": "Confirmation validation selector; BusinessCandidateReview and BusinessRematchPrompt render the failed condition through the proven BusinessTranslator validation.confirmed catalog key. Exact retained value: \"validation.confirmed\".",
+      "text": "validation.confirmed"
+    },
+    {
       "anchor": "function:calendarDay",
       "fingerprint": "a048ae4ceb329737a73cfb87c86294be1fb3a8765371470c5f6bd9295b9852c5",
       "kind": "english-pinned-formatter",
       "path": "components/checks/runs/check-runs-format.ts",
       "reason": "calendarDay pins en-CA only to serialize a stable calendar key; localized display is performed by the caller presentation formatter. Current consumer: function:calendarDay; retained value: \"new Intl.DateTimeFormat(\\\"en-CA\\\", { timeZone })\".",
       "text": "new Intl.DateTimeFormat(\"en-CA\", { timeZone })"
-    },
-    {
-      "anchor": "variable:definitions",
-      "fingerprint": "2415d7ff6b316081efe5a9892230f9c8b5441c407264c8d186c676d09d5a0aa4",
-      "kind": "accessible-attribute",
-      "path": "components/checks/runs/check-runs-table-columns.tsx",
-      "reason": "Current consumer variable:definitions in components/checks/runs/check-runs-table-columns.tsx resolves the symbolic selector \"researchMetricsUnavailableAria\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "researchMetricsUnavailableAria"
-    },
-    {
-      "anchor": "function:CostCell",
-      "fingerprint": "28d471674b9632b4249a0b3be0a3a7e4b9a3b7bc98facff9f359d9a05e4eaf4f",
-      "kind": "accessible-attribute",
-      "path": "components/checks/runs/check-runs-table-columns.tsx",
-      "reason": "Current consumer function:CostCell in components/checks/runs/check-runs-table-columns.tsx resolves the symbolic selector \"notBilledTooltip\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "notBilledTooltip"
-    },
-    {
-      "anchor": "function:checkRunsTableColumns",
-      "fingerprint": "2e47ab793be4ea6769728b6b58cfd490df6ba835956f1207a6f9cfb1d376c3f9",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/check-runs-table-columns.tsx",
-      "reason": "Current consumer function:checkRunsTableColumns in components/checks/runs/check-runs-table-columns.tsx resolves the symbolic selector \"top\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "top"
-    },
-    {
-      "anchor": "variable:definitions",
-      "fingerprint": "4a0518a50bf3dc758cdfe006372b1ab2913a0a8108ef3a1b75fef84da2fe9682",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/check-runs-table-columns.tsx",
-      "reason": "Current consumer variable:definitions in components/checks/runs/check-runs-table-columns.tsx resolves the symbolic selector \"mobile\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "mobile"
-    },
-    {
-      "anchor": "function:ProviderCell",
-      "fingerprint": "70dd1c0ac7db4e462d64e6f2abb874cbed3b5de8725e1b015cfb19c1983d0a2f",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/check-runs-table-columns.tsx",
-      "reason": "Current consumer function:ProviderCell in components/checks/runs/check-runs-table-columns.tsx resolves the symbolic selector \"fallbackBadge\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "fallbackBadge"
-    },
-    {
-      "anchor": "variable:definitions",
-      "fingerprint": "7ce2b09248887419dc8b691d33c2db1552eec94d57acd2acc8fcd23503eacb5a",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/check-runs-table-columns.tsx",
-      "reason": "Current consumer variable:definitions in components/checks/runs/check-runs-table-columns.tsx resolves the symbolic selector \"desktop\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "desktop"
-    },
-    {
-      "anchor": "function:checkRunsTableColumns",
-      "fingerprint": "a541ed8b8cbada9e70b93133567768ecf4b7a3d07e987c00d7e8e8f322a5ba98",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/check-runs-table-columns.tsx",
-      "reason": "Current consumer function:checkRunsTableColumns in components/checks/runs/check-runs-table-columns.tsx resolves the symbolic selector \"notAvailable\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "notAvailable"
-    },
-    {
-      "anchor": "variable:definitions",
-      "fingerprint": "bd2fe3503f0368929c74bcd414b5e854c49861e6d2ca9d889750f6006e20be5a",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/check-runs-table-columns.tsx",
-      "reason": "Current consumer variable:definitions in components/checks/runs/check-runs-table-columns.tsx resolves the symbolic selector \"researchMetricsUnavailable\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "researchMetricsUnavailable"
-    },
-    {
-      "anchor": "function:PositionDelta",
-      "fingerprint": "d69b2acfffa63f5567dbd6984c8bd1c51662fd521aca5cf1a092eadcd855a9bf",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/check-runs-table-columns.tsx",
-      "reason": "Current consumer function:PositionDelta in components/checks/runs/check-runs-table-columns.tsx resolves the symbolic selector \"number\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "number"
-    },
-    {
-      "anchor": "variable:definitions",
-      "fingerprint": "f84ea6d63db2f72a35f3144c50effecf584e75d9b357baccc3c755e8e5dd4291",
-      "kind": "accessible-attribute",
-      "path": "components/checks/runs/check-runs-table-columns.tsx",
-      "reason": "Current consumer variable:definitions in components/checks/runs/check-runs-table-columns.tsx resolves the symbolic selector \"researchMetricsUnavailableTooltip\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "researchMetricsUnavailableTooltip"
-    },
-    {
-      "anchor": "function:hiddenMetaRows",
-      "fingerprint": "3f2664342457fc1d94f51bab0da7f1706ed92b528da5589e92915574ed092b3e",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunDetails.tsx",
-      "reason": "Current consumer function:hiddenMetaRows in components/checks/runs/CheckRunDetails.tsx resolves the symbolic selector \"detailDepth\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "detailDepth"
-    },
-    {
-      "anchor": "variable:lines",
-      "fingerprint": "5196bb6545a38d51d715adb9bfda943357e99eea0c5facb440a691723b7028b2",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunDetails.tsx",
-      "reason": "Current consumer variable:lines in components/checks/runs/CheckRunDetails.tsx resolves the symbolic selector \"runDetails\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "runDetails"
-    },
-    {
-      "anchor": "function:hiddenMetaRows",
-      "fingerprint": "819e916af8b9122e133b50d1fbb0b0eaba70c901ec2564e3ec65dddc39274791",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunDetails.tsx",
-      "reason": "Current consumer function:hiddenMetaRows in components/checks/runs/CheckRunDetails.tsx resolves the symbolic selector \"detailWhen\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "detailWhen"
-    },
-    {
-      "anchor": "variable:lines",
-      "fingerprint": "940c31a1c6199ff335802407c48d7360878ea286348aebbc9e3a1e23dfbce409",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunDetails.tsx",
-      "reason": "Current consumer variable:lines in components/checks/runs/CheckRunDetails.tsx resolves the symbolic selector \"allProvidersFailed\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "allProvidersFailed"
-    },
-    {
-      "anchor": "variable:lines",
-      "fingerprint": "b9672a0c37d9bdf5d375d133c014cf769f6474595cdab621a8e803b47c9b294f",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunDetails.tsx",
-      "reason": "Current consumer variable:lines in components/checks/runs/CheckRunDetails.tsx resolves the symbolic selector \"providerChain\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "providerChain"
-    },
-    {
-      "anchor": "function:hiddenMetaRows",
-      "fingerprint": "bf2fddff2788c5022eb7578a80d4933310e3ab87205e64daa9305aadcd438d9b",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunDetails.tsx",
-      "reason": "Current consumer function:hiddenMetaRows in components/checks/runs/CheckRunDetails.tsx resolves the symbolic selector \"detailCost\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "detailCost"
-    },
-    {
-      "anchor": "function:attemptRows",
-      "fingerprint": "c253ae46d5e62acbc5e837765bef670874ad20940a59f2daef1e707934ea6144",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunDetails.tsx",
-      "reason": "Current consumer function:attemptRows in components/checks/runs/CheckRunDetails.tsx resolves the symbolic selector \"notAvailable\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "notAvailable"
     },
     {
       "anchor": "variable:filters",
@@ -559,46 +399,6 @@
       "path": "components/checks/runs/CheckRunsTable.tsx",
       "reason": "Current consumer function:checkRunsTableRows in components/checks/runs/CheckRunsTable.tsx resolves the symbolic selector \"runLabel\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
       "text": "runLabel"
-    },
-    {
-      "anchor": "variable:lines",
-      "fingerprint": "113180554447679f82f9ce57ac05d44ce4902397320848eee0c48a67807a196f",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunStoredResults.tsx",
-      "reason": "Current consumer variable:lines in components/checks/runs/CheckRunStoredResults.tsx resolves the symbolic selector \"retrieved\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "retrieved"
-    },
-    {
-      "anchor": "function:checkRunStoredResultLines",
-      "fingerprint": "48e24f5f8c0958323c76dc660b86e8884eeab557c15757c0c8f2627fd7b036f5",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunStoredResults.tsx",
-      "reason": "Current consumer function:checkRunStoredResultLines in components/checks/runs/CheckRunStoredResults.tsx resolves the symbolic selector \"openFullResults\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "openFullResults"
-    },
-    {
-      "anchor": "variable:lines",
-      "fingerprint": "6de532785670450d4b0c1a8bc513500bf0d46d4faded18d4a6c155d616d6bb15",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunStoredResults.tsx",
-      "reason": "Current consumer variable:lines in components/checks/runs/CheckRunStoredResults.tsx resolves the symbolic selector \"retrievedOfDepth\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "retrievedOfDepth"
-    },
-    {
-      "anchor": "variable:lines",
-      "fingerprint": "80bba0ea3b2ec6dbbe1c09ec586823446a97f452421c1374bbc7a22cd6283276",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunStoredResults.tsx",
-      "reason": "Current consumer variable:lines in components/checks/runs/CheckRunStoredResults.tsx resolves the symbolic selector \"retrievedResults\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "retrievedResults"
-    },
-    {
-      "anchor": "function:checkRunStoredResultLines",
-      "fingerprint": "90c9d1d0a9b414448c9ad6053c78a92b6e3c841898ea7c903cf7260d6d2256aa",
-      "kind": "jsx-expression",
-      "path": "components/checks/runs/CheckRunStoredResults.tsx",
-      "reason": "Current consumer function:checkRunStoredResultLines in components/checks/runs/CheckRunStoredResults.tsx resolves the symbolic selector \"positionsNotRetrieved\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "positionsNotRetrieved"
     },
     {
       "anchor": "variable:reasonMeta",
@@ -719,30 +519,6 @@
       "path": "components/cost-estimate/CostEstimateLine.tsx",
       "reason": "CostEstimateLine is imported only by CostEstimateLine.stories.tsx and CostEstimateLine.test.tsx. No production component imports it, so this compatibility export is unmounted in the application.",
       "text": "/mo"
-    },
-    {
-      "anchor": "function:SortableColumnHeader",
-      "fingerprint": "177b6e5ceeb0af7555c49c7e573ff7a0b62090e3a8008073e6ebed2075409975",
-      "kind": "accessible-attribute",
-      "path": "components/domain-overview/domain-overview-table-sort.tsx",
-      "reason": "Current consumer function:SortableColumnHeader in components/domain-overview/domain-overview-table-sort.tsx resolves the symbolic selector \"sortAscending\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "sortAscending"
-    },
-    {
-      "anchor": "function:SortableColumnHeader",
-      "fingerprint": "f2af23dbf8a86b3017c135d7d050b2193dc05d4ed3c20a41c2d709f8da8a17d0",
-      "kind": "accessible-attribute",
-      "path": "components/domain-overview/domain-overview-table-sort.tsx",
-      "reason": "Current consumer function:SortableColumnHeader in components/domain-overview/domain-overview-table-sort.tsx resolves the symbolic selector \"sortDescending\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "sortDescending"
-    },
-    {
-      "anchor": "function:SortableColumnHeader",
-      "fingerprint": "fe77ec481a0565cd29aa38feabcc6bd8a5a71af2c6b6fb45aad6755beda6d13e",
-      "kind": "accessible-attribute",
-      "path": "components/domain-overview/domain-overview-table-sort.tsx",
-      "reason": "Current consumer function:SortableColumnHeader in components/domain-overview/domain-overview-table-sort.tsx resolves the symbolic selector \"sort\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "sort"
     },
     {
       "anchor": "function:DomainOverviewContextBar",
@@ -967,70 +743,6 @@
       "path": "components/keywords/add/AddKeywordApiPanel.tsx",
       "reason": "AddKeywordApiPanel values are CSS variables, an OpenAPI URL, and curl protocol syntax. Current consumer: function:AddKeywordApiPanel; retained value: \"curl\".",
       "text": "curl"
-    },
-    {
-      "anchor": "function:ExportModal",
-      "fingerprint": "0a4876632fb7ebf2d8dccc0958f3da5721bc6eeac9a121a149afefdda7b03897",
-      "kind": "jsx-expression",
-      "path": "components/keywords/export/ExportModal.tsx",
-      "reason": "Current consumer function:ExportModal in components/keywords/export/ExportModal.tsx resolves the symbolic selector \"fileFormatNote\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "fileFormatNote"
-    },
-    {
-      "anchor": "function:ExportModal",
-      "fingerprint": "274537ddd538018bfbd313a4f4362f77679e6de098b81b36244e82f3b7f28786",
-      "kind": "jsx-expression",
-      "path": "components/keywords/export/ExportModal.tsx",
-      "reason": "Current consumer function:ExportModal in components/keywords/export/ExportModal.tsx resolves the symbolic selector \"always\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "always"
-    },
-    {
-      "anchor": "function:ExportModal",
-      "fingerprint": "6f100a9f255bfb72ed50904657d89d6e4c60295c1556f343687e04bbb3535af2",
-      "kind": "jsx-expression",
-      "path": "components/keywords/export/ExportModal.tsx",
-      "reason": "Current consumer function:ExportModal in components/keywords/export/ExportModal.tsx resolves the symbolic selector \"title\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "title"
-    },
-    {
-      "anchor": "function:ExportModal",
-      "fingerprint": "7b5ae4bcaca841ea77a3749f51be0057315a94e7b847e168fe36264de3b499a0",
-      "kind": "jsx-expression",
-      "path": "components/keywords/export/ExportModal.tsx",
-      "reason": "Current consumer function:ExportModal in components/keywords/export/ExportModal.tsx resolves the symbolic selector \"columns\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "columns"
-    },
-    {
-      "anchor": "function:ExportModal",
-      "fingerprint": "a494f12c713a6b2ffcf9ebfc71f5e1bfd88674a3fedd5d5ad3dfad9151d6c5fc",
-      "kind": "jsx-expression",
-      "path": "components/keywords/export/ExportModal.tsx",
-      "reason": "Current consumer function:ExportModal in components/keywords/export/ExportModal.tsx resolves the symbolic selector \"cancel\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "cancel"
-    },
-    {
-      "anchor": "function:ExportModal",
-      "fingerprint": "aeab0dae560c0817768b65481ba9cd9c6e23b18762f552ebb432313db86a0263",
-      "kind": "jsx-expression",
-      "path": "components/keywords/export/ExportModal.tsx",
-      "reason": "Current consumer function:ExportModal in components/keywords/export/ExportModal.tsx resolves the symbolic selector \"format\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "format"
-    },
-    {
-      "anchor": "function:ExportModal",
-      "fingerprint": "dbdc6250ebbbf301ef8d9586bc02318a70b20c009b3ed8c60651eb1947673b3c",
-      "kind": "jsx-expression",
-      "path": "components/keywords/export/ExportModal.tsx",
-      "reason": "Current consumer function:ExportModal in components/keywords/export/ExportModal.tsx resolves the symbolic selector \"data\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "data"
-    },
-    {
-      "anchor": "function:ExportModal",
-      "fingerprint": "ded2908eaea66d28deca8dd8746e644946fd7d12e6aeeef90562b1493585e355",
-      "kind": "jsx-expression",
-      "path": "components/keywords/export/ExportModal.tsx",
-      "reason": "Current consumer function:ExportModal in components/keywords/export/ExportModal.tsx resolves the symbolic selector \"keywordAndPosition\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "keywordAndPosition"
     },
     {
       "anchor": "function:flatKeywordNoRowsState",
@@ -1425,14 +1137,6 @@
       "text": "Run check (Top 20)"
     },
     {
-      "anchor": "function:StatGrid",
-      "fingerprint": "3bc68fee3ea98bedab3d3c3715a1fc43dc68ddc3da95d936b83acc78cc54246b",
-      "kind": "jsx-expression",
-      "path": "components/keywords/KeywordTrafficCard.tsx",
-      "reason": "Current consumer function:StatGrid in components/keywords/KeywordTrafficCard.tsx resolves the symbolic selector \"noData\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "noData"
-    },
-    {
       "anchor": "function:TargetReferenceLine",
       "fingerprint": "85fa5f884092b06fd22e830f022fd2f31b96241b80922fe7e2abd539b1eb75cb",
       "kind": "accessible-attribute",
@@ -1457,6 +1161,78 @@
       "text": "var(--fg-muted)"
     },
     {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "2d1f4a1de0eb1a4f7f44ae23af1d5be72a031b8b455210eb39bd209b8ba81810",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Sanity - the composable content cloud"
+    },
+    {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "625abb49be239b229dba297f2ec9eff9e6a15c6bec17742a63c06b4ca6aa8fcd",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "What is a headless CMS?"
+    },
+    {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "6a4d622b628da02b62425a115e2a43f14a037673ff40bb1c3257ff879e27c220",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Headless CMS for product teams - Acme"
+    },
+    {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "73f059a3437bd673fb32ee46919839ffe4a4d76d9330fb403e1090b0e910c5a7",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Strapi - Open source headless CMS"
+    },
+    {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "9a2dbc85a66b1327ea571fb12748c54b85208fa46a2005e7d4c644c2214ef194",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Headless content management system"
+    },
+    {
+      "anchor": "function:screenshotRows",
+      "fingerprint": "d37580198b5323ae48744d42af07e09d4400c471bd94a2ad30d7f10b1b2dc75d",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Hygraph - GraphQL-native headless CMS"
+    },
+    {
+      "anchor": "variable:rows",
+      "fingerprint": "fe8011812a65de35d7dcb944c876ec426d5b992f04cab4e5ed9047b78071b3aa",
+      "kind": "ui-property",
+      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
+      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
+      "text": "Result ${index + 1}"
+    },
+    {
+      "anchor": "function:MonitorRecurringReview",
+      "fingerprint": "7453eda441c6446f663ae9942c4bee43f374e219ad6145990596e3361e44e451",
+      "kind": "jsx-text",
+      "path": "components/local-monitors/MonitorRecurringReview.tsx",
+      "reason": "ISO 4217 currency code USD identifies the immutable quoted and approved money denomination; it is intentionally language-independent, not English reader prose. Exact retained value: \"USD\".",
+      "text": "USD"
+    },
+    {
+      "anchor": "function:MonitorRecurringSchedule",
+      "fingerprint": "44ecf44f43c00fa70f74fc00a3eb2ee76b2cfc55864efb89a371373ffc01846b",
+      "kind": "jsx-text",
+      "path": "components/local-monitors/MonitorRecurringSchedule.tsx",
+      "reason": "ISO 4217 currency code USD identifies the stored schedule ceiling denomination; it is intentionally language-independent, not English reader prose. Exact retained value: \"USD\".",
+      "text": "USD"
+    },
+    {
       "anchor": "function:MarketPicker",
       "fingerprint": "1a63312dd23050581b11115739d5bde123e512526a290328fc172b94f058096f",
       "kind": "jsx-expression",
@@ -1471,6 +1247,46 @@
       "path": "components/markets/MarketPicker.tsx",
       "reason": "Current consumer function:MarketPicker in components/markets/MarketPicker.tsx resolves the symbolic selector \"all\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
       "text": "all"
+    },
+    {
+      "anchor": "variable:explicitReviewSchema",
+      "fingerprint": "00574e5a9dd4d47366b178bb90e0b13001869c8032ab61abfd8f4c01177bb6ae",
+      "kind": "validation-message",
+      "path": "components/measurement-settings/form.ts",
+      "reason": "Internal consent validation code; commands.ts consumes only safeParse.success and the UI renders translated mode-specific consent labels, never this raw failure code. Exact retained value: \"confirm_required\".",
+      "text": "confirm_required"
+    },
+    {
+      "anchor": "function:MeasurementConflictReview",
+      "fingerprint": "9a15aff0a147cd718f92529d5bc72886e994e25663d7a2b808ef760f2230c622",
+      "kind": "ui-property",
+      "path": "components/measurement-settings/MeasurementConflictReview.tsx",
+      "reason": "Immutable comparison label selector; MeasurementConflictReview renders it through the proven reviewed host MeasurementTranslator t(label) and uses the original selector as a stable key. Exact retained value: \"current\".",
+      "text": "current"
+    },
+    {
+      "anchor": "function:MeasurementConflictReview",
+      "fingerprint": "e03b18b33a0d19d840fb935d8b3a0290d65927738f676556f51a68e9f2dc3371",
+      "kind": "ui-property",
+      "path": "components/measurement-settings/MeasurementConflictReview.tsx",
+      "reason": "Immutable comparison label selector; MeasurementConflictReview renders it through the proven reviewed host MeasurementTranslator t(label) and uses the original selector as a stable key. Exact retained value: \"yourDraft\".",
+      "text": "yourDraft"
+    },
+    {
+      "anchor": "function:MeasurementPolicySettingsCard",
+      "fingerprint": "711ea0807b61be69fe2d4fac75e1b69b693c655ea80c2f43203bc019431372e0",
+      "kind": "ui-property",
+      "path": "components/measurement-settings/MeasurementPolicySettingsCard.tsx",
+      "reason": "Policy field catalog selector; the mapped field label is rendered through next-intl t(field.label), never as the literal protocol value. Exact retained value: \"grace\".",
+      "text": "grace"
+    },
+    {
+      "anchor": "function:MeasurementPolicySettingsCard",
+      "fingerprint": "79edcb8df97d3429f632b1995a5d5cbda4cf55216b776eca00eb77a2d8502156",
+      "kind": "ui-property",
+      "path": "components/measurement-settings/MeasurementPolicySettingsCard.tsx",
+      "reason": "Policy field catalog selector; the mapped field label is rendered through next-intl t(field.label), never as the literal protocol value. Exact retained value: \"manual\".",
+      "text": "manual"
     },
     {
       "anchor": "function:onboardingSteps",
@@ -1545,46 +1361,6 @@
       "text": "&ndash;"
     },
     {
-      "anchor": "function:createRunPageSummaryLabels",
-      "fingerprint": "01d6cbf19ede82f23616631a36dc8b29bafaf9339e82dba62d0486c413eb6ffa",
-      "kind": "ui-property",
-      "path": "components/rank-runs/run-page-summary-presentation.ts",
-      "reason": "Current consumer function:createRunPageSummaryLabels in components/rank-runs/run-page-summary-presentation.ts resolves the symbolic selector \"facts.selection\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "facts.selection"
-    },
-    {
-      "anchor": "function:createRunPageSummaryLabels",
-      "fingerprint": "0bc245689deb486d7c0ea0272cd5f75124b8bc02576d3e58ce67f6922646f897",
-      "kind": "ui-property",
-      "path": "components/rank-runs/run-page-summary-presentation.ts",
-      "reason": "Current consumer function:createRunPageSummaryLabels in components/rank-runs/run-page-summary-presentation.ts resolves the symbolic selector \"facts.firstCheck\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "facts.firstCheck"
-    },
-    {
-      "anchor": "function:createRunPageSummaryLabels",
-      "fingerprint": "a03e3e5e4f23583464b919363f500a16eea968aac33113f4797516cbb5670905",
-      "kind": "ui-property",
-      "path": "components/rank-runs/run-page-summary-presentation.ts",
-      "reason": "Current consumer function:createRunPageSummaryLabels in components/rank-runs/run-page-summary-presentation.ts resolves the symbolic selector \"skipped\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "skipped"
-    },
-    {
-      "anchor": "function:createRunPageSummaryLabels",
-      "fingerprint": "be8130b38bba480c4209a5fec37d52d00bb15eb9c4806362743e86e96182988e",
-      "kind": "ui-property",
-      "path": "components/rank-runs/run-page-summary-presentation.ts",
-      "reason": "Current consumer function:createRunPageSummaryLabels in components/rank-runs/run-page-summary-presentation.ts resolves the symbolic selector \"remaining\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "remaining"
-    },
-    {
-      "anchor": "function:createRunPageSummaryLabels",
-      "fingerprint": "c7ef2670a92bd6102b8df433c6210952d31931ce122b9c2ecae2bd4a29ade2ca",
-      "kind": "ui-property",
-      "path": "components/rank-runs/run-page-summary-presentation.ts",
-      "reason": "Current consumer function:createRunPageSummaryLabels in components/rank-runs/run-page-summary-presentation.ts resolves the symbolic selector \"provider\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "provider"
-    },
-    {
       "anchor": "function:plannedDateParts",
       "fingerprint": "69724b5fe94455ef121541f69a735e37dd7e4fbd68f856ee46d5b5ca1a535f3d",
       "kind": "english-pinned-formatter",
@@ -1601,52 +1377,12 @@
       "text": "timeOfDay"
     },
     {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "076819992c845b198a7f25f81ab50d9d56ca288ad34da48c61cdae7fed636559",
-      "kind": "accessible-attribute",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"list.defaultHint\".",
-      "text": "list.defaultHint"
-    },
-    {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "0f9bb57a6be14a38f77eb54ffad1a2d3eaecd610de18b639911ae98667969624",
+      "anchor": "function:scheduleStateMeta",
+      "fingerprint": "3c8649606ab9a5132c09cdc955ebfb96333ecd11f0c72c641b198b9fdb060dcc",
       "kind": "ui-property",
       "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"perRun\".",
-      "text": "perRun"
-    },
-    {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "1a56cc4fbfaa6e4af9445091e6c572a4c51d822e24d20cadb45910d0823ba590",
-      "kind": "ui-property",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"next\".",
-      "text": "next"
-    },
-    {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "3a081fa26a096d4aadb9eae4a538e0f8a5757ff5628672c90ca94e5cbbdade39",
-      "kind": "ui-property",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"schedule\".",
-      "text": "schedule"
-    },
-    {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "3ef08f78ef7332ff486f20313ba30f08f05ab664e5c1945f3c91d1f458e6a76f",
-      "kind": "jsx-expression",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"list.tagScope\".",
-      "text": "list.tagScope"
-    },
-    {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "481060df2c0e918739fe48e8afe9264327f5ee362927bb465595b5cd1a008dfd",
-      "kind": "jsx-expression",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"archived\".",
-      "text": "archived"
+      "reason": "The scoped next-intl translator passed by SchedulesList resolves the catalog key list.empty; it is not display copy.",
+      "text": "list.empty"
     },
     {
       "anchor": "function:scheduleStateMeta",
@@ -1657,60 +1393,12 @@
       "text": "list.paused"
     },
     {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "64f19923f2a8250347e08c1e2dba451cbc5ead9c13d7c9deb841d23903d9e189",
-      "kind": "ui-property",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"actions\".",
-      "text": "actions"
-    },
-    {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "67e90cb1ef487a4c7dee910d770ed1815715847c98e9e81930f528d9c60d07fd",
-      "kind": "ui-property",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"members\".",
-      "text": "members"
-    },
-    {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "693547428ff9f0a4a79ed9544e71e076385dbbf19b716621534dbd8fcf1c5124",
-      "kind": "jsx-expression",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"list.perRun\".",
-      "text": "list.perRun"
-    },
-    {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "914d58dd2cf09d4ebd775e3ca8ba5bd98cfea3e41cd2cf2c3e57adf479989dce",
-      "kind": "ui-property",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"cadence\".",
-      "text": "cadence"
-    },
-    {
       "anchor": "function:scheduleStateMeta",
       "fingerprint": "a7119aaf7648af7f0f7f4289e23573a77ceb14ff3dfc3d5c22dd0b15207f53a7",
       "kind": "ui-property",
       "path": "components/schedules/schedules-table-columns.tsx",
       "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:scheduleStateMeta; retained value: \"list.blocked\".",
       "text": "list.blocked"
-    },
-    {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "c0ccb6ea59c9f1e9874085356143ab6219fd279b2adf3d044c226b4415e45204",
-      "kind": "jsx-expression",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"list.memberMeta\".",
-      "text": "list.memberMeta"
-    },
-    {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "e80d9a334eb1a2b20cc27cdc2c012f1dd67b556e1d1a4c7fee5f0bd044cfe621",
-      "kind": "jsx-expression",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "Schedule column metadata carries catalog selector keys resolved by the schedule table presentation boundary. Current consumer: function:schedulesTableColumns; retained value: \"default\".",
-      "text": "default"
     },
     {
       "anchor": "function:drawerStatCards",
@@ -1927,54 +1615,6 @@
       "path": "components/search-insights/search-insights-copy.ts",
       "reason": "search-insights-copy remains for test-only compatibility exports. Production presentation imports the scoped catalog; module geometry imports do not invoke its legacy label exports. Current consumer: variable:EXPORT_TRUNCATED; retained value: \"SEARCH_INSIGHTS_EXPORT_ROW_CAP.toLocaleString(\\\"en-US\\\")\".",
       "text": "SEARCH_INSIGHTS_EXPORT_ROW_CAP.toLocaleString(\"en-US\")"
-    },
-    {
-      "anchor": "function:QueryActions",
-      "fingerprint": "15e95d36e753b101f5a4854efe05185c6263dff1fcc3ee2e1b59ddd57bcd99f6",
-      "kind": "jsx-expression",
-      "path": "components/search-insights/search-insights-data-table-columns.tsx",
-      "reason": "Current consumer function:QueryActions in components/search-insights/search-insights-data-table-columns.tsx resolves the symbolic selector \"tracked\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "tracked"
-    },
-    {
-      "anchor": "function:QueryActions",
-      "fingerprint": "2308830b115dfaa285841253590afcbb1d495399924282a0a3c5f569736eabf4",
-      "kind": "accessible-attribute",
-      "path": "components/search-insights/search-insights-data-table-columns.tsx",
-      "reason": "Current consumer function:QueryActions in components/search-insights/search-insights-data-table-columns.tsx resolves the symbolic selector \"trackedTitle\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "trackedTitle"
-    },
-    {
-      "anchor": "function:QueryActions",
-      "fingerprint": "7c8f92b09bcd87cc00414c06824f1b1d738c933714d57f43ed922df859d69df7",
-      "kind": "accessible-attribute",
-      "path": "components/search-insights/search-insights-data-table-columns.tsx",
-      "reason": "Current consumer function:QueryActions in components/search-insights/search-insights-data-table-columns.tsx resolves the symbolic selector \"trackTitle\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "trackTitle"
-    },
-    {
-      "anchor": "function:QueryActions",
-      "fingerprint": "cc7d43cad7b81237046fcc41a68388682eb90c81cf7328452c506c22ba7b8fba",
-      "kind": "jsx-expression",
-      "path": "components/search-insights/search-insights-data-table-columns.tsx",
-      "reason": "Current consumer function:QueryActions in components/search-insights/search-insights-data-table-columns.tsx resolves the symbolic selector \"adding\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "adding"
-    },
-    {
-      "anchor": "function:QueryActions",
-      "fingerprint": "cf37512448da7ced4f0ecd9132a83a0b5d7daac314c5a2d6f1e2f7adf4f3ffb4",
-      "kind": "jsx-expression",
-      "path": "components/search-insights/search-insights-data-table-columns.tsx",
-      "reason": "Current consumer function:QueryActions in components/search-insights/search-insights-data-table-columns.tsx resolves the symbolic selector \"track\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "track"
-    },
-    {
-      "anchor": "function:PageLink",
-      "fingerprint": "b6ca2f14c319838fe35f847867db43fb31795232dcb9e920b4bd002a11cce2b2",
-      "kind": "accessible-attribute",
-      "path": "components/search-insights/search-insights-pages-columns.tsx",
-      "reason": "Current consumer function:PageLink in components/search-insights/search-insights-pages-columns.tsx resolves the symbolic selector \"openUrl\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "openUrl"
     },
     {
       "anchor": "variable:storyContext",
@@ -2233,182 +1873,6 @@
       "text": "alertFired"
     },
     {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "07aef55bfb3077d46f5341fb026c497f3f3ff8455bd8bca8877d798084fafeb3",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.applicationPlan.label\".",
-      "text": "search.entries.applicationPlan.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "0aefbcf19db2d6621edf6d75b03536716d280de3f8bda3d443ffd6e506fac0f9",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.providerConnections.label\".",
-      "text": "search.entries.providerConnections.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "0da37fe2b5b78a619e5d9e57e67752fbfbaa4a669473d68e47ea13f05aec8210",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.notificationChannels.label\".",
-      "text": "search.entries.notificationChannels.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "353341ca294c149432a09fdcd5df787d23cbcaee00f4a8db3059671d16cc1c75",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.stopOnMatch.label\".",
-      "text": "search.entries.stopOnMatch.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "52d2116dbf392429d0bcfc02a167f086ef7e9f90795728827a7c45945b0895ca",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.tagsAndSegments.label\".",
-      "text": "search.entries.tagsAndSegments.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "5448ab376d3dc70874f76a94dddab7234819ee56cd8e19e911c8c961c1123711",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.experimentalFeatures.label\".",
-      "text": "search.entries.experimentalFeatures.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "6ec8074d859816368f82724dd2779bb3ea1ae1d303a95cf6d02dcda98580b9e0",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.competitors.label\".",
-      "text": "search.entries.competitors.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "723836be9ed9be72f8aac251fa44d499f180d0f1185c5b88ddbf075c3c8d2a7a",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.defaultDevice.label\".",
-      "text": "search.entries.defaultDevice.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "7653c73b687253d52fb9624a201ec94581b4a7d9e3e3d037e35a3d1ab82be1f0",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.defaultLocation.label\".",
-      "text": "search.entries.defaultLocation.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "7a81053d4ced1531b611fcb6f1c1c31ce4c8d0c5c3eb232143c704a5f39a2217",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.defaultSerpDepth.label\".",
-      "text": "search.entries.defaultSerpDepth.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "a2fd010c7a3936e3d796d3767c8ec0bdcae99fd5edaf99c0a1cf954235ba81da",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.scheduleTimezone.label\".",
-      "text": "search.entries.scheduleTimezone.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "ae1063c9657d9ffccdb40640d6ea1d47741677fe074dd68c22f2fd8063218ace",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.providerBudgets.label\".",
-      "text": "search.entries.providerBudgets.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "af1c25fee6a1b88cb38917c08050f8fa25edd2cc6e376a63d114070a8d0a6309",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.projectName.label\".",
-      "text": "search.entries.projectName.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "b9b4f5c4b4b35d8d3b464d62004a7e4740be4383d6a2849d4fc01ce4dbd9a0d3",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.apiKeys.label\".",
-      "text": "search.entries.apiKeys.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "c80ee8ffefee608b605eef7def17ffd2b9bbf29ef539eebb152b0fd04e14581d",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.urlInspectionLimit.label\".",
-      "text": "search.entries.urlInspectionLimit.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "c9c486ec941e5ad7970df775b94f2b5d6be79b0e630dbc80b55846d796dfbe20",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.members.label\".",
-      "text": "search.entries.members.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "ca27900a57d8c1731b54026d316a67298b5e8fb0d5372d868b59577b217761c7",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.websiteDomain.label\".",
-      "text": "search.entries.websiteDomain.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "cba7c37980c4bcacf8ff4b31305a1ec8c2065104f0184e6c18a99f730f4a3649",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.searchDataSync.label\".",
-      "text": "search.entries.searchDataSync.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "d695988de742d71f28bcbdb25176baefecd0969256ef9ad35bb4abc9cb2601b5",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.projectManagement.label\".",
-      "text": "search.entries.projectManagement.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "db3f6923db5e2d00bae56fa2296240f4175c110ae99a483fdcc85711f6ec7737",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.domainMatching.label\".",
-      "text": "search.entries.domainMatching.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "ddfcc420ff666dc71fd9e88922dccbb5cda9cbe300088a88187d953b93a8867d",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.deployWebhooks.label\".",
-      "text": "search.entries.deployWebhooks.label"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "f3d00ce5750195ab5b0f50393af37c0c82921bfdc6c175e04104573a2e10f993",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.checkFrequency.label\".",
-      "text": "search.entries.checkFrequency.label"
-    },
-    {
       "anchor": "function:requestPreview",
       "fingerprint": "ffbe4f2a17dcea5bb97ecc8aa5a90e657b8bb7ef2168653578c8d71d14cb73d5",
       "kind": "validation-message",
@@ -2503,54 +1967,6 @@
       "path": "components/shell/WorkspaceSwitcher.tsx",
       "reason": "WorkspaceSearchHeader uses catalog selectors at the scoped shell render boundary. Current consumer: function:WorkspaceSearchHeader; retained value: \"Esc\".",
       "text": "Esc"
-    },
-    {
-      "anchor": "function:Pagination",
-      "fingerprint": "0fde8a616b4c6f1bdcbd9ff6fc7965c08224610a932a25f4d54197e3d1f2f406",
-      "kind": "jsx-expression",
-      "path": "components/timeline/TimelineFeed.tsx",
-      "reason": "Current consumer function:Pagination in components/timeline/TimelineFeed.tsx resolves the symbolic selector \"previous\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "previous"
-    },
-    {
-      "anchor": "function:FilterChip",
-      "fingerprint": "3539a5ce8294490ea1d460f2f3e5308462b8ce08b8067cd724b5d00263503985",
-      "kind": "jsx-expression",
-      "path": "components/timeline/TimelineFeed.tsx",
-      "reason": "Current consumer function:FilterChip in components/timeline/TimelineFeed.tsx resolves the symbolic selector \"filterSelected\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "filterSelected"
-    },
-    {
-      "anchor": "function:FilterChip",
-      "fingerprint": "7b7479ccddf1ad884fce890ea0630c164bdb968df08e256cf62228a3e09cdfc7",
-      "kind": "jsx-expression",
-      "path": "components/timeline/TimelineFeed.tsx",
-      "reason": "Current consumer function:FilterChip in components/timeline/TimelineFeed.tsx resolves the symbolic selector \"filterSwitch\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "filterSwitch"
-    },
-    {
-      "anchor": "function:Pagination",
-      "fingerprint": "9dd62479e98be3cb927c6e572407ee2a88b3f0626f802e22ac3b201448e1f947",
-      "kind": "accessible-attribute",
-      "path": "components/timeline/TimelineFeed.tsx",
-      "reason": "Current consumer function:Pagination in components/timeline/TimelineFeed.tsx resolves the symbolic selector \"pagesAria\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "pagesAria"
-    },
-    {
-      "anchor": "function:Pagination",
-      "fingerprint": "c46c0fe61fa53133eca0b580f4c7e8bff3f0778829e934c055b17d479af00340",
-      "kind": "jsx-expression",
-      "path": "components/timeline/TimelineFeed.tsx",
-      "reason": "Current consumer function:Pagination in components/timeline/TimelineFeed.tsx resolves the symbolic selector \"next\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "next"
-    },
-    {
-      "anchor": "function:Pagination",
-      "fingerprint": "fef3847c54c6e053a5b2b660732129ddc927674a6a7a127c6a823ea4f08e3f79",
-      "kind": "jsx-expression",
-      "path": "components/timeline/TimelineFeed.tsx",
-      "reason": "Current consumer function:Pagination in components/timeline/TimelineFeed.tsx resolves the symbolic selector \"page\" through its scoped typed presentation function. The selector is retained data, not standalone English display copy.",
-      "text": "page"
     },
     {
       "anchor": "variable:dataTableStoryColumns",
@@ -2866,6 +2282,14 @@
     },
     {
       "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
+      "fingerprint": "d5e3ebe5c163e684f3cfffd54f2bb1e96a3439ff5ad52316be02dff03591d201",
+      "kind": "ui-property",
+      "path": "components/ui/status-chip-mapping.ts",
+      "reason": "The status mapping retains an English fallback identifier. Run status chips and the legend resolve the skipped messageKey through the shared catalog.",
+      "text": "Skipped"
+    },
+    {
+      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
       "fingerprint": "e22fa4b02c9f1c633c68c21f31285214493ca83a738141ba6217a53de0c7311f",
       "kind": "ui-property",
       "path": "components/ui/status-chip-mapping.ts",
@@ -2959,102 +2383,6 @@
       "path": "components/ui/StatusChip.tsx",
       "reason": "StatusChip consumes status presentation identifiers and tone CSS tokens; visible labels are resolved by the caller catalog mapping. Current consumer: variable:TONE_STYLES; retained value: \"var(--red-text)\".",
       "text": "var(--red-text)"
-    },
-    {
-      "anchor": "function:createRunPageSummaryLabels",
-      "fingerprint": "2818ccbbbd34418e6af988a7aa5491555971e47acdeff70476f1d0a8415cc04e",
-      "kind": "ui-property",
-      "path": "components/rank-runs/run-page-summary-presentation.ts",
-      "text": "operations",
-      "reason": "The operations selector is passed to the scoped typed translator; it is not literal display copy."
-    },
-    {
-      "anchor": "function:scheduleStateMeta",
-      "fingerprint": "3c8649606ab9a5132c09cdc955ebfb96333ecd11f0c72c641b198b9fdb060dcc",
-      "kind": "ui-property",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "The scoped next-intl translator passed by SchedulesList resolves the catalog key list.empty; it is not display copy.",
-      "text": "list.empty"
-    },
-    {
-      "anchor": "function:schedulesTableColumns",
-      "fingerprint": "12fb165d61f6f7c1b382fb1907eb7fd95eda86ee5b6555c5639275398e994d86",
-      "kind": "jsx-expression",
-      "path": "components/schedules/schedules-table-columns.tsx",
-      "reason": "The scoped next-intl translator passed by SchedulesList resolves the catalog key list.emptyNext; it is not display copy.",
-      "text": "list.emptyNext"
-    },
-    {
-      "anchor": "variable:RANK_RUN_STATUS_PRESENTATIONS",
-      "fingerprint": "d5e3ebe5c163e684f3cfffd54f2bb1e96a3439ff5ad52316be02dff03591d201",
-      "kind": "ui-property",
-      "path": "components/ui/status-chip-mapping.ts",
-      "reason": "The status mapping retains an English fallback identifier. Run status chips and the legend resolve the skipped messageKey through the shared catalog.",
-      "text": "Skipped"
-    },
-    {
-      "anchor": "variable:settingsSearchEntries",
-      "fingerprint": "54f00b88e6b7890bb7b8f1d0835f7f74abee9c5b586efd4f3ab47e9abf162287",
-      "kind": "ui-property",
-      "path": "components/settings/shell/settings-search-index.ts",
-      "reason": "settingsSearchEntries stores exact catalog selectors used by SettingsSearch for localized title, description, and keyword projection. Current consumer: variable:settingsSearchEntries; retained value: \"search.entries.projectContext.label\".",
-      "text": "search.entries.projectContext.label"
-    },
-    {
-      "anchor": "variable:rows",
-      "fingerprint": "fe8011812a65de35d7dcb944c876ec426d5b992f04cab4e5ed9047b78071b3aa",
-      "kind": "ui-property",
-      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
-      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
-      "text": "Result ${index + 1}"
-    },
-    {
-      "anchor": "function:screenshotRows",
-      "fingerprint": "625abb49be239b229dba297f2ec9eff9e6a15c6bec17742a63c06b4ca6aa8fcd",
-      "kind": "ui-property",
-      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
-      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
-      "text": "What is a headless CMS?"
-    },
-    {
-      "anchor": "function:screenshotRows",
-      "fingerprint": "73f059a3437bd673fb32ee46919839ffe4a4d76d9330fb403e1090b0e910c5a7",
-      "kind": "ui-property",
-      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
-      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
-      "text": "Strapi - Open source headless CMS"
-    },
-    {
-      "anchor": "function:screenshotRows",
-      "fingerprint": "2d1f4a1de0eb1a4f7f44ae23af1d5be72a031b8b455210eb39bd209b8ba81810",
-      "kind": "ui-property",
-      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
-      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
-      "text": "Sanity - the composable content cloud"
-    },
-    {
-      "anchor": "function:screenshotRows",
-      "fingerprint": "6a4d622b628da02b62425a115e2a43f14a037673ff40bb1c3257ff879e27c220",
-      "kind": "ui-property",
-      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
-      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
-      "text": "Headless CMS for product teams - Acme"
-    },
-    {
-      "anchor": "function:screenshotRows",
-      "fingerprint": "d37580198b5323ae48744d42af07e09d4400c471bd94a2ad30d7f10b1b2dc75d",
-      "kind": "ui-property",
-      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
-      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
-      "text": "Hygraph - GraphQL-native headless CMS"
-    },
-    {
-      "anchor": "function:screenshotRows",
-      "fingerprint": "9a2dbc85a66b1327ea571fb12748c54b85208fa46a2005e7d4c644c2214ef194",
-      "kind": "ui-property",
-      "path": "components/keywords/retrieved-results-test-fixtures.tsx",
-      "reason": "Synthetic fixture used only by RetrievedResultsCard tests; this string is test data, not production UI copy.",
-      "text": "Headless content management system"
     }
   ],
   "schemaVersion": 1,
@@ -3385,6 +2713,11 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/rank-tracker/rank-tracker-saved-tab.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/rank-tracker/runs/[id]/page.tsx",
       "status": "migrated"
     },
@@ -3466,6 +2799,21 @@
     {
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/billing/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/business-locations/monitors/[monitor]/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/business-locations/monitors/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/business-locations/page.tsx",
       "status": "migrated"
     },
     {
@@ -3710,6 +3058,11 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/admin/metering/recovery/page.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/admin/page.tsx",
       "status": "migrated"
     },
@@ -3794,6 +3147,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "app/(regional)/onboarding/initial-first-check-candidates.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "app/(regional)/onboarding/layout.tsx",
       "status": "excluded"
@@ -3816,7 +3174,7 @@
     {
       "kind": "render",
       "path": "app/(regional)/onboarding/page.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "ui-data",
@@ -3836,7 +3194,7 @@
     {
       "kind": "render",
       "path": "app/(regional)/setup/page.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -4095,6 +3453,11 @@
     },
     {
       "kind": "render",
+      "path": "components/admin/AdminAnnouncements.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/AdminAuditTable.tsx",
       "status": "migrated"
     },
@@ -4170,12 +3533,52 @@
     },
     {
       "kind": "render",
+      "path": "components/admin/AnnouncementEditor.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/InstanceMailSettings.tsx",
       "status": "pending"
     },
     {
       "kind": "render",
       "path": "components/admin/MailTwoFactorGate.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/recovery/AdminRecoveryConsole.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/recovery/RecoveryAxes.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/recovery/RecoveryDetails.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/recovery/RecoveryPreviewDialog.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/recovery/RecoverySummary.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/recovery/RecoveryTable.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/recovery/RecoveryTriageForm.tsx",
       "status": "pending"
     },
     {
@@ -4222,6 +3625,16 @@
       "kind": "render",
       "path": "components/agent-reports/ReportShare.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ai-research/ai-research-failure-copy.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/AiCatalogNotice.tsx",
+      "status": "migrated"
     },
     {
       "kind": "ui-data",
@@ -4576,7 +3989,7 @@
     {
       "kind": "render",
       "path": "components/audit/audit-columns.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "ui-data",
@@ -4741,7 +4154,7 @@
     {
       "kind": "render",
       "path": "components/backlinks/backlinks-table-columns.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "ui-data",
@@ -4845,6 +4258,105 @@
     },
     {
       "kind": "render",
+      "path": "components/business-location-settings/BusinessAssignmentWorkspace.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/business-location-settings/BusinessIdentityHistory.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/business-location-settings/BusinessLocationsWorkspace.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/business-location-settings/BusinessMatchesWorkspace.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/business-locations/BusinessActionStatus.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/business-locations/BusinessArchivePrompt.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/business-locations/BusinessCandidateReview.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/business-locations/BusinessIdentityEditor.tsx",
+      "status": "excluded",
+      "reason": "Contains exact reviewed catalog/protocol selectors or ISO currency denomination, not literal reader prose; every candidate remains individually guarded by a source-and-fingerprint exception."
+    },
+    {
+      "kind": "render",
+      "path": "components/business-locations/BusinessLocationsList.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/business-locations/BusinessMatchProvenance.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/business-locations/BusinessRematchPrompt.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/business-locations/BusinessRevisionReview.tsx",
+      "status": "excluded",
+      "reason": "Contains exact reviewed catalog/protocol selectors or ISO currency denomination, not literal reader prose; every candidate remains individually guarded by a source-and-fingerprint exception."
+    },
+    {
+      "kind": "render",
+      "path": "components/business-locations/BusinessSectionHeading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/business-locations/BusinessSubjectAssignment.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/business-locations/identity-form.ts",
+      "status": "excluded",
+      "reason": "Contains exact reviewed catalog/protocol selectors or ISO currency denomination, not literal reader prose; every candidate remains individually guarded by a source-and-fingerprint exception."
+    },
+    {
+      "kind": "render",
+      "path": "components/business-locations/IdentityFields.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/business-locations/presentation.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/business-locations/prompt-form.ts",
+      "status": "excluded",
+      "reason": "Contains exact reviewed catalog/protocol selectors or ISO currency denomination, not literal reader prose; every candidate remains individually guarded by a source-and-fingerprint exception."
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/business-locations/use-business-command.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/charts/Sparkline.tsx",
       "status": "migrated"
     },
@@ -4871,12 +4383,12 @@
     {
       "kind": "render",
       "path": "components/checks/runs/check-runs-table-columns.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "render",
       "path": "components/checks/runs/CheckRunDetails.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -4911,7 +4423,7 @@
     {
       "kind": "render",
       "path": "components/checks/runs/CheckRunStoredResults.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -5190,6 +4702,11 @@
     },
     {
       "kind": "render",
+      "path": "components/cost-estimate/HeaderBudgetScope.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/cost-estimate/HeaderProviderSpend.tsx",
       "status": "migrated"
     },
@@ -5207,6 +4724,96 @@
       "kind": "ui-data",
       "path": "components/cost-estimate/useNativeUsageFormat.ts",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-competitors/ComparisonSelectionControl.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-competitors/DashboardComparisonCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-competitors/DashboardComparisonSurface.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/dashboard-layout/dashboard-editor-escape.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/dashboard-layout/dashboard-translator.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-layout/DashboardCompositor.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-layout/DashboardLayoutEditor.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-layout/DashboardPreferenceRecovery.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-layout/DashboardScopeUnavailable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-layout/DashboardToolbarContext.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-layout/DashboardViewControls.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-layout/DashboardViewHelp.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-layout/DashboardWidgetRow.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-layout/PersonalDashboardSurface.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/dashboard-layout/use-widget-reorder.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-local/LocalReportCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-local/LocalSubjectControl.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/dashboard-local/report-summary.ts",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -5276,7 +4883,7 @@
     {
       "kind": "render",
       "path": "components/domain-overview/domain-overview-table-sort.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "ui-data",
@@ -5770,6 +5377,76 @@
     },
     {
       "kind": "render",
+      "path": "components/keyword-detail-history/AttemptHistoryTable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/keyword-detail-history/history-chart-model.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/keyword-detail-history/history-page-state.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/HistoryPosition.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/HistoryResultKind.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/HistoryScope.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/HistoryTime.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/KeywordDetailHistory.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/LegacyPositionHistoryPlot.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/ObservationHistoryTable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/RecordedHistoryChart.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/RecordedUrlHistory.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keyword-detail-history/RetainedSnapshotCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/keyword-detail-history/use-keyword-detail-history.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/keyword-detail/empty/empty-state-primitives.tsx",
       "status": "migrated"
     },
@@ -6019,9 +5696,19 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/keywords/export/export-history-request.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/export/ExportHistoryOptions.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/keywords/export/ExportModal.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -6160,22 +5847,22 @@
     },
     {
       "kind": "ui-data",
+      "path": "components/keywords/grid/keyword-rank-quality-view.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
       "path": "components/keywords/grid/keyword-scope-summary.ts",
       "status": "excluded"
     },
     {
-      "kind": "ui-data",
-      "path": "components/keywords/grid/keyword-weekly-summary-copy.ts",
-      "status": "migrated"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/keywords/grid/keyword-weekly-summary.ts",
+      "kind": "render",
+      "path": "components/keywords/grid/KeywordChangeCell.tsx",
       "status": "migrated"
     },
     {
       "kind": "render",
-      "path": "components/keywords/grid/KeywordChangeCell.tsx",
+      "path": "components/keywords/grid/KeywordColumnOrderControl.tsx",
       "status": "migrated"
     },
     {
@@ -6201,6 +5888,41 @@
     {
       "kind": "render",
       "path": "components/keywords/grid/KeywordInlineEditTextField.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/grid/KeywordLocalColumns.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/grid/KeywordPersonalViewControl.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/grid/KeywordPresentationDraftProvider.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/grid/KeywordRankTrendCell.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/grid/KeywordRankValue.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/grid/KeywordRecordedCheckCell.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/grid/KeywordReportSummary.tsx",
       "status": "migrated"
     },
     {
@@ -6320,6 +6042,11 @@
     },
     {
       "kind": "render",
+      "path": "components/keywords/grid/RankTrackerReportScopeControl.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/keywords/grid/RowActionsCell.tsx",
       "status": "migrated"
     },
@@ -6391,6 +6118,11 @@
     {
       "kind": "ui-data",
       "path": "components/keywords/grid/use-keywords-grid-view-state.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/keywords/grid/use-personal-keyword-layout.ts",
       "status": "migrated"
     },
     {
@@ -6535,12 +6267,37 @@
     },
     {
       "kind": "render",
+      "path": "components/keywords/KeywordDetailAttemptSlot.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/KeywordDetailComparison.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/keywords/KeywordDetailHeaderChrome.tsx",
       "status": "migrated"
     },
     {
       "kind": "render",
       "path": "components/keywords/KeywordDetailHeaderSlot.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/KeywordDetailRankSlot.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/KeywordDetailRetainedUrl.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/keywords/KeywordDetailScopeProof.tsx",
       "status": "migrated"
     },
     {
@@ -6636,7 +6393,7 @@
     {
       "kind": "render",
       "path": "components/keywords/KeywordTrafficCard.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -6900,6 +6657,118 @@
     },
     {
       "kind": "render",
+      "path": "components/local-monitors/MonitorCapturedScope.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorDetail.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorFields.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorForm.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorHistory.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorKeywordPicker.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorList.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorManualLaunch.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorPoints.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorRecurringForm.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorRecurringReview.tsx",
+      "status": "excluded",
+      "reason": "Contains exact reviewed catalog/protocol selectors or ISO currency denomination, not literal reader prose; every candidate remains individually guarded by a source-and-fingerprint exception."
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorRecurringSchedule.tsx",
+      "status": "excluded",
+      "reason": "Contains exact reviewed catalog/protocol selectors or ISO currency denomination, not literal reader prose; every candidate remains individually guarded by a source-and-fingerprint exception."
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorRequestFields.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorRetryPanel.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorRunReceipt.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/MonitorWorkspace.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/results/MonitorHistoryWindow.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/results/MonitorPointEvidence.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/results/MonitorResultGrid.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/results/MonitorResultTable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-monitors/results/MonitorRunResults.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/local-reports/LocalReportCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/locations/CountrySelect.tsx",
       "status": "migrated"
     },
@@ -7049,6 +6918,134 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/measurement-help/LocalizedMeasurementHelp.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-help/MeasurementHelp.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/measurement-help/translate.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/measurement-settings/commands.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/measurement-settings/draft-validation.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/measurement-settings/draft.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/measurement-settings/editor-validation.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/measurement-settings/form.ts",
+      "status": "excluded",
+      "reason": "Contains exact reviewed catalog/protocol selectors or ISO currency denomination, not literal reader prose; every candidate remains individually guarded by a source-and-fingerprint exception."
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementActionStatus.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementCapabilityEvidence.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementConflictReview.tsx",
+      "status": "excluded",
+      "reason": "Contains exact reviewed catalog/protocol selectors or ISO currency denomination, not literal reader prose; every candidate remains individually guarded by a source-and-fingerprint exception."
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementIntentActions.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementPolicySettingsCard.tsx",
+      "status": "excluded",
+      "reason": "Contains exact reviewed catalog/protocol selectors or ISO currency denomination, not literal reader prose; every candidate remains individually guarded by a source-and-fingerprint exception."
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementPolicySettingsSection.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementQuoteReview.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementRunReceipt.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementScheduleFields.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementScopeSummary.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementSelectionFields.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementSettingsEditor.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementSettingsHost.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/measurement-settings/MeasurementSettingsHostSection.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/measurement-settings/translate.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/measurement-settings/use-measurement-actions.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/metering/usage-display-context.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/metering/usage-number-format.ts",
       "status": "migrated"
@@ -7056,6 +7053,11 @@
     {
       "kind": "render",
       "path": "components/metering/UsageDisplayControls.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/metering/UsageDisplaySettingsProvider.tsx",
       "status": "migrated"
     },
     {
@@ -7110,12 +7112,22 @@
     },
     {
       "kind": "render",
+      "path": "components/onboarding/OnboardingDefaultsReview.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/onboarding/OnboardingLogoutButton.tsx",
       "status": "migrated"
     },
     {
       "kind": "render",
       "path": "components/onboarding/OnboardingNav.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/onboarding/OnboardingPageHeading.tsx",
       "status": "migrated"
     },
     {
@@ -7179,8 +7191,18 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/onboarding/steps/first-check-selection.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/onboarding/steps/FirstCheckErrors.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/onboarding/steps/FirstCheckPolicyNotice.tsx",
       "status": "migrated"
     },
     {
@@ -7434,6 +7456,11 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/onboarding/use-reviewed-onboarding-defaults.ts",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/onboarding/WatchSetupVideoLink.tsx",
       "status": "migrated"
@@ -7510,6 +7537,11 @@
     },
     {
       "kind": "render",
+      "path": "components/overview/OverviewContributorsCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/overview/OverviewDashboardView.tsx",
       "status": "migrated"
     },
@@ -7535,6 +7567,11 @@
     },
     {
       "kind": "render",
+      "path": "components/overview/OverviewHealthUnavailable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/overview/OverviewKpiGrid.tsx",
       "status": "migrated"
     },
@@ -7551,6 +7588,16 @@
     {
       "kind": "render",
       "path": "components/overview/OverviewNoDataTop.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/overview/OverviewPersonalDashboard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/overview/OverviewReportHistoryCard.tsx",
       "status": "migrated"
     },
     {
@@ -7970,13 +8017,18 @@
     },
     {
       "kind": "ui-data",
+      "path": "components/rank-runs/preflight-contracts.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
       "path": "components/rank-runs/preflight-presentation.ts",
       "status": "migrated"
     },
     {
       "kind": "render",
       "path": "components/rank-runs/PreflightBlockNotice.tsx",
-      "status": "pending"
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -8006,7 +8058,7 @@
     {
       "kind": "ui-data",
       "path": "components/rank-runs/run-page-summary-presentation.ts",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -8280,6 +8332,21 @@
     },
     {
       "kind": "render",
+      "path": "components/saved-views/PersonalSavedViewsControl.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/saved-views/PersonalSaveViewModal.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/saved-views/PersonalViewScopeNotice.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/schedules/AddKeywordsDrawer.tsx",
       "status": "migrated"
     },
@@ -8446,7 +8513,7 @@
     {
       "kind": "render",
       "path": "components/search-insights/search-insights-data-table-columns.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "ui-data",
@@ -8456,7 +8523,7 @@
     {
       "kind": "render",
       "path": "components/search-insights/search-insights-pages-columns.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "ui-data",
@@ -8966,7 +9033,7 @@
     {
       "kind": "ui-data",
       "path": "components/settings/shell/settings-search-index.ts",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "ui-data",
@@ -9069,6 +9136,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/settings/tracking/ReviewedDefaultsPanel.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/settings/tracking/search-sync-presentation.ts",
       "status": "migrated"
@@ -9125,6 +9197,16 @@
     },
     {
       "kind": "ui-data",
+      "path": "components/settings/tracking/use-defaults-form-review.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/settings/tracking/use-reviewed-defaults.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
       "path": "components/settings/usage/__tests__/BudgetEditModal.fixtures.ts",
       "status": "pending"
     },
@@ -9141,6 +9223,11 @@
     {
       "kind": "render",
       "path": "components/settings/usage/PlanCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/settings/usage/ProviderBudgetRow.tsx",
       "status": "migrated"
     },
     {
@@ -9296,6 +9383,11 @@
     {
       "kind": "render",
       "path": "components/shell/HeaderContextSlot.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/shell/InstanceAnnouncementBanner.tsx",
       "status": "migrated"
     },
     {
@@ -9506,7 +9598,7 @@
     {
       "kind": "render",
       "path": "components/timeline/TimelineFeed.tsx",
-      "status": "excluded"
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -9627,6 +9719,11 @@
       "kind": "ui-data",
       "path": "components/ui/data-link-styles.ts",
       "status": "pending"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/ui/data-table/data-table-column-order.ts",
+      "status": "migrated"
     },
     {
       "kind": "ui-data",
@@ -9834,6 +9931,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/ui/HelpButton.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/ui/icon-well-styles.ts",
       "status": "migrated"
@@ -9861,6 +9963,11 @@
     {
       "kind": "render",
       "path": "components/ui/InlineCallout.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ui/InlineNoticeBanner.tsx",
       "status": "migrated"
     },
     {
@@ -10286,7 +10393,7 @@
     {
       "kind": "render",
       "path": "components/usagekit/provider-project-chain.tsx",
-      "status": "pending"
+      "status": "migrated"
     },
     {
       "kind": "render",

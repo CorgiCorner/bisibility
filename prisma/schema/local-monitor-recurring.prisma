@@ -1,0 +1,33 @@
+model LocalMonitorRecurringApproval {
+ id String @id
+ projectId String
+ monitorId String
+ scheduleIntentId String @unique
+ definitionRevisionId String
+ monitorVersion Int
+ actorId String?
+ snapshot Json
+ contentHash String
+ approvalDigest String
+ approvedAt DateTime
+ validUntil DateTime
+ @@unique([projectId,id])
+ @@map("local_monitor_recurring_approvals")
+}
+model LocalMonitorRecurringCursor {
+ approvalId String @id
+ projectId String
+ nextOccurrenceKey String
+ nextDueAt DateTime
+ lastOccurrenceKey String?
+ lastOutcome String?
+ usedCents Decimal @default(0) @db.Decimal(60,18)
+ issuedOccurrences Int @default(0)
+ state String @default("active")
+ reason String?
+ version Int @default(0)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ @@index([state,nextDueAt,approvalId],map:"local_monitor_recurring_due")
+ @@map("local_monitor_recurring_cursors")
+}

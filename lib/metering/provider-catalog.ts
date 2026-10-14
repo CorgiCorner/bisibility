@@ -8,6 +8,7 @@ export interface ProviderCatalogPort {
 }
 export type CatalogFeature =
   | "rank_check"
+  | "local_scan"
   | "keyword_metrics"
   | "keyword_research"
   | "ranked_keywords"
@@ -21,6 +22,7 @@ export type CatalogSelection = {
   feature: CatalogFeature;
   mode?: "live" | "standard" | "priority";
   researchSource?: "ideas" | "related" | "suggestions";
+  localSurface?: "maps" | "local_finder";
 };
 const research = {
   ideas: "keyword_ideas",
@@ -56,6 +58,14 @@ export function catalogOperation(
           : "serp.google.organic.task_post";
       if (selection.mode !== "live")
         options.priority = selection.mode === "priority" ? "high" : "normal";
+    } else if (
+      selection.feature === "local_scan" &&
+      selection.localSurface &&
+      selection.mode &&
+      selection.mode !== "live"
+    ) {
+      operation = `serp.google.${selection.localSurface}.task_post`;
+      options.priority = selection.mode === "priority" ? "high" : "normal";
     } else if (selection.feature === "keyword_research" && selection.researchSource) {
       operation = `dataforseo_labs.google.${research[selection.researchSource]}.live`;
     } else if (selection.feature in labs) {

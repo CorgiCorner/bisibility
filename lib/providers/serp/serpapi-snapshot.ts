@@ -1,3 +1,4 @@
+import { serpApiCapturedMetadata } from "@/lib/observation/provider-metadata";
 import type { SerpRankInput, SerpRankResult } from "@/lib/providers/types";
 import {
   type SerpSnapshotContinuation,
@@ -21,6 +22,10 @@ export async function fetchSerpApiSnapshotPage(
   context: SerpSnapshotContinuation,
   start: number,
 ): Promise<SerpRankResult> {
+  if (process.env.BISIBILITY_FAKE_PROVIDER === "1")
+    throw new SerpApiError(
+      "Snapshot continuation requires an explicit synthetic adapter in fake mode.",
+    );
   const age = Date.now() - Date.parse(context.capturedAt);
   if (
     !Number.isInteger(start) ||
@@ -73,6 +78,7 @@ export async function fetchSerpApiSnapshotPage(
     "SerpApi",
     decideOrganicResult({ candidates, depth: 100, domain: context.domain }),
   );
+  const metadata = serpApiCapturedMetadata([data]);
   return {
     billingUnits: serpApiUsageReceipt(data, { ok: true }).quantity,
     checkedAt: new Date(),
@@ -81,6 +87,22 @@ export async function fetchSerpApiSnapshotPage(
     rankingUrl: decision.rankingUrl,
     raw: {
       ...rawPayload([data], decision),
+      snapshotPageEvidence: {
+        version: 1,
+        adapterVersion: "serpapi-observation-v1",
+        nextStart: start,
+        requestDepth: 10,
+        observedAt: metadata.observedAt,
+        observedThrough: metadata.observedThrough,
+        effectiveScope: metadata.effectiveScope,
+        configuredScope: {
+          location: context.location.primaryGeoName,
+          language: context.location.hl,
+          device: context.device,
+        },
+        completeThrough: null,
+        completeness: "unknown",
+      },
       snapshotContinuation: {
         ...context,
         nextStart: start + 10,

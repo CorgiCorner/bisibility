@@ -12,6 +12,7 @@ import {
   TagsCell,
 } from "./grid-columns";
 import { trafficColumns } from "./grid-columns-traffic";
+import { rankPoint, rankQualityRow } from "./keyword-rank-quality.test-fixture";
 
 const columnMessages = messages.projectRankTracker.keywordImport.management.columns;
 const keywordColumnLabels = {
@@ -150,7 +151,15 @@ describe("keywordColumns", () => {
     const column = columns.find((candidate) => candidate.id === "change");
     const getter = column && "accessorFn" in column ? column.accessorFn : undefined;
 
-    expect(getter?.({ ...row, position: 6, positionBaseline: 4, previousPosition: 6 }, 0)).toBe(-2);
+    const qualified = rankQualityRow();
+    qualified.rankQuality.baseline = rankPoint({ position: 4 });
+    qualified.rankQuality.movement = -2;
+    expect(
+      getter?.({ ...qualified, position: 6, positionBaseline: 4, previousPosition: 6 }, 0),
+    ).toBe(-2);
+    expect(
+      getter?.({ ...row, position: 6, positionBaseline: 4, previousPosition: 6 }, 0),
+    ).toBeNull();
   });
 
   it("sorts and filters by the target schedule", () => {

@@ -1,7 +1,7 @@
 import { renderWithUsageSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { budgetFixture, projectUsageFixture } from "@/lib/metering/shared-view-fixtures";
 import { emptyProjectUsage } from "@/lib/metering/user-views";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { ProviderUsageCard } from "./ProviderUsageCard";
 
@@ -13,7 +13,7 @@ vi.mock("./BudgetEditModal", () => ({ BudgetEditModal: () => <div>Open budget ed
 it("does not claim a healthy bound when no budgets apply", () => {
   const data = projectUsageFixture();
   data.budgets = [];
-  render(<ProviderUsageCard projectId="p" projectRef="p" canEditBudget={false} data={data} />);
+  render(<ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />);
   expect(screen.queryByText("Within budget")).toBeNull();
   expect(screen.getAllByText("No budgets apply.").length).toBeGreaterThan(0);
 });
@@ -55,7 +55,7 @@ it("does not label unavailable accounting as within budget", () => {
   expect(screen.queryByText("Within budget")).not.toBeInTheDocument();
 });
 
-it("shows the exact most constrained bound, including reservations, as its headline", () => {
+it("shows each budget with explicit used, reserved and limit labels", () => {
   const data = projectUsageFixture();
   data.budgets = [
     budgetFixture("0"),
@@ -68,10 +68,14 @@ it("shows the exact most constrained bound, including reservations, as its headl
   const { container } = render(
     <ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />,
   );
-  expect(container.querySelector("span.text-2xl")).toHaveTextContent("80 + 10 / 100");
+  const row = container.querySelector<HTMLElement>('[data-budget-row="tight"]')!;
+  expect(within(row).getByText("Used").nextElementSibling).toHaveTextContent("80");
+  expect(within(row).getByText("Reserved").nextElementSibling).toHaveTextContent("10");
+  expect(within(row).getByText("Limit").nextElementSibling).toHaveTextContent("100");
+  expect(container.querySelector(".text-2xl")).toBeNull();
 });
 it.each(["unknown", "unavailable", "redacted", "zero"])(
-  "distinguishes the %s budget headline",
+  "distinguishes the %s budget amount",
   (state) => {
     const data = projectUsageFixture();
     const row = budgetFixture("0");
@@ -82,9 +86,12 @@ it.each(["unknown", "unavailable", "redacted", "zero"])(
     const { container } = render(
       <ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />,
     );
-    expect(container.querySelector("span.text-2xl")).toHaveTextContent(
+    const renderedRow = container.querySelector<HTMLElement>("[data-budget-row]")!;
+    const value =
+      state === "redacted" ? renderedRow : within(renderedRow).getByText("Used").nextElementSibling;
+    expect(value).toHaveTextContent(
       state === "zero"
-        ? "0 + 0 / 100"
+        ? "0"
         : state === "unknown"
           ? "Unknown"
           : state === "redacted"
@@ -116,7 +123,9 @@ it("retains budget evidence after a connection is deleted and accepts soft bound
   const view = render(
     <ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />,
   );
-  expect(view.container.querySelector("span.text-2xl")).toHaveTextContent("62 + 0 / 100");
+  expect(screen.getByText("Used").nextElementSibling).toHaveTextContent("62");
+  expect(screen.getByText("Limit").nextElementSibling).toHaveTextContent("100");
+  expect(screen.getByText("Hard limit:", { exact: false })).toHaveTextContent("200");
   expect(
     view.container
       .querySelector<HTMLElement>("[data-usage-track]")
@@ -149,7 +158,7 @@ it.each(["unknown", "unavailable", "redacted"])(
   },
 );
 
-it.each([true, false])("prefers a 99% bound with unlimited first=%s", (first) => {
+it.each([true, false])("preserves the 99% bound with unlimited first=%s", (first) => {
   const data = projectUsageFixture();
   const unlimited = { ...budgetFixture("0"), id: "unlimited", limit: "unlimited" as const };
   const tight = { ...budgetFixture("99"), id: "tight" };
@@ -157,5 +166,44 @@ it.each([true, false])("prefers a 99% bound with unlimited first=%s", (first) =>
   const { container } = render(
     <ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />,
   );
-  expect(container.querySelector("span.text-2xl")).toHaveTextContent("99 + 0 / 100");
+  const row = container.querySelector<HTMLElement>('[data-budget-row="tight"]')!;
+  expect(within(row).getByText("Used").nextElementSibling).toHaveTextContent("99");
+  expect(within(row).getByText("Limit").nextElementSibling).toHaveTextContent("100");
+});
+
+it("separates provider, project and traffic from figures without parsing project names", () => {
+  const data = projectUsageFixture();
+  data.budgets[0] = {
+    ...budgetFixture("0", "budget_cents"),
+    kind: "connection",
+    target: "DataForSEO · Synthetic · local preview",
+    display: { providerLabel: "DataForSEO", projectName: "Synthetic · local preview" },
+  };
+  const { container } = render(
+    <ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />,
+  );
+  expect(screen.getByRole("heading", { name: "DataForSEO" })).toBeInTheDocument();
+  expect(screen.getByText("Synthetic · local preview")).toBeInTheDocument();
+  expect(screen.getByText("Any traffic")).toBeInTheDocument();
+  expect(screen.getByText("Used").nextElementSibling).toHaveTextContent("$0.00");
+  expect(screen.queryByText("DataForSEO · Synthetic · local preview")).toBeNull();
+  expect(container.querySelectorAll("dl")).toHaveLength(1);
+});
+
+it("keeps a confirmed blocked policy visible when one amount is unknown", () => {
+  const data = projectUsageFixture();
+  data.budgets[0].level = "exceeded";
+  data.budgets[0].reserved = { text: "", unit: "units", certainty: "unknown" };
+  render(<ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />);
+  expect(screen.getByText("Over limit")).toBeInTheDocument();
+  expect(screen.getByText("Reserved").nextElementSibling).toHaveTextContent("Unknown");
+});
+
+it("announces generic estimates without asserting a proven lower bound", () => {
+  const data = projectUsageFixture();
+  data.budgets[0].used = { text: "12", unit: "units", certainty: "estimated" };
+  render(<ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />);
+  expect(screen.getByLabelText("Estimated: ≈ 12 Units")).toBeInTheDocument();
+  expect(screen.getByText("Estimated")).toBeInTheDocument();
+  expect(screen.getByText("Used").nextElementSibling).not.toHaveTextContent("≥");
 });

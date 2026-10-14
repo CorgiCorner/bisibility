@@ -1,50 +1,44 @@
 import "server-only";
 
 import { Prisma } from "@/lib/generated/prisma/client";
-import type { ObservationRunInput } from "./types";
+import { observationDefinitionForCheck } from "./persist-definition";
+import { persistObservationItems } from "./persist-items";
+import type { ObservationRunInput, WebObservationRunInput } from "./types";
 
 export async function persistObservationRun(
   tx: Prisma.TransactionClient,
-  params: { rankCheckId: string; projectId: string; input: ObservationRunInput },
+  params: {
+    rankCheckId: string;
+    projectId: string;
+    input: WebObservationRunInput;
+    definitionBindingId?: string | null;
+  },
 ): Promise<void> {
+  const captured = await observationDefinitionForCheck(
+    tx,
+    params.projectId,
+    params.rankCheckId,
+    params.input,
+    params.definitionBindingId,
+  );
+  const input = captured.input;
   const observationRun = await tx.observationRun.create({
     data: {
       rankCheckId: params.rankCheckId,
+      definitionBindingId: captured.definitionBindingId,
       projectId: params.projectId,
-      provider: params.input.provider,
-      surface: params.input.surface,
-      engine: params.input.engine,
-      requestPolicy: params.input.requestPolicy as Prisma.InputJsonValue,
-      completeness: params.input.completeness,
-      configuredScope: params.input.configuredScope as Prisma.InputJsonValue,
-      effectiveScope: params.input.effectiveScope ?? Prisma.DbNull,
-      executedAt: params.input.executedAt,
+      provider: input.provider,
+      surface: input.surface,
+      engine: input.engine,
+      requestPolicy: input.requestPolicy as Prisma.InputJsonValue,
+      completeness: input.completeness,
+      configuredScope: input.configuredScope as Prisma.InputJsonValue,
+      effectiveScope: input.effectiveScope ?? Prisma.DbNull,
+      executedAt: input.executedAt,
     },
   });
 
-  if (params.input.items.length === 0) return;
-
-  await tx.observationItem.createMany({
-    data: params.input.items.map((item, ordinal) => ({
-      observationRunId: observationRun.id,
-      resultKind: item.resultKind,
-      ordinal,
-      rankGroup: item.rankGroup,
-      rankAbsolute: item.rankAbsolute,
-      blockPosition: item.blockPosition,
-      positionInBlock: item.positionInBlock,
-      title: item.title,
-      url: item.url,
-      domain: item.domain,
-      businessName: item.businessName,
-      placeId: item.placeId,
-      cid: item.cid,
-      mapsUrl: item.mapsUrl,
-      rating: item.rating ?? Prisma.DbNull,
-      rawFragment:
-        item.rawFragment == null ? Prisma.JsonNull : (item.rawFragment as Prisma.InputJsonValue),
-    })),
-  });
+  await persistObservationItems(tx, observationRun.id, input.items, true);
 }
 
 export async function persistRankCheckObservation(
@@ -52,7 +46,10 @@ export async function persistRankCheckObservation(
   input: ObservationRunInput | null | undefined,
   projectId: string,
   rankCheckId: string,
+  definitionBindingId?: string | null,
 ): Promise<void> {
   if (!input) return;
-  await persistObservationRun(tx, { input, projectId, rankCheckId });
+  if (input.surface !== "web_serp")
+    throw new Error("Local observations require a neutral execution owner.");
+  await persistObservationRun(tx, { input, projectId, rankCheckId, definitionBindingId });
 }

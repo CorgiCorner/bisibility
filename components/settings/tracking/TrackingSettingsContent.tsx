@@ -7,6 +7,7 @@ import {
 import { trackingCardGeometryClassNames } from "@/components/settings/tracking/tracking-settings-layout";
 import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import type { DefaultsData } from "@/lib/settings/options";
+import type { PreviewDefaults } from "./use-reviewed-defaults";
 
 type TrackingSettingsContentProps = {
   canEdit: boolean;
@@ -14,6 +15,7 @@ type TrackingSettingsContentProps = {
   domain: string | null;
   initialCronPreview: CronPreviewResult;
   previewCron: PreviewTrackingCron;
+  previewDefaults: PreviewDefaults;
   projectId: string;
   updateDefaults: UpdateTrackingDefaults;
 };
@@ -24,18 +26,20 @@ export function TrackingSettingsContent({
   domain,
   initialCronPreview,
   previewCron,
+  previewDefaults,
   projectId,
   updateDefaults,
 }: Readonly<TrackingSettingsContentProps>) {
   return (
     <div className="max-w-[760px] space-y-5" data-tracking-settings-content="">
-      <div data-tracking-settled-frame="checkDefaults">
+      <div data-tracking-settled-frame="checkDefaults" id="check-defaults" tabIndex={-1}>
         <TrackingDefaultsCard
           canEdit={canEdit}
           defaults={defaults}
           domain={domain}
           initialCronPreview={initialCronPreview}
           previewCron={previewCron}
+          previewDefaults={previewDefaults}
           projectId={projectId}
           updateDefaults={updateDefaults}
         />

@@ -279,6 +279,11 @@ describe("NoDataKpiRow", () => {
     expect(screen.getByText("0 of 2 keywords measured")).toBeInTheDocument();
     expect(screen.getAllByText("–")).toHaveLength(3);
     expect(screen.queryByText("awaiting first check")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Explain: Organic visibility" }));
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "A versioned index of organic results in the first 20 positions.",
+    );
+    expect(screen.getByRole("dialog").querySelector("dl")).toBeNull();
   });
 
   it.each(states)(

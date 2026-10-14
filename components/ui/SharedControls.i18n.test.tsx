@@ -2,7 +2,8 @@ import {
   renderWithFeatureMessages,
   renderWithSharedMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -215,4 +216,56 @@ describe("shared control translations", () => {
     expect(screen.getByRole("button", { name: "Kolumny" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Gęstość tabeli" })).toBeVisible();
   });
+});
+
+it("keeps embedded column controls open while Tab moves through the footer", async () => {
+  const user = userEvent.setup();
+  const changed = vi.fn();
+  const columns = [{ accessorKey: "name", header: "Name" }];
+  renderWithSharedMessages(
+    <DataTableColumnsMenu
+      columns={columns}
+      id="embedded-columns"
+      onColumnVisibilityChange={changed}
+      footerContent={
+        <>
+          <input aria-label="Column order" defaultValue="1" />
+          <button type="button">Save order</button>
+        </>
+      }
+    />,
+  );
+  const trigger = screen.getByRole("button", { name: "Columns" });
+  await user.click(trigger);
+  const checkbox = await screen.findByRole("checkbox", { name: "Hide Name column" });
+  await user.click(checkbox);
+  expect(changed).toHaveBeenCalledOnce();
+  expect(changed).toHaveBeenCalledWith({ name: false });
+  const order = screen.getByRole("textbox", { name: "Column order" });
+  await user.click(order);
+  await user.tab();
+  expect(screen.getByRole("button", { name: "Save order" })).toHaveFocus();
+  expect(screen.getByRole("dialog", { name: "Columns" })).toBeVisible();
+  await user.keyboard("{Escape}");
+  await waitFor(() => expect(screen.queryByRole("dialog", { name: "Columns" })).toBeNull());
+  await waitFor(() => expect(trigger).toHaveFocus());
+});
+
+it("preserves the menu interaction when columns have no embedded controls", async () => {
+  const user = userEvent.setup();
+  const changed = vi.fn();
+  renderWithSharedMessages(
+    <DataTableColumnsMenu
+      columns={[{ accessorKey: "name", header: "Name" }]}
+      id="legacy-columns"
+      onColumnVisibilityChange={changed}
+    />,
+  );
+  const trigger = screen.getByRole("button", { name: "Columns" });
+  expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+  await user.click(trigger);
+  expect(await screen.findByRole("menu", { name: "Columns" })).toBeVisible();
+  await user.click(screen.getByRole("checkbox", { name: "Hide Name column" }));
+  expect(changed).toHaveBeenCalledOnce();
+  expect(changed).toHaveBeenCalledWith({ name: false });
 });

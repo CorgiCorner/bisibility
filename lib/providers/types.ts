@@ -2,7 +2,7 @@ import type { ObservationRunInput } from "@/lib/observation/types";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import type { SerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
-import type { SerpSnapshotContinuation } from "@/lib/serp/snapshot-extension";
+import type { SerpSnapshotContinuation, SnapshotPageEvidence } from "@/lib/serp/snapshot-extension";
 import type { ProviderAllocationCatalog } from "./allocation-catalog";
 import type {
   AnalyticsQueryStatsInput,
@@ -11,6 +11,14 @@ import type {
   QueryStatRow,
 } from "./analytics-types";
 import type {
+  BacklinkHistoryInput,
+  BacklinkHistoryResult,
+  BacklinkRowMode,
+  BacklinkRowsResult,
+  BacklinkSummaryResult,
+  BacklinkTargetInput,
+} from "./backlink-types";
+import type {
   DomainOverviewInput,
   DomainOverviewResult,
   HistoricalOverviewResult,
@@ -18,7 +26,20 @@ import type {
   RelevantPagesInput,
   RelevantPagesResult,
 } from "./domain-overview-types";
-import type { ProviderHistoryWindow } from "./history-window";
+
+export type {
+  BacklinkFlag,
+  BacklinkHistoryInput,
+  BacklinkHistoryResult,
+  BacklinkRow,
+  BacklinkRowMode,
+  BacklinkRowsResult,
+  BacklinkSummary,
+  BacklinkSummaryResult,
+  BacklinkTargetInput,
+  BacklinkTargetScope,
+} from "./backlink-types";
+
 import type { ProviderUsageObserver } from "./usage";
 
 export type {
@@ -83,6 +104,7 @@ export type SerpOrganicResult = {
 };
 
 export type SerpRawPayload = {
+  snapshotPageEvidence?: SnapshotPageEvidence;
   snapshotContinuation?: SerpSnapshotContinuation;
   normalization?: {
     anomalies: Array<{ code: string; index: number }>;
@@ -137,65 +159,6 @@ export type KeywordMetrics = {
 
 export type ResearchKeywordRow = { keyword: string } & KeywordMetrics;
 export type ResearchPage = { costCents: number; rows: ResearchKeywordRow[] };
-
-export type BacklinkTargetScope = "site" | "page";
-export type BacklinkRowMode = "as_is" | "one_per_domain";
-export type BacklinkFlag = "nofollow" | "ugc" | "sponsored" | "image" | "sitewide";
-
-export type BacklinkSummary = {
-  backlinksTotal: number;
-  brokenBacklinks: number;
-  brokenPages: number;
-  dofollowPct: number;
-  domainRank: number;
-  lostBacklinks: number;
-  lostReferringDomains: number;
-  newBacklinks: number;
-  newReferringDomains: number;
-  referringDomainsTotal: number;
-  referringPages: number;
-  spamScore: number;
-};
-
-type BacklinkHistoryRow = {
-  lostLinks: number;
-  lostReferringDomains: number;
-  month: string;
-  newLinks: number;
-  newReferringDomains: number;
-};
-
-export type BacklinkRow = {
-  anchor: string;
-  domainAuthority: number;
-  firstSeen: string | null;
-  flags: BacklinkFlag[];
-  linksCount: number;
-  lostAt: string | null;
-  sourceDomain: string;
-  sourceUrl: string;
-  spamScore: number;
-  status: "active" | "new" | "lost";
-  targetUrl: string;
-};
-
-export type BacklinkTargetInput = {
-  attribution?: ProviderRequestAttribution;
-  includeSubdomains: boolean;
-  tag?: string;
-  target: string;
-  targetScope: BacklinkTargetScope;
-};
-
-export type BacklinkHistoryInput = BacklinkTargetInput & { historyWindow?: ProviderHistoryWindow };
-
-export type BacklinkSummaryResult = { costCents: number; summary: BacklinkSummary };
-export type BacklinkHistoryResult = { costCents: number; rows: BacklinkHistoryRow[] };
-export type BacklinkRowsResult = {
-  costCents: number;
-  rows: BacklinkRow[];
-  totalCount: number;
-};
 
 export type KeywordResearchInput = {
   attribution?: ProviderRequestAttribution;

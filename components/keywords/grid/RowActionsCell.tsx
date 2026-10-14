@@ -29,14 +29,19 @@ type RowActionsCellProps = {
   onRunCheck: (row: KeywordRow) => void;
   projectRef: string;
   row: KeywordRow;
+  detailHref?: string;
 };
 
-type RowActionCallbacks = Omit<RowActionsCellProps, "checkPending" | "projectRef" | "row">;
+type RowActionCallbacks = Omit<
+  RowActionsCellProps,
+  "checkPending" | "projectRef" | "row" | "detailHref"
+>;
 
 export function rowActionsColumn(
   callbacks: RowActionCallbacks,
   projectRef: string,
   pendingCheckIds: ReadonlySet<string> = new Set(),
+  detailHref?: (row: KeywordRow) => string,
 ): DataTableColumn<KeywordRow> {
   return {
     cell: ({ row }) =>
@@ -44,6 +49,7 @@ export function rowActionsColumn(
         <RowActionsCell
           {...callbacks}
           checkPending={pendingCheckIds.has(row.original.id)}
+          detailHref={detailHref?.(row.original)}
           projectRef={projectRef}
           row={row.original}
         />
@@ -68,6 +74,7 @@ export function RowActionsCell({
   canDeleteKeyword,
   canUpdateKeyword,
   checkPending = false,
+  detailHref,
   onDelete,
   onEdit,
   onRunCheck,
@@ -94,7 +101,7 @@ export function RowActionsCell({
   function open(event: MouseEvent<HTMLElement>) {
     event.stopPropagation();
     setAnchorEl(null);
-    router.push(appPath(projectRef, "rank-tracker", row.id));
+    router.push(detailHref ?? appPath(projectRef, "rank-tracker", row.id));
   }
 
   function select(event: MouseEvent<HTMLElement>, action: (row: KeywordRow) => void) {

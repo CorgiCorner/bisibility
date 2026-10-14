@@ -34,6 +34,7 @@ export type DataTableColumn<TRow extends DataTableRowBase> =
   import("@tanstack/react-table").ColumnDef<TRow, unknown> & { meta?: DataTableColumnMeta };
 
 export type DataTableLayoutControlProps = {
+  columnOrder?: readonly string[];
   columnSizing?: Record<string, number>;
   columnVisibility?: Record<string, boolean>;
   onColumnSizingChange?: (next: Record<string, number>) => void;
@@ -74,6 +75,7 @@ export type DataTableProps<TRow extends DataTableRowBase> = DataTableLayoutContr
 export type DataTableColumnsMenuProps<TRow extends DataTableRowBase> =
   DataTableLayoutControlProps & {
     ariaLabel?: string;
+    footerContent?: ReactNode;
     columns: readonly DataTableColumn<TRow>[];
     id: string;
   };

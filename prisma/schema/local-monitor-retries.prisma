@@ -1,0 +1,30 @@
+// Immutable paid-retry lineage. Composite scope and captured original item authority are SQL-owned.
+model LocalMonitorRetrySelection {
+ id String @id
+ projectId String
+ monitorId String
+ parentRunId String
+ parentOccurrenceId String
+ definitionRevisionId String
+ scheduleIntentId String
+ parentExpectedCount Int
+ sourceHash String
+ selectedProofHash String
+ createdAt DateTime @default(now())
+ @@unique([projectId,id])
+ @@map("local_monitor_retry_selections")
+}
+model LocalMonitorRetryMember {
+ selectionId String
+ projectId String
+ parentItemId String
+ targetId String
+ targetKey String
+ recordVersion Int
+ recordSnapshot Json
+ nativeState String
+ nativeProof String
+ @@id([selectionId,targetId])
+ @@unique([selectionId,parentItemId])
+ @@map("local_monitor_retry_members")
+}

@@ -108,6 +108,10 @@
         "projectContext": {
           "label": "プロジェクトのコンテキスト",
           "keywords": "事業 対象顧客 製品 目標 エージェント コンテキスト"
+        },
+        "businessLocations": {
+          "label": "店舗",
+          "keywords": "企業 支店 店舗 cid place id ローカル 対象"
         }
       }
     },
@@ -122,7 +126,14 @@
       "notifications": "通知",
       "team": "チーム",
       "tracking": "追跡",
-      "context": "プロジェクトのコンテキスト"
+      "context": "プロジェクトのコンテキスト",
+      "businessLocations": "店舗"
+    },
+    "groups": {
+      "project": "プロジェクト",
+      "measurement": "計測",
+      "team": "チームと請求",
+      "administration": "管理"
     }
   }
 }

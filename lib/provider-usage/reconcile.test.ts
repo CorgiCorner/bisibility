@@ -67,11 +67,11 @@ it("counts unknown and overdue operations from Store with no legacy ledger reads
   expect(f.queries.join(" ")).toContain("metering_operation");
   expect(mocks.notify).toHaveBeenCalledWith(
     expect.objectContaining({
-      fields: {
+      fields: expect.objectContaining({
         "Oldest age minutes": 16,
         "Overdue entries": 1,
         "Unconfirmed total": 2,
-      },
+      }),
     }),
   );
 });

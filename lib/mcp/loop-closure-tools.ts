@@ -30,7 +30,18 @@ function project(input: JsonObject, resource: string) {
 
 function exportQuery(input: JsonObject) {
   const params = new URLSearchParams({ format: "json" });
-  for (const key of ["cursor", "granularity", "limit", "range"]) {
+  for (const key of [
+    "cursor",
+    "granularity",
+    "limit",
+    "range",
+    "version",
+    "stream",
+    "basis",
+    "from",
+    "to",
+    "aggregation",
+  ]) {
     const value = input[key];
     if (typeof value === "string" || typeof value === "number") params.set(key, String(value));
   }

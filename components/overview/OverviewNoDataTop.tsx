@@ -1,4 +1,5 @@
 "use client";
+import { LocalizedMeasurementHelp } from "@/components/measurement-help/LocalizedMeasurementHelp";
 import { FirstCheckBanner, FirstCheckBannerLink } from "@/components/rank-check/FirstCheckBanner";
 import {
   FirstCheckBannerAction,
@@ -7,13 +8,16 @@ import {
   type RunFirstCheckAction,
 } from "@/components/rank-check/FirstCheckBannerAction";
 import { Card } from "@/components/ui/Card";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { useSharedErrorMessages } from "@/i18n/useSharedErrorMessages";
 import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
 import type { ProjectRef } from "@/lib/routing/app-path";
 import { appPath } from "@/lib/routing/app-path";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
+import {
+  VISIBILITY_DEFINITION_VERSION_V1,
+  VISIBILITY_METRIC_ID_V1,
+} from "@/lib/visibility/definition";
 import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { RecentlyAddedCard } from "./OverviewNoDataBottom";
@@ -233,7 +237,19 @@ export function NoDataKpiRow(props: Readonly<NoDataKpiRowProps>) {
                       : kpiT("visibility")}
               </span>
               {kpi.id === "visibility" ? (
-                <InfoTooltip text={kpiT("visibilityDescription")} />
+                <span className="-my-2.5 inline-flex">
+                  <LocalizedMeasurementHelp
+                    metricId={VISIBILITY_METRIC_ID_V1}
+                    definitionVersion={VISIBILITY_DEFINITION_VERSION_V1}
+                  />
+                </span>
+              ) : kpi.id === "averagePosition" ? (
+                <span className="-my-2.5 inline-flex">
+                  <LocalizedMeasurementHelp
+                    metricId="average_ranked_position"
+                    definitionVersion="help-v1"
+                  />
+                </span>
               ) : null}
             </div>
             <div

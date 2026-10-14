@@ -1,7 +1,10 @@
+import { persistProviderFailure } from "./queued-results-failure";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
-import { resolveExpectedUrlForKeyword } from "@/lib/expected-url/keyword";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { collectedQueuedDefinition } from "@/lib/measurement-definitions/worker-collection";
+import { loadDefinitionComparablePrevious } from "@/lib/measurement-definitions/worker-comparable";
+import { queuedDataForSeoObservation } from "@/lib/observation/queued-dataforseo";
 import { ownAdmission } from "@/lib/provider-usage/admission-extension";
 import { chargedProviderCostCents } from "@/lib/providers/call-error";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
@@ -17,8 +20,6 @@ import {
   fetchDataForSeoQueuedResult,
 } from "@/lib/providers/serp/dataforseo-queued";
 import { requireDeterminateOrganicResult } from "@/lib/providers/serp/payload-contract-error";
-import { trackedProjectDomain } from "@/lib/schemas/project";
-import { resolveSerpDepth } from "@/lib/serp/constants";
 import { rankCheckCostCents } from "./cost";
 import { CURRENT_RANK_NORMALIZATION_VERSION } from "./normalization-version";
 import { organicDomainRanksFromV2Results } from "./organic-ranks";
@@ -52,23 +53,10 @@ import {
   releaseAbortedLease,
   transitionLease,
 } from "./queued-results-lease";
-import { loadComparablePrevious, type QueuedTask } from "./queued-results-load";
+import { type QueuedTask } from "./queued-results-load";
 import { QUEUED_DEADLINE_REASON } from "./queued-timeouts";
-import { fallbackSchedule, persistFailedRankCheck, persistRankCheck } from "./runner";
+import { fallbackSchedule, persistRankCheck } from "./runner";
 import { computeNextCheckAt } from "./schedule";
-
-async function persistProviderFailure(
-  task: QueuedTask,
-  message: string,
-  costCents: number | undefined,
-  lease: QueuedPersistenceLease,
-) {
-  const previous = await loadComparablePrevious(task);
-  const expectedUrl = await resolveExpectedUrlForKeyword(task.keyword.id);
-  const origin = queuedBatchAttribution(task.batch);
-  // biome-ignore format: keep the queue persistence module under its enforced line cap.
-  await persistFailedRankCheck({ attempts: [{ message, provider: "dataforseo" }], checkedAt: new Date(), connectionId: task.batch.connectionId ?? undefined, error: message, existingRankCheckId: task.rankCheckId, expectedUrlAtCheck: expectedUrl.url, keywordId: task.keyword.id, keywordPublicId: task.keyword.publicId, keywordText: task.keyword.text, previousPosition: previous?.position ?? null, persistenceFinalize: terminalizeLease(lease, "failed"), persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease), projectDomain: trackedProjectDomain(task.keyword.project.domain) ?? "", projectId: task.keyword.projectId, provider: "dataforseo", providerCostCents: costCents, providerRequestId: task.providerTaskId ?? undefined, providerUsage: { context: { correlationId: task.id, feature: "rank_check", projectId: task.keyword.projectId, source: origin.source, trigger: origin.trigger }, ...(origin.credential ? { credential: origin.credential } : {}), tag: task.providerTag ?? dataForSeoQueuedTaskTag(task.id) }, requestedDepth: resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined), transactionOptions: queuedResultTransactionOptions });
-}
 
 async function persistProviderResult(
   task: QueuedTask,
@@ -87,7 +75,9 @@ async function persistProviderResult(
   const polled = await pollDataForSeoQueue(
     credentials,
     task.keyword.projectId,
-    () => {
+    async () => {
+      if (recovery) await recovery.assertRetrieval();
+      else await ownAdmission.assertRetrieval(prisma, task.batch.connection!.id, [task.id]);
       throwIfQueuedResultDeadlineReached(deadlineAt);
       return fetchDataForSeoQueuedResult(credentials, task.providerTaskId as string, { signal });
     },
@@ -136,9 +126,10 @@ async function persistProviderResult(
   // biome-ignore format: keep the queue persistence module under its enforced line cap.
   const items = providerTask.status_code === DATA_FOR_SEO_NO_SEARCH_RESULTS_STATUS ? [] : Array.isArray(providerTask.result) ? providerTask.result.flatMap((result) => result.items ?? []) : [null];
   const checkedAt = new Date();
-  const requestedDepth = resolveSerpDepth(task.rankCheck.requestedDepth ?? undefined);
+  const definition = await collectedQueuedDefinition(task, lease);
+  const requestedDepth = definition.request.depth;
   // biome-ignore format: keep the queue persistence module under its enforced line cap.
-  const decision = requireDeterminateOrganicResult("DataForSEO", dataForSeoOrganicDecision(items, trackedProjectDomain(task.keyword.project.domain) ?? "", requestedDepth));
+  const decision = requireDeterminateOrganicResult("DataForSEO", dataForSeoOrganicDecision(items, definition.request.domain, requestedDepth));
   const reportedCost = recovery
     ? frozenCost
     : terminalCostCents !== null && terminalCostCents > 0
@@ -147,19 +138,41 @@ async function persistProviderResult(
         ? null
         : Number(task.costCents);
   const costCents = rankCheckCostCents(reportedCost);
-  const previous = await loadComparablePrevious(task);
-  const expectedUrl = await resolveExpectedUrlForKeyword(task.keyword.id);
+  const previous = await loadDefinitionComparablePrevious(
+    definition,
+    queuedDataForSeoObservation(
+      providerTask,
+      items,
+      requestedDepth,
+      checkedAt,
+      decision.outcome === "match",
+      definition.request,
+    ),
+    decision.position,
+    checkedAt,
+  );
+  const expectedUrl = { url: definition.request.targetUrl };
   const origin = queuedBatchAttribution(task.batch);
   const schedule = task.keyword.schedule ?? task.keyword.project.defaults ?? fallbackSchedule();
   const rawPayload = dataForSeoRawPayload(items, decision);
   const raw = rawPayload as unknown as Prisma.InputJsonObject;
   await persistRankCheck(
     // biome-ignore format: keep the queue persistence module under its enforced line cap.
-    { attempts: [], connectionId: task.batch.connection.id, existingRankCheckId: task.rankCheckId, expectedUrlAtCheck: expectedUrl.url, hasDefaults: Boolean(task.keyword.project.defaults), hasSchedule: Boolean(task.keyword.schedule), keywordId: task.keyword.id, keywordPublicId: task.keyword.publicId, keywordTargetUrl: task.keyword.targetUrl, previousRankingUrl: previous?.rankingUrl ?? null, previousRaw: previous?.raw ?? null, persistenceFinalize: terminalizeLease(lease, "completed"), persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease), projectId: task.keyword.projectId, providerRequestId: task.providerTaskId, providerUsage: { context: { correlationId: task.id, feature: "rank_check", projectId: task.keyword.projectId, source: origin.source, trigger: origin.trigger }, ...(origin.credential ? { credential: origin.credential } : {}), tag: task.providerTag ?? dataForSeoQueuedTaskTag(task.id) }, transactionOptions: queuedResultTransactionOptions },
+    { queuedTaskId: task.id, attempts: [], connectionId: task.batch.connection.id, existingRankCheckId: task.rankCheckId, expectedUrlAtCheck: expectedUrl.url, hasDefaults: Boolean(task.keyword.project.defaults), hasSchedule: Boolean(task.keyword.schedule), keywordId: task.keyword.id, keywordPublicId: task.keyword.publicId, keywordTargetUrl: definition.request.targetUrl, previousRankingUrl: previous?.rankingUrl ?? null, previousRaw: previous?.raw ?? null, persistenceFinalize: terminalizeLease(lease, "completed"), persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease), projectId: task.keyword.projectId, providerRequestId: task.providerTaskId, providerUsage: { context: { correlationId: task.id, feature: "rank_check", projectId: task.keyword.projectId, source: origin.source, trigger: origin.trigger }, ...(origin.credential ? { credential: origin.credential } : {}), tag: task.providerTag ?? dataForSeoQueuedTaskTag(task.id) }, transactionOptions: queuedResultTransactionOptions },
     {
+      definitionBindingId: definition.id,
+      recoveryContextHash: task.recoveryContextHash ?? undefined,
       comparisonAllowed: previous !== null,
       providerCostCents: reportedCost !== null && reportedCost > 0 ? reportedCost : undefined,
       rankCheck: {
+        observation: queuedDataForSeoObservation(
+          providerTask,
+          items,
+          requestedDepth,
+          checkedAt,
+          decision.outcome === "match",
+          definition.request,
+        ),
         billingUnits: 1,
         checkedAt,
         costCents,

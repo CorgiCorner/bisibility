@@ -1,11 +1,17 @@
 import { keywordRows } from "@/components/keywords/keywords-fixtures";
 import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
+import { reportAsOf } from "@/lib/rank-reports/report-test-fixture";
+import { detailRouteFixture } from "@/tests/keyword-detail-page-history-fixture";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import KeywordDetailPage from "./page";
 
 const mocks = vi.hoisted(() => ({
+  loadKeywordDetailHistoryWindow: vi.fn(),
+  loadKeywordHistoryPage: vi.fn(),
+  refreshKeywordHistoryWindow: vi.fn(),
+  loadKeywordHistorySnapshot: vi.fn(),
   trafficProps: vi.fn(),
   syncTraffic: vi.fn(),
   getKeywordDetail: vi.fn(),
@@ -21,6 +27,13 @@ const mocks = vi.hoisted(() => ({
   requireReadableProject: vi.fn(),
   resolveRegionalDocumentLocale: vi.fn(),
   resolveProjectAccess: vi.fn(),
+}));
+
+vi.mock("@/lib/queries/keyword-detail-history", () => ({
+  loadKeywordDetailHistoryWindow: mocks.loadKeywordDetailHistoryWindow,
+  loadKeywordHistoryPage: mocks.loadKeywordHistoryPage,
+  refreshKeywordHistoryWindow: mocks.refreshKeywordHistoryWindow,
+  loadKeywordHistorySnapshot: mocks.loadKeywordHistorySnapshot,
 }));
 
 vi.mock("@/lib/queries/competitor-policies", () => ({
@@ -79,10 +92,14 @@ const normalDetailState = {
   position: 3,
 };
 
-vi.mock("@/components/keywords/PositionHistoryCard", () => ({
-  PositionHistoryCard: (props: { chartState?: unknown; keyword: unknown; timeZone: string }) => {
+vi.mock("@/components/keyword-detail-history/KeywordDetailHistory", () => ({
+  KeywordDetailHistory: (props: { history: unknown; keyword: unknown; timeZone: string }) => {
     positionHistoryProps(props);
-    return <div data-testid="position-history" />;
+    return (
+      <div data-testid="position-history">
+        <div data-testid="ranking-history" />
+      </div>
+    );
   },
 }));
 vi.mock("@/lib/actions/traffic-sync", () => ({ syncProjectTraffic: mocks.syncTraffic }));
@@ -168,6 +185,8 @@ describe("KeywordDetailPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     positionHistoryProps.mockClear();
+    mocks.loadKeywordDetailHistoryWindow.mockImplementation(detailRouteFixture);
+    vi.setSystemTime(reportAsOf);
     mocks.storedResultsIndex.mockResolvedValue([]);
     mocks.getKeywordCompetitors.mockResolvedValue([]);
     mocks.loadRetrievedResultsForChecks.mockResolvedValue([savedResults[0]]);
@@ -296,7 +315,7 @@ describe("KeywordDetailPage", () => {
     expect(mocks.trafficProps).toHaveBeenLastCalledWith(
       expect.objectContaining({ canSync: true, syncTrafficAction: mocks.syncTraffic }),
     );
-    expect(traffic.nextElementSibling).toBe(history);
+    expect(chart).toContainElement(history);
     expect(screen.getByLabelText("Check scope")).toHaveTextContent("United StatesEnglishMobile");
   });
 
@@ -346,11 +365,14 @@ describe("KeywordDetailPage", () => {
         }),
       );
       expect(screen.getByRole("heading", { name: "SERP snapshots" })).toBeInTheDocument();
-      expect(screen.queryByTestId("position-history")).not.toBeInTheDocument();
+      expect(screen.getByTestId("position-history")).toBeInTheDocument();
+      expect(mocks.loadKeywordDetailHistoryWindow).toHaveBeenCalledTimes(1);
+      expect(mocks.loadKeywordHistoryPage).not.toHaveBeenCalled();
+      expect(mocks.loadKeywordHistorySnapshot).not.toHaveBeenCalled();
     },
   );
 
-  it("passes costContext.timezone to PositionHistoryCard", async () => {
+  it("passes costContext.timezone to the actual recorded history workspace", async () => {
     mocks.loadRankTrackerCostContext.mockResolvedValue({
       costPerCheckCents: null,
       timezone: "Europe/Madrid",

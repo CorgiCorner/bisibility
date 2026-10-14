@@ -1,172 +1,108 @@
 import "server-only";
-
 import type { Actor } from "@/lib/auth/authorize";
 import {
   buildCompetitorMarket,
   emptyCompetitorFilter,
 } from "@/lib/competitors/competitor-market-model";
 import type { CompetitorScope } from "@/lib/competitors/scope-model";
-import {
-  COMPETITOR_ENGINE,
-  competitorMarketKey,
-  resolveCompetitorMarket,
-} from "@/lib/competitors/scope-model";
+import { resolveCompetitorMarket } from "@/lib/competitors/scope-model";
 import { competitorAppliesToMarket } from "@/lib/competitors/serp-comparison";
-import type { CompetitorMarketOption } from "@/lib/competitors/types";
 import { normalizeCompetitorDomain } from "@/lib/competitors/types";
 import { prisma } from "@/lib/db/prisma";
-import { isPublicIdOfType } from "@/lib/db/public-id";
-import { fetchProjectKeywordVolumes } from "@/lib/queries/keyword-metrics-query";
-import { storedOrganicDomainRanks } from "@/lib/rank-check/organic-ranks";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject, requireReadableProjectFor } from "./_auth";
-import { legacyOrganicRanks } from "./competitor-legacy-ranks";
+import { loadCompetitorCurrentData } from "./competitor-current-data";
 import { loadCompetitorPolicies } from "./competitor-policies";
-import type { QueryKeywordDetail } from "./competitor-query-model";
 import {
-  competitorMarketData,
   competitorSuggestions,
   managedCompetitor,
   summarizeCompetitorMarkets,
 } from "./competitor-query-model";
-
-const LEGACY_FALLBACK_MAX = 500;
+import type { RankTrackerReportOptions } from "./rank-tracker-report-model";
 
 async function queryCompetitors(
-  { project }: Awaited<ReturnType<typeof requireReadableProject>>,
+  scope: Awaited<ReturnType<typeof requireReadableProject>>,
   requested: CompetitorScope | null | undefined,
   includeAllMarkets: boolean,
+  options?: RankTrackerReportOptions,
 ) {
-  const projectDomain = trackedProjectDomain(project.domain) ?? "";
-  const ownDomain = normalizeCompetitorDomain(projectDomain) ?? projectDomain;
-  const [competitorRows, keywordSummaries] = await Promise.all([
-    loadCompetitorPolicies(project.id),
-    prisma.keyword.findMany({
-      orderBy: [{ id: "asc" }],
-      select: {
-        device: true,
-        id: true,
-        locationId: true,
-        locationRef: {
-          select: {
-            canonicalKey: true,
-            cityName: true,
-            countryCode: true,
-            displayName: true,
-            hl: true,
-            kind: true,
-            languageLabel: true,
-            regionCode: true,
+  return prisma.$transaction(
+    async (tx) => {
+      const { actor } = scope;
+      const project = await tx.project.findUniqueOrThrow({
+        where: { id: scope.project.id },
+        select: { id: true, publicId: true, domain: true },
+      });
+      const ownDomain = normalizeCompetitorDomain(trackedProjectDomain(project.domain) ?? "") ?? "";
+      const [competitorRows, current] = await Promise.all([
+        loadCompetitorPolicies(project.id, tx),
+        loadCompetitorCurrentData(tx, actor, project, options),
+      ]);
+      const managed = competitorRows.map(managedCompetitor);
+      const suggestions = competitorSuggestions([], current.suggestionRows, ownDomain, managed);
+      const summaries = summarizeCompetitorMarkets(
+        current.candidates.map((row) => ({
+          ...row,
+          locationId: row.locationRef.id,
+          locationRef: row.locationRef,
+          rankChecks: [],
+        })),
+      );
+      const markets = summaries.map((option) => {
+        const members = competitorRows
+          .filter((row) => competitorAppliesToMarket(row, option.locationId))
+          .map(managedCompetitor);
+        const allColumns = [
+          { domain: ownDomain, kind: "You" as const, label: ownDomain },
+          ...members.map((member) => ({ ...member, kind: "Managed" as const })),
+        ];
+        const observations = current.observationsFor(allColumns, option.locationId, option.device);
+        return buildCompetitorMarket(
+          {
+            ...option,
+            allColumns,
+            competitorCount: members.length,
+            observations,
+            tags: [...new Set(observations.flatMap((row) => row.tags))].sort(),
+            trackedKeywordCount: observations.length,
           },
-        },
-        rankChecks: {
-          orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
-          select: { checkedAt: true, organicRanks: true, position: true },
-          take: 1,
-          where: { status: "completed" },
-        },
-      },
-      where: { projectId: project.id },
-    }),
-  ]);
-  const summaries = summarizeCompetitorMarkets(keywordSummaries);
-  const selected = resolveCompetitorMarket(summaries, requested);
-  const managed = competitorRows.map(managedCompetitor);
-  const managedForMarket = (locationId: string) =>
-    competitorRows
-      .filter((competitor) => competitorAppliesToMarket(competitor, locationId))
-      .map(managedCompetitor);
-  const details =
-    includeAllMarkets || selected
-      ? await prisma.keyword.findMany({
-          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-          select: {
-            device: true,
-            id: true,
-            locationId: true,
-            publicId: true,
-            tags: { select: { tag: { select: { name: true } } } },
-            text: true,
-          },
-          where: includeAllMarkets
-            ? { projectId: project.id }
-            : { device: selected?.device, locationId: selected?.locationId, projectId: project.id },
-        })
-      : [];
-  const latestByKeyword = new Map(
-    keywordSummaries.flatMap((keyword) =>
-      keyword.rankChecks[0] ? [[keyword.id, keyword.rankChecks[0]] as const] : [],
-    ),
+          emptyCompetitorFilter,
+        );
+      });
+      const optionsWithCounts = summaries
+        .map((option) => ({
+          ...option,
+          checkedKeywordCount:
+            markets.find((market) => market.key === option.key)?.checkedKeywordCount ?? 0,
+        }))
+        .sort(
+          (a, b) =>
+            b.checkedKeywordCount - a.checkedKeywordCount ||
+            b.keywordCount - a.keywordCount ||
+            a.location.localeCompare(b.location) ||
+            a.device.localeCompare(b.device),
+        );
+      const selected = resolveCompetitorMarket(optionsWithCounts, requested);
+      const market = markets.find((value) => value.key === selected?.key) ?? null;
+      return {
+        allMarkets: includeAllMarkets ? markets : null,
+        managedCompetitors: managed,
+        market,
+        marketOptions: optionsWithCounts.map(
+          ({ observations: _observations, ...option }) => option,
+        ),
+        projectId: project.publicId,
+        scope:
+          requested ??
+          (selected
+            ? { device: selected.device, engine: selected.engine, locationId: selected.locationId }
+            : null),
+        suggestions,
+      };
+    },
+    { isolationLevel: "RepeatableRead" },
   );
-  const missingSnapshotIds = keywordSummaries
-    .filter(
-      (keyword) =>
-        keyword.rankChecks.length > 0 &&
-        storedOrganicDomainRanks(keyword.rankChecks[0]?.organicRanks) === null,
-    )
-    .map((keyword) => keyword.id);
-  const missingSnapshotIdSet = new Set(missingSnapshotIds);
-  const prioritizedMissingIds = [
-    ...details.map((keyword) => keyword.id).filter((id) => missingSnapshotIdSet.has(id)),
-    ...missingSnapshotIds,
-  ];
-  const fallbackIds = [...new Set(prioritizedMissingIds)].slice(0, LEGACY_FALLBACK_MAX);
-  const [legacyRows, volumes] = await Promise.all([
-    legacyOrganicRanks(project.id, fallbackIds),
-    details.length > 0
-      ? fetchProjectKeywordVolumes(project.id, keywordSummaries.length)
-      : Promise.resolve(new Map<string, number | null>()),
-  ]);
-  const legacyRanks = new Map(legacyRows.map((row) => [row.keywordId, row.ranks]));
-  const suggestions = competitorSuggestions(summaries, legacyRows, ownDomain, managed);
-  const detailsByMarket = new Map<string, QueryKeywordDetail[]>();
-  for (const keyword of details) {
-    const key = competitorMarketKey({
-      device: keyword.device,
-      engine: COMPETITOR_ENGINE,
-      locationId: keyword.locationId,
-    });
-    const existing = detailsByMarket.get(key);
-    if (existing) existing.push(keyword);
-    else detailsByMarket.set(key, [keyword]);
-  }
-  const buildMarket = (option: CompetitorMarketOption) =>
-    buildCompetitorMarket(
-      competitorMarketData(
-        option,
-        detailsByMarket.get(option.key) ?? [],
-        latestByKeyword,
-        legacyRanks,
-        volumes,
-        ownDomain,
-        managedForMarket(option.locationId),
-      ),
-      emptyCompetitorFilter,
-    );
-  const market = selected ? buildMarket(selected) : null;
-
-  return {
-    allMarkets: includeAllMarkets ? summaries.map(buildMarket) : null,
-    managedCompetitors: managed,
-    market,
-    marketOptions: summaries.map(({ observations: _observations, ...option }) => option),
-    projectId: requiredProjectPublicId(project.publicId),
-    scope:
-      requested ??
-      (selected
-        ? { device: selected.device, engine: selected.engine, locationId: selected.locationId }
-        : null),
-    suggestions,
-  };
 }
-
-function requiredProjectPublicId(value: string) {
-  if (!isPublicIdOfType(value, "prj")) {
-    throw new Error("Project public ID is not available.");
-  }
-  return value;
-}
-
 export async function getCompetitorsView(projectId: string, requested?: CompetitorScope | null) {
   const result = await queryCompetitors(await requireReadableProject(projectId), requested, false);
   return {
@@ -178,17 +114,21 @@ export async function getCompetitorsView(projectId: string, requested?: Competit
     suggestions: result.suggestions,
   };
 }
-
 export async function getCompetitorsApiView(projectId: string) {
   return readCompetitorsApiView(await requireReadableProject(projectId));
 }
-
-export async function getCompetitorsApiViewFor(actor: Actor, projectId: string) {
-  return readCompetitorsApiView(await requireReadableProjectFor(actor, projectId));
+export async function getCompetitorsApiViewFor(
+  actor: Actor,
+  projectId: string,
+  options?: RankTrackerReportOptions,
+) {
+  return readCompetitorsApiView(await requireReadableProjectFor(actor, projectId), options);
 }
-
-async function readCompetitorsApiView(scope: Awaited<ReturnType<typeof requireReadableProject>>) {
-  const result = await queryCompetitors(scope, null, true);
+async function readCompetitorsApiView(
+  scope: Awaited<ReturnType<typeof requireReadableProject>>,
+  options?: RankTrackerReportOptions,
+) {
+  const result = await queryCompetitors(scope, null, true, options);
   return {
     managedCompetitors: result.managedCompetitors,
     markets: result.allMarkets ?? [],

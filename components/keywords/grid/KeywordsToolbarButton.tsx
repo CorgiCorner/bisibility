@@ -1,5 +1,6 @@
 import { Button, type ButtonProps } from "@/components/ui/Button";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import { cn } from "@/lib/ui/cn";
 export const toolbarSecondaryIconClassName = "text-fg-muted";
 
@@ -47,6 +48,7 @@ export function KeywordsToolbarButton({
           iconOnly || compactBelowXl
             ? "max-xl:min-w-10 max-xl:gap-0"
             : "max-lg:min-w-10 max-lg:gap-0",
+          props.variant === "secondary" && toolbarControlClassName,
           props.variant === "secondary" && "[&_[data-button-start-icon]]:text-fg-muted",
           className,
         )}
@@ -58,6 +60,7 @@ export function KeywordsToolbarButton({
             : {}),
         }}
         {...props}
+        variant={props.variant === "secondary" ? "outline" : props.variant}
       >
         {labelClassName ? <span className={labelClassName}>{label}</span> : null}
         {children}

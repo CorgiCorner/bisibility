@@ -94,7 +94,8 @@
           "sampleProject": "Projekty przykładowe nie wykonują prawdziwych sprawdzeń.",
           "sendUnconfirmed": "Nie udało się potwierdzić wysłania tego sprawdzenia, więc nie zostało ponowione. Uruchom je jeszcze raz, jeśli go potrzebujesz.",
           "skipped": "To sprawdzenie zostało pominięte.",
-          "unexpected": "Sprawdzenie nie powiodło się po naszej stronie. Ponów za chwilę."
+          "unexpected": "Sprawdzenie nie powiodło się po naszej stronie. Ponów za chwilę.",
+          "measurementPolicy": "Skonfiguruj politykę pomiarów przed nowymi sprawdzeniami."
         },
         "live": "Sprawdzenia na żywo zwykle kończą się w ciągu minuty.",
         "notChecked": "Jeszcze nie sprawdzono",

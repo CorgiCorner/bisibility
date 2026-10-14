@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { withVerifiedLoginCodeRequest } from "@/lib/auth/login-code-request-context";
 import { loginSchema } from "@/lib/auth/login-schema";
 import { EMAIL_CAPACITY_EXHAUSTED } from "@/lib/auth/signin-capacity-types";
+import { assertTestAuthEmail } from "@/lib/auth/test-auth-extension";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { resolveClientIp } from "@/lib/http/client-ip";
 import type { WaitlistFailureCode } from "@/lib/landing/waitlist-result";
@@ -40,7 +41,8 @@ export async function requestLoginCode(input: unknown): Promise<RequestLoginCode
   if (!parsed.success) return { code: "invalid_input", ok: false };
 
   const requestHeaders = await headers();
-  if (deploymentMode() === "cloud") {
+  const testIdentity = await assertTestAuthEmail(parsed.data.email);
+  if (deploymentMode() === "cloud" && !testIdentity) {
     const rawIp = resolveClientIp(requestHeaders);
     const clientDigest = createHash("sha256")
       .update(rawIp ?? "unidentified")

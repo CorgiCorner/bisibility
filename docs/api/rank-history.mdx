@@ -134,24 +134,109 @@ The project export supports the same history filters as the app:
 | `range` | `30`, `90`, or `all`. Defaults to `30`. |
 | `granularity` | `daily` or `weekly`. Defaults to `daily`. |
 | `limit` | JSON page size. Defaults to `50`, maximum `200`. |
-| `cursor` | Opaque JSON pagination cursor. |
+| `cursor` | Opaque continuation token: legacy offset CursorV3 in v1, signed snapshot cursor in v2. Do not decode or construct it in a client. |
 | `format` | Optional `json` or `csv` override. |
+| `version` | `1` (default, compatible legacy rows) or `2` (explicit qualified report). |
+| `stream` | V2: `observations` (default) or `attempts`. |
+| `basis` | V2: `recorded_at` (default), or `observed_at` for observations. |
+| `from`, `to` | V2: explicit ordered ISO time window; provide both. |
+| `aggregation` | V2: `none`; v2 does not reinterpret legacy weekly buckets. |
 
-JSON uses the standard `data` and `meta.next_cursor` envelope. Every row includes
+Default v1 JSON uses the standard `data` and `meta.next_cursor` envelope. Every row includes
 `id`, `keyword_id`, `keyword`, `checked_at`, `position`, `previous_position`, and
-`ranking_url`. Only completed rank checks are included.
+`ranking_url`. Optional additive fields `provider`, `requested_depth`, and
+`normalization_version` preserve the same provenance as CSV; unavailable values
+are `null`. `ranking_url` is the URL saved for that check, even after the current
+keyword URL changes. Only completed rank checks are included.
+
+The existing `daily` policy returns each selected observation, rather than one
+daily average. `weekly` selects the latest check in seven-day buckets anchored
+at January 1 in UTC. It is not ISO-week grouping or a weekly average. These
+legacy names retain their existing behavior for compatibility.
+
+V1 retains the existing offset CursorV3 transport and fresh authorized selection
+on each request. Pages are not a frozen cross-request snapshot: concurrent changes
+can move rows between pages. Every page remains project- and credential-scoped,
+with bounded database reads. Use explicit `version=2` for snapshot-bound reporting.
+No cursor itself grants access; revocation is rechecked before returning rows.
+
+V2 returns qualified observation or logical-attempt records, preserving nulls,
+status, observed/recorded time, effective/configured scope and quality provenance.
+`meta.report` carries the whole-scope summary, versions, membership policy and
+watermark. Signed v2 cursors bind the original time, source, project, credential
+and selection. A changed source returns `409`; an invalid or foreign token returns
+`400 invalid_cursor`. Restart an export explicitly after those errors. Legacy v3
+offset tokens are accepted only by v1 and are never silently rebound into v2.
+
+Both versions reject an oversized source with `413`, rather than returning an
+apparently complete truncated export. Capacity is enforced before CSV or JSON
+bytes become observable. V2 CSV is a complete bounded download with a manifest;
+CSV continuation tokens are unsupported.
+
+V2 `attempts` also includes `rank_check_run` and `rank_check_run_item` records
+for actual retained runs/items without an attached RankCheck. Their IDs are the
+existing `rcr_...` and opaque run-item IDs. These records carry saved status,
+outcome, reasons and actual nullable execution timestamps; they have no check,
+rank or provider observation time. Run counts refer to the saved run, not the
+current keyword population. `scope_membership` distinguishes persisted items from
+project-only runs. Full-project exports retain project-only runs. Selected or
+filtered exports omit runs whose original keyword membership cannot be proved,
+and report `unresolved_membership_count`; current assignments are never substituted.
+
+V2 observations include `normalized_items` and `normalized_item_count`, preserving
+retained source ordinal, block, promotion, rank scale and opaque string CID.
+Raw fragments and current identity matches are excluded. `meta.report.normalized_items`
+describes retained-only completeness, total count, capacity and the absence of
+truncation. Nested items paginate with their parent observation; there is no
+independent item cursor. If the full retained source exceeds capacity, no partial
+success is returned. V2 CSV stores deterministic normalized-item JSON in its
+sanitized cell, alongside the report manifest.
+
+Every page rechecks current access and credential revocation. A validated v2
+signed continuation does not create another export audit entry. A first request
+without a continuation starts a new export, including a retry of that initial
+request; it is not an idempotency proof. V1 retains its per-response audit behavior.
 
 Send `Accept: text/csv` or `format=csv` for a streamed CSV download. CSV exports
 include `keyword_id`, `keyword`, `checked_at`, `position`, `previous_position`,
 `ranking_url`, `provider`, `requested_depth`, and `normalization_version`, and
 are not cursor-paginated.
 
-Project exports, including MCP `export_rank_history`, do not include
+Default v1 project exports, including legacy MCP `export_rank_history`, do not include
 `observation_completeness` in JSON or CSV. A null position in an export therefore
 cannot establish complete no-match coverage. Use the keyword rank-check history
 or individual rank-check resource when you need the persisted coverage field.
+`requested_depth` is the intended depth, not proof that the provider returned a
+complete prefix. Provider and parser versions alone do not prove comparable
+location, device or target identity.
 
 ## Async polling flow
+
+Read the run itself to handle outcomes that produce no rank-check row:
+
+```http
+GET /api/v1/projects/{project_id}/rank-check-runs/{run_id}
+Authorization: Bearer <api_key>
+```
+
+The response includes execution `status`, nullable `outcome`, counts, actual
+timestamps, `terminal`, and `polling_state`. A cancelled run or a completed run
+with a deferred outcome can finish without a completed check. Stop ordinary
+completion polling when `terminal` is true. A blocked run reports its bounded
+machine reason; display that state instead of waiting for a positive ranking.
+Unknown future statuses remain readable and use `polling_state: unknown`.
+
+`GET /projects/{project_id}/rank-check-runs` lists runs with `limit` (50 by
+default, maximum 200), `cursor`, and an optional comma-separated `status` filter.
+Its default history segment includes unlaunched cancelled, deferred and blocked
+runs. Use `segment=planned` for planned schedule rows. Pages have live statuses;
+they are not a historical SEO metric snapshot. Unlaunched counts are labelled
+`planned_or_unlaunched`, while launched counts use `run_snapshot`.
+
+Run reads require project read access and execute no provider requests. Native
+estimates remain separate from actual usage. Unknown actual cost and unknown
+estimate quantities remain `null`. The resource excludes actor details,
+selection payloads, internal workflow/task identifiers and credentials.
 
 ```http
 POST /api/v1/keywords/{id}/checks
@@ -160,7 +245,23 @@ Content-Type: application/json
 ```
 
 The API returns `202` with `{ "id": "rcr_...", "status": "queued" }` when the
-workflow is queued. Poll `GET /keywords/{id}/rank-checks?status=completed` and
-select the row whose `run_id` equals that queued run ID. The matching row holds
-the final position and rank-check ID. If the queue worker is unavailable, the
-request returns `503` and no run is kept.
+workflow is queued. Read the project run for its outcome. When a completed check
+exists, read `GET /keywords/{id}/rank-checks?status=completed` and select the row
+whose `run_id` equals the queued run ID. That row holds the position and rank-check
+ID. If the queue worker is unavailable, the request returns `503` and no run is kept.
+
+## Retained Local monitoring reads
+
+Five read-only operations use original Local monitor (`lmn`), run (`lmr`) and point (`lmt`) public IDs:
+
+- `GET /projects/{project_id}/local-monitors/{monitor_id}/runs` lists retained occurrences.
+- `GET /projects/{project_id}/local-monitors/{monitor_id}/runs/{run_id}/results` returns original sampled points, current policy freshness, grid quality and accounting state.
+- `GET /projects/{project_id}/local-monitors/{monitor_id}/runs/{run_id}/points/{target_id}/listings` returns bounded normalized listings and retained string CID/source metadata.
+- `GET /projects/{project_id}/local-monitors/{monitor_id}/runs/{run_id}/points/{target_id}/history` keeps the exact captured target.
+- `GET /projects/{project_id}/local-monitors/{monitor_id}/runs/{run_id}/export?version=1&format=json` exports the existing `local-point-report-v1` report; `format=csv` returns CSV.
+
+`as_of`, `from` and `to` require canonical UTC timestamps with milliseconds. Histories use inclusive `occurrence_created_at` windows and opaque signed cursors of 1 through 8000 characters. Keep every selection option on continuation. Fresh credential, user and membership authorization applies on every page. Changed retained source or freshness policy refuses continuation; restart the selection.
+
+The JSON API uses snake_case fields; the existing Local download JSON retains camelCase fields. Neither transport exposes provider task IDs, credentials or raw fragments. Unknown, absent, stale and unsupported states remain distinct; a coordinate seed does not prove an exact provider search centre. These reads never launch provider work, initialize accounting or change schedules. Local exports audit each successful download response; rank-history version 2 alone deduplicates audit across signed continuation pages.
+
+Compatible SDK 0.17.0 candidates and CLI/MCP consumers are validated locally against the same handler fixture. Registry publication and final published-package acceptance follow a separate release stage.

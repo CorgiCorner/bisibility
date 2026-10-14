@@ -3,6 +3,15 @@ import {
   type AuditPayloadPolicy,
   auditFields as f,
 } from "@/lib/auth/audit-payload-policy";
+import {
+  registerReviewedFrequencyAudit,
+  reviewedConsentPolicy,
+  withReviewedConsent,
+} from "./audit-field-declarations-consent";
+import {
+  registerLocalMeasurementAuditDeclarations,
+  registerRankCheckAuditDeclarations,
+} from "./audit-field-declarations-measurement";
 import { registerOnboardingAuditDeclarations } from "./audit-field-declarations-onboarding";
 
 type Declare = (actions: readonly string[], policy?: AuditPayloadPolicy) => void;
@@ -15,6 +24,12 @@ export function registerAdditionalAuditDeclarations(
   { market, projectDefaults, provider, rankCheck }: SharedPolicies,
 ) {
   registerOnboardingAuditDeclarations(declare);
+  registerLocalMeasurementAuditDeclarations(declare);
+  const usageDisplay = {
+    ...f.strings("moneyDisplay"),
+    ...f.numbers("revision", "moneyFractionDigits", "quantityFractionDigits"),
+  };
+  declare(["settings.usage_display.update"], { before: usageDisplay, after: usageDisplay });
   const list = (policy: AuditFieldPolicy): readonly [AuditFieldPolicy] => [policy];
   const strings = (...names: string[]) => f.strings(...names);
   const schedule = {
@@ -30,7 +45,11 @@ export function registerAdditionalAuditDeclarations(
     movedFrom: list("string"),
   };
   const checkSchedulePolicy = { after: checkSchedule, before: checkSchedule };
-  declare(["check_schedule.create", "check_schedule.update"], checkSchedulePolicy);
+  declare(["check_schedule.create"], checkSchedulePolicy);
+  declare(["check_schedule.update"], {
+    before: checkSchedule,
+    after: withReviewedConsent(checkSchedule),
+  });
   declare(["check_schedule.delete", "check_schedule.assign"], checkSchedulePolicy);
   declare(["check_schedule.set_default"], checkSchedulePolicy);
   declare(["check_schedule.remove"], checkSchedulePolicy);
@@ -49,17 +68,11 @@ export function registerAdditionalAuditDeclarations(
       preference: notificationPreference,
     },
   });
-  declare(
-    [
-      "settings.presence_inspection_budget.update",
-      "settings.rank_check_frequency.update",
-      "settings.search_data_sync.update",
-    ],
-    {
-      after: projectDefaults,
-      before: projectDefaults,
-    },
-  );
+  declare(["settings.presence_inspection_budget.update", "settings.search_data_sync.update"], {
+    after: projectDefaults,
+    before: projectDefaults,
+  });
+  registerReviewedFrequencyAudit(declare, projectDefaults);
   declare(["settings.hosted_pricing_feedback.submit"], {
     after: { ...f.booleans("answered"), ...strings("category") },
   });
@@ -75,6 +88,7 @@ export function registerAdditionalAuditDeclarations(
     after: {
       market,
       schedule: projectDefaults,
+      consent: reviewedConsentPolicy,
     },
     before: { market, schedule: projectDefaults },
   });
@@ -108,29 +122,7 @@ export function registerAdditionalAuditDeclarations(
       before: { ...strings("id", "writeMode"), ...f.dates("writeModeChangedAt") },
     },
   );
-  declare(["rank_check.queue_first"], {
-    after: { ...f.numbers("queued"), ...strings("reason") },
-  });
-  const rankCheckRun = {
-    ...(rankCheck as Record<string, AuditFieldPolicy>),
-    ...strings("code", "message", "runId"),
-    ...f.urls("rankingUrl"),
-  };
-  declare(["rank_check.requested", "rank_check.run_now"], { after: rankCheckRun });
-  declare(["rank_check.completed", "rank_check.failed", "rank_check.stale_failed"], {
-    after: rankCheck,
-    before: rankCheck,
-  });
-  declare(["rank_check.deferred", "rank_check.running"], {
-    after: rankCheck,
-    before: rankCheck,
-  });
-  declare(["rank_check.raw_purge"], {
-    after: {
-      ...f.numbers("batchSize", "deletedCount", "retentionDays", "updatedCount"),
-      ...f.dates("cutoff"),
-    },
-  });
+  registerRankCheckAuditDeclarations(declare, rankCheck);
   declare(["settings.run_check_now"], {
     after: { ...f.numbers("failed", "queued", "total"), ...strings("reason") },
   });
@@ -148,9 +140,16 @@ export function registerAdditionalAuditDeclarations(
       }),
     },
   });
-  const savedView = strings("name", "savedViewId", "surface");
+  const savedView = {
+    ...strings("name", "savedViewId", "surface", "visibility"),
+    ...f.numbers("revision"),
+  };
   declare(["saved_view.create"], { after: savedView });
+  declare(["saved_view.update"], { before: savedView, after: savedView });
   declare(["saved_view.delete"], { before: savedView });
+  declare(["project_surface_preference.set_default", "project_surface_preference.presentation"], {
+    after: { ...strings("surface", "operation"), ...f.numbers("revision") },
+  });
   const signal = {
     ...strings(
       "created_at",

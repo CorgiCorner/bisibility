@@ -1,11 +1,11 @@
 import { Prisma } from "@/lib/generated/prisma/client";
 import { describe, expect, it, vi } from "vitest";
 import { persistObservationRun } from "./persist";
-import type { ObservationRunInput } from "./types";
+import type { WebObservationRunInput } from "./types";
 
 const executedAt = new Date("2026-08-28T20:30:00.000Z");
 
-function observationInput(): ObservationRunInput {
+function observationInput(): WebObservationRunInput {
   return {
     provider: "example-provider",
     surface: "web_serp",
@@ -44,6 +44,7 @@ function observationInput(): ObservationRunInput {
 
 function transaction() {
   return {
+    $queryRaw: vi.fn().mockResolvedValue([]),
     observationRun: { create: vi.fn().mockResolvedValue({ id: "observation_run_1" }) },
     observationItem: { createMany: vi.fn().mockResolvedValue({ count: 3 }) },
   };
@@ -145,6 +146,7 @@ describe("persistObservationRun", () => {
     expect(tx.observationRun.create).toHaveBeenCalledWith({
       data: {
         rankCheckId: "rank_check_1",
+        definitionBindingId: null,
         projectId: "project_1",
         provider: "example-provider",
         surface: "web_serp",

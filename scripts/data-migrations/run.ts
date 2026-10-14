@@ -5,6 +5,7 @@ import { dataMigrationManifest } from "@/lib/data-migrations/manifest";
 import { databaseConnectionConfig } from "@/lib/db/pool-config";
 import pg from "pg";
 import { activeDataMigrationImplementations } from "./registry";
+import { readyDataMigrations } from "./prerequisites";
 import { resolveActiveDataMigrations } from "./resolver";
 import { runActiveDataMigrations } from "./runner";
 import type { DataMigrationDatabase } from "./types";
@@ -47,7 +48,7 @@ export function dataMigrationLockTimeoutMs(
   return seconds * 1_000;
 }
 
-export async function runDataMigrations() {
+export async function runDataMigrations({ deferUnready = false } = {}) {
   const migrations = await resolveActiveDataMigrations(
     dataMigrationManifest,
     activeDataMigrationImplementations,
@@ -60,9 +61,10 @@ export async function runDataMigrations() {
   });
   await db.connect();
   try {
+    const ready = await readyDataMigrations(db, migrations, deferUnready);
     await runActiveDataMigrations(
       db as unknown as DataMigrationDatabase,
-      migrations,
+      ready,
       {
         batchSize: dataMigrationBatchSize(),
         lockTimeoutMs: dataMigrationLockTimeoutMs(),

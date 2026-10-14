@@ -6,6 +6,7 @@ import type { WorkspaceBudgetSummary } from "@/lib/queries/workspace-budget-summ
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { HeaderBudgetScope } from "./HeaderBudgetScope";
 import { headerBudgetFigure, headerBudgetSummary } from "./header-budget-summary";
 
 export type HeaderProviderSpendProps = {
@@ -41,16 +42,6 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
       `${p.figure(value)} ${p.unit(value.unit)}`;
     return lowerBound && value.certainty === "estimated" ? `≥ ${text}` : text;
   };
-  const scope = (row: import("@usagekit/views").BudgetRow) => {
-    const target = row.kind === "group" ? p.operation("project") : row.target;
-    const traffic =
-      row.traffic.kind === "any"
-        ? "any"
-        : row.traffic.kind === "surface"
-          ? row.traffic.surface
-          : row.traffic.source;
-    return `${target} · ${row.traffic.kind === "source" ? p.dimension("source", traffic) : p.operation(traffic)}`;
-  };
   const details = (
     <div className="max-w-xs space-y-2 text-left">
       <p>{t("headerCapTooltip")}</p>
@@ -60,7 +51,7 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
             p.budget.redacted
           ) : (
             <>
-              <p className="font-medium">{scope(row)}</p>
+              <HeaderBudgetScope row={row} />
               {row.level === "unavailable" ? (
                 p.budget.unavailable
               ) : (

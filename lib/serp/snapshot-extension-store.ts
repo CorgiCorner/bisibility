@@ -5,6 +5,8 @@ import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { assertDefinitionActor } from "@/lib/measurement-definitions/access";
+import { captureSnapshotDefinition } from "@/lib/measurement-definitions/snapshot-binding";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { SNAPSHOT_EXTENSION_LEASE_MS, type SnapshotExtensionState } from "./snapshot-extension";
 import {
@@ -21,6 +23,7 @@ export async function claimSnapshotExtension(input: {
 }) {
   return prisma.$transaction(async (tx) => {
     await lockProjectForProviderMutation(tx, input.projectId);
+    await assertDefinitionActor(tx, input.actorId, input.projectId, "update");
     const project = await tx.project.findUnique({
       where: { id: input.projectId },
       select: { id: true, writeMode: true },
@@ -78,6 +81,15 @@ export async function claimSnapshotExtension(input: {
       data: { raw: { ...raw, snapshotExtension: claimed } as unknown as Prisma.InputJsonObject },
     });
     if (updated.count !== 1) return { ok: false as const, reason: "running" as const };
+    const definition = await captureSnapshotDefinition(tx, {
+      id: requestId,
+      actorId: input.actorId,
+      projectId: input.projectId,
+      keywordId: check.keywordId,
+      rankCheckId: check.id,
+      context,
+      state: claimed,
+    });
     await writeAudit(
       {
         action: "rank_check.snapshot_extend",
@@ -89,7 +101,7 @@ export async function claimSnapshotExtension(input: {
       },
       tx,
     );
-    return { ok: true as const, check, context, state: claimed, raw, requestId };
+    return { ok: true as const, check, context, state: claimed, raw, requestId, definition };
   });
 }
 

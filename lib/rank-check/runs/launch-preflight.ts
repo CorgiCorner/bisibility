@@ -1,8 +1,8 @@
 import "server-only";
-
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { readHostPolicySnapshot } from "@/lib/measurement-definitions/host-policy-snapshot";
 import { budgetDenialReason } from "@/lib/metering/budget-denial";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
@@ -33,6 +33,7 @@ export function verifyLaunchPreviewToken(
   costCents: number | null,
   selectionHash: string,
   now: Date,
+  sourceHash?: string,
 ) {
   verifyPreviewToken(
     input.previewToken,
@@ -42,6 +43,7 @@ export function verifyLaunchPreviewToken(
       projectId: input.project.id,
       providerId: input.providerId ?? null,
       selectionHash,
+      sourceHash,
       trigger: input.trigger,
     },
     now,
@@ -58,13 +60,15 @@ export async function lockLaunchSourceSnapshot(
   await lockProjectForProviderMutation(tx, projectId);
   const project = await tx.project.findUnique({
     select: {
-      defaults: { select: { serpDepth: true } },
+      domain: true,
+      defaults: { select: { serpDepth: true, serpStopOnMatch: true } },
     },
     where: { id: projectId },
   });
   const connection = (await loadSerpProviderChain(projectId, providerId, tx))[0];
   if (!project || !connection) throw new LaunchRankCheckRunError("no_provider");
-  return { connection, project };
+  const measurementPolicy = await readHostPolicySnapshot(tx, projectId);
+  return { connection, project, measurementPolicy };
 }
 type ProviderAllocationConnection = Pick<ProviderConnection, "id" | "provider">;
 

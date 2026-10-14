@@ -56,7 +56,7 @@ describe("KeywordsFilterBar", () => {
     expect(screen.getByText("Filtros activos")).toBeInTheDocument();
   });
 
-  it("renders the search via shared ToolbarSearch (type=search, toolbar control surface)", () => {
+  it("renders the search via shared ToolbarSearch with a compact outlined surface", () => {
     render(<KeywordsFilterBar {...baseProps} />);
 
     const input = screen.getByRole("searchbox", { name: "Search keywords" });
@@ -66,14 +66,13 @@ describe("KeywordsFilterBar", () => {
 
     const label = input.closest("label");
     expect(label).toHaveClass(
-      "min-h-[34px]",
+      "h-8.5",
       "rounded-control",
       "border",
       "border-border-control",
       "bg-transparent",
-      "text-[12.5px]",
-      "font-normal",
     );
+    expect(input).toHaveClass("text-[12.5px]");
   });
 
   it("calls onSearchChange with the new value when the search input changes", () => {

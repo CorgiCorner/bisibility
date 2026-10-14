@@ -3,9 +3,9 @@
 import { SettingsSearch } from "@/components/settings/shell/SettingsSearch";
 import {
   type SettingsSectionId,
+  settingsSectionGroups,
   settingsSectionHref,
   settingsSectionLabel,
-  settingsSections,
 } from "@/components/settings/shell/settings-sections";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { ProjectRef } from "@/lib/routing/app-path";
@@ -32,9 +32,13 @@ export function SettingsMobileMenu({
           onChange={(section) =>
             router.push(settingsSectionHref(projectRef, section as SettingsSectionId))
           }
-          options={settingsSections.map((section) => ({
-            label: settingsSectionLabel(t, section.id),
-            value: section.id,
+          groups={settingsSectionGroups.map((group) => ({
+            id: group.id,
+            label: t(`groups.${group.id}`),
+            options: group.sections.map((id) => ({
+              label: settingsSectionLabel(t, id),
+              value: id,
+            })),
           }))}
           triggerClassName="w-full justify-between"
           value={activeSection}

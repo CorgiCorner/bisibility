@@ -48,7 +48,7 @@
     "partialFailure": "Analiza nie została zakończona. Potwierdzone wyniki zachowano. Sprawdź zużycie dostawcy przed ponowieniem.",
     "contentTruncated": "Fragmenty odpowiedzi skrócono, aby mieściły się w zapisanym raporcie.",
     "readOnly": "Projekt jest tylko do odczytu lub Twoja rola nie pozwala uruchamiać płatnych analiz. Możesz otwierać zapisane raporty.",
-    "noSource": "Połącz zgodnego dostawcę danych w Integracjach.",
+    "noSource": "Połącz DataForSEO w integracjach, aby oszacować koszt lub uruchomić analizę.",
     "country": "Kraj",
     "language": "Język",
     "firstModel": "Pierwszy model",
@@ -77,7 +77,7 @@
     "restoreLegacyPreset": "Użyj dotychczasowego presetu 512 tokenów",
     "legacyPromptLanguage": "Zgodnie z oryginalnym promptem",
     "legacyPromptLanguageHint": "Dotychczasowy preset wysyła prompt bez zmian i nie dodaje instrukcji języka.",
-    "catalogUnavailableLegacy": "Aktualny katalog jest niedostępny. Dotychczasowy preset mini/nano oraz zbiór ChatGPT dla USA w języku angielskim pozostają dostępne. Rozszerzone ustawienia wymagają świeżego, zweryfikowanego katalogu.",
+    "catalogUnavailableLegacy": "Lista modeli jest niedostępna. Preset mini/nano nadal jest dostępny.",
     "pricingUnavailableLegacy": "Brakuje świeżej, ograniczonej wyceny rozszerzonych ustawień. Dotychczasowy preset mini/nano z 512 tokenami pozostaje dostępny według stawek z podaną datą weryfikacji.",
     "modelPolicyPending": "Ten model oczekuje na decyzję BYOK i zasady kosztów. Opublikowana cena nie oznacza zgody na uruchomienie.",
     "webSearchPolicyPending": "Web search jest dostępny wyłącznie po jawnym włączeniu BYOK według faktycznego kosztu.",
@@ -107,6 +107,9 @@
     "modelNeedsOwnAccount": "Połącz własne konto dostawcy w Integracjach i wybierz rzeczywisty koszt dostawcy.",
     "modelNeedsActualPayment": "Wybierz rzeczywisty koszt dostawcy, aby użyć tego modelu z własnym kontem dostawcy.",
     "modelPricingUnavailable": "Nie można potwierdzić aktualnej ceny tego modelu. Spróbuj ponownie później.",
-    "modelUnavailable": "Ten model nie jest jeszcze obsługiwany w analizach promptów."
+    "modelUnavailable": "Ten model nie jest jeszcze obsługiwany w analizach promptów.",
+    "catalogUnavailableVisibility": "Lista rynków jest niedostępna. ChatGPT dla Stanów Zjednoczonych po angielsku nadal jest dostępny.",
+    "catalogHelp": "Informacje o dostępnych ustawieniach AI",
+    "openIntegrations": "Otwórz integracje"
   }
 }

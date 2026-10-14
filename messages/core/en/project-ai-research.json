@@ -48,7 +48,7 @@
     "partialFailure": "The analysis could not be completed. Confirmed results are retained. Review provider usage before retrying.",
     "contentTruncated": "Answer excerpts are shortened to fit the saved report.",
     "readOnly": "This project is read-only or your role cannot run paid analyses. You can still open saved reports.",
-    "noSource": "Connect a compatible data provider in Integrations.",
+    "noSource": "Connect DataForSEO in Integrations to estimate costs or run an analysis.",
     "country": "Country",
     "language": "Language",
     "firstModel": "First model",
@@ -77,7 +77,7 @@
     "restoreLegacyPreset": "Use the existing 512-token preset",
     "legacyPromptLanguage": "Follow the original prompt",
     "legacyPromptLanguageHint": "The existing preset sends your prompt unchanged and adds no language instruction.",
-    "catalogUnavailableLegacy": "The live catalog is unavailable. The existing mini/nano preset and ChatGPT United States/English dataset preset remain available. Extended settings need a verified fresh catalog.",
+    "catalogUnavailableLegacy": "Model list unavailable. The mini/nano preset is still available.",
     "pricingUnavailableLegacy": "Fresh bounded pricing is unavailable for extended settings. The existing 512-token mini/nano preset remains available with its dated admission rates.",
     "modelPolicyPending": "This model is awaiting a BYOK and cost-policy decision. Its published price does not enable execution.",
     "webSearchPolicyPending": "Web search is available only with an explicit BYOK actual-cost opt-in.",
@@ -107,6 +107,9 @@
     "modelNeedsOwnAccount": "Connect your own provider account in Integrations and select actual provider cost.",
     "modelNeedsActualPayment": "Select actual provider cost to use this model with your own provider account.",
     "modelPricingUnavailable": "Current pricing cannot be verified for this model. Try again later.",
-    "modelUnavailable": "This model is not supported for prompt runs yet."
+    "modelUnavailable": "This model is not supported for prompt runs yet.",
+    "catalogUnavailableVisibility": "Market list unavailable. ChatGPT for the United States in English is still available.",
+    "catalogHelp": "About available AI settings",
+    "openIntegrations": "Open Integrations"
   }
 }

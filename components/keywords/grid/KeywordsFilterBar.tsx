@@ -17,6 +17,7 @@ import { KeywordsToolbarActions } from "./KeywordsToolbarActions";
 import { KeywordsToolbarButton, toolbarSecondaryIconClassName } from "./KeywordsToolbarButton";
 
 type KeywordsFilterBarProps = {
+  columnOrderControl?: ReactNode;
   columnSizing: Record<string, number>;
   columns: readonly DataTableColumn<KeywordRow>[];
   columnVisibility: Record<string, boolean>;
@@ -30,6 +31,7 @@ type KeywordsFilterBarProps = {
   onColumnVisibilityChange: (next: Record<string, boolean>) => void;
   onDensityChange: (density: DataTableDensity) => void;
   onImportCsv?: () => void;
+  exportDisabled?: boolean;
   onOpenExport: () => void;
   onOpenFilters: () => void;
   onRefresh: () => void;
@@ -43,6 +45,7 @@ type KeywordsFilterBarProps = {
 };
 
 export function KeywordsFilterBar({
+  columnOrderControl,
   columnSizing,
   columns,
   columnVisibility,
@@ -56,6 +59,7 @@ export function KeywordsFilterBar({
   onColumnVisibilityChange,
   onDensityChange,
   onImportCsv,
+  exportDisabled,
   onOpenExport,
   onOpenFilters,
   onRefresh,
@@ -72,8 +76,8 @@ export function KeywordsFilterBar({
   const hasContextControls = Boolean(scopeControl || savedViewControl);
 
   return (
-    <div className="px-4 py-3.5" data-keywords-toolbar="">
-      <div className="grid gap-3">
+    <div className="px-4 py-3" data-keywords-toolbar="">
+      <div className="grid gap-2">
         {hasContextControls ? (
           <div
             // `contents` would leak these into the parent grid as separate rows below xl.
@@ -105,6 +109,7 @@ export function KeywordsFilterBar({
         ) : null}
         <div className="order-1 grid min-w-0 grid-cols-1 items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto] lg:order-2 lg:grid-cols-[minmax(220px,1fr)_auto] xl:grid-cols-[minmax(320px,1fr)_auto]">
           <ToolbarSearch
+            variant="outlined"
             className="min-w-0"
             id="keywords-filter"
             label={t("searchKeywords")}
@@ -114,6 +119,7 @@ export function KeywordsFilterBar({
             value={searchValue}
           />
           <KeywordsToolbarActions
+            columnOrderControl={columnOrderControl}
             columnSizing={columnSizing}
             columns={columns}
             columnVisibility={columnVisibility}
@@ -125,6 +131,7 @@ export function KeywordsFilterBar({
             onColumnVisibilityChange={onColumnVisibilityChange}
             onDensityChange={onDensityChange}
             onImportCsv={onImportCsv}
+            exportDisabled={exportDisabled}
             onOpenExport={onOpenExport}
             onOpenFilters={onOpenFilters}
           />

@@ -21,6 +21,7 @@ export type ApiErrorCode =
   | "self_import"
   | "sample_project"
   | "snapshot_expired"
+  | "saved_view_conflict"
   | "unauthorized"
   | "unsupported_api_version"
   | "unsupported_target"
@@ -77,6 +78,7 @@ const errorTitles = {
   scheduler_unavailable: "Scheduler unavailable",
   self_import: "Self import blocked",
   snapshot_expired: "Snapshot expired",
+  saved_view_conflict: "Conflict",
   unauthorized: "Unauthorized",
   unsupported_api_version: "Unsupported API version",
   unsupported_target: "Unsupported target",

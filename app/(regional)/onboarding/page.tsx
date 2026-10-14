@@ -1,5 +1,6 @@
 import { OnboardingEntryAnalytics } from "@/components/analytics/OnboardingEntryAnalytics";
 import { locationFieldValueFromKeywordLocation } from "@/components/keywords/location-field-value";
+import { OnboardingPageHeading } from "@/components/onboarding/OnboardingPageHeading";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import {
   buildOnboardingStepHref,
@@ -13,6 +14,7 @@ import type { OnboardingWizardActions } from "@/components/onboarding/onboarding
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
+import { previewDefaultSettings } from "@/lib/actions/defaults-reviewed";
 import { addKeywordsMatrix } from "@/lib/actions/keyword";
 import { importTopQueries } from "@/lib/actions/keyword-suggest";
 import { completeProjectOnboarding } from "@/lib/actions/project";
@@ -56,6 +58,7 @@ import { listWorkspaces } from "@/lib/queries/workspaces";
 import { serpDepthValues } from "@/lib/serp/constants";
 import { redirect } from "next/navigation";
 import { createOnboardingProject, deriveOnboardingWebsite, saveOnboardingMarkets } from "./actions";
+import { initialFirstCheckCandidates } from "./initial-first-check-candidates";
 import { resolveOnboardingLocations } from "./onboarding-location-state";
 import { getOnboardingProviderState } from "./onboarding-provider-state";
 import { updateOnboardingProject } from "./update-project";
@@ -225,6 +228,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
     redirect(buildOnboardingStepHref(supportedStep, flowState));
   }
 
+  const checkLimit = Math.max(1, locations.length * devices.length);
   const actions = {
     addKeywordsAction: addKeywordsMatrix,
     completeGooglePropertySelectionAction: completeGooglePropertySelection,
@@ -246,19 +250,16 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
     // saveMatchingScopeAction: saveMatchingScope, // Restore with issue #863.
     syncProjectTrafficAction: syncProjectTraffic,
     testProviderConnectionAction: testConnection,
+    previewProjectDefaultsAction: previewDefaultSettings,
     updateProjectDefaultsAction: updateDefaultRankCheckSettings,
   } satisfies OnboardingWizardActions;
 
   return (
     <>
-      <section className="mt-6">
-        <h1 className="m-0 text-[30px] font-semibold leading-tight tracking-[-1px]">
-          {t("onboarding.page.title")}
-        </h1>
-        <p className="m-0 mt-2 max-w-[560px] text-[15px] leading-[1.5] text-fg-muted">
-          {t("onboarding.page.description")}
-        </p>
-      </section>
+      <OnboardingPageHeading
+        title={t("onboarding.page.title")}
+        description={t("onboarding.page.description")}
+      />
 
       <OnboardingEntryAnalytics />
       <OnboardingWizard
@@ -282,16 +283,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         initialKeywordText={initialKeywordText}
         initialKeywordDraft={initialKeywordTexts.join("\n")}
         initialFirstCheckCandidates={
-          currentStep === 4 && projectId && initialKeywordText
-            ? (
-                await listFirstCheckCandidates({
-                  projectId,
-                  keywordText: initialKeywordText,
-                  includeExisting: true,
-                  limit: Math.max(1, locations.length * devices.length),
-                })
-              ).candidates
-            : undefined
+          await initialFirstCheckCandidates(currentStep, projectId, initialKeywordText, checkLimit)
         }
         initialProject={initialProject}
         initialWebsite={project?.domain ? undefined : websitePrefill}

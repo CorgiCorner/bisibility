@@ -16,6 +16,7 @@ import type { OverviewCompetitorComparison } from "@/lib/competitors/overview-co
 import type { CheckHealth } from "@/lib/queries/check-health";
 import type { ReactNode } from "react";
 import { OverviewCompetitorsCard } from "./OverviewCompetitorsCard";
+import { OverviewHealthUnavailable } from "./OverviewHealthUnavailable";
 
 function OverviewSections({
   banner,
@@ -27,13 +28,14 @@ function OverviewSections({
 }: Readonly<{
   banner?: ReactNode;
   canCreateKeyword: boolean;
-  checkHealth: CheckHealth;
+  checkHealth: CheckHealth | null;
   competitors?: OverviewCompetitorComparison | null;
   overview: OverviewView;
   projectRef: string;
 }>) {
   const { dataSource, distribution, highlights, kpis, trend } = overview;
-  const hasBanner = checkHealth.failed24h.count > 0 || checkHealth.budget.exhausted;
+  const hasBanner =
+    checkHealth && (checkHealth.failed24h.count > 0 || checkHealth.budget.exhausted);
 
   return (
     <>
@@ -45,13 +47,15 @@ function OverviewSections({
       />
       <div className="flex min-w-0 flex-col gap-4.5">
         {banner}
-        {hasBanner ? (
+        {!checkHealth ? <OverviewHealthUnavailable /> : null}
+        {hasBanner && checkHealth ? (
           <OverviewHealthBanners checkHealth={checkHealth} projectRef={projectRef} />
         ) : null}
         <OverviewKpiGrid
           kpis={kpis}
           projectRef={projectRef}
           visibilityCoverage={overview.visibilityCoverage}
+          qualityReport={overview.qualityReport}
         />
         <PositionTrendCard
           data={trend}
@@ -72,7 +76,7 @@ function OverviewSections({
             projectRef={projectRef}
           />
         </section>
-        <DataSourcePanel checkHealth={checkHealth} health={dataSource} />
+        {checkHealth ? <DataSourcePanel checkHealth={checkHealth} health={dataSource} /> : null}
         <ByMarketRollup
           device={overview.toolbar.deviceValue}
           projectRef={projectRef}
@@ -95,7 +99,7 @@ export type OverviewDashboardViewProps = {
   canCreateKeyword?: boolean;
   canManageProviders?: boolean;
   canRunChecks?: boolean;
-  checkHealth: CheckHealth;
+  checkHealth: CheckHealth | null;
   isSample: boolean;
   competitors?: OverviewCompetitorComparison | null;
   overview: OverviewView;
@@ -114,6 +118,17 @@ export function OverviewDashboardView({
     <SampleProjectBanner projectId={overview.publicId} projectRef={overview.publicId} />
   ) : null;
 
+  if (!checkHealth)
+    return (
+      <OverviewSections
+        canCreateKeyword={canCreateKeyword}
+        banner={sampleBanner}
+        checkHealth={null}
+        competitors={competitors}
+        overview={overview}
+        projectRef={overview.publicId}
+      />
+    );
   if (isSample || overview.state !== "populated") {
     return (
       <>

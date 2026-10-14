@@ -1,186 +1,116 @@
 import { defaultRankTrackerQueryState } from "@/lib/keywords/rank-tracker-query";
+import { reportPolicy } from "@/lib/rank-reports/report-test-fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getRankTrackerKeywordList } from "./rank-tracker-list";
+import type { RankTrackerReportOptions } from "./rank-tracker-report-model";
 
-const mocks = vi.hoisted(() => ({
-  hydrate: vi.fn(),
-  exact: vi.fn(),
-  queryRaw: vi.fn(),
-  requireReadableProject: vi.fn(),
-}));
+const mocks = vi.hoisted(() => ({ actor: vi.fn(), select: vi.fn() }));
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db/prisma", () => ({ prisma: { $queryRaw: mocks.queryRaw } }));
-vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
-vi.mock("./keyword-row-loader", () => ({ loadKeywordRowsByInternalIds: mocks.hydrate }));
-vi.mock("./rank-tracker-list-exact", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("./rank-tracker-list-exact")>();
-  return { ...actual, exactRankTrackerRows: mocks.exact };
+vi.mock("./_auth", () => ({ getQueryActor: mocks.actor }));
+vi.mock("./rank-tracker-selection-core", () => ({ selectRankTrackerReportKeywords: mocks.select }));
+const options = (): RankTrackerReportOptions => ({
+  asOf: reportPolicy().asOf,
+  limits: { maxChecks: 1000, maxItems: 1000, maxTargets: 1000 },
+  loadMetadata: async () => new Map(),
+  policyAt: () => reportPolicy(),
+});
+const selection = () => ({
+  evaluation: "shared_kernel",
+  facets: { intents: [], positions: [], tags: [], topics: [] },
+  locations: [],
+  query: defaultRankTrackerQueryState,
+  report: { selectionDigest: "full-scope", metric: { counts: { expected: 103 }, value: 50 } },
+  rows: Array.from({ length: 103 }, (_, i) => ({ id: `kw_${i}` })),
+  selectedKeywordIds: Array.from({ length: 103 }, (_, i) => `kw_${i}`),
+  selectionDigest: "full-scope",
+  totalCount: 103,
 });
 
-const metadata = {
-  facets: {
-    intents: [],
-    positions: [
-      { count: 0, id: "top3", label: "Top 3" },
-      { count: 0, id: "top10", label: "Top 10" },
-      { count: 0, id: "11-50", label: "11-50" },
-      { count: 0, id: "51-100", label: "51-100" },
-    ],
-    tags: [],
-    topics: [],
-  },
-  keywordIds: [],
-  locations: [{ count: 8, displayName: "United States", id: "US:en", kind: "country" }],
-  matchedTargetCount: 51,
-  totalCount: 80,
-};
-
-describe("getRankTrackerKeywordList", () => {
+describe("getRankTrackerKeywordList shared whole scope", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireReadableProject.mockResolvedValue({
-      project: { domain: "example.com", id: "internal_1" },
-    });
-    mocks.queryRaw.mockResolvedValue([metadata]);
-    mocks.hydrate.mockResolvedValue([]);
-    mocks.exact.mockImplementation((rows) => rows);
+    mocks.actor.mockResolvedValue({ id: "verified-session" });
+    mocks.select.mockImplementation(async (_context, input) => ({
+      ...selection(),
+      query: input.query,
+    }));
   });
-
-  it("authorizes the public ref and sends only internal id to SQL", async () => {
-    await getRankTrackerKeywordList({
-      projectRef: "prj_public",
-      query: defaultRankTrackerQueryState,
-    });
-    expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_public");
-    const statement = mocks.queryRaw.mock.calls[0][0];
-    expect(statement.values).toContain("internal_1");
-    expect(statement.values).not.toContain("prj_public");
+  it("passes the verified session and public project ref to the shared authorized selection", async () => {
+    await getRankTrackerKeywordList(
+      { projectRef: "prj_public", query: defaultRankTrackerQueryState },
+      options(),
+    );
+    expect(mocks.select).toHaveBeenCalledWith(
+      { actor: { id: "verified-session" }, transport: "session" },
+      expect.objectContaining({ projectRef: "prj_public" }),
+      expect.any(Object),
+    );
   });
-
-  it("reports the last canonical page while retaining empty requested-page rows", async () => {
-    const result = await getRankTrackerKeywordList({
-      projectRef: "prj_public",
-      query: {
-        ...defaultRankTrackerQueryState,
-        page: 99,
-        pageSize: 25,
+  it("keeps whole-scope 103 counts, selected IDs and summary independent of 25/50-page rows", async () => {
+    const first = await getRankTrackerKeywordList(
+      { projectRef: "prj_public", query: { ...defaultRankTrackerQueryState, pageSize: 25 } },
+      options(),
+    );
+    const second = await getRankTrackerKeywordList(
+      { projectRef: "prj_public", query: { ...defaultRankTrackerQueryState, pageSize: 50 } },
+      options(),
+    );
+    expect(first.rows).toHaveLength(25);
+    expect(second.rows).toHaveLength(50);
+    expect(first.report).toEqual(second.report);
+    expect(first.selectedKeywordIds).toEqual(second.selectedKeywordIds);
+    expect(first.matchedTargetCount).toBe(103);
+    expect(first.report?.metric.counts.expected).toBe(103);
+  });
+  it("returns actual rows of the canonical final page rather than mixing that page number with empty rows", async () => {
+    const result = await getRankTrackerKeywordList(
+      {
+        projectRef: "prj_public",
+        query: { ...defaultRankTrackerQueryState, page: 99, pageSize: 25 },
       },
-    });
-    expect(result).toMatchObject({
-      matchedTargetCount: 51,
-      page: 3,
-      pageCount: 3,
+      options(),
+    );
+    expect(result).toMatchObject({ page: 5, pageCount: 5, matchedTargetCount: 103 });
+    expect(result.rows).toHaveLength(3);
+  });
+  it("retains an unavailable market lens and its empty selection without widening", async () => {
+    mocks.select.mockImplementationOnce(async (_context, input) => ({
+      ...selection(),
+      query: input.query,
       rows: [],
-      totalCount: 80,
-    });
-    expect(mocks.hydrate).toHaveBeenCalledWith(expect.objectContaining({ id: "internal_1" }), []);
-  });
-
-  it("reports page one when an out-of-range request has zero matches", async () => {
-    mocks.queryRaw.mockResolvedValueOnce([{ ...metadata, matchedTargetCount: 0 }]);
-    const result = await getRankTrackerKeywordList({
-      projectRef: "prj_public",
-      query: { ...defaultRankTrackerQueryState, page: 99, pageSize: 25 },
-    });
-    expect(result).toMatchObject({ matchedTargetCount: 0, page: 1, pageCount: 0, rows: [] });
-  });
-
-  it("applies exact candidates before count and page", async () => {
-    mocks.queryRaw.mockResolvedValue([{ ...metadata, keywordIds: ["internal_a", "internal_b"] }]);
-    mocks.hydrate.mockResolvedValue([
+      selectedKeywordIds: [],
+    }));
+    const result = await getRankTrackerKeywordList(
       {
-        id: "kw_a",
-        hasRankData: true,
-        position: 2,
-        rankingUrl: "https://example.com/a",
-        targetUrl: "/a",
-        serpFeatures: [],
-      },
-      {
-        id: "kw_b",
-        hasRankData: true,
-        position: 3,
-        rankingUrl: "https://example.com/b",
-        targetUrl: "/target",
-        serpFeatures: [],
-      },
-    ]);
-    mocks.exact.mockReturnValueOnce([{ id: "kw_b" }]);
-    const result = await getRankTrackerKeywordList({
-      projectRef: "prj_public",
-      query: {
-        ...defaultRankTrackerQueryState,
-        filters: { ...defaultRankTrackerQueryState.filters, wrongUrl: true },
-        pageSize: 25,
-      },
-    });
-    expect(result).toMatchObject({ matchedTargetCount: 1, pageCount: 1, totalCount: 80 });
-    expect(result.rows.map((row: { id: string }) => row.id)).toEqual(["kw_b"]);
-    expect(mocks.queryRaw.mock.calls[0][0].sql).not.toContain("LIMIT ? OFFSET ?");
-  });
-
-  it("falls an unknown location back to all while preserving full options", async () => {
-    const result = await getRankTrackerKeywordList({
-      projectRef: "prj_public",
-      query: {
-        ...defaultRankTrackerQueryState,
-        lens: { device: "desktop", locationId: "stale" },
-      },
-    });
-    expect(result.resolvedLens).toEqual({ device: "desktop", locationId: null });
-    expect(result.locations).toHaveLength(1);
-  });
-
-  it("derives exact counts, facets, and page rows from the fully filtered candidate set", async () => {
-    mocks.queryRaw.mockResolvedValue([
-      { ...metadata, keywordIds: ["a", "b", "c"], totalCount: 80 },
-    ]);
-    mocks.hydrate.mockResolvedValue([
-      { id: "a", intent: "commercial", position: 2, tags: ["A"], topic: "Docs" },
-      { id: "b", intent: "commercial", position: 8, tags: ["A", "B"], topic: "Docs" },
-      { id: "c", intent: "informational", position: 60, tags: ["B"], topic: "Blog" },
-    ]);
-    mocks.exact.mockImplementation((rows) => rows.slice(1));
-    const result = await getRankTrackerKeywordList({
-      projectRef: "prj_public",
-      query: {
-        ...defaultRankTrackerQueryState,
-        filters: { ...defaultRankTrackerQueryState.filters, wrongUrl: true },
-        pageSize: 25,
-      },
-    });
-    expect(result).toMatchObject({
-      facets: metadata.facets,
-      matchedTargetCount: 2,
-      pageCount: 1,
-      totalCount: 80,
-    });
-    expect(result.rows.map((row: { id: string }) => row.id)).toEqual(["b", "c"]);
-  });
-
-  it.each([
-    { filters: { ...defaultRankTrackerQueryState.filters, change: "down" as const } },
-    { filters: { ...defaultRankTrackerQueryState.filters, urlChanged: true } },
-    { sort: { direction: "desc" as const, field: "change" as const } },
-    { sort: { direction: "desc" as const, field: "sparkline" as const } },
-  ])("keeps helper-dependent movement and URL history selection uncapped", async (override) => {
-    await getRankTrackerKeywordList({
-      projectRef: "prj_public",
-      query: { ...defaultRankTrackerQueryState, ...override },
-    });
-    expect(mocks.queryRaw.mock.calls[0][0].sql).not.toContain("LIMIT ? OFFSET ?");
-  });
-
-  it("rejects grouped mode before data access", async () => {
-    await expect(
-      getRankTrackerKeywordList({
         projectRef: "prj_public",
         query: {
           ...defaultRankTrackerQueryState,
-          grouped: true,
+          lens: { device: "desktop", locationId: "stale" },
         },
-      }),
+      },
+      options(),
+    );
+    expect(result.resolvedLens).toEqual({ device: "desktop", locationId: "stale" });
+    expect(result.rows).toEqual([]);
+    expect(result.page).toBe(1);
+  });
+  it("refuses an absent server policy before session or data access", async () => {
+    await expect(
+      Reflect.apply(getRankTrackerKeywordList, null, [
+        { projectRef: "prj_public", query: defaultRankTrackerQueryState },
+      ]),
+    ).rejects.toThrow("policy");
+    expect(mocks.actor).not.toHaveBeenCalled();
+    expect(mocks.select).not.toHaveBeenCalled();
+  });
+  it("rejects grouped mode before authorization and data access", async () => {
+    await expect(
+      getRankTrackerKeywordList(
+        { projectRef: "prj_public", query: { ...defaultRankTrackerQueryState, grouped: true } },
+        options(),
+      ),
     ).rejects.toThrow("flat mode only");
-    expect(mocks.requireReadableProject).not.toHaveBeenCalled();
+    expect(mocks.actor).not.toHaveBeenCalled();
+    expect(mocks.select).not.toHaveBeenCalled();
   });
 });

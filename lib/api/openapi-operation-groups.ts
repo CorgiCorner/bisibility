@@ -56,7 +56,22 @@ export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly s
       "matchProjectKeywords",
     ],
   ],
-  ["rank-checks", ["runRankCheck", "listRankChecks", "getRankCheckResult", "exportRankHistory"]],
+  [
+    "rank-checks",
+    [
+      "runRankCheck",
+      "listRankChecks",
+      "getRankCheckResult",
+      "listRankCheckRuns",
+      "getRankCheckRun",
+      "exportRankHistory",
+      "listLocalMonitorRuns",
+      "getLocalMonitorRunResults",
+      "listLocalMonitorPointListings",
+      "listLocalMonitorPointHistory",
+      "exportLocalMonitorRun",
+    ],
+  ],
   [
     "keyword-research",
     ["searchLocations", "getKeywordMetrics", "researchKeywords", "listRankedKeywordSuggestions"],

@@ -1,4 +1,5 @@
 import { TrackingSettingsContent } from "@/components/settings/tracking/TrackingSettingsContent";
+import { previewDefaultSettings } from "@/lib/actions/defaults-reviewed";
 import { updateDefaultRankCheckSettings } from "@/lib/actions/settings";
 import {
   type CronPreviewResult,
@@ -38,6 +39,7 @@ export async function TrackingSettingsSection({
       domain={domain}
       initialCronPreview={initialCronPreview}
       previewCron={previewProjectCronRuns}
+      previewDefaults={previewDefaultSettings}
       projectId={projectId}
       updateDefaults={updateDefaultRankCheckSettings}
     />

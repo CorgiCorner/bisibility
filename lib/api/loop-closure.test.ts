@@ -1,12 +1,18 @@
 import { hashApiKey } from "@/lib/providers/crypto";
+import { configureHistoryExportDatabase } from "@/lib/rank-history/export-database.test-fixture";
+import { reportAsOf } from "@/lib/rank-reports/report-test-fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetIdempotencyForTests } from "./idempotency";
+import { project } from "./loop-closure-project.test-fixture";
 import { resetRateLimitStateForTests } from "./ratelimit";
 import { handleApiRequest } from "./router";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
-    apiKey: { findMany: vi.fn(), update: vi.fn() },
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
+    rankCheck: { count: vi.fn(), findMany: vi.fn() },
+    apiKey: { findFirst: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     auditLog: { create: vi.fn() },
     keyword: { findMany: vi.fn() },
     project: { findFirst: vi.fn(), update: vi.fn() },
@@ -30,26 +36,20 @@ vi.mock("@/lib/auth/session", () => ({
   requireSession: mocks.requireSession,
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/rank-history/export-host", async () => {
+  const fixture = await import("@/lib/rank-history/export-database.test-fixture");
+  return fixture.historyExportTestHostModule();
+});
+vi.mock("@/lib/rank-reports/host-cursor", async () => {
+  const fixture = await import("@/lib/rank-history/export-database.test-fixture");
+  return fixture.historyExportTestCursorModule();
+});
 
 const rawKey = "bsb_key_test_loop_closure_123456";
 const alertPublicId = "al_abcdefghijklmnopqrstuvwx";
 const missingAlertPublicId = "al_zyxwvutsrqponmlkjihgfedc";
 const otherProjectPublicId = "prj_zyxwvutsrqponmlkjihgfedc";
 let scopes: ("admin" | "read" | "write")[] = ["admin"];
-
-function project() {
-  return {
-    createdAt: new Date("2026-01-01T00:00:00.000Z"),
-    domain: "example.com",
-    id: "project_1",
-    name: "Example",
-    ownerId: "user_1",
-    publicId: "prj_abcdefghijklmnopqrstuvwx",
-    sitemapMonitoringEnabled: true,
-    updatedAt: new Date("2026-01-02T00:00:00.000Z"),
-    writeMode: "active",
-  };
-}
 
 function authRow() {
   return {
@@ -86,12 +86,15 @@ function call(method: string, path: string, body?: unknown, headers?: HeadersIni
 describe("loop-closure API routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.setSystemTime(reportAsOf);
+    configureHistoryExportDatabase(mocks.prisma);
     resetIdempotencyForTests();
     resetRateLimitStateForTests();
     process.env.REDIS_URL = "";
     process.env.BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE = "100";
     scopes = ["admin"];
     mocks.prisma.apiKey.findMany.mockImplementation(() => Promise.resolve([authRow()]));
+    mocks.prisma.apiKey.findFirst.mockImplementation(() => Promise.resolve(authRow()));
     mocks.prisma.apiKey.update.mockResolvedValue({ id: "api_key_1" });
     mocks.prisma.project.findFirst.mockResolvedValue(project());
     mocks.prisma.project.update.mockImplementation(({ data }) =>
@@ -123,6 +126,9 @@ describe("loop-closure API routes", () => {
             id: "check_1",
             position: 4,
             previousPosition: 7,
+            provider: "synthetic",
+            requestedDepth: 100,
+            normalizationVersion: "fixture-v1",
             publicId: "check_abcdefghijklmnopqrstuvwx",
             rankingUrl: "https://example.com/rank",
           },
@@ -188,6 +194,9 @@ describe("loop-closure API routes", () => {
           checked_at: "2026-07-20T10:00:00.000Z",
           id: "check_abcdefghijklmnopqrstuvwx",
           keyword_id: "kw_abcdefghijklmnopqrstuvwx",
+          provider: "synthetic",
+          requested_depth: 100,
+          normalization_version: "fixture-v1",
         },
       ],
       meta: { next_cursor: null },

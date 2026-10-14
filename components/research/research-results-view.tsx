@@ -5,6 +5,7 @@ import { Menu } from "@/components/ui/Menu";
 import { menuSelectPaperStyle } from "@/components/ui/MenuSelect";
 import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
+import { csvRowWithNumberFormat } from "@/lib/ui/csv";
 import { downloadTextFile } from "@/lib/ui/download";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { useTranslations } from "next-intl";
@@ -14,10 +15,6 @@ import { useState } from "react";
 // so consumers that only format data do not pull the interactive menu chain in.
 
 export type ResearchExportFormat = "csv" | "json";
-
-function csvField(value: string) {
-  return /[",\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
-}
 
 export function researchExportContent(
   rows: readonly GroupedResearchRow[],
@@ -40,16 +37,19 @@ export function researchExportContent(
     );
   }
   const lines = rows.map((row) =>
-    [
-      csvField(row.keyword),
-      row.searchVolume ?? "",
-      row.difficulty ?? "",
-      row.cpcCents == null ? "" : (row.cpcCents / 100).toFixed(2),
-      row.intent ?? "",
-      row.source,
-      row.alreadyTracked ? "yes" : "no",
-      csvField(row.variants.map((variant) => variant.keyword).join("; ")),
-    ].join(","),
+    csvRowWithNumberFormat(
+      [
+        row.keyword,
+        row.searchVolume ?? "",
+        row.difficulty ?? "",
+        row.cpcCents == null ? null : row.cpcCents / 100,
+        row.intent ?? "",
+        row.source,
+        row.alreadyTracked ? "yes" : "no",
+        row.variants.map((variant) => variant.keyword).join("; "),
+      ],
+      (value, index) => (index === 3 ? value.toFixed(2) : String(value)),
+    ),
   );
   return ["keyword,volume,kd,cpc_usd,intent,source,tracked,variants", ...lines].join("\n");
 }

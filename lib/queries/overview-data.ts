@@ -1,20 +1,21 @@
 import "server-only";
 
-import { whereExecutedChecks } from "@/lib/checks/status";
+import { localOverviewKeywordWhere } from "@/lib/dashboard-local/overview-scope";
 import { prisma } from "@/lib/db/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { monthStartUtc } from "@/lib/metering/utc-window";
+import { targetReportBaseline } from "@/lib/rank-reports/policy";
 import { supportsResearchScope } from "@/lib/serp/research-capability";
-import { fetchProjectKeywordVolumes } from "./keyword-metrics-query";
 import {
   normalizeOverviewFilters,
   type OverviewFilters,
   overviewCheckStart,
-  overviewKeywordWhere,
 } from "./overview-filters";
-import { fetchOverviewMarketChecks } from "./overview-market-query";
-
-const OVERVIEW_KEYWORD_MAX = 2000;
-const OVERVIEW_CHECK_MAX = 30;
+import { overviewMarketHistoryStart } from "./overview-markets";
+import { readOverviewMeasurements } from "./overview-measurement-read";
+import { loadRankTrackerMetadataBatches } from "./rank-tracker-metadata-batches";
+import type { RankTrackerReportOptions } from "./rank-tracker-report-model";
+import { createSessionRankTrackerReportOptions } from "./rank-tracker-session-report";
 
 function nextMonthStartUtc(now: Date) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
@@ -24,158 +25,141 @@ export async function loadOverviewMetricData(
   projectId: string,
   input: Partial<OverviewFilters> = {},
   now = new Date(),
-  options: { includeMarkets?: boolean } = {},
+  options: {
+    includeMarkets?: boolean;
+    keywordIds?: readonly string[];
+    tx?: Prisma.TransactionClient;
+    report?: RankTrackerReportOptions;
+  } = {},
 ) {
   const filters = normalizeOverviewFilters(input);
-  const where = overviewKeywordWhere(projectId, filters);
-  const checkedAt = { gte: overviewCheckStart(now, filters.range) };
-  const [
-    projectDefaults,
-    keywords,
-    marketKeywords,
-    projectMarkets,
-    filteredKeywordCount,
-    addedThisMonth,
-    keywordVolumes,
-    marketChecks,
-    latestCheck,
-  ] = await Promise.all([
-    prisma.projectDefaults.findUnique({
-      select: {
-        cronExpression: true,
-        frequency: true,
-        jitterMinutes: true,
-        nextCheckAt: true,
-        timezone: true,
-      },
-      where: { projectId },
-    }),
-    prisma.keyword.findMany({
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      select: {
-        _count: { select: { rankChecks: { where: whereExecutedChecks() } } },
-        createdAt: true,
-        device: true,
-        id: true,
-        locationRef: {
-          select: {
-            countryCode: true,
-            displayName: true,
-            languageCode: true,
-            languageLabel: true,
-          },
-        },
-        publicId: true,
-        rankChecks: {
-          orderBy: { checkedAt: "desc" },
-          select: {
-            checkedAt: true,
-            normalizationVersion: true,
-            observationRun: { select: { completeness: true } },
-            position: true,
-            previousPosition: true,
-            requestedDepth: true,
-            rankingUrl: true,
-            status: true,
-          },
-          take: OVERVIEW_CHECK_MAX,
-          where: { checkedAt, ...whereExecutedChecks() },
-        },
-        schedule: {
-          select: {
-            cronExpression: true,
-            frequency: true,
-            jitterMinutes: true,
-            nextCheckAt: true,
-            timezone: true,
-          },
-        },
-        text: true,
-      },
-      take: OVERVIEW_KEYWORD_MAX,
-      where,
-    }),
-    options.includeMarkets
-      ? prisma.keyword.findMany({
-          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-          select: {
-            id: true,
-            locationId: true,
-            locationRef: {
-              select: {
-                countryCode: true,
-                displayName: true,
-                languageCode: true,
-                languageLabel: true,
-              },
-            },
-            schedule: { select: { frequency: true } },
-          },
-          take: OVERVIEW_KEYWORD_MAX,
-          where,
-        })
-      : Promise.resolve([]),
-    options.includeMarkets
-      ? prisma.projectMarket.findMany({
-          orderBy: [{ location: { displayName: "asc" } }, { location: { languageLabel: "asc" } }],
-          select: {
-            locationId: true,
-            location: {
-              select: {
-                countryCode: true,
-                displayName: true,
-                languageCode: true,
-                languageLabel: true,
-              },
-            },
-          },
-          where: { projectId, status: "active" },
-        })
-      : Promise.resolve([]),
-    prisma.keyword.count({ where }),
-    prisma.keyword.count({
-      where: {
-        ...where,
-        createdAt: { gte: monthStartUtc(now), lt: nextMonthStartUtc(now) },
-      },
-    }),
-    fetchProjectKeywordVolumes(projectId, OVERVIEW_KEYWORD_MAX, {
-      device: filters.device === "all" ? null : filters.device,
-      tag: filters.tag,
-    }),
-    options.includeMarkets
-      ? fetchOverviewMarketChecks(projectId, OVERVIEW_KEYWORD_MAX, now, filters.range, {
-          device: filters.device === "all" ? null : filters.device,
-          marketIds: filters.marketIds,
-          tag: filters.tag,
-        })
-      : Promise.resolve(new Map()),
-    prisma.rankCheck.findFirst({
-      orderBy: { checkedAt: "desc" },
-      select: { checkedAt: true, provider: true },
-      where: { keyword: { projectId }, status: "completed" },
-    }),
-  ]);
-
-  return {
-    addedThisMonth,
-    filteredKeywordCount,
-    filters,
-    keywordVolumes,
-    keywords,
-    latestCheck,
-    marketKeywords: marketKeywords.map((keyword) => ({
-      ...keyword,
-      rankChecks: marketChecks.get(keyword.id) ?? [],
-    })),
-    projectMarkets: projectMarkets.map((market) => ({
-      ...market,
-      researchAvailable: supportsResearchScope(
-        market.location.countryCode,
-        market.location.languageCode,
+  const report =
+    options.report ??
+    (await createSessionRankTrackerReportOptions(
+      now,
+      { "7d": 7, "28d": 28, "90d": 90 }[filters.range],
+    ));
+  const read = async (tx: Prisma.TransactionClient) => {
+    const project = await tx.project.findUnique({
+      where: { id: projectId },
+      select: { id: true, publicId: true },
+    });
+    if (!project) throw new Error("Overview project is unavailable.");
+    const where = localOverviewKeywordWhere(projectId, filters, options.keywordIds);
+    const historyStart = new Date(
+      Math.min(
+        overviewCheckStart(now, filters.range).getTime(),
+        overviewMarketHistoryStart(now, filters.range).getTime(),
       ),
-    })),
-    projectDefaults,
-    where,
+    );
+    const [
+      projectDefaults,
+      selectedKeywords,
+      projectMarkets,
+      filteredKeywordCount,
+      addedThisMonth,
+      latestCheck,
+    ] = await Promise.all([
+      tx.projectDefaults.findUnique({
+        select: {
+          cronExpression: true,
+          frequency: true,
+          jitterMinutes: true,
+          nextCheckAt: true,
+          timezone: true,
+        },
+        where: { projectId },
+      }),
+      readOverviewMeasurements(where, historyStart, now, tx),
+      options.includeMarkets
+        ? tx.projectMarket.findMany({
+            orderBy: [{ location: { displayName: "asc" } }, { location: { languageLabel: "asc" } }],
+            select: {
+              locationId: true,
+              location: {
+                select: {
+                  countryCode: true,
+                  displayName: true,
+                  languageCode: true,
+                  languageLabel: true,
+                },
+              },
+            },
+            where: { projectId, status: "active" },
+          })
+        : Promise.resolve([]),
+      tx.keyword.count({ where }),
+      tx.keyword.count({
+        where: {
+          ...where,
+          createdAt: { gte: monthStartUtc(now), lt: nextMonthStartUtc(now) },
+        },
+      }),
+      tx.rankCheck.findFirst({
+        orderBy: { checkedAt: "desc" },
+        select: { checkedAt: true, provider: true },
+        where: {
+          keyword: options.keywordIds === undefined ? { projectId } : where,
+          ...(options.keywordIds === undefined ? {} : { createdAt: { lte: now } }),
+          status: "completed",
+        },
+      }),
+    ]);
+
+    // Execution pause stops new work; active-market membership retains its observed targets.
+    const eligible = selectedKeywords;
+    const metadata = await loadRankTrackerMetadataBatches(
+      report.loadMetadata,
+      tx,
+      project,
+      eligible,
+      now,
+    );
+    const policy = report.policyAt(now);
+    const keywords = eligible.map((keyword) => {
+      const captured = metadata.get(keyword.publicId);
+      return {
+        ...keyword,
+        measurementPolicy: {
+          asOf: new Date(now.getTime()),
+          ...targetReportBaseline({ baselineWindow: captured?.baselineWindow ?? null }, policy),
+          expectedScope: captured?.expectedScope ?? null,
+          freshForMs: captured?.freshForMs ?? null,
+          requireCurrentScope: true,
+        },
+      };
+    });
+    const keywordVolumes = new Map(
+      keywords.map((keyword) => [keyword.id, metadata.get(keyword.publicId)?.volume ?? null]),
+    );
+
+    return {
+      addedThisMonth,
+      filteredKeywordCount,
+      eligibleTargetCount: keywords.length,
+      filters,
+      keywordVolumes,
+      keywords,
+      latestCheck,
+      marketKeywords: options.includeMarkets ? keywords : [],
+      projectMarkets: projectMarkets
+        .filter(
+          (market) =>
+            options.keywordIds === undefined ||
+            selectedKeywords.some((keyword) => keyword.locationId === market.locationId),
+        )
+        .map((market) => ({
+          ...market,
+          researchAvailable: supportsResearchScope(
+            market.location.countryCode,
+            market.location.languageCode,
+          ),
+        })),
+      projectDefaults,
+      where,
+    };
   };
+  return options.tx
+    ? read(options.tx)
+    : prisma.$transaction(read, { isolationLevel: "RepeatableRead" });
 }

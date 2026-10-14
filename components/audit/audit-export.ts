@@ -2,6 +2,7 @@ import { initials as avatarInitials } from "@/lib/avatar/initials";
 import type { AuditEntry } from "@/lib/queries/audit";
 import { auditEventName } from "@/lib/queries/audit-event-name";
 import { formatAuditTimestamp } from "@/lib/queries/audit-timestamp";
+import { csvRow } from "@/lib/ui/csv";
 import { downloadTextFile } from "@/lib/ui/download";
 
 export type AuditExportFormat = "csv" | "json";
@@ -50,14 +51,6 @@ export function auditEntriesToJson(entries: readonly AuditEntry[]) {
   return JSON.stringify(entries.map(auditExportEntry), null, 2);
 }
 
-function escapeCsv(value: string | number | null | undefined) {
-  const text = String(value ?? "");
-  if (!/[",\n]/.test(text)) {
-    return text;
-  }
-  return `"${text.replaceAll('"', '""')}"`;
-}
-
 export function auditEntriesToCsv(rows: readonly AuditEntry[]) {
   const headers = [
     "timestamp",
@@ -76,10 +69,10 @@ export function auditEntriesToCsv(rows: readonly AuditEntry[]) {
   ];
   const lines = rows.map((rawRow) => {
     const row = auditExportEntry(rawRow);
-    return [
+    return csvRow([
       row.timestamp,
       row.actor.email,
-      row.eventName,
+      row.eventName ?? null,
       row.resource.type,
       row.resource.id,
       row.operation,
@@ -89,12 +82,10 @@ export function auditEntriesToCsv(rows: readonly AuditEntry[]) {
       row.source.ip,
       row.metadata.user_agent,
       row.metadata.app_version,
-      row.statusReason,
-    ]
-      .map(escapeCsv)
-      .join(",");
+      row.statusReason ?? null,
+    ]);
   });
-  return [headers.join(","), ...lines].join("\n");
+  return [csvRow(headers), ...lines].join("\n");
 }
 
 export function downloadAuditEntries(

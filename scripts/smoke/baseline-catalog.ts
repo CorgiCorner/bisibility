@@ -14,6 +14,11 @@ const databaseUrl = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DIRECT_URL or DATABASE_URL is required.");
 
 const publicIdTables = {
+  biz: "business_locations",
+  lmr: "local_measurement_runs",
+  lmj: "local_monitor_launch_intents",
+  lmn: "local_monitors",
+  lmt: "local_measurement_targets",
   agr: "agent_reports",
   ait: "ai_topics",
   aip: "ai_prompts",

@@ -1,0 +1,127 @@
+// Same-project composite ownership and append-only constraints are enforced by the additive migration.
+
+model BusinessLocation {
+  id String @id @default(cuid())
+  publicId String @unique
+  projectId String
+  role String
+  state String @default("active")
+  version Int @default(0)
+  currentRevisionId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([projectId,id])
+  @@map("business_locations")
+}
+
+model BusinessIdentityRevision {
+  id String @id @default(cuid())
+  projectId String
+  entityId String
+  revision Int
+  previousRevisionId String?
+  effectiveFrom DateTime
+  normalizerVersion String
+  actorId String?
+  reason String
+  snapshot Json
+  @@unique([projectId,entityId,id])
+  @@unique([entityId,revision])
+  @@unique([projectId,id])
+  @@map("business_identity_revisions")
+}
+
+model BusinessIdentifierClaim {
+  id String @id @default(cuid())
+  projectId String
+  entityId String
+  identityRevisionId String
+  namespace String
+  engine String
+  type String
+  value String
+  @@unique([projectId,namespace,engine,type,value])
+  @@index([projectId,entityId])
+  @@map("business_identifier_claims")
+}
+
+model BusinessMatchHead {
+  id String @id @default(cuid())
+  projectId String
+  entityId String
+  observationRunId String
+  itemId String
+  version Int @default(0)
+  currentDecisionId String?
+  @@unique([projectId,entityId,itemId])
+  @@unique([projectId,entityId,observationRunId,itemId,id])
+  @@map("business_match_heads")
+}
+
+model BusinessMatchDecision {
+  id String @id @default(cuid())
+  headId String
+  projectId String
+  entityId String
+  identityRevisionId String
+  observationRunId String
+  itemId String
+  decisionRevision Int
+  previousDecisionId String?
+  status String
+  matchedBy String?
+  reason String
+  source String
+  confirmedBy String?
+  reviewReason String?
+  observedAt DateTime
+  recordedAt DateTime @default(now())
+  matcherVersion String
+  evidence Json
+  @@unique([headId,decisionRevision])
+  @@unique([projectId,entityId,observationRunId,itemId,headId,id])
+  @@map("business_match_decisions")
+}
+
+model BusinessAssignmentHead {
+  id String @id @default(cuid())
+  projectId String
+  scopeType String
+  scopeId String
+  keywordId String?
+  marketId String?
+  version Int @default(0)
+  currentRevisionId String?
+  @@unique([projectId,scopeType,scopeId])
+  @@unique([projectId,id])
+  @@map("business_assignment_heads")
+}
+
+model BusinessAssignmentRevision {
+  id String @id @default(cuid())
+  headId String
+  projectId String
+  revision Int
+  previousRevisionId String?
+  entityId String?
+  identityRevisionId String?
+  effectiveFrom DateTime
+  actorId String?
+  reason String
+  @@unique([headId,revision])
+  @@unique([projectId,headId,id])
+  @@map("business_assignment_revisions")
+}
+
+model BusinessLocationMutation {
+  id String @id @default(cuid())
+  projectId String
+  operation String
+  keyHash String
+  actorId String?
+  bodyHash String
+  result Json
+  createdAt DateTime @default(now())
+  @@unique([projectId,operation,keyHash])
+  @@map("business_location_mutations")
+}

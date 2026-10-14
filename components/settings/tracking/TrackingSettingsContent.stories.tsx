@@ -7,6 +7,7 @@ import {
 } from "@/components/settings/tracking/TrackingSettingsLoading";
 import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import type { DefaultsData } from "@/lib/settings/options";
+import { reviewedDefaultsPreview } from "@/lib/settings/reviewed-defaults.test-fixture";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
@@ -118,8 +119,9 @@ const args = {
   domain: "example.com",
   initialCronPreview: { message: null, runs: [], status: "idle", timezone: null },
   previewCron: fn(async () => readyPreview),
+  previewDefaults: fn(reviewedDefaultsPreview),
   projectId,
-  updateDefaults: fn(async () => ({})),
+  updateDefaults: fn(async (values) => ({ ...values, kind: "saved" })),
 } satisfies Story["args"];
 
 function renderContent(storyArgs: Story["args"]) {

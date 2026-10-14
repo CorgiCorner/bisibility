@@ -165,7 +165,7 @@ function customOccurrences(schedule: PlannerScheduleCadence, now: Date, horizon:
   return occurrences;
 }
 
-function usesCronOccurrences(schedule: PlannerScheduleCadence) {
+export function usesCronOccurrences(schedule: PlannerScheduleCadence) {
   return (
     schedule.frequency === "custom_cron" ||
     ((schedule.frequency === "weekly" || schedule.frequency === "monthly") &&
@@ -190,7 +190,8 @@ export function plannedOccurrenceForKey(
   if (usesCronOccurrences(schedule)) {
     const plannedFor = new Date(occurrenceKey);
     if (!schedule.cronExpression || Number.isNaN(plannedFor.getTime())) return null;
-    const previous = new Date(plannedFor.getTime() - 60_001);
+    // An earlier whole minute may match a different, valid cron occurrence.
+    const previous = new Date(plannedFor.getTime() - 1);
     if (
       nextCronRun(schedule.cronExpression, previous, schedule.timezone).getTime() !==
       plannedFor.getTime()

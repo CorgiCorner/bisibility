@@ -58,6 +58,9 @@ function moversText(data: WeeklyDigestData) {
 
 export function renderWeeklyDigestEmail(data: WeeklyDigestData): WeeklyDigestEmail {
   const range = `${dateLabel(data.rangeStart)} to ${dateLabel(data.rangeEnd)}`;
+  const quality = data.quality.metric;
+  const coverage = quality.dataCoverage === null ? "unknown" : `${Math.round(quality.dataCoverage * 100)}%`;
+  const evidence = `Expected keywords: ${quality.counts.expected}. Comparable: ${quality.counts.comparable}. Unknown: ${quality.counts.unknown}. Fresh coverage: ${coverage}.`;
   const summary = `Average delta: ${averageLabel(data.avgPositionDelta)}. Checked keywords: ${data.checkedKeywords}. Failed checks: ${data.failedChecksCount}.`;
 
   return {
@@ -65,6 +68,7 @@ export function renderWeeklyDigestEmail(data: WeeklyDigestData): WeeklyDigestEma
       `<p><strong>Weekly rank report for ${escapeHtml(data.projectName)}</strong></p>`,
       `<p>${escapeHtml(data.projectDomain)} - ${escapeHtml(range)}</p>`,
       `<p>${escapeHtml(summary)}</p>`,
+      `<p>${escapeHtml(evidence)}</p>`,
       moversHtml(data),
     ].join(""),
     subject: `Weekly rank report - ${data.projectName}`,
@@ -72,6 +76,7 @@ export function renderWeeklyDigestEmail(data: WeeklyDigestData): WeeklyDigestEma
       `Weekly rank report for ${data.projectName}`,
       `${data.projectDomain} - ${range}`,
       summary,
+      evidence,
       "",
       moversText(data),
     ].join("\n"),

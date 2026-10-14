@@ -3,6 +3,7 @@ import "server-only";
 import {
   type Action,
   canProjectAction,
+  isPersonalPreferenceResource,
   type ResourceType,
   requiredRoleFor,
 } from "@/lib/auth/capabilities";
@@ -110,6 +111,14 @@ export function authorize(
 
   const role = resourceRole(actor, resource);
   const requiredRole = requiredRoleFor(action, resource.type, resource.requiredRole);
+
+  if (
+    isPersonalPreferenceResource(resource.type) &&
+    (!resource.projectId || resource.ownerId !== actor.id)
+  ) {
+    auditForbidden(actor, action, { ...resource, requiredRole }, role);
+    throw new AuthorizationError("forbidden");
+  }
 
   if (!role || !canProjectAction(role, action, resource.type, resource.requiredRole)) {
     auditForbidden(actor, action, { ...resource, requiredRole }, role);

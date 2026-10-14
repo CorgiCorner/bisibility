@@ -10,6 +10,7 @@ import { CloudBetaBanner } from "@/components/shell/CloudBetaBanner";
 import { CommandPaletteProvider } from "@/components/shell/CommandPalette";
 import { CLOUD_BETA_DISMISSAL_COOKIE, isCloudBetaDismissed } from "@/components/shell/cloud-beta";
 import { DemoBanner } from "@/components/shell/DemoBanner";
+import { InstanceAnnouncementBanner } from "@/components/shell/InstanceAnnouncementBanner";
 import { ProjectWriteModeBanner } from "@/components/shell/ProjectWriteModeNotices";
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import { Sidebar } from "@/components/shell/Sidebar";
@@ -29,6 +30,7 @@ import {
   loadSetupAcknowledgedAt,
 } from "@/lib/getting-started/setup-acknowledgement";
 import { resolveSetupProgress } from "@/lib/getting-started/setup-steps";
+import { listEnabledInstanceAnnouncements } from "@/lib/instance-announcements/store";
 import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
 import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { getQuerySession } from "@/lib/queries/_auth";
@@ -85,6 +87,7 @@ export async function WorkspaceShell({
     markets,
     enabledExperimentalModules,
     i18n,
+    announcements,
   ] = await Promise.all([
     listWorkspaces(),
     loadWorkspaceBudgetSummary(projectRef),
@@ -95,6 +98,7 @@ export async function WorkspaceShell({
     listProjectMarketOptions(projectRef),
     getExperimentalModules(projectRef),
     shellI18n,
+    listEnabledInstanceAnnouncements(),
   ]);
   const { messages, runtime } = i18n;
   const workerLiveness = instanceAdminSession ? await getWorkerLivenessDetails() : null;
@@ -188,6 +192,13 @@ export async function WorkspaceShell({
                   workspaces={workspaces}
                 />
                 <div className="flex min-w-0 flex-col">
+                  {announcements.map((announcement) => (
+                    <InstanceAnnouncementBanner
+                      key={announcement.id}
+                      announcement={announcement}
+                      defaultLinkLabel={t("shell.announcements.learnMore")}
+                    />
+                  ))}
                   {isDemo ? (
                     <DemoBanner
                       actor={demoActor?.kind ?? notFound()}

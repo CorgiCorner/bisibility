@@ -8,8 +8,11 @@ import { prisma } from "@/lib/db/prisma";
 import { requireReadableProject } from "./_auth";
 
 // Internal project IDs only; public entry points authorize before loading policies.
-export function loadCompetitorPolicies(projectId: string) {
-  return prisma.competitor.findMany({
+export function loadCompetitorPolicies(
+  projectId: string,
+  db: Pick<typeof prisma, "competitor"> = prisma,
+) {
+  return db.competitor.findMany({
     orderBy: [{ label: "asc" }, { domain: "asc" }],
     select: {
       domain: true,

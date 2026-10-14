@@ -1,60 +1,28 @@
 "use client";
 import { buildOnboardingStepHref } from "@/components/onboarding/onboarding-fixtures";
 import { displayProvider, onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
-import { locationValuesForKeys } from "@/components/onboarding/onboarding-location-field";
 import { Button } from "@/components/ui/Button";
-import type { ProjectDefaultsInput } from "@/lib/schemas/project";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { FirstCheckErrors } from "./FirstCheckErrors";
+import { FirstCheckPolicyNotice } from "./FirstCheckPolicyNotice";
 import { FirstCheckQueueMessage } from "./FirstCheckQueueMessage";
 import { FirstCheckResults } from "./FirstCheckResults";
+import {
+  isPausedFrequency,
+  localizedFrequency,
+  selectedDevices,
+  selectedMarkets,
+} from "./first-check-selection";
 import { InlineProviderSetup } from "./InlineProviderSetup";
 import type { StepFirstCheckProps } from "./StepFirstCheck.types";
 import { StepFirstCheckCompletion } from "./StepFirstCheckCompletion";
 import { StepFirstCheckFooter } from "./StepFirstCheckFooter";
 import { StepFirstCheckReview } from "./StepFirstCheckReview";
-import type { OnboardingTrackingDefaultsInput } from "./step-schedule-model";
 import { useFirstCheckKeyword } from "./use-first-check-keyword";
 import { useFirstCheckRun } from "./use-first-check-run";
 import { useFirstCheckSubmit } from "./use-first-check-submit";
-
-function selectedDevices(
-  defaults: ProjectDefaultsInput | OnboardingTrackingDefaultsInput | undefined,
-) {
-  if (defaults && "devices" in defaults && defaults.devices.length > 0) return defaults.devices;
-  return [defaults?.device ?? "desktop"];
-}
-function selectedMarkets(
-  defaults: ProjectDefaultsInput | OnboardingTrackingDefaultsInput | undefined,
-) {
-  if (defaults && "locations" in defaults) {
-    return defaults.locationSelections ?? locationValuesForKeys(defaults.locations);
-  }
-  return locationValuesForKeys([defaults?.locationKey ?? "US"]);
-}
-const isPausedFrequency = (frequency: ProjectDefaultsInput["frequency"] | undefined) =>
-  frequency === "manual" || frequency === "paused";
-function localizedFrequency(
-  t: ReturnType<typeof useTranslations<"onboarding.firstCheck">>,
-  frequency: ProjectDefaultsInput["frequency"],
-) {
-  switch (frequency) {
-    case "custom_cron":
-      return t("frequency.customCron");
-    case "daily":
-      return t("frequency.daily");
-    case "manual":
-      return t("frequency.manual");
-    case "monthly":
-      return t("frequency.monthly");
-    case "paused":
-      return t("frequency.paused");
-    case "weekly":
-      return t("frequency.weekly");
-  }
-}
 export function StepFirstCheck({
   completeOnboardingAction,
   connectProviderAction,
@@ -153,7 +121,6 @@ export function StepFirstCheck({
                   })
                 : t("queue.completed", { checks: state.rows.length, frequency: frequencyLabel })
               : t("queue.initial", { checks: sampleCount, frequency: frequencyLabel });
-
   function openProvider() {
     providerCloseFocusRef.current = "trigger";
     setProviderExpanded(true);
@@ -170,7 +137,6 @@ export function StepFirstCheck({
   function focusAfterProviderClose() {
     if (providerCloseFocusRef.current === "trigger") providerToggleRef.current?.focus();
   }
-
   function onPreviewClick() {
     void start({
       keywordText: sampleKeyword,
@@ -178,7 +144,6 @@ export function StepFirstCheck({
       projectId,
     });
   }
-
   async function changeTimezone(value: string) {
     const previous = timezone;
     setTimezone(value);
@@ -190,7 +155,6 @@ export function StepFirstCheck({
       setTimezoneError(t("errors.timezone"));
     }
   }
-
   const backAction = onBack ? (
     <Button
       onClick={onBack}
@@ -213,7 +177,6 @@ export function StepFirstCheck({
       {t("back")}
     </Button>
   );
-
   const reviewDescription =
     state.status === "completed"
       ? t("description.completed")
@@ -224,12 +187,10 @@ export function StepFirstCheck({
           : defaults?.frequency === "paused"
             ? t("description.paused")
             : t("description.scheduled", { frequency: frequencyLabel });
-
   return (
     <form id={onboardingFormId} onSubmit={onSubmit}>
       <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">{t("title")}</h2>
       <div className="mt-1 text-[13px] text-fg-muted">{reviewDescription}</div>
-
       <StepFirstCheckReview
         devices={devices}
         frequency={defaults?.frequency}
@@ -256,7 +217,6 @@ export function StepFirstCheck({
         providerReady={providerReady}
         timezone={timezone}
       />
-
       <FirstCheckErrors
         keywordError={
           keywordError ?? (!sampleKeyword && providerReady ? t("errors.keyword") : null)
@@ -283,6 +243,7 @@ export function StepFirstCheck({
       ) : null}
       {queueMessage ? <FirstCheckQueueMessage message={queueMessage} /> : null}
       <FirstCheckResults onRetryFailed={() => void retryFailed()} state={state} />
+      <FirstCheckPolicyNotice projectId={navigationProjectId ?? null} state={state} />
       {state.status === "completed" && !hasFailedSampleChecks && navigationProjectId ? (
         <StepFirstCheckCompletion
           frequency={defaults?.frequency}

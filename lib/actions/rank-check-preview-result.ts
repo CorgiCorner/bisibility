@@ -6,6 +6,7 @@ import { redactOpsText } from "@/lib/ops/redact-text";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { RankCheckRunnerError } from "@/lib/rank-check/runner-error";
+import { LaunchRankCheckRunError } from "@/lib/rank-check/runs/launch-types";
 import type { SerpDevice } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 
@@ -61,6 +62,8 @@ export type FirstCheckPreviewFailureCode =
   | "budget_missing"
   | "budget_exhausted"
   | "failed"
+  | "measurement_policy_unconfigured"
+  | "measurement_policy_unsupported"
   | "no_provider"
   | "project_read_only"
   | "rate_limited"
@@ -105,6 +108,12 @@ export function isProjectReadOnlyError(error: unknown) {
 }
 
 export function expectedPreviewFailure(error: unknown): RunFirstCheckPreviewResult | null {
+  if (
+    error instanceof LaunchRankCheckRunError &&
+    (error.code === "measurement_policy_unconfigured" ||
+      error.code === "measurement_policy_unsupported")
+  )
+    return previewFailure(error.code, error.message);
   if (isProjectReadOnlyError(error)) {
     return previewFailure("project_read_only", "This project is read-only right now.");
   }

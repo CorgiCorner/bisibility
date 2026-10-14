@@ -1,11 +1,23 @@
 import { asProjectRef } from "@/lib/routing/app-path";
 import { rankBucketColors } from "@/lib/theme/chart-colors";
+import { unmeasuredOverviewReport } from "./quality-test-fixture";
 import type { OverviewView } from "./types";
 
 const projectRef = asProjectRef("prj_abc123");
 const now = "2026-06-28T12:00:00.000Z";
 
 export const overviewFixture = {
+  qualityReport: unmeasuredOverviewReport(248),
+  reportHistory: {
+    asOf: now,
+    timeZone: "UTC",
+    population: "frozen_selected_targets",
+    weights: "frozen_at_report_watermark",
+    reason: null,
+    undatedChecks: 0,
+    days: [],
+  },
+  contributors: [],
   addedThisMonth: 12,
   byMarket: [],
   checksThisMonth: 7440,
@@ -156,8 +168,8 @@ export const overviewFixture = {
   },
   trackedKeywordCount: 248,
   trend: [
-    { dateKey: "2026-06-18", label: "2026-06-18", value: 8 },
-    { dateKey: "2026-06-28", label: null, value: 7 },
+    { comparisonKey: "synthetic-series", dateKey: "2026-06-18", label: "2026-06-18", value: 8 },
+    { comparisonKey: "synthetic-series", dateKey: "2026-06-28", label: "2026-06-28", value: 7 },
   ],
   trendTakeaway: {
     days: 30,

@@ -5,6 +5,7 @@ import type { KeywordRow } from "@/lib/queries/keywords";
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { DeviceCell } from "./grid-columns";
+import { rankPoint, rankQualityRow } from "./keyword-rank-quality.test-fixture";
 import {
   MarketDifficultyCell,
   MarketKeywordCell,
@@ -32,7 +33,7 @@ describe("market grid cells", () => {
     );
     const label = `${count} active ${count === 1 ? "target" : "targets"}`;
     expect(screen.getByText(`1 market / ${label}`)).toBeInTheDocument();
-    expect(screen.getByLabelText(`Best position across ${label}`)).toBeInTheDocument();
+    expect(screen.getByText("Current position unknown")).toBeInTheDocument();
     expect(screen.getByText(`${count} ${count === 1 ? "target" : "targets"}`)).toBeInTheDocument();
   });
 
@@ -40,7 +41,7 @@ describe("market grid cells", () => {
     const { rerender } = render(
       <MarketPositionCell row={{ ...row, checkState: "running", hasRankData: false }} />,
     );
-    expect(screen.getByLabelText("Check running")).toBeInTheDocument();
+    expect(screen.getByText("Current position unknown")).toBeInTheDocument();
 
     rerender(<MarketVolumeCell row={{ ...row, volumeKnown: false }} />);
     expect(
@@ -51,16 +52,33 @@ describe("market grid cells", () => {
     expect(screen.getByLabelText("No difficulty data")).toBeInTheDocument();
   });
 
-  it("names an out-of-depth result with its numeric catalog argument", () => {
+  it("shows confirmed absence without rendering the compatibility sentinel", () => {
+    const absent = rankQualityRow();
+    absent.rankQuality.current = rankPoint({
+      evidence: "known_absent",
+      position: null,
+      reportedPosition: null,
+      requestedDepth: 50,
+    });
     render(
-      <MarketPositionCell row={{ ...row, hasRankData: true, position: 101, trackedDepth: 50 }} />,
+      <MarketPositionCell
+        row={{ ...absent, hasRankData: false, position: 101, trackedDepth: 50 }}
+      />,
     );
-
-    expect(screen.getByText("Not found in top 50")).toBeInTheDocument();
+    expect(screen.getByText("Not found in measured scope")).toBeInTheDocument();
+    expect(screen.queryByText("#101")).not.toBeInTheDocument();
   });
 
   it("renders a ranked position through the feature catalog", () => {
-    render(<MarketPositionCell row={{ ...row, hasRankData: true, position: 2 }} />);
+    render(
+      <MarketPositionCell
+        row={{
+          ...rankQualityRow(),
+          rankQuality: { ...rankQualityRow().rankQuality, current: rankPoint({ position: 2 }) },
+          position: 2,
+        }}
+      />,
+    );
 
     expect(screen.getByText("#2")).toBeInTheDocument();
   });
@@ -78,7 +96,7 @@ it("discloses unknown coverage instead of declaring an out-of-depth absence", ()
       }}
     />,
   );
-  expect(screen.getByLabelText("Coverage unknown")).toBeInTheDocument();
+  expect(screen.getByText("Current position unknown")).toBeInTheDocument();
   expect(screen.queryByText("Not found in top 100")).not.toBeInTheDocument();
 });
 
@@ -104,6 +122,6 @@ it("retains incomplete coverage when an unranked group contains an unknown targe
   const aggregate = aggregateMarketGridRows(targets)[0];
   const parent = groupRow(aggregate, aggregate.children);
   render(<MarketPositionCell row={parent} />);
-  expect(screen.getByLabelText("Coverage unknown")).toBeInTheDocument();
+  expect(screen.getByText("Current position unknown")).toBeInTheDocument();
   expect(screen.queryByText("Not found in top 100")).not.toBeInTheDocument();
 });

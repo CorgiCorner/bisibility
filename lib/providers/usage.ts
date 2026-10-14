@@ -15,7 +15,7 @@ export type ProviderUsageReceipt = {
 };
 
 export type ProviderUsageObserver = {
-  begin(input?: { attemptKey: string }): Promise<string>;
+  begin(input?: { attemptKey: string; request?: ProviderRequest }): Promise<string>;
   prepare?(input: { attemptKey: string; request: ProviderRequest }): Promise<{
     attemptId: string;
     request: PricedRequest;
@@ -87,7 +87,10 @@ export async function readObservedResponse<T>(input: {
       attemptId = prepared.attemptId;
       pricedRequest = prepared.request;
     } else {
-      attemptId = await input.observer?.begin({ attemptKey });
+      attemptId = await input.observer?.begin({
+        attemptKey,
+        ...(snapshot ? { request: snapshot } : {}),
+      });
     }
     if (attemptId) await input.observer?.beforeDispatch?.(attemptId);
   } catch (cause) {

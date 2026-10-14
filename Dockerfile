@@ -48,7 +48,7 @@ COPY --from=deps /workspace/node_modules ./node_modules
 COPY . .
 RUN npm run db:download-rds-ca \
   && npx prisma generate \
-  && NODE_OPTIONS="$(node scripts/ci/node-memory-limit.mjs --merge)" npm run build
+  && npm run ci:build
 
 FROM builder AS migrate
 ARG CORGICORNER_EPHEMERAL=0

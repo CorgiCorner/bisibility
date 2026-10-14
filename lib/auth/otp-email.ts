@@ -2,6 +2,7 @@ import "server-only";
 
 import { otpSendState } from "@/lib/auth/otp-send-context";
 import { FIXED_OTP_ENABLED } from "@/lib/auth/runtime-config";
+import { suppressTestAuthEmail } from "@/lib/auth/test-auth-extension";
 import { refreshInstanceMailRuntime } from "@/lib/email/instance-mail-store";
 import { isEmailConfigured } from "@/lib/email/registry";
 import { sendEmail } from "@/lib/email/send";
@@ -32,6 +33,7 @@ function signInSubject(type: OtpEmail["type"]) {
 }
 
 export async function sendOtpEmail({ email, otp, type }: OtpEmail) {
+  if (await suppressTestAuthEmail(email, type)) return;
   await refreshInstanceMailRuntime();
   const emailConfigured = isEmailConfigured();
   const requestState = otpSendState();

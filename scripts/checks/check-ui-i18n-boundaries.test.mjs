@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import test from "node:test";
+import "./translator-provenance.test.mjs";
 import {
   checkUiI18nBoundaries,
   findUncatalogedUiStrings,

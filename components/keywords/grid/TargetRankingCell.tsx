@@ -5,7 +5,8 @@ import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import { pathFromUrl } from "@/lib/queries/keyword-row-format";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { hasIncompleteObservation } from "@/lib/serp/rank-depth";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
+import { keywordRankView } from "./keyword-rank-quality-view";
 
 type TargetRankingCellProps = {
   row: KeywordRow;
@@ -22,10 +23,12 @@ function UrlPath({ value }: Readonly<{ value: string }>) {
 }
 
 function MatchStatus({ row }: Readonly<{ row: KeywordRow }>) {
-  const expectedUrl = row.expectedUrl ?? row.targetUrl;
+  const view = keywordRankView(row);
+  if (view.isGroup || view.currentPosition === null) return null;
+  const expectedUrl = view.quality ? row.expectedUrl : (row.expectedUrl ?? row.targetUrl);
   if (!expectedUrl || !row.rankingUrl) return null;
   const mismatch = hasUrlMismatch({
-    position: row.hasRankData ? row.position : null,
+    position: view.currentPosition,
     rankingUrl: row.rankingUrl,
     targetUrl: expectedUrl,
   });
@@ -38,24 +41,32 @@ function MatchStatus({ row }: Readonly<{ row: KeywordRow }>) {
 
 export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.grid");
+  const format = useFormatter();
+  const qualityT = useTranslations("projectRankTracker.keywordImport.management.grid.quality");
+  const view = keywordRankView(row);
   const parent = marketGridParent(row);
-  if (parent && parent.aggregate.rankingUrls.length > 1) {
+  if (parent) {
     return (
       <Tooltip content={parent.aggregate.rankingUrls.join("\n")}>
         <span className="font-sans tabular-nums text-[11.5px] text-fg-muted">
-          {t("targetCount", { count: parent.aggregate.rankingUrls.length })}
+          {qualityT("groupRankingUrls", {
+            count: format.number(parent.aggregate.rankingUrls.length),
+          })}
         </span>
       </Tooltip>
     );
   }
-  const rankingLabel = row.rankingUrl
-    ? pathFromUrl(row.rankingUrl)
+  const rankingUrl =
+    view.quality?.current?.rankingUrl ?? view.lastKnown?.rankingUrl ?? row.rankingUrl;
+  const rankingLabel = rankingUrl
+    ? pathFromUrl(rankingUrl)
     : row.checkState === "never_checked"
       ? t("notCheckedYet")
       : hasIncompleteObservation(row.observationCompleteness)
         ? t("coverageUnknown")
         : t("notFound");
-  const expectedUrl = row.expectedUrl ?? row.targetUrl;
+  // Qualified rows carry the expectation captured by that check, never today's editable target.
+  const expectedUrl = view.quality ? row.expectedUrl : (row.expectedUrl ?? row.targetUrl);
 
   return (
     <div className="flex w-full min-w-0 items-center gap-1.5 py-1 text-[11.5px] leading-tight">
@@ -69,26 +80,29 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
               <UrlPath value={expectedUrl} />
               <span className="sr-only">
                 {t("expectedForMarket", { path: pathFromUrl(expectedUrl) })}
-                {row.expectedUrlSource ? ` (${row.expectedUrlSource})` : ""}
               </span>
             </span>
           ) : (
             <span className="font-sans tabular-nums text-[11px] text-fg-muted">{t("notSet")}</span>
           )}
-          {row.expectedUrlFallbackCurrent ? (
-            <span className="sr-only" title={t("expectedCurrentTarget")}>
-              {t("expectedCurrentTarget")}
-            </span>
-          ) : null}
         </div>
+        {expectedUrl ? (
+          <span className="block truncate text-[10.5px] text-fg-muted">
+            {row.expectedUrlFallbackCurrent
+              ? t("expectedCurrentTarget")
+              : view.quality
+                ? qualityT("capturedExpectedUrl")
+                : qualityT("expectedUrlProvenanceUnknown")}
+          </span>
+        ) : null}
         <div className="flex min-w-0 items-center gap-1.5">
           <span className="w-[48px] shrink-0 font-sans tabular-nums text-[9.5px] uppercase text-fg-muted">
             {t("ranking")}
           </span>
-          {row.rankingUrl ? (
+          {rankingUrl ? (
             <a
               className="min-w-0 truncate font-sans tabular-nums text-[11.5px] text-fg-muted hover:text-accent-text hover:underline"
-              href={row.rankingUrl}
+              href={rankingUrl}
               onClick={(event) => event.stopPropagation()}
               rel="noreferrer noopener"
               target="_blank"
@@ -99,6 +113,11 @@ export function TargetRankingCell({ row }: Readonly<TargetRankingCellProps>) {
             <span className="font-sans tabular-nums text-[11px] text-fg-muted">{rankingLabel}</span>
           )}
         </div>
+        {rankingUrl && view.currentPosition === null ? (
+          <span className="block truncate text-[10.5px] text-fg-muted">
+            {qualityT("retainedRankingUrl")}
+          </span>
+        ) : null}
       </div>
       <MatchStatus row={row} />
     </div>

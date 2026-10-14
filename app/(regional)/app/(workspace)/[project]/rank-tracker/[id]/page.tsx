@@ -1,13 +1,14 @@
+import { KeywordDetailHistory } from "@/components/keyword-detail-history/KeywordDetailHistory";
 import { KeywordManagementMessagesBoundary } from "@/components/keywords/add/KeywordManagementMessagesBoundary";
+import { KeywordDataRefresh } from "@/components/keywords/KeywordDataRefresh";
 import { KeywordHeaderCard } from "@/components/keywords/KeywordHeaderCard";
 import { KeywordPendingDetail } from "@/components/keywords/KeywordPendingDetail";
 import { KeywordTrafficCard } from "@/components/keywords/KeywordTrafficCard";
-import { PositionHistoryCard } from "@/components/keywords/PositionHistoryCard";
-import { RankingUrlHistory } from "@/components/keywords/RankingUrlHistory";
 import { RetrievedResultsCard } from "@/components/keywords/RetrievedResultsCard";
 import { loadRankTrackerCostContext } from "@/components/keywords/rank-tracker-cost-context";
 import { PageContent } from "@/components/shell/PageContent";
 import { BackLink } from "@/components/ui/BackLink";
+import { Card } from "@/components/ui/Card";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
@@ -20,28 +21,45 @@ import { syncProjectTraffic } from "@/lib/actions/traffic-sync";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { providerLabel } from "@/lib/checks/attempts";
+import { keywordDetailRankState } from "@/lib/keyword-detail/quality-projector";
 import { deriveKeywordDetailState } from "@/lib/keyword-detail/state-model";
+import { rankTrackerDetailReturnHref } from "@/lib/keywords/rank-tracker-detail-navigation";
+import type { NextSearchParams } from "@/lib/keywords/rank-tracker-query";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getKeywordCompetitors } from "@/lib/queries/competitor-policies";
+import {
+  loadKeywordDetailHistoryWindow,
+  loadKeywordHistoryPage,
+  loadKeywordHistorySnapshot,
+  refreshKeywordHistoryWindow,
+} from "@/lib/queries/keyword-detail-history";
 import { getKeywordTargetContext } from "@/lib/queries/keyword-target-context";
 import { getKeywordDetail, getKeywordTagSuggestions } from "@/lib/queries/keywords";
 import { loadRetrievedResultsForChecks, storedResultsIndex } from "@/lib/queries/retrieved-results";
 import { getRankCheckRawRetentionDays } from "@/lib/rank-check/raw-retention";
-import { appPath, asProjectRef } from "@/lib/routing/app-path";
+import {
+  RankReportCapacityError,
+  RankReportSnapshotConflictError,
+} from "@/lib/rank-reports/errors";
+import { keywordHistoryWindows } from "@/lib/rank-reports/history-calendar";
 import { notFound } from "next/navigation";
 
 type KeywordDetailPageProps = {
   params: Promise<{ id: string; project: string }>;
+  searchParams?: Promise<NextSearchParams>;
 };
 
-export default async function KeywordDetailPage({ params }: Readonly<KeywordDetailPageProps>) {
+export default async function KeywordDetailPage({
+  params,
+  searchParams,
+}: Readonly<KeywordDetailPageProps>) {
   const { id, project } = await params;
   const runtime = await resolveRegionalDocumentLocale();
   const messages = await loadCoreMessages(runtime.locale, ["projectRankTracker"]);
   const t = createIntlTranslator(runtime.locale, messages, { timeZone: runtime.timeZone });
   const { publicId } = await resolveProjectAccess(project);
-  const projectRef = asProjectRef(publicId);
-  const [keyword, tagSuggestions, readable, costContext, targetContext, competitors] =
+  const returnHref = rankTrackerDetailReturnHref(publicId, (await searchParams) ?? {});
+  const [keywordMetadata, tagSuggestions, readable, costContext, targetContext, competitors] =
     await Promise.all([
       getKeywordDetail(publicId, id),
       getKeywordTagSuggestions(publicId),
@@ -51,9 +69,54 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
       getKeywordCompetitors(publicId, id),
     ]);
 
-  if (!keyword) {
+  if (!keywordMetadata) {
     notFound();
   }
+  const historyTimeZone = costContext?.timezone ?? runtime.timeZone;
+  const historyScope = {
+    projectId: publicId,
+    keywordId: id,
+    windows: keywordHistoryWindows(new Date(), historyTimeZone),
+  };
+  let initial: Awaited<
+    ReturnType<typeof loadKeywordDetailHistoryWindow<NonNullable<typeof keywordMetadata>>>
+  >;
+  try {
+    initial = await loadKeywordDetailHistoryWindow(
+      historyScope,
+      historyScope.windows[1].window,
+      keywordMetadata,
+    );
+  } catch (error) {
+    if (
+      !(error instanceof RankReportCapacityError) &&
+      !(error instanceof RankReportSnapshotConflictError)
+    )
+      throw error;
+    return (
+      <KeywordManagementMessagesBoundary>
+        <PageContent className="grid gap-4">
+          <BackLink href={returnHref}>
+            {t("projectRankTracker.keywordDetail.navigation.allKeywords")}
+          </BackLink>
+          <Card component="section" className="min-w-0 px-5 py-4.5" size="md">
+            <h2 className="text-base font-semibold">
+              {t("projectRankTracker.keywordDetail.quality.reportUnavailable")}
+            </h2>
+            <p role="status" className="mb-4 mt-2 text-sm text-fg-muted">
+              {t(
+                error instanceof RankReportCapacityError
+                  ? "projectRankTracker.keywordDetail.quality.reportCapacity"
+                  : "projectRankTracker.keywordDetail.quality.reportChanged",
+              )}
+            </p>
+            <KeywordDataRefresh />
+          </Card>
+        </PageContent>
+      </KeywordManagementMessagesBoundary>
+    );
+  }
+  const { keyword, quality } = initial;
   const { projectMarkets, targets: marketTargets } = targetContext;
   const storedChecks = await storedResultsIndex({
     keywordPublicId: id,
@@ -70,13 +133,15 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
   const role = getProjectRole(readable.actor, readable.project.id);
   const canUpdateKeyword = canProjectAction(role, "update", "keyword");
   const canSyncTraffic = canProjectAction(role, "update", "project");
-  const detailState = deriveKeywordDetailState(keyword, keyword.traffic);
+  // Unrelated traffic connection state keeps its existing adapter; rank state comes from the shared snapshot.
+  const trafficState = deriveKeywordDetailState(keyword, keyword.traffic).trafficState;
+  const rankState = keywordDetailRankState(quality);
   const checkProviderLabel = providerLabel(
     costContext?.providerId ?? keyword.dataProvider ?? "unknown",
   );
 
   const backLink = (
-    <BackLink href={appPath(projectRef, "rank-tracker")}>
+    <BackLink href={returnHref}>
       {t("projectRankTracker.keywordDetail.navigation.allKeywords")}
     </BackLink>
   );
@@ -94,26 +159,34 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
         "use server";
         return loadRetrievedResults({ checkIds, projectId: publicId });
       }}
-      rankingUrl={keyword.rankingUrl ?? null}
       retentionDays={getRankCheckRawRetentionDays()}
       timeZone={costContext?.timezone ?? "UTC"}
     />
   );
 
   const positionHistory = (
-    <PositionHistoryCard
-      chartState={detailState.chartState}
-      keyword={keyword}
-      marketTargets={marketTargets}
-      timeZone={costContext?.timezone ?? "UTC"}
+    <KeywordDetailHistory
+      keyword={keyword.keyword}
+      timeZone={historyTimeZone}
+      history={{
+        initial: initial.history,
+        windows: historyScope.windows,
+        readPage: async (input) => {
+          "use server";
+          return loadKeywordHistoryPage(historyScope, input);
+        },
+        readWindow: async (window) => {
+          "use server";
+          return refreshKeywordHistoryWindow(historyScope, window);
+        },
+        readSnapshot: async (input) => {
+          "use server";
+          return loadKeywordHistorySnapshot(historyScope, input);
+        },
+      }}
     />
   );
-  const hasHistoricalPosition = (
-    keyword.positionObservations ??
-    keyword.positionHistory ??
-    []
-  ).some((point) => point.position !== null);
-  if (detailState.rankState !== "normal") {
+  if (rankState !== "normal") {
     return (
       <KeywordManagementMessagesBoundary>
         <PageContent className="grid gap-4">
@@ -124,13 +197,14 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
             costContext={costContext}
             createKeywordAlertAction={createKeywordAlertRule}
             keyword={keyword}
-            history={hasHistoricalPosition ? positionHistory : undefined}
+            quality={quality}
+            history={positionHistory}
             providerConnected={keyword.providerConnected}
             projectId={publicId}
             projectMarkets={projectMarkets}
             projectRef={publicId}
             providerLabel={checkProviderLabel}
-            rankState={detailState.rankState}
+            rankState={rankState}
             runCheckNowAction={runCheckNow}
             searchConsoleConnected={keyword.traffic.hasSearchConsoleConnection}
             updateKeywordAction={updateKeyword}
@@ -141,9 +215,8 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
             syncTrafficAction={syncProjectTraffic}
             projectRef={publicId}
             traffic={keyword.traffic}
-            trafficState={detailState.trafficState}
+            trafficState={trafficState}
           />
-          {keyword.rankingUrlHistory?.length ? <RankingUrlHistory keyword={keyword} /> : null}
         </PageContent>
       </KeywordManagementMessagesBoundary>
     );
@@ -159,6 +232,7 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
           costContext={costContext}
           createKeywordAlertAction={createKeywordAlertRule}
           keyword={keyword}
+          quality={quality}
           projectId={publicId}
           projectMarkets={projectMarkets}
           providerLabel={checkProviderLabel}
@@ -174,9 +248,8 @@ export default async function KeywordDetailPage({ params }: Readonly<KeywordDeta
           syncTrafficAction={syncProjectTraffic}
           projectRef={publicId}
           traffic={keyword.traffic}
-          trafficState={detailState.trafficState}
+          trafficState={trafficState}
         />
-        <RankingUrlHistory keyword={keyword} />
       </PageContent>
     </KeywordManagementMessagesBoundary>
   );

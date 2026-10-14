@@ -115,3 +115,31 @@ describe("project Meter display boundary", () => {
       expect(projectBudgetRow({ ...budget, budget: { ...budget.budget, scope } }, null)).toBeNull();
   });
 });
+
+it("attaches separate authorized labels without changing figures or exposing redacted scopes", () => {
+  const display = { projectName: "Project · branch", providerLabel: "Provider" };
+  const plain = projectBudgetRow(budget, null, true);
+  const labeled = projectBudgetRow(budget, null, true, null, undefined, undefined, display);
+  expect(labeled).toEqual({ ...plain, display: { projectName: display.projectName } });
+  const connection = {
+    ...budget,
+    budget: {
+      ...budget.budget,
+      scope: { kind: "connection" as const, namespace: "n", connection: "c" },
+    },
+  };
+  expect(
+    projectBudgetRow(connection, "conn_public", true, null, undefined, undefined, display)?.display,
+  ).toEqual(display);
+  expect(
+    projectBudgetRow(
+      { ...budget, redacted: true },
+      null,
+      true,
+      null,
+      undefined,
+      undefined,
+      display,
+    ),
+  ).toBeNull();
+});

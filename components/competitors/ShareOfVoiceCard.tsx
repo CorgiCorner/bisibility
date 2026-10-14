@@ -1,8 +1,9 @@
+import { LocalizedMeasurementHelp } from "@/components/measurement-help/LocalizedMeasurementHelp";
 import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { CompetitorFilter, CompetitorKind, CompetitorMarket } from "@/lib/competitors/types";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { CompetitorFilterControls } from "./CompetitorFilterControls";
 import { CompetitorTile } from "./CompetitorTile";
@@ -36,8 +37,10 @@ export function ShareOfVoiceCard({
   scopeControls,
 }: Readonly<ShareOfVoiceCardProps>) {
   const t = useTranslations("projectCompetitors.ui");
-  const maxShare = Math.max(1, ...market.shares.map((competitor) => competitor.shareOfVoice));
+  const format = useFormatter();
+  const maxShare = Math.max(1, ...market.shares.map((competitor) => competitor.shareOfVoice ?? 0));
   const emptyCopy = {
+    quality_unknown: t("sovQualityUnknown"),
     completed_unranked: t("sovCompletedUnranked"),
     filter_excludes_all: t("sovFilterExcludesAll"),
     no_volume_data: t("sovNoVolume"),
@@ -49,7 +52,14 @@ export function ShareOfVoiceCard({
     <Card className="px-5 py-4.5" size="md">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 flex-col gap-1">
-          <SectionTitle>{t("shareOfVoice")}</SectionTitle>
+          <div className="flex items-center gap-2">
+            <SectionTitle>{t("shareOfVoice")}</SectionTitle>
+            <LocalizedMeasurementHelp
+              metricId={market.quality.metricId}
+              definitionVersion={market.quality.definitionVersion}
+              report={{ counts: market.quality }}
+            />
+          </div>
           <span>
             {t("sovScope", {
               device: market.device === "mobile" ? t("mobile") : t("desktop"),
@@ -67,6 +77,20 @@ export function ShareOfVoiceCard({
         />
       </div>
 
+      <p className="mt-3 text-xs text-fg-muted" aria-live="polite">
+        {t("sovQuality", {
+          measured: format.number(market.quality.measured),
+          expected: format.number(market.quality.expected),
+          unknown: format.number(market.quality.unknown),
+          coverage:
+            market.quality.dataCoverage === null
+              ? t("sovCoverageUnknown")
+              : format.number(market.quality.dataCoverage, {
+                  style: "percent",
+                  maximumFractionDigits: 0,
+                }),
+        })}
+      </p>
       {scopeControls ? <div className="mt-3.5">{scopeControls}</div> : null}
 
       {emptyCopy ? (
@@ -79,7 +103,7 @@ export function ShareOfVoiceCard({
         <div className="mt-4.5 flex flex-col gap-[13px]">
           {market.shares.map((competitor) => {
             const kind = kindStyles[competitor.kind];
-            const barWidth = `${Math.round((competitor.shareOfVoice / maxShare) * 100)}%`;
+            const barWidth = `${Math.round(((competitor.shareOfVoice ?? 0) / maxShare) * 100)}%`;
             const managed =
               competitor.id && competitor.kind === "Managed"
                 ? {
@@ -135,7 +159,7 @@ export function ShareOfVoiceCard({
                 <span className="w-full text-right font-sans tabular-nums text-xs text-fg-muted sm:w-[130px]">
                   {t("sharedKeywordsPercent", {
                     count: competitor.sharedKeywords,
-                    percent: competitor.shareOfVoice,
+                    percent: Math.round(competitor.shareOfVoice ?? 0),
                   })}
                 </span>
                 {managed ? (

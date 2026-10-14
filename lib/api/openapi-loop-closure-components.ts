@@ -1,9 +1,11 @@
 import { publicIdSchema } from "./openapi-public-id";
+import { rankHistoryReportSchemas } from "./openapi-rank-history-report";
 
 const dateTime = { format: "date-time", type: "string" } as const;
 const nullableDateTime = { format: "date-time", type: ["string", "null"] } as const;
 
 export const loopClosureSchemas = {
+  ...rankHistoryReportSchemas,
   RankHistoryExportResponse: {
     properties: {
       data: { items: { $ref: "#/components/schemas/RankHistoryExportRow" }, type: "array" },
@@ -22,9 +24,12 @@ export const loopClosureSchemas = {
       id: publicIdSchema("check"),
       keyword: { type: "string" },
       keyword_id: publicIdSchema("kw"),
+      normalization_version: { type: ["string", "null"] },
       position: { type: ["integer", "null"] },
       previous_position: { type: ["integer", "null"] },
+      provider: { type: ["string", "null"] },
       ranking_url: { type: ["string", "null"] },
+      requested_depth: { minimum: 1, type: ["integer", "null"] },
     },
     required: [
       "id",

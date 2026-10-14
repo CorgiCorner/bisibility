@@ -129,6 +129,8 @@ export function isLaunchRankCheckRunNothingToRun(
 export type LaunchRankCheckRunErrorCode =
   | "budget_exhausted"
   | "cost_limit_exceeded"
+  | "measurement_policy_unconfigured"
+  | "measurement_policy_unsupported"
   | "no_provider";
 
 export class LaunchRankCheckRunError extends Error {
@@ -138,15 +140,17 @@ export class LaunchRankCheckRunError extends Error {
     readonly budgetReason?: BudgetDenialReason,
   ) {
     super(
-      budgetReason === "budget_missing"
-        ? MISSING_PROJECT_BUDGET_MESSAGE
-        : budgetReason === "usage_reconciliation_required"
-          ? UNRESOLVED_USAGE_MESSAGE
-          : code === "budget_exhausted"
-            ? "Rank check monthly budget reached."
-            : code === "cost_limit_exceeded"
-              ? "The estimated rank check cost exceeds max_cost_cents."
-              : "No connected rank data provider is available.",
+      code === "measurement_policy_unconfigured" || code === "measurement_policy_unsupported"
+        ? "Configure measurement policy in Project settings > Tracking, then preview again."
+        : budgetReason === "budget_missing"
+          ? MISSING_PROJECT_BUDGET_MESSAGE
+          : budgetReason === "usage_reconciliation_required"
+            ? UNRESOLVED_USAGE_MESSAGE
+            : code === "budget_exhausted"
+              ? "Rank check monthly budget reached."
+              : code === "cost_limit_exceeded"
+                ? "The estimated rank check cost exceeds max_cost_cents."
+                : "No connected rank data provider is available.",
     );
     this.name = "LaunchRankCheckRunError";
   }

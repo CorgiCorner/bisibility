@@ -1,3 +1,4 @@
+import { readPaidFenceReference } from "./paid-fence-references";
 import { rankAttribution } from "./rank-attribution";
 import "server-only";
 import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
@@ -10,10 +11,11 @@ import { assertProviderCostLimit } from "@/lib/providers/cost-limit";
 import { translatePaidAdmission } from "./admission-errors";
 import { reserveFromEntry } from "./mapping";
 import { reservePaidAttempts } from "./paid-admission";
+import type { PaidFenceHook } from "./paid-attempt-types";
 import { PaidAttemptAdmissionError } from "./paid-attempt-types";
 import { fencePaidAttemptsInTransaction, markPaidAttemptDispatch } from "./paid-dispatch";
 import { reserveOwnPricedRequests } from "./priced-own-request";
-import { createTransactionMeter, readPaidOperation } from "./transaction-meter";
+import { createTransactionMeter } from "./transaction-meter";
 
 export async function reserveOwnTransports(
   tx: Prisma.TransactionClient,
@@ -107,17 +109,23 @@ export async function ownTransportRef(tx: Prisma.TransactionClient, id: string) 
   if (!entry?.namespace) throw new Error("Retained own-key identity is unavailable");
   return { namespace: entry.namespace, principal: entry.ownerId, operationId: id };
 }
-export async function fenceOwnTransports(db: PrismaClient, grants: readonly OwnAttemptGrant[]) {
+export async function fenceOwnTransports(
+  db: PrismaClient,
+  grants: readonly OwnAttemptGrant[],
+  beforeFence?: PaidFenceHook,
+) {
   if (!grants.length) throw new Error("Paid transport requires a complete grant set");
   await db.$transaction(async (tx) => {
-    const meter = await createTransactionMeter(tx);
     const paid = [];
     for (const grant of grants) {
-      const operation = await readPaidOperation(meter, await ownTransportRef(tx, grant.attemptId));
+      const { operation } = await readPaidFenceReference(
+        tx,
+        await ownTransportRef(tx, grant.attemptId),
+      );
       if (!operation.lease || operation.lease.leaseId !== grant.leaseId)
         throw new Error("Own-key transport is fenced out");
       paid.push({ operation, lease: operation.lease });
     }
-    await fencePaidAttemptsInTransaction(tx, paid);
+    await fencePaidAttemptsInTransaction(tx, paid, { beforeFence });
   });
 }

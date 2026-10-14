@@ -135,7 +135,11 @@
       "startUnconfirmed": "The start response was lost. Retry to recover the same run without starting it twice.",
       "refreshEstimate": "Refresh estimate",
       "marketInactive": "This market is no longer active. Resume it before starting a check.",
-      "keywordsArchived": "These keywords have been archived. Refresh the page to choose another scope."
+      "keywordsArchived": "These keywords have been archived. Refresh the page to choose another scope.",
+      "measurementPolicy": "Measurement policy",
+      "configureMeasurementPolicy": "Configure policy",
+      "measurementPolicyUnconfigured": "Configure measurement policy before running new checks.",
+      "measurementPolicyUnsupported": "Measurement policy no longer matches the current adapters. Review and configure it again."
     },
     "globalError": {
       "description": "The app could not render this page. Reload to try again.",
@@ -593,6 +597,10 @@
       },
       "toolbarSearch": {
         "clear": "Clear {label}"
+      },
+      "noticeMotion": {
+        "pause": "Pause scrolling",
+        "resume": "Resume scrolling"
       }
     },
     "nativeUsage": {
@@ -827,6 +835,1197 @@
         "settled": "Settled",
         "released": "Released"
       }
+    },
+    "measurementHelp": {
+      "explain": "Explain: {title}",
+      "close": "Close",
+      "glossary": "Full explanation: {title}",
+      "unknownVersion": "Detailed definition unavailable for this version.",
+      "neutralDefinition": "This report identifies a measurement, but its detailed definition is unavailable.",
+      "contextLoading": "Report context is loading. The definition remains available.",
+      "contextError": "Report context is unavailable. This does not mean a zero result.",
+      "unknownValue": "Unknown",
+      "counts": {
+        "expected": "Expected targets",
+        "measured": "Determinate observed targets",
+        "ranked": "Ranked targets",
+        "knownAbsent": "Confirmed absent",
+        "unknown": "Unknown results",
+        "neverChecked": "Never observed",
+        "failed": "Failed attempts",
+        "stale": "Stale observations",
+        "unsupported": "Unsupported",
+        "freshDeterminate": "Fresh determinate targets",
+        "comparable": "Comparable paired targets",
+        "metricEligible": "Metric-eligible targets",
+        "unknownFreshness": "Targets with unknown freshness"
+      },
+      "entries": {
+        "organic_visibility_top20": {
+          "title": "Organic visibility",
+          "versions": {
+            "v1": {
+              "definition": "A versioned index of organic results in the first 20 positions.",
+              "interpretation": "Read the index with observed coverage, fresh determinate counts, and comparable targets.",
+              "limitation": "This is not traffic or leads. Unknown results are not confirmed absence; changing coverage alone does not prove improvement."
+            }
+          }
+        },
+        "organic_top10_rate": {
+          "title": "Organic Top 10 rate",
+          "versions": {
+            "qualified-v1": {
+              "definition": "The share of eligible determinate targets confirmed in the organic Top 10.",
+              "interpretation": "Read the rate alongside expected, measured, and ranked counts in the same scope.",
+              "limitation": "Unknown targets are not ranked or absent. The same percentage can describe different coverage; comparisons require a comparable cohort."
+            }
+          }
+        },
+        "organic_rank": {
+          "title": "Organic position",
+          "versions": {
+            "help-v1": {
+              "definition": "The confirmed position of an organic link on its declared rank scale.",
+              "interpretation": "Compare positions only within compatible search scope and methodology.",
+              "limitation": "A business slot, Maps listing, or feature presence is not an organic position. Unknown or absent results have no synthetic position."
+            }
+          }
+        },
+        "feature_presence": {
+          "title": "Search feature presence",
+          "versions": {
+            "help-v1": {
+              "definition": "Whether a search-results block was observed, such as Local Google results: businesses with a map in regular Google results.",
+              "interpretation": "A visible block and a confirmed target within that block are separate observations.",
+              "limitation": "No observed block, no confirmed business, unknown identity, and unsupported measurement mean different things."
+            }
+          }
+        },
+        "business_slot": {
+          "title": "Local Google results",
+          "versions": {
+            "help-v1": {
+              "definition": "Businesses with a map in regular Google results; a business slot refers to the explicitly confirmed branch.",
+              "interpretation": "The branch's stable identity and the original block, page, and slot identify the observation.",
+              "limitation": "A shared domain or similar name is only a candidate. Promoted or unknown promotion results are not organic-eligible; Maps and Local Finder use separate scales."
+            }
+          }
+        },
+        "maps_rank": {
+          "title": "Maps position",
+          "versions": {
+            "help-v1": {
+              "definition": "The confirmed listing position on the Google Maps surface, on its own rank scale.",
+              "interpretation": "Keep Maps observations separate from regular Google results and Local Finder.",
+              "limitation": "This explanation does not mean Maps measurement is available. Unsupported measurement is not a missing business or zero rank."
+            }
+          }
+        },
+        "local_finder_rank": {
+          "title": "Local Finder position",
+          "versions": {
+            "help-v1": {
+              "definition": "The confirmed listing position in Google's expanded local-results view, on its own scale.",
+              "interpretation": "Keep Local Finder observations separate from business slots in regular results and from Maps.",
+              "limitation": "This explanation does not enable Local Finder measurement. Unknown or unsupported observations do not prove absence."
+            }
+          }
+        },
+        "average_ranked_position": {
+          "title": "Average ranked position",
+          "versions": {
+            "help-v1": {
+              "definition": "Average position among targets with a confirmed positive rank in one compatible scope and rank scale.",
+              "interpretation": "Read ranked count and coverage alongside the average.",
+              "limitation": "Absent and unknown targets receive no zero or 101 position. Losing observations alone does not prove improvement."
+            }
+          }
+        },
+        "observation_time": {
+          "title": "Observation time",
+          "versions": {
+            "help-v1": {
+              "definition": "When the search result was observed, not when the report or cache was read.",
+              "interpretation": "Requested time, recorded time, observation time, and report as-of time have different meanings.",
+              "limitation": "Reading a cached result does not create a new observation or make old data fresh. Missing historical timestamps stay unknown."
+            }
+          }
+        },
+        "data_quality": {
+          "title": "Data quality and coverage",
+          "versions": {
+            "help-v1": {
+              "definition": "Observed coverage describes determinate retained observations; fresh coverage additionally requires an explicit freshness policy.",
+              "interpretation": "Read expected, observed, fresh determinate, unknown, and comparable counts separately. Comparable count describes paired targets, not coverage.",
+              "limitation": "Unknown freshness is not fresh. A failed attempt can coexist with a retained successful observation; quality counts are not necessarily disjoint."
+            }
+          }
+        },
+        "rank_movement": {
+          "title": "Comparable change",
+          "versions": {
+            "help-v1": {
+              "definition": "A change between observations with compatible scope, methodology, identity, and evidence.",
+              "interpretation": "Read the paired comparable count and original observation dates. Percentage-point change differs from relative percent change.",
+              "limitation": "Missing baseline, changed scope, entry, exit, or re-entry is not an ordinary numeric movement. A change in membership alone does not prove improvement."
+            }
+          }
+        },
+        "ranking_url": {
+          "title": "Observed and desired URL",
+          "versions": {
+            "help-v1": {
+              "definition": "The observed URL is the page actually found in that observation; the desired URL is the configured target.",
+              "interpretation": "Use each historical check's observed URL when reading its result.",
+              "limitation": "Today's URL or the desired URL cannot fill a missing historical observed URL. Missing evidence remains unavailable."
+            }
+          }
+        },
+        "provider_cost": {
+          "title": "Provider usage and cost",
+          "versions": {
+            "help-v1": {
+              "definition": "An estimate before execution is distinct from confirmed provider usage or cost after settlement.",
+              "interpretation": "Read amounts in their native unit. Provider cost, customer charge, and application credits are separate measures.",
+              "limitation": "Search quota is not USD. An unknown charge is not zero; a cached read is not a new paid request. Help does not fetch current prices or run checks."
+            }
+          }
+        },
+        "measurement_depth": {
+          "title": "Result depth",
+          "versions": {
+            "help-v1": {
+              "definition": "The requested result horizon is distinct from the horizon proven complete by the observation.",
+              "interpretation": "Interpret a missing target using the observed scope, result kind, rank scale, and completeness evidence.",
+              "limitation": "Requested depth alone does not prove absence. Unknown completeness remains unknown; organic completeness does not prove local-block completeness."
+            }
+          }
+        },
+        "search_location": {
+          "title": "Search location",
+          "versions": {
+            "help-v1": {
+              "definition": "Where the search is simulated; this is different from the business address or branch identity.",
+              "interpretation": "Read the configured and effective search scope when a provider substitutes a location.",
+              "limitation": "One city observation does not cover every point in that city. A country fallback is not evidence for the requested city."
+            }
+          }
+        },
+        "refresh_schedule": {
+          "title": "Schedule and refresh",
+          "versions": {
+            "help-v1": {
+              "definition": "The schedule requests new observations; refreshing the view reads stored report data.",
+              "interpretation": "Read the original observation time and explicit freshness policy independently of when the view was refreshed.",
+              "limitation": "Opening help or reading a widget does not launch a provider check, change the schedule, or turn a cached observation into a new one."
+            }
+          }
+        },
+        "visibility_top20": {
+          "title": "Organic visibility",
+          "versions": {
+            "visibility-top20-v1": {
+              "definition": "A versioned index of organic results in the first 20 positions.",
+              "interpretation": "Read the index with observed coverage, fresh determinate counts, and comparable targets.",
+              "limitation": "This is not traffic or leads. Unknown results are not confirmed absence; changing coverage alone does not prove improvement."
+            }
+          }
+        },
+        "competitor_share_of_voice_top10": {
+          "title": "Competitor share of voice",
+          "versions": {
+            "bisibility-sov-top10-v2": {
+              "definition": "The selected domain’s share of volume-weighted linear Top 10 scores across the selected domains.",
+              "interpretation": "All domains use the same qualified keyword cohort and weights. Read the observed coverage and fresh coverage alongside the percentage.",
+              "limitation": "This is a relative index of selected domains, not market share, traffic or leads. Unknown and stale observations are excluded; zero total scores produce no percentage. Version 2 changes the legacy treatment of missing volumes and incomplete observations."
+            }
+          }
+        }
+      }
+    },
+    "personalViews": {
+      "latestRevision": "Latest revision",
+      "openLatest": "Open latest view in a new tab",
+      "reloadLatest": "Reload latest revision",
+      "reviewLatest": "Keep draft and use latest revision",
+      "cancel": "Cancel",
+      "conflict": "This view changed. Review the latest version before saving.",
+      "delete": "Delete view",
+      "discard": "Discard changes",
+      "failed": "Could not save the view. Your changes remain available.",
+      "general": "General",
+      "modified": "Unsaved changes",
+      "name": "Name",
+      "personal": "Personal",
+      "project": "Project",
+      "saveAs": "Save as",
+      "saved": "Saved",
+      "saveChanges": "Save changes",
+      "saving": "Saving",
+      "setDefault": "Set as my default",
+      "unavailableDefault": "Your saved default is unavailable. General is shown.",
+      "unavailableView": "This view is unavailable. Choose General explicitly to change scope.",
+      "visibility": "Visibility",
+      "unavailable_scope": "This scope is unavailable. Choose another view or remove the unavailable filter.",
+      "invalid_url": "The link contains invalid filters. Correct the link or choose General.",
+      "unavailable_view": "This view is unavailable. Choose General explicitly to change scope.",
+      "columnOrder": "Column order",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "privateUnavailable": "Private views are not available yet.",
+      "privateSharing": "Choose Project to share this view with the project."
+    },
+    "businessLocations": {
+      "locations": "Business locations",
+      "locationsHelp": "Branches keep separate identities even when they share a website. Selecting a branch here does not assign a subject.",
+      "locationVisibility": "Show locations",
+      "noLocations": "No locations in this state.",
+      "readOnly": "You can view these locations. Editing is unavailable.",
+      "createLocation": "Add business location",
+      "editIdentity": "Edit identity",
+      "archive": "Archive",
+      "restore": "Restore",
+      "identityRevision": "Identity revision {revision}",
+      "identityVersionHelp": "Saving creates a new identity revision. Historical observations stay unchanged.",
+      "identityHelp": "Keep CID and Place ID as text. A website is a weak signal, not a branch identifier. Maps URLs are not fetched.",
+      "save": "Save identity",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "conflict": "The save conflicted. Review current data before continuing; your draft is retained.",
+      "saveError": "Saving failed. Your draft is retained; try again.",
+      "selectionChanged": "The selected resource changed. Close this editor and open the current selection.",
+      "currentUnavailable": "Current data is unavailable. Request an authorized refresh before reviewing the conflict.",
+      "reviewCurrent": "Review current data",
+      "reviewChangedFields": "Compare current values with your draft. Keeping changes also refreshes untouched fields.",
+      "current": "Current",
+      "yourDraft": "Your draft",
+      "notProvided": "Not provided",
+      "keepChangedFields": "Keep my changed fields",
+      "useCurrent": "Use current values",
+      "editConflictingIdentity": "Review and edit conflicting identity",
+      "unavailableBranch": "Unavailable branch",
+      "archiveHelp": "Archiving preserves identity and match history. Archived subjects become unavailable; restoring rechecks active identifier claims.",
+      "archiveConfirmation": "I reviewed the effect on assigned subjects.",
+      "currentState": "Current state: {state}; version {version}.",
+      "reviewState": "Use reviewed state version",
+      "confirmAction": "Confirm state change",
+      "assignSubject": "Assign local subject",
+      "assignmentHelp": "Choose an active subject branch and its current identity revision explicitly for this keyword or market. No branch is selected automatically.",
+      "staleAssignment": "This subject identity is archived or no longer current. Select an eligible branch revision or clear the assignment.",
+      "subject": "Subject branch",
+      "noSubject": "No assigned subject",
+      "saveSubject": "Save subject assignment",
+      "currentAssignment": "Current subject: {name}; assignment revision {revision}.",
+      "reviewAssignmentKeepChoice": "Use reviewed assignment revision and keep my choice",
+      "reviewCandidate": "Review candidate",
+      "candidateBranch": "Branch: {name}",
+      "candidateItem": "Observed business",
+      "candidateDomain": "Observed website",
+      "surface": "Google result surface",
+      "matchStatus": "Match state",
+      "matchReason": "Match reason",
+      "observedAt": "Observed at",
+      "promotion": "Promotion evidence",
+      "sourceSlot": "Original slot",
+      "sourcePage": "Original page",
+      "sourceOrdinal": "Original item ordinal",
+      "confirmationBlocked": "This item cannot be manually confirmed as a weak candidate. Hard conflicts and missing review details remain unresolved.",
+      "reviewOnlyThisItem": "Confirmation applies only to this retained item. It never confirms future results or turns unknown/promoted items into organic results.",
+      "reviewAction": "Review action",
+      "confirmCandidate": "Confirm this candidate",
+      "rejectCandidate": "Reject this item",
+      "candidateConfirmation": "I reviewed this branch and this specific observed item.",
+      "saveReview": "Save item review",
+      "candidateConflictHelp": "The decision or identity changed. Refresh or rematch retained evidence, then review the new decision.",
+      "reviewLatestDecision": "Review latest decision",
+      "rematch": "Rematch retained results",
+      "rematchHelp": "Re-evaluate only the selected retained observation and exact current decision heads. This does not send a provider request or modify previous decisions.",
+      "missingRetainedEvidence": "Required retained evidence is unavailable. Rematching is blocked.",
+      "rematchConfirmation": "I reviewed the selected retained observation and decision heads.",
+      "confirmRematch": "Rematch retained observation",
+      "fields": {
+        "name": "Branch name",
+        "address": "Address",
+        "domain": "Website domain",
+        "cid": "Google CID (text)",
+        "placeId": "Google Place ID (text)",
+        "mapsUrl": "Google Maps URL",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+        "reason": "Reason",
+        "role": "Business purpose"
+      },
+      "roles": {
+        "subject": "Subject",
+        "competitor": "Competitor"
+      },
+      "states": {
+        "active": "Active",
+        "archived": "Archived"
+      },
+      "surfaces": {
+        "web_serp": "Google web results",
+        "maps": "Google Maps",
+        "local_finder": "Google Local Finder"
+      },
+      "matchStates": {
+        "confirmed": "Confirmed",
+        "candidate": "Candidate",
+        "rejected": "Rejected",
+        "unresolved": "Unresolved"
+      },
+      "promotions": {
+        "organic": "Organic",
+        "promoted": "Promoted",
+        "unknown": "Unknown"
+      },
+      "validation": {
+        "name": "Enter a valid branch name.",
+        "address": "Use at most 500 address characters.",
+        "domain": "Enter a valid website domain.",
+        "cid": "Enter CID as digits in text; never a numeric conversion.",
+        "placeId": "Enter a valid opaque Place ID without whitespace.",
+        "mapsUrl": "Use a supported HTTPS Google Maps URL without credentials.",
+        "coordinates": "Enter both finite coordinates: latitude −90 to 90, longitude −180 to 180.",
+        "reason": "Enter a reason of 1–500 characters.",
+        "confirmed": "Review and confirm this action.",
+        "noChange": "Change an identity field before saving a revision."
+      },
+      "reasons": {
+        "exact_identifier": "Equal stable identifier",
+        "stable_identifier_conflict": "Conflicting stable identifier",
+        "contradictory_identifiers": "Contradictory identifiers",
+        "ambiguous_exact_items": "Multiple exact items",
+        "ambiguous_registry_identity": "Multiple matching branches",
+        "invalid_identifier": "Malformed identifier",
+        "unsafe_numeric_identifier": "Unsafe numeric identifier",
+        "invalid_ordinals": "Invalid original positions",
+        "duplicate_observation_identity": "Duplicate observation identity",
+        "weak_name": "Similar name",
+        "weak_domain": "Shared website",
+        "weak_name_and_domain": "Similar name and shared website",
+        "insufficient_evidence": "Insufficient evidence",
+        "manually_confirmed_item": "This item was manually confirmed",
+        "manually_rejected_item": "This item was manually rejected"
+      },
+      "chooseAssignmentScope": "Choose a keyword or market",
+      "assignmentScopeKind": "Assignment scope",
+      "keywordScope": "Keyword",
+      "marketScope": "Market",
+      "searchScope": "Search",
+      "noScopes": "No matching active keywords or markets.",
+      "nextScopes": "Next results",
+      "scopeSelectionHelp": "Search and choose a scope explicitly. Selecting a location above does not assign it.",
+      "readError": "Could not read current data. Your selection is retained.",
+      "loading": "Loading…",
+      "devices": {
+        "desktop": "Desktop",
+        "mobile": "Mobile"
+      },
+      "retainedMatches": "Retained matches",
+      "chooseRetainedObservation": "Choose an existing observation to review this branch. Reading or rematching uses retained data.",
+      "readObservations": "Read saved observations",
+      "recordedAt": "Recorded",
+      "noRetainedObservations": "No saved local observations are available.",
+      "retainedBatch": "Reviewing {included} of {total} normalized items in this batch.",
+      "noMatchDecisions": "No match decisions for this batch. Rematch retained evidence to evaluate it.",
+      "identityHistory": "Identity history",
+      "identityHistoryHelp": "Previous identities remain recorded. Reading a revision does not reinterpret its observations.",
+      "readIdentityHistory": "Read identity history",
+      "identityEffectiveFrom": "Effective from",
+      "identifierClaimed": "Another active branch already claims this CID or PlaceID. Correct the identifiers or resolve that claim before retrying.",
+      "mapsIdentifierConflict": "The Maps URL disagrees with this identity’s CID or PlaceID. Review both before saving.",
+      "invalidMapsIdentifier": "The Maps URL contains invalid or conflicting identifiers. Use a supported explicit Maps URL.",
+      "idempotencyConflict": "This command key was used for a different request. Close this review and begin a new action.",
+      "decisionSource": "Decision source",
+      "decisionRecordedAt": "Decision recorded",
+      "matcherVersion": "Matcher version",
+      "sourceGroup": "Original Maps group",
+      "sourceScale": "Original rank scale",
+      "reviewSnapshotAt": "Review snapshot",
+      "previousCandidates": "Previous candidate batch",
+      "nextCandidates": "Next candidate batch",
+      "decisionSources": {
+        "automatic": "Original automatic match",
+        "manual": "Manual review",
+        "rematch": "Derived rematch"
+      },
+      "locationsSummary": "Manage branch identities and archived locations.",
+      "scopeSelectionSummary": "Choose where to assign a subject branch.",
+      "identitySummary": "Keep the details for this branch up to date.",
+      "assignmentSummary": "Choose a branch for this keyword or market.",
+      "helpLabel": "About {section}"
+    },
+    "measurementSettings": {
+      "title": "Measurement settings",
+      "displayHelp": "Editing, reading or hiding this view does not launch a measurement or change a schedule.",
+      "readOnly": "You can review settings. Measurement and schedule changes are unavailable.",
+      "manualOnly": "Manual measurements only; no schedule is created here.",
+      "enabled": "Enabled",
+      "paused": "Paused",
+      "unavailable": "Unavailable option",
+      "invalidSettings": "Review the marked settings. Use a supported time, time zone, calendar choice and jitter from 0 to 120 minutes.",
+      "preview": "Review measurement quote",
+      "cancel": "Cancel",
+      "selectionChanged": "The selected scope changed. Close and reopen these controls.",
+      "quoteReview": "Quote and scope review",
+      "scopeReview": "Configured and effective scope",
+      "configured": "Configured scope",
+      "effective": "Effective scope",
+      "effectiveUnknown": "Effective scope is unknown; the configured scope is not proof of provider geolocation.",
+      "geoHelp": "A city or point selects one query scope, not coverage of the whole area. The branch address and search location are separate.",
+      "counts": "{keywords} keywords; {targets} targets; {eligible} eligible targets.",
+      "overlaps": "{count} other active runs overlap this selection.",
+      "manualEstimate": "Estimated usage for one manual run",
+      "amountUnknown": "Unknown amount",
+      "estimateHelp": "These are estimates in each provider's native unit, not confirmed usage. Partial amounts cover known targets only; unknown is never zero. No currencies or units are combined.",
+      "scheduleForecast": "Schedule forecast",
+      "calendarWindow": "{count} due occurrences from {start} to {end} ({timezone}), supplied by the server calendar.",
+      "nextRun": "Next planned occurrence: {time} ({timezone}).",
+      "nextRunUnknown": "No next occurrence was established.",
+      "noScheduleForecast": "No schedule forecast is available.",
+      "quoteMetadata": "Capability {capability}; rate {rate}; quote expires {expiry}.",
+      "budgetRecheck": "Budget and execution checks are repeated at launch. A quote is not a reservation or settled charge.",
+      "scheduleDraft": "Future schedule",
+      "scheduleHelp": "Editing this draft leaves the current schedule unchanged. Saving changes future occurrences and never starts an immediate scan.",
+      "manualLaunch": "Launch a manual measurement",
+      "manualConsent": "I reviewed this exact scope and native estimate; request one manual run.",
+      "launch": "Request manual run",
+      "saveSchedule": "Save future schedule intent",
+      "scheduleConsent": "I reviewed the calendar and estimates; apply this change to future occurrences.",
+      "saveScheduleButton": "Save future schedule",
+      "recoverLaunch": "Recover the same launch intent",
+      "recoverSchedule": "Recover the same schedule save",
+      "actionFailed": "The action could not be confirmed. Your draft is retained.",
+      "revisionConflict": "Settings revision changed: draft {base}, current {current}.",
+      "reviewConflictHelp": "Compare current settings and your draft. Keeping the draft adopts the reviewed revision and requires a new quote.",
+      "reviewCurrent": "Refresh current settings",
+      "keepDraftNewRevision": "Keep draft with reviewed revision",
+      "current": "Current",
+      "yourDraft": "Your draft",
+      "fields": {
+        "provider": "Provider",
+        "surface": "Google results",
+        "geo": "Search location",
+        "language": "Search language",
+        "device": "Device",
+        "depth": "Requested depth",
+        "enabled": "Enable future scheduled measurements",
+        "frequency": "Cadence",
+        "timezone": "Schedule time zone",
+        "timeOfDay": "Local time (HH:mm)",
+        "jitter": "Jitter minutes",
+        "weekday": "Weekday",
+        "dayOfMonth": "Day of month",
+        "cron": "Custom cron expression"
+      },
+      "devices": {
+        "desktop": "Desktop",
+        "mobile": "Mobile"
+      },
+      "surfaces": {
+        "web_serp": "Google web results",
+        "maps": "Google Maps",
+        "local_finder": "Google Local Finder"
+      },
+      "geoKinds": {
+        "country": "Country",
+        "region": "Region",
+        "city": "City",
+        "point": "Point"
+      },
+      "cadences": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "custom_cron": "Custom cron"
+      },
+      "weekdays": {
+        "Monday": "Monday",
+        "Tuesday": "Tuesday",
+        "Wednesday": "Wednesday",
+        "Thursday": "Thursday",
+        "Friday": "Friday",
+        "Saturday": "Saturday",
+        "Sunday": "Sunday"
+      },
+      "units": {
+        "cents": "cents",
+        "searches": "searches",
+        "test": "test units"
+      },
+      "certainty": {
+        "estimate": "Estimate",
+        "partial": "Known subtotal; {count} targets remain unknown",
+        "unknown": "Estimate unknown for {count} targets"
+      },
+      "sources": {
+        "project": "Inherited from project",
+        "schedule": "Inherited from schedule",
+        "keyword": "Inherited from keyword",
+        "explicit": "Explicit override",
+        "unknown": "Source unknown"
+      },
+      "basis": {
+        "resolved_request": "Effective options describe the planned resolved request, not verified Google geolocation.",
+        "retained_observation": "Effective scope refers to retained observation evidence, not proof of the next run.",
+        "unknown": "No effective-scope evidence is available."
+      },
+      "effectiveAt": "Scope evidence observed at {time}.",
+      "degradation": {
+        "none": "No named scope degradation was reported. This does not establish future result completeness.",
+        "location_coarsened": "Effective location was coarser than configured; it is not comparable as the configured city/point.",
+        "location_unverified": "Provider location was not verified.",
+        "language_unverified": "Effective search language was not verified.",
+        "device_unverified": "Effective device was not verified.",
+        "point_unverified": "Effective point was not proved; do not infer precise point coverage.",
+        "scope_unknown": "Effective scope is unknown."
+      },
+      "phases": {
+        "previewing": "Reading quote…",
+        "launching": "Requesting run…",
+        "saving_schedule": "Saving schedule intent…",
+        "launch_unknown": "Launch result is unknown. Keep this intent; recover with the same key. Do not create another paid request.",
+        "schedule_unknown": "Save result is unknown. Keep this intent and recover it before creating another save.",
+        "started": "Run requested; this is not confirmed provider usage.",
+        "saved": "Future schedule saved; no manual scan was started.",
+        "error": "Could not read the quote. Your draft is retained.",
+        "conflict": "A settings conflict requires current-data review.",
+        "blocked": "The action is blocked.",
+        "saving_intent": "Saving future defaults…",
+        "intent_unknown": "The save could not be confirmed. Recover the same operation before changing scope."
+      },
+      "blocks": {
+        "no_provider": "No connected provider is available.",
+        "provider_disabled": "The configured connection is disabled.",
+        "needs_reauth": "The configured connection needs authorization.",
+        "unsupported_surface": "This implemented adapter does not support the selected surface.",
+        "capability_changed": "Capability version changed; explicitly review the provider/surface and preview again.",
+        "unsupported_device": "The selected device is unsupported.",
+        "unsupported_geo": "The selected location is unsupported.",
+        "unsupported_language": "The selected search language is unsupported.",
+        "unsupported_depth": "The selected depth is unsupported.",
+        "ambiguous_capability": "Capability evidence is ambiguous; no option is chosen automatically.",
+        "settings_conflict": "Settings changed; review the current revision and quote again.",
+        "preview_required": "Request and review a current quote first.",
+        "invalid_quote": "The quote lacks valid scope/cost/calendar evidence. Preview again.",
+        "preview_expired": "The quote expired. Preview again.",
+        "preview_mismatch": "Scope or price changed. Preview again.",
+        "rate_changed": "Rate version changed. Preview again.",
+        "rate_unavailable": "Current rate version is unavailable. No price is assumed.",
+        "budget_missing": "A required budget is missing.",
+        "budget_exhausted": "The current budget is exhausted.",
+        "usage_reconciliation_required": "Usage reconciliation is required before paid work.",
+        "duplicate": "An active run already covers this selection.",
+        "budget_blocked": "The budget blocks this launch.",
+        "nothing_eligible": "No targets are eligible for this manual run.",
+        "cost_limit_exceeded": "The estimated operation exceeds its cost limit.",
+        "sample_project": "Sample projects cannot launch paid measurements.",
+        "preview_failed": "Could not read the quote. Your draft is retained.",
+        "action_failed": "The action could not be confirmed.",
+        "invalid_settings": "The server rejected these settings without saving them.",
+        "forbidden": "You are not authorized to change these settings.",
+        "unsupported_capability": "The server rejected an unsupported capability.",
+        "measurement_policy_unconfigured": "Configure measurement policy before running new checks.",
+        "measurement_policy_unsupported": "Measurement policy no longer matches the current adapters. Review and configure it again.",
+        "save_intent_first": "Save location, language or device defaults first, then review the schedule again.",
+        "scheduler_calendar_unavailable": "A forecast for the current scheduler mode is unavailable. Manual runs and an explicit schedule pause remain available."
+      },
+      "recoverIntent": "Recover the same defaults save",
+      "hostSchedule": "Schedule to review",
+      "intentConsent": "I reviewed the future defaults and any unknown estimate.",
+      "scheduleScope": "Whole schedule: {keywords} keywords, {targets} targets across {locations} locations, {languages} languages and {devices} devices.",
+      "hostUnavailable": {
+        "measurement_policy_unconfigured": "Configure measurement policy before reviewing a run.",
+        "measurement_policy_unsupported": "The saved policy needs review for the current provider adapter.",
+        "source_unavailable": "Current target or provider settings are unavailable.",
+        "settings_revision_unavailable": "The current settings revision cannot be represented by these controls.",
+        "default_geo_unavailable": "The default geography is not available in an active market.",
+        "defaults_missing": "Project defaults have not been configured.",
+        "needs_reauth": "The provider connection requires authentication again.",
+        "provider_disabled": "Provider connections are disabled.",
+        "provider_disconnected": "No provider connection is ready.",
+        "provider_missing": "No provider connection is configured.",
+        "unsupported_capability": "The selected adapter capability is unavailable."
+      },
+      "intentScopeHelp": "This change creates or retargets no existing targets. {count} existing targets inherit the project depth.",
+      "intentHelp": "Location, language and device apply to new targets. Depth applies where inherited. Saving preserves existing target identity and launches no scan. Provider selection belongs to the manual run or selected schedule.",
+      "existingCalendar": "Existing schedule phase",
+      "intentForecastUnknown": "Future recurring usage for the inherited-depth change is unknown. Manual and selected-schedule quotes are separate.",
+      "readFailed": "Current settings could not be loaded. Your draft is retained.",
+      "configurePolicy": "Configure measurement policy",
+      "saveIntent": "Save project defaults",
+      "quoteExpires": "Quote valid until {expiry}.",
+      "saveIntentButton": "Save defaults",
+      "defaultDepthReview": "Current project depth: {current}. Saving these defaults will use {chosen}.",
+      "capabilityEvidence": {
+        "title": "What this adapter can retain",
+        "retained_provider_ids": "Stable provider IDs are available only when present in retained results.",
+        "unavailable": "This adapter does not supply stable place IDs.",
+        "organic_group_and_provider_axes_when_retained": "Organic group rank and provider position axes remain distinct when retained.",
+        "organic_group": "This adapter supplies organic group rank.",
+        "coverage": "Coverage is proven separately for each result kind by captured observation metadata.",
+        "pagination": "Absence requires a captured complete prefix; requested depth alone is insufficient.",
+        "freshness": "Freshness requires captured policy and provider time. Missing proof stays unknown."
+      },
+      "excluded": {
+        "paused": "Paused schedule",
+        "manual": "Manual-only schedule",
+        "in_progress": "Already in progress",
+        "no_provider": "No runnable provider",
+        "other_project": "Outside this project",
+        "keyword_archived": "Archived keyword",
+        "market_inactive": "Inactive market"
+      },
+      "excludedTitle": "Excluded targets",
+      "impact": {
+        "scope_changed": "Location, language, device or surface changes require independent definition proof before historical comparison. Old observations are retained.",
+        "policy_changed": "Depth or provider policy changed. Comparability depends on the retained definitions; it is not inferred from this preview.",
+        "cadence_only": "Only cadence changed. The target scope is retained; historical quality still comes from the captured definitions.",
+        "unchanged": "The selected scope and cadence match the baseline. Historical quality still comes from captured definitions."
+      },
+      "recovery": {
+        "provider": "Review provider connection",
+        "market": "Review active markets",
+        "defaults": "Review project defaults",
+        "policy": "Configure measurement policy",
+        "review": "Reload current settings"
+      },
+      "runAccepted": "Run retained for {keywords} keywords and {targets} targets.",
+      "runReceipt": "Retained run receipt",
+      "runReceiptHelp": "Queued work is not a completed observation. Open the retained run for accepted, blocked or deferred item outcomes.",
+      "runStatuses": {
+        "planned": "Planned",
+        "blocked": "Blocked",
+        "queued": "Queued",
+        "running": "Running",
+        "cancelling": "Cancellation requested",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "viewRun": "Open run outcomes"
+    },
+    "dashboardLayout": {
+      "title": "Customize dashboard",
+      "presentationOnly": "Personal display only. Schedules and paid checks do not change.",
+      "preset": "Dashboard preset",
+      "show": "Show {title}",
+      "hide": "Hide {title}",
+      "moveUp": "Move {title} up",
+      "moveDown": "Move {title} down",
+      "reorder": "Reorder {title}",
+      "reorderHint": "Drag a handle, or use arrow keys, Home and End to reorder.",
+      "widgetHelp": "About {title}",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saving": "Saving display preferences.",
+      "conflict": "Preferences changed elsewhere. Your draft is preserved; review the current layout before saving.",
+      "saveError": "Could not save. Your draft and previous default are preserved.",
+      "saved": "Display preferences saved.",
+      "moved": "Moved {title} to position {position}.",
+      "shellUnavailable": "Context is unavailable. This does not mean zero.",
+      "widgetUnavailable": "This section's stored report is unavailable.",
+      "widgetLoading": "Loading stored report.",
+      "widgetError": "This section could not be read. Other sections remain available.",
+      "span": "Width of {title}",
+      "widgets": {
+        "organic_kpis": {
+          "label": "Organic metrics",
+          "description": "Read stored organic metrics with their version, coverage, and comparable cohort."
+        },
+        "position_trend": {
+          "label": "Position history",
+          "description": "Read original observation dates and compatible positive ranks, with gaps preserved."
+        },
+        "position_distribution": {
+          "label": "Position distribution",
+          "description": "Group confirmed organic positions; unknown results are not synthetic positions."
+        },
+        "recent_targets": {
+          "label": "Recent targets",
+          "description": "Show recently added targets in the resolved search scope."
+        },
+        "data_source": {
+          "label": "Data source",
+          "description": "Read stored connection and provider information; displaying it does not launch a check."
+        },
+        "by_market": {
+          "label": "By market",
+          "description": "Read separate market reports within the shared range and filters."
+        },
+        "movers": {
+          "label": "Movers",
+          "description": "Read comparable changes and separate entry, exit, and unknown states."
+        },
+        "local_business_results": {
+          "label": "Local Google results",
+          "description": "Businesses with a map in regular Google results, for an explicitly selected confirmed branch."
+        },
+        "competitor_comparison": {
+          "label": "Competitor comparison",
+          "description": "Read the explicitly selected competitor-set scope; this is not the whole market."
+        },
+        "visibility_history": {
+          "label": "Visibility history",
+          "description": "Read versioned stored visibility history when a compatible report is available."
+        },
+        "contributors": {
+          "label": "Contributors",
+          "description": "Read target contributions from the authoritative report, not a client calculation."
+        },
+        "quality_history": {
+          "label": "Quality history",
+          "description": "Read observed, fresh, and comparable counts separately from stored quality reports."
+        }
+      },
+      "reasons": {
+        "missing_project_access": "Project read access is required.",
+        "preset_mismatch": "This section uses a different preset scope.",
+        "missing_competitors_access": "Competitor read access is required.",
+        "missing_local_subject": "Select an explicit business identity revision for Local SEO.",
+        "foreign_local_subject": "The selected business does not belong to this project.",
+        "missing_competitor_scope": "Select an explicit competitor comparison scope.",
+        "foreign_competitor_scope": "The competitor scope does not belong to this project.",
+        "missing_capability": "The stored data capability required by this section is unavailable."
+      },
+      "shell": {
+        "scope": "Shared search scope",
+        "mode": "Project mode",
+        "health": "Check health",
+        "budget": "Budget status",
+        "coverage": "Data coverage"
+      },
+      "presets": {
+        "general": "General",
+        "local": "Local SEO",
+        "competitors": "Competitors"
+      },
+      "spans": {
+        "standard": "Standard",
+        "wide": "Wide"
+      },
+      "setDefault": "Set as my default",
+      "defaultSaved": "Your default dashboard is saved.",
+      "reviewCurrent": "Review the current saved layout",
+      "keepDraft": "Keep my draft",
+      "useCurrent": "Use the current layout",
+      "readOnly": "Read-only project. Display preferences remain personal.",
+      "healthClear": "No failed checks in the last 24 hours.",
+      "budgetBlocked": "Paid checks are blocked by the current budget.",
+      "budgetReadOnly": "Viewing saved reports does not run a paid check.",
+      "coverageSummary": "Resolved {measured} of {expected} targets; {comparable} comparable pairs.",
+      "freshnessUnknown": "Freshness coverage is unknown.",
+      "freshCoverage": "Fresh resolved targets: {count}.",
+      "invalidPreset": "This dashboard preset is unavailable. Choose an available preset.",
+      "scopeNotMeasured": "This scope is not resolved. No ranking metric was calculated.",
+      "widgetLoadOnSave": "Save this layout to load the section data.",
+      "healthUnknown": "Check health is unavailable. This does not mean zero failures.",
+      "budgetUnknown": "Budget status is unknown. No paid checks are launched by this view.",
+      "preferenceUnavailable": "The stored dashboard layout is unavailable in this version.",
+      "preferencePreserved": "Your stored layout and draft are preserved. Saving is blocked until a compatible current revision is reviewed.",
+      "reloadPreference": "Reload stored layout",
+      "preferenceReloadFailed": "The stored layout could not be reloaded. Your draft is preserved.",
+      "preferenceRevision": "Current layout revision: {revision}",
+      "unsavedDraft": "Unsaved layout draft. The stored layout has not changed.",
+      "viewDetails": "About this view",
+      "viewHelp": "This view shows saved results. It does not run checks.",
+      "viewHelpClose": "Close"
+    },
+    "localMonitors": {
+      "title": "Local monitors",
+      "create": "Create monitor",
+      "edit": "Edit monitor",
+      "definition": "Monitor configuration",
+      "subject": "Business location",
+      "manageSubjects": "Manage business locations",
+      "reviewIntegrations": "Review integrations",
+      "setupOnly": "Saving a monitor stores its configuration. It does not start checks or create charges.",
+      "noSubjects": "Add an active business location first, then choose it explicitly.",
+      "moreSubjects": "More business locations",
+      "useCurrentIdentity": "Use the current location identity",
+      "keywords": "Keywords",
+      "searchKeywords": "Search existing keywords",
+      "search": "Search",
+      "selectedKeywords": "{count} selected (maximum 20)",
+      "noKeywords": "No keywords on this page. Try another search.",
+      "moreKeywords": "More keywords",
+      "targetCount": "{count} keyword and point combinations (maximum 100)",
+      "validation": "Check the name, location, keywords, coordinates, supported language, operating system, map zoom and maximum of 100 targets.",
+      "save": "Save configuration",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "status": "Status",
+      "points": "Points",
+      "revision": "Revision",
+      "visibility": "Monitor visibility",
+      "activeOnly": "Active monitors",
+      "includingArchived": "Include archived monitors",
+      "moreMonitors": "More monitors",
+      "empty": "No monitors yet. Create one using an existing business location.",
+      "readOnly": "You can read this configuration. A project editor can change it.",
+      "readError": "The saved data could not be loaded. Try again.",
+      "back": "Back to monitors",
+      "archive": "Archive",
+      "archiveConfirm": "Archive this monitor? Its configuration and history will be retained.",
+      "confirmArchive": "Confirm archive",
+      "mode": "Saved schedule intent",
+      "launchUnavailable": "Running checks from this monitor is not available yet. Review integrations for provider availability.",
+      "configuredPoints": "Configured points",
+      "pointHelp": "These are the saved sampling coordinates. Results are unavailable until a run is explicitly linked to this monitor revision.",
+      "point": "Point",
+      "row": "Row",
+      "column": "Column",
+      "result": "Recorded result",
+      "resultUnavailable": "Not available",
+      "definitionHistory": "Configuration history",
+      "revisionNumber": "Revision {revision}",
+      "showHistory": "Show saved revisions",
+      "moreHistory": "Earlier revisions",
+      "axesHelp": "Choose an operating system and map zoom for Maps. Saving changed options creates a revision; review its cost and confirm again before running checks.",
+      "fields": {
+        "name": "Name",
+        "latitude": "Center latitude",
+        "longitude": "Center longitude",
+        "language": "Search language code",
+        "spacing": "Point spacing (metres)",
+        "cutoff": "Maximum results per point",
+        "surface": "Search surface",
+        "device": "Device",
+        "grid": "Grid size",
+        "subjectReference": "Business location reference",
+        "identityRevision": "Location identity revision",
+        "engine": "Search engine",
+        "resultKind": "Result type",
+        "rankScale": "Position scale",
+        "operatingSystem": "Operating system",
+        "zoom": "Map zoom",
+        "calendarReference": "Calendar reference",
+        "calendarEpoch": "Calendar version",
+        "frequency": "Frequency",
+        "cron": "Cron expression",
+        "timeOfDay": "Time of day",
+        "timezone": "Calendar timezone",
+        "jitter": "Schedule jitter",
+        "configuredDepth": "Configured calendar depth",
+        "providerPolicy": "Configured provider policy",
+        "retainedGrid": "7 × 7 (retained history)",
+        "gridPilotHelp": "The pilot supports 1 × 1, 3 × 3 and 5 × 5 grids. Larger grids require separate scope and budget approval."
+      },
+      "surfaces": {
+        "maps": "Maps results",
+        "local_finder": "Local Finder results"
+      },
+      "devices": {
+        "desktop": "Desktop",
+        "mobile": "Mobile",
+        "unknown": "Unknown device"
+      },
+      "states": {
+        "active": "Active",
+        "archived": "Archived"
+      },
+      "modes": {
+        "manual": "Manual",
+        "paused": "Paused",
+        "scheduled": "Scheduled intent",
+        "unknown": "Unknown"
+      },
+      "readiness": {
+        "archived": "This monitor is archived.",
+        "subject_changed": "The business location changed. Review and save a new revision.",
+        "keyword_changed": "A selected keyword changed or is unavailable. Review the selection.",
+        "manual": "No recurring execution is enabled.",
+        "paused": "The saved schedule intent is paused.",
+        "definition_changed": "The schedule refers to an earlier configuration.",
+        "calendar_changed": "The calendar changed or is unavailable. Review it before scheduling."
+      },
+      "errors": {
+        "conflict": "The saved configuration changed. Reload it and review before saving again.",
+        "invalid": "Some configuration fields are invalid. Review the form.",
+        "forbidden": "You no longer have permission to change this project.",
+        "unavailable": "The requested location or monitor is unavailable. Reload and try again."
+      },
+      "reload": "Reload current configuration",
+      "capturedScope": "Saved measurement scope",
+      "capturedCalendar": "Saved calendar",
+      "noSavedCalendar": "No calendar is saved for this intent.",
+      "unrestricted": "Unrestricted",
+      "notSet": "Not set",
+      "metres": "{count} m",
+      "minutes": "{count} min",
+      "resultKinds": {
+        "local_pack": "Local pack",
+        "map_listing": "Maps listing",
+        "listing": "Local Finder listing"
+      },
+      "rankScales": {
+        "pack_slot": "Local pack slot",
+        "maps_organic": "Organic position in Maps",
+        "finder_organic": "Organic position in Local Finder"
+      },
+      "frequencies": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "custom_cron": "Custom cron"
+      },
+      "manual": {
+        "title": "Run this monitor",
+        "help": "Choose a connection, review the full task count and provider charge, then confirm. Opening this panel or refreshing saved status does not contact the provider.",
+        "connection": "Provider connection",
+        "chooseConnection": "Choose a connection",
+        "noConnection": "Connect a supported provider in Integrations to run this monitor.",
+        "preview": "Review run",
+        "consent": "Confirm provider charge",
+        "taskCount": "This run submits {count} keyword–point tasks.",
+        "expires": "Quote expires: {time}",
+        "consentHelp": "Confirmation authorizes only this run. It does not enable a schedule.",
+        "confirmLaunch": "Confirm and run",
+        "refreshRecorded": "Refresh saved status",
+        "noRun": "No saved run yet.",
+        "recordedRun": "Latest saved run",
+        "progress": "{complete} of {total} tasks complete",
+        "receiptHelp": "Unknown acceptance stays unresolved. Refreshing never resubmits a task or collects provider results.",
+        "keyword": "Keyword",
+        "point": "Point",
+        "coordinate": "Coordinates",
+        "status": "Saved status",
+        "pointNumber": "Point {number}",
+        "unknown": "Unknown",
+        "nativeCents": "US cents",
+        "errors": {
+          "forbidden": "You cannot launch this monitor.",
+          "invalid": "Check the selected run settings.",
+          "conflict": "The monitor or its connection changed. Review a fresh run.",
+          "expired": "The quote expired. Review a fresh run.",
+          "unavailable": "This run is currently unavailable. Refresh saved status before trying again."
+        },
+        "unavailable": {
+          "capability_unregistered": "This local search capability is not registered. Choose a supported configuration.",
+          "connection_unavailable": "This connection is unavailable. Review it in Integrations.",
+          "unsupported": "The provider does not support this monitor configuration. Edit its search settings.",
+          "pricing_unavailable": "The complete provider charge is unknown. A paid run cannot start.",
+          "worker_unavailable": "The execution worker is disabled. Enable the worker before queuing a run."
+        },
+        "states": {
+          "awaiting_dispatch": "Waiting to start",
+          "cancelled": "Cancelled",
+          "needs_provider_evidence": "Provider acceptance is unknown",
+          "pending_reconciliation": "Evidence needs review",
+          "accounting_pending": "Confirming provider charge",
+          "awaiting_collection": "Accepted; results pending",
+          "owner_release_pending": "Finalizing saved result",
+          "complete": "Complete",
+          "unavailable": "Unavailable"
+        },
+        "queue": {
+          "queued": "Run queued. The worker will recheck the approved scope and price before starting.",
+          "running": "The worker is processing this run.",
+          "blocked": "This run needs review. Its saved results and unresolved charges are retained.",
+          "complete": "The worker has finished this run."
+        },
+        "loadingRecorded": "Loading saved status…"
+      },
+      "recurring": {
+        "title": "Recurring Local measurements",
+        "loading": "Loading stored schedule…",
+        "unavailable": "The schedule could not be reviewed. Reload and check access, source changes or the worker configuration.",
+        "disabled": "Automatic Local execution is disabled on this deployment. An operator must explicitly enable the existing worker before approval. Stored runs remain readable.",
+        "calendar": "Calendar",
+        "chooseCalendar": "Choose an existing calendar",
+        "projectTimezone": "Project timezone",
+        "connection": "Own-key connection",
+        "chooseConnection": "Choose a connection",
+        "perOccurrence": "Maximum per measurement (USD)",
+        "total": "Total issuance ceiling (USD)",
+        "maximumOccurrences": "Maximum number of measurements",
+        "validUntil": "Approval end (your local time)",
+        "invalid": "Review the required fields and limits.",
+        "policy": "Approve this exact grid and calendar. Each due measurement gets a fresh quote under the captured price version and ceiling. Missed complete intervals are skipped; unknown accepted work prevents repurchase. Issued quotes count conservatively against the total ceiling, even if no task is sent.",
+        "review": "Review recurring approval",
+        "next": "Next configured occurrence",
+        "validThrough": "Approval ends",
+        "issuedCeiling": "Issued quote authority",
+        "status": "Stored status",
+        "noApproval": "No paid recurring approval is active for this schedule intent.",
+        "tooManyChoices": "The choices exceed this bounded form. Narrow or archive calendars/connections before review.",
+        "pause": "Pause future measurements",
+        "reviewNotice": "This confirmation authorizes future measurements until the chosen end and limits. It performs no provider request now.",
+        "capturedCalendar": "Calendar: {frequency}, {timezone}",
+        "quoted": "Current exact quote",
+        "approve": "Approve recurring measurements",
+        "cancel": "Cancel",
+        "states": {
+          "active": "Active authority",
+          "blocked": "Blocked; review again",
+          "finished": "Authority finished"
+        },
+        "frequencies": {
+          "daily": "daily",
+          "weekly": "weekly",
+          "monthly": "monthly",
+          "custom_cron": "custom calendar"
+        }
+      },
+      "results": {
+        "title": "Run results",
+        "history": "Run history",
+        "rank": "Qualified business rank",
+        "unknown": "Unknown",
+        "evidence": "Evidence",
+        "freshness": "Freshness",
+        "observedAt": "Observed at",
+        "receipt": "Receipt state",
+        "points": "Measured points",
+        "grid": "Sampled point grid",
+        "business": "Business",
+        "nativeGroup": "Native group rank",
+        "nativeAbsolute": "Native absolute rank",
+        "promotion": "Promotion",
+        "identityMatch": "Identity match",
+        "pointEvidence": "Retained point listings",
+        "scope": "Captured scope",
+        "reason": "Quality reason",
+        "none": "None",
+        "observedRank": "Observed rank before scope qualification",
+        "loading": "Loading retained evidence…",
+        "seedHelp": "Coordinates are query seeds acknowledged by the provider, not proof of exact observer geography. Missing acknowledgment stays unknown.",
+        "unavailable": "This saved run is unavailable for the selected project, monitor or time.",
+        "empty": "No saved runs yet. A run requires an explicit preview and cost confirmation.",
+        "asOf": "Report as of",
+        "accountingHelp": "Evidence is selected as of the report time. Receipt and accounting states show their current state.",
+        "topN": "Observed Top {n}",
+        "observedCoverage": "Observed coverage",
+        "dataCoverage": "Fresh data coverage",
+        "bounds": "Sample bounds",
+        "comparisonHelp": "Freshness uses current project policy and the original saved monitor intent. Comparison requires compatible captured scopes.",
+        "exportCsv": "Export Local CSV v1",
+        "exportJson": "Export Local JSON v1",
+        "pointHistory": "Point history",
+        "pointHistoryHelp": "Saved attempts for this exact point, keyword, identity and policy in the selected interval. Changed scope starts a separate history.",
+        "pointHistoryMore": "Load earlier attempts",
+        "evidenceStates": {
+          "positive": "Confirmed positive rank",
+          "known_absent": "Proven absent",
+          "unknown": "Unknown",
+          "unsupported": "Unsupported",
+          "not_observed": "Not observed"
+        },
+        "freshnessStates": {
+          "fresh": "Fresh",
+          "stale": "Stale",
+          "unknown": "Unknown"
+        },
+        "matchStates": {
+          "confirmed": "Confirmed",
+          "candidate": "Candidate",
+          "rejected": "Rejected",
+          "unavailable": "Unavailable"
+        },
+        "promotionStates": {
+          "organic": "Organic",
+          "promoted": "Promoted",
+          "unknown": "Unknown"
+        },
+        "reasonStates": {
+          "not_completed": "Not completed",
+          "unsupported": "Unsupported scope",
+          "missing_scope": "Scope proof missing",
+          "scope_mismatch": "Scope differs",
+          "missing_normalization": "Normalizer proof missing",
+          "invalid_position": "Invalid native position",
+          "insufficient_depth": "Capture depth too small",
+          "current_scope_unavailable": "Current scope unavailable",
+          "unproven_absence": "Absence unproven",
+          "future_observation": "Future observation",
+          "missing_observation_time": "Observation time missing"
+        },
+        "historyWindow": "History period",
+        "allHistory": "All retained history",
+        "historyDays": "Last {days} days",
+        "customHistory": "Custom interval",
+        "historyWindowHelp": "Periods end at the saved report time and use elapsed 24-hour days. Dates use your report timezone. Reading history does not run a scan.",
+        "historyBounds": "From {from} to {to}",
+        "historyCount": "{count, plural, one {# saved run in this interval} other {# saved runs in this interval}}"
+      },
+      "retry": {
+        "title": "Retry selected failed points",
+        "help": "Choose only original tasks proven rejected or never sent. This is a new paid run with a fresh quote. Accepted or unresolved tasks must finish collection or reconciliation on their original run.",
+        "parentCount": "Original run: {count} targets.",
+        "childScope": "Selected retry: {selected} of {parent} original targets. Coverage describes this selection only.",
+        "selection": "Original points",
+        "point": "Point {point}",
+        "confirm": "Confirm paid subset retry",
+        "queued": "Retry queued: {id}",
+        "reasons": {
+          "eligible_rejected": "Proven rejected",
+          "eligible_unsent": "Proven never sent",
+          "accepted_original": "Accepted: collect original task",
+          "unknown_acceptance": "Acceptance unresolved: reconcile original task",
+          "in_progress": "Original task is in progress",
+          "accounting_pending": "Accounting is pending",
+          "reconciliation_pending": "Reconciliation is pending",
+          "owner_retained": "Original owner is retained",
+          "proof_unavailable": "Native terminal proof is unavailable"
+        }
+      }
+    },
+    "dashboardComparison": {
+      "selection": "Competitor comparison",
+      "choose": "Choose a saved comparison",
+      "remember": "Remember this comparison",
+      "clear": "Clear remembered comparison",
+      "saved": "Comparison remembered. Your dashboard default is unchanged.",
+      "cleared": "Remembered comparison cleared.",
+      "conflict": "Preferences changed. Reload before saving this reference.",
+      "saveError": "Could not remember the comparison. Your existing preference is preserved.",
+      "desktop": "Desktop",
+      "mobile": "Mobile",
+      "title": "Competitor Share of Voice",
+      "unknown": "Unknown",
+      "domain": "Domain",
+      "current": "Current",
+      "baseline": "Baseline",
+      "change": "Change",
+      "percentagePoints": "{value} pp",
+      "fixedCohort": "Same {count} selected targets and frozen volume weights in both periods.",
+      "comparisonCoverage": "Comparable targets: {comparable} / {expected}. Changes are unavailable when the full selected cohort cannot be compared.",
+      "scope": "{location} / {language} / {device}",
+      "coverage": "Determinate: {measured} / {expected}. Observed coverage: {observed}. Fresh coverage: {fresh}.",
+      "asOf": "Report as of:",
+      "baselineAsOf": "Requested baseline watermark:",
+      "providerConnected": "A ranking provider is connected. This read does not launch checks.",
+      "providerMissing": "No ranking provider is connected. Stored observations remain readable.",
+      "state": {
+        "missing": "Choose a saved comparison to see its results.",
+        "invalid": "This comparison link is invalid. Choose a saved comparison.",
+        "unavailable": "This saved comparison is unavailable. Choose another comparison.",
+        "capacity": "This comparison has too many targets. Choose a smaller saved comparison."
+      },
+      "reloadRevision": "Review current preference revision",
+      "reloadUnavailable": "A newer compatible preference is unavailable. Reload the page to review its scope.",
+      "reviewRevision": "Revision {revision} loaded. Review your selected comparison and choose Remember or Clear to save explicitly.",
+      "emptyTitle": "No saved comparisons",
+      "emptyDescription": "Set up and save a comparison on the Competitors page to use it here.",
+      "configureComparison": "Set up comparison"
+    },
+    "reviewedDefaults": {
+      "title": "Review future defaults",
+      "scope": "{place}, {language}, {device}; depth {depth}.",
+      "cadence": "{frequency}; {timezone}; cron {cron}; jitter {jitter} minutes.",
+      "impact": "No existing targets are retargeted or created. {count} existing targets inherit the project depth.",
+      "estimateUnknown": "Future recurring usage for this depth change is unknown. Review each paid run separately.",
+      "estimateUnchanged": "Inherited depth usage is unchanged. This save launches no measurement.",
+      "policyUnknown": "Measurement policy is unavailable. Saving future intent does not configure it or enable paid execution.",
+      "expiry": "This review expires at {time}.",
+      "consent": "I reviewed these exact future defaults and any unknown usage.",
+      "recover": "The save outcome is not confirmed. Recover the same command before editing.",
+      "retry": "Recover same save",
+      "review": "Review changes",
+      "confirmSave": "Confirm reviewed save",
+      "stopAtMatch": "Stop when the target is found.",
+      "scanFullDepth": "Continue through the full reviewed depth."
     }
   }
 }

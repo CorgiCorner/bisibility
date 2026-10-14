@@ -1,3 +1,5 @@
+import { fixtureScope } from "@/lib/rank-measurements/fixtures";
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
 import { describe, expect, it } from "vitest";
 import {
   buildOverviewMarkets,
@@ -16,21 +18,31 @@ function target(
   previous: number | null,
   frequency = "daily",
 ): OverviewMarketKeyword {
+  const languageCode = new Map([
+    ["Spanish", "es"],
+    ["English", "en"],
+    ["Arabic", "ar"],
+    ["Dutch", "nl"],
+    ["Polish", "pl"],
+  ]).get(languageLabel);
+  if (!languageCode) throw new Error("Explicit market fixture language required");
+  const scope = { ...fixtureScope, targetId: id, location: displayName, language: languageCode };
+  const check = (position: number | null, at: string) =>
+    recordedFixture(position, {
+      id: `${id}:${at}`,
+      configuredScope: scope,
+      effectiveScope: scope,
+      observedAt: new Date(at),
+      recordedAt: new Date(at),
+    });
   return {
     id,
+    projectId: scope.projectId,
     locationId,
-    locationRef: { displayName, languageLabel },
+    locationRef: { displayName, languageCode, languageLabel },
     rankChecks: [
-      {
-        checkedAt: new Date("2026-06-27T12:00:00.000Z"),
-        position: current,
-        status: "completed",
-      },
-      {
-        checkedAt: new Date("2026-05-20T12:00:00.000Z"),
-        position: previous,
-        status: "completed",
-      },
+      check(current, "2026-06-27T12:00:00.000Z"),
+      check(previous, "2026-05-20T12:00:00.000Z"),
     ],
     schedule: { frequency },
   };
@@ -106,7 +118,7 @@ describe("overview markets", () => {
     );
 
     expect(rows).toHaveLength(2);
-    expect(rows[0]).toMatchObject({ locationId: "loc_es_es", targetCount: 0, top10Share: 0 });
+    expect(rows[0]).toMatchObject({ locationId: "loc_es_es", targetCount: 0, top10Share: null });
   });
 
   it("keeps the sparkline endpoint aligned with the current-window headline", () => {
@@ -115,7 +127,8 @@ describe("overview markets", () => {
     const [row] = buildOverviewMarkets([previousOnly], { now, range: "28d" });
 
     expect(row?.top10Share).toBe(0);
-    expect(row?.trend.slice(0, -1)).toEqual(Array(7).fill(100));
+    // The old preceding-period rank is not an observation inside this window.
+    expect(row?.trend.slice(0, -1)).toEqual(Array(7).fill(null));
     expect(row?.trend.at(-1)).toBe(row?.top10Share);
   });
 });

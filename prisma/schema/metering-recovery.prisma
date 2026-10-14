@@ -1,0 +1,68 @@
+// Operational triage never changes financial accounting truth.
+model MeteringRecoveryTriage {
+  namespace      String
+  caseKey        String
+  version        Int      @default(1)
+  basisHash      String
+  status         String   @default("open")
+  reason         String?
+  assigneeId     String?
+  snoozedUntil   DateTime? @db.Timestamptz
+  updatedById    String
+  updatedAt      DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  @@id([namespace, caseKey])
+  @@index([namespace, status, snoozedUntil], map: "metering_recovery_triage_status_idx")
+  @@map("metering_recovery_triage")
+}
+
+// A durable command joins repeated and concurrent operator requests.
+model MeteringRecoveryCommand {
+  namespace      String
+  commandId      String
+  identityHash   String
+  actorId        String
+  action         String
+  state          String   @default("queued")
+  input          Json
+  result         Json?
+  leaseId        String?
+  leaseExpiresAt DateTime? @db.Timestamptz
+  createdAt      DateTime @default(now()) @db.Timestamptz
+  updatedAt      DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  @@id([namespace, commandId])
+  @@index([namespace, state, createdAt], map: "metering_recovery_commands_state_idx")
+  @@map("metering_recovery_commands")
+}
+
+// Only ready-to-save results remain here after a failed product transaction.
+model RankCheckRunRecoveryGrant {
+  runId         String @id
+  run           RankCheckRun @relation(fields: [runId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  namespace     String
+  instanceId    String
+  ownerId       String
+  actorId       String
+  validUntil    DateTime @db.Timestamptz
+  coverage      Json
+  requestedAt   DateTime? @db.Timestamptz
+  createdAt     DateTime @default(now()) @db.Timestamptz
+  @@map("rank_check_run_recovery_grants")
+}
+
+model RankCheckResultEvidence {
+  namespace         String
+  instanceId        String
+  rankCheckId       String    @id
+  rankCheck         RankCheck @relation(fields: [rankCheckId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  identityHash      String
+  payloadEncrypted  String
+  schemaVersion     Int       @default(1)
+  createdAt         DateTime  @default(now()) @db.Timestamptz
+  expiresAt         DateTime  @db.Timestamptz
+  blockedCode       String?
+
+  @@index([expiresAt], map: "rank_check_result_evidence_expiry_idx")
+  @@map("rank_check_result_evidence")
+}

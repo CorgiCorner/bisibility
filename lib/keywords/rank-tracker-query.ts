@@ -10,6 +10,10 @@ import { DEFAULT_LENS_DEVICE, type LensDevice } from "@/lib/keywords/lens-model"
 import type { SavedViewConfig } from "@/lib/keywords/saved-view-model";
 import { z } from "zod";
 import {
+  rankTrackerScalarParam as scalar,
+  rankTrackerParamValues as values,
+} from "./rank-tracker-query-input";
+import {
   RANK_TRACKER_MAX_PAGE,
   RANK_TRACKER_PAGE_SIZES,
   RANK_TRACKER_SORT_FIELDS,
@@ -17,7 +21,13 @@ import {
   type RankTrackerQueryParseResult,
   type RankTrackerQueryState,
 } from "./rank-tracker-query-types";
+import {
+  defaultRankTrackerReportScope,
+  parseRankTrackerReportScope,
+  reportScopeParams,
+} from "./rank-tracker-report-scope";
 
+export type { NextSearchParams } from "./rank-tracker-query-input";
 export type {
   RankTrackerListQueryInput,
   RankTrackerListResult,
@@ -27,7 +37,7 @@ export type {
   RankTrackerSortField,
 } from "./rank-tracker-query-types";
 
-export type NextSearchParams = Record<string, string | string[] | undefined>;
+import type { NextSearchParams } from "./rank-tracker-query-input";
 
 const devices = ["all", "desktop", "mobile"] as const satisfies readonly LensDevice[];
 const positionIds = positionBuckets.map(({ id }) => id) as [
@@ -84,6 +94,7 @@ const schemas = {
 };
 
 const PARAM_FIELDS = {
+  ...reportScopeParams,
   change: "change",
   contains: "contains",
   device: "device",
@@ -108,6 +119,7 @@ const PARAM_FIELDS = {
 } as const satisfies Record<string, RankTrackerQueryField>;
 
 export const defaultRankTrackerQueryState: RankTrackerQueryState = {
+  reportScope: { ...defaultRankTrackerReportScope },
   filters: { ...emptyKeywordFilters },
   // Flat is the stable baseline when row-dependent market counts are unavailable.
   grouped: false,
@@ -118,15 +130,6 @@ export const defaultRankTrackerQueryState: RankTrackerQueryState = {
   search: "",
   sort: { direction: "asc", field: "position" },
 };
-
-function values(params: NextSearchParams, key: string) {
-  const raw = params[key];
-  return raw === undefined ? [] : Array.isArray(raw) ? raw : [raw];
-}
-
-function scalar(params: NextSearchParams, key: string) {
-  return values(params, key)[0];
-}
 
 function list(params: NextSearchParams, key: string) {
   return [
@@ -140,6 +143,7 @@ function list(params: NextSearchParams, key: string) {
 }
 
 function safe<T>(schema: z.ZodType<T>, raw: unknown, fallback: T, key: string, issues: string[]) {
+  if (raw === undefined) return fallback;
   const result = schema.safeParse(raw);
   if (result.success) return result.data;
   issues.push(key);
@@ -171,7 +175,7 @@ export function parseRankTrackerQuery(params: NextSearchParams): RankTrackerQuer
   }
   const filters: KeywordFilters = {
     change: safe(schemas.change, scalar(params, "change"), "any", "change", issues),
-    contains: safe(schemas.contains, scalar(params, "contains") ?? "", "", "contains", issues),
+    contains: safe(schemas.contains, scalar(params, "contains"), "", "contains", issues),
     intents: stringList(params, "intents", 80, issues),
     lastCheck: safe(schemas.lastCheck, scalar(params, "lastCheck"), "any", "lastCheck", issues),
     position: enumList(params, "position", positionIds, 4, issues) as KeywordFilters["position"],
@@ -185,18 +189,18 @@ export function parseRankTrackerQuery(params: NextSearchParams): RankTrackerQuer
   };
   filters.volMax = Math.max(filters.volMin, filters.volMax);
   const state: RankTrackerQueryState = {
+    reportScope: parseRankTrackerReportScope(params, issues),
     filters,
     grouped: safe(schemas.grouped, scalar(params, "grouped"), false, "grouped", issues),
     lens: {
       device: safe(schemas.device, scalar(params, "device"), DEFAULT_LENS_DEVICE, "device", issues),
       locationId:
-        safe(schemas.location, scalar(params, "location") ?? "", "", "location", issues) || null,
+        safe(schemas.location, scalar(params, "location"), "", "location", issues) || null,
     },
     page: safe(schemas.page, scalar(params, "page"), 1, "page", issues),
     pageSize: safe(schemas.pageSize, scalar(params, "pageSize"), 50, "pageSize", issues),
-    savedViewId:
-      safe(schemas.savedViewId, scalar(params, "view") ?? "", "", "view", issues) || null,
-    search: safe(schemas.search, scalar(params, "q") ?? "", "", "q", issues),
+    savedViewId: safe(schemas.savedViewId, scalar(params, "view"), "", "view", issues) || null,
+    search: safe(schemas.search, scalar(params, "q"), "", "q", issues),
     sort: {
       direction: safe(schemas.direction, scalar(params, "dir"), "asc", "dir", issues),
       field: safe(schemas.sort, scalar(params, "sort"), "position", "sort", issues),
@@ -205,68 +209,7 @@ export function parseRankTrackerQuery(params: NextSearchParams): RankTrackerQuer
   return { issues: [...new Set(issues)], present, state };
 }
 
-const FILTER_PARAMS = [
-  ["position", "position"],
-  ["change", "change"],
-  ["volMin", "volMin"],
-  ["volMax", "volMax"],
-  ["contains", "contains"],
-  ["tags", "tags"],
-  ["topics", "topics"],
-  ["intents", "intents"],
-  ["serp", "serp"],
-  ["lastCheck", "lastCheck"],
-  ["wrongUrl", "wrongUrl"],
-  ["urlChanged", "urlChanged"],
-] as const;
-
-function serializedInput(input: RankTrackerQueryState | RankTrackerQueryParseResult) {
-  return "state" in input ? input : { present: new Set<RankTrackerQueryField>(), state: input };
-}
-
-export function serializeRankTrackerQuery(
-  input: RankTrackerQueryState | RankTrackerQueryParseResult,
-) {
-  const { present, state } = serializedInput(input);
-  const params = new URLSearchParams();
-  if (state.search || present.has("search")) params.set("q", state.search);
-  if (state.lens.locationId || present.has("location")) {
-    params.set("location", state.lens.locationId ?? "");
-  }
-  if (state.lens.device !== DEFAULT_LENS_DEVICE || present.has("device")) {
-    params.set("device", state.lens.device);
-  }
-  for (const [param, field] of FILTER_PARAMS) {
-    const value = state.filters[field];
-    if (Array.isArray(value) && (value.length || present.has(field))) {
-      params.set(param, value.join(","));
-    } else if (typeof value === "boolean" && (value || present.has(field))) {
-      params.set(param, value ? "1" : "0");
-    } else if (
-      typeof value === "string" &&
-      ((value && (field === "contains" || value !== "any")) ||
-        present.has(field) ||
-        (state.savedViewId !== null && value === "any"))
-    ) {
-      params.set(param, value);
-    } else if (field === "volMin" && (value !== 0 || present.has(field))) {
-      params.set(param, String(value));
-    } else if (field === "volMax" && (value !== 50 || present.has(field))) {
-      params.set(param, String(value));
-    }
-  }
-  if (state.sort.field !== "position" || present.has("sort")) params.set("sort", state.sort.field);
-  if (state.sort.direction !== "asc" || present.has("direction")) {
-    params.set("dir", state.sort.direction);
-  }
-  if (state.page !== 1 || present.has("page")) params.set("page", String(state.page));
-  if (state.pageSize !== 50 || present.has("pageSize")) {
-    params.set("pageSize", String(state.pageSize));
-  }
-  if (state.grouped || present.has("grouped")) params.set("grouped", state.grouped ? "1" : "0");
-  if (state.savedViewId) params.set("view", state.savedViewId);
-  return params;
-}
+export { serializeRankTrackerQuery } from "./rank-tracker-query-serialization";
 
 function overrideFilters(
   base: KeywordFilters,

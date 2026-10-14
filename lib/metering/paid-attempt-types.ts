@@ -36,6 +36,8 @@ export type PaidAttemptContext = {
   keywordId?: string;
   rankCheckId?: string;
   rankCheckRunId?: string;
+  recoveryGrantExpiresAt?: string;
+  recoveryMaxCostCents?: string;
   rankCheckRunItemId?: string;
   trigger?: string;
   tag?: string;
@@ -57,7 +59,41 @@ export type PaidAttemptInput = {
 };
 export type PaidAttemptReservation = { operation: Operation; replayed: boolean };
 export type PaidAttemptGrant = { operation: Operation; lease: Lease };
+
+import type { ProviderRequest } from "@usagekit/providers";
+export type NativeRequestGuard = Readonly<{
+  lockBusiness(
+    tx: Prisma.TransactionClient,
+    operationId: string,
+    request?: ProviderRequest,
+    native?: Readonly<{ correlationId: string }>,
+  ): Promise<void>;
+  assertRequest(
+    tx: Prisma.TransactionClient,
+    operationId: string,
+    request?: ProviderRequest,
+  ): Promise<void>;
+}>;
+export type PaidFenceReference = Readonly<{
+  operation: Operation;
+  lease: Lease;
+  context: PaidAttemptContext;
+}>;
+/** Trusted semantic host callback within the original native fence transaction. */
+export type PaidFenceHook = Readonly<{
+  /** Stable semantic business locks BEFORE native binding/accounting locks. */
+  lockBusiness(
+    tx: Prisma.TransactionClient,
+    references: readonly PaidFenceReference[],
+  ): Promise<void>;
+  /** After canonical lease/context checks, before possible-send writes. Must not mint another grant. */
+  assertDispatch(
+    tx: Prisma.TransactionClient,
+    references: readonly PaidFenceReference[],
+  ): Promise<void>;
+}>;
 export type PaidAttemptOptions = {
+  beforeFence?: PaidFenceHook;
   clock?: Clock;
   /** Platform implementations must validate retained account, wallet and credential custody. */
   verifyBinding?: (

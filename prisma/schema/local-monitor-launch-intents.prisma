@@ -1,0 +1,32 @@
+model LocalMonitorLaunchIntent {
+ id String @id
+ publicId String @unique
+ projectId String
+ monitorId String
+ actorId String?
+ command Json
+ bodyHash String
+ keyHash String
+ connectionStamp String
+ consentDigest String
+ approvedAt DateTime
+ expiresAt DateTime
+ collectionDeadline DateTime
+ pollIntervalMs Int
+ runId String?
+ origin String @default("manual")
+ recurringApprovalId String?
+ recurringOccurrenceKey String?
+ state String @default("queued")
+ reason String?
+ leaseToken String?
+ leaseVersion Int @default(0)
+ leaseExpiresAt DateTime?
+ version Int @default(0)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ @@unique([projectId,keyHash])
+ @@index([state,leaseExpiresAt,createdAt],map:"local_monitor_launch_intents_pending")
+ @@index([projectId,monitorId,createdAt,id],map:"local_monitor_launch_intents_history")
+ @@map("local_monitor_launch_intents")
+}

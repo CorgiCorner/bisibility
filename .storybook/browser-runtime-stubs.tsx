@@ -713,3 +713,5 @@ export const updateProviderCost = asyncNoop;
 export const updateProviderRate = asyncNoop;
 export const updateProviderSettings = asyncNoop;
 export const updateRankCheckFrequency = asyncNoop;
+
+export const updateProjectUsageDisplay = asyncNoop;

@@ -158,6 +158,7 @@ export function OnboardingWizardSteps({
           saveMarketsAction={actions.saveMarketsAction}
           trackingDefaults={draft.schedule}
           updateProjectDefaultsAction={actions.updateProjectDefaultsAction}
+          previewProjectDefaultsAction={actions.previewProjectDefaultsAction}
         />
       ) : null}
       {currentStep === 4 ? (

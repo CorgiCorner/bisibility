@@ -1,18 +1,17 @@
-import { Sparkline } from "@/components/charts/Sparkline";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import { keywordScheduleTarget } from "@/lib/keywords/schedule-targets";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { scheduleRowSortValue } from "@/lib/schedules/mixed-state";
-import * as rankDepth from "@/lib/serp/rank-depth";
-import { chartColors } from "@/lib/theme/chart-colors";
 import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
 import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
 import { useTranslations } from "next-intl";
 import { type TrafficColumnLabels, trafficColumns } from "./grid-columns-traffic";
 import { KeywordChangeCell } from "./KeywordChangeCell";
+import { KeywordRankTrendCell } from "./KeywordRankTrendCell";
+import { KeywordRecordedCheckCell } from "./KeywordRecordedCheckCell";
 import type { KeywordColumnActions } from "./keyword-column-actions";
-import { LastCheckedCell } from "./LastCheckedCell";
+import { keywordRankMovement, keywordRankView } from "./keyword-rank-quality-view";
 import {
   MarketDifficultyCell,
   MarketKeywordCell,
@@ -66,37 +65,6 @@ export function DeviceCell({ row }: Readonly<{ row: KeywordRow }>) {
   );
 }
 
-function SparklineCell({
-  formatPosition,
-  noRankLabel,
-  positionTrend,
-  row,
-}: Readonly<{
-  formatPosition: (value: number) => string;
-  noRankLabel: (row: KeywordRow) => string;
-  positionTrend: string;
-  row: KeywordRow;
-}>) {
-  if (!rankDepth.hasTrackedPosition(row)) {
-    return <NoDataValue className="block w-[92px]" label={noRankLabel(row)} />;
-  }
-
-  const color =
-    row.positionBaseline === null
-      ? chartColors.accent
-      : row.positionBaseline >= row.position
-        ? chartColors.green
-        : chartColors.red;
-  return (
-    <Sparkline
-      ariaLabel={positionTrend}
-      color={color}
-      data={row.sparkline}
-      valueFormatter={(value) => (value ? formatPosition(value) : "")}
-    />
-  );
-}
-
 export function TagsCell({ row }: Readonly<{ row: KeywordRow }>) {
   return (
     <span className="flex h-full min-w-0 items-center gap-[5px] overflow-hidden py-1">
@@ -128,11 +96,18 @@ export function keywordColumns(
   projectRef: string,
   pendingCheckIds: ReadonlySet<string> = new Set(),
   labels: KeywordColumnLabels,
+  detailHref?: (row: KeywordRow) => string,
 ): DataTableColumn<KeywordRow>[] {
   return [
     {
       accessorFn: (row) => row.keyword,
-      cell: ({ row }) => <MarketKeywordCell projectRef={projectRef} row={row.original} />,
+      cell: ({ row }) => (
+        <MarketKeywordCell
+          projectRef={projectRef}
+          row={row.original}
+          href={detailHref?.(row.original)}
+        />
+      ),
       header: labels.keyword,
       id: "keyword",
       meta: { flex: 1.55, lockVisible: true, pin: "left", title: labels.keyword },
@@ -151,7 +126,7 @@ export function keywordColumns(
       size: 148,
     },
     {
-      accessorFn: (row) => row.position,
+      accessorFn: (row) => keywordRankView(row).currentPosition,
       cell: ({ row }) => <MarketPositionCell row={row.original} />,
       header: labels.positionShort,
       id: "position",
@@ -160,16 +135,8 @@ export function keywordColumns(
       size: 172,
     },
     {
-      accessorFn: (row) =>
-        rankDepth.hasTrackedPosition(row) && row.positionBaseline !== null
-          ? row.positionBaseline - row.position
-          : null,
-      cell: ({ row }) =>
-        rankDepth.hasTrackedPosition(row.original) ? (
-          <KeywordChangeCell row={row.original} />
-        ) : (
-          <NoDataValue label={labels.noRankLabel(row.original)} />
-        ),
+      accessorFn: keywordRankMovement,
+      cell: ({ row }) => <KeywordChangeCell row={row.original} />,
       header: labels.change,
       id: "change",
       meta: { align: "end", title: labels.change },
@@ -216,15 +183,9 @@ export function keywordColumns(
       size: 104,
     },
     {
-      accessorFn: (row) =>
-        rankDepth.hasTrackedPosition(row) ? (row.sparkline.at(-1) ?? null) : null,
+      accessorFn: (row) => keywordRankView(row).currentPosition,
       cell: ({ row }) => (
-        <SparklineCell
-          formatPosition={labels.formatPosition}
-          noRankLabel={labels.noRankLabel}
-          positionTrend={labels.positionTrend({ keyword: row.original.keyword })}
-          row={row.original}
-        />
+        <KeywordRankTrendCell formatPosition={labels.formatPosition} row={row.original} />
       ),
       header: labels.trend,
       id: "sparkline",
@@ -236,9 +197,9 @@ export function keywordColumns(
     {
       accessorFn: (row) => row.lastCheckAt,
       cell: ({ row }) => (
-        <LastCheckedCell
-          lastCheckAt={row.original.lastCheckAt}
-          status={pendingCheckIds.has(row.original.id) ? "running" : row.original.lastCheckStatus}
+        <KeywordRecordedCheckCell
+          row={row.original}
+          pending={pendingCheckIds.has(row.original.id)}
         />
       ),
       header: labels.lastChecked,
@@ -283,7 +244,7 @@ export function keywordColumns(
       minSize: 132,
       size: 132,
     },
-    rowActionsColumn(actions, projectRef, pendingCheckIds),
+    rowActionsColumn(actions, projectRef, pendingCheckIds, detailHref),
   ];
 }
 

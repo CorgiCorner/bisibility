@@ -5,8 +5,9 @@ import {
   type UsagePage,
   type UsageRow,
 } from "@usagekit/core";
-import type { BudgetRow, UsageSummaryView, UsageView } from "@usagekit/views";
+import type { UsageSummaryView, UsageView } from "@usagekit/views";
 import { usageSummaryFromPages } from "@usagekit/views";
+import type { ProjectBudgetRow } from "./project-budget-display";
 
 export const usageUnits = ["cents", "units", "customer_cents", "requests"] as const;
 export type UsageConnection = { connectionId: string; provider: string; primary?: boolean };
@@ -16,7 +17,7 @@ export type ProjectUsageViews = {
   to: string;
   summary: UsageSummaryView;
   detail: UsageView;
-  budgets: BudgetRow[];
+  budgets: ProjectBudgetRow[];
   connections: UsageConnection[];
   paidWorkBlocked: boolean | null;
   unresolved: number;

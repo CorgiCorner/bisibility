@@ -1,6 +1,6 @@
 {
   "name": "bisibility",
-  "version": "0.32.0",
+  "version": "0.33.0",
   "private": true,
   "description": "Self-hostable open-source keyword rank tracker with keyword and backlink research, MCP, and bring-your-own providers.",
   "license": "AGPL-3.0-only",
@@ -49,7 +49,7 @@
     "start": "next start",
     "predb:seed": "prisma generate",
     "db:seed": "prisma db seed",
-    "db:backfill:competitor-organics": "node --experimental-transform-types scripts/ops/backfill-competitor-organics.ts",
+    "db:backfill:competitor-organics": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/ops/backfill-competitor-organics.ts",
     "db:backfill:window-facts": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/ops/backfill-window-facts.ts",
     "db:rotate:provider-secrets": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/ops/rotate-provider-secrets.ts",
     "db:migrate:two-factor-secrets": "node --experimental-transform-types --import ./lib/temporal/register-loader.mjs scripts/ops/migrate-two-factor-secrets.ts",

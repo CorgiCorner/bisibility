@@ -1,19 +1,28 @@
+import { csvRow } from "@/lib/ui/csv";
+
 const encoder = new TextEncoder();
 
 export type ZipEntryInput = { bytes: Uint8Array; name: string };
-
-function csvCell(value: unknown) {
-  const text =
-    value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
 
 function csvBytes(payload: Record<string, unknown>, key: string, headers: readonly string[]) {
   const rows = Array.isArray(payload[key]) ? (payload[key] as Record<string, unknown>[]) : [];
   return encoder.encode(
     [
-      headers.join(","),
-      ...rows.map((row) => headers.map((header) => csvCell(row[header])).join(",")),
+      csvRow(headers),
+      ...rows.map((row) =>
+        csvRow(
+          headers.map((header) => {
+            const value = row[header];
+            return value == null
+              ? null
+              : typeof value === "number"
+                ? value
+                : typeof value === "object"
+                  ? JSON.stringify(value)
+                  : String(value);
+          }),
+        ),
+      ),
     ].join("\n"),
   );
 }

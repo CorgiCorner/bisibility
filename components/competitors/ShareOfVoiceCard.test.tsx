@@ -1,5 +1,5 @@
 import { renderWithCompetitorsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
-import { buildCompetitorMarket } from "@/lib/competitors/competitor-market-model";
+import { buildCompetitorMarket as projectMarket } from "@/lib/competitors/competitor-market-model";
 import type { CompetitorFilter, CompetitorMarketData } from "@/lib/competitors/types";
 import { fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -8,6 +8,28 @@ import { ShareOfVoiceCard } from "./ShareOfVoiceCard";
 vi.mock("./ManagedCompetitorControls", () => ({
   ManagedCompetitorControls: () => null,
 }));
+
+// Explicit synthetic current proof; production legacy numbers alone remain unknown.
+const buildCompetitorMarket: typeof projectMarket = (data, filter) =>
+  projectMarket(
+    {
+      ...data,
+      observations: data.observations.map((row) => ({
+        ...row,
+        quality: Object.fromEntries(
+          data.allColumns.map(({ domain }) => [
+            domain,
+            {
+              evidence: row.ranks[domain] == null ? "known_absent" : "positive",
+              freshness: "fresh",
+              reason: null,
+            },
+          ]),
+        ),
+      })),
+    },
+    filter,
+  );
 
 const data = {
   allColumns: [
@@ -47,6 +69,30 @@ describe("ShareOfVoiceCard no-data semantics", () => {
     vi.unstubAllEnvs();
   });
 
+  it("opens the help for the report's actual competitor definition with its own counts", () => {
+    const filter: CompetitorFilter = { excludedKeywordIds: [], position: "all", tag: null };
+    render(
+      <ShareOfVoiceCard
+        canDelete={false}
+        canUpdate={false}
+        filter={filter}
+        market={buildCompetitorMarket(data, filter)}
+        onFilterChange={vi.fn()}
+        projectId="project_1"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Explain: Competitor share of voice" }));
+    expect(screen.getByText(/volume-weighted linear Top 10 scores/)).toBeInTheDocument();
+    expect(screen.getByText(/Version 2 changes the legacy treatment/)).toBeInTheDocument();
+    expect(screen.getByText("Expected targets")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Full explanation: Competitor share of voice" }),
+    ).toHaveAttribute(
+      "href",
+      "/guides/rank-measurements#measurement-competitor-share-of-voice-top10",
+    );
+  });
+
   it("labels completed unranked checks honestly without rendering zero shares", () => {
     const filter: CompetitorFilter = { excludedKeywordIds: [], position: "all", tag: null };
     const market = buildCompetitorMarket(data, filter);
@@ -69,7 +115,7 @@ describe("ShareOfVoiceCard no-data semantics", () => {
     expect(screen.queryByText(/Google/)).not.toBeInTheDocument();
     expect(screen.queryByText(/US \/ Desktop/)).not.toBeInTheDocument();
     expect(screen.queryByText(/no completed rank checks exist/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/0%/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^0%$/)).not.toBeInTheDocument();
   });
 
   it("renders the SOV market contract copy supplied with the selector", () => {
@@ -95,12 +141,12 @@ describe("ShareOfVoiceCard no-data semantics", () => {
     ).toBeInTheDocument();
   });
 
-  it("does not render a zero-percent SOV chart when every volume is missing", () => {
+  it("does not render a zero-percent SOV chart when every volume is actually zero", () => {
     const filter: CompetitorFilter = { excludedKeywordIds: [], position: "all", tag: null };
     const missingVolume = {
       ...data,
       observations: [
-        { ...data.observations[0], ranked: true, ranks: { "example.com": 2 }, volume: null },
+        { ...data.observations[0], ranked: true, ranks: { "example.com": 2 }, volume: 0 },
       ],
     } satisfies CompetitorMarketData;
     const market = buildCompetitorMarket(missingVolume, filter);
@@ -117,7 +163,7 @@ describe("ShareOfVoiceCard no-data semantics", () => {
     );
 
     expect(screen.getByText(/no positive search volume is available/i)).toBeInTheDocument();
-    expect(screen.queryByText(/0%/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^0%$/)).not.toBeInTheDocument();
   });
 
   it("identifies an active filter that excludes otherwise completed data", () => {

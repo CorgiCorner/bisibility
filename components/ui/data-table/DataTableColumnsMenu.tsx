@@ -1,13 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Menu } from "@/components/ui/Menu";
 import { MenuItem } from "@/components/ui/MenuItem";
 import { menuSelectPaperStyle } from "@/components/ui/menu-select-support";
+import { Popup } from "@/components/ui/Popup";
+import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import { ArrowCounterClockwiseIcon as ArrowCounterClockwise } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
 import { EyeIcon as Eye } from "@phosphor-icons/react/dist/csr/Eye";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { DataTableSelectionCheckbox } from "./DataTableSelectionCheckbox";
 import { useDataTableLayout } from "./data-table-layout-store";
 import { dataTableColumnId } from "./data-table-model";
@@ -30,11 +33,12 @@ export function DataTableColumnsMenu<TRow extends DataTableRowBase>({
   ariaLabel,
   columnSizing,
   columnVisibility,
+  footerContent,
   columns,
   id,
   onColumnSizingChange,
   onColumnVisibilityChange,
-}: Readonly<DataTableColumnsMenuProps<TRow>>) {
+}: Readonly<DataTableColumnsMenuProps<TRow> & { footerContent?: ReactNode }>) {
   const t = useTranslations("shared.controls.dataTable");
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const columnsLabel = ariaLabel ?? t("columns");
@@ -62,63 +66,112 @@ export function DataTableColumnsMenu<TRow extends DataTableRowBase>({
       <Button
         aria-controls={anchorEl ? `${id}-columns-menu` : undefined}
         aria-expanded={Boolean(anchorEl)}
-        aria-haspopup="menu"
+        aria-haspopup={footerContent ? "dialog" : "menu"}
         aria-label={columnsLabel}
         onClick={(event) => setAnchorEl(event.currentTarget)}
         size="sm"
+        className={toolbarControlClassName}
         startIcon={<Eye aria-hidden size={15} weight="regular" />}
         style={{ fontWeight: 400 }}
-        variant="secondary"
+        variant="outline"
       >
         {t("columns")}
       </Button>
-      <Menu
-        anchorEl={anchorEl}
-        id={`${id}-columns-menu`}
-        onClose={() => setAnchorEl(null)}
-        open={Boolean(anchorEl)}
-        listProps={{ "aria-label": columnsLabel, style: { padding: 0 } }}
-        contentProps={{ style: { ...menuSelectPaperStyle, minWidth: 210 } }}
-      >
-        <div className="px-2 py-1.5 font-sans text-[10px] font-semibold uppercase tracking-[0.08em] text-fg-muted">
-          {t("toggleColumns")}
-        </div>
-        {toggleable.map(({ column, id: columnId }) => {
-          const label = columnLabel(column, t("column"));
-          const checked = visibility[columnId] !== false;
-          return (
-            <MenuItem
-              key={columnId}
-              onClick={() => setVisibility({ ...visibility, [columnId]: !checked })}
-              style={{ alignItems: "center", display: "flex", gap: "10px", minHeight: 36 }}
-            >
-              <DataTableSelectionCheckbox
-                ariaLabel={t(checked ? "hideColumn" : "showColumn", { column: label })}
-                checked={checked}
-                disabled={false}
-                indeterminate={false}
-                onChange={() => setVisibility({ ...visibility, [columnId]: !checked })}
-              />
-              {label}
-            </MenuItem>
-          );
-        })}
-        <MenuItem
-          onClick={reset}
-          style={{
-            alignItems: "center",
-            borderTop: "1px solid var(--border)",
-            display: "flex",
-            gap: "10px",
-            marginTop: "6px",
-            minHeight: 36,
-            paddingTop: "8px",
+      {footerContent ? (
+        <Popup
+          anchorEl={anchorEl}
+          id={`${id}-columns-menu`}
+          aria-label={columnsLabel}
+          onClose={() => setAnchorEl(null)}
+          open={Boolean(anchorEl)}
+          contentProps={{
+            className: "w-80 p-2",
+            style: { ...menuSelectPaperStyle, minWidth: 210, maxWidth: "calc(100vw - 32px)" },
           }}
         >
-          <ArrowCounterClockwise aria-hidden size={15} weight="regular" />
-          {t("resetLayout")}
-        </MenuItem>
-      </Menu>
+          <p className="px-2 py-1.5 font-sans text-[10px] font-semibold uppercase tracking-[0.08em] text-fg-muted">
+            {t("toggleColumns")}
+          </p>
+          <div className="space-y-1">
+            {toggleable.map(({ column, id: columnId }) => {
+              const label = columnLabel(column, t("column"));
+              const checked = visibility[columnId] !== false;
+              return (
+                <Checkbox
+                  key={columnId}
+                  checked={checked}
+                  label={label}
+                  aria-label={t(checked ? "hideColumn" : "showColumn", { column: label })}
+                  containerClassName="min-h-9 items-center rounded-control px-2 py-1.5 hover:bg-bg-inset"
+                  labelClassName="text-[12px] font-normal"
+                  onChange={(event) =>
+                    setVisibility({ ...visibility, [columnId]: event.currentTarget.checked })
+                  }
+                />
+              );
+            })}
+          </div>
+          <div className="mt-2 border-t border-border pt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={reset}
+              startIcon={<ArrowCounterClockwise aria-hidden size={15} weight="regular" />}
+            >
+              {t("resetLayout")}
+            </Button>
+          </div>
+          <div className="mt-2 border-t border-border pt-2">{footerContent}</div>
+        </Popup>
+      ) : (
+        <Menu
+          anchorEl={anchorEl}
+          id={`${id}-columns-menu`}
+          onClose={() => setAnchorEl(null)}
+          open={Boolean(anchorEl)}
+          listProps={{ "aria-label": columnsLabel, style: { padding: 0 } }}
+          contentProps={{ style: { ...menuSelectPaperStyle, minWidth: 210 } }}
+        >
+          <div className="px-2 py-1.5 font-sans text-[10px] font-semibold uppercase tracking-[0.08em] text-fg-muted">
+            {t("toggleColumns")}
+          </div>
+          {toggleable.map(({ column, id: columnId }) => {
+            const label = columnLabel(column, t("column"));
+            const checked = visibility[columnId] !== false;
+            return (
+              <MenuItem
+                key={columnId}
+                onClick={() => setVisibility({ ...visibility, [columnId]: !checked })}
+                style={{ alignItems: "center", display: "flex", gap: "10px", minHeight: 36 }}
+              >
+                <DataTableSelectionCheckbox
+                  ariaLabel={t(checked ? "hideColumn" : "showColumn", { column: label })}
+                  checked={checked}
+                  disabled={false}
+                  indeterminate={false}
+                  onChange={() => setVisibility({ ...visibility, [columnId]: !checked })}
+                />
+                {label}
+              </MenuItem>
+            );
+          })}
+          <MenuItem
+            onClick={reset}
+            style={{
+              alignItems: "center",
+              borderTop: "1px solid var(--border)",
+              display: "flex",
+              gap: "10px",
+              marginTop: "6px",
+              minHeight: 36,
+              paddingTop: "8px",
+            }}
+          >
+            <ArrowCounterClockwise aria-hidden size={15} weight="regular" />
+            {t("resetLayout")}
+          </MenuItem>
+        </Menu>
+      )}
     </>
   );
 }

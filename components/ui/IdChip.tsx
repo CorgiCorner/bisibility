@@ -4,6 +4,7 @@ import { IdChipCopyButton } from "./IdChipCopyButton";
 
 export type IdChipProps = {
   copyLabel?: string;
+  truncate?: "prefix" | "middle";
   size?: "xs" | "sm" | "md" | "lg";
   className?: string;
   copyClassName?: string;
@@ -32,13 +33,17 @@ const idTextSizeByIdChipSize = {
   lg: "text-[11px]",
 } satisfies Record<IdChipSize, string>;
 
-export function shortId(value: string) {
+export function shortId(value: string, truncate: "prefix" | "middle" = "prefix") {
+  if (truncate === "middle") {
+    return value.length > 17 ? `${value.slice(0, 10)}…${value.slice(-6)}` : value;
+  }
   return value.slice(0, 10);
 }
 
 export function IdChip({
   value,
   copyLabel,
+  truncate = "prefix",
   size = "sm",
   className,
   copyClassName,
@@ -53,7 +58,7 @@ export function IdChip({
       title={value}
     >
       <span className={cn("font-mono leading-[1.45]", idTextSizeByIdChipSize[size])}>
-        {shortId(value)}
+        {shortId(value, truncate)}
       </span>
       <IdChipCopyButton
         className={cn("shrink-0", copyClassName)}

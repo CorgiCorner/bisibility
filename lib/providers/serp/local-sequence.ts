@@ -1,4 +1,5 @@
 import type { SerpProvider } from "@/lib/providers/types";
+import { syntheticSerpObservation } from "./synthetic-observation";
 
 const DEFAULT_POSITION = 20;
 const MAX_POSITION = 100;
@@ -37,9 +38,15 @@ export const localSequenceProvider: SerpProvider = {
   async fetchRank(input) {
     const position = localRankPosition(input.keyword, input.completedCheckCount);
     const rankingUrl = `https://${input.domain}/local-rank-${position}`;
+    const checkedAt = new Date();
     return {
       billingUnits: 0,
-      checkedAt: new Date(),
+      checkedAt,
+      observation: syntheticSerpObservation("local-sequence", input, {
+        checkedAt,
+        position,
+        rankingUrl,
+      }),
       costCents: 0,
       position,
       rankingUrl,

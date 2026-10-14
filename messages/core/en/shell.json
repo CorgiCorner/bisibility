@@ -423,6 +423,9 @@
       "subtitle": "A full copy of {projectName} you can restore into self-host",
       "success": "Package exported and downloaded.",
       "title": "Export project data"
+    },
+    "announcements": {
+      "learnMore": "Learn more"
     }
   }
 }

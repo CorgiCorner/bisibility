@@ -1,3 +1,18 @@
+vi.mock("@/lib/actions/defaults-reviewed", async () => {
+  const { reviewedDefaultsWriterFixture } = await import("./defaults-reviewed.test-fixture");
+  return {
+    saveReviewedDefaultSettings: (input: unknown) =>
+      reviewedDefaultsWriterFixture(input, "settings.defaults.update"),
+    saveReviewedFrequencyDefaults: (input: unknown) =>
+      reviewedDefaultsWriterFixture(input, "settings.rank_check_frequency.update"),
+    saveReviewedProjectDefaults: (input: unknown) =>
+      reviewedDefaultsWriterFixture(input, "project_defaults.update"),
+  };
+});
+vi.mock("@/lib/providers/crypto", () => ({
+  getPurposeSecretKeys: () => [Buffer.from("synthetic-writer-fixture-key-only-000")],
+}));
+
 import {
   getSettingsActionMocks,
   resetSettingsActionMocks,
@@ -86,6 +101,7 @@ describe("settings default actions", () => {
           }),
         }),
       }),
+      expect.anything(),
     );
     const audit = settingsActionMocks.writeAudit.mock.calls.at(-1)?.[0];
     expect(audit.after.schedule).not.toHaveProperty("id");
@@ -235,6 +251,7 @@ describe("settings default actions", () => {
           market: { city: null, country: "Germany", device: "mobile", locationKey: "DE" },
         }),
       }),
+      expect.anything(),
     );
   });
 
@@ -281,10 +298,12 @@ describe("settings default actions", () => {
           updatedAt: expect.anything(),
         }),
       }),
+      expect.anything(),
     );
     expect(result).not.toHaveProperty("id");
     expect(result).not.toHaveProperty("createdAt");
     expect(result).not.toHaveProperty("updatedAt");
+    if (result.kind !== "saved") throw new Error("Reviewed writer fixture must save.");
     expect(result.projectId).toBe("prj_abcdefghijklmnopqrstuvwx");
     expect(settingsActionMocks.prisma.projectDefaults.upsert).toHaveBeenCalledTimes(1);
   });

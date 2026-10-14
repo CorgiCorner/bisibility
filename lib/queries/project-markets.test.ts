@@ -1,136 +1,22 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import {
+  activeMarket,
+  first,
+  getProjectMarketMocks,
+  options,
+  pausedMarket,
+  resetProjectMarketMocks,
+  second,
+} from "./project-markets.test-fixture";
 
-const mocks = vi.hoisted(() => ({
-  listArchivedProjectMarkets: vi.fn(),
-  monthlyTrackingCostCents: vi.fn(),
-  prisma: {
-    keyword: { findMany: vi.fn(), groupBy: vi.fn() },
-    location: { findMany: vi.fn() },
-    project: { findUnique: vi.fn() },
-    projectMarket: { findMany: vi.fn() },
-  },
-  requireReadableProject: vi.fn(),
-  supportsResearchScope: vi.fn(),
-}));
-
-vi.mock("server-only", () => ({}));
-vi.mock("@/lib/cost-estimate/project-estimate", () => ({
-  monthlyTrackingCostCents: mocks.monthlyTrackingCostCents,
-}));
-vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/markets/registry", () => ({
-  listArchivedProjectMarkets: mocks.listArchivedProjectMarkets,
-}));
-vi.mock("@/lib/serp/research-capability", () => ({
-  supportsResearchScope: mocks.supportsResearchScope,
-}));
-vi.mock("./_auth", () => ({ requireReadableProject: mocks.requireReadableProject }));
-
-import { getArchivedProjectMarkets, getProjectMarkets } from "./project-markets";
-
-const activeMarket = {
-  futureKeywordDevices: ["desktop", "mobile"],
-  location: {
-    canonicalKey: "ES@es",
-    countryCode: "ES",
-    displayName: "Malaga",
-    languageCode: "es",
-    languageLabel: "Spanish",
-  },
-  locationId: "location_malaga",
-  name: "Malaga core",
-  publicId: "pmkt_abcdefghijklmnopqrstuvwx",
-  status: "active",
-};
-
-const pausedMarket = {
-  ...activeMarket,
-  location: {
-    canonicalKey: "ES@en",
-    countryCode: "ES",
-    displayName: "Malaga",
-    languageCode: "en",
-    languageLabel: "English",
-  },
-  locationId: "location_malaga_en",
-  name: "Malaga English",
-  publicId: "pmkt_bbcdefghijklmnopqrstuvwx",
-  status: "paused",
-};
+const mocks = getProjectMarketMocks();
+const { getArchivedProjectMarkets, getProjectMarkets } = await import("./project-markets");
 
 describe("project markets query", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.requireReadableProject.mockResolvedValue({
-      project: { id: "project_1", publicId: "prj_abcdefghijklmnopqrstuvwx" },
-    });
-    mocks.monthlyTrackingCostCents.mockImplementation((count: number) => count * 257.5);
-    mocks.supportsResearchScope.mockReturnValue(true);
-    mocks.prisma.project.findUnique.mockResolvedValue({
-      defaults: { cronExpression: null, frequency: "daily", serpDepth: 100 },
-      checkSchedules: [],
-      keywords: [
-        {
-          archivedAt: null,
-          device: "desktop",
-          locationId: "location_malaga",
-          rankChecks: [{ position: 1 }],
-          text: "one",
-        },
-        {
-          archivedAt: null,
-          device: "mobile",
-          locationId: "location_malaga",
-          rankChecks: [{ position: 8 }],
-          text: "two",
-        },
-        {
-          archivedAt: null,
-          device: "desktop",
-          locationId: "location_malaga_en",
-          rankChecks: [],
-          text: "three",
-        },
-        {
-          archivedAt: new Date("2026-09-06T00:00:00.000Z"),
-          device: "desktop",
-          locationId: "location_malaga",
-          rankChecks: [],
-          text: "archived",
-        },
-      ],
-      markets: [activeMarket, pausedMarket],
-      providerConnections: [],
-    });
-    mocks.listArchivedProjectMarkets.mockResolvedValue([
-      {
-        ...activeMarket,
-        location: activeMarket.location,
-        status: "removed",
-      },
-    ]);
-    mocks.prisma.keyword.groupBy.mockResolvedValue([
-      { _count: { _all: 2 }, locationId: "location_malaga" },
-    ]);
-    mocks.prisma.keyword.findMany.mockResolvedValue([
-      { locationId: "location_malaga", schedule: null },
-      { locationId: "location_malaga", schedule: null },
-    ]);
-    mocks.prisma.location.findMany.mockResolvedValue([
-      {
-        canonicalKey: "ES",
-        countryCode: "ES",
-        displayName: "All of Spain",
-        id: "location_spain",
-        languageCode: "es",
-        languageLabel: "Spanish",
-      },
-    ]);
-    mocks.prisma.projectMarket.findMany.mockResolvedValue([activeMarket, pausedMarket]);
-  });
+  beforeEach(resetProjectMarketMocks);
 
   it("loads active and paused table rows with complete rollups while excluding removed rows", async () => {
-    const view = await getProjectMarkets("prj_abcdefghijklmnopqrstuvwx");
+    const view = await getProjectMarkets("prj_abcdefghijklmnopqrstuvwx", options);
 
     expect(view.markets).toEqual([
       expect.objectContaining({
@@ -168,7 +54,7 @@ describe("project markets query", () => {
   });
 
   it("lists the registry by selection key without reading the Location table", async () => {
-    const view = await getProjectMarkets("prj_abcdefghijklmnopqrstuvwx");
+    const view = await getProjectMarkets("prj_abcdefghijklmnopqrstuvwx", options);
 
     expect(view.marketCreation?.registry).toEqual([
       {
@@ -205,6 +91,9 @@ describe("project markets query", () => {
           rankChecks: [],
           schedule: null,
           text: "daily keyword",
+          id: first.id,
+          publicId: first.publicId,
+          createdAt: first.createdAt,
         },
         {
           archivedAt: null,
@@ -213,13 +102,16 @@ describe("project markets query", () => {
           rankChecks: [],
           schedule: { cronExpression: null, frequency: "weekly", serpDepth: 50 },
           text: "weekly keyword",
+          id: second.id,
+          publicId: second.publicId,
+          createdAt: second.createdAt,
         },
       ],
       markets: [activeMarket],
       providerConnections: [],
     });
 
-    const view = await getProjectMarkets("prj_abcdefghijklmnopqrstuvwx");
+    const view = await getProjectMarkets("prj_abcdefghijklmnopqrstuvwx", options);
 
     expect(view.markets[0]?.monthlyCostCents).toBe(120);
     expect(mocks.monthlyTrackingCostCents).toHaveBeenNthCalledWith(

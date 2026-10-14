@@ -58,7 +58,7 @@ function rankCheck(
 }
 
 describe("mapKeyword traffic fields", () => {
-  it("retains recorded history across depth changes without comparing incompatible checks", () => {
+  it("retains legacy recorded history across depth changes without claiming qualified comparisons", () => {
     const row = mapKeyword(
       {
         ...keywordRow(),
@@ -75,7 +75,7 @@ describe("mapKeyword traffic fields", () => {
       metrics,
     );
     expect(row.positionObservations.map((point) => point.position)).toEqual([6, 5, null]);
-    expect(row.completedComparableChecks).toHaveLength(1);
+    expect(row.completedComparableChecks).toEqual([]);
     expect(row.positionBaseline).toBeNull();
     expect(row.trackedDepth).toBe(50);
   });
@@ -261,7 +261,7 @@ describe("mapKeyword traffic fields", () => {
     ]);
   });
 
-  it("uses the latest positive check from an earlier day as the position baseline", () => {
+  it("keeps an unproved legacy baseline unknown while retaining every dated observation", () => {
     const row = mapKeyword(
       {
         ...keywordRow(),
@@ -275,11 +275,14 @@ describe("mapKeyword traffic fields", () => {
       metrics,
     );
 
-    expect(row.positionBaseline).toBe(4);
-    expect(row.positionHistory).toEqual([
-      { checkedAt: "2026-07-01T10:00:00.000Z", label: "Jul 1", position: 4 },
-      { checkedAt: "2026-07-03T09:00:00.000Z", label: "Jul 3", position: 6 },
-      { checkedAt: "2026-07-03T12:00:00.000Z", label: "Jul 3", position: 6 },
+    expect(row.positionBaseline).toBeNull();
+    expect(row.positionHistory).toEqual([]);
+    expect(
+      row.positionObservations.map(({ position, checkedAt }) => ({ position, checkedAt })),
+    ).toEqual([
+      { position: 4, checkedAt: "2026-07-01T10:00:00.000Z" },
+      { position: 6, checkedAt: "2026-07-03T09:00:00.000Z" },
+      { position: 6, checkedAt: "2026-07-03T12:00:00.000Z" },
     ]);
   });
 
@@ -325,7 +328,7 @@ describe("mapKeyword traffic fields", () => {
     expect(first.schedule.next_check_at).not.toBe(second.schedule.next_check_at);
   });
 
-  it("maps only the latest two completed checks from the current comparable window", () => {
+  it("retains unqualified legacy observations without inventing a two-check comparable window", () => {
     const input = {
       ...keywordRow(),
       rankChecks: [
@@ -352,18 +355,9 @@ describe("mapKeyword traffic fields", () => {
 
     const row = mapKeyword(input, project, metrics);
 
-    expect(row.completedComparableChecks).toEqual([
-      {
-        checkedAt: "2026-07-09T10:00:00.000Z",
-        position: 7,
-        rankingUrl: "https://example.com/previous",
-      },
-      {
-        checkedAt: dateFromFrozenNow({ hours: -13 }).toISOString(),
-        position: null,
-        rankingUrl: null,
-      },
-    ]);
+    expect(row.completedComparableChecks).toEqual([]);
+    expect(row.positionObservations.map(({ position }) => position)).toEqual([3, 9, 7, null]);
+    expect(row.positionBaseline).toBeNull();
   });
 
   it("keeps completed rank data when a newer attempt fails", () => {
@@ -494,7 +488,7 @@ describe("mapKeyword traffic fields", () => {
     });
   });
 
-  it("keeps URL history across a comparison boundary while segmenting position history", () => {
+  it("keeps legacy URL history without drawing an unproved position segment", () => {
     const current = rankCheck("2026-07-03T10:00:00.000Z", "check_v2", 5, {
       rankingUrl: "https://example.com/current",
     });
@@ -515,11 +509,12 @@ describe("mapKeyword traffic fields", () => {
     const legacyOnly = mapKeyword({ ...keywordRow(), rankChecks: [legacy] }, project, metrics);
 
     expect(segmented).toMatchObject({
-      bestPosition: 5,
+      bestPosition: null,
       position: 5,
-      positionHistoryBoundaryAt: "2026-07-01T10:00:00.000Z",
+      positionBaseline: null,
     });
-    expect(segmented.positionHistory).toHaveLength(1);
+    expect(segmented.positionHistory).toEqual([]);
+    expect(segmented.positionObservations.map(({ position }) => position)).toEqual([2, 5]);
     expect(segmented.rankingUrlHistory).toMatchObject([
       {
         isCurrent: false,
@@ -534,7 +529,8 @@ describe("mapKeyword traffic fields", () => {
         url: "https://example.com/current",
       },
     ]);
-    expect(legacyOnly.positionHistoryBoundaryAt).toBeNull();
+    expect(legacyOnly.positionHistory).toEqual([]);
+    expect(legacyOnly.positionObservations.map(({ position }) => position)).toEqual([2]);
   });
 });
 

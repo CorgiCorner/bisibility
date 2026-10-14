@@ -40,6 +40,25 @@ deployments, project-level credentials saved through the UI take precedence
 over optional environment fallback credentials. Blank credential fields on an
 existing connection keep the stored encrypted value.
 
+## Usage display options
+
+In **Integrations**, open **Display options** under usage. Project editors can
+choose currency or recorded raw units and 0, 1, 2, 3, 4, or 6 decimal places.
+These settings are shared by every project member across devices, the header,
+usage summaries, and budget views. Viewers and projects in read-only mode can
+read the saved settings but cannot change them.
+
+Projects start with currency and two decimal places. Old browser-only settings
+are not imported. A save takes effect after the server confirms it. If another
+editor saved first, their current settings are shown with a conflict message;
+review the change before saving again. Other members receive the current
+settings when they load or refresh the project.
+
+Display options change presentation only. Provider amounts, reservations,
+budget admission, and accounting precision stay exact. Currency display uses
+the currency recorded with the amount; it does not convert between currencies.
+Unknown values remain unknown.
+
 ## DataForSEO
 
 Use DataForSEO when you want pay-as-you-go SERP requests with provider-reported

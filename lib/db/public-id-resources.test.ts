@@ -17,6 +17,11 @@ describe("runtime public ID resource extensions", () => {
   it("preserves every original resource and parser result without mutating the core registry", () => {
     expect(PUBLIC_ID_RESOURCE_REGISTRY).toEqual({
       ...core.PUBLIC_ID_RESOURCE_REGISTRY,
+      biz: "businessLocation",
+      lmt: "localMeasurementTarget",
+      lmr: "localMeasurementRun",
+      lmn: "localMonitor",
+      lmj: "localMonitorLaunchIntent",
       agr: "agentReport",
       ait: "aiTopic",
       aip: "aiPrompt",
@@ -52,16 +57,26 @@ describe("runtime public ID resource extensions", () => {
     }
   });
 
-  it.each(["ait", "aip", "apr", "ais", "air", "asm", "asg"] as const)(
-    "generates strict tracking resource IDs: %s",
-    (prefix) => {
-      const id = makePublicId(prefix);
-      expect(parsePublicId(id)?.prefix).toBe(prefix);
-      expect(requirePublicId(id, prefix)).toBe(id);
-      expect(core.parsePublicId(id)).toBeNull();
-      expect(parsePublicId(`${prefix}_legacy`)).toBeNull();
-    },
-  );
+  it.each([
+    "ait",
+    "aip",
+    "apr",
+    "ais",
+    "air",
+    "asm",
+    "asg",
+    "biz",
+    "lmt",
+    "lmr",
+    "lmn",
+    "lmj",
+  ] as const)("generates strict tracking resource IDs: %s", (prefix) => {
+    const id = makePublicId(prefix);
+    expect(parsePublicId(id)?.prefix).toBe(prefix);
+    expect(requirePublicId(id, prefix)).toBe(id);
+    expect(core.parsePublicId(id)).toBeNull();
+    expect(parsePublicId(`${prefix}_legacy`)).toBeNull();
+  });
 
   it.each([
     "agr_legacy",

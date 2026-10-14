@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
 import { analyzeAiResearchAction } from "@/lib/actions/ai-research";
-import type { AiResearchCatalog } from "@/lib/ai-research/catalog-types";
+import type { AiCatalogFailureReason, AiResearchCatalog } from "@/lib/ai-research/catalog-types";
 import {
   LEGACY_MODELS,
   LEGACY_OUTPUT_TOKENS,
@@ -19,26 +19,18 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
+import { AiCatalogNotice } from "./AiCatalogNotice";
 import { AiCostPolicyFields } from "./AiCostPolicyFields";
 import { AiPromptFields } from "./AiPromptFields";
 import { AiResearchResults } from "./AiResearchResults";
 import { AiVisibilityFields } from "./AiVisibilityFields";
+import { failureCopyKey } from "./ai-research-failure-copy";
 import {
   extendedPromptAvailable,
   freshResearchCatalog,
   legacyResearchInput,
 } from "./ai-research-presets";
 import { useAiResearchSubmission } from "./useAiResearchSubmission";
-
-function failureCopyKey(reason: string) {
-  if (reason === "no_source") return "noSource";
-  if (reason === "pricing_unavailable") return "pricingUnavailable";
-  if (reason === "credentials_changed") return "credentialsChanged";
-  if (reason === "actual_cost_requires_own_credentials") return "actualCostUnavailable";
-  if (reason === "cost_limit_exceeded") return "estimateAboveCap";
-  if (reason.startsWith("unsupported_")) return "unsupportedSettings";
-  return "requestFailure";
-}
 
 type History = { id: string; title: string; createdAt: string }[];
 export function AiResearchWorkspace({
@@ -51,6 +43,7 @@ export function AiResearchWorkspace({
   analyzeAction = analyzeAiResearchAction,
   catalog,
   catalogError,
+  catalogFailure,
 }: Readonly<{
   projectId: string;
   domain: string;
@@ -61,6 +54,7 @@ export function AiResearchWorkspace({
   analyzeAction?: typeof analyzeAiResearchAction;
   catalog?: AiResearchCatalog;
   catalogError?: string;
+  catalogFailure?: AiCatalogFailureReason;
 }>) {
   const errors = useSharedErrorMessages();
   const t = useTranslations("projectAiResearch");
@@ -96,6 +90,7 @@ export function AiResearchWorkspace({
   const legacy = legacyResearchInput(mode, values);
   const actual = "cost_policy" in values && values.cost_policy === "provider_actual_cost";
   const unavailable = !freshCatalog;
+  const noSource = catalogFailure === "no_source";
   const pricingUnavailable =
     mode === "prompt" &&
     !actual &&
@@ -119,12 +114,12 @@ export function AiResearchWorkspace({
     mode,
     catalog: freshCatalog,
     projectId,
-    canRun,
+    canRun: canRun && !noSource,
     unavailable: extendedUnavailable,
     analyzeAction,
     initialOutcome,
   });
-  const disabled = !canRun || pending || retryBlocked || completed;
+  const disabled = !canRun || noSource || pending || retryBlocked || completed;
   return (
     <div className="grid min-w-0 gap-5">
       <p className="m-0 max-w-3xl text-ui-body leading-relaxed text-fg-muted">
@@ -132,9 +127,7 @@ export function AiResearchWorkspace({
       </p>
       {!canRun ? <Card className="text-ui-body text-fg-muted">{t("readOnly")}</Card> : null}
       {unavailable ? (
-        <Card role="alert" className="text-ui-body text-fg-muted">
-          {t("catalogUnavailableLegacy")}
-        </Card>
+        <AiCatalogNotice mode={mode} projectId={projectId} reason={catalogFailure} />
       ) : null}
       {pricingUnavailable ? (
         <Card role="alert" className="text-ui-body text-fg-muted">

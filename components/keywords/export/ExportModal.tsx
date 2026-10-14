@@ -3,7 +3,6 @@
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import type { KeywordExportTarget } from "@/components/keywords/export-target-model";
 import { Button } from "@/components/ui/Button";
-import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Modal } from "@/components/ui/Modal";
 import { exportKeywords } from "@/lib/actions/keyword-export-action";
 import { zodResolver } from "@/lib/forms/zod-resolver";
@@ -15,6 +14,7 @@ import { LockSimpleIcon as LockSimple } from "@phosphor-icons/react/dist/csr/Loc
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { ExportHistoryOptions } from "./ExportHistoryOptions";
 import {
   ExportOptionRow,
   exportColumns,
@@ -23,11 +23,14 @@ import {
   useExportModalPresentation,
 } from "./ExportModalParts";
 import { exportFailureMessage } from "./export-action-error";
+import { historyActionFields } from "./export-history-request";
 
 const exportSchema = z.object({
   columns: z.record(z.enum(exportColumns), z.boolean()),
   format: z.enum(exportFormats),
   granularity: z.enum(["daily", "weekly"]),
+  historyVersion: z.enum(["1", "2"]),
+  stream: z.enum(["observations", "attempts"]),
   range: z.enum(["30", "90", "all"]),
   scope: z.enum(exportScopes),
 });
@@ -42,9 +45,6 @@ type ExportModalProps = {
   target: KeywordExportTarget;
 };
 
-const historySelectClass =
-  "min-h-9 flex-1 justify-between rounded-control border-border-control bg-bg-elev px-3 text-[12.5px] font-normal";
-
 function exportContent(file: ExportFile) {
   if (file.encoding !== "base64") return file.content;
   const binary = atob(file.content);
@@ -56,8 +56,7 @@ function downloadExport(file: ExportFile) {
 }
 
 export function ExportModal({ onClose, open, projectId, target }: Readonly<ExportModalProps>) {
-  const { columnLabels, formatOptions, granularityOptions, rangeOptions, scopeOptions, t } =
-    useExportModalPresentation();
+  const { columnLabels, formatOptions, scopeOptions, t } = useExportModalPresentation();
   const sharedErrors = useSharedErrorMessages();
   const [actionError, setActionError] = useState<string | null>(null);
   const {
@@ -79,12 +78,15 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
       },
       format: "csv",
       granularity: "daily",
+      historyVersion: "1",
+      stream: "observations",
       range: "30",
       scope: "current",
     },
     resolver: zodResolver(exportSchema),
   });
   const values = watch();
+  const report = values.scope === "history" && values.historyVersion === "2";
   const ctaLabel = t("export", { format: values.format.toUpperCase() });
   const subtitle =
     target.selection.mode === "all"
@@ -97,6 +99,7 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
     try {
       const file = await exportKeywords({
         ...formValues,
+        ...historyActionFields(formValues),
         selection: target.selection,
         projectId,
       });
@@ -141,6 +144,8 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
       <form className="grid gap-4.5" id="export-keywords" onSubmit={handleSubmit(submit)}>
         <input type="hidden" {...register("range")} />
         <input type="hidden" {...register("granularity")} />
+        <input type="hidden" {...register("historyVersion")} />
+        <input type="hidden" {...register("stream")} />
         <div>
           <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
             {t("format")}
@@ -207,77 +212,62 @@ export function ExportModal({ onClose, open, projectId, target }: Readonly<Expor
             })}
           </div>
           {values.scope === "history" ? (
-            <div className="mt-2 flex gap-2">
-              <MenuSelect
-                ariaLabel={t("rangeAria")}
-                onChange={(value) =>
-                  setValue("range", value as ExportValues["range"], {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-                options={rangeOptions}
-                triggerClassName={historySelectClass}
-                value={values.range}
-              />
-              <MenuSelect
-                ariaLabel={t("granularityAria")}
-                onChange={(value) =>
-                  setValue("granularity", value as ExportValues["granularity"], {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-                options={granularityOptions}
-                triggerClassName={historySelectClass}
-                value={values.granularity}
-              />
-            </div>
+            <ExportHistoryOptions
+              values={values}
+              onRangeChange={(value) => setValue("range", value)}
+              onGranularityChange={(value) => setValue("granularity", value)}
+              onVersionChange={(value) => setValue("historyVersion", value)}
+              onStreamChange={(value) => setValue("stream", value)}
+            />
           ) : null}
         </div>
 
-        <div>
-          <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
-            {t("columns")}
-          </div>
-          <div className="mt-[9px] grid grid-cols-2 gap-[7px]">
-            <div className="inline-flex items-center gap-[9px] rounded-control border border-border bg-bg px-2.5 py-2">
-              <span className="grid h-[17px] w-[17px] place-items-center rounded-control bg-accent-solid text-accent-on-solid">
-                <LockSimple size={10} weight="regular" />
-              </span>
-              <span className="flex-1 text-[12.5px] text-fg">{t("keywordAndPosition")}</span>
-              <span className="font-sans tabular-nums text-[9px] uppercase tracking-[0.4px] text-fg-muted">
-                {t("always")}
-              </span>
+        {!report ? (
+          <div>
+            <div className="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted">
+              {t("columns")}
             </div>
-            {exportColumns.map((column) => {
-              const active = values.columns[column];
-              return (
-                <button
-                  className="inline-flex items-center gap-[9px] rounded-control border border-border bg-bg-elev px-2.5 py-2 text-left outline-none hover:border-accent focus-visible:border-accent"
-                  key={column}
-                  onClick={() => setValue(`columns.${column}`, !active)}
-                  type="button"
-                >
-                  <span
-                    className="grid h-[17px] w-[17px] place-items-center rounded-control border-[1.5px]"
-                    style={{
-                      backgroundColor: active ? "var(--accent)" : "var(--bg-elev)",
-                      borderColor: active ? "var(--accent)" : "var(--border)",
-                    }}
+            <div className="mt-[9px] grid grid-cols-2 gap-[7px]">
+              <div className="inline-flex items-center gap-[9px] rounded-control border border-border bg-bg px-2.5 py-2">
+                <span className="grid h-[17px] w-[17px] place-items-center rounded-control bg-accent-solid text-accent-on-solid">
+                  <LockSimple size={10} weight="regular" />
+                </span>
+                <span className="flex-1 text-[12.5px] text-fg">{t("keywordAndPosition")}</span>
+                <span className="font-sans tabular-nums text-[9px] uppercase tracking-[0.4px] text-fg-muted">
+                  {t("always")}
+                </span>
+              </div>
+              {exportColumns.map((column) => {
+                const active = values.columns[column];
+                return (
+                  <button
+                    className="inline-flex items-center gap-[9px] rounded-control border border-border bg-bg-elev px-2.5 py-2 text-left outline-none hover:border-accent focus-visible:border-accent"
+                    key={column}
+                    onClick={() => setValue(`columns.${column}`, !active)}
+                    type="button"
                   >
-                    {active ? <Check className="text-white" size={11} weight="regular" /> : null}
-                  </span>
-                  <span className="text-[12.5px] text-fg">{columnLabels[column]}</span>
-                </button>
-              );
-            })}
+                    <span
+                      className="grid h-[17px] w-[17px] place-items-center rounded-control border-[1.5px]"
+                      style={{
+                        backgroundColor: active ? "var(--accent)" : "var(--bg-elev)",
+                        borderColor: active ? "var(--accent)" : "var(--border)",
+                      }}
+                    >
+                      {active ? <Check className="text-white" size={11} weight="regular" /> : null}
+                    </span>
+                    <span className="text-[12.5px] text-fg">{columnLabels[column]}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <div className="flex items-center gap-[9px] rounded-control border border-dashed border-border bg-transparent px-[13px] py-[11px]">
           <ArrowsClockwise weight="regular" className="shrink-0 text-accent-text" size={15} />
-          <span className="text-[11.5px] leading-[1.45] text-fg-muted">{t("fileFormatNote")}</span>
+          <span className="text-[11.5px] leading-[1.45] text-fg-muted">
+            {t(report ? "reportFileFormatNote" : "fileFormatNote")}
+          </span>
         </div>
         {actionError ? (
           <p className="m-0 font-sans tabular-nums text-[11.5px] text-red-text">{actionError}</p>

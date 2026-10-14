@@ -1,23 +1,29 @@
 "use client";
 
-import { Disclosure } from "@/components/ui/Disclosure";
+import { settingsCardNaturalFrameClassName } from "@/components/settings/shell/settings-layout";
+import { Card } from "@/components/ui/Card";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { MenuSelect } from "@/components/ui/MenuSelect";
+import { SectionTitle } from "@/components/ui/SectionTitle";
+import { usageDisplayPrecisions } from "@/lib/project-usage-display/schema";
 import { useTranslations } from "next-intl";
 import { useUsageDisplaySettings } from "./use-usage-display-settings";
 
 export function UsageDisplayControls() {
   const t = useTranslations("projectSettingsUsage.meter.display");
-  const { options, setOptions } = useUsageDisplaySettings();
+  const { options, setOptions, canEdit, pending, error } = useUsageDisplaySettings();
   return (
-    <Disclosure
-      className="border-0 bg-transparent"
-      contentClassName="px-0 pb-2 sm:px-0"
-      summaryClassName="px-0 py-2 sm:px-0 [&>h3]:text-[13px] [&>h3]:font-medium"
-      title={t("title")}
-    >
+    <Card id="usage-display" className={`${settingsCardNaturalFrameClassName} space-y-3`}>
+      <div className="flex items-center gap-1">
+        <SectionTitle>{t("title")}</SectionTitle>
+        <InfoTooltip text={t("help")} />
+      </div>
       <div className="flex flex-wrap items-center gap-3">
         <MenuSelect
+          size="toolbar"
+          triggerClassName="h-[34px] min-h-[34px] text-[12px]"
           ariaLabel={t("money")}
+          disabled={!canEdit || pending}
           leadingLabel={t("money")}
           onChange={(moneyDisplay) =>
             setOptions({ moneyDisplay: moneyDisplay === "raw-unit" ? "raw-unit" : "currency" })
@@ -29,7 +35,10 @@ export function UsageDisplayControls() {
           value={options.moneyDisplay}
         />
         <MenuSelect
+          size="toolbar"
+          triggerClassName="h-[34px] min-h-[34px] text-[12px]"
           ariaLabel={t("precision")}
+          disabled={!canEdit || pending}
           leadingLabel={t("precision")}
           onChange={(value) => {
             const fractionDigits = Number(value);
@@ -38,14 +47,24 @@ export function UsageDisplayControls() {
               quantityFractionDigits: fractionDigits,
             });
           }}
-          options={[0, 1, 2, 3, 4, 6].map((count) => ({
+          options={usageDisplayPrecisions.map((count) => ({
             value: String(count),
             label: t("digits", { count }),
           }))}
           value={String(options.moneyFractionDigits)}
         />
       </div>
-      <p className="mt-2 text-[12px] text-fg-muted">{t("help")}</p>
-    </Disclosure>
+      {!canEdit ? <p className="mt-1 text-[12px] text-fg-muted">{t("readOnly")}</p> : null}
+      {pending ? (
+        <p role="status" className="mt-1 text-[12px] text-fg-muted">
+          {t("saving")}
+        </p>
+      ) : null}
+      {error ? (
+        <p role="alert" className="mt-1 text-[12px] text-fg-muted">
+          {t(error)}
+        </p>
+      ) : null}
+    </Card>
   );
 }

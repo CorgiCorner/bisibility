@@ -42,8 +42,19 @@ export type UsageSummaryCardsProps = {
   details?: ReactNode;
 };
 
-// Cells draw their own right and bottom rules; the inset grid hides the outer ones.
-const cell = "p-5 sm:p-6 min-w-0 border-r border-b border-border";
+// A separator belongs to a pair of cells, never to the outer edge or an empty slot.
+function cellClass(index: number, count: number) {
+  const smColumns = Math.min(count, 2);
+  const xlColumns = Math.min(count, 3);
+  return [
+    "p-4 min-w-0 border-border",
+    index + 1 < count ? "border-b" : "border-b-0",
+    index + smColumns < count ? "sm:border-b" : "sm:border-b-0",
+    index % smColumns < smColumns - 1 && index + 1 < count ? "sm:border-e" : "sm:border-e-0",
+    index + xlColumns < count ? "xl:border-b" : "xl:border-b-0",
+    index % xlColumns < xlColumns - 1 && index + 1 < count ? "xl:border-e" : "xl:border-e-0",
+  ].join(" ");
+}
 
 /** Complete totals per unit on one surface, each with its certainty. */
 export function UsageSummaryCards({
@@ -121,14 +132,17 @@ export function UsageSummaryCards({
           return result;
         }, {})
       : view.measurements);
+  const entries = Object.entries(measurements);
   const Surface = variant === "plain" ? "div" : Card;
   return (
     <section aria-label={labels.title} className="min-w-0 space-y-3">
       {caption}
-      <Surface className="gap-0 overflow-hidden py-0">
-        <div className="-mr-px -mb-px grid min-w-0 sm:grid-cols-2 xl:grid-cols-3">
-          {Object.entries(measurements).map(([unit, value]) => (
-            <div key={unit} className={cell}>
+      <Surface className="gap-0 overflow-hidden p-0">
+        <div
+          className={`grid min-w-0 ${entries.length > 1 ? "sm:grid-cols-2" : ""} ${entries.length > 2 ? "xl:grid-cols-3" : ""}`}
+        >
+          {entries.map(([unit, value], index) => (
+            <div key={unit} className={cellClass(index, entries.length)}>
               <MeasurementCard
                 variant="plain"
                 title={

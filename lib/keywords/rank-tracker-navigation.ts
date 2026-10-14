@@ -10,6 +10,7 @@ import type {
   RankTrackerQueryField,
 } from "./rank-tracker-query-types";
 import { RANK_TRACKER_SORT_FIELDS } from "./rank-tracker-query-types";
+import { rankTrackerScope } from "./rank-tracker-report-scope";
 
 const ORTHOGONAL_PARAMS = ["tab", "add", "action"] as const;
 export const RANK_TRACKER_FILTER_FIELDS = Object.keys(emptyKeywordFilters) as Array<
@@ -54,6 +55,13 @@ export function rankTrackerMutationPresence(
   for (const field of RANK_TRACKER_FILTER_FIELDS) {
     if (!sameValue(current.filters[field], next.filters[field])) present.add(field);
   }
+  const beforeScope = rankTrackerScope(current),
+    afterScope = rankTrackerScope(next);
+  if (beforeScope.view !== afterScope.view) present.add("reportView");
+  if (JSON.stringify(beforeScope.subject) !== JSON.stringify(afterScope.subject))
+    present.add("localSubject");
+  if (beforeScope.comparisonDays !== afterScope.comparisonDays) present.add("comparisonDays");
+  if (beforeScope.asOf !== afterScope.asOf) present.add("asOf");
   if (current.search !== next.search) present.add("search");
   if (current.lens.device !== next.lens.device) present.add("device");
   if (current.lens.locationId !== next.lens.locationId) present.add("location");

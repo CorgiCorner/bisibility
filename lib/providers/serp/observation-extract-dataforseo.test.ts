@@ -102,7 +102,7 @@ describe("dataForSeoObservationRun", () => {
     });
 
     expect(run.items.map((item) => item.blockPosition)).toEqual([null, null, null]);
-    expect(run.items.map((item) => item.positionInBlock)).toEqual([1, 2, 3]);
+    expect(run.items.map((item) => item.positionInBlock)).toEqual([null, null, null]);
   });
 
   it("prefers provider rank-group values within a flat local-pack block", () => {

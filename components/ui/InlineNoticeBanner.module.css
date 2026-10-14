@@ -1,0 +1,104 @@
+.viewport {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.viewport:focus {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.viewport:focus .track {
+  animation: none;
+}
+
+.viewport:focus .duplicate {
+  display: none;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+}
+
+.banner .track {
+  animation-duration: var(--notice-scroll-duration, 14s);
+}
+
+.copy {
+  margin: 0;
+  padding-right: 3rem;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--fg-muted);
+}
+
+.banner[data-paused="true"] .track {
+  animation-play-state: paused;
+}
+
+.motionToggle {
+  flex-shrink: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .banner:hover .track {
+    animation-play-state: paused;
+  }
+}
+
+@media (min-width: 640px) {
+  .viewport {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .banner .track {
+    width: max-content;
+    animation: none;
+  }
+
+  .copy {
+    min-width: 0;
+    padding-right: 0;
+  }
+
+  .duplicate {
+    display: none;
+  }
+
+  .motionToggle {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewport {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .banner .track {
+    width: max-content;
+    animation: none;
+  }
+
+  .copy {
+    padding-right: 0;
+    overflow: visible;
+  }
+
+  .duplicate {
+    display: none;
+  }
+
+  .motionToggle {
+    display: none;
+  }
+}

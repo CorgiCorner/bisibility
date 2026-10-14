@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildHighlights,
   buildKpis,
@@ -10,9 +10,32 @@ import {
 } from "./overview-builders";
 
 const now = new Date("2026-06-28T12:00:00.000Z");
+beforeEach(() => vi.setSystemTime(now));
 
 function check(position: number | null, overrides: Partial<Check> = {}): Check {
+  const at = overrides.checkedAt ?? new Date("2026-06-28T10:00:00.000Z");
   return {
+    observationRun: {
+      projectId: "overview-project",
+      createdAt: at,
+      completeness: "complete",
+      provider: "synthetic",
+      engine: "google",
+      surface: "web_serp",
+      configuredScope: { location: "United States", language: "en", device: "desktop" },
+      effectiveScope: { location: "United States", language: "en", device: "desktop" },
+      requestPolicy: {
+        evidence: {
+          version: 1,
+          targetRevision: "fixture-target-v1",
+          policyRevision: "fixture-policy-v1",
+          observedAt: at.toISOString(),
+          completeThrough: {
+            organic_result: overrides.requestedDepth === undefined ? 100 : overrides.requestedDepth,
+          },
+        },
+      },
+    },
     checkedAt: new Date("2026-06-28T10:00:00.000Z"),
     normalizationVersion: "v2",
     position,
@@ -40,7 +63,10 @@ function keyword(id: string, rankChecks: Check[] = [], overrides: Partial<Keywor
 }
 
 function highlights(keywords: Keyword[]) {
-  return buildHighlights(keywords.map(snapshotFor), now);
+  return buildHighlights(
+    keywords.map((keyword) => snapshotFor(keyword)),
+    now,
+  );
 }
 
 function visibilityKpi(snapshots: ReturnType<typeof snapshotFor>[]) {
@@ -49,12 +75,14 @@ function visibilityKpi(snapshots: ReturnType<typeof snapshotFor>[]) {
 
 describe("overview builders", () => {
   it("keeps only valid ranked positions in the trend", () => {
-    const outside = keyword("outside", [check(101)]);
+    const outside = keyword("outside", [check(101, { observationRun: null })]);
 
     expect(pos(100)).toBe(100);
     expect(pos(101)).toBeNull();
     expect(snapshotFor(outside).position).toBeNull();
-    expect(buildTrend([outside])).toEqual([]);
+    expect(buildTrend([outside])).toEqual([
+      expect.objectContaining({ value: null, comparisonKey: null }),
+    ]);
   });
 
   it("uses only genuine earlier in-window positions for movement", () => {
@@ -85,7 +113,7 @@ describe("overview builders", () => {
     expect(snapshot).toMatchObject({ movement: null, position: 3, previous: null });
   });
 
-  it("keeps comparable movement when a failed attempt is newer", () => {
+  it("retains a qualified rank after failure without claiming a new movement", () => {
     const snapshot = snapshotFor(
       keyword("failed-attempt", [
         check(null, { status: "failed" }),
@@ -94,7 +122,7 @@ describe("overview builders", () => {
       ]),
     );
 
-    expect(snapshot).toMatchObject({ movement: 5, position: 3, previous: 8 });
+    expect(snapshot).toMatchObject({ movement: null, position: 3, previous: null });
   });
 
   it("returns semantic highlight states instead of display sentences", () => {
@@ -123,7 +151,7 @@ describe("overview builders", () => {
     expect(rows.find((list) => list.kind === "attention")?.rows[0]).toMatchObject({
       note: { kind: "latestCheckFailed" },
       positionState: "noData",
-      positionTone: "danger",
+      positionTone: "muted",
     });
   });
 
@@ -186,7 +214,7 @@ describe("overview builders", () => {
     );
   });
 
-  it("does not retain a previous successful rank when the newest attempt failed or was unranked", () => {
+  it("retains the prior qualified rank after failure, but keeps a proven latest absence unranked", () => {
     const rows = buildHighlights(
       [
         snapshotFor(
@@ -212,8 +240,8 @@ describe("overview builders", () => {
         expect.objectContaining({
           id: "failed-after-rank",
           note: { kind: "latestCheckFailed" },
-          position: null,
-          positionState: "noData",
+          position: 3,
+          positionState: "ranked",
         }),
         expect.objectContaining({
           id: "unranked-after-rank",
@@ -242,9 +270,9 @@ describe("overview builders", () => {
 
     expect(rows?.find((row) => row.id === "failed")).toMatchObject({
       note: { kind: "latestCheckFailed" },
-      position: null,
-      positionState: "noData",
-      positionTone: "danger",
+      position: 3,
+      positionState: "ranked",
+      positionTone: "default",
     });
     expect(rows?.find((row) => row.id === "outside")).toMatchObject({
       note: { kind: "latestCheckNotRanked" },
@@ -256,7 +284,7 @@ describe("overview builders", () => {
     expect(rows?.some((row) => row.id === "running")).toBe(false);
   });
 
-  it("treats a first observation in the top 10 as a new top-10 entry", () => {
+  it("keeps first observations distinct from a proven new top-10 entry", () => {
     const rows = highlights([
       keyword("first-ever", [check(3)]),
       keyword("entered", [
@@ -266,7 +294,7 @@ describe("overview builders", () => {
       keyword("stayed", [check(5), check(8, { checkedAt: new Date("2026-06-21T10:00:00.000Z") })]),
     ]).find((list) => list.kind === "newTop10")?.rows;
 
-    expect(rows?.map((row) => row.id)).toEqual(["first-ever", "entered"]);
+    expect(rows?.map((row) => row.id)).toEqual(["entered"]);
   });
 
   it("shows neutral new deltas for first observations instead of fabricated gains", () => {

@@ -30,8 +30,13 @@ describe("PositionTrendCard date display", () => {
       >
         <PositionTrendCard
           data={[
-            { dateKey: "2026-08-24", label: "2026-08-24", value: 9 },
-            { dateKey: "2026-08-25", label: null, value: 7 },
+            {
+              comparisonKey: "synthetic-series",
+              dateKey: "2026-08-24",
+              label: "2026-08-24",
+              value: 9,
+            },
+            { comparisonKey: "synthetic-series", dateKey: "2026-08-25", label: null, value: 7 },
           ]}
         />
       </ProjectDashboardMessages>,

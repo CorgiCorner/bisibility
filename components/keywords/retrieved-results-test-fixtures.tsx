@@ -32,6 +32,7 @@ export function fullResults(overrides: Partial<Extract<RetrievedResults, { tier:
     url: index === 21 ? "https://example.com/compare" : `https://sub${index}.example.org/page`,
   }));
   return {
+    rankingUrl: "/compare",
     aiOverview: true,
     checkId: CHECK_ID,
     checkedAt: "2026-08-02T06:00:00.000Z",

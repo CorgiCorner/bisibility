@@ -7,7 +7,9 @@
  * separate fields with separate vocabularies. PR0 enables exactly one surface and engine.
  */
 
-export const observationSurfaces = ["web_serp"] as const;
+import type { ObservationEvidenceMetadata } from "./evidence-metadata";
+
+export const observationSurfaces = ["web_serp", "maps", "local_finder"] as const;
 export type ObservationSurface = (typeof observationSurfaces)[number];
 
 export const observationEngines = ["google"] as const;
@@ -21,10 +23,17 @@ export const observationCompleteness = [
 export type ObservationCompleteness = (typeof observationCompleteness)[number];
 
 /** Result kinds PR0 extracts. `organic_result` stays on `RankCheck.organicRanks` for now. */
-export const observationResultKinds = ["organic_result", "local_pack", "ai_overview"] as const;
+export const observationResultKinds = [
+  "organic_result",
+  "local_pack",
+  "ai_overview",
+  "map_listing",
+  "listing",
+] as const;
 export type ObservationResultKind = (typeof observationResultKinds)[number];
 
 export type ObservationRequestPolicy = {
+  evidence?: ObservationEvidenceMetadata;
   depth: number;
   stopOnMatch: boolean;
   /** Provider-side target matching, when the request carried one (e.g. `with_subdomains`). */
@@ -45,6 +54,12 @@ export type ObservationRating = {
 };
 
 export type ObservationItemInput = {
+  rankScale?: "organic_group" | "pack_slot" | "maps_organic" | "finder_organic" | null;
+  promotion?: "organic" | "promoted" | "unknown" | null;
+  sourcePage?: number | null;
+  sourceBlockId?: string | null;
+  sourceOrdinal?: number | null;
+  observedAt?: Date | null;
   resultKind: ObservationResultKind;
   rankGroup?: number | null;
   rankAbsolute?: number | null;
@@ -65,14 +80,54 @@ export type ObservationItemInput = {
   rawFragment: unknown;
 };
 
-export type ObservationRunInput = {
+export type ObservationRunBase = {
   provider: string;
-  surface: ObservationSurface;
   engine: ObservationEngine;
-  requestPolicy: ObservationRequestPolicy;
   completeness: ObservationCompleteness;
   configuredScope: ObservationScope;
   effectiveScope?: ObservationScope | null;
   executedAt: Date;
   items: ObservationItemInput[];
 };
+
+/** Separate point surfaces cannot inherit web-only request semantics or an organic owner. */
+export type LocalObservationRequestPolicy = {
+  version: 1;
+  surface: "maps" | "local_finder";
+  depth: number;
+  cutoff: number;
+  zoom: number | null;
+  capabilityVersion: string;
+  pointRevisionId: string;
+  policyRevision: string;
+  /** V2 acknowledges only correlated query seed semantics, never exact observer geography. */
+  pointAcknowledgment?: {
+    version: 1;
+    class: "coordinate_seed";
+    known: boolean;
+    exactObserverPoint: false;
+  };
+  identityIssueCount?: number;
+  unsupportedItemCount?: number;
+  evidence?: ObservationEvidenceMetadata;
+};
+export type LocalObservationScope = ObservationScope & {
+  pointRevisionId: string;
+  coordinates: { latitude: string; longitude: string };
+  zoom: number | null;
+  scopeClass: "coordinate_seed" | "coordinate_observed";
+};
+export type WebObservationRunInput = ObservationRunBase & {
+  surface: "web_serp";
+  requestPolicy: ObservationRequestPolicy;
+};
+export type LocalObservationRunInput = Omit<
+  ObservationRunBase,
+  "configuredScope" | "effectiveScope"
+> & {
+  surface: "maps" | "local_finder";
+  requestPolicy: LocalObservationRequestPolicy;
+  configuredScope: LocalObservationScope;
+  effectiveScope?: LocalObservationScope | null;
+};
+export type ObservationRunInput = WebObservationRunInput | LocalObservationRunInput;

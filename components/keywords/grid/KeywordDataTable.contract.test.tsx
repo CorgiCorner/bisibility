@@ -1,10 +1,12 @@
 import { emptyKeywordFilters } from "@/lib/keywords/keyword-filter-model";
+import { presentReportSummary } from "@/lib/rank-reports/presentation";
 import { asMarketRef } from "@/lib/routing/app-path";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { stubResizeObserver } from "@/tests/observers";
 import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { groupedPendingRows, pendingRows, renderPendingGrid } from "./KeywordsGrid.test-helpers";
+import { wholeScopeReport } from "./keyword-rank-quality.test-fixture";
 
 function renderedKeywordOrder(keywords: readonly string[]) {
   const body = screen.getByTestId("rank-tracker-keywords-body");
@@ -156,7 +158,7 @@ describe("KeywordDataTable server contract", () => {
     expect(screen.queryByRole("radio", { name: "Flat" })).not.toBeInTheDocument();
   });
 
-  it("builds the grouped summary from matching leaf targets", () => {
+  it("uses the full filtered server report for grouped summary independent of page children", () => {
     const [group] = groupedPendingRows();
     if (!group) throw new Error("Expected a grouped fixture row");
     const rows = [
@@ -171,7 +173,10 @@ describe("KeywordDataTable server contract", () => {
         })),
       },
     ];
+    const report = wholeScopeReport();
+    report.metric.counts = { ...report.metric.counts, expected: 100, unknown: 95 };
     renderPendingGrid({
+      report: presentReportSummary(report),
       matchedGroupCount: 4,
       matchedTargetCount: 100,
       query: {
@@ -189,9 +194,11 @@ describe("KeywordDataTable server contract", () => {
 
     expect(
       screen.getByRole("status", {
-        name: "Current page: 2 of 2 keywords improved this week · no drops",
+        name: "Organic visibility: 0.21 · 100 targets; 4 ranked, 1 confirmed absent, 95 unknown",
       }),
     ).toBeInTheDocument();
+    expect(screen.queryByText(/Current page:/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: /Grouped|Flat/ })).not.toBeInTheDocument();
     expect(screen.getByText("100 matching targets")).toBeInTheDocument();
     expect(screen.getByText("1-4 of 4")).toBeInTheDocument();
   });

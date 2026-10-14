@@ -1,6 +1,11 @@
 import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
+import { persistQueuedSubmissionResult } from "./queued-submit-persist";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
+import {
+  queuedDefinitionFence,
+  queuedWorkerSessions,
+} from "@/lib/measurement-definitions/worker-queued";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
@@ -84,11 +89,16 @@ async function submitBatch(batchId: string) {
   if (!connection) {
     return markDefiniteFailure(batchId, "DataForSEO connection was removed before submission.");
   }
+  const definitions = await queuedWorkerSessions(claimed.batch);
+  const definitionFence = queuedDefinitionFence(definitions);
   let execution: QueuedDeploymentExecution | null;
   try {
     execution =
       connection.credentialSource === "hosted"
-        ? await startQueuedDeploymentExecution(batchId)
+        ? await startQueuedDeploymentExecution(
+            batchId,
+            new Map([...definitions].map(([id, session]) => [id, session.beforeReserve])),
+          )
         : null;
   } catch (error) {
     if (error instanceof DeploymentAdmissionExhaustedError) {
@@ -121,7 +131,7 @@ async function submitBatch(batchId: string) {
   let phase: "not_sent" | "rejected" | "unknown" | "responded" = "not_sent";
   const submissionPhase = () => phase;
   try {
-    const tasks = await submissionTasks(claimed.batch);
+    const tasks = await submissionTasks(claimed.batch, definitions);
     assertQueuedTaskBatchSize(tasks.length);
     const submission = prepareDataForSeoQueuedTasks({
       credentials,
@@ -141,7 +151,8 @@ async function submitBatch(batchId: string) {
     });
     if (execution) {
       await execution.begin(
-        tasks.map((task) => ({
+        tasks.map((task, index) => ({
+          providerRequest: submission.requests[index],
           correlationId: task.correlationId,
           keywordId: task.keywordId,
           tag: task.tag,
@@ -156,6 +167,10 @@ async function submitBatch(batchId: string) {
         projectId: claimed.batch.projectId,
         tasks,
         providerRequests: submission.requests,
+        beforeFence: definitionFence,
+        beforeReserve: new Map(
+          [...definitions].map(([id, session]) => [id, session.beforeReserve]),
+        ),
         credentialVersion: ownCredentialVersion(
           "dataforseo",
           connection.id,
@@ -164,7 +179,7 @@ async function submitBatch(batchId: string) {
       });
     }
     let result: DataForSeoQueuedSubmissionResult;
-    await execution?.transportStarted();
+    await execution?.transportStarted(definitionFence);
     await journal?.transportStarted();
     try {
       result = await submission.submit(journal?.pricedRequests);
@@ -190,49 +205,7 @@ async function submitBatch(batchId: string) {
     } else {
       await journal?.settle(result);
     }
-    await prisma.$transaction(async (tx) => {
-      for (const task of result.accepted) {
-        const duplicate =
-          execution &&
-          result.accepted.some(
-            (other) =>
-              other.correlationId < task.correlationId &&
-              other.providerTaskId === task.providerTaskId,
-          );
-        await tx.queuedRankCheckTask.updateMany({
-          data: duplicate
-            ? {
-                costCents: task.costCents,
-                error: "Duplicate provider task identity.",
-                state: "provider_failed",
-              }
-            : {
-                costCents: task.costCents,
-                error: null,
-                providerTaskId: task.providerTaskId,
-                providerTag: task.tag,
-                state: "submitted",
-              },
-          where: { id: task.correlationId, state: "submitting" },
-        });
-      }
-      for (const task of result.failed) {
-        await tx.queuedRankCheckTask.updateMany({
-          data: { costCents: task.costCents, error: task.message, state: "provider_failed" },
-          where: { id: task.correlationId, state: "submitting" },
-        });
-      }
-      for (const task of result.unknown) {
-        await tx.queuedRankCheckTask.updateMany({
-          data: { error: task.message, state: "ambiguous" },
-          where: { id: task.correlationId, state: "submitting" },
-        });
-      }
-      await tx.queuedRankCheckBatch.updateMany({
-        data: { state: "submitted", submittedAt: new Date() },
-        where: { id: batchId, state: "submitting" },
-      });
-    });
+    await persistQueuedSubmissionResult(batchId, result, execution);
     await execution?.finish();
     const authoritative = await prisma.queuedRankCheckBatch.findUniqueOrThrow({
       select: { state: true },

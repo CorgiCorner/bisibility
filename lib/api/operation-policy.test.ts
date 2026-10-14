@@ -107,7 +107,25 @@ describe("operation policy", () => {
       .sort((left, right) => left.operationId.localeCompare(right.operationId));
 
     expect(after).toEqual(before);
-    expect(before).toHaveLength(128);
+    // Existing rank-run list/detail reads are now documented at the top level.
+    expect(before).toHaveLength(130);
+    expect(
+      before.filter(
+        ({ operationId }) =>
+          operationId === "listRankCheckRuns" || operationId === "getRankCheckRun",
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        operationId: "getRankCheckRun",
+        requiredScope: "read",
+        projectAccess: "read",
+      }),
+      expect.objectContaining({
+        operationId: "listRankCheckRuns",
+        requiredScope: "read",
+        projectAccess: "read",
+      }),
+    ]);
     for (const operation of before) {
       const runtimePath = pathSegments(operation.path).map((segment) =>
         segment.startsWith("{") ? "value" : segment,
@@ -127,7 +145,7 @@ describe("operation policy", () => {
       { admin: 0, read: 0, write: 0 },
     );
 
-    expect(counts).toEqual({ admin: 16, read: 48, write: 64 });
+    expect(counts).toEqual({ admin: 16, read: 50, write: 64 });
   });
 
   it("declares self-revocation and prefers it over the token-id route", () => {

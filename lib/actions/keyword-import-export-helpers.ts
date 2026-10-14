@@ -1,3 +1,5 @@
+import { csvRow } from "@/lib/ui/csv";
+import { xlsxCellText } from "@/lib/ui/xlsx-cell-text";
 import ExcelJS from "exceljs";
 
 export {
@@ -22,6 +24,8 @@ export const keywordExportColumns = [
 
 export type KeywordExportColumn = (typeof keywordExportColumns)[number];
 export type KeywordExportOptions = {
+  /** Fixed read watermark for history serialization; omitted by legacy current exports. */
+  asOf?: Date;
   columns: Record<KeywordExportColumn, boolean>;
   granularity: "daily" | "weekly";
   range: "30" | "90" | "all";
@@ -59,9 +63,9 @@ export function keywordExportOptions(data: KeywordExportOptionInput): KeywordExp
   };
 }
 
-function cutoff(range: KeywordExportOptions["range"]) {
+function cutoff(range: KeywordExportOptions["range"], asOf = new Date()) {
   if (range === "all") return null;
-  const value = new Date();
+  const value = new Date(asOf.getTime());
   value.setDate(value.getDate() - Number(range));
   return value;
 }
@@ -75,7 +79,7 @@ function weekKey(date: Date) {
 }
 
 export function selectedChecks(row: KeywordExportRow, options: KeywordExportOptions) {
-  const minDate = cutoff(options.range);
+  const minDate = cutoff(options.range, options.asOf);
   const checks = row.rankChecks.filter((check) => !minDate || check.checkedAt >= minDate);
   if (options.granularity === "daily") return checks;
   const weeks = new Set<string>();
@@ -100,15 +104,17 @@ function exportCellText(value: unknown) {
   return (value as bigint).toString(10);
 }
 
-function csvCell(value: unknown) {
-  const text = exportCellText(value);
-  return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
 export function serializeCsv(headers: string[], rows: Record<string, unknown>[]) {
   return [
-    headers.join(","),
-    ...rows.map((row) => headers.map((header) => csvCell(row[header])).join(",")),
+    csvRow(headers),
+    ...rows.map((row) =>
+      csvRow(
+        headers.map((header) => {
+          const value = row[header];
+          return typeof value === "number" ? value : exportCellText(value);
+        }),
+      ),
+    ),
   ].join("\n");
 }
 
@@ -196,7 +202,11 @@ export async function serializeKeywordExportXlsx(
   for (const row of table.rows) {
     const values = table.headers.map((header) => {
       const value = (row as Record<string, unknown>)[header];
-      return value instanceof Date ? exportCellText(value) : value;
+      return value instanceof Date
+        ? exportCellText(value)
+        : typeof value === "string"
+          ? xlsxCellText(value)
+          : value;
     });
     sheet.addRow(values);
   }

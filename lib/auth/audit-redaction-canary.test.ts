@@ -41,7 +41,12 @@ function sourceFiles(directory: string): string[] {
     if (entry.isDirectory()) {
       return entry.name === "generated" ? [] : sourceFiles(path);
     }
-    if (![".ts", ".tsx"].includes(extname(entry.name)) || entry.name.includes(".test.")) return [];
+    if (
+      ![".ts", ".tsx"].includes(extname(entry.name)) ||
+      entry.name.includes(".test.") ||
+      /[.-]test-fixtures?\.[cm]?[jt]sx?$/u.test(entry.name)
+    )
+      return [];
     return [path];
   });
 }

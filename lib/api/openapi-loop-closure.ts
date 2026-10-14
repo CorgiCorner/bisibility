@@ -9,6 +9,26 @@ type Bearer = (
 ) => object;
 
 const exportParameters = [
+  {
+    in: "query",
+    name: "version",
+    schema: { enum: ["1", "2"], default: "1", type: "string" },
+    description:
+      "V1 preserves legacy row/aggregation semantics. V2 returns shared qualified history and whole-scope metadata.",
+  },
+  {
+    in: "query",
+    name: "stream",
+    schema: { enum: ["observations", "attempts"], default: "observations", type: "string" },
+  },
+  {
+    in: "query",
+    name: "basis",
+    schema: { enum: ["observed_at", "recorded_at"], default: "recorded_at", type: "string" },
+  },
+  { in: "query", name: "from", schema: { format: "date-time", type: "string" } },
+  { in: "query", name: "to", schema: { format: "date-time", type: "string" } },
+  { in: "query", name: "aggregation", schema: { enum: ["none"], default: "none", type: "string" } },
   { in: "query", name: "format", schema: { enum: ["csv", "json"], type: "string" } },
   {
     explode: true,
@@ -40,7 +60,7 @@ function rankHistoryOperation(input: {
   ref: (name: keyof typeof schemas) => object;
 }) {
   const operation = input.bearer(
-    "Export project rank history as paginated JSON or streamed CSV",
+    "Export project rank history as paginated JSON or complete CSV",
     "exportRankHistory",
     input.ref("RankHistoryExportResponse"),
     undefined,
@@ -52,10 +72,17 @@ function rankHistoryOperation(input: {
       ...operation.responses,
       "200": {
         content: {
-          "application/json": { schema: input.ref("RankHistoryExportResponse") },
+          "application/json": {
+            schema: {
+              anyOf: [
+                input.ref("RankHistoryExportResponse"),
+                input.ref("RankHistoryReportResponse"),
+              ],
+            },
+          },
           "text/csv": { schema: { type: "string" } },
         },
-        description: "Paginated JSON or streamed CSV rank history",
+        description: "Paginated JSON or complete bounded CSV rank history",
       },
     },
   };
@@ -66,6 +93,43 @@ export function loopClosurePaths(input: {
   ref: (name: keyof typeof schemas) => object;
 }) {
   return {
+    "/projects/{project_id}/rank-check-runs": {
+      get: {
+        ...input.bearer(
+          "List rank-check runs",
+          "listRankCheckRuns",
+          input.ref("RankCheckRunReadList"),
+          undefined,
+          [
+            {
+              in: "query",
+              name: "segment",
+              schema: { type: "string", enum: ["history", "planned"], default: "history" },
+            },
+            {
+              in: "query",
+              name: "status",
+              schema: { type: "string" },
+              description: "Comma-separated execution statuses.",
+            },
+            { in: "query", name: "cursor", schema: { type: "string" } },
+            {
+              in: "query",
+              name: "limit",
+              schema: { type: "integer", minimum: 1, maximum: 200, default: 50 },
+            },
+          ],
+        ),
+        description:
+          "Read rank-check runs including cancelled or deferred outcomes without a check.",
+      },
+    },
+    "/projects/{project_id}/rank-check-runs/{run_id}": {
+      get: {
+        ...input.bearer("Get a rank-check run", "getRankCheckRun", input.ref("RankCheckRunRead")),
+        description: "Read an existing run without launching a measurement.",
+      },
+    },
     "/projects/{project_id}/exports/rank-history": {
       get: rankHistoryOperation(input),
     },

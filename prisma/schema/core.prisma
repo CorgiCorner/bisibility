@@ -20,6 +20,11 @@ enum Device {
   mobile
 }
 
+enum SavedViewVisibility {
+  private
+  project
+}
+
 enum LocationKind {
   country
   region
@@ -67,6 +72,7 @@ enum ProviderCostFeature {
   domain_overview
   keyword_metrics
   keyword_research
+  local_scan
   rank_check
   ranked_keywords
 }
@@ -207,6 +213,7 @@ enum OnboardingQuizStatus {
 }
 
 model User {
+  measurementSettingsMutations MeasurementSettingsMutation[]
   id                           String                   @id @default(cuid())
   publicId                     String                   @unique
   name                         String
@@ -247,7 +254,10 @@ model User {
   sentInvites                  Invite[]
   createdAlertRules            AlertRule[]
   alertRuleRecipients          AlertRuleRecipient[]
-  savedViews                   SavedView[]
+  savedViews                   SavedView[]                 @relation("SavedViewCreator")
+  personalSavedViews           SavedView[]                 @relation("SavedViewOwner")
+  projectSurfacePreferences    UserProjectSurfacePreference[]
+  savedViewCreationRequests    SavedViewCreationRequest[]
   slackConnections             SlackConnection[]
   createdMigrationTokens       MigrationToken[]
   personalAccessTokens         PersonalAccessToken[]
@@ -517,6 +527,13 @@ model Waitlist {
 }
 
 model Project {
+  historyEvidenceReplayRuns HistoryEvidenceReplayRun[]
+  historyEvidenceReplayReceipts HistoryEvidenceReplayReceipt[]
+  measurementSettingsMutations MeasurementSettingsMutation[]
+  measurementTargetEpoch BigInt @default(0)
+  measurementPolicyEpoch BigInt @default(0)
+  measurementPolicyConfig Json?
+  usageDisplaySettings Json?
   providerUiRevision               BigInt                           @default(0)
   id                               String                           @id @default(cuid())
   publicId                         String                           @unique
@@ -585,6 +602,8 @@ model Project {
   notifications                    Notification[]
   notificationPreferences          NotificationPreference[]
   savedViews                       SavedView[]
+  surfacePreferences               UserProjectSurfacePreference[]
+  savedViewCreationRequests         SavedViewCreationRequest[]
   invites                          Invite[]
   migrationTokens                  MigrationToken[]
   cloudImportJobs                  CloudImportJob[]
@@ -660,12 +679,21 @@ model ProjectMarket {
   @@unique([projectId, locationId])
   @@index([projectId, status, createdAt, id])
   @@index([locationId])
+  @@unique([projectId, id])
   @@map("project_markets")
 }
 
 // The legacy expression index remains for its existing consumers. textNormalized is a
 // migration-owned stored generated column, represented with dbgenerated for Prisma 7.
 model Keyword {
+  historyEvidenceReplayReceipts HistoryEvidenceReplayReceipt[]
+  measurementSnapshotRequests MeasurementSnapshotRequestBinding[]
+  measurementTargetEpoch BigInt @default(0)
+  measurementPolicyEpoch BigInt @default(0)
+  measurementTargets MeasurementTargetRevision[]
+  measurementPolicies MeasurementPolicyRevision[]
+  measurementHead MeasurementDefinitionHead?
+  measurementBindings MeasurementExecutionBinding[]
   id                   String                   @id @default(cuid())
   publicId             String                   @unique
   projectId            String
@@ -701,6 +729,7 @@ model Keyword {
   @@index([projectId, topic])
   @@index([locationId])
   @@index([checkScheduleId])
+  @@unique([projectId, id])
   @@map("keywords")
 }
 
@@ -729,6 +758,7 @@ model SavedKeyword {
 }
 
 model Location {
+  measurementEpoch BigInt @default(0)
   id               String            @id @default(cuid())
   kind             LocationKind
   displayName      String
@@ -849,6 +879,8 @@ model KeywordSchedule {
 }
 
 model CheckSchedule {
+  measurementEpoch BigInt @default(0)
+  @@unique([projectId,id], map: "measurement_check_schedule_project_id")
   id             String             @id @default(cuid())
   publicId       String             @unique
   projectId      String
@@ -888,6 +920,13 @@ model KeywordDispatchState {
 }
 
 model RankCheck {
+  historyEvidenceReplayReceipts HistoryEvidenceReplayReceipt[]
+  definitionExecutionToken String?
+  definitionWorkflowId String?
+  definitionExecutionPrincipal Json?
+  measurementSnapshotRequests MeasurementSnapshotRequestBinding[]
+  measurementBindings MeasurementExecutionBinding[]
+  @@unique([keywordId,id], map: "measurement_rank_check_keyword_id")
   id                   String               @id @default(cuid())
   publicId             String               @unique
   keywordId            String
@@ -928,6 +967,7 @@ model RankCheck {
   attemptCount         Int                  @default(1)
   triggeredAlerts      TriggeredAlert[]
   queuedTask           QueuedRankCheckTask?
+  recoveryResult       RankCheckResultEvidence?
   observationRun       ObservationRun?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
@@ -947,6 +987,8 @@ model RankCheck {
 }
 
 model RankCheckRun {
+  definitionExecutionOrigin Json?
+  recoveryGrant           RankCheckRunRecoveryGrant?
   /// Removed from user-facing history; retained for scheduler idempotency and accounting.
   deletedAt               DateTime?
   id                      String                 @id @default(cuid())
@@ -1010,6 +1052,7 @@ model RankCheckRun {
 }
 
 model RankCheckRunItem {
+  definitionIntent Json?
   id                 String             @id @default(cuid())
   runId              String
   run                RankCheckRun       @relation(fields: [runId], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -1042,13 +1085,17 @@ model RankCheckRunItem {
 }
 
 model ObservationRun {
+  definitionBindingId String?
+  definitionBinding MeasurementExecutionBinding? @relation(fields: [projectId,definitionBindingId], references: [projectId,id], onDelete: NoAction, map: "measurement_observation_binding_fk")
+  @@index([definitionBindingId], map: "measurement_observation_binding_index")
   id              String            @id @default(cuid())
-  rankCheckId     String            @unique
-  rankCheck       RankCheck         @relation(fields: [rankCheckId], references: [id], onDelete: Cascade)
+  rankCheckId     String?           @unique
+  rankCheck       RankCheck?        @relation(fields: [rankCheckId], references: [id], onDelete: Cascade)
+  neutralExecutionItemId String?   @unique
   projectId       String
   project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   provider        String
-  /// Allowed values: "web_serp".
+  /// Allowed values: "web_serp", "maps", "local_finder"; capability admission is separate.
   surface         String
   /// Allowed values: "google".
   engine          String
@@ -1058,13 +1105,14 @@ model ObservationRun {
   completeness    String
   /// Requested scope as { location, language, device }.
   configuredScope Json
-  /// Provider-effective scope, set only when it differed from the configured one.
+  /// Provider-proven effective scope; absent proof remains unknown.
   effectiveScope  Json?
   executedAt      DateTime
   items           ObservationItem[]
   createdAt       DateTime          @default(now())
 
   @@index([projectId, executedAt(sort: Desc)])
+  @@unique([projectId, id])
   @@map("observation_runs")
 }
 
@@ -1076,6 +1124,12 @@ model ObservationItem {
   resultKind       String
   /// Order of the item within the run as emitted by the provider adapter.
   ordinal          Int
+  rankScale        String?
+  promotion        String?
+  sourcePage       Int?
+  sourceBlockId    String?
+  sourceOrdinal    Int?
+  observedAt       DateTime?
   rankGroup        Int?
   rankAbsolute     Int?
   /// Position of the feature block on the page (1-based) when the provider supplies it.
@@ -1097,6 +1151,7 @@ model ObservationItem {
   createdAt        DateTime       @default(now())
 
   @@index([observationRunId, resultKind])
+  @@unique([id, observationRunId])
   @@map("observation_items")
 }
 
@@ -1119,6 +1174,8 @@ model RankCheckRawPurgeProgress {
 }
 
 model QueuedRankCheckBatch {
+  definitionWorkflowId String?
+  definitionWorkflowRunId String?
   id              String                @id
   projectId       String
   project         Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -1154,6 +1211,8 @@ model QueuedRankCheckBatch {
 }
 
 model QueuedRankCheckTask {
+  measurementBindings MeasurementExecutionBinding[]
+  @@unique([keywordId,id], map: "measurement_queued_task_keyword_id")
   id                        String               @id
   batchId                   String
   batch                     QueuedRankCheckBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
@@ -1164,6 +1223,7 @@ model QueuedRankCheckTask {
   providerTaskId            String?              @unique
   providerTag               String?
   meteringContext           Json?
+  recoveryContextHash       String?
   state                     String
   costCents                 Decimal?             @db.Decimal(10, 4)
   error                     String?
@@ -1769,16 +1829,65 @@ model SavedView {
   projectId   String
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdById String?
-  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   User?    @relation("SavedViewCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  visibility  SavedViewVisibility @default(project)
+  ownerId     String?
+  owner       User?    @relation("SavedViewOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  revision    Int      @default(1)
   name        String
   /// Product surface that owns this view. Existing rows default to keyword views.
   surface     String   @default("keywords")
   config      Json
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  personalDefaults UserProjectSurfacePreference[]
+  creationRequests SavedViewCreationRequest[]
 
   @@index([projectId, surface])
+  @@index([projectId, surface, visibility, ownerId])
   @@map("saved_views")
+}
+
+model UserProjectSurfacePreference {
+  id                 String    @id @default(cuid())
+  userId             String
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId          String
+  project            Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  surface            String
+  revision           Int       @default(1)
+  schemaVersion      Int       @default(1)
+  defaultSavedViewId  String?
+  defaultSavedViewPublicId String?
+  defaultSavedView    SavedView? @relation(fields: [defaultSavedViewId], references: [id], onDelete: SetNull)
+  defaultPresetId    String    @default("general")
+  presentation       Json?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([userId, projectId, surface])
+  @@index([projectId])
+  @@index([defaultSavedViewId])
+  @@map("user_project_surface_preferences")
+}
+
+model SavedViewCreationRequest {
+  id                 String    @id @default(cuid())
+  userId             String
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId          String
+  project            Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  requestId          String
+  inputHash          String
+  savedViewPublicId  String
+  savedViewId        String?
+  savedView          SavedView? @relation(fields: [savedViewId], references: [id], onDelete: SetNull)
+  createdAt          DateTime  @default(now())
+
+  @@unique([userId, projectId, requestId])
+  @@index([projectId])
+  @@index([savedViewId])
+  @@map("saved_view_creation_requests")
 }
 
 model Notification {

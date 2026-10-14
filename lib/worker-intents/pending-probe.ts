@@ -1,7 +1,7 @@
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { recurringMonitorsEnabled } from "@/lib/local-monitor-recurring/config";
 
 export const WORKER_INTENT_PENDING_PROBE = Prisma.sql`
   SELECT
@@ -13,6 +13,10 @@ export const WORKER_INTENT_PENDING_PROBE = Prisma.sql`
           sample."dispatch" IN ('planned', 'claimed', 'submission_started', 'submitted', 'collecting')
           OR (sample."dispatch" = 'submission_unknown' AND sample."providerTaskId" IS NOT NULL)
         )
+    )
+    OR EXISTS (
+      SELECT 1 FROM "local_monitor_launch_intents"
+      WHERE state IN ('queued','running') AND ("leaseExpiresAt" IS NULL OR "leaseExpiresAt"<=NOW())
     )
     OR EXISTS (
       SELECT 1 FROM "ai_tracking_schedules"
@@ -65,5 +69,10 @@ export const WORKER_INTENT_PENDING_PROBE = Prisma.sql`
 
 export async function hasPendingWorkerIntent() {
   const [result] = await prisma.$queryRaw<Array<{ pending: boolean }>>(WORKER_INTENT_PENDING_PROBE);
-  return result?.pending ?? false;
+  if (result?.pending) return true;
+  if (!recurringMonitorsEnabled()) return false;
+  const [due] = await prisma.$queryRaw<
+    Array<{ pending: boolean }>
+  >`SELECT EXISTS(SELECT 1 FROM "local_monitor_recurring_cursors" WHERE state='active' AND "nextDueAt"<=NOW()) AS pending`;
+  return due?.pending ?? false;
 }

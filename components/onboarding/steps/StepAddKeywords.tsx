@@ -4,6 +4,9 @@ import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages
 import { buildOnboardingStepHref } from "@/components/onboarding/onboarding-fixtures";
 import { feedbackClass, onboardingFormId } from "@/components/onboarding/onboarding-form-utils";
 import { locationSelectionInputForKey } from "@/components/onboarding/onboarding-locations";
+import { ReviewedDefaultsPanel } from "@/components/settings/tracking/ReviewedDefaultsPanel";
+import { useDefaultsFormReview } from "@/components/settings/tracking/use-defaults-form-review";
+import { useReviewedDefaults } from "@/components/settings/tracking/use-reviewed-defaults";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { KEYWORD_IMPORT_MAX, KEYWORD_TEXT_MAX } from "@/lib/schemas/keyword";
 import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_DEVICE, type SerpDevice } from "@/lib/serp/constants";
@@ -54,7 +57,9 @@ export function StepAddKeywords({
   saveMarketsAction,
   trackingDefaults,
   updateProjectDefaultsAction,
+  previewProjectDefaultsAction,
 }: Readonly<StepAddKeywordsProps>) {
+  const reviewed = useReviewedDefaults(previewProjectDefaultsAction, updateProjectDefaultsAction);
   const t = useTranslations("onboarding.keywords");
   const sharedErrors = useSharedErrorMessages();
   const router = useRouter();
@@ -68,13 +73,7 @@ export function StepAddKeywords({
   const [actionError, setActionError] = useState<string | null>(null);
   const savingRef = useRef(false);
   const [actionWarning, setActionWarning] = useState<string | null>(null);
-  const {
-    formState: { errors, isSubmitting },
-    handleSubmit,
-    register,
-    setValue,
-    watch,
-  } = useForm<KeywordSetupForm>({
+  const form = useForm<KeywordSetupForm>({
     defaultValues: formDefaults,
     resolver: zodResolver(
       keywordSetupFormSchemaFor(
@@ -87,6 +86,14 @@ export function StepAddKeywords({
       ),
     ),
   });
+  const {
+    formState: { errors, isSubmitting },
+    handleSubmit,
+    register,
+    setValue,
+    watch,
+  } = form;
+  useDefaultsFormReview(form, reviewed.invalidate);
   const keywords = watch("keywords") ?? "";
   const projectId = watch("projectId") ?? flowState?.projectId ?? "";
   const locations = watch("locations") ?? formDefaults.locations;
@@ -130,8 +137,8 @@ export function StepAddKeywords({
     const defaults = completedTrackingDefaults(values, selectedLocations);
     const submitted = keywordDraftPreview(values.keywords);
     try {
+      if ((await reviewed.submit(projectDefaultsInput(defaults))) === "review") return;
       await saveMarketsAction?.({ marketKeys: values.locations, projectId: values.projectId });
-      await updateProjectDefaultsAction?.(projectDefaultsInput(defaults));
       if (!addKeywordsAction) {
         await onComplete?.(keywordFormValues(values), defaults, submitted.uniqueKeywords.length);
       } else {
@@ -177,84 +184,92 @@ export function StepAddKeywords({
       <input type="hidden" {...register("timezone")} />
       <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">{t("title")}</h2>
       <p className="m-0 mt-1 text-[13px] text-fg-muted">{t("description")}</p>
-      {projectId ? (
-        <KeywordTopQueryImport
-          costContext={costContext}
+      <fieldset className="contents" disabled={reviewed.locked || reviewed.pending}>
+        {projectId ? (
+          <KeywordTopQueryImport
+            costContext={costContext}
+            currentKeywords={keywords}
+            hasAnalyticsSource={hasAnalyticsSource}
+            importTopQueriesAction={importTopQueriesAction}
+            messages={topImportMessages}
+            onAppendQueries={appendQueries}
+            projectId={projectId}
+          />
+        ) : null}
+        <KeywordRankedImport
+          connections={rankedKeywordConnections}
           currentKeywords={keywords}
-          hasAnalyticsSource={hasAnalyticsSource}
-          importTopQueriesAction={importTopQueriesAction}
-          messages={topImportMessages}
+          domain={projectDomain}
+          fetchAction={fetchRankedKeywordSuggestionsAction}
+          messages={rankedMessages}
           onAppendQueries={appendQueries}
           projectId={projectId}
         />
-      ) : null}
-      <KeywordRankedImport
-        connections={rankedKeywordConnections}
-        currentKeywords={keywords}
-        domain={projectDomain}
-        fetchAction={fetchRankedKeywordSuggestionsAction}
-        messages={rankedMessages}
-        onAppendQueries={appendQueries}
-        projectId={projectId}
-      />
-      <textarea
-        aria-describedby={errors.keywords ? "onboarding-keywords-error" : undefined}
-        aria-invalid={errors.keywords ? true : undefined}
-        aria-required="true"
-        className="mt-3 min-h-[150px] w-full resize-y rounded-control border border-border-control bg-transparent px-3.5 py-3 text-[13px] font-normal leading-[1.7] text-fg outline-none placeholder:font-normal placeholder:text-fg-muted focus:border-accent"
-        placeholder={t("placeholder")}
-        {...register("keywords", { onChange: (event) => onKeywordsChange?.(event.target.value) })}
-        required
-      />
-      {errors.keywords && errors.keywords.message !== longWarning ? (
-        <p className={`m-0 mt-2 ${feedbackClass} text-red-text`} id="onboarding-keywords-error">
-          {errors.keywords.message}
+        <textarea
+          aria-describedby={errors.keywords ? "onboarding-keywords-error" : undefined}
+          aria-invalid={errors.keywords ? true : undefined}
+          aria-required="true"
+          className="mt-3 min-h-[150px] w-full resize-y rounded-control border border-border-control bg-transparent px-3.5 py-3 text-[13px] font-normal leading-[1.7] text-fg outline-none placeholder:font-normal placeholder:text-fg-muted focus:border-accent"
+          placeholder={t("placeholder")}
+          {...register("keywords", { onChange: (event) => onKeywordsChange?.(event.target.value) })}
+          required
+        />
+        {errors.keywords && errors.keywords.message !== longWarning ? (
+          <p className={`m-0 mt-2 ${feedbackClass} text-red-text`} id="onboarding-keywords-error">
+            {errors.keywords.message}
+          </p>
+        ) : null}
+        <p className={`m-0 mt-2 ${feedbackClass} text-fg-muted`}>
+          {t("summary", {
+            duplicates: preview.duplicateLines,
+            keywords: preview.uniqueKeywords.length,
+          })}
         </p>
-      ) : null}
-      <p className={`m-0 mt-2 ${feedbackClass} text-fg-muted`}>
-        {t("summary", {
-          duplicates: preview.duplicateLines,
-          keywords: preview.uniqueKeywords.length,
-        })}
-      </p>
-      {longWarning ? (
-        <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>{longWarning}</p>
-      ) : null}
-      {keywordCount >= 450 && keywordCount <= KEYWORD_IMPORT_MAX ? (
-        <p className={`m-0 mt-2 ${feedbackClass} text-yellow-text`}>{t("approachingLimit")}</p>
-      ) : null}
-      <TrackingDefaultsFields
-        createMarketAction={createMarketAction}
-        devices={devices}
-        errors={{
-          devices: errors.devices?.message,
-          frequency: errors.frequency?.message,
-          locations: errors.locations?.message,
-        }}
-        frequency={frequency}
-        locations={selectedLocations}
-        onDepthChange={(depth) => setValue("serpDepth", depth, { shouldDirty: true })}
-        onDevicesChange={setDevices}
-        onFrequencyChange={(value: RankCheckFrequency) =>
-          setValue("frequency", value, { shouldDirty: true })
-        }
-        onLocationsChange={(next) => {
-          const locationKeys = next.map((item) => item.canonicalKey);
-          setSelectedLocations(next);
-          setValue("locations", locationKeys, { shouldDirty: true, shouldValidate: true });
-          onMarketsChange?.(next);
-        }}
-        projectId={projectId}
-        serpDepth={serpDepth}
-      />
-      <KeywordImportSummary
-        calculatorPath={calculatorPath}
-        cronExpression={costContext.cronExpression}
-        devices={devices}
-        frequency={frequency}
-        keywordCount={keywordCount}
-        locationCount={locations.length}
-        serpDepth={serpDepth}
+        {longWarning ? (
+          <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>{longWarning}</p>
+        ) : null}
+        {keywordCount >= 450 && keywordCount <= KEYWORD_IMPORT_MAX ? (
+          <p className={`m-0 mt-2 ${feedbackClass} text-yellow-text`}>{t("approachingLimit")}</p>
+        ) : null}
+        <TrackingDefaultsFields
+          createMarketAction={createMarketAction}
+          devices={devices}
+          errors={{
+            devices: errors.devices?.message,
+            frequency: errors.frequency?.message,
+            locations: errors.locations?.message,
+          }}
+          frequency={frequency}
+          locations={selectedLocations}
+          onDepthChange={(depth) => setValue("serpDepth", depth, { shouldDirty: true })}
+          onDevicesChange={setDevices}
+          onFrequencyChange={(value: RankCheckFrequency) =>
+            setValue("frequency", value, { shouldDirty: true })
+          }
+          onLocationsChange={(next) => {
+            const locationKeys = next.map((item) => item.canonicalKey);
+            setSelectedLocations(next);
+            setValue("locations", locationKeys, { shouldDirty: true, shouldValidate: true });
+            onMarketsChange?.(next);
+          }}
+          projectId={projectId}
+          serpDepth={serpDepth}
+        />
+        <KeywordImportSummary
+          calculatorPath={calculatorPath}
+          cronExpression={costContext.cronExpression}
+          devices={devices}
+          frequency={frequency}
+          keywordCount={keywordCount}
+          locationCount={locations.length}
+          serpDepth={serpDepth}
+        />
+      </fieldset>
+      <ReviewedDefaultsPanel
+        quote={reviewed.quote}
+        acknowledged={reviewed.acknowledged}
+        onAcknowledged={reviewed.setAcknowledged}
+        locked={reviewed.locked}
       />
       {actionError ? (
         <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>

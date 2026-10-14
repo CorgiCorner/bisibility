@@ -30,6 +30,31 @@ const rowSchema = z.object({
   domain: z.string().nullable(),
   title: z.string().nullable(),
 });
+const snapshotScopeSchema = z.object({
+  location: z.string().min(1).max(2048),
+  language: z.string().min(1).max(128),
+  device: z.string().min(1).max(128),
+});
+const snapshotPageEvidenceSchema = z
+  .object({
+    version: z.literal(1),
+    adapterVersion: z.literal("serpapi-observation-v1"),
+    nextStart: z.number().int().min(10).max(90).multipleOf(10),
+    requestDepth: z.literal(10),
+    observedAt: z.iso.datetime().nullable(),
+    observedThrough: z.iso.datetime().nullable(),
+    configuredScope: snapshotScopeSchema,
+    effectiveScope: snapshotScopeSchema.nullable(),
+    completeThrough: z.null(),
+    completeness: z.literal("unknown"),
+  })
+  .strict();
+export function readSnapshotPageEvidence(raw: unknown) {
+  const parsed = snapshotPageEvidenceSchema.safeParse(
+    (raw as Record<string, unknown> | null)?.snapshotPageEvidence,
+  );
+  return parsed.success ? parsed.data : null;
+}
 const extensionSchema = z.object({
   version: z.literal(1),
   state: z.enum(["idle", "running", "failed"]),
@@ -40,6 +65,7 @@ const extensionSchema = z.object({
   pages: z
     .array(
       z.object({
+        evidence: snapshotPageEvidenceSchema.nullable().optional(),
         start: z.number().int().min(10).max(90).multipleOf(10),
         fetchedAt: z.iso.datetime(),
         skippedDuplicates: z.number().int().min(0),

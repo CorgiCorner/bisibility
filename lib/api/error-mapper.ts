@@ -14,6 +14,7 @@ import {
   LaunchRankCheckRunError,
   UnrunnableInlineRankCheckError,
 } from "@/lib/rank-check/runs/launch-types";
+import { SavedViewConflictError } from "@/lib/saved-views/errors";
 import { ZodError, z } from "zod";
 import { budgetExhaustedResponse } from "./budget-exhausted";
 import { ApiConflictError, ApiForbiddenError, ApiInputError, ApiNotFoundError } from "./errors";
@@ -85,6 +86,9 @@ export function errorFromUnknown(
   if (error instanceof ApiConflictError) {
     return errorResponse("conflict", error.message, 409, { headers, instance });
   }
+  if (error instanceof SavedViewConflictError) {
+    return errorResponse(error.code, error.message, 409, { headers, instance });
+  }
   // The launch refuses the same keyword with a 409 before anything is created. Reaching the guard
   // one step later is still the caller's answer to give, not a server fault, so it gets the same
   // shape as its sibling - and the reason travels with it.
@@ -111,6 +115,15 @@ export function errorFromUnknown(
     return errorResponse("project_domain_required", error.message, 422, { headers, instance });
   }
   if (error instanceof LaunchRankCheckRunError) {
+    if (
+      error.code === "measurement_policy_unconfigured" ||
+      error.code === "measurement_policy_unsupported"
+    )
+      return errorResponse("conflict", error.message, 409, {
+        headers,
+        instance,
+        problemDetails: { code: error.code },
+      });
     if (error.code === "budget_exhausted") {
       return budgetExhaustedResponse(
         { headers, instance },

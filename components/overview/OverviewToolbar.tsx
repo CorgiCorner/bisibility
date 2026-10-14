@@ -1,5 +1,6 @@
 "use client";
 
+import { useDashboardToolbarControls } from "@/components/dashboard-layout/DashboardToolbarContext";
 import { Toolbar } from "@/components/shell/Toolbar";
 import { Button } from "@/components/ui/Button";
 import { MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
@@ -23,17 +24,27 @@ function tagOptions(allTags: string, tags: readonly string[]): MenuSelectOption[
 export function OverviewToolbar({
   canCreateKeyword = true,
   initialSelected,
+  placement = "page",
   projectRef,
 }: Readonly<{
   canCreateKeyword?: boolean;
   initialSelected?: SelectedFilters;
+  placement?: "page" | "content" | "inline";
   projectRef: string;
 }>) {
   const t = useTranslations("projectDashboard.toolbar");
+  const dashboardControls = useDashboardToolbarControls();
+  const inline = placement === "inline";
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const selected = initialSelected ?? { availableTags: [], rangeValue: "28d", tagValue: null };
+  const range = searchParams.get("range");
+  const tag = searchParams.get("tag");
+  const selected = initialSelected ?? {
+    availableTags: tag ? [tag] : [],
+    rangeValue: range === "7d" || range === "90d" ? range : "28d",
+    tagValue: tag,
+  };
   const rangeOptions: readonly MenuSelectOption[] = [
     { label: t("last7Days"), value: "7d" },
     { label: t("last28Days"), value: "28d" },
@@ -53,8 +64,20 @@ export function OverviewToolbar({
   }
 
   return (
-    <div className="-mx-4 -mt-4 mb-5.5 sm:-mx-5 lg:-mx-7 lg:-mt-5.5">
+    <div
+      className={
+        placement === "page" ? "-mx-4 -mt-4 mb-5.5 sm:-mx-5 lg:-mx-7 lg:-mt-5.5" : undefined
+      }
+    >
       <Toolbar
+        className={
+          inline
+            ? "border-0 bg-transparent px-0 py-0 sm:px-0 lg:px-0"
+            : placement === "content"
+              ? "px-0 sm:px-0 lg:px-0"
+              : undefined
+        }
+        wrapControls={inline}
         action={
           canCreateKeyword ? (
             <Button
@@ -62,7 +85,8 @@ export function OverviewToolbar({
               href={appPath(projectRef, "rank-tracker?add=1")}
               size="sm"
               startIcon={<Plus size={15} weight="regular" />}
-              style={{ height: 37, minHeight: 37, whiteSpace: "nowrap" }}
+              className="whitespace-nowrap"
+              style={inline ? undefined : { height: 37, minHeight: 37 }}
               variant="primary"
             >
               <span className="hidden sm:inline">{t("addKeyword")}</span>
@@ -71,6 +95,7 @@ export function OverviewToolbar({
           ) : null
         }
       >
+        {inline ? dashboardControls?.preset : null}
         <MenuSelect
           ariaLabel={t("dateRangeAriaLabel")}
           leadingIcon={
@@ -89,6 +114,7 @@ export function OverviewToolbar({
           triggerClassName="overview-toolbar-filter"
           value={selected.tagValue ?? ALL_TAGS}
         />
+        {inline ? dashboardControls?.customization : null}
       </Toolbar>
     </div>
   );

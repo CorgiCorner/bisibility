@@ -54,7 +54,9 @@ export type OnboardingWizardActions = {
   testProviderConnectionAction: NonNullable<
     Parameters<typeof StepConnectProvider>[0]["testProviderConnectionAction"]
   >;
+  previewProjectDefaultsAction?: import("@/components/settings/tracking/use-reviewed-defaults").PreviewDefaults;
   updateProjectDefaultsAction: (
     input: ProjectDefaultsInput,
+    review?: import("@/lib/settings/reviewed-defaults-contract").DefaultsReview,
   ) => Promise<{ nextCheckAt?: string | null }>;
 };

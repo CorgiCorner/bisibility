@@ -1,8 +1,10 @@
+import { KeywordPresentationDraftProvider } from "@/components/keywords/grid/KeywordPresentationDraftProvider";
 import { KeywordsGrid } from "@/components/keywords/grid/KeywordsGrid";
+import { RankTrackerReportScopeControl } from "@/components/keywords/grid/RankTrackerReportScopeControl";
 import { loadRankTrackerCostContext } from "@/components/keywords/rank-tracker-cost-context";
-import { SavedKeywordsWorkspace } from "@/components/keywords/saved/SavedKeywordsWorkspace";
 import { RankTrackerFeatureBoundary } from "@/components/rank-tracker/RankTrackerFeatureBoundary";
 import { RankTrackerTabs } from "@/components/rank-tracker/RankTrackerTabs";
+import { PersonalViewScopeNotice } from "@/components/saved-views/PersonalViewScopeNotice";
 import { PageContent } from "@/components/shell/PageContent";
 import { addKeywords, updateKeyword } from "@/lib/actions/keyword";
 import {
@@ -15,7 +17,6 @@ import {
 import { importTopQueries } from "@/lib/actions/keyword-suggest";
 import { getFirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { queueFirstChecks, runCheckNow } from "@/lib/actions/rankCheck";
-import { removeSavedKeywords } from "@/lib/actions/saved-keyword";
 import { deleteSavedView } from "@/lib/actions/saved-views";
 import { createKeywordSavedView } from "@/lib/actions/saved-views-typed";
 import { getProjectRole } from "@/lib/auth/authorize";
@@ -24,25 +25,22 @@ import { isPublicIdOfType } from "@/lib/db/public-id";
 import { parseRankTrackerAction } from "@/lib/keywords/rank-tracker-command";
 import { rankTrackerNavigationHref } from "@/lib/keywords/rank-tracker-navigation";
 import { keywordSavedViewConfig } from "@/lib/keywords/saved-view-model";
+import { keywordViewLegacyScope } from "@/lib/keywords/saved-view-v2-model";
 import { resolveLegacyMarketRef } from "@/lib/markets/market-context";
 import { LEGACY_MARKET_PARAM, legacyMarketDestination } from "@/lib/markets/market-routes";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { getPreferences } from "@/lib/queries/account";
 import { getCheckHealth } from "@/lib/queries/check-health";
 import { isProviderConnected } from "@/lib/queries/integrations";
-import {
-  getKeywordCount,
-  getKeywordDefaultMarket,
-  getKeywordTagSuggestions,
-} from "@/lib/queries/keywords";
+import { getKeywordDefaultMarket, getKeywordTagSuggestions } from "@/lib/queries/keywords";
 import { getProjectMarkets } from "@/lib/queries/project-markets";
-import { getRankCheckRunCount } from "@/lib/queries/rank-check-runs";
-import { listSavedKeywords, savedKeywordCount } from "@/lib/queries/saved-keywords";
-import { listSavedViews } from "@/lib/queries/saved-views";
+import { savedKeywordCount } from "@/lib/queries/saved-keywords";
+import { presentReportSummary } from "@/lib/rank-reports/presentation";
 import { appPath } from "@/lib/routing/app-path";
 import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-runs-path";
 import { permanentRedirect, redirect } from "next/navigation";
 import { loadRankTrackerPageList, resolveRankTrackerPageQuery } from "./rank-tracker-page-data";
+import { SavedTab } from "./rank-tracker-saved-tab";
 
 type KeywordsPageProps = {
   // `market` is present only when this page is reached through the market route, which is how
@@ -78,52 +76,6 @@ function legacyRunsDestination(
     source: "rank_checks",
     view: paramValue(params.segment) === "planned" ? "planned" : undefined,
   });
-}
-
-async function SavedTab({
-  projectId,
-  projectRef,
-}: Readonly<{ projectId: string; projectRef: string }>) {
-  const [
-    saved,
-    savedCount,
-    trackedCount,
-    runsCount,
-    readable,
-    costContext,
-    keywordDefaults,
-    projectMarkets,
-  ] = await Promise.all([
-    listSavedKeywords(projectRef),
-    savedKeywordCount(projectRef),
-    getKeywordCount(projectRef),
-    getRankCheckRunCount(projectId),
-    requireReadableProject(projectRef),
-    loadRankTrackerCostContext(projectRef),
-    getKeywordDefaultMarket(projectRef),
-    getProjectMarkets(projectRef),
-  ]);
-  const role = getProjectRole(readable.actor, readable.project.id);
-  return (
-    <PageContent>
-      <RankTrackerFeatureBoundary>
-        <SavedKeywordsWorkspace
-          addKeywordsAction={addKeywords}
-          canCreateKeyword={canProjectAction(role, "create", "keyword")}
-          canDeleteKeyword={canProjectAction(role, "delete", "keyword")}
-          costContext={costContext}
-          defaultDevice={keywordDefaults.device}
-          initialSavedCount={savedCount}
-          projectId={readable.project.publicId}
-          projectMarkets={projectMarkets}
-          removeSavedKeywordsAction={removeSavedKeywords}
-          rows={saved.rows}
-          runsCount={runsCount}
-          trackedCount={trackedCount}
-        />
-      </RankTrackerFeatureBoundary>
-    </PageContent>
-  );
 }
 
 export default async function KeywordsPage({
@@ -162,11 +114,22 @@ export default async function KeywordsPage({
   const requestedAction = parseRankTrackerAction(paramValue(params?.action));
   const {
     activeView,
-    explicitGrouping,
     malformedDevice,
+    status,
+    explicitGrouping,
+    personalPreferences,
     query: requestedQuery,
     staleView,
   } = await resolveRankTrackerPageQuery(publicId, params ?? {});
+  if (status !== "ready")
+    return (
+      <PageContent>
+        <PersonalViewScopeNotice
+          status={status}
+          href={`${routeRankTrackerPath ?? appPath(publicId, "rank-tracker")}?view=`}
+        />
+      </PageContent>
+    );
   const scopedQuery = marketLocationKey
     ? {
         ...requestedQuery,
@@ -190,7 +153,13 @@ export default async function KeywordsPage({
     projectMarketsPromise.then(({ markets }) =>
       loadRankTrackerPageList(publicId, scopedQuery, markets, { explicitGrouping }),
     ),
-    listSavedViews(publicId),
+    Promise.resolve(
+      personalPreferences.views.flatMap((view) =>
+        view.config.surface === "keywords"
+          ? [{ ...view, surface: "keywords" as const, config: keywordViewLegacyScope(view.config) }]
+          : [],
+      ),
+    ),
     requireReadableProject(publicId),
     getCheckHealth(publicId),
     loadRankTrackerCostContext(publicId),
@@ -221,7 +190,8 @@ export default async function KeywordsPage({
     );
   }
   const query = list.query;
-  const gridKey = `${list.mode}:${activeView?.id ?? "all-keywords"}:${query.page}:${query.pageSize}:${query.search}:${query.sort.field}:${query.sort.direction}:${JSON.stringify(query.filters)}:${query.lens.device}:${query.lens.locationId ?? "all"}`;
+  const scopeKey = JSON.stringify(query.reportScope);
+  const gridKey = `${scopeKey}:${personalPreferences.scopeKey}:${personalPreferences.preference.revision}:${list.mode}:${activeView?.id ?? "all-keywords"}:${query.page}:${query.pageSize}:${query.search}:${query.sort.field}:${query.sort.direction}:${JSON.stringify(query.filters)}:${query.lens.device}:${query.lens.locationId ?? "all"}`;
   const role = getProjectRole(readable.actor, readable.project.id);
   const deletableSavedViewIds = savedViews.filter((view) => view.canDelete).map((view) => view.id);
   const currentViewConfig = keywordSavedViewConfig({
@@ -239,55 +209,71 @@ export default async function KeywordsPage({
             savedCount={savedCount}
             trackedCount={list.totalCount}
           />
-          <KeywordsGrid
-            activeViewId={activeView?.id ?? null}
-            addKeywordsAction={addKeywords}
-            bulkClearTargetAction={bulkClearTargetUrls}
-            bulkDeleteAction={bulkDeleteKeywords}
-            bulkSetFrequencyAction={bulkSetFrequency}
-            bulkSetTargetAction={bulkSetTargetUrl}
-            bulkTagAction={bulkTagKeywords}
-            checkHealth={checkHealth}
-            canCreateKeyword={canProjectAction(role, "create", "keyword")}
-            canDeleteKeyword={canProjectAction(role, "delete", "keyword")}
-            canManageProviders={canProjectAction(role, "manage", "provider_connection")}
-            canUpdateKeyword={canProjectAction(role, "update", "keyword")}
-            createSavedViewAction={
-              canProjectAction(role, "create", "saved_view") ? createKeywordSavedView : undefined
-            }
-            costContext={costContext}
-            deepLinkRunId={deepLinkRunId}
-            deletableSavedViewIds={deletableSavedViewIds}
-            deleteSavedViewAction={deletableSavedViewIds.length > 0 ? deleteSavedView : undefined}
-            getFirstCheckRunPlanAction={getFirstCheckRunPlan}
-            initialAction={requestedAction}
-            initialAddOpen={openAddDrawer}
-            initialViewConfig={currentViewConfig}
-            importTopQueriesAction={importTopQueries}
-            initialDensity={preferences.density}
-            key={gridKey}
-            keywordDefaults={keywordDefaults}
-            lens={query.lens}
-            providerConnected={checkHealth.providerConnected}
-            projectId={readable.project.publicId}
-            projectMarkets={projectMarkets}
-            searchConsoleConnected={searchConsoleConnected}
-            queueFirstChecksAction={queueFirstChecks}
-            runCheckNowAction={runCheckNow}
-            rows={list.mode === "grouped-server" ? list.groups : list.rows}
-            savedViews={savedViews}
-            tagSuggestions={tagSuggestions}
-            facets={list.facets}
-            locations={list.locations}
-            matchedGroupCount={list.mode === "grouped-server" ? list.matchedGroupCount : undefined}
-            matchedTargetCount={list.matchedTargetCount}
-            page={list.page}
-            pageCount={list.pageCount}
-            pageSize={list.pageSize}
+          <RankTrackerReportScopeControl
             query={query}
-            totalCount={list.totalCount}
-            updateKeywordAction={updateKeyword}
+            basePath={routeRankTrackerPath ?? appPath(publicId, "rank-tracker")}
+            local={list.local}
+            localSetupHref={appPath(publicId, "settings", "business-locations")}
           />
+          <KeywordPresentationDraftProvider
+            key={`${personalPreferences.scopeKey}:${personalPreferences.preference.revision}:${activeView?.id ?? "general"}`}
+            initial={personalPreferences.presentation}
+          >
+            <KeywordsGrid
+              local={list.local}
+              personalPreferences={personalPreferences}
+              activeViewId={activeView?.id ?? null}
+              addKeywordsAction={addKeywords}
+              bulkClearTargetAction={bulkClearTargetUrls}
+              bulkDeleteAction={bulkDeleteKeywords}
+              bulkSetFrequencyAction={bulkSetFrequency}
+              bulkSetTargetAction={bulkSetTargetUrl}
+              bulkTagAction={bulkTagKeywords}
+              checkHealth={checkHealth}
+              canCreateKeyword={canProjectAction(role, "create", "keyword")}
+              canDeleteKeyword={canProjectAction(role, "delete", "keyword")}
+              canManageProviders={canProjectAction(role, "manage", "provider_connection")}
+              canUpdateKeyword={canProjectAction(role, "update", "keyword")}
+              createSavedViewAction={
+                canProjectAction(role, "create", "saved_view") ? createKeywordSavedView : undefined
+              }
+              costContext={costContext}
+              deepLinkRunId={deepLinkRunId}
+              deletableSavedViewIds={deletableSavedViewIds}
+              deleteSavedViewAction={deletableSavedViewIds.length > 0 ? deleteSavedView : undefined}
+              getFirstCheckRunPlanAction={getFirstCheckRunPlan}
+              initialAction={requestedAction}
+              initialAddOpen={openAddDrawer}
+              initialViewConfig={currentViewConfig}
+              importTopQueriesAction={importTopQueries}
+              initialDensity={preferences.density}
+              key={gridKey}
+              keywordDefaults={keywordDefaults}
+              lens={query.lens}
+              providerConnected={checkHealth.providerConnected}
+              projectId={readable.project.publicId}
+              projectMarkets={projectMarkets}
+              searchConsoleConnected={searchConsoleConnected}
+              queueFirstChecksAction={queueFirstChecks}
+              runCheckNowAction={runCheckNow}
+              rows={list.mode === "grouped-server" ? list.groups : list.rows}
+              savedViews={savedViews}
+              tagSuggestions={tagSuggestions}
+              facets={list.facets}
+              locations={list.locations}
+              matchedGroupCount={
+                list.mode === "grouped-server" ? list.matchedGroupCount : undefined
+              }
+              matchedTargetCount={list.matchedTargetCount}
+              report={list.report ? presentReportSummary(list.report) : undefined}
+              page={list.page}
+              pageCount={list.pageCount}
+              pageSize={list.pageSize}
+              query={query}
+              totalCount={list.totalCount}
+              updateKeywordAction={updateKeyword}
+            />
+          </KeywordPresentationDraftProvider>
         </section>
       </RankTrackerFeatureBoundary>
     </PageContent>

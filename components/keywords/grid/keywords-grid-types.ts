@@ -18,6 +18,9 @@ import type {
 } from "@/lib/keywords/saved-view-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
+import type { RankTrackerLocalPresentation } from "@/lib/queries/rank-tracker-local-model";
+import type { ReportSummaryPresentation } from "@/lib/rank-reports/presentation";
+import type { KeywordPersonalViewContext } from "@/lib/saved-views/keyword-personal-context";
 import type { ProjectDefaultMarket } from "@/lib/serp/default-market";
 
 export type CheckHealthView = {
@@ -37,6 +40,7 @@ export type CheckHealthView = {
 
 export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   activeViewId?: string | null;
+  personalPreferences?: KeywordPersonalViewContext;
   canCreateKeyword: boolean;
   canDeleteKeyword: boolean;
   canManageProviders: boolean;
@@ -69,6 +73,8 @@ export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   projectMarkets?: ProjectMarketsView;
   query: RankTrackerQueryState;
   queueFirstChecksAction: FirstCheckActions.QueueFirstChecksAction;
+  local?: RankTrackerLocalPresentation;
+  report?: ReportSummaryPresentation;
   rows: MarketGridViewRow[];
   runCheckNowAction?: KeywordActions.KeywordDetailActions["runCheckNowAction"];
   savedViews?: KeywordSavedView[];

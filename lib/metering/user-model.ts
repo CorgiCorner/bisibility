@@ -1,6 +1,6 @@
 import type { BudgetStatus, Operation } from "@usagekit/core";
-import type { BudgetRow } from "@usagekit/views";
 import type { VerifiedOwnBudgetBinding } from "./own-budget-read-types";
+import type { ProjectBudgetDisplay, ProjectBudgetRow } from "./project-budget-display";
 import { sharedBudgetRow } from "./shared-budget-row";
 
 export function projectBudgetRow(
@@ -10,7 +10,8 @@ export function projectBudgetRow(
   provider: string | null = null,
   ownBinding?: VerifiedOwnBudgetBinding,
   displayLabel?: string,
-): BudgetRow | null {
+  display?: ProjectBudgetDisplay,
+): ProjectBudgetRow | null {
   if (ownBinding && status.budget.scope.kind !== "tag") return null;
   const own =
     status.budget.scope.kind === "tag" &&
@@ -23,9 +24,27 @@ export function projectBudgetRow(
   if (status.redacted || (!own && !["group", "connection"].includes(status.budget.scope.kind)))
     return null;
   const connectionScope = own || status.budget.scope.kind === "connection";
-  return (
-    sharedBudgetRow(status, connectionScope ? connection : null, figuresKnown, displayLabel) ?? null
+  const row = sharedBudgetRow(
+    status,
+    connectionScope ? connection : null,
+    figuresKnown,
+    displayLabel,
   );
+  return row
+    ? {
+        ...row,
+        ...(display
+          ? {
+              display: {
+                projectName: display.projectName,
+                ...(connectionScope && display.providerLabel
+                  ? { providerLabel: display.providerLabel }
+                  : {}),
+              },
+            }
+          : {}),
+      }
+    : null;
 }
 
 /** A connection/group bound can retain another owner's charges after transfer. Only

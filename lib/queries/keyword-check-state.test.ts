@@ -1,6 +1,8 @@
 import { keywordCheckState } from "@/lib/queries/keyword-row";
 import { getKeywordRows } from "@/lib/queries/keywords";
 import { ACTIVE_QUEUED_TASK_STATES } from "@/lib/rank-check/queued-state";
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
+import { dateFromFrozenNow } from "@/tests/clock";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -48,8 +50,31 @@ describe("keywordCheckState", () => {
     expect(keywordCheckState(rankedCheck, [])).toBe("ranked");
   });
 
-  it("returns not_ranked for a completed attempt without a position", () => {
-    expect(keywordCheckState({ position: null, status: "completed" }, [])).toBe("not_ranked");
+  it("keeps a legacy completed attempt without proof of absence unknown", () => {
+    expect(keywordCheckState({ position: null, status: "completed" }, [])).toBe("unknown");
+  });
+
+  it("returns not_ranked only for complete captured scope through the requested horizon", () => {
+    expect(
+      keywordCheckState(
+        recordedFixture(null, {
+          observedAt: dateFromFrozenNow({ seconds: -60 }),
+          recordedAt: dateFromFrozenNow({ seconds: -30 }),
+        }),
+        [],
+      ),
+    ).toBe("not_ranked");
+  });
+
+  it("does not affirm absence from a future captured observation", () => {
+    expect(
+      keywordCheckState(
+        recordedFixture(null, {
+          observedAt: dateFromFrozenNow({ milliseconds: 1 }),
+        }),
+        [],
+      ),
+    ).toBe("unknown");
   });
 
   it("returns running for a running attempt", () => {
