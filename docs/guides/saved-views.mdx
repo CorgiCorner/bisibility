@@ -1,36 +1,119 @@
 ---
 title: "Use saved views"
-description: "Save and restore keyword-table or competitor comparison scopes."
+description: "Save keyword or competitor scopes and keep your own default and table layout."
 ---
 
-Saved views preserve a useful keyword-table query without changing any keyword.
+Saved views preserve filters and presentation without changing keywords or
+measurement schedules. General starts with organic results. Local SEO and
+Competitors are optional views of the available data.
 
 If you want to keep untracked ideas from Research instead, see
 [Save keyword ideas](/guides/saved-keywords).
 
-## Save a view
+## Save and edit a view
 
-1. Open **Keywords**.
-2. Select the location/device lens, search text, and filters you need.
-3. In **Saved views**, select the plus button and enter a name up to 48 characters.
+Open **Keywords**, choose your location/device scope, filters and sort, then
+configure the visible columns, order and widths. Use **Save as** to create a
+named view up to 48 characters. Choose personal or project visibility explicitly.
+A personal view is private to its owner; a project view requires the existing
+project write permission. Older project views retain their shared visibility.
 
-A saved configuration includes search text, location and device lens, movement,
-last-check state, position buckets, SERP features, tags, topics, intents, search
-volume range, and the wrong-URL flag. Applying a view restores those controls in
-the URL-backed keywords screen.
+Changing a filter or layout leaves an unsaved draft. **Save changes** updates a
+view you can edit. **Save as** creates your own copy. **Discard** restores the
+saved configuration. Merely opening a shared view never saves your changes into
+that view or changes another member's personal settings.
 
-Saved views belong to the project rather than a browser. Other project members
-with access can list and use them. Delete obsolete views from the saved-view
-control; deleting a view never deletes its matching keywords.
+The configuration stores the query and layout, not ranking values, the current
+page or bulk-selection checkboxes. Visibility and width controls keep stable
+column IDs. Use the move-up and move-down controls to order columns with a
+keyboard.
 
-Legacy country, city, and device filter fields are discarded when an old saved
-view is read because those dimensions now live in the location/device lens.
+## Set your own default
 
-Competitor views are separate from keyword views. They preserve the exact
-location, desktop or mobile device, Google engine, position and tag filters, and
-excluded public keyword IDs. Unsaved competitor exclusions stay in the current
-tab through refresh via session storage; the **Unsaved changes** badge offers
-explicit save and discard actions.
+**Set as my default** is a separate action from selecting a view. Your preference
+belongs to your account, project and surface and follows you between devices.
+An administrator cannot set another member's personal default.
 
-API routes are listed under
-[Saved views](/api/saved-views).
+An explicit view link has precedence over your default, including deliberately
+empty filters. Without an explicit link, the page uses your available personal
+default and otherwise General. Deleted or inaccessible views fall back with an
+explanation; their private names are not revealed.
+
+A missing market or tag is reported as unavailable. It does not silently expand
+a city-specific view to all markets. Unknown or retired columns are ignored with
+an explanation while the remaining configuration stays usable.
+
+## Conflicts and access
+
+Concurrent edits use a revision check. A conflict keeps your draft and requires
+reviewing current data before another save. Choose **Reload latest revision**;
+your draft stays in place. The control shows the refreshed revision and lets you
+open the latest saved view in another tab for comparison. Then choose
+**Keep draft and use latest revision** to review it before explicitly saving
+again. A failed preference save keeps the
+local draft and the previous persisted default.
+
+A viewer can configure their own presentation without acquiring permission to
+edit project data or shared views. Each read and write checks current membership.
+Removing a saved view never removes matching keywords.
+
+## Scope and costs
+
+The active view name is accompanied by the selected scope. The report summary
+covers the resolved filtered targets; pagination changes the rows on screen.
+The keyword configuration keeps its location/device lens and optional wrong-URL
+filter. The lens selects the market and device to read. The wrong-URL filter
+requires a qualified positive ranking URL that differs from the expected URL for
+that measurement; missing URLs or unqualified evidence do not establish a mismatch.
+Saving these settings does not change the expected page or request a new check.
+Selecting Local SEO does not assign a branch, purchase results or enable a
+schedule. Missing local configuration has a named state.
+
+Showing, hiding or reordering a column or dashboard section changes only
+presentation. Hiding a section does not stop an existing measurement schedule.
+Fresh paid checks and schedule changes have separate preview and confirmation
+flows.
+
+Competitor views retain their own location, device, Google engine and exclusion
+scope. They do not inherit an ambiguous all-device keyword configuration.
+
+API routes are listed under [Saved views](/api/saved-views). Personal preference
+transport remains limited to the authenticated user scope supported by that
+transport; a project key does not acquire access to another member's private view.
+
+## Read shared views through the API
+
+The project saved-view list exposes only project-shared resources. Project API
+keys and personal access tokens do not receive private views, owner IDs or creator
+IDs. Existing `config` stays a version 1 scope for compatible consumers. The
+additive `definition` contains the complete stored version 1 or version 2
+configuration, including version 2 sort, grouping, page size and presentation.
+`revision` is the current saved-resource revision; `visibility` is `project`.
+
+API field names use snake case, including `page_size`, `report_scope` and
+`column_order`. Column IDs inside presentation arrays and sizing/visibility maps
+remain exact opaque IDs. Reading these resources performs no checks or purchases.
+The existing API creation path still creates shared version 1 scopes; version 2
+and private writes retain their authenticated session controls.
+
+## Dashboard competitor comparison
+
+The dedicated Competitors preset requires an explicit saved competitor view and
+its current revision. Choose the location/device scope you want to compare. A
+comparison link takes precedence over your remembered reference; an unavailable
+revision or conflicting URL scope never expands to General or all devices.
+
+The selected range and tag apply to one frozen current target cohort. Both periods
+use the same target IDs, selected domains and volume weights with the shared
+Top10 Share of Voice definition. The dashboard shows its report time, requested
+baseline watermark and coverage. A change stays unknown when the entire selected
+cohort lacks comparable baseline evidence; current shares remain visible.
+
+Choosing a comparison changes the display URL. **Remember** is a separate personal
+preference save and leaves the General default unchanged. A revision conflict
+requires an explicit review of the newer preference before another save. Clearing
+the reference does not delete the saved view or alter measurement schedules.
+
+Self-hosted operators must upgrade all application routes and processes together before
+creating private saved views. Running older application routes against the upgraded
+database can expose private views or allow them to be removed by another project member.

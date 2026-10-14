@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 
-const { inspectRepository } = await import("./request-engine-reachability.mjs");
+const { DISPOSITION_ENTRIES, inspectRepository } = await import("./request-engine-reachability.mjs");
 
 const LOGIN_PATH = [
   "app/(auth)/login/page.ts",
@@ -63,6 +63,56 @@ function withFixture(files, run) {
 }
 
 describe("request to engine client reachability guard", () => {
+  for (const [name, originalPath] of [
+    [
+      "snapshot extension execution-only rationale",
+      "lib/actions/extend-snapshot.ts -> lib/serp/extend-snapshot.ts -> lib/rank-check/fallback.ts -> lib/rank-check/runner.ts -> lib/rank-check/runner-persistence.ts -> lib/temporal/alert-delivery-client.ts",
+    ],
+    [
+      "converted API execution path",
+      "lib/api/rank-check-request.ts -> lib/rank-check/runs/inline.ts -> lib/temporal/rank-check-activities.ts -> lib/rank-check/fallback.ts -> lib/rank-check/runner.ts -> lib/rank-check/runner-persistence.ts -> lib/temporal/alert-delivery-client.ts",
+    ],
+  ]) {
+    it(`retains ${name} through the extracted fallback chain`, () => {
+      const extractedPath = originalPath.replace(
+        "lib/rank-check/fallback.ts -> lib/rank-check/runner.ts",
+        "lib/rank-check/fallback.ts -> lib/rank-check/fallback-chain.ts -> lib/rank-check/runner.ts",
+      );
+      const originalModules = originalPath.split(" -> ");
+      const files = Object.fromEntries(
+        originalModules.map((file, index) => [
+          file,
+          originalModules[index + 1]
+            ? sideEffectImport(`@/${originalModules[index + 1].replace(/\.ts$/u, "")}`)
+            : "export const client = true;",
+        ]),
+      );
+      files["lib/rank-check/fallback.ts"] += `\n${sideEffectImport("./fallback-chain")}`;
+      files["lib/rank-check/fallback-chain.ts"] = sideEffectImport("./runner");
+      const dispositions = new Map(
+        DISPOSITION_ENTRIES.filter(([key]) => key === originalPath || key === extractedPath),
+      );
+
+      withFixture(files, (root) => {
+        const result = inspectRepository(root, dispositions);
+        assert.ok(result.reachablePaths.some(({ key }) => key === extractedPath));
+        assert.deepEqual(result.missingDispositions, []);
+        assert.deepEqual(result.staleDispositions, []);
+        assert.equal(dispositions.get(extractedPath), dispositions.get(originalPath));
+
+        writeModule(root, "lib/rank-check/fallback-chain.ts", sideEffectImport("./new-bridge"));
+        writeModule(root, "lib/rank-check/new-bridge.ts", sideEffectImport("./runner"));
+        const changed = inspectRepository(root, dispositions);
+        assert.deepEqual(changed.missingDispositions, [
+          extractedPath.replace(
+            "fallback-chain.ts -> lib/rank-check/runner.ts",
+            "fallback-chain.ts -> lib/rank-check/new-bridge.ts -> lib/rank-check/runner.ts",
+          ),
+        ]);
+      });
+    });
+  }
+
   it("reports the full login -> session -> auth -> welcome-email-client path", () => {
     withLoginFixture((root) => {
       const dispositions = new Map(

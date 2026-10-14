@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
     notificationPreference: { findUnique: vi.fn(), upsert: vi.fn() },
     project: { findUnique: vi.fn() },
     rankCheck: { createMany: vi.fn(), findMany: vi.fn() },
-    savedView: { create: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
+    savedView: { create: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },
     tag: { findMany: vi.fn() },
   },
   writeAudit: vi.fn(() => Promise.resolve({ id: "audit_1" })),
@@ -187,9 +187,7 @@ describe("cloud import package restoration", () => {
     mocks.prisma.savedView.create.mockImplementation(({ data }) =>
       Promise.resolve({ ...data, id: "view_1" }),
     );
-    mocks.prisma.savedView.update.mockImplementation(({ data, where }) =>
-      Promise.resolve({ ...data, id: where.id }),
-    );
+    mocks.prisma.savedView.updateMany.mockResolvedValue({ count: 1 });
     mocks.prisma.notificationPreference.findUnique.mockResolvedValue(null);
     mocks.prisma.notificationPreference.upsert.mockImplementation(({ create }) =>
       Promise.resolve(create),
@@ -350,7 +348,11 @@ describe("cloud import package restoration", () => {
       id: "rule_existing",
       targets: [],
     });
-    mocks.prisma.savedView.findFirst.mockResolvedValue({ id: "view_existing" });
+    mocks.prisma.savedView.findFirst.mockResolvedValue({
+      id: "view_existing",
+      revision: 1,
+      config: { search: "rank" },
+    });
 
     const result = await importCloudExport(token, fullPayload(), url);
 
@@ -361,12 +363,18 @@ describe("cloud import package restoration", () => {
     expect(mocks.prisma.alertRuleTarget.deleteMany).toHaveBeenCalledWith({
       where: { ruleId: "rule_existing" },
     });
-    expect(mocks.prisma.savedView.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "view_existing" } }),
-    );
+    expect(mocks.prisma.savedView.updateMany).toHaveBeenCalledWith({
+      data: { config: expect.any(Object), revision: { increment: 1 } },
+      where: { id: "view_existing", projectId: "project_1", visibility: "project", revision: 1 },
+    });
     expect(mocks.prisma.savedView.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { name: "Rank terms", projectId: "project_1", surface: "keywords" },
+        where: {
+          name: "Rank terms",
+          projectId: "project_1",
+          surface: "keywords",
+          visibility: "project",
+        },
       }),
     );
   });

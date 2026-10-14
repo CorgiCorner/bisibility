@@ -1,10 +1,11 @@
 import "server-only";
 
+import { definitionWorkerInvocation } from "@/lib/measurement-definitions/worker-claim";
+import { retainedDefinitionFailureIntent } from "@/lib/measurement-definitions/worker-failure";
 import { ApplicationFailure } from "@temporalio/common";
 import { requiredPublicAuditId, writeAudit } from "../auth/audit";
 import { prisma } from "../db/prisma";
 import { makePublicId } from "../db/public-id";
-import { resolveExpectedUrlForKeyword } from "../expected-url/keyword";
 import { publishOperationChanged } from "../notifications/realtime";
 import { isProviderErrorCode } from "../providers/provider-error-code";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
@@ -18,8 +19,6 @@ import {
   RunItemKeywordMismatchError,
 } from "../rank-check/runs/items";
 import { rankCheckWorkflowId } from "../rank-check/workflow-id";
-import { trackedProjectDomain } from "../schemas/project";
-import { resolveEffectiveSerpDepth } from "../serp/constants";
 import type {
   CreateRunningRankCheckActivityInput,
   DiscardRankCheckActivityInput,
@@ -39,6 +38,10 @@ function automaticLegacySource(input: CreateRunningRankCheckActivityInput) {
 export async function createRunningRankCheckActivity(
   input: CreateRunningRankCheckActivityInput,
 ): Promise<RunningRankCheckActivityResult> {
+  if (!input.workflowRunId.startsWith("inline-")) {
+    if (definitionWorkerInvocation().workflowRunId !== input.workflowRunId)
+      throw new Error("Workflow execution changed before preparation.");
+  }
   let projectId: string | undefined;
   const startedAt = new Date();
   // biome-ignore format: compact data keeps this activity module under the line cap.
@@ -236,17 +239,21 @@ export async function failRankCheckActivity(
   // biome-ignore format: compact ternary keeps this activity module under the line cap.
   const storedAttempts = Array.isArray(running?.attempts) && running.attempts.length > 0
     ? (running.attempts as { provider: string; message: string }[]) : undefined;
-  const expectedUrl = await resolveExpectedUrlForKeyword(keyword.id);
+  const originalIntent = await retainedDefinitionFailureIntent(
+    keyword.projectId,
+    keyword.id,
+    input.rankCheckId,
+  );
   // biome-ignore format: compact call keeps this activity module under the line cap.
   const rankCheck = await persistFailedRankCheck({
     error: input.message,
     errorCode: isProviderErrorCode(running?.errorCode) ? running.errorCode : undefined,
-    attempts: storedAttempts, existingRankCheckId: input.rankCheckId, expectedUrlAtCheck: expectedUrl.url, keywordId: keyword.id,
-    keywordPublicId: keyword.publicId, keywordText: keyword.text,
-    previousPosition: keyword.rankChecks[0]?.position ?? null,
-    projectDomain: trackedProjectDomain(keyword.project.domain) ?? "", projectId: keyword.projectId,
+    attempts: storedAttempts, existingRankCheckId: input.rankCheckId, expectedUrlAtCheck: originalIntent?.targetUrl ?? null, keywordId: keyword.id,
+    keywordPublicId: keyword.publicId, keywordText: originalIntent?.keyword ?? keyword.text,
+    previousPosition: null,
+    projectDomain: originalIntent?.domain ?? "", projectId: keyword.projectId,
     provider: input.providerId ?? "primary",
-    requestedDepth: resolveEffectiveSerpDepth({ projectDepth: keyword.project.defaults?.serpDepth, checkScheduleDepth: keyword.checkSchedule?.serpDepth, scheduleDepth: keyword.schedule?.serpDepth }),
+    requestedDepth: originalIntent?.depth,
   }).catch((error) => {
     if (error instanceof RankCheckClosedBeforePersistenceError) return null;
     throw error;

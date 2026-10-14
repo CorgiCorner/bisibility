@@ -48,7 +48,7 @@ COPY --from=deps /workspace/node_modules ./node_modules
 COPY . .
 RUN npm run db:download-rds-ca \
   && npx prisma generate \
-  && NODE_OPTIONS="$(node scripts/ci/node-memory-limit.mjs --merge)" npm run build
+  && npm run ci:build
 
 FROM builder AS migrate
 ARG CORGICORNER_EPHEMERAL=0
@@ -115,6 +115,7 @@ COPY --from=builder --chown=nextjs:nodejs /workspace/lib ./lib
 # the packaged Prisma CLI/config above, applies schema changes, runs data
 # migrations, then applies the guarded schema contracts.
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/migrate.ts ./scripts/deploy/migrate.ts
+COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/staged-data-migrations.ts ./scripts/deploy/staged-data-migrations.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/pre-data-migrations.ts ./scripts/deploy/pre-data-migrations.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/completed-data-migrations.ts ./scripts/deploy/completed-data-migrations.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/accounting-cutover-preflight.ts ./scripts/deploy/accounting-cutover-preflight.ts

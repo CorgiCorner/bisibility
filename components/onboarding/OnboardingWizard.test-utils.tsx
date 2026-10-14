@@ -3,6 +3,7 @@ import { countrySeed } from "@/lib/serp/location";
 import type { ComponentProps } from "react";
 import { vi } from "vitest";
 import { OnboardingWizard } from "./OnboardingWizard";
+import { previewDefaultsFixture } from "./reviewed-defaults-test-fixture";
 
 const languageLabels: Record<string, string> = { en: "English", es: "Spanish" };
 
@@ -70,7 +71,8 @@ export function renderWizard({ actions: actionOverrides, ...props }: RenderWizar
     // saveMatchingScopeAction: vi.fn(async () => undefined), // Restore with issue #863.
     syncProjectTrafficAction: vi.fn(async () => undefined),
     testProviderConnectionAction: vi.fn(async () => ({ message: "Connected", ok: true })),
-    updateProjectDefaultsAction: vi.fn(async () => ({ nextCheckAt: null })),
+    previewProjectDefaultsAction: vi.fn(previewDefaultsFixture),
+    updateProjectDefaultsAction: vi.fn(async () => ({ kind: "saved" as const, nextCheckAt: null })),
     ...actionOverrides,
   };
 

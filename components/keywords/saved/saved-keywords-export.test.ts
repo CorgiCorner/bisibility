@@ -46,3 +46,23 @@ describe("savedKeywordsCsv", () => {
     );
   });
 });
+
+it("neutralizes every saved text column and preserves numeric negatives and nulls", () => {
+  expect(
+    savedKeywordsCsv([
+      {
+        ...rows[0],
+        text: "\uFEFF=1+1",
+        sourceSeed: "  +SUM(1,2)",
+        location: "@market",
+        intent: "-intent",
+        savedAt: "\tdate",
+        volume: -3,
+        difficulty: 0,
+        cpc: null,
+      },
+    ]),
+  ).toBe(
+    "keyword,volume,kd,cpc,intent,source_seed,location,saved_at\n'\uFEFF=1+1,-3,0,,'-intent,\"'  +SUM(1,2)\",'@market,'\tdate",
+  );
+});

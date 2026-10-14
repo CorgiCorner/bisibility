@@ -32,7 +32,7 @@ import {
   settingsShellFeatureTestMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -179,6 +179,25 @@ describe("SettingsShell", () => {
     expect(currentLink).not.toHaveClass("bg-nav-active");
     expect(inactiveLink).toHaveClass("hover:bg-bg-sunken");
     expect(inactiveLink).not.toHaveClass("hover:bg-nav-active");
+  });
+
+  it("groups settings without duplicating links and keeps the same groups in the mobile menu", async () => {
+    const user = userEvent.setup();
+    render(<Shell />);
+    const nav = screen.getByRole("navigation", { name: "Settings sections" });
+    const measurement = within(nav).getByRole("region", { name: "Measurements" });
+    expect(within(measurement).getByRole("link", { name: "Tracking" })).toBeInTheDocument();
+    expect(within(measurement).getByRole("link", { name: "Data sources" })).toBeInTheDocument();
+    expect(within(measurement).queryByRole("link", { name: "General" })).toBeNull();
+    expect(within(nav).getAllByRole("link")).toHaveLength(settingsSections.length);
+    for (const label of ["Project", "Measurements", "Team and billing", "Administration"])
+      expect(within(nav).getByRole("heading", { name: label })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Settings section" }));
+    expect(screen.getByRole("menu", { name: "Settings section" })).toHaveTextContent(
+      "Measurements",
+    );
+    await user.click(screen.getByRole("menuitem", { name: "Tracking" }));
+    expect(routerMock.push).toHaveBeenCalledWith(`/app/${projectRef}/settings/tracking`);
   });
 
   it("opens Project Context from settings and keeps its existing route active", async () => {

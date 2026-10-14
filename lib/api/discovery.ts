@@ -21,7 +21,7 @@ import {
   serpDepthValues,
   serpDeviceOptions,
 } from "@/lib/serp/constants";
-import { getApiVersionCapabilities } from "./api-versions";
+import { apiFeatures, getApiVersionCapabilities } from "./api-versions";
 import { capabilitiesCatalogMetadata, getCapabilities, getLlmsText } from "./capabilities";
 import type { ApiContext } from "./context";
 import { DEFAULT_LOCATION_KEY, legacySerpMarketCatalog } from "./legacy-market-input";
@@ -249,6 +249,7 @@ export function capabilities(ctx: Pick<ApiContext, "headers">) {
       ...capabilitiesCatalogMetadata,
       ...getApiVersionCapabilities(),
       data: getCapabilities(),
+      features: apiFeatures,
       rank_check_scheduler_mode: resolveRankCheckSchedulerMode(),
       scheduler_driver: resolveSchedulerDriver().driver,
     },

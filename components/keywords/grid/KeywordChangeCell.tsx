@@ -1,17 +1,22 @@
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import * as rankDepth from "@/lib/serp/rank-depth";
 import { ArrowDownIcon as ArrowDown } from "@phosphor-icons/react/dist/csr/ArrowDown";
 import { ArrowUpIcon as ArrowUp } from "@phosphor-icons/react/dist/csr/ArrowUp";
 import { CircleIcon as Circle } from "@phosphor-icons/react/dist/csr/Circle";
 import { useTranslations } from "next-intl";
+import {
+  keywordGroupReport,
+  keywordRankEvent,
+  keywordRankMovement,
+  keywordRankQuality,
+} from "./keyword-rank-quality-view";
 
 function deltaFor(
   row: KeywordRow,
   t: ReturnType<typeof useTranslations<"projectRankTracker.keywordImport.management.grid">>,
 ) {
-  if (row.positionBaseline === null) return null;
-  const change = row.positionBaseline - row.position;
+  const change = keywordRankMovement(row);
+  if (change === null) return null;
   if (change > 0) {
     return {
       color: "var(--green-text)",
@@ -33,15 +38,31 @@ function deltaFor(
 
 export function KeywordChangeCell({ row }: Readonly<{ row: KeywordRow }>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.grid");
-  if (!rankDepth.hasTrackedPosition(row)) return null;
-  if (row.positionBaseline === null) {
+  const qualityT = useTranslations("projectRankTracker.keywordImport.management.grid.quality");
+  const event = keywordRankEvent(row);
+  const comparison = keywordGroupReport(row)?.comparison ?? keywordRankQuality(row)?.comparison;
+  if (keywordRankMovement(row) === null) {
+    if (event === "first")
+      return (
+        <span
+          aria-label={t("firstObservation")}
+          className="inline-flex h-auto shrink-0 self-center items-center whitespace-nowrap rounded-full border border-border bg-accent-soft px-2.5 py-1 font-sans tabular-nums text-[11px] font-semibold leading-none text-accent-text"
+        >
+          {t("new")}
+        </span>
+      );
+    const label =
+      event === "entered" || event === "exited" || event === "re_entered"
+        ? qualityT(`events.${event}`)
+        : qualityT(
+            comparison === "not_requested" ? "comparisonNotRequested" : "comparisonUnavailable",
+          );
     return (
-      <span
-        aria-label={t("firstObservation")}
-        className="inline-flex h-auto shrink-0 self-center items-center whitespace-nowrap rounded-full border border-border bg-accent-soft px-2.5 py-1 font-sans tabular-nums text-[11px] font-semibold leading-none text-accent-text"
-      >
-        {t("new")}
-      </span>
+      <Tooltip content={label}>
+        <span aria-label={label} className="font-sans text-[10.5px] text-fg-muted">
+          {event && event !== "unknown" ? label : "-"}
+        </span>
+      </Tooltip>
     );
   }
 

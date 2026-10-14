@@ -14,10 +14,12 @@ const KEYWORD_PUBLIC_ID = "kw_abcdefghijklmnopqrstuvwx";
 const mocks = vi.hoisted(() => {
   const prisma = {
     $executeRaw: vi.fn(),
+    $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
     keyword: { createMany: vi.fn(), findMany: vi.fn() },
     keywordSchedule: { createMany: vi.fn() },
+    rankCheck: { count: vi.fn(), findMany: vi.fn() },
     keywordTag: { createMany: vi.fn() },
     location: { findUnique: vi.fn(), upsert: vi.fn() },
     project: { findFirst: vi.fn(), findUnique: vi.fn() },
@@ -113,6 +115,15 @@ describe("keyword workbook import action", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.$executeRaw.mockResolvedValue(0);
+    mocks.prisma.$queryRaw.mockImplementation(async (parts: TemplateStringsArray) => {
+      const sql = parts.join("?");
+      if (sql.includes("FROM users")) return [{ id: "user_1" }];
+      if (sql.includes("FROM memberships")) return [{ role: "admin" }];
+      if (sql.includes("to_regclass")) return [{ tables: 0, source: false, guard: false }];
+      throw new Error(`Unexpected export authority query: ${sql}`);
+    });
+    mocks.prisma.rankCheck.count.mockResolvedValue(0);
+    mocks.prisma.rankCheck.findMany.mockResolvedValue([]);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.requireSession.mockResolvedValue({ user: { id: "user_1" } });
     mocks.prisma.user.findUnique.mockResolvedValue({
@@ -849,18 +860,30 @@ describe("keyword workbook import action", () => {
         id: "keyword_1",
         location: "United States",
         publicId: "kw_abcdefghijklmnopqrstuvwx",
-        rankChecks: [
-          {
-            checkedAt: new Date("2026-06-20T10:00:00.000Z"),
-            position: 3,
-            previousPosition: 7,
-            rankingUrl: "https://example.com/rank",
-          },
-        ],
         tags: [{ tag: { name: "SEO" } }],
         targetUrl: "/rank",
         text: "rank tracker",
         updatedAt: new Date("2026-06-21T00:00:00.000Z"),
+      },
+    ]);
+
+    mocks.prisma.rankCheck.count.mockResolvedValue(1);
+    mocks.prisma.rankCheck.findMany.mockResolvedValue([
+      {
+        publicId: "check_abcdefghijklmnopqrstuvwx",
+        keywordId: "keyword_1",
+        status: "completed",
+        checkedAt: new Date("2026-06-20T10:00:00Z"),
+        createdAt: new Date("2026-06-20T10:00:00Z"),
+        updatedAt: new Date("2026-06-20T10:00:00Z"),
+        normalizationVersion: null,
+        observationRun: null,
+        requestedDepth: 100,
+        position: 3,
+        previousPosition: 7,
+        rankingUrl: "https://example.com/rank",
+        provider: "legacy-fixture-provider",
+        degradedToCountry: false,
       },
     ]);
 
@@ -893,24 +916,31 @@ describe("keyword workbook import action", () => {
       "device",
     ]);
     expect(sheet?.getCell("A2").value).toBe("rank tracker");
+    expect(sheet?.getCell("B2").value).toBe(3);
+    expect(mocks.prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: "RepeatableRead",
+    });
     expect(sheet?.getCell("C2").value).toBe("/rank");
   });
 
   it("caps the plain current-scope export at the shared download keyword limit", async () => {
     mocks.prisma.keyword.findMany.mockReset();
-    mocks.prisma.keyword.findMany.mockResolvedValue(
-      Array.from({ length: 501 }, (_unused, index) => ({
-        createdAt: new Date("2026-06-01T00:00:00.000Z"),
-        device: "desktop",
-        id: `keyword_${index}`,
-        location: "United States",
-        publicId: `kw_${index}`,
-        rankChecks: [],
-        tags: [],
-        targetUrl: "/rank",
-        text: `keyword ${index}`,
-        updatedAt: new Date("2026-06-21T00:00:00.000Z"),
-      })),
+    const keywords = Array.from({ length: 501 }, (_unused, index) => ({
+      createdAt: new Date("2026-06-01T00:00:00.000Z"),
+      device: "desktop",
+      id: `keyword_${index}`,
+      location: "United States",
+      publicId: `kw_a${index.toString(36).padStart(23, "0")}`,
+      rankChecks: [],
+      tags: [],
+      targetUrl: "/rank",
+      text: `keyword ${index}`,
+      updatedAt: new Date("2026-06-21T00:00:00.000Z"),
+    }));
+    mocks.prisma.keyword.findMany.mockImplementation(async ({ where }) =>
+      where.publicId?.in
+        ? keywords.filter((row) => where.publicId.in.includes(row.publicId))
+        : keywords,
     );
 
     await expect(
@@ -938,7 +968,19 @@ describe("keyword workbook import action", () => {
 
   it("filters selected exports exclusively by keyword public ID", async () => {
     mocks.prisma.keyword.findMany.mockReset();
-    mocks.prisma.keyword.findMany.mockResolvedValue([]);
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      {
+        id: "keyword_1",
+        publicId: KEYWORD_PUBLIC_ID,
+        createdAt: new Date("2026-06-01T00:00:00Z"),
+        updatedAt: new Date("2026-06-01T00:00:00Z"),
+        text: "rank tracker",
+        device: "desktop",
+        location: "United States",
+        tags: [],
+        targetUrl: "/rank",
+      },
+    ]);
 
     await exportKeywords({
       format: "csv",
@@ -949,10 +991,10 @@ describe("keyword workbook import action", () => {
 
     expect(mocks.prisma.keyword.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: {
+        where: expect.objectContaining({
           projectId: "project_1",
           publicId: { in: [KEYWORD_PUBLIC_ID] },
-        },
+        }),
       }),
     );
   });

@@ -61,7 +61,9 @@ describe("Cloud backup count query", () => {
     expect(mocks.counts.alertRule).toHaveBeenCalledWith({
       where: { projectId: "project_1" },
     });
-    expect(mocks.counts.savedView).toHaveBeenCalledWith({ where: { projectId: "project_1" } });
+    expect(mocks.counts.savedView).toHaveBeenCalledWith({
+      where: { projectId: "project_1", visibility: "project" },
+    });
     expect(mocks.counts.notificationPreference).toHaveBeenCalledWith({
       where: { projectId: "project_1", userId: "user_1" },
     });

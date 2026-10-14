@@ -3,6 +3,10 @@ import { access, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, extname, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "@typescript/typescript6";
+import { collectTranslatorBindings } from "./translator-bindings.mjs";
+import { coreTranslatorContracts } from "./translator-contracts.mjs";
+import { createRepoModuleResolver } from "./translator-modules.mjs";
+import { unwrapExpression } from "./translator-syntax.mjs";
 
 const sourceExtensions = new Set([".ts", ".tsx"]);
 const renderExtensions = new Set([".tsx"]);
@@ -33,7 +37,7 @@ const visiblePropertyNames = new Set([
 ]);
 const validationPropertyNames = new Set(["invalid_type_error", "message", "required_error"]);
 const englishLocale = /^en(?:-|$)/iu;
-const ignoredSourceSuffix = /\.(?:browser|endpoint|hydration|integration|stories|test|verification)\.(?:ts|tsx)$/u;
+const ignoredSourceSuffix = /\.(?:browser|endpoint|hydration|integration|stories|test(?:-fixtures?)?|verification)\.(?:ts|tsx)$/u;
 const registryRelativePath = "i18n/ui-surface-registry.json";
 const coreTranslatorFactories = new Map([
   ["next-intl", new Set(["createTranslator", "useTranslations"])],
@@ -77,231 +81,6 @@ function literalText(node) {
   return ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) ? node.text : undefined;
 }
 
-function unwrapExpression(node) {
-  let current = node;
-  while (
-    current &&
-    (ts.isAsExpression(current) ||
-      ts.isAwaitExpression(current) ||
-      ts.isNonNullExpression(current) ||
-      ts.isParenthesizedExpression(current) ||
-      ts.isTypeAssertionExpression(current))
-  ) {
-    current = current.expression;
-  }
-  return current;
-}
-
-function bindingScope(node) {
-  for (let current = node.parent; current; current = current.parent) {
-    if (
-      ts.isBlock(current) ||
-      ts.isCatchClause(current) ||
-      ts.isFunctionLike(current) ||
-      ts.isModuleBlock(current) ||
-      ts.isSourceFile(current)
-    ) {
-      return current;
-    }
-  }
-  return undefined;
-}
-
-function bindingNames(name, add) {
-  if (ts.isIdentifier(name)) {
-    add(name);
-    return;
-  }
-  if (ts.isObjectBindingPattern(name) || ts.isArrayBindingPattern(name)) {
-    for (const element of name.elements) {
-      if (ts.isOmittedExpression(element)) continue;
-      bindingNames(element.name, add);
-    }
-  }
-}
-
-function isConstDeclaration(declaration) {
-  const list = declaration.parent;
-  return ts.isVariableDeclarationList(list) && (list.flags & ts.NodeFlags.Const) !== 0;
-}
-
-function collectTranslatorBindings(source, translatorFactories) {
-  const bindings = [];
-  const typeAliases = [];
-
-  function addBinding(
-    name,
-    declaration,
-    { factory = false, immutable = false, initializer, nameNode = name, parameter, scope } = {},
-  ) {
-    if (!scope) return;
-    bindings.push({
-      declaration,
-      factory,
-      immutable,
-      initializer,
-      kind: factory ? "translator-factory" : "other",
-      name: name.text,
-      nameNode,
-      parameter,
-      scope,
-      start: declaration.getStart(source),
-    });
-  }
-
-  function visitBindings(node) {
-    if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
-      const factoryNames = translatorFactories.get(node.moduleSpecifier.text);
-      const clause = node.importClause;
-      if (clause?.name) addBinding(clause.name, clause, { scope: source });
-      if (clause?.namedBindings && ts.isNamedImports(clause.namedBindings)) {
-        for (const element of clause.namedBindings.elements) {
-          const importedName = element.propertyName?.text ?? element.name.text;
-          if (element.isTypeOnly && !factoryNames?.has(importedName)) continue;
-          addBinding(element.name, element, {
-            factory: factoryNames?.has(importedName),
-            scope: source,
-          });
-        }
-      }
-      if (clause?.namedBindings && ts.isNamespaceImport(clause.namedBindings)) {
-        addBinding(clause.namedBindings.name, clause.namedBindings, { scope: source });
-      }
-    }
-
-    if (ts.isVariableDeclaration(node)) {
-      const scope = bindingScope(node);
-      bindingNames(node.name, (name) =>
-        addBinding(name, node, {
-          immutable: isConstDeclaration(node),
-          initializer: ts.isIdentifier(node.name) ? node.initializer : undefined,
-          scope,
-        }),
-      );
-    }
-
-    if (ts.isParameter(node)) {
-      const scope = bindingScope(node);
-      bindingNames(node.name, (name) => addBinding(name, node, { nameNode: name, parameter: node, scope }));
-    }
-
-    if ((ts.isClassDeclaration(node) || ts.isFunctionDeclaration(node)) && node.name) {
-      addBinding(node.name, node, { scope: bindingScope(node) });
-    }
-
-    if (ts.isTypeAliasDeclaration(node)) {
-      typeAliases.push({
-        declaration: node,
-        name: node.name.text,
-        scope: bindingScope(node),
-        start: node.getStart(source),
-      });
-    }
-
-    ts.forEachChild(node, visitBindings);
-  }
-
-  visitBindings(source);
-
-  function resolve(identifier) {
-    const position = identifier.getStart(source);
-    return bindings
-      .filter(
-        (binding) =>
-          binding.name === identifier.text &&
-          binding.scope.pos <= identifier.pos &&
-          identifier.end <= binding.scope.end &&
-          (binding.factory || binding.start <= position),
-      )
-      .sort(
-        (left, right) =>
-          left.scope.end - left.scope.pos - (right.scope.end - right.scope.pos) || right.start - left.start,
-      )[0];
-  }
-
-  function resolveTypeAlias(name, position) {
-    return typeAliases
-      .filter(
-        (alias) =>
-          alias.name === name &&
-          alias.scope &&
-          alias.scope.pos <= position &&
-          position <= alias.scope.end &&
-          alias.start <= position,
-      )
-      .sort(
-        (left, right) =>
-          left.scope.end - left.scope.pos - (right.scope.end - right.scope.pos) || right.start - left.start,
-      )[0];
-  }
-
-  function unwrapType(type) {
-    let current = type;
-    while (current && ts.isParenthesizedTypeNode(current)) current = current.type;
-    return current;
-  }
-
-  function isTranslatorType(type, position, seen = new Set()) {
-    const current = unwrapType(type);
-    if (!current || !ts.isTypeReferenceNode(current) || !ts.isIdentifier(current.typeName)) return false;
-    const name = current.typeName.text;
-    const [argument] = current.typeArguments ?? [];
-    if (["Awaited", "Promise"].includes(name) && argument) return isTranslatorType(argument, position, seen);
-    if (name === "ReturnType" && argument && ts.isTypeQueryNode(argument) && ts.isIdentifier(argument.exprName)) {
-      return resolve(argument.exprName)?.kind === "translator-factory";
-    }
-    const alias = resolveTypeAlias(name, position);
-    if (!alias || seen.has(alias.declaration)) return false;
-    seen.add(alias.declaration);
-    return isTranslatorType(alias.declaration.type, alias.declaration.type.getStart(source), seen);
-  }
-
-  function propertyType(type, name, position, seen = new Set()) {
-    const current = unwrapType(type);
-    if (!current) return undefined;
-    if (ts.isTypeLiteralNode(current)) {
-      for (const member of current.members) {
-        if (ts.isPropertySignature(member) && propertyName(member.name) === name) return member.type;
-      }
-      return undefined;
-    }
-    if (ts.isIntersectionTypeNode(current)) {
-      for (const nested of current.types) {
-        const property = propertyType(nested, name, position, seen);
-        if (property) return property;
-      }
-      return undefined;
-    }
-    if (!ts.isTypeReferenceNode(current) || !ts.isIdentifier(current.typeName)) return undefined;
-    const alias = resolveTypeAlias(current.typeName.text, position);
-    if (!alias || seen.has(alias.declaration)) return undefined;
-    seen.add(alias.declaration);
-    return propertyType(alias.declaration.type, name, alias.declaration.type.getStart(source), seen);
-  }
-
-  function parameterBindingType(binding) {
-    const parameter = binding.parameter;
-    if (!parameter?.type) return undefined;
-    if (ts.isIdentifier(parameter.name)) return parameter.type;
-    return propertyType(parameter.type, binding.name, binding.nameNode.getStart(source));
-  }
-
-  for (const binding of bindings.filter((entry) => entry.parameter)) {
-    const type = parameterBindingType(binding);
-    if (type && isTranslatorType(type, type.getStart(source))) binding.kind = "translator";
-  }
-
-  for (const binding of bindings.filter((entry) => entry.immutable && entry.initializer).sort((a, b) => a.start - b.start)) {
-    const initializer = unwrapExpression(binding.initializer);
-    if (!initializer) continue;
-    if (ts.isIdentifier(initializer) && resolve(initializer)?.kind === "translator") binding.kind = "translator";
-    if (ts.isCallExpression(initializer) && isTranslatorFactoryCall(initializer, { resolve })) {
-      binding.kind = "translator";
-    }
-  }
-
-  return { resolve };
-}
 
 function isTranslatorFactoryCall(call, bindings) {
   const expression = unwrapExpression(call.expression);
@@ -693,11 +472,11 @@ function visit(source, node, candidates, mode, bindings) {
   ts.forEachChild(node, (child) => visit(source, child, candidates, mode, bindings));
 }
 
-export function findUncatalogedUiStrings(fileName, code, { mode = "render", translatorFactories = coreTranslatorFactories } = {}) {
+export function findUncatalogedUiStrings(fileName, code, { mode = "render", translatorFactories = coreTranslatorFactories, resolveModule, translatorContracts = coreTranslatorContracts } = {}) {
   const scriptKind = fileName.endsWith(".ts") ? ts.ScriptKind.TS : ts.ScriptKind.TSX;
   const source = ts.createSourceFile(fileName, code, ts.ScriptTarget.Latest, true, scriptKind);
   const candidates = [];
-  visit(source, source, candidates, mode, collectTranslatorBindings(source, translatorFactories));
+  visit(source, source, candidates, mode, collectTranslatorBindings(source, translatorFactories, { fileName, translatorFactories, translatorContracts, resolveModule, active: new Set([fileName]), depth: 0, cache: new Map() }));
   return candidates;
 }
 
@@ -1056,7 +835,7 @@ export async function checkUiI18nBoundaries({ complete = false, registryPath, ro
     const candidates = findUncatalogedUiStrings(
       source.path,
       await readFile(resolve(root, source.path), "utf8"),
-      { mode: source.kind, translatorFactories },
+      { mode: source.kind, translatorFactories, resolveModule: createRepoModuleResolver(root) },
     );
     for (const candidate of candidates) {
       const exception = registry.exceptions.find(

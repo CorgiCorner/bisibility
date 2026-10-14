@@ -122,6 +122,11 @@ function mappedError(
     return problem("conflict", error.message, 409, { code: error.code });
   }
   if (error instanceof LaunchRankCheckRunError) {
+    if (
+      error.code === "measurement_policy_unconfigured" ||
+      error.code === "measurement_policy_unsupported"
+    )
+      return problem("conflict", error.message, 409, { code: error.code, surface: "app" });
     if (error.code === "cost_limit_exceeded") {
       // App routes never set max_cost_cents, so this code cannot arrive here; mapped defensively
       // so a future caller still gets the API's shape instead of a 500.

@@ -125,6 +125,9 @@ function resultText(
           return budgetMissing;
         case "budget_exhausted":
           return t("results.failure.budgetExhausted");
+        case "measurement_policy_unconfigured":
+        case "measurement_policy_unsupported":
+          return t("results.failure.measurementPolicy");
         case "no_provider":
           return t("results.failure.noProvider");
         case "project_read_only":

@@ -8,10 +8,12 @@ export function OverviewKpiGrid({
   kpis,
   projectRef,
   visibilityCoverage,
+  qualityReport,
 }: Readonly<{
   kpis: OverviewKpi[];
   projectRef: string;
   visibilityCoverage: OverviewView["visibilityCoverage"];
+  qualityReport: OverviewView["qualityReport"];
 }>) {
   const t = useTranslations("projectDashboard.dashboard");
   return (
@@ -25,6 +27,7 @@ export function OverviewKpiGrid({
           key={kpi.id}
           projectRef={projectRef}
           visibilityCoverage={visibilityCoverage}
+          qualityReport={qualityReport}
         />
       ))}
     </section>

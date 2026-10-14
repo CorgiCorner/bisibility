@@ -3,9 +3,10 @@
 import { useKeywordDeletion } from "@/components/keywords/use-keyword-deletion";
 import { Card } from "@/components/ui/Card";
 import { useDataTableLayout } from "@/components/ui/data-table/data-table-layout-store";
+import { dataTableColumnId } from "@/components/ui/data-table/data-table-model";
 import type { DataTableDensity, DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { FloatingSelectionBarSpacer } from "@/components/ui/FloatingSelectionBar";
-import { SummaryStrip } from "@/components/ui/SummaryStrip";
+import { rankTrackerDetailHref } from "@/lib/keywords/rank-tracker-detail-navigation";
 import {
   rankTrackerMutationPresence,
   rankTrackerNavigationHref,
@@ -17,6 +18,8 @@ import {
   type RankTrackerQueryField,
   type RankTrackerQueryState,
 } from "@/lib/keywords/rank-tracker-query-types";
+import { rankTrackerScope } from "@/lib/keywords/rank-tracker-report-scope";
+import { keywordViewScopeLabels } from "@/lib/keywords/view-scope-description";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
 import { UI_RADIUS_ROLES } from "@/lib/ui/design-role-tokens";
@@ -27,13 +30,16 @@ import { useMemo, useState, useTransition } from "react";
 import { BulkActionBar } from "./BulkActionBar";
 import { type KeywordColumnLabels, keywordColumns } from "./grid-columns";
 import { persistKeywordGridDensity } from "./grid-density";
+import { KeywordColumnOrderControl } from "./KeywordColumnOrderControl";
 import { KeywordGridViewport } from "./KeywordGridViewport";
+import { useKeywordLocalColumns } from "./KeywordLocalColumns";
+import { KeywordPersonalViewControl } from "./KeywordPersonalViewControl";
+import { KeywordReportSummary } from "./KeywordReportSummary";
 import { KeywordsFilterBar } from "./KeywordsFilterBar";
 import { defaultKeywordColumnVisibility, KEYWORD_DATA_TABLE_ID } from "./keyword-data-table-config";
 import type { KeywordDataTableProps } from "./keyword-data-table-types";
-import { buildKeywordWeeklySummary } from "./keyword-weekly-summary";
-import { weeklySummarySentence } from "./keyword-weekly-summary-copy";
 import { noRankLabel } from "./market-grid-cells";
+import { usePersonalKeywordLayout } from "./use-personal-keyword-layout";
 
 const keywordTableCardStyle = {
   borderRadius: UI_RADIUS_ROLES.card,
@@ -49,7 +55,7 @@ function leafRows(rows: KeywordDataTableProps["rows"]): KeywordRow[] {
 }
 
 // biome-ignore format: Compact parameter destructuring keeps this production module within 300 lines.
-export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkHealth, filterChips, filterCount, initialDensity, marketScope = null, matchedGroupCount, matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, providerConnected, projectId, projectMarkets, rankTrackerPath, rows, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction }: KeywordDataTableProps) {
+export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkHealth, filterChips, filterCount, initialDensity, local, marketScope = null, matchedGroupCount, matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, personalPreferences, providerConnected, projectId, projectMarkets, rankTrackerPath, report, rows, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction }: KeywordDataTableProps) {
   const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const columnT = useTranslations("projectRankTracker.keywordImport.management.columns");
   const marketCellsT = useTranslations("projectRankTracker.keywordImport.management.marketCells");
@@ -57,17 +63,12 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
   const router = useRouter();
   const searchParams = useSearchParams();
   const layout = useDataTableLayout(KEYWORD_DATA_TABLE_ID);
-  const columnVisibility =
-    Object.keys(layout.columnVisibility).length > 0
-      ? layout.columnVisibility
-      : defaultKeywordColumnVisibility;
   const [density, setDensity] = useState<DataTableDensity>(initialDensity ?? "standard");
   const [selection, setSelection] = useState<ReadonlySet<string>>(() => new Set());
   const [navigationSequence, setNavigationSequence] = useState(0);
   const [editing, setEditing] = useState<{ focusTargetUrl: boolean; row: KeywordRow } | null>(null);
   const [navigationPending, startNavigation] = useTransition();
   const targetRows = useMemo(() => leafRows(rows), [rows]);
-  const weeklySummary = useMemo(() => buildKeywordWeeklySummary(targetRows), [targetRows]);
   const selectedIds = [...selection];
   const selectedRows = targetRows.filter((row) => selection.has(row.id));
   const columnLabels = useMemo<KeywordColumnLabels>(
@@ -116,9 +117,28 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
         projectId,
         pendingCheckIds,
         columnLabels,
+        (row) => rankTrackerDetailHref(projectId, row.id, query),
       ),
-    [canDeleteKeyword, canUpdateKeyword, columnLabels, deletion.open, onRunChecks, pendingCheckIds, projectId],
+    [canDeleteKeyword, canUpdateKeyword, columnLabels, deletion.open, onRunChecks, pendingCheckIds, projectId, query],
   );
+  const localColumns = useKeywordLocalColumns(columns, local?.facts ?? []);
+  const viewColumns = local ? localColumns : columns;
+  const personalLayout = usePersonalKeywordLayout(personalPreferences, viewColumns);
+  const presentationScope = keywordViewScopeLabels(query.lens, marketScope, projectMarkets?.markets, {
+    allLocations: t("allLocations"), selectedLocation: t("selectedLocation"), allDevices: t("allDevices"),
+    desktop: t("deviceDesktop"), mobile: t("deviceMobile"),
+  });
+  const scopeT = useTranslations("projectRankTracker.reportScope");
+  const reportScope = rankTrackerScope(query);
+  const presentationScopeSummary = [scopeT(reportScope.view), scopeT("days", { days: format.number(reportScope.comparisonDays) }),
+    reportScope.asOf ? scopeT("snapshot", { date: format.dateTime(new Date(reportScope.asOf), { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }) }) : scopeT("latest"),
+    ...(local?.summary ? [local.summary.subject.name] : []), t("scopeSummary", presentationScope),
+    ...(query.search ? [t("searchSummary", { search: query.search })] : []),
+    ...filterChips.map((chip) => chip.label)].join(", ");
+  const columnVisibility = personalPreferences ? personalLayout.visibility : Object.keys(layout.columnVisibility).length ? layout.columnVisibility : defaultKeywordColumnVisibility;
+  const sizing = personalPreferences ? personalLayout.sizing : layout.columnSizing;
+  const setSizing = personalPreferences ? personalLayout.setSizing : layout.setColumnSizing;
+  const setVisibility = personalPreferences ? personalLayout.setVisibility : layout.setColumnVisibility;
   const pagination = {
     page,
     pageSize,
@@ -164,8 +184,11 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
     <>
       <Card className="min-w-0 overflow-hidden p-0" size="md" style={keywordTableCardStyle}>
         <KeywordsFilterBar
-          columnSizing={layout.columnSizing}
-          columns={columns}
+          columnOrderControl={personalPreferences ? <KeywordColumnOrderControl columns={viewColumns.flatMap((column) => {
+          const id = dataTableColumnId(column); return id && column.meta?.title ? [{ id, label: column.meta.title }] : [];
+        })} order={personalLayout.order} onChange={personalLayout.setOrder} /> : null}
+          columnSizing={sizing}
+          columns={viewColumns}
           columnVisibility={columnVisibility}
           density={density}
           filterChips={filterChips}
@@ -173,33 +196,35 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
           id={KEYWORD_DATA_TABLE_ID}
           onAddKeyword={onAddKeyword}
           onClearFilters={onClearFilters}
-          onColumnSizingChange={layout.setColumnSizing}
-          onColumnVisibilityChange={layout.setColumnVisibility}
+          onColumnSizingChange={setSizing}
+          onColumnVisibilityChange={setVisibility}
           onDensityChange={handleDensityChange}
           onImportCsv={onImportCsv}
-          onOpenExport={() => onOpenExport(selectedIds)}
+          exportDisabled={Boolean(local)}
+          onOpenExport={() => { if (!local) onOpenExport(selectedIds); }}
           onOpenFilters={onOpenFilters}
           onRefresh={() => router.refresh()}
           onRemoveFilter={onRemoveFilter}
           onSearchChange={onSearchChange}
           onSearchCommit={onSearchCommit}
-          savedViewControl={savedViewControl}
+          savedViewControl={personalPreferences ? <KeywordPersonalViewControl context={personalPreferences}
+            presentation={personalLayout.presentation} query={query} projectId={projectId}
+            layoutModified={personalLayout.modified}
+            canCreateShared={canUpdateKeyword} scopeSummary={presentationScopeSummary}
+            onDiscardLayout={personalLayout.discard} /> : savedViewControl}
           searchValue={searchValue}
           scopeChip={scopeChip}
           scopeControl={scopeControl}
         />
 
-        {weeklySummary ? (
-          <SummaryStrip
-            className="rounded-none px-4"
-            sentence={t("currentPage", { summary: weeklySummarySentence(weeklySummary, t) })}
-            tone={weeklySummary.tone}
-          />
-        ) : null}
+
+
+        {!local ? <KeywordReportSummary report={report} expected={matchedTargetCount} pending={navigationPending} /> : null}
         <KeywordGridViewport
           key={`${query.grouped ? "grouped" : "flat"}:${searchParams.toString()}:${navigationSequence}`}
-          columnSizing={layout.columnSizing}
-          columns={columns}
+          columnOrder={personalPreferences ? personalLayout.order : undefined}
+          columnSizing={sizing}
+          columns={viewColumns}
           columnVisibility={columnVisibility}
           density={density}
           footerStart={
@@ -207,9 +232,9 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
           }
           id={KEYWORD_DATA_TABLE_ID}
           noRowsState={noRowsState}
-          onColumnSizingChange={layout.setColumnSizing}
-          onColumnVisibilityChange={layout.setColumnVisibility}
-          onNavigate={(keywordId) => router.push(appPath(projectId, "rank-tracker", keywordId))}
+          onColumnSizingChange={setSizing}
+          onColumnVisibilityChange={setVisibility}
+          onNavigate={(keywordId) => router.push(rankTrackerDetailHref(projectId, keywordId, query))}
           onPaginationChange={handlePagination}
           onSelectionChange={setSelection}
           onSortingChange={handleSorting}

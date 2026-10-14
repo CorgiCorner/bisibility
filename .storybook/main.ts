@@ -5,6 +5,9 @@ import type { StorybookConfig } from "@storybook/nextjs-vite";
 import { type Plugin, searchForWorkspaceRoot } from "vite";
 
 const runtimeStubs = fileURLToPath(new URL("./browser-runtime-stubs.tsx", import.meta.url));
+const announcementActionsStub = fileURLToPath(
+  new URL("./instance-announcement-stubs.ts", import.meta.url),
+);
 const temporalRuntimeStubs = fileURLToPath(new URL("./temporal-runtime-stubs.ts", import.meta.url));
 const keywordActionStub = fileURLToPath(new URL("./keyword-action-stubs.ts", import.meta.url));
 const keywordSuggestionStub = fileURLToPath(
@@ -93,6 +96,10 @@ const prismaRuntimeStubPatterns = [
 const nodeRuntimeStubPattern = /^node:(async_hooks|crypto|dns\/promises|net|tls)$/;
 
 const runtimeAliases = {
+  "@/lib/actions/instance-announcements": announcementActionsStub,
+  "@/lib/actions/metering-recovery": fileURLToPath(
+    new URL("./recovery-action-stubs.ts", import.meta.url),
+  ),
   "@/lib/roadmap/actions": fileURLToPath(new URL("./roadmap-action-stubs.ts", import.meta.url)),
   "@/components/cost-estimate/useCostEstimate": fileURLToPath(
     new URL("../tests/cost-estimate.ts", import.meta.url),
@@ -176,6 +183,7 @@ const runtimeStubPlugin = {
   name: "storybook-runtime-stubs",
   enforce: "pre",
   resolveId(source, importer) {
+    if (source === "@/lib/actions/instance-announcements") return announcementActionsStub;
     const candidates = candidateModuleIds(source, importer);
     const cleanSource = source.split("?", 1)[0] ?? source;
     const keywordActionBoundary = resolveKeywordActionBoundary(cleanSource);

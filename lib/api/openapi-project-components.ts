@@ -5,6 +5,7 @@ import {
   legacyMarketNameOpenApiSchema,
   primaryLocationKeyDescription,
 } from "./legacy-market-input";
+import { defaultsReviewSchemas } from "./openapi-defaults-review";
 import { publicIdSchema } from "./openapi-public-id";
 import {
   jitterMinutesContractSchema,
@@ -79,6 +80,7 @@ const readinessSchema = {
 };
 
 export const projectSchemas = {
+  ...defaultsReviewSchemas,
   Project: {
     properties: {
       created_at: { format: "date-time", type: "string" },
@@ -150,6 +152,7 @@ export const projectSchemas = {
   },
   ProjectDefaultsPatch: {
     properties: {
+      review: { $ref: "#/components/schemas/ProjectDefaultsReview" },
       city: deprecatedLegacyMarketField(
         "Optional city name resolved within country when location_key is omitted.",
         { type: ["string", "null"] },

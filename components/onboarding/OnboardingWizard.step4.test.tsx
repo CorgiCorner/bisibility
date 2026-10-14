@@ -3,6 +3,7 @@ import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { project, renderWizard } from "./OnboardingWizard.test-utils";
+import { confirmDefaultsFixture, previewDefaultsFixture } from "./reviewed-defaults-test-fixture";
 
 describe("OnboardingWizard final step", () => {
   it("connects a provider in the final-step modal and focuses the enabled test action", async () => {
@@ -135,6 +136,7 @@ describe("OnboardingWizard final step", () => {
 
   it("uses the authoritative next dispatch returned after a timezone save", async () => {
     const updateProjectDefaultsAction = vi.fn(async () => ({
+      kind: "saved" as const,
       nextCheckAt: "2026-08-30T06:00:00.000Z",
     }));
     renderWizard({
@@ -153,6 +155,7 @@ describe("OnboardingWizard final step", () => {
           isSampleProject: false,
           providerReady: true,
         })),
+        previewProjectDefaultsAction: vi.fn(previewDefaultsFixture),
         updateProjectDefaultsAction,
       },
       initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
@@ -165,7 +168,13 @@ describe("OnboardingWizard final step", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Project timezone" }));
     fireEvent.click(screen.getByRole("menuitem", { name: /Europe\/Warsaw/ }));
+    expect(updateProjectDefaultsAction).not.toHaveBeenCalled();
+    await confirmDefaultsFixture("Confirm reviewed save");
     await waitFor(() => expect(updateProjectDefaultsAction).toHaveBeenCalledTimes(1));
+    expect(updateProjectDefaultsAction).toHaveBeenCalledWith(
+      expect.objectContaining({ timezone: "Europe/Warsaw" }),
+      expect.objectContaining({ confirmed: true, previewToken: "synthetic-reviewed-defaults" }),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Run check" }));
     expect(await screen.findByText(/next run Aug 30, 2026, 08:00/)).toBeInTheDocument();
     expect(screen.queryByText(/Aug 29, 2026/)).not.toBeInTheDocument();

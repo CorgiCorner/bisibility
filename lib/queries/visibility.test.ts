@@ -7,29 +7,55 @@ import {
   visibilitySnapshotFor,
 } from "./visibility";
 
-type TestCheck = {
-  normalizationVersion: string | null;
-  position: number | null;
-  requestedDepth: number | null;
+type TestCheck = import("@/lib/rank-measurements/recorded-check").RecordedMeasurementCheck & {
   status: string;
 };
+let fixtureId = 0;
+let checkId = 0;
 
 function check(
   position: number | null,
   requestedDepth: number | null,
   overrides: Partial<TestCheck> = {},
 ): TestCheck {
+  const at = new Date(Date.parse("2026-01-01T00:00:00Z") - checkId++ * 1000);
   return {
+    id: `check-${checkId}`,
     normalizationVersion: "v1",
     position,
     requestedDepth,
     status: "completed",
+    checkedAt: at,
+    provider: "synthetic",
+    observationRun: {
+      projectId: "project-a",
+      createdAt: at,
+      completeness: "complete",
+      provider: "synthetic",
+      engine: "google",
+      surface: "web_serp",
+      configuredScope: { location: "City A", language: "en", device: "desktop" },
+      effectiveScope: { location: "City A", language: "en", device: "desktop" },
+      requestPolicy: {
+        evidence: {
+          version: 1,
+          targetRevision: "fixture-v1",
+          policyRevision: "fixture-policy-v1",
+          observedAt: at.toISOString(),
+          completeThrough: { organic_result: requestedDepth },
+        },
+      },
+    },
     ...overrides,
   };
 }
 
 function snapshot(checks: TestCheck[], volume: number | null = 1) {
-  return visibilitySnapshotFor({ rankChecks: checks }, volume);
+  return visibilitySnapshotFor(
+    { id: `fixture-${fixtureId++}`, projectId: "project-a", rankChecks: checks },
+    volume,
+    { asOf: new Date("2026-02-01T00:00:00.000Z") },
+  );
 }
 
 describe("Visibility v1.1 selector", () => {
@@ -64,7 +90,7 @@ describe("Visibility v1.1 selector", () => {
     expect(result.value).toBeCloseTo(70.3333, 4);
   });
 
-  it("uses the newest eligible completed check and skips shallower attempts", () => {
+  it("does not hide the latest unqualified attempt behind older depth", () => {
     const selected = snapshot([
       check(null, 10),
       check(3, 100),
@@ -72,8 +98,8 @@ describe("Visibility v1.1 selector", () => {
       check(8, 50),
     ]);
 
-    expect(selected.current?.position).toBe(3);
-    expect(selected.previous?.position).toBe(8);
+    expect(selected.current?.evidence).toBe("unknown");
+    expect(selected.previous).toBeNull();
   });
 
   it("keeps a completed eligible not-found check as a valid zero observation", () => {
@@ -82,13 +108,13 @@ describe("Visibility v1.1 selector", () => {
     expect(result).toMatchObject({ delta: -100, measuredKeywordCount: 1, value: 0 });
   });
 
-  it("skips a depth-10 check between two depth-100 checks for the delta", () => {
+  it("keeps an intervening unqualified depth as an explicit boundary", () => {
     const result = summarizeVisibility([
       snapshot([check(1, 100), check(null, 10), check(20, 100)], 100),
     ]);
 
-    expect(result.comparableKeywordCount).toBe(1);
-    expect(result.delta).toBeCloseTo(96.6667, 4);
+    expect(result.comparableKeywordCount).toBe(0);
+    expect(result.delta).toBeNull();
   });
 
   it("keeps scores invariant across eligible depths 100, 50, and 20", () => {

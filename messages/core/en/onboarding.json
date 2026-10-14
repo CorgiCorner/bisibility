@@ -94,7 +94,8 @@
           "sampleProject": "Sample projects don't run real checks.",
           "sendUnconfirmed": "We could not confirm this check was sent, so it was not retried. Run it again if you need it.",
           "skipped": "This check was skipped.",
-          "unexpected": "Check failed on our side. Retry in a moment."
+          "unexpected": "Check failed on our side. Retry in a moment.",
+          "measurementPolicy": "Configure measurement policy before running new checks."
         },
         "live": "Live checks usually return within a minute.",
         "notChecked": "Not checked yet",

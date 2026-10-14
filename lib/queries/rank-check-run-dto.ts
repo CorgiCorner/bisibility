@@ -31,6 +31,7 @@ export const rankCheckRunSelect = {
     },
   },
   completedCount: true,
+  createdAt: true,
   costCents: true,
   deferredCount: true,
   estimatedCostCents: true,

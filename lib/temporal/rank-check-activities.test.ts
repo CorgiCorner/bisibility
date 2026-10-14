@@ -1,4 +1,10 @@
+import { assertDefinitionExecutionPermit } from "@/lib/measurement-definitions/worker-claim";
 import { adoptedTimestampQuery } from "@/lib/metering/read.test-fixture";
+import {
+  definitionActivityContextFixture,
+  definitionClaimQueryFixture,
+} from "@/lib/rank-check/definition-claim.test-fixture";
+import { admittedDefinitionSourceFixture } from "@/lib/rank-check/definition-policy.test-fixture";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
 import { meteringNamespace } from "../metering/runtime";
@@ -100,6 +106,7 @@ vi.mock("./rank-check-ops", () => ({
 function runningInput(
   overrides: Partial<Parameters<typeof createRunningRankCheckActivity>[0]> = {},
 ) {
+  definitionActivityContextFixture(overrides.workflowRunId ?? "run_manual_1");
   return {
     keywordId: "keyword_1",
     scheduleId: null,
@@ -116,7 +123,8 @@ describe("rank-check activities", () => {
     mocks.prisma.$queryRawUnsafe.mockImplementation(adoptedTimestampQuery);
     mocks.nativeCosts.mockResolvedValue(undefined);
     mocks.prisma.$executeRaw.mockResolvedValue(1);
-    mocks.prisma.$queryRaw.mockResolvedValue([]);
+    definitionActivityContextFixture();
+    mocks.prisma.$queryRaw.mockImplementation(definitionClaimQueryFixture());
     mocks.prisma.project.findUnique.mockResolvedValue({ ownerId: "owner_1" });
     mocks.currentBudgets.mockResolvedValue([]);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
@@ -825,6 +833,14 @@ describe("rank-check activities", () => {
       startedAt: new Date("2026-01-01T06:00:05.000Z"),
     });
 
+    const admitted = admittedDefinitionSourceFixture("project_1", "keyword_1");
+    admitted.target.text = "rank tracker";
+    admitted.target.domain = "example.com";
+    admitted.target.targetUrl = null;
+    mocks.prisma.$queryRaw.mockResolvedValueOnce([
+      { intent: { version: 1, depth: 20, source: admitted } },
+    ]);
+
     await failRankCheckActivity({
       keywordId: "keyword_1",
       message: fullChainMessage,
@@ -851,7 +867,7 @@ describe("rank-check activities", () => {
       keywordId: "keyword_1",
       keywordPublicId: "kw_a00000000000000000000000",
       keywordText: "rank tracker",
-      previousPosition: 8,
+      previousPosition: null,
       projectDomain: "example.com",
       projectId: "project_1",
       provider: "primary",
@@ -916,6 +932,11 @@ describe("rank-check activities", () => {
     ).resolves.toMatchObject({ rankCheckId: "rank_running_1", position: 3 });
 
     expect(mocks.runKeywordCheckWithFallback).toHaveBeenCalledWith({
+      definitionPermit: expect.objectContaining({
+        rankCheckId: "rank_running_1",
+        workflowId: "rank-check-keyword_1",
+        workflowRunId: "run_manual_1",
+      }),
       credential: undefined,
       depth: 20,
       keywordId: "keyword_1",
@@ -924,6 +945,11 @@ describe("rank-check activities", () => {
       source: "app",
       trigger: "manual",
     });
+    expect(() =>
+      assertDefinitionExecutionPermit(
+        mocks.runKeywordCheckWithFallback.mock.calls[0][0].definitionPermit,
+      ),
+    ).not.toThrow();
   });
 
   it("keeps a run item's stored origin when the worker executes it", async () => {
@@ -1045,7 +1071,11 @@ describe("rank-check activities", () => {
       new ProviderRateLimitedError("serpapi", { message: "rate limited" }),
     );
 
-    const promise = runRankCheckActivity({ keywordId: "keyword_1", source: "manual" });
+    const promise = runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      source: "manual",
+    });
 
     await expect(promise).rejects.toMatchObject({
       nonRetryable: true,
@@ -1061,7 +1091,11 @@ describe("rank-check activities", () => {
       }),
     );
     await expect(
-      runRankCheckActivity({ keywordId: "keyword_1", source: "manual" }),
+      runRankCheckActivity({
+        keywordId: "keyword_1",
+        rankCheckId: "rank_running_1",
+        source: "manual",
+      }),
     ).rejects.toMatchObject({
       nonRetryable: true,
       type: "provider_usage_unconfirmed",
@@ -1075,7 +1109,11 @@ describe("rank-check activities", () => {
       new BudgetExhaustedError({ capCents: 1, projectId: "project_1", spentCents: 1 }),
     );
 
-    const promise = runRankCheckActivity({ keywordId: "keyword_1", source: "manual" });
+    const promise = runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      source: "manual",
+    });
 
     await expect(promise).rejects.toMatchObject({
       nonRetryable: true,
@@ -1102,7 +1140,11 @@ describe("rank-check activities", () => {
   it("maps project read-only errors to a non-retryable Temporal failure", async () => {
     mocks.runKeywordCheckWithFallback.mockRejectedValue(new ProjectReadOnlyError("project_1"));
 
-    const promise = runRankCheckActivity({ keywordId: "keyword_1", source: "manual" });
+    const promise = runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_running_1",
+      source: "manual",
+    });
 
     await expect(promise).rejects.toMatchObject({
       nonRetryable: true,
@@ -1233,7 +1275,7 @@ describe("rank-check activities", () => {
       await expect(
         runRankCheckActivity({
           keywordId: "keyword_1",
-          rankCheckId: "rank_running_1",
+          rankCheckId: "rank_inline_1",
           inline: true,
           source: "manual",
         }),
@@ -1407,7 +1449,7 @@ describe("rank-check activities", () => {
   it("records a refused paid-call fence as send_unconfirmed without spend", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-02T08:00:00.000Z"));
-    mocks.prisma.$executeRaw.mockResolvedValue(0);
+    mocks.prisma.$queryRaw.mockImplementation(definitionClaimQueryFixture({ allowed: false }));
     mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 1 });
 
     await expect(

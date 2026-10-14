@@ -7,6 +7,7 @@ export type ClaimedRankCheckGroup = {
   projectId: string;
   runId?: string;
   runItemIds?: string[];
+  runItemClaims?: RankCheckRunItemClaim[];
 };
 
 export type RankCheckClaimCompensation = {
@@ -30,3 +31,5 @@ export type ClaimDueRankChecksResult = {
   groups: ClaimedRankCheckGroup[];
   metrics: ClaimDueRankChecksMetrics;
 };
+
+export type RankCheckRunItemClaim = { id: string; claimAttempts: number; claimExpiresAt: string };

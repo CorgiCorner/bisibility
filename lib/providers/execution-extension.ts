@@ -40,6 +40,10 @@ export function hostedRankCheckEstimatedCostCents(
 
 export async function startQueuedDeploymentExecution(
   _batchId: string,
+  _beforeReserve?: ReadonlyMap<
+    string,
+    import("@/lib/metering/paid-attempt-types").NativeRequestGuard
+  >,
 ): Promise<QueuedDeploymentExecution | null> {
   return null;
 }

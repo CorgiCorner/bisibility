@@ -14,6 +14,7 @@ type CompetitorMarketApiObservation = {
 };
 
 type CompetitorMarketApiView = {
+  quality: CompetitorMarket["quality"];
   checkedKeywordCount: number;
   country: string;
   dataState: CompetitorMarket["dataState"];
@@ -31,26 +32,6 @@ type CompetitorMarketApiView = {
   }>;
 };
 
-function visibilityScore(position: number) {
-  return position <= 10 ? 11 - position : 0;
-}
-
-function marketScores(market: CompetitorMarket) {
-  const domains = market.allColumns.map((column) => column.domain);
-  const scores = new Map<string, number>();
-  for (const observation of market.observations) {
-    if (!observation.completed) continue;
-    const volume = Math.max(0, observation.volume ?? 0);
-    for (const domain of domains) {
-      const rank = observation.ranks[domain];
-      if (typeof rank !== "number" || rank <= 0) continue;
-      scores.set(domain, (scores.get(domain) ?? 0) + visibilityScore(rank) * volume);
-    }
-  }
-  const total = domains.reduce((sum, domain) => sum + (scores.get(domain) ?? 0), 0);
-  return { scores, total };
-}
-
 function measuredAt(observations: CompetitorObservation[]) {
   return (
     observations
@@ -62,9 +43,8 @@ function measuredAt(observations: CompetitorObservation[]) {
 }
 
 export function competitorMarketApiView(market: CompetitorMarket): CompetitorMarketApiView {
-  const { scores, total } = marketScores(market);
-  const ranked = market.dataState === "ranked" && total > 0;
   return {
+    quality: market.quality,
     checkedKeywordCount: market.checkedKeywordCount,
     country: market.location,
     dataState: market.dataState,
@@ -90,7 +70,7 @@ export function competitorMarketApiView(market: CompetitorMarket): CompetitorMar
     shares: market.shares.map((share) => ({
       domain: share.domain,
       sharedKeywords: share.sharedKeywords,
-      shareOfVoice: ranked ? (scores.get(share.domain) ?? 0) / total : null,
+      shareOfVoice: share.shareOfVoice === null ? null : share.shareOfVoice / 100,
     })),
   };
 }

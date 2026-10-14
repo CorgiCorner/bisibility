@@ -6,6 +6,7 @@ const db = vi.hoisted(() => ({
   rankCheck: { findFirst: vi.fn(), updateMany: vi.fn() },
   providerConnection: { findFirst: vi.fn() },
   $queryRaw: vi.fn(),
+  $executeRaw: vi.fn(),
   $transaction: vi.fn(),
 }));
 const audit = vi.hoisted(() => vi.fn());
@@ -41,6 +42,15 @@ beforeEach(() => {
   vi.clearAllMocks();
   stored = { organic_results: [], snapshotContinuation: context };
   db.$transaction.mockImplementation((fn) => fn(db));
+  db.$executeRaw.mockResolvedValue(1);
+  db.$queryRaw.mockImplementation(async (strings: TemplateStringsArray) => {
+    const sql = strings.join("?");
+    if (sql.includes("FROM users")) return [{ id: input.actorId }];
+    if (sql.includes("FROM memberships")) return [{ role: "member" }];
+    if (sql.includes("FROM rank_checks c LEFT JOIN")) return [{ original: null, observedAt: null }];
+    if (sql.includes('FROM "projects"')) return [{ id: input.projectId }];
+    throw new Error(`Unexpected fixture SQL: ${sql}`);
+  });
   db.project.findUnique.mockResolvedValue({ id: input.projectId, writeMode: "active" });
   db.providerConnection.findFirst.mockResolvedValue({ id: "connection-1" });
   db.rankCheck.findFirst.mockImplementation(async () => ({
@@ -77,6 +87,17 @@ describe("snapshot extension claim", () => {
     expect(results.filter((result) => result.ok)).toHaveLength(1);
     expect(results.filter((result) => !result.ok)).toEqual([{ ok: false, reason: "running" }]);
     expect(audit).toHaveBeenCalledTimes(1);
+    const accepted = results.find((result) => result.ok);
+    expect(accepted?.ok && accepted.definition).toMatchObject({
+      actorId: input.actorId,
+      projectId: input.projectId,
+      rankCheckId: "internal-check",
+      originProof: "legacy_retained_context",
+      originalObservedAt: null,
+      requestDepth: 10,
+      nextStart: 20,
+    });
+    expect(db.$executeRaw).toHaveBeenCalledTimes(1);
   });
   it("binds both the snapshot and original provider connection to the authorized project", async () => {
     await claimSnapshotExtension(input);
@@ -99,6 +120,14 @@ describe("snapshot extension claim", () => {
         }),
       }),
     );
+  });
+  it("refuses a revoked membership before any snapshot claim or binding write", async () => {
+    db.$queryRaw.mockImplementation(async (strings: TemplateStringsArray) =>
+      strings.join("?").includes("FROM memberships") ? [] : [{ id: input.actorId }],
+    );
+    await expect(claimSnapshotExtension(input)).rejects.toThrow("authorized");
+    expect(db.rankCheck.updateMany).not.toHaveBeenCalled();
+    expect(db.$executeRaw).not.toHaveBeenCalled();
   });
   it("rejects a stale page confirmation before claiming or calling a provider", async () => {
     expect(await claimSnapshotExtension({ ...input, nextStart: 30 })).toEqual({

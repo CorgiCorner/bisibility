@@ -1,0 +1,51 @@
+// Product evidence provenance only. No provider/finance lifecycle and no raw copies.
+model HistoryEvidenceReplayRun {
+  id String @id
+  projectId String
+  project           Project                        @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  initiatorKind String
+  initiatorRef String
+  parserVersion String
+  codeHash String
+  requestHash String
+  request Json
+  manifest Json
+  manifestHash String
+  snapshotAt DateTime @db.Timestamptz(3)
+  cursor Int @default(0)
+  revision Int @default(0)
+  applied Int @default(0)
+  excluded Int @default(0)
+  projectionPresent Int @default(0)
+  state String @default("running")
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @db.Timestamptz(3)
+  receipts HistoryEvidenceReplayReceipt[]
+  @@unique([projectId,id])
+  @@map("history_evidence_replay_runs")
+}
+model HistoryEvidenceReplayReceipt {
+  id String @id
+  projectId String
+  project            Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  runId String
+  run                HistoryEvidenceReplayRun @relation(fields: [projectId, runId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+  sourceId String
+  keywordId String?
+  keyword            Keyword?                 @relation(fields: [projectId, keywordId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+  rankCheckId String?
+  rankCheck          RankCheck?               @relation(fields: [keywordId, rankCheckId], references: [keywordId, id], onDelete: Cascade, onUpdate: NoAction)
+  sourceHash String
+  parserVersion String
+  codeHash String
+  originalCheckedAt DateTime @db.Timestamp(3)
+  retainedObservedAt DateTime? @db.Timestamptz(3)
+  sourceKind String
+  status String
+  outputHash String?
+  normalizedFacts Json?
+  qualification String @default("retained_facts_only")
+  recordedAt DateTime @default(now()) @db.Timestamptz(3)
+  @@unique([runId,sourceId])
+  @@map("history_evidence_replay_receipts")
+}

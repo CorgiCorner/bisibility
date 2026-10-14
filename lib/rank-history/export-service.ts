@@ -1,109 +1,57 @@
 import "server-only";
-
 import type { Actor } from "@/lib/auth/authorize";
-import { authorize } from "@/lib/auth/authorize";
-import { whereCompletedChecks } from "@/lib/checks/status";
-import { prisma } from "@/lib/db/prisma";
+import { AuthorizationError, authorize } from "@/lib/auth/authorize";
 import { type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id";
 import { auditKeywordExport } from "@/lib/keywords/export-audit";
+import type { RankTrackerReportOptions } from "@/lib/queries/rank-tracker-report-model";
+import type { RankReportDatabase } from "@/lib/rank-reports/access";
+import { csvRow } from "@/lib/ui/csv";
+import { legacyHistoryFromSnapshot } from "./bounded-history";
+import type { HistoryExportAuthority } from "./export-authority";
+import { historyExportReportOptions } from "./export-host";
+import { loadHistoryExportSnapshot } from "./export-snapshot";
 
 export type RankHistoryExportOptions = {
   actor: Actor;
   auditActorId?: string | null;
+  authority?: HistoryExportAuthority;
   format: "csv" | "json" | "xlsx";
   granularity: "daily" | "weekly";
   keywordIds?: string[];
   projectId: string;
   range: "30" | "90" | "all";
 };
-
-function cutoff(range: RankHistoryExportOptions["range"]) {
-  if (range === "all") return null;
-  const value = new Date();
-  value.setDate(value.getDate() - Number(range));
-  return value;
-}
-
-function auditActorId(input: RankHistoryExportOptions) {
-  return input.auditActorId === undefined ? input.actor.id : input.auditActorId;
-}
-
 function requiredPublicId(value: string | null, prefix: PublicIdPrefix, resource: string) {
-  if (!value || parsePublicId(value)?.prefix !== prefix) {
+  if (!value || parsePublicId(value)?.prefix !== prefix)
     throw new Error(`${resource} public ID is not available.`);
-  }
   return value;
 }
-
-export async function loadRankHistoryExport(input: RankHistoryExportOptions) {
-  if (input.keywordIds?.some((keywordId) => parsePublicId(keywordId)?.prefix !== "kw")) {
+/** The legacy result shape is preserved; every database read is now bounded and authorized. */
+export async function loadRankHistoryExport(
+  input: RankHistoryExportOptions,
+  options: { report?: RankTrackerReportOptions; db?: RankReportDatabase } = {},
+) {
+  if (input.keywordIds?.some((id) => parsePublicId(id)?.prefix !== "kw"))
     throw new Error("Keyword not found.");
-  }
-  const project = await prisma.project.findFirst({
-    select: { id: true, publicId: true },
-    where: { OR: [{ id: input.projectId }, { publicId: input.projectId }] },
-  });
-  if (!project) throw new Error("Project not found.");
-  authorize(input.actor, "read", { projectId: project.id, type: "keyword" });
-
-  const minDate = cutoff(input.range);
-  const keywords =
-    input.keywordIds?.length === 0
-      ? []
-      : await prisma.keyword.findMany({
-          select: {
-            createdAt: true,
-            device: true,
-            location: true,
-            publicId: true,
-            rankChecks: {
-              orderBy: [{ checkedAt: "desc" }, { publicId: "desc" }],
-              select: {
-                checkedAt: true,
-                normalizationVersion: true,
-                position: true,
-                previousPosition: true,
-                provider: true,
-                publicId: true,
-                rankingUrl: true,
-                requestedDepth: true,
-              },
-              where: {
-                ...whereCompletedChecks(),
-                ...(minDate ? { checkedAt: { gte: minDate } } : {}),
-              },
-            },
-            tags: { select: { tag: { select: { name: true } } } },
-            targetUrl: true,
-            text: true,
-            topic: true,
-            intent: true,
-          },
-          orderBy: { createdAt: "desc" },
-          where: {
-            projectId: project.id,
-            ...(input.keywordIds?.length ? { publicId: { in: input.keywordIds } } : {}),
-          },
-        });
-
-  if (input.keywordIds) {
-    const order = new Map(input.keywordIds.map((id, index) => [id, index]));
-    keywords.sort(
-      (left, right) =>
-        (order.get(left.publicId) ?? Number.MAX_SAFE_INTEGER) -
-        (order.get(right.publicId) ?? Number.MAX_SAFE_INTEGER),
-    );
-  }
-
+  if (input.authority && input.authority.actor.id !== input.actor.id)
+    throw new AuthorizationError("forbidden");
+  const context = input.authority ?? { actor: input.actor, transport: "session" as const };
+  const snapshot = await loadHistoryExportSnapshot(
+    context,
+    input,
+    options.report ?? historyExportReportOptions(context),
+    options.db,
+  );
+  authorize(input.actor, "read", { projectId: snapshot.project.id, type: "keyword" });
   await auditKeywordExport(
-    auditActorId(input),
-    project.id,
-    project.publicId,
-    keywords.length,
+    input.auditActorId === undefined ? input.actor.id : input.auditActorId,
+    snapshot.project.id,
+    snapshot.project.publicId,
+    snapshot.keywords.length,
     input.format,
     "history",
   );
-  return { keywords, project };
+  return legacyHistoryFromSnapshot(snapshot, input);
 }
 
 type LoadedRankHistory = Awaited<ReturnType<typeof loadRankHistoryExport>>;
@@ -150,30 +98,18 @@ export function rankHistoryRows(
   );
 }
 
-function csvCell(value: unknown) {
-  const text =
-    value === null || value === undefined
-      ? ""
-      : value instanceof Date
-        ? value.toISOString()
-        : String(value);
-  return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
 export function rankHistoryCsvLine(row: ReturnType<typeof rankHistoryRows>[number]) {
-  return [
+  return csvRow([
     row.keywordId,
     row.keyword,
-    row.checkedAt,
+    row.checkedAt.toISOString(),
     row.position,
     row.previousPosition,
     row.rankingUrl,
     row.provider,
     row.requestedDepth,
     row.normalizationVersion,
-  ]
-    .map(csvCell)
-    .join(",");
+  ]);
 }
 
 export const rankHistoryCsvHeader =

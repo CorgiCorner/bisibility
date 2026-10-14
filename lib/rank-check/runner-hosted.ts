@@ -116,6 +116,8 @@ export async function prepareLiveRankExecution(
           operationKey: `rank-check:${input.rankCheckId}`,
           provider,
           rankCheckId: input.rankCheckId,
+          beforeFence: input.definitionFence,
+          beforeReserve: input.definitionBeforeReserve,
         })
       : null;
   if (hosted && !execution) {

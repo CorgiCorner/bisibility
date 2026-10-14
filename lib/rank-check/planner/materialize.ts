@@ -1,6 +1,6 @@
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
+import { captureDefinitionItemIntents } from "@/lib/measurement-definitions/worker-intent";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import {
   activeMarketLocationIds,
@@ -244,8 +244,14 @@ export async function materializePlannedRun(runId: string, now: Date, runNow = f
         where: { rankCheckId: null, runId, status: "queued" },
       });
     }
+    const definitionIntents = await captureDefinitionItemIntents(
+      tx,
+      run.projectId,
+      lockedRows.map((row) => ({ keywordId: row.id, depth: admission.depth })),
+    );
     await tx.rankCheckRunItem.createMany({
       data: lockedRows.map(({ id: keywordId }, index) => ({
+        definitionIntent: definitionIntents.get(keywordId),
         estimatedCostCents:
           admission.itemCosts[index] === null ? null : Math.ceil(admission.itemCosts[index] ?? 0),
         keywordId,

@@ -72,7 +72,11 @@ async function rankCheckRunReadModel(
   };
 }
 
-export async function listRankCheckRuns(projectId: string, url: URL) {
+export async function listRankCheckRuns(
+  projectId: string,
+  url: URL,
+  options: { includeUnlaunched?: boolean } = {},
+) {
   const segment = url.searchParams.get("segment") ?? "history";
   if (segment !== "history" && segment !== "planned") {
     throw new ApiInputError("Segment must be history or planned.");
@@ -83,6 +87,7 @@ export async function listRankCheckRuns(projectId: string, url: URL) {
   const cursorDate = cursor ? new Date(cursor.t) : null;
   const cursorId = cursor?.public_id;
   const history = segment === "history";
+  const includeUnlaunched = history && options.includeUnlaunched === true;
   const plannedStatuses = statuses?.filter(
     (candidate): candidate is "planned" | "blocked" =>
       candidate === "planned" || candidate === "blocked",
@@ -106,6 +111,7 @@ export async function listRankCheckRuns(projectId: string, url: URL) {
         statuses,
         cursorDate && cursorId ? { id: cursorId, timestamp: cursorDate } : null,
         limit + 1,
+        includeUnlaunched,
       )
     : await prisma.rankCheckRun.findMany({
         orderBy: [{ plannedFor: "asc" }, { publicId: "asc" }],
@@ -141,9 +147,10 @@ export async function listRankCheckRuns(projectId: string, url: URL) {
       ? (last.launchedAt ?? last.finishedAt)
       : last.plannedFor
     : null;
+  const cursorTimestamp = includeUnlaunched ? (last?.createdAt ?? null) : timestamp;
   const nextCursor =
-    rows.length > limit && last && timestamp
-      ? encodeCursor({ publicId: last.publicId, timestamp }, "rcr")
+    rows.length > limit && last && cursorTimestamp
+      ? encodeCursor({ publicId: last.publicId, timestamp: cursorTimestamp }, "rcr")
       : null;
   return {
     data: await Promise.all(

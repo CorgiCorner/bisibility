@@ -135,7 +135,11 @@
       "startUnconfirmed": "Se perdió la respuesta de inicio. Reintenta para recuperar la misma ejecución sin iniciarla dos veces.",
       "refreshEstimate": "Actualizar estimación",
       "marketInactive": "Este mercado ya no está activo. Reanúdalo antes de iniciar una comprobación.",
-      "keywordsArchived": "Estas palabras clave se han archivado. Actualiza la página para elegir otro alcance."
+      "keywordsArchived": "Estas palabras clave se han archivado. Actualiza la página para elegir otro alcance.",
+      "measurementPolicy": "Política de medición",
+      "configureMeasurementPolicy": "Configurar política",
+      "measurementPolicyUnconfigured": "Configura la política de medición antes de nuevas comprobaciones.",
+      "measurementPolicyUnsupported": "La política ya no coincide con los adaptadores actuales. Revísala y configúrala de nuevo."
     },
     "globalError": {
       "description": "La aplicación no ha podido renderizar esta página. Recarga para volver a intentarlo.",
@@ -593,6 +597,10 @@
       },
       "toolbarSearch": {
         "clear": "Borrar {label}"
+      },
+      "noticeMotion": {
+        "pause": "Pausar el desplazamiento",
+        "resume": "Reanudar el desplazamiento"
       }
     },
     "nativeUsage": {
@@ -827,6 +835,1197 @@
         "settled": "Liquidado",
         "released": "Liberado"
       }
+    },
+    "measurementHelp": {
+      "explain": "Explicar: {title}",
+      "close": "Cerrar",
+      "glossary": "Explicación completa: {title}",
+      "unknownVersion": "La definición detallada de esta versión no está disponible.",
+      "neutralDefinition": "El informe identifica una medición, pero su definición detallada no está disponible.",
+      "contextLoading": "Se está cargando el contexto del informe. La definición sigue disponible.",
+      "contextError": "El contexto del informe no está disponible. Esto no significa un resultado cero.",
+      "unknownValue": "Desconocido",
+      "counts": {
+        "expected": "Objetivos esperados",
+        "measured": "Objetivos observados con resultado concluyente",
+        "ranked": "Objetivos posicionados",
+        "knownAbsent": "Ausencia confirmada",
+        "unknown": "Resultados desconocidos",
+        "neverChecked": "Nunca observados",
+        "failed": "Intentos fallidos",
+        "stale": "Observaciones antiguas",
+        "unsupported": "No admitidos",
+        "freshDeterminate": "Objetivos recientes concluyentes",
+        "comparable": "Pares de objetivos comparables",
+        "metricEligible": "Objetivos aptos para la métrica",
+        "unknownFreshness": "Objetivos de vigencia desconocida"
+      },
+      "entries": {
+        "organic_visibility_top20": {
+          "title": "Visibilidad orgánica",
+          "versions": {
+            "v1": {
+              "definition": "Un índice versionado de resultados orgánicos en las primeras 20 posiciones.",
+              "interpretation": "Lee el índice junto con la cobertura observada, los resultados recientes concluyentes y los objetivos comparables.",
+              "limitation": "No mide tráfico ni contactos. Un resultado desconocido no confirma ausencia; un cambio de cobertura por sí solo no demuestra mejora."
+            }
+          }
+        },
+        "organic_top10_rate": {
+          "title": "Porcentaje en el Top 10 orgánico",
+          "versions": {
+            "qualified-v1": {
+              "definition": "La proporción de objetivos aptos con resultado concluyente confirmado en el Top 10 orgánico.",
+              "interpretation": "Lee el porcentaje junto con los objetivos esperados, medidos y posicionados dentro del mismo alcance.",
+              "limitation": "Los objetivos desconocidos no están posicionados ni ausentes. El mismo porcentaje puede tener distinta cobertura; la comparación requiere una cohorte comparable."
+            }
+          }
+        },
+        "organic_rank": {
+          "title": "Posición orgánica",
+          "versions": {
+            "help-v1": {
+              "definition": "La posición confirmada de un enlace orgánico en la escala de clasificación declarada.",
+              "interpretation": "Compara posiciones solo con alcance de búsqueda y metodología compatibles.",
+              "limitation": "La posición de un negocio, un resultado de Maps o la presencia de un bloque no es una posición orgánica. Los resultados desconocidos o ausentes no reciben posiciones ficticias."
+            }
+          }
+        },
+        "feature_presence": {
+          "title": "Presencia de funciones de búsqueda",
+          "versions": {
+            "help-v1": {
+              "definition": "Indica si se observó un bloque, como Resultados locales de Google: negocios con un mapa en los resultados habituales de Google.",
+              "interpretation": "Un bloque visible y un objetivo confirmado dentro del bloque son observaciones distintas.",
+              "limitation": "La falta de un bloque observado, un negocio sin confirmar, una identidad desconocida y una medición no admitida son estados diferentes."
+            }
+          }
+        },
+        "business_slot": {
+          "title": "Resultados locales de Google",
+          "versions": {
+            "help-v1": {
+              "definition": "Negocios con un mapa en los resultados habituales de Google; la posición del negocio corresponde a una sucursal confirmada explícitamente.",
+              "interpretation": "La identidad estable de la sucursal y su bloque, página y posición originales identifican la observación.",
+              "limitation": "Compartir dominio o tener un nombre parecido solo genera un candidato. Los resultados promocionados o de promoción desconocida no son aptos como orgánicos; Maps y Local Finder usan escalas distintas."
+            }
+          }
+        },
+        "maps_rank": {
+          "title": "Posición en Maps",
+          "versions": {
+            "help-v1": {
+              "definition": "La posición confirmada de un resultado en Google Maps, en su propia escala.",
+              "interpretation": "Separa las observaciones de Maps de los resultados habituales de Google y de Local Finder.",
+              "limitation": "Esta explicación no indica que la medición de Maps esté disponible. Una medición no admitida no significa ausencia del negocio ni posición cero."
+            }
+          }
+        },
+        "local_finder_rank": {
+          "title": "Posición en Local Finder",
+          "versions": {
+            "help-v1": {
+              "definition": "La posición confirmada en la vista ampliada de resultados locales de Google, en su propia escala.",
+              "interpretation": "Separa Local Finder de las posiciones de negocios en resultados habituales y de Maps.",
+              "limitation": "Esta explicación no habilita la medición de Local Finder. Las observaciones desconocidas o no admitidas no demuestran ausencia."
+            }
+          }
+        },
+        "average_ranked_position": {
+          "title": "Posición media entre objetivos posicionados",
+          "versions": {
+            "help-v1": {
+              "definition": "La posición media de objetivos con rango positivo confirmado en un alcance y una escala compatibles.",
+              "interpretation": "Lee la media junto con el número de objetivos posicionados y la cobertura.",
+              "limitation": "Los objetivos ausentes y desconocidos no reciben posición cero ni 101. Perder observaciones por sí solo no demuestra mejora."
+            }
+          }
+        },
+        "observation_time": {
+          "title": "Momento de observación",
+          "versions": {
+            "help-v1": {
+              "definition": "Cuándo se observó el resultado, no cuándo se leyó el informe o la caché.",
+              "interpretation": "La solicitud, el registro, la observación y el momento de referencia del informe tienen significados distintos.",
+              "limitation": "Leer un resultado en caché no crea una observación nueva ni actualiza los datos antiguos. Las fechas históricas ausentes siguen siendo desconocidas."
+            }
+          }
+        },
+        "data_quality": {
+          "title": "Calidad y cobertura de datos",
+          "versions": {
+            "help-v1": {
+              "definition": "La cobertura observada describe observaciones concluyentes conservadas; la cobertura reciente exige además una política explícita de vigencia.",
+              "interpretation": "Lee por separado los objetivos esperados, observados, recientes concluyentes, desconocidos y comparables. El número comparable describe pares, no cobertura.",
+              "limitation": "Una vigencia desconocida no es reciente. Un intento fallido puede coexistir con una observación correcta conservada; los contadores de calidad pueden solaparse."
+            }
+          }
+        },
+        "rank_movement": {
+          "title": "Cambio comparable",
+          "versions": {
+            "help-v1": {
+              "definition": "Un cambio entre observaciones con alcance, metodología, identidad y evidencia compatibles.",
+              "interpretation": "Lee el número de pares comparables y sus fechas originales. Los puntos porcentuales difieren del cambio porcentual relativo.",
+              "limitation": "La falta de referencia, un alcance distinto, una entrada, salida o reentrada no son movimientos numéricos ordinarios. Cambiar la composición por sí solo no demuestra mejora."
+            }
+          }
+        },
+        "ranking_url": {
+          "title": "URL observada y deseada",
+          "versions": {
+            "help-v1": {
+              "definition": "La URL observada es la página encontrada en esa observación; la URL deseada es el objetivo configurado.",
+              "interpretation": "Lee cada resultado histórico con la URL observada en esa comprobación.",
+              "limitation": "La URL actual o deseada no puede sustituir una URL histórica ausente. La evidencia que falta sigue sin estar disponible."
+            }
+          }
+        },
+        "provider_cost": {
+          "title": "Uso y coste del proveedor",
+          "versions": {
+            "help-v1": {
+              "definition": "La estimación previa a la ejecución es distinta del uso o coste confirmado tras la liquidación.",
+              "interpretation": "Lee los importes en su unidad nativa. El coste del proveedor, el cargo al cliente y los créditos de la aplicación son medidas separadas.",
+              "limitation": "La cuota de búsquedas no es USD. Un cargo desconocido no es cero; leer la caché no es una nueva solicitud de pago. La ayuda no consulta precios ni ejecuta comprobaciones."
+            }
+          }
+        },
+        "measurement_depth": {
+          "title": "Profundidad de resultados",
+          "versions": {
+            "help-v1": {
+              "definition": "El horizonte solicitado difiere del horizonte cuya integridad está demostrada por la observación.",
+              "interpretation": "Interpreta un objetivo no encontrado según el alcance observado, el tipo de resultado, la escala y la evidencia de integridad.",
+              "limitation": "La profundidad solicitada por sí sola no demuestra ausencia. La integridad desconocida sigue siendo desconocida; la integridad orgánica no prueba la de un bloque local."
+            }
+          }
+        },
+        "search_location": {
+          "title": "Ubicación de búsqueda",
+          "versions": {
+            "help-v1": {
+              "definition": "El lugar desde el que se simula la búsqueda; no es la dirección del negocio ni la identidad de la sucursal.",
+              "interpretation": "Lee el alcance configurado y el efectivo cuando el proveedor sustituye una ubicación.",
+              "limitation": "Una observación de una ciudad no cubre todos sus puntos. Sustituir la ciudad por el país no aporta evidencia para la ciudad solicitada."
+            }
+          }
+        },
+        "refresh_schedule": {
+          "title": "Programación y actualización",
+          "versions": {
+            "help-v1": {
+              "definition": "La programación solicita observaciones nuevas; actualizar la vista lee datos de informes guardados.",
+              "interpretation": "Lee el momento original de observación y la política explícita de vigencia independientemente de la actualización de la vista.",
+              "limitation": "Abrir la ayuda o leer un widget no ejecuta una comprobación del proveedor, no cambia la programación ni crea una observación nueva desde la caché."
+            }
+          }
+        },
+        "visibility_top20": {
+          "title": "Visibilidad orgánica",
+          "versions": {
+            "visibility-top20-v1": {
+              "definition": "Un índice versionado de resultados orgánicos en las primeras 20 posiciones.",
+              "interpretation": "Lee el índice junto con la cobertura observada, los resultados recientes concluyentes y los objetivos comparables.",
+              "limitation": "No mide tráfico ni contactos. Un resultado desconocido no confirma ausencia; un cambio de cobertura por sí solo no demuestra mejora."
+            }
+          }
+        },
+        "competitor_share_of_voice_top10": {
+          "title": "Cuota de visibilidad entre competidores",
+          "versions": {
+            "bisibility-sov-top10-v2": {
+              "definition": "La proporción del dominio seleccionado en las puntuaciones lineales del Top 10 de los dominios seleccionados, ponderadas por volumen de búsquedas.",
+              "interpretation": "Todos los dominios utilizan el mismo conjunto de palabras clave válidas y los mismos pesos. Lee el porcentaje junto con la cobertura observada y la cobertura de datos recientes.",
+              "limitation": "Es un índice relativo de los dominios seleccionados, no cuota de mercado, tráfico ni clientes potenciales. Se excluyen las observaciones desconocidas y desactualizadas; una puntuación total de cero no produce un porcentaje. La versión 2 cambia el tratamiento anterior de los volúmenes ausentes y las observaciones incompletas."
+            }
+          }
+        }
+      }
+    },
+    "personalViews": {
+      "latestRevision": "Última revisión",
+      "openLatest": "Abrir la última vista en una pestaña nueva",
+      "reloadLatest": "Recargar la última revisión",
+      "reviewLatest": "Conservar borrador y usar la última revisión",
+      "cancel": "Cancelar",
+      "conflict": "La vista ha cambiado. Revisa la versión más reciente antes de guardar.",
+      "delete": "Eliminar vista",
+      "discard": "Descartar cambios",
+      "failed": "No se pudo guardar la vista. Tus cambios siguen disponibles.",
+      "general": "General",
+      "modified": "Cambios sin guardar",
+      "name": "Nombre",
+      "personal": "Personal",
+      "project": "Proyecto",
+      "saveAs": "Guardar como",
+      "saved": "Guardado",
+      "saveChanges": "Guardar cambios",
+      "saving": "Guardando",
+      "setDefault": "Establecer como mi predeterminada",
+      "unavailableDefault": "Tu vista predeterminada no está disponible. Se muestra General.",
+      "unavailableView": "Esta vista no está disponible. Elige General para cambiar el alcance explícitamente.",
+      "visibility": "Visibilidad",
+      "unavailable_scope": "Este alcance no está disponible. Elige otra vista o elimina el filtro no disponible.",
+      "invalid_url": "El enlace contiene filtros no válidos. Corrige el enlace o elige General.",
+      "unavailable_view": "Esta vista no está disponible. Elige General para cambiar el alcance explícitamente.",
+      "columnOrder": "Orden de columnas",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "privateUnavailable": "Las vistas privadas aún no están disponibles.",
+      "privateSharing": "Elige Proyecto para compartir esta vista con el proyecto."
+    },
+    "businessLocations": {
+      "locations": "Ubicaciones de empresa",
+      "locationsHelp": "Las sucursales mantienen identidades separadas aunque compartan una web. Seleccionar aquí no asigna el objetivo.",
+      "locationVisibility": "Mostrar ubicaciones",
+      "noLocations": "No hay ubicaciones en este estado.",
+      "readOnly": "Puedes consultar las ubicaciones. La edición no está disponible.",
+      "createLocation": "Añadir ubicación",
+      "editIdentity": "Editar identidad",
+      "archive": "Archivar",
+      "restore": "Restaurar",
+      "identityRevision": "Revisión de identidad {revision}",
+      "identityVersionHelp": "Guardar crea una nueva revisión de identidad. Las observaciones históricas no cambian.",
+      "identityHelp": "Mantén CID y Place ID como texto. La web es un indicio débil, no un identificador de sucursal. No se consultan las URL de Maps.",
+      "save": "Guardar identidad",
+      "cancel": "Cancelar",
+      "saving": "Guardando…",
+      "saved": "Guardado.",
+      "conflict": "Hay un conflicto al guardar. Revisa los datos actuales antes de continuar; se conserva el borrador.",
+      "saveError": "No se pudo guardar. Se conserva el borrador; vuelve a intentarlo.",
+      "selectionChanged": "El recurso seleccionado ha cambiado. Cierra el editor y abre la selección actual.",
+      "currentUnavailable": "Los datos actuales no están disponibles. Solicita una actualización autorizada antes de revisar el conflicto.",
+      "reviewCurrent": "Revisar datos actuales",
+      "reviewChangedFields": "Compara los valores actuales con el borrador. Conservar los cambios también actualiza los campos sin modificar.",
+      "current": "Actual",
+      "yourDraft": "Tu borrador",
+      "notProvided": "No indicado",
+      "keepChangedFields": "Conservar mis campos modificados",
+      "useCurrent": "Usar valores actuales",
+      "editConflictingIdentity": "Revisar y editar la identidad en conflicto",
+      "unavailableBranch": "Ubicación no disponible",
+      "archiveHelp": "Archivar conserva el historial de identidad y coincidencias. Los objetivos archivados quedan indisponibles; restaurar vuelve a comprobar los identificadores activos.",
+      "archiveConfirmation": "He revisado el efecto sobre los objetivos asignados.",
+      "currentState": "Estado actual: {state}; versión {version}.",
+      "reviewState": "Usar la versión de estado revisada",
+      "confirmAction": "Confirmar cambio de estado",
+      "assignSubject": "Asignar objetivo local",
+      "assignmentHelp": "Elige explícitamente una ubicación objetivo activa y su revisión de identidad actual para esta palabra o mercado. No se selecciona ninguna automáticamente.",
+      "staleAssignment": "La identidad del objetivo está archivada o desactualizada. Selecciona una revisión disponible o elimina la asignación.",
+      "subject": "Ubicación objetivo",
+      "noSubject": "Sin objetivo asignado",
+      "saveSubject": "Guardar asignación de objetivo",
+      "currentAssignment": "Objetivo actual: {name}; revisión de asignación {revision}.",
+      "reviewAssignmentKeepChoice": "Usar la revisión de asignación revisada y conservar mi elección",
+      "reviewCandidate": "Revisar candidato",
+      "candidateBranch": "Ubicación: {name}",
+      "candidateItem": "Empresa observada",
+      "candidateDomain": "Web observada",
+      "surface": "Superficie de resultados de Google",
+      "matchStatus": "Estado de coincidencia",
+      "matchReason": "Motivo de coincidencia",
+      "observedAt": "Fecha de observación",
+      "promotion": "Evidencia de promoción",
+      "sourceSlot": "Posición original",
+      "sourcePage": "Página original",
+      "sourceOrdinal": "Índice original del elemento",
+      "confirmationBlocked": "Este elemento no se puede confirmar manualmente como candidato débil. Los conflictos de identidad y la falta de datos siguen sin resolver.",
+      "reviewOnlyThisItem": "La confirmación solo afecta a este elemento conservado. No confirma resultados futuros ni convierte elementos desconocidos o promocionados en orgánicos.",
+      "reviewAction": "Acción de revisión",
+      "confirmCandidate": "Confirmar este candidato",
+      "rejectCandidate": "Rechazar este elemento",
+      "candidateConfirmation": "He revisado esta ubicación y este elemento observado concreto.",
+      "saveReview": "Guardar revisión del elemento",
+      "candidateConflictHelp": "La decisión o identidad ha cambiado. Actualiza o vuelve a cotejar la evidencia conservada y revisa la nueva decisión.",
+      "reviewLatestDecision": "Revisar la última decisión",
+      "rematch": "Volver a cotejar resultados conservados",
+      "rematchHelp": "Reevalúa solo la observación conservada y las versiones actuales exactas de las decisiones. No envía solicitudes al proveedor ni modifica decisiones anteriores.",
+      "missingRetainedEvidence": "La evidencia conservada necesaria no está disponible. El nuevo cotejo está bloqueado.",
+      "rematchConfirmation": "He revisado la observación conservada y las versiones actuales de las decisiones.",
+      "confirmRematch": "Cotejar observación conservada",
+      "fields": {
+        "name": "Nombre de ubicación",
+        "address": "Dirección",
+        "domain": "Dominio web",
+        "cid": "Google CID (texto)",
+        "placeId": "Google Place ID (texto)",
+        "mapsUrl": "URL de Google Maps",
+        "latitude": "Latitud",
+        "longitude": "Longitud",
+        "reason": "Motivo",
+        "role": "Finalidad de ubicación"
+      },
+      "roles": {
+        "subject": "Objetivo",
+        "competitor": "Competidor"
+      },
+      "states": {
+        "active": "Activa",
+        "archived": "Archivada"
+      },
+      "surfaces": {
+        "web_serp": "Resultados web de Google",
+        "maps": "Google Maps",
+        "local_finder": "Google Local Finder"
+      },
+      "matchStates": {
+        "confirmed": "Confirmada",
+        "candidate": "Candidata",
+        "rejected": "Rechazada",
+        "unresolved": "Sin resolver"
+      },
+      "promotions": {
+        "organic": "Orgánica",
+        "promoted": "Promocionada",
+        "unknown": "Desconocida"
+      },
+      "validation": {
+        "name": "Introduce un nombre de ubicación válido.",
+        "address": "Usa un máximo de 500 caracteres para la dirección.",
+        "domain": "Introduce un dominio web válido.",
+        "cid": "Introduce CID como texto de dígitos, sin conversión numérica.",
+        "placeId": "Introduce un Place ID textual válido sin espacios.",
+        "mapsUrl": "Usa una URL HTTPS de Google Maps admitida y sin credenciales.",
+        "coordinates": "Introduce ambas coordenadas finitas: latitud de −90 a 90 y longitud de −180 a 180.",
+        "reason": "Introduce un motivo de 1 a 500 caracteres.",
+        "confirmed": "Revisa y confirma la acción.",
+        "noChange": "Modifica un campo de identidad antes de guardar una revisión."
+      },
+      "reasons": {
+        "exact_identifier": "Identificador estable coincidente",
+        "stable_identifier_conflict": "Identificador estable en conflicto",
+        "contradictory_identifiers": "Identificadores contradictorios",
+        "ambiguous_exact_items": "Varios elementos exactos",
+        "ambiguous_registry_identity": "Varias ubicaciones coincidentes",
+        "invalid_identifier": "Identificador mal formado",
+        "unsafe_numeric_identifier": "Identificador numérico inseguro",
+        "invalid_ordinals": "Posiciones originales inválidas",
+        "duplicate_observation_identity": "Identidad de observación duplicada",
+        "weak_name": "Nombre similar",
+        "weak_domain": "Web compartida",
+        "weak_name_and_domain": "Nombre similar y web compartida",
+        "insufficient_evidence": "Evidencia insuficiente",
+        "manually_confirmed_item": "Este elemento se confirmó manualmente",
+        "manually_rejected_item": "Este elemento se rechazó manualmente"
+      },
+      "chooseAssignmentScope": "Elige una palabra clave o un mercado",
+      "assignmentScopeKind": "Ámbito de asignación",
+      "keywordScope": "Palabra clave",
+      "marketScope": "Mercado",
+      "searchScope": "Buscar",
+      "noScopes": "No hay palabras clave ni mercados activos que coincidan.",
+      "nextScopes": "Resultados siguientes",
+      "scopeSelectionHelp": "Busca y elige un ámbito explícitamente. Elegir una ubicación arriba no la asigna.",
+      "readError": "No se pudieron leer los datos actuales. Se conserva tu selección.",
+      "loading": "Cargando…",
+      "devices": {
+        "desktop": "Ordenador",
+        "mobile": "Móvil"
+      },
+      "retainedMatches": "Coincidencias guardadas",
+      "chooseRetainedObservation": "Elige una observación existente para revisar esta sucursal. La lectura y la nueva coincidencia usan datos guardados.",
+      "readObservations": "Leer observaciones guardadas",
+      "recordedAt": "Registrado",
+      "noRetainedObservations": "No hay observaciones locales guardadas disponibles.",
+      "retainedBatch": "Se revisan {included} de {total} elementos normalizados en este lote.",
+      "noMatchDecisions": "No hay decisiones de coincidencia para este lote. Evalúa los datos guardados con una nueva coincidencia.",
+      "identityHistory": "Historial de identidad",
+      "identityHistoryHelp": "Las identidades anteriores se conservan. Leer una revisión no reinterpreta sus observaciones.",
+      "readIdentityHistory": "Leer historial de identidad",
+      "identityEffectiveFrom": "Vigente desde",
+      "identifierClaimed": "Otra sucursal activa ya tiene este CID o PlaceID. Corrige los identificadores o resuelve esa asignación antes de reintentar.",
+      "mapsIdentifierConflict": "La URL de Maps no coincide con el CID o PlaceID de esta identidad. Revisa ambos antes de guardar.",
+      "invalidMapsIdentifier": "La URL de Maps contiene identificadores inválidos o contradictorios. Usa una URL explícita de Maps compatible.",
+      "idempotencyConflict": "Esta clave se usó para otra solicitud. Cierra la revisión e inicia una nueva acción.",
+      "decisionSource": "Origen de la decisión",
+      "decisionRecordedAt": "Decisión registrada",
+      "matcherVersion": "Versión del comparador",
+      "sourceGroup": "Grupo original de Maps",
+      "sourceScale": "Escala de posición original",
+      "reviewSnapshotAt": "Instantánea de revisión",
+      "previousCandidates": "Lote anterior de candidatos",
+      "nextCandidates": "Siguiente lote de candidatos",
+      "decisionSources": {
+        "automatic": "Coincidencia automática original",
+        "manual": "Revisión manual",
+        "rematch": "Nueva coincidencia derivada"
+      },
+      "locationsSummary": "Gestiona las identidades de las sucursales y las ubicaciones archivadas.",
+      "scopeSelectionSummary": "Elige dónde asignar una sucursal.",
+      "identitySummary": "Mantén actualizados los datos de esta sucursal.",
+      "assignmentSummary": "Elige una sucursal para esta palabra clave o mercado.",
+      "helpLabel": "Acerca de {section}"
+    },
+    "measurementSettings": {
+      "title": "Ajustes de medición",
+      "displayHelp": "Editar, consultar u ocultar esta vista no inicia una medición ni cambia un horario.",
+      "readOnly": "Puedes consultar los ajustes. No puedes cambiar mediciones ni horarios.",
+      "manualOnly": "Solo mediciones manuales; aquí no se crea ningún horario.",
+      "enabled": "Activado",
+      "paused": "En pausa",
+      "unavailable": "Opción no disponible",
+      "invalidSettings": "Revisa los ajustes marcados. Usa una hora, zona y opción de calendario admitidas y una variación de 0 a 120 minutos.",
+      "preview": "Revisar estimación de medición",
+      "cancel": "Cancelar",
+      "selectionChanged": "El alcance seleccionado ha cambiado. Cierra y vuelve a abrir los controles.",
+      "quoteReview": "Revisión de estimación y alcance",
+      "scopeReview": "Alcance configurado y efectivo",
+      "configured": "Alcance configurado",
+      "effective": "Alcance efectivo",
+      "effectiveUnknown": "El alcance efectivo es desconocido; la configuración no demuestra la geolocalización del proveedor.",
+      "geoHelp": "Una ciudad o punto selecciona un alcance de consulta, no la cobertura de toda el área. La dirección del negocio y el lugar de búsqueda son distintos.",
+      "counts": "Palabras: {keywords}; objetivos: {targets}; objetivos aptos: {eligible}.",
+      "overlaps": "Otras ejecuciones activas en este alcance: {count}.",
+      "manualEstimate": "Uso estimado de una ejecución manual",
+      "amountUnknown": "Cantidad desconocida",
+      "estimateHelp": "Son estimaciones en la unidad nativa de cada proveedor, no uso confirmado. Las cantidades parciales solo cubren objetivos conocidos; desconocido no significa cero. No se combinan monedas ni unidades.",
+      "scheduleForecast": "Previsión del horario",
+      "calendarWindow": "Ocurrencias previstas: {count}, de {start} a {end} ({timezone}), según el calendario del servidor.",
+      "nextRun": "Próxima ocurrencia prevista: {time} ({timezone}).",
+      "nextRunUnknown": "No se ha establecido la próxima ocurrencia.",
+      "noScheduleForecast": "No hay previsión de horario disponible.",
+      "quoteMetadata": "Capacidad {capability}; tarifa {rate}; estimación válida hasta {expiry}.",
+      "budgetRecheck": "El presupuesto y los requisitos de ejecución se vuelven a comprobar al iniciar. Una estimación no es una reserva ni un cargo liquidado.",
+      "scheduleDraft": "Horario futuro",
+      "scheduleHelp": "Editar el borrador mantiene el horario actual. Guardar cambia las ocurrencias futuras y no inicia un análisis inmediato.",
+      "manualLaunch": "Iniciar medición manual",
+      "manualConsent": "He revisado este alcance exacto y la estimación nativa; solicito una ejecución manual.",
+      "launch": "Solicitar ejecución manual",
+      "saveSchedule": "Guardar intención de horario futuro",
+      "scheduleConsent": "He revisado el calendario y las estimaciones; aplico este cambio a las ocurrencias futuras.",
+      "saveScheduleButton": "Guardar horario futuro",
+      "recoverLaunch": "Recuperar la misma intención de inicio",
+      "recoverSchedule": "Recuperar el mismo guardado de horario",
+      "actionFailed": "No se ha confirmado el resultado. Se conserva el borrador.",
+      "revisionConflict": "La revisión de ajustes ha cambiado: borrador {base}, actual {current}.",
+      "reviewConflictHelp": "Compara los ajustes actuales y el borrador. Conservar el borrador adopta la revisión revisada y requiere una nueva estimación.",
+      "reviewCurrent": "Actualizar ajustes actuales",
+      "keepDraftNewRevision": "Conservar borrador con revisión revisada",
+      "current": "Actual",
+      "yourDraft": "Tu borrador",
+      "fields": {
+        "provider": "Proveedor",
+        "surface": "Resultados de Google",
+        "geo": "Lugar de búsqueda",
+        "language": "Idioma de búsqueda",
+        "device": "Dispositivo",
+        "depth": "Profundidad solicitada",
+        "enabled": "Activar mediciones futuras programadas",
+        "frequency": "Frecuencia",
+        "timezone": "Zona horaria del horario",
+        "timeOfDay": "Hora local (HH:mm)",
+        "jitter": "Variación en minutos",
+        "weekday": "Día de la semana",
+        "dayOfMonth": "Día del mes",
+        "cron": "Expresión cron personalizada"
+      },
+      "devices": {
+        "desktop": "Ordenador",
+        "mobile": "Móvil"
+      },
+      "surfaces": {
+        "web_serp": "Resultados web de Google",
+        "maps": "Google Maps",
+        "local_finder": "Google Local Finder"
+      },
+      "geoKinds": {
+        "country": "País",
+        "region": "Región",
+        "city": "Ciudad",
+        "point": "Punto"
+      },
+      "cadences": {
+        "daily": "Diaria",
+        "weekly": "Semanal",
+        "monthly": "Mensual",
+        "custom_cron": "Cron personalizado"
+      },
+      "weekdays": {
+        "Monday": "Lunes",
+        "Tuesday": "Martes",
+        "Wednesday": "Miércoles",
+        "Thursday": "Jueves",
+        "Friday": "Viernes",
+        "Saturday": "Sábado",
+        "Sunday": "Domingo"
+      },
+      "units": {
+        "cents": "céntimos",
+        "searches": "búsquedas",
+        "test": "unidades de prueba"
+      },
+      "certainty": {
+        "estimate": "Estimación",
+        "partial": "Subtotal conocido; objetivos desconocidos: {count}",
+        "unknown": "Estimación desconocida; objetivos: {count}"
+      },
+      "sources": {
+        "project": "Heredado del proyecto",
+        "schedule": "Heredado del horario",
+        "keyword": "Heredado de la palabra clave",
+        "explicit": "Valor explícito",
+        "unknown": "Origen desconocido"
+      },
+      "degradation": {
+        "none": "No se ha informado de degradación del alcance. No demuestra la integridad de resultados futuros.",
+        "location_coarsened": "La ubicación efectiva fue más amplia que la configurada; no es comparable como la ciudad o punto seleccionados.",
+        "location_unverified": "La ubicación del proveedor no se ha verificado.",
+        "language_unverified": "El idioma efectivo de búsqueda no se ha verificado.",
+        "device_unverified": "El dispositivo efectivo no se ha verificado.",
+        "point_unverified": "El punto efectivo no está demostrado; no infieras una cobertura precisa del punto.",
+        "scope_unknown": "El alcance efectivo es desconocido."
+      },
+      "phases": {
+        "previewing": "Leyendo estimación…",
+        "launching": "Solicitando ejecución…",
+        "saving_schedule": "Guardando intención de horario…",
+        "launch_unknown": "El resultado del inicio es desconocido. Conserva la intención y recupérala con la misma clave. No crees otra solicitud de pago.",
+        "schedule_unknown": "El resultado del guardado es desconocido. Conserva la intención y recupérala antes de otro guardado.",
+        "started": "Ejecución solicitada; no es uso confirmado del proveedor.",
+        "saved": "Horario futuro guardado; no se inició ningún análisis manual.",
+        "error": "No se pudo leer la estimación. Se conserva el borrador.",
+        "conflict": "El conflicto de ajustes requiere revisar los datos actuales.",
+        "blocked": "La acción está bloqueada.",
+        "saving_intent": "Guardando los valores futuros…",
+        "intent_unknown": "No se confirmó el guardado. Recupera la misma operación antes de cambiar el alcance."
+      },
+      "blocks": {
+        "no_provider": "No hay un proveedor conectado disponible.",
+        "provider_disabled": "La conexión configurada está desactivada.",
+        "needs_reauth": "La conexión configurada requiere autorización.",
+        "unsupported_surface": "El adaptador implementado no admite la superficie seleccionada.",
+        "capability_changed": "La versión de capacidades cambió; revisa explícitamente proveedor y superficie y vuelve a previsualizar.",
+        "unsupported_device": "El dispositivo seleccionado no está admitido.",
+        "unsupported_geo": "La ubicación seleccionada no está admitida.",
+        "unsupported_language": "El idioma de búsqueda seleccionado no está admitido.",
+        "unsupported_depth": "La profundidad seleccionada no está admitida.",
+        "ambiguous_capability": "La evidencia de capacidades es ambigua; no se elige ninguna opción automáticamente.",
+        "settings_conflict": "Los ajustes cambiaron; revisa la revisión actual y estima de nuevo.",
+        "preview_required": "Solicita y revisa primero una estimación actual.",
+        "invalid_quote": "La estimación carece de datos válidos de alcance, coste o calendario. Previsualiza de nuevo.",
+        "preview_expired": "La estimación caducó. Previsualiza de nuevo.",
+        "preview_mismatch": "El alcance o precio cambió. Previsualiza de nuevo.",
+        "rate_changed": "La versión de tarifa cambió. Previsualiza de nuevo.",
+        "rate_unavailable": "La versión actual de tarifa no está disponible. No se supone ningún precio.",
+        "budget_missing": "Falta un presupuesto obligatorio.",
+        "budget_exhausted": "El presupuesto actual está agotado.",
+        "usage_reconciliation_required": "Hay que conciliar el uso antes de ejecutar trabajo de pago.",
+        "duplicate": "Una ejecución activa ya cubre este alcance.",
+        "budget_blocked": "El presupuesto bloquea este inicio.",
+        "nothing_eligible": "No hay objetivos aptos para esta ejecución manual.",
+        "cost_limit_exceeded": "La estimación de la operación supera su límite de coste.",
+        "sample_project": "Los proyectos de ejemplo no pueden iniciar mediciones de pago.",
+        "preview_failed": "No se pudo leer la estimación. Se conserva el borrador.",
+        "action_failed": "No se ha confirmado el resultado de la acción.",
+        "invalid_settings": "El servidor rechazó los ajustes sin guardarlos.",
+        "forbidden": "No tienes permiso para cambiar estos ajustes.",
+        "unsupported_capability": "El servidor rechazó una capacidad no admitida.",
+        "measurement_policy_unconfigured": "Configura la política de medición antes de nuevas comprobaciones.",
+        "measurement_policy_unsupported": "La política ya no coincide con los adaptadores actuales. Revísala y configúrala de nuevo.",
+        "save_intent_first": "Guarda primero la ubicación, el idioma o el dispositivo y vuelve a revisar el calendario.",
+        "scheduler_calendar_unavailable": "No hay una previsión para el modo actual. Puedes ejecutar una medición manual o pausar explícitamente el calendario."
+      },
+      "basis": {
+        "resolved_request": "Las opciones efectivas describen la solicitud prevista resuelta, no una geolocalización de Google verificada.",
+        "retained_observation": "El alcance efectivo corresponde a evidencia conservada, no demuestra la próxima ejecución.",
+        "unknown": "No hay evidencia de alcance efectivo."
+      },
+      "effectiveAt": "La evidencia del alcance se observó en {time}.",
+      "recoverIntent": "Recuperar el mismo guardado",
+      "hostSchedule": "Calendario que revisar",
+      "intentConsent": "He revisado los valores futuros y cualquier estimación desconocida.",
+      "scheduleScope": "Calendario completo: {keywords} palabras clave, {targets} destinos en {locations} ubicaciones, {languages} idiomas y {devices} dispositivos.",
+      "hostUnavailable": {
+        "measurement_policy_unconfigured": "Configura la política de medición antes de revisar una ejecución.",
+        "measurement_policy_unsupported": "La política guardada requiere revisión para el adaptador actual.",
+        "source_unavailable": "Los ajustes actuales de destinos o proveedor no están disponibles.",
+        "settings_revision_unavailable": "Estos controles no pueden representar la revisión actual.",
+        "default_geo_unavailable": "La ubicación predeterminada no está disponible en un mercado activo.",
+        "defaults_missing": "No se han configurado los ajustes del proyecto.",
+        "needs_reauth": "La conexión requiere autenticación de nuevo.",
+        "provider_disabled": "Las conexiones están desactivadas.",
+        "provider_disconnected": "Ninguna conexión está lista.",
+        "provider_missing": "No hay conexión de proveedor configurada.",
+        "unsupported_capability": "La capacidad del adaptador no está disponible."
+      },
+      "intentScopeHelp": "El cambio no crea ni reasigna destinos existentes. {count} destinos heredan la profundidad del proyecto.",
+      "intentHelp": "La ubicación, el idioma y el dispositivo se aplican a destinos nuevos. La profundidad se aplica donde se hereda. Guardar conserva la identidad de los destinos existentes y no inicia una medición. El proveedor corresponde a la ejecución manual o al calendario seleccionado.",
+      "existingCalendar": "Fase actual del calendario",
+      "intentForecastUnknown": "El uso recurrente futuro del cambio de profundidad heredada es desconocido. Las estimaciones manual y del calendario seleccionado son independientes.",
+      "readFailed": "No se pudieron cargar los ajustes actuales. Se conserva el borrador.",
+      "configurePolicy": "Configurar la política de medición",
+      "saveIntent": "Guardar valores del proyecto",
+      "quoteExpires": "Estimación válida hasta {expiry}.",
+      "saveIntentButton": "Guardar valores",
+      "defaultDepthReview": "Profundidad actual del proyecto: {current}. Al guardar se usará {chosen}.",
+      "capabilityEvidence": {
+        "title": "Qué pruebas retiene el adaptador",
+        "retained_provider_ids": "Los identificadores estables solo están disponibles si figuran en resultados retenidos.",
+        "unavailable": "Este adaptador no proporciona identificadores estables de lugares.",
+        "organic_group_and_provider_axes_when_retained": "El rango orgánico y los ejes de posición del proveedor se conservan por separado.",
+        "organic_group": "El adaptador proporciona rango de grupo orgánico.",
+        "coverage": "Cada tipo de resultado necesita metadatos de cobertura capturados.",
+        "pagination": "La ausencia requiere un prefijo completo capturado; la profundidad solicitada no basta.",
+        "freshness": "La vigencia requiere política capturada y hora del proveedor. Sin pruebas permanece desconocida."
+      },
+      "excluded": {
+        "paused": "Calendario pausado",
+        "manual": "Solo manual",
+        "in_progress": "Ya en curso",
+        "no_provider": "Sin proveedor listo",
+        "other_project": "Fuera del proyecto",
+        "keyword_archived": "Palabra archivada",
+        "market_inactive": "Mercado inactivo"
+      },
+      "excludedTitle": "Objetivos excluidos",
+      "impact": {
+        "scope_changed": "Cambiar ubicación, idioma, dispositivo o superficie requiere pruebas independientes de definición para comparar el historial. Las observaciones anteriores se conservan.",
+        "policy_changed": "Cambió la profundidad o política del proveedor. La comparación depende de las definiciones retenidas, no de esta revisión.",
+        "cadence_only": "Solo cambió el calendario. El ámbito se conserva; la calidad histórica depende de definiciones capturadas.",
+        "unchanged": "El ámbito y calendario coinciden con la referencia. La calidad histórica sigue dependiendo de definiciones capturadas."
+      },
+      "recovery": {
+        "provider": "Revisar conexión del proveedor",
+        "market": "Revisar mercados activos",
+        "defaults": "Revisar ajustes del proyecto",
+        "policy": "Configurar política de medición",
+        "review": "Recargar ajustes actuales"
+      },
+      "runAccepted": "Ejecución retenida para {keywords} palabras y {targets} objetivos.",
+      "runReceipt": "Comprobante de ejecución",
+      "runReceiptHelp": "En cola no significa observado. Consulta la ejecución para tareas aceptadas, bloqueadas o aplazadas.",
+      "runStatuses": {
+        "planned": "Planificada",
+        "blocked": "Bloqueada",
+        "queued": "En cola",
+        "running": "En curso",
+        "cancelling": "Cancelación solicitada",
+        "completed": "Completada",
+        "cancelled": "Cancelada"
+      },
+      "viewRun": "Abrir resultados de ejecución"
+    },
+    "dashboardLayout": {
+      "title": "Personalizar panel",
+      "presentationOnly": "Solo presentación personal. No cambia la programación ni las comprobaciones de pago.",
+      "preset": "Preset del panel",
+      "show": "Mostrar {title}",
+      "hide": "Ocultar {title}",
+      "moveUp": "Subir {title}",
+      "moveDown": "Bajar {title}",
+      "reorder": "Reordenar {title}",
+      "reorderHint": "Arrastra un asa o usa las flechas, Inicio y Fin para cambiar el orden.",
+      "widgetHelp": "Acerca de {title}",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "saving": "Guardando preferencias de presentación.",
+      "conflict": "Las preferencias cambiaron en otro lugar. Se conserva el borrador; revisa el diseño actual antes de guardar.",
+      "saveError": "No se pudo guardar. Se conservan el borrador y el diseño anterior.",
+      "saved": "Preferencias de presentación guardadas.",
+      "moved": "{title} se ha movido a la posición {position}.",
+      "shellUnavailable": "El contexto no está disponible. Esto no significa cero.",
+      "widgetUnavailable": "El informe guardado de esta sección no está disponible.",
+      "widgetLoading": "Cargando informe guardado.",
+      "widgetError": "No se pudo leer esta sección. Las demás siguen disponibles.",
+      "span": "Anchura de {title}",
+      "widgets": {
+        "organic_kpis": {
+          "label": "Métricas orgánicas",
+          "description": "Lee métricas orgánicas guardadas con su versión, cobertura y cohorte comparable."
+        },
+        "position_trend": {
+          "label": "Historial de posiciones",
+          "description": "Lee fechas originales de observación y posiciones positivas compatibles, conservando los huecos."
+        },
+        "position_distribution": {
+          "label": "Distribución de posiciones",
+          "description": "Agrupa posiciones orgánicas confirmadas; los resultados desconocidos no reciben posiciones ficticias."
+        },
+        "recent_targets": {
+          "label": "Objetivos recientes",
+          "description": "Muestra objetivos añadidos recientemente dentro del alcance de búsqueda resuelto."
+        },
+        "data_source": {
+          "label": "Fuente de datos",
+          "description": "Lee información guardada de conexión y proveedor; mostrarla no ejecuta comprobaciones."
+        },
+        "by_market": {
+          "label": "Por mercado",
+          "description": "Lee informes separados por mercado dentro del periodo y los filtros compartidos."
+        },
+        "movers": {
+          "label": "Cambios de posición",
+          "description": "Lee cambios comparables y estados distintos de entrada, salida y resultado desconocido."
+        },
+        "local_business_results": {
+          "label": "Resultados locales de Google",
+          "description": "Negocios con un mapa en los resultados habituales de Google, para una sucursal confirmada seleccionada explícitamente."
+        },
+        "competitor_comparison": {
+          "label": "Comparación de competidores",
+          "description": "Lee el conjunto de competidores seleccionado explícitamente; no representa todo el mercado."
+        },
+        "visibility_history": {
+          "label": "Historial de visibilidad",
+          "description": "Lee el historial de visibilidad guardado y versionado cuando exista un informe compatible."
+        },
+        "contributors": {
+          "label": "Contribuciones",
+          "description": "Lee contribuciones de objetivos del informe autorizado, sin cálculos en el cliente."
+        },
+        "quality_history": {
+          "label": "Historial de calidad",
+          "description": "Lee por separado los contadores observados, recientes y comparables de los informes de calidad guardados."
+        }
+      },
+      "reasons": {
+        "missing_project_access": "Se requiere acceso de lectura al proyecto.",
+        "preset_mismatch": "Esta sección usa el alcance de otro preset.",
+        "missing_competitors_access": "Se requiere acceso de lectura a los competidores.",
+        "missing_local_subject": "Selecciona una revisión explícita de la identidad del negocio para SEO local.",
+        "foreign_local_subject": "El negocio seleccionado no pertenece a este proyecto.",
+        "missing_competitor_scope": "Selecciona un alcance explícito de comparación de competidores.",
+        "foreign_competitor_scope": "El alcance de competidores no pertenece a este proyecto.",
+        "missing_capability": "La capacidad de datos guardados necesaria para esta sección no está disponible."
+      },
+      "shell": {
+        "scope": "Alcance de búsqueda compartido",
+        "mode": "Modo del proyecto",
+        "health": "Estado de comprobaciones",
+        "budget": "Estado del presupuesto",
+        "coverage": "Cobertura de datos"
+      },
+      "presets": {
+        "general": "General",
+        "local": "SEO local",
+        "competitors": "Competidores"
+      },
+      "spans": {
+        "standard": "Estándar",
+        "wide": "Amplia"
+      },
+      "setDefault": "Establecer como mi predeterminado",
+      "defaultSaved": "Se guardó tu dashboard predeterminado.",
+      "reviewCurrent": "Revisar el diseño guardado actual",
+      "keepDraft": "Conservar mi borrador",
+      "useCurrent": "Usar el diseño actual",
+      "readOnly": "Proyecto de solo lectura. Las preferencias de vista son personales.",
+      "healthClear": "Sin mediciones fallidas en las últimas 24 horas.",
+      "budgetBlocked": "El presupuesto actual bloquea las mediciones de pago.",
+      "budgetReadOnly": "Leer informes guardados no inicia una medición de pago.",
+      "coverageSummary": "{measured} de {expected} objetivos resueltos; {comparable} pares comparables.",
+      "freshnessUnknown": "Se desconoce la cobertura de datos recientes.",
+      "freshCoverage": "Objetivos recientes resueltos: {count}.",
+      "invalidPreset": "Este conjunto de vista no está disponible. Elige uno disponible.",
+      "scopeNotMeasured": "El alcance no está resuelto. No se calculó ninguna métrica de posición.",
+      "widgetLoadOnSave": "Guarda el diseño para cargar los datos de esta sección.",
+      "healthUnknown": "El estado de las comprobaciones no está disponible. No significa que no haya fallos.",
+      "budgetUnknown": "El estado del presupuesto es desconocido. Esta vista no inicia comprobaciones de pago.",
+      "preferenceUnavailable": "El diseño guardado no está disponible en esta versión.",
+      "preferencePreserved": "El diseño guardado y el borrador se conservan. No se puede guardar hasta revisar una revisión actual compatible.",
+      "reloadPreference": "Volver a cargar el diseño guardado",
+      "preferenceReloadFailed": "No se pudo cargar el diseño. El borrador se conserva.",
+      "preferenceRevision": "Revisión actual del diseño: {revision}",
+      "unsavedDraft": "Borrador de diseño sin guardar. El diseño guardado no ha cambiado.",
+      "viewDetails": "Acerca de esta vista",
+      "viewHelp": "Esta vista muestra resultados guardados. No inicia comprobaciones.",
+      "viewHelpClose": "Cerrar"
+    },
+    "localMonitors": {
+      "title": "Monitores locales",
+      "create": "Crear monitor",
+      "edit": "Editar monitor",
+      "definition": "Configuración del monitor",
+      "subject": "Ubicación del negocio",
+      "manageSubjects": "Gestionar ubicaciones",
+      "reviewIntegrations": "Revisar integraciones",
+      "setupOnly": "Guardar conserva la configuración. No inicia comprobaciones ni genera cargos.",
+      "noSubjects": "Añade una ubicación activa y selecciónala de forma explícita.",
+      "moreSubjects": "Más ubicaciones",
+      "useCurrentIdentity": "Usar la identidad actual",
+      "keywords": "Palabras clave",
+      "searchKeywords": "Buscar palabras clave existentes",
+      "search": "Buscar",
+      "selectedKeywords": "{count} seleccionadas (máximo 20)",
+      "noKeywords": "No hay palabras en esta página. Prueba otra búsqueda.",
+      "moreKeywords": "Más palabras clave",
+      "targetCount": "{count} combinaciones de palabras y puntos (máximo 100)",
+      "validation": "Revisa el nombre, la ubicación, las palabras clave, las coordenadas, el idioma compatible, el sistema operativo, el zoom del mapa y el límite de 100 objetivos.",
+      "save": "Guardar configuración",
+      "saving": "Guardando…",
+      "cancel": "Cancelar",
+      "status": "Estado",
+      "points": "Puntos",
+      "revision": "Revisión",
+      "visibility": "Visibilidad de monitores",
+      "activeOnly": "Monitores activos",
+      "includingArchived": "Incluir archivados",
+      "moreMonitors": "Más monitores",
+      "empty": "No hay monitores. Crea uno con una ubicación existente.",
+      "readOnly": "Puedes consultar la configuración. Un editor del proyecto puede modificarla.",
+      "readError": "No se pudieron cargar los datos guardados. Inténtalo de nuevo.",
+      "back": "Volver a monitores",
+      "archive": "Archivar",
+      "archiveConfirm": "¿Archivar este monitor? Se conservarán la configuración y el historial.",
+      "confirmArchive": "Confirmar archivo",
+      "mode": "Intención de programación guardada",
+      "launchUnavailable": "Todavía no se pueden ejecutar comprobaciones desde este monitor. Revisa la disponibilidad en integraciones.",
+      "configuredPoints": "Puntos configurados",
+      "pointHelp": "Estas son las coordenadas guardadas. Los resultados requieren una ejecución vinculada explícitamente a esta revisión.",
+      "point": "Punto",
+      "row": "Fila",
+      "column": "Columna",
+      "result": "Resultado guardado",
+      "resultUnavailable": "No disponible",
+      "definitionHistory": "Historial de configuración",
+      "revisionNumber": "Revisión {revision}",
+      "showHistory": "Mostrar revisiones",
+      "moreHistory": "Revisiones anteriores",
+      "axesHelp": "Elige un sistema operativo y un nivel de zoom para Maps. Guardar los cambios crea una revisión; revisa su coste y confirma de nuevo antes de ejecutar las comprobaciones.",
+      "fields": {
+        "name": "Nombre",
+        "latitude": "Latitud central",
+        "longitude": "Longitud central",
+        "language": "Código de idioma",
+        "spacing": "Distancia entre puntos (metros)",
+        "cutoff": "Máximo de resultados por punto",
+        "surface": "Tipo de búsqueda",
+        "device": "Dispositivo",
+        "grid": "Tamaño de cuadrícula",
+        "subjectReference": "Referencia de la ubicación del negocio",
+        "identityRevision": "Revisión de identidad de la ubicación",
+        "engine": "Buscador",
+        "resultKind": "Tipo de resultado",
+        "rankScale": "Escala de posición",
+        "operatingSystem": "Sistema operativo",
+        "zoom": "Zoom del mapa",
+        "calendarReference": "Referencia del calendario",
+        "calendarEpoch": "Versión del calendario",
+        "frequency": "Frecuencia",
+        "cron": "Expresión cron",
+        "timeOfDay": "Hora del día",
+        "timezone": "Zona horaria del calendario",
+        "jitter": "Variación del horario",
+        "configuredDepth": "Profundidad configurada del calendario",
+        "providerPolicy": "Política del proveedor configurada",
+        "retainedGrid": "7 × 7 (historial conservado)",
+        "gridPilotHelp": "El piloto admite cuadrículas de 1 × 1, 3 × 3 y 5 × 5. Las mayores requieren aprobación separada del alcance y presupuesto."
+      },
+      "surfaces": {
+        "maps": "Resultados de Maps",
+        "local_finder": "Resultados de Local Finder"
+      },
+      "devices": {
+        "desktop": "Ordenador",
+        "mobile": "Móvil",
+        "unknown": "Dispositivo desconocido"
+      },
+      "states": {
+        "active": "Activo",
+        "archived": "Archivado"
+      },
+      "modes": {
+        "manual": "Manual",
+        "paused": "Pausado",
+        "scheduled": "Programación guardada",
+        "unknown": "Desconocido"
+      },
+      "readiness": {
+        "archived": "Este monitor está archivado.",
+        "subject_changed": "La ubicación cambió. Revísala y guarda otra revisión.",
+        "keyword_changed": "Una palabra cambió o ya no está disponible. Revisa la selección.",
+        "manual": "La ejecución periódica no está activada.",
+        "paused": "La programación guardada está pausada.",
+        "definition_changed": "La programación corresponde a una configuración anterior.",
+        "calendar_changed": "El calendario cambió o no está disponible. Revísalo antes de programar."
+      },
+      "errors": {
+        "conflict": "La configuración cambió. Vuelve a cargarla y revisa antes de guardar.",
+        "invalid": "Algunos campos no son válidos. Revisa el formulario.",
+        "forbidden": "Ya no tienes permiso para modificar este proyecto.",
+        "unavailable": "La ubicación o el monitor no están disponibles. Vuelve a cargar e inténtalo de nuevo."
+      },
+      "reload": "Recargar configuración actual",
+      "capturedScope": "Alcance de medición guardado",
+      "capturedCalendar": "Calendario guardado",
+      "noSavedCalendar": "No hay un calendario guardado para esta intención.",
+      "unrestricted": "Sin restricciones",
+      "notSet": "Sin definir",
+      "metres": "{count} m",
+      "minutes": "{count} min",
+      "resultKinds": {
+        "local_pack": "Paquete local",
+        "map_listing": "Ficha de Maps",
+        "listing": "Ficha de Local Finder"
+      },
+      "rankScales": {
+        "pack_slot": "Posición en el paquete local",
+        "maps_organic": "Posición orgánica en Maps",
+        "finder_organic": "Posición orgánica en Local Finder"
+      },
+      "frequencies": {
+        "daily": "Diaria",
+        "weekly": "Semanal",
+        "monthly": "Mensual",
+        "custom_cron": "Cron personalizado"
+      },
+      "manual": {
+        "title": "Ejecutar este monitor",
+        "help": "Elige una conexión, revisa todas las tareas y el coste del proveedor y confirma. Abrir este panel o actualizar el estado guardado no contacta con el proveedor.",
+        "connection": "Conexión del proveedor",
+        "chooseConnection": "Elige una conexión",
+        "noConnection": "Conecta un proveedor compatible en Integraciones para ejecutar este monitor.",
+        "preview": "Revisar ejecución",
+        "consent": "Confirmar coste del proveedor",
+        "taskCount": "Esta ejecución enviará {count} tareas de palabra clave y punto.",
+        "expires": "La estimación caduca: {time}",
+        "consentHelp": "La confirmación autoriza solo esta ejecución. No activa ninguna programación.",
+        "confirmLaunch": "Confirmar y ejecutar",
+        "refreshRecorded": "Actualizar estado guardado",
+        "noRun": "Todavía no hay ejecuciones guardadas.",
+        "recordedRun": "Última ejecución guardada",
+        "progress": "{complete} de {total} tareas completadas",
+        "receiptHelp": "La aceptación desconocida sigue sin resolverse. Actualizar no reenvía tareas ni consulta resultados al proveedor.",
+        "keyword": "Palabra clave",
+        "point": "Punto",
+        "coordinate": "Coordenadas",
+        "status": "Estado guardado",
+        "pointNumber": "Punto {number}",
+        "unknown": "Desconocido",
+        "nativeCents": "centavos de USD",
+        "errors": {
+          "forbidden": "No puedes ejecutar este monitor.",
+          "invalid": "Revisa los ajustes seleccionados.",
+          "conflict": "El monitor o su conexión han cambiado. Revisa una nueva ejecución.",
+          "expired": "La estimación ha caducado. Revisa una nueva ejecución.",
+          "unavailable": "Esta ejecución no está disponible. Actualiza el estado guardado antes de volver a intentarlo."
+        },
+        "unavailable": {
+          "capability_unregistered": "Esta función de búsqueda local no está registrada. Elige una configuración compatible.",
+          "connection_unavailable": "Esta conexión no está disponible. Revísala en Integraciones.",
+          "unsupported": "El proveedor no admite esta configuración. Edita los ajustes de búsqueda.",
+          "pricing_unavailable": "Se desconoce el coste total del proveedor. No se puede iniciar una ejecución de pago.",
+          "worker_unavailable": "El worker de ejecución está desactivado. Actívalo antes de poner una ejecución en cola."
+        },
+        "states": {
+          "awaiting_dispatch": "Esperando para empezar",
+          "cancelled": "Cancelado",
+          "needs_provider_evidence": "Aceptación del proveedor desconocida",
+          "pending_reconciliation": "Los datos necesitan revisión",
+          "accounting_pending": "Confirmando el cargo del proveedor",
+          "awaiting_collection": "Aceptado; resultados pendientes",
+          "owner_release_pending": "Finalizando el resultado guardado",
+          "complete": "Completado",
+          "unavailable": "No disponible"
+        },
+        "queue": {
+          "queued": "Ejecución en cola. El worker comprobará el alcance y precio aprobados antes de empezar.",
+          "running": "El worker está procesando esta ejecución.",
+          "blocked": "Esta ejecución necesita revisión. Se conservan los resultados y cargos pendientes.",
+          "complete": "El worker ha terminado esta ejecución."
+        },
+        "loadingRecorded": "Cargando estado guardado…"
+      },
+      "recurring": {
+        "title": "Mediciones Local recurrentes",
+        "loading": "Cargando calendario guardado…",
+        "unavailable": "No se pudo revisar el calendario. Comprueba acceso, cambios de fuentes o configuración del worker.",
+        "disabled": "La ejecución Local automática está desactivada. Un operador debe activar explícitamente el worker existente. Los resultados guardados siguen disponibles.",
+        "calendar": "Calendario",
+        "chooseCalendar": "Elige un calendario existente",
+        "projectTimezone": "Zona del proyecto",
+        "connection": "Conexión con clave propia",
+        "chooseConnection": "Elige una conexión",
+        "perOccurrence": "Máximo por medición (USD)",
+        "total": "Límite total de cotizaciones emitidas (USD)",
+        "maximumOccurrences": "Número máximo de mediciones",
+        "validUntil": "Fin del consentimiento (hora local)",
+        "invalid": "Revisa los campos y límites.",
+        "policy": "Autoriza esta cuadrícula y calendario. Cada medición obtiene una cotización nueva con la versión de precio y límites guardados. Los intervalos completos perdidos se omiten; la aceptación desconocida impide recomprar. Las cotizaciones emitidas consumen el límite de forma conservadora, incluso sin envío.",
+        "review": "Revisar consentimiento recurrente",
+        "next": "Próxima fecha configurada",
+        "validThrough": "Fin del consentimiento",
+        "issuedCeiling": "Autoridad de cotizaciones emitidas",
+        "status": "Estado guardado",
+        "noApproval": "Esta versión del calendario no tiene consentimiento recurrente de pago activo.",
+        "tooManyChoices": "Las opciones superan el formulario. Reduce o archiva calendarios o conexiones.",
+        "pause": "Pausar mediciones futuras",
+        "reviewNotice": "La confirmación autoriza mediciones futuras hasta la fecha y límites elegidos. No envía ninguna solicitud ahora.",
+        "capturedCalendar": "Calendario: {frequency}, {timezone}",
+        "quoted": "Cotización exacta actual",
+        "approve": "Autorizar mediciones recurrentes",
+        "cancel": "Cancelar",
+        "states": {
+          "active": "Autoridad activa",
+          "blocked": "Bloqueada; revisar de nuevo",
+          "finished": "Autoridad finalizada"
+        },
+        "frequencies": {
+          "daily": "diaria",
+          "weekly": "semanal",
+          "monthly": "mensual",
+          "custom_cron": "calendario personalizado"
+        }
+      },
+      "results": {
+        "title": "Resultados de la ejecución",
+        "history": "Historial de ejecuciones",
+        "rank": "Posición de negocio cualificada",
+        "unknown": "Desconocido",
+        "evidence": "Evidencia",
+        "freshness": "Actualidad",
+        "observedAt": "Fecha de observación",
+        "receipt": "Estado del recibo",
+        "points": "Puntos medidos",
+        "grid": "Cuadrícula de puntos muestreados",
+        "business": "Negocio",
+        "nativeGroup": "Posición nativa del grupo",
+        "nativeAbsolute": "Posición nativa absoluta",
+        "promotion": "Promoción",
+        "identityMatch": "Coincidencia de identidad",
+        "pointEvidence": "Listados retenidos del punto",
+        "scope": "Ámbito capturado",
+        "reason": "Motivo de calidad",
+        "none": "Ninguno",
+        "observedRank": "Posición observada antes de cualificar el ámbito",
+        "loading": "Cargando evidencia retenida…",
+        "seedHelp": "Las coordenadas son semillas de consulta reconocidas por el proveedor, no prueban la ubicación exacta del observador. Sin reconocimiento, el ámbito es desconocido.",
+        "unavailable": "Esta ejecución guardada no está disponible para el proyecto, monitor o fecha seleccionados.",
+        "empty": "Todavía no hay ejecuciones guardadas. Ejecutar requiere una vista previa y confirmación explícita del coste.",
+        "asOf": "Informe a fecha de",
+        "accountingHelp": "La evidencia corresponde a la fecha del informe. Los estados del recibo y la contabilidad son actuales.",
+        "topN": "Top {n} observado",
+        "observedCoverage": "Cobertura observada",
+        "dataCoverage": "Cobertura de datos actuales",
+        "bounds": "Límites de la muestra",
+        "comparisonHelp": "La actualidad usa la política actual del proyecto y la configuración original del monitor. La comparación requiere alcances compatibles.",
+        "exportCsv": "Exportar CSV local v1",
+        "exportJson": "Exportar JSON local v1",
+        "pointHistory": "Historial del punto",
+        "pointHistoryHelp": "Intentos guardados para el mismo punto, palabra clave, identidad y política en el intervalo elegido. Un cambio de alcance inicia otro historial.",
+        "pointHistoryMore": "Cargar intentos anteriores",
+        "evidenceStates": {
+          "positive": "Posición positiva confirmada",
+          "known_absent": "Ausencia probada",
+          "unknown": "Desconocido",
+          "unsupported": "No compatible",
+          "not_observed": "No observado"
+        },
+        "freshnessStates": {
+          "fresh": "Actual",
+          "stale": "Obsoleto",
+          "unknown": "Desconocido"
+        },
+        "matchStates": {
+          "confirmed": "Confirmado",
+          "candidate": "Candidato",
+          "rejected": "Rechazado",
+          "unavailable": "No disponible"
+        },
+        "promotionStates": {
+          "organic": "Orgánico",
+          "promoted": "Promocionado",
+          "unknown": "Desconocido"
+        },
+        "reasonStates": {
+          "not_completed": "Sin completar",
+          "unsupported": "Ámbito no compatible",
+          "missing_scope": "Falta evidencia del ámbito",
+          "scope_mismatch": "Ámbito diferente",
+          "missing_normalization": "Falta evidencia de normalización",
+          "invalid_position": "Posición nativa no válida",
+          "insufficient_depth": "Profundidad insuficiente",
+          "current_scope_unavailable": "Ámbito actual no disponible",
+          "unproven_absence": "Ausencia no probada",
+          "future_observation": "Observación futura",
+          "missing_observation_time": "Falta fecha de observación"
+        },
+        "historyWindow": "Periodo del historial",
+        "allHistory": "Todo el historial conservado",
+        "historyDays": "Últimos {days} días",
+        "customHistory": "Intervalo personalizado",
+        "historyWindowHelp": "El periodo termina en la fecha del informe guardado y usa días de 24 horas. Las fechas usan la zona horaria del informe. Consultar el historial no inicia un escaneo.",
+        "historyBounds": "De {from} a {to}",
+        "historyCount": "{count, plural, one {# medición guardada en este intervalo} other {# mediciones guardadas en este intervalo}}"
+      },
+      "retry": {
+        "title": "Reintentar puntos fallidos seleccionados",
+        "help": "Selecciona solo tareas originales con rechazo o ausencia de envío demostrados. Es una nueva ejecución de pago con una cotización nueva. Las tareas aceptadas o sin resolver deben completar la recopilación o conciliación original.",
+        "parentCount": "Ejecución original: {count} objetivos.",
+        "childScope": "Reintento seleccionado: {selected} de {parent} objetivos originales. La cobertura solo describe esta selección.",
+        "selection": "Puntos originales",
+        "point": "Punto {point}",
+        "confirm": "Confirmar reintento de pago",
+        "queued": "Reintento en cola: {id}",
+        "reasons": {
+          "eligible_rejected": "Rechazo demostrado",
+          "eligible_unsent": "Ausencia de envío demostrada",
+          "accepted_original": "Aceptada: recopila la tarea original",
+          "unknown_acceptance": "Aceptación sin resolver: concilia la tarea original",
+          "in_progress": "Tarea original en curso",
+          "accounting_pending": "Contabilidad pendiente",
+          "reconciliation_pending": "Conciliación pendiente",
+          "owner_retained": "Bloqueo original conservado",
+          "proof_unavailable": "Prueba nativa de finalización no disponible"
+        }
+      }
+    },
+    "dashboardComparison": {
+      "selection": "Comparación de competidores",
+      "choose": "Elegir una comparación guardada",
+      "remember": "Recordar esta comparación",
+      "clear": "Borrar la comparación recordada",
+      "saved": "Comparación recordada. El panel predeterminado no ha cambiado.",
+      "cleared": "Comparación recordada borrada.",
+      "conflict": "Las preferencias cambiaron. Recárgalas antes de guardar la referencia.",
+      "saveError": "No se pudo recordar la comparación. La preferencia anterior se conserva.",
+      "desktop": "Ordenador",
+      "mobile": "Móvil",
+      "title": "Cuota de visibilidad de competidores",
+      "unknown": "Desconocido",
+      "domain": "Dominio",
+      "current": "Actual",
+      "baseline": "Referencia",
+      "change": "Cambio",
+      "percentagePoints": "{value} pp",
+      "fixedCohort": "Los mismos {count} objetivos seleccionados y pesos de volumen fijos en ambos períodos.",
+      "comparisonCoverage": "Objetivos comparables: {comparable} / {expected}. El cambio no está disponible si no puede compararse toda la selección.",
+      "scope": "{location} / {language} / {device}",
+      "coverage": "Determinados: {measured} / {expected}. Cobertura observada: {observed}. Cobertura reciente: {fresh}.",
+      "asOf": "Fecha del informe:",
+      "baselineAsOf": "Momento de referencia solicitado:",
+      "providerConnected": "Hay un proveedor de posiciones conectado. Esta lectura no inicia comprobaciones.",
+      "providerMissing": "No hay un proveedor de posiciones conectado. Las observaciones guardadas siguen disponibles.",
+      "state": {
+        "missing": "Elige una comparación guardada para ver sus resultados.",
+        "invalid": "Este enlace de comparación no es válido. Elige una comparación guardada.",
+        "unavailable": "Esta comparación guardada no está disponible. Elige otra.",
+        "capacity": "Esta comparación tiene demasiados objetivos. Elige una comparación guardada más pequeña."
+      },
+      "reloadRevision": "Revisar la revisión actual de preferencias",
+      "reloadUnavailable": "No hay una preferencia compatible más reciente. Recarga la página para revisar su alcance.",
+      "reviewRevision": "Revisión {revision} cargada. Revisa la comparación y elige Recordar o Borrar para guardarla explícitamente.",
+      "emptyTitle": "No hay comparaciones guardadas",
+      "emptyDescription": "Configura y guarda una comparación en la página Competidores para usarla aquí.",
+      "configureComparison": "Configurar comparación"
+    },
+    "reviewedDefaults": {
+      "title": "Revisar ajustes futuros",
+      "scope": "{place}, {language}, {device}; profundidad {depth}.",
+      "cadence": "{frequency}; {timezone}; cron {cron}; desfase {jitter} minutos.",
+      "impact": "No se crean ni cambian identidades de objetivos. {count} objetivos heredan la profundidad del proyecto.",
+      "estimateUnknown": "El uso recurrente futuro tras este cambio de profundidad es desconocido. Revisa cada medición de pago por separado.",
+      "estimateUnchanged": "El uso por profundidad heredada no cambia. Guardar no inicia mediciones.",
+      "policyUnknown": "La política de medición no está disponible. Guardar esta intención no la configura ni activa ejecuciones de pago.",
+      "expiry": "La revisión vence el {time}.",
+      "consent": "He revisado estos ajustes exactos y cualquier uso desconocido.",
+      "recover": "El resultado no está confirmado. Recupera el mismo guardado antes de editar.",
+      "retry": "Recuperar mismo guardado",
+      "review": "Revisar cambios",
+      "confirmSave": "Confirmar guardado revisado",
+      "stopAtMatch": "Detener al encontrar el objetivo.",
+      "scanFullDepth": "Continuar hasta toda la profundidad revisada."
     }
   }
 }

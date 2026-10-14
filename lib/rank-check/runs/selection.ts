@@ -48,8 +48,24 @@ type SelectionProject = { domain: string | null; id: string };
 
 export const runSelectionKeywordSelect = {
   archivedAt: true,
+  device: true,
   id: true,
   locationId: true,
+  locationRef: {
+    select: {
+      canonicalKey: true,
+      kind: true,
+      countryCode: true,
+      regionCode: true,
+      cityName: true,
+      gl: true,
+      hl: true,
+      languageCode: true,
+      primaryGeoCode: true,
+      primaryGeoName: true,
+      secondaryGeoName: true,
+    },
+  },
   queuedRankCheckTasks: {
     select: { state: true },
     take: 1,
@@ -121,6 +137,12 @@ export async function lockRunSelectionKeywords(
     WHERE k."projectId" = ${projectId} AND k.id IN (${Prisma.join(keywordIds)})
     ORDER BY k.id
     FOR UPDATE OF k
+  `);
+  await tx.$queryRaw(Prisma.sql`
+    SELECT l.id FROM "locations" l
+    JOIN "keywords" k ON k."locationId" = l.id
+    WHERE k."projectId" = ${projectId} AND k.id IN (${Prisma.join(keywordIds)})
+    ORDER BY l.id FOR SHARE OF l
   `);
   return tx.keyword.findMany({
     orderBy: { id: "asc" },

@@ -116,7 +116,7 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
     providerCostBySource(project.id, now),
     prisma.savedView.findMany({
       select: { config: true },
-      where: { projectId: project.id, surface: "keywords" },
+      where: { projectId: project.id, surface: "keywords", visibility: "project" },
     }),
   ]);
   if (!fullProject) throw new Error("Project not found.");

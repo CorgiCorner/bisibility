@@ -54,5 +54,5 @@ export async function recoveryCandidates(
       FROM metering_operation o ${finalReceiptJoin}
       WHERE o.namespace=${namespace} AND o.input->>'fundingSource'='byok'
         AND o.created_at<=${cutoff} AND ${unknownAccounting}
-    ) candidates WHERE cursor>${after} ORDER BY cursor LIMIT ${limit + 1}`);
+    ) candidates WHERE cursor COLLATE "C">${after} COLLATE "C" ORDER BY cursor COLLATE "C" LIMIT ${limit + 1}`);
 }

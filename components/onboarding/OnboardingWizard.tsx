@@ -18,6 +18,7 @@ import {
 } from "@/components/onboarding/onboarding-wizard-state";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { OnboardingDefaultsReview } from "./OnboardingDefaultsReview";
 import { OnboardingProjectOptions } from "./OnboardingProjectOptions";
 import { OnboardingWizardSkipAction } from "./OnboardingWizardSkipAction";
 import { readCurrentProviderValues } from "./onboarding-provider-values";
@@ -28,6 +29,7 @@ import {
   providerOptions,
 } from "./steps/StepConnectProvider.fields";
 import { useOnboardingSources } from "./use-onboarding-sources";
+import { useReviewedOnboardingDefaults } from "./use-reviewed-onboarding-defaults";
 // biome-ignore format: Compact initial props keep this production component within its line limit.
 export function OnboardingWizard({ actions, costCalculatorPath, costPerCheckCents, dataResidencyMessage,
   gscJustConnected,
@@ -213,12 +215,9 @@ export function OnboardingWizard({ actions, costCalculatorPath, costPerCheckCent
       schedule: { ...current.schedule, locationSelections: [...selections], locations },
     }));
   };
-  async function handleTimezoneChange(timezone: string) {
-    const defaults = { ...draft.schedule, timezone };
-    setDraft((current) => ({ ...current, schedule: defaults }));
-    const result = await actions.updateProjectDefaultsAction(defaults);
-    setAuthoritativeNextCheckAt(result.nextCheckAt ?? null);
-  }
+  const {reviewed, error, handleTimezoneChange} = useReviewedOnboardingDefaults(actions, draft.schedule,
+    (timezone) => setDraft((current) => ({...current, schedule: {...current.schedule, timezone}})),
+    () => setAuthoritativeNextCheckAt(null), setAuthoritativeNextCheckAt);
   const providerStepContinueDisabled =
     currentStep === 2 && providerContinueDisabled && !sources.hasAnalyticsSource;
   const continueDisabled =
@@ -235,6 +234,7 @@ export function OnboardingWizard({ actions, costCalculatorPath, costPerCheckCent
       maxReachableStep={maxReachableStep}
       onStepChange={goToStep}
     >
+      <OnboardingDefaultsReview error={error} active={currentStep === 4} reviewed={reviewed} onConfirm={() => {void handleTimezoneChange(draft.schedule.timezone);}} />
       <section className="rounded-card border border-border bg-bg-elev p-6 sm:px-7 sm:py-[26px]">
         {inlineWarning ? (
           <p className={`m-0 mb-4 ${feedbackClass} text-yellow-text`}>{inlineWarning}</p>

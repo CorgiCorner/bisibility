@@ -423,6 +423,9 @@
       "subtitle": "Pełna kopia projektu {projectName}, którą odtworzysz we własnej instancji",
       "success": "Pakiet wyeksportowano i pobrano.",
       "title": "Eksportuj dane projektu"
+    },
+    "announcements": {
+      "learnMore": "Dowiedz się więcej"
     }
   }
 }

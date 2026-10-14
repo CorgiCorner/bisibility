@@ -17,7 +17,11 @@ vi.mock("@/lib/ai-research/service", () => ({
 }));
 vi.mock("@/lib/agent-reports/service", () => ({ listAgentReports: mocks.history }));
 
-import { analyzeAiResearchAction, getAiResearchCatalogAction } from "./ai-research";
+import {
+  analyzeAiResearchAction,
+  getAiResearchCatalogAction,
+  getAiResearchPage,
+} from "./ai-research";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -32,6 +36,28 @@ describe("AI action authorization", () => {
     await expect(getAiResearchCatalogAction("prj_public")).resolves.toMatchObject({ ok: true });
     expect(mocks.scope).toHaveBeenCalledWith({ id: "actor" }, "read", "prj_public", {
       type: "project",
+    });
+    expect(mocks.catalog).toHaveBeenCalledWith("internal-project");
+    expect(mocks.analyze).not.toHaveBeenCalled();
+    expect(mocks.compare).not.toHaveBeenCalled();
+  });
+  it("carries a missing catalog source to the page without losing saved reports", async () => {
+    mocks.catalog.mockResolvedValue({
+      ok: false,
+      reason: "no_source",
+      message: "Connect a provider.",
+    });
+    mocks.history.mockResolvedValue([{ id: "agr_saved", title: "Saved report" }]);
+    mocks.scope.mockResolvedValue({
+      id: "internal-project",
+      domain: "acme.com",
+      writeMode: "active",
+    });
+    const page = await getAiResearchPage("prj_public", "visibility");
+    expect(page).toMatchObject({
+      catalog: undefined,
+      catalogFailure: "no_source",
+      history: [{ id: "agr_saved" }],
     });
     expect(mocks.catalog).toHaveBeenCalledWith("internal-project");
     expect(mocks.analyze).not.toHaveBeenCalled();

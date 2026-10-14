@@ -27,6 +27,7 @@ async function onboardingRuntime() {
     "auth",
     "onboarding",
     "projectCostEstimate",
+    "projectSettingsTracking",
   ]);
   return { ...runtime, messages, t: createIntlTranslator(runtime.locale, messages, runtime) };
 }

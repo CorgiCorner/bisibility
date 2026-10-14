@@ -6,6 +6,7 @@ import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
+import type { NativeRequestGuard, PaidFenceHook } from "@/lib/metering/paid-attempt-types";
 import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import {
@@ -21,6 +22,8 @@ import { type RequestCostLimit, requestCostLimit } from "./request-cost-limit";
 import type { ProviderRequestAttribution } from "./tag";
 
 type JournalInput = {
+  beforeReserve?: NativeRequestGuard;
+  beforeFence?: PaidFenceHook;
   attribution: ProviderRequestAttribution;
   connectionId: string;
   keywordId?: string;
@@ -51,7 +54,7 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
       return { attemptId, request };
     },
     async begin(attempt) {
-      const next = consent.admit(() => begin(attempt?.attemptKey));
+      const next = consent.admit(() => begin(attempt?.attemptKey, attempt?.request));
       return next;
     },
     async settle(id, receipt) {
@@ -76,7 +79,7 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
     async beforeDispatch(id) {
       const grant = grants.get(id);
       if (!grant) throw new Error("Paid transport grant is unavailable");
-      await ownAdmission.fence(db, [grant]);
+      await ownAdmission.fence(db, [grant], input.beforeFence);
     },
     async cancel(id) {
       await db.$transaction(async (tx) => {
@@ -119,7 +122,9 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
       if (unresolved)
         throw new ProviderUsagePersistenceError({ phase: "admission", attemptId: unresolved.id });
       const reserved = await db.$transaction(async (tx) => {
+        await input.beforeReserve?.lockBusiness(tx, id, providerRequest);
         await captureByokEvidence(tx, input, id);
+        await input.beforeReserve?.assertRequest(tx, id, providerRequest);
         const lockedQuery = {
           ...query,
           where: { ...query.where, id: { notIn: [...inFlight, id] } },

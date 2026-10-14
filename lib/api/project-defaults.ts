@@ -1,23 +1,21 @@
 import "server-only";
 
-import { normalizeSchedule } from "@/lib/actions/_schedule";
-import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
-import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
+import { previewDefaultsHost, saveDefaultsHost } from "@/lib/measurement-settings/host/defaults";
+import { SettingsHostError } from "@/lib/measurement-settings/host/errors";
+import { PreviewTokenError } from "@/lib/rank-check/runs/preview-token";
 import { projectDefaultsPatchSchema } from "@/lib/schemas/project";
-import { resolveSerpDepth } from "@/lib/serp/constants";
 import {
   keywordMarketSelect,
   type ProjectDefaultMarket,
   projectDefaultSerpMarket,
 } from "@/lib/serp/default-market";
-import { resolveProjectDefaultMarket } from "@/lib/serp/project-default-market";
-import { projectDefaultsUpsertArgs } from "@/lib/settings/project-defaults-write";
+import { DefaultsReviewRequiredError } from "@/lib/settings/reviewed-defaults-contract";
 import type { ApiContext } from "./context";
 import { forbidden, projectMatches } from "./context";
-import { legacyMarketLocationSelection } from "./legacy-market-input";
-import { resourceResponse } from "./responses";
-import { objectBody, parseApiInput, readJsonBody } from "./surface";
+import { defaultsApiContext } from "./project-defaults-authority";
+import { errorResponse, resourceResponse } from "./responses";
+import { camelizeKeys, objectBody, parseApiInput, readJsonBody, snakeizeKeys } from "./surface";
 
 type DefaultsResourceRow = {
   cronExpression: string | null;
@@ -95,89 +93,54 @@ export async function getProjectDefaults(ctx: ApiContext, projectId: string) {
 export async function updateProjectDefaults(ctx: ApiContext, projectId: string) {
   if (!projectMatches(ctx.auth, projectId))
     return forbidden(ctx, "API key is not scoped to this project.");
-
-  const body = await readJsonBody(ctx);
-  const data = parseApiInput(projectDefaultsPatchSchema, {
-    ...objectBody(body),
-    project_id: projectId,
-  });
-  const [before, keywords] = await Promise.all([
-    prisma.projectDefaults.findUnique({
-      where: { projectId: ctx.auth.project.id },
-    }),
-    prisma.keyword.findMany({
-      select: keywordMarketSelect,
-      where: { projectId: ctx.auth.project.id },
-    }),
-  ]);
-  // serp_depth is optional on PATCH; an omitted value keeps the stored depth.
-  const schedule = normalizeSchedule({
-    ...data,
-    serpDepth: resolveSerpDepth(data.serpDepth ?? before?.serpDepth ?? undefined),
-  });
-  const currentMarket = projectDefaultSerpMarket(before, keywords);
-  const shouldResolveMarket =
-    data.city !== undefined ||
-    data.country !== undefined ||
-    data.device !== undefined ||
-    data.locationKey !== undefined;
-  // Legacy city names stay structured so the resolver can preserve their provider region.
-  const legacyCountry = data.country ?? currentMarket.country;
-  const resolvedDefault = shouldResolveMarket
-    ? await resolveProjectDefaultMarket({
-        city: data.city,
-        country: legacyCountry,
-        device: data.device ?? currentMarket.device,
-        ...(data.locationKey
-          ? { selection: { canonicalKey: data.locationKey, kind: "city" as const } }
-          : {
-              selection: legacyMarketLocationSelection({
-                city: data.city,
-                country: legacyCountry,
-              }),
-            }),
-        projectId: ctx.auth.project.id,
-      })
-    : null;
-  const persistedMarket = resolvedDefault
-    ? {
-        city: resolvedDefault.city,
-        country: resolvedDefault.country,
-        device: resolvedDefault.device,
-        locationKey: resolvedDefault.locationKey,
-      }
-    : null;
-  const responseMarket = persistedMarket
-    ? { ...persistedMarket, source: "explicit" as const }
-    : currentMarket;
-  const defaults = await prisma.$transaction(async (tx) => {
-    const stored = await tx.projectDefaults.upsert(
-      projectDefaultsUpsertArgs({
-        defaults: { ...schedule, ...persistedMarket },
-        projectId: ctx.auth.project.id,
-        serpStopOnMatch: data.serpStopOnMatch,
-      }),
+  const body = objectBody(camelizeKeys(await readJsonBody(ctx)));
+  const data = parseApiInput(projectDefaultsPatchSchema, { ...body, project_id: projectId });
+  const context = defaultsApiContext(ctx);
+  const request = { kind: "patch" as const, values: data };
+  try {
+    if (ctx.url.searchParams.get("preview_only") === "true")
+      return resourceResponse(snakeizeKeys(await previewDefaultsHost(context, request)), {
+        headers: ctx.headers,
+      });
+    const result = await saveDefaultsHost(context, request, body.review);
+    const v = result.value;
+    return resourceResponse(
+      defaultsResource(
+        {
+          ...v,
+          lastCheckedAt: result.timestamps.lastCheckedAt
+            ? new Date(result.timestamps.lastCheckedAt)
+            : null,
+          nextCheckAt: result.timestamps.nextCheckAt
+            ? new Date(result.timestamps.nextCheckAt)
+            : null,
+          updatedAt: new Date(result.timestamps.updatedAt),
+        },
+        ctx.auth.project.publicId,
+        result.market,
+      ),
+      { headers: ctx.headers },
     );
-    await refreshKeywordDispatchStates({ inheritedProjectId: ctx.auth.project.id }, tx);
-    return stored;
-  });
-  await writeAudit({
-    action: "project_defaults.update",
-    actorId: ctx.actorId ?? null,
-    after: {
-      market: responseMarket,
-      schedule: defaults,
-    },
-    before: {
-      market: currentMarket,
-      schedule: before,
-    },
-    projectId: ctx.auth.project.id,
-    targetId: ctx.auth.project.publicId,
-    targetType: "project",
-  });
-
-  return resourceResponse(defaultsResource(defaults, ctx.auth.project.publicId, responseMarket), {
-    headers: ctx.headers,
-  });
+  } catch (error) {
+    if (error instanceof DefaultsReviewRequiredError)
+      return errorResponse("conflict", error.message, 428, {
+        headers: ctx.headers,
+        instance: ctx.instance,
+        problemDetails: { reason: "preview_required" },
+      });
+    if (error instanceof SettingsHostError || error instanceof PreviewTokenError)
+      return errorResponse("conflict", "Settings or quote changed. Preview again.", 409, {
+        headers: ctx.headers,
+        instance: ctx.instance,
+        problemDetails: {
+          reason:
+            error instanceof SettingsHostError
+              ? error.code
+              : error.code === "expired"
+                ? "preview_expired"
+                : "preview_mismatch",
+        },
+      });
+    throw error;
+  }
 }

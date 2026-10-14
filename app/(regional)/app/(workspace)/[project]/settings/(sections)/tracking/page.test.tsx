@@ -21,6 +21,12 @@ vi.mock("@/components/settings/tracking/TrackingSettingsSection", () => ({
     return <div data-tracking-section-test="" />;
   },
 }));
+vi.mock("@/components/measurement-settings/MeasurementPolicySettingsSection", () => ({
+  MeasurementPolicySettingsSection: () => null,
+}));
+vi.mock("@/components/measurement-settings/MeasurementSettingsHostSection", () => ({
+  MeasurementSettingsHostSection: () => null,
+}));
 vi.mock("@/i18n/catalog-loader.server", () => ({ loadCoreMessages: mocks.loadCoreMessages }));
 vi.mock("@/i18n/document-locale.server", () => ({
   resolveRegionalDocumentLocale: mocks.resolveRegionalDocumentLocale,

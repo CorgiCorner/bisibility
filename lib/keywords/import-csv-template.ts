@@ -1,3 +1,5 @@
+import { csvCell } from "@/lib/ui/csv";
+
 export const keywordImportTemplateColumns = [
   "keyword",
   "target_url",
@@ -21,8 +23,6 @@ export function keywordImportTemplateForMarkets(
   const lines = keywordImportTemplateCsv.split("\n");
   return [
     `${lines[0]},location_key`,
-    ...lines
-      .slice(1)
-      .map((line, index) => `${line},"${keys[index % keys.length].replaceAll('"', '""')}"`),
+    ...lines.slice(1).map((line, index) => `${line},${csvCell(keys[index % keys.length])}`),
   ].join("\n");
 }

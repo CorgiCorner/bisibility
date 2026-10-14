@@ -1,3 +1,5 @@
+import { reviewedDefaultsRoute } from "./reviewed-defaults-route";
+
 type ToolArgs = Record<string, unknown>;
 type AgentRestCall = {
   body?: unknown;
@@ -57,6 +59,9 @@ function call(
 }
 
 export function dispatchAgentToolRoute(name: string, input: ToolArgs): AgentRestCall | null {
+  if (name === "updateProjectDefaults") return reviewedDefaultsRoute(input);
+  if (name === "previewProjectDefaults")
+    return reviewedDefaultsRoute({ ...input, preview_only: true });
   if (name === "searchLocations")
     return call(input, `/locations/search${query(input, ["q", "country", "limit"])}`, "GET");
   if (name === "listRankedKeywordSuggestions")

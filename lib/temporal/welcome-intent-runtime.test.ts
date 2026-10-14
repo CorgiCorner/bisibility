@@ -24,6 +24,9 @@ vi.mock("./worker-extensions", () => ({ startWorkerExtensions: () => ({ close: m
 vi.mock("./worker-intent-processor", () => ({
   startWorkerIntentProcessor: () => ({ close: mocks.close }),
 }));
+vi.mock("@/lib/metering/recovery/processor", () => ({
+  startRecoveryProcessor: () => ({ close: async () => undefined }),
+}));
 
 import { runWelcomeIntentRuntime } from "./welcome-intent-runtime";
 

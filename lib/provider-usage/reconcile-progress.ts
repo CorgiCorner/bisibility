@@ -1,7 +1,15 @@
 import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
 import { createSql, lock, Prisma as SQL } from "@/lib/metering/store/host-sql";
 import { recoverCandidate } from "./reconcile-recovery";
-import { reconciliationHealth, recoveryCandidates } from "./reconcile-state";
+import {
+  finalReceiptJoin,
+  reconciliationHealth,
+  recoveryCandidates,
+  unknownAccounting,
+} from "./reconcile-state";
+import { retainRecoveryIncident, writeReconciliationHealth } from "./reconciliation-health";
+import { recoveryErrorCode } from "./recovery-error";
+import { recoveryIncidentBody } from "./recovery-notification-policy";
 
 type Progress = { after: string; cutoff: string };
 async function progress(tx: Prisma.TransactionClient, key: string, now: Date) {
@@ -53,27 +61,32 @@ export async function recoverPage(
           const recovered = await recoverCandidate(tx, namespace, candidate, now);
           await tx.$executeRaw(SQL.sql`DELETE FROM metering_metadata WHERE key=${failureKey}`);
           await save(tx, key, { ...current, after: candidate.cursor });
+          await writeReconciliationHealth(tx, namespace, {
+            lastActivityAt: new Date().toISOString(),
+          });
           return recovered;
         },
         { timeout: 30000 },
       );
-    } catch {
+    } catch (error) {
       // Recovery rolled back. Retain an incident and advance this scan without
       // changing the failed operation; the next scan will retry its proof.
       await client.$transaction(async (tx) => {
         const current = await progress(tx, key, now);
         if (current.cutoff !== planned.position.cutoff || current.after >= candidate.cursor) return;
-        const incident = JSON.stringify({
+        await retainRecoveryIncident(tx, failureKey, {
           namespace,
+          origin: "scan",
           kind: candidate.kind,
           id: candidate.id,
+          code: recoveryErrorCode(error),
           failedAt: now.toISOString(),
           scanCutoff: current.cutoff,
         });
-        await tx.$executeRaw(
-          SQL.sql`INSERT INTO metering_metadata(key,value) VALUES(${failureKey},${incident}) ON CONFLICT(key) DO UPDATE SET value=excluded.value`,
-        );
         await save(tx, key, { ...current, after: candidate.cursor });
+        await writeReconciliationHealth(tx, namespace, {
+          lastActivityAt: new Date().toISOString(),
+        });
       });
     }
     if (changed) reconciled++;
@@ -89,14 +102,33 @@ export async function recoverPage(
     if (!hasMore) {
       // A completed scan also retires incidents resolved by another path.
       // Current failures retain this scan's cutoff and remain visible.
-      await tx.$executeRaw(SQL.sql`DELETE FROM metering_metadata
-        WHERE key LIKE 'authoritative-reconciliation-error:%'
-          AND value::jsonb->>'namespace'=${namespace}
-          AND value::jsonb->>'scanCutoff' IS DISTINCT FROM ${current.cutoff}`);
+      await tx.$executeRaw(SQL.sql`DELETE FROM metering_metadata m
+        WHERE m.key LIKE 'authoritative-reconciliation-error:%'
+          AND ${recoveryIncidentBody}->>'namespace'=${namespace}
+          AND COALESCE(${recoveryIncidentBody}->>'origin','scan')='scan'
+          AND ${recoveryIncidentBody}->>'scanCutoff' IS DISTINCT FROM ${current.cutoff}`);
+      await tx.$executeRaw(SQL.sql`DELETE FROM metering_metadata m
+        WHERE m.key LIKE 'authoritative-reconciliation-error:%'
+          AND ${recoveryIncidentBody}->>'namespace'=${namespace}
+          AND ${recoveryIncidentBody}->>'origin'='admin'
+          AND (
+            (${recoveryIncidentBody}->>'kind'='operation' AND EXISTS(
+              SELECT 1 FROM metering_operation o ${finalReceiptJoin}
+              WHERE o.namespace=${namespace} AND o.operation_id=${recoveryIncidentBody}->>'id'
+                AND NOT ${unknownAccounting}))
+            OR (${recoveryIncidentBody}->>'kind'='evidence' AND EXISTS(
+              SELECT 1 FROM metering_usage_evidence e
+              LEFT JOIN metering_history_import h ON h.namespace=e.namespace AND h.source_id=e.id
+                AND h.migration_id='20261011021000_accounting_history'
+              JOIN metering_operation o ON o.namespace=e.namespace AND o.operation_id=COALESCE(h.operation_id,e.id)
+              WHERE e.namespace=${namespace} AND e.id=${recoveryIncidentBody}->>'id'
+                AND e."receiptId" IS NOT NULL AND EXISTS(
+                  SELECT 1 FROM metering_receipt r WHERE r.operation_pk=o.operation_pk AND r.receipt_id=e."receiptId")))
+          )`);
     }
     const [failures] = await tx.$queryRaw<{ failed: bigint }[]>(SQL.sql`
-      SELECT count(*) AS failed FROM metering_metadata
-      WHERE key LIKE 'authoritative-reconciliation-error:%' AND value::jsonb->>'namespace'=${namespace}`);
+      SELECT count(*) AS failed FROM metering_metadata m
+      WHERE m.key LIKE 'authoritative-reconciliation-error:%' AND ${recoveryIncidentBody}->>'namespace'=${namespace}`);
     const failed = Number(failures?.failed ?? 0n);
     const lastReconciledAt = hasMore || failed > 0 ? null : now.toISOString();
     if (lastReconciledAt) {
@@ -107,6 +139,17 @@ export async function recoverPage(
       });
     }
     if (!hasMore) await tx.$executeRaw(SQL.sql`DELETE FROM metering_metadata WHERE key=${key}`);
+    await writeReconciliationHealth(tx, namespace, {
+      ...(!hasMore
+        ? { lastActivityAt: new Date().toISOString(), lastCompletedAt: new Date().toISOString() }
+        : {}),
+      ...(!hasMore && failed === 0 && health.unconfirmed === 0
+        ? { lastCleanAt: new Date().toISOString() }
+        : {}),
+      failed,
+      unconfirmed: health.unconfirmed,
+      overdue: health.overdue,
+    });
     return { hasMore, lastReconciledAt, reconciled, scanned: page.length, failed, ...health };
   });
 }

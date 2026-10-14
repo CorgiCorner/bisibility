@@ -1,3 +1,17 @@
+import { resetRecordedWorkerDefinition } from "@/lib/rank-check/recorded-worker-definition.test-fixture";
+
+vi.mock("@/lib/measurement-definitions/worker-session", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/measurement-definitions/worker-session")>();
+  const { recordedLiveWorkerDefinition } = await import(
+    "@/lib/rank-check/recorded-worker-definition.test-fixture"
+  );
+  return {
+    ...actual,
+    liveWorkerDefinition: recordedLiveWorkerDefinition(actual.workerDefinitionOwner),
+  };
+});
+
 import { resetRateLimitStateForTests } from "@/lib/api/ratelimit";
 import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { encryptSecret } from "@/lib/providers/crypto";
@@ -42,6 +56,7 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 
 vi.mock("@/lib/operations/access-extension", () => ({
+  assertOperationAccessInTransaction: vi.fn(),
   assertOperationAccess: mocks.assertOperationAccess,
 }));
 
@@ -50,12 +65,13 @@ vi.mock("@/lib/notifications/events", () => ({
   notifyRankCheckFailed: mocks.notifyRankCheckFailed,
 }));
 
-function provider(fetchRank: SerpProvider["fetchRank"], id = "mock-serp"): SerpProvider {
+function provider(fetchRank: SerpProvider["fetchRank"], id = "serpapi"): SerpProvider {
   return { fetchRank, id, label: "Mock SERP", testConnection: vi.fn() };
 }
 
 describe("runCheck", () => {
   beforeEach(() => {
+    resetRecordedWorkerDefinition();
     resetRateLimitStateForTests();
     clearProviderRateLimitState();
     process.env.REDIS_URL = "";
@@ -128,7 +144,8 @@ describe("runCheck", () => {
       estimatedCostCents: null,
       keywordId: "keyword_1",
       position: 3,
-      previousPosition: 8,
+      // Legacy raw payload has no immutable comparable observation proof.
+      previousPosition: null,
       provider: "dataforseo",
       rankingUrl: "https://example.com/ranking-page",
       requestedDepth: 20,
@@ -223,6 +240,7 @@ describe("runCheck", () => {
         position: null,
         rankingUrl: null,
       }),
+      "dataforseo",
     );
     const credentialsEncrypted = encryptSecret(
       JSON.stringify({ login: "login", password: "secret" }),
@@ -407,6 +425,7 @@ describe("runCheck", () => {
 
 describe("persistRankCheck", () => {
   beforeEach(() => {
+    resetRecordedWorkerDefinition();
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.prisma.auditLog.create.mockResolvedValue({ id: "audit_1" });
     mocks.prisma.signal.create.mockImplementation(({ data }) =>

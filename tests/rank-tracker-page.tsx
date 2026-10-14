@@ -1,9 +1,18 @@
 import KeywordsPage from "@/app/(regional)/app/(workspace)/[project]/rank-tracker/page";
+import { KeywordPresentationDraftContext } from "@/components/keywords/grid/KeywordPresentationDraftProvider";
+import type { KeywordsGridProps } from "@/components/keywords/grid/keywords-grid-types";
+import {
+  projectRankTrackerFeatureTestMessages,
+  renderWithFeatureMessages as render,
+} from "@/i18n/test-support/render-with-feature-messages";
 import type { RankTrackerAction } from "@/lib/keywords/rank-tracker-command";
-import { permanentRedirect, redirect } from "@/tests/next-navigation";
-import { render } from "@testing-library/react";
-import type { ReactNode } from "react";
+import type { RankTrackerReportOptions } from "@/lib/queries/rank-tracker-report-model";
+import type { KeywordPersonalViewContext } from "@/lib/saved-views/keyword-personal-context";
+import type { TablePresentation } from "@/lib/saved-views/presentation-model";
+import { type ReactNode, useContext } from "react";
 import { vi } from "vitest";
+import { PAGE_PROJECT_REF, pagePreference, pageView } from "./rank-tracker-page-fixtures";
+import { initializePageActor, initializePageFixture } from "./rank-tracker-page-setup";
 
 const mocks = vi.hoisted(() => ({
   getCheckHealth: vi.fn(),
@@ -17,21 +26,44 @@ const mocks = vi.hoisted(() => ({
   getProjectMarkets: vi.fn(),
   getRankTrackerGroupedList: vi.fn(),
   getRankTrackerKeywordList: vi.fn(),
-  getSavedView: vi.fn(),
+  getQueryActor: vi.fn(),
   isProviderConnected: vi.fn(),
   listSavedKeywords: vi.fn(),
-  listSavedViews: vi.fn(),
   requireReadableProject: vi.fn(),
   resolveProjectAccess: vi.fn(),
   savedKeywordCount: vi.fn(),
+  getPersonalSurfacePreference: vi.fn(),
+  listSessionSavedViews: vi.fn(),
+  scopeLocations: vi.fn(),
+  scopeMarkets: vi.fn(),
+  scopeTags: vi.fn(),
+  createSessionRankTrackerReportOptions: vi.fn(),
 }));
 
 export const captured = {
   gridProps: {} as Record<string, unknown>,
   initialAction: undefined as RankTrackerAction | null | undefined,
   initialDensity: undefined as string | undefined,
+  presentation: null as TablePresentation | null,
+  reportOptions: null as RankTrackerReportOptions | null,
+  personalPreferences: null as KeywordPersonalViewContext | null,
+  notice: null as { status: string; href: string } | null,
 };
 
+vi.mock("server-only", () => ({}));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    keyword: { findMany: mocks.scopeLocations },
+    projectMarket: { findMany: mocks.scopeMarkets },
+    tag: { findMany: mocks.scopeTags },
+  },
+}));
+vi.mock("@/lib/project-surface-preferences/query", () => ({
+  getPersonalSurfacePreference: mocks.getPersonalSurfacePreference,
+}));
+vi.mock("@/lib/queries/rank-tracker-session-report", () => ({
+  createSessionRankTrackerReportOptions: mocks.createSessionRankTrackerReportOptions,
+}));
 vi.mock("@/components/rank-tracker/RankTrackerFeatureBoundary", () => ({
   RankTrackerFeatureBoundary: ({ children }: { children: ReactNode }) => children,
 }));
@@ -43,16 +75,25 @@ vi.mock("@/components/rank-tracker/RankTrackerTabs", () => ({
   ),
 }));
 vi.mock("@/components/keywords/grid/KeywordsGrid", () => ({
-  KeywordsGrid: (props: {
-    initialAction?: RankTrackerAction | null;
-    initialAddOpen?: boolean;
-    initialDensity?: string;
-    [key: string]: unknown;
-  }) => {
-    captured.gridProps = props;
+  KeywordsGrid: (props: Readonly<KeywordsGridProps>) => {
+    captured.gridProps = { ...props };
+    captured.personalPreferences = props.personalPreferences ?? null;
     captured.initialAction = props.initialAction;
     captured.initialDensity = props.initialDensity;
+    captured.presentation = useContext(KeywordPresentationDraftContext)?.draft ?? null;
     return <div data-testid="tracked-grid" />;
+  },
+}));
+// Only the async notice leaf is synchronous here; status is produced by the actual context and resolver.
+vi.mock("@/components/saved-views/PersonalViewScopeNotice", () => ({
+  PersonalViewScopeNotice: (props: { status: string; href: string }) => {
+    captured.notice = props;
+    return (
+      <section>
+        <p role="status">{props.status}</p>
+        <a href={props.href}>General</a>
+      </section>
+    );
   },
 }));
 vi.mock("@/components/keywords/saved/SavedKeywordsWorkspace", () => ({
@@ -71,6 +112,7 @@ vi.mock("@/lib/dates/request", () => ({
   getResolvedDateFormat: vi.fn().mockResolvedValue({ preference: "auto", resolved: "month_first" }),
 }));
 vi.mock("@/lib/queries/_auth", () => ({
+  getQueryActor: mocks.getQueryActor,
   requireReadableProject: mocks.requireReadableProject,
   resolveProjectAccess: mocks.resolveProjectAccess,
 }));
@@ -103,108 +145,57 @@ vi.mock("@/lib/queries/saved-keywords", () => ({
   savedKeywordCount: mocks.savedKeywordCount,
 }));
 vi.mock("@/lib/queries/saved-views", () => ({
-  getSavedView: mocks.getSavedView,
-  listSavedViews: mocks.listSavedViews,
+  listSessionSavedViews: mocks.listSessionSavedViews,
 }));
 
 export function getPageMocks() {
   return mocks;
 }
-
+export function getPageReportOptions() {
+  if (!captured.reportOptions)
+    throw new Error("Page fixture requires the session report port to have been constructed");
+  return captured.reportOptions;
+}
+export function getPagePersonalPreferences() {
+  if (!captured.personalPreferences)
+    throw new Error("Page fixture requires a rendered personal context");
+  return captured.personalPreferences;
+}
+export function setupPageDefaultView(version: 1 | 2 = 2, grouped = true) {
+  const view = pageView(version, grouped);
+  mocks.listSessionSavedViews.mockResolvedValue([view]);
+  mocks.getPersonalSurfacePreference.mockResolvedValue({
+    ...pagePreference(),
+    defaultTarget: { kind: "saved_view", viewId: view.id },
+    revision: 7,
+  });
+  return view;
+}
+export function setupPageActor(actorId?: string) {
+  initializePageActor(mocks, actorId);
+}
 export function setupPageTest() {
-  vi.clearAllMocks();
-  redirect.mockImplementation((href: string) => {
-    throw new Error(`NEXT_REDIRECT:${href}`);
-  });
-  permanentRedirect.mockImplementation((href: string) => {
-    throw new Error(`NEXT_REDIRECT:${href}`);
-  });
-  mocks.resolveLegacyMarketRef.mockResolvedValue(null);
-  captured.gridProps = {};
-  captured.initialAction = undefined;
-  captured.initialDensity = undefined;
-  mocks.resolveProjectAccess.mockResolvedValue({
-    mode: "member",
-    projectId: "project_1",
-    publicId: "prj_1",
-  });
-  mocks.getCheckHealth.mockResolvedValue({ budget: {}, providerConnected: true });
-  mocks.getKeywordCount.mockResolvedValue(9);
-  mocks.getRankCheckRunCount.mockResolvedValue(25);
-  mocks.getKeywordDefaultMarket.mockResolvedValue({
-    city: null,
-    country: "United States",
-    device: "desktop",
-    displayName: "United States",
-    locationKey: "US",
-    source: "explicit",
-  });
-  mocks.getRankTrackerGroupedList.mockResolvedValue({
-    facets: { intents: [], positions: [], tags: [], topics: [] },
-    groups: [],
-    locations: [],
-    matchedGroupCount: 0,
-    matchedTargetCount: 0,
-    page: 1,
-    pageCount: 0,
-    pageSize: 25,
-    resolvedLens: { device: "all", locationId: null },
-    totalCount: 9,
-  });
-  mocks.getRankTrackerKeywordList.mockResolvedValue({
-    facets: { intents: [], positions: [], tags: [], topics: [] },
-    locations: [],
-    matchedTargetCount: 0,
-    page: 1,
-    pageCount: 1,
-    pageSize: 25,
-    resolvedLens: { device: "all", locationId: null },
-    rows: [],
-    totalCount: 9,
-  });
-  mocks.getKeywordTagSuggestions.mockResolvedValue([]);
-  mocks.loadRankTrackerCostContext.mockResolvedValue({ costPerCheckCents: 1, spentCents: 3900 });
-  mocks.getProjectMarkets.mockResolvedValue({
-    markets: [],
-    maxMarkets: 5,
-    monthlyCostCents: 0,
-    perMarketChecks: 0,
-    projectId: "prj_1",
-  });
-  mocks.getSavedView.mockResolvedValue(null);
-  mocks.isProviderConnected.mockResolvedValue(true);
-  mocks.getPreferences.mockResolvedValue({
-    dateFormat: "iso",
-    density: "standard",
-    landing: "dashboard",
-    theme: "system",
-  });
-  mocks.listSavedKeywords.mockResolvedValue({ rows: [], total: 2 });
-  mocks.listSavedViews.mockResolvedValue([]);
-  mocks.requireReadableProject.mockResolvedValue({
-    actor: { id: "user_1", memberships: [{ projectId: "project_1", role: "owner" }] },
-    project: { id: "project_1", publicId: "prj_1" },
-  });
-  mocks.savedKeywordCount.mockResolvedValue(2);
+  initializePageFixture(mocks, captured);
 }
 
 export async function renderPage(searchParams: Record<string, string | string[] | undefined>) {
-  render(
+  return render(
     await KeywordsPage({
-      params: Promise.resolve({ project: "prj_1" }),
+      params: Promise.resolve({ project: PAGE_PROJECT_REF }),
       searchParams: Promise.resolve(searchParams),
     }),
+    { messages: projectRankTrackerFeatureTestMessages },
   );
 }
-
 export async function renderPageAt(
   params: { market?: string; project: string },
   searchParams: Record<string, string | string[] | undefined>,
 ) {
-  render(
+  return render(
     await KeywordsPage({
       params: Promise.resolve(params),
       searchParams: Promise.resolve(searchParams),
     }),
+    { messages: projectRankTrackerFeatureTestMessages },
   );
 }

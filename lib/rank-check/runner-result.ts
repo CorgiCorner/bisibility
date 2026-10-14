@@ -6,6 +6,11 @@ import type { RankNormalizationVersion } from "./normalization-version";
 import type { OrganicDomainRank } from "./organic-ranks";
 
 export type RankCheckRunResult = {
+  /** Original predecessor qualified by the same retained semantic/effective evidence. */
+  comparisonPredecessorId?: string | null;
+  /** Exact winning durable attempt, supplied by the runner, never provider JSON. */
+  definitionBindingId?: string | null;
+  recoveryContextHash?: string;
   usageRecorded?: boolean;
   comparisonAllowed: boolean;
   providerCostCents?: number;

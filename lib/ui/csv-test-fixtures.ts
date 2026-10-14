@@ -1,0 +1,16 @@
+export const csvTextFixtures = [
+  { value: "=1+1", exported: "'=1+1" },
+  { value: "+SUM(1,2)", exported: "'+SUM(1,2)" },
+  { value: "-opis", exported: "'-opis" },
+  { value: "@tekst", exported: "'@tekst" },
+  { value: "  =1+1", exported: "'  =1+1" },
+  { value: "\uFEFF=1+1", exported: "'\uFEFF=1+1" },
+  { value: "\u0000 \u001F\uFEFF+41", exported: "'\u0000 \u001F\uFEFF+41" },
+  { value: "\tplain text", exported: "'\tplain text" },
+  { value: "\rplain text", exported: "'\rplain text" },
+  { value: "\nplain text", exported: "'\nplain text" },
+  { value: 'rank "tracker", ideas\nsecond line', exported: 'rank "tracker", ideas\nsecond line' },
+  { value: "  ordinary text  ", exported: "  ordinary text  " },
+  { value: "Zażółć gęślą jaźń 日本語", exported: "Zażółć gęślą jaźń 日本語" },
+  { value: "'already text", exported: "'already text" },
+] as const;

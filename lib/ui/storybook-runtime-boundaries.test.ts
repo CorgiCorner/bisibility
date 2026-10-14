@@ -105,6 +105,21 @@ describe("Storybook keyword action boundaries", () => {
   });
 });
 
+describe("Storybook instance administration action boundaries", () => {
+  it("retains dedicated announcement and recovery fixtures in the combined configuration", async () => {
+    const aliases = await configuredAliases();
+    expect(aliases.get("@/lib/actions/instance-announcements")).toMatch(
+      /[\\/]\.storybook[\\/]instance-announcement-stubs\.ts$/,
+    );
+    expect(aliases.get("@/lib/actions/metering-recovery")).toMatch(
+      /[\\/]\.storybook[\\/]recovery-action-stubs\.ts$/,
+    );
+    expect(aliases.get("@/lib/actions/instance-announcements")).not.toBe(
+      aliases.get("@/lib/actions/metering-recovery"),
+    );
+  });
+});
+
 describe("Storybook provider-management action boundary", () => {
   it("aliases the verified provider context's server actions to readonly browser fixtures", async () => {
     const aliases = await configuredAliases();

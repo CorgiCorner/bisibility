@@ -25,12 +25,24 @@ function currentEntries(entries) {
       "lib/api/rank-checks.ts ->",
       "lib/api/rank-checks.ts -> lib/api/rank-check-request.ts ->",
     );
-    return [
+    const current = [
       [splitPath, disposition],
       ...(path.startsWith("lib/api/rank-checks.ts ->")
         ? [[path.replace("lib/api/rank-checks.ts", "lib/api/rank-check-request.ts"), disposition]]
         : []),
     ];
+    // The extracted chain retains the original provider execution call. Runner
+    // persistence remains a separate export, so its existing disposition applies
+    // only to this exact added module edge; other new paths still require review.
+    return current.flatMap(([key, value]) => [
+      [key, value],
+      ...(key.includes("lib/rank-check/fallback.ts -> lib/rank-check/runner.ts")
+        ? [[key.replace(
+          "lib/rank-check/fallback.ts -> lib/rank-check/runner.ts",
+          "lib/rank-check/fallback.ts -> lib/rank-check/fallback-chain.ts -> lib/rank-check/runner.ts",
+        ), value]]
+        : []),
+    ]);
   });
 }
 

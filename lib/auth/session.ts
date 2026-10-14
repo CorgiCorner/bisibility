@@ -7,6 +7,7 @@ import {
   validateReturnTo,
 } from "@/lib/auth/return-to";
 import { retryTransientSessionDatabaseRead } from "@/lib/auth/session-retry";
+import { assertTestAuthSession } from "@/lib/auth/test-auth-extension";
 import { prisma } from "@/lib/db/prisma";
 import { readDemoConfig } from "@/lib/demo/config";
 import { loadConfiguredDemoActor } from "@/lib/demo/identity";
@@ -51,6 +52,12 @@ export async function enforceActiveSession<T extends { user: { id: string } }>(
   session: T | null,
 ): Promise<T | null> {
   if (!session) {
+    return null;
+  }
+
+  try {
+    await assertTestAuthSession(session.user.id);
+  } catch {
     return null;
   }
 

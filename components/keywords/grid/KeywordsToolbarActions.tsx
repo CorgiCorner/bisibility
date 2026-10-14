@@ -17,12 +17,13 @@ import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { UploadSimpleIcon as UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { KeywordsToolbarButton, toolbarSecondaryIconClassName } from "./KeywordsToolbarButton";
 
 const menuRowStyle = { alignItems: "center", display: "flex", gap: "10px", minHeight: 36 };
 
 type KeywordsToolbarActionsProps = {
+  columnOrderControl?: ReactNode;
   columnSizing: Record<string, number>;
   columns: readonly DataTableColumn<KeywordRow>[];
   columnVisibility: Record<string, boolean>;
@@ -34,11 +35,13 @@ type KeywordsToolbarActionsProps = {
   onColumnVisibilityChange: (next: Record<string, boolean>) => void;
   onDensityChange: (density: DataTableDensity) => void;
   onImportCsv?: () => void;
+  exportDisabled?: boolean;
   onOpenExport: () => void;
   onOpenFilters: () => void;
 };
 
 export function KeywordsToolbarActions({
+  columnOrderControl,
   columnSizing,
   columns,
   columnVisibility,
@@ -50,6 +53,7 @@ export function KeywordsToolbarActions({
   onColumnVisibilityChange,
   onDensityChange,
   onImportCsv,
+  exportDisabled,
   onOpenExport,
   onOpenFilters,
 }: Readonly<KeywordsToolbarActionsProps>) {
@@ -63,6 +67,7 @@ export function KeywordsToolbarActions({
     <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">
       <span className="inline-flex">
         <DataTableColumnsMenu
+          footerContent={columnOrderControl}
           columnSizing={columnSizing}
           columns={columns}
           columnVisibility={columnVisibility}
@@ -119,6 +124,7 @@ export function KeywordsToolbarActions({
         contentProps={{ style: { border: "1px solid var(--border)", minWidth: 190 } }}
       >
         <MenuItem
+          disabled={exportDisabled}
           onClick={() => {
             setTransferAnchor(null);
             onOpenExport();
@@ -145,6 +151,7 @@ export function KeywordsToolbarActions({
       <span className="hidden lg:inline-flex" data-testid="keywords-export-action">
         <KeywordsToolbarButton
           compactBelowXl
+          disabled={exportDisabled}
           label={t("export")}
           onClick={onOpenExport}
           showTooltip

@@ -106,6 +106,8 @@ export type RetrievedRow = {
 };
 
 type RetrievedResultsBase = {
+  /** URL retained on this check; missing legacy metadata stays unavailable. */
+  rankingUrl?: string | null;
   checkId: string;
   checkedAt: string;
   provider: string;

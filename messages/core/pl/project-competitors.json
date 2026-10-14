@@ -159,7 +159,10 @@
       "viewName": "Nazwa widoku",
       "viewNamePlaceholder": "np. USA, telefon – zestaw podstawowy",
       "why": "dlaczego?",
-      "you": "Ty"
+      "you": "Ty",
+      "sovQualityUnknown": "Bieżące porównanie jest niedostępne. Zachowane pomiary nie potwierdzają aktywnej definicji, aktualności lub przeszukanego zakresu.",
+      "sovCoverageUnknown": "nieznane",
+      "sovQuality": "Kwalifikuje się {measured} z {expected} słów kluczowych. Nieznane: {unknown}. Pokrycie aktualnymi danymi: {coverage}."
     }
   }
 }

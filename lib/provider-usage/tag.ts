@@ -26,6 +26,7 @@ export const PROVIDER_REQUEST_FEATURES = [
   "domain_overview",
   "keyword_metrics",
   "keyword_research",
+  "local_scan",
   "rank_check",
   "ranked_keywords",
 ] as const satisfies readonly ProviderCostFeature[];

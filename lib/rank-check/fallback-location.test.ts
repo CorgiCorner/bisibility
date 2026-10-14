@@ -5,6 +5,7 @@ import { keywordRankLocation, locationForProvider } from "./fallback-location";
 
 function location(overrides: Partial<Location> = {}): Location {
   return {
+    measurementEpoch: 0n,
     canonicalKey: "US",
     cityName: null,
     countryCode: "US",

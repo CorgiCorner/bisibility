@@ -27,7 +27,7 @@ type AttributionRun = {
  * historical rows is deliberately absent from the allowlist, so it maps to the app surface here
  * instead of travelling downstream; anything else unknown falls back to `app` too.
  */
-function attributableSource(value: string | null): ProviderRequestSource {
+export function attributableSource(value: string | null): ProviderRequestSource {
   if (
     value !== null &&
     (SOURCES_BY_SURFACE.programmatic.includes(value as ProviderRequestSource) || value === "app")

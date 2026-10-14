@@ -3,7 +3,9 @@ import { prisma } from "@/lib/db/prisma";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
 import { meteringNamespace } from "@/lib/metering/runtime";
 import { notifyOps } from "@/lib/ops/notify";
+import { providerUsageOpsKey } from "./ops-identity";
 import { recoverPage } from "./reconcile-progress";
+import { planRecoveryNotice } from "./recovery-notification-policy";
 
 export const PROVIDER_USAGE_RECONCILED_AT_SETTING_KEY = "provider_usage_reconciled_at";
 export const PROVIDER_USAGE_OVERDUE_THRESHOLD_MS = 15 * 60_000;
@@ -35,20 +37,38 @@ export async function reconcileProviderUsage(
     limit,
     PROVIDER_USAGE_RECONCILED_AT_SETTING_KEY,
   );
-  if (result.failed > 0)
+  const [failedNotice, overdueNotice] = await client.$transaction(async (tx) => [
+    await planRecoveryNotice(tx, namespace, "failed", result.failed, now),
+    await planRecoveryNotice(tx, namespace, "overdue", result.overdue, now),
+  ]);
+  if (failedNotice.notice)
     await notifyOps({
-      dedupeKey: "provider_usage_recovery_failed",
+      dedupeKey: `${providerUsageOpsKey("provider_usage_recovery_failed", namespace)}:${failedNotice.fingerprint}:${failedNotice.notice}:${now.toISOString().slice(0, 10)}`,
       kind: "provider_usage_recovery_failed",
-      severity: "error",
-      title: "Provider usage recovery has failed candidates",
-      fields: { "Failed recoveries": result.failed, Namespace: namespace },
+      severity: failedNotice.notice === "resolved" ? "info" : "error",
+      title:
+        failedNotice.notice === "resolved"
+          ? "Provider usage recovery failures resolved"
+          : failedNotice.notice === "digest"
+            ? "Provider usage recovery daily digest: failed candidates remain"
+            : "Provider usage recovery has failed candidates",
+      fields: {
+        "Failed recoveries": result.failed,
+        Namespace: namespace,
+        "Recovery console": `${process.env.SITE_URL ?? ""}/app/admin/metering/recovery`,
+      },
     });
-  if (result.overdue > 0)
+  if (overdueNotice.notice)
     await notifyOps({
-      dedupeKey: PROVIDER_USAGE_UNCONFIRMED_DEDUPE_KEY,
+      dedupeKey: `${providerUsageOpsKey(PROVIDER_USAGE_UNCONFIRMED_DEDUPE_KEY, namespace)}:${overdueNotice.fingerprint}:${overdueNotice.notice}:${now.toISOString().slice(0, 10)}`,
       kind: "provider_usage_unconfirmed",
-      severity: "warning",
-      title: `Provider usage reconciliation found ${result.overdue} unconfirmed entries older than 15 minutes`,
+      severity: overdueNotice.notice === "resolved" ? "info" : "warning",
+      title:
+        overdueNotice.notice === "resolved"
+          ? "Provider usage reconciliation overdue backlog resolved"
+          : overdueNotice.notice === "digest"
+            ? `Provider usage daily digest: ${result.overdue} overdue unconfirmed entries remain`
+            : `Provider usage reconciliation found ${result.overdue} unconfirmed entries older than 15 minutes`,
       fields: {
         "Oldest age minutes": Math.max(
           0,
@@ -56,6 +76,8 @@ export async function reconcileProviderUsage(
         ),
         "Overdue entries": result.overdue,
         "Unconfirmed total": result.unconfirmed,
+        Namespace: namespace,
+        "Recovery console": `${process.env.SITE_URL ?? ""}/app/admin/metering/recovery`,
       },
     });
   const { oldest: _, ...response } = result;

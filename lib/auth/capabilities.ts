@@ -7,18 +7,25 @@ export type ResourceType =
   | "api_key"
   | "audit_log"
   | "billing"
+  | "business_location"
+  | "business_assignment"
+  | "entity_match"
   | "check_schedule"
   | "cloud_import_job"
   | "competitor"
   | "ingest_hook"
   | "keyword"
+  | "local_measurement_target"
+  | "local_measurement_run"
   | "migration_token"
   | "notification_delivery_channel"
   | "notification_preference"
   | "ownership"
+  | "personal_saved_view"
   | "project"
   | "project_defaults"
   | "project_market"
+  | "project_surface_preference"
   | "provider_connection"
   | "saved_view"
   | "signal"
@@ -46,6 +53,10 @@ const minimumRoleByAction = {
 const ownerOnlyResources = new Set<ResourceType>(["billing", "ownership"]);
 const adminOnlyCreateDeleteResources = new Set<ResourceType>(["api_key", "ingest_hook"]);
 
+export function isPersonalPreferenceResource(resourceType: ResourceType): boolean {
+  return resourceType === "personal_saved_view" || resourceType === "project_surface_preference";
+}
+
 export function requiredRoleFor(
   action: Action,
   resourceType: ResourceType,
@@ -53,6 +64,9 @@ export function requiredRoleFor(
 ): Role {
   if (requiredRole) {
     return requiredRole;
+  }
+  if (isPersonalPreferenceResource(resourceType) && action !== "manage") {
+    return "viewer";
   }
   if (ownerOnlyResources.has(resourceType) || (resourceType === "project" && action === "delete")) {
     return "owner";

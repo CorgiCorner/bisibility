@@ -108,6 +108,10 @@
         "projectContext": {
           "label": "Contexto del proyecto",
           "keywords": "negocio audiencia productos objetivos agentes contexto"
+        },
+        "businessLocations": {
+          "label": "Ubicaciones de empresa",
+          "keywords": "empresa sucursal ubicación cid place id sujeto local"
         }
       }
     },
@@ -122,7 +126,14 @@
       "notifications": "Notificaciones",
       "team": "Equipo",
       "tracking": "Seguimiento",
-      "context": "Contexto del proyecto"
+      "context": "Contexto del proyecto",
+      "businessLocations": "Ubicaciones de empresa"
+    },
+    "groups": {
+      "project": "Proyecto",
+      "measurement": "Mediciones",
+      "team": "Equipo y facturación",
+      "administration": "Administración"
     }
   }
 }

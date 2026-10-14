@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import { expect, type Page } from "@playwright/test";
+import { configureSyntheticMeasurementPolicy } from "./measurement-policy";
 
 const otpFile = process.env.BISIBILITY_E2E_OTP_FILE;
 const wizardNavigationTimeout = 30_000;
@@ -119,6 +120,9 @@ export async function completeOnboarding(
   await page.getByPlaceholder("One keyword per line").fill(keyword);
   await clickWizardPrimary(page, "Continue", /[?&]step=4(?:&|$)/);
   if (options.runPreview) {
+    const configuredProject = new URL(page.url()).searchParams.get("projectId");
+    if (!configuredProject) throw new Error("Onboarding lacks its actual project public ID.");
+    await configureSyntheticMeasurementPolicy(page, configuredProject);
     const runCheck = page.getByRole("button", { name: "Run check", exact: true });
     await expect(runCheck).toBeEnabled();
     await runCheck.click();

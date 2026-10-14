@@ -11,6 +11,7 @@ type UseRankTrackerCommandsInput = {
   canCreateKeyword: boolean;
   canUpdateKeyword: boolean;
   initialAction: RankTrackerAction | null;
+  exportSupported?: boolean;
   /** Names the market the run command spends in; `null` is the project level. */
   marketScope?: MarketScope | null;
   onAdd: () => void;
@@ -26,6 +27,7 @@ export function useRankTrackerCommands({
   canCreateKeyword,
   canUpdateKeyword,
   initialAction,
+  exportSupported = true,
   marketScope = null,
   onAdd,
   onExport,
@@ -36,7 +38,7 @@ export function useRankTrackerCommands({
 }: Readonly<UseRankTrackerCommandsInput>) {
   const t = useTranslations("projectRankTracker.keywordImport.management");
   const router = useRouter();
-  const canExport = rowCounts.visible > 0;
+  const canExport = exportSupported && rowCounts.visible > 0;
   const canFilter = rowCounts.all > 0;
   const runCheckRows = rowCounts.scoped ?? rowCounts.visible;
   const canRunChecks = canUpdateKeyword && marketScope?.status !== "paused" && runCheckRows > 0;

@@ -112,7 +112,13 @@
         "cents": "Centy",
         "precision": "Miejsca po przecinku",
         "digits": "{count, number}",
-        "help": "Zapisane w tej przeglądarce. Zaokrąglenie widoku nie zmienia zapisanych kwot ani budżetów."
+        "help": "Wspólne dla wszystkich osób w projekcie: zużycia, budżetów i nagłówka. Zmienia się tylko zaokrąglenie wyświetlania; wartości rozliczeń pozostają dokładne. Waluta wynika z zapisanej jednostki, bez przeliczania walut.",
+        "readOnly": "Wspólne ustawienia wyświetlania mogą zmieniać osoby z uprawnieniem edycji projektu.",
+        "saving": "Zapisywanie ustawień wyświetlania projektu...",
+        "conflict": "Inna osoba zmieniła ustawienia. Widzisz jej zapisane wartości; sprawdź swoją zmianę i spróbuj ponownie.",
+        "forbidden": "Nie masz już uprawnienia edycji tego projektu. Zmiana nie została zapisana.",
+        "invalid": "Wybierz dostępny format kwoty i liczbę miejsc po przecinku.",
+        "failed": "Nie udało się zapisać ustawień wyświetlania. Nadal widoczne są poprzednie wartości."
       }
     }
   }

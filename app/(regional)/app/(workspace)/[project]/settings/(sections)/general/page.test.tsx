@@ -88,6 +88,7 @@ describe("GeneralSettingsPage", () => {
       "shared",
       "projectSettingsShell",
       "projectSettingsGeneral",
+      "projectSettingsUsage",
     ]);
     expect(screen.getByRole("main")).toHaveAttribute("data-project-ref", "prj_resolved");
 

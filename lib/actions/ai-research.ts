@@ -43,6 +43,7 @@ export async function getAiResearchPage(projectId: string, mode: "visibility" | 
   return {
     catalog: catalogOutcome.ok ? catalogOutcome.catalog : undefined,
     catalogError: catalogOutcome.ok ? undefined : catalogOutcome.message,
+    catalogFailure: catalogOutcome.ok ? undefined : catalogOutcome.reason,
     domain: trackedProjectDomain(project.domain) ?? "",
     history,
     canRun:

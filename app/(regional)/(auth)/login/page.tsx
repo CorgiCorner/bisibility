@@ -21,6 +21,7 @@ import {
   GOOGLE_CAPACITY_EXHAUSTED,
   type SignInCapacityMiss,
 } from "@/lib/auth/signin-capacity-types";
+import { readTestAuthIdentity } from "@/lib/auth/test-auth-extension";
 import { readDemoConfig } from "@/lib/demo/config";
 import { demoNextPath } from "@/lib/demo/demo-next-path";
 import { explicitDeploymentDataRegionLabel, isCloud } from "@/lib/deployment/deployment";
@@ -85,6 +86,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
   // The sign-in endpoint is the only surface that knows about the session, so marketing
   // navigation can stay static: "Sign in" is always safe to click.
   const demo = readDemoConfig();
+  const testIdentity = await readTestAuthIdentity();
   const demoOAuthRequest =
     demo.kind === "editable" && firstParam(params?.client_id) && firstParam(params?.sig);
   if (!switchingAccount && !demoOAuthRequest && (await getSession())) {
@@ -179,7 +181,7 @@ export default async function LoginPage({ searchParams }: Readonly<LoginPageProp
             }
             emailSignInUnavailable={emailSignInUnavailable}
             enabledProviders={editableOwnerSignIn ? undefined : ENABLED_SOCIAL_PROVIDERS}
-            humanVerificationRequired={isCloud}
+            humanVerificationRequired={isCloud && !testIdentity}
             initialErrorCode={capacityMiss ? null : (error ?? null)}
             legalConsentLinks={legalConsentLinks()}
             returnTo={returnTo}

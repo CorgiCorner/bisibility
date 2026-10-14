@@ -41,6 +41,7 @@ import {
 import { createDataForSeoResearchMethods } from "./dataforseo-research";
 import { dataForSeoObservationRun } from "./observation-extract-dataforseo";
 import { requireDeterminateOrganicResult } from "./payload-contract-error";
+import { dataForSeoSentScope } from "./web-local-proof";
 
 const USER_DATA_URL = "https://api.dataforseo.com/v3/appendix/user_data";
 const SERP_URL = "https://api.dataforseo.com/v3/serp/google/organic/live/advanced";
@@ -112,6 +113,7 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
         }
       : {}),
   };
+  const sentScope = dataForSeoSentScope(payload, input.location);
   const data = await requestEnvelope(
     SERP_URL,
     {
@@ -164,6 +166,8 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
     rankingUrl: decision.rankingUrl,
     raw: dataForSeoRawPayload(items, decision),
     observation: dataForSeoObservationRun({
+      providerResults: task.result,
+      sentScope,
       completeness:
         stopOnMatch && decision.outcome === "match"
           ? "truncated_by_stop_on_match"

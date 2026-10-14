@@ -148,3 +148,85 @@ test("funding tags exclude the opposite funding budget on the same connection", 
   ];
   expect(preparePaidAttempt(request).scope.tags).not.toContain(request.reservation.scope.tags[0]);
 });
+
+test("resumed original work refuses a higher current BYOK or customer quote", async () => {
+  const { preparePaidAttempt } = await import("./current-paid-quote");
+  const request = input();
+  request.context.recoveryMaxCostCents = "2";
+  expect(preparePaidAttempt(request).estimate).toContainEqual({
+    unit: "cents",
+    value: 2n,
+    scale: 0,
+  });
+  expect(() =>
+    preparePaidAttempt({
+      ...request,
+      reservation: {
+        ...request.reservation,
+        estimate: [{ unit: "cents", value: 20001n, scale: 4 }],
+      },
+    }),
+  ).toThrow();
+  const platform = {
+    ...request,
+    reservation: { ...request.reservation, fundingSource: "platform" as const },
+    platformQuote: {
+      estimate: [
+        { unit: "cents", value: 1n, scale: 0 },
+        { unit: "customer_cents", value: 20001n, scale: 4 },
+      ],
+      costOwner: "provider-account",
+      creditAccountRef: "wallet",
+      customerPriceVersion: "frozen",
+      estimateSource: "measured" as const,
+      platformPools: ["pool"],
+    },
+  };
+  expect(() => preparePaidAttempt(platform)).toThrow();
+  expect(
+    preparePaidAttempt({
+      ...platform,
+      context: { ...request.context, recoveryMaxCostCents: "2.0001" },
+    }),
+  ).toMatchObject({ fundingSource: "platform" });
+});
+
+test("resumed unit-priced searches enforce the valued budget rather than the provider zero", async () => {
+  const { preparePaidAttempt } = await import("./current-paid-quote");
+  const request = input();
+  const priced = {
+    ...request,
+    reservation: {
+      ...request.reservation,
+      provider: "serpapi",
+      operation: "search",
+      estimate: [
+        { unit: "cents", value: 0n, scale: 4 },
+        { unit: "units", value: 1n, scale: 0 },
+      ],
+    },
+    context: {
+      ...request.context,
+      feature: "rank_check",
+      recoveryMaxCostCents: "2",
+      requestPricing: {
+        version: 1 as const,
+        provider: "serpapi",
+        operation: "search",
+        options: {},
+        budgetValuation: {
+          source: "manual" as const,
+          perUnitCents: "2.0001",
+          unitsPerCheck: 1 as const,
+        },
+      },
+    },
+  };
+  expect(() => preparePaidAttempt(priced)).toThrow();
+  expect(
+    preparePaidAttempt({
+      ...priced,
+      context: { ...priced.context, recoveryMaxCostCents: "2.0001" },
+    }),
+  ).toMatchObject({ fundingSource: "byok" });
+});

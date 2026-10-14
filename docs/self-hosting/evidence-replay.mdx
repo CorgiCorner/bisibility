@@ -1,0 +1,96 @@
+---
+title: "Retained history repair"
+description: "Replay original organic facts from retained history with bounded dry-run, immutable provenance and explicit unknown measurement quality."
+---
+
+This operator repairs missing `RankCheck.organicRanks` from the original retained
+organic collection. It makes no provider requests or scheduling changes. Apply the
+additive migration through the normal upgrade procedure first. Keep a backup and
+use the same reviewed application source for discovery and resume.
+
+## Preview the complete selected history
+
+The command requires a strict project public ID and an inclusive UTC time window.
+Provide `DATABASE_URL` through the existing protected operator environment. It
+must use the intended database role, `public` schema and UTC session. Preserve the
+installation's TLS validation. Do not pass the URL as an argument or write it to a
+report. The operator checks its actual database principal and privileges.
+
+```sh
+npm run db:backfill:competitor-organics -- \
+  --project prj_REPLACE_WITH_REAL_PUBLIC_ID \
+  --from 2026-10-01T00:00:00.000Z --to 2026-10-12T23:59:59.999Z
+```
+
+The default is read-only dry-run. It returns counts, named exclusions and a
+manifest hash; it creates no replay run, receipt, audit entry or match decision.
+The old project-free latest-check command is no longer supported.
+
+The manifest covers every retained check in the selected project/window,
+including named exclusions for incomplete checks. It freezes creation watermark,
+IDs, original physical timestamps, raw/normalized hashes and original observation
+owner. No silent latest-only or partial-page selection is allowed. The maximum is
+10,000 checks, an 8 MiB manifest, 1 MiB per original raw payload, 16 MiB selected
+raw/batch payloads and 50,000 normalized items. Excess capacity is refused; choose
+explicit narrower windows and retain their separate reports.
+
+## Apply or resume an explicit run
+
+Add `--execute` to create a new immutable run and apply one atomic batch. The
+maximum batch is 200 checks; `--batch-size` may lower it. `--max-batches` defaults
+to one and accepts at most 100. Retain the returned run ID and checkpoint.
+
+```sh
+npm run db:backfill:competitor-organics -- \
+  --project prj_REPLACE_WITH_REAL_PUBLIC_ID --execute --resume RETAINED_RUN_ID
+```
+
+Resume cannot replace the frozen project/window or source/parser/code version.
+Every batch rechecks authority and source, fills only SQL-NULL organic facts,
+appends provenance and advances the checkpoint in one transaction. A stale
+source/code/principal or CAS conflict refuses the batch; it is not retried
+implicitly. A new explicit dry-run/run can inspect changed retained sources.
+Existing facts are never overwritten. A new run over already repaired checks
+records `projection_present`, without charging, re-fetching or duplicating facts.
+
+`--execute --stop RETAINED_RUN_ID` stops at the last committed checkpoint. It does
+not undo facts or delete provenance. CLI statements are bounded to 60 seconds,
+lock waits to five seconds and connection startup to 15 seconds. Failure output
+contains fixed categories and SQLSTATE only, not source rows or connection values.
+
+## Meaning and limits
+
+Original checked-at wall-time and provider observed-at provenance are separate.
+`recordedAt` is the repair receipt time, never a replacement observation time.
+Legacy raw commonly lacks original provider time and effective geographic scope;
+those remain unknown. An empty original collection is an empty retained fact
+array, not proof of known absence. Later continuation pages never become original
+root evidence. Ambiguous multi-task containers are excluded.
+
+A retained normalized observation can survive raw expiry only through the actual
+same-check winning execution binding. No current keyword settings or synthetic
+observation are reconstructed. Repair never upgrades completeness, freshness,
+coverage, geography, revisions or current KPI eligibility.
+
+Authorized server integrations may call `prepareRetainedEvidenceRematch` and
+`replayRetainedEvidenceRematch` with the existing trusted session context and a
+server-owned current source hash. The actor is not a request field and the CLI
+cannot confirm or rematch on someone's behalf. These functions reuse the existing
+append-only matcher/CAS authority and original winning web binding or immutable
+local occurrence/canonical paid custody. They require actual retained observation
+time and reject conflicting identity evidence. Web local-pack rematch also requires
+its retained versioned aggregate identity-issue proof, including after raw expiry;
+missing or positive issue counts remain unavailable. A changed source or revoked member
+also refuses a previously successful idempotent replay.
+
+A replay decision includes source/parser/code provenance and is explicitly
+`rematch`, including its first revision. Original automatic decisions and the
+original grid KPI remain unchanged. Later reinterpretation is history evidence,
+not proof of the original scheduled or paid result. The service exports are not a
+new public API endpoint, automatic background job or implicit rematch on read.
+
+Ordinary source and project retention deletions keep their cascade behavior.
+Provenance receipts are immutable on update; there is no blanket deletion ban.
+Repair does not modify raw payloads, check timestamps, rank positions, financial
+ledgers, paid holds or settlement decisions. Real-data apply remains a separate
+operator rollout after review of the dry-run and backup.

@@ -1,10 +1,19 @@
 import { comparableCompletedWindow } from "@/lib/checks/status";
 import { earlierDayPosition } from "@/lib/keywords/position-history";
-import { describe, expect, it } from "vitest";
+import { fixtureScope } from "@/lib/rank-measurements/fixtures";
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 function check(day: number, position: number | null, overrides: Record<string, unknown> = {}) {
+  const at = new Date(`2026-08-${String(day).padStart(2, "0")}T10:00:00.000Z`);
+  const scope = { ...fixtureScope, targetId: "target" };
   return {
-    checkedAt: new Date(`2026-08-${String(day).padStart(2, "0")}T10:00:00.000Z`),
+    ...recordedFixture(position, {
+      configuredScope: scope,
+      effectiveScope: scope,
+      observedAt: at,
+      recordedAt: at,
+    }),
     normalizationVersion: "v2",
     position,
     rankingUrl: `https://example.com/${day}`,
@@ -17,6 +26,8 @@ function check(day: number, position: number | null, overrides: Record<string, u
 function bounded(checks: ReturnType<typeof check>[]) {
   return checks.filter((item) => item.status !== "deferred").slice(0, 12);
 }
+
+beforeEach(() => vi.setSystemTime(new Date("2026-10-12T12:00:00Z")));
 
 describe("rank tracker bounded history policy", () => {
   it("uses an earlier-day baseline instead of a same-day rerun", () => {

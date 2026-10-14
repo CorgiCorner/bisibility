@@ -1,10 +1,15 @@
+import { observationEvidencePolicy } from "@/lib/observation/evidence-metadata";
+import { dataForSeoCapturedMetadata } from "@/lib/observation/provider-metadata";
 import type {
   ObservationCompleteness,
   ObservationItemInput,
   ObservationRequestPolicy,
-  ObservationRunInput,
   ObservationScope,
+  WebObservationRunInput,
 } from "@/lib/observation/types";
+import { dataForSeoLocalPack } from "./dataforseo-local-pack";
+import { DATAFORSEO_OBSERVATION_ADAPTER_VERSION } from "./observation-adapter-versions";
+import { dataForSeoEffectiveScope, localProofPolicy, type SentWebScope } from "./web-local-proof";
 
 type RecordValue = Record<string, unknown>;
 
@@ -22,19 +27,6 @@ function text(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
-function stringValue(value: unknown) {
-  if (typeof value !== "string" && typeof value !== "number" && typeof value !== "bigint") {
-    return null;
-  }
-  const normalized = String(value).trim();
-  return normalized || null;
-}
-
-function rating(item: RecordValue) {
-  const value = record(item.rating);
-  return value ? { count: finite(value.votes_count), value: finite(value.value) } : null;
-}
-
 function firstChildTitle(values: readonly unknown[]) {
   for (const value of values) {
     const child = record(value);
@@ -42,29 +34,6 @@ function firstChildTitle(values: readonly unknown[]) {
     if (title) return title;
   }
   return null;
-}
-
-function localPackItem(
-  item: RecordValue,
-  positionInBlock: number,
-  position: number | null,
-): ObservationItemInput {
-  return {
-    blockPosition: position,
-    businessName: text(item.title),
-    cid: stringValue(item.cid),
-    domain: text(item.domain),
-    mapsUrl: text(item.url_maps) ?? text(item.maps_url) ?? text(item.directions) ?? null,
-    placeId: stringValue(item.place_id),
-    positionInBlock,
-    rankAbsolute: finite(item.rank_absolute),
-    rankGroup: finite(item.rank_group),
-    rating: rating(item),
-    rawFragment: item,
-    resultKind: "local_pack",
-    title: text(item.title),
-    url: text(item.url),
-  };
 }
 
 function aiOverviewItem(item: RecordValue, position: number | null): ObservationItemInput {
@@ -88,45 +57,33 @@ function aiOverviewItem(item: RecordValue, position: number | null): Observation
 }
 
 export function dataForSeoObservationRun(input: {
+  providerResults?: readonly unknown[];
+  sentScope?: SentWebScope;
   items: readonly unknown[];
   requestPolicy: ObservationRequestPolicy;
   completeness: ObservationCompleteness;
   configuredScope: ObservationScope;
   effectiveScope?: ObservationScope | null;
   executedAt: Date;
-}): ObservationRunInput {
+}): WebObservationRunInput {
   const items: ObservationItemInput[] = [];
+  const captured = dataForSeoCapturedMetadata(input.providerResults ?? []);
+  const local = dataForSeoLocalPack(input.items, input.providerResults ?? []);
+  const effectiveScope =
+    input.effectiveScope ?? dataForSeoEffectiveScope(input.sentScope, input.providerResults ?? []);
+  const policy = localProofPolicy(
+    observationEvidencePolicy(input.requestPolicy, DATAFORSEO_OBSERVATION_ADAPTER_VERSION),
+    local.identityIssues,
+    input.sentScope && effectiveScope ? "sent_request" : null,
+  );
 
   for (let index = 0; index < input.items.length; index += 1) {
     const item = record(input.items[index]);
     if (!item || typeof item.type !== "string") continue;
 
     if (item.type === "organic") continue;
-
     if (item.type === "local_pack") {
-      if (Array.isArray(item.items)) {
-        const firstChild = record(item.items[0]);
-        const position = finite(item.rank_absolute) ?? finite(firstChild?.rank_absolute);
-        for (const [childIndex, value] of item.items.entries()) {
-          const child = record(value);
-          if (child) {
-            items.push(localPackItem(child, finite(child.rank_group) ?? childIndex + 1, position));
-          }
-        }
-        continue;
-      }
-
-      const position = finite(item.rank_absolute);
-      let indexInBlock = 0;
-      for (; index < input.items.length; index += 1) {
-        const sibling = record(input.items[index]);
-        if (sibling?.type !== "local_pack" || Array.isArray(sibling.items)) break;
-        items.push(
-          localPackItem(sibling, finite(sibling.rank_group) ?? indexInBlock + 1, position),
-        );
-        indexInBlock += 1;
-      }
-      index -= 1;
+      items.push(...(local.bySourceIndex.get(index) ?? []));
       continue;
     }
 
@@ -139,12 +96,19 @@ export function dataForSeoObservationRun(input: {
   return {
     completeness: input.completeness,
     configuredScope: input.configuredScope,
-    effectiveScope: input.effectiveScope ?? null,
+    effectiveScope,
     engine: "google",
     executedAt: input.executedAt,
     items,
     provider: "dataforseo",
-    requestPolicy: input.requestPolicy,
+    requestPolicy: {
+      ...policy,
+      evidence: {
+        ...policy.evidence,
+        observedAt: captured.observedAt,
+        observedThrough: captured.observedThrough,
+      },
+    },
     surface: "web_serp",
   };
 }

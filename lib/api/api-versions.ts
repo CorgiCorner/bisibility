@@ -2,6 +2,9 @@ import { errorResponse } from "./responses";
 
 export const API_VERSION_HEADER = "Bisibility-API-Version";
 
+// Protocol support only. This never grants the caller permission to change settings.
+export const apiFeatures = { reviewed_project_defaults: "v1" } as const;
+
 const servedApiVersions = ["v1"] as const;
 
 export function getApiVersionCapabilities() {

@@ -40,6 +40,7 @@ export function DataTable<TRow extends DataTableRowBase>({
   ariaLabel,
   bordered = true,
   columnPinning,
+  columnOrder,
   columns,
   columnSizing,
   columnVisibility,
@@ -88,6 +89,7 @@ export function DataTable<TRow extends DataTableRowBase>({
   });
   const container = useDataTableContainer();
   const { page, rowCount, sourceSizing, table } = useDataTable({
+    columnOrder,
     columnPinning,
     columns,
     columnSizing,

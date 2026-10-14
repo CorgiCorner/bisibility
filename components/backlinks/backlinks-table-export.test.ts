@@ -48,3 +48,49 @@ describe("backlinksExportContent", () => {
     expect(csv).toContain('"Acme, ""desk"""');
   });
 });
+
+it.each(["backlinks", "anchors", "referring_domains", "top_pages"] as const)(
+  "centralizes text protection for backlinks view %s",
+  (view) => {
+    const value = {
+      ...rows[0],
+      anchor: "\uFEFF=1+1",
+      sourceDomain: "  +domain",
+      targetUrl: "@target",
+      domainAuthority: -3,
+    };
+    const before = structuredClone(value);
+    const csv = backlinksExportContent({ now, rows: [value], slice: "all_links", view });
+    const protectedValue =
+      view === "anchors" || view === "backlinks"
+        ? "'\uFEFF=1+1"
+        : view === "referring_domains"
+          ? "'  +domain"
+          : "'@target";
+    expect(csv).toContain(protectedValue);
+    expect(csv).toContain(",-3,");
+    expect(value).toEqual(before);
+  },
+);
+
+it("quotes carriage returns in backlink anchors without splitting a cell", () => {
+  expect(
+    backlinksExportContent({
+      now,
+      rows: [{ ...rows[0], anchor: "first\rsecond" }],
+      slice: "all_links",
+      view: "backlinks",
+    }),
+  ).toContain('"first\rsecond"');
+});
+
+it("retains the original fixed spam-score precision for numeric negative values", () => {
+  expect(
+    backlinksExportContent({
+      now,
+      rows: [{ ...rows[0], spamScore: -3 }],
+      slice: "all_links",
+      view: "backlinks",
+    }),
+  ).toContain(",51,-3.0,2,");
+});

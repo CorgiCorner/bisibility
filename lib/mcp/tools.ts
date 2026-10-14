@@ -4,62 +4,17 @@ import { dispatchAiTrackingTool } from "./ai-tracking-tools";
 import { internalMcpToolName } from "./canonical-tools";
 import { dispatchExtendedToolRoute, providerSettingsBody } from "./extended-tool-routes";
 import { dispatchKeywordResearchTool } from "./keyword-research-tools";
+import { dispatchLocalMonitorTool } from "./local-monitor-tools";
 import { dispatchLoopClosureTool } from "./loop-closure-tools";
 import { validateMcpPublicIds } from "./public-id-input";
 import { dispatchResearchWorkspaceTool } from "./research-workspace-tools";
 import { dispatchMcpRestCall, type McpApiAuthorization, type RestCall } from "./rest-call";
 import { dispatchSessionProfile } from "./session-profile";
+import { addKeywordsBody, body, query, requiredString } from "./tool-arguments";
 import type { JsonObject } from "./types";
 
 type ToolArgs = JsonObject;
 type RestMethod = RestCall["method"];
-
-function requiredString(input: ToolArgs, key: string) {
-  const value = input[key];
-  if (typeof value !== "string" || !value.trim()) {
-    throw new Error(`${key} is required.`);
-  }
-  return value;
-}
-
-function serializeQueryValue(value: unknown) {
-  if (value === undefined || value === null || value === "") return null;
-  if (typeof value === "object") return JSON.stringify(value);
-  if (typeof value === "function") return value.name;
-  if (typeof value === "symbol") return value.description ?? "";
-  if (typeof value === "string") return value;
-  if (typeof value === "boolean") return value ? "true" : "false";
-  if (typeof value === "number") return value.toString(10);
-  if (typeof value === "bigint") return value.toString(10);
-  return "";
-}
-
-function query(input: ToolArgs, keys: string[]) {
-  const params = new URLSearchParams();
-  for (const key of keys) {
-    const serialized = serializeQueryValue(input[key]);
-    if (serialized !== null) params.set(key, serialized);
-  }
-  return params.size ? `?${params}` : "";
-}
-
-function body(input: ToolArgs, omit: string[]) {
-  const skipped = new Set([...omit, "idempotency_key", "project_id"]);
-  return Object.fromEntries(Object.entries(input).filter(([key]) => !skipped.has(key)));
-}
-
-function addKeywordsBody(input: ToolArgs) {
-  const defaults = body(input, ["project_id", "keywords"]);
-  const keywords = Array.isArray(input.keywords) ? input.keywords : [];
-
-  return {
-    keywords: keywords.map((item) =>
-      typeof item === "string"
-        ? { ...defaults, keyword: item }
-        : { ...defaults, ...(item as JsonObject) },
-    ),
-  };
-}
 
 function call(
   path: string,
@@ -84,6 +39,8 @@ function projectPath(input: ToolArgs, resource = "") {
 
 function dispatchToRest(name: string, input: ToolArgs): RestCall {
   validateMcpPublicIds(name, input);
+  const localRoute = dispatchLocalMonitorTool(name, input);
+  if (localRoute) return localRoute;
   const trackingRoute = dispatchAiTrackingTool(name, input);
   if (trackingRoute) return trackingRoute;
   // biome-ignore format: compact dispatch keeps this registry under the file line cap.
@@ -128,8 +85,6 @@ function dispatchToRest(name: string, input: ToolArgs): RestCall {
       return call("/projects", "POST", input, body(input, []));
     case "getProject":
       return call(projectPath(input), "GET");
-    case "updateProjectDefaults":
-      return call(project("defaults"), "PATCH", input, body(input, ["project_id"]));
     case "listKeywords":
       return call(`${project("keywords")}${keywordList()}`, "GET");
     case "addKeywords":

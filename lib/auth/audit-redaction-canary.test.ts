@@ -41,7 +41,12 @@ function sourceFiles(directory: string): string[] {
     if (entry.isDirectory()) {
       return entry.name === "generated" ? [] : sourceFiles(path);
     }
-    if (![".ts", ".tsx"].includes(extname(entry.name)) || entry.name.includes(".test.")) return [];
+    if (
+      ![".ts", ".tsx"].includes(extname(entry.name)) ||
+      entry.name.includes(".test.") ||
+      /[.-]test-fixtures?\.[cm]?[jt]sx?$/u.test(entry.name)
+    )
+      return [];
     return [path];
   });
 }
@@ -228,6 +233,27 @@ describe("audit redaction canaries", () => {
       "competitor.details.update",
     );
     expect(data.after).toEqual(details);
+  });
+
+  it("retains usage-display preferences and drops unreviewed payload fields", async () => {
+    const preferences = {
+      revision: 2,
+      moneyDisplay: "native",
+      moneyFractionDigits: 2,
+      quantityFractionDigits: 0,
+    };
+    const data = await writeCanary(
+      {
+        ...preferences,
+        credential: "usage-display-canary-secret",
+        rawProviderResponse: { token: "nested-secret" },
+      },
+      undefined,
+      "settings.usage_display.update",
+    );
+    expect(data.after).toEqual(preferences);
+    expect(JSON.stringify(data)).not.toContain("usage-display-canary-secret");
+    expect(JSON.stringify(data)).not.toContain("nested-secret");
   });
 
   it("drops undeclared sensitive keys at any depth", async () => {

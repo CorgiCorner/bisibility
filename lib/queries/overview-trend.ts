@@ -1,10 +1,13 @@
-import { positionComparisonKey } from "@/lib/checks/position-observations";
-import { comparableCompletedWindow } from "@/lib/checks/status";
+import { resolveRecordedChecks } from "@/lib/rank-measurements/check-resolution";
+import type { CapturedObservation } from "@/lib/rank-measurements/recorded-check";
+import type { MeasurementPolicy } from "@/lib/rank-measurements/types";
 
 export type Check = {
   checkedAt: Date;
   normalizationVersion: string | null;
-  observationRun?: { completeness: string } | null;
+  observationRun?: CapturedObservation | null;
+  id?: string;
+  provider?: string;
   position: number | null;
   previousPosition: number | null;
   rankingUrl: string | null;
@@ -12,6 +15,8 @@ export type Check = {
   status: string;
 };
 export type Keyword = {
+  measurementPolicy?: Partial<MeasurementPolicy>;
+  projectId?: string;
   _count: { rankChecks: number };
   createdAt: Date;
   device: string;
@@ -38,161 +43,128 @@ export type TrendTakeaway = {
   kind: "improved" | "slipped" | "steady";
   leader?: string;
   value?: number;
+  comparableCount?: number;
   window: "firstTrackedDays" | "lastThirtyDays";
 } | null;
-
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-function position(value: number | null | undefined) {
-  return typeof value === "number" && value > 0 && value <= 100 ? value : null;
-}
-
 function average(values: readonly number[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
-
-function latestDailyChecks(checks: readonly Check[], start?: Date) {
-  const days = new Map<string, Check>();
-  for (const check of checks) {
-    if (check.status !== "completed" || (start && check.checkedAt < start)) continue;
-    if (check.position !== null && position(check.position) === null) continue;
-    const day = check.checkedAt.toISOString().slice(0, 10);
-    const previous = days.get(day);
-    if (!previous || check.checkedAt > previous.checkedAt) days.set(day, check);
-  }
-  return days;
-}
-
-function dailyAverages(keywords: readonly Keyword[], start?: Date) {
-  const groups = new Map<string, { date: Date; positions: number[] }>();
-  for (const keyword of keywords) {
-    for (const check of latestDailyChecks(
-      comparableCompletedWindow(keyword.rankChecks).checks,
-      start,
-    ).values()) {
-      const current = position(check.position);
-      if (!current || check.status !== "completed" || (start && check.checkedAt < start)) continue;
-      const key = check.checkedAt.toISOString().slice(0, 10);
-      const group = groups.get(key) ?? {
-        date: new Date(`${key}T00:00:00.000Z`),
-        positions: [],
-      };
-      group.positions.push(current);
-      groups.set(key, group);
-    }
-  }
-  return [...groups.values()]
-    .sort((left, right) => left.date.getTime() - right.date.getTime())
-    .map(({ date, positions }) => ({ date, value: average(positions) }));
+function dayEnd(key: string) {
+  return new Date(new Date(`${key}T00:00:00.000Z`).getTime() + DAY_MS - 1);
 }
 
 export function buildTrend(keywords: readonly Keyword[], start?: Date): Trend[] {
-  const days = new Map<string, Map<string, Check>>();
-  for (const keyword of keywords) {
-    for (const [day, check] of latestDailyChecks(keyword.rankChecks, start)) {
-      const observations = days.get(day) ?? new Map<string, Check>();
-      const previous = observations.get(keyword.id);
-      if (!previous || check.checkedAt > previous.checkedAt) observations.set(keyword.id, check);
-      days.set(day, observations);
-    }
-  }
-  return [...days.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-12)
-    .map(([dateKey, observations], index, points) => {
-      const entries = [...observations.entries()].sort(([a], [b]) => a.localeCompare(b));
-      const positions = entries.flatMap(([, check]) => {
-        const value = position(check.position);
-        return value === null ? [] : [value];
-      });
-      const keys = entries.map(([id, check]) => [id, positionComparisonKey(check)]);
-      return {
-        comparisonKey: keys.some(([, key]) => key === null) ? null : JSON.stringify(keys),
-        dateKey,
-        label: index === points.length - 1 ? null : dateKey,
-        value: positions.length ? Math.round(average(positions) * 10) / 10 : null,
-      };
-    });
+  const days = [
+    ...new Set(
+      keywords.flatMap((keyword) =>
+        keyword.rankChecks
+          .filter((check) => !start || check.checkedAt >= start)
+          .map((check) => check.checkedAt.toISOString().slice(0, 10)),
+      ),
+    ),
+  ].sort();
+  return days.map((dateKey) => {
+    const begin = new Date(`${dateKey}T00:00:00.000Z`),
+      asOf = dayEnd(dateKey);
+    const entries = keywords
+      .map((keyword) => ({
+        id: keyword.id,
+        quality: resolveRecordedChecks(
+          keyword.rankChecks,
+          keyword.id,
+          {
+            asOf,
+            currentNotBefore: begin,
+            requestedGeo: {
+              location: keyword.locationRef.displayName,
+              device: keyword.device,
+              ...(keyword.locationRef.languageCode
+                ? { language: keyword.locationRef.languageCode }
+                : {}),
+            },
+          },
+          keyword.projectId,
+        ),
+      }))
+      .sort((a, b) => a.id.localeCompare(b.id));
+    const measured = entries.filter(
+      ({ quality }) =>
+        quality.latestAttempt?.execution === "completed" &&
+        quality.current?.evidence === "positive",
+    );
+    const keys = measured.map(({ id, quality }) => [id, quality.current?.comparisonKey]);
+    return {
+      comparisonKey:
+        keys.length && keys.every(([, key]) => key !== null) ? JSON.stringify(keys) : null,
+      dateKey,
+      label: dateKey,
+      value: measured.length
+        ? Math.round(average(measured.map(({ quality }) => quality.current?.position ?? 0)) * 10) /
+          10
+        : null,
+    };
+  });
 }
 
-function trackedDays(first: Date, last: Date) {
-  return Math.floor((last.getTime() - first.getTime()) / DAY_MS) + 1;
-}
-
-function leadKeyword(
-  keywords: readonly Keyword[],
-  start: Date,
-  improving: boolean,
-  volumes: ReadonlyMap<string, number | null>,
-) {
-  return keywords
-    .flatMap((keyword) => {
-      const checks = [
-        ...latestDailyChecks(comparableCompletedWindow(keyword.rankChecks).checks, start).values(),
-      ]
-        .filter((check) => position(check.position))
-        .sort((left, right) => left.checkedAt.getTime() - right.checkedAt.getTime());
-      const first = position(checks[0]?.position);
-      const latest = position(checks.at(-1)?.position);
-      return first && latest
-        ? [{ keyword, movement: first - latest, volume: volumes.get(keyword.id) ?? 0 }]
-        : [];
-    })
-    .sort((left, right) => {
-      const movement = improving ? right.movement - left.movement : left.movement - right.movement;
-      return (
-        movement ||
-        right.volume - left.volume ||
-        left.keyword.text.localeCompare(right.keyword.text)
-      );
-    })[0]?.keyword.text;
-}
-
+/** A narrative uses positive pairs from one cohort, never three unrelated daily averages. */
 export function buildTrendTakeaway(
   keywords: readonly Keyword[],
   now: Date,
   volumes: ReadonlyMap<string, number | null> = new Map(),
 ): TrendTakeaway {
-  const windowDays = 30;
   const windowStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - (windowDays - 1) * DAY_MS,
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - 29 * DAY_MS,
   );
-  const points = dailyAverages(keywords, windowStart);
-  if (points.length === 0) return null;
-  const days = trackedDays(points[0]?.date ?? now, points.at(-1)?.date ?? now);
+  const dates = keywords.flatMap((keyword) =>
+    keyword.rankChecks
+      .filter((check) => check.checkedAt >= windowStart && check.checkedAt <= now)
+      .map((check) => check.checkedAt.getTime()),
+  );
+  if (!dates.length) return null;
+  const first = new Date(dates.reduce((a, b) => Math.min(a, b))),
+    last = new Date(dates.reduce((a, b) => Math.max(a, b)));
+  const days = Math.floor((last.getTime() - first.getTime()) / DAY_MS) + 1;
   if (days < 7) return null;
-
-  const startAverage = average(points.slice(0, 3).map((point) => point.value));
-  const endAverage = average(points.slice(-3).map((point) => point.value));
-  const signedDelta = startAverage - endAverage;
-  const delta = Math.round(Math.abs(signedDelta) * 10) / 10;
-  const shortHistory = days < windowDays;
-
-  if (delta < 0.1) {
-    return {
-      days: shortHistory ? days : windowDays,
-      kind: "steady",
-      window: shortHistory ? "firstTrackedDays" : "lastThirtyDays",
-    };
-  }
-
-  if (shortHistory) {
-    return {
-      days,
-      kind: signedDelta > 0 ? "improved" : "slipped",
-      value: delta,
-      window: "firstTrackedDays",
-    };
-  }
-  const leader =
-    leadKeyword(keywords, windowStart, signedDelta > 0, volumes) ??
-    keywords.map((keyword) => keyword.text).sort()[0] ??
-    "";
+  const baselineBefore = dayEnd(first.toISOString().slice(0, 10));
+  const pairs = keywords.flatMap((keyword) => {
+    const quality = resolveRecordedChecks(
+      keyword.rankChecks,
+      keyword.id,
+      {
+        asOf: now,
+        currentNotBefore: windowStart,
+        baselineBefore,
+        baselineNotBefore: windowStart,
+        requestedGeo: {
+          location: keyword.locationRef.displayName,
+          device: keyword.device,
+          ...(keyword.locationRef.languageCode
+            ? { language: keyword.locationRef.languageCode }
+            : {}),
+        },
+      },
+      keyword.projectId,
+    );
+    return quality.movement !== null
+      ? [{ keyword, movement: quality.movement, volume: volumes.get(keyword.id) ?? 0 }]
+      : [];
+  });
+  if (!pairs.length) return null;
+  const signedDelta = average(pairs.map((pair) => pair.movement));
+  const value = Math.round(Math.abs(signedDelta) * 10) / 10;
+  const short = days < 30;
+  const leader = pairs.sort(
+    (a, b) =>
+      (signedDelta >= 0 ? b.movement - a.movement : a.movement - b.movement) ||
+      b.volume - a.volume ||
+      a.keyword.text.localeCompare(b.keyword.text),
+  )[0]?.keyword.text;
   return {
-    days: windowDays,
-    kind: signedDelta > 0 ? "improved" : "slipped",
-    leader,
-    value: delta,
-    window: "lastThirtyDays",
+    days: Math.min(days, 30),
+    kind: value < 0.1 ? "steady" : signedDelta > 0 ? "improved" : "slipped",
+    ...(value >= 0.1 ? { value, ...(!short ? { leader } : {}) } : {}),
+    comparableCount: pairs.length,
+    window: short ? "firstTrackedDays" : "lastThirtyDays",
   };
 }

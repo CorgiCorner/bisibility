@@ -1,3 +1,7 @@
+import {
+  definitionKeywordScopeFixture,
+  definitionQueryFixture,
+} from "@/lib/rank-check/definition-policy.test-fixture";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const KEYWORD_PUBLIC_ID = "kw_abcdefghijklmnopqrstuvwx";
@@ -88,6 +92,7 @@ const input = {
 
 function keywordRow(overrides: Partial<KeywordRow> = {}): KeywordRow {
   return {
+    ...definitionKeywordScopeFixture(),
     archivedAt: null,
     id: "keyword_1",
     locationId: "location_active",
@@ -129,17 +134,19 @@ describe("launchSingleRankCheckRun", () => {
       },
     );
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 5_000,
       defaults: { serpDepth: 100 },
       providerAllocationsInitializedAt: null,
     });
     mocks.tx.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 5_000,
       defaults: { serpDepth: 100 },
       providerAllocationsInitializedAt: null,
     });
     mocks.tx.$executeRaw.mockResolvedValue(1);
-    mocks.tx.$queryRaw.mockResolvedValue([]);
+    mocks.tx.$queryRaw.mockImplementation(definitionQueryFixture());
     mocks.tx.rankCheckRun.findUnique.mockResolvedValue(null);
     mocks.prisma.projectMarket.findMany.mockResolvedValue([{ locationId: "location_active" }]);
     mocks.tx.projectMarket.findMany.mockResolvedValue([{ locationId: "location_active" }]);
@@ -153,7 +160,7 @@ describe("launchSingleRankCheckRun", () => {
     mocks.tx.rankCheckRun.create.mockResolvedValue({ id: "run_1" });
     mocks.tx.rankCheckRunItem.createMany.mockResolvedValue({ count: 1 });
     mocks.loadProviderChain.mockResolvedValue([
-      { costPerCheckCents: 25, id: "connection_1", provider: "provider-a" },
+      { costPerCheckCents: 25, id: "connection_1", provider: "serpapi" },
     ]);
     mocks.estimatedCost.mockReturnValue(25);
     mocks.assertBudgetAvailable.mockResolvedValue({ capCents: 5_000, spentCents: 0 });

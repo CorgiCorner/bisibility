@@ -6,6 +6,12 @@ function group(count: number) {
     claimedAt: "2026-07-29T00:00:00.000Z",
     device: "desktop",
     keywordIds: Array.from({ length: count }, (_, index) => `keyword_${index + 1}`),
+    runItemIds: Array.from({ length: count }, (_, index) => `item_${index + 1}`),
+    runItemClaims: Array.from({ length: count }, (_, index) => ({
+      id: `item_${index + 1}`,
+      claimAttempts: 1,
+      claimExpiresAt: "2026-07-29T00:05:00.000Z",
+    })),
     locationId: "location_1",
     projectId: "project_1",
     runId: "run_1",

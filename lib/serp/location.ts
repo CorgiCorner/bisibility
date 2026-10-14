@@ -76,13 +76,14 @@ export type LocationCandidate = {
 };
 
 // Persistence boundary for cached location rows (backed by Prisma in M2+).
-export interface LocationStore {
-  findByKey(canonicalKey: string): Promise<ResolvedLocation | null>;
+export type LocationDescription = Omit<ResolvedLocation, "id">;
+export interface LocationStore<T extends LocationDescription = ResolvedLocation> {
+  findByKey(canonicalKey: string): Promise<T | null>;
   // Implement with a canonicalKey upsert; the resolver re-reads after create races.
-  create(row: Omit<ResolvedLocation, "id">): Promise<ResolvedLocation>;
+  create(row: LocationDescription): Promise<T>;
   // Enrich a cached row only after the resolver verifies a trusted candidate has
   // the same canonical location identity. Optional for in-memory test stores.
-  enrich?(location: ResolvedLocation, candidate: LocationCandidate): Promise<ResolvedLocation>;
+  enrich?(location: T, candidate: LocationCandidate): Promise<T>;
 }
 
 // Provider-backed region/city search (implemented per adapter in M3+).

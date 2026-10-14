@@ -1,3 +1,4 @@
+import { selectCandidates } from "./items-claim-query";
 import "server-only";
 
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
@@ -13,7 +14,6 @@ import type { ClaimDueRankChecksResult, ClaimedRankCheckGroup } from "./dispatch
 import { cancelUnrunnableCandidates } from "./items-claim-cancel";
 import { itemClaimMetrics } from "./items-claim-metrics";
 import { type ClaimCandidate, claimCandidateRun } from "./items-claim-types";
-import { activeMarketExistsSql } from "./runnable";
 import { finalizeRankCheckRun } from "./runs/finalize";
 
 const DEFAULT_PAGE_SIZE = 100;
@@ -39,89 +39,6 @@ export async function markRankCheckRunStarted(
 function pageSize(value?: number) {
   if (!Number.isFinite(value)) return DEFAULT_PAGE_SIZE;
   return Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(value ?? DEFAULT_PAGE_SIZE)));
-}
-
-async function selectCandidates(
-  tx: Prisma.TransactionClient,
-  now: Date,
-  limit: number,
-  perProjectCap: number,
-) {
-  return tx.$queryRaw<Candidate[]>(Prisma.sql`
-    WITH eligible_items AS MATERIALIZED (
-      SELECT
-        item.id,
-        item.status,
-        item."claimAttempts",
-        item."claimExpiresAt",
-        item."notBefore",
-        item."keywordId",
-        item."runId",
-        run."publicId" AS "runPublicId",
-        run."projectId",
-        run."requestedCount",
-        keyword."publicId" AS "keywordPublicId",
-        keyword."locationId",
-        keyword."archivedAt",
-        ${activeMarketExistsSql("keyword")} AS "marketActive",
-        keyword.device::text AS device,
-        project.domain,
-        COALESCE(item."notBefore", item."claimExpiresAt") AS "dueAt",
-        ROW_NUMBER() OVER (
-          PARTITION BY run."projectId"
-          ORDER BY COALESCE(item."notBefore", item."claimExpiresAt"), item.id
-        ) AS "projectRank",
-        ROW_NUMBER() OVER (
-          PARTITION BY item."keywordId"
-          ORDER BY COALESCE(item."notBefore", item."claimExpiresAt"), item.id
-        ) AS "keywordRank"
-      FROM "rank_check_run_items" item
-      JOIN "rank_check_runs" run ON run.id = item."runId"
-      JOIN "keywords" keyword ON keyword.id = item."keywordId"
-      JOIN "projects" project ON project.id = run."projectId"
-      WHERE run.status IN ('queued', 'running')
-        AND (
-          (item.status = 'queued' AND item."notBefore" IS NOT NULL AND item."notBefore" <= ${now})
-          OR (
-            item.status = 'running'
-            AND item."rankCheckId" IS NULL
-            AND item."claimExpiresAt" < ${now}
-          )
-        )
-        -- One running item per keyword is a unique index; a second run's target waits its turn
-        -- instead of failing the whole claim.
-        AND NOT EXISTS (
-          SELECT 1
-          FROM "rank_check_run_items" other
-          WHERE other."keywordId" = item."keywordId"
-            AND other.status = 'running'
-            AND other.id <> item.id
-        )
-    ),
-    fair_candidates AS MATERIALIZED (
-      SELECT id
-      FROM eligible_items
-      WHERE "projectRank" <= ${perProjectCap} AND "keywordRank" = 1
-      ORDER BY "projectRank", "dueAt", "projectId", id
-      LIMIT ${limit}
-    )
-    SELECT eligible.*
-    FROM fair_candidates candidate
-    JOIN "rank_check_run_items" item ON item.id = candidate.id
-    JOIN eligible_items eligible ON eligible.id = item.id
-    JOIN "keywords" keyword ON keyword.id = item."keywordId"
-    JOIN "rank_check_runs" run ON run.id = item."runId"
-    WHERE run.status IN ('queued', 'running') AND (
-      (item.status = 'queued' AND item."notBefore" IS NOT NULL AND item."notBefore" <= ${now})
-      OR (
-        item.status = 'running'
-        AND item."rankCheckId" IS NULL
-        AND item."claimExpiresAt" < ${now}
-      )
-    )
-    ORDER BY eligible."projectRank", eligible."dueAt", eligible."projectId", eligible.id
-    FOR UPDATE OF run, item, keyword SKIP LOCKED
-  `);
 }
 
 async function claimQueued(
@@ -184,7 +101,12 @@ async function reclaimExpired(
   `);
 }
 
-function groupClaims(candidates: Candidate[], claimedIds: Set<string>) {
+function groupClaims(
+  candidates: Candidate[],
+  claimedIds: Set<string>,
+  claimedRows: ReadonlyMap<string, ClaimedRow>,
+  claimExpiresAt: Date,
+) {
   const groups = new Map<string, ClaimedRankCheckGroup>();
   for (const item of candidates) {
     if (!claimedIds.has(item.id)) continue;
@@ -198,9 +120,17 @@ function groupClaims(candidates: Candidate[], claimedIds: Set<string>) {
       projectId: item.projectId,
       runId: item.runId,
       runItemIds: [],
+      runItemClaims: [],
     };
     group.keywordIds.push(item.keywordId);
     group.runItemIds?.push(item.id);
+    const claimed = claimedRows.get(item.id);
+    if (!claimed) throw new Error("Original run-item claim is unavailable.");
+    group.runItemClaims?.push({
+      id: item.id,
+      claimAttempts: claimed.claimAttempts,
+      claimExpiresAt: claimExpiresAt.toISOString(),
+    });
     groups.set(key, group);
   }
   return [...groups.values()];
@@ -267,7 +197,12 @@ export async function claimDueRankCheckItems(
     const activeIds = new Set(
       [...queued, ...reclaimed].filter((item) => item.status === "running").map((item) => item.id),
     );
-    const groups = groupClaims(candidates, activeIds);
+    const groups = groupClaims(
+      candidates,
+      activeIds,
+      new Map([...queued, ...reclaimed].map((item) => [item.id, item])),
+      claimExpiresAt,
+    );
     for (const runId of new Set(groups.map((group) => group.runId))) {
       if (!runId) continue;
       await markRankCheckRunStarted(tx, { now, runId });

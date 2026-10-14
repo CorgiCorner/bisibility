@@ -1,5 +1,7 @@
 import "server-only";
 
+export { selectRankTrackerReportKeywords } from "./rank-tracker-report-selection";
+
 import { prisma } from "@/lib/db/prisma";
 import {
   assertKeywordExportMembershipLimit,

@@ -1,3 +1,7 @@
+import {
+  confirmDefaultsFixture,
+  previewDefaultsFixture,
+} from "@/components/onboarding/reviewed-defaults-test-fixture";
 import { DeploymentModeProvider } from "@/components/shell/DeploymentModeProvider";
 import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
 import {
@@ -50,7 +54,11 @@ function renderStep(
 ) {
   return render(
     <>
-      <StepAddKeywords {...props} />
+      <StepAddKeywords
+        previewProjectDefaultsAction={previewDefaultsFixture}
+        updateProjectDefaultsAction={async () => ({ kind: "saved" })}
+        {...props}
+      />
       {withContinue ? (
         <button form="onboarding-step-form" type="submit">
           Continue
@@ -162,6 +170,7 @@ describe("StepAddKeywords", () => {
     ]);
 
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await confirmDefaultsFixture();
 
     await waitFor(() =>
       expect(saveMarketsAction).toHaveBeenCalledWith({
@@ -468,6 +477,7 @@ describe("StepAddKeywords", () => {
 
     fireEvent.change(keywordBox(), { target: { value: " rank tracker \nRank Tracker\nseo api" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await confirmDefaultsFixture();
 
     await waitFor(() => expect(addKeywordsAction).toHaveBeenCalledTimes(1));
     expect(addKeywordsAction).toHaveBeenCalledWith({
@@ -505,6 +515,7 @@ describe("StepAddKeywords", () => {
 
     fireEvent.change(keywordBox(), { target: { value: "rank tracker" } });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await confirmDefaultsFixture();
 
     expect(
       await screen.findByText("Austin was not found; tracking United States instead."),

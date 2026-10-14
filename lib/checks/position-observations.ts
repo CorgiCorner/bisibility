@@ -1,4 +1,8 @@
-import { whereComparableTo } from "@/lib/checks/status";
+import { qualifyMeasurement } from "@/lib/rank-measurements/qualify";
+import {
+  type RecordedMeasurementCheck,
+  recordedMeasurement,
+} from "@/lib/rank-measurements/recorded-check";
 
 export type PositionObservation = {
   checkedAt: string;
@@ -8,20 +12,13 @@ export type PositionObservation = {
   position: number | null;
 };
 
-type RecordedCheck = {
-  checkedAt: Date;
-  degradedToCountry?: boolean;
-  normalizationVersion: string | null;
-  position: number | null;
-  requestedDepth: number | null;
-  status?: string;
-};
+type RecordedCheck = RecordedMeasurementCheck & { checkedAt: Date };
 
-export function positionComparisonKey(check: Parameters<typeof whereComparableTo>[0]) {
-  const predicate = whereComparableTo(check);
-  return predicate
-    ? JSON.stringify([predicate.normalizationVersion, predicate.requestedDepth])
-    : null;
+export function positionComparisonKey(check: RecordedMeasurementCheck) {
+  return qualifyMeasurement(recordedMeasurement(check, "target"), {
+    asOf: new Date(),
+    horizon: check.requestedDepth ?? 100,
+  }).comparisonKey;
 }
 
 /** Display observations even when they cannot support a movement comparison. */

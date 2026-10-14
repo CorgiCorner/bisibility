@@ -423,6 +423,9 @@
       "subtitle": "Una copia completa de {projectName} que puedes restaurar en una instalación autoalojada",
       "success": "Paquete exportado y descargado.",
       "title": "Exportar los datos del proyecto"
+    },
+    "announcements": {
+      "learnMore": "Más información"
     }
   }
 }

@@ -16,6 +16,7 @@ import type { useTranslations } from "next-intl";
 export const settingsSections = [
   { icon: SlidersHorizontal, id: "general" },
   { icon: Target, id: "context" },
+  { icon: Target, id: "business-locations" },
   { icon: Database, id: "data-sources" },
   { icon: Crosshair, id: "tracking" },
   { icon: Flag, id: "competitors" },
@@ -33,12 +34,21 @@ export type SettingsSectionId = (typeof settingsSections)[number]["id"] | "usage
 export type SettingsSection = (typeof settingsSections)[number];
 export type SettingsShellTranslations = ReturnType<typeof useTranslations<"projectSettingsShell">>;
 
+export const settingsSectionGroups = [
+  { id: "project", sections: ["general", "context", "business-locations"] },
+  { id: "measurement", sections: ["data-sources", "tracking", "competitors"] },
+  { id: "team", sections: ["notifications", "team", "billing"] },
+  { id: "administration", sections: ["developers", "experimental", "advanced"] },
+] as const satisfies ReadonlyArray<{ id: string; sections: readonly SettingsSectionId[] }>;
+
 export function settingsSectionLabel(t: SettingsShellTranslations, section: SettingsSectionId) {
   switch (section) {
     case "advanced":
       return t("sections.advanced");
     case "billing":
       return t("sections.billing");
+    case "business-locations":
+      return t("sections.businessLocations");
     case "competitors":
       return t("sections.competitors");
     case "context":

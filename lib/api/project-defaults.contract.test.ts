@@ -1,27 +1,84 @@
+import type { ProjectDefaults } from "@/lib/generated/prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const f = vi.hoisted(() => {
+  const state: { defaults: ProjectDefaults | null; persisted?: ProjectDefaults } = {
+    defaults: null,
+  };
+  return { state, save: vi.fn(), preview: vi.fn() };
+});
+vi.mock("@/lib/db/prisma", () => ({ prisma: { location: { findUnique: async () => null } } }));
+vi.mock("@/lib/measurement-settings/host/defaults", async () => {
+  const { prepareDefaultsDraft } = await import("@/lib/measurement-settings/host/defaults-source");
+  const { defaultsRowForTest, defaultsSourceForTest } = await import(
+    "@/lib/measurement-settings/host/defaults-source.test-fixture"
+  );
+  const { defaultsReviewSchema } = await import("@/lib/settings/reviewed-defaults-contract");
+  const { publicProjectDefaults } = await import("@/lib/settings/project-defaults-config");
+  const { prisma } = await import("@/lib/db/prisma");
+  return {
+    previewDefaultsHost: async (...args: unknown[]) => {
+      f.preview(...args);
+      const { defaultsRequestSchema } = await import("@/lib/settings/reviewed-defaults-contract");
+      const request = defaultsRequestSchema.parse(args[1]);
+      const prepared = await prepareDefaultsDraft(
+        prisma,
+        defaultsSourceForTest(f.state.defaults),
+        request,
+      );
+      return {
+        request,
+        draft: prepared.draft,
+        expectedRevision: "9007199254740993123",
+        expectedSourceHash: "a".repeat(64),
+        previewToken: "synthetic-transport-only",
+        expiresAt: "2026-10-13T12:02:00.000Z",
+        resolved: {
+          locationKey: prepared.described.location.canonicalKey,
+          label: prepared.described.location.displayName,
+          languageCode: prepared.described.location.languageCode,
+          device: prepared.draft.device,
+        },
+        impact: prepared.impact,
+        policyReady: false,
+      };
+    },
+    saveDefaultsHost: async (...args: unknown[]) => {
+      f.save(...args);
+      const [, request, review] = args;
+      defaultsReviewSchema.parse(review);
+      const { defaultsRequestSchema } = await import("@/lib/settings/reviewed-defaults-contract");
+      const prepared = await prepareDefaultsDraft(
+        prisma,
+        defaultsSourceForTest(f.state.defaults),
+        defaultsRequestSchema.parse(request),
+      );
+      const row = defaultsRowForTest({
+        ...prepared.draft,
+        ...(prepared.persistMarket ? prepared.described.market : {}),
+        projectId: "project",
+      });
+      f.state.persisted = row;
+      return {
+        revision: "0",
+        sourceHash: "b".repeat(64),
+        value: publicProjectDefaults(row, `prj_${"a".repeat(24)}`),
+        market: prepared.responseMarket,
+        timestamps: {
+          lastCheckedAt: null,
+          nextCheckAt: null,
+          updatedAt: new Date(0).toISOString(),
+        },
+      };
+    },
+  };
+});
+
+import { defaultsApiFixture } from "@/lib/measurement-settings/host/defaults-api.test-fixture";
+import { defaultsRowForTest } from "@/lib/measurement-settings/host/defaults-source.test-fixture";
 import { updateProjectDefaults } from "./project-defaults";
 
-const mocks = vi.hoisted(() => ({
-  prisma: {
-    $transaction: vi.fn(),
-    keyword: { findMany: vi.fn() },
-    projectDefaults: { findUnique: vi.fn(), upsert: vi.fn() },
-  },
-  refreshKeywordDispatchStates: vi.fn(),
-  resolveKeywordLocation: vi.fn(),
-  writeAudit: vi.fn(),
-}));
-
-vi.mock("server-only", () => ({}));
-vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
-vi.mock("@/lib/rank-check/dispatcher-state", () => ({
-  refreshKeywordDispatchStates: mocks.refreshKeywordDispatchStates,
-}));
-vi.mock("@/lib/serp/location-service", () => ({
-  resolveKeywordLocation: mocks.resolveKeywordLocation,
-}));
-
+const ref = `prj_${"a".repeat(24)}`;
 const schedule = {
   cron_expression: null,
   frequency: "manual",
@@ -29,149 +86,104 @@ const schedule = {
   serp_stop_on_match: false,
   timezone: "UTC",
 };
-
-function context(body: unknown) {
-  return {
-    actorId: null,
-    auth: {
-      apiKey: { projectId: "project_1" },
-      project: { id: "project_1", publicId: "prj_a00000000000000000000000" },
-    },
-    headers: new Headers(),
-    req: new Request("https://example.com/api/v1/projects/prj_a00000000000000000000000/defaults", {
-      body: JSON.stringify(body),
-      headers: { "content-type": "application/json" },
-      method: "PATCH",
-    }),
-  } as never;
+const review = {
+  expected_source_hash: "a".repeat(64),
+  expected_revision: "9007199254740993123",
+  preview_token: "synthetic-transport-only",
+  idempotency_key: "synthetic-reviewed-api-command",
+  confirmed: true,
+};
+async function patch(body: object) {
+  const response = await updateProjectDefaults(defaultsApiFixture(ref, { ...body, review }), ref);
+  return { status: response.status, body: await response.json(), stored: f.state.persisted };
 }
-
-async function patchDefaults(body: unknown) {
-  const response = await updateProjectDefaults(context(body), "prj_a00000000000000000000000");
-  const resolution = mocks.resolveKeywordLocation.mock.calls[0]?.[0];
-  const upsert = mocks.prisma.projectDefaults.upsert.mock.calls[0]?.[0];
-  return { body: await response.json(), resolution, status: response.status, upsert };
-}
-
-describe("project defaults legacy market contract", () => {
+/** Real parser/catalog and v1 route serialization; the host persistence/CAS is exercised in actual PG. */
+describe("reviewed API keeps the legacy market/depth resource contract", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.prisma.$transaction.mockImplementation((run: (tx: unknown) => unknown) =>
-      run(mocks.prisma),
-    );
-    mocks.prisma.keyword.findMany.mockResolvedValue([]);
-    mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
-    mocks.prisma.projectDefaults.upsert.mockImplementation(({ create }: { create: object }) =>
-      Promise.resolve({ id: "defaults_1", lastCheckedAt: null, nextCheckAt: null, ...create }),
-    );
-    mocks.resolveKeywordLocation.mockResolvedValue({
-      degraded: false,
-      location: {
-        canonicalKey: "DE",
-        cityName: null,
-        countryCode: "DE",
-        displayName: "Germany",
-        id: "loc_de",
-        kind: "country",
-      },
-      warning: null,
-    });
+    f.state.defaults = null;
+    delete f.state.persisted;
   });
-
-  it.each([
-    [
-      "country name",
-      { country: "Germany", device: "mobile" },
-      { device: "mobile", location_key: "DE" },
-    ],
-    [
-      "country alias",
-      { country: "de", device: "mobile" },
-      { device: "mobile", location_key: "DE" },
-    ],
-  ])(
-    "persists identical defaults for the legacy %s shape and the location_key shape",
-    async (_label, legacy, modern) => {
-      const old = await patchDefaults({ ...schedule, ...legacy });
-      vi.clearAllMocks();
-      mocks.prisma.$transaction.mockImplementation((run: (tx: unknown) => unknown) =>
-        run(mocks.prisma),
+  it("returns a bare snake-case preview of the parsed request without writing defaults", async () => {
+    const response = await updateProjectDefaults(
+      defaultsApiFixture(ref, { ...schedule, location_key: "DE", device: "mobile" }, true),
+      ref,
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      request: {
+        kind: "patch",
+        values: { ...schedule, project_id: ref, location_key: "DE", device: "mobile" },
+      },
+      draft: {
+        ...schedule,
+        project_id: ref,
+        location_key: "DE",
+        device: "mobile",
+        city: null,
+        country: "Germany",
+        serp_depth: 100,
+      },
+      expected_revision: "9007199254740993123",
+      expected_source_hash: "a".repeat(64),
+      preview_token: "synthetic-transport-only",
+      expires_at: "2026-10-13T12:02:00.000Z",
+      resolved: { location_key: "DE", label: "Germany", language_code: "de", device: "mobile" },
+      impact: {
+        existing_target_retargets: 0,
+        new_targets: 0,
+        inherited_depth_targets: 0,
+        recurring_estimate: "unchanged",
+        scope_changed: true,
+        cadence_changed: true,
+      },
+      policy_ready: false,
+    });
+    expect(f.save).not.toHaveBeenCalled();
+    expect(f.state.persisted).toBeUndefined();
+    expect(f.preview).toHaveBeenCalledWith(
+      expect.objectContaining({ actor: { id: "key" } }),
+      expect.objectContaining({ kind: "patch" }),
+    );
+  });
+  it.each(["Germany", "de"])(
+    "resolves legacy %s and canonical location_key identically",
+    async (country) => {
+      const legacy = await patch({ ...schedule, country, device: "mobile" });
+      const modern = await patch({ ...schedule, location_key: "DE", device: "mobile" });
+      expect(legacy.status).toBe(200);
+      expect(modern).toEqual(legacy);
+      expect(legacy.stored).toMatchObject({
+        country: "Germany",
+        device: "mobile",
+        locationKey: "DE",
+      });
+      expect(legacy.body).toMatchObject({
+        country: "Germany",
+        device: "mobile",
+        location_key: "DE",
+      });
+      expect(f.save).toHaveBeenCalledWith(
+        expect.objectContaining({ actor: { id: "key" }, auditActorId: null }),
+        expect.objectContaining({ kind: "patch" }),
+        expect.objectContaining({ confirmed: true, expectedRevision: review.expected_revision }),
       );
-      mocks.prisma.keyword.findMany.mockResolvedValue([]);
-      mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
-      mocks.prisma.projectDefaults.upsert.mockImplementation(({ create }: { create: object }) =>
-        Promise.resolve({ id: "defaults_1", lastCheckedAt: null, nextCheckAt: null, ...create }),
-      );
-      mocks.resolveKeywordLocation.mockResolvedValue({
-        degraded: false,
-        location: {
-          canonicalKey: "DE",
-          cityName: null,
-          countryCode: "DE",
-          displayName: "Germany",
-          id: "loc_de",
-          kind: "country",
-        },
-        warning: null,
-      });
-      const fresh = await patchDefaults({ ...schedule, ...modern });
-
-      expect(old.status).toBe(200);
-      expect(fresh.status).toBe(200);
-      expect(old.resolution).toEqual({
-        projectId: "project_1",
-        selection: { canonicalKey: "DE", kind: "city" },
-      });
-      expect(fresh.resolution).toEqual(old.resolution);
-      expect(fresh.upsert).toEqual(old.upsert);
-      expect(old.upsert).toMatchObject({
-        create: { country: "Germany", device: "mobile", locationKey: "DE" },
-      });
-      expect(fresh.body).toEqual(old.body);
-      expect(old.body).toMatchObject({ country: "Germany", device: "mobile", location_key: "DE" });
     },
   );
-});
-
-describe("project defaults serp depth contract", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.prisma.$transaction.mockImplementation((run: (tx: unknown) => unknown) =>
-      run(mocks.prisma),
-    );
-    mocks.prisma.keyword.findMany.mockResolvedValue([]);
-    mocks.prisma.projectDefaults.upsert.mockImplementation(({ update }: { update: object }) =>
-      Promise.resolve({ id: "defaults_1", lastCheckedAt: null, nextCheckAt: null, ...update }),
-    );
-  });
-
-  it("keeps the stored serp_depth when the patch omits it", async () => {
-    mocks.prisma.projectDefaults.findUnique.mockResolvedValue({
-      ...schedule,
-      cronExpression: null,
-      jitterMinutes: 0,
-      serpDepth: 20,
-      serpStopOnMatch: false,
-    });
-    const result = await patchDefaults(schedule);
-
+  it("keeps stored depth when PATCH omits it", async () => {
+    f.state.defaults = defaultsRowForTest({ serpDepth: 20, serpStopOnMatch: false });
+    const result = await patch(schedule);
     expect(result.status).toBe(200);
-    expect(result.upsert).toMatchObject({ update: { serpDepth: 20 } });
+    expect(result.stored?.serpDepth).toBe(20);
     expect(result.body).toMatchObject({ serp_depth: 20 });
   });
-
-  it("falls back to the default depth for a project without stored defaults", async () => {
-    mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
-    const result = await patchDefaults(schedule);
-
-    expect(result.upsert).toMatchObject({ update: { serpDepth: 100 } });
+  it("uses the schema default depth for no stored defaults", async () => {
+    const result = await patch(schedule);
+    expect(result.stored?.serpDepth).toBe(100);
   });
-
-  it("stores an explicit serp_depth", async () => {
-    mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
-    const result = await patchDefaults({ ...schedule, serp_depth: 50 });
-
-    expect(result.upsert).toMatchObject({ update: { serpDepth: 50 } });
+  it("resolves an explicit depth without coercing opaque revision strings", async () => {
+    const result = await patch({ ...schedule, serp_depth: 50 });
+    expect(result.stored?.serpDepth).toBe(50);
     expect(result.body).toMatchObject({ serp_depth: 50 });
   });
 });

@@ -31,6 +31,22 @@ describe("rank-check preview token", () => {
     delete process.env.BISIBILITY_SECRETS_KEYS_RETIRED;
   });
 
+  it("requires a fresh preview after scope changes even at the same quoted price", () => {
+    const snapshot = { ...expected, sourceHash: "b".repeat(64) };
+    const signed = createPreviewToken(snapshot, now);
+    expect(verifyPreviewToken(signed.token, snapshot, now)).toMatchObject(snapshot);
+    expect(() =>
+      verifyPreviewToken(signed.token, { ...snapshot, sourceHash: "c".repeat(64) }, now),
+    ).toThrow("mismatch");
+  });
+
+  it("refuses an old unbound preview when launch requires an options snapshot", () => {
+    const signed = createPreviewToken(expected, now);
+    expect(() =>
+      verifyPreviewToken(signed.token, { ...expected, sourceHash: "b".repeat(64) }, now),
+    ).toThrow("mismatch");
+  });
+
   it("round trips a valid signed payload", () => {
     const signed = createPreviewToken(expected, now);
     expect(verifyPreviewToken(signed.token, expected, now)).toEqual({

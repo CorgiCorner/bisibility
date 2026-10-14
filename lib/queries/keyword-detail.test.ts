@@ -1,3 +1,5 @@
+import { capturedObservationSelect } from "@/lib/observation/select";
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { keywordLocationRelation } from "./keyword-location-test-fixtures";
 import type { Metrics } from "./keyword-metrics";
@@ -48,7 +50,7 @@ const rankCheckSelect = {
   expectedUrlAtCheck: true,
   id: true,
   normalizationVersion: true,
-  observationRun: { select: { completeness: true } },
+  observationRun: { select: capturedObservationSelect },
   position: true,
   provider: true,
   previousPosition: true,
@@ -71,11 +73,15 @@ const noMetrics = (overrides: Partial<Metrics> = {}): Metrics => ({
 });
 
 function rankCheck(overrides: Record<string, unknown> = {}) {
+  const at =
+    overrides.checkedAt instanceof Date
+      ? overrides.checkedAt
+      : new Date("2026-06-20T08:00:00.000Z");
+  const position = "position" in overrides ? (overrides.position as number | null) : 7;
   return {
-    checkedAt: new Date("2026-06-20T08:00:00.000Z"),
+    ...recordedFixture(position, { observedAt: at, recordedAt: at }),
     id: "check_1",
     normalizationVersion: "v2",
-    position: 7,
     previousPosition: null,
     rankingUrl: "https://example.com/old",
     requestedDepth: 100,

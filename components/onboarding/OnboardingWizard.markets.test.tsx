@@ -3,6 +3,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { project, renderWizard } from "./OnboardingWizard.test-utils";
+import { confirmDefaultsFixture } from "./reviewed-defaults-test-fixture";
 
 it("creates a draft market through the shared drawer, keeps it across navigation and persists it on submit", async () => {
   const projectId = `prj_${"a".repeat(24)}`;
@@ -77,6 +78,7 @@ it("creates a draft market through the shared drawer, keeps it across navigation
     target: { value: "rank tracker" },
   });
   fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+  await confirmDefaultsFixture();
 
   await waitFor(() =>
     expect(actions.saveMarketsAction).toHaveBeenCalledWith({

@@ -24,7 +24,8 @@ export async function getCloudBackupCounts(projectId: string): Promise<CloudBack
       prisma.rankCheck.count({
         where: { keyword: { projectId: project.id }, ...whereExecutedChecks() },
       }),
-    savedViews: () => prisma.savedView.count(projectWhere),
+    savedViews: () =>
+      prisma.savedView.count({ where: { projectId: project.id, visibility: "project" } }),
   } satisfies Record<CloudBackupCountKey, () => Promise<number>>;
   const entries = await Promise.all(
     CLOUD_BACKUP_COUNT_KEYS.map(async (key) => [key, await loaders[key]()] as const),

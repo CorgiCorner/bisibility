@@ -1,9 +1,10 @@
 "use client";
-import { UsageDisplayControls } from "@/components/metering/UsageDisplayControls";
 import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { BudgetCard } from "@/components/usagekit/budget-card";
+import { IconButton } from "@/components/ui/IconButton";
+import { IdChip } from "@/components/ui/IdChip";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { CostSummaryCard } from "@/components/usagekit/cost-summary-card";
 import { UsageSummaryCards } from "@/components/usagekit/usage-summary-cards";
 import { UsageTable } from "@/components/usagekit/usage-table";
@@ -77,21 +78,34 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
           formatUnit={p.unit}
         />
       )}
-      {data.budgets.map((row) => (
-        <BudgetCard
-          key={row.id}
-          row={row}
-          title={p.bound(row)}
-          labels={p.budget}
-          formatTime={p.date}
-          formatFigure={p.figure}
-          formatUnit={p.unit}
-        />
-      ))}
-      <Disclosure title={t("detailsTitle")} headingLevel="h3">
-        <p>{t("walletAuthority")}</p>
-        <p>{t("period", { from: p.date(data.from), to: p.date(data.to) })}</p>
-        {data.summary.asOf && <p>{t("asOf", { date: p.date(data.summary.asOf) })}</p>}
+      <Disclosure
+        title={t("detailsTitle")}
+        headingLevel="h3"
+        summaryClassName="px-4 py-4 sm:px-4 [&>h3]:text-sm [&>h3]:leading-snug"
+        contentClassName="space-y-3 px-4 pb-4 text-xs sm:px-4"
+      >
+        <div className="flex flex-wrap items-center gap-1 text-xs text-fg-muted">
+          <p>{t("period", { from: p.date(data.from), to: p.date(data.to) })}</p>
+          <Tooltip
+            placement="top"
+            semantics="description"
+            content={
+              <div className="space-y-2">
+                <p>{t("walletAuthority")}</p>
+                {data.summary.asOf && <p>{t("asOf", { date: p.date(data.summary.asOf) })}</p>}
+              </div>
+            }
+          >
+            <IconButton
+              aria-label={t("detailsTitle")}
+              size="small"
+              type="button"
+              className="size-6 min-h-6 cursor-help p-0 text-fg-muted"
+            >
+              <Info aria-hidden size={12} weight="regular" />
+            </IconButton>
+          </Tooltip>
+        </div>
         {data.unresolved > 0 && (
           <p>
             {t("unresolved", { count: data.unresolved })}{" "}
@@ -103,7 +117,13 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
           view={detail}
           labels={p.table}
           dimensionLabels={p.dimensions}
-          formatDimension={p.dimension}
+          formatDimension={(key, value) =>
+            key === "connection" && /^conn_[a-zA-Z0-9]+$/.test(value) ? (
+              <IdChip size="xs" truncate="middle" value={value} />
+            ) : (
+              p.dimension(key, value)
+            )
+          }
           formatFigure={p.figure}
           formatUnit={p.unit}
           showFunding
@@ -111,7 +131,6 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
           onFirstPage={page ? () => setPage(0) : undefined}
         />
       </Disclosure>
-      <UsageDisplayControls />
     </section>
   );
 }

@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { localRankPosition, localSequenceProvider, parseLocalRankSequence } from "./local-sequence";
 
+beforeEach(() => vi.stubEnv("BISIBILITY_DEV_SERP_PROVIDER", "1"));
+afterEach(() => vi.unstubAllEnvs());
 describe("local sequence SERP provider", () => {
   it("parses a staged rank sequence from keyword text", () => {
     expect(parseLocalRankSequence("alerts test [seq:5, 15,15,4]")).toEqual([5, 15, 15, 4]);

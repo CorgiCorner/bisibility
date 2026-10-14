@@ -1,9 +1,10 @@
+import { materializeRankRun } from "./launch-write";
 import "server-only";
-
 import { ApiConflictError } from "@/lib/api/errors";
-import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
+import { assertLaunchPolicy } from "@/lib/measurement-definitions/host-launch-policy";
+import { readHostPolicySnapshot } from "@/lib/measurement-definitions/host-policy-snapshot";
 import { assertOperationAccess } from "@/lib/operations/access-extension";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
@@ -13,7 +14,9 @@ import {
   runnableKeywordWhere,
   unrunnableKeywordReason,
 } from "@/lib/rank-check/runnable";
+import { resolveSerpStopOnMatch } from "@/lib/serp/constants";
 import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
+import type { RankRunHostBoundary } from "./launch-host";
 import {
   apiIdempotencyKey,
   findIdempotentRun,
@@ -21,11 +24,7 @@ import {
 } from "./launch-idempotency";
 import {
   assertLaunchBudget,
-  estimatedRunUsageQuantity,
   lockLaunchSourceSnapshot,
-  providerAllocationReservation,
-  quoteRankRunReservationForLaunch,
-  runUsageEstimate,
   verifyLaunchPreviewToken,
 } from "./launch-preflight";
 import {
@@ -39,15 +38,16 @@ import {
   requireRankCheckRunProject,
 } from "./launch-types";
 import { quoteRunRows } from "./native-quotes";
+import { previewSourceHash } from "./preview-source-hash";
 import {
   lockRunSelectionKeywords,
   resolveRunSelection,
   runSelectionKeywordHeld,
   runSelectionKeywordSelect,
 } from "./selection";
-
 export async function launchRankCheckRun(
   input: LaunchRankCheckRunInput & { retry?: RetryLaunch },
+  host: RankRunHostBoundary = {},
 ): Promise<LaunchRankCheckRunResult> {
   requireRankCheckRunProject(input.project);
   // Early preflight: a manual request the gate refuses is rejected before any
@@ -56,14 +56,18 @@ export async function launchRankCheckRun(
   // A lost response must recover the committed run even after its preview or membership changes.
   const idempotencyKey = apiIdempotencyKey(input.idempotencyKey);
   const existing = await findIdempotentRun(input.project.id, idempotencyKey);
-  if (existing) return existing;
+  if (existing) {
+    await host.assertReplay?.(prisma, idempotencyKey);
+    return existing;
+  }
   const now = new Date();
   const resolved = await resolveRunSelection(input.project, input.spec);
   const activeLocationIds = await activeMarketLocationIds(input.project.id, prisma);
   const [project, rows, connections] = await Promise.all([
     prisma.project.findUnique({
       select: {
-        defaults: { select: { serpDepth: true } },
+        domain: true,
+        defaults: { select: { serpDepth: true, serpStopOnMatch: true } },
       },
       where: { id: input.project.id },
     }),
@@ -95,8 +99,32 @@ export async function launchRankCheckRun(
         costCents: null,
         targets: [],
       };
+  const measurementPolicy = await prisma.$transaction(
+    (tx) => readHostPolicySnapshot(tx, input.project.id),
+    { isolationLevel: "RepeatableRead" },
+  );
+  if (connections[0])
+    assertLaunchPolicy(
+      measurementPolicy,
+      connections[0].provider,
+      executable,
+      estimate.targets.map((target) => target.depth),
+    );
   if (!input.retry) {
-    verifyLaunchPreviewToken(input, estimate.costCents, resolved.selectionHash, now);
+    verifyLaunchPreviewToken(
+      input,
+      estimate.costCents,
+      resolved.selectionHash,
+      now,
+      previewSourceHash({
+        domain: project.domain,
+        rows: executable,
+        stopOnMatch: resolveSerpStopOnMatch(project.defaults?.serpStopOnMatch),
+        depths: estimate.targets.map((target) => target.depth),
+        provider: connections[0] ?? null,
+        measurementPolicy,
+      }),
+    );
   }
   if (!connections[0]) throw new LaunchRankCheckRunError("no_provider");
   const publicId = makePublicId("rcr");
@@ -108,8 +136,17 @@ export async function launchRankCheckRun(
   try {
     created = await prisma.$transaction(
       async (tx) => {
-        const { connection: currentConnection, project: currentProject } =
-          await lockLaunchSourceSnapshot(tx, input.project.id, input.providerId);
+        await host.assertActor?.(tx);
+        const {
+          connection: currentConnection,
+          project: currentProject,
+          measurementPolicy: currentPolicy,
+        } = await lockLaunchSourceSnapshot(tx, input.project.id, input.providerId);
+        const concurrent = await findIdempotentRun(input.project.id, idempotencyKey, tx);
+        if (concurrent) {
+          await host.assertReplay?.(tx, idempotencyKey);
+          return { existing: concurrent };
+        }
         const lockedRows = await lockRunSelectionKeywords(
           tx,
           input.project.id,
@@ -131,6 +168,7 @@ export async function launchRankCheckRun(
             ),
           );
         }
+        const consent = await host.assertAdmission?.(tx);
         const estimate = await quoteRunRows(
           executable,
           currentProject.defaults?.serpDepth,
@@ -138,102 +176,44 @@ export async function launchRankCheckRun(
           currentConnection,
           tx,
         );
+        assertLaunchPolicy(
+          currentPolicy,
+          currentConnection.provider,
+          executable,
+          estimate.targets.map((target) => target.depth),
+        );
         if (!input.retry) {
-          verifyLaunchPreviewToken(input, estimate.costCents, resolved.selectionHash, now);
+          verifyLaunchPreviewToken(
+            input,
+            estimate.costCents,
+            resolved.selectionHash,
+            now,
+            previewSourceHash({
+              domain: currentProject.domain,
+              rows: executable,
+              stopOnMatch: resolveSerpStopOnMatch(currentProject.defaults?.serpStopOnMatch),
+              depths: estimate.targets.map((target) => target.depth),
+              provider: currentConnection,
+              measurementPolicy: currentPolicy,
+            }),
+          );
         }
-        const concurrent = await findIdempotentRun(input.project.id, idempotencyKey, tx);
-        if (concurrent) return { existing: concurrent };
         if (currentConnection.credentialSource !== "hosted") {
           await assertLaunchBudget(input, currentConnection, estimate, now, tx);
         }
-        const rankReservation = await quoteRankRunReservationForLaunch(tx, {
-          connection: currentConnection,
-          projectId: input.project.id,
-          source: input.origin.source,
-          targets: estimate.targets,
+        return materializeRankRun(tx, {
+          input,
+          currentConnection,
+          estimate,
+          executable,
+          resolved,
+          now,
+          publicId,
+          orchestrationWorkflowId,
+          host,
+          consent: consent || undefined,
+          idempotencyKey,
         });
-        const estimatedCostCents = estimate.costCents ?? 0;
-        const allocationReservation = currentConnection.id
-          ? providerAllocationReservation(currentConnection.id, estimatedRunUsageQuantity(estimate))
-          : currentConnection.id
-            ? { providerConnectionId: currentConnection.id }
-            : {};
-        const usageEstimate = runUsageEstimate(currentConnection, estimate);
-        const keywordCount = new Set(executable.map(({ text }) => text)).size;
-        const run = await tx.rankCheckRun.create({
-          data: {
-            credentialId: input.origin.credential?.id ?? null,
-            credentialKind: input.origin.credential?.kind ?? null,
-            estimatedCostCents,
-            idempotencyKey,
-            keywordCount,
-            launchedAt: now,
-            orchestrationWorkflowId,
-            parentRelation: input.retry?.relation,
-            parentRunId: input.retry?.parentRunId,
-            projectId: input.project.id,
-            publicId,
-            requestedById: input.actorId,
-            requestedCount: resolved.keywordIds.length,
-            selectionHash: resolved.selectionHash,
-            selectionKind: input.retry?.relation ?? input.spec.kind,
-            selectionSpec: input.retry
-              ? {
-                  kind: input.retry.relation,
-                  parentRunId: input.retry.parentRunPublicId,
-                  v: 1,
-                  ...usageEstimate,
-                  ...allocationReservation,
-                  ...rankReservation,
-                }
-              : {
-                  ...input.spec,
-                  depth: input.depth ?? null,
-                  providerId: input.providerId ?? null,
-                  ...usageEstimate,
-                  ...allocationReservation,
-                  ...rankReservation,
-                },
-            skippedCount: 0,
-            source: input.origin.source,
-            status: "queued",
-            targetCount: executable.length,
-            totalCount: executable.length,
-            trigger: input.trigger,
-          },
-          select: { id: true },
-        });
-        await tx.rankCheckRunItem.createMany({
-          data: estimate.targets.map((target) => ({
-            estimatedCostCents: target.cost,
-            keywordId: target.keywordId,
-            notBefore: null,
-            runId: run.id,
-            sourceRunItemId: input.retry?.sources.get(target.keywordId),
-            status: "queued",
-          })),
-        });
-        await writeAudit(
-          {
-            action: input.retry ? "rank_check_run.retry" : "rank_check_run.launch",
-            actorId: input.actorId,
-            after: input.retry
-              ? { parentRunId: input.retry.parentRunPublicId, relation: input.retry.relation }
-              : {
-                  estimatedCostCents,
-                  keywordCount,
-                  publicId,
-                  selectionKind: input.spec.kind,
-                  targetCount: executable.length,
-                  trigger: input.trigger,
-                },
-            projectId: input.project.id,
-            targetId: publicId,
-            targetType: "rank_check_run",
-          },
-          tx,
-        );
-        return { estimatedCostCents, id: run.id, keywordCount, targetCount: executable.length };
       },
       { maxWait: 10_000, timeout: 60_000 },
     );
@@ -241,6 +221,7 @@ export async function launchRankCheckRun(
     if (!isUniqueConstraintError(error)) throw error;
     const concurrent = await findIdempotentRun(input.project.id, idempotencyKey);
     if (!concurrent) throw error;
+    await host.assertReplay?.(prisma, idempotencyKey);
     return concurrent;
   }
   if ("outcome" in created) return created;

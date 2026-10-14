@@ -34,7 +34,16 @@ describe("keyword row loader", () => {
         select: expect.objectContaining({
           rankChecks: expect.objectContaining({
             orderBy: [{ checkedAt: "desc" }, { id: "desc" }],
-            select: expect.objectContaining({ observationRun: { select: { completeness: true } } }),
+            select: expect.objectContaining({
+              observationRun: {
+                select: expect.objectContaining({
+                  completeness: true,
+                  configuredScope: true,
+                  effectiveScope: true,
+                  requestPolicy: true,
+                }),
+              },
+            }),
           }),
         }),
       }),

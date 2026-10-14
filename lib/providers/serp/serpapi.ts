@@ -19,6 +19,7 @@ import {
   SerpApiError,
 } from "./serpapi-request";
 import { serpApiUsageReceipt } from "./usage-receipts";
+import type { SentWebPage } from "./web-local-proof";
 
 const ACCOUNT_URL = "https://serpapi.com/account.json";
 const GOOGLE_ORGANIC_PAGE_SIZE = 10;
@@ -63,6 +64,7 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
     location: input.location,
   });
   const pages: SerpApiResponse[] = [];
+  const sentPages: SentWebPage[] = [];
   const candidates: OrganicResultCandidate[] = [];
   const pageStarts = searchPageStarts(depth);
   const stopOnMatch = resolveSerpStopOnMatch(input.stopOnMatch);
@@ -71,6 +73,16 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
   let billingUnits: number | null = 0;
 
   for (const start of pageStarts) {
+    const sentPage: SentWebPage = {
+      engine: "google",
+      start,
+      wireLocation: googleParams.location,
+      scope: {
+        location: input.location.primaryGeoName,
+        language: googleParams.hl,
+        device: input.device,
+      },
+    };
     const data = await requestJson(
       buildSearchUrl(input, apiKey, googleParams, start),
       credentials,
@@ -88,6 +100,7 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
     }
 
     pages.push(data);
+    sentPages.push(sentPage);
     candidates.push(...serpApiOrganicCandidates(pageResults, start));
 
     const decision = decideOrganicResult({ candidates, depth, domain: input.domain });
@@ -116,6 +129,7 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
     pages,
     reachedEnd,
     requestedPageCount: pageStarts.length,
+    sentPages,
     stoppedOnMatch,
   };
 }
@@ -164,6 +178,7 @@ export const serpApiProvider: SerpProvider = {
       pages,
       reachedEnd,
       requestedPageCount,
+      sentPages,
       stoppedOnMatch,
     } = await fetchGoogleOrganicResults(input, requireApiKey(credentials));
     const decision = requireDeterminateOrganicResult(
@@ -206,6 +221,7 @@ export const serpApiProvider: SerpProvider = {
         effectiveScope: null,
         executedAt: checkedAt,
         pages,
+        sentPages,
         requestPolicy: { depth, findTargetsIn: null, forcedAiOverview: false, stopOnMatch },
       }),
     };

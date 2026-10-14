@@ -1,7 +1,11 @@
-import { PROVIDER_ALLOCATION_METADATA } from "./allocation-metadata";
+import { PROVIDER_CATALOG } from "./catalog-metadata";
+
+export { PROVIDER_CATALOG } from "./catalog-metadata";
+
 import { ga4AnalyticsProvider } from "./analytics/ga4";
 import { gscAnalyticsProvider } from "./analytics/gsc";
 import { plausibleAnalyticsProvider } from "./analytics/plausible";
+import { developmentSerpProvider } from "./development-serp";
 import { syntheticProviderResult } from "./fake-request-receipts";
 import { dataForSeoProvider } from "./serp/dataforseo";
 import {
@@ -10,91 +14,20 @@ import {
   fakeBacklinksSummary,
 } from "./serp/fake-backlinks";
 import { localSequenceProvider } from "./serp/local-sequence";
+import { localSequenceProviderEnabled } from "./serp/synthetic-mode";
+import { syntheticSerpObservation } from "./serp/synthetic-observation";
+
+export { localSequenceProviderEnabled } from "./serp/synthetic-mode";
+
 import { serpApiProvider } from "./serp/serpapi";
 import type {
   AnalyticsProvider,
   AnalyticsTopQuery,
   PageStatRow,
-  ProviderCatalogEntry,
   QueryStatRow,
   SerpProvider,
   SerpRankInput,
 } from "./types";
-
-const BASE_PROVIDER_CATALOG = [
-  {
-    id: "dataforseo",
-    allocation: PROVIDER_ALLOCATION_METADATA.dataforseo,
-    label: "DataForSEO",
-    kind: "serp",
-    defaultStatus: "ready",
-    requiredCredentials: ["login", "password"],
-    logoDomain: "dataforseo.com",
-  },
-  {
-    id: "serpapi",
-    allocation: PROVIDER_ALLOCATION_METADATA.serpapi,
-    label: "SerpApi",
-    kind: "serp",
-    defaultStatus: "ready",
-    requiredCredentials: ["apiKey"],
-    logoDomain: "serpapi.com",
-  },
-  {
-    id: "gsc",
-    allocation: PROVIDER_ALLOCATION_METADATA.gsc,
-    label: "Google Search Console",
-    kind: "analytics",
-    defaultStatus: "optional",
-    requiredCredentials: ["apiKey", "login"],
-    logoDomain: "google.com",
-  },
-  {
-    id: "ga4",
-    allocation: PROVIDER_ALLOCATION_METADATA.ga4,
-    label: "Google Analytics 4",
-    kind: "analytics",
-    defaultStatus: "optional",
-    requiredCredentials: ["apiKey", "login"],
-    logoDomain: "google.com",
-  },
-  {
-    id: "plausible",
-    allocation: PROVIDER_ALLOCATION_METADATA.plausible,
-    label: "Plausible",
-    kind: "analytics",
-    defaultStatus: "optional",
-    requiredCredentials: ["apiKey", "login"],
-    // Plausible's "login" is the site domain (site_id); it is not an account login.
-    credentialLabels: { apiKey: "API token (api_key)", login: "site domain (login)" },
-    loginDefaultsToProjectDomain: true,
-    logoDomain: "plausible.io",
-  },
-] as const satisfies ProviderCatalogEntry[];
-
-const LOCAL_SEQUENCE_CATALOG_ITEM = {
-  id: "local-sequence",
-  allocation: PROVIDER_ALLOCATION_METADATA["local-sequence"],
-  label: "Local rank test",
-  kind: "serp",
-  defaultStatus: "ready",
-  logoDomain: undefined,
-  requiredCredentials: [],
-} as const satisfies ProviderCatalogEntry;
-
-export function localSequenceProviderEnabled(nodeEnv: string | undefined, explicitFlag?: string) {
-  return nodeEnv !== "production" && (nodeEnv !== "test" || explicitFlag === "1");
-}
-
-const localSequenceEnabled = localSequenceProviderEnabled(
-  process.env.NODE_ENV,
-  process.env.BISIBILITY_DEV_SERP_PROVIDER,
-);
-
-export const PROVIDER_CATALOG = [
-  ...BASE_PROVIDER_CATALOG,
-  ...(localSequenceEnabled ? [LOCAL_SEQUENCE_CATALOG_ITEM] : []),
-] as const satisfies readonly ProviderCatalogEntry[];
 
 export type ProviderTint = "accent" | "blue" | "green" | "purple";
 
@@ -103,6 +36,11 @@ export function tintFor(provider: string): ProviderTint {
     ? "blue"
     : "accent";
 }
+
+const localSequenceEnabled = localSequenceProviderEnabled(
+  process.env.NODE_ENV,
+  process.env.BISIBILITY_DEV_SERP_PROVIDER,
+);
 
 const serpProviders: Record<string, SerpProvider> = {
   dataforseo: dataForSeoProvider,
@@ -140,8 +78,11 @@ function fakeSerpProvider(id: string, label: string): SerpProvider {
     },
     async fetchRank(input) {
       const position = stablePosition(input);
+      const checkedAt = new Date("2026-06-19T00:00:00.000Z");
+      const rankingUrl = `https://${input.domain}/rank-${position}`;
       return syntheticProviderResult(input.credentials, () => ({
-        checkedAt: new Date("2026-06-19T00:00:00.000Z"),
+        checkedAt,
+        observation: syntheticSerpObservation(id, input, { checkedAt, position, rankingUrl }),
         costCents: 0,
         position,
         rankingUrl: `https://${input.domain}/rank-${position}`,
@@ -233,7 +174,8 @@ export function getSerpProvider(id: string) {
   }
 
   if (process.env.BISIBILITY_FAKE_PROVIDER === "1") {
-    return fakeSerpProvider(provider.id, provider.label);
+    const fake = fakeSerpProvider(provider.id, provider.label);
+    return developmentSerpProvider(fake) ?? fake;
   }
 
   return provider;

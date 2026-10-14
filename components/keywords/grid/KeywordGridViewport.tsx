@@ -13,6 +13,7 @@ import type { ReactNode } from "react";
 import { KeywordNoRowsOverlay, type KeywordNoRowsState } from "./KeywordTableStatus";
 
 type KeywordGridViewportProps = {
+  columnOrder?: readonly string[];
   columnSizing: Record<string, number>;
   columns: readonly DataTableColumn<KeywordRow>[];
   columnVisibility: Record<string, boolean>;
@@ -36,6 +37,7 @@ type KeywordGridViewportProps = {
 };
 
 export function KeywordGridViewport({
+  columnOrder,
   columnSizing,
   columns,
   columnVisibility,
@@ -65,6 +67,7 @@ export function KeywordGridViewport({
         <DataTable
           bordered={false}
           ariaLabel={t("tableAria")}
+          columnOrder={columnOrder}
           columnSizing={columnSizing}
           columns={columns}
           columnVisibility={columnVisibility}

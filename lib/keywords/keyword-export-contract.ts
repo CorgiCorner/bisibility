@@ -12,6 +12,11 @@ import {
   RANK_TRACKER_SORT_FIELDS,
   type RankTrackerQueryState,
 } from "./rank-tracker-query-types";
+import {
+  defaultRankTrackerReportScope,
+  type RankTrackerReportScope,
+  rankTrackerReportScopeSchema,
+} from "./rank-tracker-report-scope";
 
 const positionIds = positionBuckets.map(({ id }) => id) as [
   RankTrackerQueryState["filters"]["position"][number],
@@ -30,6 +35,12 @@ const text = (max: number) => z.string().trim().max(max);
 
 export const rankTrackerExportQuerySchema: z.ZodType<RankTrackerQueryState> = z
   .object({
+    reportScope: rankTrackerReportScopeSchema
+      .refine(
+        (scope) => scope.view === "general",
+        "Local evidence export is not supported by the organic export contract.",
+      )
+      .default(() => ({ ...defaultRankTrackerReportScope })),
     filters: z
       .object({
         change: z.enum(changeIds),
@@ -66,7 +77,7 @@ export const rankTrackerExportQuerySchema: z.ZodType<RankTrackerQueryState> = z
 
 export type KeywordExportSelection =
   | { mode: "all" }
-  | { keywordIds: string[]; mode: "selected" }
+  | { keywordIds: string[]; mode: "selected"; reportScope?: RankTrackerReportScope }
   | { mode: "query"; query: RankTrackerQueryState };
 
 export const keywordExportSelectionSchema: z.ZodType<KeywordExportSelection> = z.discriminatedUnion(
@@ -83,6 +94,9 @@ export const keywordExportSelectionSchema: z.ZodType<KeywordExportSelection> = z
             "Selected keyword IDs must be unique.",
           ),
         mode: z.literal("selected"),
+        reportScope: rankTrackerReportScopeSchema
+          .refine((scope) => scope.view === "general", "Local evidence export is not supported.")
+          .optional(),
       })
       .strict(),
     z.object({ mode: z.literal("query"), query: rankTrackerExportQuerySchema }).strict(),

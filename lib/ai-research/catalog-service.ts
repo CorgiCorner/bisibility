@@ -7,17 +7,23 @@ import { fetchAiResearchCapabilities } from "./catalog";
 import type { AiCatalogOutcome } from "./catalog-types";
 import { requireAiSource } from "./context";
 
+async function catalogCredentials(source: Awaited<ReturnType<typeof requireAiSource>>) {
+  const credentials = await resolveConnectionCredentials(source.connection);
+  if (!credentials?.login || !credentials.password)
+    throw new ProviderLookupSignal({ ok: false, reason: "no_source" });
+  return credentials;
+}
+
 export async function loadAiResearchCapabilities(
   source: Awaited<ReturnType<typeof requireAiSource>>,
   deadlineAt = Date.now() + 10_000,
 ) {
-  const credentials = await resolveConnectionCredentials(source.connection);
-  if (!credentials) throw new ProviderLookupSignal({ ok: false, reason: "no_source" });
-  return fetchAiResearchCapabilities(credentials, deadlineAt);
+  return fetchAiResearchCapabilities(await catalogCredentials(source), deadlineAt);
 }
 export async function getAiResearchCatalog(projectId: string): Promise<AiCatalogOutcome> {
   try {
     const source = await requireAiSource(projectId);
+    const credentials = await catalogCredentials(source);
     const credentialIdentity = createHash("sha256")
       .update(
         `${source.connection.credentialSource}:${source.connection.credentialsEncrypted ?? ""}`,
@@ -28,10 +34,15 @@ export async function getAiResearchCatalog(projectId: string): Promise<AiCatalog
       key: `ai-catalog:v1:${projectId}:${source.connection.id}:${credentialIdentity}`,
       ttlSeconds: 300,
       lockTtlSeconds: 30,
-      load: async () => (await loadAiResearchCapabilities(source)).catalog,
+      load: async () =>
+        (await fetchAiResearchCapabilities(credentials, Date.now() + 10_000)).catalog,
     });
     return loaded.status === "contended"
-      ? { ok: false, message: "The provider catalog is already being refreshed. Retry shortly." }
+      ? {
+          ok: false,
+          reason: "contended",
+          message: "The provider catalog is already being refreshed. Retry shortly.",
+        }
       : {
           ok: true,
           catalog: {
@@ -39,9 +50,16 @@ export async function getAiResearchCatalog(projectId: string): Promise<AiCatalog
             actualCostAvailable: source.connection.credentialSource === "own",
           },
         };
-  } catch {
+  } catch (error) {
+    if (error instanceof ProviderLookupSignal && error.outcome.reason === "no_source")
+      return {
+        ok: false,
+        reason: "no_source",
+        message: "Connect a compatible provider in Integrations to load its AI catalog.",
+      };
     return {
       ok: false,
+      reason: "provider_unavailable",
       message:
         "The provider's free model and market catalog could not be loaded. Connect a compatible provider in Integrations and retry.",
     };

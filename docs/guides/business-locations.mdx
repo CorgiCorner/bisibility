@@ -1,0 +1,100 @@
+---
+title: "Track business locations"
+description: "Keep branch identities, explicit local subjects and retained match decisions separate from search locations."
+---
+
+Open **Settings > Business locations** to add a branch. An organic project can
+continue without a business location. The General view remains the default.
+
+## Add or change a branch
+
+Enter the business name and any known CID or Place ID as text. Address,
+coordinates, website and a validated Maps URL are optional. A website can be
+shared by several branches and does not identify one branch by itself.
+
+Choose whether the location is a subject or a competitor. Saving a changed
+identity creates a new revision; it preserves the identity used by historical
+observations. A conflicting edit keeps your draft and asks you to review current
+values before saving again.
+
+Archiving preserves history and makes existing subject assignments unavailable.
+Restoring checks active identifier claims again. These actions do not purchase
+measurements or change a measurement schedule.
+
+## Assign a local subject
+
+Search for an active keyword or market and choose the scope explicitly. Select an
+active subject branch and its current identity revision, explain the change, and
+save. Choosing a branch in the locations list does not assign it to a scope.
+
+An identity change can make an older assignment unavailable. Review that scope
+and explicitly select the intended current revision. The application does not
+replace it with the first available branch.
+
+A search location describes where a measurement was requested. A business
+address describes the branch. A grid point is another measurement parameter.
+These locations have separate meanings.
+
+## Review retained observations
+
+Select a branch, then read and choose a saved observation. The observation list
+labels the recording time; it does not present it as the time Google results
+were observed. Each match decision preserves its original observation time.
+
+**Rematch** uses retained normalized items and appends decisions for an explicitly
+shown batch. It makes no provider request. Missing original time or adapter
+metadata disables rematching; it does not turn an unknown result into absence.
+
+Exact stable identifiers can confirm a match only without conflicting IDs. Name
+or website matches create candidates. An authorized editor can review a candidate,
+confirm the branch or reject it, and record a reason. A viewer can read decisions.
+Conflicts require reviewing the current decision before another write.
+
+Local Google results are the business results with a map inside ordinary Google
+results. Their presence does not prove that your branch appears in them.
+Organic rank, local slot, Maps rank and Local Finder rank have separate scales.
+Paid or unclassified items do not establish an organic local KPI.
+
+## Access and costs
+
+Every read and write checks current project membership. Personal display choices
+do not grant editing rights. Reading, choosing a branch, changing presentation
+and rematching retained observations perform no paid provider requests.
+
+Fresh measurements and schedule changes use their own preview, permission and
+cost confirmation flows. Showing or hiding a local widget does not start or
+stop a schedule.
+
+## Identifier conflicts and retained review pages
+
+A supported HTTPS Google Maps URL can provide an explicit query CID or Place ID.
+The writer keeps those identifiers as opaque text, checks them against any
+explicit or retained identifiers and records `maps_url` provenance in a new
+`business-identity-v2` revision. It never fetches the URL or guesses identifiers
+from a URL path. Older v1 revisions remain readable and unchanged. Contradictory
+identifiers require correcting the identity; an identifier already claimed by
+another active branch is not a stale-revision conflict. A restore collision must
+be resolved in the registry before reopening the restore action.
+
+Match details show the matcher version, automatic/manual/rematch source and the
+decision recording time separately from the original observation time. Original
+Maps group and rank scale remain original evidence; missing values stay unknown.
+
+Retained review uses pages of at most 256 original items. Next and Previous keep
+the selected project, branch revision, observation source and decision watermark.
+Refreshing after a write keeps that page and advances the decision watermark.
+Changed source or identity, revoked access and invalid cursors refuse the read;
+they do not select a different observation. This is authorized continuation of a
+retained read, not a persisted historical snapshot or a provider request. Matching
+still evaluates the complete original collection before proposing weak candidates.
+
+A current confirmed decision claims that exact retained item for its branch.
+Another branch cannot confirm the same item while that decision remains current.
+Rejecting it or explicitly rematching to a non-confirmed decision releases the
+claim. Different items in the same observation can belong to different branches;
+archiving a branch does not silently replace its historical attribution.
+
+Web local-pack review retains unsafe or contradictory identifier anomalies from
+the original adapter. When positive anomaly evidence cannot be attributed after
+raw retention, local-pack matching remains unavailable; organic results are not
+reclassified. The application never invents an original observation time.

@@ -38,7 +38,7 @@ describe("databasePoolConfig", () => {
       connectionTimeoutMillis: 15_000,
       idleTimeoutMillis: 10_000,
       max: 3,
-      options: '-c search_path="bisibility_preview_pr_446" -c TimeZone=UTC',
+      options: '-c search_path="bisibility_preview_pr_446",pg_temp -c TimeZone=UTC',
     });
   });
 
@@ -92,7 +92,7 @@ describe("databaseConnectionConfig", () => {
     url.searchParams.set("options", "-c statement_timeout=15000 -c TimeZone=Europe/Warsaw");
     const config = databaseConnectionConfig(url.toString());
     expect(config.options).toBe(
-      '-c statement_timeout=15000 -c TimeZone=Europe/Warsaw -c search_path="preview" -c TimeZone=UTC',
+      '-c statement_timeout=15000 -c TimeZone=Europe/Warsaw -c search_path="preview",pg_temp -c TimeZone=UTC',
     );
     if (!config.connectionString) throw new Error("URL options were not canonicalized");
     expect(new URL(config.connectionString).searchParams.get("options")).toBe(config.options);

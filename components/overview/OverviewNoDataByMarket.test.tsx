@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { OverviewNoData } from "./OverviewNoData";
 import { overviewFixture } from "./overview-fixtures";
+import { unmeasuredOverviewReport } from "./quality-test-fixture";
 import type { OverviewView } from "./types";
 
 function row(locationId: string, locationLabel: string, languageLabel: string) {
@@ -15,6 +16,7 @@ function row(locationId: string, locationLabel: string, languageLabel: string) {
     rangeDays: 28,
     researchAvailable: true,
     targetCount: 1,
+    qualityReport: unmeasuredOverviewReport(1),
     top10Count: 0,
     top10Share: 0,
     trend: [0, 0, 0, 0, 0, 0, 0, 0],
@@ -30,6 +32,7 @@ describe("OverviewNoData market rollup", () => {
           ...row("loc_be_ar", "Belgium", "Arabic"),
           researchAvailable: false,
           targetCount: 0,
+          qualityReport: unmeasuredOverviewReport(0),
         },
         row("loc_es_en", "Spain", "English"),
         row("loc_es_es", "Spain", "Spanish"),

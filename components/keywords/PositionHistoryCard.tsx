@@ -1,10 +1,11 @@
 "use client";
 
-import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
+import type { KeywordHistoryPort } from "@/components/keyword-detail-history/history-contract";
+import { KeywordDetailHistory } from "@/components/keyword-detail-history/KeywordDetailHistory";
+import { LegacyPositionHistoryPlot } from "@/components/keyword-detail-history/LegacyPositionHistoryPlot";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Card } from "@/components/ui/Card";
-import { ChartRegion } from "@/components/ui/ChartRegion";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { ZonedTime } from "@/components/ui/ZonedTime";
 import { observationSeries } from "@/lib/checks/position-observations";
@@ -18,20 +19,17 @@ import {
 } from "@/lib/keywords/market-position-history";
 import { calendarDayKey, dailyPositionPoints } from "@/lib/keywords/position-history";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import { chartColors } from "@/lib/theme/chart-colors";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { DegradedPositionMarkers } from "./DegradedPositionMarkers";
-import { LatestPositionAnnotation, TargetReferenceLine } from "./PositionHistoryAnnotations";
 import { PositionHistoryHeader, PositionHistoryNotes } from "./PositionHistoryHeader";
-import { marketPositionPalette, PositionHistoryMarketLegend } from "./PositionHistoryMarketLegend";
-import { positionHistoryChartLayout } from "./position-history-layout";
+import { PositionHistoryMarketLegend } from "./PositionHistoryMarketLegend";
 import { positionHistorySeries } from "./position-history-series";
 
 export { historyAnnotationTop } from "./PositionHistoryAnnotations";
 
 type PositionHistoryCardProps = {
+  history?: KeywordHistoryPort;
   chartState?: KeywordDetailChartState;
   keyword: KeywordRow;
   marketTargets?: readonly KeywordRow[];
@@ -56,7 +54,7 @@ function localizedDayLabel(
   return formatDisplayDateRange(dayKey, dayKey, { ...dateDisplay, timeZone: "UTC" });
 }
 
-export function PositionHistoryCard({
+function LegacyPositionHistoryCard({
   chartState,
   keyword,
   marketTargets = [keyword],
@@ -228,59 +226,23 @@ export function PositionHistoryCard({
           value={range}
         />
       </PositionHistoryHeader>
-      <ChartRegion className="relative mt-2 h-[280px]" label={chartRegionLabel}>
-        {notEnough ? (
-          <div className="grid h-full place-items-center rounded-card">
-            <div className="flex flex-col items-center gap-2 rounded-card border border-border bg-bg-elev px-5 py-4 text-center">
-              <p className="m-0 text-[13px] font-semibold text-fg">{emptyStateTitle}</p>
-              {displayedPosition !== null ? (
-                <span className="inline-flex items-center gap-2 rounded-full bg-bg-sunken px-3 py-1 font-sans tabular-nums text-[11px] text-fg-muted">
-                  {t("currentPosition", { position: displayedPosition })} | {t("nextCheckLabel")}{" "}
-                  {nextCheckLabel}
-                </span>
-              ) : null}
-            </div>
-          </div>
-        ) : (
-          <TimeSeriesChart
-            height={280}
-            labels={chartLabels}
-            series={chartSeries}
-            min={1}
-            max={maxPosition}
-            reversed
-            yTicks={[1, 10, 20]}
-            formatValue={(value) => t("axisPosition", { position: value })}
-            {...positionHistoryChartLayout}
-          >
-            {!allMarkets && target !== null ? <TargetReferenceLine target={target} /> : null}
-            {!allMarkets && target !== null ? (
-              <LatestPositionAnnotation labels={labels} positions={positions} target={target} />
-            ) : null}
-            {allMarkets ? (
-              comparison.values.map((series, index) => (
-                <DegradedPositionMarkers
-                  labels={chartLabels}
-                  color={
-                    marketPositionPalette[index % marketPositionPalette.length] ??
-                    chartColors.accent
-                  }
-                  key={series.target.id}
-                  location={series.target.location}
-                  points={series.points}
-                />
-              ))
-            ) : (
-              <DegradedPositionMarkers
-                labels={chartLabels}
-                color={chartColors.accent}
-                location={keyword.location}
-                points={history}
-              />
-            )}
-          </TimeSeriesChart>
-        )}
-      </ChartRegion>
+      <LegacyPositionHistoryPlot
+        allMarkets={allMarkets}
+        chartLabels={chartLabels}
+        chartRegionLabel={chartRegionLabel}
+        chartSeries={chartSeries}
+        comparison={comparison}
+        displayedPosition={displayedPosition}
+        emptyStateTitle={emptyStateTitle}
+        history={history}
+        keyword={keyword}
+        labels={labels}
+        maxPosition={maxPosition}
+        nextCheckLabel={nextCheckLabel}
+        notEnough={notEnough}
+        positions={positions}
+        target={target}
+      />
       <PositionHistoryNotes
         hasGaps={positions.some((position) => position === null)}
         boundaryVisible={boundaryVisible}
@@ -296,4 +258,16 @@ export function PositionHistoryCard({
       ) : null}
     </Card>
   );
+}
+
+export function PositionHistoryCard(props: Readonly<PositionHistoryCardProps>) {
+  if (props.history)
+    return (
+      <KeywordDetailHistory
+        history={props.history}
+        keyword={props.keyword.keyword}
+        timeZone={props.timeZone}
+      />
+    );
+  return <LegacyPositionHistoryCard {...props} />;
 }

@@ -1,9 +1,15 @@
-import { captured, getPageMocks, renderPage, setupPageTest } from "@/tests/rank-tracker-page";
+import {
+  captured,
+  getPageMocks,
+  getPageReportOptions,
+  renderPage,
+  setupPageTest,
+} from "@/tests/rank-tracker-page";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = getPageMocks();
 
-describe("KeywordsPage grouped tabs", () => {
+describe("KeywordsPage automatic project-market grouping", () => {
   beforeEach(setupPageTest);
 
   function projectMarkets(count: number) {
@@ -20,7 +26,7 @@ describe("KeywordsPage grouped tabs", () => {
   }
 
   it.each([0, 1, 2])(
-    "renders the automatic mode for %i project markets without a manual choice",
+    "renders the automatic mode for %i registered markets without a manual choice",
     async (count) => {
       projectMarkets(count);
       await renderPage({});
@@ -31,12 +37,18 @@ describe("KeywordsPage grouped tabs", () => {
       expect(
         count > 1 ? mocks.getRankTrackerKeywordList : mocks.getRankTrackerGroupedList,
       ).not.toHaveBeenCalled();
+      expect(
+        count > 1 ? mocks.getRankTrackerGroupedList : mocks.getRankTrackerKeywordList,
+      ).toHaveBeenCalledWith(
+        { projectRef: "prj_1", query: expect.objectContaining({ grouped: count > 1 }) },
+        getPageReportOptions(),
+      );
       expect(mocks.getProjectMarkets).toHaveBeenCalledOnce();
     },
   );
 
   it.each([0, 1, 2])(
-    "preserves the explicit URL choice with %i registered markets",
+    "preserves the validated explicit URL choice with %i registered markets",
     async (count) => {
       projectMarkets(count);
       const grouped = count <= 1;
@@ -48,16 +60,22 @@ describe("KeywordsPage grouped tabs", () => {
       expect(
         grouped ? mocks.getRankTrackerKeywordList : mocks.getRankTrackerGroupedList,
       ).not.toHaveBeenCalled();
+      expect(
+        grouped ? mocks.getRankTrackerGroupedList : mocks.getRankTrackerKeywordList,
+      ).toHaveBeenCalledWith(
+        { projectRef: "prj_1", query: expect.objectContaining({ grouped }) },
+        getPageReportOptions(),
+      );
     },
   );
 
   it("groups from the registry even before its second market has keywords", async () => {
     projectMarkets(2);
     await renderPage({});
-    expect(mocks.getRankTrackerGroupedList).toHaveBeenCalledWith({
-      projectRef: "prj_1",
-      query: expect.objectContaining({ grouped: true }),
-    });
+    expect(mocks.getRankTrackerGroupedList).toHaveBeenCalledWith(
+      { projectRef: "prj_1", query: expect.objectContaining({ grouped: true }) },
+      getPageReportOptions(),
+    );
     expect(mocks.getRankTrackerKeywordList).not.toHaveBeenCalled();
   });
 });

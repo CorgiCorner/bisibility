@@ -1,4 +1,4 @@
-import { getApiVersionCapabilities } from "./api-versions";
+import { apiFeatures, getApiVersionCapabilities } from "./api-versions";
 import { costEstimateParameters } from "./openapi-parameters";
 
 const json = (schema: object) => ({ "application/json": { schema } });
@@ -37,10 +37,18 @@ const capabilitiesResponse = {
       type: "array",
     },
     data: { items: ref("Capability"), type: "array" },
+    features: {
+      description: "Supported request protocols, independent of the caller's permissions.",
+      properties: {
+        reviewed_project_defaults: { const: apiFeatures.reviewed_project_defaults, type: "string" },
+      },
+      required: ["reviewed_project_defaults"],
+      type: "object",
+    },
     rank_check_scheduler_mode: rankCheckSchedulerMode,
     scheduler_driver: schedulerDriver,
   },
-  required: ["apiVersions", "data", "rank_check_scheduler_mode", "scheduler_driver"],
+  required: ["apiVersions", "data", "features", "rank_check_scheduler_mode", "scheduler_driver"],
   type: "object",
 };
 

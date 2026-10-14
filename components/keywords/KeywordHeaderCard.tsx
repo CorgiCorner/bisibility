@@ -1,6 +1,7 @@
 "use client";
 
 import { useRunPreflight } from "@/components/rank-runs/useRunPreflight";
+import type { KeywordDetailQuality } from "@/lib/keyword-detail/quality-model";
 import type { KeywordDetailRankState } from "@/lib/keyword-detail/state-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -20,6 +21,7 @@ type KeywordHeaderCardProps = KeywordDetailActions & {
   canUpdateKeyword: boolean;
   costContext?: ProjectCostContext;
   keyword: KeywordRow;
+  quality?: KeywordDetailQuality;
   scheduleTargets?: readonly KeywordRow[];
   projectId: string;
   projectMarkets?: ProjectMarketsView;
@@ -33,6 +35,7 @@ export function KeywordHeaderCard({
   canUpdateKeyword,
   costContext,
   keyword,
+  quality,
   scheduleTargets,
   projectId,
   projectMarkets,
@@ -93,6 +96,7 @@ export function KeywordHeaderCard({
         scheduleTargets={scheduleTargets}
         projectRef={projectId}
         keyword={keyword}
+        quality={quality}
         onChangeSchedule={canUpdateKeyword ? onChangeSchedule : undefined}
         providerLabel={providerLabel ?? costContext?.providerId ?? keyword.dataProvider}
         rankState={rankState}

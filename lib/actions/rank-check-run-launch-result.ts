@@ -22,6 +22,8 @@ export type LaunchRankCheckRunActionFailure = {
     | "budget_missing"
     | "budget_exhausted"
     | "cost_limit_exceeded"
+    | "measurement_policy_unconfigured"
+    | "measurement_policy_unsupported"
     | "no_provider"
     | "preview_expired"
     | "preview_mismatch"

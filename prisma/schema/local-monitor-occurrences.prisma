@@ -1,0 +1,29 @@
+// Immutable link from a monitor definition/schedule intent to the already admitted Local run.
+model LocalMonitorOccurrence {
+  id String @id
+  projectId String
+  monitorId String
+  definitionRevisionId String
+  scheduleIntentId String
+  monitorVersion Int
+  actorId String?
+  mode String
+  keyHash String
+  bodyHash String
+  quoteHash String
+  runId String
+  createdAt DateTime @default(now())
+  @@unique([projectId,keyHash])
+  @@unique([projectId,runId])
+  @@index([projectId,monitorId,createdAt,id], map: "local_monitor_occurrences_history")
+  @@map("local_monitor_occurrences")
+
+  @@unique([projectId, id], map: "local_monitor_occurrence_project_id")
+  users                          User?                        @relation(fields: [actorId], references: [id], onUpdate: NoAction)
+  projects                       Project                      @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  local_monitor_revisions        LocalMonitorRevision         @relation(fields: [projectId, monitorId, definitionRevisionId], references: [projectId, monitorId, id], onDelete: NoAction, onUpdate: NoAction)
+  local_monitors                 LocalMonitor                 @relation(fields: [projectId, monitorId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+  local_monitor_schedule_intents LocalMonitorScheduleIntent   @relation(fields: [projectId, monitorId, scheduleIntentId], references: [projectId, monitorId, id], onDelete: NoAction, onUpdate: NoAction)
+  local_measurement_runs         LocalMeasurementRun          @relation(fields: [projectId, runId], references: [projectId, id], onDelete: NoAction, onUpdate: NoAction)
+  local_monitor_retry_selections LocalMonitorRetrySelection[]
+}

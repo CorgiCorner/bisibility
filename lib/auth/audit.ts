@@ -2,7 +2,7 @@ import "server-only";
 
 import { auditTargetPolicy } from "@/lib/audit/target-policy";
 import { prisma } from "@/lib/db/prisma";
-import { makePublicId, type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id";
+import { makePublicId, type PublicIdPrefix, parsePublicId } from "@/lib/db/public-id-resources";
 import { Prisma as PrismaRuntime } from "@/lib/generated/prisma/client";
 import { auditPayloadPolicy } from "./audit-field-declarations";
 import { sanitizeDeclaredAuditPayload } from "./audit-payload-policy";

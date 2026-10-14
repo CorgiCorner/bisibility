@@ -1,4 +1,6 @@
+import type { RecordedMeasurementCheck } from "@/lib/rank-measurements/recorded-check";
 import type { RankCheckStatus } from "./contract";
+import { positionComparisonKey } from "./position-observations";
 
 export type { RankCheckStatus } from "./contract";
 
@@ -35,6 +37,10 @@ type ComparableRankCheck = {
 
 type CompletedComparableRankCheck = ComparableRankCheck & {
   status?: string;
+  position?: number | null;
+  observationRun?: RecordedMeasurementCheck["observationRun"];
+  provider?: string | null;
+  checkedAt?: Date;
 };
 
 // Central policy boundary: missing historical depth stays unknown. Do not infer
@@ -60,16 +66,20 @@ export function comparableCompletedWindow<T extends CompletedComparableRankCheck
     (check) => check.status === undefined || check.status === RANK_CHECK_STATUS.COMPLETED,
   );
   const latest = completed[0];
-  const predicate = latest ? whereComparableTo(latest) : null;
-  if (!predicate) return { boundary: null as T | null, checks: [] as T[], hasBoundary: false };
+  const key = latest
+    ? positionComparisonKey({ ...latest, position: latest.position ?? null })
+    : null;
+  if (!key)
+    return {
+      boundary: latest ?? (null as T | null),
+      checks: [] as T[],
+      hasBoundary: latest !== undefined,
+    };
 
   const checks: T[] = [];
   let boundary: T | null = null;
   for (const check of completed) {
-    if (
-      check.normalizationVersion === predicate.normalizationVersion &&
-      check.requestedDepth === predicate.requestedDepth
-    ) {
+    if (positionComparisonKey({ ...check, position: check.position ?? null }) === key) {
       checks.push(check);
       continue;
     }

@@ -1,5 +1,9 @@
 import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import {
+  definitionKeywordScopeFixture,
+  definitionQueryFixture,
+} from "@/lib/rank-check/definition-policy.test-fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { previewRankCheckRun } from "./preview";
 
@@ -19,6 +23,8 @@ const mocks = vi.hoisted(() => {
     isBudgetError: vi.fn(),
     loadChain: vi.fn(),
     prisma: {
+      $queryRaw: vi.fn(),
+      $transaction: vi.fn(),
       keyword: { findMany: vi.fn() },
       project: { findUnique: vi.fn() },
       projectMarket: { findMany: vi.fn() },
@@ -64,6 +70,7 @@ function row(
   } = {},
 ) {
   return {
+    ...definitionKeywordScopeFixture(options.locationId ?? "location_active"),
     archivedAt: options.archivedAt ?? null,
     id,
     locationId: options.locationId ?? "location_active",
@@ -87,11 +94,14 @@ function spec(keywordIds: `kw_${string}`[] = [KW_A, KW_B, KW_C]) {
 describe("rank-check run preview", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
+    mocks.prisma.$queryRaw.mockImplementation(definitionQueryFixture());
     mocks.resolveSelection.mockResolvedValue({
       keywordIds: ["internal_a", "internal_b", "internal_c"],
       selectionHash: HASH,
     });
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 100,
       defaults: { serpDepth: 100 },
       providerAllocationsInitializedAt: null,
@@ -110,7 +120,7 @@ describe("rank-check run preview", () => {
         costPerCheckCents: 10,
         credentialsEncrypted: "encrypted",
         id: "connection_1",
-        provider: "provider-a",
+        provider: "serpapi",
       },
     ]);
     mocks.cost.mockReturnValue(10);
@@ -261,6 +271,7 @@ describe("rank-check run preview", () => {
 
   it("uses provider allocation enforcement after allocation initialization", async () => {
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 100,
       defaults: { serpDepth: 100 },
       providerAllocationsInitializedAt: new Date("2026-09-01T00:00:00.000Z"),
@@ -281,7 +292,7 @@ describe("rank-check run preview", () => {
         estimatedCostCents: 30,
         estimatedUsageQuantity: 15,
         projectId: "project_1",
-        provider: "provider-a",
+        provider: "serpapi",
       }),
       mocks.prisma,
     );
@@ -289,6 +300,7 @@ describe("rank-check run preview", () => {
 
   it("uses the programmatic cap for a programmatic origin and reports the blocked surface", async () => {
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 100,
       defaults: { serpDepth: 100 },
       providerAllocationsInitializedAt: new Date("2026-09-01T00:00:00.000Z"),
@@ -394,6 +406,7 @@ describe("rank-check run preview", () => {
       projectId: "project_1",
       providerId: null,
       selectionHash: HASH,
+      sourceHash: expect.stringMatching(/^[a-f0-9]{64}$/u),
       trigger: "api",
     });
   });
@@ -413,7 +426,7 @@ describe("rank-check run preview", () => {
     const result = await previewRankCheckRun({
       origin: APP_REQUEST_ORIGIN,
       project,
-      providerId: "provider-a",
+      providerId: "serpapi",
       spec: spec(),
     });
 
@@ -423,8 +436,9 @@ describe("rank-check run preview", () => {
       depth: null,
       estimateCents: 30,
       projectId: "project_1",
-      providerId: "provider-a",
+      providerId: "serpapi",
       selectionHash: HASH,
+      sourceHash: expect.stringMatching(/^[a-f0-9]{64}$/u),
       trigger: "api",
     });
     expect(result.overlaps).toEqual([]);
@@ -483,6 +497,7 @@ describe("manual rank-check run preview", () => {
       selectionHash: HASH,
     });
     mocks.prisma.project.findUnique.mockResolvedValue({
+      publicId: "prj_abcdefghijklmnopqrstuvwx",
       budgetCapCents: 100,
       defaults: { serpDepth: 100 },
       providerAllocationsInitializedAt: null,
@@ -492,7 +507,7 @@ describe("manual rank-check run preview", () => {
     mocks.prisma.rankCheckRun.findMany.mockResolvedValue([]);
     mocks.prisma.rankCheckRun.count.mockResolvedValue(0);
     mocks.loadChain.mockResolvedValue([
-      { costPerCheckCents: 10, id: "connection_1", provider: "provider-a" },
+      { costPerCheckCents: 10, id: "connection_1", provider: "serpapi" },
     ]);
     mocks.cost.mockReturnValue(10);
     mocks.assertBudget.mockResolvedValue({ capCents: 100, spentCents: 20 });

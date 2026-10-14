@@ -1,4 +1,5 @@
 import { createKeywordAfterDefault } from "@/lib/api/keyword-create-test-harness";
+import type { DefaultsHostContext } from "@/lib/measurement-settings/host/defaults-authority";
 import { PROVIDER_CATALOG, serpProviderCapabilities } from "@/lib/providers/registry";
 import { keywordLocation } from "@/lib/test/fixtures/location";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -12,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   authenticateBearer: vi.fn(),
   prisma: {
     $executeRaw: vi.fn(),
+    $queryRaw: vi.fn(),
+    apiKey: { findFirst: vi.fn() },
     $transaction: vi.fn(),
     keyword: { findMany: vi.fn(), updateMany: vi.fn() },
     project: {
@@ -19,6 +22,7 @@ const mocks = vi.hoisted(() => ({
       create: vi.fn(),
       delete: vi.fn(),
       findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       update: vi.fn(),
     },
     projectDefaults: { findUnique: vi.fn(), upsert: vi.fn() },
@@ -50,13 +54,31 @@ vi.mock("@/lib/actions/_shared", () => ({
   ),
   parseActionInput: (_schema: unknown, input: unknown) => input,
 }));
-vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
+vi.mock("@/lib/auth/audit", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/auth/audit")>()),
+  writeAudit: mocks.writeAudit,
+}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/serp/location-service", () => ({
   resolveKeywordLocation: mocks.resolveKeywordLocation,
 }));
 
+vi.mock("@/lib/providers/crypto", () => ({
+  getPurposeSecretKeys: () => [Buffer.from("synthetic-writer-fixture-key-only-000")],
+}));
+vi.mock("@/lib/measurement-settings/host/defaults", async () => {
+  const { projectsDefaultsPortFixture } = await import("./projects-defaults.test-fixture");
+  return {
+    previewDefaultsHost: (context: DefaultsHostContext, request: unknown) =>
+      projectsDefaultsPortFixture(context, request, undefined, true),
+    saveDefaultsHost: (context: DefaultsHostContext, request: unknown, review: unknown) =>
+      projectsDefaultsPortFixture(context, request, review),
+  };
+});
+
 const project = {
+  writeMode: "active",
+  isSample: false,
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
   domain: "example.com",
   id: "project_1",
@@ -124,7 +146,7 @@ function context(
     instance: `urn:bisibility:api:v1:${path}`,
     method,
     origin: {
-      credentialId: "key_test",
+      credentialId: "key_1",
       credentialKind: "project_key",
       source: "api",
       surface: "programmatic",
@@ -133,6 +155,28 @@ function context(
     req,
     url: new URL(req.url),
   };
+}
+
+async function reviewedContext(body: object) {
+  const path = `/projects/${project.publicId}/defaults`;
+  const previewContext = context("PATCH", `${path}?preview_only=true`, body);
+  const response = await projectHandlers.updateProjectDefaults(previewContext, project.publicId);
+  expect(response.status).toBe(200);
+  const preview = await response.json();
+  return context("PATCH", path, {
+    ...body,
+    review: {
+      expected_revision: preview.expected_revision,
+      expected_source_hash: preview.expected_source_hash,
+      preview_token: preview.preview_token,
+      idempotency_key: "synthetic-reviewed-project-defaults",
+      confirmed: true,
+    },
+  });
+}
+async function callReviewedDefaults(body: object) {
+  const reviewed = await reviewedContext(body);
+  return call("PATCH", `/projects/${project.publicId}/defaults`, await reviewed.req.json());
 }
 
 function personalContext(body: unknown): PersonalApiContext {
@@ -176,6 +220,14 @@ describe("project write API routes", () => {
     vi.clearAllMocks();
     resetIdempotencyForTests();
     mocks.prisma.$executeRaw.mockResolvedValue(0);
+    mocks.prisma.$queryRaw.mockResolvedValue([]);
+    mocks.prisma.apiKey.findFirst.mockResolvedValue({
+      id: "key_1",
+      scopes: ["admin"],
+      revokedAt: null,
+      expiresAt: null,
+    });
+    mocks.prisma.project.findUniqueOrThrow.mockResolvedValue(project);
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
     mocks.authenticateBearer.mockResolvedValue({
       kind: "project_key",
@@ -259,11 +311,54 @@ describe("project write API routes", () => {
     vi.unstubAllEnvs();
   });
 
+  it("requires explicit reviewed consent before defaults mutations", async () => {
+    const response = await call("PATCH", `/projects/${project.publicId}/defaults`, {
+      frequency: "daily",
+      jitter_minutes: 60,
+      timezone: "UTC",
+    });
+    expect(response.status).toBe(428);
+    await expect(response.json()).resolves.toMatchObject({
+      details: { reason: "preview_required" },
+    });
+    expect(mocks.prisma.projectDefaults.upsert).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+    expect(mocks.resolveKeywordLocation).not.toHaveBeenCalled();
+  });
+
+  it("rejects a forged reviewed quote before writing defaults", async () => {
+    const ctx = await reviewedContext({ frequency: "daily", jitter_minutes: 60, timezone: "UTC" });
+    const body = await ctx.req.json();
+    body.review.preview_token = "forged-quote";
+    const response = await call("PATCH", `/projects/${project.publicId}/defaults`, body);
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toMatchObject({
+      details: { reason: "preview_mismatch" },
+    });
+    expect(mocks.prisma.projectDefaults.upsert).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
+  it("rejects a defaults credential identity mismatch before preview or mutation", async () => {
+    const ctx = context("PATCH", `/projects/${project.publicId}/defaults`, {
+      frequency: "daily",
+      jitter_minutes: 60,
+      timezone: "UTC",
+    });
+    const mismatched = { ...ctx, origin: { ...ctx.origin, credentialId: "other-key" } };
+    await expect(
+      projectHandlers.updateProjectDefaults(mismatched, project.publicId),
+    ).rejects.toMatchObject({ code: "forbidden" });
+    expect(mocks.prisma.projectDefaults.upsert).not.toHaveBeenCalled();
+    expect(mocks.resolveKeywordLocation).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
   it("updates a project and its defaults for scoped project keys", async () => {
     const patched = await call("PATCH", "/projects/prj_a00000000000000000000000", {
       name: "Renamed",
     });
-    const defaults = await call("PATCH", "/projects/prj_a00000000000000000000000/defaults", {
+    const defaults = await callReviewedDefaults({
       country: "DE",
       cron_expression: null,
       device: "mobile",
@@ -389,7 +484,7 @@ describe("project write API routes", () => {
       },
     ]);
 
-    const defaults = await call("PATCH", "/projects/prj_a00000000000000000000000/defaults", {
+    const defaults = await callReviewedDefaults({
       frequency: "weekly",
       jitter_minutes: 30,
       timezone: "Europe/Berlin",
@@ -409,6 +504,7 @@ describe("project write API routes", () => {
           market: expect.objectContaining({ country: "Germany", device: "mobile" }),
         }),
       }),
+      mocks.prisma,
     );
   });
 
@@ -426,7 +522,7 @@ describe("project write API routes", () => {
       warning: null,
     });
 
-    const defaults = await call("PATCH", "/projects/prj_a00000000000000000000000/defaults", {
+    const defaults = await callReviewedDefaults({
       frequency: "daily",
       jitter_minutes: 60,
       location_key: "US/Texas/Austin",
@@ -522,7 +618,7 @@ describe("project write API routes", () => {
       warning: null,
     });
 
-    const defaults = await call("PATCH", "/projects/prj_a00000000000000000000000/defaults", {
+    const defaults = await callReviewedDefaults({
       device: "mobile",
       frequency: "daily",
       jitter_minutes: 60,
@@ -659,7 +755,7 @@ describe("project write API routes", () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([existing]);
 
     const response = await projectHandlers.updateProjectDefaults(
-      context("PATCH", "/projects/prj_a00000000000000000000000/defaults", {
+      await reviewedContext({
         country: "DE",
         device: "mobile",
         frequency: "daily",
@@ -692,7 +788,7 @@ describe("project write API routes", () => {
     });
 
     const response = await projectHandlers.updateProjectDefaults(
-      context("PATCH", "/projects/prj_a00000000000000000000000/defaults", {
+      await reviewedContext({
         country: "DE",
         device: "mobile",
         frequency: "daily",
@@ -755,7 +851,7 @@ describe("project write API routes", () => {
       "prj_a00000000000000000000000",
     );
     const patchResponse = await projectHandlers.updateProjectDefaults(
-      context("PATCH", "/projects/prj_a00000000000000000000000/defaults", {
+      await reviewedContext({
         frequency: "daily",
         jitter_minutes: 60,
         timezone: "UTC",

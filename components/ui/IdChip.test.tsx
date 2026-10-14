@@ -16,6 +16,11 @@ describe("IdChip", () => {
     expect(shortId("rcr_9d2e41abcdef")).toBe("rcr_9d2e41");
   });
 
+  it("preserves both ends of long identifiers without truncating short identifiers", () => {
+    expect(shortId("conn_adbea2c178b319ecf9687a76", "middle")).toBe("conn_adbea…687a76");
+    expect(shortId("conn_example", "middle")).toBe("conn_example");
+  });
+
   it("limits Mono to the opaque machine identifier", () => {
     render(<IdChip value="prj_8fK2Qf9m" />);
 

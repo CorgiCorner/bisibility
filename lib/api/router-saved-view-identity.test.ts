@@ -1,15 +1,25 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({
-  session: vi.fn(),
-  audit: vi.fn(),
-  authenticate: vi.fn(),
-  prisma: {
+const mocks = vi.hoisted(() => {
+  const prisma = {
+    $queryRaw: vi.fn(),
     user: { findUnique: vi.fn() },
-    project: { findFirst: vi.fn(), findUnique: vi.fn() },
-    savedView: { findFirst: vi.fn(), delete: vi.fn(), create: vi.fn(), findMany: vi.fn() },
-  },
-}));
+    project: { findFirst: vi.fn(), findUnique: vi.fn(), findUniqueOrThrow: vi.fn() },
+    savedView: {
+      count: vi.fn(),
+      findFirst: vi.fn(),
+      deleteMany: vi.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+    },
+  };
+  return {
+    session: vi.fn(),
+    audit: vi.fn(),
+    authenticate: vi.fn(),
+    prisma: { ...prisma, $transaction: vi.fn(async (body) => body(prisma)) },
+  };
+});
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.session }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/auth/audit", () => ({
@@ -56,14 +66,22 @@ beforeEach(() => {
   });
   mocks.prisma.project.findUnique.mockResolvedValue(project);
   mocks.prisma.project.findFirst.mockResolvedValue(project);
+  mocks.prisma.project.findUniqueOrThrow.mockImplementation(async () =>
+    mocks.prisma.project.findFirst(),
+  );
+  mocks.prisma.$queryRaw.mockResolvedValue([{ id: project.id }]);
+  mocks.prisma.savedView.count.mockResolvedValue(0);
   mocks.prisma.savedView.findFirst.mockResolvedValue({
     id: "view-db",
     publicId: viewRef,
     createdById: "third-user",
     name: "Third users view",
     surface: "keywords",
+    visibility: "project",
+    ownerId: null,
+    revision: 1,
   });
-  mocks.prisma.savedView.delete.mockResolvedValue({});
+  mocks.prisma.savedView.deleteMany.mockResolvedValue({ count: 1 });
 });
 it("denies a member PAT deleting another user view despite an owner browser session", async () => {
   mocks.session.mockResolvedValue({ user: { id: "owner-user" } });
@@ -73,7 +91,7 @@ it("denies a member PAT deleting another user view despite an owner browser sess
   });
   const response = await handleApiRequest(request(), path);
   expect(response.status).toBe(403);
-  expect(mocks.prisma.savedView.delete).not.toHaveBeenCalled();
+  expect(mocks.prisma.savedView.deleteMany).not.toHaveBeenCalled();
   expect(mocks.session).not.toHaveBeenCalled();
 });
 it("control: the same member PAT is denied with a matching member browser session", async () => {
@@ -84,7 +102,7 @@ it("control: the same member PAT is denied with a matching member browser sessio
   });
   const response = await handleApiRequest(request(), path);
   expect(response.status).toBe(403);
-  expect(mocks.prisma.savedView.delete).not.toHaveBeenCalled();
+  expect(mocks.prisma.savedView.deleteMany).not.toHaveBeenCalled();
 });
 it("allows a member PAT to delete its own view without a browser session", async () => {
   mocks.session.mockRejectedValue(new Error("NEXT_REDIRECT"));
@@ -94,10 +112,13 @@ it("allows a member PAT to delete its own view without a browser session", async
     createdById: "member-user",
     name: "Own view",
     surface: "keywords",
+    visibility: "project",
+    ownerId: null,
+    revision: 1,
   });
   const response = await handleApiRequest(request(), path);
   expect(response.status).toBe(200);
-  expect(mocks.prisma.savedView.delete).toHaveBeenCalled();
+  expect(mocks.prisma.savedView.deleteMany).toHaveBeenCalled();
   expect(mocks.session).not.toHaveBeenCalled();
 });
 
@@ -127,7 +148,10 @@ it("creates project-key views without attributing them to the project owner", as
       data: expect.objectContaining({ createdById: null, projectId: project.id }),
     }),
   );
-  expect(mocks.audit).toHaveBeenCalledWith(expect.objectContaining({ actorId: null }));
+  expect(mocks.audit).toHaveBeenCalledWith(
+    expect.objectContaining({ actorId: null }),
+    expect.objectContaining({ savedView: mocks.prisma.savedView }),
+  );
   expect(mocks.session).not.toHaveBeenCalled();
 });
 it("does not delete a saved view on a read-only project", async () => {
@@ -135,5 +159,33 @@ it("does not delete a saved view on a read-only project", async () => {
   mocks.prisma.project.findFirst.mockResolvedValue({ ...project, writeMode: "migration_hold" });
   const response = await handleApiRequest(request(), path);
   expect(response.status).toBe(423);
-  expect(mocks.prisma.savedView.delete).not.toHaveBeenCalled();
+  expect(mocks.prisma.savedView.deleteMany).not.toHaveBeenCalled();
+});
+
+it("keeps a matching user PAT project-only and never borrows its browser session for private views", async () => {
+  mocks.session.mockResolvedValue({ user: { id: "member-user" } });
+  mocks.prisma.savedView.findFirst.mockImplementation(async ({ where }) =>
+    where.visibility === "project"
+      ? null
+      : {
+          id: "private-view",
+          publicId: viewRef,
+          createdById: "member-user",
+          ownerId: "member-user",
+          visibility: "private",
+          revision: 1,
+          name: "Private sensitive scope",
+          surface: "keywords",
+        },
+  );
+  const response = await handleApiRequest(request(), path);
+  expect(response.status).toBe(200);
+  expect(mocks.prisma.savedView.findFirst).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: { projectId: project.id, publicId: viewRef, visibility: "project" },
+    }),
+  );
+  expect(mocks.prisma.savedView.deleteMany).not.toHaveBeenCalled();
+  expect(mocks.session).not.toHaveBeenCalled();
+  expect(JSON.stringify(await response.json())).not.toContain("Private sensitive scope");
 });

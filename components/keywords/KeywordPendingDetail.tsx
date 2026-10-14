@@ -3,6 +3,7 @@
 import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { AccentCtaLink } from "@/components/ui/AccentCtaLink";
 import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
+import type { KeywordDetailQuality } from "@/lib/keyword-detail/quality-model";
 import type { KeywordDetailRankState } from "@/lib/keyword-detail/state-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { KeywordRow } from "@/lib/queries/keywords";
@@ -29,6 +30,7 @@ type KeywordPendingDetailProps = KeywordDetailActions & {
   history?: ReactNode;
   costContext?: ProjectCostContext;
   keyword: KeywordRow;
+  quality?: KeywordDetailQuality;
   scheduleTargets?: readonly KeywordRow[];
   pollAction?: RankCheckPollAction;
   providerConnected: boolean;
@@ -57,6 +59,7 @@ export function KeywordPendingDetail({
   canUpdateKeyword,
   costContext,
   keyword,
+  quality,
   scheduleTargets,
   history,
   pollAction,
@@ -141,6 +144,7 @@ export function KeywordPendingDetail({
         scheduleTargets={scheduleTargets}
         projectRef={projectId}
         keyword={keyword}
+        quality={quality}
         onChangeSchedule={canUpdateKeyword ? onChangeSchedule : undefined}
         providerLabel={providerLabel ?? costContext?.providerId ?? keyword.dataProvider}
         rankState={state}

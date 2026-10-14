@@ -10,6 +10,7 @@ type Props = {
   budgetHref: string;
   duplicateRunHref: string;
   integrationsHref: string;
+  policyHref: string;
 };
 
 export function PreflightBlockNotice(props: Readonly<Props>) {
@@ -17,6 +18,20 @@ export function PreflightBlockNotice(props: Readonly<Props>) {
   const t = useTranslations("shared.rankPreflight");
   if (!props.code) return null;
   const block = {
+    measurement_policy_unconfigured: {
+      cta: t("configureMeasurementPolicy"),
+      href: props.policyHref,
+      label: t("measurementPolicy"),
+      message: t("measurementPolicyUnconfigured"),
+      tone: "attention" as const,
+    },
+    measurement_policy_unsupported: {
+      cta: t("configureMeasurementPolicy"),
+      href: props.policyHref,
+      label: t("measurementPolicy"),
+      message: t("measurementPolicyUnsupported"),
+      tone: "attention" as const,
+    },
     budget_missing: {
       cta: t("editBudget"),
       href: props.budgetHref,

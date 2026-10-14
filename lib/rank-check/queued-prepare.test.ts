@@ -1,4 +1,9 @@
+import { Context } from "@temporalio/activity";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  admittedDefinitionSourceFixture,
+  definitionQueryFixture,
+} from "./definition-policy.test-fixture";
 import { claimDueRankCheckItems } from "./items-claim";
 import { prepareQueuedRankCheckBatch } from "./queued-prepare";
 
@@ -7,6 +12,7 @@ const mocks = vi.hoisted(() => {
     batches: [] as Array<Record<string, unknown>>,
     item: {
       claimExpiresAt: new Date("2026-09-02T08:05:00.000Z") as Date | null,
+      claimAttempts: 1,
       id: "item_1",
       keywordId: "keyword_1",
       rankCheckId: null as string | null,
@@ -39,8 +45,8 @@ const mocks = vi.hoisted(() => {
         throw error;
       }
     }),
-    $executeRaw: vi.fn(async () => 1),
-    $queryRaw: vi.fn(async () => []),
+    $executeRaw: vi.fn(async (_query: unknown, ..._values: unknown[]) => 1),
+    $queryRaw: vi.fn(async (_query: unknown, ..._values: unknown[]): Promise<unknown> => []),
     auditLog: { create: vi.fn(async () => ({ id: "audit_1" })) },
     keyword: {
       findMany: vi.fn(async () => [
@@ -97,6 +103,12 @@ const mocks = vi.hoisted(() => {
       findUniqueOrThrow: vi.fn(async () => ({ costCents: null })),
     },
     rankCheckRun: {
+      create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+        state.run = { ...state.run, ...data };
+        state.item.claimAttempts = 0;
+        state.item.claimExpiresAt = null;
+        return { id: "run_1", items: [state.item] };
+      }),
       findUnique: vi.fn(async () => state.run),
       update: vi.fn(async () => ({})),
     },
@@ -115,13 +127,22 @@ const mocks = vi.hoisted(() => {
           where,
         }: {
           data: Record<string, unknown>;
-          where: { id: string; keywordId: string; rankCheckId: null; status: string };
+          where: {
+            id: string;
+            keywordId: string;
+            rankCheckId: null;
+            status: string;
+            claimAttempts: number;
+            claimExpiresAt: Date | null;
+          };
         }) => {
           if (
             where.id === state.item.id &&
             where.keywordId === state.item.keywordId &&
             where.rankCheckId === null &&
             where.status === state.item.status &&
+            where.claimAttempts === state.item.claimAttempts &&
+            where.claimExpiresAt?.getTime() === state.item.claimExpiresAt?.getTime() &&
             state.item.rankCheckId === null
           ) {
             Object.assign(state.item, data);
@@ -165,11 +186,53 @@ vi.mock("@/lib/providers/credentials", () => ({
   resolveProviderCredentials: () => ({ login: "login", password: "password" }),
 }));
 
+function queuedSourceFixture() {
+  const source = admittedDefinitionSourceFixture("project_1", "keyword_1");
+  source.target.text = "site:example.com";
+  source.target.domain = "example.com";
+  if (!source.policy.defaults) throw new Error("Synthetic defaults fixture is required.");
+  source.policy.defaults.frequency = "daily";
+  source.policy.defaults.serpDepth = 20;
+  return source;
+}
+// Trusted semantic producer port only. Keep real queued permit admission and original request wiring.
+vi.mock("@/lib/measurement-definitions/worker-session", async () => {
+  const { assertDefinitionExecutionPermit } = await import(
+    "@/lib/measurement-definitions/worker-claim"
+  );
+  const { frozenRequest } = await import("@/lib/measurement-definitions/canonical");
+  return {
+    captureWorkerDefinition: vi.fn(async (tx, input) => {
+      assertDefinitionExecutionPermit(input.permit);
+      expect(tx).toBe(mocks.prisma);
+      expect(input.projectId).toBe("project_1");
+      expect(input.keywordId).toBe("keyword_1");
+      expect(input.connection).toMatchObject({ id: "connection_1", provider: "dataforseo" });
+      expect(input.permit.principal).toMatchObject({ runId: "run_1", runItemId: "item_1" });
+      expect(mocks.state.tasks).toContainEqual(
+        expect.objectContaining({ id: input.queuedTaskId, rankCheckId: input.permit.rankCheckId }),
+      );
+      return {
+        binding: { request: frozenRequest(queuedSourceFixture(), "dataforseo", input.depth) },
+      };
+    }),
+  };
+});
+
 const baseInput = {
   batchId: "batch_1",
   claimedAt: "2026-09-02T08:00:00.000Z",
   chunkIndex: 0,
   device: "desktop",
+  dispatchClaims: [
+    {
+      keywordId: "keyword_1",
+      stateVersion: "1",
+      dueCheckAt: "2026-09-02T07:00:00.000Z",
+      advancedCheckAt: "2026-09-03T08:00:00.000Z",
+    },
+  ],
+  runItemClaims: [{ id: "item_1", claimAttempts: 1, claimExpiresAt: "2026-09-02T08:05:00.000Z" }],
   keywordIds: ["keyword_1"],
   locationId: "location_1",
   projectId: "project_1",
@@ -183,12 +246,21 @@ function sqlText(query: unknown) {
 describe("queued rank-check run-item preparation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
+    vi.spyOn(Context, "current").mockReturnValue({
+      info: {
+        workflowExecution: {
+          workflowId: "queued-fixture",
+          runId: baseInput.workflowRunId,
+        },
+      },
+    } as unknown as Context);
+    vi.setSystemTime(new Date(baseInput.claimedAt));
     mocks.nativeCosts.mockResolvedValue([0.725]);
     vi.stubEnv("DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED", "1");
     mocks.state.batches = [];
     mocks.state.item = {
       claimExpiresAt: new Date("2026-09-02T08:05:00.000Z"),
+      claimAttempts: 1,
       id: "item_1",
       keywordId: "keyword_1",
       rankCheckId: null,
@@ -203,10 +275,73 @@ describe("queued rank-check run-item preparation", () => {
       trigger: "scheduled",
     };
     mocks.state.tasks = [];
+    mocks.prisma.$executeRaw.mockImplementation(async (query: unknown, ...values: unknown[]) => {
+      const parts = Array.isArray(query) ? query : (query as { strings: string[] }).strings;
+      const sql = parts.join("?");
+      if (sql.includes('UPDATE rank_checks SET "definitionExecutionToken"')) {
+        const row = mocks.state.rankChecks.find((check) => check.id === values[2]);
+        if (
+          row?.status !== "running" ||
+          row.workflowRunId !== values[3] ||
+          row.definitionExecutionToken
+        )
+          return 0;
+        row.definitionExecutionToken = values[0];
+        row.definitionWorkflowId = values[1];
+      }
+      return 1;
+    });
+    const catalogQuery = definitionQueryFixture(async (query, ...values) => {
+      const parts = Array.isArray(query) ? query : (query as { strings: string[] }).strings;
+      const parameters = Array.isArray(query) ? values : (query as { values: unknown[] }).values;
+      const sql = parts.join("?");
+      if (sql.includes("FROM keyword_dispatch_states"))
+        return parameters[0] === "keyword_1" && parameters[2] === "1" ? [{ id: "keyword_1" }] : [];
+      if (sql.includes('SELECT i."definitionIntent" AS intent'))
+        return [{ intent: { version: 1, depth: 20, source: queuedSourceFixture() } }];
+      if (sql.includes('SELECT "definitionExecutionToken" AS token')) {
+        const row = mocks.state.rankChecks.find((check) => check.id === parameters[0]);
+        if (
+          row?.status !== "running" ||
+          row.workflowRunId !== parameters[1] ||
+          row.definitionWorkflowId !== parameters[2] ||
+          !row.definitionExecutionToken
+        )
+          return [];
+        return [
+          {
+            token: row.definitionExecutionToken,
+            principal: {
+              actorId: null,
+              runId: "run_1",
+              runItemId: "item_1",
+              source: mocks.state.run.source,
+              trigger: mocks.state.run.trigger,
+              credentialId: mocks.state.run.credentialId,
+              credentialKind: mocks.state.run.credentialKind,
+              selectionKind: "legacy_schedule",
+              selectionHash: "a".repeat(64),
+              checkScheduleId: null,
+            },
+          },
+        ];
+      }
+      return [];
+    });
+    mocks.prisma.$queryRaw.mockImplementation(async (query: unknown, ...values: unknown[]) => {
+      const parts = Array.isArray(query) ? query : (query as { strings: string[] }).strings;
+      if (parts.join("?").includes("SELECT measurement_definition_source("))
+        return [{ source: queuedSourceFixture() }];
+      return catalogQuery(query as never, ...values);
+    });
     mocks.assertQueuedRankCheckBatchAllocation.mockResolvedValue(undefined);
   });
 
-  afterEach(() => vi.unstubAllEnvs());
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   it.each<[string, Array<{ locationId: string }>, Date | null, string]>([
     [
@@ -383,19 +518,84 @@ describe("queued rank-check run-item preparation", () => {
     expect(mocks.assertQueuedRankCheckBatchAllocation).not.toHaveBeenCalled();
   });
 
-  it("replays old input without runItemIds through the original standalone writes", async () => {
+  it("links legacy dispatcher input to an owned run without another paid reservation", async () => {
     await expect(prepareQueuedRankCheckBatch(baseInput)).resolves.toMatchObject({
       batchId: "batch_1",
       state: "prepared",
     });
 
     expect(mocks.prisma.rankCheckRunItem.findMany).not.toHaveBeenCalled();
-    expect(mocks.prisma.rankCheckRunItem.updateMany).not.toHaveBeenCalled();
+    expect(mocks.prisma.rankCheckRunItem.updateMany).toHaveBeenCalledOnce();
+    expect(mocks.prisma.rankCheckRun.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          selectionKind: "legacy_schedule",
+          estimatedCostCents: 1,
+          items: {
+            create: [
+              expect.objectContaining({
+                definitionIntent: { version: 1, depth: 20, source: queuedSourceFixture() },
+              }),
+            ],
+          },
+        }),
+      }),
+    );
     expect(mocks.state.rankChecks).toHaveLength(1);
     expect(mocks.state.tasks).toHaveLength(1);
-    expect(mocks.state.batches[0]).not.toHaveProperty("runId");
-    expect(mocks.state.rankChecks[0]).not.toHaveProperty("runId");
+    expect(mocks.state.batches[0]).toMatchObject({ runId: "run_1" });
+    expect(mocks.state.rankChecks[0]).toMatchObject({ runId: "run_1" });
     expect(mocks.publishOperationChanged).toHaveBeenCalledWith({ projectId: "project_1" });
+  });
+
+  it.each(["changed generation", "expired lease"])(
+    "refuses %s before creating provider work",
+    async (reason) => {
+      if (reason === "expired lease") vi.setSystemTime(new Date("2026-09-02T08:06:00Z"));
+      const input = {
+        ...baseInput,
+        runId: "run_1",
+        runItemIds: ["item_1"],
+        runItemClaims: baseInput.runItemClaims.map((claim) => ({
+          ...claim,
+          claimAttempts: reason === "changed generation" ? 2 : claim.claimAttempts,
+        })),
+      };
+      await expect(prepareQueuedRankCheckBatch(input)).rejects.toThrow(
+        "Original run-item claim changed before preparation",
+      );
+      expect(mocks.state.batches).toEqual([]);
+      expect(mocks.state.rankChecks).toEqual([]);
+      expect(mocks.providerFacingCreate).not.toHaveBeenCalled();
+      expect(mocks.nativeCosts).not.toHaveBeenCalled();
+    },
+  );
+
+  it("refuses legacy dispatch input without an actual advancement claim", async () => {
+    const { dispatchClaims: _claims, ...input } = baseInput;
+    await expect(prepareQueuedRankCheckBatch(input)).rejects.toThrow(
+      "actual dispatcher advancement claims",
+    );
+    expect(mocks.state.batches).toEqual([]);
+    expect(mocks.state.rankChecks).toEqual([]);
+    expect(mocks.prisma.rankCheckRun.create).not.toHaveBeenCalled();
+    expect(mocks.providerFacingCreate).not.toHaveBeenCalled();
+  });
+
+  it("rolls back the batch and check when the run-item CAS is lost after pricing", async () => {
+    mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValueOnce({ count: 0 });
+    await expect(
+      prepareQueuedRankCheckBatch({ ...baseInput, runId: "run_1", runItemIds: ["item_1"] }),
+    ).rejects.toThrow("claim was lost before preparation");
+    expect(mocks.nativeCosts).toHaveBeenCalledOnce();
+    expect(mocks.state.batches).toEqual([]);
+    expect(mocks.state.rankChecks).toEqual([]);
+    expect(mocks.state.item).toMatchObject({
+      rankCheckId: null,
+      claimAttempts: 1,
+      claimExpiresAt: new Date("2026-09-02T08:05:00Z"),
+    });
+    expect(mocks.providerFacingCreate).not.toHaveBeenCalled();
   });
 
   it("lets one concurrent claim reach the real provider-facing prepare write", async () => {
@@ -481,6 +681,7 @@ describe("queued rank-check run-item preparation", () => {
             ...baseInput,
             runId: group.runId,
             runItemIds: group.runItemIds,
+            runItemClaims: group.runItemClaims,
           }),
         ),
       ),
@@ -509,6 +710,8 @@ describe("queued rank-check run-item preparation", () => {
         id: "item_1",
         keywordId: "keyword_1",
         rankCheckId: null,
+        claimAttempts: 1,
+        claimExpiresAt: new Date("2026-09-02T08:05:00Z"),
         status: "running",
       },
     });
@@ -519,7 +722,15 @@ describe("queued rank-check run-item preparation", () => {
     await prepareQueuedRankCheckBatch({ ...baseInput, runId: "run_1" });
 
     expect(mocks.prisma.rankCheckRunItem.findMany).toHaveBeenCalledWith({
-      select: { id: true, keywordId: true, runId: true },
+      select: {
+        id: true,
+        keywordId: true,
+        runId: true,
+        claimAttempts: true,
+        claimExpiresAt: true,
+        status: true,
+        rankCheckId: true,
+      },
       where: { keywordId: { in: ["keyword_1"] }, runId: "run_1" },
     });
     expect(mocks.state.item).toMatchObject({ claimExpiresAt: null, rankCheckId: "rank_1" });
@@ -538,9 +749,9 @@ describe("queued rank-check run-item preparation", () => {
         batchId: "batch_2",
         runId: "run_1",
         runItemIds: ["item_1"],
-        workflowRunId: "workflow_2",
+        workflowRunId: "workflow_1",
       }),
-    ).rejects.toThrow("claim was lost before preparation");
+    ).rejects.toThrow("Original run-item claim changed before preparation");
 
     expect(mocks.state.batches).toHaveLength(1);
     expect(mocks.state.rankChecks).toHaveLength(1);

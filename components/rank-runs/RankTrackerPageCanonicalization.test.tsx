@@ -51,6 +51,7 @@ vi.mock("@/lib/auth/capabilities", () => ({
 }));
 vi.mock("@/lib/queries/_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
+  getQueryActor: async () => ({ id: "user_1" }),
   resolveProjectAccess: mocks.resolveProjectAccess,
 }));
 vi.mock("@/lib/queries/account", () => ({ getPreferences: mocks.getPreferences }));
@@ -82,7 +83,17 @@ vi.mock("@/lib/queries/saved-keywords", () => ({
 vi.mock("@/lib/queries/saved-views", () => ({
   getSavedView: mocks.getSavedView,
   listSavedViews: mocks.listSavedViews,
+  listSessionSavedViews: mocks.listSavedViews,
 }));
+vi.mock("@/lib/queries/rank-tracker-personal-context", async () => {
+  const { personalContextFixture } = await import("./personal-context-test-fixture");
+  return {
+    loadRankTrackerPersonalContext: async (
+      projectId: string,
+      params: Record<string, string | string[] | undefined>,
+    ) => personalContextFixture(projectId, params, await mocks.listSavedViews()),
+  };
+});
 vi.mock("@/lib/queries/workspace-budget-summary", () => ({
   loadWorkspaceBudgetSummary: mocks.loadWorkspaceBudgetSummary,
 }));
@@ -183,31 +194,39 @@ describe("KeywordsPage canonicalization", () => {
   });
 
   it("canonicalizes a zero-result page to one with full query semantics", async () => {
-    mocks.getSavedView.mockResolvedValueOnce({
-      canDelete: true,
-      config: {
-        filters: {
-          change: "any",
-          contains: "",
-          intents: [],
-          lastCheck: "any",
-          position: [],
-          serp: [],
-          tags: ["saved"],
-          topics: [],
-          urlChanged: false,
-          volMax: 50,
-          volMin: 0,
-          wrongUrl: false,
+    mocks.listSavedViews.mockResolvedValue([
+      {
+        canDelete: true,
+        config: {
+          filters: {
+            change: "any",
+            contains: "",
+            intents: [],
+            lastCheck: "any",
+            position: [],
+            serp: [],
+            tags: ["saved"],
+            topics: [],
+            urlChanged: false,
+            volMax: 50,
+            volMin: 0,
+            wrongUrl: false,
+          },
+          lens: { device: "desktop", locationId: null },
+          search: "saved",
+          surface: "keywords",
+          version: 1,
         },
-        lens: { device: "desktop", locationId: null },
-        search: "saved",
+        id: `viw_${"a".repeat(24)}`,
+        name: "Saved",
         surface: "keywords",
-        version: 1,
+        canEdit: true,
+        visibility: "project",
+        projectId: "prj_1",
+        revision: 1,
+        createdAt: "2026-10-14T00:00:00Z",
       },
-      id: "viw_1",
-      name: "Saved",
-    });
+    ]);
     await expect(
       renderPage({
         action: "filter",
@@ -216,14 +235,14 @@ describe("KeywordsPage canonicalization", () => {
         q: "no matches",
         tab: "tracked",
         tags: "",
-        view: "viw_1",
+        view: `viw_${"a".repeat(24)}`,
       }),
     ).rejects.toThrow("NEXT_REDIRECT:");
     const href = String(redirect.mock.calls[0]?.[0]);
     expect(href).toContain("page=1");
     expect(href).toContain("q=no+matches");
     expect(href).toContain("tags=");
-    expect(href).toContain("view=viw_1");
+    expect(href).toContain(`view=viw_${"a".repeat(24)}`);
     expect(href).toContain("tab=tracked");
     expect(href).toContain("add=1");
     expect(href).toContain("action=filter");
@@ -234,9 +253,9 @@ describe("KeywordsPage canonicalization", () => {
       facets: { intents: [], positions: [], tags: [], topics: [] },
       locations: [],
       matchedTargetCount: 51,
-      page: 6,
-      pageCount: 6,
-      pageSize: 10,
+      page: 3,
+      pageCount: 3,
+      pageSize: 25,
       resolvedLens: { device: "desktop", locationId: null },
       rows: [],
       totalCount: 51,
@@ -246,30 +265,31 @@ describe("KeywordsPage canonicalization", () => {
         action: "filter",
         add: "1",
         page: "99",
-        pageSize: "10",
+        pageSize: "25",
         tags: "",
         tab: "tracked",
       }),
     ).rejects.toThrow("NEXT_REDIRECT:");
-    expect(redirect).toHaveBeenCalledWith(expect.stringContaining("page=6"));
+    expect(redirect).toHaveBeenCalledWith(expect.stringContaining("page=3"));
     expect(redirect).toHaveBeenCalledWith(expect.stringContaining("tags="));
     expect(redirect).toHaveBeenCalledWith(expect.stringContaining("action=filter"));
   });
 
-  it("canonicalizes a malformed device once while preserving URL semantics", async () => {
-    await expect(
-      renderPage({ action: "filter", add: "1", device: "tablet", q: "", tab: "tracked", tags: "" }),
-    ).rejects.toThrow("NEXT_REDIRECT:");
-    const href = String(redirect.mock.calls[0]?.[0]);
-    expect(href).toContain("device=all");
-    expect(href).toContain("q=");
-    expect(href).toContain("tags=");
-    expect(href).toContain("tab=tracked");
-    expect(href).toContain("add=1");
-    expect(href).toContain("action=filter");
-
-    redirect.mockClear();
-    await renderPage(Object.fromEntries(new URL(href, "https://example.com").searchParams));
+  it("rejects malformed device without broadening the URL or reading ranking results", async () => {
+    const page = (await KeywordsPage({
+      params: Promise.resolve({ project: "prj_1" }),
+      searchParams: Promise.resolve({
+        action: "filter",
+        add: "1",
+        device: "tablet",
+        q: "",
+        tab: "tracked",
+        tags: "",
+      }),
+    })) as ReactElement<{ children: ReactElement<{ status: string }> }>;
+    expect(page.props.children.props.status).toBe("invalid_url");
     expect(redirect).not.toHaveBeenCalled();
+    expect(mocks.getRankTrackerKeywordList).not.toHaveBeenCalled();
+    expect(mocks.getRankTrackerGroupedList).not.toHaveBeenCalled();
   });
 });
