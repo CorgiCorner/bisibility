@@ -2650,6 +2650,81 @@
     }
   },
   {
+    "name": "list_rank_check_runs",
+    "title": "List retained rank-check runs",
+    "description": "Read retained execution states, including cancelled, blocked and deferred outcomes without observations. Does not launch checks, retry provider requests or change schedules.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "segment": {
+          "type": "string",
+          "enum": ["history", "planned"]
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192
+        }
+      },
+      "required": ["project_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "get_rank_check_run",
+    "title": "Get retained rank-check run",
+    "description": "Read retained execution states, including cancelled, blocked and deferred outcomes without observations. Does not launch checks, retry provider requests or change schedules.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
+          "type": "string",
+          "pattern": "^prj_[a-z][a-z0-9]{23}$"
+        },
+        "run_id": {
+          "description": "Public identifier of the retained rank-check run.",
+          "type": "string",
+          "pattern": "^rcr_[a-z][a-z0-9]{23}$"
+        }
+      },
+      "required": ["project_id", "run_id"],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
     "name": "list_sitemap_monitors",
     "title": "List sitemap monitors",
     "description": "List the project sitemap monitor, including its status and latest snapshot summary.",

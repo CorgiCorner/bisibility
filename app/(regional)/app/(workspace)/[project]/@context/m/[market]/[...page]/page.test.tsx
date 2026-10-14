@@ -7,9 +7,16 @@ import { setNavigationState } from "@/tests/next-navigation";
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ listHeaderMarkets: vi.fn(), resolveProjectAccess: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  listHeaderMarkets: vi.fn(),
+  resolveProjectAccess: vi.fn(),
+  personalContext: vi.fn(),
+}));
 
 vi.mock("@/lib/queries/_auth", () => ({ resolveProjectAccess: mocks.resolveProjectAccess }));
+vi.mock("@/lib/queries/rank-tracker-personal-context", () => ({
+  loadRankTrackerPersonalContext: mocks.personalContext,
+}));
 vi.mock("@/lib/queries/header-markets", () => ({ listHeaderMarkets: mocks.listHeaderMarkets }));
 vi.mock("@/components/ui/Tooltip", () => import("@/tests/tooltip-stub"));
 vi.mock("@/i18n/document-locale.server", () => ({
@@ -38,6 +45,9 @@ async function renderRoute(page: string[]) {
 describe("header context slot route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.personalContext.mockResolvedValue({
+      state: { lens: { device: "all", locationId: null }, filters: {}, search: "" },
+    });
     mocks.listHeaderMarkets.mockResolvedValue([
       {
         countryCode: "US",
@@ -85,4 +95,20 @@ describe("header context slot route", () => {
     expect(NoHeaderContext()).toBeNull();
     expect(mocks.listHeaderMarkets).not.toHaveBeenCalled();
   });
+});
+
+it("resolves a private view URL through the same personal scope as the table", async () => {
+  const search = { view: "viw_abcdefghijklmnopqrstuvwx" };
+  const state = {
+    lens: { device: "mobile", locationId: "krakow" },
+    filters: {},
+    search: "service",
+  };
+  mocks.personalContext.mockResolvedValue({ state });
+  const result = await HeaderContextRoute({
+    params: Promise.resolve({ market: MARKET, page: ["rank-tracker"], project: PROJECT }),
+    searchParams: Promise.resolve(search),
+  });
+  expect(mocks.personalContext).toHaveBeenCalledWith(PROJECT, search);
+  expect(result.props.children.props.savedView).toMatchObject(state);
 });

@@ -89,12 +89,18 @@ export async function claimDefinitionPaidCall(
   return permit;
 }
 async function inlineInvocation(tx: DefinitionTransaction, rankCheckId: string) {
+  // API credentials retain their matching actor identity. Fresh authorization still runs
+  // through definitionWorkerHost before capture and again inside the native dispatch fence.
   const rows = await tx.$queryRaw<Array<{ publicId: string; workflowRunId: string | null }>>`
     SELECT r."publicId",c."workflowRunId" FROM rank_checks c
     JOIN rank_check_run_items i ON i."rankCheckId"=c.id AND i."runId"=c."runId"
     JOIN rank_check_runs r ON r.id=i."runId"
     WHERE c.id=${rankCheckId} AND c.status='running' AND i.status='running'
-      AND r.status IN ('queued','running') AND r.trigger='manual' AND r."requestedById" IS NOT NULL
+      AND r.status IN ('queued','running')
+      AND ((r.trigger='manual' AND r."requestedById" IS NOT NULL AND r."credentialKind" IS NULL AND r."credentialId" IS NULL) OR
+        (r.trigger='api' AND r.source IN ('api','sdk','cli','mcp') AND length(r."credentialId")>0
+          AND ((r."credentialKind"='project_key' AND r."requestedById" IS NULL) OR
+            (r."credentialKind" IN ('personal_token','oauth_client') AND r."requestedById" IS NOT NULL))))
     FOR UPDATE OF r,i,c`;
   const row = rows[0];
   if (rows.length !== 1 || row.workflowRunId !== `inline-${row.publicId}`)

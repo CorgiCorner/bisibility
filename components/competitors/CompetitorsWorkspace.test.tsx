@@ -3,7 +3,10 @@ import { canProjectAction } from "@/lib/auth/capabilities";
 import { buildCompetitorMarket } from "@/lib/competitors/competitor-market-model";
 import type { CompetitorMarketData, CompetitorsViewModel } from "@/lib/competitors/types";
 import type { Role } from "@/lib/generated/prisma/client";
-import { screen } from "@testing-library/react";
+import { generalPreference } from "@/lib/project-surface-preferences/model";
+import { canonicalViewFixture, viewProjectId } from "@/lib/saved-views/view-test-fixture";
+import { routerMock } from "@/tests/next-navigation";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CompetitorsWorkspace } from "./CompetitorsWorkspace";
 
@@ -207,4 +210,71 @@ describe("CompetitorsWorkspace", () => {
       expect(Boolean(screen.queryByRole("button", { name: "Add competitor" }))).toBe(canCreate);
     },
   );
+});
+
+it("discards a changed personal scope with exactly one canonical navigation", () => {
+  const market = buildCompetitorMarket(marketData, {
+    excludedKeywordIds: [],
+    position: "all",
+    tag: null,
+  });
+  const scope = {
+    device: "desktop" as const,
+    engine: "google" as const,
+    locationId: "location_us",
+  };
+  const personalView = {
+    ...canonicalViewFixture(),
+    surface: "competitors" as const,
+    config: {
+      version: 1 as const,
+      surface: "competitors" as const,
+      scope: { ...scope, device: "mobile" as const },
+      filters: { excludedKeywordIds: [], position: "all" as const, tag: null },
+    },
+  };
+  render(
+    <CompetitorsWorkspace
+      activeViewId={personalView.id}
+      canCreate={false}
+      canDelete={false}
+      canUpdate={false}
+      deletableSavedViewIds={[]}
+      initialFilter={personalView.config.filters}
+      projectRef={viewProjectId}
+      savedViews={[]}
+      personalViews={{
+        views: [personalView],
+        preference: generalPreference(viewProjectId, "competitors"),
+        presentation: null,
+        scopeKey: "viewer-scope",
+        privateCreation: { canCreatePrivate: true, reason: null },
+      }}
+      view={{
+        managedCompetitors: [
+          { domain: "example.net", id: "competitor_1", initials: "EN", label: "Example" },
+        ],
+        market,
+        markets: [
+          {
+            ...market,
+            canonicalKey: "country:us",
+            checkedKeywordCount: 1,
+            keywordCount: 1,
+            cityName: null,
+            countryCode: "US",
+            hl: "en",
+            regionName: null,
+          },
+        ],
+        projectId: viewProjectId,
+        scope,
+        suggestions: [],
+      }}
+    />,
+  );
+  routerMock.push.mockClear();
+  fireEvent.click(screen.getByRole("button", { name: "Discard changes" }));
+  expect(routerMock.push).toHaveBeenCalledTimes(1);
+  expect(routerMock.push).toHaveBeenCalledWith(expect.stringContaining(`?view=${personalView.id}`));
 });

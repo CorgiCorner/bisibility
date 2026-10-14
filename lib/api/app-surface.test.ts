@@ -115,7 +115,7 @@ vi.mock("@/lib/actions/saved-views", () => ({
   createSavedView: mocks.actions.createSavedView,
   deleteSavedView: mocks.actions.deleteSavedView,
 }));
-vi.mock("@/lib/queries/saved-views", () => ({ listSavedViews: mocks.queries.listSavedViews }));
+vi.mock("@/lib/queries/saved-views", () => ({ listSavedViewsFor: mocks.queries.listSavedViews }));
 vi.mock("@/lib/actions/competitors", () => ({
   addManagedCompetitor: mocks.actions.addManagedCompetitor,
   removeManagedCompetitor: mocks.actions.removeManagedCompetitor,

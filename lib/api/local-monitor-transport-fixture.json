@@ -14,7 +14,7 @@
       "protocol": {
         "geometry": "sphere-r6371000-v1",
         "matcher": "business-match-maps-v1",
-        "normalizer_versions": ["dataforseo-maps-task-v2"],
+        "normalizer_versions": ["dataforseo-local-task-v3"],
         "metric_definition": "sampled-grid-top-n-v1"
       },
       "financial_basis": "current_accounting_state",
@@ -253,7 +253,7 @@
     "protocol": {
       "geometry": "sphere-r6371000-v1",
       "matcher": "business-match-maps-v1",
-      "normalizerVersions": ["dataforseo-maps-task-v2"],
+      "normalizerVersions": ["dataforseo-local-task-v3"],
       "metricDefinition": "sampled-grid-top-n-v1"
     },
     "financialBasis": "current_accounting_state",
@@ -358,7 +358,7 @@
       "protocol": {
         "geometry": "sphere-r6371000-v1",
         "matcher": "business-match-maps-v1",
-        "normalizer_versions": ["dataforseo-maps-task-v2"],
+        "normalizer_versions": ["dataforseo-local-task-v3"],
         "metric_definition": "sampled-grid-top-n-v1"
       },
       "financial_basis": "current_accounting_state",
@@ -493,7 +493,7 @@
       "protocol": {
         "geometry": "sphere-r6371000-v1",
         "matcher": "business-match-maps-v1",
-        "normalizer_versions": ["dataforseo-maps-task-v2"],
+        "normalizer_versions": ["dataforseo-local-task-v3"],
         "metric_definition": "sampled-grid-top-n-v1"
       },
       "financial_basis": "current_accounting_state",
@@ -613,5 +613,5 @@
       ]
     }
   },
-  "export_csv": "report_manifest,\"{\"\"version\"\":1,\"\"report\"\":\"\"local-point-report-v1\"\",\"\"projectId\"\":\"\"prj_abcdefghijklmnopqrstuvwx\"\",\"\"monitorId\"\":\"\"lmn_abcdefghijklmnopqrstuvwx\"\",\"\"runId\"\":\"\"lmr_abcdefghijklmnopqrstuvwx\"\",\"\"asOf\"\":\"\"2026-10-12T12:00:00.000Z\"\",\"\"definitionRevisionId\"\":\"\"definition-r1\"\",\"\"identityRevisionId\"\":\"\"identity-revision-1\"\",\"\"subject\"\":\"\"Synthetic original business\"\",\"\"scope\"\":\"\"sampled_points\"\",\"\"coordinateProof\"\":\"\"acknowledged_query_seed_or_unknown\"\",\"\"protocol\"\":{\"\"geometry\"\":\"\"sphere-r6371000-v1\"\",\"\"matcher\"\":\"\"business-match-maps-v1\"\",\"\"normalizerVersions\"\":[\"\"dataforseo-maps-task-v2\"\"],\"\"metricDefinition\"\":\"\"sampled-grid-top-n-v1\"\"},\"\"financialBasis\"\":\"\"current_accounting_state\"\",\"\"freshnessPolicy\"\":{\"\"basis\"\":\"\"manual_ttl\"\",\"\"freshForMs\"\":3600000,\"\"freshnessReason\"\":null,\"\"policyEpoch\"\":\"\"8\"\",\"\"configurationRevision\"\":\"\"synthetic-fresh-v1\"\",\"\"semantics\"\":\"\"current_project_policy_with_original_intent\"\"},\"\"comparison\"\":\"\"unavailable\"\",\"\"grids\"\":[{\"\"keywordId\"\":\"\"kw_abcdefghijklmnopqrstuvwx\"\",\"\"keyword\"\":\"\"Synthetic dentist\"\",\"\"gridRevisionKey\"\":\"\"grid-revision-v1:6057fb9de728abf70ef0000982483fe1b6d168186565174ba2aa4b076c5a0ff0\"\",\"\"identityRevisionId\"\":\"\"identity-revision-1\"\",\"\"topN\"\":3,\"\"size\"\":1,\"\"pointIds\"\":[\"\"lmt_aaaaaaaaaaaaaaaaaaaaaaa0\"\"],\"\"expected\"\":1,\"\"observedRate\"\":1,\"\"observedCoverage\"\":1,\"\"dataCoverage\"\":1,\"\"sampleBounds\"\":[1,1],\"\"counts\"\":{\"\"expected\"\":1,\"\"measured\"\":1,\"\"metricEligible\"\":1,\"\"ranked\"\":1,\"\"knownAbsent\"\":0,\"\"unknown\"\":0,\"\"neverChecked\"\":0,\"\"failed\"\":0,\"\"stale\"\":0,\"\"unsupported\"\":0,\"\"freshDeterminate\"\":1,\"\"unknownFreshness\"\":0,\"\"comparable\"\":0},\"\"freshness\"\":\"\"fresh\"\",\"\"comparison\"\":\"\"unavailable\"\",\"\"scope\"\":\"\"sampled_points\"\"}]}\"\r\ntargetId,keyword,point,row,column,latitude,longitude,surface,language,device,operatingSystem,cutoff,zoom,observedAt,recordedAt,qualifiedPosition,observedPosition,evidence,reason,freshness,identityMatch,scopeClass,resolution,accountingPending\r\nlmt_aaaaaaaaaaaaaaaaaaaaaaa0,Synthetic dentist,1,1,1,\"52.0000000\",\"-21.0000000\",maps,en,desktop,windows,20,14,2026-10-12T11:58:00.000Z,2026-10-12T11:59:00.000Z,3,3,positive,,fresh,confirmed,coordinate_seed,complete,false"
+  "export_csv": "report_manifest,\"{\"\"version\"\":1,\"\"report\"\":\"\"local-point-report-v1\"\",\"\"projectId\"\":\"\"prj_abcdefghijklmnopqrstuvwx\"\",\"\"monitorId\"\":\"\"lmn_abcdefghijklmnopqrstuvwx\"\",\"\"runId\"\":\"\"lmr_abcdefghijklmnopqrstuvwx\"\",\"\"asOf\"\":\"\"2026-10-12T12:00:00.000Z\"\",\"\"definitionRevisionId\"\":\"\"definition-r1\"\",\"\"identityRevisionId\"\":\"\"identity-revision-1\"\",\"\"subject\"\":\"\"Synthetic original business\"\",\"\"scope\"\":\"\"sampled_points\"\",\"\"coordinateProof\"\":\"\"acknowledged_query_seed_or_unknown\"\",\"\"protocol\"\":{\"\"geometry\"\":\"\"sphere-r6371000-v1\"\",\"\"matcher\"\":\"\"business-match-maps-v1\"\",\"\"normalizerVersions\"\":[\"\"dataforseo-local-task-v3\"\"],\"\"metricDefinition\"\":\"\"sampled-grid-top-n-v1\"\"},\"\"financialBasis\"\":\"\"current_accounting_state\"\",\"\"freshnessPolicy\"\":{\"\"basis\"\":\"\"manual_ttl\"\",\"\"freshForMs\"\":3600000,\"\"freshnessReason\"\":null,\"\"policyEpoch\"\":\"\"8\"\",\"\"configurationRevision\"\":\"\"synthetic-fresh-v1\"\",\"\"semantics\"\":\"\"current_project_policy_with_original_intent\"\"},\"\"comparison\"\":\"\"unavailable\"\",\"\"grids\"\":[{\"\"keywordId\"\":\"\"kw_abcdefghijklmnopqrstuvwx\"\",\"\"keyword\"\":\"\"Synthetic dentist\"\",\"\"gridRevisionKey\"\":\"\"grid-revision-v1:6057fb9de728abf70ef0000982483fe1b6d168186565174ba2aa4b076c5a0ff0\"\",\"\"identityRevisionId\"\":\"\"identity-revision-1\"\",\"\"topN\"\":3,\"\"size\"\":1,\"\"pointIds\"\":[\"\"lmt_aaaaaaaaaaaaaaaaaaaaaaa0\"\"],\"\"expected\"\":1,\"\"observedRate\"\":1,\"\"observedCoverage\"\":1,\"\"dataCoverage\"\":1,\"\"sampleBounds\"\":[1,1],\"\"counts\"\":{\"\"expected\"\":1,\"\"measured\"\":1,\"\"metricEligible\"\":1,\"\"ranked\"\":1,\"\"knownAbsent\"\":0,\"\"unknown\"\":0,\"\"neverChecked\"\":0,\"\"failed\"\":0,\"\"stale\"\":0,\"\"unsupported\"\":0,\"\"freshDeterminate\"\":1,\"\"unknownFreshness\"\":0,\"\"comparable\"\":0},\"\"freshness\"\":\"\"fresh\"\",\"\"comparison\"\":\"\"unavailable\"\",\"\"scope\"\":\"\"sampled_points\"\"}]}\"\r\ntargetId,keyword,point,row,column,latitude,longitude,surface,language,device,operatingSystem,cutoff,zoom,observedAt,recordedAt,qualifiedPosition,observedPosition,evidence,reason,freshness,identityMatch,scopeClass,resolution,accountingPending\r\nlmt_aaaaaaaaaaaaaaaaaaaaaaa0,Synthetic dentist,1,1,1,\"52.0000000\",\"-21.0000000\",maps,en,desktop,windows,20,14,2026-10-12T11:58:00.000Z,2026-10-12T11:59:00.000Z,3,3,positive,,fresh,confirmed,coordinate_seed,complete,false"
 }

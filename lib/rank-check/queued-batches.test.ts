@@ -2,19 +2,20 @@ import { describe, expect, it } from "vitest";
 import { chunkQueuedRankCheckGroup, queuedBatchWorkflowId } from "./queued-batches";
 
 function group(count: number) {
+  const runItemIds = Array.from({ length: count }, (_, index) => `item_${index + 1}`);
   return {
     claimedAt: "2026-07-29T00:00:00.000Z",
     device: "desktop",
     keywordIds: Array.from({ length: count }, (_, index) => `keyword_${index + 1}`),
-    runItemIds: Array.from({ length: count }, (_, index) => `item_${index + 1}`),
-    runItemClaims: Array.from({ length: count }, (_, index) => ({
-      id: `item_${index + 1}`,
-      claimAttempts: 1,
-      claimExpiresAt: "2026-07-29T00:05:00.000Z",
-    })),
     locationId: "location_1",
     projectId: "project_1",
     runId: "run_1",
+    runItemIds,
+    runItemClaims: runItemIds.map((id) => ({
+      id,
+      claimAttempts: 1,
+      claimExpiresAt: "2026-07-29T00:05:00.000Z",
+    })),
   };
 }
 
@@ -48,10 +49,27 @@ describe("queued rank-check batches", () => {
       keywordIds: ["keyword_101"],
       runId: "run_1",
       runItemIds: ["item_101"],
+      runItemClaims: [
+        { id: "item_101", claimAttempts: 1, claimExpiresAt: "2026-07-29T00:05:00.000Z" },
+      ],
     });
     expect(() => chunkQueuedRankCheckGroup({ ...group(2), runItemIds: ["item_1"] })).toThrow(
       "runItemIds must align with keywordIds.",
     );
+  });
+
+  it("rejects a missing or mismatched current item generation", () => {
+    const input = group(1);
+    for (const runItemClaims of [
+      undefined,
+      [],
+      [{ ...input.runItemClaims[0], id: "foreign_item" }],
+      [{ ...input.runItemClaims[0], claimAttempts: 0 }],
+    ]) {
+      expect(() => chunkQueuedRankCheckGroup({ ...input, runItemClaims })).toThrow(
+        "exact current run-item claim generation",
+      );
+    }
   });
 
   it("keeps keyword text and credentials out of workflow identity", () => {

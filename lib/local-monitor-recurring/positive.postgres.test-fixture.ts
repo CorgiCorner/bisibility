@@ -18,7 +18,9 @@ import { previewRecurringMonitor } from "./preview";
 import { readRecurringMonitor } from "./read";
 
 /** Actual whole migrated DB and registered Maps/native Meter; the test owns HTTP and clock only. */
-export async function positiveRecurringDatabase() {
+export async function positiveRecurringDatabase(
+  axes?: Partial<typeof import("@/lib/local-monitor-store/fixture").monitorDefinitionFixture.axes>,
+) {
   const f = await monitorDatabase();
   try {
     const ready = await f.client.query<{ ready: boolean }>(`SELECT
@@ -78,7 +80,7 @@ export async function positiveRecurringDatabase() {
           definition: {
             ...f.command.definition,
             name,
-            axes: { ...f.command.definition.axes, operatingSystem: "windows" },
+            axes: { ...f.command.definition.axes, operatingSystem: "windows", ...axes },
           },
         },
         f.writerContext,

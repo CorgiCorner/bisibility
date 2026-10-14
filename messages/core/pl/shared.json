@@ -1762,7 +1762,8 @@
       "rankScales": {
         "pack_slot": "Miejsce w pakiecie lokalnym",
         "maps_organic": "Pozycja organiczna w Mapach",
-        "finder_organic": "Pozycja organiczna w Local Finder"
+        "finder_organic": "Pozycja organiczna w Local Finder",
+        "finder_group": "Grupa wyników Local Finder (z miejscami reklam)"
       },
       "frequencies": {
         "daily": "Codziennie",
@@ -1969,6 +1970,21 @@
           "owner_retained": "Oryginalna blokada pozostaje aktywna",
           "proof_unavailable": "Brak natywnego dowodu zakończenia"
         }
+      },
+      "center": {
+        "title": "Środek pomiaru",
+        "help": "Wybierz zapisaną lokalizację, aby skopiować jej współrzędne. Śledzona firma pozostaje bez zmian.",
+        "choose": "Wybierz zapisaną lokalizację",
+        "search": "Szukaj nazwy lub adresu",
+        "missingCoordinates": "Brak zapisanych współrzędnych",
+        "empty": "Brak zapisanych współrzędnych. Dodaj je do placówki lub wpisz poniżej.",
+        "manual": "Zaawansowane: wpisz współrzędne",
+        "previewEmpty": "Wybierz środek, aby zobaczyć punkty pomiaru.",
+        "preview": "{count, plural, one {# zaplanowany punkt} few {# zaplanowane punkty} many {# zaplanowanych punktów} other {# zaplanowanego punktu}}",
+        "previewSpacing": "Odstęp między punktami: {metres} m",
+        "previewHelp": "Układ punktów, północ u góry. Nie wykonano jeszcze pomiarów.",
+        "showPoints": "Zobacz współrzędne punktów",
+        "previewInvalid": "Nie można wyznaczyć siatki dla tych ustawień. Sprawdź współrzędne i odstęp między punktami."
       }
     },
     "dashboardComparison": {

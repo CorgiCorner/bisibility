@@ -24,6 +24,10 @@ const metricsCost = metricsRate
   : "a paid metrics lookup";
 
 export const descriptions: Record<string, string> = {
+  listRankCheckRuns:
+    "Read retained execution outcomes and cursors, including blocked and cancelled runs without observations. Never launches or retries a check.",
+  getRankCheckRun:
+    "Read one retained execution without starting provider work or changing schedules.",
   listLocalMonitorRuns:
     "Read immutable admitted Local run history. No provider request or launch occurs.",
   getLocalMonitorRunResults:

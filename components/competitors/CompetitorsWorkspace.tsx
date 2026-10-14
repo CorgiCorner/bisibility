@@ -18,10 +18,12 @@ import {
   type CompetitorSavedViewConfig,
   competitorSavedViewHref,
 } from "@/lib/competitors/saved-view-model";
+import { competitorViewLegacyScope } from "@/lib/competitors/saved-view-v2-model";
 import type { CompetitorFilter, CompetitorsViewModel } from "@/lib/competitors/types";
 import type { DeleteSavedViewInput } from "@/lib/keywords/saved-view-model";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
+import type { KeywordPersonalViewContext } from "@/lib/saved-views/keyword-personal-context";
 import type {
   CompetitorSavedView,
   CreateProjectSavedViewInput,
@@ -49,6 +51,8 @@ type CompetitorsWorkspaceProps = Partial<Pick<KeywordWorkspaceActions, "addKeywo
   projectMarkets?: ProjectMarketsView;
   savedViews: CompetitorSavedView[];
   view: CompetitorsViewModel;
+  personalViews?: KeywordPersonalViewContext;
+  canCreateSharedView?: boolean;
 };
 
 export function CompetitorsWorkspace({
@@ -65,13 +69,15 @@ export function CompetitorsWorkspace({
   projectMarkets,
   savedViews,
   view,
+  personalViews,
+  canCreateSharedView = false,
 }: Readonly<CompetitorsWorkspaceProps>) {
   const t = useTranslations("projectCompetitors.workspace");
   const router = useRouter();
   const [scopeOpen, setScopeOpen] = useState(false);
   const [trackOpen, setTrackOpen] = useState(false);
   const rawMarket = view.market;
-  const draftKey = `competitors:${view.projectId}:${rawMarket?.key ?? "invalid"}:${activeViewId ?? "base"}`;
+  const draftKey = `competitors:${personalViews?.scopeKey ?? view.projectId}:${rawMarket?.key ?? "invalid"}:${activeViewId ?? "base"}`;
   const draft = useCompetitorDraft(draftKey, initialFilter);
   const activeFilter = useMemo(() => {
     if (!rawMarket) return initialFilter;
@@ -188,7 +194,12 @@ export function CompetitorsWorkspace({
     surface: "competitors",
     version: 1,
   };
-  const activeSavedView = savedViews.find((savedView) => savedView.id === activeViewId) ?? null;
+  const activeSavedView =
+    personalViews?.views
+      .filter((savedView) => savedView.surface === "competitors")
+      .find((savedView) => savedView.id === activeViewId) ??
+    savedViews.find((savedView) => savedView.id === activeViewId) ??
+    null;
   const scopeModified = Boolean(
     activeSavedView &&
       (activeSavedView.config.scope.device !== config.scope.device ||
@@ -198,8 +209,14 @@ export function CompetitorsWorkspace({
 
   function discardChanges() {
     draft.clear();
-    if (scopeModified && activeSavedView) {
-      router.push(competitorSavedViewHref(projectRef, activeSavedView.id, activeSavedView.config));
+    if (!personalViews && scopeModified && activeSavedView) {
+      router.push(
+        competitorSavedViewHref(
+          projectRef,
+          activeSavedView.id,
+          competitorViewLegacyScope(activeSavedView.config),
+        ),
+      );
     }
   }
 
@@ -219,6 +236,9 @@ export function CompetitorsWorkspace({
             projectId={view.projectId}
             projectRef={projectRef}
             savedViews={savedViews}
+            personalViews={personalViews}
+            onClearDraft={draft.clear}
+            canCreateSharedView={canCreateSharedView}
           />
           <Button
             onClick={() => setScopeOpen(true)}

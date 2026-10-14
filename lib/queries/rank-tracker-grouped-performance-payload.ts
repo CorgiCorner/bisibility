@@ -5,7 +5,10 @@ import {
   type MarketGridTarget,
 } from "@/lib/keywords/market-grid-model";
 import { mapKeyword } from "@/lib/queries/keyword-row";
+import { fixtureScope } from "@/lib/rank-measurements/fixtures";
+import { recordedFixture } from "@/lib/rank-measurements/recorded-fixtures";
 import {
+  DATA_TABLE_PERF_AS_OF,
   DATA_TABLE_PERF_PROJECT,
   type DataTablePerfFixture,
 } from "./rank-tracker-grouped-performance-fixtures";
@@ -33,6 +36,14 @@ function payloadTarget(
   if (!location) throw new Error(`Fixture location is absent for returned member: ${member.id}.`);
   const schedule = fixture.schedules.find((candidate) => candidate.id === target.checkScheduleId);
   if (!schedule) throw new Error(`Fixture schedule is absent for returned member: ${member.id}.`);
+  const scope = {
+    ...fixtureScope,
+    projectId: DATA_TABLE_PERF_PROJECT.id,
+    targetId: target.id,
+    location: location.displayName,
+    language: location.hl,
+    device: target.device,
+  };
   return {
     ...mapKeyword(
       {
@@ -44,18 +55,25 @@ function payloadTarget(
         location: location.displayName,
         locationRef: { ...location, languageLabel: location.hl.toUpperCase() },
         publicId: target.publicId,
-        rankChecks: [...target.rankHistory].reverse().map((check, checkIndex) => ({
-          checkedAt: new Date(check.checkedAt),
-          errorCode: null,
-          id: `${target.id}_payload_${checkIndex}`,
-          normalizationVersion: "v1",
-          position: check.position,
-          previousPosition: check.previousPosition,
-          provider: "fixture",
-          rankingUrl: check.rankingUrl,
-          requestedDepth: 100,
-          status: "completed" as const,
-        })),
+        rankChecks: [...target.rankHistory].reverse().map((check, checkIndex) => {
+          const at = new Date(check.checkedAt);
+          const recorded = recordedFixture(check.position, {
+            id: `${target.id}_payload_${checkIndex}`,
+            configuredScope: scope,
+            effectiveScope: scope,
+            normalizationVersion: "v1",
+            observedAt: at,
+            recordedAt: at,
+          });
+          return {
+            ...recorded,
+            observationRun:
+              check.observationRun === undefined ? recorded.observationRun : check.observationRun,
+            errorCode: null,
+            previousPosition: check.previousPosition,
+            rankingUrl: check.rankingUrl,
+          };
+        }),
         schedule: {
           cronExpression: null,
           frequency: target.schedule.frequency,
@@ -85,7 +103,7 @@ export function groupedPerformancePayload(
   let targetIndex = 0;
   return selection.groups.map((group) => {
     const members = group.members.map((member) => payloadTarget(fixture, member, targetIndex++));
-    const aggregate = aggregateMarketGridRows(members, new Date("2026-09-05T12:00:00.000Z"))[0];
+    const aggregate = aggregateMarketGridRows(members, DATA_TABLE_PERF_AS_OF)[0];
     if (!aggregate) throw new Error(`Returned group has no fixture members: ${group.term}.`);
     return groupRow(aggregate, aggregate.children);
   });

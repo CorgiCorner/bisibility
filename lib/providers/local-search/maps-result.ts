@@ -4,8 +4,10 @@ import type { LocalObservationRunInput } from "@/lib/observation/types";
 import type { LocalProviderBinding } from "./contracts";
 import { parseLocalItems } from "./items";
 import {
+  acknowledgedLocalAdapter,
   MAPS_ADAPTER_VERSION,
   MAPS_CAPABILITY_VERSION,
+  MAPS_V2_ADAPTER_VERSION,
   mapsTaskRequest,
   supportedMapsAdapterVersion,
 } from "./maps-capability";
@@ -28,8 +30,13 @@ export function parseMapsResult(
   receivedAt: Date,
   adapterVersion = MAPS_ADAPTER_VERSION,
 ): LocalObservationRunInput {
-  if (!supportedMapsAdapterVersion(adapterVersion))
+  if (
+    !supportedMapsAdapterVersion(adapterVersion) ||
+    (adapterVersion !== MAPS_ADAPTER_VERSION &&
+      (binding.target.surface !== "maps" || binding.target.language !== "en"))
+  )
     throw new Error("Unsupported Maps evidence version.");
+  const surface = binding.target.surface;
   const request = mapsTaskRequest(binding);
   const body: unknown = JSON.parse(String(request.body));
   const expected = object(Array.isArray(body) ? body[0] : null);
@@ -52,11 +59,11 @@ export function parseMapsResult(
     task.result_count === 0 &&
     task.result === null &&
     JSON.stringify(task.path) ===
-      JSON.stringify(["v3", "serp", "google", "maps", "task_get", "advanced", taskId]) &&
+      JSON.stringify(["v3", "serp", "google", surface, "task_get", "advanced", taskId]) &&
     (task.data == null ||
       (echo?.api === "serp" &&
         echo.se === "google" &&
-        echo.se_type === "maps" &&
+        echo.se_type === surface &&
         (echo.keyword === expected.keyword || echo.keyword === binding.keyword.text) &&
         ["location_coordinate", "language_code", "device", "os", "depth"].every(
           (key) => echo[key] === expected[key],
@@ -77,15 +84,15 @@ export function parseMapsResult(
     task.result_count !== 1 ||
     results.length !== 1 ||
     !result ||
-    result.type !== "maps" ||
+    result.type !== surface ||
     JSON.stringify(task.path) !==
-      JSON.stringify(["v3", "serp", "google", "maps", "task_get", "advanced", taskId])
+      JSON.stringify(["v3", "serp", "google", surface, "task_get", "advanced", taskId])
   )
     throw new Error("Maps result does not match the original accepted task.");
   if (
     echo?.api !== "serp" ||
     echo.se !== "google" ||
-    echo.se_type !== "maps" ||
+    echo.se_type !== surface ||
     (echo.keyword !== expected.keyword && echo.keyword !== binding.keyword.text) ||
     ["location_coordinate", "language_code", "device", "os", "depth"].some(
       (key) => echo[key] !== expected[key],
@@ -106,10 +113,19 @@ export function parseMapsResult(
   if (!items || items.length > 700 || result.items_count !== items.length)
     throw new Error("Maps result item count is incoherent.");
   const observedAt = providerObservationTime(result.datetime);
-  const parsed = parseLocalItems({ items, surface: "maps", taskId, resultOrdinal: 0, observedAt });
+  const parsed = parseLocalItems({
+    items,
+    surface: surface as "maps" | "local_finder",
+    taskId,
+    resultOrdinal: 0,
+    observedAt,
+  });
   const { target, point } = binding;
-  const v2 = adapterVersion === MAPS_ADAPTER_VERSION;
-  const seedAcknowledged = v2 && echo.search_this_area === true && echo.search_places === false;
+  const v2 = acknowledgedLocalAdapter(adapterVersion);
+  const seedAcknowledged =
+    v2 &&
+    (surface === "local_finder" ||
+      (echo.search_this_area === true && echo.search_places === false));
   const seedScope = {
     location: expected.location_coordinate,
     language: target.language,
@@ -121,7 +137,7 @@ export function parseMapsResult(
   };
   return {
     provider: "dataforseo",
-    surface: "maps",
+    surface: surface as "maps" | "local_finder",
     engine: "google",
     completeness: "unknown",
     configuredScope: {
@@ -138,13 +154,14 @@ export function parseMapsResult(
     items: parsed.items,
     requestPolicy: {
       version: 1,
-      surface: "maps",
+      surface: surface as "maps" | "local_finder",
       depth: target.cutoff,
       cutoff: target.cutoff,
       zoom: target.zoom,
-      capabilityVersion: v2
-        ? MAPS_CAPABILITY_VERSION
-        : MAPS_CAPABILITY_VERSION.replace("maps-en-v2:", "maps-en-v1:"),
+      capabilityVersion:
+        adapterVersion === MAPS_ADAPTER_VERSION
+          ? MAPS_CAPABILITY_VERSION
+          : `dataforseo-maps-en-${adapterVersion === MAPS_V2_ADAPTER_VERSION ? "v2" : "v1"}:maps-standard-100-20261012-v1`,
       pointRevisionId: point.revisionId,
       policyRevision: target.policyRevision,
       ...(v2
@@ -167,7 +184,7 @@ export function parseMapsResult(
         requestedAt: binding.requestedAt,
         targetRevision: executionTargetKey(target),
         policyRevision: target.policyRevision,
-        completeThrough: { map_listing: null },
+        completeThrough: { [target.resultKind]: null },
       },
     },
   };

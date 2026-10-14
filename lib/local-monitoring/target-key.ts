@@ -18,7 +18,7 @@ export const executionTargetSchema = z
     engine: z.literal("google"),
     surface: z.enum(["web_serp", "maps", "local_finder"]),
     resultKind: z.enum(["local_pack", "map_listing", "listing"]),
-    rankScale: z.enum(["pack_slot", "maps_organic", "finder_organic"]),
+    rankScale: z.enum(["pack_slot", "maps_organic", "finder_organic", "finder_group"]),
     language: token,
     device: z.enum(["desktop", "mobile"]),
     operatingSystem: token.nullable(),
@@ -35,7 +35,8 @@ export const executionTargetSchema = z
           target.zoom === null
         : target.surface === "maps"
           ? target.resultKind === "map_listing" && target.rankScale === "maps_organic"
-          : target.resultKind === "listing" && target.rankScale === "finder_organic";
+          : target.resultKind === "listing" &&
+            ["finder_organic", "finder_group"].includes(target.rankScale);
     if (!valid)
       ctx.addIssue({ code: "custom", message: "Surface, kind and rank scale do not match" });
   });

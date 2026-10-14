@@ -354,6 +354,43 @@ describe("project write API routes", () => {
     expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 
+  it("rejects a reviewed write after the project key was revoked in the database", async () => {
+    const reviewed = await reviewedContext({
+      country: "DE",
+      device: "mobile",
+      frequency: "daily",
+    });
+    mocks.prisma.$transaction.mockClear();
+    mocks.prisma.$queryRaw.mockClear();
+    mocks.prisma.apiKey.findFirst.mockResolvedValue({
+      id: "key_1",
+      scopes: ["admin"],
+      revokedAt: new Date(),
+      expiresAt: null,
+    });
+    const response = await call(
+      "PATCH",
+      `/projects/${project.publicId}/defaults`,
+      await reviewed.req.json(),
+    );
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({
+      type: "https://bisibility.com/problems/forbidden",
+      status: 403,
+    });
+    expect(mocks.prisma.$transaction).toHaveBeenCalled();
+    expect(
+      mocks.prisma.$queryRaw.mock.calls.some(
+        ([parts]) =>
+          Array.isArray(parts) &&
+          parts.join("?").includes("FROM api_keys") &&
+          parts.join("?").includes("FOR SHARE"),
+      ),
+    ).toBe(true);
+    expect(mocks.prisma.projectDefaults.upsert).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
+
   it("updates a project and its defaults for scoped project keys", async () => {
     const patched = await call("PATCH", "/projects/prj_a00000000000000000000000", {
       name: "Renamed",

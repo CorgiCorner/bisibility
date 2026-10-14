@@ -10,6 +10,7 @@ import type { MonitorFormValues } from "@/lib/local-monitors/form-model";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
 import type { UseFormReturn } from "react-hook-form";
+import { MonitorField } from "./MonitorField";
 
 export function MonitorRequestFields({
   form,
@@ -27,27 +28,33 @@ export function MonitorRequestFields({
   const zoomRange = surface === "maps" ? MAPS_REQUEST_SCOPE.zoomRange : [4, 18];
   return (
     <>
-      <MenuSelect
-        ariaLabel={t("fields.operatingSystem")}
-        ariaInvalid={Boolean(form.formState.errors.axes?.operatingSystem)}
-        disabled={disabled}
-        value={operatingSystem ?? ""}
-        options={[
-          ...systems.map((value) => ({ value, label: value })),
-          ...(operatingSystem && !systems.includes(operatingSystem)
-            ? [{ value: operatingSystem, label: operatingSystem, disabled: true }]
-            : []),
-        ]}
-        onChange={(value) => {
-          if (systems.includes(value))
-            form.setValue("axes.operatingSystem", value, {
-              shouldDirty: true,
-              shouldValidate: true,
-            });
-        }}
-      />
+      <MonitorField label={t("fields.operatingSystem")} help={t("axesHelp")}>
+        <MenuSelect
+          size="input"
+          ariaLabel={t("fields.operatingSystem")}
+          ariaInvalid={Boolean(form.formState.errors.axes?.operatingSystem)}
+          disabled={disabled}
+          value={operatingSystem ?? ""}
+          options={[
+            ...systems.map((value) => ({ value, label: value })),
+            ...(operatingSystem && !systems.includes(operatingSystem)
+              ? [{ value: operatingSystem, label: operatingSystem, disabled: true }]
+              : []),
+          ]}
+          onChange={(value) => {
+            if (systems.includes(value))
+              form.setValue("axes.operatingSystem", value, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+          }}
+        />
+      </MonitorField>
       <div>
-        <label htmlFor={`${id}-zoom`} className="mb-1 block text-sm font-medium">
+        <label
+          htmlFor={`${id}-zoom`}
+          className="mb-1.5 flex min-h-6 items-center text-ui-xs text-fg-muted"
+        >
           {t("fields.zoom")}
         </label>
         <Input
@@ -60,7 +67,6 @@ export function MonitorRequestFields({
           {...form.register("axes.zoom", { valueAsNumber: true })}
         />
       </div>
-      <p className="text-sm text-fg-muted sm:col-span-2">{t("axesHelp")}</p>
     </>
   );
 }

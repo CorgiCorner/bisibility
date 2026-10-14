@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   targetContext: vi.fn(),
   headerMarkets: vi.fn(),
   overviewMarkets: vi.fn(),
+  personalContext: vi.fn(),
 }));
 vi.mock("@/lib/queries/_auth", () => ({
   resolveProjectAccess: mocks.access,
@@ -19,6 +20,9 @@ vi.mock("@/lib/queries/_auth", () => ({
 }));
 vi.mock("@/lib/queries/keyword-target-context", () => ({
   getKeywordTargetContext: mocks.targetContext,
+}));
+vi.mock("@/lib/queries/rank-tracker-personal-context", () => ({
+  loadRankTrackerPersonalContext: mocks.personalContext,
 }));
 vi.mock("@/lib/queries/header-markets", () => ({ listHeaderMarkets: mocks.headerMarkets }));
 vi.mock("@/lib/actions/keyword", () => ({ addKeywordsMatrix: vi.fn() }));
@@ -49,6 +53,9 @@ async function slotContent(page: string[]) {
 describe("project header context route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.personalContext.mockResolvedValue({
+      state: { lens: { device: "all", locationId: null }, filters: {}, search: "" },
+    });
     mocks.access.mockResolvedValue({ publicId: projectId });
     mocks.readable.mockResolvedValue(readable("owner"));
     mocks.headerMarkets.mockResolvedValue([]);
@@ -94,7 +101,7 @@ describe("project header context route", () => {
   it("keeps the standard market context on the rank tracker list", async () => {
     const result = await slotContent(["rank-tracker"]);
     expect(result?.type).toBe(RankTrackerHeaderContext);
-    expect(result?.props).toEqual({ contexts: [], projectRef: projectId });
+    expect(result?.props).toMatchObject({ contexts: [], projectRef: projectId });
     expect(mocks.headerMarkets).toHaveBeenCalledWith(projectId);
     expect(mocks.targetContext).not.toHaveBeenCalled();
   });
@@ -111,4 +118,16 @@ describe("project header context route", () => {
     expect(await route(["runs", "schedules"])).toBeNull();
     expect(mocks.targetContext).not.toHaveBeenCalled();
   });
+});
+
+it("uses the canonical personal/default resolution for header scope", async () => {
+  const state = {
+    lens: { device: "mobile", locationId: "krakow" },
+    filters: {},
+    search: "service",
+  };
+  mocks.personalContext.mockResolvedValue({ state });
+  const result = await slotContent(["rank-tracker"]);
+  expect(mocks.personalContext).toHaveBeenCalledWith(projectId, {});
+  expect(result?.props).toMatchObject({ savedView: state });
 });

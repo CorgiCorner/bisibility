@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
   getRankCheckRunCount: vi.fn(),
   isProviderConnected: vi.fn(),
   listHeaderMarkets: vi.fn(),
-  listSavedViews: vi.fn(),
+  loadRankTrackerPersonalContext: vi.fn(),
   loadRankTrackerCostContext: vi.fn(),
   loadRankTrackerPageList: vi.fn(),
   requireMarketContext: vi.fn(),
@@ -98,7 +98,9 @@ vi.mock("@/lib/queries/rank-check-runs", () => ({
   getRankCheckRunCount: mocks.getRankCheckRunCount,
 }));
 vi.mock("@/lib/queries/saved-keywords", () => ({ savedKeywordCount: mocks.savedKeywordCount }));
-vi.mock("@/lib/queries/saved-views", () => ({ listSavedViews: mocks.listSavedViews }));
+vi.mock("@/lib/queries/rank-tracker-personal-context", () => ({
+  loadRankTrackerPersonalContext: mocks.loadRankTrackerPersonalContext,
+}));
 vi.mock("@/lib/project-usage-display/store", async () => {
   const { defaultUsageDisplayOptions } = await import("@/lib/project-usage-display/schema");
   return {
@@ -190,7 +192,7 @@ describe("market Rank Tracker route composition", () => {
     mocks.listHeaderMarkets.mockResolvedValue([
       { countryCode: "BE", keywordCount: 7, languageCode: "ar", name: "Belgium", ref: MARKET },
     ]);
-    mocks.listSavedViews.mockResolvedValue([]);
+    mocks.loadRankTrackerPersonalContext.mockResolvedValue({ state: pageQuery(null) });
     mocks.loadRankTrackerCostContext.mockResolvedValue(null);
     mocks.loadRankTrackerPageList.mockImplementation(async (_projectRef, query) => ({
       facets: { intents: [], positions: [], tags: [], topics: [] },
@@ -248,5 +250,6 @@ describe("market Rank Tracker route composition", () => {
       { explicitGrouping: undefined },
     );
     expect(capturedGridProps.lens).toEqual({ device: "all", locationId: MARKET_LOCATION_KEY });
+    expect(mocks.loadRankTrackerPersonalContext).toHaveBeenCalledWith(PROJECT, {});
   });
 });

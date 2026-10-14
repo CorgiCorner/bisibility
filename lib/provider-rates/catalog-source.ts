@@ -1,8 +1,8 @@
 import { createCatalog, serpapi } from "@usagekit/providers";
-import { createDataForSeoMapsModule } from "./dataforseo-maps-module";
+import { createDataForSeoLocalModule } from "./dataforseo-finder-module";
 
 /** Shared immutable provider definitions for browser estimates and server admission. */
 export const nativeProviderCatalog = createCatalog({
-  providers: [createDataForSeoMapsModule(), serpapi],
+  providers: [createDataForSeoLocalModule(), serpapi],
   enabled: ["dataforseo", "serpapi"],
 });

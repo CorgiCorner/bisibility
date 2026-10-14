@@ -73,11 +73,11 @@ export function MonitorKeywordPicker({
     ...known.filter((row) => selected.includes(row.id) && !rows.some((item) => item.id === row.id)),
   ];
   return (
-    <fieldset disabled={disabled} className="space-y-3">
-      <legend className="text-sm font-medium">{t("keywords")}</legend>
+    <fieldset disabled={disabled} className="m-0 flex min-w-0 flex-col gap-3 border-0 p-0">
+      <legend className="mb-3 p-0 text-ui-body font-medium">{t("keywords")}</legend>
       <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1">
-          <label htmlFor={id} className="mb-1 block text-sm">
+          <label htmlFor={id} className="mb-1.5 block text-ui-xs text-fg-muted">
             {t("searchKeywords")}
           </label>
           <Input
@@ -96,20 +96,23 @@ export function MonitorKeywordPicker({
         <Button
           type="button"
           variant="outline"
+          className="min-h-10"
           disabled={pending || disabled}
           onClick={() => void load()}
         >
           {t("search")}
         </Button>
       </div>
-      <p className="text-sm text-fg-muted">
+      <p className="m-0 text-ui-xs text-fg-muted">
         {t("selectedKeywords", { count: format.number(selected.length) })}
       </p>
-      <ul className="grid gap-2 sm:grid-cols-2">
+      <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2">
         {visible.map((row) => (
-          <li key={row.id}>
+          <li key={row.id} className="m-0 min-w-0 list-none p-0">
             <Checkbox
               label={row.text}
+              labelClassName="text-ui-body font-normal"
+              containerClassName="rounded-control border border-border p-3"
               description={t(
                 row.device === "mobile"
                   ? "devices.mobile"
@@ -134,7 +137,7 @@ export function MonitorKeywordPicker({
           </li>
         ))}
       </ul>
-      {!rows.length ? <p className="text-sm text-fg-muted">{t("noKeywords")}</p> : null}
+      {!rows.length ? <p className="m-0 text-ui-xs text-fg-muted">{t("noKeywords")}</p> : null}
       {cursor ? (
         <Button
           type="button"

@@ -4,11 +4,8 @@ import { localDigest } from "@/lib/local-monitoring-store/canonical";
 import type { LocalTransaction } from "@/lib/local-monitoring-store/context";
 import { meteringNamespace } from "@/lib/metering/runtime";
 import { nativeProviderCatalog } from "@/lib/provider-rates/catalog-source";
-import {
-  MAPS_POST_OPERATION,
-  MAPS_PRICE_VERSION,
-  mapsPriceCurrent,
-} from "@/lib/provider-rates/dataforseo-maps-module";
+import { localPriceBinding } from "@/lib/provider-rates/dataforseo-finder-module";
+import { mapsPriceCurrent } from "@/lib/provider-rates/dataforseo-maps-module";
 import { loadNativeProviderQuote } from "@/lib/provider-rates/native-quote";
 import { sumMapsNative } from "@/lib/providers/local-search/maps-native-quantity";
 import { PricedRequest, type ProviderRequest } from "@usagekit/providers";
@@ -23,10 +20,11 @@ export async function priceMapsRequest(
 ) {
   if (!mapsPriceCurrent(now)) throw new Error("Maps price snapshot expired.");
   const matched = nativeProviderCatalog.match("dataforseo", request);
+  const price = localPriceBinding(request);
   if (
     matched.operation === "unknown" ||
-    matched.operation.id !== MAPS_POST_OPERATION ||
-    matched.options.mapsPriceVersion !== MAPS_PRICE_VERSION
+    matched.operation.id !== price.operation ||
+    matched.options[price.key] !== price.version
   )
     throw new Error("Maps native descriptor did not validate the request.");
   const quote = await loadNativeProviderQuote(
@@ -55,6 +53,7 @@ export function assertMapsPricedRequest(
   projectId: string,
   priceVersion: string,
 ) {
+  const price = localPriceBinding(expected);
   const body: unknown =
     typeof expected.body === "string" ? JSON.parse(expected.body) : expected.body;
   if (
@@ -65,8 +64,8 @@ export function assertMapsPricedRequest(
     request.method !== expected.method ||
     request.url !== expected.url ||
     request.matched.operation === "unknown" ||
-    request.matched.operation.id !== MAPS_POST_OPERATION ||
-    request.matched.options.mapsPriceVersion !== MAPS_PRICE_VERSION ||
+    request.matched.operation.id !== price.operation ||
+    request.matched.options[price.key] !== price.version ||
     request.admission.operation.providerPriceVersion !== priceVersion ||
     localDigest(request.parsed.body) !== localDigest(body)
   )

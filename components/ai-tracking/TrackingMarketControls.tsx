@@ -1,7 +1,8 @@
 "use client";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { trackingConfigurationForm } from "@/lib/ai-tracking/projections/forms";
-import { serpCountryCatalog } from "@/lib/serp/country-catalog";
+import { serpCountryCatalog, serpCountryForName } from "@/lib/serp/country-catalog";
 import { serpLanguageCatalog } from "@/lib/serp/generated/serp-language-catalog";
 import { useTranslations } from "next-intl";
 import { type Control, Controller } from "react-hook-form";
@@ -47,6 +48,12 @@ export function TrackingMarketControls({
           render={({ field }) => (
             <MenuSelect
               ariaLabel={t("location")}
+              leadingIcon={
+                <CountryFlag
+                  className="h-3 w-4 flex-none rounded-[2px] shadow-sm"
+                  code={serpCountryForName(field.value)?.countryCode ?? ""}
+                />
+              }
               searchable
               size="input"
               value={field.value}
@@ -56,6 +63,13 @@ export function TrackingMarketControls({
               }}
               options={serpCountryCatalog.map((country) => ({
                 value: country.displayName,
+                icon: (
+                  <CountryFlag
+                    className="h-3 w-4 flex-none rounded-[2px] shadow-sm"
+                    code={country.countryCode}
+                  />
+                ),
+                searchText: `${country.displayName} ${country.countryCode} ${country.aliases.join(" ")}`,
                 label: country.displayName,
               }))}
             />

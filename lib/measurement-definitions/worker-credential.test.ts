@@ -57,3 +57,16 @@ describe("original caller key is separate from provider secret and owner", () =>
     expect(f.findFirst).not.toHaveBeenCalled();
   });
 });
+
+it("refuses attributing a project credential to an unrelated user", async () => {
+  const f = fixture();
+  await expect(
+    assertDefinitionRunCredential(f.tx, "project_1", {
+      credentialKind: "project_key",
+      credentialId: "key_1",
+      requestedById: "user_1",
+    }),
+  ).rejects.toMatchObject({ code: "measurement_definition_unavailable" });
+  expect(f.raw).not.toHaveBeenCalled();
+  expect(f.findFirst).not.toHaveBeenCalled();
+});

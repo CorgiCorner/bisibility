@@ -7,6 +7,8 @@ const choices: SetupChoices = {
     {
       id: "biz_abcdefghijklmnopqrstuvwx",
       name: "Example branch",
+      address: "Example street 1",
+      coordinates: { latitude: 52.2297, longitude: 21.0122 },
       identityRevisionId: "example-revision",
     },
   ],

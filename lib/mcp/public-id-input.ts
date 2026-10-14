@@ -34,12 +34,13 @@ function requireMcpPublicId(value: string, prefix: PublicIdPrefix) {
 
 export function validateMcpPublicIds(name: string, input: JsonObject) {
   const local = isLocalMonitorTool(name);
+  const runPrefix = name === "getRankCheckRun" ? "rcr" : local ? "lmr" : "air";
   for (const [key, prefix] of Object.entries(publicIdInputs)) {
     const value = input[key];
     if (typeof value === "string")
       requireMcpPublicId(
         value,
-        local && key === "monitor_id" ? "lmn" : local && key === "run_id" ? "lmr" : prefix,
+        local && key === "monitor_id" ? "lmn" : key === "run_id" ? runPrefix : prefix,
       );
   }
   if (local && typeof input.target_id === "string") requireMcpPublicId(input.target_id, "lmt");

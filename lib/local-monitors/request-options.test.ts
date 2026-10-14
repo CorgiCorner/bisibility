@@ -50,7 +50,7 @@ describe("Maps form, server, request and consent dimensions", () => {
     { zoom: 22 },
     { zoom: 3.5 },
     { cutoff: 21 },
-    { language: "pl" },
+    { language: "xx" },
   ])("rejects unsupported new Maps axes %j on the client and both write commands", (axes) => {
     const invalid = { ...definition, axes: { ...definition.axes, ...axes } };
     expect(monitorFormSchema.safeParse(invalid).success).toBe(false);

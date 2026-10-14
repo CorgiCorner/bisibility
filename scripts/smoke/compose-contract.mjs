@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import {
-  ensureDockerVmFreeSpace,
-  reclaimDockerBuildCache,
-} from "./docker-ephemeral.mjs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { workflowProbe } from "./compose-workflow-probe.mjs";
+import { ensureDockerVmFreeSpace, reclaimDockerBuildCache } from "./docker-ephemeral.mjs";
 
 const project = `bisibility-compose-contract-${process.pid}`;
+const temporaryRoot = mkdtempSync(join(tmpdir(), "bisibility-compose-contract-"));
+const noHostPortsCompose = join(temporaryRoot, "compose.no-host-ports.yaml");
 const fullRuntime = process.argv.slice(2).includes("--full");
 const buildsImages = fullRuntime && process.env.BISIBILITY_COMPOSE_E2E_SKIP_BUILD !== "1";
 const reclaimsBuildCache =
@@ -15,6 +18,7 @@ const files = [
   "compose.worker.yaml",
   "compose.temporal.yaml",
   ...(fullRuntime ? ["compose.build.yaml"] : []),
+  noHostPortsCompose,
 ];
 const baseArgs = ["compose", "-p", project, ...files.flatMap((file) => ["-f", file])];
 const workerContainer = `${project}-worker-e2e`;
@@ -23,7 +27,6 @@ const workerImage =
   process.env.BISIBILITY_COMPOSE_E2E_WORKER_IMAGE ?? `${project}-worker:local`;
 const env = {
   ...process.env,
-  APP_HOST_PORT: String(20_000 + (process.pid % 20_000)),
   BETTER_AUTH_SECRET: "compose-contract-auth-secret",
   BETTER_AUTH_URL: "https://example.com",
   BISIBILITY_DEPLOYMENT_SUFFIX: "contract",
@@ -43,58 +46,6 @@ const env = {
   TEMPORAL_POSTGRES_PASSWORD: "temporal-contract",
 };
 
-const workflowProbe = `
-const { prisma } = await import("file:///app/lib/db/prisma.ts");
-const { encryptSecret } = await import("file:///app/lib/providers/crypto.ts");
-const { closeTemporalClient, getTemporalClient, startRankCheckWorkflow } = await import(
-  "file:///app/lib/temporal/client.ts"
-);
-
-try {
-  if (process.env.BISIBILITY_FAKE_PROVIDER !== "1" || process.env.DEPLOYMENT_ENV !== "test") {
-    throw new Error("Compose workflow fixture requires the isolated fake-provider environment.");
-  }
-  const keyword = await prisma.keyword.findFirst({ orderBy: { createdAt: "asc" } });
-  if (!keyword) throw new Error("Demo seed did not create a keyword.");
-  const connection = await prisma.providerConnection.findFirst({
-    where: { projectId: keyword.projectId, provider: "dataforseo", credentialSource: "own", enabled: true, status: "connected" },
-    select: { id: true },
-  });
-  if (!connection) throw new Error("Demo seed did not create the fake provider connection.");
-  await prisma.providerConnection.update({
-    where: { id: connection.id },
-    data: { credentialsEncrypted: encryptSecret(JSON.stringify({ login: "compose-fixture", password: "compose-fixture" })) },
-  });
-  // Synthetic manual quote uses the same rate authority as preview and admission.
-  await prisma.providerConnectionRate.upsert({
-    where: { connectionId_feature: { connectionId: connection.id, feature: "rank_check" } },
-    create: { connectionId: connection.id, feature: "rank_check", amountCents: "1.2345" },
-    update: { amountCents: "1.2345" },
-  });
-  const started = await startRankCheckWorkflow({
-    keywordId: keyword.id,
-    providerId: "dataforseo",
-  });
-  const client = await getTemporalClient();
-  const result = await client.workflow.getHandle(started.workflowId, started.runId).result();
-  if (result.deferred) throw new Error("Rank-check workflow was deferred: " + result.reason);
-  const rankCheck = await prisma.rankCheck.findUnique({ where: { id: result.rankCheckId } });
-  if (!rankCheck || rankCheck.status !== "completed") {
-    throw new Error("Rank-check workflow did not persist a completed result.");
-  }
-  console.log(
-    JSON.stringify({
-      keywordId: keyword.id,
-      rankCheckId: rankCheck.id,
-      status: rankCheck.status,
-      workflowId: started.workflowId,
-    }),
-  );
-} finally {
-  await closeTemporalClient();
-  await prisma.$disconnect();
-}
-`;
 
 function run(args, options = {}) {
   const result = spawnSync("docker", [...baseArgs, ...args], {
@@ -139,12 +90,14 @@ function reportServiceDiagnostics() {
 function docker(args, options = {}) {
   const result = spawnSync("docker", args, {
     encoding: "utf8",
+    timeout: options.timeoutMs,
     env,
     stdio: options.capture ? "pipe" : "inherit",
   });
   if (result.error || (options.acceptFailure !== true && result.status !== 0)) {
-    const detail = result.error?.message ?? result.stderr ?? `exit ${result.status}`;
-    throw new Error(`docker ${args.join(" ")} failed: ${detail}`);
+    const detail = result.error?.message ?? `exit ${result.status}`;
+    const output = [result.stdout, result.stderr].filter(Boolean).map((value) => value.slice(-16_384)).join("\n");
+    throw new Error(`docker ${args.slice(0, 2).join(" ")} failed: ${detail}\n${output}`);
   }
   return result;
 }
@@ -174,6 +127,7 @@ function waitForWorker() {
 }
 
 try {
+  writeFileSync(noHostPortsCompose, "services:\n  app:\n    ports: !reset []\n");
   ensureDockerVmFreeSpace({ environment: env, profile: buildsImages ? "build" : "runtime" });
   run(["config", "--quiet"]);
   run(["up", "-d", "temporal-postgres"]);
@@ -184,18 +138,9 @@ try {
   run(["run", "--rm", "temporal-namespace"]);
   const namespace = run(
     [
-      "run",
-      "--rm",
-      "--entrypoint",
-      "temporal",
-      "temporal-namespace",
-      "operator",
-      "namespace",
-      "describe",
-      "--address",
-      "temporal:7233",
-      "--namespace",
-      "bisibility-contract",
+      "run", "--rm", "--entrypoint", "temporal", "temporal-namespace",
+      "operator", "namespace", "describe",
+      "--address", "temporal:7233", "--namespace", "bisibility-contract",
     ],
     { capture: true },
   );
@@ -204,20 +149,10 @@ try {
   }
   const searchAttributes = run(
     [
-      "run",
-      "--rm",
-      "--entrypoint",
-      "temporal",
-      "temporal-namespace",
-      "operator",
-      "search-attribute",
-      "list",
-      "--address",
-      "temporal:7233",
-      "--namespace",
-      "bisibility-contract",
-      "--output",
-      "json",
+      "run", "--rm", "--entrypoint", "temporal", "temporal-namespace",
+      "operator", "search-attribute", "list",
+      "--address", "temporal:7233", "--namespace", "bisibility-contract",
+      "--output", "json",
     ],
     { capture: true },
   );
@@ -268,17 +203,11 @@ try {
     waitForWorker();
     const probe = docker(
       [
-        "exec",
-        workerContainer,
-        "node",
-        "--experimental-transform-types",
-        "--import",
-        "./lib/temporal/register-loader.mjs",
-        "--input-type=module",
-        "--eval",
-        workflowProbe,
+        "exec", workerContainer, "node", "--experimental-transform-types",
+        "--import", "./lib/temporal/register-loader.mjs",
+        "--input-type=module", "--eval", workflowProbe,
       ],
-      { capture: true },
+      { capture: true, timeoutMs: 120_000 },
     );
     if (!probe.stdout.includes('"status":"completed"')) {
       throw new Error(`Bundled rank-check probe returned no completed result: ${probe.stdout}`);
@@ -291,15 +220,21 @@ try {
 } catch (error) {
   console.error(`Compose bootstrap contract failed: ${error.message}`);
   reportServiceDiagnostics();
+  const workerLogs = docker(["logs", "--tail", "80", workerContainer], { acceptFailure: true, capture: true });
+  console.error(`[diagnostics] worker logs:\n${workerLogs.stdout ?? ""}${workerLogs.stderr ?? ""}`);
   process.exitCode = 1;
 } finally {
-  docker(["rm", "--force", workerContainer], { acceptFailure: true, capture: true });
-  spawnSync("docker", [...baseArgs, "down", "--volumes", "--rmi", "local", "--remove-orphans"], {
-    env,
-    stdio: "inherit",
-  });
-  docker(["image", "rm", "--force", appImage, workerImage], {
-    acceptFailure: true,
-    capture: true,
-  });
+  try {
+    docker(["rm", "--force", workerContainer], { acceptFailure: true, capture: true });
+    spawnSync("docker", [...baseArgs, "down", "--volumes", "--rmi", "local", "--remove-orphans"], {
+      env,
+      stdio: "inherit",
+    });
+    docker(["image", "rm", "--force", appImage, workerImage], {
+      acceptFailure: true,
+      capture: true,
+    });
+  } finally {
+    rmSync(temporaryRoot, { force: true, recursive: true });
+  }
 }

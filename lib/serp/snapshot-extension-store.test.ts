@@ -41,7 +41,15 @@ let stored: Record<string, unknown>;
 beforeEach(() => {
   vi.clearAllMocks();
   stored = { organic_results: [], snapshotContinuation: context };
-  db.$transaction.mockImplementation((fn) => fn(db));
+  db.$transaction.mockImplementation(async (fn) => {
+    const original = structuredClone(stored);
+    try {
+      return await fn(db);
+    } catch (error) {
+      stored = original;
+      throw error;
+    }
+  });
   db.$executeRaw.mockResolvedValue(1);
   db.$queryRaw.mockImplementation(async (strings: TemplateStringsArray) => {
     const sql = strings.join("?");
@@ -79,6 +87,41 @@ beforeEach(() => {
 });
 
 describe("snapshot extension claim", () => {
+  it.each(["deactivated", "removed_membership", "viewer"])(
+    "refuses a snapshot claim for an actor whose fresh database authority is %s",
+    async (reason) => {
+      const original = db.$queryRaw.getMockImplementation();
+      if (!original) throw new Error("Missing original authority fixture.");
+      db.$queryRaw.mockImplementation(async (parts: TemplateStringsArray) => {
+        const sql = parts.join("?");
+        if (reason === "deactivated" && sql.includes("FROM users")) return [];
+        if (reason === "removed_membership" && sql.includes("FROM memberships")) return [];
+        if (reason === "viewer" && sql.includes("FROM memberships")) return [{ role: "viewer" }];
+        return original(parts);
+      });
+      await expect(claimSnapshotExtension(input)).rejects.toMatchObject({ code: "forbidden" });
+      expect(db.rankCheck.findFirst).not.toHaveBeenCalled();
+      expect(db.rankCheck.updateMany).not.toHaveBeenCalled();
+      expect(db.$executeRaw).not.toHaveBeenCalled();
+      expect(audit).not.toHaveBeenCalled();
+    },
+  );
+  it("rolls back the page claim when no retained snapshot origin can be established", async () => {
+    const before = structuredClone(stored);
+    const original = db.$queryRaw.getMockImplementation();
+    if (!original) throw new Error("Missing original authority fixture.");
+    db.$queryRaw.mockImplementation(async (parts: TemplateStringsArray) =>
+      parts.join("?").includes("FROM rank_checks c LEFT JOIN") ? [] : original(parts),
+    );
+    await expect(claimSnapshotExtension(input)).rejects.toMatchObject({
+      code: "measurement_definition_unavailable",
+    });
+    expect(db.rankCheck.updateMany).toHaveBeenCalledOnce();
+    expect(stored).toEqual(before);
+    expect(db.$executeRaw).not.toHaveBeenCalled();
+    expect(audit).not.toHaveBeenCalled();
+  });
+
   it("admits only one concurrent request for the same page", async () => {
     const results = await Promise.all([
       claimSnapshotExtension(input),

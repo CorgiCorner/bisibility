@@ -79,7 +79,7 @@ describe("registered source-dated Maps native pricing", () => {
     { keyword: "site:example.test" },
     { keyword: "site%3Aexample.test" },
     { location_coordinate: "91,21,14z" },
-    { language_code: "pl" },
+    { language_code: "xx" },
   ])("fails closed for unsupported paid or scope options %j", (changes) => {
     const f = mapsFixture();
     const body: unknown = JSON.parse(String(f.request.body));

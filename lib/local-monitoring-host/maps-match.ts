@@ -22,7 +22,7 @@ import { localDigest, localKeywordRevision } from "@/lib/local-monitoring-store/
 import type { LocalNormalizationPort } from "@/lib/local-monitoring-store/evidence-types";
 import { readOccurrenceDefinition } from "@/lib/local-monitoring-store/occurrence-definition";
 import { unknownLocalObservationTime } from "@/lib/local-monitoring-store/unknown-observation-time";
-import { MAPS_ADAPTER_VERSION } from "@/lib/providers/local-search/maps-capability";
+import { acknowledgedLocalAdapter } from "@/lib/providers/local-search/maps-capability";
 /** Runs only under the original collector's project/item locks, custody and lease checks. */
 export const retainMapsCollectionMatch: NonNullable<
   LocalNormalizationPort["afterPersist"]
@@ -81,7 +81,7 @@ export const retainMapsCollectionMatch: NonNullable<
   ]);
   if (replay) {
     // Legacy v1 observations existed before match capture. Their geography remains unknown.
-    if (record.adapterVersion !== MAPS_ADAPTER_VERSION && existing.size === 0) return;
+    if (!acknowledgedLocalAdapter(record.adapterVersion) && existing.size === 0) return;
     const originals = await tx.businessMatchDecision.findMany({
       where: {
         projectId: item.projectId,

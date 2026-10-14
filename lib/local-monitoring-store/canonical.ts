@@ -20,7 +20,9 @@ export function localDigest(value: unknown) {
     .update(JSON.stringify(canonical(value)))
     .digest("hex");
 }
-export function localKeywordSourceHash(keyword: LocalKeywordSnapshot) {
+export function localKeywordSourceHash(
+  keyword: Pick<LocalKeywordSnapshot, "id" | "text" | "device" | "locationId">,
+) {
   return localDigest({
     id: keyword.id,
     text: keyword.text,

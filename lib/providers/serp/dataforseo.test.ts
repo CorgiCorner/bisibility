@@ -220,10 +220,9 @@ describe("dataForSeoProvider", () => {
       },
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][1]?.headers).toMatchObject({
-      Authorization: "Basic bG9naW46c2VjcmV0",
-      "Content-Type": "application/json",
-    });
+    const headers = new Headers(fetchMock.mock.calls[0][1]?.headers);
+    expect(headers.get("authorization")).toBe("Basic bG9naW46c2VjcmV0");
+    expect(headers.get("content-type")).toBe("application/json");
     // Country row: no numeric code, so location_name is sent; language_code = hl.
     expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual([
       {

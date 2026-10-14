@@ -58,6 +58,7 @@
               "guides/competitors",
               "serp-observations",
               "local-monitor-recurring",
+              "local-search-provider",
               "local-monitor-retry"
             ]
           },

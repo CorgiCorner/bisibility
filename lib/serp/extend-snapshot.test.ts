@@ -61,6 +61,8 @@ const claim = {
   },
 };
 
+let capturedDefinition: Awaited<ReturnType<typeof captureSnapshotDefinition>>;
+
 beforeEach(async () => {
   vi.clearAllMocks();
   const tx = {
@@ -82,6 +84,7 @@ beforeEach(async () => {
     context,
     state: claim.state,
   });
+  capturedDefinition = definition;
   mocks.claim.mockResolvedValue({ ...claim, definition });
   mocks.finish.mockResolvedValue(undefined);
   mocks.chain.mockResolvedValue([
@@ -117,6 +120,26 @@ beforeEach(async () => {
 });
 
 describe("extend snapshot service", () => {
+  it("refuses a copied definition binding before entering the provider pipeline", async () => {
+    mocks.claim.mockResolvedValue({ ...claim, definition: structuredClone(capturedDefinition) });
+    expect(await extendSnapshot(input)).toEqual({ ok: false, reason: "failed" });
+    expect(mocks.run).not.toHaveBeenCalled();
+    expect(mocks.attribution).not.toHaveBeenCalled();
+  });
+  it("refuses an original connection whose credential envelope is no longer available", async () => {
+    mocks.chain.mockResolvedValue([
+      {
+        id: context.connectionId,
+        credentialSource: "own",
+        provider: "serpapi",
+        credentialsEncrypted: null,
+      },
+    ]);
+    expect(await extendSnapshot(input)).toEqual({ ok: false, reason: "failed" });
+    expect(mocks.run).not.toHaveBeenCalled();
+    expect(mocks.attribution).not.toHaveBeenCalled();
+  });
+
   it("uses the shared budget, allocation, rate-limit and usage pipeline for one page", async () => {
     expect(await extendSnapshot(input)).toEqual({ ok: true });
     expect(mocks.run).toHaveBeenCalledWith(

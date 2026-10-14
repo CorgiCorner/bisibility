@@ -68,4 +68,10 @@ describe("Cloud backup count query", () => {
       where: { projectId: "project_1", userId: "user_1" },
     });
   });
+
+  it("does not read counts when project access is denied", async () => {
+    mocks.requireReadableProject.mockRejectedValueOnce(new Error("Forbidden"));
+    await expect(getCloudBackupCounts("prj_foreign")).rejects.toThrow("Forbidden");
+    for (const count of Object.values(mocks.counts)) expect(count).not.toHaveBeenCalled();
+  });
 });

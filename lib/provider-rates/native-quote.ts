@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { compareQuantity } from "@usagekit/core";
 import { loadNativeCatalogPolicy, nativeProviderCatalog } from "./catalog-policy";
+import { FINDER_POST_OPERATION, FINDER_PRICE_VERSION } from "./dataforseo-finder-module";
 import {
   MAPS_POST_OPERATION,
   MAPS_PRICE_VERSION,
@@ -27,6 +28,8 @@ export async function loadNativeProviderQuote(
   now = new Date(),
   unitsPerCheck = 1,
 ) {
+  if (operation === FINDER_POST_OPERATION && now < new Date("2026-10-14T00:00:00.000Z"))
+    throw new ProviderQuoteUnavailableError();
   const policy = await loadNativeCatalogPolicy(db, binding, feature, operation, options, now);
   if (binding.provider === "serpapi") {
     if (feature !== "rank_check" || operation !== "search" || Object.keys(options).length)
@@ -42,11 +45,16 @@ export async function loadNativeProviderQuote(
     throw new ProviderQuoteUnavailableError();
   if (
     binding.provider === "dataforseo" &&
-    operation === MAPS_POST_OPERATION &&
+    [MAPS_POST_OPERATION, FINDER_POST_OPERATION].includes(operation) &&
     quote.source === "measured" &&
     !quote.priceVersion
   ) {
-    if (options.mapsPriceVersion !== MAPS_PRICE_VERSION || !mapsPriceCurrent(now))
+    if (
+      !(operation === MAPS_POST_OPERATION
+        ? options.mapsPriceVersion === MAPS_PRICE_VERSION
+        : options.finderPriceVersion === FINDER_PRICE_VERSION) ||
+      !mapsPriceCurrent(now)
+    )
       throw new ProviderQuoteUnavailableError();
     // Measured amounts retain the independently current catalog floor's version, not a list fallback amount.
     const floor = nativeProviderCatalog.estimate(

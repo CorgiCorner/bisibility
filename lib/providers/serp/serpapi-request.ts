@@ -6,6 +6,9 @@ import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import type { ProviderCredentials, SerpRankInput } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
+import { resolveSerpDepth } from "@/lib/serp/constants";
+import type { SerpRankLocation } from "@/lib/serp/location";
+import type { ProviderRequest } from "@usagekit/providers";
 import { dispatchPricedRequest } from "@usagekit/providers";
 import type { SerpApiResponse } from "./serpapi-payload";
 import { serpApiUsageReceipt } from "./usage-receipts";
@@ -16,6 +19,24 @@ const REQUEST_TIMEOUT_MS = 10_000;
 // Ten pages fit within the 15-minute activity with 2.5 minutes for persistence.
 export const SERP_API_SEARCH_TIMEOUT_MS = 75_000;
 const RETRY_BASE_MS = 200;
+
+// SerpApi uses secondaryGeoName plus gl/hl, never mutually exclusive uule/lat/lon.
+export function serpApiGoogleParams(input: { depth?: number; location: SerpRankLocation }) {
+  return {
+    depth: resolveSerpDepth(input.depth),
+    gl: input.location.gl,
+    hl: input.location.hl,
+    location: input.location.secondaryGeoName,
+  };
+}
+
+/** Strip auth exactly as the priced transport does before retaining a native request. */
+export function serpApiRankRequest(input: SerpRankInput): ProviderRequest {
+  const { depth: _depth, ...googleParams } = serpApiGoogleParams(input);
+  const url = new URL(buildSearchUrl(input, "", googleParams, 0));
+  url.searchParams.delete("api_key");
+  return { method: "GET", url: url.toString() };
+}
 
 export class SerpApiError extends Error {
   constructor(

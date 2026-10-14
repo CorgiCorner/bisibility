@@ -91,6 +91,37 @@ describe("check schedule service", () => {
     mocks.writeAudit.mockResolvedValue({});
   });
 
+  it.each(["deactivated", "removed_membership", "viewer"])(
+    "refuses schedule updates for an actor whose fresh database authority is %s",
+    async (reason) => {
+      const original = mocks.tx.$queryRaw.getMockImplementation();
+      if (!original) throw new Error("Missing original authority fixture.");
+      mocks.tx.$queryRaw.mockImplementation(async (parts: TemplateStringsArray) => {
+        const sql = parts.join("?");
+        if (reason === "deactivated" && sql.includes("FROM users")) return [];
+        if (reason === "removed_membership" && sql.includes("FROM memberships")) return [];
+        if (reason === "viewer" && sql.includes("FROM memberships")) return [{ role: "viewer" }];
+        return original(parts);
+      });
+      await expect(
+        updateSchedule("user_1", "project_1", { projectId: `prj_${"p".repeat(24)}`, scheduleId }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+      expect(mocks.tx.checkSchedule.findFirst).not.toHaveBeenCalled();
+      expect(mocks.tx.checkSchedule.update).not.toHaveBeenCalled();
+      expect(mocks.tx.keyword.updateMany).not.toHaveBeenCalled();
+      expect(mocks.tx.$executeRaw).not.toHaveBeenCalled();
+      expect(mocks.writeAudit).not.toHaveBeenCalled();
+    },
+  );
+  it("refuses schedule updates while the locked project is read-only", async () => {
+    mocks.tx.project.findUnique.mockResolvedValue({ writeMode: "migration_hold" });
+    await expect(
+      updateSchedule("user_1", "project_1", { projectId: `prj_${"p".repeat(24)}`, scheduleId }),
+    ).rejects.toThrow("read-only");
+    expect(mocks.tx.checkSchedule.findFirst).not.toHaveBeenCalled();
+    expect(mocks.tx.checkSchedule.update).not.toHaveBeenCalled();
+    expect(mocks.writeAudit).not.toHaveBeenCalled();
+  });
   it("creates a non-default schedule and audits inside the transaction", async () => {
     const result = await createSchedule("user_1", "project_1", {
       cronExpression: null,

@@ -1,5 +1,6 @@
 "use client";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import { Input } from "@/components/ui/Input";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Textarea } from "@/components/ui/Textarea";
@@ -128,6 +129,14 @@ export function TrackingGenerationFields({
           render={({ field }) => (
             <MenuSelect
               ariaLabel={t("generationCountry")}
+              leadingIcon={
+                field.value ? (
+                  <CountryFlag
+                    className="h-3 w-4 flex-none rounded-[2px] shadow-sm"
+                    code={field.value}
+                  />
+                ) : undefined
+              }
               searchable
               value={field.value ?? ""}
               size="input"
@@ -135,6 +144,13 @@ export function TrackingGenerationFields({
                 { value: "", label: t("generationNoCountry") },
                 ...serpCountryCatalog.map((country) => ({
                   value: country.countryCode,
+                  icon: (
+                    <CountryFlag
+                      className="h-3 w-4 flex-none rounded-[2px] shadow-sm"
+                      code={country.countryCode}
+                    />
+                  ),
+                  searchText: `${country.displayName} ${country.countryCode} ${country.aliases.join(" ")}`,
                   label: country.displayName,
                 })),
               ]}

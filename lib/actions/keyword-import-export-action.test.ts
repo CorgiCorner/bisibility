@@ -41,7 +41,11 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("next/headers", () => ({ cookies: vi.fn(async () => ({ get: vi.fn() })) }));
-vi.mock("@/lib/auth/authorize", () => ({ authorize: mocks.authorize }));
+vi.mock("@/lib/auth/authorize", async (load) => {
+  const actual = await load<typeof import("@/lib/auth/authorize")>();
+  mocks.authorize.mockImplementation(actual.authorize);
+  return { ...actual, authorize: mocks.authorize };
+});
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/serp/location-service", () => ({
@@ -922,6 +926,57 @@ describe("keyword workbook import action", () => {
     });
     expect(sheet?.getCell("C2").value).toBe("/rank");
   });
+
+  it.each(["deactivated", "removed_membership"])(
+    "refuses export for a freshly %s actor before reading rows",
+    async (reason) => {
+      const input = {
+        format: "csv",
+        projectId: PROJECT_PUBLIC_ID,
+        scope: "current",
+        selection: { mode: "all" },
+      };
+      mocks.prisma.keyword.findMany.mockReset().mockResolvedValue([]);
+      await expect(exportKeywords(input)).resolves.toMatchObject({ mimeType: "text/csv" });
+      expect(mocks.prisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ action: "keyword.csv_export" }),
+        }),
+      );
+      mocks.prisma.keyword.findMany.mockClear();
+      mocks.prisma.rankCheck.findMany.mockClear();
+      mocks.prisma.auditLog.create.mockClear();
+      const previousQuery = mocks.prisma.$queryRaw.getMockImplementation();
+      if (!previousQuery) throw new Error("Export authority fixture required");
+      let rejectedAuthorityReads = 0;
+      mocks.prisma.$queryRaw.mockImplementation(
+        async (strings: TemplateStringsArray, ...values: unknown[]) => {
+          const sql = strings.join("?");
+          if (
+            (reason === "deactivated" && sql.includes("FROM users")) ||
+            (reason === "removed_membership" && sql.includes("FROM memberships"))
+          ) {
+            rejectedAuthorityReads += 1;
+            return [];
+          }
+          return previousQuery(strings, ...values);
+        },
+      );
+      try {
+        await expect(exportKeywords(input)).rejects.toMatchObject({ code: "forbidden" });
+        expect(rejectedAuthorityReads).toBeGreaterThan(0);
+        expect(mocks.prisma.keyword.findMany).not.toHaveBeenCalled();
+        expect(mocks.prisma.rankCheck.findMany).not.toHaveBeenCalled();
+        expect(mocks.prisma.auditLog.create).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({ action: "keyword.csv_export" }),
+          }),
+        );
+      } finally {
+        mocks.prisma.$queryRaw.mockImplementation(previousQuery);
+      }
+    },
+  );
 
   it("caps the plain current-scope export at the shared download keyword limit", async () => {
     mocks.prisma.keyword.findMany.mockReset();

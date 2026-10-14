@@ -155,7 +155,9 @@ export function matchBusinessCollection(input: {
         itemId: item.itemId,
         observedAt: item.observedAt,
         matcherVersion:
-          item.surface === "maps" ? mapsBusinessMatcherVersion : businessMatcherVersion,
+          item.surface === "maps" || item.surface === "local_finder"
+            ? mapsBusinessMatcherVersion
+            : businessMatcherVersion,
         status,
         matchedBy,
         reason,

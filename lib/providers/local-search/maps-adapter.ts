@@ -3,7 +3,11 @@ import type { SubmissionRecord } from "@/lib/local-monitoring/execution-types";
 import { executionTargetKey, operationKey } from "@/lib/local-monitoring/target-key";
 import type { LocalNormalizationPort } from "@/lib/local-monitoring-store/evidence-types";
 import type { DocumentedLocalAdapter, LocalProviderBinding, LocalProviderPorts } from "./contracts";
-import { mapsTaskRequest, supportedMapsAdapterVersion } from "./maps-capability";
+import {
+  MAPS_ADAPTER_VERSION,
+  mapsTaskRequest,
+  supportedMapsAdapterVersion,
+} from "./maps-capability";
 import { parseMapsResult } from "./maps-result";
 import { object } from "./records";
 import { localTaskGetUrl, nativeTaskId } from "./request";
@@ -13,6 +17,8 @@ function assertRecord(record: SubmissionRecord, binding: LocalProviderBinding) {
   if (
     record.provider !== "dataforseo" ||
     !supportedMapsAdapterVersion(record.adapterVersion) ||
+    (record.adapterVersion !== MAPS_ADAPTER_VERSION &&
+      (binding.target.surface !== "maps" || binding.target.language !== "en")) ||
     record.scope.projectId !== binding.target.projectId ||
     operationKey(record.scope) !== record.key ||
     record.targetKey !== executionTargetKey(binding.target) ||
@@ -83,7 +89,9 @@ export function createMapsAdapter<DispatchEvidence>(input: {
       if (ids.length !== 1 || ids[0] !== retained.outcome?.taskIds[0])
         throw new Error("Maps collection task ID changed.");
       await input.ports.assertRetrieval(retained);
-      const data = await input.ports.retrieveEnvelope(localTaskGetUrl("maps", ids[0]));
+      const data = await input.ports.retrieveEnvelope(
+        localTaskGetUrl(binding.target.surface as "maps" | "local_finder", ids[0]),
+      );
       const receivedAt = input.ports.clock();
       const run = parseMapsResult(data, ids[0], binding, receivedAt, retained.adapterVersion);
       return {
