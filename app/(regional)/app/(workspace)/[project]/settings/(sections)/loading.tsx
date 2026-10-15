@@ -1,1 +1,1 @@
-export { SettingsShellLoading as default } from "@/components/settings/shell/SettingsShellLoading";
+export { GeneralSettingsRouteLoading as default } from "@/components/settings/general/GeneralSettingsLoading";

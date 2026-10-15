@@ -36,10 +36,11 @@ describe("ShellSkeleton", () => {
     );
 
     // Nav rows are 36px and inset 10px, the settled rhythm. The workspace trigger is NOT one
-    // of them: it is 44px in both states, so it has its own selector and its own count.
+    // of them: it shares one 36px strip with search and collapse.
     const rows = container.querySelectorAll(".h-9.gap-2\\.5.pl-\\[1px\\]");
     expect(rows).toHaveLength(rowCount());
-    expect(container.querySelectorAll(".h-11.gap-2\\.5.px-\\[11px\\]")).toHaveLength(1);
+    const top = screen.getByTestId("shell-skeleton-sidebar").firstElementChild?.firstElementChild;
+    expect(top).toHaveClass("h-9");
 
     // The fixed 30px leading slot is what puts the skeleton glyph on the settled rail's icon
     // axis. Without it the row lands 7px to the left and the shell jumps when data arrives.
@@ -123,7 +124,7 @@ describe("ShellSkeleton", () => {
     expect(groups[1].includes("mt-auto")).toBe(false);
     // The footer remains pinned and centres its metadata in the collapsed rail.
     expect(groups[2]).toContain("justify-center");
-    expect(container.querySelectorAll(".h-2\\.5.w-9")).toHaveLength(1);
+    expect(container.querySelectorAll(".h-4.w-9")).toHaveLength(1);
   });
 
   it("keeps the expanded footer as the final pinned rail section", () => {
@@ -134,7 +135,7 @@ describe("ShellSkeleton", () => {
     );
 
     const rail = screen.getByTestId("shell-skeleton-sidebar");
-    expect(rail.children[3].className).toContain("justify-between");
+    expect(rail.children[2].className).toContain("justify-between");
   });
 
   it("keeps the header frame and its three 32px controls", () => {

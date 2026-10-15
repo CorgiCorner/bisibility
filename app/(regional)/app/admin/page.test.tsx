@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   dashboard: vi.fn(),
+  emailAllowance: vi.fn(),
   dateFormat: vi.fn(),
   requireAdmin: vi.fn(),
 }));
@@ -15,6 +16,7 @@ vi.mock("@/lib/auth/instance-admin", () => ({
 vi.mock("@/lib/dates/request", () => ({
   getResolvedDateFormat: mocks.dateFormat,
 }));
+vi.mock("@/lib/email/allowance", () => ({ getInstanceAdminEmailAllowance: mocks.emailAllowance }));
 vi.mock("@/lib/queries/instance-admin", () => ({
   getInstanceAdminDashboard: mocks.dashboard,
 }));
@@ -33,6 +35,10 @@ describe("instance admin page", () => {
 
     expect(mocks.requireAdmin).toHaveBeenCalledOnce();
     expect(mocks.dashboard).toHaveBeenCalledOnce();
+    expect(mocks.emailAllowance).toHaveBeenCalledOnce();
+    expect(mocks.requireAdmin.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.emailAllowance.mock.invocationCallOrder[0] ?? 0,
+    );
     expect(mocks.requireAdmin.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.dashboard.mock.invocationCallOrder[0] ?? 0,
     );
@@ -43,5 +49,6 @@ describe("instance admin page", () => {
 
     await expect(InstanceAdminPage()).rejects.toThrow("NEXT_NOT_FOUND");
     expect(mocks.dashboard).not.toHaveBeenCalled();
+    expect(mocks.emailAllowance).not.toHaveBeenCalled();
   });
 });

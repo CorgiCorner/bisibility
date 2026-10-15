@@ -45,6 +45,25 @@ function Bar({ className }: Readonly<{ className: string }>) {
   );
 }
 
+export function ProjectRunsLoadingTabs({ active }: Readonly<{ active: "runs" | "schedules" }>) {
+  const t = useTranslations("projectRuns.schedules.loading");
+  return (
+    <div className="flex min-w-0 gap-0.5 border-b border-border">
+      {(["runs", "schedules"] as const).map((tab) => (
+        <span
+          key={tab}
+          className={cn(
+            "-mb-px border-b-2 px-4 py-2.5 text-[13px] font-semibold",
+            tab === active ? "border-accent text-fg" : "border-transparent text-fg-muted",
+          )}
+        >
+          {tab === "runs" ? t("runs") : t("schedules")}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function ProjectRunsLoading({
   active = "runs",
 }: Readonly<{ active?: keyof typeof layouts }>) {
@@ -57,19 +76,7 @@ export function ProjectRunsLoading({
         {label}
       </span>
       <div aria-hidden className="grid min-w-0 gap-4">
-        <div className="flex min-w-0 gap-0.5 border-b border-border">
-          {(["runs", "schedules"] as const).map((tab) => (
-            <span
-              key={tab}
-              className={cn(
-                "-mb-px border-b-2 px-4 py-2.5 text-[13px] font-semibold",
-                tab === active ? "border-accent text-fg" : "border-transparent text-fg-muted",
-              )}
-            >
-              {tab === "runs" ? t("runs") : t("schedules")}
-            </span>
-          ))}
-        </div>
+        <ProjectRunsLoadingTabs active={active} />
         <Card className="min-w-0 overflow-hidden p-0" size="sm">
           <TableCardHeader
             title={<Bar className="h-4 w-20" />}

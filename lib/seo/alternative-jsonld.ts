@@ -1,9 +1,24 @@
 import type { CompetitorContent } from "@/lib/content/competitor-types";
 import { absoluteSiteUrl, createFaqPageJsonLd } from "@/lib/seo/jsonld";
 
-export function buildAlternativeJsonLd(competitor: CompetitorContent) {
+export function buildAlternativeJsonLd(
+  competitor: CompetitorContent,
+  {
+    pagePath = `/alternatives/${competitor.slug}`,
+    homePath = "/",
+    alternativesPath = "/alternatives",
+    home = "Home",
+    alternatives = "Alternatives",
+  }: {
+    pagePath?: string;
+    homePath?: string;
+    alternativesPath?: string;
+    home?: string;
+    alternatives?: string;
+  } = {},
+) {
   const faqJsonLd = createFaqPageJsonLd(competitor.faq);
-  const pageUrl = absoluteSiteUrl(`/alternatives/${competitor.slug}`);
+  const pageUrl = absoluteSiteUrl(pagePath);
   const softwareId = `${pageUrl}#software`;
   const entityJsonLd = competitor.entityFirst
     ? [
@@ -34,12 +49,17 @@ export function buildAlternativeJsonLd(competitor: CompetitorContent) {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home", item: absoluteSiteUrl("/") },
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: home,
+          item: absoluteSiteUrl(homePath),
+        },
         {
           "@type": "ListItem",
           position: 2,
-          name: "Alternatives",
-          item: absoluteSiteUrl("/alternatives"),
+          name: alternatives,
+          item: absoluteSiteUrl(alternativesPath),
         },
         {
           "@type": "ListItem",

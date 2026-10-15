@@ -5,6 +5,7 @@ import { agentReportRoute, agentReportsRoute } from "@/lib/api/agent-workspace";
 import type { ApiContext } from "@/lib/api/context";
 import { dispatchResearchWorkspaceTool } from "@/lib/mcp/research-workspace-tools";
 import messages from "@/messages/core/en/agent-workspace.json";
+import auditMessages from "@/messages/core/en/project-site-audit.json";
 import shared from "@/messages/core/en/shared.json";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -141,6 +142,7 @@ describe("retained evidence saved audit workflow", () => {
           report={{ ...saved, createdAt: saved.created_at }}
           projectRef={projectId}
           provenanceLabel="Provenance"
+          savedDetailsLabel={auditMessages.projectSiteAudit.savedDetails}
         />
       </FeatureMessagesProvider>,
     );

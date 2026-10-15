@@ -1,13 +1,14 @@
 import { renderWithInstanceAdminMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { MeteringAdminData } from "@/lib/metering/admin-types";
 import { adminUsageFixture } from "@/lib/metering/shared-view-fixtures";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { AdminMeteringView } from "./AdminMeteringView";
 
 it("removes shadow and legacy comparison presentation", () => {
   render(<AdminMeteringView data={adminUsageFixture()} />);
   expect(screen.queryByText(/disagreement/i)).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "First page" })).toBeNull();
 });
 
 const load = vi.hoisted(() => vi.fn());
@@ -126,4 +127,59 @@ it("keeps both tables busy while a page is pending and reports failed pages", as
   await act(async () => rejectPage(new Error("page failed")));
   expect(screen.getByRole("status")).toHaveTextContent("unavailable");
   expect(screen.queryByText("page failed")).toBeNull();
+});
+
+it("renders compact budget rows with readable scope and exact unknown semantics", () => {
+  const data: MeteringAdminData = adminUsageFixture();
+  const row = data.budgets[0];
+  if (!row) throw new Error("Missing budget fixture");
+  row.target = "prj_example_long_public_id";
+  data.references = { projects: { [row.target]: "Example project" }, connections: {} };
+  data.budgets = [
+    row,
+    { ...row, id: "unknown", level: "unavailable", used: "unavailable", remaining: "unavailable" },
+  ];
+  render(<AdminMeteringView data={data} />);
+  const table = screen.getByRole("table", { name: "Current budgets" });
+  expect(within(table).getAllByText("Example project")).toHaveLength(2);
+  expect(within(table).getByText("62 Units")).toBeInTheDocument();
+  expect(within(table).getAllByText("Unavailable").length).toBeGreaterThan(0);
+  expect(within(table).getAllByRole("button", { name: "Copy ID" })).toHaveLength(2);
+  expect(within(table).getAllByRole("row")).toHaveLength(3);
+});
+
+it("names currency columns even when amount suffix formatting omits the currency unit", () => {
+  render(<AdminMeteringView data={adminUsageFixture()} />);
+  const table = screen.getByRole("table", { name: "Usage detail" });
+  expect(
+    within(table)
+      .getAllByRole("columnheader")
+      .every((cell) => cell.textContent?.trim()),
+  ).toBe(true);
+  expect(within(table).getByRole("columnheader", { name: "Customer charges" })).toBeInTheDocument();
+});
+
+it("preserves a hard spending ceiling and conceals every redacted amount", () => {
+  const data: MeteringAdminData = adminUsageFixture();
+  const seed = data.budgets[0];
+  if (!seed) throw new Error("Missing budget fixture");
+  data.budgets = [
+    {
+      ...seed,
+      boundary: {
+        onExceed: "allow",
+        hardLimit: { text: "120", unit: "units", certainty: "measured" },
+      },
+    },
+  ];
+  const view = render(<AdminMeteringView data={data} />);
+  expect(screen.getByText("Hard limit: 120 Units")).toBeInTheDocument();
+  view.rerender(
+    <AdminMeteringView
+      data={{ ...data, budgets: [{ ...(data.budgets[0] as typeof seed), redacted: true }] }}
+    />,
+  );
+  const table = screen.getByRole("table", { name: "Current budgets" });
+  expect(within(table).queryByText(/120 Units|62 Units|38 Units|100 Units/)).toBeNull();
+  expect(within(table).getByText(/figures are hidden/)).toBeInTheDocument();
 });

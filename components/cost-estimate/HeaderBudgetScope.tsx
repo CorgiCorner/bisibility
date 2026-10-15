@@ -1,5 +1,6 @@
 "use client";
 
+import { BudgetTrafficBadge } from "@/components/metering/BudgetTrafficBadge";
 import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
 import type { ProjectBudgetRow } from "@/lib/metering/project-budget-display";
 
@@ -7,22 +8,16 @@ import type { ProjectBudgetRow } from "@/lib/metering/project-budget-display";
 export function HeaderBudgetScope({ row }: { row: ProjectBudgetRow }) {
   const p = useUsagePresentation();
   const target = row.kind === "group" ? p.operation("project") : p.dimensions.connection;
-  const traffic =
-    row.traffic.kind === "any"
-      ? "any"
-      : row.traffic.kind === "surface"
-        ? row.traffic.surface
-        : row.traffic.source;
   const title = row.kind === "group" ? target : (row.display?.providerLabel ?? target);
-  const trafficLabel =
-    row.traffic.kind === "source" ? p.dimension("source", traffic) : p.operation(traffic);
   return (
-    <p className="space-y-0.5">
-      <span className="block font-medium">{title}</span>
-      {row.display?.projectName && (
-        <span className="block text-fg-muted">{row.display.projectName}</span>
-      )}
-      <span className="block text-fg-muted">{trafficLabel}</span>
-    </p>
+    <div className="min-w-0 space-y-0.5 text-[11px] leading-snug">
+      <span className="flex flex-wrap items-baseline gap-x-1.5">
+        <span className="font-medium">{title}</span>
+        {row.kind === "group" && row.display?.projectName && (
+          <span className="opacity-75">{row.display.projectName}</span>
+        )}
+      </span>
+      <BudgetTrafficBadge traffic={row.traffic} />
+    </div>
   );
 }

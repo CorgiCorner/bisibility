@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { BacklinkRowMode, BacklinkTargetScope } from "@/lib/providers/types";
 import { backlinksCachedUntil } from "./cache";
+import { unknownBacklinksSnapshotId } from "./source-filter";
+import { snapshotProvider } from "./stored";
 
 export { snapshotEnvelope, snapshotMode, snapshotProvider } from "./stored";
 
@@ -16,12 +18,16 @@ type SnapshotLookupInput = {
   mode: BacklinkRowMode;
   now: Date;
   projectId: string;
+  provider?: string;
   scope: BacklinkTargetScope;
   target: string;
 };
 
 function snapshotLookupWhere(input: SnapshotLookupInput): Prisma.BacklinkSnapshotWhereInput {
   return {
+    ...(input.provider
+      ? { AND: [{ summary: { equals: input.provider, path: ["_provider"] } }] }
+      : {}),
     expiresAt: { gt: input.now },
     fetchedRowCount: { gte: input.minRows },
     includeSubdomains: input.includeSubdomains,
@@ -40,9 +46,11 @@ export function findBacklinksSnapshotMetadata(input: SnapshotLookupInput) {
   });
 }
 
-export function findBacklinksSnapshot(input: SnapshotLookupInput) {
+export async function findBacklinksSnapshot(input: SnapshotLookupInput) {
+  const unknownId = input.provider === "unknown" ? await unknownBacklinksSnapshotId(input) : null;
+  if (input.provider === "unknown" && !unknownId) return null;
   const cutoff = new Date(input.now.getTime() - 90 * 24 * 60 * 60 * 1000);
-  return prisma.backlinkSnapshot.findFirst({
+  const snapshot = await prisma.backlinkSnapshot.findFirst({
     include: {
       rows: {
         orderBy: { id: "asc" },
@@ -50,8 +58,14 @@ export function findBacklinksSnapshot(input: SnapshotLookupInput) {
       },
     },
     orderBy: { fetchedAt: "desc" },
-    where: snapshotLookupWhere(input),
+    where: {
+      ...snapshotLookupWhere({ ...input, provider: unknownId ? undefined : input.provider }),
+      ...(unknownId ? { id: unknownId } : {}),
+    },
   });
+  return input.provider === "unknown" && snapshotProvider(snapshot?.summary) !== "unknown"
+    ? null
+    : snapshot;
 }
 
 function rowData(row: BacklinksRow) {
@@ -116,12 +130,16 @@ export function findCurrentBacklinksSnapshot(input: {
   includeSubdomains: boolean;
   now: Date;
   projectId: string;
+  provider?: string;
   scope: BacklinkTargetScope;
   target: string;
 }) {
   return prisma.backlinkSnapshot.findFirst({
     orderBy: { fetchedAt: "desc" },
     where: {
+      ...(input.provider
+        ? { AND: [{ summary: { equals: input.provider, path: ["_provider"] } }] }
+        : {}),
       expiresAt: { gt: input.now },
       includeSubdomains: input.includeSubdomains,
       projectId: input.projectId,

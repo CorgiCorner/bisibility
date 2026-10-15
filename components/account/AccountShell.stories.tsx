@@ -37,13 +37,13 @@ const meta = {
   component: AccountShell,
   decorators: [
     (Story) => (
-      <main className="p-6">
+      <main className="p-4 sm:p-6">
         <Story />
       </main>
     ),
   ],
   parameters: {
-    layout: "padded",
+    layout: "fullscreen",
     nextjs: { appDirectory: true },
     viewport: { defaultViewport: "desktop" },
   },

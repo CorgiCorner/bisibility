@@ -1,6 +1,8 @@
+import { auditFixture, failedAuditFixture } from "@/components/site-audit/story-fixtures";
 import { renderWithFeatureMessages } from "@/i18n/test-support/render-with-feature-messages";
 import type { AgentReportResource } from "@/lib/agent-reports/model";
 import messages from "@/messages/core/en/agent-workspace.json";
+import auditMessages from "@/messages/core/en/project-site-audit.json";
 import shared from "@/messages/core/en/shared.json";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -19,10 +21,18 @@ const report: AgentReportResource = {
   provenance: { source: "project_member" },
 };
 
-function renderDetail(value = report) {
+function renderDetail(
+  value = report,
+  savedDetailsLabel = auditMessages.projectSiteAudit.savedDetails,
+) {
   return renderWithFeatureMessages(
-    <AgentReportDetail report={value} projectRef={projectRef} provenanceLabel="Provenance" />,
-    { messages: { ...shared, ...messages } },
+    <AgentReportDetail
+      report={value}
+      projectRef={projectRef}
+      provenanceLabel="Provenance"
+      savedDetailsLabel={savedDetailsLabel}
+    />,
+    { messages: { ...shared, ...messages, ...auditMessages } },
   );
 }
 
@@ -76,6 +86,70 @@ describe("shared report page presentation", () => {
     expect(screen.getByText(payload)).toBeInTheDocument();
     expect(screen.getByText("<iframe srcdoc='bad'>")).toBeInTheDocument();
     expect(container.querySelector("script,img,iframe")).toBeNull();
+  });
+
+  it("renders a saved site audit as the existing URL issues table and keeps metadata in page details", async () => {
+    renderDetail({ ...report, kind: "site_audit", body: { ...auditFixture.result } });
+    expect(screen.getByRole("table", { name: "URL issues" })).toBeInTheDocument();
+    expect(screen.queryByText("max Duration Ms")).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Page details" })[0]);
+    expect(await screen.findByRole("dialog", { name: "Page details" })).toHaveTextContent(
+      "Monitor the keywords that matter to your business.",
+    );
+  });
+
+  it("preserves unknown results in saved audits and safely falls back for legacy report bodies", () => {
+    const view = renderDetail({
+      ...report,
+      kind: "site_audit",
+      body: { ...failedAuditFixture.result },
+    });
+    expect(screen.getByText("Unknown")).toBeInTheDocument();
+    expect(screen.queryByText("No title")).not.toBeInTheDocument();
+    view.unmount();
+    renderDetail({ ...report, kind: "site_audit", body: { analysis: "Legacy saved report" } });
+    expect(screen.getByText("Legacy saved report")).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("presents historical minimal saved pages without inventing completeness or SEO metrics", () => {
+    renderDetail({
+      ...report,
+      kind: "site_audit",
+      body: {
+        pages: [
+          { url: "https://example.com/", title: "Saved page" },
+          { url: "https://example.com/pricing", title: null, status: 200 },
+        ],
+      },
+    });
+    expect(screen.getByRole("table", { name: "Saved pages" })).toHaveTextContent("Saved page");
+    expect(screen.getByRole("table", { name: "Saved pages" })).toHaveTextContent("Unknown");
+    expect(
+      screen.queryByText(/pages fetched|confirmed indexable|0 ms|0 H1/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("uses the page-owned saved-details label for legacy audit bodies", () => {
+    renderDetail(
+      {
+        ...report,
+        kind: "site_audit",
+        body: { pages: [{ url: "https://example.com/", title: "Saved page" }] },
+      },
+      "Page-owned saved audit details",
+    );
+    expect(
+      screen
+        .getByRole("heading", { level: 2, name: "Page-owned saved audit details" })
+        .closest("summary"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", {
+        level: 2,
+        name: auditMessages.projectSiteAudit.savedDetails,
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it("omits the provenance panel when the saved report has no provenance", () => {

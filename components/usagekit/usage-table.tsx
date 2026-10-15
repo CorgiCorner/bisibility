@@ -64,6 +64,7 @@ export type UsageTableProps = {
   labels?: Partial<UsageTableLabels>;
   /** Column headings per dimension; the dimension name is the default. */
   dimensionLabels?: Partial<Record<string, string>>;
+  unitLabels?: Partial<Record<string, string>>;
   onNextPage?: (cursor: string) => void;
   onFirstPage?: () => void;
   /** A newer page is loading; the current rows stay visible but dimmed. */
@@ -82,6 +83,7 @@ export function UsageTable({
   view,
   labels: custom,
   dimensionLabels = {},
+  unitLabels = {},
   onNextPage,
   onFirstPage,
   busy = false,
@@ -138,7 +140,8 @@ export function UsageTable({
               {showFunding && <TableHead className={head}>{labels.funding}</TableHead>}
               {view.units.map((unit) => (
                 <TableHead key={unit} className={`${head} text-right`}>
-                  {formatUnit?.(unit) ??
+                  {unitLabels[unit] ??
+                    formatUnit?.(unit) ??
                     (unit === "customer_cents" ? labels.customerCharges : unit)}
                 </TableHead>
               ))}
@@ -231,6 +234,7 @@ export function UsageTable({
 export function UsageTablePanel({
   labels,
   dimensionLabels,
+  unitLabels,
   formatFigure,
   formatUnit,
   formatDimension,
@@ -290,6 +294,7 @@ export function UsageTablePanel({
       busy={retained !== null}
       labels={labels}
       dimensionLabels={dimensionLabels}
+      unitLabels={unitLabels}
       formatFigure={formatFigure}
       formatUnit={formatUnit}
       formatDimension={formatDimension}

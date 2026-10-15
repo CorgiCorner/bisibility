@@ -3,7 +3,10 @@ import {
   SettingsLoadingBar,
   SettingsRouteLoading,
 } from "@/components/settings/shell/SettingsRouteLoading";
-import { settingsCardFrameClassName } from "@/components/settings/shell/settings-layout";
+import {
+  settingsCardFrameClassName,
+  settingsCardNaturalFrameClassName,
+} from "@/components/settings/shell/settings-layout";
 import { cn } from "@/lib/ui/cn";
 
 function ChannelsLoadingCard() {
@@ -31,15 +34,18 @@ function ChannelsLoadingCard() {
 function DeliveryAddressLoadingCard() {
   return (
     <section
-      className={settingsCardFrameClassName}
+      className={settingsCardNaturalFrameClassName}
       data-notification-loading-frame="delivery"
       data-settings-loading-frame="delivery"
     >
       <div className="space-y-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 w-full space-y-2 sm:w-auto sm:flex-1">
             <SettingsLoadingBar className="h-4 w-32" />
             <SettingsLoadingBar className="h-3 w-60" />
+          </div>
+          <div className="ml-auto flex min-h-9 shrink-0 items-center">
+            <SettingsLoadingBar className="h-8 w-28" />
           </div>
         </div>
         <div className="space-y-2">

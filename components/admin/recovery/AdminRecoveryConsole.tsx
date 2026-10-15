@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/Button";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import {
   commitRecoveryAction,
@@ -133,8 +134,8 @@ function RecoveryConsole({ initial }: { initial: RecoveryPage }) {
     <section className="grid min-w-0 gap-5" aria-label={t("heading")}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold">{t("heading")}</h2>
-          <p className="mt-1 text-sm text-fg-muted">{t("description")}</p>
+          <h2 className="text-sm font-semibold">{t("heading")}</h2>
+          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-fg-muted">{t("description")}</p>
           <p className="mt-2 break-all text-xs text-fg-muted">
             {page.instance} · {t("namespace")}: {page.namespace}
           </p>
@@ -149,40 +150,49 @@ function RecoveryConsole({ initial }: { initial: RecoveryPage }) {
         </Button>
       </div>
       <RecoverySummary page={page} />
-      <p className="rounded-xl border border-border p-3 text-sm leading-relaxed text-fg-muted">
-        {t("safetyNote")}
-      </p>
-      <div className="flex flex-wrap items-center gap-3">
-        <MenuSelect
-          ariaLabel={t("category")}
-          disabled={busy}
-          value={filters.category ?? "all"}
-          options={(["all", "unfinished", "accounting", "failed", "historical"] as const).map(
-            (value) => ({ value, label: t(`categories.${value}`) }),
-          )}
-          onChange={(value) =>
-            load({ category: value as RecoveryFilters["category"], provider: filters.provider })
-          }
-        />
-        <MenuSelect
-          ariaLabel={t("provider")}
-          disabled={busy}
-          value={filters.provider ?? "all"}
-          options={[
-            { value: "all", label: t("allProviders") },
-            ...Array.from(new Set(page.rows.map((row) => row.provider))).map((value) => ({
-              value,
-              label: value,
-            })),
-          ]}
-          onChange={(value) =>
-            load({ category: filters.category, provider: value === "all" ? undefined : value })
-          }
-        />
-        <Button disabled={busy || !selected.length} onClick={plan}>
-          {t("previewSelected", { count: selected.length })}
-        </Button>
-        <p className="text-xs text-fg-muted">{t("batchLimit", { count: MAX_RECOVERY_BATCH })}</p>
+      <div className="flex items-center gap-1 text-xs text-fg-muted">
+        <span>{t("noSpendShort")}</span>
+        <InfoTooltip text={t("safetyNote")} />
+      </div>
+      <div className="flex flex-wrap items-end gap-3 rounded-card border border-border bg-bg-elev p-4">
+        <div className="grid min-w-40 gap-1.5">
+          <span className="text-xs font-medium text-fg-muted">{t("category")}</span>
+          <MenuSelect
+            ariaLabel={t("category")}
+            disabled={busy}
+            value={filters.category ?? "all"}
+            options={(["all", "unfinished", "accounting", "failed", "historical"] as const).map(
+              (value) => ({ value, label: t(`categories.${value}`) }),
+            )}
+            onChange={(value) =>
+              load({ category: value as RecoveryFilters["category"], provider: filters.provider })
+            }
+          />
+        </div>
+        <div className="grid min-w-40 gap-1.5">
+          <span className="text-xs font-medium text-fg-muted">{t("provider")}</span>
+          <MenuSelect
+            ariaLabel={t("provider")}
+            disabled={busy}
+            value={filters.provider ?? "all"}
+            options={[
+              { value: "all", label: t("allProviders") },
+              ...Array.from(new Set(page.rows.map((row) => row.provider))).map((value) => ({
+                value,
+                label: value,
+              })),
+            ]}
+            onChange={(value) =>
+              load({ category: filters.category, provider: value === "all" ? undefined : value })
+            }
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+          <Button disabled={busy || !selected.length} onClick={plan}>
+            {t("previewSelected", { count: selected.length })}
+          </Button>
+          <InfoTooltip text={t("batchLimit", { count: MAX_RECOVERY_BATCH })} />
+        </div>
       </div>
       {error && !preview && (
         <p role="alert" className="text-sm text-danger">

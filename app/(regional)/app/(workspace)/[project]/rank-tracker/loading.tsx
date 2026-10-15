@@ -17,10 +17,14 @@ export default function KeywordsLoading() {
   return (
     <PageContent aria-hidden>
       <div className="grid gap-4">
-        <div className="flex gap-1 border-b border-border">
-          <Bar className="mb-2 h-[26px] w-[118px]" />
-          <Bar className="mb-2 h-[26px] w-[104px]" />
-          <Bar className="mb-2 h-[26px] w-[86px]" />
+        <div className="flex gap-1 border-b border-border" data-loading-tracker-tabs>
+          <Bar className="h-[42px] w-[118px]" />
+          <Bar className="h-[42px] w-[104px]" />
+        </div>
+        <div className="flex min-w-0 flex-wrap items-center gap-2" data-loading-report-scope>
+          <Bar className="h-8.5 w-44" />
+          <Bar className="h-8.5 w-44" />
+          <Bar className="h-8.5 w-28" />
         </div>
         <div className="overflow-hidden rounded-card border border-border bg-bg-elev">
           <div className="grid gap-3 px-4 py-3.5" data-keywords-toolbar="">
@@ -33,6 +37,14 @@ export default function KeywordsLoading() {
               <Bar className="h-8.5 w-full min-w-0 sm:flex-1" />
               <Bar className="h-8.5 w-62 self-end sm:w-47.5 sm:self-auto" />
             </div>
+          </div>
+          <div
+            className="flex flex-wrap items-center gap-3 bg-bg-sunken px-4 py-1.5"
+            data-loading-report-summary
+          >
+            <Bar className="h-5 w-36" />
+            <Bar className="h-5 w-28" />
+            <Bar className="h-5 w-24" />
           </div>
           <div className="min-w-0 overflow-x-auto">
             <div className="h-[650px] min-h-[420px] max-h-[calc(100dvh-200px)] min-w-[1080px]">

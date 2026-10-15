@@ -1,7 +1,7 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { GeneralSettingsRouteLoading } from "@/components/settings/general/GeneralSettingsLoading";
 import { SettingsCard } from "@/components/settings/shell/SettingsCard";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
-import { SettingsShellLoading } from "@/components/settings/shell/SettingsShellLoading";
 import { SettingsField } from "@/components/settings/shell/settings-field-widths";
 import { settingsCardGeometryClassNames } from "@/components/settings/shell/settings-layout";
 import { FieldLabel } from "@/components/ui/FieldLabel";
@@ -38,7 +38,7 @@ const meta = {
       </FeatureMessagesProvider>
     ),
   ],
-  parameters: { nextjs: { appDirectory: true } },
+  parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
 } satisfies Meta<typeof SettingsShell>;
 
 export default meta;
@@ -134,7 +134,7 @@ export const Loading: Story = {
   render: () => (
     <div data-settings-shell-story="loading">
       <h1 className="sr-only">Settings loading state</h1>
-      <SettingsShellLoading />
+      <GeneralSettingsRouteLoading />
     </div>
   ),
 };

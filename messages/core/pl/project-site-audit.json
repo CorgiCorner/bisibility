@@ -83,6 +83,8 @@
       "size_limit": "Odpowiedź przekroczyła limit 512 KiB. Nie oceniono tej strony.",
       "request_limit": "Osiągnięto limit żądań przed pobraniem tej strony.",
       "unknown": "Nie udało się pobrać strony. Jej status HTTP i pomiary SEO są nieznane."
-    }
+    },
+    "savedPages": "Zapisane strony",
+    "savedDetails": "Szczegóły zapisanego raportu"
   }
 }

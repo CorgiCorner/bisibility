@@ -15,10 +15,11 @@ describe("backlinks cache", () => {
         includeSubdomains: true,
         mode: "one_per_domain",
         projectId: "project_1",
+        provider: "dataforseo",
         scope: "site",
-        target: "acme-store.com",
+        target: "example.com",
       }),
-    ).toBe("bl:v1:project_1:acme-store.com:site:1:one_per_domain");
+    ).toBe("bl:v2:project_1:dataforseo:example.com:site:1:one_per_domain");
   });
 
   it("uses a configurable positive 24 hour TTL", () => {

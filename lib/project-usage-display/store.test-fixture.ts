@@ -58,8 +58,11 @@ export function displayDatabase() {
     },
   );
   const transactionPort = { ...tx, project: { ...tx.project, update } };
-  const transaction = vi.fn(async (run: (transaction: typeof tx) => Promise<unknown>) =>
-    run(transactionPort),
+  const transaction = vi.fn(
+    async (
+      run: (transaction: typeof tx) => Promise<unknown>,
+      _options?: { maxWait?: number; timeout?: number },
+    ) => run(transactionPort),
   );
   return {
     db: { $transaction: transaction } as unknown as UsageDisplayDatabase,

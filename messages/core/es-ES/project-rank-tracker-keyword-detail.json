@@ -707,6 +707,48 @@
         "reportUnavailable": "Informe no disponible",
         "reportCapacity": "Este historial supera el límite del informe. Vuelve a la lista de palabras clave para ver los datos actuales.",
         "reportChanged": "Los datos cambiaron mientras se cargaba el informe. Actualiza los datos guardados para abrir una nueva instantánea."
+      },
+      "providerComparison": {
+        "title": "Comparar proveedores",
+        "help": "Consulta una vez DataForSEO y SerpApi para la misma palabra, mercado y dispositivo. Los resultados se guardan fuera del historial de seguimiento. No cambia la programación ni el proveedor del proyecto.",
+        "open": "Abrir comparación",
+        "close": "Cerrar",
+        "error": "No se pudo confirmar la comparación. Actualiza el resultado guardado o reintenta la misma solicitud.",
+        "retry": "Reintentar",
+        "loading": "Cargando comparación…",
+        "depth": "Top 20",
+        "needsProviders": "Conecta DataForSEO y SerpApi para comparar resultados.",
+        "connections": "Conexiones de proveedores",
+        "refresh": "Actualizar resultado",
+        "preview": "Revisar coste",
+        "review": "Comparación puntual",
+        "searches": "{count, plural, one {# búsqueda} other {# búsquedas}}",
+        "credits": "Créditos: {value}",
+        "expires": "Estimación válida hasta {date}",
+        "launch": "Iniciar comparación",
+        "cancel": "Cancelar",
+        "noPosition": "Sin posición confirmada",
+        "complete": "Respuesta completa",
+        "uncertain": "Cobertura incierta",
+        "qualityHelp": "La falta de posición no demuestra ausencia. Compara las fechas de observación y la cobertura de ambos proveedores.",
+        "attention": "Este resultado requiere atención. No se pudo confirmar su coste o resultado.",
+        "desktop": "Ordenador",
+        "mobile": "Móvil",
+        "retryLaunch": "Comprobar inicio",
+        "launchUncertain": "No se confirmó el inicio. Comprueba la misma solicitud antes de iniciar otra.",
+        "providers": {
+          "dataforseo": "DataForSEO",
+          "serpapi": "SerpApi"
+        },
+        "statuses": {
+          "queued": "En cola",
+          "claimed": "En curso",
+          "completed": "Completado",
+          "failed": "Error",
+          "unknown": "Incierto",
+          "cancelled": "Cancelado"
+        },
+        "outside": "Fuera del Top 20"
       }
     }
   }

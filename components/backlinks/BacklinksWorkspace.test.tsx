@@ -87,6 +87,79 @@ afterEach(() => {
 });
 
 describe("BacklinksWorkspace", () => {
+  it("reopens a recent legacy result read-only without changing its unknown source", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-24T12:00:00Z"));
+    const analyzeAction = vi.fn(async (input: unknown) => {
+      const request = input as { estimateOnly?: boolean };
+      return request.estimateOnly
+        ? {
+            ...estimate("example.com"),
+            provider: "unknown",
+            cached: true,
+            costCents: 0,
+            estimatedCostCents: 0,
+          }
+        : {
+            ...snapshot("example.com"),
+            provider: "unknown",
+            cached: true,
+            costCents: 0,
+            fetchedRowCount: 100,
+            totalRowsAvailable: 200,
+          };
+    });
+    renderWorkspace({
+      analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
+      context: {
+        ...context,
+        recentTargets: [
+          {
+            cachedUntil: "2026-07-25T12:00:00Z",
+            fetchedAt: "2026-07-24T10:00:00Z",
+            includeSubdomains: true,
+            provider: "unknown",
+            resultLimit: 100,
+            target: "example.com",
+            targetScope: "site",
+          },
+        ],
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^example\.com/ }));
+    await act(async () => vi.advanceTimersByTimeAsync(320));
+    expect(analyzeAction).toHaveBeenCalledWith(
+      expect.objectContaining({ provider: "unknown", maxCostCents: 0, estimateOnly: false }),
+    );
+    expect(screen.getByText("Source: Unknown source")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Refresh now|Load more/i }),
+    ).not.toBeInTheDocument();
+    expect(loadMoreAction).not.toHaveBeenCalled();
+  });
+  it("re-estimates the explicitly selected provider without launching a paid analysis", async () => {
+    vi.useFakeTimers();
+    const analyzeAction = vi.fn(async (input: unknown) => outcome(input));
+    renderWorkspace({
+      analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
+      initialTarget: "example.com",
+      context: {
+        ...context,
+        providers: [
+          { label: "Fixture A", value: "fixture_a" },
+          { label: "Fixture B", value: "fixture_b" },
+        ],
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Backlink source" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Fixture B" }));
+    await act(async () => vi.advanceTimersByTimeAsync(320));
+    expect(analyzeAction).toHaveBeenCalledTimes(1);
+    expect(analyzeAction).toHaveBeenCalledWith(
+      expect.objectContaining({ estimateOnly: true, provider: "fixture_b", target: "example.com" }),
+    );
+    expect(loadMoreAction).not.toHaveBeenCalled();
+  });
   it("matches Domain Overview when a capable provider is missing", () => {
     renderWorkspace({ context: { ...context, providerStatus: "no_provider" } });
 

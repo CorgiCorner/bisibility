@@ -83,6 +83,8 @@
       "size_limit": "The response exceeded the 512 KiB limit. This page could not be assessed.",
       "request_limit": "The crawl reached its request limit before this page could be fetched.",
       "unknown": "The page could not be fetched. Its HTTP status and SEO measurements are unknown."
-    }
+    },
+    "savedPages": "Saved pages",
+    "savedDetails": "Saved report details"
   }
 }

@@ -40,8 +40,11 @@ export async function readProjectUsageDisplaySettings(
   actor: Actor | null,
   db: UsageDisplayDatabase = prisma,
 ) {
-  return db.$transaction(async (tx) =>
-    readSnapshot(tx, await usageDisplayProjectScope(tx, actor, projectId, "read")),
+  return db.$transaction(
+    async (tx) => readSnapshot(tx, await usageDisplayProjectScope(tx, actor, projectId, "read")),
+    // Project layout competes with parallel server-render reads. Allow a cold
+    // remote connection to acquire a slot while retaining a bounded transaction.
+    { maxWait: 10_000, timeout: 15_000 },
   );
 }
 export async function saveProjectUsageDisplaySettings(

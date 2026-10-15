@@ -14,6 +14,7 @@ const analyzeBacklinksActionSchema = z.object({
   maxCostCents: z.number().int().nonnegative().optional(),
   mode: z.enum(["as_is", "one_per_domain"]).default("as_is"),
   projectId: z.string().trim().min(1).max(120),
+  provider: z.string().trim().min(1).max(120).optional(),
   resultLimit: z
     .union([z.literal(100), z.literal(300), z.literal(500), z.literal(1000)])
     .default(100),
@@ -25,6 +26,7 @@ const loadMoreBacklinkRowsActionSchema = z.object({
   includeSubdomains: z.boolean(),
   limit: z.number().int().min(100).max(1000).multipleOf(100),
   projectId: z.string().trim().min(1).max(120),
+  provider: z.string().trim().min(1).max(120).optional(),
   target: z.string().trim().min(1),
   targetScope: z.enum(["site", "page"]),
 });
@@ -58,6 +60,7 @@ export async function analyzeBacklinksAction(input: unknown) {
         includeSubdomains: data.includeSubdomains,
         maxCostCents: data.maxCostCents,
         mode: data.mode,
+        provider: data.provider,
         resultLimit: data.resultLimit,
         target: data.target,
         targetScope: data.targetScope,
@@ -79,6 +82,7 @@ export async function loadMoreBacklinkRowsAction(input: unknown) {
       {
         includeSubdomains: data.includeSubdomains,
         limit: data.limit,
+        provider: data.provider,
         target: data.target,
         targetScope: data.targetScope,
       },

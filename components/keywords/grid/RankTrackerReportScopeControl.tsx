@@ -2,9 +2,9 @@
 import { LocalReportCard } from "@/components/local-reports/LocalReportCard";
 import { Button } from "@/components/ui/Button";
 import { Calendar } from "@/components/ui/Calendar";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { Popup } from "@/components/ui/Popup";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import { rankTrackerAsOfFormSchema } from "@/lib/keywords/rank-tracker-as-of-input";
 import {
@@ -127,41 +127,45 @@ export function RankTrackerReportScopeControl({
             }}
           />
         ) : null}
-        <div className="flex items-center gap-1">
-          <MenuSelect
-            ariaLabel={t("period")}
-            leadingLabel={t("comparisonLabel")}
-            value={String(scope.comparisonDays)}
-            options={rankTrackerComparisonDays.map((days) => ({
-              value: String(days),
-              label: t("days", { days: format.number(days) }),
-            }))}
-            onChange={(value) => {
-              const days = rankTrackerComparisonDays.find((days) => String(days) === value);
-              if (days) go({ comparisonDays: days }, ["comparisonDays"]);
-            }}
-          />
-          <InfoTooltip text={t("comparisonHelp", { days: format.number(scope.comparisonDays) })} />
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className={`${toolbarControlClassName} h-8.5 px-2.5`}
-          style={{ fontWeight: 400 }}
-          aria-label={`${t("asOfUtc")}: ${snapshotLabel}`}
-          aria-haspopup="dialog"
-          aria-expanded={Boolean(timeAnchor)}
-          startIcon={<CalendarBlankIcon aria-hidden size={15} />}
-          onClick={(event) => {
-            form.reset({ date: scope.asOf?.slice(0, 16) ?? "" });
-            setTimeAnchor(event.currentTarget);
+        <MenuSelect
+          ariaLabel={t("period")}
+          triggerTitle={t("comparisonHelp", { days: format.number(scope.comparisonDays) })}
+          leadingLabel={t("comparisonLabel")}
+          value={String(scope.comparisonDays)}
+          options={rankTrackerComparisonDays.map((days) => ({
+            value: String(days),
+            label: t("days", { days: format.number(days) }),
+          }))}
+          onChange={(value) => {
+            const days = rankTrackerComparisonDays.find((days) => String(days) === value);
+            if (days) go({ comparisonDays: days }, ["comparisonDays"]);
           }}
-        >
-          {snapshotLabel}
-        </Button>
-        <InfoTooltip
-          text={scope.view === "local" ? `${t("membership")} ${t("localScope")}` : t("membership")}
         />
+        <Tooltip
+          content={
+            scope.view === "local" ? `${t("membership")} ${t("localScope")}` : t("membership")
+          }
+          semantics="description"
+          placement="top"
+          disabled={Boolean(timeAnchor)}
+        >
+          <Button
+            size="sm"
+            variant="outline"
+            className={`${toolbarControlClassName} h-8.5 px-2.5`}
+            style={{ fontWeight: 400 }}
+            aria-label={`${t("asOfUtc")}: ${snapshotLabel}`}
+            aria-haspopup="dialog"
+            aria-expanded={Boolean(timeAnchor)}
+            startIcon={<CalendarBlankIcon aria-hidden size={15} />}
+            onClick={(event) => {
+              form.reset({ date: scope.asOf?.slice(0, 16) ?? "" });
+              setTimeAnchor(event.currentTarget);
+            }}
+          >
+            {snapshotLabel}
+          </Button>
+        </Tooltip>
       </div>
       <Popup
         anchorEl={timeAnchor}

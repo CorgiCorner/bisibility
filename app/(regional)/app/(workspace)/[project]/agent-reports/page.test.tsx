@@ -41,7 +41,7 @@ beforeEach(() => {
 });
 
 it.each(["empty", "populated", "loading"])(
-  "uses the older list-page container for %s reports",
+  "uses the canonical list-page container for %s reports",
   async (state) => {
     if (state === "populated")
       mocks.reports.mockResolvedValue({
@@ -63,7 +63,7 @@ it.each(["empty", "populated", "loading"])(
     );
     const root = view.container.firstElementChild;
     for (const className of reference.split(" ")) expect(root).toHaveClass(className);
-    expect(root).toHaveClass("gap-5");
+    expect(root).toHaveClass("gap-4");
     expect(root).not.toHaveClass("p-4", "m-4", "max-w-[1040px]", "mx-auto");
     if (state === "loading") expect(root).toHaveAttribute("aria-busy", "true");
   },
@@ -122,10 +122,10 @@ it.each([
   },
 );
 
-it("aligns the detail fallback with the report list", () => {
-  const detail = render(<AgentReportLoading />);
+it("reserves the detail frame without exposing interactive placeholders", async () => {
+  const detail = render(await AgentReportLoading());
   expect(detail.container.firstElementChild).toHaveClass("max-w-[1400px]");
-  expect(detail.container.querySelectorAll('[data-slot="card"]')).toHaveLength(1);
-  expect(detail.container.querySelectorAll(".h-20")).toHaveLength(3);
   expect(detail.container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
+  expect(detail.container).toHaveTextContent(messages.agentWorkspace.back);
+  expect(detail.container.querySelectorAll("a, button, input")).toHaveLength(0);
 });

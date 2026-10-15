@@ -1,5 +1,5 @@
 import { renderWithCostEstimateMessages as render } from "@/i18n/test-support/render-with-feature-messages";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { BudgetStatus } from "@usagekit/core";
 import { budgetsViewFromStatuses, headerStatusFromBudgets } from "@usagekit/views";
@@ -49,7 +49,25 @@ it("shows an authoritative reservation without presenting it as a lower bound", 
   expect(screen.getByRole("link")).not.toHaveTextContent("At least");
   await userEvent.tab();
   const tooltip = await screen.findByRole("tooltip");
-  expect(tooltip).toHaveTextContent("Reserved: $0.10");
+  const table = within(tooltip).getByRole("table", {
+    name: "Budget usage, including reservations. Open Usage for details.",
+  });
+  const columns = within(table).getAllByRole("columnheader");
+  expect(columns.map((column) => column.textContent)).toEqual([
+    "Budget",
+    "Used",
+    "Reserved",
+    "Limit",
+  ]);
+  for (const column of columns) expect(column).toHaveAttribute("scope", "col");
+  const project = within(table).getByRole("row", { name: /Project/ });
+  expect(within(project).getByRole("rowheader")).toHaveAttribute("scope", "row");
+  expect(
+    within(project)
+      .getAllByRole("cell")
+      .map((cell) => cell.textContent),
+  ).toEqual(["$0.00", "$0.10", "$1.00"]);
+  expect(table.querySelector("button,input,select,[role='checkbox']")).toBeNull();
   expect(tooltip).not.toHaveTextContent("≥");
 });
 it("recognizes a real unlimited budget with the mapper's reservation semantics", () => {

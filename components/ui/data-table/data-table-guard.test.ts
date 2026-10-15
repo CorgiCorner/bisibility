@@ -27,6 +27,8 @@ const exemptions: TableOwnershipExemptions = {
   permanentStaticPaths: new Set([
     "app/(static)/(marketing)/alternatives/[slug]/page.tsx",
     "components/usagekit/primitives/table.tsx",
+    // Read-only tooltip summary, with caption/headers and no controls verified by its production test.
+    "components/cost-estimate/HeaderProviderSpend.tsx",
   ]),
   permanentStaticRoots: ["components/marketing"],
   temporaryMigrationPaths,
@@ -145,11 +147,17 @@ describe("data table ownership guard", () => {
   it("keeps permanent static-content exemptions exact", () => {
     const sources = [
       tableSource("components/marketing/content/StaticMatrix.tsx", splitTableOpeningTag),
+      tableSource("components/cost-estimate/HeaderProviderSpend.tsx", splitTableOpeningTag),
+      tableSource("components/cost-estimate/OtherBudgetTable.tsx", splitTableOpeningTag),
       tableSource("app/(static)/(marketing)/alternatives/[slug]/page.tsx", splitTableOpeningTag),
       tableSource("app/(static)/(marketing)/alternatives/page.tsx", splitTableOpeningTag),
     ];
 
     expect(findTableOwnershipViolations(sources, exemptions)).toEqual([
+      expect.objectContaining({
+        kind: "html-table",
+        path: "components/cost-estimate/OtherBudgetTable.tsx",
+      }),
       expect.objectContaining({
         kind: "html-table",
         path: "app/(static)/(marketing)/alternatives/page.tsx",

@@ -93,7 +93,7 @@ export function DomainOverviewAnalyzeCard({
   if (report && !matchesReport) descriptionIds.push("domain-overview-report-target-note");
 
   return (
-    <Card className="p-4.5 sm:p-5" size="md">
+    <Card className="min-w-0 p-4.5 sm:p-5" size="md">
       <form
         className="grid gap-3.5"
         onSubmit={handleSubmit(({ target: next }) => {
@@ -141,7 +141,7 @@ export function DomainOverviewAnalyzeCard({
             />
           </div>
         </div>
-        <div className="flex items-center justify-end gap-4">
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-4">
           <button
             className={pricingTriggerClassName}
             onClick={(event) => setPricingAnchor(event.currentTarget)}

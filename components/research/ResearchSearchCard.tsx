@@ -141,7 +141,7 @@ export function ResearchSearchCard({
   const pricingRows = researchPricingRows(mode, resultLimit, includeClickstream);
   const fallbackCostCents = researchFallbackCostCents(pricingRows, seeds.length);
   return (
-    <Card className="w-full p-4 sm:p-5" size="md">
+    <Card className="min-w-0 w-full p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(submit)}>
         <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-start">
           <div className="flex min-h-[34px] flex-1 flex-wrap items-center gap-1.5 rounded-control border border-border-control bg-transparent px-2.5 py-0.5 focus-within:border-accent md:min-w-[240px]">
@@ -203,7 +203,7 @@ export function ResearchSearchCard({
             />
             <InfoTooltip text={t("clickstreamHelp")} />
           </span>
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-4">
             <button
               className={pricingTriggerClassName}
               onClick={(event) => setPricingAnchor(event.currentTarget)}

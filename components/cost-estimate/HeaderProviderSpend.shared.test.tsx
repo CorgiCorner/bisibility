@@ -2,7 +2,7 @@ import {
   renderWithCostEstimateMessages as render,
   renderWithFeatureMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { BudgetRow } from "@usagekit/views";
 import { budgetsViewFromStatuses, headerStatusFromBudgets } from "@usagekit/views";
@@ -97,7 +97,9 @@ it("renders exact reserved project usage through the shared bound projection and
   await userEvent.tab();
   expect(screen.getByRole("link")).toHaveFocus();
   expect(screen.getByRole("link")).toHaveTextContent("Less than 1% used");
-  expect(await screen.findByRole("tooltip")).toHaveTextContent("Reserved: 1 Units");
+  const tooltip = await screen.findByRole("tooltip");
+  expect(within(tooltip).getByRole("columnheader", { name: "Reserved" })).toBeInTheDocument();
+  expect(within(tooltip).getAllByRole("cell", { name: "1 Units" })).toHaveLength(2);
   expect(await screen.findByRole("tooltip")).toBeInTheDocument();
 });
 it("offers budget editing without a fabricated spend for an unbounded project", () => {
@@ -354,4 +356,38 @@ it("does not treat unknown unlimited usage as fully known", () => {
     />,
   );
   expect(screen.getByRole("link")).toHaveTextContent("Usage unknown");
+});
+
+it("distinguishes app and programmatic traffic within their own provider budget rows", async () => {
+  const budgets = {
+    state: "ok" as const,
+    problem: null,
+    rows: [
+      { ...row, id: "app", traffic: { kind: "surface" as const, surface: "app" as const } },
+      {
+        ...row,
+        id: "agents",
+        traffic: { kind: "surface" as const, surface: "programmatic" as const },
+      },
+    ],
+  };
+  render(
+    <HeaderProviderSpend
+      projectRef="prj_example"
+      summary={{
+        eligible: true,
+        paidWorkBlocked: false,
+        budgets,
+        status: headerStatusFromBudgets(budgets),
+      }}
+    />,
+  );
+  await userEvent.tab();
+  const tooltip = await screen.findByRole("tooltip");
+  const app = within(tooltip).getByRole("row", { name: /App and schedules/ });
+  const agents = within(tooltip).getByRole("row", { name: /API and agents/ });
+  expect(app).not.toHaveTextContent("API and agents");
+  expect(agents).not.toHaveTextContent("App and schedules");
+  expect(within(app).getByRole("cell", { name: "1,000 Units" })).toBeInTheDocument();
+  expect(within(agents).getByRole("cell", { name: "1,000 Units" })).toBeInTheDocument();
 });

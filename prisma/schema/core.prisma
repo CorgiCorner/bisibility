@@ -213,6 +213,8 @@ enum OnboardingQuizStatus {
 }
 
 model User {
+  providerComparisonPreviews ProviderComparisonPreview[]
+  providerComparisonRuns ProviderComparisonRun[]
   measurementSettingsMutations MeasurementSettingsMutation[]
   id                           String                   @id @default(cuid())
   publicId                     String                   @unique
@@ -541,6 +543,8 @@ model Waitlist {
 }
 
 model Project {
+  providerComparisonPreviews ProviderComparisonPreview[]
+  providerComparisonRuns ProviderComparisonRun[]
   historyEvidenceReplayRuns HistoryEvidenceReplayRun[]
   historyEvidenceReplayReceipts HistoryEvidenceReplayReceipt[]
   measurementSettingsMutations MeasurementSettingsMutation[]
@@ -727,6 +731,8 @@ model ProjectMarket {
 // The legacy expression index remains for its existing consumers. textNormalized is a
 // migration-owned stored generated column, represented with dbgenerated for Prisma 7.
 model Keyword {
+  providerComparisonPreviews ProviderComparisonPreview[]
+  providerComparisonRuns ProviderComparisonRun[]
   historyEvidenceReplayReceipts HistoryEvidenceReplayReceipt[]
   measurementSnapshotRequests MeasurementSnapshotRequestBinding[]
   measurementTargetEpoch BigInt @default(0)

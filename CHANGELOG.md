@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+## [0.35.0] - 2026-10-15
+
+### Added
+
+- Added an administrator view of daily email limits, reserved send attempts and remaining capacity.
+
+- Added one-time DataForSEO and SerpApi comparisons with cost review and results separate from tracking history; both providers must be connected.
+
+### Changed
+
+- Kept backlink cache and history separate by provider, with unknown-source labels for older snapshots.
+
+- Improved admin usage, budgets and recovery with compact tables, readable scopes and matching loading states.
+
+### Fixed
+
+- Fixed report layouts, page loaders and concurrent display-setting timeouts, and softened non-control borders.
+
 ## [0.34.0] - 2026-10-14
 
 ### Added

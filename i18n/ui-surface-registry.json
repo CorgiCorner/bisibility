@@ -2433,21 +2433,6 @@
     },
     {
       "kind": "render",
-      "path": "app/(regional)/(private-admin)/app/admin/billing/page.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "app/(regional)/(private-admin)/app/admin/layout.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "app/(regional)/(private-billing)/app/billing/refunds/page.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/@context/[...page]/page.tsx",
       "status": "migrated"
     },
@@ -2495,6 +2480,11 @@
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/agent-reports/page.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/ai-tracking/loading.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -2658,6 +2648,11 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/markets/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/markets/page.tsx",
       "status": "migrated"
     },
@@ -2743,6 +2738,11 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/runs/rank-checks/[id]/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/runs/rank-checks/[id]/page.tsx",
       "status": "migrated"
     },
@@ -2803,7 +2803,22 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/business-locations/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/business-locations/monitors/[monitor]/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/business-locations/monitors/[monitor]/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/business-locations/monitors/loading.tsx",
       "status": "migrated"
     },
     {
@@ -2848,6 +2863,11 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/experimental/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/experimental/page.tsx",
       "status": "migrated"
     },
@@ -2869,6 +2889,11 @@
     {
       "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/settings/(sections)/markets/loading.tsx",
       "status": "migrated"
     },
     {
@@ -3033,7 +3058,17 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/admin/administration/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/admin/administration/page.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/audit/loading.tsx",
       "status": "migrated"
     },
     {
@@ -3053,8 +3088,18 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/admin/metering/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/admin/metering/page.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "app/(regional)/app/admin/metering/recovery/loading.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -3288,6 +3333,11 @@
     },
     {
       "kind": "render",
+      "path": "components/account/AccountRouteLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/account/AccountSection.tsx",
       "status": "migrated"
     },
@@ -3463,8 +3513,23 @@
     },
     {
       "kind": "render",
+      "path": "components/admin/AdminBudgetTable.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/AdminDashboard.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/AdminDashboardLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/AdminEmailAllowance.tsx",
+      "status": "pending"
     },
     {
       "kind": "render",
@@ -3480,6 +3545,16 @@
       "kind": "render",
       "path": "components/admin/AdminMeteringFilters.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/AdminMeteringFrame.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/AdminMeteringLoading.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -3509,6 +3584,11 @@
     {
       "kind": "render",
       "path": "components/admin/AdminRefresh.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/AdminSectionLoading.tsx",
       "status": "migrated"
     },
     {
@@ -3588,6 +3668,16 @@
     },
     {
       "kind": "render",
+      "path": "components/agent-reports/AgentReportDetailLayout.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/agent-reports/AgentReportDetailLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/agent-reports/AgentReportHistory.tsx",
       "status": "pending"
     },
@@ -3627,6 +3717,11 @@
       "status": "pending"
     },
     {
+      "kind": "render",
+      "path": "components/agent-reports/SavedAuditPages.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/ai-research/ai-research-failure-copy.ts",
       "status": "migrated"
@@ -3650,6 +3745,11 @@
       "kind": "render",
       "path": "components/ai-research/AiPromptFields.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/ai-research/AiResearchPageLoading.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -5071,6 +5171,11 @@
       "status": "migrated"
     },
     {
+      "kind": "render",
+      "path": "components/getting-started/GettingStartedLoading.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "ui-data",
       "path": "components/getting-started/go-further-cards.ts",
       "status": "migrated"
@@ -5192,6 +5297,11 @@
     },
     {
       "kind": "render",
+      "path": "components/install/InstallPageLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/integrations/ConnectDrawer.tsx",
       "status": "migrated"
     },
@@ -5263,6 +5373,11 @@
     {
       "kind": "render",
       "path": "components/integrations/IntegrationsByoNote.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/integrations/IntegrationsPageLoading.tsx",
       "status": "migrated"
     },
     {
@@ -6879,6 +6994,11 @@
     },
     {
       "kind": "render",
+      "path": "components/markets/page/MarketsPageLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/markets/page/MarketsRowMenu.tsx",
       "status": "migrated"
     },
@@ -7058,6 +7178,11 @@
     {
       "kind": "ui-data",
       "path": "components/measurement-settings/use-measurement-actions.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/metering/BudgetTrafficBadge.tsx",
       "status": "migrated"
     },
     {
@@ -7651,211 +7776,6 @@
       "status": "migrated"
     },
     {
-      "kind": "ui-data",
-      "path": "components/private/billing/account-notice-pricing.ts",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/AccountBillingCapCard.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/AccountBillingClient.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/AccountBillingLedger.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/AccountBillingServer.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/AccountPricingAnnouncement.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/AccountStatus.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/AccountUsageBudgetServer.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/AccountUsageCostNote.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/admin-billing-columns.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/AdminBillingPanel.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/AdminProviderCreditsCard.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/AdminRolloutButton.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/BalanceSummaryCard.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/private/billing/billing-locale.ts",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/BillingNoticeBanner.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/BillingOperationsPanel.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/BillingPanel.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/BillingPlanCards.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/BillingSharedControlsProvider.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/CreditsBonusClaimCard.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/CreditsEnabledClientContext.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/ExistingAccountCapNotice.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/ledger-columns.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/LedgerTableCard.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/OnboardingCreditsOffer.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/OnboardingCreditsOfferSlot.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/OneOffPurchaseDialog.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/OneOffPurchaseSummary.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/ProviderSourceOfferSlot.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/ProviderSourceSelector.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/refund-admin-columns.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/refund-owner-columns.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/RefundDecisionModal.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/RefundPurchasesCard.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/RefundRequestConfirmModal.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/RefundSupportPage.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/reversal-dispute-columns.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "ui-data",
-      "path": "components/private/billing/reversal-format.ts",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/SpendBreakdownCard.tsx",
-      "status": "pending"
-    },
-    {
-      "kind": "render",
-      "path": "components/private/billing/SpendPaceCard.tsx",
-      "status": "pending"
-    },
-    {
       "kind": "render",
       "path": "components/project-context/ProjectContextForm.tsx",
       "status": "pending"
@@ -7954,6 +7874,16 @@
       "kind": "render",
       "path": "components/project-runs/RunTitleCell.tsx",
       "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/provider-comparison/ComparisonResults.tsx",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/provider-comparison/ProviderComparisonCard.tsx",
+      "status": "pending"
     },
     {
       "kind": "ui-data",
@@ -8088,6 +8018,11 @@
     {
       "kind": "render",
       "path": "components/rank-runs/run-target-table-columns.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/rank-runs/RunDetailLoading.tsx",
       "status": "migrated"
     },
     {
@@ -8248,6 +8183,11 @@
     {
       "kind": "render",
       "path": "components/research/ResearchFiltersDrawer.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/research/ResearchIdleLoading.tsx",
       "status": "migrated"
     },
     {
@@ -8422,6 +8362,11 @@
     },
     {
       "kind": "render",
+      "path": "components/schedules/ScheduleEditorLoadingContent.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/schedules/ScheduleEditorMembers.tsx",
       "status": "migrated"
     },
@@ -8443,6 +8388,11 @@
     {
       "kind": "render",
       "path": "components/schedules/ScheduleObjectFrame.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/schedules/SchedulePageLoading.tsx",
       "status": "migrated"
     },
     {
@@ -8737,6 +8687,11 @@
     },
     {
       "kind": "render",
+      "path": "components/search-insights/SearchInsightsTableLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/search-insights/SearchInsightsTrustStrip.tsx",
       "status": "migrated"
     },
@@ -8852,6 +8807,11 @@
     },
     {
       "kind": "render",
+      "path": "components/settings/BusinessSettingsLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/settings/data-sources/DataSourcesSettingsContent.tsx",
       "status": "migrated"
     },
@@ -8913,6 +8873,11 @@
     {
       "kind": "render",
       "path": "components/settings/experimental/ExperimentalModulesSection.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/settings/experimental/ExperimentalSettingsLoading.tsx",
       "status": "migrated"
     },
     {
@@ -9097,11 +9062,6 @@
     },
     {
       "kind": "render",
-      "path": "components/settings/shell/SettingsShellLoading.tsx",
-      "status": "migrated"
-    },
-    {
-      "kind": "render",
       "path": "components/settings/shell/SettingsSubnav.tsx",
       "status": "migrated"
     },
@@ -9163,6 +9123,11 @@
     {
       "kind": "render",
       "path": "components/settings/tracking/MatchScopeCard.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/settings/tracking/MeasurementConfigurationLoading.tsx",
       "status": "migrated"
     },
     {
@@ -9492,6 +9457,11 @@
     },
     {
       "kind": "render",
+      "path": "components/shell/ShellHeaderLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/shell/ShellSkeleton.tsx",
       "status": "migrated"
     },
@@ -9596,6 +9566,16 @@
       "status": "migrated"
     },
     {
+      "kind": "ui-data",
+      "path": "components/site-audit/site-audit-table-layout.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/site-audit/SiteAuditLoading.tsx",
+      "status": "migrated"
+    },
+    {
       "kind": "render",
       "path": "components/site-audit/SiteAuditResults.tsx",
       "status": "pending"
@@ -9632,7 +9612,32 @@
     },
     {
       "kind": "render",
+      "path": "components/timeline/TimelineLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/timeline/TimelineRow.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/tracking-loading/AiTrackingLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/tracking-loading/AiVisibilityLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/tracking-loading/DashboardLoading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/tracking-loading/LoadingPrimitives.tsx",
       "status": "migrated"
     },
     {

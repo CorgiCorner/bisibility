@@ -84,7 +84,7 @@ export function Badge({ children, status }: Readonly<{ children?: ReactNode; sta
   return (
     <span
       className={cn(
-        "inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide",
+        "inline-flex max-w-full rounded-full px-2 py-1 text-xs font-medium leading-4 [overflow-wrap:anywhere]",
         statusTone(status),
       )}
     >
@@ -93,12 +93,23 @@ export function Badge({ children, status }: Readonly<{ children?: ReactNode; sta
   );
 }
 
-export function Metric({ label, value }: Readonly<{ label: string; value: ReactNode }>) {
+export function Metric({
+  label,
+  value,
+  technical = false,
+}: Readonly<{ label: string; value: ReactNode; technical?: boolean }>) {
   const format = useFormatter();
   return (
-    <div className="min-w-0 rounded-card border border-border bg-bg-sunken px-3 py-2.5">
-      <div className="text-[11px] font-medium text-fg-muted">{label}</div>
-      <div className="mt-1 text-lg font-semibold text-fg">
+    <div className="min-w-0 rounded-card border border-border bg-bg-sunken p-3">
+      <div className="text-xs font-medium leading-5 text-fg-muted">{label}</div>
+      <div
+        className={cn(
+          "mt-1 min-w-0 text-fg [overflow-wrap:anywhere]",
+          technical
+            ? "text-[13px] leading-5 tabular-nums"
+            : "text-xl font-semibold leading-7 tabular-nums",
+        )}
+      >
         {typeof value === "number" ? format.number(value) : value}
       </div>
     </div>
@@ -112,10 +123,10 @@ export function Panel({
   title,
 }: Readonly<{ children: ReactNode; description: string; id: string; title: string }>) {
   return (
-    <section aria-labelledby={id}>
-      <Card size="lg">
+    <section aria-labelledby={id} className="min-w-0">
+      <Card className="min-w-0" size="lg">
         <SectionTitle id={id}>{title}</SectionTitle>
-        <p className="mt-1 text-xs leading-relaxed text-fg-muted">{description}</p>
+        <p className="mt-1 max-w-4xl text-[13px] leading-relaxed text-fg-muted">{description}</p>
         <div className="mt-4">{children}</div>
       </Card>
     </section>
@@ -130,7 +141,7 @@ export function RankWindow({
   return (
     <div>
       <h3 className="text-sm font-semibold text-fg">{label}</h3>
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
         <Metric label={t("rankWindow.scheduled")} value={data.scheduled} />
         <Metric label={t("rankWindow.succeeded")} value={data.succeeded} />
         <Metric label={t("rankWindow.failed")} value={data.failed} />

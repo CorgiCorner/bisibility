@@ -4,6 +4,7 @@ import {
 } from "@/components/demo-research/StoredResultFreshness";
 import type { BacklinksSnapshot } from "@/lib/backlinks/types";
 import { relativePastFact } from "@/lib/format/relative-time";
+import { PROVIDER_CATALOG } from "@/lib/providers/catalog-metadata";
 import { ClockIcon as Clock } from "@phosphor-icons/react/dist/csr/Clock";
 import { GlobeSimpleIcon as GlobeSimple } from "@phosphor-icons/react/dist/csr/GlobeSimple";
 import { useFormatter, useTranslations } from "next-intl";
@@ -81,6 +82,15 @@ export function BacklinksSnapshotMeta({
       </span>
       <span className="text-[12.5px] text-fg-muted">
         {scope} {t("snapshot")} {relativePastLabel(new Date(snapshot.fetchedAt), now, t)}
+      </span>
+      <span className="text-[12px] text-fg-muted">
+        {t("source", {
+          provider:
+            snapshot.provider === "unknown"
+              ? t("unknownSource")
+              : (PROVIDER_CATALOG.find((provider) => provider.id === snapshot.provider)?.label ??
+                snapshot.provider),
+        })}
       </span>
       {storedFreshness ? (
         <StoredResultFreshness {...storedFreshness} />

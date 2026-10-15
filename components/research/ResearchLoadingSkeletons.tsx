@@ -1,6 +1,11 @@
+"use client";
 import { PageContent } from "@/components/shell/PageContent";
+import { pricingTriggerClassName } from "@/components/ui/PricingPopover";
 import { tableHeaderBorderClassName } from "@/components/ui/table-header-styles";
 import { cn } from "@/lib/ui/cn";
+import { BinocularsIcon } from "@phosphor-icons/react/dist/csr/Binoculars";
+import { useTranslations } from "next-intl";
+import { ResearchIdleLoading } from "./ResearchIdleLoading";
 
 function Bar({ className }: Readonly<{ className?: string }>) {
   return <div className={cn("animate-pulse rounded-control bg-bg-sunken", className)} />;
@@ -21,22 +26,23 @@ const tableGrid =
   "grid grid-cols-[50px_minmax(210px,1.5fr)_92px_102px_68px_78px_96px_104px] items-center";
 
 function SearchCardLoading() {
+  const t = useTranslations("projectResearch.search");
   return (
-    <div className="rounded-card border border-border bg-bg-elev p-4 sm:p-5">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start">
-        <Bar className="h-10 flex-1 rounded-control md:min-w-[240px]" />
-        <Bar className="h-10 md:w-[230px]" />
-        <Bar className="h-10 md:w-[132px]" />
-        <Bar className="h-10 md:w-[132px]" />
+    <div className="min-w-0 rounded-card border border-border bg-bg-elev p-4 sm:p-5">
+      <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-start">
+        <Bar className="min-h-[34px] flex-1 rounded-control md:min-w-[240px]" />
+        <Bar className="h-[34px] md:w-[230px]" />
+        <Bar className="h-[34px] md:w-[132px]" />
+        <Bar className="h-[34px] md:w-[132px]" />
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Bar className="h-5 w-9 rounded-full" />
-          <Bar className="h-3 w-[190px]" />
-          <Bar className="size-3 rounded-full" />
+          <span className="text-[12.5px] opacity-40">{t("clickstream")}</span>
+          <Bar className="size-6 rounded-full" />
         </div>
-        <div className="flex items-center gap-4">
-          <Bar className="h-3 w-[112px]" />
+        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-4">
+          <span className={`${pricingTriggerClassName} px-1.5 py-px`}>{t("pricing")}</span>
           <Bar className="h-9 w-[216px]" />
         </div>
       </div>
@@ -45,18 +51,13 @@ function SearchCardLoading() {
 }
 
 function IdleStateLoading() {
+  const t = useTranslations("projectResearch.state");
   return (
-    <div className="flex min-h-[258px] flex-col items-center justify-center rounded-card border border-border bg-bg-elev p-8">
-      <Bar className="mb-4 size-7 rounded-full bg-accent-soft" />
-      <Bar className="h-4 w-[190px]" />
-      <div className="mt-2.5 grid w-full max-w-[320px] gap-2">
-        <Bar className="mx-auto h-3 w-[250px]" />
-        <Bar className="mx-auto h-3 w-[292px]" />
-        <Bar className="mx-auto h-3 w-[268px]" />
-        <Bar className="mx-auto h-3 w-[286px]" />
-        <Bar className="mx-auto h-3 w-[232px]" />
-      </div>
-    </div>
+    <ResearchIdleLoading
+      icon={BinocularsIcon}
+      title={t("idleTitle")}
+      bullets={[t("idleBulletProvider"), t("idleBulletCache"), t("idleBulletGrouping")]}
+    />
   );
 }
 
@@ -129,6 +130,7 @@ export function ResearchResultsLoading({ ariaLabel }: Readonly<{ ariaLabel: stri
   return (
     <div
       aria-label={ariaLabel}
+      aria-busy="true"
       className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,1fr)]"
     >
       <ResultsTableLoading />

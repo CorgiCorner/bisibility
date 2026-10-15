@@ -11,7 +11,6 @@ import {
   FieldWidths as FieldWidthsStory,
   Loading as LoadingStory,
 } from "@/components/settings/shell/SettingsShell.stories";
-import { SettingsShellLoading } from "@/components/settings/shell/SettingsShellLoading";
 import {
   SettingsField,
   settingsFieldWidths,
@@ -81,11 +80,6 @@ function render(ui: ReactElement) {
 }
 
 const loadingBoundaries = [
-  {
-    activeSection: "general",
-    name: "generic Settings shell",
-    render: () => <SettingsShellLoading />,
-  },
   {
     activeSection: "general",
     name: "General",
@@ -314,21 +308,13 @@ describe("SettingsShell", () => {
     );
   });
 
-  it("keeps loading and settled card frames on the same geometry contract", () => {
+  it("keeps the shared settled card on its geometry contract", () => {
     const { container } = render(
-      <>
-        <SettingsCard className={settingsCardGeometryClassNames.form} title="Settled">
-          Settled content.
-        </SettingsCard>
-        <SettingsShellLoading />
-      </>,
+      <SettingsCard className={settingsCardGeometryClassNames.form} title="Settled">
+        Settled content.
+      </SettingsCard>,
     );
-    const settled = container.querySelector('[data-settings-card-frame="settled"]');
-    const frames = Array.from(container.querySelectorAll("[data-settings-loading-frame]"));
-
-    expect(settled).toBeInTheDocument();
-    expect(frames).toHaveLength(2);
-    expect(settled).toHaveClass(
+    expect(container.querySelector('[data-settings-card-frame="settled"]')).toHaveClass(
       "max-w-[760px]",
       "min-h-[376px]",
       "rounded-card",
@@ -336,16 +322,6 @@ describe("SettingsShell", () => {
       "lg:min-h-0",
       "lg:h-[324px]",
     );
-    expect(frames[0]).toHaveClass(
-      "max-w-[760px]",
-      "min-h-[376px]",
-      "rounded-card",
-      "p-5",
-      "lg:min-h-0",
-      "lg:h-[324px]",
-    );
-    expect(frames[1]).toHaveClass("h-[219px]", "lg:h-[226px]");
-    expect(container.querySelector("[data-settings-loading-route-header]")).not.toBeInTheDocument();
   });
 
   it.each(loadingBoundaries)(

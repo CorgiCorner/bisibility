@@ -3,8 +3,11 @@
 // Rendered both by the client workspace and by the route-level loading.tsx, which mounts
 // BacklinksMessagesBoundary around it. Either way `projectBacklinks` is a client payload.
 
+import { ResearchIdleLoading } from "@/components/research/ResearchIdleLoading";
 import { PageContent } from "@/components/shell/PageContent";
+import { pricingTriggerClassName } from "@/components/ui/PricingPopover";
 import { cn } from "@/lib/ui/cn";
+import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
 import { useTranslations } from "next-intl";
 import type { ComponentPropsWithoutRef } from "react";
 
@@ -17,24 +20,26 @@ const tableHeaderKeys = ["source", "target", "anchor", "authority", "first-seen"
 const tableRowKeys = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8"] as const;
 
 function AnalyzeCardLoading() {
+  const t = useTranslations("projectBacklinks.workspace.analyze");
   return (
     <div
-      className="rounded-card border border-border bg-bg-elev p-4 sm:p-5"
+      className="min-w-0 rounded-card border border-border bg-bg-elev p-4 sm:p-5"
       data-testid="backlinks-analyze-loading"
     >
       <div className="grid gap-3">
         <div className="flex flex-col gap-3 md:flex-row md:items-start">
-          <Bar className="h-[38px] flex-1 rounded-control border border-border md:min-w-[240px]" />
-          <Bar className="h-[38px] md:w-[196px]" />
-          <Bar className="min-h-[38px] lg:w-[132px]" />
+          <Bar className="min-h-9 flex-1 sm:min-h-[34px] rounded-control border border-border md:min-w-[240px]" />
+          <Bar className="h-[34px] md:w-[196px]" />
+          <Bar className="min-h-[34px] lg:w-[132px]" />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <Bar className="h-5 w-9 rounded-full" />
-            <Bar className="h-3 w-[164px]" />
+            <span className="text-[12.5px] opacity-40">{t("includeSubdomains")}</span>
+            <Bar className="size-6 rounded-full" />
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <Bar className="h-3 w-[112px]" />
+          <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-4">
+            <span className={`${pricingTriggerClassName} px-1.5 py-px`}>{t("pricing")}</span>
             <Bar className="h-9 min-w-[216px]" />
           </div>
         </div>
@@ -44,21 +49,13 @@ function AnalyzeCardLoading() {
 }
 
 function IdleStateLoading() {
+  const t = useTranslations("projectBacklinks.workspace.idle");
   return (
-    <div
-      className="flex flex-col items-center justify-center rounded-card border border-border bg-bg-elev px-8 py-11 text-center"
-      data-testid="backlinks-idle-loading"
-    >
-      <Bar className="h-[54px] w-[54px] rounded-card" data-testid="backlinks-idle-icon-loading" />
-      <Bar className="mt-4.5 h-5 w-[210px]" />
-      <div className="m-0 mt-[7px] w-full max-w-[430px]" data-testid="backlinks-idle-copy-loading">
-        <div className="mx-auto grid w-fit gap-1.5" data-testid="backlinks-idle-bullets-loading">
-          <Bar className="h-3 w-[402px] max-w-full" />
-          <Bar className="h-3 w-[378px] max-w-full" />
-          <Bar className="h-3 w-[424px] max-w-full" />
-        </div>
-      </div>
-    </div>
+    <ResearchIdleLoading
+      icon={LinkIcon}
+      title={t("idleTitle")}
+      bullets={[t("bullets.price"), t("bullets.cache"), t("bullets.diff")]}
+    />
   );
 }
 

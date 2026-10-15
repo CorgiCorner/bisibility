@@ -707,6 +707,48 @@
         "reportUnavailable": "レポートを表示できません",
         "reportCapacity": "この履歴はレポートの上限を超えています。現在のデータを表示するには、キーワード一覧に戻ってください。",
         "reportChanged": "読み込み中にデータが変更されました。保存済みデータを更新して、新しいスナップショットを開いてください。"
+      },
+      "providerComparison": {
+        "title": "プロバイダーを比較",
+        "help": "同じキーワード、市場、デバイスでDataForSEOとSerpApiを1回ずつ確認します。結果は追跡履歴とは別に保存され、スケジュールやプロジェクトのプロバイダーは変更されません。",
+        "open": "比較を開く",
+        "close": "閉じる",
+        "error": "比較を確認できませんでした。保存済みの結果を更新するか、同じリクエストを再試行してください。",
+        "retry": "再試行",
+        "loading": "比較を読み込み中…",
+        "depth": "上位20件",
+        "needsProviders": "結果を比較するにはDataForSEOとSerpApiを接続してください。",
+        "connections": "プロバイダー接続",
+        "refresh": "結果を更新",
+        "preview": "費用を確認",
+        "review": "1回限りの比較",
+        "searches": "{count, plural, other {# 回の検索}}",
+        "credits": "クレジット: {value}",
+        "expires": "見積もりの有効期限: {date}",
+        "launch": "比較を実行",
+        "cancel": "キャンセル",
+        "noPosition": "確認済みの順位なし",
+        "complete": "完全な応答",
+        "uncertain": "カバレッジが不明",
+        "qualityHelp": "順位がないだけでは不在を証明できません。両方のプロバイダーの観測時刻とカバレッジを比較してください。",
+        "attention": "この結果は確認が必要です。費用または結果を確定できませんでした。",
+        "desktop": "デスクトップ",
+        "mobile": "モバイル",
+        "retryLaunch": "実行状況を確認",
+        "launchUncertain": "実行を確認できませんでした。別の実行を開始する前に同じリクエストを確認してください。",
+        "providers": {
+          "dataforseo": "DataForSEO",
+          "serpapi": "SerpApi"
+        },
+        "statuses": {
+          "queued": "待機中",
+          "claimed": "実行中",
+          "completed": "完了",
+          "failed": "失敗",
+          "unknown": "不明",
+          "cancelled": "キャンセル済み"
+        },
+        "outside": "上位20件外"
       }
     }
   }

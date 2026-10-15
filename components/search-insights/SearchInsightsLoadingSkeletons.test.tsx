@@ -1,13 +1,14 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { renderWithSearchInsightsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { FIRST_VIEW_ROWS } from "@/lib/search-insights/constants";
+import { stubResizeObserver } from "@/tests/observers";
+import { screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   SearchInsightsBodyLoading,
   SearchInsightsPageLoading,
 } from "./SearchInsightsLoadingSkeletons";
-import { moduleTableColumns } from "./search-insights-table-columns";
 
-// Six rows in each of the two table cards, which is what the design reserves.
-const SKELETON_ROWS = 12;
+beforeEach(stubResizeObserver);
 
 describe("SearchInsightsBodyLoading", () => {
   it("reserves the geometry the tables arrive into rather than a copy of it", () => {
@@ -15,11 +16,13 @@ describe("SearchInsightsBodyLoading", () => {
       <SearchInsightsBodyLoading ariaLabel="Search Console data loading" />,
     );
 
-    const reserved = [...container.querySelectorAll("div")].filter((node) =>
-      node.className.includes(moduleTableColumns.queries),
-    );
-
-    expect(reserved).toHaveLength(SKELETON_ROWS);
+    const tables = container.querySelectorAll("[role=table]");
+    expect(tables).toHaveLength(2);
+    for (const table of tables) {
+      expect(table.querySelectorAll("[role=columnheader]")).toHaveLength(6);
+      expect(table.querySelectorAll("[role=row][data-depth]")).toHaveLength(FIRST_VIEW_ROWS);
+    }
+    expect(container.querySelectorAll("button:not(:disabled)")).toHaveLength(0);
   });
 
   it("tells assistive technology the page is loading rather than empty", () => {

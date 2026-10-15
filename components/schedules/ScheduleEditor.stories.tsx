@@ -1,7 +1,13 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import projectRunsMessages from "@/messages/core/en/project-runs-schedules.json";
+import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { ScheduleEditor } from "./ScheduleEditor";
 import type { ScheduleEditorProps } from "./ScheduleEditorModel";
 import { ScheduleObjectFrame } from "./ScheduleObjectFrame";
+
+const messages = mergeMessageCatalogs(sharedMessages, projectRunsMessages);
 
 const dailySchedule = {
   cronExpression: null,
@@ -65,9 +71,11 @@ const meta = {
   component: ScheduleEditor,
   decorators: [
     (Story) => (
-      <div className="min-h-screen bg-bg p-5 text-fg sm:p-6">
-        <Story />
-      </div>
+      <FeatureMessagesProvider locale="en" messages={messages} timeZone="UTC">
+        <div className="min-h-screen bg-bg p-5 text-fg sm:p-6">
+          <Story />
+        </div>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },

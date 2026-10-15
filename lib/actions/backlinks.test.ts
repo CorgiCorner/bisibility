@@ -100,6 +100,27 @@ describe("backlinks actions", () => {
     );
   });
 
+  it("forwards an explicit provider for estimates, analysis and load-more", async () => {
+    const input = {
+      projectId: "prj_1",
+      provider: " fixture_b ",
+      target: "example.com",
+      targetScope: "site",
+      includeSubdomains: true,
+      limit: 100,
+    };
+    await analyzeBacklinksAction({ ...input, estimateOnly: true });
+    await analyzeBacklinksAction(input);
+    await loadMoreBacklinkRowsAction(input);
+    expect(mocks.analyze).toHaveBeenCalledTimes(2);
+    for (const service of [mocks.analyze, mocks.loadMore]) {
+      expect(service).toHaveBeenCalledWith(
+        expect.objectContaining({ projectId: "project_1" }),
+        expect.objectContaining({ provider: "fixture_b" }),
+      );
+    }
+  });
+
   it("authorizes and delegates validated load-more input", async () => {
     const outcome = { ok: false, reason: "rate_limited" };
     mocks.loadMore.mockResolvedValue(outcome);

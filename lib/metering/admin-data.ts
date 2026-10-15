@@ -11,10 +11,11 @@ import { meteringNamespace, meteringRuntime } from "./runtime";
 export async function readMeteringAdmin({
   month,
   project,
+  actorId,
   usageCursor,
   exceptionCursor,
   exceptionTo,
-}: MeteringAdminFilters & MeteringAdminCursors): Promise<MeteringAdminData> {
+}: MeteringAdminFilters & MeteringAdminCursors & { actorId?: string }): Promise<MeteringAdminData> {
   const { meter } = await meteringRuntime();
   const namespace = meteringNamespace();
   const access: AccessContext = {
@@ -55,7 +56,7 @@ export async function readMeteringAdmin({
         publicId: true,
         provider: true,
         projectId: true,
-        project: { select: { ownerId: true } },
+        project: { select: { ownerId: true, publicId: true } },
       },
       orderBy: { id: "asc" },
       take: 51,
@@ -130,7 +131,13 @@ export async function readMeteringAdmin({
     connectionIds.length
       ? prisma.providerConnection.findMany({
           where: { id: { in: connectionIds } },
-          select: { id: true, publicId: true },
+          select: {
+            id: true,
+            publicId: true,
+            provider: true,
+            projectId: true,
+            project: { select: { publicId: true } },
+          },
         })
       : [],
     groupIds.length
@@ -148,7 +155,46 @@ export async function readMeteringAdmin({
       [platformAllocationTag(connection.provider, connection.id), connection.publicId],
     ]),
   );
+  const references: NonNullable<MeteringAdminData["references"]> = {
+    projects: {},
+    connections: {},
+  };
+  const candidateIds = [
+    ...new Set([
+      ...projects.map((row) => row.id),
+      ...groupRefs.map((row) => row.id),
+      ...projectChoices.map((row) => row.id),
+      ...connections.map((row) => row.projectId),
+      ...connectionRefs.map((row) => row.projectId),
+    ]),
+  ];
+  // Instance administration does not grant access to tenant project names.
+  const readableProjects =
+    actorId && candidateIds.length
+      ? await prisma.project.findMany({
+          where: {
+            id: { in: candidateIds },
+            OR: [{ ownerId: actorId }, { members: { some: { userId: actorId } } }],
+          },
+          select: { id: true, publicId: true, name: true },
+        })
+      : [];
+  const readableNames = new Map(readableProjects.map((row) => [row.id, row.name]));
+  const filterIds = new Set(projectChoices.map((row) => row.id));
+  if (project) filterIds.add(project);
+  for (const row of readableProjects) {
+    if (row.publicId) references.projects[row.publicId] = row.name;
+    if (filterIds.has(row.id)) references.projects[row.id] = row.name;
+  }
+  for (const row of [...connections, ...connectionRefs]) {
+    if (!row.publicId || !row.project?.publicId) continue;
+    references.connections[row.publicId] = {
+      project: readableNames.get(row.projectId) ?? row.project.publicId,
+      provider: row.provider,
+    };
+  }
   return {
+    references,
     usage: {
       ...usage,
       watermark: null,

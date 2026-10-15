@@ -138,6 +138,22 @@
         "analytics": "Analítica",
         "serp": "SERP",
         "connections": "Conexiones de {kind}"
+      },
+      "emailAllowance": {
+        "title": "Envíos de correo de hoy",
+        "description": "Límites diarios de seguridad de esta instalación.",
+        "bulk": "Correo masivo",
+        "transactional": "Correo transaccional",
+        "attempts": "Intentos reservados",
+        "remaining": "Restantes",
+        "limit": "Límite diario",
+        "reset": "Se restablece: {time} UTC",
+        "asOf": "Lectura: {time} UTC",
+        "help": "Cada envío reservado a un destinatario consume este límite, incluso si el intento falla después. Son límites locales de la aplicación, no totales de mensajes entregados ni la cuota de la cuenta del proveedor.",
+        "notConfigured": "El envío de correo no está configurado en esta instalación.",
+        "setup": "Configurar el correo",
+        "configurationUnavailable": "No se pudo leer la configuración del correo.",
+        "countsUnavailable": "El recuento de intentos de envío no está disponible."
       }
     },
     "worker": {
@@ -369,7 +385,12 @@
       "allProjects": "Todos los proyectos",
       "unavailableNote": "Los datos de medición no están disponibles. Los importes y recuentos son desconocidos.",
       "truncated": "Se muestra una selección limitada. Filtre por proyecto para reducir los resultados.",
-      "budgetNote": "Los presupuestos muestran el ciclo actual, independientemente del mes de uso seleccionado."
+      "budgetNote": "Los presupuestos muestran el ciclo actual, independientemente del mes de uso seleccionado.",
+      "usageHeading": "Uso registrado",
+      "budgetsHeading": "Presupuestos actuales",
+      "scope": "Proyecto / conexión",
+      "status": "Estado",
+      "exceptionsHeading": "Requiere atención"
     },
     "announcements": {
       "heading": "Avisos para los usuarios",
@@ -566,7 +587,8 @@
       "blockedScopes": "Gasto bloqueado por contabilidad sin confirmar: {projects, number} proyectos, {connections, number} conexiones.",
       "projectBlocked": "La contabilidad pendiente bloquea el gasto del proyecto.",
       "connectionBlocked": "La contabilidad pendiente bloquea el gasto de la conexión.",
-      "lastResultActivityAt": "Último progreso del proceso de recuperación de resultados"
+      "lastResultActivityAt": "Último progreso del proceso de recuperación de resultados",
+      "noSpendShort": "La recuperación comprueba las pruebas guardadas antes de actuar."
     }
   }
 }

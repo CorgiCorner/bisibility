@@ -19,7 +19,8 @@
         "includeSubdomains": "Incluir subdominios",
         "subdomainsHelp": "Cuenta como parte del perfil los enlaces a blog.acme-store.com y a otros subdominios. No cambia el precio.",
         "pricing": "¿Cómo se calcula el precio?",
-        "needTarget": "Escribe primero un dominio: aquí aparecerá el precio"
+        "needTarget": "Escribe primero un dominio: aquí aparecerá el precio",
+        "provider": "Fuente de backlinks"
       },
       "demo": {
         "title": "Backlinks",
@@ -147,7 +148,9 @@
         "recentTargetsAria": "Objetivos recientes",
         "recentTargets": "Objetivos recientes",
         "removeRecent": "Quitar {target} de los objetivos recientes",
-        "historyUnavailable": "El historial no está disponible para este resultado. El resumen y los enlaces siguen disponibles."
+        "historyUnavailable": "El historial no está disponible para este resultado. El resumen y los enlaces siguen disponibles.",
+        "source": "Fuente: {provider}",
+        "unknownSource": "Fuente desconocida"
       },
       "summary": {
         "per30Days": "/ 30 d",

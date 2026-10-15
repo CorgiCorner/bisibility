@@ -84,6 +84,29 @@ export async function analyzeBacklinks(
   const now = new Date();
   const project = await backlinksProject(context.projectId);
   if (!project) return { ok: false, reason: "no_source" };
+  if (options.provider === "unknown") {
+    if (options.fresh) return { ok: false, reason: "no_source" };
+    const cached = await findBacklinksSnapshot({
+      ...input,
+      minRows: input.resultLimit,
+      now,
+      projectId: project.id,
+      provider: "unknown",
+    });
+    if (!cached) return { ok: false, reason: "no_source" };
+    return options.estimateOnly
+      ? estimateEnvelope({
+          cachedSnapshot: cached,
+          estimatedCostCents: 0,
+          includeSubdomains: input.includeSubdomains,
+          provider: "unknown",
+          scope: input.scope,
+          target: input.target,
+        })
+      : snapshotEnvelope(cached, { cached: true, costCents: 0, now });
+  }
+  const source = backlinksSource(project, options.provider);
+  const provider = options.provider ?? source?.provider.id;
 
   let cachedSnapshot: { expiresAt: Date; fetchedAt: Date } | null = null;
   if (!options.fresh) {
@@ -93,6 +116,7 @@ export async function analyzeBacklinks(
         minRows: input.resultLimit,
         now,
         projectId: project.id,
+        provider,
       });
     } else {
       const cached = await findBacklinksSnapshot({
@@ -100,6 +124,7 @@ export async function analyzeBacklinks(
         minRows: input.resultLimit,
         now,
         projectId: project.id,
+        provider,
       });
       if (cached) {
         return snapshotEnvelope(cached, { cached: true, costCents: 0, now });
@@ -107,7 +132,6 @@ export async function analyzeBacklinks(
     }
   }
 
-  const source = backlinksSource(project);
   if (!source) return { ok: false, reason: "no_source" };
   const estimate = backlinksEstimate({
     resultLimit: input.resultLimit,
@@ -131,6 +155,7 @@ export async function analyzeBacklinks(
       includeSubdomains: input.includeSubdomains,
       mode: input.mode,
       projectId: project.id,
+      provider: source.provider.id,
       scope: input.scope,
       target: input.target,
     });
@@ -204,6 +229,7 @@ export async function loadMoreBacklinkRows(
   context: BacklinksServiceContext,
   options: LoadMoreBacklinkRowsOptions,
 ): Promise<BacklinksRowsOutcome> {
+  if (options.provider === "unknown") return { ok: false, reason: "no_source" };
   const input = normalizedLoadMore(options);
   const now = new Date();
   const project = await backlinksProject(context.projectId);
@@ -212,9 +238,14 @@ export async function loadMoreBacklinkRows(
     ...input,
     now,
     projectId: project.id,
+    provider: options.provider,
   });
   if (!snapshot) throw new BacklinksSnapshotExpiredError();
-  const source = backlinksSource(project, snapshotProvider(snapshot.summary));
+  const provider = snapshotProvider(snapshot.summary);
+  if (provider === "unknown" || (options.provider && options.provider !== provider)) {
+    return { ok: false, reason: "no_source" };
+  }
+  const source = backlinksSource(project, provider);
   if (!source) return { ok: false, reason: "no_source" };
 
   try {

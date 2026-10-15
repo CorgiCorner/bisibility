@@ -1,0 +1,63 @@
+// Isolated on-demand request custody, never ordinary rank history or schedules.
+model ProviderComparisonPreview {
+  id String @id @default(uuid())
+  projectId String
+  actorId String?
+  keywordId String?
+  snapshot Json
+  sourceHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  keyword Keyword? @relation(fields: [keywordId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  runs ProviderComparisonRun[]
+  @@unique([projectId, id])
+  @@index([projectId, createdAt], map: "provider_comparison_previews_projectid_createdat_idx")
+  @@map("provider_comparison_previews")
+}
+
+model ProviderComparisonRun {
+  id String @id @default(uuid())
+  projectId String
+  actorId String?
+  keywordId String?
+  requestKey String
+  previewId String
+  snapshot Json
+  sourceHash String
+  cancellationRequested Boolean @default(false)
+  createdAt DateTime @default(now())
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  keyword Keyword? @relation(fields: [keywordId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  preview ProviderComparisonPreview @relation(fields: [projectId, previewId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+  sides ProviderComparisonSide[]
+  @@unique([projectId, requestKey])
+  @@unique([projectId, id])
+  @@index([projectId, createdAt], map: "provider_comparison_runs_projectid_createdat_idx")
+  @@map("provider_comparison_runs")
+}
+
+model ProviderComparisonSide {
+  id String @id @default(uuid())
+  runId String
+  projectId String
+  provider String
+  connectionId String
+  status String @default("queued")
+  claimToken String?
+  requestKeys String[] @default([])
+  attemptIds String[] @default([])
+  costCents Decimal? @db.Decimal(12,4)
+  customerCostCents Decimal? @db.Decimal(12,4)
+  quantity Decimal? @db.Decimal(18,6)
+  reason String?
+  result Json?
+  claimedAt DateTime?
+  finishedAt DateTime?
+  run ProviderComparisonRun @relation(fields: [projectId, runId], references: [projectId, id], onDelete: Cascade, onUpdate: NoAction)
+  @@unique([runId, provider])
+  @@index([projectId, status], map: "provider_comparison_sides_projectid_status_idx")
+  @@map("provider_comparison_sides")
+}

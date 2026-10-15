@@ -54,11 +54,13 @@ describe("backlinks page context", () => {
       costContext: { capCents: 5000, spentCents: 125 },
       defaultTarget: "example.com",
       providerStatus: "connected",
+      providers: [{ label: "DataForSEO", value: "dataforseo" }],
       recentTargets: [
         {
           cachedUntil: "2026-07-25T15:00:00.000Z",
           fetchedAt: "2026-07-24T15:00:00.000Z",
           includeSubdomains: true,
+          provider: "unknown",
           resultLimit: 500,
           target: "example.com",
           targetScope: "site",
@@ -67,6 +69,7 @@ describe("backlinks page context", () => {
           cachedUntil: "2026-07-25T14:00:00.000Z",
           fetchedAt: "2026-07-24T14:00:00.000Z",
           includeSubdomains: false,
+          provider: "unknown",
           resultLimit: 100,
           target: "https://example.com/pricing",
           targetScope: "page",
@@ -76,18 +79,51 @@ describe("backlinks page context", () => {
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
     expect(mocks.cost).toHaveBeenCalledWith("prj_1");
     expect(mocks.prisma.backlinkSnapshot.findMany).toHaveBeenCalledWith({
-      distinct: ["target", "targetScope", "includeSubdomains"],
       orderBy: { fetchedAt: "desc" },
       select: {
         expiresAt: true,
         fetchedAt: true,
         fetchedRowCount: true,
         includeSubdomains: true,
+        summary: true,
         target: true,
         targetScope: true,
       },
-      take: 5,
+      take: 50,
       where: { projectId: "project_1" },
     });
+  });
+
+  it("offers only connected providers with the complete backlinks capability", async () => {
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      { provider: "serpapi", status: "connected" },
+      { provider: "dataforseo", status: "needs_reauth" },
+      { provider: "unregistered", status: "connected" },
+    ]);
+    await expect(getBacklinksPageContext("prj_1")).resolves.toMatchObject({
+      providerStatus: "needs_reauth",
+      providers: [],
+    });
+  });
+
+  it("keeps identical recent targets from different sources separate", async () => {
+    const base = {
+      expiresAt: new Date("2026-07-25T15:00:00Z"),
+      fetchedAt: new Date("2026-07-24T15:00:00Z"),
+      fetchedRowCount: 100,
+      includeSubdomains: true,
+      target: "example.com",
+      targetScope: "site",
+    };
+    mocks.prisma.backlinkSnapshot.findMany.mockResolvedValue([
+      { ...base, summary: { _provider: "fixture_a" } },
+      { ...base, summary: { _provider: "fixture_b" } },
+      { ...base, summary: { _provider: "fixture_a" } },
+    ]);
+    const result = await getBacklinksPageContext("prj_1");
+    expect(result.recentTargets.map((target) => target.provider)).toEqual([
+      "fixture_a",
+      "fixture_b",
+    ]);
   });
 });

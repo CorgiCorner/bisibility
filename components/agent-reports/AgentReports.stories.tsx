@@ -1,12 +1,15 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
-import { PageContent } from "@/components/shell/PageContent";
+import { auditFixture } from "@/components/site-audit/story-fixtures";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { AgentReportResource, AgentReportSummary } from "@/lib/agent-reports/model";
 import messages from "@/messages/core/en/agent-workspace.json";
+import auditMessages from "@/messages/core/en/project-site-audit.json";
 import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { AgentReportDetail } from "./AgentReportDetail";
+import { AgentReportBack, AgentReportDetailFrame } from "./AgentReportDetailLayout";
+import { AgentReportDetailLoading } from "./AgentReportDetailLoading";
 import { AgentReportHistory } from "./AgentReportHistory";
 import { AgentReportsLayout, AgentReportsLoading, AgentReportsToolbar } from "./AgentReportsLayout";
 
@@ -57,31 +60,60 @@ function HistoryView() {
   );
 }
 
-function AnalysisView() {
+function AnalysisView({ audit = false, legacy = false }: { audit?: boolean; legacy?: boolean }) {
   return (
-    <div className="grid gap-4">
-      <AgentReportDetail
-        report={analysisReport}
-        projectRef={projectRef}
-        provenanceLabel={messages.agentWorkspace.provenance}
-      />
-    </div>
+    <AgentReportDetail
+      report={
+        audit
+          ? {
+              ...analysisReport,
+              title: "Site audit - acme.com",
+              kind: "site_audit",
+              body: legacy
+                ? {
+                    pages: [
+                      { url: "https://acme.com/", title: "Acme - keyword intelligence" },
+                      { url: "https://acme.com/pricing", title: null, status: 200 },
+                    ],
+                  }
+                : { ...auditFixture.result },
+            }
+          : analysisReport
+      }
+      projectRef={projectRef}
+      provenanceLabel={messages.agentWorkspace.provenance}
+      savedDetailsLabel={auditMessages.projectSiteAudit.savedDetails}
+    />
   );
 }
 
 function AgentReportsStory({
   view,
-}: Readonly<{ view: "history" | "analysis" | "empty" | "loading" }>) {
+}: Readonly<{
+  view: "history" | "analysis" | "audit" | "legacy-audit" | "empty" | "loading" | "detail-loading";
+}>) {
   return (
     <FeatureMessagesProvider
       locale="en"
-      messages={{ ...sharedMessages, ...messages }}
+      messages={{ ...sharedMessages, ...messages, ...auditMessages }}
       timeZone="UTC"
     >
-      {view === "analysis" ? (
-        <PageContent variant="section">
-          <AnalysisView />
-        </PageContent>
+      {view === "analysis" || view === "audit" || view === "legacy-audit" ? (
+        <AgentReportDetailFrame>
+          <AgentReportBack
+            href={`/app/${projectRef}/agent-reports`}
+            label={messages.agentWorkspace.back}
+          />
+          <AnalysisView
+            audit={view === "audit" || view === "legacy-audit"}
+            legacy={view === "legacy-audit"}
+          />
+        </AgentReportDetailFrame>
+      ) : view === "detail-loading" ? (
+        <AgentReportDetailLoading
+          backLabel={messages.agentWorkspace.back}
+          membersOnlyLabel={messages.agentWorkspace.membersOnly}
+        />
       ) : view === "loading" ? (
         <AgentReportsLoading
           description={messages.agentWorkspace.reportsDescription}
@@ -118,3 +150,8 @@ export const History: Story = { args: { view: "history" } };
 export const Analysis: Story = { args: { view: "analysis" } };
 export const Empty: Story = { args: { view: "empty" } };
 export const Loading: Story = { args: { view: "loading" } };
+export const DetailLoading: Story = { args: { view: "detail-loading" } };
+
+export const SiteAudit: Story = { args: { view: "audit" } };
+
+export const LegacySiteAudit: Story = { args: { view: "legacy-audit" } };

@@ -121,7 +121,7 @@ export function ScheduleEditorFields({
         />
       </div>
 
-      <div className="h-[210px] sm:h-[180px]" data-testid="schedule-cadence-fields">
+      <div data-testid="schedule-cadence-fields">
         {frequency === "custom_cron" ? (
           <div className="flex flex-col gap-1.5">
             <FieldLabel
@@ -148,7 +148,7 @@ export function ScheduleEditorFields({
           </div>
         ) : null}
 
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-2 items-start gap-3.5">
           {frequency === "weekly" ? (
             <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
               <FieldLabel className={labelClass} label={t("weekday")} />
@@ -186,6 +186,7 @@ export function ScheduleEditorFields({
               <FieldLabel className={labelClass} htmlFor="schedule-time" label={t("time")} />
               <Input
                 aria-label={t("editor.time24")}
+                aria-describedby="schedule-time-help"
                 className={fieldClass}
                 id="schedule-time"
                 inputMode="numeric"
@@ -193,7 +194,7 @@ export function ScheduleEditorFields({
                 {...register("timeOfDay")}
                 onChange={(event) => setCadenceValue("timeOfDay", event.currentTarget.value)}
               />
-              <span className="text-[11px] text-fg-muted">
+              <span className="text-[11px] leading-5 text-fg-muted" id="schedule-time-help">
                 {watch("timeOfDay")
                   ? t("editor.thirtyMinuteSteps")
                   : frequency === "daily"

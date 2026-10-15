@@ -5,7 +5,8 @@ import { recurringMonitorsEnabled } from "@/lib/local-monitor-recurring/config";
 
 export const WORKER_INTENT_PENDING_PROBE = Prisma.sql`
   SELECT
-    EXISTS (
+    EXISTS (SELECT 1 FROM provider_comparison_sides WHERE status='queued')
+    OR EXISTS (
       SELECT 1 FROM "ai_tracking_runs" AS run
       JOIN "ai_tracking_samples" AS sample ON sample."runId" = run."id"
       WHERE run."state" IN ('planned', 'running', 'cancelled')

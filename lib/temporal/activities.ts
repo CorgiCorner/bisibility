@@ -44,6 +44,7 @@ export type { MeteringMaintenanceActivityResult } from "./metering-maintenance-a
 export { maintainMeteringReservationsActivity } from "./metering-maintenance-activity";
 export type { OpsHeartbeatActivityResult } from "./ops-activities";
 export { opsHeartbeatActivity } from "./ops-activities";
+export { executeProviderComparisonActivity } from "./provider-comparison-activities";
 export type { ProviderUsageReconciliationActivityResult } from "./provider-usage-reconcile-activity";
 export { reconcileProviderUsageActivity } from "./provider-usage-reconcile-activity";
 export {

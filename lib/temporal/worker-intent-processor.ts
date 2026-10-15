@@ -5,6 +5,7 @@ import { hasPendingWorkerIntent } from "../worker-intents/pending-probe";
 import { subscribeToWorkerIntents, workerIntentPollIntervalMs } from "../worker-intents/realtime";
 import { dispatchAiTrackingIntents } from "./ai-tracking-intent-dispatch";
 import { dispatchLocalMonitorIntents } from "./local-monitor-intent-dispatch";
+import { dispatchProviderComparisonIntents } from "./provider-comparison-intents";
 import { dispatchQueuedRankCheckRunIntents } from "./rank-run-intent-dispatch";
 import { dispatchFirstTrafficSyncIntent } from "./traffic-intent-dispatch";
 import { sweepWelcomeFollowupIntents } from "./welcome-intent-processor";
@@ -12,6 +13,7 @@ import { sweepWelcomeFollowupIntents } from "./welcome-intent-processor";
 type SweepOptions = {
   produceLocalMonitors?: typeof produceDueRecurringMonitors;
   dispatchLocalMonitors?: typeof dispatchLocalMonitorIntents;
+  dispatchComparisons?: typeof dispatchProviderComparisonIntents;
   dispatchTracking?: typeof dispatchAiTrackingIntents;
   dispatchRankRuns?: typeof dispatchQueuedRankCheckRunIntents;
   dispatchTraffic?: typeof dispatchFirstTrafficSyncIntent;
@@ -24,11 +26,21 @@ export async function sweepWorkerIntents(options: SweepOptions = {}) {
   const rankRuns = await (options.dispatchRankRuns ?? dispatchQueuedRankCheckRunIntents)();
   const localRecurring = await (options.produceLocalMonitors ?? produceDueRecurringMonitors)();
   const localMonitors = await (options.dispatchLocalMonitors ?? dispatchLocalMonitorIntents)();
+  const comparisons = await (options.dispatchComparisons ?? dispatchProviderComparisonIntents)();
   const tracking = await (options.dispatchTracking ?? dispatchAiTrackingIntents)();
   const search = await (options.reconcileSearchInsights ?? reconcileRequestedSearchInsightsSyncs)();
   const traffic = await (options.dispatchTraffic ?? dispatchFirstTrafficSyncIntent)();
   const welcome = await (options.sweepWelcome ?? sweepWelcomeFollowupIntents)();
-  return { rankRuns, localRecurring, localMonitors, tracking, search, traffic, welcome };
+  return {
+    rankRuns,
+    localRecurring,
+    localMonitors,
+    comparisons,
+    tracking,
+    search,
+    traffic,
+    welcome,
+  };
 }
 
 export function startWorkerIntentProcessor() {

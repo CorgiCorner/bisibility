@@ -1,1 +1,1 @@
-export { default } from "@/app/(regional)/app/(workspace)/[project]/overview/loading";
+export { DashboardLoading as default } from "@/components/tracking-loading/DashboardLoading";

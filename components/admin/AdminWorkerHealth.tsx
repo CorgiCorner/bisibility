@@ -43,23 +43,29 @@ export function AdminWorkerHealth({
           <Metric
             label={t("lastHeartbeat")}
             value={
-              <span className="text-sm">
+              <span className="text-[13px] leading-5">
                 {displayTime(worker.lastSeenAt, context, values("unavailable"))}
               </span>
             }
           />
-          <Metric label={t("release")} value={<span>{worker.release}</span>} />
-          <Metric label={t("environment")} value={<span>{worker.environment}</span>} />
-          <Metric label={t("schedulerDriver")} value={<span>{worker.schedulerDriver}</span>} />
+          <Metric technical label={t("release")} value={<span>{worker.release}</span>} />
+          <Metric technical label={t("environment")} value={<span>{worker.environment}</span>} />
+          <Metric
+            technical
+            label={t("schedulerDriver")}
+            value={<span>{worker.schedulerDriver}</span>}
+          />
           <Metric
             label={t("schemaStatus")}
             value={<Badge status={status.tone}>{status.label}</Badge>}
           />
           <Metric
+            technical
             label={t("bundledMigration")}
             value={<span>{worker.bundledMigration ?? values("unavailable")}</span>}
           />
           <Metric
+            technical
             label={t("appliedMigration")}
             value={<span>{worker.appliedMigration ?? values("unavailable")}</span>}
           />

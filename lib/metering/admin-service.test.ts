@@ -25,6 +25,7 @@ it("audits the verified administrator before reading identifiers and totals", as
   });
   const page = await getMeteringAdminPage({ month: "2026-09", project: "project1" });
   expect(page.data?.usage.rows).toEqual([]);
+  expect(mocks.read).toHaveBeenCalledWith(expect.objectContaining({ actorId: "admin1" }));
   expect(mocks.audit).toHaveBeenCalledWith(
     expect.objectContaining({
       actorId: "admin1",

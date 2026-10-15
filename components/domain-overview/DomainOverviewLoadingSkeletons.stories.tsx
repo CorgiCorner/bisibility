@@ -1,3 +1,5 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { domainOverviewFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import type { Meta, StoryObj } from "@storybook/react";
 import {
   DomainOverviewPageLoading,
@@ -8,9 +10,15 @@ const meta = {
   component: DomainOverviewPageLoading,
   decorators: [
     (Story) => (
-      <div className="min-h-screen bg-bg text-fg">
-        <Story />
-      </div>
+      <FeatureMessagesProvider
+        locale="en"
+        timeZone="UTC"
+        messages={domainOverviewFeatureTestMessages}
+      >
+        <div className="min-h-screen bg-bg text-fg">
+          <Story />
+        </div>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen" },

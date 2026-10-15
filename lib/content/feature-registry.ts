@@ -214,11 +214,11 @@ export const featureStatus = {
     docs: "/docs/guides/alerts",
   },
   aiVisibilityTracking: {
-    label: "dedicated AI visibility and LLM citation tracking",
-    status: "exploring",
-    activity: "researching",
-    docs: "/roadmap",
-    maturity: "concept",
+    label: "AI tracking with retained answers and citations",
+    status: "shipped",
+    activity: "building",
+    docs: "/docs/guides/ai-tracking",
+    maturity: "beta",
   },
   appTranslations: {
     label: "app translations in Spanish, Japanese, and Polish",

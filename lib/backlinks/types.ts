@@ -15,6 +15,7 @@ export type AnalyzeBacklinksOptions = {
   includeSubdomains?: boolean;
   maxCostCents?: number;
   mode?: BacklinkRowMode;
+  provider?: string;
   resultLimit?: 100 | 300 | 500 | 1000;
   target: string;
   targetScope?: BacklinkTargetScope;
@@ -23,6 +24,7 @@ export type AnalyzeBacklinksOptions = {
 export type LoadMoreBacklinkRowsOptions = {
   includeSubdomains: boolean;
   limit: number;
+  provider?: string;
   target: string;
   targetScope: BacklinkTargetScope;
 };

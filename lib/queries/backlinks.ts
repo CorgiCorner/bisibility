@@ -1,7 +1,9 @@
 import "server-only";
 
+import { snapshotProvider } from "@/lib/backlinks/stored";
 import { prisma } from "@/lib/db/prisma";
-import { serpProviderCapabilities } from "@/lib/providers/registry";
+import { getSerpProvider, serpProviderCapabilities } from "@/lib/providers/registry";
+import { providerChainOrderBy } from "@/lib/rank-check/provider-chain-order";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { requireReadableProject } from "./_auth";
 import { getProjectCostContext } from "./cost-calculator";
@@ -17,28 +19,67 @@ export async function getBacklinksPageContext(projectId: string) {
   const { project } = await requireReadableProject(projectId);
   const [recentSnapshots, costContext, providerConnections] = await Promise.all([
     prisma.backlinkSnapshot.findMany({
-      distinct: ["target", "targetScope", "includeSubdomains"],
       orderBy: { fetchedAt: "desc" },
       select: {
         expiresAt: true,
         fetchedAt: true,
         fetchedRowCount: true,
         includeSubdomains: true,
+        summary: true,
         target: true,
         targetScope: true,
       },
-      take: 5,
+      take: 50,
       where: { projectId: project.id },
     }),
     getProjectCostContext(project.publicId),
     prisma.providerConnection.findMany({
+      orderBy: providerChainOrderBy(),
       select: { provider: true, status: true },
       where: { enabled: true, kind: "serp", projectId: project.id },
     }),
   ]);
-  const capableConnections = providerConnections.filter(
-    (connection) => serpProviderCapabilities(connection.provider)?.backlinks,
-  );
+  const capableConnections = providerConnections.filter((connection) => {
+    if (!serpProviderCapabilities(connection.provider)?.backlinks) return false;
+    const provider = getSerpProvider(connection.provider);
+    return Boolean(
+      provider.fetchBacklinksSummary &&
+        provider.fetchBacklinksHistory &&
+        provider.fetchBacklinksRows,
+    );
+  });
+  const providers = [
+    ...new Set(
+      capableConnections
+        .filter((connection) => connection.status === "connected")
+        .map((connection) => connection.provider),
+    ),
+  ].map((id) => ({ label: getSerpProvider(id).label, value: id }));
+  const seen = new Set<string>();
+  const recentTargets = recentSnapshots
+    .flatMap((snapshot) => {
+      const provider = snapshotProvider(snapshot.summary);
+      const key = JSON.stringify([
+        snapshot.target,
+        snapshot.targetScope,
+        snapshot.includeSubdomains,
+        provider,
+      ]);
+      if (seen.has(key)) return [];
+      seen.add(key);
+      return [
+        {
+          cachedUntil: snapshot.expiresAt.toISOString(),
+          fetchedAt: snapshot.fetchedAt.toISOString(),
+          includeSubdomains: snapshot.includeSubdomains,
+          provider,
+          resultLimit: recentResultLimit(snapshot.fetchedRowCount),
+          target: snapshot.target,
+          targetScope: snapshot.targetScope === "page" ? ("page" as const) : ("site" as const),
+        },
+      ];
+    })
+    .slice(0, 5);
   const providerStatus: "connected" | "needs_reauth" | "no_provider" = capableConnections.some(
     (connection) => connection.status === "connected",
   )
@@ -51,13 +92,7 @@ export async function getBacklinksPageContext(projectId: string) {
     costContext,
     defaultTarget: trackedProjectDomain(project.domain) ?? "",
     providerStatus,
-    recentTargets: recentSnapshots.map((snapshot) => ({
-      cachedUntil: snapshot.expiresAt.toISOString(),
-      fetchedAt: snapshot.fetchedAt.toISOString(),
-      includeSubdomains: snapshot.includeSubdomains,
-      resultLimit: recentResultLimit(snapshot.fetchedRowCount),
-      target: snapshot.target,
-      targetScope: snapshot.targetScope === "page" ? ("page" as const) : ("site" as const),
-    })),
+    providers,
+    recentTargets,
   };
 }

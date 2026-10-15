@@ -257,3 +257,4 @@ export async function rankCheckWorkflow(
 }
 
 export { localMonitorRunWorkflow } from "./local-monitor-workflow";
+export { providerComparisonWorkflow } from "./provider-comparison-workflow";

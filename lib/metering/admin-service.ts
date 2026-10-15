@@ -42,6 +42,7 @@ export async function getMeteringAdminPage(input: unknown): Promise<MeteringAdmi
   });
   try {
     const data = await readMeteringAdmin({
+      actorId: session.user.id,
       month,
       project,
       usageCursor: usagePage?.cursor,

@@ -138,6 +138,22 @@
         "analytics": "Analityka",
         "serp": "SERP",
         "connections": "Połączenia: {kind}"
+      },
+      "emailAllowance": {
+        "title": "Wysyłka e-maili dzisiaj",
+        "description": "Dzienne limity bezpieczeństwa tej instalacji.",
+        "bulk": "Wiadomości masowe",
+        "transactional": "Wiadomości transakcyjne",
+        "attempts": "Zarezerwowane próby",
+        "remaining": "Pozostało",
+        "limit": "Limit dzienny",
+        "reset": "Reset: {time} UTC",
+        "asOf": "Odczyt: {time} UTC",
+        "help": "Każda zarezerwowana wysyłka do odbiorcy zużywa limit, także gdy próba później kończy się błędem. Są to lokalne limity aplikacji, a nie liczba dostarczonych wiadomości ani limit konta u dostawcy.",
+        "notConfigured": "Wysyłka e-maili nie jest skonfigurowana w tej instalacji.",
+        "setup": "Konfiguracja e-maili",
+        "configurationUnavailable": "Nie udało się odczytać ustawień e-maili.",
+        "countsUnavailable": "Liczba prób wysyłki jest niedostępna."
       }
     },
     "worker": {
@@ -369,7 +385,12 @@
       "allProjects": "Wszystkie projekty",
       "unavailableNote": "Dane pomiarowe są niedostępne. Kwoty i liczby są nieznane.",
       "truncated": "Pokazano ograniczony zestaw. Wybierz projekt, aby zawęzić wyniki.",
-      "budgetNote": "Budżety pokazują bieżący cykl niezależnie od wybranego miesiąca użycia."
+      "budgetNote": "Budżety pokazują bieżący cykl niezależnie od wybranego miesiąca użycia.",
+      "usageHeading": "Zapisane zużycie",
+      "budgetsHeading": "Bieżące budżety",
+      "scope": "Projekt / połączenie",
+      "status": "Status",
+      "exceptionsHeading": "Wymaga uwagi"
     },
     "announcements": {
       "heading": "Komunikaty dla użytkowników",
@@ -566,7 +587,8 @@
       "blockedScopes": "Niepewne rozliczenia blokują wydatki: {projects, number} projektów, {connections, number} połączeń.",
       "projectBlocked": "Nierozstrzygnięte rozliczenia blokują wydatki projektu.",
       "connectionBlocked": "Nierozstrzygnięte rozliczenia blokują wydatki połączenia.",
-      "lastResultActivityAt": "Ostatni postęp odzyskiwania wyników"
+      "lastResultActivityAt": "Ostatni postęp odzyskiwania wyników",
+      "noSpendShort": "Odzyskiwanie sprawdza zapisane dowody przed wykonaniem operacji."
     }
   }
 }

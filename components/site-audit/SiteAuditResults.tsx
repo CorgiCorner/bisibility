@@ -12,6 +12,7 @@ import { auditCoverage, hasAuditContent } from "@/lib/site-audit/presentation";
 import type { SiteAuditIssue, SiteAuditPage, SiteAuditResult } from "@/lib/site-audit/schema";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { siteAuditTableLayout } from "./site-audit-table-layout";
 
 const numericIssueKeys = {
   http_error: "issues.http_error",
@@ -53,9 +54,7 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
       id: "url",
       accessorKey: "url",
       header: t("columns.0"),
-      size: 320,
-      minSize: 240,
-      meta: { flex: 2 },
+      ...siteAuditTableLayout.url,
       cell: ({ row }) => (
         <div className="grid min-w-0 gap-1">
           <span className="truncate font-mono text-[11px]" title={row.original.url}>
@@ -77,8 +76,7 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
       id: "status",
       accessorKey: "status",
       header: t("columns.1"),
-      size: 85,
-      minSize: 80,
+      ...siteAuditTableLayout.status,
       cell: ({ row }) => (
         <span className="font-mono">{row.original.status ?? t("notFetched")}</span>
       ),
@@ -87,8 +85,7 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
       id: "indexable",
       accessorKey: "indexable",
       header: t("columns.2"),
-      size: 110,
-      minSize: 100,
+      ...siteAuditTableLayout.indexable,
       cell: ({ row }) =>
         hasAuditContent(row.original)
           ? row.original.indexable
@@ -100,8 +97,7 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
       id: "links",
       accessorKey: "internalLinkCount",
       header: t("columns.3"),
-      size: 160,
-      minSize: 150,
+      ...siteAuditTableLayout.links,
       cell: ({ row }) =>
         !hasAuditContent(row.original) ? (
           t("notAssessed")
@@ -117,9 +113,7 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
       id: "issues",
       accessorFn: (row) => row.issues.length,
       header: t("columns.4"),
-      size: 350,
-      minSize: 250,
-      meta: { flex: 2 },
+      ...siteAuditTableLayout.issues,
       cell: ({ row }) => (
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="min-w-0 flex-1">
@@ -154,6 +148,7 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
   return (
     <div className="grid min-w-0 gap-4">
       <SummaryStrip
+        className="border border-border"
         sentence={t(coverage.unavailable ? "unavailableSummary" : "summary", {
           ...result.summary,
           ...coverage,

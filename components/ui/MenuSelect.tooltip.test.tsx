@@ -1,6 +1,6 @@
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { renderWithSharedMessages } from "@/i18n/test-support/render-with-feature-messages";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
@@ -35,6 +35,17 @@ describe("MenuSelect tooltip", () => {
 
     await user.hover(screen.getByRole("button", { name: "Scope" }));
     expect(await screen.findByRole("tooltip")).toHaveTextContent("Choose a scope for this project");
+  });
+
+  it("hides help while the options menu is open", async () => {
+    const user = userEvent.setup();
+    renderWithSharedMessages(<TooltipMenu />);
+    const trigger = screen.getByRole("button", { name: "Scope" });
+    await user.hover(trigger);
+    expect(await screen.findByRole("tooltip")).toBeInTheDocument();
+    await user.click(trigger);
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
   });
 
   it("opens visually on keyboard focus", async () => {

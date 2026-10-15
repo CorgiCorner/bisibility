@@ -38,8 +38,12 @@ function supportsBacklinks(provider: SerpProvider): provider is BacklinksProvide
 
 export function backlinksSource(project: BacklinksProject, preferredProvider?: string) {
   const eligible = project.providerConnections.flatMap((connection) => {
-    const provider = getSerpProvider(connection.provider);
-    return supportsBacklinks(provider) ? [{ connection, provider }] : [];
+    try {
+      const provider = getSerpProvider(connection.provider);
+      return supportsBacklinks(provider) ? [{ connection, provider }] : [];
+    } catch {
+      return [];
+    }
   });
   return (
     eligible.find(({ provider }) => provider.id === preferredProvider) ??

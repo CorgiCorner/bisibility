@@ -95,32 +95,29 @@ describe("ScheduleEditorFields", () => {
   });
 });
 
-it("retains one reserved cadence footprint while changing all four frequencies", async () => {
+it("keeps cadence controls and time guidance accessible across every frequency", async () => {
   const user = userEvent.setup();
   render(<ScheduleEditorFieldsHarness />);
-  const footprint = screen.getByTestId("schedule-cadence-fields");
   const timezone = screen.getByRole("button", { name: "Time zone" });
   for (const cadence of ["Weekly", "Monthly", "Custom cron", "Daily"]) {
     await user.click(screen.getByRole("radio", { name: cadence }));
-    expect(screen.getByTestId("schedule-cadence-fields")).toBe(footprint);
-    expect(footprint).toHaveClass("h-[210px]", "sm:h-[180px]");
-    expect(footprint).not.toContainElement(timezone);
+    expect(timezone).toBeVisible();
+    if (cadence === "Custom cron") {
+      expect(screen.getByLabelText("Cron expression")).toBeVisible();
+      expect(screen.queryByLabelText("Time, 24-hour")).not.toBeInTheDocument();
+    } else {
+      expect(screen.getByLabelText("Time, 24-hour")).toHaveAccessibleDescription("30-minute steps");
+    }
   }
 });
 
-it("reserves the same two-line error slot for empty, invalid and cleared fields", () => {
+it("only renders an alert when a field has a validation error", () => {
   const { container, rerender } = render(<ScheduleEditorErrorText />);
-  const slot = container.querySelector("span");
-  expect(slot).toHaveClass("h-10", "overflow-y-auto");
-  expect(slot).toBeEmptyDOMElement();
+  expect(container).toBeEmptyDOMElement();
   for (const text of Object.values(scheduleEditorValidationCode)) {
     rerender(<ScheduleEditorErrorText text={text} />);
-    expect(container.querySelector("span")).toBe(slot);
-    expect(slot).toHaveClass("h-10");
-    expect(slot).toHaveAttribute("role", "alert");
-    expect(slot?.textContent).not.toBe("");
+    expect(screen.getByRole("alert").textContent).not.toBe("");
   }
   rerender(<ScheduleEditorErrorText />);
-  expect(container.querySelector("span")).toBe(slot);
-  expect(slot).toBeEmptyDOMElement();
+  expect(container).toBeEmptyDOMElement();
 });

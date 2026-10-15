@@ -11,7 +11,7 @@ type AccountLoadingBarProps = { className?: string };
 export function AccountLoadingBar({ className }: Readonly<AccountLoadingBarProps>) {
   return (
     <div
-      className={cn("animate-pulse rounded-control bg-bg-sunken", className)}
+      className={cn("max-w-full motion-safe:animate-pulse rounded-control bg-bg-sunken", className)}
       data-account-loading-bar=""
     />
   );
@@ -29,6 +29,7 @@ function AccountLoadingSubnav({ activeSection }: Readonly<{ activeSection: Accou
   return (
     <nav
       aria-hidden
+      aria-busy="true"
       className="sticky top-6 hidden w-[200px] self-start flex-col gap-0.5 pl-3.5 lg:flex"
       data-account-loading-active-section={activeSection}
       data-account-loading-subnav=""

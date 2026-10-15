@@ -83,6 +83,8 @@
       "size_limit": "La respuesta superó el límite de 512 KiB. No se pudo evaluar esta página.",
       "request_limit": "Se alcanzó el límite de solicitudes antes de obtener esta página.",
       "unknown": "No se pudo obtener la página. Su estado HTTP y sus mediciones SEO son desconocidos."
-    }
+    },
+    "savedPages": "Páginas guardadas",
+    "savedDetails": "Detalles del informe guardado"
   }
 }
