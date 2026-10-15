@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { SiteAuditResultsLoading } from "./SiteAuditLoading";
 import { SiteAuditResults } from "./SiteAuditResults";
 
 export type SiteAuditWorkspaceProps = {
@@ -125,11 +126,10 @@ export function SiteAuditWorkspace({
         </Card>
       ) : null}
       {isSubmitting || loadingHistory ? (
-        <Card aria-busy="true" role="status">
-          <p className="m-0 text-[13px] text-fg-muted">
-            {isSubmitting ? t("loadingRun") : t("loadingHistory")}
-          </p>
-        </Card>
+        <SiteAuditResultsLoading
+          label={isSubmitting ? t("loadingRun") : t("loadingHistory")}
+          rows={saved?.result.pages.length}
+        />
       ) : saved ? (
         <>
           <p className="m-0 text-[11px] text-fg-muted">

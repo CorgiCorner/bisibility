@@ -7,6 +7,7 @@ import { settingsCardFrameClassName } from "@/components/settings/shell/settings
 import { trackingCardGeometryClassNames } from "@/components/settings/tracking/tracking-settings-layout";
 import { cn } from "@/lib/ui/cn";
 import type { ReactNode } from "react";
+import { MeasurementConfigurationLoading } from "./MeasurementConfigurationLoading";
 
 function Frame({
   children,
@@ -58,19 +59,6 @@ export function TrackingSettingsLoading() {
           ))}
         </div>
       </Frame>
-      <section className={settingsCardFrameClassName} data-tracking-loading-frame="markets">
-        <div className="flex items-start justify-between gap-4">
-          <div className="w-full space-y-2">
-            <SettingsLoadingBar className="h-4 w-32" />
-            <SettingsLoadingBar className="h-3 w-full max-w-[430px]" />
-          </div>
-          <SettingsLoadingBar className="h-8 w-24" />
-        </div>
-        <div className="mt-5 space-y-3 border-t border-border pt-4">
-          <SettingsLoadingBar className="h-10 w-full" />
-          <SettingsLoadingBar className="h-10 w-full" />
-        </div>
-      </section>
     </div>
   );
 }
@@ -78,7 +66,10 @@ export function TrackingSettingsLoading() {
 export function TrackingSettingsRouteLoading() {
   return (
     <SettingsRouteLoading activeSection="tracking">
-      <TrackingSettingsLoading />
+      <div className="max-w-[760px] space-y-5">
+        <MeasurementConfigurationLoading />
+        <TrackingSettingsLoading />
+      </div>
     </SettingsRouteLoading>
   );
 }

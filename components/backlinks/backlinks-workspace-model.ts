@@ -14,6 +14,7 @@ export type RecentBacklinksTarget = {
   cachedUntil: string;
   fetchedAt: string;
   includeSubdomains: boolean;
+  provider?: string;
   resultLimit: BacklinksLimit;
   target: string;
   targetScope: BacklinkTargetScope;
@@ -26,6 +27,7 @@ type BacklinksWorkspaceContext = {
   };
   defaultTarget: string;
   providerStatus: "connected" | "needs_reauth" | "no_provider";
+  providers?: { label: string; value: string }[];
   recentTargets: RecentBacklinksTarget[];
 };
 
@@ -49,6 +51,7 @@ export function recentTargetKey(target: RecentBacklinksTarget) {
   return [
     target.target,
     target.targetScope,
+    target.provider ?? "unknown",
     target.includeSubdomains ? "subdomains" : "no-subdomains",
   ].join(":");
 }

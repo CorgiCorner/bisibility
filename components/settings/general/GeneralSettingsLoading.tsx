@@ -76,6 +76,16 @@ export function GeneralSettingsRouteLoading() {
   return (
     <SettingsRouteLoading activeSection="general">
       <GeneralSettingsLoading />
+      <section
+        className="mt-5 max-w-[640px] space-y-3 rounded-card border border-border bg-bg-elev p-5"
+        data-general-loading-frame="usage-display"
+      >
+        <SettingsLoadingBar className="h-[21px] w-40" />
+        <div className="flex flex-wrap items-center gap-3">
+          <SettingsLoadingBar className="h-[34px] w-44" />
+          <SettingsLoadingBar className="h-[34px] w-40" />
+        </div>
+      </section>
     </SettingsRouteLoading>
   );
 }

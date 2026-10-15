@@ -21,6 +21,9 @@ export const rankRunActionBoundaries = {
   "@/lib/actions/rank-check-run-launch": rankRunActionStub,
 } as const;
 export const keywordActionBoundaries = {
+  "@/lib/actions/provider-comparison": fileURLToPath(
+    new URL("./provider-comparison-stubs.ts", import.meta.url),
+  ),
   "@/lib/actions/keyword-delete-impact": keywordActionStub,
   "@/lib/actions/keyword-suggest": keywordSuggestionStub,
   "@/lib/actions/keyword-suggestion-sources": keywordSuggestionStub,

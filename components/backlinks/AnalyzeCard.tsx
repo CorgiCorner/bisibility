@@ -32,10 +32,13 @@ type AnalyzeCardProps = {
   includeSubdomains: boolean;
   onIncludeSubdomainsChange: (value: boolean) => void;
   onLimitChange: (value: BacklinksLimit) => void;
+  onProviderChange?: (provider: string) => void;
   onScopeChange: (value: BacklinkTargetScope) => void;
   onSubmit: () => void;
   onTargetChange: (value: string) => void;
   resultLimit: BacklinksLimit;
+  provider?: string;
+  providers?: { label: string; value: string }[];
   scope: BacklinkTargetScope;
   submitting?: boolean;
   target: string;
@@ -47,10 +50,13 @@ export function AnalyzeCard({
   includeSubdomains,
   onIncludeSubdomainsChange,
   onLimitChange,
+  onProviderChange,
   onScopeChange,
   onSubmit,
   onTargetChange,
   resultLimit,
+  provider,
+  providers = [],
   scope,
   submitting = false,
   target,
@@ -85,7 +91,7 @@ export function AnalyzeCard({
   }
 
   return (
-    <Card className="p-4 sm:p-5" size="md">
+    <Card className="min-w-0 p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-3 md:flex-row md:items-start">
           <div
@@ -147,6 +153,16 @@ export function AnalyzeCard({
             triggerClassName={`${analyzeControlHeightClassName} min-h-0 justify-between lg:w-[132px]`}
             value={String(resultLimit)}
           />
+          {providers.length > 1 && onProviderChange ? (
+            <MenuSelect
+              ariaLabel={t("provider")}
+              disabled={submitting}
+              onChange={onProviderChange}
+              options={providers}
+              triggerClassName={`${analyzeControlHeightClassName} min-h-0 justify-between`}
+              value={provider ?? providers[0].value}
+            />
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2.5">
@@ -160,7 +176,7 @@ export function AnalyzeCard({
             />
             <InfoTooltip text={t("subdomainsHelp")} />
           </span>
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-4">
             <button
               className={pricingTriggerClassName}
               onClick={(event) => setPricingAnchor(event.currentTarget)}

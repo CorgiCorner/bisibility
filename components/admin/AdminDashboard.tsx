@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminEmailAllowance } from "@/components/admin/AdminEmailAllowance";
 import { AdminFailureBreakdown } from "@/components/admin/AdminFailureBreakdown";
 import { AdminHealthPills } from "@/components/admin/AdminHealthPills";
 import { AdminOpsActions } from "@/components/admin/AdminOpsActions";
@@ -11,6 +12,7 @@ import { AdminWorkerHealth } from "@/components/admin/AdminWorkerHealth";
 import { AdminDashboardOpsEventsTable } from "@/components/admin/admin-dashboard-tables";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { ExternalLink } from "@/components/ui/ExternalLink";
+import type { InstanceEmailAllowance } from "@/lib/email/allowance-model";
 import { checkFailureRate } from "@/lib/ops/instance-admin-health";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
 import { DOCS_URL } from "@/lib/site/site";
@@ -24,7 +26,10 @@ function connectionKindLabel(kind: string, t: AdminTranslations) {
   return kind;
 }
 
-export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard }>) {
+export function AdminDashboard({
+  data,
+  emailAllowance,
+}: Readonly<{ data: InstanceAdminDashboard; emailAllowance?: InstanceEmailAllowance }>) {
   const context = useDateDisplay();
   const format = useFormatter();
   const t = useTranslations("instanceAdmin");
@@ -42,7 +47,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
   const unavailable = t("values.unavailable");
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="flex w-full min-w-0 flex-col gap-5">
       <AdminHealthPills
         checkFailureRatePercent={checkFailureRatePercent}
         providerHealth={data.availability.dataSources ? data.providerHealth : []}
@@ -51,6 +56,8 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
       />
 
       <AdminWorkerHealth available={data.availability.worker} ops={data.ops} worker={data.worker} />
+
+      {emailAllowance ? <AdminEmailAllowance allowance={emailAllowance} /> : null}
 
       <Panel
         description={t("dashboard.rankChecks.description")}
@@ -67,7 +74,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
               <h3 className="text-sm font-semibold text-fg">
                 {t("dashboard.rankChecks.failures")}
               </h3>
-              <p className="mt-1 text-xs text-fg-muted">
+              <p className="mt-1 text-[13px] leading-relaxed text-fg-muted">
                 {t("dashboard.rankChecks.failureDescription")}
               </p>
               <div className="mt-2">
@@ -81,7 +88,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
               <h3 className="text-sm font-semibold text-fg">
                 {t("dashboard.rankChecks.fallbacks")}
               </h3>
-              <p className="mt-1 text-xs text-fg-muted">
+              <p className="mt-1 text-[13px] leading-relaxed text-fg-muted">
                 {t("dashboard.rankChecks.fallbackDescription")}
               </p>
               <div className="mt-2">
@@ -130,7 +137,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
             <Metric
               label={t("dashboard.presence.lastBudgetExhaustion")}
               value={
-                <span className="text-sm">
+                <span className="text-[13px] leading-5">
                   {displayTime(data.presence?.occurredAt ?? null, context, unavailable)}
                 </span>
               }
@@ -144,7 +151,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
         id="admin-temporal"
         title={t("dashboard.temporal.title")}
       >
-        <p className="mb-3 text-xs text-fg-muted">
+        <p className="mb-3 text-[13px] leading-relaxed text-fg-muted">
           {data.temporal.collectedAt
             ? t("dashboard.temporal.asOf", {
                 time: format.dateTime(new Date(data.temporal.collectedAt), {
@@ -155,7 +162,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
               })
             : unavailable}
         </p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           <Metric
             label={t("dashboard.temporal.schedules")}
             value={temporalHeartbeat?.schedules ?? unavailable}
@@ -179,7 +186,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
           <Metric
             label={t("dashboard.temporal.nextAction")}
             value={
-              <span className="text-sm">
+              <span className="text-[13px] leading-5">
                 {temporalHeartbeat
                   ? displayTime(temporalHeartbeat.nextActionAt, context, unavailable)
                   : unavailable}
@@ -188,17 +195,17 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
           />
         </div>
         {data.temporal.status === "unavailable" ? (
-          <p className="mt-3 rounded-card bg-yellow/10 p-3 text-xs text-yellow-text">
+          <p className="mt-3 rounded-card bg-yellow/10 p-3 text-[13px] leading-relaxed text-yellow-text">
             {t("dashboard.temporal.snapshotUnavailable")}
           </p>
         ) : null}
         {data.temporal.status === "disabled" ? (
-          <p className="mt-3 rounded-card bg-bg-sunken p-3 text-xs text-fg-muted">
+          <p className="mt-3 rounded-card bg-bg-sunken p-3 text-[13px] leading-relaxed text-fg-muted">
             {t("dashboard.temporal.disabled")}
           </p>
         ) : null}
         {temporalIssues.length > 0 ? (
-          <ul className="mt-3 space-y-1 rounded-card bg-bg-sunken p-3 text-[11px] text-fg-muted">
+          <ul className="mt-3 space-y-1 rounded-card bg-bg-sunken p-3 text-[13px] leading-relaxed text-fg-muted">
             {temporalIssues.map((issue) => (
               <li key={issue}>{issue}</li>
             ))}
@@ -213,11 +220,11 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
       >
         {!data.ops.configured ? (
           <div className="mb-3 rounded-card bg-yellow/10 p-3">
-            <p className="m-0 text-xs leading-relaxed text-yellow-text">
+            <p className="m-0 text-[13px] leading-relaxed text-yellow-text">
               {t("dashboard.ops.slackMissing")}
             </p>
             <ExternalLink
-              className="mt-2 text-xs font-semibold text-accent-text hover:underline"
+              className="mt-2 text-[13px] font-semibold text-accent-text hover:underline"
               href={`${DOCS_URL}/self-hosting/operations`}
             >
               {t("dashboard.ops.slackMissingLink")}
@@ -237,7 +244,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
         {!data.availability.opsEvents ? (
           <AdminSectionUnavailable>{t("dashboard.ops.historyUnavailable")}</AdminSectionUnavailable>
         ) : data.ops.events.length === 0 ? (
-          <p className="text-xs text-fg-muted">{t("dashboard.ops.empty")}</p>
+          <p className="text-[13px] leading-relaxed text-fg-muted">{t("dashboard.ops.empty")}</p>
         ) : (
           <AdminDashboardOpsEventsTable events={data.ops.events} />
         )}
@@ -252,7 +259,7 @@ export function AdminDashboard({ data }: Readonly<{ data: InstanceAdminDashboard
           <AdminSectionUnavailable>{t("dashboard.stats.unavailable")}</AdminSectionUnavailable>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
               <Metric label={t("dashboard.stats.users")} value={data.stats.users} />
               <Metric label={t("dashboard.stats.projects")} value={data.stats.projects} />
               <Metric label={t("dashboard.stats.keywords")} value={data.stats.keywords} />

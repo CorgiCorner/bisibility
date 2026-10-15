@@ -16,6 +16,7 @@ export type HeaderProviderSpendProps = {
 export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpendProps) {
   const t = useTranslations("projectCostEstimate.providerSpend");
   const p = useUsagePresentation();
+  const preflight = useTranslations("shared.rankPreflight");
   const locale = useLocale();
   const compact = headerBudgetSummary(summary?.budgets.rows ?? []);
   const percent = new Intl.NumberFormat(locale).format(Math.floor(compact.percent ?? 0));
@@ -43,32 +44,57 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
     return lowerBound && value.certainty === "estimated" ? `≥ ${text}` : text;
   };
   const details = (
-    <div className="max-w-xs space-y-2 text-left">
-      <p>{t("headerCapTooltip")}</p>
-      {summary?.budgets.rows.map((row) => (
-        <div key={row.id}>
-          {row.redacted ? (
-            p.budget.redacted
-          ) : (
-            <>
-              <HeaderBudgetScope row={row} />
-              {row.level === "unavailable" ? (
-                p.budget.unavailable
+    <div className="max-h-[60vh] max-w-sm space-y-3 overflow-auto text-left text-[11px] leading-snug">
+      <p className="m-0 opacity-75">{t("headerCapTooltip")}</p>
+      <table className="w-full table-fixed border-collapse text-[11px] [overflow-wrap:anywhere]">
+        <thead>
+          <tr className="text-[10px]">
+            <th className="w-[34%] pb-2 text-left font-medium">{preflight("budget")}</th>
+            <th className="whitespace-nowrap pb-2 pl-2 text-right font-medium">{p.budget.used}</th>
+            <th className="whitespace-nowrap pb-2 pl-2 text-right font-medium">
+              {p.budget.reserved}
+            </th>
+            <th className="whitespace-nowrap pb-2 pl-2 text-right font-medium">{p.budget.limit}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {summary?.budgets.rows.map((row) => (
+            <tr key={row.id} className="border-t border-border align-top">
+              {row.redacted ? (
+                <td colSpan={4} className="py-2">
+                  {p.budget.redacted}
+                </td>
               ) : (
-                <p>
-                  {p.budget.used}: {amount(row.used, true)}; {p.budget.reserved}:{" "}
-                  {amount(row.reserved)}; {p.budget.limit}: {amount(row.limit)}
-                  {row.boundary.onExceed === "allow" && row.boundary.hardLimit && (
+                <>
+                  <th scope="row" className="py-2 text-left font-normal">
+                    <HeaderBudgetScope row={row} />
+                  </th>
+                  {row.level === "unavailable" ? (
+                    <td colSpan={3} className="py-2 pl-2 text-right">
+                      {p.budget.unavailable}
+                    </td>
+                  ) : (
                     <>
-                      ; {p.budget.hardLimit}: {amount(row.boundary.hardLimit)}
+                      <td className="py-2 pl-2 text-right tabular-nums">
+                        {amount(row.used, true)}
+                      </td>
+                      <td className="py-2 pl-2 text-right tabular-nums">{amount(row.reserved)}</td>
+                      <td className="py-2 pl-2 text-right tabular-nums">
+                        <span>{amount(row.limit)}</span>
+                        {row.boundary.onExceed === "allow" && row.boundary.hardLimit && (
+                          <span className="mt-1 block opacity-75">
+                            {p.budget.hardLimit}: {amount(row.boundary.hardLimit)}
+                          </span>
+                        )}
+                      </td>
                     </>
                   )}
-                </p>
+                </>
               )}
-            </>
-          )}
-        </div>
-      ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
   const href = `${appPath(projectRef, "integrations")}?tab=usage`;

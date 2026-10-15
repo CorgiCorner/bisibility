@@ -1,3 +1,5 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { researchFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import type { Meta, StoryObj } from "@storybook/react";
 import { ResearchPageLoading, ResearchResultsLoading } from "./ResearchLoadingSkeletons";
 
@@ -6,9 +8,11 @@ const meta = {
   args: { variant: "analytics" },
   decorators: [
     (Story) => (
-      <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
-        <Story />
-      </div>
+      <FeatureMessagesProvider locale="en" timeZone="UTC" messages={researchFeatureTestMessages}>
+        <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
+          <Story />
+        </div>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen" },

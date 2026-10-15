@@ -11,7 +11,7 @@ export function AgentReportsLayout({
   busy = false,
 }: Readonly<{ children: ReactNode; busy?: boolean }>) {
   return (
-    <PageContent variant="section" aria-busy={busy || undefined} className="flex flex-col gap-5">
+    <PageContent variant="section" aria-busy={busy || undefined} className="flex flex-col gap-4">
       {children}
     </PageContent>
   );
@@ -22,8 +22,8 @@ export function AgentReportsToolbar({
   action,
 }: Readonly<{ description: string; action?: ReactNode }>) {
   return (
-    <div className="grid gap-3">
-      <p className="text-[13px] text-fg-muted">{description}</p>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <p className="m-0 max-w-2xl text-[13px] leading-normal text-fg-muted">{description}</p>
       {action ? <div>{action}</div> : null}
     </div>
   );
@@ -56,11 +56,11 @@ export function AgentReportsLoading({
       <Card aria-hidden className="divide-y divide-border p-0">
         {["first", "second", "third"].map((key) => (
           <div
-            className="flex min-w-0 flex-wrap items-center justify-between gap-3 px-4 py-4"
+            className="flex min-w-0 flex-wrap items-center justify-between gap-3 px-4 py-3"
             key={key}
           >
             <div className="min-w-0 flex-1">
-              <div className="h-[1lh] w-3/4 rounded-control bg-bg-sunken text-[14px] motion-safe:animate-pulse" />
+              <div className="h-[1lh] w-3/4 rounded-control bg-bg-sunken text-[13px] motion-safe:animate-pulse" />
               <div className="mt-1 h-[1lh] w-1/4 rounded-control bg-bg-sunken text-[11px] motion-safe:animate-pulse" />
             </div>
             <div className="h-[1lh] w-20 rounded-control bg-bg-sunken text-[12px] motion-safe:animate-pulse" />

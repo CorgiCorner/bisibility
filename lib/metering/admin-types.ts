@@ -11,6 +11,11 @@ export type MeteringAdminData = {
   exceptions: ExceptionsView;
   projects: string[];
   truncated: boolean;
+  /** Project names require owner or membership access; otherwise references retain public IDs. */
+  references?: {
+    projects: Record<string, string>;
+    connections: Record<string, { project: string; provider: string }>;
+  };
 };
 export type MeteringAdminPage = MeteringAdminFilters & {
   data: MeteringAdminData | null;

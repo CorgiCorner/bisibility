@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { demoResearchFreshUntil, demoResearchStorageState } from "@/lib/demo/research-storage";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { BacklinkRowMode, BacklinkTargetScope } from "@/lib/providers/types";
+import { unknownBacklinksSnapshotId } from "./source-filter";
 import { normalizeBacklinksTarget } from "./target";
 import type {
   BacklinksHistoryMonth,
@@ -33,7 +34,7 @@ export function snapshotMode(summary: unknown): BacklinkRowMode {
 
 export function snapshotProvider(summary: unknown) {
   const provider = record(summary)[PROVIDER_KEY];
-  return typeof provider === "string" && provider ? provider : "dataforseo";
+  return typeof provider === "string" && provider.trim() ? provider : "unknown";
 }
 
 function publicSummary(value: unknown): BacklinksSummary {
@@ -135,14 +136,31 @@ export async function findStoredBacklinks(input: {
   mode: BacklinkRowMode;
   now?: Date;
   projectId: string;
+  provider?: string;
   target: string;
   targetScope?: BacklinkTargetScope;
 }) {
   const normalized = normalizeBacklinksTarget(input.target, input.targetScope);
+  const unknownId =
+    input.provider === "unknown"
+      ? await unknownBacklinksSnapshotId({
+          includeSubdomains: normalized.scope === "site" && input.includeSubdomains,
+          mode: input.mode,
+          projectId: input.projectId,
+          scope: normalized.scope,
+          target: normalized.target,
+        })
+      : null;
+  if (input.provider === "unknown" && !unknownId) return null;
   const snapshot = await prisma.backlinkSnapshot.findFirst({
     include: { rows: { orderBy: { id: "asc" } } },
     orderBy: { fetchedAt: "desc" },
     where: {
+      ...(unknownId
+        ? { id: unknownId }
+        : input.provider
+          ? { AND: [{ summary: { equals: input.provider, path: [PROVIDER_KEY] } }] }
+          : {}),
       includeSubdomains: normalized.scope === "site" ? input.includeSubdomains : false,
       projectId: input.projectId,
       summary: { equals: input.mode, path: [MODE_KEY] },
@@ -151,6 +169,7 @@ export async function findStoredBacklinks(input: {
     },
   });
   if (!snapshot) return null;
+  if (input.provider === "unknown" && snapshotProvider(snapshot.summary) !== "unknown") return null;
   const freshUntil = demoResearchFreshUntil([snapshot.fetchedAt]);
   if (!freshUntil) return null;
   return {
@@ -178,6 +197,7 @@ export async function listStoredBacklinks(input: { now?: Date; projectId: string
       {
         includeSubdomains: snapshot.includeSubdomains,
         mode: snapshotMode(snapshot.summary),
+        provider: snapshotProvider(snapshot.summary),
         target: snapshot.target,
         targetScope: snapshot.targetScope === "page" ? "page" : "site",
         ...demoResearchStorageState({ freshUntil, now: input.now, savedAt: snapshot.fetchedAt }),

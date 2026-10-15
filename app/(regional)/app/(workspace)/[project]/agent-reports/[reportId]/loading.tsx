@@ -1,16 +1,16 @@
-import { PageContent } from "@/components/shell/PageContent";
-import { Card } from "@/components/ui/Card";
+import { AgentReportDetailLoading } from "@/components/agent-reports/AgentReportDetailLoading";
+import { loadCoreMessages } from "@/i18n/catalog-loader.server";
+import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
+import { createIntlTranslator } from "@/i18n/translator.server";
 
-export default function AgentReportLoading() {
+export default async function AgentReportLoading() {
+  const runtime = await resolveRegionalDocumentLocale();
+  const messages = await loadCoreMessages(runtime.locale, ["agentWorkspace"]);
+  const t = createIntlTranslator(runtime.locale, messages, runtime);
   return (
-    <PageContent variant="section">
-      <Card aria-busy="true">
-        <div aria-hidden="true" className="grid gap-5 motion-safe:animate-pulse">
-          {["title", "body", "footer"].map((key) => (
-            <div className="h-20 rounded-control bg-bg-sunken" key={key} />
-          ))}
-        </div>
-      </Card>
-    </PageContent>
+    <AgentReportDetailLoading
+      backLabel={t("agentWorkspace.back")}
+      membersOnlyLabel={t("agentWorkspace.membersOnly")}
+    />
   );
 }

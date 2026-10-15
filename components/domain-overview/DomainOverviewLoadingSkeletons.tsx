@@ -1,7 +1,14 @@
+"use client";
+import { ResearchIdleLoading } from "@/components/research/ResearchIdleLoading";
 import { PageContent } from "@/components/shell/PageContent";
+import { pricingTriggerClassName } from "@/components/ui/PricingPopover";
 import { tableHeaderBorderClassName } from "@/components/ui/table-header-styles";
 import { cn } from "@/lib/ui/cn";
+import { GlobeIcon } from "@phosphor-icons/react/dist/csr/Globe";
+import { InfoIcon } from "@phosphor-icons/react/dist/csr/Info";
+import { useTranslations } from "next-intl";
 import type { ComponentPropsWithoutRef } from "react";
+import { useDomainOverviewCacheDuration } from "./DomainOverviewCacheProvider";
 
 const six = ["traffic", "keywords", "top10", "value", "pos1", "new"] as const;
 const eight = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8"] as const;
@@ -104,15 +111,16 @@ export function DomainOverviewResultsLoading({ ariaLabel }: Readonly<{ ariaLabel
 }
 
 function AnalyzeCardLoading() {
+  const t = useTranslations("projectDomainOverview.workspace.analyze");
   return (
     <div
-      className="rounded-card border border-border bg-bg-elev p-4.5 sm:p-5"
+      className="min-w-0 rounded-card border border-border bg-bg-elev p-4.5 sm:p-5"
       data-skeleton="analyze-card"
     >
       <div className="grid gap-3.5">
         <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
           <Bar
-            className="h-[34px] flex-1 rounded-control border border-border md:min-w-[320px]"
+            className="min-h-9 flex-1 sm:min-h-[34px] rounded-control border border-border md:min-w-[320px]"
             data-skeleton="target-control"
           />
           <div className="md:w-[230px]" data-skeleton="scope-wrapper">
@@ -122,18 +130,18 @@ function AnalyzeCardLoading() {
             />
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Bar className="h-3.5 w-3.5 rounded-full" />
-            <Bar className="h-3 w-[320px] max-w-full" />
-          </div>
-          <div className="ml-auto flex items-center gap-4">
-            <Bar className="h-3 w-[112px]" />
-            <Bar
-              className="h-[37px] min-w-[200px] rounded-control"
-              data-skeleton="analyze-action"
-            />
-          </div>
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-4">
+          <span className={`${pricingTriggerClassName} px-1.5 py-px`}>{t("pricing")}</span>
+          <Bar className="h-[37px] min-w-[200px] rounded-control" data-skeleton="analyze-action" />
+        </div>
+        <div
+          className="-mx-4.5 -mb-4.5 border-t border-border px-4.5 py-3.5 sm:-mx-5 sm:-mb-5 sm:px-5"
+          data-skeleton="scope-footer"
+        >
+          <span className="inline-flex items-center gap-2 text-[12.5px] text-fg-muted opacity-40">
+            <InfoIcon weight="regular" aria-hidden size={14} />
+            {t("scopeHelp")}
+          </span>
         </div>
       </div>
     </div>
@@ -141,22 +149,14 @@ function AnalyzeCardLoading() {
 }
 
 function IdlePanelLoading() {
+  const t = useTranslations("projectDomainOverview.workspace.state");
+  const duration = useDomainOverviewCacheDuration();
   return (
-    <div
-      className="flex flex-col items-center justify-center rounded-card border border-border bg-bg-elev px-8 py-11 text-center"
-      data-skeleton="idle-panel"
-    >
-      <Bar className="h-[54px] w-[54px] rounded-card" data-skeleton="idle-icon" />
-      <Bar className="mt-4.5 h-5 w-[180px]" />
-      <div className="mt-[7px] grid gap-1.5">
-        {["provider", "cache", "keywords"].map((key, index) => (
-          <div className="flex items-center gap-2" data-skeleton="idle-bullet" key={key}>
-            <Bar className="h-1.5 w-1.5 rounded-full" />
-            <Bar className="h-3" style={{ width: `${250 + index * 28}px` }} />
-          </div>
-        ))}
-      </div>
-    </div>
+    <ResearchIdleLoading
+      title={t("idleTitle")}
+      icon={GlobeIcon}
+      bullets={[t("idleBullets.key"), t("idleBullets.cache", { duration }), t("idleBullets.track")]}
+    />
   );
 }
 

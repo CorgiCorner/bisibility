@@ -210,7 +210,7 @@ export function compareRows(opts: {
     },
     {
       ...COMPARE_CRITERIA.selfHostedLicense,
-      bisibility: cell("free", "$0 / AGPL-3.0"),
+      bisibility: cell("free", "$0 / AGPL-3.0-only"),
       competitor: opts.selfHostedLicense ?? cell("na", "Not available"),
     },
     {

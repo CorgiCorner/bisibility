@@ -707,6 +707,48 @@
         "reportUnavailable": "Raport niedostępny",
         "reportCapacity": "Ta historia przekracza limit raportu. Wróć do listy fraz, aby obejrzeć bieżące dane.",
         "reportChanged": "Dane zmieniły się podczas wczytywania raportu. Odśwież zapisane dane, aby otworzyć nowy snapshot."
+      },
+      "providerComparison": {
+        "title": "Porównanie dostawców",
+        "help": "Jednorazowo sprawdza tę samą frazę, rynek i urządzenie przez DataForSEO i SerpApi. Wyniki są oddzielone od historii śledzenia. Harmonogram i dostawca projektu pozostają bez zmian.",
+        "open": "Otwórz porównanie",
+        "close": "Zamknij",
+        "error": "Nie udało się potwierdzić porównania. Odśwież zapisany wynik lub ponów to samo żądanie.",
+        "retry": "Ponów",
+        "loading": "Wczytywanie porównania…",
+        "depth": "Top 20",
+        "needsProviders": "Aby porównać wyniki, połącz DataForSEO i SerpApi.",
+        "connections": "Połączenia dostawców",
+        "refresh": "Odśwież wynik",
+        "preview": "Sprawdź koszt",
+        "review": "Jednorazowe porównanie",
+        "searches": "{count, plural, one {# wyszukiwanie} few {# wyszukiwania} many {# wyszukiwań} other {# wyszukiwania}}",
+        "credits": "Kredyty: {value}",
+        "expires": "Wycena ważna do {date}",
+        "launch": "Uruchom porównanie",
+        "cancel": "Anuluj",
+        "noPosition": "Brak potwierdzonej pozycji",
+        "complete": "Pełna odpowiedź",
+        "uncertain": "Niepewne pokrycie",
+        "qualityHelp": "Sam brak pozycji nie dowodzi nieobecności. Porównaj czas obserwacji i pokrycie obu dostawców.",
+        "attention": "Ten wynik wymaga uwagi. Nie udało się potwierdzić kosztu lub rezultatu.",
+        "desktop": "Komputer",
+        "mobile": "Telefon",
+        "retryLaunch": "Sprawdź uruchomienie",
+        "launchUncertain": "Nie potwierdzono uruchomienia. Sprawdź to samo żądanie przed rozpoczęciem kolejnego.",
+        "providers": {
+          "dataforseo": "DataForSEO",
+          "serpapi": "SerpApi"
+        },
+        "statuses": {
+          "queued": "W kolejce",
+          "claimed": "W trakcie",
+          "completed": "Zakończono",
+          "failed": "Błąd",
+          "unknown": "Niepewny",
+          "cancelled": "Anulowano"
+        },
+        "outside": "Poza Top 20"
       }
     }
   }

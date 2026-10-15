@@ -273,7 +273,11 @@ describe("KeywordDetailPage", () => {
         syncTrafficAction: mocks.syncTraffic,
       }),
     );
-    expect(pending.nextElementSibling).toBe(traffic);
+    const comparison = screen
+      .getByRole("heading", { name: "Compare providers" })
+      .closest("section");
+    expect(pending.nextElementSibling).toBe(comparison);
+    expect(comparison?.nextElementSibling).toBe(traffic);
     expect(mocks.getKeywordDetail).toHaveBeenCalledWith("prj_1", "kw_pending");
     expect(mocks.loadRankTrackerCostContext).toHaveBeenCalledWith("prj_1");
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
@@ -311,7 +315,11 @@ describe("KeywordDetailPage", () => {
     const retrieved = screen.getByTestId("retrieved-results-card");
     expect(header.nextElementSibling).toBe(chart);
     expect(chart.nextElementSibling).toBe(retrieved);
-    expect(retrieved.nextElementSibling).toBe(traffic);
+    const comparison = screen
+      .getByRole("heading", { name: "Compare providers" })
+      .closest("section");
+    expect(retrieved.nextElementSibling).toBe(comparison);
+    expect(comparison?.nextElementSibling).toBe(traffic);
     expect(mocks.trafficProps).toHaveBeenLastCalledWith(
       expect.objectContaining({ canSync: true, syncTrafficAction: mocks.syncTraffic }),
     );

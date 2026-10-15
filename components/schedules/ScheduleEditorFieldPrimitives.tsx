@@ -20,11 +20,9 @@ export function ScheduleEditorErrorText({ text }: Readonly<{ text?: string }>) {
               : text === scheduleEditorValidationCode.nameTooLong
                 ? t("editor.scheduleNameTooLong", { maximum: 80 })
                 : null;
+  if (!message) return null;
   return (
-    <span
-      className="block h-10 overflow-y-auto text-[11px] leading-5 text-red-text"
-      role={message ? "alert" : undefined}
-    >
+    <span className="block text-[11px] leading-5 text-red-text" role="alert">
       {message}
     </span>
   );

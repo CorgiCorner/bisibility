@@ -8,8 +8,9 @@ type ScheduleObjectFrameProps = {
   breadcrumb: { href: string; label: ReactNode };
   children?: ReactNode;
   navigation?: ReactNode;
+  pending?: boolean;
   subtitle?: ReactNode;
-  title: string;
+  title: ReactNode;
 };
 
 export function ScheduleObjectFrame({
@@ -18,14 +19,19 @@ export function ScheduleObjectFrame({
   breadcrumb,
   children,
   navigation,
+  pending = false,
   subtitle,
   title,
 }: Readonly<ScheduleObjectFrameProps>) {
   return (
-    <PageContent className="grid gap-4">
+    <PageContent aria-busy={pending || undefined} className="grid gap-4">
       {navigation}
       <nav aria-label={breadcrumbLabel} className="w-fit text-[12.5px] text-fg-muted">
-        <BackLink href={breadcrumb.href}>{breadcrumb.label}</BackLink>
+        {pending ? (
+          <span>{breadcrumb.label}</span>
+        ) : (
+          <BackLink href={breadcrumb.href}>{breadcrumb.label}</BackLink>
+        )}
       </nav>
       <header>
         <h1 className="m-0 text-[21px] font-semibold tracking-[-0.4px] text-fg">{title}</h1>

@@ -16,7 +16,7 @@ export const CLOUD_BETA_EMAIL_NOTICE =
 export const GITHUB_ISSUES_URL = `${GITHUB_URL}/issues/new`;
 export const DISCORD_URL = "https://discord.gg/HcYpvfn79w";
 export const FEEDBACK_URL = "mailto:feedback@bisibility.com?subject=bisibility%20feedback";
-export const LICENSE = "AGPL-3.0";
+export const LICENSE = "AGPL-3.0-only";
 
 export function isDocsHref(href: string): boolean {
   const docsBase = DOCS_URL.replace(/\/$/, "");

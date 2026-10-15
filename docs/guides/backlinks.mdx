@@ -4,9 +4,16 @@ description: "Analyze referring domains and backlinks for a site or page from th
 ---
 
 Backlinks is a paid DataForSEO lookup. The page is project-level; it does not
-follow the header market switcher. One snapshot per target is kept for 24
+follow the header market switcher. Each provider keeps its own snapshot per target for 24
 hours and shared with the UI, so filtering the rows you already paid for is
 free.
+
+Results identify their recorded source. Older snapshots without source metadata
+show **Unknown source**. The source picker appears only when multiple connected
+providers implement backlink analysis; with one DataForSEO connection there is
+nothing to select. Changing sources previews its cost and does not run a paid
+lookup. Rows, cached results and load-more stay tied to the selected source.
+This does not add another backlink provider adapter.
 
 ## What you need
 

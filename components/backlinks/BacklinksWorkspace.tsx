@@ -50,6 +50,7 @@ export function BacklinksWorkspace({
   const [scope, setScope] = useState<BacklinkTargetScope>("site");
   const [resultLimit, setResultLimit] = useState<BacklinksLimit>(100);
   const [includeSubdomains, setIncludeSubdomains] = useState(true);
+  const [provider, setProvider] = useState(context.providers?.[0]?.value);
   const [recentTargets, setRecentTargets] = useState(context.recentTargets);
   const [submitting, setSubmitting] = useState(false);
   const [snapshot, setSnapshot] = useState<BacklinksSnapshot | null>(null);
@@ -57,6 +58,7 @@ export function BacklinksWorkspace({
   const [walletBudgetBlocked, setWalletBudgetBlocked] = useState(false);
   const [budgetReason, setBudgetReason] = useState<ReturnType<typeof budgetDenialReason>>();
   const [failedSummary, setFailedSummary] = useState<FailedSummary | null>(null);
+  const readOnly = Boolean(failedSummary) || snapshot?.provider === "unknown";
 
   const requestInput = (
     nextTarget: string,
@@ -65,6 +67,7 @@ export function BacklinksWorkspace({
     includeSubdomains,
     mode: "as_is",
     projectId,
+    ...(provider ? { provider } : {}),
     resultLimit,
     target: nextTarget,
     targetScope: scope,
@@ -76,13 +79,17 @@ export function BacklinksWorkspace({
     initialEstimate,
   );
 
-  function updateTarget(nextTarget: string) {
-    setTarget(nextTarget);
+  function clearResult() {
     setSnapshot(null);
     setFailure(false);
     setBudgetReason(undefined);
     setWalletBudgetBlocked(false);
     setFailedSummary(null);
+  }
+
+  function updateTarget(nextTarget: string) {
+    setTarget(nextTarget);
+    clearResult();
     scheduleEstimate(nextTarget);
   }
 
@@ -91,19 +98,18 @@ export function BacklinksWorkspace({
     nextScope: BacklinkTargetScope = "site",
     nextIncludeSubdomains = true,
     nextResultLimit: BacklinksLimit = resultLimit,
+    nextProvider = provider,
   ) {
     setTarget(nextTarget);
     setScope(nextScope);
     setIncludeSubdomains(nextScope === "site" && nextIncludeSubdomains);
     setResultLimit(nextResultLimit);
-    setSnapshot(null);
-    setFailure(false);
-    setBudgetReason(undefined);
-    setWalletBudgetBlocked(false);
-    setFailedSummary(null);
+    setProvider(nextProvider);
+    clearResult();
     scheduleEstimate(nextTarget, {
       includeSubdomains: nextScope === "site" && nextIncludeSubdomains,
       resultLimit: nextResultLimit,
+      provider: nextProvider,
       targetScope: nextScope,
     });
   }
@@ -151,7 +157,6 @@ export function BacklinksWorkspace({
         setFailure(true);
         return;
       }
-      // A paid request never yields a dry run; guard the union for the type system.
       if (isBacklinksEstimate(outcome)) {
         setFailure(true);
         return;
@@ -161,6 +166,7 @@ export function BacklinksWorkspace({
         cachedUntil: outcome.cachedUntil,
         fetchedAt: outcome.fetchedAt,
         includeSubdomains: outcome.includeSubdomains,
+        provider: outcome.provider,
         resultLimit: nextResultLimit,
         target: outcome.target,
         targetScope: outcome.targetScope,
@@ -174,13 +180,20 @@ export function BacklinksWorkspace({
   }
 
   function openRecentTarget(recent: RecentBacklinksTarget) {
-    selectTarget(recent.target, recent.targetScope, recent.includeSubdomains, recent.resultLimit);
+    selectTarget(
+      recent.target,
+      recent.targetScope,
+      recent.includeSubdomains,
+      recent.resultLimit,
+      recent.provider ?? provider,
+    );
     if (!(new Date(recent.cachedUntil).getTime() > Date.now())) return;
     void analyze({
       fallbackOnCostLimit: true,
       overrides: {
         includeSubdomains: recent.includeSubdomains,
         maxCostCents: 0,
+        ...(recent.provider ? { provider: recent.provider } : {}),
         resultLimit: recent.resultLimit,
         targetScope: recent.targetScope,
       },
@@ -193,6 +206,7 @@ export function BacklinksWorkspace({
       includeSubdomains: current.includeSubdomains,
       limit: 100,
       projectId,
+      provider: current.provider,
       target: current.target,
       targetScope: current.targetScope,
     });
@@ -204,6 +218,13 @@ export function BacklinksWorkspace({
     <section aria-label={t("aria")} className="grid min-w-0 gap-4">
       <AnalyzeCard
         estimate={estimate}
+        provider={provider}
+        providers={context.providers}
+        onProviderChange={(next) => {
+          setProvider(next);
+          clearResult();
+          scheduleEstimate(target, { provider: next });
+        }}
         includeSubdomains={includeSubdomains}
         onIncludeSubdomainsChange={setIncludeSubdomains}
         onLimitChange={(limit) => {
@@ -214,8 +235,6 @@ export function BacklinksWorkspace({
           setScope(nextScope);
           const nextIncludeSubdomains = nextScope === "page" ? false : includeSubdomains;
           if (nextScope === "page") setIncludeSubdomains(false);
-          // Exact-page scope is not billed the 12-month history, so the button
-          // price has to be refetched the way a limit change refetches it.
           scheduleEstimate(target, {
             includeSubdomains: nextIncludeSubdomains,
             targetScope: nextScope,
@@ -260,9 +279,9 @@ export function BacklinksWorkspace({
           ) : null}
           <BacklinksResults
             estimateCents={estimate.costCents}
-            onLoadMore={failedSummary ? undefined : () => loadMoreRows(snapshot)}
-            onRefresh={failedSummary ? undefined : () => void analyze({ fresh: true })}
-            readOnly={Boolean(failedSummary)}
+            onLoadMore={readOnly ? undefined : () => loadMoreRows(snapshot)}
+            onRefresh={readOnly ? undefined : () => void analyze({ fresh: true })}
+            readOnly={readOnly}
             refreshing={submitting}
             snapshot={snapshot}
           />

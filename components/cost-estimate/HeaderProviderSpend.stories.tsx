@@ -1,5 +1,6 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
+import type { ProjectBudgetRow } from "@/lib/metering/project-budget-display";
 import { budgetFixture, headerFixture } from "@/lib/metering/shared-view-fixtures";
 import costEstimateMessages from "@/messages/core/en/project-cost-estimate.json";
 import sharedMessages from "@/messages/core/en/shared.json";
@@ -87,5 +88,40 @@ export const Reserved: Story = {
     summary: headerFixture([
       { ...budgetFixture("0"), reserved: { text: "10", unit: "units", certainty: "estimated" } },
     ]),
+  },
+};
+
+const trafficRows: ProjectBudgetRow[] = [
+  {
+    ...budgetFixture("0", "cents"),
+    id: "project",
+    display: { projectName: "webscraping.app" },
+    limit: { text: "5000", unit: "cents", certainty: "measured" },
+  },
+  {
+    ...budgetFixture("0"),
+    id: "app",
+    kind: "connection",
+    traffic: { kind: "surface", surface: "app" },
+    display: { projectName: "webscraping.app", providerLabel: "SerpApi" },
+  },
+  {
+    ...budgetFixture("0"),
+    id: "agents",
+    kind: "connection",
+    traffic: { kind: "surface", surface: "programmatic" },
+    display: { projectName: "webscraping.app", providerLabel: "SerpApi" },
+  },
+];
+
+export const TrafficChannels: Story = {
+  args: {
+    summary: {
+      ...headerFixture(),
+      budgets: {
+        ...headerFixture().budgets,
+        rows: trafficRows,
+      },
+    },
   },
 };

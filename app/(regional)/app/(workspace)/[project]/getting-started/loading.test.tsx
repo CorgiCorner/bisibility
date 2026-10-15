@@ -11,7 +11,7 @@ describe("GettingStartedLoading", () => {
     expect(content).toHaveClass("mx-auto", "max-w-[1040px]");
     expect(content).not.toHaveClass("max-w-[1400px]");
     expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(12);
-    expect(container.querySelectorAll("section")).toHaveLength(3);
+    expect(container.querySelectorAll("section")).toHaveLength(2);
     expect(
       container.querySelectorAll(
         '[data-testid="getting-started-loading-grid"] > section:first-child > div',

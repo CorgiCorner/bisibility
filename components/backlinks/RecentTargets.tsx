@@ -1,6 +1,7 @@
 "use client";
 
 import { relativePastFact } from "@/lib/format/relative-time";
+import { PROVIDER_CATALOG } from "@/lib/providers/catalog-metadata";
 import { ClockCounterClockwiseIcon as Recent } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useTranslations } from "next-intl";
@@ -62,6 +63,9 @@ export function RecentTargets({ onOpen, onRemove, targets }: Readonly<RecentTarg
                 {target.target}
               </strong>
               <span className="font-sans tabular-nums text-[10px] text-fg-muted">
+                {target.provider
+                  ? `${target.provider === "unknown" ? tSnapshot("unknownSource") : (PROVIDER_CATALOG.find((entry) => entry.id === target.provider)?.label ?? target.provider)} · `
+                  : null}
                 {scopeLabel(target.targetScope)} -{" "}
                 {relativePastLabel(new Date(target.fetchedAt), now, tSnapshot)}
               </span>

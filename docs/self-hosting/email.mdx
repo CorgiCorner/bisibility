@@ -200,3 +200,17 @@ Wiring a provider into your own instance takes four steps:
    `lib/email/send.test.ts`.
 4. Forward any new environment variables in `compose.yaml`, `compose.worker.yaml`, and
    `scripts/deploy/bake-runtime-env.mjs`, and document them in `.env.example`.
+
+## Daily sending allowance
+
+Instance administrators can read this installation's daily bulk and transactional
+allowances on the admin dashboard. The limits use `EMAIL_DAILY_BUDGET_BULK` and
+`EMAIL_DAILY_BUDGET_TRANSACTIONAL`; the existing defaults are 1,000 per category.
+They reset at midnight UTC and do not change when the dashboard is refreshed.
+
+The counter records reserved recipient send attempts, including attempts that
+later fail. It is not a delivered-message total or the provider account's quota.
+A successful read with no counter row shows zero; a failed read remains unavailable.
+The dashboard offers setup guidance when mail is unconfigured and hides the allowance
+when sending is disabled in the read-only demo. It does not contact a hosted
+installation or the mail provider to obtain these limits.

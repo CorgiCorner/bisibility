@@ -12,6 +12,7 @@ describe("worker intent processor", () => {
       retained: 0,
     }));
     const localMonitors = vi.fn(async () => ({ started: 0 }));
+    const comparisons = vi.fn(async () => ({ started: 0 }));
     const tracking = vi.fn(async () => ({ started: 0 }));
     const search = vi.fn(async () => ({
       claimed: 0,
@@ -29,6 +30,7 @@ describe("worker intent processor", () => {
         dispatchLocalMonitors: localMonitors,
         produceLocalMonitors: localRecurring,
         dispatchTracking: tracking,
+        dispatchComparisons: comparisons,
         dispatchTraffic: traffic,
         reconcileSearchInsights: search,
         sweepWelcome: welcome,
@@ -37,6 +39,7 @@ describe("worker intent processor", () => {
       rankRuns: { claimed: 0, launched: 0, scanned: 0 },
       localMonitors: { started: 0 },
       localRecurring: { enabled: false, queued: 0, blocked: 0, skipped: 0, retained: 0 },
+      comparisons: { started: 0 },
       tracking: { started: 0 },
       search: { claimed: 0, failed: 0, scanned: 0, skipped: 0, started: 0 },
       traffic: { status: "idle" },

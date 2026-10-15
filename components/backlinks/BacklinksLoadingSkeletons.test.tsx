@@ -32,50 +32,26 @@ describe("BacklinksLoadingSkeletons", () => {
     expect(form).toHaveClass("grid", "gap-3");
     expect(firstRow).toHaveClass("flex", "flex-col", "gap-3", "md:flex-row", "md:items-start");
     expect(target).toHaveClass(
-      "h-[38px]",
+      "min-h-9",
+      "sm:min-h-[34px]",
       "flex-1",
       "rounded-control",
       "border",
       "border-border",
       "md:min-w-[240px]",
     );
-    expect(scope).toHaveClass("h-[38px]", "md:w-[196px]");
-    expect(limit).toHaveClass("min-h-[38px]", "lg:w-[132px]");
+    expect(scope).toHaveClass("h-[34px]", "md:w-[196px]");
+    expect(limit).toHaveClass("min-h-[34px]", "lg:w-[132px]");
     expect(lowerRow).toHaveClass("flex", "flex-wrap", "items-center", "justify-between", "gap-3");
-    expect(submitGroup).toHaveClass("flex", "flex-wrap", "items-center", "gap-4");
+    expect(submitGroup).toHaveClass("flex", "items-center", "gap-4");
     expect(submit).toHaveClass("min-w-[216px]");
   });
 
-  it("matches the settled non-compact idle-state surface", () => {
-    render(<BacklinksPageLoading />);
-    const idleSurface = screen.getByTestId("backlinks-idle-loading");
-    const iconWell = screen.getByTestId("backlinks-idle-icon-loading");
-    const title = iconWell.nextElementSibling;
-    const copy = screen.getByTestId("backlinks-idle-copy-loading");
-    const bullets = screen.getByTestId("backlinks-idle-bullets-loading");
-
-    expect
-      .soft(idleSurface)
-      .toHaveClass(
-        "flex",
-        "flex-col",
-        "items-center",
-        "justify-center",
-        "text-center",
-        "rounded-card",
-        "border",
-        "border-border",
-        "bg-bg-elev",
-        "px-8",
-        "py-11",
-      );
-    expect.soft(idleSurface).not.toHaveClass("min-h-[420px]");
-    expect.soft(iconWell).toHaveClass("h-[54px]", "w-[54px]", "rounded-card");
-    expect.soft(iconWell).not.toHaveClass("size-16", "rounded-full");
-    expect.soft(title).toHaveClass("mt-4.5", "h-5", "w-[210px]");
-    expect.soft(copy).toHaveClass("mt-[7px]", "max-w-[430px]");
-    expect.soft(bullets).toHaveClass("grid", "gap-1.5");
-    expect(bullets?.children).toHaveLength(3);
+  it("uses real static idle guidance without exposing active controls during loading", () => {
+    const { container } = render(<BacklinksPageLoading />);
+    expect(container.querySelector("[data-empty-state]")).toBeInTheDocument();
+    expect(container.querySelectorAll("[data-empty-state-bullet]")).toHaveLength(3);
+    expect(container.querySelector("input,button,a")).toBeNull();
   });
 
   it("exposes the result-loading state accessibly", () => {

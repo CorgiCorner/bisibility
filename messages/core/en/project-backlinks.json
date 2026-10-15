@@ -19,7 +19,8 @@
         "includeSubdomains": "Include subdomains",
         "subdomainsHelp": "Counts links to blog.acme-store.com and other subdomains as part of the profile. Does not change the price.",
         "pricing": "How is this priced?",
-        "needTarget": "Enter a domain first - the price appears here"
+        "needTarget": "Enter a domain first - the price appears here",
+        "provider": "Backlink source"
       },
       "demo": {
         "title": "Backlinks",
@@ -147,7 +148,9 @@
         "recentTargetsAria": "Recent targets",
         "recentTargets": "Recent targets",
         "removeRecent": "Remove {target} from recent targets",
-        "historyUnavailable": "History is unavailable for this result. The summary and links are still available."
+        "historyUnavailable": "History is unavailable for this result. The summary and links are still available.",
+        "source": "Source: {provider}",
+        "unknownSource": "Unknown source"
       },
       "summary": {
         "per30Days": "/ 30d",

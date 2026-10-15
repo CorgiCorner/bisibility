@@ -19,10 +19,11 @@ export function backlinksCacheKey(input: {
   includeSubdomains: boolean;
   mode: BacklinkRowMode;
   projectId: string;
+  provider: string;
   scope: BacklinkTargetScope;
   target: string;
 }) {
-  return `bl:v1:${input.projectId}:${input.target}:${input.scope}:${input.includeSubdomains ? 1 : 0}:${input.mode}`;
+  return `bl:v2:${input.projectId}:${encodeURIComponent(input.provider)}:${input.target}:${input.scope}:${input.includeSubdomains ? 1 : 0}:${input.mode}`;
 }
 
 export function withBacklinksCache(input: {

@@ -6,6 +6,7 @@ import { KeywordPendingDetail } from "@/components/keywords/KeywordPendingDetail
 import { KeywordTrafficCard } from "@/components/keywords/KeywordTrafficCard";
 import { RetrievedResultsCard } from "@/components/keywords/RetrievedResultsCard";
 import { loadRankTrackerCostContext } from "@/components/keywords/rank-tracker-cost-context";
+import { ProviderComparisonCard } from "@/components/provider-comparison/ProviderComparisonCard";
 import { PageContent } from "@/components/shell/PageContent";
 import { BackLink } from "@/components/ui/BackLink";
 import { Card } from "@/components/ui/Card";
@@ -164,6 +165,16 @@ export default async function KeywordDetailPage({
     />
   );
 
+  const providerComparison = (
+    <ProviderComparisonCard
+      key={id}
+      projectRef={publicId}
+      keywordRef={id}
+      canLaunch={canUpdateKeyword}
+      timeZone={historyTimeZone}
+    />
+  );
+
   const positionHistory = (
     <KeywordDetailHistory
       keyword={keyword.keyword}
@@ -210,6 +221,7 @@ export default async function KeywordDetailPage({
             updateKeywordAction={updateKeyword}
           />
           {retrievedResultsCard}
+          {providerComparison}
           <KeywordTrafficCard
             canSync={canSyncTraffic}
             syncTrafficAction={syncProjectTraffic}
@@ -243,6 +255,7 @@ export default async function KeywordDetailPage({
         />
         {positionHistory}
         {retrievedResultsCard}
+        {providerComparison}
         <KeywordTrafficCard
           canSync={canSyncTraffic}
           syncTrafficAction={syncProjectTraffic}

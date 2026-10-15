@@ -707,6 +707,48 @@
         "reportUnavailable": "Report unavailable",
         "reportCapacity": "This history exceeds the report limit. Return to the keyword list to view current data.",
         "reportChanged": "The data changed while the report was loading. Refresh stored data to open a new snapshot."
+      },
+      "providerComparison": {
+        "title": "Compare providers",
+        "help": "Runs DataForSEO and SerpApi once for the same keyword, market and device. Results stay separate from tracking history. Schedules and the project provider do not change.",
+        "open": "Open comparison",
+        "close": "Close",
+        "error": "Could not confirm the comparison. Refresh the saved result or retry the same request.",
+        "retry": "Retry",
+        "loading": "Loading comparison…",
+        "depth": "Top 20",
+        "needsProviders": "Connect both DataForSEO and SerpApi to compare results.",
+        "connections": "Provider connections",
+        "refresh": "Refresh result",
+        "preview": "Review cost",
+        "review": "One-time comparison",
+        "searches": "{count, plural, one {# search} other {# searches}}",
+        "credits": "Credits: {value}",
+        "expires": "Estimate expires at {date}",
+        "launch": "Run comparison",
+        "cancel": "Cancel",
+        "noPosition": "No confirmed position",
+        "complete": "Complete response",
+        "uncertain": "Coverage uncertain",
+        "qualityHelp": "A missing position alone does not prove absence. Compare observation times and coverage for both providers.",
+        "attention": "This result needs attention. Its cost or outcome could not be confirmed.",
+        "desktop": "Desktop",
+        "mobile": "Mobile",
+        "retryLaunch": "Check launch status",
+        "launchUncertain": "The launch was not confirmed. Check the same request before starting another.",
+        "providers": {
+          "dataforseo": "DataForSEO",
+          "serpapi": "SerpApi"
+        },
+        "statuses": {
+          "queued": "Queued",
+          "claimed": "Running",
+          "completed": "Completed",
+          "failed": "Failed",
+          "unknown": "Uncertain",
+          "cancelled": "Cancelled"
+        },
+        "outside": "Outside Top 20"
       }
     }
   }

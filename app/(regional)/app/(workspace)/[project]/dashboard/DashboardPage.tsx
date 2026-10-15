@@ -5,6 +5,7 @@ import { OverviewDashboardView } from "@/components/overview/OverviewDashboardVi
 import { OverviewPersonalDashboard } from "@/components/overview/OverviewPersonalDashboard";
 import { OverviewSkeleton } from "@/components/overview/OverviewSkeleton";
 import { PageContent } from "@/components/shell/PageContent";
+import { DashboardLoadingContent } from "@/components/tracking-loading/DashboardLoading";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { getProjectRole } from "@/lib/auth/authorize";
@@ -183,7 +184,23 @@ export default async function DashboardPage({
         messages={messages}
         timeZone={runtime.timeZone}
       >
-        <Suspense fallback={<OverviewSkeleton />}>
+        <Suspense
+          fallback={
+            isSample ? (
+              <OverviewSkeleton />
+            ) : (
+              <DashboardLoadingContent
+                preset={
+                  search?.dashboardView === "general" ||
+                  search?.dashboardView === "local" ||
+                  search?.dashboardView === "competitors"
+                    ? search.dashboardView
+                    : undefined
+                }
+              />
+            )
+          }
+        >
           <OverviewData
             filters={filters}
             isSample={isSample}

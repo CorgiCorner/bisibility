@@ -6,6 +6,8 @@ import type {
   DataTableColumn,
   DataTableRowBase,
 } from "@/components/ui/data-table/data-table-types";
+import { IdChip } from "@/components/ui/IdChip";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import type { RecoveryCase } from "@/lib/metering/recovery/contract";
 import { MAX_RECOVERY_BATCH } from "@/lib/metering/recovery/input";
@@ -100,8 +102,12 @@ export function RecoveryTable({
           const value = row.original.value;
           return (
             value && (
-              <div className="min-w-0 break-all">
-                {value.project ?? t("retainedScope")}
+              <div className="min-w-0">
+                {value.project ? (
+                  <IdChip value={value.project} truncate="middle" size="xs" />
+                ) : (
+                  t("retainedScope")
+                )}
                 {value.historical && (
                   <span className="mt-1 block text-xs text-fg-muted">{t("historical")}</span>
                 )}
@@ -180,7 +186,7 @@ export function RecoveryTable({
             label: t(`groups.${value}`),
           }))}
         />
-        <p className="text-xs text-fg-muted">{t("pageGrouping")}</p>
+        <InfoTooltip text={t("pageGrouping")} />
       </div>
       <DataTable<Row>
         id="admin-task-recovery"

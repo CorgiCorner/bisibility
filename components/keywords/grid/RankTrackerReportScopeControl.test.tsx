@@ -140,27 +140,55 @@ describe("Snapshot calendar", () => {
       screen.getByRole("button", { name: /Snapshot time \(UTC\).*14:30/ }).textContent,
     ).not.toBe(label);
   });
-  it("shows scope help through the standard tooltip without opening a dialog", async () => {
+  it("describes Snapshot on its calendar trigger without a separate help button", async () => {
     renderScope("ready", "general");
-    const help = screen.getByRole("button", { name: /The table uses your current keyword list/ });
+    const trigger = screen.getByRole("button", { name: /Snapshot time \(UTC\)/ });
+    expect(trigger).toHaveAccessibleDescription(/The table uses your current keyword list/);
+    expect(
+      screen.queryByRole("button", { name: /The table uses your current keyword list/ }),
+    ).toBeNull();
     const user = userEvent.setup();
-    await user.hover(help);
+    await user.hover(trigger);
     expect(await screen.findByRole("tooltip")).toHaveTextContent(
       "The table uses your current keyword list",
     );
-    await user.click(help);
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.click(trigger);
+    expect(screen.getByRole("dialog", { name: /Snapshot time \(UTC\)/ })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
     expect(routerMock.push).not.toHaveBeenCalled();
   });
-  it("explains the comparison period beside its labeled control", async () => {
+  it("explains the comparison on its own control without covering its menu", async () => {
     renderScope("ready", "general");
-    expect(screen.getByRole("button", { name: "Comparison period" })).toHaveTextContent("Compare");
+    const trigger = screen.getByRole("button", { name: "Comparison period" });
+    expect(trigger).toHaveTextContent("Compare");
+    expect(trigger).toHaveAccessibleDescription(/at least 7 days earlier/);
+    expect(
+      screen.queryByRole("button", { name: /Compares results for the selected date/ }),
+    ).toBeNull();
     const user = userEvent.setup();
-    await user.hover(
-      screen.getByRole("button", { name: /Compares results for the selected date/ }),
-    );
+    await user.hover(trigger);
     expect(await screen.findByRole("tooltip")).toHaveTextContent("at least 7 days earlier");
+    await user.click(trigger);
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
     expect(screen.queryByRole("dialog")).toBeNull();
+    expect(routerMock.push).not.toHaveBeenCalled();
+  });
+  it("opens both explanations on keyboard focus and still opens the calendar with Enter", async () => {
+    renderScope("ready", "general");
+    const user = userEvent.setup();
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Comparison period" })).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("at least 7 days earlier");
+    await user.tab();
+    expect(screen.getByRole("button", { name: /Snapshot time \(UTC\)/ })).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "The table uses your current keyword list",
+    );
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("dialog", { name: /Snapshot time \(UTC\)/ })).toBeInTheDocument();
+    expect(routerMock.push).not.toHaveBeenCalled();
   });
   it("returns to Latest without collecting provider data", async () => {
     const fetch = vi.spyOn(globalThis, "fetch");

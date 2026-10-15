@@ -18,8 +18,8 @@
   --table-header-bg: transparent;
   --fg: #202020;
   --fg-muted: #585858;
-  --border: #d0d0d0;
-  --border-soft: #e7e7e7;
+  --border: #d6d6d6;
+  --border-soft: #ebebeb;
   --border-control: #7c7c7c;
   --nav-active: #dddddd;
   --meter-track: #dcdcdc;
@@ -94,8 +94,8 @@
   --table-header-bg: transparent;
   --fg: #eeeeee;
   --fg-muted: #bababa;
-  --border: #484848;
-  --border-soft: #383838;
+  --border: #424242;
+  --border-soft: #343434;
   --border-control: #878787;
   --nav-active: #303030;
   --meter-track: #696969;

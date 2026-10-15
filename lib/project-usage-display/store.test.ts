@@ -23,6 +23,23 @@ const options = {
 const command = { projectId: projectA, expectedRevision: 0, options };
 beforeEach(() => audit.mockReset());
 
+it("can acquire a settings transaction behind concurrent server-render reads", async () => {
+  const f = displayDatabase();
+  f.transaction.mockImplementation(async (run, transactionOptions) => {
+    // A cold remote connection plus parallel header reads exceeded Prisma's
+    // default two-second acquisition budget in the local production-data view.
+    if ((transactionOptions?.maxWait ?? 2_000) < 3_000)
+      throw new Error("Unable to start a transaction in the given time.");
+    return run(f.tx);
+  });
+  expect(await read(projectA, member(), f.db)).toMatchObject({
+    projectId: projectA,
+    options: defaultUsageDisplayOptions,
+  });
+  expect(f.tx.project.update).not.toHaveBeenCalled();
+  expect(audit).not.toHaveBeenCalled();
+});
+
 it("defaults to currency/2 without creating a row or modifying accounting", async () => {
   const f = displayDatabase();
   expect(await read(projectA, member(), f.db)).toEqual({

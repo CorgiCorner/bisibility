@@ -11,10 +11,11 @@
 // the geometry does not move when data lands.
 //
 // This is a picture of the shell, not a working one: no links, no nav labels, no client
-// components. The row counts come from the real rail so the two cannot drift.
+// controls. The row counts come from the real rail so the two cannot drift.
 
 import { navItemGroups, navItems } from "@/lib/nav/nav-items";
 import { Fragment, type ReactNode } from "react";
+import { ShellHeaderLoading } from "./ShellHeaderLoading";
 
 // The boundary has no project yet, so the rail is built against the literal route pattern.
 // Only the row counts are used - the hrefs and labels are discarded.
@@ -78,22 +79,18 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
       {/* Order mirrors the settled rail: top control, switcher, scrollable nav, footer. */}
       <div className="flex-none">
         {collapsed ? (
-          <div className="ml-5.5 grid h-12 w-9 place-items-center">
-            <Block className="h-5 w-5 rounded-control" />
+          <div className="ml-5.5 grid size-9 place-items-center">
+            <Block className="h-5 w-5" />
           </div>
         ) : (
-          <div className="flex h-12 w-full items-center px-[11px]">
-            <Block className="ml-auto h-[30px] w-[30px] flex-none rounded-control" />
+          <div className="flex h-9 w-full items-center gap-2 px-[11px]">
+            <Block className="h-[30px] w-[30px] flex-none" />
+            <Block className="h-3.5 min-w-0 flex-1" />
+            <Block className="h-[30px] w-[30px] flex-none" />
+            <Block className="h-[30px] w-[30px] flex-none" />
           </div>
         )}
       </div>
-      {collapsed ? null : (
-        <div className="mt-3 flex h-11 w-full items-center gap-2.5 px-[11px]">
-          <Block className="h-5 w-5 flex-none rounded-control" />
-          <Block className="h-3.5 min-w-0 flex-1" />
-          <Block className="h-3 w-3 flex-none rounded-control" />
-        </div>
-      )}
       {/* Only the nav region gives; the footer is the only pinned area. */}
       <div className="mt-4 flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
         {standaloneRailRows.map((key) => (
@@ -109,39 +106,10 @@ function SidebarSkeleton({ collapsed }: Readonly<{ collapsed: boolean }>) {
         ))}
       </div>
       <div
-        className={`flex flex-none items-center pt-2 ${collapsed ? "justify-center" : "justify-between px-[11px]"}`}
+        className={`flex flex-none items-center pt-3 ${collapsed ? "justify-center" : "justify-between px-[11px]"}`}
       >
-        <Block className="h-[18px] w-[18px] rounded-control" />
-        <Block className="ml-auto h-2.5 w-9 rounded-control" />
-      </div>
-    </div>
-  );
-}
-
-function HeaderSkeleton() {
-  return (
-    <div
-      className="relative z-40 flex flex-nowrap items-center justify-between gap-2.5 border-b border-border bg-bg-sidebar px-4 py-3 sm:gap-4 sm:px-5 lg:px-7 lg:py-3.5"
-      data-testid="shell-skeleton-header"
-    >
-      <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
-        <Block className="h-[42px] w-[42px] flex-none rounded-card lg:hidden" />
-        <div className="min-w-0 flex-1">
-          <Block className="h-[22px] w-[180px] max-w-full sm:h-[26px]" />
-          <Block className="mt-1 hidden h-[15px] w-[260px] max-w-full sm:block" />
-        </div>
-      </div>
-      {/* Right cluster order matches AppHeader: [actions] [search][bell][account]. */}
-      <div className="flex flex-none items-center gap-6">
-        <div className="hidden min-w-[210px] flex-none pt-[3px] md:block">
-          <Block className="h-2.5 w-[104px] rounded-control" />
-          <Block className="mt-1 h-3 w-[150px] rounded-control" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Block className="h-8 w-8" />
-          <Block className="h-8 w-8" />
-          <Block className="h-8 w-8" />
-        </div>
+        {collapsed ? null : <Block className="h-4 w-20" />}
+        <Block className="h-4 w-9" />
       </div>
     </div>
   );
@@ -165,7 +133,7 @@ export function ShellSkeleton({ children, collapsed = false }: Readonly<ShellSke
     >
       <SidebarSkeleton collapsed={collapsed} />
       <div className="flex min-w-0 flex-col">
-        <HeaderSkeleton />
+        <ShellHeaderLoading />
         {/* A plain div, not <main>: the settled shell owns that landmark and this is inert. */}
         <div className="min-w-0 flex-1 px-4 py-4 sm:px-5 lg:px-7 lg:py-5.5">{children}</div>
       </div>

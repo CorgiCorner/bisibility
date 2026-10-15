@@ -138,6 +138,22 @@
         "analytics": "アナリティクス",
         "serp": "SERP",
         "connections": "{kind} の接続"
+      },
+      "emailAllowance": {
+        "title": "今日のメール送信",
+        "description": "このインストールの1日あたりの安全上限です。",
+        "bulk": "一括メール",
+        "transactional": "トランザクションメール",
+        "attempts": "予約済み送信試行",
+        "remaining": "残り",
+        "limit": "1日の上限",
+        "reset": "リセット: {time} UTC",
+        "asOf": "取得: {time} UTC",
+        "help": "受信者への送信を予約した時点で上限に計上され、後で送信に失敗しても計上されたままです。これはアプリのローカル上限であり、配信済みメール数やプロバイダーアカウントの割り当てではありません。",
+        "notConfigured": "このインストールではメール送信が設定されていません。",
+        "setup": "メールの設定",
+        "configurationUnavailable": "メール設定を読み取れませんでした。",
+        "countsUnavailable": "送信試行数を取得できません。"
       }
     },
     "worker": {
@@ -369,7 +385,12 @@
       "allProjects": "すべてのプロジェクト",
       "unavailableNote": "計測データを取得できません。金額と件数は不明です。",
       "truncated": "表示件数に上限があります。プロジェクトで絞り込んでください。",
-      "budgetNote": "予算は選択した使用月に関係なく現在の周期を表示します。"
+      "budgetNote": "予算は選択した使用月に関係なく現在の周期を表示します。",
+      "usageHeading": "記録された使用量",
+      "budgetsHeading": "現在の予算",
+      "scope": "プロジェクト / 接続",
+      "status": "状態",
+      "exceptionsHeading": "対応が必要"
     },
     "announcements": {
       "heading": "ユーザーへのお知らせ",
@@ -566,7 +587,8 @@
       "blockedScopes": "未確定の会計により支出が制限されています: プロジェクト {projects, number} 件、接続 {connections, number} 件。",
       "projectBlocked": "未確定の会計によりプロジェクトの支出が制限されています。",
       "connectionBlocked": "未確定の会計により接続の支出が制限されています。",
-      "lastResultActivityAt": "結果復旧ワーカーの最終実行"
+      "lastResultActivityAt": "結果復旧ワーカーの最終実行",
+      "noSpendShort": "復旧では、操作の前に保存済みの証拠を確認します。"
     }
   }
 }

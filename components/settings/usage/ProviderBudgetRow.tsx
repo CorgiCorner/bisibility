@@ -1,5 +1,6 @@
 "use client";
 
+import { BudgetTrafficBadge } from "@/components/metering/BudgetTrafficBadge";
 import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
 import { usageCapFromBudget } from "@/components/usagekit/usage-cap-pill";
 import { UsageMeter } from "@/components/usagekit/usage-meter";
@@ -65,7 +66,7 @@ export function ProviderBudgetRow({ row }: { row: ProjectBudgetRow }) {
           {row.display?.projectName && (
             <p className="break-words text-xs text-fg-muted">{row.display.projectName}</p>
           )}
-          <p className="text-xs text-fg-muted">{traffic}</p>
+          <BudgetTrafficBadge traffic={row.traffic} />
         </div>
         <UsageStatus tone={tone}>{status}</UsageStatus>
       </div>

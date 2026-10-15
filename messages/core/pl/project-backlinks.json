@@ -19,7 +19,8 @@
         "includeSubdomains": "Uwzględnij subdomeny",
         "subdomainsHelp": "Wlicza do profilu linki do blog.acme-store.com i innych subdomen. Nie zmienia ceny.",
         "pricing": "Jak liczona jest cena?",
-        "needTarget": "Najpierw podaj domenę – cena pojawi się tutaj"
+        "needTarget": "Najpierw podaj domenę – cena pojawi się tutaj",
+        "provider": "Źródło backlinków"
       },
       "demo": {
         "title": "Linki zwrotne",
@@ -147,7 +148,9 @@
         "recentTargetsAria": "Ostatnie cele",
         "recentTargets": "Ostatnie cele",
         "removeRecent": "Usuń cel {target} z listy ostatnich",
-        "historyUnavailable": "Historia jest niedostępna dla tego wyniku. Podsumowanie i linki są nadal dostępne."
+        "historyUnavailable": "Historia jest niedostępna dla tego wyniku. Podsumowanie i linki są nadal dostępne.",
+        "source": "Źródło: {provider}",
+        "unknownSource": "Nieznane źródło"
       },
       "summary": {
         "per30Days": "/ 30 dni",

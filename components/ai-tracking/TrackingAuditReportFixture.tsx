@@ -1,5 +1,6 @@
 import { AgentReportDetail } from "@/components/agent-reports/AgentReportDetail";
 import { trackingEvidenceAudit } from "@/lib/ai-tracking/projections/audit-report";
+import auditMessages from "@/messages/core/en/project-site-audit.json";
 import { trackingSampleFixtures } from "./fixtures";
 
 const input = trackingEvidenceAudit({
@@ -13,6 +14,7 @@ export function TrackingAuditReportFixture() {
     <AgentReportDetail
       projectRef="prj_abcdefghijklmnopqrstuvwx"
       provenanceLabel="Provenance"
+      savedDetailsLabel={auditMessages.projectSiteAudit.savedDetails}
       report={{
         id: "agr_abcdefghijklmnopqrstuvwx",
         kind: input.kind,

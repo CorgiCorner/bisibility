@@ -1,9 +1,8 @@
+import { Card } from "@/components/ui/Card";
 import type { ReactNode } from "react";
 
-const metricKeys = ["position", "ranking-url", "what-changed"] as const;
-// This placeholder row count matches the four periods in the spec render, not a contract for
-// real keyword data, which can have one period or many.
-const rankingHistoryKeys = ["current", "previous", "first-seen", "earlier"] as const;
+const slots = ["position", "ranking-url", "last-check"] as const;
+const rows = ["first", "second", "third", "fourth"] as const;
 
 function Bar({ className }: Readonly<{ className: string }>) {
   return (
@@ -14,148 +13,108 @@ function Bar({ className }: Readonly<{ className: string }>) {
     />
   );
 }
-
-function Panel({ children, className }: Readonly<{ children: ReactNode; className: string }>) {
+function Panel({ children, className }: Readonly<{ children: ReactNode; className?: string }>) {
   return (
-    <div className={`rounded-card border border-border bg-bg-elev ${className}`}>{children}</div>
+    <Card size="lg" className={`min-w-0 ${className ?? ""}`}>
+      {children}
+    </Card>
   );
 }
 
-function MetricCard() {
-  return (
-    <Panel className="flex h-[158px] flex-col p-4">
-      <Bar className="h-2.5 w-20" />
-      <Bar className="mt-3 h-7 w-24" />
-      <Bar className="mt-2 h-3 w-16" />
-      <Bar className="mt-auto h-3 w-[68%]" />
-    </Panel>
-  );
-}
-
-function ChartPanel() {
-  return (
-    <Panel className="h-[300px] p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <Bar className="h-4 w-32" />
-          <Bar className="mt-2 h-3 w-56" />
-        </div>
-        <Bar className="h-8 w-32" />
-      </div>
-      <Bar className="mt-4 h-[216px] w-full rounded-control" />
-    </Panel>
-  );
-}
-
-function SearchPerformancePanel() {
-  return (
-    <Panel className="h-[172px] p-4">
-      <Bar className="h-4 w-36" />
-      <Bar className="mt-2 h-3 w-48" />
-      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {["clicks", "impressions", "ctr", "position"].map((key) => (
-          <Bar className="h-[58px] w-full" key={key} />
-        ))}
-      </div>
-      <Bar className="mt-3 h-3 w-[72%]" />
-    </Panel>
-  );
-}
-
-function LandingPagePanel() {
-  return (
-    <Panel className="h-[204px] p-4">
-      <Bar className="h-4 w-44" />
-      <Bar className="mt-2 h-3 w-64" />
-      <div className="mt-4 rounded-control border border-border p-3">
-        <Bar className="h-4 w-32" />
-        <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-5">
-          {["sessions", "visitors", "bounce", "duration", "scroll"].map((key) => (
-            <Bar className="h-[58px] w-full" key={key} />
-          ))}
-        </div>
-      </div>
-    </Panel>
-  );
-}
-
-function RankingHistoryPanel() {
-  return (
-    <Panel className="h-[240px] overflow-hidden">
-      <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3.5">
-        <div>
-          <Bar className="h-4 w-40" />
-          <Bar className="mt-2 h-3 w-72" />
-        </div>
-        <Bar className="h-6 w-28 rounded-full" />
-      </div>
-      {rankingHistoryKeys.map((key) => (
-        <div
-          className="flex h-[44px] items-center gap-4 border-b border-border px-4"
-          data-keyword-detail-skeleton-ranking-history-row
-          key={key}
-        >
-          <Bar className="h-2.5 w-2.5 rounded-full" />
-          <Bar className="h-3 w-24" />
-          <Bar className="h-3 flex-1" />
-          <Bar className="h-3 w-16" />
-        </div>
-      ))}
-    </Panel>
-  );
-}
-
+/** Follows the current route: backlink, one header, recorded history, stored SERP, comparison, traffic. */
 export function KeywordDetailPageSkeleton({ ariaLabel }: Readonly<{ ariaLabel: string }>) {
   return (
     <section aria-busy="true" aria-label={ariaLabel} className="grid min-w-0 gap-4">
-      <Panel className="p-4 sm:p-5">
+      <Bar className="h-5 w-32" />
+      <Panel>
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <Bar className="h-7 w-48" />
-            <div
-              className="mt-3 flex flex-wrap gap-[7px]"
-              data-keyword-detail-skeleton-context-pills
-            >
-              <Bar className="h-7 w-28 rounded-full" />
-              <Bar className="h-7 w-20 rounded-full" />
-              <Bar className="h-7 w-16 rounded-full" />
-              <Bar className="h-7 w-24 rounded-full" />
-            </div>
+          <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+            <Bar className="h-7 w-48 max-w-full" />
+            <Bar className="h-6 w-24" />
           </div>
-          <div className="flex gap-2">
-            <Bar className="h-10 w-36" />
-            <Bar className="h-10 w-10" />
-            <Bar className="h-10 w-10" />
+          <div className="flex flex-wrap gap-2">
+            <Bar className="h-8.5 w-36" />
+            <Bar className="h-8.5 w-8.5" />
+            <Bar className="h-8.5 w-8.5" />
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-[7px]" data-keyword-detail-skeleton-context-pills>
+          {["market", "device", "language", "engine"].map((key) => (
+            <Bar className="h-7 w-24" key={key} />
+          ))}
+        </div>
+        <div
+          className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)]"
+          data-keyword-detail-skeleton-slots
+        >
+          {slots.map((key) => (
+            <div className="min-w-0" key={key}>
+              <Bar className="h-3 w-20" />
+              <Bar className="mt-2 h-6 w-32 max-w-full" />
+              <Bar className="mt-2 h-4 w-40 max-w-full" />
+            </div>
+          ))}
+          <div className="border-t border-border pt-3 sm:col-span-2 lg:col-span-3">
+            <Bar className="h-3 w-28" />
+            <Bar className="mt-1.5 h-6 w-40" />
           </div>
         </div>
         <div
-          className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1"
+          className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-border pt-3"
           data-keyword-detail-skeleton-header-metadata
         >
-          <Bar className="h-3 w-28" />
-          <Bar className="h-3 w-px" />
-          <Bar className="h-3 w-32" />
-          <Bar className="h-3 w-24" />
-          <Bar className="h-3 w-20" />
-        </div>
-        <div className="mt-4 border-t border-border pt-3">
-          <Bar className="h-6 w-56 rounded-full" />
+          {["label", "volume", "difficulty", "cpc", "market"].map((key) => (
+            <Bar className="h-5 w-24" key={key} />
+          ))}
         </div>
       </Panel>
-      <div className="grid gap-3 lg:grid-cols-3">
-        {metricKeys.map((key) => (
-          <MetricCard key={key} />
+      <Panel>
+        <div className="ml-10 mr-4 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <Bar className="h-5 w-36" />
+            <Bar className="mt-2 h-4 w-40" />
+          </div>
+          <Bar className="h-8.5 w-56 max-w-full" />
+        </div>
+        <Bar className="mt-2 h-[280px] w-full" />
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border py-3">
+          <Bar className="h-7 w-48" />
+          <Bar className="h-4 w-56 max-w-full" />
+        </div>
+        {rows.map((key) => (
+          <div
+            className="flex min-h-11 items-center gap-4 border-b border-border py-2"
+            data-keyword-detail-skeleton-ranking-history-row
+            key={key}
+          >
+            <Bar className="h-3 w-24" />
+            <Bar className="h-3 min-w-0 flex-1" />
+            <Bar className="h-3 w-16" />
+          </div>
         ))}
-      </div>
-      <div className="flex flex-wrap gap-[7px]">
-        <Bar className="h-7 w-24 rounded-full" />
-        <Bar className="h-7 w-20 rounded-full" />
-        <Bar className="h-7 w-24 rounded-full" />
-      </div>
-      <ChartPanel />
-      <SearchPerformancePanel />
-      <LandingPagePanel />
-      <RankingHistoryPanel />
+      </Panel>
+      <Panel className="overflow-hidden p-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-5">
+          <Bar className="h-5 w-40" />
+          <Bar className="h-8.5 w-36" />
+        </div>
+        <Bar className="h-[480px] w-full rounded-none sm:h-[520px]" />
+      </Panel>
+      <Panel>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Bar className="h-5 w-40" />
+          <Bar className="h-8.5 w-36" />
+        </div>
+      </Panel>
+      <Panel>
+        <Bar className="h-5 w-36" />
+        <Bar className="mt-3 h-4 w-64 max-w-full" />
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {["clicks", "impressions", "ctr", "position"].map((key) => (
+            <Bar className="h-14 w-full" key={key} />
+          ))}
+        </div>
+      </Panel>
     </section>
   );
 }

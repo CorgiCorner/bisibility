@@ -33,6 +33,36 @@ function ScopeHarness() {
 }
 
 describe("AnalyzeCard", () => {
+  it("does not show a provider choice when only one source is eligible", () => {
+    render(
+      <AnalyzeCard
+        {...baseProps}
+        providers={[{ label: "DataForSEO", value: "dataforseo" }]}
+        onProviderChange={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Backlink source" })).not.toBeInTheDocument();
+  });
+
+  it("lets the user explicitly choose among eligible sources", async () => {
+    const onProviderChange = vi.fn();
+    render(
+      <AnalyzeCard
+        {...baseProps}
+        provider="fixture_a"
+        providers={[
+          { label: "Fixture A", value: "fixture_a" },
+          { label: "Fixture B", value: "fixture_b" },
+        ]}
+        onProviderChange={onProviderChange}
+      />,
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Backlink source" }));
+    await user.click(screen.getByRole("menuitem", { name: "Fixture B" }));
+    expect(onProviderChange).toHaveBeenCalledWith("fixture_b");
+    expect(baseProps.onSubmit).not.toHaveBeenCalled();
+  });
   it("keeps the first control row at an exact 34px height", () => {
     render(<AnalyzeCard {...baseProps} />);
 

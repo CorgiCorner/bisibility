@@ -138,6 +138,22 @@
         "analytics": "Analytics",
         "serp": "SERP",
         "connections": "{kind} connections"
+      },
+      "emailAllowance": {
+        "title": "Email sending today",
+        "description": "Daily safety limits for this installation.",
+        "bulk": "Bulk email",
+        "transactional": "Transactional email",
+        "attempts": "Reserved attempts",
+        "remaining": "Remaining",
+        "limit": "Daily limit",
+        "reset": "Resets {time} UTC",
+        "asOf": "Read {time} UTC",
+        "help": "Each reserved recipient send counts toward this limit, including attempts that later fail. These are local application limits, not delivered-message totals or a provider account quota.",
+        "notConfigured": "Email sending is not configured for this installation.",
+        "setup": "Email setup",
+        "configurationUnavailable": "Email settings could not be read.",
+        "countsUnavailable": "Email attempt counts are unavailable."
       }
     },
     "worker": {
@@ -369,7 +385,12 @@
       "allProjects": "All projects",
       "unavailableNote": "Metering data is unavailable. Amounts and counts are unknown.",
       "truncated": "Showing a bounded selection. Filter by project to narrow the results.",
-      "budgetNote": "Budgets show the current cycle, independently of the selected usage month."
+      "budgetNote": "Budgets show the current cycle, independently of the selected usage month.",
+      "usageHeading": "Recorded usage",
+      "budgetsHeading": "Current budgets",
+      "scope": "Project / connection",
+      "status": "Status",
+      "exceptionsHeading": "Needs attention"
     },
     "announcements": {
       "heading": "User announcements",
@@ -566,7 +587,8 @@
       "blockedScopes": "Spending blocked by uncertainty: {projects, number} projects, {connections, number} connections.",
       "projectBlocked": "Project spending is blocked by unresolved accounting.",
       "connectionBlocked": "Connection spending is blocked by unresolved accounting.",
-      "lastResultActivityAt": "Result recovery worker last made progress"
+      "lastResultActivityAt": "Result recovery worker last made progress",
+      "noSpendShort": "Recovery checks existing evidence before taking action."
     }
   }
 }

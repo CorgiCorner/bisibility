@@ -66,16 +66,14 @@ use logs afterward. Setup never offers another account, and non-admins receive n
 > administrator is assigned. Use the seed command below to choose an administrator after upgrading.
 
 `/app/admin` provides cross-instance operations without extending project permissions. It shows
-worker identity and liveness, check totals and lag, recent failures, analytics freshness, Temporal
-signals, the event outbox, instance counts, and monthly rank-check cost. Rate-limited actions test
+worker identity and liveness, check totals and lag, recent failures, analytics freshness, Temporal signals, the event outbox, instance counts, and monthly rank-check cost. Rate-limited actions test
 Slack and retry undelivered events. Existing deployments can grant the role by email after migrations:
 
 ```bash
 node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email operator@example.com
 ```
 
-Run it inside the deployed app container, such as `docker compose exec app
-node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email operator@example.com`.
+Run it inside the deployed app container, such as `docker compose exec app node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email operator@example.com`.
 Equivalent platform shells include `fly ssh console` and `railway ssh`. A checkout also works when
 `DATABASE_URL` targets the instance. Hosted databases need the public connection string, not an
 internal hostname.
@@ -86,11 +84,13 @@ email. If an account has lost its authenticator and all backup codes, see
 [Admin recovery](/self-hosting/security#admin-recovery) for the audited emergency two-factor reset
 procedure.
 
-Cross-tenant lists contain only identifiers, counts, statuses, durations, and categorized errors.
-They exclude keyword text, project names, email addresses, tenant domains, and account data. Instance
-administration grants no tenant project access. Normal authorization still protects every project link.
-Without operator Slack, Redis still supplies worker liveness and instance stats remain available.
-Slack-specific controls report that Slack is not configured.
+Cross-tenant lists contain only identifiers, counts, statuses, durations and categorized errors, excluding keyword text, project names, email addresses, tenant domains and account data.
+Instance administration grants no tenant project access. Normal authorization still protects every project link.
+Without operator Slack, Redis still supplies worker liveness and instance stats remain available; Slack-specific controls report that Slack is not configured.
+
+Metering separates monthly recorded usage, current-cycle budgets and operations needing attention. Unknown amounts stay unknown; short IDs copy in full.
+Project names require existing ownership or membership. Other scopes show public IDs; administrator status grants no extra project access.
+Recovery actions remain separate from ordinary usage and require review.
 
 ## Routine operational checks
 

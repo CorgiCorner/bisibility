@@ -8,7 +8,11 @@ export function AdminMeteringFilters({
   months,
   project,
   projects,
-}: Pick<MeteringAdminPage, "month" | "months" | "project"> & { projects: string[] }) {
+  projectNames,
+}: Pick<MeteringAdminPage, "month" | "months" | "project"> & {
+  projects: string[];
+  projectNames?: Record<string, string>;
+}) {
   const router = useRouter(),
     pathname = usePathname(),
     t = useTranslations("instanceAdmin.metering");
@@ -18,26 +22,32 @@ export function AdminMeteringFilters({
     router.push(`${pathname}?${params}`);
   }
   return (
-    <div className="flex flex-wrap gap-3">
-      <MenuSelect
-        ariaLabel={t("month")}
-        value={month}
-        options={[...new Set([month, ...months])].map((value) => ({ value, label: value }))}
-        onChange={(value) => select(value, project ?? "")}
-      />
-      <MenuSelect
-        ariaLabel={t("project")}
-        value={project ?? ""}
-        options={[
-          { value: "", label: t("allProjects") },
-          ...[...new Set([...(project ? [project] : []), ...projects])].map((value) => ({
-            value,
-            label: value,
-          })),
-        ]}
-        onChange={(value) => select(month, value)}
-        searchable
-      />
+    <div className="grid gap-3 rounded-card border border-border bg-bg-elev p-4 sm:grid-cols-[12rem_minmax(14rem,24rem)]">
+      <div className="grid min-w-0 gap-1.5">
+        <span className="text-xs font-medium text-fg-muted">{t("month")}</span>
+        <MenuSelect
+          ariaLabel={t("month")}
+          value={month}
+          options={[...new Set([month, ...months])].map((value) => ({ value, label: value }))}
+          onChange={(value) => select(value, project ?? "")}
+        />
+      </div>
+      <div className="grid min-w-0 gap-1.5">
+        <span className="text-xs font-medium text-fg-muted">{t("project")}</span>
+        <MenuSelect
+          ariaLabel={t("project")}
+          value={project ?? ""}
+          options={[
+            { value: "", label: t("allProjects") },
+            ...[...new Set([...(project ? [project] : []), ...projects])].map((value) => ({
+              value,
+              label: projectNames?.[value] ?? value,
+            })),
+          ]}
+          onChange={(value) => select(month, value)}
+          searchable
+        />
+      </div>
     </div>
   );
 }

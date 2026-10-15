@@ -1,4 +1,1 @@
-import { ResearchPageLoading } from "@/components/research/ResearchLoadingSkeletons";
-export default function Loading() {
-  return <ResearchPageLoading variant="section" />;
-}
+export { AiVisibilityLoading as default } from "@/components/tracking-loading/AiVisibilityLoading";

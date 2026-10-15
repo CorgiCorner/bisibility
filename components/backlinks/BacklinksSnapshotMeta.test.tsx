@@ -9,6 +9,16 @@ import { BacklinksSnapshotMeta } from "./BacklinksSnapshotMeta";
 import { backlinksSnapshotFixture } from "./backlinks-fixtures";
 
 describe("BacklinksSnapshotMeta", () => {
+  it("identifies a legacy source as unknown instead of assigning DataForSEO", () => {
+    render(
+      <BacklinksSnapshotMeta
+        estimateCents={null}
+        snapshot={{ ...backlinksSnapshotFixture, provider: "unknown" }}
+      />,
+    );
+    expect(screen.getByText("Source: Unknown source")).toBeInTheDocument();
+    expect(screen.queryByText("Source: DataForSEO")).not.toBeInTheDocument();
+  });
   it("renders stale stored metadata without a refresh action", () => {
     render(
       <BacklinksSnapshotMeta

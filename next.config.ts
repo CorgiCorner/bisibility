@@ -144,6 +144,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        destination: "https://github.com/CorgiCorner/bisibility/blob/main/CHANGELOG.md",
+        permanent: true,
+        source: "/changelog",
+      },
+      {
         destination: "/app/:project/keyword-research",
         permanent: true,
         source: "/app/:project/research",

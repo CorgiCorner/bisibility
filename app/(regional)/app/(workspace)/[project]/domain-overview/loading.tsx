@@ -1,4 +1,5 @@
 import { DomainOverviewPageLoading } from "@/components/domain-overview/DomainOverviewLoadingSkeletons";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
@@ -11,6 +12,12 @@ export default async function Loading() {
   const messages = await loadCoreMessages(runtime.locale, ["shared", "projectDomainOverview"]);
   const t = createIntlTranslator(runtime.locale, messages, runtime);
   return (
-    <DomainOverviewPageLoading ariaLabel={t("projectDomainOverview.workspace.ui.pageLoading")} />
+    <FeatureMessagesProvider
+      locale={runtime.locale}
+      timeZone={runtime.timeZone}
+      messages={messages}
+    >
+      <DomainOverviewPageLoading ariaLabel={t("projectDomainOverview.workspace.ui.pageLoading")} />
+    </FeatureMessagesProvider>
   );
 }

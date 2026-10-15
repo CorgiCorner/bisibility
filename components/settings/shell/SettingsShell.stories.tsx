@@ -38,7 +38,7 @@ const meta = {
       </FeatureMessagesProvider>
     ),
   ],
-  parameters: { nextjs: { appDirectory: true } },
+  parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
 } satisfies Meta<typeof SettingsShell>;
 
 export default meta;
