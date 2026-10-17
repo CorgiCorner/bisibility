@@ -20,6 +20,7 @@ import { useMemo, useState } from "react";
 import { ResearchDetailPanel } from "./ResearchDetailPanel";
 import { ResearchFiltersDrawer } from "./ResearchFiltersDrawer";
 import { ResearchResultsTable } from "./ResearchResultsTable";
+import { ResearchTextFilter } from "./ResearchTextFilter";
 import { DiagnosticsBanner, skipNote, warningLabel } from "./research-diagnostics";
 import { deeperResearchCostCents } from "./research-results-model";
 import { rowsForResearchScope } from "./research-scope-capability";
@@ -166,6 +167,12 @@ export function ResearchResults({
       ) : null}
       <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,1fr)]">
         <ResearchResultsTable
+          search={
+            <ResearchTextFilter
+              value={filters.query ?? ""}
+              onChange={(query) => setFilters((current) => ({ ...current, query }))}
+            />
+          }
           activeKeyword={activeKeyword}
           cached={result.cached}
           canRemoveSaved={Boolean(onRemoveSaved)}

@@ -20,6 +20,7 @@ import type { RecoveryOutcome } from "./contract";
 import { recoverOriginalProof } from "./proof";
 import { readRecoveryRecords } from "./query";
 import { openRecoveryCase, type RecoveryTokenScope, recoveryInstance } from "./tokens";
+import { deferTransientRecovery } from "./transient-retry";
 
 async function claim(database: PrismaClient, namespace: string, now: Date) {
   return database.$transaction(async (tx) => {
@@ -27,7 +28,10 @@ async function claim(database: PrismaClient, namespace: string, now: Date) {
       where: {
         namespace,
         input: { path: ["instance"], equals: recoveryInstance() },
-        OR: [{ state: "queued" }, { state: "running", leaseExpiresAt: { lt: now } }],
+        OR: [
+          { state: "queued", OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lte: now } }] },
+          { state: "running", leaseExpiresAt: { lt: now } },
+        ],
       },
       orderBy: [{ createdAt: "asc" }, { commandId: "asc" }],
       take: 1,
@@ -131,6 +135,7 @@ export async function processRecoveryCommands(
   }
   const input = parsed.data,
     scope = { actor: command.actorId, namespace, instance: input.instance };
+  const initialOutcomes = Array.isArray(command.result) ? command.result.length : 0;
   let processed = 0;
   for (let index = 0; index < Math.min(4, Math.max(1, options.limit ?? 4)); index++) {
     try {
@@ -144,6 +149,17 @@ export async function processRecoveryCommands(
     } catch (error) {
       let advanced = false;
       try {
+        if (
+          await deferTransientRecovery(
+            database,
+            namespace,
+            command.commandId,
+            command.leaseId,
+            error,
+            initialOutcomes + processed,
+          )
+        )
+          break;
         advanced = await recordFailure(
           database,
           namespace,

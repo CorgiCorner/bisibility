@@ -134,7 +134,7 @@ describe("RecentResearchSearches", () => {
       />,
     );
 
-    expect(screen.getByText("United States / English - yesterday")).toBeInTheDocument();
+    expect(screen.getByText(/United States \/ English - yesterday/)).toBeInTheDocument();
     expect(screen.getByText("Germany / German - just now")).toBeInTheDocument();
   });
 

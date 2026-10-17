@@ -29,18 +29,35 @@ const roleRank = {
 // the auth layer remains importable in tests.
 const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn) => fn;
 
-// This distinguishes missing sessions from stale account references for UI only;
-// authorization must revalidate the referenced user.
-export const getSessionReference = perRequestCache(async () => {
+export class SessionReadUnavailableError extends Error {
+  constructor() {
+    super("Session availability could not be confirmed.");
+    this.name = "SessionReadUnavailableError";
+  }
+}
+
+async function readSessionReference(requireAvailability = false) {
   const requestHeaders = await headers();
   const { auth } = await import("@/lib/auth/auth");
   const resolved = await retryTransientSessionDatabaseRead(() =>
     auth.api.getSession({ headers: requestHeaders }),
   );
-  if (!resolved.ok) return null;
+  if (!resolved.ok) {
+    if (requireAvailability) throw new SessionReadUnavailableError();
+    return null;
+  }
 
   return resolved.value;
-});
+}
+
+// A reference alone is not active authorization; callers must revalidate the account.
+export const getSessionReference = perRequestCache(() => readSessionReference());
+
+const getAvailableSession = perRequestCache(async () =>
+  enforceActiveSession(await readSessionReference(true), true),
+);
+
+export const getOptionalAvailableSession = getAvailableSession;
 
 export const getSession = perRequestCache(async () => {
   return enforceActiveSession(await getSessionReference());
@@ -50,6 +67,7 @@ export const getSession = perRequestCache(async () => {
 // database check as defense in depth even though deactivation normally deletes all sessions.
 export async function enforceActiveSession<T extends { user: { id: string } }>(
   session: T | null,
+  requireAvailability = false,
 ): Promise<T | null> {
   if (!session) {
     return null;
@@ -57,7 +75,8 @@ export async function enforceActiveSession<T extends { user: { id: string } }>(
 
   try {
     await assertTestAuthSession(session.user.id);
-  } catch {
+  } catch (error) {
+    if (requireAvailability) throw error;
     return null;
   }
 
@@ -71,7 +90,10 @@ export async function enforceActiveSession<T extends { user: { id: string } }>(
       where: { id: session.user.id },
     }),
   );
-  if (!resolved.ok) return null;
+  if (!resolved.ok) {
+    if (requireAvailability) throw new SessionReadUnavailableError();
+    return null;
+  }
   const user = resolved.value;
   if (user?.deactivatedAt === null) {
     return session;
@@ -95,9 +117,9 @@ export async function enforceActiveSession<T extends { user: { id: string } }>(
 
 export type AuthSession = NonNullable<Awaited<ReturnType<typeof getSession>>>;
 
-export async function requireSession() {
+async function requireResolvedSession(read: typeof getSession) {
   await connection();
-  const session = await getSession();
+  const session = await read();
 
   if (!session) {
     const returnTo = validateReturnTo((await headers()).get(RETURN_TO_REQUEST_HEADER));
@@ -105,6 +127,15 @@ export async function requireSession() {
   }
 
   return session;
+}
+
+export async function requireSession() {
+  return requireResolvedSession(getSession);
+}
+
+// SSE must distinguish unavailable authorization reads from a confirmed missing session.
+export async function requireAvailableSession() {
+  return requireResolvedSession(getAvailableSession);
 }
 
 export async function requireRole(role: Role) {

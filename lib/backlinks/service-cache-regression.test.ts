@@ -1,11 +1,12 @@
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { invalidateBacklinksCache } from "./cache";
 import { analyzeBacklinks } from "./service";
 
 const fixtures = vi.hoisted(() => ({
   values: new Map<string, string>(),
-  redis: { get: vi.fn(), set: vi.fn(), eval: vi.fn() },
+  redis: { get: vi.fn(), set: vi.fn(), eval: vi.fn(), del: vi.fn() },
   prisma: {
     project: { findFirst: vi.fn() },
     backlinkSnapshot: { findFirst: vi.fn() },
@@ -49,6 +50,9 @@ describe("failed summary with real cache control flow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     fixtures.values.clear();
+    fixtures.redis.del.mockImplementation(async (key: string) =>
+      Number(fixtures.values.delete(key)),
+    );
     fixtures.redis.get.mockImplementation(async (key: string) => fixtures.values.get(key) ?? null);
     fixtures.redis.set.mockImplementation(
       async (key: string, value: string, options: { NX?: boolean }) => {
@@ -111,5 +115,69 @@ describe("failed summary with real cache control flow", () => {
       expect(fixtures.provider.fetchBacklinksSummary).toHaveBeenCalledTimes(invocation);
       expect(fixtures.provider.fetchBacklinksHistory).toHaveBeenCalledTimes(invocation);
     }
+  });
+  it("fetches the larger requested sample after a smaller Redis sample was cached", async () => {
+    fixtures.provider.fetchBacklinksHistory.mockResolvedValue({ costCents: 1, rows: [] });
+    fixtures.provider.fetchBacklinksRows.mockImplementation(
+      async (_credentials: unknown, input: { limit: number }) => ({
+        costCents: 1,
+        totalCount: 1000,
+        rows: Array.from({ length: input.limit }, (_, index) => ({
+          anchor: "link",
+          domainAuthority: 1,
+          firstSeen: null,
+          flags: [],
+          linksCount: 1,
+          lostAt: null,
+          sourceDomain: `s${index}.example.org`,
+          sourceUrl: `https://s${index}.example.org/`,
+          spamScore: 0,
+          status: "active",
+          targetUrl: "https://example.org/",
+        })),
+      }),
+    );
+    fixtures.prisma.$transaction.mockImplementation(
+      async (
+        work: (tx: {
+          backlinkSnapshot: {
+            create: (input: { data: Record<string, unknown> }) => Promise<unknown>;
+          };
+        }) => Promise<unknown>,
+      ) =>
+        work({
+          backlinkSnapshot: {
+            create: async ({ data }) => ({
+              ...data,
+              id: "snapshot-fixture",
+              rows: (data.rows as { create: unknown[] }).create,
+            }),
+          },
+        }),
+    );
+    const context = { origin: APP_REQUEST_ORIGIN, projectId: "prj_fixture" };
+    const first = await analyzeBacklinks(context, { target: "example.org", resultLimit: 100 });
+    const larger = await analyzeBacklinks(context, { target: "example.org", resultLimit: 1000 });
+    expect(first).toMatchObject({ ok: true, fetchedRowCount: 100 });
+    expect(larger).toMatchObject({ ok: true, fetchedRowCount: 1000, cached: false });
+    expect(fixtures.provider.fetchBacklinksRows).toHaveBeenCalledTimes(2);
+  });
+  it("evicts every cached sample reference when its snapshot advances", async () => {
+    const scope = {
+      includeSubdomains: true,
+      mode: "as_is" as const,
+      projectId: "fixture_project",
+      provider: "dataforseo",
+      scope: "site" as const,
+      target: "example.org",
+    };
+    for (const limit of [100, 300, 500, 1000])
+      fixtures.values.set(
+        `bl:v3:fixture_project:dataforseo:example.org:site:1:as_is:${limit}`,
+        "old-reference",
+      );
+    await invalidateBacklinksCache(scope);
+    expect(fixtures.values.size).toBe(0);
+    expect(fixtures.redis.del).toHaveBeenCalledTimes(4);
   });
 });

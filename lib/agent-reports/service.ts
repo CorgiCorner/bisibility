@@ -31,9 +31,9 @@ function resource(row: AgentReport): AgentReportResource {
 }
 
 export async function createAgentReport(
-  input: AgentReportInput & { projectId: string; actorId?: string | null },
+  input: AgentReportInput & { projectId: string; actorId?: string | null; cacheReuseUntil?: Date },
 ) {
-  const { projectId, actorId, ...payload } = input;
+  const { projectId, actorId, cacheReuseUntil, ...payload } = input;
   const data = agentReportSchema.parse(payload);
   const project = await prisma.project.findUniqueOrThrow({
     where: { id: projectId },
@@ -42,7 +42,13 @@ export async function createAgentReport(
   assertProjectWritable(project);
   return resource(
     await prisma.agentReport.create({
-      data: { ...data, projectId, publicId: makePublicId("agr"), createdById: actorId ?? null },
+      data: {
+        ...data,
+        ...(cacheReuseUntil ? { cacheReuseUntil } : {}),
+        projectId,
+        publicId: makePublicId("agr"),
+        createdById: actorId ?? null,
+      },
     }),
   );
 }

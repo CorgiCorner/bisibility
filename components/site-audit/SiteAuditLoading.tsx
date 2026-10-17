@@ -1,6 +1,7 @@
 "use client";
 
 import { PageContent } from "@/components/shell/PageContent";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
@@ -27,8 +28,8 @@ export function SiteAuditPageLoading() {
               {t("description", { domain: "…" })}
             </p>
             <div className="mt-4 flex flex-wrap items-end gap-3">
-              <div className="w-32">
-                <FieldLabel label={t("pageLimit")} />
+              <div className="grid w-32 gap-2">
+                <FieldLabel className="text-ui-body font-medium" label={t("pageLimit")} />
                 <Input
                   disabled
                   tabIndex={-1}
@@ -36,7 +37,15 @@ export function SiteAuditPageLoading() {
                   className="bg-bg-sunken motion-safe:animate-pulse"
                 />
               </div>
-              <div className="h-9 w-[116px] rounded-control bg-bg-sunken motion-safe:animate-pulse" />
+              <Button
+                size="input"
+                disabled
+                tabIndex={-1}
+                startIcon={<MagnifyingGlassIcon size={15} weight="regular" />}
+                className="opacity-40 motion-safe:animate-pulse"
+              >
+                {t("run")}
+              </Button>
               <p className="m-0 pb-2 text-[11px] text-fg-muted">{t("cost")}</p>
             </div>
           </Card>

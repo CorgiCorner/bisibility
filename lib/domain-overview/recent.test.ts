@@ -40,6 +40,8 @@ describe("recent domain overview targets", () => {
       expect(mocks.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
+            OR: expect.any(Array),
+            cachedUntil: { gt: new Date(0) },
             fetchedAt: { gt: new Date("2026-08-09T12:00:00.000Z") },
             projectId: "project_1",
           },
@@ -182,7 +184,7 @@ describe("recent domain overview targets", () => {
         target: true,
       },
       take: 16,
-      where: { cachedUntil: { gt: now }, projectId: "project_1" },
+      where: { OR: expect.any(Array), cachedUntil: { gt: now }, projectId: "project_1" },
     });
   });
 
@@ -192,7 +194,11 @@ describe("recent domain overview targets", () => {
     expect(mocks.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         take: 64,
-        where: { cachedUntil: { gt: expect.any(Date) }, projectId: "project_1" },
+        where: {
+          OR: expect.any(Array),
+          cachedUntil: { gt: expect.any(Date) },
+          projectId: "project_1",
+        },
       }),
     );
   });

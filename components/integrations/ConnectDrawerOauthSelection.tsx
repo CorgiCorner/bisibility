@@ -5,6 +5,7 @@ import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect, type MenuSelectOption } from "@/components/ui/MenuSelect";
 import { PillBadge } from "@/components/ui/Pill";
 import { zodResolver } from "@/lib/forms/zod-resolver";
+import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
 import {
   googlePropertyDisplayName,
   googlePropertyMatchesDomain,
@@ -270,7 +271,9 @@ export function ConnectDrawerOauthSelection({
               weight="regular"
             />
             <span>
-              {isGa4 && setup.failureClass ? (
+              {setup.failure ? (
+                googlePropertyFailureMessage(setup.failure, t)
+              ) : isGa4 && setup.failureClass ? (
                 <span className="flex flex-col gap-1">
                   <span>{t("loadGa4Error")}</span>
                   <span>{ga4DiscoveryFailure(setup.failureClass, t)}</span>

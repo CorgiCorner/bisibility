@@ -22,6 +22,7 @@ export type DomainOverviewPageContext = {
   costContext: { capCents: number; spentCents: number; timezone?: string };
   defaultTarget: string;
   providerStatus: "connected" | "needs_reauth" | "no_provider";
+  supportingProviders?: string[];
   recentTargets: DomainRecentTarget[];
   trackedScopes: ResearchScope[];
 };
@@ -76,7 +77,7 @@ export type DomainOverviewWorkspaceProps = {
   loadPagesPageAction: LoadDomainPagesPageAction;
   projectId: string;
   projectRef: string;
-  researchScope: ResearchScope | null;
+  researchScope?: ResearchScope | null;
   saveSelectedKeywordsAction?: SaveSelectedKeywordsAction;
 };
 

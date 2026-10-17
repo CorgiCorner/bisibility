@@ -3,6 +3,7 @@ import {
   renderWithOnboardingMessages as render,
   renderWithFeatureMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StepConnectGscCard, StepConnectGscSetupNotice } from "./StepConnectGscCard";
@@ -192,4 +193,33 @@ describe("StepConnectGscCard", () => {
       }),
     );
   });
+});
+
+it("keeps onboarding property selection open on a typed pending failure", async () => {
+  render(
+    <StepConnectGscCard
+      configured
+      projectId="prj_1"
+      googleOAuth={{
+        properties: [
+          {
+            kind: "domain",
+            label: "example.com",
+            permissionLevel: "siteOwner",
+            value: "sc-domain:example.com",
+          },
+        ],
+      }}
+      completePropertySelection={vi.fn().mockResolvedValue({
+        status: "failed",
+        failure: { reason: "permission", action: "check_permissions" },
+      })}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Use selected property" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "This Google account cannot access these properties.",
+  );
+  expect(screen.getByRole("heading", { name: "Select a Search Console property" })).toBeVisible();
+  expect(routerMock.refresh).not.toHaveBeenCalled();
 });

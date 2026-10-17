@@ -32,9 +32,9 @@ export async function readLegacyOverviewQuality(
     });
   if (options.asOf.getTime() !== input.now.getTime())
     throw new Error("Legacy overview snapshot changed.");
-  // Renew permission for empty cohorts too; batching alone has no metadata call in that case.
-  await options.loadMetadata(tx, project, [], input.now);
   const keywords = candidates.filter((row) => row.createdAt <= input.now);
+  // Nonempty batching renews authority itself; an empty cohort still needs that check.
+  if (!keywords.length) await options.loadMetadata(tx, project, [], input.now);
   if (keywords.length > options.limits.maxTargets) throw new RankReportCapacityError();
   const metadata = await loadRankTrackerMetadataBatches(
     options.loadMetadata,

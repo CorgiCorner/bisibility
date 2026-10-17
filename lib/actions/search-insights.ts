@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db/prisma";
+import type { GooglePropertyFailure } from "@/lib/integrations/google-property-failure";
 import type { GooglePropertyOption } from "@/lib/integrations/types";
 import {
   loadStoredGoogleProperties,
@@ -58,6 +59,7 @@ export type ArchivedSearchInsightsProperty = SearchInsightsProperty & {
 };
 
 export type SearchInsightsPropertiesResult = {
+  failure?: GooglePropertyFailure;
   archived: readonly ArchivedSearchInsightsProperty[];
   error?: string;
   properties: readonly SearchInsightsPropertyOption[];
@@ -123,6 +125,7 @@ export async function loadSearchInsightsProperties(
   return {
     archived: archived.filter((property) => property !== null),
     ...(setup.error ? { error: setup.error } : {}),
+    ...(setup.failure ? { failure: setup.failure } : {}),
     properties: setup.properties.map((option) => propertyOption(option)),
     ...(setup.requiresReauth ? { requiresReauth: true } : {}),
     ...(setup.preferredProperty ? { selected: setup.preferredProperty } : {}),
@@ -141,7 +144,7 @@ export async function selectSearchInsightsProperty(input: unknown) {
     property: data.property,
     provider: SOURCE,
   });
-  revalidatePath(MODULE_ROUTE, "page");
+  if (result.status !== "failed") revalidatePath(MODULE_ROUTE, "page");
   return result;
 }
 

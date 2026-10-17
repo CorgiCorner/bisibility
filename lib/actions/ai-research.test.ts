@@ -57,6 +57,7 @@ describe("AI action authorization", () => {
     expect(page).toMatchObject({
       catalog: undefined,
       catalogFailure: "no_source",
+      supportingProviders: ["DataForSEO"],
       history: [{ id: "agr_saved" }],
     });
     expect(mocks.catalog).toHaveBeenCalledWith("internal-project");
@@ -104,4 +105,33 @@ it("preserves missing-budget guidance in the research action result", async () =
     reason: "budget_missing",
     message: expect.stringContaining("configure a monthly budget"),
   });
+});
+
+it.each(["visibility", "prompt"] as const)(
+  "authorizes %s research with a long local matching domain",
+  async (mode) => {
+    const domain = `${"a".repeat(50)}.${"b".repeat(12)}.example.com`;
+    await analyzeAiResearchAction("prj_public", mode, {
+      ...input,
+      domain,
+      ...(mode === "prompt" ? { prompt: "q" } : { target_type: "brand" }),
+    });
+    expect(mocks.scope).toHaveBeenCalledWith({ id: "actor" }, "create", "prj_public", {
+      type: "project",
+    });
+    expect(mode === "prompt" ? mocks.compare : mocks.analyze).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: "internal-project" }),
+      expect.objectContaining({ domain }),
+    );
+  },
+);
+it("rejects unsupported provider domain mode before authorization or paid service I/O", async () => {
+  await expect(
+    analyzeAiResearchAction("prj_public", "visibility", {
+      ...input,
+      domain: `${"a".repeat(50)}.${"b".repeat(12)}.example.com`,
+    }),
+  ).rejects.toThrow(/Domain searches support at most 63 characters/);
+  expect(mocks.actor).not.toHaveBeenCalled();
+  expect(mocks.analyze).not.toHaveBeenCalled();
 });

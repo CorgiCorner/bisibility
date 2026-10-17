@@ -1,6 +1,6 @@
 # Bisibility plugin for Claude Code
 
-This plugin installs the Bisibility remote MCP connection and four focused SEO skills as one versioned package.
+This plugin installs the Bisibility remote MCP connection and focused SEO skills as one versioned package.
 
 ## Install
 
@@ -25,9 +25,16 @@ For a self-hosted installation, set `BISIBILITY_MCP_URL` to that installation's 
 
 ## Included skills
 
+- `/bisibility:project-setup` saves reusable project context and proposes confirmed tracking setup.
+- `/bisibility:seo-coach` recommends the next skill from saved context without writes or paid calls.
+- `/bisibility:ai-visibility-audit` audits retained AI mentions and citations, with optional approved research and report saving.
+- `/bisibility:alert-triage` verifies fired alerts against rank history and proposes confirmed per-alert changes.
 - `/bisibility:rank-tracking-report` builds a read-only, evidence-backed ranking movement report.
 - `/bisibility:keyword-opportunity-research` researches and prioritizes keyword ideas with an estimate-first cost gate.
 - `/bisibility:backlink-profile-analysis` analyzes a site or page backlink profile with an estimate-first cost gate.
+- `/bisibility:keyword-clustering` groups supplied or saved keywords into page plans with evidence-based cannibalization checks.
+- `/bisibility:competitor-analysis` compares one rival with tracked project keywords using a confirmed market and total cost plan.
+- `/bisibility:competitive-landscape` maps sampled visibility across the project and up to five rivals with per-domain cost approval.
 
 - `/bisibility:seo-audit` collects a bounded Site Audit, saved ranking and AI evidence, prioritizes actions, saves an AgentReport and returns its project link. Requires Bisibility v0.28.0 or newer with the corresponding MCP tools exposed.
 
@@ -41,7 +48,7 @@ Use existing ranking/AI data and the free bounded crawl; do not spend on provide
 
 The external client's model performs the analysis. Bisibility provides MCP data and storage; there is no built-in autonomous audit agent. The crawl is an HTTP sample of at most 15 pages in 15 seconds, not a full-site or Lighthouse audit. Missing sources and partial results remain visible in the report.
 
-For Codex or another Agent Skills client, copy the complete `plugins/bisibility/skills/seo-audit` directory (including `references` and `scripts`) from the release checkout into the client's skill directory, such as `~/.codex/skills/seo-audit`. Connect that client to MCP using the [agent setup guide](https://bisibility.com/docs/agents), then invoke `$seo-audit` with the same prompt. The Claude Code marketplace commands above apply only to Claude Code. Do not install just the SKILL.md without its references.
+For Codex or another Agent Skills client, copy the complete skill directory (`plugins/bisibility/skills/<slug>`, including references and scripts) from the release checkout into the client's skill directory. For example, copy `plugins/bisibility/skills/seo-audit` to `~/.codex/skills/seo-audit`. Connect that client to MCP using the [agent setup guide](https://bisibility.com/docs/agents), then invoke `$seo-audit` with the same prompt. The Claude Code marketplace commands above apply only to Claude Code. Do not install just the SKILL.md without its references.
 
 Core tools are `list_projects`, `get_project`, `get_project_context`, `run_site_audit`, `get_site_audit`, `list_keywords`, `list_agent_reports`, `get_agent_report` and `create_agent_report`. Optional tools include `get_rank_history`, `list_search_performance_query_stats`, `analyze_ai_visibility` and `compare_ai_prompts`; the latter two require estimate-first spending approval. See the skill's [workflow](skills/seo-audit/references/workflow.md) and [report contract](skills/seo-audit/references/report.md). Client namespaces may prefix tool names.
 

@@ -200,17 +200,7 @@ export function LoginEmailStep({
                   {button}
                   {googleFull ? (
                     <GoogleCapacityNote justMissed={capacityMiss === "google"} />
-                  ) : (
-                    <CapacityMeter
-                      compact
-                      label={t("capacity.signUpSpotsRemaining", {
-                        cap: capacity.googleSpots.cap,
-                        left: capacity.googleSpots.left,
-                      })}
-                      meter={capacity.googleSpots}
-                      tooltip={t("capacity.signUpSpotsTooltip")}
-                    />
-                  )}
+                  ) : null}
                 </div>
               );
             })}

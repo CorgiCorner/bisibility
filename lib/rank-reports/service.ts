@@ -1,3 +1,4 @@
+import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
@@ -197,7 +198,7 @@ export async function readRankReportFor(
 ) {
   const plan = prepareRankReportRead(context, input, options);
   return db.$transaction((tx) => readRankReportInTransaction(tx, plan), {
-    isolationLevel: "RepeatableRead",
+    ...REPORT_READ_TRANSACTION,
   });
 }
 
@@ -236,7 +237,7 @@ export async function readRankReportPagesFor(
       for (const plan of plans) pages.push(await readRankReportInTransaction(tx, plan));
       return pages;
     },
-    { isolationLevel: "RepeatableRead" },
+    { ...REPORT_READ_TRANSACTION },
   );
 }
 
@@ -279,6 +280,6 @@ export async function readRankReportPagesWithProjectionFor<T>(
         throw new RankReportSnapshotConflictError();
       return { pages, projection: result.projection };
     },
-    { isolationLevel: "RepeatableRead" },
+    { ...REPORT_READ_TRANSACTION },
   );
 }

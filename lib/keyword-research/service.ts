@@ -1,7 +1,7 @@
 import "server-only";
-
 import { requireApiPublicId } from "@/lib/api/public-id";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
+import { withProjectCachePolicy } from "@/lib/provider-lookups/project-cache-policy";
 import { remainingRequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
@@ -52,190 +52,192 @@ export async function researchKeywords(input: {
 }): Promise<KeywordResearchOutcome> {
   const project = await keywordResearchProject(input.projectId);
   if (!project) return { ok: false, reason: "no_source" };
-  const eligible = eligibleResearchConnections(project, "research");
-  const requestedConnectionId = input.connectionId
-    ? requireApiPublicId(input.connectionId, "conn")
-    : undefined;
-  const selected = requestedConnectionId
-    ? eligible.find(({ connection }) => connection.publicId === requestedConnectionId)
-    : eligible[0];
-  if (!selected) return { ok: false, reason: "no_source" };
-  const location = await researchLocation(project, input.locationKey);
-  if (!supportsResearchScope(location.value.gl, location.value.hl)) {
-    return { ok: false, reason: "unsupported_location" };
-  }
-  const rateContext =
-    selected.provider.id === "dataforseo"
-      ? LIST_PROVIDER_RATE_CONTEXT
-      : await loadProviderRateContext(selected.connection.id, "keyword_research");
-  const fetchedAt = new Date().toISOString();
-  if (input.estimateOnly) {
-    const estimate = await estimateKeywordResearch({
-      ...input,
-      context: rateContext,
-      limit: input.resultLimit,
-      location: location.value,
-      selected,
-    });
-    return {
-      ...estimate,
-      connections: connectionResources(eligible),
-      estimate: true,
-      ok: true,
-      provider: selected.provider.label,
-    };
-  }
+  return withProjectCachePolicy(project.lookupCacheTtlSeconds, async () => {
+    const eligible = eligibleResearchConnections(project, "research");
+    const requestedConnectionId = input.connectionId
+      ? requireApiPublicId(input.connectionId, "conn")
+      : undefined;
+    const selected = requestedConnectionId
+      ? eligible.find(({ connection }) => connection.publicId === requestedConnectionId)
+      : eligible[0];
+    if (!selected) return { ok: false, reason: "no_source" };
+    const location = await researchLocation(project, input.locationKey);
+    if (!supportsResearchScope(location.value.gl, location.value.hl)) {
+      return { ok: false, reason: "unsupported_location" };
+    }
+    const rateContext =
+      selected.provider.id === "dataforseo"
+        ? LIST_PROVIDER_RATE_CONTEXT
+        : await loadProviderRateContext(selected.connection.id, "keyword_research");
+    const fetchedAt = new Date().toISOString();
+    if (input.estimateOnly) {
+      const estimate = await estimateKeywordResearch({
+        ...input,
+        context: rateContext,
+        limit: input.resultLimit,
+        location: location.value,
+        selected,
+      });
+      return {
+        ...estimate,
+        connections: connectionResources(eligible),
+        estimate: true,
+        ok: true,
+        provider: selected.provider.label,
+      };
+    }
 
-  const plannedSources = sourcesForMode(input.mode);
-  const seen = new Set([normalizeResearchKeyword(input.seed)]);
-  const rows: Array<ResearchPage["rows"][number] & { source: KeywordResearchSource }> = [];
-  const diagnostics: KeywordResearchSourceDiagnostic[] = [];
-  const successfulFetchedAts: string[] = [];
-  let spentThisRequest = 0;
-  let latestFetchedAt = fetchedAt;
-  for (let index = 0; index < plannedSources.length; index += 1) {
-    const source = plannedSources[index];
-    if (rows.length >= input.resultLimit) {
-      diagnostics.push(...remainingResearchDiagnostics(plannedSources, index, "result_limit"));
-      break;
-    }
-    const key = keywordResearchSourceKey({
-      connectionId: selected.connection.id,
-      includeClickstream: input.includeClickstream,
-      limit: input.resultLimit,
-      location: location.value,
-      projectId: project.id,
-      seed: input.seed,
-      source,
-    });
-    try {
-      const lookup = await withKeywordResearchCache({
-        fresh: input.fresh,
-        key,
-        load: async () => {
-          const estimated = await sourceEstimate({
-            context: rateContext,
-            includeClickstream: input.includeClickstream,
-            limit: input.resultLimit,
-            selected,
-            source,
-          });
-          if (
-            input.maxCostCents !== undefined &&
-            spentThisRequest + estimated > input.maxCostCents
-          ) {
-            throw new ProviderLookupSignal({
-              estimatedCostCents: spentThisRequest + estimated,
-              ok: false,
-              reason: "cost_limit_exceeded",
+    const plannedSources = sourcesForMode(input.mode);
+    const seen = new Set([normalizeResearchKeyword(input.seed)]);
+    const rows: Array<ResearchPage["rows"][number] & { source: KeywordResearchSource }> = [];
+    const diagnostics: KeywordResearchSourceDiagnostic[] = [];
+    const successfulFetchedAts: string[] = [];
+    let spentThisRequest = 0;
+    let latestFetchedAt = fetchedAt;
+    for (let index = 0; index < plannedSources.length; index += 1) {
+      const source = plannedSources[index];
+      if (rows.length >= input.resultLimit) {
+        diagnostics.push(...remainingResearchDiagnostics(plannedSources, index, "result_limit"));
+        break;
+      }
+      const key = keywordResearchSourceKey({
+        connectionId: selected.connection.id,
+        includeClickstream: input.includeClickstream,
+        limit: input.resultLimit,
+        location: location.value,
+        projectId: project.id,
+        seed: input.seed,
+        source,
+      });
+      try {
+        const lookup = await withKeywordResearchCache({
+          fresh: input.fresh,
+          key,
+          load: async () => {
+            const estimated = await sourceEstimate({
+              context: rateContext,
+              includeClickstream: input.includeClickstream,
+              limit: input.resultLimit,
+              selected,
+              source,
             });
-          }
-          const page = await callResearchSource({
-            ...input,
-            limit: input.resultLimit,
-            maxCostCents: remainingRequestCostLimit(input.maxCostCents, spentThisRequest),
-            location: location.value,
-            projectId: project.id,
-            rateContext,
-            selected,
-            source,
-          });
-          spentThisRequest += page.costCents;
-          return { ...page, fetchedAt: new Date().toISOString() };
-        },
-      });
-      if (lookup.status === "contended") {
-        throw new ProviderLookupSignal({
-          ok: false,
-          reason: "in_progress",
-          resetAt: lookup.resetAt,
+            if (
+              input.maxCostCents !== undefined &&
+              spentThisRequest + estimated > input.maxCostCents
+            ) {
+              throw new ProviderLookupSignal({
+                estimatedCostCents: spentThisRequest + estimated,
+                ok: false,
+                reason: "cost_limit_exceeded",
+              });
+            }
+            const page = await callResearchSource({
+              ...input,
+              limit: input.resultLimit,
+              maxCostCents: remainingRequestCostLimit(input.maxCostCents, spentThisRequest),
+              location: location.value,
+              projectId: project.id,
+              rateContext,
+              selected,
+              source,
+            });
+            spentThisRequest += page.costCents;
+            return { ...page, fetchedAt: new Date().toISOString() };
+          },
         });
+        if (lookup.status === "contended") {
+          throw new ProviderLookupSignal({
+            ok: false,
+            reason: "in_progress",
+            resetAt: lookup.resetAt,
+          });
+        }
+        latestFetchedAt = lookup.value.fetchedAt;
+        successfulFetchedAts.push(lookup.value.fetchedAt);
+        diagnostics.push({
+          cached: lookup.cached,
+          costCents: lookup.value.costCents,
+          returned: lookup.value.rows.length,
+          source,
+          status: "ok",
+        });
+        for (const row of lookup.value.rows) {
+          const normalized = normalizeResearchKeyword(row.keyword);
+          if (!normalized || seen.has(normalized)) continue;
+          seen.add(normalized);
+          rows.push({ ...row, source });
+          if (rows.length >= input.resultLimit) break;
+        }
+      } catch (error) {
+        if (error instanceof DeploymentAdmissionExhaustedError) throw error;
+        const outcome = error instanceof ProviderLookupSignal ? error.outcome : null;
+        const isCostLimit = outcome?.reason === "cost_limit_exceeded";
+        if (
+          !diagnostics.some((item) => item.status === "ok") &&
+          !(input.mode === "auto" && isCostLimit)
+        )
+          if (outcome) return outcome;
+          else throw error;
+        const reason: KeywordResearchSourceReason = isCostLimit
+          ? "cost_limit"
+          : outcome && outcome.reason !== "cost_limit_exceeded"
+            ? outcome.reason
+            : "provider_error";
+        diagnostics.push({
+          cached: false,
+          costCents: outcome?.costCents ?? 0,
+          reason,
+          returned: 0,
+          source,
+          status: isCostLimit ? "skipped" : "failed",
+        });
+        diagnostics.push(
+          ...remainingResearchDiagnostics(
+            plannedSources,
+            index + 1,
+            isCostLimit ? "cost_limit" : "previous_source_failed",
+          ),
+        );
+        break;
       }
-      latestFetchedAt = lookup.value.fetchedAt;
-      successfulFetchedAts.push(lookup.value.fetchedAt);
-      diagnostics.push({
-        cached: lookup.cached,
-        costCents: lookup.value.costCents,
-        returned: lookup.value.rows.length,
-        source,
-        status: "ok",
-      });
-      for (const row of lookup.value.rows) {
-        const normalized = normalizeResearchKeyword(row.keyword);
-        if (!normalized || seen.has(normalized)) continue;
-        seen.add(normalized);
-        rows.push({ ...row, source });
-        if (rows.length >= input.resultLimit) break;
-      }
-    } catch (error) {
-      if (error instanceof DeploymentAdmissionExhaustedError) throw error;
-      const outcome = error instanceof ProviderLookupSignal ? error.outcome : null;
-      const isCostLimit = outcome?.reason === "cost_limit_exceeded";
-      if (
-        !diagnostics.some((item) => item.status === "ok") &&
-        !(input.mode === "auto" && isCostLimit)
-      )
-        if (outcome) return outcome;
-        else throw error;
-      const reason: KeywordResearchSourceReason = isCostLimit
-        ? "cost_limit"
-        : outcome && outcome.reason !== "cost_limit_exceeded"
-          ? outcome.reason
-          : "provider_error";
-      diagnostics.push({
-        cached: false,
-        costCents: outcome?.costCents ?? 0,
-        reason,
-        returned: 0,
-        source,
-        status: isCostLimit ? "skipped" : "failed",
-      });
-      diagnostics.push(
-        ...remainingResearchDiagnostics(
-          plannedSources,
-          index + 1,
-          isCostLimit ? "cost_limit" : "previous_source_failed",
-        ),
-      );
-      break;
     }
-  }
-  const outcome = annotateResearchResult(
-    {
-      cached:
-        diagnostics.length > 0 &&
-        diagnostics.every((source) => source.status === "ok" && source.cached),
-      cachedUntil: diagnostics.every(
-        (source) => source.status === "ok" || source.reason === "result_limit",
-      )
-        ? keywordResearchCachedUntil(
-            successfulFetchedAts.length > 0 ? successfulFetchedAts : fetchedAt,
-          )
-        : fetchedAt,
-      costCents: diagnostics.reduce((sum, source) => sum + source.costCents, 0),
-      fetchedAt: latestFetchedAt,
-      rows,
-      sources: diagnostics,
-    },
-    project,
-    selected.provider.label,
-    connectionResources(eligible),
-    location.key,
-  );
-  try {
-    await maybePersistKeywordResearchSnapshot({
-      connectionPublicId: requestedConnectionId,
-      includeClickstream: input.includeClickstream,
-      location: location.value,
-      mode: input.mode,
-      outcome,
+    const outcome = annotateResearchResult(
+      {
+        cached:
+          diagnostics.length > 0 &&
+          diagnostics.every((source) => source.status === "ok" && source.cached),
+        cachedUntil: diagnostics.every(
+          (source) => source.status === "ok" || source.reason === "result_limit",
+        )
+          ? keywordResearchCachedUntil(
+              successfulFetchedAts.length > 0 ? successfulFetchedAts : fetchedAt,
+            )
+          : fetchedAt,
+        costCents: diagnostics.reduce((sum, source) => sum + source.costCents, 0),
+        fetchedAt: latestFetchedAt,
+        rows,
+        sources: diagnostics,
+      },
       project,
-      resultLimit: input.resultLimit,
-      seed: input.seed,
-      successfulFetchedAts,
-    });
-  } catch (error) {
-    console.error("[keyword-research] Failed to persist a demo snapshot.", error);
-  }
-  return outcome;
+      selected.provider.label,
+      connectionResources(eligible),
+      location.key,
+    );
+    try {
+      await maybePersistKeywordResearchSnapshot({
+        connectionPublicId: requestedConnectionId,
+        includeClickstream: input.includeClickstream,
+        location: location.value,
+        mode: input.mode,
+        outcome,
+        project,
+        resultLimit: input.resultLimit,
+        seed: input.seed,
+        successfulFetchedAts,
+      });
+    } catch (error) {
+      console.error("[keyword-research] Failed to persist a demo snapshot.", error);
+    }
+    return outcome;
+  });
 }

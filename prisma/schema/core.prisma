@@ -552,6 +552,7 @@ model Project {
   measurementPolicyEpoch BigInt @default(0)
   measurementPolicyConfig Json?
   usageDisplaySettings Json?
+  lookupCacheTtlSeconds Int?
   providerUiRevision               BigInt                           @default(0)
   id                               String                           @id @default(cuid())
   publicId                         String                           @unique
@@ -2649,6 +2650,7 @@ model ProjectContext {
 }
 
 model AgentReport {
+  cacheReuseUntil DateTime?
   id          String   @id @default(cuid())
   publicId    String   @unique
   projectId   String

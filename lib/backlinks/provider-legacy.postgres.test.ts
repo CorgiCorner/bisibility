@@ -42,6 +42,7 @@ describe("legacy backlink source SQL", () => {
         ownerId: owner.id,
         name: "Fixture",
         domain: "example.com",
+        lookupCacheTtlSeconds: 604800,
       },
     });
     projectId = project.id;
@@ -74,7 +75,7 @@ describe("legacy backlink source SQL", () => {
       const legacy = await fixture.db.backlinkSnapshot.create({
         data: { ...data, summary: { _mode: "as_is", ...summary } },
       });
-      await fixture.db.backlinkSnapshot.create({
+      const known = await fixture.db.backlinkSnapshot.create({
         data: {
           ...data,
           fetchedAt: new Date("2026-10-02T00:00:00Z"),
@@ -85,7 +86,7 @@ describe("legacy backlink source SQL", () => {
         includeSubdomains: true,
         minRows: 100,
         mode: "as_is" as const,
-        now: new Date("2026-10-14T00:00:00Z"),
+        now: new Date("2026-10-03T00:00:00Z"),
         projectId,
         provider: "unknown",
         scope: "site" as const,
@@ -103,9 +104,13 @@ describe("legacy backlink source SQL", () => {
         fetchedAt: "2026-10-01T00:00:00.000Z",
         costCents: 0,
       });
-      expect((await findBacklinksSnapshot({ ...request, provider: "dataforseo" }))?.id).not.toBe(
-        legacy.id,
+      expect((await findBacklinksSnapshot({ ...request, provider: "dataforseo" }))?.id).toBe(
+        known.id,
       );
+      // Source matching must not reopen a result after the explicit project TTL.
+      expect(
+        await findBacklinksSnapshot({ ...request, now: new Date("2026-10-14T00:00:00Z") }),
+      ).toBeNull();
     }
   }, 30_000);
 });

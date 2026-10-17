@@ -7,6 +7,7 @@ import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
+import { moduleSupport } from "@/lib/providers/module-support";
 import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import { getActionActor, requireProjectScope } from "./_shared";
@@ -41,6 +42,7 @@ export async function getAiResearchPage(projectId: string, mode: "visibility" | 
   });
   const catalogOutcome = await getAiResearchCatalog(project.id);
   return {
+    ...moduleSupport("aiResearch"),
     catalog: catalogOutcome.ok ? catalogOutcome.catalog : undefined,
     catalogError: catalogOutcome.ok ? undefined : catalogOutcome.message,
     catalogFailure: catalogOutcome.ok ? undefined : catalogOutcome.reason,

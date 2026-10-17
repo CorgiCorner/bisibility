@@ -1,3 +1,4 @@
+import { providerConnectionRevision } from "@/lib/providers/connection-revision";
 import type { FrozenComparison } from "./model";
 export function comparisonFixture(fundingSource: "own" | "hosted" = "own"): FrozenComparison {
   return {
@@ -18,7 +19,17 @@ export function comparisonFixture(fundingSource: "own" | "hosted" = "own"): Froz
     connections: ["dataforseo", "serpapi"].map((provider) => ({
       provider: provider as "dataforseo" | "serpapi",
       id: `connection-${provider}`,
-      revision: "2026-10-14T00:00:00.000Z",
+      revision: providerConnectionRevision({
+        id: `connection-${provider}`,
+        projectId: "project",
+        provider,
+        kind: "serp",
+        enabled: true,
+        status: "connected",
+        credentialSource: fundingSource,
+        credentialsEncrypted: "encrypted-fixture",
+        providerUiRevision: 4n,
+      }),
       credentialVersion: "binding",
       fundingSource,
       providerEstimateCents: provider === "serpapi" ? 4 : 2,

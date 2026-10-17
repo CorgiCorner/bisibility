@@ -1,9 +1,10 @@
 "use client";
-
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
 import { MissingBudgetNotice } from "@/components/i18n/MissingBudgetNotice";
 import { UsageReconciliationNotice } from "@/components/i18n/UsageReconciliationNotice";
 import { WalletBudgetNotice } from "@/components/i18n/WalletBudgetNotice";
+import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
+import { ProviderAccessGate } from "@/components/ui/ProviderAccessGate";
 import type { AnalyzeBacklinksActionInput } from "@/lib/actions/backlinks";
 import {
   type BacklinksSnapshot,
@@ -13,6 +14,7 @@ import {
 } from "@/lib/backlinks/types";
 import { budgetDenialReason } from "@/lib/metering/budget-denial";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
+import { appPath } from "@/lib/routing/app-path";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AnalyzeCard } from "./AnalyzeCard";
@@ -20,6 +22,7 @@ import { BacklinksFailedSummary } from "./BacklinksFailedSummary";
 import { BacklinksIdleState } from "./BacklinksIdleState";
 import { BacklinksResultsLoading } from "./BacklinksLoadingSkeletons";
 import { BacklinksResults } from "./BacklinksResults";
+import { loadMoreWorkspaceRows } from "./backlinks-append-state";
 import {
   type BacklinksLimit,
   type BacklinksWorkspaceProps,
@@ -58,7 +61,8 @@ export function BacklinksWorkspace({
   const [walletBudgetBlocked, setWalletBudgetBlocked] = useState(false);
   const [budgetReason, setBudgetReason] = useState<ReturnType<typeof budgetDenialReason>>();
   const [failedSummary, setFailedSummary] = useState<FailedSummary | null>(null);
-  const readOnly = Boolean(failedSummary) || snapshot?.provider === "unknown";
+  const providerReady = context.providerStatus === "connected";
+  const readOnly = !providerReady || Boolean(failedSummary) || snapshot?.provider === "unknown";
 
   const requestInput = (
     nextTarget: string,
@@ -115,11 +119,9 @@ export function BacklinksWorkspace({
   }
 
   function rememberTarget(next: RecentBacklinksTarget) {
+    const key = recentTargetKey(next);
     setRecentTargets((current) =>
-      [next, ...current.filter((item) => recentTargetKey(item) !== recentTargetKey(next))].slice(
-        0,
-        5,
-      ),
+      [next, ...current.filter((item) => recentTargetKey(item) !== key)].slice(0, 5),
     );
   }
 
@@ -201,52 +203,48 @@ export function BacklinksWorkspace({
     });
   }
 
-  async function loadMoreRows(current: BacklinksSnapshot) {
-    const outcome = await loadMoreAction({
-      includeSubdomains: current.includeSubdomains,
-      limit: 100,
-      projectId,
-      provider: current.provider,
-      target: current.target,
-      targetScope: current.targetScope,
-    });
-    if (outcome.ok) addSpend(outcome.costCents);
-    return outcome;
-  }
-
   return (
     <section aria-label={t("aria")} className="grid min-w-0 gap-4">
-      <AnalyzeCard
-        estimate={estimate}
-        provider={provider}
-        providers={context.providers}
-        onProviderChange={(next) => {
-          setProvider(next);
-          clearResult();
-          scheduleEstimate(target, { provider: next });
-        }}
-        includeSubdomains={includeSubdomains}
-        onIncludeSubdomainsChange={setIncludeSubdomains}
-        onLimitChange={(limit) => {
-          setResultLimit(limit);
-          scheduleEstimate(target, { resultLimit: limit });
-        }}
-        onScopeChange={(nextScope) => {
-          setScope(nextScope);
-          const nextIncludeSubdomains = nextScope === "page" ? false : includeSubdomains;
-          if (nextScope === "page") setIncludeSubdomains(false);
-          scheduleEstimate(target, {
-            includeSubdomains: nextIncludeSubdomains,
-            targetScope: nextScope,
-          });
-        }}
-        onSubmit={() => void analyze()}
-        onTargetChange={updateTarget}
-        resultLimit={resultLimit}
-        scope={scope}
-        submitting={submitting}
-        target={target}
-      />
+      <ProviderAccessGate
+        blocked={
+          context.providerStatus === "no_provider" || context.providerStatus === "needs_reauth"
+        }
+        reconnect={context.providerStatus === "needs_reauth"}
+        providers={context.supportingProviders}
+        href={appPath(projectId, "integrations")}
+      >
+        <AnalyzeCard
+          estimate={estimate}
+          provider={provider}
+          providers={context.providers}
+          onProviderChange={(next) => {
+            setProvider(next);
+            clearResult();
+            scheduleEstimate(target, { provider: next });
+          }}
+          includeSubdomains={includeSubdomains}
+          onIncludeSubdomainsChange={setIncludeSubdomains}
+          onLimitChange={(limit) => {
+            setResultLimit(limit);
+            scheduleEstimate(target, { resultLimit: limit });
+          }}
+          onScopeChange={(nextScope) => {
+            setScope(nextScope);
+            const nextIncludeSubdomains = nextScope === "page" ? false : includeSubdomains;
+            if (nextScope === "page") setIncludeSubdomains(false);
+            scheduleEstimate(target, {
+              includeSubdomains: nextIncludeSubdomains,
+              targetScope: nextScope,
+            });
+          }}
+          onSubmit={() => void analyze()}
+          onTargetChange={updateTarget}
+          resultLimit={resultLimit}
+          scope={scope}
+          submitting={submitting}
+          target={target}
+        />
+      </ProviderAccessGate>
       <RecentTargets
         onOpen={openRecentTarget}
         onRemove={(recent) =>
@@ -279,18 +277,33 @@ export function BacklinksWorkspace({
           ) : null}
           <BacklinksResults
             estimateCents={estimate.costCents}
-            onLoadMore={readOnly ? undefined : () => loadMoreRows(snapshot)}
+            onLoadMore={
+              readOnly
+                ? undefined
+                : () =>
+                    loadMoreWorkspaceRows(
+                      loadMoreAction,
+                      projectId,
+                      snapshot,
+                      addSpend,
+                      setSnapshot,
+                    )
+            }
             onRefresh={readOnly ? undefined : () => void analyze({ fresh: true })}
             readOnly={readOnly}
             refreshing={submitting}
             snapshot={snapshot}
           />
         </div>
-      ) : failedSummary ? null : (
-        <BacklinksIdleState
-          projectRef={projectId}
-          state={context.providerStatus === "connected" ? "idle" : context.providerStatus}
+      ) : failedSummary ? null : context.providerStatus !== "connected" ? (
+        <ProviderAccessEmptyState
+          surface="backlinks"
+          href={appPath(projectId, "integrations")}
+          providers={context.supportingProviders}
+          reconnect={context.providerStatus === "needs_reauth"}
         />
+      ) : (
+        <BacklinksIdleState projectRef={projectId} />
       )}
     </section>
   );

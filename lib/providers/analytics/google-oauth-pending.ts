@@ -9,7 +9,7 @@ import { verifyProviderConnectionBeforeSave } from "@/lib/api/provider-verificat
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
-import type { GoogleOAuthSetup } from "@/lib/integrations/types";
+import type { GoogleOAuthSetup, GooglePropertySelectionResult } from "@/lib/integrations/types";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { decryptProviderCredentials, decryptSecret, encryptSecret } from "@/lib/providers/crypto";
 import {
@@ -24,6 +24,11 @@ import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { listGa4Properties, listGoogleSites, refreshGoogleAccessToken } from "./google-client";
+import {
+  googlePropertyFailure,
+  googlePropertyFailureCopy,
+  googlePropertySaveFailure,
+} from "./google-failure";
 import { pendingGscContext } from "./google-oauth-pending-gsc-context";
 import { ga4PropertyOptions, gscPropertyOptions } from "./google-property-options";
 import { normalizeGa4PropertyId } from "./property-id";
@@ -113,25 +118,6 @@ export function formatGooglePropertyDiscoveryLog(input: {
   }`;
 }
 
-const GA4_FAILURE_COPY: Record<ProviderFailureClass, string> = {
-  auth: "This Google account may not have Analytics access, or Google rejected the request.",
-  config_invalid:
-    "The Google Analytics API configuration is invalid. Check the API setup and try again.",
-  network: "Google Analytics is temporarily unavailable.",
-  provider_4xx:
-    "This Google account may not have Analytics access, or Google rejected the request.",
-  provider_5xx: "Google Analytics is temporarily unavailable.",
-  rate_limit: "Google's request limit was reached. Try again shortly.",
-  unknown:
-    "This Google account may not have Analytics access, or the Analytics API rejected the request.",
-};
-
-function pendingSetupError(provider: "ga4" | "gsc", failureClass: ProviderFailureClass) {
-  return provider === "ga4"
-    ? `Couldn't load your GA4 properties. ${GA4_FAILURE_COPY[failureClass]}`
-    : "We couldn't load verified properties from this Google account. Reconnect and try again.";
-}
-
 export async function getPendingGoogleOAuthSetup(
   projectId: string,
 ): Promise<GoogleOAuthSetup | null> {
@@ -154,6 +140,7 @@ export async function getPendingGoogleOAuthSetup(
     };
   } catch (error) {
     const failureClass = classifyProviderFailure(error);
+    const failure = googlePropertyFailure(error);
     console.info(
       formatGooglePropertyDiscoveryLog({
         failureClass,
@@ -163,7 +150,9 @@ export async function getPendingGoogleOAuthSetup(
     );
     return {
       ...(context.pending.accountEmail ? { accountEmail: context.pending.accountEmail } : {}),
-      error: pendingSetupError(context.pending.provider, failureClass),
+      error: googlePropertyFailureCopy(failure),
+      failure,
+      ...(["reconnect", "reauthorize"].includes(failure.action) ? { requiresReauth: true } : {}),
       failureClass,
       properties: [],
       ...(context.pending.property ? { preferredProperty: context.pending.property } : {}),
@@ -175,7 +164,7 @@ export async function getPendingGoogleOAuthSetup(
 export async function completePendingGooglePropertySelection(input: {
   projectId: string;
   property: string;
-}) {
+}): Promise<GooglePropertySelectionResult> {
   const context = await pendingForProject(input.projectId);
   if (!context) throw new Error("Google connection expired. Connect the account again.");
 
@@ -187,8 +176,13 @@ export async function completePendingGooglePropertySelection(input: {
     property = normalized.value;
   } else {
     property = input.property.trim();
-    const accessToken = await refreshGoogleAccessToken(context.pending.refreshToken);
-    const sites = await listGoogleSites(accessToken);
+    let sites: Awaited<ReturnType<typeof listGoogleSites>>;
+    try {
+      const accessToken = await refreshGoogleAccessToken(context.pending.refreshToken);
+      sites = await listGoogleSites(accessToken);
+    } catch (error) {
+      return googlePropertySaveFailure(context.pending.provider, error);
+    }
     const selected = sites.find(
       (site) => site.siteUrl === property && site.permissionLevel !== "siteUnverifiedUser",
     );
@@ -206,12 +200,16 @@ export async function completePendingGooglePropertySelection(input: {
     apiKey: context.pending.refreshToken,
     login: property,
   };
-  await verifyProviderConnectionBeforeSave({
-    credentials,
-    hasStoredCredentials: false,
-    projectId: context.project.id,
-    provider: providerDefinition,
-  });
+  try {
+    await verifyProviderConnectionBeforeSave({
+      credentials,
+      hasStoredCredentials: false,
+      projectId: context.project.id,
+      provider: providerDefinition,
+    });
+  } catch (error) {
+    return googlePropertySaveFailure(provider, error);
+  }
   const where = { projectId_provider: { projectId: context.project.id, provider } };
   const savedConnection = await prisma.$transaction(async (tx) => {
     await lockProjectForProviderMutation(tx, context.project.id);

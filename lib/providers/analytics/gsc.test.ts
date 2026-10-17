@@ -1,5 +1,6 @@
 import { clearProviderRateLimitState, ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { googlePropertyFailure } from "./google-failure";
 import { gscAnalyticsProvider } from "./gsc";
 import {
   GSC_QUERY_STATS_PAGE_SIZE,
@@ -578,7 +579,10 @@ describe("gsc analytics provider", () => {
           return Response.json(tokenResponse);
         }
         if (target.includes("/urlInspection/index:inspect")) {
-          return Response.json({ error: { message: "quota exceeded" } }, { status: 403 });
+          return Response.json(
+            { error: { message: "quota exceeded fixture_secret" } },
+            { status: 403 },
+          );
         }
         return new Response("not found", { status: 404 });
       }),
@@ -589,7 +593,7 @@ describe("gsc analytics provider", () => {
         { apiKey: "refresh_token", login: "sc-domain:example.com" },
         { property: "sc-domain:example.com", url: "https://example.com/page" },
       ),
-    ).rejects.toThrow("quota exceeded");
+    ).rejects.toThrow("Google API request failed with status 403.");
   });
 
   it("maps Search Analytics 429 responses to ProviderRateLimitedError", async () => {
@@ -618,7 +622,7 @@ describe("gsc analytics provider", () => {
     });
   });
 
-  it("surfaces Search Analytics quotaExceeded 403 messages", async () => {
+  it("preserves safe Search Analytics quotaExceeded 403 diagnostics", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string | URL | Request) => {
@@ -628,7 +632,12 @@ describe("gsc analytics provider", () => {
         }
         if (target.includes("/searchAnalytics/query")) {
           return Response.json(
-            { error: { message: "Quota exceeded for search analytics requests" } },
+            {
+              error: {
+                message: "Quota exceeded for search analytics requests fixture_secret",
+                errors: [{ reason: "quotaExceeded" }],
+              },
+            },
             { status: 403 },
           );
         }
@@ -641,7 +650,16 @@ describe("gsc analytics provider", () => {
       { endDate: "2026-07-03", startDate: "2026-07-01" },
     );
 
-    await expect(rejection).rejects.toThrow("Quota exceeded for search analytics requests");
+    await expect(rejection).rejects.toThrow("Google API request failed with status 403.");
+    await rejection.catch((error: unknown) => {
+      expect(googlePropertyFailure(error)).toEqual({
+        reason: "quota",
+        action: "retry_later",
+        httpStatus: 403,
+        code: "quotaExceeded",
+      });
+      expect(String(error)).not.toContain("fixture_secret");
+    });
     await rejection.catch((error: unknown) => {
       expect(error).toBeInstanceOf(Error);
       expect(error).not.toBeInstanceOf(ProviderRateLimitedError);

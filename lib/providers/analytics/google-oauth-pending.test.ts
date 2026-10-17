@@ -2,6 +2,7 @@ import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { ProviderHttpError } from "@/lib/providers/failure-class";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { googleResponseError } from "./google-failure";
 import {
   completePendingGooglePropertySelection,
   formatGooglePropertyDiscoveryLog,
@@ -144,33 +145,29 @@ describe("pending Google OAuth property selection", () => {
     [
       new ProviderAuthError("google", "raw auth payload"),
       "auth",
-      "This Google account may not have Analytics access, or Google rejected the request.",
+      "Reconnect your Google account to load properties.",
     ],
     [
       new ProviderHttpError(403, "raw forbidden payload"),
       "provider_4xx",
-      "This Google account may not have Analytics access, or Google rejected the request.",
+      "This Google account cannot access these properties. Check its permissions in Search Console or Analytics.",
     ],
     [
       new ProviderRateLimitedError("ga4", { message: "raw quota payload" }),
       "rate_limit",
-      "Google's request limit was reached. Try again shortly.",
+      "Google's request limit was reached. Try again later.",
     ],
     [
       new ProviderHttpError(503, "raw outage payload"),
       "provider_5xx",
-      "Google Analytics is temporarily unavailable.",
+      "Google is temporarily unavailable. Try again.",
     ],
     [
       new TypeError("raw network payload"),
       "network",
-      "Google Analytics is temporarily unavailable.",
+      "Google is temporarily unavailable. Try again.",
     ],
-    [
-      new Error("raw unknown payload"),
-      "unknown",
-      "This Google account may not have Analytics access, or the Analytics API rejected the request.",
-    ],
+    [new Error("raw unknown payload"), "unknown", "Properties could not be loaded. Try again."],
   ])(
     "classifies and sanitizes failed GA4 property discovery",
     async (error, failureClass, reason) => {
@@ -179,8 +176,12 @@ describe("pending Google OAuth property selection", () => {
       mocks.decryptSecret.mockReturnValue(JSON.stringify({ ...pending, provider: "ga4" }));
       mocks.listGa4Properties.mockRejectedValue(error);
 
-      await expect(getPendingGoogleOAuthSetup("prj_1")).resolves.toEqual({
-        error: `Couldn't load your GA4 properties. ${reason}`,
+      await expect(getPendingGoogleOAuthSetup("prj_1")).resolves.toMatchObject({
+        error: reason,
+        failure: expect.objectContaining({
+          action: expect.any(String),
+          reason: expect.any(String),
+        }),
         failureClass,
         properties: [],
         provider: "ga4",
@@ -194,6 +195,62 @@ describe("pending Google OAuth property selection", () => {
       expect(JSON.stringify(info.mock.calls)).not.toContain(error.message);
     },
   );
+
+  it.each(
+    (["refresh", "list", "gsc_verify", "ga4_verify"] as const).flatMap((stage) =>
+      (
+        [
+          [401, "UNAUTHENTICATED", "auth", "reconnect", "reauth_required"],
+          [401, "invalid_client", "configuration", "configure_api", "failed"],
+          [403, "ACCESS_TOKEN_SCOPE_INSUFFICIENT", "scope", "reauthorize", "reauth_required"],
+          [403, "PERMISSION_DENIED", "permission", "check_permissions", "failed"],
+          [403, "SERVICE_DISABLED", "api_disabled", "configure_api", "failed"],
+          [429, "RESOURCE_EXHAUSTED", "quota", "retry_later", "failed"],
+          [503, "UNRECOGNIZED", "temporary", "retry", "failed"],
+        ] as const
+      ).map(([status, code, reason, action, outcome]) => ({
+        stage,
+        status,
+        code,
+        reason,
+        action,
+        outcome,
+      })),
+    ),
+  )("returns safe $reason failures at pending $stage without saving", async (test) => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const error = googleResponseError(test.status, {
+      error: { status: test.code, details: [{ reason: test.code }], message: "raw_secret" },
+    });
+    mocks.decryptSecret.mockReturnValue(
+      JSON.stringify({
+        ...pending,
+        provider: test.stage === "ga4_verify" ? "ga4" : "gsc",
+      }),
+    );
+    if (test.stage === "refresh") mocks.refreshGoogleAccessToken.mockRejectedValue(error);
+    else if (test.stage === "list") mocks.listGoogleSites.mockRejectedValue(error);
+    else mocks.verifyProviderConnectionBeforeSave.mockRejectedValue(error);
+
+    const result = await completePendingGooglePropertySelection({
+      projectId: "prj_1",
+      property: test.stage === "ga4_verify" ? "123456789" : "sc-domain:example.com",
+    });
+    expect(result).toEqual({
+      status: test.outcome,
+      failure: {
+        action: test.action,
+        reason: test.reason,
+        httpStatus: test.status,
+        ...(test.code === "UNRECOGNIZED" ? {} : { code: test.code }),
+      },
+    });
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    expect(mocks.prisma.providerConnection.upsert).not.toHaveBeenCalled();
+    expect(mocks.cookieStore.delete).not.toHaveBeenCalled();
+    expect(mocks.queueSearchInsightsImport).not.toHaveBeenCalled();
+    expect(JSON.stringify([result, info.mock.calls])).not.toContain("raw_secret");
+  });
 
   it("formats property discovery diagnostics without sensitive data", () => {
     const output = formatGooglePropertyDiscoveryLog({
@@ -420,7 +477,7 @@ describe("pending Google OAuth property selection", () => {
         projectId: "prj_1",
         property: "123456789",
       }),
-    ).rejects.toThrow("Property 123456789 was not found. Re-select it.");
+    ).resolves.toEqual({ status: "failed", failure: { reason: "unknown", action: "retry" } });
 
     expect(mocks.prisma.providerConnection.upsert).not.toHaveBeenCalled();
     expect(mocks.cookieStore.delete).not.toHaveBeenCalled();

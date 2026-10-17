@@ -1,4 +1,5 @@
 import type { ActiveIntegrationKind } from "@/lib/integrations/category-copy";
+import type { GooglePropertyFailure } from "@/lib/integrations/google-property-failure";
 import type { ProviderFailureClass } from "@/lib/providers/failure-class";
 import type {
   ConnectProviderInput,
@@ -104,6 +105,7 @@ export type GoogleOAuthSetup = {
   archivedProperties?: readonly ArchivedGoogleProperty[];
   error?: string;
   failureClass?: ProviderFailureClass;
+  failure?: GooglePropertyFailure;
   preferredProperty?: string;
   projectDomain?: string;
   properties: readonly GooglePropertyOption[];
@@ -113,7 +115,10 @@ export type GoogleOAuthSetup = {
 
 export type GooglePropertySaveResult =
   | { property: string; status: "saved" }
-  | { status: "reauth_required" };
+  | { status: "reauth_required"; failure?: GooglePropertyFailure }
+  | { status: "failed"; failure: GooglePropertyFailure };
+
+export type GooglePropertySelectionResult = GooglePropertySaveResult | { property: string };
 
 export type DrawerDefaults = {
   costPerCheck?: number;
@@ -203,7 +208,7 @@ export type ProviderActionHandlers = {
   completeGooglePropertySelection?(input: {
     projectId: string;
     property: string;
-  }): Promise<{ property: string }>;
+  }): Promise<GooglePropertySelectionResult>;
   loadStoredGoogleProperties?(input: {
     projectId: string;
     provider: "ga4" | "gsc";

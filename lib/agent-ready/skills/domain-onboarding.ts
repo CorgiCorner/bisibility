@@ -4,157 +4,130 @@ export const skill: TaskSkill = {
   slug: "domain-onboarding",
   title: "Domain onboarding",
   description:
-    "Stand up rank tracking for a new domain end-to-end - create the project, set its defaults, connect a data provider, add the first keywords, and kick off an initial rank check. Use this when a user says they want to start tracking a new website/domain in bisibility.",
-  compatibility: "Requires a bisibility origin and a bearer API key with write scope.",
+    "Set up a new domain project with reviewed defaults, an intended provider and first keywords. Request initial paid checks only with explicit spending approval. Use when a user wants to start tracking a new website in bisibility.",
+  compatibility:
+    "Requires a resolved bisibility origin and a write-scoped personal access token for project creation; a project API key cannot create projects.",
   kind: "task-skill",
-  version: "0.1.0",
+  version: "0.1.1",
   body: `# Domain onboarding
 
-Onboard a brand-new domain into bisibility so it is fully ready for rank
-tracking: create the project, configure its defaults (country, device), connect
-a data provider, add the initial keyword set, and trigger a first rank check so
-the user immediately has data flowing.
+Create a domain project, confirm its tracking defaults, connect the intended
+provider and add an agreed first keyword set. Initial paid checks are a separate,
+explicitly approved step; creating a project is not proof that rankings exist.
 
-## When to use this skill
+## Prerequisites and scope
 
-Use this when a user wants to **start tracking a new domain/website** from
-scratch ("set up tracking for example.com", "onboard our new site"). If a
-project already exists and the user only wants to add keywords, use the
-**keyword-import** skill instead. For connecting or fixing a provider on an
-existing project, use **provider-setup**.
+- Resolve the instance origin; use \`$BISIBILITY_BASE\` including \`/api/v1\`.
+- Project creation requires a personal access token (\`bsb_pat_live_...\`) with
+  write scope. A project API key (\`bsb_key_live_...\`) cannot create projects.
+  Send the token as \`Authorization: Bearer $BISIBILITY_API_KEY\`; never display it.
+- Confirm the domain, name, market, device and initial keyword list before writes.
+  Read existing projects first; reuse the right project rather than duplicating it.
+- Use stable \`Idempotency-Key\` values for retriable writes. Lists paginate through
+  \`meta.next_cursor\`; errors use \`application/problem+json\`. Honor 429 retry windows.
 
-## Prerequisites
+## 1. Find or create the project
 
-- **Origin**: resolve the base URL first. EU hosted region is
-  \`https://eu.bisibility.com/api/v1\`; a self-hosted instance is
-  \`https://your-host.example/api/v1\`. Ask the user (or read it from config) and
-  use it consistently as \`$BISIBILITY_BASE\`.
-- **API key**: a bearer key with **write** scope, sent as
-  \`Authorization: Bearer $BISIBILITY_API_KEY\`. Never print, echo, or log the
-  key, and never write it into files.
-- All list responses are \`{ "data": [...], "meta": { "next_cursor": "..." } }\`;
-  paginate with \`?limit=<n>&cursor=<next_cursor>\`. Errors are
-  \`application/problem+json\`; on 429, respect the retry window.
-
-> Plan before you write. Confirm the domain, locale, and keyword list with the
-> user before creating anything. Pass an \`Idempotency-Key\` header on each write
-> so retries don't create duplicate projects, keywords, or checks.
-
-## Steps
-
-### 1. Create the project - \`POST /projects\` (createProject)
-
-Create the project for the domain. Key fields: \`name\` and the canonical
-\`domain\` to track.
+\`GET /projects\` lists projects visible to the personal token. If the requested
+project already exists, use **keyword-import** or **provider-setup** instead.
+Otherwise create the confirmed project:
 
 \`\`\`bash
-curl -sS -X POST "$BISIBILITY_BASE/projects" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -H "Idempotency-Key: onboard-example-com-2026-06-29" \\
-  -d '{
-    "name": "Example Co",
-    "domain": "example.com"
-  }'
+curl -fsS -X POST "$BISIBILITY_BASE/projects" -H "Authorization: Bearer $BISIBILITY_API_KEY" -H "Content-Type: application/json" -H "Idempotency-Key: onboard-example-com-project" -d '{"name":"Example Co","domain":"example.com"}'
 \`\`\`
 
-Capture the returned project id and set \`PROJECT_ID\` to it - every following
-call uses that variable.
+Capture \`data.id\` (\`prj_...\`) as \`$PROJECT_ID\`. Project paths select it directly.
+For later paths without a project ID, pass \`X-Bisibility-Project: $PROJECT_ID\`
+when using a personal token.
 
-### 2. Set project defaults - \`PATCH /projects/{project_id}/defaults\` (updateProjectDefaults)
+## 2. Preview and confirm defaults
 
-Define the defaults new keywords inherit: country and device.
+First read \`GET /capabilities\` and verify
+\`features.reviewed_project_defaults=v1\`. Preview the exact intended patch:
 
 \`\`\`bash
-curl -sS -X PATCH "$BISIBILITY_BASE/projects/$PROJECT_ID/defaults" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "country": "US",
-    "device": "desktop"
-  }'
+curl -fsS -X PATCH "$BISIBILITY_BASE/projects/$PROJECT_ID/defaults?preview_only=true" -H "Authorization: Bearer $BISIBILITY_API_KEY" -H "Content-Type: application/json" -d '{"location_key":"US","device":"desktop"}'
 \`\`\`
 
-### 3. Connect a data provider (cross-reference: **provider-setup**)
+This preview performs no writes or provider calls. Show the resolved market,
+cadence, depth and impact to the user. After confirmation, send the same patch
+to \`PATCH /projects/{project_id}/defaults\` with a \`review\` object containing
+\`expected_source_hash\`, \`expected_revision\` and \`preview_token\` copied exactly
+from \`data\`, a stable \`idempotency_key\` (8-128 characters), and \`confirmed: true\`.
+The header alone does not replace this review object.
 
-A project needs a connected provider before rank checks can run. List available
-providers with \`GET /projects/{project_id}/providers\` (listProviders), then
-follow the **provider-setup** skill to \`connectProvider\` and
-\`testProviderConnection\`. Provider credentials are bring-your-own and stored in
-the instance - never echo them. Do not proceed to step 5 until the provider's
-test passes.
+A missing review returns 428. A changed or expired preview returns 409; obtain a
+fresh preview and confirmation rather than reusing stale values. Saving defaults
+does not retarget existing keyword identities or rewrite their history.
 
-### 4. Add the first keywords - \`POST /projects/{project_id}/keywords\` (addKeywords)
+## 3. Verify the intended provider
 
-Submit the initial keyword set. Keywords inherit the project defaults from step
-2; you can override per keyword (e.g. \`target_url\`, \`device\`) when needed.
+Read \`GET /projects/{project_id}/providers\`. Reuse the enabled, connected provider
+that supports rank checks. If credentials need connecting, follow **provider-setup**.
+Connect verifies credentials before saving; a second test is unnecessary after a
+successful connect. Never display provider credentials.
+
+Confirm scheduling as part of the exact keyword plan. The examples below use
+manual schedules with no cron. Omitting a schedule can inherit recurring project
+defaults; do not do so without showing and approving that effect. Enabling or
+expanding recurring paid checks requires its own cost-aware approval.
+
+## 4. Add the agreed first keywords
+
+Read existing keywords before adding and compare keyword text, canonical market
+and device. Submit only the missing identities:
 
 \`\`\`bash
-curl -sS -X POST "$BISIBILITY_BASE/projects/$PROJECT_ID/keywords" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -H "Idempotency-Key: onboard-example-com-keywords-1" \\
-  -d '{
-    "keywords": [
-      { "keyword": "best widgets" },
-      { "keyword": "buy widgets online", "target_url": "https://example.com/shop" }
-    ]
-  }'
+curl -fsS -X POST "$BISIBILITY_BASE/projects/$PROJECT_ID/keywords" -H "Authorization: Bearer $BISIBILITY_API_KEY" -H "Content-Type: application/json" -H "Idempotency-Key: onboard-example-com-keywords-1" -d '{"keywords":[{"keyword":"best widgets","location_key":"US","device":"desktop","schedule":{"frequency":"manual","cron_expression":null,"timezone":"UTC","jitter_minutes":60}},{"keyword":"buy widgets online","target_url":"https://example.com/shop","location_key":"US","device":"desktop","schedule":{"frequency":"manual","cron_expression":null,"timezone":"UTC","jitter_minutes":60}}]}'
 \`\`\`
 
-The response \`data\` array contains the created keyword ids (\`kw_...\`).
+The response is \`data.created\`, \`data.skipped\` and \`data.results[]\` with
+\`status\` and \`keyword.id\` (\`kw_...\`). Read back the keywords to verify the saved
+market, device and target URLs. Adding keywords does not establish fresh rank data.
 
-### 5. Trigger an initial rank check - \`POST /keywords/{id}/checks\` (runRankCheck)
+## 5. Request initial checks only when approved
 
-Kick off a first check per keyword so the user sees data right away (otherwise
-they wait for the next scheduled run). Loop over the \`kw_...\` ids from step 4.
+If the user requested paid checks, review their bounded scope and provider cost,
+obtain explicit spending approval, and supply the agreed \`max_cost_cents\` to
+\`POST /keywords/{id}/checks\`. Do not automatically loop over every keyword.
+Send the project-selection header on this path when using a personal token.
 
-\`\`\`bash
-curl -sS -X POST "$BISIBILITY_BASE/keywords/$KEYWORD_ID/checks" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -H "Idempotency-Key: onboard-example-com-check-$KEYWORD_ID"
-\`\`\`
+A 202 returns \`data.id\` as a run ID (\`rcr_...\`), not a measurement ID. Follow
+\`GET /projects/{project_id}/rank-check-runs/{run_id}\` and report \`terminal\`,
+\`polling_state\`, counts and \`blocked_reason\`. After execution, read completed
+results from \`GET /keywords/{id}/rank-checks?status=completed\`. An inline 201 may
+return the measurement directly. Never claim that queued work already produced ranks.
 
-Rank checks are asynchronous: the call enqueues work and returns quickly. Don't
-block on results during onboarding - let the user know checks are running and
-that ranks will appear once they complete.
+## Report the result
 
-## Notes / gotchas
-
-- **Idempotency**: reuse a stable \`Idempotency-Key\` per logical action so a
-  network retry never double-creates a project, keyword, or check.
-- **Order matters**: defaults -> provider -> keywords -> checks. Adding keywords
-  before defaults means they inherit whatever the project shipped with; adding
-  checks before a working provider will fail.
-- **Provider first for real data**: steps 4 and 5 succeed structurally without a
-  provider, but checks can only resolve ranks once a provider is connected and
-  tested.
-- **Pagination & rate limits**: if you re-list keywords or providers to verify,
-  follow \`meta.next_cursor\`; back off and retry on 429 per the retry window.
-- **Secrets**: never print the API key or any provider credentials.`,
+State the project, confirmed defaults, provider readiness, created/skipped keyword
+counts and readback. Distinguish checks not requested, queued, blocked, failed and
+completed. If paid checks were not approved, finish with setup verified and that
+remaining step clearly stated.`,
   references: [
     {
       path: "references/api.md",
-      content: `# Domain onboarding - API cheat-sheet
+      content: `# Domain onboarding - REST contract
 
-Base path: \`/api/v1\`. Auth: \`Authorization: Bearer <api_key>\` (write scope).
-Lists: \`{ data, meta.next_cursor }\`; paginate \`?limit&cursor\`. Errors:
-\`application/problem+json\`. Writes accept \`Idempotency-Key\`.
+Base: resolved origin + \`/api/v1\`. Creation needs a write-scoped personal token;
+project keys cannot create projects. Personal-token projectless paths need
+\`X-Bisibility-Project\` when the project is ambiguous.
 
-| METHOD path | operationId | key fields |
-|-|-|-|
-| POST /projects | createProject | \`name\`, \`domain\` |
-| PATCH /projects/{project_id}/defaults | updateProjectDefaults | \`country\`, \`device\` |
-| POST /projects/{project_id}/keywords | addKeywords | \`keywords[].keyword\`, optional \`target_url\`/\`device\` |
-| POST /keywords/{id}/checks | runRankCheck | (no body; enqueues async check) |
+| Operation | Purpose |
+|-|-|
+| GET /projects | Find an existing project first |
+| POST /projects | Create with name and domain; read data.id |
+| PATCH /projects/{project_id}/defaults?preview_only=true | Preview intended defaults |
+| PATCH /projects/{project_id}/defaults | Same patch plus exact confirmed review |
+| GET /projects/{project_id}/providers | Reuse or connect the intended provider |
+| POST /projects/{project_id}/keywords | Read data.created/skipped/results[].keyword.id |
+| POST /keywords/{id}/checks | Approved paid check; optional max_cost_cents |
+| GET /projects/{project_id}/rank-check-runs/{run_id} | Poll queued run, rcr_... |
+| GET /keywords/{id}/rank-checks?status=completed | Read measurements, check_... |
 
-Connecting a provider is a prerequisite - see the **provider-setup** skill
-(\`listProviders\`, \`connectProvider\`, \`testProviderConnection\`). Connect and
-test a provider before running rank checks.
-
-Recommended order: createProject -> updateProjectDefaults -> connect provider ->
-addKeywords -> runRankCheck (per keyword id).`,
+Defaults review requires expected_source_hash, expected_revision, preview_token,
+idempotency_key and confirmed=true. Missing review: 428; stale preview: 409.
+Never expose bearer/provider credentials or treat queue acceptance as completion.`,
     },
   ],
 };

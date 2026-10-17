@@ -8,6 +8,7 @@ import type { MeteringAdminPage } from "./admin-types";
 
 const inputSchema = z
   .object({
+    section: z.enum(["usage", "exceptions"]).optional(),
     month: z
       .string()
       .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
@@ -43,6 +44,8 @@ export async function getMeteringAdminPage(input: unknown): Promise<MeteringAdmi
   try {
     const data = await readMeteringAdmin({
       actorId: session.user.id,
+      section: query.section,
+      includeBudgets: !query.section,
       month,
       project,
       usageCursor: usagePage?.cursor,

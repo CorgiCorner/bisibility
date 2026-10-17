@@ -249,6 +249,9 @@ export async function fetchBacklinksAnalysis(input: {
 }
 
 export async function fetchMoreBacklinksRows(input: {
+  correlationId?: string;
+  onProviderCall?: () => void;
+  onNotDispatched?: () => void;
   includeSubdomains: boolean;
   limit: number;
   mode: BacklinkRowMode;
@@ -263,15 +266,19 @@ export async function fetchMoreBacklinksRows(input: {
   const target = providerTarget(input);
   return paidProviderCall({
     ...paidCallInput(input),
-    call: (credentials, usage) =>
-      input.source.provider.fetchBacklinksRows(credentials, {
+    correlationId: input.correlationId,
+    onNotDispatched: input.onNotDispatched,
+    call: (credentials, usage) => {
+      input.onProviderCall?.();
+      return input.source.provider.fetchBacklinksRows(credentials, {
         ...target,
         limit: input.limit,
         mode: input.mode,
         offset: input.offset,
         attribution: usage,
         tag: usage?.tag,
-      }),
+      });
+    },
     itemCount: input.limit,
     rate: rates.rows,
   });

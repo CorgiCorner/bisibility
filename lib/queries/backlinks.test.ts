@@ -54,6 +54,7 @@ describe("backlinks page context", () => {
       costContext: { capCents: 5000, spentCents: 125 },
       defaultTarget: "example.com",
       providerStatus: "connected",
+      supportingProviders: ["DataForSEO"],
       providers: [{ label: "DataForSEO", value: "dataforseo" }],
       recentTargets: [
         {

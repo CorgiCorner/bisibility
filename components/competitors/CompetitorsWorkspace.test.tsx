@@ -274,7 +274,8 @@ it("discards a changed personal scope with exactly one canonical navigation", ()
     />,
   );
   routerMock.push.mockClear();
-  fireEvent.click(screen.getByRole("button", { name: "Discard changes" }));
+  fireEvent.click(screen.getByRole("button", { name: personalView.name }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Discard changes" }));
   expect(routerMock.push).toHaveBeenCalledTimes(1);
   expect(routerMock.push).toHaveBeenCalledWith(expect.stringContaining(`?view=${personalView.id}`));
 });

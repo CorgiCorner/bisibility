@@ -1,5 +1,6 @@
 import { renderWithResearchMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
+import { downloadTextFile } from "@/lib/ui/download";
 import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ResearchResultsTable } from "./ResearchResultsTable";
@@ -8,6 +9,8 @@ import {
   researchResultsSelectionIds,
   researchResultsTableRows,
 } from "./research-results-table-state";
+
+vi.mock("@/lib/ui/download", () => ({ downloadTextFile: vi.fn() }));
 
 afterEach(() => {
   vi.useRealTimers();
@@ -160,12 +163,15 @@ describe("ResearchResultsTable", () => {
     expect(screen.getByText("51-51 of 51")).toBeInTheDocument();
   });
 
-  it("summarizes fetched results with the shared relative-time label", () => {
+  it("keeps filters next to export and omits the redundant top result summary", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-23T16:00:00.000Z"));
     renderTable({ fetchedAt: "2026-07-22T10:00:00.000Z" });
 
-    expect(screen.getByText(/of 2 keywords - cached yesterday/)).toBeInTheDocument();
+    expect(screen.queryByText(/of 2 keywords - cached yesterday/)).not.toBeInTheDocument();
+    const actions = screen.getByTestId("research-table-actions");
+    expect(within(actions).getByRole("button", { name: /Filters/ })).toBeInTheDocument();
+    expect(within(actions).getByRole("button", { name: "Export" })).toBeInTheDocument();
   });
 
   it("keeps selected bulk actions and their matrix check count", () => {
@@ -291,4 +297,22 @@ describe("ResearchResultsTable", () => {
       within(screen.getByTestId("research-results-viewport")).getByRole("table"),
     ).toHaveAttribute("data-bordered", "false");
   });
+});
+
+it("exports the same ascending CPC order as the filtered table, with missing metrics last", async () => {
+  const high = { ...row("high"), cpcCents: 200 };
+  const low = { ...row("low"), cpcCents: 10 };
+  renderTable({ rows: [high, row("missing"), low] });
+  fireEvent.click(screen.getByRole("button", { name: "Sort Cost per click ascending" }));
+  expect(resultRows()[0]).toHaveTextContent("low");
+  expect(resultRows().at(-1)).toHaveTextContent("missing");
+  fireEvent.click(screen.getByRole("button", { name: "Export" }));
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Export CSV" }));
+  const csv = vi.mocked(downloadTextFile).mock.calls.at(-1)?.[0] ?? "";
+  expect(
+    csv
+      .split("\n")
+      .slice(1)
+      .map((line) => line.split(",")[0]),
+  ).toEqual(["low", "high", "missing"]);
 });

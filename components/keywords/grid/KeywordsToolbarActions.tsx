@@ -10,6 +10,7 @@ import type {
 } from "@/components/ui/data-table/data-table-types";
 import { Menu } from "@/components/ui/Menu";
 import { MenuItem } from "@/components/ui/MenuItem";
+import { trackKeywordAction } from "@/lib/analytics/product-interactions";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
@@ -62,6 +63,11 @@ export function KeywordsToolbarActions({
   const { readOnly } = useProjectWriteMode();
   const mobileTooltips = useMediaQuery("(max-width:1023px)");
   const hasFilters = filterCount > 0;
+
+  function transfer(action: "add" | "import" | "export", callback?: () => void) {
+    trackKeywordAction(action, "rank_tracker_toolbar");
+    callback?.();
+  }
 
   return (
     <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">
@@ -127,7 +133,7 @@ export function KeywordsToolbarActions({
           disabled={exportDisabled}
           onClick={() => {
             setTransferAnchor(null);
-            onOpenExport();
+            transfer("export", onOpenExport);
           }}
           style={menuRowStyle}
         >
@@ -139,7 +145,7 @@ export function KeywordsToolbarActions({
             disabled={readOnly}
             onClick={() => {
               setTransferAnchor(null);
-              onImportCsv();
+              transfer("import", onImportCsv);
             }}
             style={menuRowStyle}
           >
@@ -153,7 +159,7 @@ export function KeywordsToolbarActions({
           compactBelowXl
           disabled={exportDisabled}
           label={t("export")}
-          onClick={onOpenExport}
+          onClick={() => transfer("export", onOpenExport)}
           showTooltip
           startIcon={
             <UploadSimple
@@ -173,7 +179,7 @@ export function KeywordsToolbarActions({
               compactBelowXl
               disabled={readOnly}
               label={t("import")}
-              onClick={onImportCsv}
+              onClick={() => transfer("import", onImportCsv)}
               showTooltip
               startIcon={
                 <DownloadSimple
@@ -195,7 +201,7 @@ export function KeywordsToolbarActions({
             showTooltip
             disabled={readOnly}
             label={t("addKeyword")}
-            onClick={onAddKeyword}
+            onClick={() => transfer("add", onAddKeyword)}
             startIcon={<Plus size={15} weight="regular" className="text-current" />}
             variant="primary"
           />

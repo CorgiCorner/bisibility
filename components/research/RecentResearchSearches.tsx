@@ -30,6 +30,13 @@ export function RecentResearchSearches({
   searches,
 }: Readonly<RecentResearchSearchesProps>) {
   const t = useTranslations("projectResearch.recent");
+  const searchT = useTranslations("projectResearch.search");
+  const modeLabels = {
+    auto: searchT("modeAuto"),
+    related: searchT("modeRelated"),
+    suggestions: searchT("modeSuggestions"),
+    ideas: searchT("modeIdeas"),
+  };
   const relativeTimeT = useTranslations("projectResearch.time");
   if (searches.length === 0) return null;
   const hintId = disabled && disabledHint ? "recent-research-disabled-hint" : undefined;
@@ -43,7 +50,15 @@ export function RecentResearchSearches({
         {searches.map((search) => (
           <div
             className="flex shrink-0 items-center gap-2 rounded-full border border-border-control bg-bg-elev px-3 py-1.5 transition-colors hover:border-accent"
-            key={`${search.createdAt}-${search.seed}`}
+            key={JSON.stringify([
+              search.createdAt,
+              search.seed,
+              search.mode,
+              search.connectionId,
+              search.locationKey,
+              search.resultLimit,
+              search.includeClickstream,
+            ])}
           >
             <button
               aria-describedby={hintId}
@@ -55,6 +70,9 @@ export function RecentResearchSearches({
               <strong className="max-w-[180px] truncate text-[12px] font-semibold">
                 {search.seed}
               </strong>
+              <span className="rounded-control border border-border px-1.5 py-0.5 text-[10px] text-fg-muted">
+                {modeLabels[search.mode]}
+              </span>
               <span className="font-sans tabular-nums text-[10px] text-fg-muted">
                 {search.scopeLabel} -{" "}
                 {researchRelativePast(new Date(search.createdAt), now, {

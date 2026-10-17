@@ -50,6 +50,7 @@ export const onboardingFeatureTestMessages = mergeMessageCatalogs(
   projectSettingsTrackingMessages,
   sharedMessages,
   onboardingMessages,
+  projectIntegrationsMessages,
   projectCostEstimateMessages,
   projectMarketsMessages,
   projectRankTrackerMessages,

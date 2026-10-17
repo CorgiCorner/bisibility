@@ -8,6 +8,7 @@
     "app/(regional)/(auth)/two-factor/page.tsx",
     "app/(regional)/app/(workspace)/[project]/@context/[...page]/page.tsx",
     "app/(regional)/app/(workspace)/[project]/@context/default.tsx",
+    "app/(regional)/app/(workspace)/[project]/@context/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/@context/m/[market]/[...page]/page.tsx",
     "app/(regional)/app/(workspace)/[project]/@context/page.tsx",
     "app/(regional)/app/(workspace)/[project]/~/[...page]/page.tsx",
@@ -219,6 +220,8 @@
     "components/admin/AdminSectionUnavailable.tsx",
     "components/admin/AdminShell.tsx",
     "components/admin/AdminTabs.tsx",
+    "components/admin/AdminTemporalHealth.tsx",
+    "components/admin/AdminTemporalSchedules.tsx",
     "components/admin/AdminWorkerHealth.tsx",
     "components/admin/AnnouncementEditor.tsx",
     "components/agent-reports/AgentReportDetailLayout.tsx",
@@ -294,6 +297,7 @@
     "components/auth/useOAuthConsentCountdown.ts",
     "components/backlinks/AnalyzeCard.tsx",
     "components/backlinks/AnalyzePricingPopover.tsx",
+    "components/backlinks/backlinks-append-state.ts",
     "components/backlinks/backlinks-filters-model.ts",
     "components/backlinks/backlinks-table-columns.tsx",
     "components/backlinks/backlinks-table-export.ts",
@@ -406,14 +410,17 @@
     "components/cost-estimate/header-budget-summary.ts",
     "components/cost-estimate/HeaderBudgetScope.tsx",
     "components/cost-estimate/HeaderProviderSpend.tsx",
+    "components/cost-estimate/HeaderProviderSpendData.tsx",
     "components/cost-estimate/SessionSpendProvider.tsx",
     "components/cost-estimate/useCostEstimate.ts",
     "components/dashboard-competitors/ComparisonSelectionControl.tsx",
     "components/dashboard-competitors/DashboardComparisonCard.tsx",
     "components/dashboard-competitors/DashboardComparisonSurface.tsx",
+    "components/dashboard-layout/dashboard-conflict.ts",
     "components/dashboard-layout/dashboard-editor-escape.ts",
     "components/dashboard-layout/dashboard-translator.ts",
     "components/dashboard-layout/DashboardCompositor.tsx",
+    "components/dashboard-layout/DashboardConflictReview.tsx",
     "components/dashboard-layout/DashboardLayoutEditor.tsx",
     "components/dashboard-layout/DashboardPreferenceRecovery.tsx",
     "components/dashboard-layout/DashboardScopeUnavailable.tsx",
@@ -1043,6 +1050,7 @@
     "components/research/research-results-table-state.ts",
     "components/research/research-results-view.tsx",
     "components/research/research-scope-capability.ts",
+    "components/research/research-tab-identity.ts",
     "components/research/research-tracking-cost.ts",
     "components/research/research-workspace-model.ts",
     "components/research/ResearchDetailPanel.tsx",
@@ -1059,6 +1067,7 @@
     "components/research/ResearchSearchCard.tsx",
     "components/research/ResearchSeedTabs.tsx",
     "components/research/ResearchStatePanel.tsx",
+    "components/research/ResearchTextFilter.tsx",
     "components/research/ResearchTrackingCostLine.tsx",
     "components/research/ResearchTrackingDrawer.tsx",
     "components/research/ResearchUnavailableMetric.tsx",
@@ -1072,6 +1081,7 @@
     "components/sample-data/SampleProjectBanner.tsx",
     "components/saved-views/PersonalSavedViewsControl.tsx",
     "components/saved-views/PersonalSaveViewModal.tsx",
+    "components/saved-views/PersonalViewMenu.tsx",
     "components/saved-views/PersonalViewScopeNotice.tsx",
     "components/schedules/AddKeywordsDrawer.tsx",
     "components/schedules/ArchivedScheduleDetails.tsx",
@@ -1183,6 +1193,7 @@
     "components/settings/experimental/ExperimentalModulesForm.tsx",
     "components/settings/experimental/ExperimentalModulesSection.tsx",
     "components/settings/experimental/ExperimentalSettingsLoading.tsx",
+    "components/settings/general/DataCacheSettings.tsx",
     "components/settings/general/DomainChangeConfirmation.tsx",
     "components/settings/general/general-settings-layout.ts",
     "components/settings/general/GeneralSettingsContent.tsx",
@@ -1278,6 +1289,7 @@
     "components/shell/GettingStartedNavLink.tsx",
     "components/shell/header-copy.ts",
     "components/shell/header-title.ts",
+    "components/shell/HeaderContextLoading.tsx",
     "components/shell/HeaderContextSlot.tsx",
     "components/shell/InstanceAnnouncementBanner.tsx",
     "components/shell/keyword-search.ts",
@@ -1426,6 +1438,8 @@
     "components/ui/primitives/popover.tsx",
     "components/ui/primitives/tooltip.tsx",
     "components/ui/provider-logo-url.ts",
+    "components/ui/ProviderAccessEmptyState.tsx",
+    "components/ui/ProviderAccessGate.tsx",
     "components/ui/ProviderLogo.tsx",
     "components/ui/quiet-chip-styles.ts",
     "components/ui/RowActionsMenu.tsx",
@@ -5905,7 +5919,17 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.counterNote",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.dashboard.temporal.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.diagnostics",
         "tags": []
       },
       {
@@ -5915,7 +5939,22 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.historyTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.dashboard.temporal.inspectionErrors",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "instanceAdmin.dashboard.temporal.inspectionPartial",
         "tags": []
       },
       {
@@ -5930,7 +5969,17 @@
       },
       {
         "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.noCounters",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "instanceAdmin.dashboard.temporal.recentActions",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.schedule",
         "tags": []
       },
       {
@@ -5951,6 +6000,76 @@
       {
         "arguments": [],
         "key": "instanceAdmin.dashboard.temporal.snapshotUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tableLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.checkAlertHealth",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.collectSearchInsights",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.deliverAlerts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.dispatchChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.maintainRuns",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.planChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.reconcileChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.reconcileUsage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.recoverChecks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.recoverImports",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.releaseMigrationHolds",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.releaseReservations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dashboard.temporal.tasks.sendDigests",
         "tags": []
       },
       {
@@ -20519,17 +20638,62 @@
       },
       {
         "arguments": [],
-        "key": "projectInstall.skills.available",
+        "key": "projectInstall.skills.ai-prompt-research",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectInstall.skills.ai-visibility-audit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.alert-triage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.available",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
         "key": "projectInstall.skills.availableCount",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectInstall.skills.backlink-profile-analysis",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.bisibility",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.competitive-landscape",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.competitor-analysis",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectInstall.skills.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.domain-onboarding",
         "tags": []
       },
       {
@@ -20544,6 +20708,11 @@
       },
       {
         "arguments": [],
+        "key": "projectInstall.skills.inPlugin",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectInstall.skills.keyword-clustering",
         "tags": []
       },
@@ -20554,12 +20723,27 @@
       },
       {
         "arguments": [],
+        "key": "projectInstall.skills.keyword-opportunity-research",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.link-prospecting",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.local-seo",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectInstall.skills.planned",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "projectInstall.skills.project-onboarding",
+        "key": "projectInstall.skills.project-setup",
         "tags": []
       },
       {
@@ -20569,7 +20753,32 @@
       },
       {
         "arguments": [],
+        "key": "projectInstall.skills.rank-tracking-report",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.self-host-health",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectInstall.skills.seo-audit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.seo-coach",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.sitemap-change-watch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.skills.team-api-governance",
         "tags": []
       },
       {
@@ -21241,6 +21450,41 @@
       {
         "arguments": [],
         "key": "projectIntegrations.oauth.googleLogo",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.oauth.googlePropertyApiDisabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.oauth.googlePropertyAuth",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.oauth.googlePropertyPermission",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.oauth.googlePropertyQuota",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.oauth.googlePropertyScope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.oauth.googlePropertyTemporary",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.oauth.googlePropertyUnknown",
         "tags": []
       },
       {
@@ -35484,6 +35728,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectResearch.results.searchKeywords",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "count",
@@ -35694,6 +35943,11 @@
       {
         "arguments": [],
         "key": "projectResearch.search.seedAria",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectResearch.search.seedHelp",
         "tags": []
       },
       {
@@ -39725,6 +39979,41 @@
       },
       {
         "arguments": [],
+        "key": "projectSearchInsights.copy.googlePropertyApiDisabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.copy.googlePropertyAuth",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.copy.googlePropertyPermission",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.copy.googlePropertyQuota",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.copy.googlePropertyScope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.copy.googlePropertyTemporary",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSearchInsights.copy.googlePropertyUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSearchInsights.copy.gscSelectionBody",
         "tags": []
       },
@@ -42616,6 +42905,231 @@
       {
         "arguments": [],
         "key": "projectSettingsExperimental.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.back",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.busy",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.conflict",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectSettingsGeneral.dataCache.days",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.default",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.delete",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.error",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "projectSettingsGeneral.dataCache.expires",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.help",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectSettingsGeneral.dataCache.hours",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.lifetime",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.list",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.module.ai_visibility",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.module.backlinks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.module.domain_overview",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.module.keyword_metrics",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.module.keyword_research",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.module.prompt_explorer",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.module.ranked_keywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.module.site_audit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.next",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.notice",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.readOnly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.refresh",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.save",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.ai_visibility",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.backlinks",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.history",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.idea",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.keywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.metrics",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.overview",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.pages",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.prompt_explorer",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.related",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.site_audit",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.source.suggestion",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.unknownKeyword",
         "tags": []
       },
       {
@@ -50588,6 +51102,11 @@
       },
       {
         "arguments": [],
+        "key": "shared.dashboardLayout.resetPreset",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.dashboardLayout.reviewCurrent",
         "tags": []
       },
@@ -52450,6 +52969,11 @@
       {
         "arguments": [],
         "key": "shared.localMonitors.results.loading",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.localMonitors.results.matcherVersionMixed",
         "tags": []
       },
       {
@@ -55247,6 +55771,66 @@
       {
         "arguments": [],
         "key": "shared.projectItemNotFound.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.providerAccess.action",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.providerAccess.connect",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.providerAccess.connectAction",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.providerAccess.emptyDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.providerAccess.emptyTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.providerAccess.reconnect",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.providerAccess.reconnectAction",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.providerAccess.reconnectDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.providerAccess.reconnectTitle",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "providers",
+            1
+          ]
+        ],
+        "key": "shared.providerAccess.supported",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.providerAccess.unavailable",
         "tags": []
       },
       {

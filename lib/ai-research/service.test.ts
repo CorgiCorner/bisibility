@@ -376,3 +376,41 @@ it.each([
   expect(mocks.paid).not.toHaveBeenCalled();
   expect(mocks.report).not.toHaveBeenCalled();
 });
+
+it.each([true, false])(
+  "does not reuse old visibility-filter caches and preserves prompt cache version (legacy=%s)",
+  async (legacy) => {
+    const keys: string[] = [];
+    mocks.cache.mockImplementation(async ({ key }: { key: string }) => {
+      keys.push(key);
+      const oldVisibility = /^ai:v[12]:/.test(key) && key.includes(":ai_visibility:");
+      return {
+        status: "success",
+        cached: true,
+        value: {
+          reportId: oldVisibility ? "agr_old_scope" : "agr_new_scope",
+          result: { evidence: "observed_dataset", costCents: 1, rows: [] },
+        },
+      };
+    });
+    const base = { ...visibilityInput, platform: legacy ? "chat_gpt" : "google" };
+    for (const domain of ["www.example.com", "example.com"])
+      expect(await analyzeAiVisibility(context, { ...base, domain })).toMatchObject({
+        ok: true,
+        cached: true,
+        reportId: "agr_new_scope",
+      });
+    expect(keys[0]).not.toBe(keys[1]);
+    await compareAiPrompts(context, {
+      ...input,
+      prompt: "q",
+      max_output_tokens: legacy ? 512 : 1024,
+    });
+    expect(keys[2]).toMatch(
+      new RegExp(`^ai:${legacy ? "v1" : "v2"}:internal-project:connection:prompt_explorer:`),
+    );
+    expect(mocks.paid).not.toHaveBeenCalled();
+    expect(mocks.observed).not.toHaveBeenCalled();
+    expect(mocks.prompt).not.toHaveBeenCalled();
+  },
+);

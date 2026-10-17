@@ -13,9 +13,9 @@
       },
       "banner": {
         "ariaLabel": "Analytics consent",
-        "body": "We count visits without cookies. Optional analytics cookies and replays help us improve bisibility.",
+        "body": "We count visits without cookies. Optional analytics cookies and redacted replays help us improve bisibility.",
         "saveError": "Your choice could not be saved. Choices you turned off remain off. Try again.",
-        "update": "Replays can include app screens. Review your choice. Analytics stays unchanged."
+        "update": "Redacted replays can include app screens. Review your choice. Analytics stays unchanged."
       },
       "modal": {
         "alwaysOn": "Always on",
@@ -23,12 +23,12 @@
           "body": "Required for sign-in, security and your saved settings.",
           "title": "Essential"
         },
-        "footer": "Your choice is saved for 6 months. Change it anytime from Privacy choices in the footer.",
-        "intro": "Choose analytics and replays separately. Essential cookies stay on.",
+        "footer": "Accepted choices are saved for 6 months; rejecting both is saved for 7 days. Change your choice anytime from Privacy choices in the footer.",
+        "intro": "Choose analytics and redacted replays separately. Essential cookies stay on.",
         "privacyPolicy": "Privacy policy",
         "replay": {
           "body": "Optional recordings help us improve the website and setup. In the app, recordings may include the first check and rank tracker. Inputs and project data are masked. Sign-in, account and billing screens, credentials and Google data are excluded.",
-          "title": "Replays"
+          "title": "Redacted replays"
         },
         "saveError": "Your changes could not be saved. Choices you turned off remain off. Try again.",
         "usage": {
@@ -1510,6 +1510,7 @@
       "title": "Customize dashboard",
       "presentationOnly": "Personal display only. Schedules and paid checks do not change.",
       "preset": "Dashboard preset",
+      "resetPreset": "Reset to preset",
       "show": "Show {title}",
       "hide": "Hide {title}",
       "moveUp": "Move {title} up",
@@ -1948,7 +1949,8 @@
         "customHistory": "Custom interval",
         "historyWindowHelp": "Periods end at the saved report time and use elapsed 24-hour days. Dates use your report timezone. Reading history does not run a scan.",
         "historyBounds": "From {from} to {to}",
-        "historyCount": "{count, plural, one {# saved run in this interval} other {# saved runs in this interval}}"
+        "historyCount": "{count, plural, one {# saved run in this interval} other {# saved runs in this interval}}",
+        "matcherVersionMixed": "This scan uses different matching rules. Individual point results remain available; the combined ranking metric is unavailable."
       },
       "retry": {
         "title": "Retry selected failed points",
@@ -2042,6 +2044,19 @@
       "confirmSave": "Confirm reviewed save",
       "stopAtMatch": "Stop when the target is found.",
       "scanFullDepth": "Continue through the full reviewed depth."
+    },
+    "providerAccess": {
+      "connect": "Connect a supporting provider to unlock these fields.",
+      "supported": "Supported providers: {providers}.",
+      "unavailable": "No supporting provider is available for this feature.",
+      "action": "Open Integrations",
+      "reconnect": "Reconnect your provider to unlock these fields.",
+      "reconnectAction": "Reconnect provider",
+      "emptyTitle": "Connect a provider to get started",
+      "reconnectTitle": "Reconnect to load new results",
+      "emptyDescription": "This feature needs a supporting provider. Connect one in Integrations to run a search.",
+      "reconnectDescription": "Reconnect your provider in Integrations before running another search.",
+      "connectAction": "Connect provider"
     }
   }
 }

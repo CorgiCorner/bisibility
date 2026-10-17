@@ -81,3 +81,29 @@ export function extendedPromptAvailable(
     ) === true
   );
 }
+
+export function aiResearchDefaults(mode: "prompt" | "visibility", domain: string): FormValues {
+  return {
+    brand: "",
+    domain,
+    max_cost_cents: mode === "prompt" ? 60 : 20,
+    estimate_only: true,
+    ...(mode === "prompt"
+      ? {
+          cost_policy: "hard_cap",
+          prompt: "",
+          models: [...LEGACY_MODELS],
+          web_search: false,
+          response_language: "en",
+          country_iso_code: undefined,
+          max_output_tokens: LEGACY_OUTPUT_TOKENS,
+        }
+      : {
+          platform: "chat_gpt",
+          target_type: "domain",
+          language_code: "en",
+          location_code: 2840,
+          limit: 10,
+        }),
+  };
+}

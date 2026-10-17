@@ -176,3 +176,33 @@ describe("SearchInsightsGa4PropertyPicker", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+it("uses a safe API-configuration action instead of raw Google error prose", () => {
+  render(
+    <SearchInsightsGa4PropertyPicker
+      cancelling={false}
+      manualEntry={false}
+      onCancel={vi.fn()}
+      onManualEntryChange={vi.fn()}
+      onPropertyChange={vi.fn()}
+      onPropertyErrorChange={vi.fn()}
+      onSelect={vi.fn()}
+      pending={false}
+      property=""
+      propertyError={null}
+      setup={{
+        error: "refresh_secret must not appear",
+        failure: {
+          reason: "api_disabled",
+          action: "configure_api",
+          httpStatus: 403,
+          code: "SERVICE_DISABLED",
+        },
+        properties: [],
+        provider: "ga4",
+      }}
+    />,
+  );
+  expect(screen.getByText(/Ask the app administrator to enable the API/)).toBeInTheDocument();
+  expect(screen.queryByText(/refresh_secret/)).toBeNull();
+});

@@ -66,3 +66,14 @@ it("uses a complete hypothetical operation scope for project budget reads", asyn
   for (const [, query] of m.budgets.mock.calls)
     expect(query.scope.connection).toEqual(expect.any(String));
 });
+
+it.each(["usage", "exceptions"] as const)(
+  "reads only the requested %s section during pagination",
+  async (section) => {
+    await readMeteringAdmin({ month: "2026-10", project: "p", includeBudgets: false, section });
+    expect(m.usage).toHaveBeenCalledTimes(section === "usage" ? 1 : 0);
+    expect(m.operations).toHaveBeenCalledTimes(section === "exceptions" ? 1 : 0);
+    expect(m.budgets).not.toHaveBeenCalled();
+    expect(m.projects).not.toHaveBeenCalled();
+  },
+);

@@ -88,3 +88,53 @@ export const backlinksEstimateSchema = {
   ],
   type: "object",
 } as const;
+
+export const backlinksQueryParameters = [
+  {
+    description: "Domain for site scope or full URL for page scope.",
+    in: "query",
+    name: "target",
+    required: true,
+    schema: { type: "string" },
+  },
+  {
+    in: "query",
+    name: "target_scope",
+    schema: { default: "site", enum: ["site", "page"], type: "string" },
+  },
+  {
+    description: "Ignored when target_scope is page.",
+    in: "query",
+    name: "include_subdomains",
+    schema: { default: true, type: "boolean" },
+  },
+  {
+    in: "query",
+    name: "result_limit",
+    schema: { default: 100, enum: [100, 300, 500, 1000], type: "integer" },
+  },
+  {
+    description: "Provider-side row mode applied over the full corpus.",
+    in: "query",
+    name: "mode",
+    schema: {
+      default: "as_is",
+      enum: ["as_is", "one_per_domain"],
+      type: "string",
+    },
+  },
+  {
+    description: "Return a free cache-aware provider cost estimate without a paid call.",
+    in: "query",
+    name: "estimate_only",
+    schema: { default: false, type: "boolean" },
+  },
+  { in: "query", name: "fresh", schema: { default: false, type: "boolean" } },
+  {
+    description:
+      "Limit admitted cost estimates across summary, history, rows and retries, in cents. Confirmed provider charges can differ from estimates.",
+    in: "query",
+    name: "max_cost_cents",
+    schema: { minimum: 1, type: "integer" },
+  },
+];

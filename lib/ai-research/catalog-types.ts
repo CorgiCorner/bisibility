@@ -1,3 +1,5 @@
+export const AI_RESEARCH_PROVIDER_ID = "dataforseo";
+
 export type AiModelCapability = {
   id: string;
   provider: "chat_gpt";

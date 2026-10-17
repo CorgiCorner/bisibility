@@ -102,7 +102,12 @@ export async function launchMeasurementSettingsHost(
             providerId: data.providerId,
             depth: data.depth as SerpDepth,
             selection: { selection: data.intent, scheduleId: data.scheduleId },
-            source: { sourceHash: source.sourceHash, manual, nativeToken: data.previewToken },
+            source: {
+              policyEpoch: source.policy.policyEpoch,
+              sourceHash: source.sourceHash,
+              manual,
+              nativeToken: data.previewToken,
+            },
           },
           new Date(),
         );

@@ -8,6 +8,7 @@ import { displayTime, Metric, Panel, RankWindow } from "@/components/admin/Admin
 import { AdminProviderHealth } from "@/components/admin/AdminProviderHealth";
 import { AdminProviderUsageTable } from "@/components/admin/AdminProviderUsageTable";
 import { AdminSectionUnavailable } from "@/components/admin/AdminSectionUnavailable";
+import { AdminTemporalHealth } from "@/components/admin/AdminTemporalHealth";
 import { AdminWorkerHealth } from "@/components/admin/AdminWorkerHealth";
 import { AdminDashboardOpsEventsTable } from "@/components/admin/admin-dashboard-tables";
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
@@ -16,7 +17,7 @@ import type { InstanceEmailAllowance } from "@/lib/email/allowance-model";
 import { checkFailureRate } from "@/lib/ops/instance-admin-health";
 import type { InstanceAdminDashboard } from "@/lib/queries/instance-admin";
 import { DOCS_URL } from "@/lib/site/site";
-import { useFormatter, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
 type AdminTranslations = ReturnType<typeof useTranslations<"instanceAdmin">>;
 
@@ -31,16 +32,7 @@ export function AdminDashboard({
   emailAllowance,
 }: Readonly<{ data: InstanceAdminDashboard; emailAllowance?: InstanceEmailAllowance }>) {
   const context = useDateDisplay();
-  const format = useFormatter();
   const t = useTranslations("instanceAdmin");
-  const temporalHeartbeat = data.temporal.status === "ok" ? data.temporal.heartbeat : null;
-  const temporalSnapshotNote =
-    data.temporal.status === "stale" ? t("dashboard.temporal.snapshotStale") : null;
-  const temporalIssues = [
-    ...(temporalSnapshotNote ? [temporalSnapshotNote] : []),
-    ...(temporalHeartbeat?.issueSchedules ?? []),
-    ...data.temporal.bootstrapErrors,
-  ];
   const checkFailureRatePercent = data.availability.rankChecks
     ? checkFailureRate(data.rank24h.failed, data.rank24h.succeeded)
     : null;
@@ -146,72 +138,7 @@ export function AdminDashboard({
         )}
       </Panel>
 
-      <Panel
-        description={t("dashboard.temporal.description")}
-        id="admin-temporal"
-        title={t("dashboard.temporal.title")}
-      >
-        <p className="mb-3 text-[13px] leading-relaxed text-fg-muted">
-          {data.temporal.collectedAt
-            ? t("dashboard.temporal.asOf", {
-                time: format.dateTime(new Date(data.temporal.collectedAt), {
-                  hour: "2-digit",
-                  hour12: false,
-                  minute: "2-digit",
-                }),
-              })
-            : unavailable}
-        </p>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          <Metric
-            label={t("dashboard.temporal.schedules")}
-            value={temporalHeartbeat?.schedules ?? unavailable}
-          />
-          <Metric
-            label={t("dashboard.temporal.recentActions")}
-            value={temporalHeartbeat?.recentActions ?? unavailable}
-          />
-          <Metric
-            label={t("dashboard.temporal.missedCatchup")}
-            value={temporalHeartbeat?.missedCatchupTotal ?? unavailable}
-          />
-          <Metric
-            label={t("dashboard.temporal.skippedOverlap")}
-            value={temporalHeartbeat?.skippedOverlapTotal ?? unavailable}
-          />
-          <Metric
-            label={t("dashboard.temporal.inspectionErrors")}
-            value={temporalHeartbeat?.inspectionErrors ?? unavailable}
-          />
-          <Metric
-            label={t("dashboard.temporal.nextAction")}
-            value={
-              <span className="text-[13px] leading-5">
-                {temporalHeartbeat
-                  ? displayTime(temporalHeartbeat.nextActionAt, context, unavailable)
-                  : unavailable}
-              </span>
-            }
-          />
-        </div>
-        {data.temporal.status === "unavailable" ? (
-          <p className="mt-3 rounded-card bg-yellow/10 p-3 text-[13px] leading-relaxed text-yellow-text">
-            {t("dashboard.temporal.snapshotUnavailable")}
-          </p>
-        ) : null}
-        {data.temporal.status === "disabled" ? (
-          <p className="mt-3 rounded-card bg-bg-sunken p-3 text-[13px] leading-relaxed text-fg-muted">
-            {t("dashboard.temporal.disabled")}
-          </p>
-        ) : null}
-        {temporalIssues.length > 0 ? (
-          <ul className="mt-3 space-y-1 rounded-card bg-bg-sunken p-3 text-[13px] leading-relaxed text-fg-muted">
-            {temporalIssues.map((issue) => (
-              <li key={issue}>{issue}</li>
-            ))}
-          </ul>
-        ) : null}
-      </Panel>
+      <AdminTemporalHealth temporal={data.temporal} />
 
       <Panel
         description={t("dashboard.ops.description")}

@@ -116,7 +116,12 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
           providerId: null,
           depth: 50,
           selection: { scheduleId: null, selection },
-          source: { sourceHash: captured.sourceHash, selection, intentEffect },
+          source: {
+            policyEpoch: captured.policy.policyEpoch,
+            sourceHash: captured.sourceHash,
+            selection,
+            intentEffect,
+          },
         },
         new Date(),
       );
@@ -198,7 +203,11 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
           providerId: selection.providerId,
           depth: 50,
           selection: { selection, schedule: draft, scheduleId: schedule.publicId },
-          source: { sourceHash: captured.sourceHash, forecast },
+          source: {
+            policyEpoch: captured.policy.policyEpoch,
+            sourceHash: captured.sourceHash,
+            forecast,
+          },
         },
         asOf,
       );

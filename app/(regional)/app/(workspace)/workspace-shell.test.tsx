@@ -49,11 +49,13 @@ vi.mock("@/components/shell/AppFooter", () => ({
 vi.mock("@/components/shell/AppHeader", () => ({
   AppHeader: ({
     actions,
+    context,
     setupDoneCount,
     setupTotalCount,
     showHostedLinks,
   }: {
     actions: ReactNode;
+    context?: ReactNode;
     setupDoneCount: number;
     setupTotalCount: number;
     showHostedLinks: boolean;
@@ -63,6 +65,7 @@ vi.mock("@/components/shell/AppHeader", () => ({
       data-hosted-links={showHostedLinks}
     >
       {actions}
+      {context}
     </header>
   ),
 }));
@@ -527,40 +530,39 @@ describe("workspace layout", () => {
     expect(markup).toContain("2026-07-19T12:00:00.000Z");
   });
 
-  it("loads the workspace list and budget summary concurrently", async () => {
-    let listResolved = false;
-    let budgetStartedBeforeListResolved = false;
-    mocks.listWorkspaces.mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          setTimeout(() => {
-            listResolved = true;
-            resolve([
-              {
-                domain: "example.com",
-                id: "prj_f00000000000000000000000",
-                keywordCount: 9,
-                name: "Example",
-                publicId: "prj_f00000000000000000000000",
-                role: "owner",
-                writeMode: "active",
-              },
-            ]);
-          }, 0);
-        }),
-    );
-    mocks.budgetSummary.mockImplementationOnce(async () => {
-      budgetStartedBeforeListResolved = !listResolved;
-      return headerFixture();
-    });
-
-    await WorkspaceShell({
+  it("renders navigation content while the parallel header context suspends", async () => {
+    const pending = new Promise<never>(() => undefined);
+    function PendingContext(): never {
+      throw pending;
+    }
+    const result = await WorkspaceShell({
       activeProjectId: "project_1",
-      children: <div>Concurrent shell</div>,
+      children: <div>Rank Tracker loading</div>,
+      context: <PendingContext />,
       projectRef: "prj_f00000000000000000000000",
     });
+    const markup = renderToStaticMarkup(result);
+    expect(markup).toContain("Rank Tracker loading");
+    expect(markup).toContain("header-context-loading");
+  });
 
-    expect(budgetStartedBeforeListResolved).toBe(true);
+  it("renders chrome and content without waiting for the header budget", async () => {
+    mocks.budgetSummary.mockImplementation(() => new Promise(() => undefined));
+    const pending = WorkspaceShell({
+      activeProjectId: "project_1",
+      children: <div>Unblocked content</div>,
+      projectRef: "prj_f00000000000000000000000",
+    });
+    const result = await Promise.race([
+      pending,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 100)),
+    ]);
+    expect(result).not.toBeNull();
+    const markup = renderToStaticMarkup(result);
+    expect(markup).toContain("Unblocked content");
+    expect(markup).toContain("data-shell-root");
+    expect(markup).toContain("header-budget-loading");
+    expect(markup).not.toContain("$0.00");
   });
 
   it.each(["owner", "viewer", "admin"])(
@@ -588,8 +590,8 @@ describe("workspace layout", () => {
 
       expect(markup).toContain("data-shell-root");
       expect(markup).toContain("Import workspace");
-      if (role === "owner") expect(markup).toContain("Usage unavailable");
-      else expect(markup).not.toContain("Usage unavailable");
+      if (role === "owner") expect(markup).toContain("header-budget-loading");
+      else expect(markup).not.toContain("header-budget-loading");
       expect(markup).not.toContain("$0.00");
     },
   );

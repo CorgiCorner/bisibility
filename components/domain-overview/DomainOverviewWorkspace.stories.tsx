@@ -242,3 +242,14 @@ export const NoData: Story = {
     initialTarget: "new.example.com",
   },
 };
+
+export const ProviderMissing: Story = {
+  args: {
+    ...Idle.args,
+    context: {
+      ...common.context,
+      providerStatus: "no_provider",
+      supportingProviders: ["DataForSEO"],
+    },
+  },
+};

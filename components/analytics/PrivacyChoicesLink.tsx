@@ -34,7 +34,13 @@ export function PrivacyChoicesLink({
           {label ?? t("title")}
         </button>
       ) : (
-        <Button onClick={() => setOpen(true)} size="xs" type="button" variant="ghost">
+        <Button
+          className="font-normal"
+          onClick={() => setOpen(true)}
+          size="xs"
+          type="button"
+          variant="ghost"
+        >
           {label ?? t("title")}
         </Button>
       )}

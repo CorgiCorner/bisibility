@@ -133,6 +133,7 @@ describe("integrated personal dashboard toolbar", () => {
   });
 
   it("reports a revision conflict without replacing the stored default or writing a layout", async () => {
+    actions.read.mockResolvedValue({ ok: true, value: { ...initial, revision: 8 } });
     actions.setDefault.mockResolvedValue({
       ok: false,
       error: { status: 409, code: "preferences_conflict" },
@@ -147,7 +148,8 @@ describe("integrated personal dashboard toolbar", () => {
     const reopened = await openCustomization();
     expect(
       within(reopened.menu).getByRole("menuitem", { name: "Set as my default" }),
-    ).not.toHaveAttribute("aria-disabled", "true");
+    ).toHaveAttribute("aria-disabled", "true");
+    expect(actions.read).toHaveBeenCalledWith(initial.projectId);
   });
 
   it("saves a different view as the default with the current revision only after explicit selection", async () => {

@@ -1,0 +1,97 @@
+{
+  "project_id": "prj_a00000000000000000000000",
+  "kind": "keyword_clustering",
+  "title": "Keyword clustering: example.com (fictional fixture)",
+  "idempotency_key": "fixture-keyword-clustering-20261016-v1",
+  "body": {
+    "version": 1,
+    "summary": "Fictional analysis: review the weekly tracking page before commissioning content.",
+    "context": {
+      "goal": "Help small teams evaluate weekly tracking.",
+      "assumptions": ["Fictional fixture, not live customer evidence."]
+    },
+    "method": "Agent analysis of saved phrases and tracking evidence; SERP-free intent heuristics.",
+    "coverage": {
+      "state": "partial",
+      "tracked_rows": 1,
+      "omitted_pages": 0,
+      "limitations": ["One tracked phrase is not a complete site keyword inventory."]
+    },
+    "recommendations": [
+      {
+        "priority": 1,
+        "action": "Review whether the weekly tracking page answers the small-team setup task.",
+        "target_url": "https://example.com/guides/weekly-tracking",
+        "evidence_ids": ["tracked-1"],
+        "rationale": "The tracked phrase maps to this page; page content has not been inspected.",
+        "confidence": "low",
+        "uncertainty": "Page quality, demand and ranking harm are unverified.",
+        "verification": "Unexecuted: inspect page intent and existing setup guidance before proposing edits."
+      }
+    ],
+    "evidence": [
+      {
+        "id": "tracked-1",
+        "source_tool": "list_keywords",
+        "keyword_id": "kw_b00000000000000000000000",
+        "phrase": "weekly rank tracker",
+        "target_url": "https://example.com/guides/weekly-tracking",
+        "ranking_url": "https://example.com/guides/weekly-tracking",
+        "position": 12,
+        "market": "user-confirmed fixture market, 2840/en",
+        "observed_at": "2026-10-15T12:00:00.000Z",
+        "retrieved_at": "2026-10-16T09:00:00.000Z",
+        "cache_state": "saved check",
+        "fact": "Fictional completed check with positive rank; full market coverage unknown."
+      },
+      {
+        "id": "supplied-2",
+        "source": "user-supplied fixture row 2",
+        "phrase": "track rankings weekly",
+        "observed_at": null,
+        "retrieved_at": "2026-10-16T09:00:00.000Z",
+        "fact": "Supplied phrase has no observed metrics or ranking history."
+      }
+    ],
+    "costs": {
+      "new_provider_cost_cents": 0,
+      "paid_calls": 0,
+      "historical_costs": "unknown",
+      "external_client_fees": "unknown",
+      "approval": "No spending approval; saved evidence only."
+    },
+    "limitations": ["Fictional fixture only; no provider calls or live page retrieval."],
+    "clusters": [
+      {
+        "id": "cluster-1",
+        "members": ["weekly rank tracker", "track rankings weekly"],
+        "member_source_ids": ["tracked-1", "supplied-2"],
+        "intent": "informational setup",
+        "primary_keyword": "weekly rank tracker",
+        "primary_reason": "Matches the saved page target and the stated task.",
+        "mapped_target_url": "https://example.com/guides/weekly-tracking",
+        "mapping_status": "saved target, content unverified",
+        "content_priority": "medium",
+        "priority_reason": "Goal fit exists; full content and demand need verification.",
+        "confidence": "medium",
+        "uncertainty": "No SERP overlap measured; supplied phrase could also imply product evaluation.",
+        "cannibalization": {
+          "status": "unverified",
+          "evidence_ids": ["tracked-1"],
+          "reason": "Only one target URL; no rank history was collected. No conflict or harm can be established."
+        }
+      }
+    ]
+  },
+  "provenance": {
+    "skill": "keyword-clustering",
+    "skill_version": "0.4.0",
+    "agent": "unknown",
+    "source_origin": "fictional_fixture",
+    "instance": "https://example.com",
+    "method": "Agent analysis of saved phrases and tracking evidence; SERP-free intent heuristics.",
+    "evidence_ids": ["tracked-1", "supplied-2"],
+    "retrieved_at": "2026-10-16T09:00:00.000Z",
+    "limitations": ["Fictional fixture only; no provider calls or live page retrieval."]
+  }
+}

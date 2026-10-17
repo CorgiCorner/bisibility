@@ -16,6 +16,8 @@ function EditorStory({ conflict = false, local = false }: { conflict?: boolean; 
         <p>Draft cancelled; previous layout retained.</p>
       ) : (
         <DashboardLayoutEditor
+          layoutForPreset={presetDashboardLayout}
+          templateForPreset={presetDashboardLayout}
           state={state}
           access={organicAccess}
           translate={dashboardFixtureTranslate}

@@ -5,12 +5,13 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
 import type { ComponentProps, ElementType, ReactNode } from "react";
 import styles from "./Button.module.css";
+import { inputActionSizeClassName } from "./input-styles";
 import { Spinner } from "./Spinner";
 
 export const buttonXsStyle = { fontSize: "12px", minHeight: 30, padding: "4px 10px" } as const;
 
 export type ButtonVariant = "destructive" | "ghost" | "outline" | "primary" | "secondary";
-export type ButtonSize = "lg" | "md" | "sm" | "xs";
+export type ButtonSize = "input" | "lg" | "md" | "sm" | "xs";
 export type ButtonProps = Omit<ComponentProps<"button">, "color"> & {
   asChild?: boolean;
   component?: ElementType;
@@ -36,7 +37,13 @@ const buttonVariants = cva(styles.root, {
       ghost: styles.ghost,
       destructive: styles.destructive,
     },
-    size: { xs: styles.xs, sm: styles.sm, md: styles.md, lg: styles.lg },
+    size: {
+      xs: styles.xs,
+      sm: styles.sm,
+      md: styles.md,
+      lg: styles.lg,
+      input: inputActionSizeClassName,
+    },
   },
 });
 export function Button({

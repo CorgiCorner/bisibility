@@ -9,9 +9,11 @@ import type { GetRankCheckStatusResult } from "@/lib/actions/rank-check-status";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { emitFirstCheckRunCompletion } from "./rank-check-preview-analytics";
 
 const runSelect = {
   publicId: true,
+  projectId: true,
   status: true,
   outcome: true,
   blockedReason: true,
@@ -79,7 +81,15 @@ export async function singleRankCheckRunStatus(
     }
     throw error;
   }
-  return runStatus(run);
+  const result = runStatus(run);
+  if (result.status === "completed") {
+    await emitFirstCheckRunCompletion({
+      actorId: actor.id,
+      projectId: run.projectId,
+      runPublicIds: [run.publicId],
+    });
+  }
+  return result;
 }
 
 /** The caller has authorized this project; preserve it in the batch query. */

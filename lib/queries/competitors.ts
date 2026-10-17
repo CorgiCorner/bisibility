@@ -1,3 +1,4 @@
+import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 import type { Actor } from "@/lib/auth/authorize";
 import {
@@ -100,7 +101,7 @@ async function queryCompetitors(
         suggestions,
       };
     },
-    { isolationLevel: "RepeatableRead" },
+    { ...REPORT_READ_TRANSACTION },
   );
 }
 export async function getCompetitorsView(projectId: string, requested?: CompetitorScope | null) {

@@ -15,7 +15,7 @@ const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn)
 export const loadWorkspaceBudgetSummary = perRequestCache(async function loadWorkspaceBudgetSummary(
   projectRef: string,
 ): Promise<WorkspaceBudgetSummary> {
-  const data = await getProjectMeteringBudgets(projectRef).catch((error: unknown) => {
+  const data = await getProjectMeteringBudgets(projectRef, "header").catch((error: unknown) => {
     const code =
       error && typeof error === "object"
         ? "code" in error

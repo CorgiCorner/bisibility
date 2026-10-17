@@ -1,3 +1,4 @@
+import { moduleSupport } from "@/lib/providers/module-support";
 import "server-only";
 
 import { requireApiPublicId } from "@/lib/api/public-id";
@@ -21,6 +22,7 @@ export async function getKeywordResearchPageContext(projectId: string) {
   const eligible = eligibleResearchConnections(researchProject, "research");
 
   return {
+    ...moduleSupport("keywordResearch"),
     connections: connectionResources(eligible).map((connection) => ({
       ...connection,
       id: requireApiPublicId(connection.id, "conn") as string,

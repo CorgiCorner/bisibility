@@ -7,7 +7,13 @@ import { TerminalWindowIcon } from "@phosphor-icons/react/dist/csr/TerminalWindo
 import type { BudgetRow } from "@usagekit/views";
 import { useUsagePresentation } from "./use-usage-presentation";
 
-export function BudgetTrafficBadge({ traffic }: { traffic: BudgetRow["traffic"] }) {
+export function BudgetTrafficBadge({
+  traffic,
+  compact = false,
+}: {
+  traffic: BudgetRow["traffic"];
+  compact?: boolean;
+}) {
   const p = useUsagePresentation();
   const app = traffic.kind === "surface" && traffic.surface === "app";
   const programmatic = traffic.kind === "surface" && traffic.surface === "programmatic";
@@ -18,6 +24,13 @@ export function BudgetTrafficBadge({ traffic }: { traffic: BudgetRow["traffic"] 
       : traffic.kind === "surface"
         ? p.operation(traffic.surface)
         : p.dimension("source", traffic.source);
+  if (compact)
+    return (
+      <span className="inline-flex max-w-full items-start gap-1 text-[10px] font-normal text-fg-muted">
+        <Icon aria-hidden size={12} weight="regular" className="mt-px shrink-0" />
+        <span className="min-w-0 leading-snug">{label}</span>
+      </span>
+    );
   return (
     <PillBadge
       className={`max-w-full shrink text-[11px] font-normal normal-case tracking-normal gap-1 ${app ? "border-accent/25 bg-accent-soft text-accent-text" : "text-fg-muted"}`}

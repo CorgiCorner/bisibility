@@ -136,6 +136,14 @@ export function dispatchExtendedToolRoute(name: string, input: JsonObject): Rest
         "GET",
       );
     case "loadMoreBacklinkRows":
+      if (
+        typeof input.snapshot_ref !== "string" ||
+        !input.snapshot_ref.length ||
+        input.snapshot_ref.length > 32768
+      )
+        throw new Error(
+          "snapshot_ref must contain 1 to 32768 characters from the latest snapshot response.",
+        );
       return call(input, project(input, "backlinks/rows"), "POST", body(input, ["project_id"]));
     case "estimateBacklinksCost":
       return call(

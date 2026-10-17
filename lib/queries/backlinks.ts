@@ -1,3 +1,4 @@
+import { moduleSupport } from "@/lib/providers/module-support";
 import "server-only";
 
 import { snapshotProvider } from "@/lib/backlinks/stored";
@@ -89,6 +90,7 @@ export async function getBacklinksPageContext(projectId: string) {
       : "no_provider";
 
   return {
+    ...moduleSupport("backlinks"),
     costContext,
     defaultTarget: trackedProjectDomain(project.domain) ?? "",
     providerStatus,

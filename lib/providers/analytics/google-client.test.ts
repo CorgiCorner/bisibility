@@ -142,7 +142,7 @@ describe("googleApiFetch provider gating", () => {
 
     await expect(
       googleApiFetch("https://example.test/x", "token", {}, context),
-    ).rejects.toBeInstanceOf(ProviderAuthError);
+    ).rejects.toMatchObject({ name: "ProviderAuthError", providerId: "gsc", status: 401 });
   });
 
   it("keeps non-authorization Google failures generic", async () => {
@@ -152,6 +152,38 @@ describe("googleApiFetch provider gating", () => {
     await expect(rejection).rejects.toThrow("status 500");
     await expect(rejection).rejects.not.toBeInstanceOf(ProviderAuthError);
   });
+
+  it.each([
+    ["accessNotConfigured", "api_disabled"],
+    ["insufficientPermissions", "permission"],
+    ["dailyLimitExceeded", "quota"],
+  ] as const)(
+    "preserves safe Google 403 reason %s without retaining raw errors",
+    async (code, reason) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(
+          jsonResponse(
+            {
+              error: {
+                message: "refresh_secret access_secret Authorization: Bearer secret",
+                errors: [{ reason: code }],
+                details: [{ metadata: { token: "secret" } }],
+              },
+            },
+            { ok: false, status: 403 },
+          ),
+        ),
+      );
+      const error = await googleApiFetch("https://example.test/x", "access_secret").catch(
+        (error) => error,
+      );
+      expect(error).toMatchObject({ status: 403, code, reason });
+      expect(String(error)).not.toContain("secret");
+      expect(JSON.stringify(error)).not.toContain("secret");
+      expect(error).not.toBeInstanceOf(ProviderAuthError);
+    },
+  );
 
   it("passes through and returns the payload when not throttled", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ rows: [1, 2] })));

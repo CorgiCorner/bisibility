@@ -1,6 +1,7 @@
 import { clearProviderRateLimitState, ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ga4AnalyticsProvider } from "./ga4";
+import { googlePropertyFailure } from "./google-failure";
 
 const tokenResponse = { access_token: "access_token" };
 
@@ -266,7 +267,7 @@ describe("ga4 analytics provider", () => {
     });
   });
 
-  it("surfaces GA4 quota 403 messages", async () => {
+  it("preserves safe GA4 quota 403 diagnostics", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string | URL | Request) => {
@@ -276,7 +277,12 @@ describe("ga4 analytics provider", () => {
         }
         if (target.includes(":runReport")) {
           return Response.json(
-            { error: { message: "Quota exceeded for analytics data tokens" } },
+            {
+              error: {
+                message: "Quota exceeded for analytics data tokens fixture_secret",
+                errors: [{ reason: "quotaExceeded" }],
+              },
+            },
             { status: 403 },
           );
         }
@@ -289,7 +295,16 @@ describe("ga4 analytics provider", () => {
       { endDate: "2026-07-03", startDate: "2026-07-01" },
     );
 
-    await expect(rejection).rejects.toThrow("Quota exceeded for analytics data tokens");
+    await expect(rejection).rejects.toThrow("Google API request failed with status 403.");
+    await rejection.catch((error: unknown) => {
+      expect(googlePropertyFailure(error)).toEqual({
+        reason: "quota",
+        action: "retry_later",
+        httpStatus: 403,
+        code: "quotaExceeded",
+      });
+      expect(String(error)).not.toContain("fixture_secret");
+    });
     await rejection.catch((error: unknown) => {
       expect(error).toBeInstanceOf(Error);
       expect(error).not.toBeInstanceOf(ProviderRateLimitedError);

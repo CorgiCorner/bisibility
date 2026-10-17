@@ -1,8 +1,12 @@
 import { ConsentBanner } from "@/components/analytics/ConsentBanner";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { AppThemeRoot } from "@/components/shell/AppThemeRoot";
 import { CommandPaletteProvider } from "@/components/shell/CommandPalette";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { mockWorkspaces } from "@/components/shell/workspaces.mock";
+import spanishShared from "@/messages/core/es-ES/shared.json";
+import japaneseShared from "@/messages/core/ja/shared.json";
+import polishShared from "@/messages/core/pl/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, fn, userEvent, within } from "storybook/test";
 
@@ -13,7 +17,7 @@ const saveConsent = fn(async (values: { analytics: boolean; replay: boolean }) =
 }));
 
 const meta = {
-  args: { saveConsent },
+  args: { delayMs: 0, saveConsent },
   component: ConsentBanner,
   parameters: { layout: "fullscreen" },
   title: "Analytics/ConsentBanner",
@@ -24,12 +28,39 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const DelayedEntrance: Story = { args: { delayMs: 5000 } };
+
+export const Polish: Story = {
+  render: (args) => (
+    <FeatureMessagesProvider locale="pl" timeZone="Europe/Warsaw" messages={polishShared}>
+      <ConsentBanner {...args} />
+    </FeatureMessagesProvider>
+  ),
+};
+export const Spanish: Story = {
+  render: (args) => (
+    <FeatureMessagesProvider locale="es-ES" timeZone="Europe/Warsaw" messages={spanishShared}>
+      <ConsentBanner {...args} />
+    </FeatureMessagesProvider>
+  ),
+};
+export const Japanese: Story = {
+  render: (args) => (
+    <FeatureMessagesProvider locale="ja" timeZone="Europe/Warsaw" messages={japaneseShared}>
+      <ConsentBanner {...args} />
+    </FeatureMessagesProvider>
+  ),
+};
+
 export const Refuse: Story = {
   play: async ({ canvasElement }) => {
     await userEvent.click(
       within(canvasElement.ownerDocument.body).getByRole("button", { name: "Reject all" }),
     );
-    await expect(saveConsent).toHaveBeenCalledWith({ analytics: false, replay: false });
+    await expect(saveConsent).toHaveBeenCalledWith(
+      { analytics: false, replay: false },
+      expect.objectContaining({ variant: "immediate", source: "banner" }),
+    );
   },
 };
 

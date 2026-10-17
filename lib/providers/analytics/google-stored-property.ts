@@ -5,8 +5,8 @@ import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import type { GoogleOAuthSetup, GooglePropertySaveResult } from "@/lib/integrations/types";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
-import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { decryptProviderCredentials, encryptSecret } from "@/lib/providers/crypto";
+import { classifyProviderFailure } from "@/lib/providers/failure-class";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { dateKey } from "@/lib/search-insights/dates";
@@ -18,6 +18,7 @@ import {
   listGoogleSites,
   refreshGoogleAccessToken,
 } from "./google-client";
+import { googlePropertyFailureCopy, logGooglePropertyFailure } from "./google-failure";
 import { ga4PropertyOptions, gscPropertyOptions } from "./google-property-options";
 import { normalizeGa4PropertyId } from "./property-id";
 
@@ -137,9 +138,12 @@ export async function loadStoredGoogleProperties(
       provider: context.provider,
     };
   } catch (error) {
-    if (error instanceof ProviderAuthError) return reconnectSetup(context.provider);
+    const failure = logGooglePropertyFailure(context.provider, error);
     return {
-      error: "Properties could not be loaded. Try again or reconnect the account.",
+      error: googlePropertyFailureCopy(failure),
+      failure,
+      failureClass: classifyProviderFailure(error),
+      ...(["reconnect", "reauthorize"].includes(failure.action) ? { requiresReauth: true } : {}),
       preferredProperty: credentials.login,
       properties: [],
       provider: context.provider,
@@ -159,8 +163,11 @@ export async function saveStoredGoogleProperty(
     const accessToken = await refreshGoogleAccessToken(credentials.apiKey);
     properties = await listProperties(context.provider, accessToken);
   } catch (error) {
-    if (error instanceof ProviderAuthError) return { status: "reauth_required" };
-    throw new Error("Properties could not be verified. Try again.");
+    const failure = logGooglePropertyFailure(context.provider, error);
+    return {
+      status: ["reconnect", "reauthorize"].includes(failure.action) ? "reauth_required" : "failed",
+      failure,
+    };
   }
 
   const selected = selectedProperty(context.provider, context.property, properties);
@@ -172,8 +179,12 @@ export async function saveStoredGoogleProperty(
       projectId: context.projectId,
       provider: providerDefinition(context.provider),
     });
-  } catch {
-    throw new Error("The selected property could not be verified. Choose another property.");
+  } catch (error) {
+    const failure = logGooglePropertyFailure(context.provider, error);
+    return {
+      status: ["reconnect", "reauthorize"].includes(failure.action) ? "reauth_required" : "failed",
+      failure,
+    };
   }
 
   await prisma.$transaction(async (tx) => {

@@ -37,7 +37,7 @@ type DomainOverviewAnalyzeCardProps = {
   scopeOverride?: DomainOverviewScope;
   submitting: boolean;
   target: string;
-  researchScope: ResearchScope;
+  researchScope: ResearchScope | null;
   trackedScopes: readonly ResearchScope[];
   report?: DomainOverviewReport | null;
 };
@@ -86,8 +86,8 @@ export function DomainOverviewAnalyzeCard({
     detected &&
       estimate.valid &&
       actionCost != null &&
-      researchScope.researchAvailable &&
-      researchScope.providerLocationCode != null,
+      researchScope?.researchAvailable &&
+      researchScope?.providerLocationCode != null,
   );
   const descriptionIds = ["domain-overview-scope-help"];
   if (report && !matchesReport) descriptionIds.push("domain-overview-report-target-note");
@@ -102,10 +102,12 @@ export function DomainOverviewAnalyzeCard({
       >
         <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
           <div
+            data-input-shell
             className={`${domainOverviewControlHeight()} flex flex-1 items-center gap-2 rounded-control border border-border-control px-3 focus-within:border-accent md:min-w-[320px]`}
           >
             <Globe weight="regular" aria-hidden className="shrink-0 text-fg-muted" size={15} />
             <input
+              data-input-inner
               {...targetField}
               aria-describedby={descriptionIds.join(" ")}
               aria-label={t("targetAria")}
@@ -129,9 +131,15 @@ export function DomainOverviewAnalyzeCard({
           </div>
           <div className="md:w-[230px]">
             <ResearchScopePicker
-              ariaLabel={t("countryAria", { country: researchScope.countryName })}
+              ariaLabel={
+                researchScope
+                  ? t("countryAria", { country: researchScope.countryName })
+                  : t("changeCountry")
+              }
               catalogScopes={catalogScopes}
-              disabled={submitting}
+              disabled={
+                submitting || (!researchScope && !catalogScopes.length && !trackedScopes.length)
+              }
               onChange={onResearchScopeChange}
               researchScope={researchScope}
               trackedScopes={trackedScopes}

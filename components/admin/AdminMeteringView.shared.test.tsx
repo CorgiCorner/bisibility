@@ -47,6 +47,7 @@ it("keeps both sealed cursor positions when either list advances or returns to f
   await waitFor(() =>
     expect(load).toHaveBeenLastCalledWith({
       month: "2026-10",
+      section: expect.any(String),
       project: "p",
       usageCursor: "usage-2-sealed",
       exceptionCursor: "exceptions-2-sealed",
@@ -56,6 +57,7 @@ it("keeps both sealed cursor positions when either list advances or returns to f
   await waitFor(() =>
     expect(load).toHaveBeenLastCalledWith({
       month: "2026-10",
+      section: expect.any(String),
       project: "p",
       usageCursor: undefined,
       exceptionCursor: "exceptions-2-sealed",
@@ -66,6 +68,7 @@ it("keeps both sealed cursor positions when either list advances or returns to f
   await waitFor(() =>
     expect(load).toHaveBeenLastCalledWith({
       month: "2026-10",
+      section: expect.any(String),
       project: "p",
       usageCursor: "usage-2-sealed",
       exceptionCursor: undefined,
@@ -126,6 +129,8 @@ it("keeps both tables busy while a page is pending and reports failed pages", as
   expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
   await act(async () => rejectPage(new Error("page failed")));
   expect(screen.getByRole("status")).toHaveTextContent("unavailable");
+  expect(screen.getByRole("table", { name: "Usage detail" })).toBeInTheDocument();
+  expect(screen.getByRole("table", { name: "Current budgets" })).toBeInTheDocument();
   expect(screen.queryByText("page failed")).toBeNull();
 });
 
@@ -183,3 +188,64 @@ it("preserves a hard spending ceiling and conceals every redacted amount", () =>
   expect(within(table).queryByText(/120 Units|62 Units|38 Units|100 Units/)).toBeNull();
   expect(within(table).getByText(/figures are hidden/)).toBeInTheDocument();
 });
+
+it("isolates unavailable budgets from confirmed usage and exception data", () => {
+  const data = { ...adminUsageFixture(), budgetsUnavailable: true };
+  render(<AdminMeteringView data={data} />);
+  expect(screen.getByRole("table", { name: "Usage detail" })).toBeInTheDocument();
+  expect(screen.getByText("No exceptions in this period.")).toBeInTheDocument();
+  expect(screen.queryByRole("table", { name: "Current budgets" })).toBeNull();
+  expect(screen.getByRole("status")).toHaveTextContent("unavailable");
+});
+
+it.each([
+  ["usage", "unavailable"],
+  ["usage", "forbidden"],
+  ["exceptions", "unavailable"],
+  ["exceptions", "forbidden"],
+] as const)(
+  "keeps the %s rows and cursor after a typed %s page, then retries",
+  async (kind, state) => {
+    const initial: MeteringAdminData = adminUsageFixture();
+    initial.usage.nextCursor = "sealed-usage-next";
+    initial.exceptions = {
+      ...initial.exceptions,
+      state: "ok",
+      nextCursor: "sealed-exceptions-next",
+      rows: [
+        {
+          operationId: "original-operation",
+          kind: "pending",
+          state: "pending",
+          source: "app",
+          connection: "conn_example",
+          since: "2026-10-01T00:00:00Z",
+          estimate: [],
+          provider: "dataforseo",
+          operation: "rank_check",
+          principal: "owner",
+          ageSeconds: 120,
+        },
+      ],
+    };
+    load.mockResolvedValueOnce({
+      data: { ...initial, [kind]: { ...initial[kind], state, rows: [], nextCursor: null } },
+    });
+    render(<AdminMeteringView data={initial} month="2026-10" />);
+    fireEvent.click(screen.getAllByRole("button", { name: "Next page" })[kind === "usage" ? 0 : 1]);
+    const retry = await screen.findByRole("button", { name: "Try again" });
+    await waitFor(() => expect(retry).toBeEnabled());
+    expect(screen.getByRole("table", { name: "Usage detail" })).toHaveTextContent("$0.12");
+    expect(screen.getByText("Pending evidence")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "First page" })).toBeNull();
+    load.mockResolvedValueOnce({ data: initial });
+    fireEvent.click(retry);
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Try again" })).toBeNull());
+    expect(load).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        section: kind,
+        [kind === "usage" ? "usageCursor" : "exceptionCursor"]: `sealed-${kind}-next`,
+      }),
+    );
+  },
+);

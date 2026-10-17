@@ -7,7 +7,7 @@ import { renderWithResearchMessages as render } from "@/i18n/test-support/render
 import type { ResearchKeywordsAction } from "@/lib/actions/keyword-research";
 import sharedMessages from "@/messages/core/en/shared.json";
 import { makeCostContext } from "@/tests/factories/cost-context";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ResearchWorkspace } from "./ResearchWorkspace";
@@ -81,6 +81,7 @@ vi.mock("./ResearchResults", () => ({
   ResearchResults: ({
     metricsAvailable,
     onAdd,
+    onDeeper,
     onRemoveSaved,
     onSave,
     result,
@@ -88,6 +89,7 @@ vi.mock("./ResearchResults", () => ({
   }: {
     metricsAvailable: boolean;
     onAdd: (draft: unknown) => void;
+    onDeeper?: () => void;
     onRemoveSaved?: (draft: unknown) => void;
     onSave: (draft: unknown) => void;
     result: {
@@ -98,6 +100,9 @@ vi.mock("./ResearchResults", () => ({
     <div>
       <output aria-label="research metrics available">{String(metricsAvailable)}</output>
       <output aria-label="tracking scope count">{trackingMarketCount}</output>
+      <button type="button" disabled={!onDeeper} onClick={onDeeper}>
+        Explore more
+      </button>
       <output aria-label="tracked keywords">
         {result.rows
           .filter((row) => row.alreadyTracked)
@@ -208,6 +213,7 @@ vi.mock("@/components/keywords/add/AddKeywordDrawer", () => ({
 }));
 
 const context = {
+  supportingProviders: ["DataForSEO"],
   connections: [
     { id: "conn_a00000000000000000000000", label: "DataForSEO", provider: "dataforseo" },
   ],
@@ -388,6 +394,36 @@ describe("ResearchWorkspace", () => {
         resultLimit: 300,
       }),
     );
+  });
+
+  it("keeps completed results visible when the supporting connection is removed", async () => {
+    const { researchAction } = paidResearchAction();
+    const view = renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
+    fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    await screen.findByRole("button", { name: "Select two" });
+    expect(screen.getByRole("button", { name: "Explore more" })).toBeEnabled();
+    const requestCount = researchAction.mock.calls.length;
+    view.rerender(
+      <SessionSpendProvider>
+        <SessionSpendProbe />
+        <ResearchWorkspace
+          {...savedKeywordActions}
+          addKeywordsAction={vi.fn() as never}
+          checkHealth={checkHealth}
+          context={{ ...context, connections: [] }}
+          costContext={costContext}
+          researchAction={researchAction as unknown as ResearchKeywordsAction}
+        />
+      </SessionSpendProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Select two" })).toBeVisible();
+    expect(
+      screen.queryByRole("region", { name: "Connect a provider to get started" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Connect a supporting provider to unlock these fields.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Explore more" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Explore more" }));
+    expect(researchAction).toHaveBeenCalledTimes(requestCount);
   });
 
   it("records paid session spend on the first research run", async () => {
@@ -664,6 +700,32 @@ describe("ResearchWorkspace", () => {
         seed: "rank tracker",
       }),
     );
+  });
+
+  it("does not describe missing-provider fields as waiting for a budget reset", () => {
+    const researchAction = vi.fn();
+    renderWorkspace(researchAction as unknown as ResearchKeywordsAction, {
+      context: { ...context, connections: [] },
+      checkHealth: { ...checkHealth, budget: { ...checkHealth.budget, exhausted: true } },
+    });
+    expect(
+      screen.queryByLabelText(
+        /Fresh lookups are disabled until the monthly provider budget resets/i,
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Fresh lookups are disabled until the monthly provider budget resets/i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    expect(screen.getByText("Connect a supporting provider to unlock these fields.")).toBeVisible();
+    const emptyPanel = screen.getByRole("region", { name: "Connect a provider to get started" });
+    expect(within(emptyPanel).getAllByRole("link")).toHaveLength(1);
+    expect(within(emptyPanel).getByRole("link", { name: "Connect provider" })).toHaveAttribute(
+      "href",
+      `/app/${context.project.id}/integrations`,
+    );
+    expect(screen.getByRole("link", { name: "Open Integrations" })).toBeVisible();
+    expect(researchAction).not.toHaveBeenCalled();
   });
 
   it("disables recent chips with a hint when no research provider exists", () => {

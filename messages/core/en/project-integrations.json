@@ -131,7 +131,14 @@
       "emptyGsc": "This Google account has no verified Search Console properties. Verify a property or connect a different account.",
       "googleAccountConnected": "Google account connected",
       "reconnect": "Reconnect account",
-      "disconnect": "Disconnect"
+      "disconnect": "Disconnect",
+      "googlePropertyAuth": "Reconnect your Google account to load properties.",
+      "googlePropertyPermission": "This Google account cannot access these properties. Check its permissions in Search Console or Analytics.",
+      "googlePropertyApiDisabled": "The Google API configuration needs attention. Ask the app administrator to enable the API and check its setup, then try again.",
+      "googlePropertyQuota": "Google's request limit was reached. Try again later.",
+      "googlePropertyTemporary": "Google is temporarily unavailable. Try again.",
+      "googlePropertyUnknown": "Properties could not be loaded. Try again.",
+      "googlePropertyScope": "Reconnect your Google account and approve the requested permissions for this app."
     },
     "provider": {
       "logo": "{provider} logo",

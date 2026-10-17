@@ -4,182 +4,114 @@ export const skill: TaskSkill = {
   slug: "self-host-health",
   title: "Self-host health check",
   description:
-    "Run a read-only health and readiness check of a bisibility instance (hosted or self-hosted): confirm the API is up, inspect capabilities, list projects, verify provider connections, and follow up on async jobs. Use this to triage a slow/failing instance or to verify a fresh deployment before relying on it.",
+    "Diagnose a hosted or self-hosted bisibility instance using read-only liveness, readiness and health evidence. Inspect project wiring and known runs only when relevant to the symptom; distinguish verified failures from missing signals.",
   compatibility: "Requires a bisibility origin and a bearer API key with read scope.",
   kind: "task-skill",
-  version: "0.1.0",
+  version: "0.1.1",
   body: `# Self-host health check
 
-Performs a fast, read-only assessment of a bisibility instance so an agent can
-answer "is this instance healthy and correctly configured?" without changing any
-state. Every call in this workflow is a GET; no \`write\`/\`admin\` scope is needed.
-
-## When to use this skill
-
-- A self-hosted (or hosted) instance is slow, erroring, or behaving oddly and you
-  need a structured triage.
-- You just deployed/upgraded an instance and want to confirm it is reachable,
-  its feature set is what you expect, and providers are still connected.
-- Before running any heavier task skill, to confirm the origin + key actually work.
-
-If you need to *change* anything (reconnect a provider, add keywords, mint keys),
-stop and hand off to the relevant write/admin skill - this skill is read-only.
+Run a read-only diagnosis of a hosted or self-hosted instance. Identify what is
+verified, what failed and which layer needs attention. Every operation here is a
+GET; no repairs, provider probes, restarts or new rank checks are performed.
 
 ## Prerequisites
 
-1. **Resolve the base URL.** Use the EU hosted region origin
-   \`https://eu.bisibility.com/api/v1\` or a self-hosted origin
-   \`https://your-host.example/api/v1\`. Confirm the exact host with the user;
-   do not assume.
-2. **API key with \`read\` scope.** Export it as \`BISIBILITY_API_KEY\`
-   (e.g. \`bsb_key_live_...\`). Send it as \`Authorization: Bearer $BISIBILITY_API_KEY\`.
-   **Never print, echo, or log the key** - reference the env var only.
+Resolve \`$BISIBILITY_BASE\` including \`/api/v1\` and a read-scoped bearer credential
+in \`$BISIBILITY_API_KEY\`. Never print the credential or provider secrets. A valid
+credential enables detailed health; anonymous health exposes aggregate status.
+
+## 1. Check liveness and traffic readiness
 
 \`\`\`bash
-export BISIBILITY_BASE="https://your-host.example/api/v1"   # or https://eu.bisibility.com/api/v1
-export BISIBILITY_API_KEY=placeholder
+curl -sS "$BISIBILITY_BASE/liveness"
+curl -sS "$BISIBILITY_BASE/readiness"
 \`\`\`
 
-## Steps
+Inspect HTTP status as well as the response body. Liveness confirms the web
+process responds. Readiness checks database reachability and blocking migration
+readiness; 503 means this process is not ready for traffic. Network and TLS errors
+require their own diagnosis and do not by themselves prove the process is down.
 
-### 1. Liveness - \`GET /liveness\` (getLiveness)
-
-The cheapest check. A 200 means the API process is up. \`/liveness\` is typically
-unauthenticated, so a failure here points at networking/DNS/TLS or a down
-process rather than auth.
+## 2. Inspect composite diagnostics
 
 \`\`\`bash
-curl -fsS "$BISIBILITY_BASE/liveness"
-# -> { "status": "ok" }
+curl -sS "$BISIBILITY_BASE/health" -H "Authorization: Bearer $BISIBILITY_API_KEY"
 \`\`\`
 
-Interpretation: connection refused / timeout = process down or unreachable;
-TLS error = cert/proxy issue.
+Read database/migration diagnostics, app/worker release and revision, worker
+liveness, scheduler and Temporal/schema signals actually returned. Distinguish
+\`unknown\`, \`disabled\`, stale and failed signals. Missing telemetry is not proof
+of a failed worker; stale telemetry warrants investigation. Health can remain
+available with only aggregate fields when the supplied credential is invalid or
+credential storage is unavailable. An HTTP 200 alone does not verify authentication
+or every subsystem.
 
-### 2. Traffic readiness - \`GET /readiness\` (getReadiness)
+## 3. Verify auth separately when needed
 
-This returns 200 when the database is reachable and blocking migrations are
-ready. A 503 means the process is alive but should not receive traffic yet.
+\`GET /capabilities\` is public feature/contract discovery. It ignores the bearer
+credential and does not prove that the key works or reveal its scope. Read it only
+when verifying enabled features, limits or an expected contract version.
 
-\`\`\`bash
-curl -fsS "$BISIBILITY_BASE/readiness"
-\`\`\`
+Use authenticated \`GET /projects\` to verify visible project access when detailed
+health was unavailable or the task requires project inventory. A 401/403 signals
+a credential/access problem; an empty list alone does not establish instance-wide
+health. A project key sees its scoped project; a personal token sees its accessible
+projects. Paginate through \`meta.next_cursor\` for the agreed scope.
 
-### 3. Composite diagnostics - \`GET /health\` (getHealth)
+## 4. Inspect project wiring only for a project-specific symptom
 
-Anonymous health exposes aggregate status only. Send the read credential to
-inspect database, migration, worker, Temporal, and schema diagnostics.
+Resolve \`$PROJECT_ID\` from project discovery, then read
+\`GET /projects/{project_id}/providers\`. Inspect \`connection_status\`, \`enabled\`
+and relevant \`capabilities\`, not just whether a catalog provider appears.
+This saved configuration is not a live provider test. For repairs, hand off to
+**provider-setup** rather than invoking its POST test from this read-only workflow.
 
-\`\`\`bash
-curl -sS "$BISIBILITY_BASE/health" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY"
-\`\`\`
+## 5. Follow a known run only when investigating execution
 
-### 4. Auth + feature set - \`GET /capabilities\` (getCapabilities)
+A queued check request returns an \`rcr_...\` run ID. Use
+\`GET /projects/{project_id}/rank-check-runs/{run_id}\`; read \`terminal\`,
+\`polling_state\`, counts, timestamps and \`blocked_reason\`. Deferred or blocked work
+is not automatically a broken worker. If the user supplies no known run, discover
+a bounded recent set with \`GET /projects/{project_id}/rank-check-runs\` only when
+needed for the diagnosis. Poll sparingly and stop after the agreed observation window.
 
-First *authenticated* call. Confirms the key is valid and shows which features,
-limits, and provider types this instance supports. A 401/403 here means the key
-or its scope is wrong even though the instance is up.
+Measurement IDs (\`check_...\`) are different. Read
+\`GET /keywords/{id}/rank-checks?status=completed\` for actual saved measurements,
+or \`GET /rank-checks/{check_id}\` for one known measurement. Never send a run ID to
+the measurement endpoint. With a personal token, select the project using
+\`X-Bisibility-Project\` on paths without a project ID when needed.
 
-\`\`\`bash
-curl -fsS "$BISIBILITY_BASE/capabilities" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY"
-\`\`\`
+## Report the evidence and next step
 
-Note the supported provider types and any version/limit fields - you will compare
-providers against this in step 5, and it tells you if an upgrade landed.
+Give observed liveness, readiness and diagnostic states; identify missing signals
+and the first actionable failure. For example: web and database are ready, but
+worker heartbeat is stale, so background execution is not confirmed. State the
+specific investigation or repair to hand off, without changing the instance.
 
-### 5. Inventory - \`GET /projects\` (listProjects)
-
-Lists projects the key can see and confirms the data layer (DB) is reachable.
-This is a list endpoint: it returns \`{ "data": [...], "meta": { "next_cursor": "..." } }\`.
-Paginate with \`?limit=<n>&cursor=<next_cursor>\` until \`next_cursor\` is absent.
-
-\`\`\`bash
-curl -fsS "$BISIBILITY_BASE/projects?limit=50" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY"
-\`\`\`
-
-A 200 with \`data: []\` is healthy-but-empty (fresh instance). A 5xx here while
-\`/readiness\` was green narrows the failure beyond basic database connectivity
-and blocking migrations.
-Set \`PROJECT_ID\` to one of the returned public project ids before continuing.
-
-### 6. Provider wiring - \`GET /projects/{project_id}/providers\` (listProviders)
-
-For each project of interest (use a \`prj_...\` id from step 4), confirm the
-configured providers and their connection status. Look for entries reporting a
-disconnected / errored / expired state - those are the most common cause of
-"checks stopped running" on an otherwise-up instance.
-
-\`\`\`bash
-curl -fsS "$BISIBILITY_BASE/projects/$PROJECT_ID/providers" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY"
-\`\`\`
-
-Provider credentials are bring-your-own and stored in the instance - they are
-never returned in full; do not attempt to read or echo them. To repair a bad
-connection, hand off to the **provider-setup** skill.
-
-### 7. Async rank checks - \`GET /rank-checks/{check_id}\` (getRankCheckResult)
-
-Async rank checks return a pollable rank-check id. Poll a known id from a recent
-manual or API-triggered check to confirm the worker is executing and persisting
-results.
-
-\`\`\`bash
-curl -fsS "$BISIBILITY_BASE/rank-checks/rank_..." \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY"
-# -> { "id": "rank_...", "status": "running|completed|failed", "error": null }
-\`\`\`
-
-Checks stuck in \`running\` indefinitely indicate the background worker is down
-even when the API tier is healthy - flag this explicitly in your summary.
-
-## Reporting
-
-Summarize as a short checklist: liveness, readiness, composite health,
-auth/capabilities, projects reachable, provider status per project, and rank-check
-execution. Call out the first failing layer (network -> app -> database contract ->
-auth -> providers -> worker) since fixing the
-earliest failure usually clears the rest.
-
-## Notes / gotchas
-
-- **Read-only.** Never call write/admin endpoints from this skill.
-- **Errors** use \`application/problem+json\`; read the \`title\`/\`detail\` fields for
-  the real cause instead of guessing from the status code alone.
-- **429 (rate limited)** includes a retry window - back off and respect it; a
-  health check should not hammer the instance.
-- **Secrets:** reference \`$BISIBILITY_API_KEY\` only; never paste the key or any
-  provider credential into output or logs.
-- **Layered diagnosis:** \`/liveness\` passing while \`/readiness\` fails isolates
-  the fault to the database contract; composite \`/health\` then separates web
-  readiness from worker, Temporal, and schema diagnostics.`,
+Use problem response detail, honor 429 retry windows, and avoid repeated probes
+that cannot resolve the uncertainty. Healthy web endpoints do not independently
+prove provider reachability or completed scheduled execution.`,
   references: [
     {
       path: "references/api.md",
-      content: `# Self-host health check - API cheat-sheet
+      content: `# Self-host health - read-only contract
 
-Base path: \`/api/v1\`. Auth: \`Authorization: Bearer <api_key>\` (read scope).
-List responses: \`{ "data": [...], "meta": { "next_cursor": "..." } }\`;
-paginate with \`?limit=<n>&cursor=<next_cursor>\`. Errors: \`application/problem+json\`.
-429 carries a retry window. All operations below are read-only GETs.
+Base: resolved origin + \`/api/v1\`; read credential for detailed/project evidence.
 
-| METHOD path | operationId | purpose / key fields |
-|-|-|-|
-| GET /liveness | getLiveness | Web process liveness; usually unauthenticated. |
-| GET /readiness | getReadiness | Database and blocking-migration readiness. |
-| GET /health | getHealth | Aggregate status anonymously; API auth unlocks worker and Temporal diagnostics. |
-| GET /capabilities | getCapabilities | Auth check + supported features, limits, provider types. |
-| GET /projects | listProjects | Inventory of visible projects (\`prj_...\`); confirms DB reachable. Supports \`limit\`, \`cursor\`. |
-| GET /projects/{project_id}/providers | listProviders | Provider connection status per project. Credentials never returned in full. |
-| GET /rank-checks/{check_id} | getRankCheckResult | Async rank-check state: \`status\` = running/completed/failed, plus \`error\`. |
+| Operation | Evidence |
+|-|-|
+| GET /liveness | Web process response |
+| GET /readiness | Database and blocking-migration readiness |
+| GET /health | Aggregate anonymously; detailed diagnostics with valid auth |
+| GET /capabilities | Public feature discovery, not credential validation |
+| GET /projects | Authenticated accessible project inventory when needed |
+| GET /projects/{project_id}/providers | Saved wiring, not a live provider probe |
+| GET /projects/{project_id}/rank-check-runs/{run_id} | Queued run state, rcr_... |
+| GET /keywords/{id}/rank-checks?status=completed | Persisted measurements, check_... |
+| GET /rank-checks/{check_id} | One known measurement, never an rcr_... run |
 
-Suggested order: getLiveness -> getReadiness -> getHealth -> getCapabilities -> listProjects -> listProviders -> getRankCheckResult.
-First failing layer (network -> app -> auth -> DB -> providers -> worker) is the
-root cause to fix first.
-`,
+Only perform symptom-relevant follow-ups. Distinguish unknown, deferred, blocked,
+failed and completed states. Never repair or start checks in this workflow.`,
     },
   ],
 };

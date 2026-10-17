@@ -7,6 +7,7 @@ import type {
   QueryStatRow,
 } from "@/lib/providers/types";
 import { googleApiFetch, listGoogleSites, refreshGoogleAccessToken } from "./google-client";
+import { preserveGoogleRequestFailure } from "./google-failure";
 import { readGscCredentials as readCredentials } from "./gsc-credentials";
 import {
   createGscUrlInspectionSession,
@@ -155,6 +156,7 @@ export const gscAnalyticsProvider: GscAnalyticsProvider = {
       }
       return { message: `Connected · ${property} (${match.permissionLevel}).`, ok: true };
     } catch (error) {
+      preserveGoogleRequestFailure(error);
       return {
         message: error instanceof Error ? error.message : "Search Console connection test failed.",
         ok: false,

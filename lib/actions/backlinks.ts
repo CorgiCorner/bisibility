@@ -23,6 +23,7 @@ const analyzeBacklinksActionSchema = z.object({
 });
 
 const loadMoreBacklinkRowsActionSchema = z.object({
+  snapshotRef: z.string().min(1).max(32768).optional(),
   includeSubdomains: z.boolean(),
   limit: z.number().int().min(100).max(1000).multipleOf(100),
   projectId: z.string().trim().min(1).max(120),
@@ -82,6 +83,7 @@ export async function loadMoreBacklinkRowsAction(input: unknown) {
       {
         includeSubdomains: data.includeSubdomains,
         limit: data.limit,
+        snapshotRef: data.snapshotRef,
         provider: data.provider,
         target: data.target,
         targetScope: data.targetScope,

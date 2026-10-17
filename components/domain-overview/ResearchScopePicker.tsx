@@ -10,7 +10,7 @@ type ResearchScopePickerProps = {
   catalogScopes: readonly ResearchScope[];
   disabled?: boolean;
   onChange: (scope: ResearchScope) => void;
-  researchScope: ResearchScope;
+  researchScope: ResearchScope | null;
   trackedScopes: readonly ResearchScope[];
   triggerClassName?: string;
   triggerTitle: string;
@@ -49,7 +49,7 @@ export function ResearchScopePicker({
   );
   const selectable = [...tracked, ...catalog];
   const countries = (
-    selectable.some((scope) => scope.countryCode === researchScope.countryCode)
+    !researchScope || selectable.some((scope) => scope.countryCode === researchScope.countryCode)
       ? selectable
       : [...selectable, researchScope]
   ).map(countryOption);
@@ -70,7 +70,7 @@ export function ResearchScopePicker({
       triggerClassName={triggerClassName}
       triggerTitle={triggerTitle}
       triggerWrapperClassName={triggerWrapperClassName}
-      value={researchScope.countryCode}
+      value={researchScope?.countryCode ?? ""}
     />
   );
 }

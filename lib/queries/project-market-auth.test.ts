@@ -46,6 +46,8 @@ describe("legacy market visibility scope", () => {
       ]);
       expect(mocks.prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
         isolationLevel: "RepeatableRead",
+        maxWait: 2_000,
+        timeout: 15_000,
       });
       expect(fetch).not.toHaveBeenCalled();
     } finally {

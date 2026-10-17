@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/data-table/DataTable";
+import { sortedDataTableRows } from "@/components/ui/data-table/data-table-sorting";
 import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
 import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
@@ -15,8 +16,7 @@ import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
 import { useFormatter, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
-import { researchRelativePast } from "./research-relative-time";
+import { type ReactNode, useMemo, useState } from "react";
 import { researchResultsColumns } from "./research-results-columns";
 import {
   RESEARCH_RESULTS_DEFAULT_PAGE_SIZE,
@@ -32,6 +32,7 @@ export type ResearchDeeperOffer = { cached: boolean; costCents: number | null; n
 
 type ResearchResultsTableProps = {
   activeKeyword: string | null;
+  search?: ReactNode;
   cached: boolean;
   canRemoveSaved: boolean;
   deeper: ResearchDeeperOffer | null;
@@ -57,10 +58,9 @@ type ResearchResultsTableProps = {
 
 export function ResearchResultsTable({
   activeKeyword,
-  cached,
+  search,
   canRemoveSaved,
   deeper,
-  fetchedAt,
   fetchedCount,
   filterCount,
   onActiveChange,
@@ -74,14 +74,12 @@ export function ResearchResultsTable({
   readOnly = false,
   seed,
   selectedKeywords,
-  totalCount,
   storedFreshness,
   trackingMarketCount = 1,
   metricsAvailable = true,
 }: Readonly<ResearchResultsTableProps>) {
   const t = useTranslations("projectResearch.results");
   const columnsT = useTranslations("projectResearch.columns");
-  const relativeTimeT = useTranslations("projectResearch.time");
   const format = useFormatter();
   const columnMessages = useMemo(
     () => ({
@@ -124,18 +122,15 @@ export function ResearchResultsTable({
     [canRemoveSaved, columnMessages, metricsAvailable, onToggleSave],
   );
   const tableRows = useMemo(() => researchResultsTableRows(rows), [rows]);
+  const exportRows = useMemo(
+    () => sortedDataTableRows(tableRows, columns, sorting),
+    [tableRows, columns, sorting],
+  );
   const selection = useMemo(
     () => researchResultsSelectionIds(tableRows, selectedKeywords),
     [selectedKeywords, tableRows],
   );
   const checksPerRun = selectedKeywords.length * trackingMarketCount;
-  const fetchedAge = researchRelativePast(new Date(fetchedAt), new Date(), {
-    daysAgo: ({ count }) => relativeTimeT("daysAgo", { count }),
-    hoursAgo: ({ count }) => relativeTimeT("hoursAgo", { count }),
-    justNow: () => relativeTimeT("justNow"),
-    minutesAgo: ({ count }) => relativeTimeT("minutesAgo", { count }),
-    yesterday: () => relativeTimeT("yesterday"),
-  });
 
   return (
     <Card className="min-w-0 overflow-hidden p-0" size="md">
@@ -196,34 +191,26 @@ export function ResearchResultsTable({
         </div>
       ) : null}
       <div className="flex flex-wrap items-center gap-2.5 px-4 py-3">
-        <Button
-          onClick={onOpenFilters}
-          size="sm"
-          startIcon={<Funnel weight="regular" size={14} />}
-          variant="secondary"
+        {search}
+        <div
+          className="ml-auto flex flex-wrap items-center justify-end gap-2"
+          data-testid="research-table-actions"
         >
-          {t("filters")}
-          {filterCount > 0 ? (
-            <span className="ml-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent-soft px-1 font-sans tabular-nums text-[9.5px] text-accent-text">
-              {filterCount}
-            </span>
-          ) : null}
-        </Button>
-        <p
-          className={`m-0 basis-auto grow text-[12px] text-fg-muted ${storedFreshness ? "shrink-0 whitespace-nowrap" : "min-w-0"}`}
-        >
-          {t.rich("showing", {
-            freshness: storedFreshness
-              ? "none"
-              : cached
-                ? t("cached", { age: fetchedAge })
-                : t("fetched", { age: fetchedAge }),
-            shown: rows.length,
-            strong: (chunks) => <strong className="text-fg">{chunks}</strong>,
-            total: totalCount,
-          })}
-        </p>
-        <ResearchExportMenu rows={rows} seed={seed} />
+          <Button
+            onClick={onOpenFilters}
+            size="sm"
+            startIcon={<Funnel weight="regular" size={14} />}
+            variant="secondary"
+          >
+            {t("filters")}
+            {filterCount > 0 ? (
+              <span className="ml-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent-soft px-1 font-sans tabular-nums text-[9.5px] text-accent-text">
+                {filterCount}
+              </span>
+            ) : null}
+          </Button>
+          <ResearchExportMenu rows={exportRows} seed={seed} />
+        </div>
         {storedFreshness ? <StoredResultFreshness {...storedFreshness} /> : null}
       </div>
       <div

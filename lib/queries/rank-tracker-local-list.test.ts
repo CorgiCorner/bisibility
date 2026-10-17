@@ -82,6 +82,8 @@ describe("real Local list read boundary", () => {
     );
     expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: "RepeatableRead",
+      maxWait: 2_000,
+      timeout: 15_000,
     });
     expect(mocks.tx.$executeRaw).toHaveBeenCalledTimes(2);
     expect(mocks.read).toHaveBeenCalledWith(

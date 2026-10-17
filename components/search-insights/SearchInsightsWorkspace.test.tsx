@@ -349,6 +349,21 @@ describe("SearchInsightsWorkspace", () => {
       result: { status: "reauth_required" as const },
     },
     {
+      expected: "Reconnect your Google account and approve the requested permissions for this app.",
+      result: {
+        status: "reauth_required" as const,
+        failure: { reason: "scope" as const, action: "reauthorize" as const },
+      },
+    },
+    {
+      expected:
+        "The Google API configuration needs attention. Ask the app administrator to enable the API and check its setup, then try again.",
+      result: {
+        status: "failed" as const,
+        failure: { reason: "api_disabled" as const, action: "configure_api" as const },
+      },
+    },
+    {
       expected: "Activation service unavailable.",
       result: new Error("Activation service unavailable."),
     },

@@ -111,6 +111,7 @@ export function publicLocalRunResult(report: LocalMonitorRunResult) {
       observedCoverage: grid.observedCoverage,
       dataCoverage: grid.dataCoverage,
       sampleBounds: grid.sampleBounds,
+      ...(grid.reason ? { reason: grid.reason } : {}),
       counts: {
         expected: grid.counts.expected,
         measured: grid.counts.measured,

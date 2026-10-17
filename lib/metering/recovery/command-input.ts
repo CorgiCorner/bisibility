@@ -4,6 +4,7 @@ export const RECOVERY_COMMAND_LEASE_MS = 120000;
 export const recoveryCommandSchema = z
   .object({
     instance: z.string(),
+    retries: z.record(z.string().regex(/^\d+$/), z.number().int().min(1).max(2)).optional(),
     items: z
       .array(
         z

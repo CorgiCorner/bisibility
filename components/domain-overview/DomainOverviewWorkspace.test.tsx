@@ -1,7 +1,7 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { renderWithDomainOverviewMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { routerMock } from "@/tests/next-navigation";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainOverviewWorkspace } from "./DomainOverviewWorkspace";
 import { domainOverviewReportFixture, domainOverviewScopeFixture } from "./fixtures";
@@ -27,6 +27,91 @@ const initialEstimate = {
 };
 
 describe("DomainOverviewWorkspace", () => {
+  it.each([
+    { providerStatus: "no_provider", withScope: true },
+    { providerStatus: "needs_reauth", withScope: true },
+    { providerStatus: "no_provider", withScope: false },
+    { providerStatus: "needs_reauth", withScope: false },
+  ] as const)(
+    "shows a provider action above and below the form for $providerStatus; scope available: $withScope",
+    ({ providerStatus, withScope }) => {
+      render(
+        <SessionSpendProvider>
+          <DomainOverviewWorkspace
+            analyzeAction={vi.fn()}
+            context={{ ...context, providerStatus, supportingProviders: ["Fixture provider"] }}
+            initialEstimate={initialEstimate}
+            initialOutcome={null}
+            initialTarget="example.com"
+            loadHistoryAction={vi.fn()}
+            loadKeywordsPageAction={vi.fn()}
+            loadPagesPageAction={vi.fn()}
+            researchScope={withScope ? domainOverviewScopeFixture : undefined}
+            projectId="prj_1"
+            projectRef="prj_1"
+          />
+        </SessionSpendProvider>,
+      );
+      const reconnect = providerStatus === "needs_reauth";
+      expect(screen.getAllByRole("link")).toHaveLength(2);
+      const emptyPanel = screen.getByRole("region", {
+        name: reconnect ? "Reconnect to load new results" : "Connect a provider to get started",
+      });
+      expect(within(emptyPanel).getAllByRole("link")).toHaveLength(1);
+      expect(
+        within(emptyPanel).getByRole("link", {
+          name: reconnect ? "Reconnect provider" : "Connect provider",
+        }),
+      ).toHaveAttribute("href", "/app/prj_1/integrations");
+      expect(
+        screen.getAllByRole("link", {
+          name: reconnect ? "Reconnect provider" : "Open Integrations",
+        })[0],
+      ).toHaveAttribute("href", "/app/prj_1/integrations");
+      expect(screen.getAllByText("Supported providers: Fixture provider.")).toHaveLength(2);
+      expect(screen.getByRole("textbox", { name: "Domain or subdomain" })).toBeDisabled();
+      expect(screen.queryByText("Connect DataForSEO to analyze domains")).not.toBeInTheDocument();
+    },
+  );
+
+  it.each(["no_provider", "needs_reauth"] as const)(
+    "keeps saved domain results local under %s",
+    (providerStatus) => {
+      const history = vi.fn();
+      const keywords = vi.fn();
+      const pages = vi.fn();
+      render(
+        <SessionSpendProvider>
+          <DomainOverviewWorkspace
+            analyzeAction={vi.fn()}
+            context={{ ...context, providerStatus, supportingProviders: ["Fixture provider"] }}
+            initialEstimate={initialEstimate}
+            initialOutcome={domainOverviewReportFixture}
+            initialTarget="example.com"
+            loadHistoryAction={history}
+            loadKeywordsPageAction={keywords}
+            loadPagesPageAction={pages}
+            researchScope={domainOverviewScopeFixture}
+            projectId="prj_1"
+            projectRef="prj_1"
+          />
+        </SessionSpendProvider>,
+      );
+      expect(screen.getByText("Top organic keywords")).toBeVisible();
+      expect(
+        screen.queryByRole("button", { name: /Load history|Load next/ }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("region", {
+          name: /Connect a provider to get started|Reconnect to load new results/,
+        }),
+      ).not.toBeInTheDocument();
+      expect(history).not.toHaveBeenCalled();
+      expect(keywords).not.toHaveBeenCalled();
+      expect(pages).not.toHaveBeenCalled();
+    },
+  );
+
   afterEach(() => vi.useRealTimers());
   beforeEach(() => {
     vi.clearAllMocks();

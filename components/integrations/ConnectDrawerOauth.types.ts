@@ -2,6 +2,7 @@ import type { OAuthScope } from "@/components/integrations/provider-auth";
 import type {
   GoogleOAuthSetup,
   GooglePropertySaveResult,
+  GooglePropertySelectionResult,
   IntegrationProviderData,
   ProviderActionHandlers,
 } from "@/lib/integrations/types";
@@ -16,7 +17,7 @@ export type ConnectDrawerOauthProps = {
     projectId: string;
     property: string;
     retentionMonths?: SearchSyncSelection["retentionMonths"];
-  }) => Promise<{ property: string }>;
+  }) => Promise<GooglePropertySelectionResult>;
   disconnectProvider?: ProviderActionHandlers["disconnectProvider"];
   loadStoredProperties?: (input: {
     projectId: string;

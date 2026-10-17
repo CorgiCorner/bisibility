@@ -1,11 +1,6 @@
-import {
-  completeDashboardLayout,
-  freezeDashboardLayout,
-  parseDashboardLayout,
-  presetDashboardLayout,
-} from "./layout";
+import { completeDashboardLayout, freezeDashboardLayout, parseDashboardLayout } from "./layout";
 import { dashboardWidget } from "./registry";
-import type { DashboardLayout, DashboardPreset, WidgetId, WidgetSpan } from "./types";
+import type { DashboardLayout, WidgetId, WidgetSpan } from "./types";
 
 export type DashboardDraft = Readonly<{
   base: DashboardLayout;
@@ -17,7 +12,8 @@ export type DashboardDraft = Readonly<{
   movement: Readonly<{ id: WidgetId; position: number }> | null;
 }>;
 export type DashboardDraftAction =
-  | { type: "preset"; preset: DashboardPreset }
+  | { type: "preset"; layout: DashboardLayout }
+  | { type: "reset"; layout: DashboardLayout }
   | { type: "visible"; id: WidgetId; visible: boolean }
   | { type: "span"; id: WidgetId; span: WidgetSpan }
   | { type: "move"; id: WidgetId; direction: "up" | "down" };
@@ -67,8 +63,11 @@ export function updateDashboardDraft(
   if (state.status === "saving") return state;
   let draft = state.draft;
   let movement: DashboardDraft["movement"] = null;
-  if (action.type === "preset") draft = presetDashboardLayout(action.preset);
-  else {
+  if (action.type === "preset") draft = checkedLayout(action.layout);
+  else if (action.type === "reset") {
+    if (action.layout.preset !== draft.preset) throw new Error("Dashboard reset preset mismatch");
+    draft = checkedLayout(action.layout);
+  } else {
     const widgets = [...draft.widgets];
     const index = widgets.findIndex((widget) => widget.id === action.id);
     if (index === -1) return state;

@@ -21,7 +21,7 @@ export {
 } from "./cache-policy";
 
 export type DomainOverviewCacheModule = "history" | "keywords" | "overview" | "pages";
-export type CachedDomainOverviewModule<T> = { costCents: number; data: T; fetchedAt: string };
+export type CachedDomainOverviewModule<T> = { costCents: number; data: T; fetchedAt?: string };
 
 export function domainOverviewCacheKey(input: {
   languageCode: string;
@@ -107,7 +107,7 @@ export async function loadDomainOverviewModule<T>(input: {
       cached: lookup.cached,
       costCents: lookup.cached ? 0 : lookup.value.costCents,
       data: lookup.value.data,
-      fetchedAt: lookup.value.fetchedAt,
+      fetchedAt: lookup.value.fetchedAt ?? null,
       ok: true,
     };
   } catch (error) {
@@ -133,7 +133,7 @@ function currentCachedModule<T>(
   overviewFetchedAt: string,
 ) {
   if (!cached) return null;
-  const cachedTime = Date.parse(cached.fetchedAt);
+  const cachedTime = Date.parse(cached.fetchedAt ?? "");
   const overviewTime = Date.parse(overviewFetchedAt);
   return Number.isFinite(cachedTime) && Number.isFinite(overviewTime) && cachedTime >= overviewTime
     ? cached

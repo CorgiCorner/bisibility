@@ -130,3 +130,39 @@ export function withTemporal(
 ) {
   return { ...baseData, temporal, worker };
 }
+
+export const scheduleHistory = [
+  ["planner-rank-check-runs", 7],
+  ["alert-delivery-sweep", 2170],
+  ["maintenance-stale-import-jobs", 114],
+  ["maintenance-stale-checks", 118],
+  ["maintenance-metering-reservations", 194],
+  ["dispatcher-rank-checks", 1011],
+  ["maintenance-rank-check-runs", 74],
+  ["maintenance-provider-usage-reconciliation", 146],
+  ["maintenance-alert-digest-flush", 269],
+  ["maintenance-search-insights-queued-imports", 199],
+  ["maintenance-alert-health", 10],
+  ["maintenance-migration-hold-release", 10],
+  ["rank-check-reconciler", 1],
+].map(([scheduleId, skippedOverlap]) => ({
+  gapAt: null,
+  missedCatchup: 0,
+  recoveredAt: null,
+  scheduleId: String(scheduleId),
+  skippedOverlap: Number(skippedOverlap),
+}));
+
+export const busyTemporal = {
+  ...baseData.temporal,
+  heartbeat: {
+    ...heartbeat,
+    schedules: 21,
+    scheduleIssues: scheduleHistory,
+    issueSchedules: scheduleHistory.map(
+      (issue) =>
+        `${issue.scheduleId}: catchup ${issue.missedCatchup}, overlap ${issue.skippedOverlap}`,
+    ),
+    skippedOverlapTotal: scheduleHistory.reduce((sum, issue) => sum + issue.skippedOverlap, 0),
+  },
+} satisfies InstanceAdminDashboard["temporal"];

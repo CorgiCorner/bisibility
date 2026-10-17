@@ -38,3 +38,42 @@ Group results into:
 4. Insufficient-data terms
 
 Explain each priority using only returned volume, difficulty, intent, CPC, trend, and tracking state. End with a short list of candidate ideas to save. Do not call `create_saved_keywords` until the user approves the exact list. Do not call `add_keywords` as part of this skill.
+
+## Schema-checked example calls
+
+Illustrative inputs only. Replace placeholder IDs with returned IDs and confirm the exact scope. Caps below are examples, not quotes or approval. Run the free quote first; execute only after explicit approval of the exact operation and cap.
+
+Free quote omits max_cost_cents:
+
+```json mcp-call
+{
+  "tool": "research_keywords",
+  "arguments": {
+    "project_id": "prj_a00000000000000000000000",
+    "seed": "example keyword",
+    "mode": "related",
+    "result_limit": 100,
+    "include_clickstream": false,
+    "fresh": false,
+    "estimate_only": true
+  }
+}
+```
+
+Approval must label the positive cap best-effort (may slightly exceed). Approved execution:
+
+```json mcp-call
+{
+  "tool": "research_keywords",
+  "arguments": {
+    "project_id": "prj_a00000000000000000000000",
+    "seed": "example keyword",
+    "mode": "related",
+    "result_limit": 100,
+    "include_clickstream": false,
+    "fresh": false,
+    "estimate_only": false,
+    "max_cost_cents": 100
+  }
+}
+```

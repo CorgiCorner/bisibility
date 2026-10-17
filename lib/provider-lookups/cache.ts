@@ -1,6 +1,11 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import {
+  isProjectResultKey,
+  projectCacheEntryCurrent,
+  unpackProjectCache,
+} from "@/lib/provider-lookups/project-cache-policy";
 import { getRedisClient, redisConfigured } from "@/lib/redis/redis";
 
 const LOCK_TTL_SECONDS = 60;
@@ -53,7 +58,13 @@ export async function readProviderLookupCache<T>(key: string): Promise<T | null 
   if (raw === undefined) return undefined;
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as T;
+    const entry = unpackProjectCache(JSON.parse(raw));
+    if (isProjectResultKey(key) && !Number.isFinite(entry.storedAt)) {
+      const remaining = await redisOperation((redis) => redis.ttl(key));
+      if (remaining === undefined) return undefined;
+      if (remaining <= 0) return null;
+    }
+    return projectCacheEntryCurrent(key, entry.value) ? (entry.value as T) : null;
   } catch {
     return null;
   }
@@ -155,4 +166,9 @@ export async function withProviderLookupCache<T>(input: {
   } finally {
     await Promise.resolve(releaseProviderLookupLock(lock)).catch(() => undefined);
   }
+}
+
+export async function deleteProviderLookupCache(key: string) {
+  if (!redisConfigured()) return;
+  await redisOperation((redis) => redis.del(key));
 }

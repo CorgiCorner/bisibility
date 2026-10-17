@@ -109,7 +109,16 @@ export async function readMonitorRunResult(
         subject,
         protocol: {
           geometry: binding.definition.grid.geometryModel,
-          matcher: "business-match-maps-v1",
+          matcher:
+            [
+              ...new Set(
+                decisions
+                  .filter((value) => value.recordedAt <= asOf)
+                  .map((value) => value.matcherVersion),
+              ),
+            ]
+              .sort()
+              .join("|") || "unknown",
           normalizerVersions: [...new Set(binding.rows.map((row) => row.record.adapterVersion))],
           metricDefinition: "sampled-grid-top-n-v1",
         },

@@ -41,6 +41,7 @@ describe("domain overview context", () => {
     expect(mocks.project.findFirst).toHaveBeenCalledWith({
       select: {
         id: true,
+        lookupCacheTtlSeconds: true,
         providerConnections: {
           orderBy: [{ priority: "asc" }, { provider: "asc" }],
           select: { credentialsEncrypted: true, id: true, provider: true },

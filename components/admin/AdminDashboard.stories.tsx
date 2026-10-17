@@ -6,7 +6,7 @@ import sharedMessages from "@/messages/core/en/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { AdminDashboard } from "./AdminDashboard";
 import { AdminDashboardLoading } from "./AdminDashboardLoading";
-import { baseData } from "./admin-dashboard-test-fixtures";
+import { baseData, busyTemporal } from "./admin-dashboard-test-fixtures";
 
 const data = {
   ...baseData,
@@ -59,3 +59,5 @@ export const Unavailable: Story = {
     },
   },
 };
+
+export const ScheduleHistory: Story = { args: { data: { ...data, temporal: busyTemporal } } };

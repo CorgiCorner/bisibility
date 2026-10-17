@@ -1,9 +1,13 @@
+import { unstable_rethrow } from "@/tests/next-navigation";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+afterEach(() => vi.restoreAllMocks());
 
 const mocks = vi.hoisted(() => ({
   canProjectAction: vi.fn(),
+  readCache: vi.fn(),
   getSettings: vi.fn(),
   getProjectRole: vi.fn(),
   loadCoreMessages: vi.fn(),
@@ -11,6 +15,12 @@ const mocks = vi.hoisted(() => ({
   resolveRegionalDocumentLocale: vi.fn(),
 }));
 
+vi.mock("@/lib/actions/project-data-cache", () => ({ readProjectDataCache: mocks.readCache }));
+vi.mock("@/components/settings/general/DataCacheSettings", () => ({
+  DataCacheSettings: ({ initial }: { initial: unknown }) => (
+    <div data-testid="data-cache" data-available={initial !== null} />
+  ),
+}));
 vi.mock("@/components/settings/general/GeneralSettingsSection", () => ({
   GeneralSettingsSection: (props: {
     canCreateTags: boolean;
@@ -47,6 +57,10 @@ import GeneralSettingsPage from "@/app/(regional)/app/(workspace)/[project]/sett
 describe("GeneralSettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.readCache.mockResolvedValue({
+      ttlSeconds: null,
+      page: { available: true, entries: [], cursor: "0" },
+    });
     mocks.canProjectAction.mockImplementation(
       (role: string | null, action: string) =>
         role === "owner" || role === "admin" || (role === "member" && action !== "delete"),
@@ -156,5 +170,24 @@ describe("GeneralSettingsPage", () => {
     await expect(
       GeneralSettingsPage({ params: Promise.resolve({ project: "prj_unavailable" }) }),
     ).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("keeps General settings usable when the cache query fails", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.readCache.mockRejectedValueOnce(new Error("cache database unavailable"));
+    render(await GeneralSettingsPage({ params: Promise.resolve({ project: "prj_resolved" }) }));
+    expect(document.querySelector("[data-general-project-name]")).toBeInTheDocument();
+    expect(screen.getByTestId("data-cache")).toHaveAttribute("data-available", "false");
+    expect(log).toHaveBeenCalledWith("[settings] Project cache unavailable.");
+  });
+  it("propagates Next navigation control flow from a cache read", async () => {
+    const redirect = new Error("redirect");
+    mocks.readCache.mockRejectedValueOnce(redirect);
+    unstable_rethrow.mockImplementationOnce((error) => {
+      throw error;
+    });
+    await expect(
+      GeneralSettingsPage({ params: Promise.resolve({ project: "prj_resolved" }) }),
+    ).rejects.toBe(redirect);
   });
 });

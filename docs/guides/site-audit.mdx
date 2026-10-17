@@ -105,8 +105,11 @@ because the audit does not render the application.
 
 Headings and internal-link lists are bounded samples: each page retains up to
 five of each, while link discovery is capped separately. Link counts are not
-proof that every destination was fetched. Broken-link findings compare sampled
-internal links with sampled HTTP errors, excluding 429 responses.
+proof that every destination was fetched. Heading text omits script and style
+contents and uses the HTML parser's single character-reference decoding pass.
+This remains a sample of returned HTML, not a visual visibility check.
+Broken-link findings compare sampled internal links with sampled HTTP errors,
+excluding 429 responses.
 
 When a page cannot be fetched, the report records a bounded failure category,
 such as DNS, connection, TLS, timeout, redirect or size limit. A missing

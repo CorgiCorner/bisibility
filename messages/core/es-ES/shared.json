@@ -23,12 +23,12 @@
           "body": "Necesarias para iniciar sesión, para la seguridad y para tus ajustes guardados.",
           "title": "Esenciales"
         },
-        "footer": "Tu elección se guarda durante 6 meses. Puedes cambiarla cuando quieras desde Opciones de privacidad, en el pie de página.",
+        "footer": "La aceptación se guarda durante 6 meses y el rechazo de ambas opciones durante 7 días. Puedes cambiarlo cuando quieras desde Opciones de privacidad, en el pie de página.",
         "intro": "Elige por separado la analítica y las grabaciones. Las cookies esenciales siguen activas.",
         "privacyPolicy": "Política de privacidad",
         "replay": {
           "body": "Las grabaciones opcionales nos ayudan a mejorar la web y la configuración inicial. En la aplicación, pueden incluir la primera comprobación y el seguimiento de posiciones. Los campos de entrada y los datos del proyecto se enmascaran. Quedan excluidas las pantallas de inicio de sesión, cuenta y facturación, las credenciales y los datos de Google.",
-          "title": "Grabaciones"
+          "title": "Grabaciones con datos ocultos"
         },
         "saveError": "No se han podido guardar los cambios. Lo que has desactivado sigue desactivado. Inténtalo de nuevo.",
         "usage": {
@@ -1510,6 +1510,7 @@
       "title": "Personalizar panel",
       "presentationOnly": "Solo presentación personal. No cambia la programación ni las comprobaciones de pago.",
       "preset": "Preset del panel",
+      "resetPreset": "Restablecer plantilla",
       "show": "Mostrar {title}",
       "hide": "Ocultar {title}",
       "moveUp": "Subir {title}",
@@ -1948,7 +1949,8 @@
         "customHistory": "Intervalo personalizado",
         "historyWindowHelp": "El periodo termina en la fecha del informe guardado y usa días de 24 horas. Las fechas usan la zona horaria del informe. Consultar el historial no inicia un escaneo.",
         "historyBounds": "De {from} a {to}",
-        "historyCount": "{count, plural, one {# medición guardada en este intervalo} other {# mediciones guardadas en este intervalo}}"
+        "historyCount": "{count, plural, one {# medición guardada en este intervalo} other {# mediciones guardadas en este intervalo}}",
+        "matcherVersionMixed": "Este escaneo usa distintas reglas de coincidencia. Los resultados de cada punto siguen disponibles; la métrica conjunta no está disponible."
       },
       "retry": {
         "title": "Reintentar puntos fallidos seleccionados",
@@ -2042,6 +2044,19 @@
       "confirmSave": "Confirmar guardado revisado",
       "stopAtMatch": "Detener al encontrar el objetivo.",
       "scanFullDepth": "Continuar hasta toda la profundidad revisada."
+    },
+    "providerAccess": {
+      "connect": "Conecta un proveedor compatible para desbloquear estos campos.",
+      "supported": "Proveedores compatibles: {providers}.",
+      "unavailable": "No hay un proveedor compatible disponible para esta función.",
+      "action": "Abrir integraciones",
+      "reconnect": "Vuelve a conectar tu proveedor para desbloquear estos campos.",
+      "reconnectAction": "Reconectar proveedor",
+      "emptyTitle": "Conecta un proveedor para empezar",
+      "reconnectTitle": "Reconecta para obtener nuevos resultados",
+      "emptyDescription": "Esta función necesita un proveedor compatible. Conéctalo en Integraciones para buscar.",
+      "reconnectDescription": "Vuelve a conectar tu proveedor en Integraciones antes de realizar otra búsqueda.",
+      "connectAction": "Conectar proveedor"
     }
   }
 }

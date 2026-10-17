@@ -24,6 +24,10 @@ view you can edit. **Save as** creates your own copy. **Discard** restores the
 saved configuration. Merely opening a shared view never saves your changes into
 that view or changes another member's personal settings.
 
+While **Save as** is saving, editing and dismissal stay locked until the request
+finishes. If it fails, the same unchanged submission can be retried without
+creating a second copy.
+
 The configuration stores the query and layout, not ranking values, the current
 page or bulk-selection checkboxes. Visibility and width controls keep stable
 column IDs. Use the move-up and move-down controls to order columns with a
@@ -96,6 +100,20 @@ API field names use snake case, including `page_size`, `report_scope` and
 remain exact opaque IDs. Reading these resources performs no checks or purchases.
 The existing API creation path still creates shared version 1 scopes; version 2
 and private writes retain their authenticated session controls.
+
+## Customize a dashboard
+
+**Customize dashboard** opens a personal layout draft. Choosing another preset
+loads your saved layout for that preset, including its widget order, visibility
+and widths. **Reset to preset** explicitly replaces that draft with the preset's
+starting template. Neither action changes the stored layout until you choose
+**Save**; **Cancel** restores the previous layout.
+
+If another tab updates your preference before **Set as my default**, review the
+current saved layout before trying again. **Reload stored layout** reads the latest
+revision without saving. Choose **Keep my draft** or **Use the current layout** to
+adopt that revision explicitly. An unavailable or failed reload keeps writes
+blocked and lets you retry the read. This changes presentation only.
 
 ## Dashboard competitor comparison
 

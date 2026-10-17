@@ -77,6 +77,7 @@ export async function executeComparisonSide(input: {
   if (!claimed) return;
   const { side, run, snapshot, token } = claimed;
   const connection = snapshot.connections[input.provider === "dataforseo" ? 0 : 1];
+  let retainedResult: ReturnType<typeof comparisonResult> | null = null;
   let execution: DeploymentExecution | null = null;
   let journal: ReturnType<typeof createProviderRequestJournal> | null = null;
   try {
@@ -151,7 +152,12 @@ export async function executeComparisonSide(input: {
     });
     const usage = execution ?? journal;
     if (!usage?.started) throw new ProviderUsagePersistenceError();
-    const result = comparisonResult(response, snapshot, new Date());
+    retainedResult = comparisonResult(response, snapshot, new Date());
+    // Retained observation and financial certainty are independent; never rebuy to recover either.
+    await prisma.providerComparisonSide.updateMany({
+      where: { id: side.id, claimToken: token, status: { in: ["claimed", "unknown"] } },
+      data: { result: retainedResult as unknown as Prisma.InputJsonValue },
+    });
     await execution?.finish();
     execution = null;
     const accounting = await comparisonAccounting({
@@ -168,7 +174,7 @@ export async function executeComparisonSide(input: {
         costCents: accounting.costCents,
         customerCostCents: accounting.customerCostCents,
         quantity: accounting.quantity,
-        result: result as unknown as Prisma.InputJsonValue,
+        result: retainedResult as unknown as Prisma.InputJsonValue,
         reason: null,
         finishedAt: new Date(),
       },
@@ -190,11 +196,14 @@ export async function executeComparisonSide(input: {
     await prisma.providerComparisonSide.updateMany({
       where: { id: side.id, claimToken: token, status: { in: ["claimed", "unknown"] } },
       data: {
-        status: uncertain ? "unknown" : "failed",
+        status: uncertain ? "unknown" : retainedResult ? "completed" : "failed",
+        ...(retainedResult ? { result: retainedResult as unknown as Prisma.InputJsonValue } : {}),
         reason:
-          error instanceof ProviderUsagePersistenceError
-            ? "usage_unconfirmed"
-            : providerErrorCodeFromError(error),
+          retainedResult && !uncertain
+            ? null
+            : error instanceof ProviderUsagePersistenceError
+              ? "usage_unconfirmed"
+              : providerErrorCodeFromError(error),
         costCents: uncertain ? null : accounting.costCents,
         customerCostCents: uncertain ? null : accounting.customerCostCents,
         quantity: uncertain ? null : accounting.quantity,

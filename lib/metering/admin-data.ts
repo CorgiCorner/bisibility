@@ -4,6 +4,7 @@ import { ownAllocationTag } from "@/lib/provider-usage/credential-version";
 import type { AccessContext, Scope, Source } from "@usagekit/core";
 import { budgetsViewFromStatuses, loadExceptionsView, loadUsageView } from "@usagekit/views";
 import { mapAdminQueries } from "./admin-batch";
+import { omittedAdminExceptions, omittedAdminUsage } from "./admin-page";
 import type { MeteringAdminCursors, MeteringAdminData, MeteringAdminFilters } from "./admin-types";
 import { platformAllocationTag } from "./paid-quote";
 import { meteringNamespace, meteringRuntime } from "./runtime";
@@ -15,6 +16,8 @@ export async function readMeteringAdmin({
   usageCursor,
   exceptionCursor,
   exceptionTo,
+  section,
+  includeBudgets = !section,
 }: MeteringAdminFilters & MeteringAdminCursors & { actorId?: string }): Promise<MeteringAdminData> {
   const { meter } = await meteringRuntime();
   const namespace = meteringNamespace();
@@ -32,50 +35,64 @@ export async function readMeteringAdmin({
   const scope = project
     ? { kind: "group" as const, namespace, group: project }
     : { kind: "namespace" as const, namespace };
+  let budgetsUnavailable = false;
   const [usage, exceptions, connections, projects, projectChoices] = await Promise.all([
-    loadUsageView(meter, access, {
-      scope,
-      from: from.toISOString(),
-      to: to.toISOString(),
-      units: ["cents", "units", "customer_cents", "requests"],
-      groupBy: ["connection", "provider", "surface", "source"],
-      limit: 100,
-      ...(usageCursor ? { cursor: usageCursor } : {}),
-    }),
-    loadExceptionsView(meter, access, {
-      scope,
-      from: "1970-01-01T00:00:00.000Z",
-      to: exceptionTo ?? new Date().toISOString(),
-      limit: 100,
-      ...(exceptionCursor ? { cursor: exceptionCursor } : {}),
-    }),
-    prisma.providerConnection.findMany({
-      where: project ? { projectId: project } : {},
-      select: {
-        id: true,
-        publicId: true,
-        provider: true,
-        projectId: true,
-        project: { select: { ownerId: true, publicId: true } },
-      },
-      orderBy: { id: "asc" },
-      take: 51,
-    }),
-    prisma.project.findMany({
-      where: project ? { id: project } : {},
-      select: { id: true, publicId: true, ownerId: true },
-      orderBy: { id: "asc" },
-      take: 51,
-    }),
-    prisma.project.findMany({ select: { id: true }, orderBy: { id: "asc" }, take: 50 }),
+    section === "exceptions"
+      ? omittedAdminUsage()
+      : loadUsageView(meter, access, {
+          scope,
+          from: from.toISOString(),
+          to: to.toISOString(),
+          units: ["cents", "units", "customer_cents", "requests"],
+          groupBy: ["connection", "provider", "surface", "source"],
+          limit: 100,
+          ...(usageCursor ? { cursor: usageCursor } : {}),
+        }),
+    section === "usage"
+      ? omittedAdminExceptions()
+      : loadExceptionsView(meter, access, {
+          scope,
+          from: "1970-01-01T00:00:00.000Z",
+          to: exceptionTo ?? new Date().toISOString(),
+          limit: 100,
+          ...(exceptionCursor ? { cursor: exceptionCursor } : {}),
+        }),
+    includeBudgets
+      ? prisma.providerConnection
+          .findMany({
+            where: project ? { projectId: project } : {},
+            select: {
+              id: true,
+              publicId: true,
+              provider: true,
+              projectId: true,
+              project: { select: { ownerId: true, publicId: true } },
+            },
+            orderBy: { id: "asc" },
+            take: 51,
+          })
+          .catch(() => {
+            budgetsUnavailable = true;
+            return [];
+          })
+      : [],
+    includeBudgets
+      ? prisma.project
+          .findMany({
+            where: project ? { id: project } : {},
+            select: { id: true, publicId: true, ownerId: true },
+            orderBy: { id: "asc" },
+            take: 51,
+          })
+          .catch(() => {
+            budgetsUnavailable = true;
+            return [];
+          })
+      : [],
+    section
+      ? []
+      : prisma.project.findMany({ select: { id: true }, orderBy: { id: "asc" }, take: 50 }),
   ]);
-  if (
-    usage.state === "unavailable" ||
-    usage.state === "forbidden" ||
-    exceptions.state === "unavailable" ||
-    exceptions.state === "forbidden"
-  )
-    throw new Error("Meter unavailable");
   const scopes: Scope[] = [
     ...projects.slice(0, 50).map((project) => ({
       namespace,
@@ -109,7 +126,10 @@ export async function readMeteringAdmin({
         ? result.value.filter((status) => status.budget.scope.kind === "group")
         : result.value;
     },
-  );
+  ).catch(() => {
+    budgetsUnavailable = true;
+    return [];
+  });
   const unique = new Map(
     statuses.flat().map((status) => [`${status.budget.id}:${status.epoch.epoch}`, status]),
   );
@@ -195,6 +215,8 @@ export async function readMeteringAdmin({
   }
   return {
     references,
+    budgetsUnavailable,
+    budgetsOmitted: !includeBudgets,
     usage: {
       ...usage,
       watermark: null,

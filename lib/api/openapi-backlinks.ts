@@ -10,7 +10,11 @@ import {
   backlinksFailedSummaryProblem,
   withBacklinksFailedSummaryProblem,
 } from "./openapi-backlinks-failure";
-import { backlinksEstimateSchema, backlinksSummary } from "./openapi-backlinks-parts";
+import {
+  backlinksEstimateSchema,
+  backlinksQueryParameters,
+  backlinksSummary,
+} from "./openapi-backlinks-parts";
 import { withCreditsExhausted } from "./openapi-operations";
 
 type BacklinksSchemaName =
@@ -136,6 +140,11 @@ export const backlinksSchemas = {
   },
   BacklinksRowsRequest: {
     properties: {
+      snapshot_ref: {
+        type: "string",
+        description:
+          "Opaque snapshot_ref from the report being extended. Missing or stale references return snapshot_expired before paid I/O.",
+      },
       include_subdomains: { type: "boolean" },
       limit: { maximum: 1000, minimum: 100, multipleOf: 100, type: "integer" },
       target: { type: "string" },
@@ -171,6 +180,10 @@ export const backlinksSchemas = {
       },
     ],
     properties: {
+      snapshot_ref: {
+        type: "string",
+        description: "Opaque reference for extending this exact snapshot revision.",
+      },
       cached: { type: "boolean" },
       cached_until: { format: "date-time", type: "string" },
       cost_cents: { minimum: 0, type: "number" },
@@ -214,56 +227,6 @@ export const backlinksSchemas = {
   },
 } as const;
 
-const queryParameters = [
-  {
-    description: "Domain for site scope or full URL for page scope.",
-    in: "query",
-    name: "target",
-    required: true,
-    schema: { type: "string" },
-  },
-  {
-    in: "query",
-    name: "target_scope",
-    schema: { default: "site", enum: ["site", "page"], type: "string" },
-  },
-  {
-    description: "Ignored when target_scope is page.",
-    in: "query",
-    name: "include_subdomains",
-    schema: { default: true, type: "boolean" },
-  },
-  {
-    in: "query",
-    name: "result_limit",
-    schema: { default: 100, enum: [100, 300, 500, 1000], type: "integer" },
-  },
-  {
-    description: "Provider-side row mode applied over the full corpus.",
-    in: "query",
-    name: "mode",
-    schema: {
-      default: "as_is",
-      enum: ["as_is", "one_per_domain"],
-      type: "string",
-    },
-  },
-  {
-    description: "Return a free cache-aware provider cost estimate without a paid call.",
-    in: "query",
-    name: "estimate_only",
-    schema: { default: false, type: "boolean" },
-  },
-  { in: "query", name: "fresh", schema: { default: false, type: "boolean" } },
-  {
-    description:
-      "Limit admitted cost estimates across summary, history, rows and retries, in cents. Confirmed provider charges can differ from estimates.",
-    in: "query",
-    name: "max_cost_cents",
-    schema: { minimum: 1, type: "integer" },
-  },
-];
-
 export function backlinksPaths(input: { bearer: Bearer }) {
   return {
     "/projects/{projectId}/backlinks": {
@@ -274,7 +237,7 @@ export function backlinksPaths(input: { bearer: Bearer }) {
             "analyzeBacklinks",
             ref("BacklinksResponse"),
             undefined,
-            queryParameters,
+            backlinksQueryParameters,
           ),
           'Requires write scope because cache misses spend provider budget. estimate_only=true needs only read scope and never spends provider budget. estimate_only is a free dry run, and max_cost_cents limits admitted cost estimates across summary, history, rows and retries. Confirmed provider charges can differ from estimates. Snapshots are cached for 24 hours. Aggregated referring-domain, page, and anchor views are consumer-side and must be labeled "within fetched rows".',
         ),
@@ -290,8 +253,8 @@ export function backlinksPaths(input: { bearer: Bearer }) {
             ref("BacklinksRowsRequest"),
           ),
         ),
-        "Extends the current unexpired snapshot. The response contains only newly fetched rows plus the updated fetched_row_count and cost_cents.",
-        "snapshot_expired: no unexpired backlinks snapshot exists",
+        "Extends the unexpired snapshot identified by snapshot_ref. Pass the reference returned by analyzeBacklinks or the previous loadMoreBacklinkRows response. The response contains only newly fetched rows plus the updated snapshot_ref, fetched_row_count and cost_cents.",
+        "snapshot_expired: the reference is missing, invalid, stale, outside the project scope, or expired; no paid request is dispatched",
       ),
     },
   };

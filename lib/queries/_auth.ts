@@ -1,7 +1,7 @@
 import "server-only";
 
 import { type Actor, authorize } from "@/lib/auth/authorize";
-import { requireSession } from "@/lib/auth/session";
+import { type AuthSession, requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { asProjectRef, type ProjectRef } from "@/lib/routing/app-path";
@@ -14,8 +14,7 @@ const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn)
 
 export const getQuerySession = perRequestCache(requireSession);
 
-export const getQueryActor = perRequestCache(async (): Promise<Actor> => {
-  const session = await getQuerySession();
+export async function getQueryActorForSession(session: AuthSession): Promise<Actor> {
   const user = await prisma.user.findUnique({
     select: {
       memberships: {
@@ -44,7 +43,11 @@ export const getQueryActor = perRequestCache(async (): Promise<Actor> => {
     memberships: user.memberships,
     role: user.role,
   };
-});
+}
+
+export const getQueryActor = perRequestCache(async () =>
+  getQueryActorForSession(await getQuerySession()),
+);
 
 async function loadProject(projectId: string) {
   if (parsePublicId(projectId)?.prefix !== "prj") {
@@ -88,35 +91,38 @@ export async function requireReadableProject(projectId: string) {
   return { actor, project };
 }
 
-export const resolveProjectAccess = perRequestCache(
-  async (
-    ref: string,
-  ): Promise<{
-    isSample: boolean;
-    projectId: string;
-    publicId: ProjectRef;
-    mode: "member";
-  }> => {
-    // A ref that is not a project publicId is a construction bug, not a permission problem.
-    // Short-circuit before the query so the 404 that reaches the user means "no access".
-    if (parsePublicId(ref)?.prefix !== "prj") {
-      notFound();
-    }
+export async function resolveProjectAccessForActor(
+  ref: string,
+  actor: Actor,
+): Promise<{
+  isSample: boolean;
+  projectId: string;
+  publicId: ProjectRef;
+  mode: "member";
+}> {
+  // A ref that is not a project publicId is a construction bug, not a permission problem.
+  // Short-circuit before the query so the 404 that reaches the user means "no access".
+  if (parsePublicId(ref)?.prefix !== "prj") {
+    notFound();
+  }
 
-    const actor = await getQueryActor();
-    const project = await prisma.project.findUnique({
-      select: { id: true, isSample: true, publicId: true },
-      where: { publicId: ref },
-    });
-    if (!project || !actor.memberships?.some((membership) => membership.projectId === project.id)) {
-      notFound();
-    }
+  const project = await prisma.project.findUnique({
+    select: { id: true, isSample: true, publicId: true },
+    where: { publicId: ref },
+  });
+  if (!project || !actor.memberships?.some((membership) => membership.projectId === project.id)) {
+    notFound();
+  }
 
-    return {
-      isSample: project.isSample,
-      mode: "member",
-      projectId: project.id,
-      publicId: asProjectRef(project.publicId),
-    };
-  },
-);
+  return {
+    isSample: project.isSample,
+    mode: "member",
+    projectId: project.id,
+    publicId: asProjectRef(project.publicId),
+  };
+}
+
+export const resolveProjectAccess = perRequestCache(async (ref: string) => {
+  if (parsePublicId(ref)?.prefix !== "prj") notFound();
+  return resolveProjectAccessForActor(ref, await getQueryActor());
+});

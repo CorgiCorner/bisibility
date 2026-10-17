@@ -9,6 +9,7 @@ import type { MeasurementEvidence, MeasurementScope } from "@/lib/rank-measureme
 export function localScope(
   scope: MeasurementScope | null,
   identityRevisionId: string | null,
+  matcherVersion: string = businessMatcherVersion,
 ): MeasurementScope | null {
   if (!scope || scope.engine !== "google" || scope.surface !== "web_serp") return null;
   return {
@@ -16,7 +17,7 @@ export function localScope(
     resultKind: "local_pack",
     rankScale: "pack_slot",
     identityRevision:
-      identityRevisionId === null ? null : `${identityRevisionId}:${businessMatcherVersion}`,
+      identityRevisionId === null ? null : `${identityRevisionId}:${matcherVersion}`,
   };
 }
 

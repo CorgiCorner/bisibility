@@ -1,4 +1,7 @@
-import { HeaderProviderSpend } from "@/components/cost-estimate/HeaderProviderSpend";
+import {
+  HeaderProviderSpendData,
+  HeaderProviderSpendSkeleton,
+} from "@/components/cost-estimate/HeaderProviderSpendData";
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { renderAccountNoticeExtension } from "@/components/shell/AccountNoticeExtension";
@@ -10,6 +13,7 @@ import { CloudBetaBanner } from "@/components/shell/CloudBetaBanner";
 import { CommandPaletteProvider } from "@/components/shell/CommandPalette";
 import { CLOUD_BETA_DISMISSAL_COOKIE, isCloudBetaDismissed } from "@/components/shell/cloud-beta";
 import { DemoBanner } from "@/components/shell/DemoBanner";
+import { HeaderContextLoading } from "@/components/shell/HeaderContextLoading";
 import { InstanceAnnouncementBanner } from "@/components/shell/InstanceAnnouncementBanner";
 import { ProjectWriteModeBanner } from "@/components/shell/ProjectWriteModeNotices";
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
@@ -38,14 +42,13 @@ import { getLatestCloudPackageExport } from "@/lib/queries/cloud-beta-export";
 import { getExperimentalModules } from "@/lib/queries/experimental-modules";
 import { listProjectMarketOptions } from "@/lib/queries/project-markets";
 import { loadSetupContext } from "@/lib/queries/setup-context";
-import { loadWorkspaceBudgetSummary } from "@/lib/queries/workspace-budget-summary";
 import { listWorkspaces } from "@/lib/queries/workspaces";
 import { temporalDeploymentConfig } from "@/lib/temporal/deployment-config";
 import { normalizeThemePreference, serverThemeMode } from "@/lib/theme/browser-theme";
 import { isSidebarCollapsed } from "@/lib/ui/sidebar-collapsed";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 
 type WorkspaceShellProps = {
   activeProjectId: string;
@@ -79,7 +82,6 @@ export async function WorkspaceShell({
   // Workspace chrome reads are independent. Self-host skips the Cloud-only audit query.
   const [
     workspaces,
-    budgetSummary,
     lastCloudExport,
     instanceAdminSession,
     setupContext,
@@ -90,7 +92,6 @@ export async function WorkspaceShell({
     announcements,
   ] = await Promise.all([
     listWorkspaces(),
-    loadWorkspaceBudgetSummary(projectRef),
     isCloud && !isDemo ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
     getInstanceAdminSession(),
     loadSetupContext(projectRef),
@@ -222,13 +223,15 @@ export async function WorkspaceShell({
                   <AppHeader
                     actions={
                       active.role === "owner" ? (
-                        <HeaderProviderSpend summary={budgetSummary} projectRef={projectRef} />
+                        <Suspense fallback={<HeaderProviderSpendSkeleton />}>
+                          <HeaderProviderSpendData projectRef={projectRef} />
+                        </Suspense>
                       ) : undefined
                     }
                     activeProjectId={active.publicId}
                     canCreateWorkspace={canCreateWorkspace}
                     canSetDefault={canSetDefault}
-                    context={context}
+                    context={<Suspense fallback={<HeaderContextLoading />}>{context}</Suspense>}
                     enabledExperimentalModules={enabledExperimentalModules}
                     projectRef={projectRef}
                     setupCompleted={setupCompleted}

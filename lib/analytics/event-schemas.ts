@@ -4,6 +4,7 @@ import {
   type AnalyticsControlId,
   type AnalyticsControlModule,
 } from "@/lib/analytics/controls";
+import { PRODUCT_MODULES } from "@/lib/analytics/product-interaction-contract";
 import { WINDOW_PRESETS } from "@/lib/search-insights/constants";
 import { z } from "zod";
 
@@ -50,11 +51,23 @@ const uiOptionSelectedSchema: z.ZodType<UiOptionSelectedProps> = z
   });
 
 export const analyticsEventSchemas = {
+  module_navigation_clicked: z.object({
+    module: z.enum(PRODUCT_MODULES),
+    source: z.enum(["sidebar", "command_palette", "getting_started_nav"]),
+  }),
+  product_action_clicked: z.object({
+    module: z.literal("rank-tracker"),
+    action: z.enum(["add", "import", "export"]),
+    source: z.enum(["command_palette", "rank_tracker_toolbar"]),
+  }),
   $pageview: z.object({ $current_url: z.string().url() }),
   consent_updated: z.object({
     analytics: z.boolean(),
     replay: z.boolean(),
     version: z.number().int().positive(),
+    prompt_variant: z.enum(["immediate", "delayed_5s", "replay_update"]).optional(),
+    decision_source: z.enum(["banner", "banner_settings"]).optional(),
+    decision_ms: z.number().int().min(0).max(86_400_000).optional(),
   }),
   getting_started_cta_clicked: z.object({
     card: z.enum(["ai", "github", "team"]).optional(),

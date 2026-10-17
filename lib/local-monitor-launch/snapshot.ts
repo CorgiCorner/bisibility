@@ -5,8 +5,8 @@ import { assertMonitorSourcesCurrent } from "@/lib/local-monitor-store/reference
 import { loadMonitorSnapshot } from "@/lib/local-monitor-store/snapshot";
 import { lockedMonitor } from "@/lib/local-monitor-store/storage";
 import type { LocalProjectScope } from "@/lib/local-monitoring-store/access";
-import { localDigest } from "@/lib/local-monitoring-store/canonical";
 import type { LocalTransaction } from "@/lib/local-monitoring-store/context";
+import { providerConnectionRevision } from "@/lib/providers/connection-revision";
 import type { MonitorPreviewCommand } from "./contracts";
 export async function currentMonitorLaunchSnapshot(
   tx: LocalTransaction,
@@ -28,13 +28,13 @@ export async function currentMonitorLaunchSnapshot(
       status: true,
       credentialSource: true,
       enabled: true,
-      updatedAt: true,
+      projectId: true,
+      providerUiRevision: true,
       credentialsEncrypted: true,
     },
   });
   if (
-    !connection ||
-    connection.kind !== "serp" ||
+    connection?.kind !== "serp" ||
     connection.status !== "connected" ||
     !connection.enabled ||
     connection.credentialSource !== "own"
@@ -42,11 +42,6 @@ export async function currentMonitorLaunchSnapshot(
     throw new LocalMonitorConflictError();
   return {
     ...snapshot,
-    connectionStamp: localDigest([
-      connection.id,
-      connection.provider,
-      connection.updatedAt,
-      connection.credentialsEncrypted,
-    ]),
+    connectionStamp: providerConnectionRevision(connection),
   };
 }

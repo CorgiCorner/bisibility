@@ -6,9 +6,9 @@
   --bg: #f5f5f5;
   --bg-elev: #ffffff;
   --bg-sidebar: #e8e8e8;
-  --bg-sunken: #e4e4e4;
+  --bg-sunken: #f0f0f0;
   --bg-band: #ececec;
-  --bg-inset: #dcdcdc;
+  --bg-inset: #e8e8e8;
   --contrast-bg: #1a1a1a;
   --contrast-surface: #262626;
   --contrast-fg: #f2f2f2;
@@ -82,9 +82,9 @@
   --bg: #1e1e1e;
   --bg-elev: #282828;
   --bg-sidebar: #121212;
-  --bg-sunken: #181818;
+  --bg-sunken: #222222;
   --bg-band: #242424;
-  --bg-inset: #101010;
+  --bg-inset: #1c1c1c;
   --contrast-bg: #e8e8e8;
   --contrast-surface: #ffffff;
   --contrast-fg: #202020;

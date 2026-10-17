@@ -131,7 +131,14 @@
       "emptyGsc": "To konto Google nie ma zweryfikowanych usług w Search Console. Zweryfikuj usługę lub połącz inne konto.",
       "googleAccountConnected": "Połączono konto Google",
       "reconnect": "Połącz ponownie konto",
-      "disconnect": "Odłącz"
+      "disconnect": "Odłącz",
+      "googlePropertyAuth": "Połącz ponownie konto Google, aby wczytać usługi.",
+      "googlePropertyPermission": "To konto Google nie ma dostępu do tych usług. Sprawdź jego uprawnienia w Search Console lub Analytics.",
+      "googlePropertyApiDisabled": "Konfiguracja API Google wymaga sprawdzenia. Poproś administratora aplikacji o włączenie API i sprawdzenie ustawień, a potem spróbuj ponownie.",
+      "googlePropertyQuota": "Osiągnięto limit zapytań Google. Spróbuj ponownie później.",
+      "googlePropertyTemporary": "Google jest chwilowo niedostępne. Spróbuj ponownie.",
+      "googlePropertyUnknown": "Nie udało się wczytać usług. Spróbuj ponownie.",
+      "googlePropertyScope": "Połącz konto Google ponownie i zaakceptuj uprawnienia, o które prosi aplikacja."
     },
     "provider": {
       "logo": "Logo dostawcy {provider}",

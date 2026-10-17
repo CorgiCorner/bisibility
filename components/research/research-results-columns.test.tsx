@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { researchResultsColumns } from "./research-results-columns";
 
 describe("researchResultsColumns", () => {
-  it("declares 4px-scale defaults and only enables descending-first volume sorting", () => {
+  it("declares 4px-scale defaults and enables keyword, volume, difficulty and CPC sorting", () => {
     const columns = researchResultsColumns({
       canRemoveSaved: true,
       messages: {
@@ -46,6 +46,12 @@ describe("researchResultsColumns", () => {
     expect(volume).toMatchObject({ minSize: 92, size: 92, sortDescFirst: true });
     expect(trend).toMatchObject({ minSize: 104, size: 104 });
     expect(cpc).toMatchObject({ minSize: 80, size: 80 });
-    expect(columns.filter((column) => column.meta?.sortable === false)).toHaveLength(6);
+    expect(columns.find((column) => column.id === "difficulty")).toMatchObject({
+      sortUndefined: "last",
+      meta: { sortable: true },
+    });
+    expect(cpc).toMatchObject({ sortUndefined: "last", meta: { sortable: true } });
+    expect(keyword?.meta?.sortable).toBe(true);
+    expect(columns.filter((column) => column.meta?.sortable === false)).toHaveLength(3);
   });
 });

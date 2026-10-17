@@ -10,6 +10,7 @@ export async function domainOverviewProject(projectId: string) {
   return prisma.project.findFirst({
     select: {
       id: true,
+      lookupCacheTtlSeconds: true,
       providerConnections: {
         orderBy: providerChainOrderBy(),
         select: { credentialsEncrypted: true, id: true, provider: true },
@@ -21,7 +22,10 @@ export async function domainOverviewProject(projectId: string) {
   });
 }
 
-export type DomainOverviewProject = NonNullable<Awaited<ReturnType<typeof domainOverviewProject>>>;
+type SelectedProject = NonNullable<Awaited<ReturnType<typeof domainOverviewProject>>>;
+export type DomainOverviewProject = Omit<SelectedProject, "lookupCacheTtlSeconds"> & {
+  lookupCacheTtlSeconds?: number | null;
+};
 
 type DomainOverviewProvider = SerpProvider & {
   fetchDomainRankOverview: NonNullable<SerpProvider["fetchDomainRankOverview"]>;

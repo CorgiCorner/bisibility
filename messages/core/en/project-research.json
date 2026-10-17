@@ -79,7 +79,8 @@
       "clickstream": "Clickstream volumes",
       "clickstreamHelp": "Volumes corrected with real-user browsing data instead of Google Ads estimates alone. About twice the lookup cost.",
       "pricing": "How is this priced?",
-      "button": "{researching, select, true {Researching} other {Research}}{cached, select, true { free, cached} other {}}{cost, select, none {} other { ~{cost}}}"
+      "button": "{researching, select, true {Researching} other {Research}}{cached, select, true { free, cached} other {}}{cost, select, none {} other { ~{cost}}}",
+      "seedHelp": "Press Enter or comma after each keyword. Up to 5 keywords."
     },
     "filters": {
       "reset": "Reset",
@@ -119,7 +120,8 @@
       "export": "Export",
       "exportAria": "Export results",
       "exportCsv": "Export CSV",
-      "exportJson": "Export JSON"
+      "exportJson": "Export JSON",
+      "searchKeywords": "Filter keywords"
     },
     "saved": {
       "remove": "Remove from saved",

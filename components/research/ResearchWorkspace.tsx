@@ -1,5 +1,7 @@
 "use client";
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
+import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
+import { ProviderAccessGate } from "@/components/ui/ProviderAccessGate";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { ResearchKeywordsActionInput } from "@/lib/actions/keyword-research";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
@@ -7,6 +9,7 @@ import {
   researchScopeForStoredLocationKey,
   researchScopeOptionsForProject,
 } from "@/lib/research/scope";
+import { appPath } from "@/lib/routing/app-path";
 import { useState } from "react";
 import { RecentResearchSearches } from "./RecentResearchSearches";
 import { ResearchResults } from "./ResearchResults";
@@ -101,10 +104,9 @@ export function ResearchWorkspace({
   }
 
   const hasProvider = context.connections.length > 0;
-  const connectionOptions = context.connections.map((connection) => ({
-    label: connection.label,
-    value: connection.id,
-  }));
+  const hasResults = Boolean(activeTab?.outcome.ok && activeTab.outcome.rows.length);
+  const hasEmptyResults = activeTab?.outcome.ok && activeTab.outcome.rows.length === 0;
+  const connectionOptions = context.connections.map(({ label, id: value }) => ({ label, value }));
   function openRecentSearch(search: Parameters<typeof recentSearchReplay>[0]) {
     const replay = recentSearchReplay(
       search,
@@ -136,50 +138,68 @@ export function ResearchWorkspace({
     });
   }
 
+  function runDeeper() {
+    if (!activeTab || !hasProvider) return;
+    const limit = activeTab.requestedLimit === 100 ? 300 : 500;
+    setResultLimit(limit);
+    const request = researchTabRequest(activeTab, limit);
+    void runResearch([activeTab.seed], request, activeTab.scope);
+  }
+
   return (
     <section className="grid min-w-0 gap-4">
-      <Tooltip content={copy.budgetTooltip(budgetState)} wrapperClassName="w-full">
-        <div className="w-full">
-          <ResearchSearchCard
-            connectionId={connectionId}
-            connectionOptions={connectionOptions}
-            disabled={budgetBlocked || !hasProvider}
-            estimate={estimate}
-            includeClickstream={includeClickstream}
-            scope={scope}
-            scopes={[scope, ...scopeOptions]}
-            mode={mode}
-            onConnectionChange={(value) => {
-              setConnectionId(value);
-              scheduleEstimate(researchAvailable ? seeds : [], { connectionId: value });
-            }}
-            onIncludeClickstreamChange={(value) => {
-              setIncludeClickstream(value);
-              scheduleEstimate(researchAvailable ? seeds : [], { includeClickstream: value });
-            }}
-            onLimitChange={(value) => {
-              setResultLimit(value);
-              scheduleEstimate(researchAvailable ? seeds : [], { resultLimit: value });
-            }}
-            onScopeChange={(value) => {
-              setScope(value);
-              scheduleEstimate(researchScopeMetricsAvailable(value) ? seeds : [], {
-                locationKey: researchScopeLocationKey(value),
-              });
-            }}
-            lookupDisabled={!hasProvider || !researchAvailable}
-            onModeChange={(value) => {
-              setMode(value);
-              scheduleEstimate(researchAvailable ? seeds : [], { mode: value });
-            }}
-            onSeedsChange={updateSeeds}
-            onSubmit={(next) => void runResearch(next)}
-            researching={researching}
-            resultLimit={resultLimit}
-            seeds={seeds}
-          />
-        </div>
-      </Tooltip>
+      <ProviderAccessGate
+        blocked={!hasProvider}
+        href={appPath(context.project.id, "integrations")}
+        providers={context.supportingProviders}
+      >
+        <Tooltip
+          disabled={!hasProvider || !budgetState}
+          content={hasProvider ? copy.budgetTooltip(budgetState) : ""}
+          wrapperClassName="w-full"
+        >
+          <div className="w-full">
+            <ResearchSearchCard
+              connectionId={connectionId}
+              connectionOptions={connectionOptions}
+              disabled={budgetBlocked || !hasProvider}
+              estimate={estimate}
+              includeClickstream={includeClickstream}
+              scope={scope}
+              scopes={[scope, ...scopeOptions]}
+              mode={mode}
+              onConnectionChange={(value) => {
+                setConnectionId(value);
+                scheduleEstimate(researchAvailable ? seeds : [], { connectionId: value });
+              }}
+              onIncludeClickstreamChange={(value) => {
+                setIncludeClickstream(value);
+                scheduleEstimate(researchAvailable ? seeds : [], { includeClickstream: value });
+              }}
+              onLimitChange={(value) => {
+                setResultLimit(value);
+                scheduleEstimate(researchAvailable ? seeds : [], { resultLimit: value });
+              }}
+              onScopeChange={(value) => {
+                setScope(value);
+                scheduleEstimate(researchScopeMetricsAvailable(value) ? seeds : [], {
+                  locationKey: researchScopeLocationKey(value),
+                });
+              }}
+              lookupDisabled={!hasProvider || !researchAvailable}
+              onModeChange={(value) => {
+                setMode(value);
+                scheduleEstimate(researchAvailable ? seeds : [], { mode: value });
+              }}
+              onSeedsChange={updateSeeds}
+              onSubmit={(next) => void runResearch(next)}
+              researching={researching}
+              resultLimit={resultLimit}
+              seeds={seeds}
+            />
+          </div>
+        </Tooltip>
+      </ProviderAccessGate>
       <RecentResearchSearches
         disabled={!hasProvider}
         disabledHint={copy.recentDisabledHint}
@@ -187,8 +207,11 @@ export function ResearchWorkspace({
         onRemove={recent.remove}
         searches={recent.searches}
       />
-      {!hasProvider ? (
-        <ResearchStatePanel projectRef={context.project.id} state="no_provider" />
+      {!hasProvider && !hasResults ? (
+        <ProviderAccessEmptyState
+          href={appPath(context.project.id, "integrations")}
+          providers={context.supportingProviders}
+        />
       ) : null}
       {hasProvider && researching ? (
         <ResearchStatePanel projectRef={context.project.id} state="loading" />
@@ -201,12 +224,9 @@ export function ResearchWorkspace({
           state={budgetState ?? (researchAvailable ? "idle" : "unsupported_location")}
         />
       ) : null}
-      {hasProvider &&
-      !researching &&
-      activeTab?.outcome.ok &&
-      activeTab.outcome.rows.length === 0 ? (
+      {hasProvider && !researching && hasEmptyResults ? (
         <ResearchStatePanel
-          cached={activeTab.outcome.cached}
+          cached={activeTab.outcome.ok && activeTab.outcome.cached}
           scopeLabel={`${activeTab.scope.countryName} / ${activeTab.scope.languageLabel}`}
           mode={activeTab.mode}
           onEditSearch={focusResearchSeedInput}
@@ -235,7 +255,7 @@ export function ResearchWorkspace({
         onClose={closeTab}
         tabs={tabs}
       />
-      {hasProvider && !researching && activeTab?.outcome.ok && activeTab.outcome.rows.length > 0 ? (
+      {!researching && activeTab?.outcome.ok && activeTab.outcome.rows.length > 0 ? (
         <ResearchResults
           costContext={costContext}
           defaultTracking={{
@@ -247,12 +267,7 @@ export function ResearchWorkspace({
           key={activeTab.id}
           metricsAvailable={researchScopeMetricsAvailable(activeTab.scope)}
           onAdd={setAddDraft}
-          onDeeper={() => {
-            const limit = activeTab.requestedLimit === 100 ? 300 : 500;
-            setResultLimit(limit);
-            const request = researchTabRequest(activeTab, limit);
-            void runResearch([activeTab.seed], request, activeTab.scope);
-          }}
+          onDeeper={hasProvider ? runDeeper : undefined}
           onRemoveSaved={
             canDeleteSavedKeywords ? (draft) => void savedKeywords.remove(draft) : undefined
           }

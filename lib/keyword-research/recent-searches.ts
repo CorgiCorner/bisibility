@@ -86,6 +86,7 @@ export function addRecentSearch(
         item.seed.trim().toLowerCase() === normalizedSeed &&
         item.scopeLabel === scopeLabel &&
         item.mode === next.mode &&
+        item.connectionId === next.connectionId &&
         item.resultLimit === next.resultLimit &&
         item.includeClickstream === next.includeClickstream
       ),

@@ -6,6 +6,7 @@ export type ResearchFilters = {
   hideTracked: boolean;
   intents: string[];
   minVolume: number;
+  query?: string;
   sources: string[];
 };
 
@@ -30,7 +31,8 @@ export function activeResearchFilterCount(filters: ResearchFilters) {
     filters.intents.length +
     filters.sources.length +
     (filters.minVolume > 0 ? 1 : 0) +
-    (filters.hideTracked ? 1 : 0)
+    (filters.hideTracked ? 1 : 0) +
+    (filters.query?.trim() ? 1 : 0)
   );
 }
 
@@ -38,7 +40,9 @@ export function applyResearchFilters(
   rows: readonly GroupedResearchRow[],
   filters: ResearchFilters,
 ) {
+  const query = filters.query?.normalize("NFKC").trim().toLowerCase() ?? "";
   return rows.filter((row) => {
+    if (query && !row.keyword.normalize("NFKC").toLowerCase().includes(query)) return false;
     if (filters.hideTracked && row.alreadyTracked) return false;
     if ((row.searchVolume ?? 0) < filters.minVolume) return false;
     if (filters.sources.length > 0 && !filters.sources.includes(row.source)) return false;

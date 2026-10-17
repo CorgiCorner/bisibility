@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## [0.36.0] - 2026-10-17
+
+### Added
+
+- Added seven agent workflows with reviewed budgets and writes, plus shared project cache lifetimes and management.
+
+### Changed
+
+- Improved research filters and provider guidance, aligned forms and report editors, and softened panel backgrounds.
+
+### Fixed
+
+- Fixed Google property diagnostics, AI provider filters, domain matching and caching, audit heading extraction and agent workflow examples.
+
+- Fixed report timeouts and workspace navigation, preserved dashboard layouts, and prevented duplicate saved-view creation.
+
+- Fixed backlink cache and pagination, admin recovery and live updates; preserved comparison approvals, consent revisions and local history.
+
 ## [0.35.0] - 2026-10-15
 
 ### Added

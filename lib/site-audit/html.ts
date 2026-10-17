@@ -26,6 +26,7 @@ function text(root: Node): string {
   while (queue.length && length < 2000) {
     const node = queue.pop();
     if (!node) break;
+    if ("tagName" in node && (node.tagName === "script" || node.tagName === "style")) continue;
     if ("value" in node) {
       parts.push(node.value);
       length += node.value.length;

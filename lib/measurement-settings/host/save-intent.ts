@@ -79,6 +79,7 @@ export function saveMeasurementIntentHost(
           depth: data.selection.depth as SerpDepth,
           selection: { scheduleId: data.scheduleId, selection: data.selection },
           source: {
+            policyEpoch: source.policy.policyEpoch,
             sourceHash: source.sourceHash,
             selection: data.selection,
             intentEffect: settingsIntentEffect(source, data.selection),

@@ -79,7 +79,8 @@
       "clickstream": "Volúmenes de clickstream",
       "clickstreamHelp": "Volúmenes corregidos con datos de navegación de usuarios reales, no solo con estimaciones de Google Ads. Cuesta cerca del doble por búsqueda.",
       "pricing": "¿Cómo se calcula el precio?",
-      "button": "{researching, select, true {Investigando} other {Investigar}}{cached, select, true { gratis, en caché} other {}}{cost, select, none {} other { ~{cost}}}"
+      "button": "{researching, select, true {Investigando} other {Investigar}}{cached, select, true { gratis, en caché} other {}}{cost, select, none {} other { ~{cost}}}",
+      "seedHelp": "Pulsa Enter o coma después de cada palabra clave. Hasta 5 palabras clave."
     },
     "filters": {
       "reset": "Restablecer",
@@ -119,7 +120,8 @@
       "export": "Exportar",
       "exportAria": "Exportar los resultados",
       "exportCsv": "Exportar CSV",
-      "exportJson": "Exportar JSON"
+      "exportJson": "Exportar JSON",
+      "searchKeywords": "Filtrar palabras clave"
     },
     "saved": {
       "remove": "Quitar de guardadas",

@@ -54,23 +54,14 @@ describe("UserMenuRow", () => {
     expect(link).toHaveAttribute("target", "_blank");
   });
 
-  it("places Discord directly below GitHub in the community links", () => {
-    expect(communityLinks.map((item) => item.key)).toEqual(["github", "discord"]);
-
-    const discord = communityLinks[1];
-    expect(discord).toBeDefined();
-    if (!discord) {
-      throw new Error("Discord community link is missing");
-    }
-
-    render(<UserMenuRow item={{ ...discord, label: "Discord" }} />);
-
-    const link = screen.getByRole("menuitem", {
-      name: "Discord (opens in a new tab)",
-    });
-    expect(link).toHaveAttribute("href", "https://discord.gg/HcYpvfn79w");
-    expect(link).toHaveAttribute("rel", "noopener");
-    expect(link).toHaveAttribute("target", "_blank");
+  it("keeps GitHub as the only community link", () => {
+    expect(communityLinks.map((item) => item.key)).toEqual(["github"]);
+    render(<UserMenuRow item={{ ...communityLinks[0], label: "GitHub" }} />);
+    expect(screen.getByRole("menuitem", { name: "GitHub (opens in a new tab)" })).toHaveAttribute(
+      "target",
+      "_blank",
+    );
+    expect(screen.queryByRole("menuitem", { name: /Discord/ })).not.toBeInTheDocument();
   });
 
   it("exposes only Account settings in account links", () => {

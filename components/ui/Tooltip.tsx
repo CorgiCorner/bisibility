@@ -40,6 +40,7 @@ export type TooltipPlacement =
 export type TooltipProps = {
   children: ReactNode;
   content: ReactNode;
+  tone?: "inverse" | "surface";
   disabled?: boolean;
   placement?: TooltipPlacement;
   arrow?: boolean;
@@ -83,6 +84,7 @@ function TooltipContent({
   semantics = "label",
   wrapperClassName,
   disabled = false,
+  tone = "inverse",
 }: Readonly<TooltipProps>) {
   const { beginClose, beginOpen } = useTooltipContext();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
@@ -234,6 +236,7 @@ function TooltipContent({
             align={alignment ?? "center"}
             sideOffset={6}
             data-ui-tooltip
+            data-tone={tone}
             data-interactive={interactive || undefined}
             className={tooltipStyles.content}
             data-instant={warmCycle || reducedMotion || undefined}

@@ -83,6 +83,7 @@ export function researchWorkspacePaths() {
             requestBody: {
               content: json({
                 additionalProperties: false,
+                ...(operationId === "analyzeAiVisibility" ? { allOf: input.allOf } : {}),
                 properties,
                 required,
                 type: "object",

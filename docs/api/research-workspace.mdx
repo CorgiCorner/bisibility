@@ -15,6 +15,19 @@ and provider dataset; it does not expose users' private ChatGPT conversations.
 Prompt Explorer submits the same prompt to selected supported models. Those
 responses are synthetic tests, not observed visibility or traffic.
 
+The local matching `domain` is a hostname of at most 253 characters, with DNS labels
+of at most 63 characters. It is trimmed and lowercased; do not include a protocol or path.
+Prompt Explorer and `target_type: "brand"` keep this hostname for citation matching
+and do not send it as a provider domain filter. Domain searches remove one leading
+`www.` only from the outgoing provider filter, with subdomains included, as required
+by the [provider contract](https://docs.dataforseo.com/v3/ai_optimization/llm_mentions/search_mentions/live/).
+The resulting provider field must be at most 63 characters; `www.` plus a 63-character
+host is accepted. The full local hostname still determines citation matches, so an
+apex citation does not become a match for a `www.` target. Longer provider fields
+are rejected before paid dispatch; use brand search or Prompt Explorer instead.
+No hostname is truncated or otherwise replaced with a parent host. Visibility results
+from the earlier provider-filter contract are not reused; prompt caches are unchanged.
+
 Start with an estimate, which makes no paid provider request:
 
 ```http

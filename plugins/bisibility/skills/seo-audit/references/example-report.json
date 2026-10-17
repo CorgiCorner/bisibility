@@ -94,7 +94,7 @@
   },
   "provenance": {
     "skill": "seo-audit",
-    "skill_version": "0.2.0",
+    "skill_version": "0.4.0",
     "agent": "fixture-author (not a live agent run)",
     "audited_at": "2026-10-05T19:00:02.000Z",
     "instance": "https://bisibility.example",

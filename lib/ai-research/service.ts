@@ -9,6 +9,10 @@ import {
 } from "@/lib/metering/budget-denial";
 import { withProviderLookupCache } from "@/lib/provider-lookups/cache";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
+import {
+  projectCacheTtl,
+  withProjectCachePolicy,
+} from "@/lib/provider-lookups/project-cache-policy";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type { ProviderRequestTrigger } from "@/lib/provider-usage/tag";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
@@ -89,103 +93,111 @@ async function run(
       throw new AiPreDispatchRefusal(error);
     throw error;
   }
-  const admission = () => loadAiAdmission(source, input, deadlineAt);
-  const evidence = kind === "ai_visibility" ? "observed_dataset" : "synthetic_prompt_test";
-  if (input.estimate_only) {
-    const admitted = await admission();
-    const actual = admitted.policy === "provider_actual_cost";
-    return {
-      ok: true,
-      estimate: true,
-      estimatedCostCents: admitted.estimate,
-      evidence,
-      estimateKind: actual ? "forecast" : "admission_bound",
-      isPartialEstimate: actual,
-      isGuaranteedMaximum: admitted.policy === "current_catalog",
-      pricingPolicy: admitted.policy,
-      pricingCheckedAt: admissionRate(admitted, kind, admitted.estimate).checkedAt,
-      credentialSource: source.connection.credentialSource === "own" ? "own" : "hosted",
-      estimateCredentialsRef: credentialReference(source.connection),
-      ...(actual
-        ? {
-            forecastAssumptions: ACTUAL_COST_ASSUMPTIONS,
-            forecastExclusions: ACTUAL_COST_EXCLUSIONS,
-            forecastScope: "tokens_and_base_only" as const,
-          }
-        : {}),
-    };
-  }
-  if ("prompt" in input && input.cost_policy === "provider_actual_cost") {
-    return runActualCost({ context, input, source, loadAdmission: admission, deadlineAt });
-  }
-  const legacy = "prompt" in input ? isLegacyPrompt(input) : isLegacyVisibility(input);
-  const { fresh, estimate_only: _estimateOnly, max_cost_cents: _cap, ...rawIdentity } = input;
-  if (legacy && "prompt" in rawIdentity) {
-    delete (rawIdentity as Partial<PromptInput>).cost_policy;
-    delete (rawIdentity as Partial<PromptInput>).max_output_tokens;
-    delete (rawIdentity as Partial<PromptInput>).web_search;
-    delete (rawIdentity as Partial<PromptInput>).response_language;
-    delete (rawIdentity as Partial<PromptInput>).country_iso_code;
-  }
-  const identity = Object.fromEntries(
-    Object.entries(rawIdentity).filter(([, value]) => value !== undefined),
-  );
-  const key = `ai:${legacy ? "v1" : "v2"}:${context.projectId}:${source.connection.id}:${kind}:${createHash("sha256").update(JSON.stringify(identity)).digest("hex")}`;
-  const loaded = await withProviderLookupCache({
-    fresh,
-    key,
-    ttlSeconds: 43_200,
-    lockTtlSeconds: 330,
-    load: async () => {
-      const admitted = await admission();
-      const { estimate } = admitted;
-      if (input.max_cost_cents !== undefined && estimate > input.max_cost_cents)
-        throw new ProviderLookupSignal({
+  return withProjectCachePolicy(
+    source.project.lookupCacheTtlSeconds,
+    async (): Promise<AiResearchOutcome> => {
+      const admission = () => loadAiAdmission(source, input, deadlineAt);
+      const evidence = kind === "ai_visibility" ? "observed_dataset" : "synthetic_prompt_test";
+      if (input.estimate_only) {
+        const admitted = await admission();
+        const actual = admitted.policy === "provider_actual_cost";
+        return {
+          ok: true,
+          estimate: true,
+          estimatedCostCents: admitted.estimate,
+          evidence,
+          estimateKind: actual ? "forecast" : "admission_bound",
+          isPartialEstimate: actual,
+          isGuaranteedMaximum: admitted.policy === "current_catalog",
+          pricingPolicy: admitted.policy,
+          pricingCheckedAt: admissionRate(admitted, kind, admitted.estimate).checkedAt,
+          credentialSource: source.connection.credentialSource === "own" ? "own" : "hosted",
+          estimateCredentialsRef: credentialReference(source.connection),
+          ...(actual
+            ? {
+                forecastAssumptions: ACTUAL_COST_ASSUMPTIONS,
+                forecastExclusions: ACTUAL_COST_EXCLUSIONS,
+                forecastScope: "tokens_and_base_only" as const,
+              }
+            : {}),
+        };
+      }
+      if ("prompt" in input && input.cost_policy === "provider_actual_cost") {
+        return runActualCost({ context, input, source, loadAdmission: admission, deadlineAt });
+      }
+      const legacy = "prompt" in input ? isLegacyPrompt(input) : isLegacyVisibility(input);
+      const { fresh, estimate_only: _estimateOnly, max_cost_cents: _cap, ...rawIdentity } = input;
+      if (legacy && "prompt" in rawIdentity) {
+        delete (rawIdentity as Partial<PromptInput>).cost_policy;
+        delete (rawIdentity as Partial<PromptInput>).max_output_tokens;
+        delete (rawIdentity as Partial<PromptInput>).web_search;
+        delete (rawIdentity as Partial<PromptInput>).response_language;
+        delete (rawIdentity as Partial<PromptInput>).country_iso_code;
+      }
+      const identity = Object.fromEntries(
+        Object.entries(rawIdentity).filter(([, value]) => value !== undefined),
+      );
+      const version = legacy ? "v1" : "v2";
+      // Retrieval normalization changed; never reuse earlier visibility rows with a different filter.
+      const cacheVersion = kind === "ai_visibility" ? `${version}-provider-domain-v1` : version;
+      const key = `ai:${cacheVersion}:${context.projectId}:${source.connection.id}:${kind}:${createHash("sha256").update(JSON.stringify(identity)).digest("hex")}`;
+      const loaded = await withProviderLookupCache({
+        fresh,
+        key,
+        ttlSeconds: projectCacheTtl(43_200),
+        lockTtlSeconds: 330,
+        load: async () => {
+          const admitted = await admission();
+          const { estimate } = admitted;
+          if (input.max_cost_cents !== undefined && estimate > input.max_cost_cents)
+            throw new ProviderLookupSignal({
+              ok: false,
+              reason: "cost_limit_exceeded",
+              estimatedCostCents: estimate,
+            });
+          const { result, providerRequestIds } = await executeResearch({
+            context,
+            kind,
+            input,
+            source,
+            admitted,
+            deadlineAt,
+          });
+          const report = await createAgentReport({
+            projectId: context.projectId,
+            actorId: context.actorId,
+            kind,
+            title: `${kind === "ai_visibility" ? "AI visibility" : "Prompt comparison"}: ${input.brand}`,
+            body: { input: identity, result },
+            provenance: researchProvenance({
+              kind,
+              input,
+              admission: admitted,
+              estimate,
+              deadlineAt,
+              providerRequestIds,
+              providerId: source.provider.id,
+              rows: result.rows,
+            }),
+          });
+          return { reportId: report.id, result };
+        },
+      });
+      if (loaded.status === "contended")
+        return {
           ok: false,
-          reason: "cost_limit_exceeded",
-          estimatedCostCents: estimate,
-        });
-      const { result, providerRequestIds } = await executeResearch({
-        context,
-        kind,
-        input,
-        source,
-        admitted,
-        deadlineAt,
-      });
-      const report = await createAgentReport({
-        projectId: context.projectId,
-        actorId: context.actorId,
-        kind,
-        title: `${kind === "ai_visibility" ? "AI visibility" : "Prompt comparison"}: ${input.brand}`,
-        body: { input: identity, result },
-        provenance: researchProvenance({
-          kind,
-          input,
-          admission: admitted,
-          estimate,
-          deadlineAt,
-          providerRequestIds,
-          providerId: source.provider.id,
-          rows: result.rows,
-        }),
-      });
-      return { reportId: report.id, result };
+          reason: "in_progress",
+          message: "An identical analysis is already running.",
+        };
+      return {
+        ok: true,
+        estimate: false,
+        cached: loaded.cached,
+        ...loaded.value,
+        costCents: loaded.cached ? 0 : loaded.value.result.costCents,
+      };
     },
-  });
-  if (loaded.status === "contended")
-    return {
-      ok: false,
-      reason: "in_progress",
-      message: "An identical analysis is already running.",
-    };
-  return {
-    ok: true,
-    estimate: false,
-    cached: loaded.cached,
-    ...loaded.value,
-    costCents: loaded.cached ? 0 : loaded.value.result.costCents,
-  };
+  );
 }
 async function outcome(load: () => Promise<AiResearchOutcome>): Promise<AiResearchOutcome> {
   try {

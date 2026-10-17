@@ -1,5 +1,7 @@
 import { ProviderAuthError } from "@/lib/providers/auth-error";
+import { ProviderHttpError } from "@/lib/providers/failure-class";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { googleResponseError } from "./google-failure";
 import { loadStoredGoogleProperties, saveStoredGoogleProperty } from "./google-stored-property";
 
 const mocks = vi.hoisted(() => ({
@@ -137,6 +139,86 @@ describe("stored Google property selection", () => {
     expect(result).toMatchObject({ properties: [], requiresReauth: true });
     expect(JSON.stringify(result)).not.toContain("invalid_grant");
     expect(JSON.stringify(result)).not.toContain("refresh_secret");
+  });
+
+  it("returns a safe permission diagnostic rather than reconnect for a stored 403", async () => {
+    mocks.listGoogleSites.mockRejectedValue(
+      new ProviderHttpError(403, "refresh_secret access_secret"),
+    );
+    const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const result = await loadStoredGoogleProperties({ projectId: "project_1", provider: "gsc" });
+    expect(result).toMatchObject({
+      failure: { reason: "permission", action: "check_permissions", httpStatus: 403 },
+    });
+    expect(result.requiresReauth).not.toBe(true);
+    expect(JSON.stringify(result)).not.toContain("secret");
+    expect(result.error).not.toContain("reconnect");
+    expect(log).toHaveBeenCalledWith(
+      "[google] property request failed",
+      expect.objectContaining({
+        httpStatus: 403,
+        reason: "permission",
+        action: "check_permissions",
+      }),
+    );
+    expect(JSON.stringify(log.mock.calls)).not.toContain("secret");
+    log.mockRestore();
+  });
+
+  it("preserves safe diagnostics when property verification fails before saving", async () => {
+    mocks.listGoogleSites.mockRejectedValue(new ProviderHttpError(403, "access_secret"));
+    const result = await saveStoredGoogleProperty({
+      actorId: "user_1",
+      projectId: "project_1",
+      property: "sc-domain:example.com",
+      provider: "gsc",
+    });
+    expect(result).toMatchObject({
+      status: "failed",
+      failure: { reason: "permission", action: "check_permissions", httpStatus: 403 },
+    });
+    expect(JSON.stringify(result)).not.toContain("secret");
+    expect(mocks.prisma.providerConnection.update).not.toHaveBeenCalled();
+  });
+
+  it("asks for OAuth consent when Google explicitly reports a missing scope", async () => {
+    mocks.listGoogleSites.mockRejectedValue(
+      googleResponseError(403, {
+        error: { details: [{ reason: "ACCESS_TOKEN_SCOPE_INSUFFICIENT" }] },
+      }),
+    );
+    const result = await loadStoredGoogleProperties({ projectId: "project_1", provider: "gsc" });
+    expect(result).toMatchObject({
+      requiresReauth: true,
+      failure: { reason: "scope", action: "reauthorize", httpStatus: 403 },
+    });
+    expect(result.error).toMatch(/approve.*permissions/i);
+    expect(result.error).not.toMatch(/expired/i);
+  });
+
+  it("keeps the final verification failure and does not save a disabled API connection", async () => {
+    mocks.verifyProviderConnectionBeforeSave.mockRejectedValue(
+      googleResponseError(403, {
+        error: { details: [{ reason: "SERVICE_DISABLED" }], message: "fixture_secret" },
+      }),
+    );
+    const result = await saveStoredGoogleProperty({
+      actorId: "user_1",
+      projectId: "project_1",
+      property: "sc-domain:example.com",
+      provider: "gsc",
+    });
+    expect(result).toMatchObject({
+      status: "failed",
+      failure: {
+        reason: "api_disabled",
+        action: "configure_api",
+        httpStatus: 403,
+        code: "SERVICE_DISABLED",
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain("fixture_secret");
+    expect(mocks.prisma.providerConnection.update).not.toHaveBeenCalled();
   });
 
   it("revalidates the selected property and audits the encrypted update atomically", async () => {
@@ -308,7 +390,7 @@ describe("stored Google property selection", () => {
         property: "sc-domain:example.com",
         provider: "gsc",
       }),
-    ).resolves.toEqual({ status: "reauth_required" });
+    ).resolves.toMatchObject({ status: "reauth_required" });
     expect(mocks.prisma.providerConnection.update).not.toHaveBeenCalled();
     expect(mocks.writeAudit).not.toHaveBeenCalled();
   });

@@ -16,7 +16,13 @@ import {
   updateDashboardDraft,
 } from "@/lib/dashboard-layout/draft";
 import { moveDashboardWidgetTo } from "@/lib/dashboard-layout/reorder";
-import type { DashboardAccess, DashboardTranslator, WidgetId } from "@/lib/dashboard-layout/types";
+import type {
+  DashboardAccess,
+  DashboardLayout,
+  DashboardPreset,
+  DashboardTranslator,
+  WidgetId,
+} from "@/lib/dashboard-layout/types";
 import { useId, useRef } from "react";
 import { DashboardViewHelp } from "./DashboardViewHelp";
 import { DashboardWidgetRow } from "./DashboardWidgetRow";
@@ -27,6 +33,8 @@ export type DashboardLayoutEditorProps = {
   access: DashboardAccess;
   translate: DashboardTranslator;
   onChange: (state: DashboardDraft) => void;
+  layoutForPreset: (preset: DashboardPreset) => DashboardLayout;
+  templateForPreset: (preset: DashboardPreset) => DashboardLayout;
   /** The host owns persistence, authz, idempotency, and applying the CAS result. */
   onSave: (request: DashboardSaveRequest) => void;
   onCancel: (state: DashboardDraft) => void;
@@ -52,6 +60,8 @@ export function DashboardLayoutEditor({
   access,
   translate: t,
   onChange,
+  layoutForPreset,
+  templateForPreset,
   onSave,
   onCancel,
   canSavePersonalLayout,
@@ -125,7 +135,7 @@ export function DashboardLayoutEditor({
             onChange={(preset) => {
               reorder.cancel();
               if (preset === "general" || preset === "local" || preset === "competitors")
-                change({ type: "preset", preset });
+                change({ type: "preset", layout: layoutForPreset(preset) });
             }}
           />
         </div>
@@ -187,7 +197,18 @@ export function DashboardLayoutEditor({
         >
           {editorStatus(state, t)}
         </p>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button
+            variant="ghost"
+            className="min-h-11 xl:min-h-[34px]"
+            disabled={saving || conflict}
+            onClick={() => {
+              reorder.cancel();
+              change({ type: "reset", layout: templateForPreset(state.draft.preset) });
+            }}
+          >
+            {t("resetPreset")}
+          </Button>
           <Button
             variant="ghost"
             className="min-h-11 xl:min-h-[34px]"

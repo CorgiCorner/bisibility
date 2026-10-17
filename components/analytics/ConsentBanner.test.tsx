@@ -4,8 +4,8 @@ import {
   renderWithFeatureMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
 import sharedMessages from "@/messages/core/en/shared.json";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ applyAnalyticsConsent: vi.fn(), setAnalyticsReplay: vi.fn() }));
 
@@ -47,6 +47,24 @@ const polishConsentMessages = {
 };
 
 describe("ConsentBanner", () => {
+  beforeEach(() => {
+    // biome-ignore lint/suspicious/noDocumentCookie: Reset only the consent cookie in the test DOM.
+    document.cookie = "bv_consent=; Max-Age=0; Path=/";
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("delays the first prompt without saving or enabling analytics", async () => {
+    vi.useFakeTimers();
+    const saveConsent = vi.fn();
+    render(<ConsentBanner saveConsent={saveConsent} />);
+    expect(screen.queryByRole("region", { name: "Analytics consent" })).not.toBeInTheDocument();
+    await act(() => vi.advanceTimersByTimeAsync(5000));
+    expect(screen.getByRole("region", { name: "Analytics consent" })).toHaveAttribute(
+      "data-consent-variant",
+      "delayed_5s",
+    );
+    expect(saveConsent).not.toHaveBeenCalled();
+  });
   it("makes refusal a single click and applies the result immediately", async () => {
     const consent = {
       analytics: false,
@@ -55,29 +73,34 @@ describe("ConsentBanner", () => {
       status: "decided" as const,
     };
     const saveConsent = vi.fn().mockResolvedValue(consent);
-    render(<ConsentBanner saveConsent={saveConsent} />);
+    render(<ConsentBanner delayMs={0} saveConsent={saveConsent} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Reject all" }));
 
     await waitFor(() =>
-      expect(saveConsent).toHaveBeenCalledWith({ analytics: false, replay: false }),
+      expect(saveConsent).toHaveBeenCalledWith(
+        { analytics: false, replay: false },
+        expect.objectContaining({ variant: "immediate", source: "banner" }),
+      ),
     );
     expect(mocks.applyAnalyticsConsent).toHaveBeenCalledWith(consent);
     expect(mocks.setAnalyticsReplay).toHaveBeenCalledWith(false);
-    expect(screen.queryByLabelText("Analytics consent")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Analytics consent")).not.toBeInTheDocument(),
+    );
   });
 
   it("opens settings without granting consent", () => {
     const saveConsent = vi.fn();
-    render(<ConsentBanner saveConsent={saveConsent} />);
+    render(<ConsentBanner delayMs={0} saveConsent={saveConsent} />);
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     expect(screen.getByRole("dialog", { name: "Privacy choices" })).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: /Usage analytics/ })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: /Usage analytics/ })).toBeChecked();
     expect(saveConsent).not.toHaveBeenCalled();
   });
 
   it("keeps accept and refuse actions the same size", () => {
-    render(<ConsentBanner saveConsent={vi.fn()} />);
+    render(<ConsentBanner delayMs={0} saveConsent={vi.fn()} />);
 
     expect(screen.getByRole("button", { name: "Accept all" })).toHaveClass("w-full");
     expect(screen.getByRole("button", { name: "Reject all" })).toHaveClass("w-full");
@@ -85,7 +108,7 @@ describe("ConsentBanner", () => {
 
   it("renders translated consent actions and a translated safe-save error", async () => {
     const saveConsent = vi.fn().mockRejectedValue(new Error("offline"));
-    renderWithFeatureMessages(<ConsentBanner saveConsent={saveConsent} />, {
+    renderWithFeatureMessages(<ConsentBanner delayMs={0} saveConsent={saveConsent} />, {
       locale: "pl",
       messages: polishConsentMessages,
     });

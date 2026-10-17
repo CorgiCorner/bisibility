@@ -1,7 +1,6 @@
-import { DISCORD_URL, DOCS_URL, FEEDBACK_URL, GITHUB_URL, MARKETING_URL } from "@/lib/site/site";
+import { DOCS_URL, FEEDBACK_URL, GITHUB_URL, MARKETING_URL } from "@/lib/site/site";
 import { BookOpenTextIcon as BookOpenText } from "@phosphor-icons/react/dist/csr/BookOpenText";
 import { ChatCircleDotsIcon as ChatCircleDots } from "@phosphor-icons/react/dist/csr/ChatCircleDots";
-import { DiscordLogoIcon as DiscordLogo } from "@phosphor-icons/react/dist/csr/DiscordLogo";
 import { GithubLogoIcon as GithubLogo } from "@phosphor-icons/react/dist/csr/GithubLogo";
 import { HouseIcon as House } from "@phosphor-icons/react/dist/csr/House";
 import { SignOutIcon as SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
@@ -12,7 +11,7 @@ export { ArrowUpRightIcon as trailingExternalIcon } from "@phosphor-icons/react/
 import type { Icon } from "@phosphor-icons/react/lib";
 
 export type UserMenuLink = {
-  key: "accountSettings" | "discord" | "docs" | "feedback" | "github" | "homepage" | "signOut";
+  key: "accountSettings" | "docs" | "feedback" | "github" | "homepage" | "signOut";
   icon: Icon;
   hostedOnly?: boolean;
   href?: string;
@@ -43,7 +42,6 @@ export function resourceLinksForDeployment(showHostedLinks: boolean) {
 
 export const communityLinks = [
   { key: "github", href: GITHUB_URL, icon: GithubLogo, external: true },
-  { key: "discord", href: DISCORD_URL, icon: DiscordLogo, external: true },
 ] satisfies UserMenuLink[];
 
 export const signOutLink = { key: "signOut", icon: SignOut } satisfies UserMenuLink;

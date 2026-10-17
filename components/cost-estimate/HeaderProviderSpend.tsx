@@ -44,7 +44,7 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
     return lowerBound && value.certainty === "estimated" ? `≥ ${text}` : text;
   };
   const details = (
-    <div className="max-h-[60vh] max-w-sm space-y-3 overflow-auto text-left text-[11px] leading-snug">
+    <div className="max-h-[60vh] max-w-[456px] space-y-3 overflow-auto text-left text-[11px] leading-snug">
       <table className="w-full table-fixed border-collapse text-[11px] [overflow-wrap:anywhere]">
         <caption className="caption-top pb-3 text-left opacity-75">{t("headerCapTooltip")}</caption>
         <thead>
@@ -65,7 +65,7 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
         </thead>
         <tbody>
           {summary?.budgets.rows.map((row) => (
-            <tr key={row.id} className="border-t border-border align-top">
+            <tr key={row.id} className="border-t border-border-soft align-top">
               {row.redacted ? (
                 <td colSpan={4} className="py-2">
                   {p.budget.redacted}
@@ -113,6 +113,8 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
   const renderTooltip = (trigger: import("react").ReactNode) => (
     <Tooltip
       content={details}
+      tone="surface"
+      interactive
       semantics="description"
       placement="bottom"
       wrapperClassName="items-center"

@@ -49,6 +49,8 @@ export type LocalResultPoint = Readonly<{
   receipt: LocalResultReceipt["items"][number];
 }>;
 export type LocalResultGrid = Readonly<{
+  /** The point evidence and receipts remain readable when this aggregate is incompatible. */
+  reason?: "matcher_version_mixed";
   keywordId: string;
   keyword: string;
   gridRevisionKey: string;

@@ -17,7 +17,7 @@ export function HeaderBudgetScope({ row }: { row: ProjectBudgetRow }) {
           <span className="opacity-75">{row.display.projectName}</span>
         )}
       </span>
-      <BudgetTrafficBadge traffic={row.traffic} />
+      <BudgetTrafficBadge compact traffic={row.traffic} />
     </div>
   );
 }

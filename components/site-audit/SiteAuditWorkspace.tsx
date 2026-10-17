@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { SavedSiteAudit, SiteAuditInput } from "@/lib/site-audit/schema";
 import { siteAuditSchema } from "@/lib/site-audit/schema";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -73,32 +73,41 @@ export function SiteAuditWorkspace({
     <section className="grid min-w-0 gap-4" aria-label={t("heading")}>
       <Card>
         <p className="m-0 text-[13px] text-fg-muted">{t("description", { domain })}</p>
-        <form className="mt-4 flex flex-wrap items-end gap-3" onSubmit={handleSubmit(run)}>
-          <div className="w-32">
-            <FieldLabel htmlFor="audit-pages" label={t("pageLimit")} />
-            <Input
-              id="audit-pages"
-              type="number"
-              min={1}
-              max={15}
-              {...register("maxPages", { valueAsNumber: true })}
-            />
-            {errors.maxPages ? (
-              <p className="text-[11px] text-red-text" role="alert">
-                {t("pageLimitError")}
-              </p>
-            ) : null}
+        <form className="mt-4 grid gap-2" onSubmit={handleSubmit(run)}>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="grid w-32 gap-2">
+              <FieldLabel
+                className="text-ui-body font-medium"
+                htmlFor="audit-pages"
+                label={t("pageLimit")}
+              />
+              <Input
+                aria-invalid={Boolean(errors.maxPages)}
+                aria-describedby={errors.maxPages ? "audit-pages-error" : undefined}
+                id="audit-pages"
+                type="number"
+                min={1}
+                max={15}
+                {...register("maxPages", { valueAsNumber: true })}
+              />
+            </div>
+            <Button
+              size="input"
+              type="submit"
+              startIcon={<MagnifyingGlassIcon size={15} weight="regular" />}
+              loading={isSubmitting}
+              loadingLabel={t("running")}
+              disabled={!canRun || loadingHistory}
+            >
+              {t("run")}
+            </Button>
+            <p className="m-0 pb-2 text-[11px] text-fg-muted">{t("cost")}</p>
           </div>
-          <Button
-            type="submit"
-            startIcon={<MagnifyingGlassIcon size={15} weight="regular" />}
-            loading={isSubmitting}
-            loadingLabel={t("running")}
-            disabled={!canRun || loadingHistory}
-          >
-            {t("run")}
-          </Button>
-          <p className="m-0 pb-2 text-[11px] text-fg-muted">{t("cost")}</p>
+          {errors.maxPages ? (
+            <p id="audit-pages-error" className="m-0 text-ui-xs text-red-text" role="alert">
+              {t("pageLimitError")}
+            </p>
+          ) : null}
         </form>
         {!canRun ? <p className="mb-0 mt-3 text-[12px] text-fg-muted">{t("readOnly")}</p> : null}
       </Card>

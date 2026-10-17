@@ -130,6 +130,7 @@ const location: SerpRankLocation = {
 function runSuggestions(
   call = dataForSeoProvider.fetchKeywordSuggestions,
   requiredCredentialSource?: "own",
+  onNotDispatched?: () => void,
 ) {
   if (!call) throw new Error("Suggestions capability is unavailable.");
   return paidProviderCall({
@@ -146,6 +147,7 @@ function runSuggestions(
     projectId: "project_1",
     provider: dataForSeoProvider,
     requiredCredentialSource,
+    onNotDispatched,
     rate: keywordResearchRate("dataforseo", "suggestions"),
     source: "app",
     trigger: "manual",
@@ -499,6 +501,7 @@ describe("paid provider lookup", () => {
       _sum: { costCents: 8, usageQuantity: null },
     });
     const call = observedMock({ costCents: 1 });
+    const onNotDispatched = vi.fn();
 
     testOwnAdmission.reserve.mockRejectedValueOnce(
       new ProviderAllocationExhaustedError("connection_1", "programmatic"),
@@ -506,6 +509,7 @@ describe("paid provider lookup", () => {
     await expect(
       paidProviderCall({
         call,
+        onNotDispatched,
         connection: {
           credentialsEncrypted: "encrypted",
           id: "connection_1",
@@ -522,6 +526,7 @@ describe("paid provider lookup", () => {
     ).rejects.toMatchObject({
       outcome: { provider: "dataforseo", reason: "budget_exhausted", surface: "programmatic" },
     });
+    expect(onNotDispatched).toHaveBeenCalledTimes(1);
     expect(testOwnAdmission.acknowledge).not.toHaveBeenCalled();
   });
 
@@ -1118,6 +1123,62 @@ describe("paid provider lookup", () => {
     expect(mocks.markReauth).not.toHaveBeenCalled();
     expect(mocks.prisma.providerCostEntry.createMany).not.toHaveBeenCalled();
     expect(finish).toHaveBeenCalledTimes(2);
+  });
+
+  it("marks only proven unsent hosted admission failures as retryable", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialSource: "hosted",
+      projectId: "project_1",
+      provider: "dataforseo",
+    });
+    const onNotDispatched = vi.fn();
+    mocks.startExecution.mockResolvedValue({
+      credentials: { login: "shared", password: "fixture" },
+      started: false,
+      costCents: null,
+      quantity: null,
+      finish: vi.fn().mockResolvedValue(undefined),
+    });
+    await expect(
+      runSuggestions(
+        vi
+          .fn()
+          .mockRejectedValue(
+            new BudgetExhaustedError({ projectId: "project_1", capCents: 1, spentCents: 1 }),
+          ),
+        undefined,
+        onNotDispatched,
+      ),
+    ).rejects.toMatchObject({ code: "budget_exhausted" });
+    expect(onNotDispatched).toHaveBeenCalledTimes(1);
+    onNotDispatched.mockClear();
+    await expect(
+      runSuggestions(
+        vi.fn().mockRejectedValue(new ProviderCallError("charged", 99)),
+        undefined,
+        onNotDispatched,
+      ),
+    ).rejects.toBeInstanceOf(ProviderUsagePersistenceError);
+    expect(onNotDispatched).not.toHaveBeenCalled();
+    mocks.startExecution.mockResolvedValue({
+      credentials: { login: "shared", password: "fixture" },
+      started: true,
+      costCents: 0.06,
+      quantity: 1,
+      finish: vi.fn().mockResolvedValue(undefined),
+    });
+    await expect(
+      runSuggestions(
+        vi
+          .fn()
+          .mockRejectedValue(
+            new BudgetExhaustedError({ projectId: "project_1", capCents: 1, spentCents: 1 }),
+          ),
+        undefined,
+        onNotDispatched,
+      ),
+    ).rejects.toMatchObject({ code: "budget_exhausted" });
+    expect(onNotDispatched).not.toHaveBeenCalled();
   });
 
   it("preserves a measured hosted failure cost and refuses an unobserved charged error", async () => {

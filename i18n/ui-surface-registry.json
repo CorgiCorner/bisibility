@@ -2443,6 +2443,11 @@
     },
     {
       "kind": "render",
+      "path": "app/(regional)/app/(workspace)/[project]/@context/loading.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "app/(regional)/app/(workspace)/[project]/@context/m/[market]/[...page]/page.tsx",
       "status": "migrated"
     },
@@ -3608,6 +3613,16 @@
     },
     {
       "kind": "render",
+      "path": "components/admin/AdminTemporalHealth.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/admin/AdminTemporalSchedules.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/admin/AdminWorkerHealth.tsx",
       "status": "migrated"
     },
@@ -4043,6 +4058,11 @@
     },
     {
       "kind": "ui-data",
+      "path": "components/analytics/consent-banner-state.ts",
+      "status": "pending"
+    },
+    {
+      "kind": "ui-data",
       "path": "components/analytics/consent-copy.ts",
       "status": "migrated"
     },
@@ -4244,6 +4264,11 @@
     {
       "kind": "render",
       "path": "components/backlinks/AnalyzePricingPopover.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
+      "path": "components/backlinks/backlinks-append-state.ts",
       "status": "migrated"
     },
     {
@@ -4817,6 +4842,11 @@
     },
     {
       "kind": "render",
+      "path": "components/cost-estimate/HeaderProviderSpendData.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/cost-estimate/SessionSpendProvider.tsx",
       "status": "migrated"
     },
@@ -4847,6 +4877,11 @@
     },
     {
       "kind": "ui-data",
+      "path": "components/dashboard-layout/dashboard-conflict.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
       "path": "components/dashboard-layout/dashboard-editor-escape.ts",
       "status": "migrated"
     },
@@ -4858,6 +4893,11 @@
     {
       "kind": "render",
       "path": "components/dashboard-layout/DashboardCompositor.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/dashboard-layout/DashboardConflictReview.tsx",
       "status": "migrated"
     },
     {
@@ -8162,6 +8202,11 @@
     },
     {
       "kind": "ui-data",
+      "path": "components/research/research-tab-identity.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "ui-data",
       "path": "components/research/research-tracking-cost.ts",
       "status": "migrated"
     },
@@ -8242,6 +8287,11 @@
     },
     {
       "kind": "render",
+      "path": "components/research/ResearchTextFilter.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/research/ResearchTrackingCostLine.tsx",
       "status": "migrated"
     },
@@ -8308,6 +8358,11 @@
     {
       "kind": "render",
       "path": "components/saved-views/PersonalSaveViewModal.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/saved-views/PersonalViewMenu.tsx",
       "status": "migrated"
     },
     {
@@ -8882,6 +8937,11 @@
     },
     {
       "kind": "render",
+      "path": "components/settings/general/DataCacheSettings.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/settings/general/DomainChangeConfirmation.tsx",
       "status": "migrated"
     },
@@ -9374,6 +9434,11 @@
       "kind": "ui-data",
       "path": "components/shell/header-title.ts",
       "status": "excluded"
+    },
+    {
+      "kind": "render",
+      "path": "components/shell/HeaderContextLoading.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",
@@ -10153,6 +10218,16 @@
     {
       "kind": "ui-data",
       "path": "components/ui/provider-logo-url.ts",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ui/ProviderAccessEmptyState.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
+      "path": "components/ui/ProviderAccessGate.tsx",
       "status": "migrated"
     },
     {

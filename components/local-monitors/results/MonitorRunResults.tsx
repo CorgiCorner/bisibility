@@ -155,7 +155,12 @@ export function MonitorRunResults({
                 {grid.sampleBounds
                   ? `${percent(grid.sampleBounds[0])} - ${percent(grid.sampleBounds[1])}`
                   : t("results.unknown")}
-                . {t("results.comparisonHelp")}
+                .{" "}
+                {t(
+                  grid.reason === "matcher_version_mixed"
+                    ? "results.matcherVersionMixed"
+                    : "results.comparisonHelp",
+                )}
               </p>
               <MonitorResultGrid grid={grid} points={points} onPoint={setPointId} />
               <MonitorResultTable points={points} onPoint={setPointId} />

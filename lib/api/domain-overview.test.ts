@@ -461,4 +461,12 @@ describe("Domain Overview REST handlers", () => {
     const body = await response.json();
     expect(body.details.estimated_cost_cents).toBe(12);
   });
+  it("serializes unknown legacy history time as explicit null", async () => {
+    mocks.history.mockResolvedValue({ ...moduleSuccess, cached: true, data: [], fetchedAt: null });
+    const response = await postDomainOverviewHistory(context("history", commonBody), "prj_1");
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      data: { cached: true, fetched_at: null, data: [] },
+    });
+  });
 });

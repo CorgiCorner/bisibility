@@ -1,18 +1,20 @@
+import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BacklinksSnapshotExpiredError, loadMoreBacklinkRows } from "./service";
+import { backlinksSnapshotReference } from "./snapshot-reference";
 
 const mocks = vi.hoisted(() => ({
   getProvider: vi.fn(),
   paidCall: vi.fn(),
   prisma: {
     $transaction: vi.fn(),
-    backlinkSnapshot: { findFirst: vi.fn() },
+    backlinkSnapshot: { findFirst: vi.fn(), updateMany: vi.fn() },
     project: { findFirst: vi.fn() },
   },
   tx: {
     backlinkRow: { createMany: vi.fn() },
-    backlinkSnapshot: { update: vi.fn() },
+    backlinkSnapshot: { updateMany: vi.fn() },
   },
 }));
 
@@ -82,12 +84,16 @@ const snapshot = {
   totalRowsAvailable: 1685,
 };
 
-function run(origin = APP_REQUEST_ORIGIN) {
+function run(
+  origin = APP_REQUEST_ORIGIN,
+  reference: string | null = backlinksSnapshotReference(snapshot),
+) {
   return loadMoreBacklinkRows(
     { origin, projectId: "prj_1" },
     {
       includeSubdomains: true,
       limit: 100,
+      snapshotRef: reference ?? undefined,
       target: "acme-store.com",
       targetScope: "site",
     },
@@ -101,6 +107,7 @@ describe("backlinks load-more service", () => {
     vi.setSystemTime(new Date("2026-07-24T15:00:00.000Z"));
     mocks.prisma.project.findFirst.mockResolvedValue(project);
     mocks.prisma.backlinkSnapshot.findFirst.mockResolvedValue(snapshot);
+    mocks.prisma.backlinkSnapshot.updateMany.mockResolvedValue({ count: 1 });
     mocks.getProvider.mockReturnValue(provider);
     mocks.paidCall.mockImplementation(
       ({ call }: { call: (credentials: object) => Promise<unknown> }) => call({}),
@@ -110,11 +117,7 @@ describe("backlinks load-more service", () => {
       (callback: (tx: typeof mocks.tx) => Promise<unknown>) => callback(mocks.tx),
     );
     mocks.tx.backlinkRow.createMany.mockResolvedValue({ count: 1 });
-    mocks.tx.backlinkSnapshot.update.mockResolvedValue({
-      ...snapshot,
-      costCents: 6,
-      fetchedRowCount: 101,
-    });
+    mocks.tx.backlinkSnapshot.updateMany.mockResolvedValue({ count: 1 });
   });
 
   it("raises snapshot_expired when no unexpired snapshot exists", async () => {
@@ -126,7 +129,7 @@ describe("backlinks load-more service", () => {
 
   it("appends rows at the fetched offset and charges only the rows rate", async () => {
     await expect(run()).resolves.toMatchObject({
-      costCents: 6,
+      costCents: 1,
       fetchedRowCount: 101,
       ok: true,
       rows: [{ sourceDomain: "forum.example.org" }],
@@ -161,9 +164,91 @@ describe("backlinks load-more service", () => {
     expect(mocks.tx.backlinkRow.createMany).toHaveBeenCalledWith(
       expect.objectContaining({ data: [expect.objectContaining({ snapshotId: "snapshot_1" })] }),
     );
-    expect(mocks.tx.backlinkSnapshot.update).toHaveBeenCalledWith({
-      data: { costCents: { increment: 1 }, fetchedRowCount: { increment: 1 } },
-      where: { id: "snapshot_1" },
+    expect(mocks.tx.backlinkSnapshot.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          costCents: { increment: 1 },
+          fetchedRowCount: { increment: 1 },
+          summary: snapshot.summary,
+          totalRowsAvailable: 1685,
+        },
+        where: expect.objectContaining({ id: "snapshot_1", fetchedRowCount: 100 }),
+      }),
+    );
+  });
+  it("rejects an unbound legacy append before purchasing another page", async () => {
+    await expect(run(APP_REQUEST_ORIGIN, null)).rejects.toBeInstanceOf(
+      BacklinksSnapshotExpiredError,
+    );
+    expect(mocks.paidCall).not.toHaveBeenCalled();
+  });
+
+  it("binds the append to the viewed snapshot and row revision", async () => {
+    await run();
+    expect(mocks.prisma.backlinkSnapshot.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: snapshot.id,
+          projectId: project.id,
+          fetchedRowCount: 100,
+        }),
+      }),
+    );
+  });
+  it("never purchases a page after another request claimed its offset", async () => {
+    mocks.prisma.backlinkSnapshot.updateMany.mockResolvedValue({ count: 0 });
+    await expect(run()).rejects.toBeInstanceOf(BacklinksSnapshotExpiredError);
+    expect(mocks.paidCall).not.toHaveBeenCalled();
+  });
+  it("rejects a changed snapshot rather than appending to a newer mode", async () => {
+    mocks.prisma.backlinkSnapshot.findFirst.mockResolvedValue({
+      ...snapshot,
+      id: "newer-other-mode",
     });
+    await expect(run()).rejects.toBeInstanceOf(BacklinksSnapshotExpiredError);
+    expect(mocks.paidCall).not.toHaveBeenCalled();
+  });
+
+  it("restores a retained paid page after append persistence failed without buying it again", async () => {
+    mocks.prisma.backlinkSnapshot.findFirst.mockResolvedValue({
+      ...snapshot,
+      summary: {
+        ...snapshot.summary,
+        _appendPending: "original-claim",
+        _appendPage: { costCents: 1, totalCount: 1685, rows: [row] },
+      },
+    });
+    await expect(run()).resolves.toMatchObject({
+      ok: true,
+      cached: true,
+      costCents: 0,
+      fetchedRowCount: 101,
+    });
+    expect(mocks.paidCall).not.toHaveBeenCalled();
+    expect(mocks.tx.backlinkRow.createMany).toHaveBeenCalledOnce();
+  });
+  it("does not rebuy an uncertain interrupted page without retained rows", async () => {
+    mocks.prisma.backlinkSnapshot.findFirst.mockResolvedValue({
+      ...snapshot,
+      summary: { ...snapshot.summary, _appendPending: "interrupted" },
+    });
+    await expect(run()).rejects.toBeInstanceOf(BacklinksSnapshotExpiredError);
+    expect(mocks.paidCall).not.toHaveBeenCalled();
+  });
+  it("releases the offset after a proven admission refusal before any dispatch", async () => {
+    mocks.paidCall.mockImplementation(async (input) => {
+      input.onNotDispatched?.();
+      throw new ProviderLookupSignal({ ok: false, reason: "budget_exhausted" });
+    });
+    await expect(run()).resolves.toMatchObject({ ok: false, reason: "budget_exhausted" });
+    expect(provider.fetchBacklinksRows).not.toHaveBeenCalled();
+    expect(mocks.prisma.backlinkSnapshot.updateMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({ data: { summary: snapshot.summary } }),
+    );
+  });
+  it("keeps an ambiguous provider failure fenced after the provider callback started", async () => {
+    provider.fetchBacklinksRows.mockRejectedValue(new Error("response lost"));
+    await expect(run()).rejects.toThrow("response lost");
+    expect(mocks.prisma.backlinkSnapshot.updateMany).toHaveBeenCalledTimes(1);
   });
 });

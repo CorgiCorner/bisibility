@@ -954,16 +954,38 @@ export type CoreMessages = {
       };
       readonly temporal: {
         readonly asOf: "As of {time}";
-        readonly description: "Temporal schedule inspection and recorded bootstrap failures.";
+        readonly counterNote: "Totals recorded over each schedule’s lifetime, not a current backlog. A skipped start means the previous run was still active.";
+        readonly description: "Scheduled background tasks, recorded counters and startup diagnostics.";
+        readonly diagnostics: "Inspection and startup diagnostics";
         readonly disabled: "Temporal scheduling is disabled for this topology.";
+        readonly historyTitle: "Schedule history";
         readonly inspectionErrors: "Inspection errors";
-        readonly missedCatchup: "Missed catchup";
+        readonly inspectionPartial: "{count, plural, one {# schedule could not be inspected.} other {# schedules could not be inspected.}} These totals may be incomplete.";
+        readonly missedCatchup: "Missed starts";
         readonly nextAction: "Next action";
+        readonly noCounters: "No missed or overlapping starts recorded.";
         readonly recentActions: "Recent actions";
+        readonly schedule: "Task";
         readonly schedules: "Schedules";
-        readonly skippedOverlap: "Skipped overlap";
+        readonly skippedOverlap: "Skipped while busy";
         readonly snapshotStale: "Temporal snapshot stale";
         readonly snapshotUnavailable: "Snapshot unavailable - worker has not published Temporal data. Values above are unknown, not zero.";
+        readonly tableLabel: "Recorded schedule counters";
+        readonly tasks: {
+          readonly checkAlertHealth: "Check alert delivery health";
+          readonly collectSearchInsights: "Collect Search Insights imports";
+          readonly deliverAlerts: "Deliver alerts";
+          readonly dispatchChecks: "Dispatch rank checks";
+          readonly maintainRuns: "Maintain rank-check runs";
+          readonly planChecks: "Plan rank checks";
+          readonly reconcileChecks: "Reconcile rank checks";
+          readonly reconcileUsage: "Reconcile provider usage";
+          readonly recoverChecks: "Recover stalled checks";
+          readonly recoverImports: "Recover stalled imports";
+          readonly releaseMigrationHolds: "Release migration holds";
+          readonly releaseReservations: "Release metering reservations";
+          readonly sendDigests: "Send alert digests";
+        };
         readonly title: "Temporal";
       };
     };
@@ -3657,7 +3679,7 @@ export type CoreMessages = {
       readonly copyUrl: "Copy icon URL";
       readonly description: "Use this icon when adding bisibility as a custom MCP app.";
       readonly download: "Download PNG";
-      readonly heading: "ChatGPT app icon";
+      readonly heading: "MCP app icon";
       readonly imageAlt: "bisibility app icon";
       readonly meta: "PNG · {width, number} × {height, number} px · {kilobytes} KB ({bytes, number} bytes) · under 10 KB";
     };
@@ -3716,17 +3738,34 @@ export type CoreMessages = {
       readonly show: "Show how to start";
     };
     readonly skills: {
+      readonly "ai-prompt-research": "Explore AI prompts";
+      readonly "ai-visibility-audit": "Check AI visibility";
+      readonly "alert-triage": "Investigate ranking alerts";
       readonly available: "available";
-      readonly availableCount: "3 available";
-      readonly description: "Download available skill archives for your agent. The other tasks below are planned.";
+      readonly availableCount: "{count, plural, one {# available} other {# available}}";
+      readonly "backlink-profile-analysis": "Assess backlink quality";
+      readonly bisibility: "Find the right skill";
+      readonly "competitive-landscape": "Map the competition";
+      readonly "competitor-analysis": "Compare competitor performance";
+      readonly description: "Download skill archives or use skills in the Claude Code plugin. Planned tasks are marked below.";
+      readonly "domain-onboarding": "First domain setup";
       readonly footer: "Download an archive and follow your agent client's instructions for installing skills.";
       readonly heading: "Skills";
+      readonly inPlugin: "in the Claude Code plugin";
       readonly "keyword-clustering": "Group by intent";
       readonly "keyword-import": "Bulk add, dedupe";
+      readonly "keyword-opportunity-research": "Find keyword opportunities";
+      readonly "link-prospecting": "Find link opportunities";
+      readonly "local-seo": "Improve local visibility";
       readonly planned: "planned";
-      readonly "project-onboarding": "First project setup";
+      readonly "project-setup": "Save project context and tracking setup";
       readonly "provider-setup": "Connect, verify keys";
-      readonly "seo-audit": "Prioritized fixes";
+      readonly "rank-tracking-report": "Review ranking changes";
+      readonly "self-host-health": "Check instance health";
+      readonly "seo-audit": "Prioritized SEO fixes";
+      readonly "seo-coach": "Choose the next SEO skill";
+      readonly "sitemap-change-watch": "Watch sitemap changes";
+      readonly "team-api-governance": "Manage team API access";
       readonly "weekly-report": "Digest of movements";
     };
   };
@@ -3865,6 +3904,13 @@ export type CoreMessages = {
       readonly googleAccountConnected: "Google account connected";
       readonly googleConnection: "Google connection";
       readonly googleLogo: "Google logo";
+      readonly googlePropertyApiDisabled: "The Google API configuration needs attention. Ask the app administrator to enable the API and check its setup, then try again.";
+      readonly googlePropertyAuth: "Reconnect your Google account to load properties.";
+      readonly googlePropertyPermission: "This Google account cannot access these properties. Check its permissions in Search Console or Analytics.";
+      readonly googlePropertyQuota: "Google's request limit was reached. Try again later.";
+      readonly googlePropertyScope: "Reconnect your Google account and approve the requested permissions for this app.";
+      readonly googlePropertyTemporary: "Google is temporarily unavailable. Try again.";
+      readonly googlePropertyUnknown: "Properties could not be loaded. Try again.";
       readonly gscAria: "Search Console property";
       readonly gscProject: "Search Console property for this project";
       readonly gscSelecting: "Choose from the Search Console properties verified for that account.";
@@ -6335,6 +6381,7 @@ export type CoreMessages = {
       readonly fetched: "fetched {age}";
       readonly filters: "Filters";
       readonly saveForLater: "Save {count, number} for later";
+      readonly searchKeywords: "Filter keywords";
       readonly selected: "{count, number} selected";
       readonly showing: "Showing <strong>{shown, number}</strong> of {total, number} keywords{freshness, select, none {} other { - {freshness}}}";
       readonly tableAria: "Keyword research results";
@@ -6370,6 +6417,7 @@ export type CoreMessages = {
       readonly resultLimit: "{count, number} results";
       readonly resultsLimitAria: "Results limit";
       readonly seedAria: "Seed keyword";
+      readonly seedHelp: "Press Enter or comma after each keyword. Up to 5 keywords.";
       readonly seedPlaceholder: "Enter up to 5 seed keywords";
     };
     readonly state: {
@@ -7110,6 +7158,13 @@ export type CoreMessages = {
       readonly ga4PropertyAriaLabel: "Google Analytics property";
       readonly ga4Sessions: "GA4 sessions";
       readonly googleLogo: "Google logo";
+      readonly googlePropertyApiDisabled: "The Google API configuration needs attention. Ask the app administrator to enable the API and check its setup, then try again.";
+      readonly googlePropertyAuth: "Reconnect your Google account to load properties.";
+      readonly googlePropertyPermission: "This Google account cannot access these properties. Check its permissions in Search Console or Analytics.";
+      readonly googlePropertyQuota: "Google's request limit was reached. Try again later.";
+      readonly googlePropertyScope: "Reconnect your Google account and approve the requested permissions for this app.";
+      readonly googlePropertyTemporary: "Google is temporarily unavailable. Try again.";
+      readonly googlePropertyUnknown: "Properties could not be loaded. Try again.";
       readonly gscSelectionBody: "Search Console reports per property. Choose one, and bisibility imports its history - you can change it later without losing what has already been pulled.";
       readonly gscSelectionTitle: "Pick the property to read";
       readonly importPausedLine: "History import paused, resumes automatically";
@@ -7650,6 +7705,54 @@ export type CoreMessages = {
     readonly title: "Experimental modules";
   };
   readonly projectSettingsGeneral: {
+    readonly dataCache: {
+      readonly back: "First page";
+      readonly busy: "This result is being refreshed. Wait until the search finishes, then try again.";
+      readonly conflict: "Settings changed in another tab. Refresh the list before saving again.";
+      readonly days: "{count, plural, one {# day} other {# days}}";
+      readonly default: "Instance default";
+      readonly delete: "Remove";
+      readonly empty: "No cached results on this page.";
+      readonly error: "The change could not be saved. Try again.";
+      readonly expires: "Expires {date}";
+      readonly help: "Shared across this project’s modules. Shorter lifetimes also limit existing results; longer lifetimes apply to newly fetched results. Saved reports, measurement history and payment receipts are kept.";
+      readonly hours: "{count, plural, one {# hour} other {# hours}}";
+      readonly lifetime: "Reuse results for";
+      readonly list: "Cached results";
+      readonly module: {
+        readonly ai_visibility: "AI visibility";
+        readonly backlinks: "Backlinks";
+        readonly domain_overview: "Domain overview";
+        readonly keyword_metrics: "Keyword metrics";
+        readonly keyword_research: "Keyword research";
+        readonly prompt_explorer: "Prompt explorer";
+        readonly ranked_keywords: "Ranked keywords";
+        readonly site_audit: "Site audit";
+      };
+      readonly next: "Next page";
+      readonly notice: "Removing a result does not run a search. A later search may need a new paid request.";
+      readonly readOnly: "Project editors can change this setting and remove cached results.";
+      readonly refresh: "Refresh list";
+      readonly save: "Save";
+      readonly saved: "Saved";
+      readonly source: {
+        readonly ai_visibility: "AI visibility";
+        readonly backlinks: "Backlinks";
+        readonly history: "History";
+        readonly idea: "Ideas";
+        readonly keywords: "Keywords";
+        readonly metrics: "Metrics";
+        readonly overview: "Overview";
+        readonly pages: "Pages";
+        readonly prompt_explorer: "Prompt explorer";
+        readonly related: "Related";
+        readonly site_audit: "Site audit";
+        readonly suggestion: "Suggestions";
+      };
+      readonly title: "Data cache";
+      readonly unavailable: "Cache could not be read. Retry the list when the connection is available.";
+      readonly unknownKeyword: "Keyword metrics";
+    };
     readonly domainChange: {
       readonly afterConfirmation: "After you confirm";
       readonly cancel: "Cancel";
@@ -8779,9 +8882,9 @@ export type CoreMessages = {
       };
       readonly banner: {
         readonly ariaLabel: "Analytics consent";
-        readonly body: "We count visits without cookies. Optional analytics cookies and replays help us improve bisibility.";
+        readonly body: "We count visits without cookies. Optional analytics cookies and redacted replays help us improve bisibility.";
         readonly saveError: "Your choice could not be saved. Choices you turned off remain off. Try again.";
-        readonly update: "Replays can include app screens. Review your choice. Analytics stays unchanged.";
+        readonly update: "Redacted replays can include app screens. Review your choice. Analytics stays unchanged.";
       };
       readonly modal: {
         readonly alwaysOn: "Always on";
@@ -8789,12 +8892,12 @@ export type CoreMessages = {
           readonly body: "Required for sign-in, security and your saved settings.";
           readonly title: "Essential";
         };
-        readonly footer: "Your choice is saved for 6 months. Change it anytime from Privacy choices in the footer.";
-        readonly intro: "Choose analytics and replays separately. Essential cookies stay on.";
+        readonly footer: "Accepted choices are saved for 6 months; rejecting both is saved for 7 days. Change your choice anytime from Privacy choices in the footer.";
+        readonly intro: "Choose analytics and redacted replays separately. Essential cookies stay on.";
         readonly privacyPolicy: "Privacy policy";
         readonly replay: {
           readonly body: "Optional recordings help us improve the website and setup. In the app, recordings may include the first check and rank tracker. Inputs and project data are masked. Sign-in, account and billing screens, credentials and Google data are excluded.";
-          readonly title: "Replays";
+          readonly title: "Redacted replays";
         };
         readonly saveError: "Your changes could not be saved. Choices you turned off remain off. Try again.";
         readonly usage: {
@@ -9359,6 +9462,7 @@ export type CoreMessages = {
       readonly reloadPreference: "Reload stored layout";
       readonly reorder: "Reorder {title}";
       readonly reorderHint: "Drag a handle, or use arrow keys, Home and End to reorder.";
+      readonly resetPreset: "Reset to preset";
       readonly reviewCurrent: "Review the current saved layout";
       readonly save: "Save";
       readonly saved: "Display preferences saved.";
@@ -9802,6 +9906,7 @@ export type CoreMessages = {
         readonly historyWindowHelp: "Periods end at the saved report time and use elapsed 24-hour days. Dates use your report timezone. Reading history does not run a scan.";
         readonly identityMatch: "Identity match";
         readonly loading: "Loading retained evidence…";
+        readonly matcherVersionMixed: "This scan uses different matching rules. Individual point results remain available; the combined ranking metric is unavailable.";
         readonly matchStates: {
           readonly candidate: "Candidate";
           readonly confirmed: "Confirmed";
@@ -10489,6 +10594,19 @@ export type CoreMessages = {
       readonly footnote: "404 - Not found";
       readonly pageTitle: "We could not find that page";
       readonly title: "Page not found";
+    };
+    readonly providerAccess: {
+      readonly action: "Open Integrations";
+      readonly connect: "Connect a supporting provider to unlock these fields.";
+      readonly connectAction: "Connect provider";
+      readonly emptyDescription: "This feature needs a supporting provider. Connect one in Integrations to run a search.";
+      readonly emptyTitle: "Connect a provider to get started";
+      readonly reconnect: "Reconnect your provider to unlock these fields.";
+      readonly reconnectAction: "Reconnect provider";
+      readonly reconnectDescription: "Reconnect your provider in Integrations before running another search.";
+      readonly reconnectTitle: "Reconnect to load new results";
+      readonly supported: "Supported providers: {providers}.";
+      readonly unavailable: "No supporting provider is available for this feature.";
     };
     readonly rankPreflight: {
       readonly alreadyScheduled: "Already scheduled";

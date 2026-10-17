@@ -56,7 +56,7 @@ export type DomainModuleOutcome<T> =
       cached: boolean;
       costCents: number;
       data: T;
-      fetchedAt: string;
+      fetchedAt: string | null;
       ok: true;
     }
   | DomainOverviewLookupFailure;

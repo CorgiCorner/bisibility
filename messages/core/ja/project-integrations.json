@@ -131,7 +131,14 @@
       "emptyGsc": "この Google アカウントには確認済みの Search Console プロパティがありません。プロパティを確認するか、別のアカウントを接続してください。",
       "googleAccountConnected": "Google アカウント接続済み",
       "reconnect": "アカウントを再接続",
-      "disconnect": "切断"
+      "disconnect": "切断",
+      "googlePropertyAuth": "プロパティを読み込むには、Google アカウントを再接続してください。",
+      "googlePropertyPermission": "この Google アカウントには、これらのプロパティへのアクセス権がありません。Search Console または Analytics で権限を確認してください。",
+      "googlePropertyApiDisabled": "Google API の設定を確認する必要があります。アプリの管理者に API の有効化と設定の確認を依頼し、もう一度お試しください。",
+      "googlePropertyQuota": "Google のリクエスト上限に達しました。しばらくしてからもう一度お試しください。",
+      "googlePropertyTemporary": "Google は一時的に利用できません。もう一度お試しください。",
+      "googlePropertyUnknown": "プロパティを読み込めませんでした。もう一度お試しください。",
+      "googlePropertyScope": "Google アカウントを再接続し、このアプリが要求する権限を承認してください。"
     },
     "provider": {
       "logo": "{provider} のロゴ",

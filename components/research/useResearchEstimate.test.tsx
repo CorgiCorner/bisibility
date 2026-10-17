@@ -17,11 +17,9 @@ function estimate(costCents: number): KeywordResearchEstimate {
   };
 }
 
-describe("useResearchEstimate", () => {
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+afterEach(() => vi.useRealTimers());
 
+describe("useResearchEstimate", () => {
   it("ignores a stale estimate that resolves after the latest request", async () => {
     vi.useFakeTimers();
     const first = deferred<KeywordResearchEstimate>();
@@ -60,4 +58,24 @@ describe("useResearchEstimate", () => {
     });
     expect(result.current.estimate.costCents).toBe(7);
   });
+});
+
+it("normalizes and deduplicates the same seeds before summing estimates", async () => {
+  vi.useFakeTimers();
+  const action = vi.fn().mockResolvedValue(estimate(7));
+  const { result } = renderHook(() =>
+    useResearchEstimate(action, (seed, overrides) => ({
+      projectId: "prj_1",
+      seed,
+      mode: "related",
+      resultLimit: 100,
+      locationKey: "US",
+      ...overrides,
+    })),
+  );
+  act(() => result.current.scheduleEstimate(["Rank", " rank "]));
+  await act(async () => vi.advanceTimersByTimeAsync(320));
+  expect(action).toHaveBeenCalledTimes(1);
+  expect(action.mock.calls[0]?.[0]).toMatchObject({ seed: "rank", estimateOnly: true });
+  expect(result.current.estimate.costCents).toBe(7);
 });

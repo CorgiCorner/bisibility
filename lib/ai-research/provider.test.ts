@@ -318,3 +318,188 @@ describe("AI provider request accounting", () => {
     ).rejects.toThrow("usage could not be confirmed");
   });
 });
+
+describe("AI provider domain is limited independently of local citation matching", () => {
+  const domain = [
+    "a".repeat(63),
+    "b".repeat(63),
+    "c".repeat(63),
+    "d".repeat(49),
+    "example",
+    "com",
+  ].join(".");
+  const common = { brand: "Example", domain, max_cost_cents: 20 };
+  const credentials = { login: "fixture", password: "fictional", usageObserver: testUsageObserver };
+  it("sends brand searches without a provider domain and preserves long-host citations", async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      Response.json({
+        status_code: 20000,
+        cost: 0.001,
+        tasks: [
+          {
+            id: "brand",
+            status_code: 20000,
+            cost: 0.001,
+            result: [
+              {
+                total_count: 1,
+                items: [
+                  {
+                    question: "q",
+                    answer: "Example",
+                    model_name: "chat_gpt",
+                    sources: [{ url: `https://${domain}/page` }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const result = await fetchObserved(
+      credentials,
+      visibilitySchema.parse({ ...common, target_type: "brand" }),
+      "tag",
+    );
+    const payload = JSON.parse(fetch.mock.calls[0][1].body)[0];
+    expect(payload.target).toEqual([
+      {
+        keyword: "Example",
+        search_filter: "include",
+        search_scope: ["answer"],
+        match_type: "word_match",
+      },
+    ]);
+    expect(result.rows[0].domainCited).toBe(true);
+    expect(result.rows[0].citations[0].url).toBe(`https://${domain}/page`);
+  });
+  it("sends prompt requests without any provider domain and preserves matching identity", async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      Response.json({
+        status_code: 20000,
+        cost: 0.001,
+        tasks: [
+          {
+            id: "prompt",
+            status_code: 20000,
+            cost: 0.001,
+            result: [
+              {
+                model_name: "gpt-4.1-mini",
+                items: [
+                  {
+                    type: "message",
+                    sections: [
+                      { text: "Example", annotations: [{ url: `https://${domain}/page` }] },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const result = await fetchPrompt(
+      credentials,
+      promptSchema.parse({ ...common, prompt: "q", models: ["gpt-4.1-mini"] }),
+      "gpt-4.1-mini",
+      "tag",
+      Date.now() + 120000,
+      modelMap,
+    );
+    const payload = JSON.parse(fetch.mock.calls[0][1].body)[0];
+    expect(payload).not.toHaveProperty("domain");
+    expect(payload).not.toHaveProperty("target");
+    expect(result.row.domainCited).toBe(true);
+    expect(result.row.citations[0].url).toBe(`https://${domain}/page`);
+  });
+  it("refuses an unchecked overlong domain before dispatch, without truncating it", async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      Response.json({
+        status_code: 20000,
+        tasks: [{ status_code: 20000, cost: 0, result: [{ items: [] }] }],
+      }),
+    );
+    const dispatch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const valid = visibilitySchema.parse({
+      brand: "Example",
+      domain: "example.com",
+      max_cost_cents: 20,
+    });
+    await expect(
+      fetchObserved(credentials, { ...valid, domain }, "tag", Date.now() + 120000, dispatch),
+    ).rejects.toThrow(/Domain searches support at most 63 characters/);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+});
+
+describe("provider-only www normalization", () => {
+  const bare = `${"a".repeat(50)}.${"b".repeat(8)}.com`;
+  const credentials = { login: "fixture", password: "fictional", usageObserver: testUsageObserver };
+  it.each(["example.com", bare])(
+    "strips www only in the outbound domain filter for %s",
+    async (host) => {
+      const domain = `www.${host}`;
+      const fetch = vi.fn().mockResolvedValue(
+        Response.json({
+          status_code: 20000,
+          cost: 0.001,
+          tasks: [
+            {
+              id: "fixture",
+              status_code: 20000,
+              cost: 0.001,
+              result: [
+                {
+                  items: [domain, host].map((citationHost) => ({
+                    question: "q",
+                    answer: "Example",
+                    model_name: "chat_gpt",
+                    sources: [{ url: `https://${citationHost}/page` }],
+                  })),
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      vi.stubGlobal("fetch", fetch);
+      const input = visibilitySchema.parse({ brand: "Example", domain, max_cost_cents: 20 });
+      const result = await fetchObserved(credentials, input, "tag");
+      expect(JSON.parse(fetch.mock.calls[0][1].body)[0].target).toEqual([
+        {
+          domain: host,
+          search_filter: "include",
+          search_scope: ["sources"],
+          include_subdomains: true,
+        },
+      ]);
+      expect(input.domain).toBe(domain);
+      expect(result.rows.map((row) => row.domainCited)).toEqual([true, false]);
+    },
+  );
+  it.each([`${bare}x`, `www.${bare}x`])(
+    "rejects oversized actual provider field before I/O: %s",
+    async (domain) => {
+      const fetch = vi.fn();
+      const dispatch = vi.fn();
+      vi.stubGlobal("fetch", fetch);
+      const valid = visibilitySchema.parse({
+        brand: "Example",
+        domain: "example.com",
+        max_cost_cents: 20,
+      });
+      await expect(
+        fetchObserved(credentials, { ...valid, domain }, "tag", Date.now() + 120000, dispatch),
+      ).rejects.toThrow(/63 characters/);
+      expect(fetch).not.toHaveBeenCalled();
+      expect(dispatch).not.toHaveBeenCalled();
+    },
+  );
+});

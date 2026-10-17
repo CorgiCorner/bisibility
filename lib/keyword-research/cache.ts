@@ -7,6 +7,7 @@ import {
   withProviderLookupCache,
   writeProviderLookupCache,
 } from "@/lib/provider-lookups/cache";
+import { projectCacheTtl } from "@/lib/provider-lookups/project-cache-policy";
 import type { KeywordMetrics, ResearchKeywordRow } from "@/lib/providers/types";
 import { researchScopeForLocation } from "@/lib/research/scope";
 import type { SerpRankLocation } from "@/lib/serp/location";
@@ -14,7 +15,7 @@ import type { KeywordResearchSource } from "./types";
 
 const DEFAULT_TTL_SECONDS = 43_200;
 
-export type KeywordResearchCacheEntry = {
+export type KeywordDataCacheEntry = {
   costCents: number;
   fetchedAt: string;
   rows: ResearchKeywordRow[];
@@ -26,7 +27,9 @@ export type KeywordMetricsCacheEntry = KeywordMetrics & {
 };
 
 export function keywordResearchCacheTtlSeconds() {
-  return positiveTtl(process.env.KEYWORD_RESEARCH_CACHE_TTL_SECONDS, DEFAULT_TTL_SECONDS);
+  return projectCacheTtl(
+    positiveTtl(process.env.KEYWORD_RESEARCH_CACHE_TTL_SECONDS, DEFAULT_TTL_SECONDS),
+  );
 }
 
 export function keywordResearchCachedUntil(fetchedAts: string | readonly string[]) {
@@ -68,13 +71,13 @@ export function keywordMetricsCacheKey(input: {
 export function withKeywordResearchCache(input: {
   fresh?: boolean;
   key: string;
-  load: () => Promise<KeywordResearchCacheEntry>;
+  load: () => Promise<KeywordDataCacheEntry>;
 }) {
   return withProviderLookupCache({ ...input, ttlSeconds: keywordResearchCacheTtlSeconds() });
 }
 
 export function readKeywordResearchCache(key: string) {
-  return readProviderLookupCache<KeywordResearchCacheEntry>(key);
+  return readProviderLookupCache<KeywordDataCacheEntry>(key);
 }
 
 export function readKeywordMetricsCache(key: string) {

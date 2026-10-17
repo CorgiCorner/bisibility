@@ -13,7 +13,6 @@ import {
 
 const evaluate = (items = [item()], targets = [revision()]) =>
   matchBusinessCollection({ projectId, observationRunId, items, targets });
-
 describe("recorded collection branch matcher", () => {
   it("keeps same-domain branches separate and prefers an exact slot3 over earlier weak slot1", () => {
     const a = revision(),
@@ -197,6 +196,31 @@ describe("recorded collection branch matcher", () => {
       });
     },
   );
+  it("a proven promoted Finder appearance cannot invalidate the organic identity match", () => {
+    const promotion = "promoted" as const;
+    const listing = (id: string, group: number, value: "organic" | "promoted" | "unknown") => ({
+      ...item(id, group),
+      surface: "local_finder" as const,
+      resultKind: "listing" as const,
+      promotion: value,
+      originalOrdinals: {
+        page: null,
+        block: null,
+        slot: null,
+        absolute: group,
+        group,
+        scale: "finder_group" as const,
+      },
+    });
+    const matches = evaluate([listing("ad", 1, promotion), listing("organic", 2, "organic")]);
+    expect(matches[1]).toMatchObject({ status: "confirmed", organicEligible: true });
+    expect(matches[0].organicEligible).toBe(false);
+    expect(
+      evaluate([listing("a", 1, "organic"), listing("b", 2, "organic")]).every(
+        (row) => row.reason === "ambiguous_exact_items" && !row.organicEligible,
+      ),
+    ).toBe(true);
+  });
   it("preserves source ordinals and excludes nonlocal or positionless identity confirmations", () => {
     expect(evaluate([{ ...item(), resultKind: "organic_result" }])[0].organicEligible).toBe(false);
     expect(

@@ -6,134 +6,100 @@ export const skill: TaskSkill = {
   description:
     "Orient on a bisibility instance and route to the right task skill; use this first whenever an agent is asked to do anything with bisibility rank tracking and is not yet sure which task or endpoint applies.",
   compatibility:
-    "Requires a bisibility origin and a bearer API key with read scope (individual tasks may need write or admin).",
+    "Requires a resolved bisibility origin and a read-scoped bearer credential for project discovery; routed tasks may require write/admin scope or a personal token.",
   kind: "task-router",
-  version: "0.1.0",
+  version: "0.1.1",
   body: `# bisibility (router)
 
-bisibility is a search-rank-tracking platform: you organize **projects** (a domain
-plus its defaults), connect a bring-your-own search-data **provider**, track
-**keywords**, run **rank checks**, and fire **alerts** on rank movement. This is
-the **router** skill - it does not perform a task. Use it to orient yourself on an
-instance, resolve credentials, and pick the specific task skill that does the work.
-
-## When to use this skill
-
-Start here whenever you are asked to do something with bisibility but are not yet
-sure which task or endpoint applies. Once you know the goal, hand off to the
-matching task skill (listed below) and follow that skill's steps.
+Resolve the instance and project, then choose the task skill matching the user's
+goal. This router does not execute the task. Do not turn orientation into an
+unrequested health audit, provider probe or write workflow.
 
 ## Prerequisites
 
-1. **Origin / base URL.** Either the EU hosted region
-   \`https://eu.bisibility.com/api/v1\` or a self-hosted instance
-   \`https://your-host.example/api/v1\`. Resolve which one you are targeting from the
-   user or environment before making any call; do not assume hosted.
-2. **API key.** A bearer key (\`bsb_key_live_...\`). Pass it as
-   \`Authorization: Bearer $BISIBILITY_API_KEY\`. **Never print, echo, or log the
-   key**, and never echo provider credentials.
-3. **Scope.** Keys carry \`read\`, \`write\`, or \`admin\`. Reading needs \`read\`;
-   provider/keyword/alert writes need \`write\`; API-key, team, and migration-token
-   ops need \`admin\`. Confirm your key's scope covers the task before you begin.
+- Resolve the actual instance origin from the user or configuration; do not assume
+  hosted. \`$BISIBILITY_BASE\` includes \`/api/v1\`.
+- Keep the bearer credential in \`$BISIBILITY_API_KEY\`; never display or log it.
+  A project key (\`bsb_key_live_...\`) selects one project. A personal access token
+  (\`bsb_pat_live_...\`) can reach projects allowed by its memberships and scope.
+- Read operations need read scope; writes need write; governance needs admin.
+  Effective access also depends on project permissions. Project creation requires
+  a write-scoped personal token; a project key cannot create another project.
 
-## Discovery URLs (machine-readable orientation)
+## Minimal orientation
 
-Fetch these to learn what a given instance supports before routing:
+1. Read \`GET /capabilities\` for supported features, limits and contract versions.
+   This endpoint is public. Sending a bearer header does not validate the key or
+   tell you its scope.
+2. Read authenticated \`GET /projects\` to resolve the intended project. Project
+   keys return their scoped project; personal tokens return accessible projects.
+   Follow \`meta.next_cursor\` as needed to find the target.
+3. State the chosen skill, target and any missing prerequisite. Stop before
+   executing the routed task unless the user also requested that execution.
 
-- \`/llms.txt\` - human/agent-readable overview of the instance.
-- \`/api/v1/openapi.json\` - full OpenAPI spec (authoritative endpoint list).
-- \`/api/v1/capabilities\` - enabled features, limits, provider support.
-- \`/.well-known/agent-skills/index.json\` - the published task-skill catalog.
-- \`/.well-known/mcp/server-card.json\` - MCP server card, if MCP is enabled.
+For example: the user asks for last week's ranking changes. Resolve example.com,
+then route to **weekly-report**, which reads saved checks and reports data gaps.
+No paid checks or project changes are needed for this routing decision.
 
-## Orientation calls
+Personal-token paths containing \`/projects/{project_id}\` select that project.
+For paths without it, pass \`X-Bisibility-Project: <prj_id>\` (or \`project\` query
+parameter) when selection would otherwise be ambiguous.
 
-\`\`\`bash
-# Liveness (getLiveness) - no auth needed on most instances
-curl -s https://eu.bisibility.com/api/v1/liveness
+## Routing table
 
-# Traffic readiness (getReadiness)
-curl -s https://eu.bisibility.com/api/v1/readiness
-
-# What this instance can do (getCapabilities)
-curl -s https://eu.bisibility.com/api/v1/capabilities \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY"
-
-# Find the project you will work in (listProjects)
-curl -s "https://eu.bisibility.com/api/v1/projects?limit=20" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY"
-\`\`\`
-
-List endpoints return \`{ "data": [...], "meta": { "next_cursor": "..." } }\`;
-paginate with \`?limit=<n>&cursor=<next_cursor>\`. Errors are
-\`application/problem+json\`; on \`429\` honor the retry window in the response.
-
-## Routing table - pick the task skill
-
-| Goal | Skill | Scope |
+| User goal | Skill | Credential tier |
 |-|-|-|
-| Connect / test / configure a search-data provider | \`provider-setup\` | write |
-| Stand up a new domain end to end | \`domain-onboarding\` | write |
-| Add or bulk-update tracked keywords | \`keyword-import\` | write |
-| Investigate triggered alerts, tune alert rules | \`alert-triage\` | write |
-| Audit retained AI answers, mentions and citations | \`ai-visibility-audit\` | read |
-| Build a weekly rank-movement report | \`weekly-report\` | read |
-| Verify a self-hosted instance is healthy | \`self-host-health\` | read |
-| Manage API keys, team invites, migration tokens | \`team-api-governance\` | admin |
+| Connect or diagnose an intended provider | provider-setup | write |
+| Create a domain project and initial targets | domain-onboarding | write personal token for creation |
+| Add or reconcile a supplied keyword list | keyword-import | write |
+| Investigate triggered alerts | alert-triage | write for changes |
+| Audit retained AI mentions and citations | ai-visibility-audit | read |
+| Summarize saved weekly ranking changes | weekly-report | read |
+| Diagnose a self-hosted instance | self-host-health | read |
+| Audit or manage keys, team access or migration tokens | team-api-governance | admin |
 
-If the goal spans several (e.g. onboard a domain *and* import keywords), run the
-skills in order and reuse the resolved origin, key, and \`project_id\` across them.
+When a task spans skills, propose the order and reuse the resolved origin and
+project. Each skill retains its own write, access and spending constraints.
 
-## Rules
+## Additional discovery only when needed
 
-- **Plan before any write or admin call.** Read first (\`listProjects\`,
-  \`listKeywords\`, etc.), confirm the target IDs, then mutate.
-- Send an \`Idempotency-Key\` header on write calls you might retry.
-- Treat IDs as opaque (\`prj_...\`, \`kw_...\`, \`bsb_key_live_...\`).
-- **Never reveal secrets** - API keys, provider credentials, or migration tokens.
-- If a needed feature is absent from \`/api/v1/capabilities\`, stop and report it
-  rather than guessing at endpoints.`,
+- \`/api/v1/openapi.json\`: endpoint and request/response contract for this instance.
+- \`/api/v1/llms.txt\`: API orientation text; do not require a marketing \`/llms.txt\`
+  page on a self-hosted instance.
+- \`/.well-known/agent-skills/index.json\`: published archive skill catalog.
+- \`/.well-known/mcp/server-card.json\`: MCP server card when available.
+
+Use **self-host-health** for liveness/readiness investigation rather than adding
+those calls to every routing task. If a required feature is absent, report the
+missing prerequisite and stop instead of guessing an endpoint.
+
+## Shared rules
+
+Lists return \`data\` with \`meta.next_cursor\`; errors use \`application/problem+json\`.
+Honor 429 retry windows. Read and verify target IDs before approved mutations;
+reuse stable idempotency keys for retried writes. Keep public project, keyword,
+run and measurement IDs distinct. Never reveal API/provider/migration secrets.
+Explicit approval is required before paid provider work; resolving a route does
+not authorize writes, credential changes or spending.`,
   references: [
     {
-      path: "references/discovery.md",
-      content: `# bisibility discovery & orientation cheat-sheet
+      path: "references/api.md",
+      content: `# Router - discovery and scope
 
-Base path: \`/api/v1\`. Auth: \`Authorization: Bearer <api_key>\`.
-Origin is either \`https://bisibility.com\` (hosted) or
-\`https://your-host.example\` (self-hosted) - resolve before calling.
+Base: resolved instance origin + \`/api/v1\`.
 
-## Discovery URLs (no version prefix except OpenAPI/capabilities)
-
-| URL | Purpose |
+| Endpoint | Evidence |
 |-|-|
-| \`/llms.txt\` | Agent-readable instance overview |
-| \`/api/v1/openapi.json\` | Authoritative OpenAPI spec |
-| \`/api/v1/capabilities\` | Enabled features, limits, providers |
-| \`/.well-known/agent-skills/index.json\` | Published task-skill catalog |
-| \`/.well-known/mcp/server-card.json\` | MCP server card (if enabled) |
+| GET /capabilities | Public features and contracts; not an auth check |
+| GET /projects | Authenticated project selection |
+| GET /openapi.json | Instance REST contract |
+| GET /llms.txt | API orientation |
 
-## Orientation endpoints
-
-| METHOD path | operationId | Notes |
-|-|-|-|
-| GET /liveness | getLiveness | Web process liveness; usually unauthenticated |
-| GET /readiness | getReadiness | Database and blocking-migration readiness |
-| GET /health | getHealth | Aggregate status anonymously; API auth unlocks detailed diagnostics |
-| GET /capabilities | getCapabilities | Feature/limit discovery |
-| GET /projects | listProjects | Find your \`project_id\` |
-
-## Conventions
-
-- Lists: \`{ "data": [...], "meta": { "next_cursor": "..." } }\`; page with
-  \`?limit=<n>&cursor=<next_cursor>\`.
-- Errors: \`application/problem+json\`; \`429\` carries a retry window.
-- Writes: optional \`Idempotency-Key\` header.
-- Scopes: \`read\` < \`write\` < \`admin\`.
-
-## Task skills to route to
-
-provider-setup, domain-onboarding, keyword-import, alert-triage,
-weekly-report, ai-visibility-audit, self-host-health, team-api-governance.`,
+Read/write/admin tiers remain bounded by project permissions. Project keys select
+one project and cannot create projects; creation needs a write personal token.
+Use X-Bisibility-Project for ambiguous projectless personal-token calls. Route to
+a task skill and stop before execution unless execution is requested. Do not run
+health probes or paid work simply to choose a skill.`,
     },
   ],
 };

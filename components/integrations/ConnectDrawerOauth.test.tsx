@@ -1,6 +1,7 @@
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import { renderWithIntegrationMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { searchSyncPlanSummary } from "@/lib/search-insights/sync/plan";
+import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ConnectDrawerOauth } from "./ConnectDrawerOauth";
@@ -363,6 +364,41 @@ describe("ConnectDrawerOauth", () => {
       "href",
       expect.stringContaining("/api/integrations/google/install"),
     );
+  });
+
+  it("preserves missing-consent instructions after final stored-property verification", async () => {
+    render(
+      <ConnectDrawerOauth
+        loadStoredProperties={async () => ({
+          properties: [
+            {
+              kind: "domain",
+              label: "example.com",
+              permissionLevel: "siteOwner",
+              value: "sc-domain:example.com",
+            },
+          ],
+          provider: "gsc",
+        })}
+        saveStoredProperty={async () => ({
+          status: "reauth_required",
+          failure: { reason: "scope", action: "reauthorize" },
+        })}
+        projectId="prj_1"
+        provider={{ ...readyGsc(), status: "connected" }}
+        scopes={["webmasters"]}
+        syncPlan={{ daysTotal: 93, pace: "gentle", retentionMonths: 3 }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Change property" }));
+    await screen.findByRole("button", { name: "Search Console property" });
+    fireEvent.click(screen.getByRole("button", { name: "Use selected property" }));
+    expect(
+      await screen.findByText(
+        "Reconnect your Google account and approve the requested permissions for this app.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Use selected property" })).not.toBeInTheDocument();
   });
 
   it("does not start a reconnect flow while the project is read-only", () => {
@@ -835,3 +871,97 @@ describe("ConnectDrawerOauth", () => {
     expect(screen.getByRole("button", { name: "Use entered property" })).toBeDisabled();
   });
 });
+
+describe("safe Google property diagnostics", () => {
+  it.each([
+    [
+      "permission",
+      "check_permissions",
+      "This Google account cannot access these properties. Check its permissions in Search Console or Analytics.",
+    ],
+    [
+      "api_disabled",
+      "configure_api",
+      "The Google API configuration needs attention. Ask the app administrator to enable the API and check its setup, then try again.",
+    ],
+    ["quota", "retry_later", "Google's request limit was reached. Try again later."],
+  ] as const)(
+    "renders the %s action for GSC rather than raw provider prose",
+    (reason, action, message) => {
+      render(
+        <ConnectDrawerOauthSelection
+          allowManualEntry={false}
+          isGa4={false}
+          syncPlan={{ daysTotal: 93, pace: "gentle", retentionMonths: 3 }}
+          manualEntry={false}
+          onManualEntryChange={vi.fn()}
+          onPropertyChange={vi.fn()}
+          onPropertyErrorChange={vi.fn()}
+          onSelect={vi.fn()}
+          pending={false}
+          property=""
+          propertyError={null}
+          readOnly={false}
+          setup={{
+            error: "access_secret must not appear",
+            failure: { reason, action, httpStatus: 403 },
+            properties: [],
+            provider: "gsc",
+          }}
+        />,
+      );
+      expect(screen.getByText(message)).toBeInTheDocument();
+      expect(screen.queryByText(/access_secret/)).toBeNull();
+      expect(screen.queryByText(/reconnect.*properties/i)).toBeNull();
+    },
+  );
+});
+
+it.each([
+  ["failed", "quota", "retry_later", "Google's request limit was reached. Try again later."],
+  [
+    "reauth_required",
+    "scope",
+    "reauthorize",
+    "Reconnect your Google account and approve the requested permissions for this app.",
+  ],
+] as const)(
+  "keeps pending drawer %s diagnostics without saving",
+  async (status, reason, action, message) => {
+    render(
+      <ConnectDrawerOauth
+        projectId="prj_1"
+        provider={{
+          ...readyGsc(),
+          drawer: {
+            ...readyGsc().drawer,
+            googleOAuth: {
+              properties: [
+                {
+                  kind: "domain",
+                  label: "example.com",
+                  permissionLevel: "siteOwner",
+                  value: "sc-domain:example.com",
+                },
+              ],
+            },
+          },
+        }}
+        scopes={["webmasters"]}
+        syncPlan={{ daysTotal: 93, pace: "gentle", retentionMonths: 3 }}
+        completePropertySelection={vi
+          .fn()
+          .mockResolvedValue({ status, failure: { reason, action } })}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Use selected property" }));
+    expect(await screen.findByText(message)).toBeVisible();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
+    if (status === "reauth_required") {
+      expect(
+        screen.queryByRole("button", { name: "Use selected property" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Use a different Google account" })).toBeVisible();
+    }
+  },
+);

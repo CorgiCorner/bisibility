@@ -331,3 +331,96 @@ describe("SearchInsightsOauthReturn", () => {
     expect(disconnectAction).not.toHaveBeenCalled();
   });
 });
+
+it.each(["gsc", "ga4"] as const)(
+  "keeps %s pending failure actionable without refreshing",
+  async (provider) => {
+    const completeAction = vi.fn().mockResolvedValue({
+      status: "failed",
+      failure: { reason: "quota", action: "retry_later", httpStatus: 429 },
+    });
+    render(
+      <ToastProvider>
+        <SearchInsightsOauthReturn
+          cancelAction={vi.fn()}
+          completeAction={completeAction}
+          disconnectAction={vi.fn()}
+          projectId="prj_1"
+          setup={
+            provider === "gsc"
+              ? setup
+              : {
+                  provider: "ga4",
+                  properties: [
+                    { kind: "ga4", label: "Store", permissionLevel: "Account", value: "123456789" },
+                  ],
+                }
+          }
+          syncPlan={{ daysTotal: 488, pace: "normal", retentionMonths: 16 }}
+        />
+      </ToastProvider>,
+    );
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: provider === "gsc" ? "Use selected property" : "Use this property",
+      }),
+    );
+    expect(
+      await screen.findByText("Google's request limit was reached. Try again later."),
+    ).toBeVisible();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", {
+        name: provider === "gsc" ? "Use selected property" : "Use this property",
+      }),
+    ).toBeEnabled();
+  },
+);
+
+it.each(["gsc", "ga4"] as const)(
+  "offers %s reauthorization after pending scope failure",
+  async (provider) => {
+    render(
+      <ToastProvider>
+        <SearchInsightsOauthReturn
+          cancelAction={vi.fn()}
+          completeAction={vi.fn().mockResolvedValue({
+            status: "reauth_required",
+            failure: { reason: "scope", action: "reauthorize" },
+          })}
+          disconnectAction={vi.fn()}
+          projectId="prj_1"
+          setup={
+            provider === "gsc"
+              ? setup
+              : {
+                  provider: "ga4",
+                  properties: [
+                    { kind: "ga4", label: "Store", permissionLevel: "Account", value: "123456789" },
+                  ],
+                }
+          }
+          syncPlan={{ daysTotal: 488, pace: "normal", retentionMonths: 16 }}
+        />
+      </ToastProvider>,
+    );
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: provider === "gsc" ? "Use selected property" : "Use this property",
+      }),
+    );
+    const reconnect = await screen.findByRole("link", { name: "Try connecting again" });
+    expect(reconnect).toHaveAttribute("href", expect.stringContaining(`provider=${provider}`));
+    expect(
+      screen.getByText(
+        "Reconnect your Google account and approve the requested permissions for this app.",
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", {
+        name: provider === "gsc" ? "Use selected property" : "Use this property",
+      }),
+    ).not.toBeInTheDocument();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
+  },
+);

@@ -1,0 +1,264 @@
+{
+  "project_id": "prj_a00000000000000000000000",
+  "kind": "competitive_landscape",
+  "title": "Competitive landscape: example.com (fictional fixture)",
+  "idempotency_key": "fixture-3",
+  "body": {
+    "version": 1,
+    "summary": "Fictional sample: the rival ranks for a team-evaluation phrase outside the tracked set. Review the project comparison page before adding content.",
+    "context": {
+      "goal": "Help small teams evaluate weekly tracking.",
+      "assumptions": [
+        "Fictional fixture, not live customer evidence.",
+        "The comparison URL is a proposed page role; its existence is unverified."
+      ]
+    },
+    "method": "Agent comparison of fictional provider rows and saved tracked phrases in the confirmed market; gaps mean absent from tracking, not absent from site rankings.",
+    "coverage": {
+      "state": "partial",
+      "tracked_rows": 1,
+      "omitted_pages": 0,
+      "limitations": ["One tracked phrase is not a complete site keyword inventory."],
+      "domains": [
+        {
+          "domain": "example.com",
+          "state": "partial",
+          "keyword_rows": 2,
+          "source_ids": ["tracked-1", "project-overview"],
+          "history_status": "failed, confirmed cost 2 cents",
+          "omitted_pages": "unknown; provider total not supplied"
+        },
+        {
+          "domain": "example.org",
+          "state": "partial",
+          "keyword_rows": 2,
+          "page_rows": 1,
+          "source_ids": ["rival-1", "rival-history"],
+          "history_status": "failed, confirmed cost 2 cents",
+          "omitted_pages": "unknown; provider total not supplied"
+        }
+      ]
+    },
+    "recommendations": [
+      {
+        "priority": 1,
+        "action": "Review the project comparison page for the team-evaluation task.",
+        "target_url": "https://example.com/compare",
+        "evidence_ids": ["rival-1", "tracked-1"],
+        "rationale": "The rival has a sampled team-evaluation phrase absent from the tracked set.",
+        "confidence": "low",
+        "uncertainty": "Project ranking for the untracked phrase and both pages contents are unverified.",
+        "verification": "Unexecuted: verify whether the proposed comparison URL exists, inspect its intent if present, and propose tracking only after separate confirmation.",
+        "target_status": "proposed URL; existence and content unverified"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "tracked-1",
+        "source_tool": "list_keywords",
+        "keyword_id": "kw_b00000000000000000000000",
+        "phrase": "weekly rank tracker",
+        "target_url": "https://example.com/guides/weekly-tracking",
+        "ranking_url": "https://example.com/guides/weekly-tracking",
+        "position": 12,
+        "market": "user-confirmed fixture market, 2840/en",
+        "observed_at": "2026-10-15T12:00:00.000Z",
+        "retrieved_at": "2026-10-16T09:00:00.000Z",
+        "cache_state": "saved check",
+        "fact": "Fictional completed check with positive rank; full market coverage unknown."
+      },
+      {
+        "id": "rival-1",
+        "source_tool": "analyze_domain_overview",
+        "domain": "example.org",
+        "scope": "root",
+        "location_code": 2840,
+        "language_code": "en",
+        "source_snapshot_at": "2026-10-15T00:00:00.000Z",
+        "observed_at": "2026-10-15T00:00:00.000Z",
+        "retrieved_at": "2026-10-16T09:00:00.000Z",
+        "cached": false,
+        "state": "partial",
+        "keyword_limit": 100,
+        "page_limit": 100,
+        "keyword_rows": [
+          {
+            "keyword": "weekly rank tracker",
+            "position": 5,
+            "url": "https://example.org/weekly"
+          },
+          {
+            "keyword": "rank tracking for teams",
+            "position": 8,
+            "url": "https://example.org/teams"
+          }
+        ],
+        "pages": [
+          {
+            "url": "https://example.org/teams",
+            "sampled_keyword_count": 1
+          }
+        ],
+        "fact": "Two fictional ranked phrases and one sampled page; provider total coverage is unknown."
+      },
+      {
+        "id": "rival-history",
+        "source_tool": "load_domain_overview_history",
+        "domain": "example.org",
+        "location_code": 2840,
+        "language_code": "en",
+        "retrieved_at": "2026-10-16T09:00:00.000Z",
+        "cached": false,
+        "observed_at": null,
+        "fact": "Fictional history is unavailable after a confirmed charged failure; no trend established."
+      },
+      {
+        "id": "project-overview",
+        "source_tool": "analyze_domain_overview",
+        "domain": "example.com",
+        "scope": "root",
+        "location_code": 2840,
+        "language_code": "en",
+        "source_snapshot_at": "2026-10-15T00:00:00.000Z",
+        "observed_at": "2026-10-15T00:00:00.000Z",
+        "retrieved_at": "2026-10-16T09:00:00.000Z",
+        "cached": false,
+        "state": "partial",
+        "keyword_rows": [
+          {
+            "keyword": "weekly rank tracker",
+            "position": 12,
+            "url": "https://example.com/guides/weekly-tracking"
+          },
+          {
+            "keyword": "manual rank checks",
+            "position": 4,
+            "url": "https://example.com/guides/manual"
+          }
+        ],
+        "fact": "Fictional partial provider sample; same market and source date as rival. History failed with confirmed 2-cent charge."
+      }
+    ],
+    "costs": {
+      "estimate_note": "Illustrative fixture cents only, not a price card.",
+      "plan": [
+        {
+          "domain": "example.com",
+          "overview_estimate_cents": 6,
+          "keyword_loads": [],
+          "page_loads": [],
+          "history_estimate_cents": 2,
+          "backlinks": "excluded",
+          "total_estimate_cents": 8,
+          "allocated_cap_cents": 8,
+          "per_call_caps": {
+            "overview": 6,
+            "history": 2
+          },
+          "cached": false
+        },
+        {
+          "domain": "example.org",
+          "overview_estimate_cents": 6,
+          "keyword_loads": [],
+          "page_loads": [],
+          "history_estimate_cents": 2,
+          "backlinks": "excluded",
+          "total_estimate_cents": 8,
+          "allocated_cap_cents": 8,
+          "per_call_caps": {
+            "overview": 6,
+            "history": 2
+          },
+          "cached": false
+        }
+      ],
+      "total_estimate_cents": 16,
+      "approved_total_cap_cents": 16,
+      "approval": "Fictional explicit user approval of the exact plan before execution.",
+      "new_provider_cost_cents": 16,
+      "receipt_state": "confirmed, including charged history failure",
+      "historical_costs": "unknown",
+      "external_client_fees": "unknown"
+    },
+    "limitations": ["Fictional fixture only; no provider calls or live page retrieval."],
+    "market": {
+      "location_code": 2840,
+      "language_code": "en",
+      "confirmed_by": "fictional user confirmation, not an assumed default"
+    },
+    "overlap_and_gaps": {
+      "tracked_phrase_denominator": 1,
+      "competitor_sample_denominator": 2,
+      "overlap": ["weekly rank tracker"],
+      "candidate_gaps": ["rank tracking for teams"],
+      "reason": "Gap is absent from the tracked set; project site ranking/content absence is unverified."
+    },
+    "top_pages": [
+      {
+        "domain": "example.org",
+        "url": "https://example.org/teams",
+        "metric": "1 keyword in the returned sample, not measured traffic",
+        "evidence_ids": ["rival-1"]
+      }
+    ],
+    "trend": {
+      "status": "unknown",
+      "reason": "History failed after confirmed charge; no compatible prior source snapshot."
+    },
+    "visible_keyword_share": {
+      "formula": "distinct observed phrases for domain / union of compatible observed phrases",
+      "union": ["weekly rank tracker", "manual rank checks", "rank tracking for teams"],
+      "union_size": 3,
+      "rows": [
+        {
+          "domain": "example.com",
+          "numerator": 2,
+          "denominator": 3,
+          "observed_share": 0.6666666666666666,
+          "status": "partial sample lower bound, not market share"
+        },
+        {
+          "domain": "example.org",
+          "numerator": 2,
+          "denominator": 3,
+          "observed_share": 0.6666666666666666,
+          "status": "partial sample lower bound, not market share"
+        }
+      ],
+      "limitation": "Overlapping shares need not sum to 100%; unobserved ranks remain unknown."
+    },
+    "strengths": [
+      {
+        "domain": "example.com",
+        "status": "provisional",
+        "fact": "Best observed position for manual rank checks; missing rival rows prevent a complete win claim.",
+        "evidence_ids": ["project-overview"]
+      },
+      {
+        "domain": "example.org",
+        "status": "provisional",
+        "fact": "Better observed position for weekly rank tracker (5 versus 12) on the matched source date.",
+        "evidence_ids": ["project-overview", "rival-1"]
+      }
+    ],
+    "openings": [
+      {
+        "action": "Review the owned comparison page for team-evaluation intent; site absence remains unverified.",
+        "evidence_ids": ["tracked-1", "rival-1"]
+      }
+    ],
+    "deferred_alternative": "Backlinks might add context, but were not approved; verify the candidate intent gap first."
+  },
+  "provenance": {
+    "skill": "competitive-landscape",
+    "skill_version": "0.4.0",
+    "agent": "unknown",
+    "source_origin": "fictional_fixture",
+    "instance": "https://example.com",
+    "method": "Agent comparison of fictional provider rows and saved tracked phrases in the confirmed market; gaps mean absent from tracking, not absent from site rankings.",
+    "evidence_ids": ["tracked-1", "rival-1", "rival-history", "project-overview"],
+    "retrieved_at": "2026-10-16T09:00:00.000Z",
+    "limitations": ["Fictional fixture only; no provider calls or live page retrieval."]
+  }
+}

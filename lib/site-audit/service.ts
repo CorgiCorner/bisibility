@@ -1,8 +1,8 @@
 import "server-only";
-
 import { createAgentReport, getAgentReport, listAgentReports } from "@/lib/agent-reports/service";
 import { consume } from "@/lib/api/ratelimit";
 import { type Actor, authorize } from "@/lib/auth/authorize";
+import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import { crawlSite } from "./crawl";
@@ -22,8 +22,35 @@ export async function runSiteAudit(
   assertProjectWritable(project);
   const domain = requireTrackedDomain(project);
   const target = auditTarget(domain);
-  const recent = await listAgentReports({ projectId: project.id, kind: SITE_AUDIT_KIND, limit: 1 });
-  if (recent[0] && Date.now() - new Date(recent[0].createdAt).getTime() < 300_000) {
+  const policy = await prisma.project.findUniqueOrThrow({
+    where: { id: project.id },
+    select: { lookupCacheTtlSeconds: true },
+  });
+  const ttl = policy.lookupCacheTtlSeconds ?? 300;
+  const recentRows = await prisma.agentReport.findMany({
+    where: {
+      projectId: project.id,
+      kind: SITE_AUDIT_KIND,
+      OR: [
+        {
+          cacheReuseUntil: { gt: new Date() },
+          createdAt: { gt: new Date(Date.now() - ttl * 1000) },
+        },
+        {
+          cacheReuseUntil: null,
+          createdAt: { gt: new Date(Date.now() - Math.min(ttl, 300) * 1000) },
+        },
+      ],
+    },
+    select: { publicId: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+    take: 1,
+  });
+  const recent = recentRows.map((row) => ({
+    id: row.publicId,
+    createdAt: row.createdAt.toISOString(),
+  }));
+  if (recent[0]) {
     const saved = await getAgentReport({ projectId: project.id, reportId: recent[0].id });
     const parsed = siteAuditResultSchema.safeParse(saved?.body);
     const result = parsed.success ? parsed.data : undefined;
@@ -48,6 +75,7 @@ export async function runSiteAudit(
     projectId: project.id,
     actorId: context.actorId ?? context.actor.id,
     kind: SITE_AUDIT_KIND,
+    cacheReuseUntil: new Date(Date.now() + ttl * 1000),
     title: `Site audit: ${domain}`,
     body: result,
     provenance: { source: "bounded_http_crawl", limits: result.limits, providerCostCents: 0 },
