@@ -19,6 +19,7 @@ const messages: Record<string, string> = {
   viewHelpClose: "Close",
   presentationOnly: "Personal display only. Schedules and paid checks do not change.",
   preset: "Dashboard preset",
+  resetPreset: "Reset to preset",
   save: "Save",
   cancel: "Cancel",
   saving: "Saving display preferences.",

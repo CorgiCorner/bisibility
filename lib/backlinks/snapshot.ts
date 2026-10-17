@@ -1,9 +1,14 @@
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import {
+  instanceLookupTtl,
+  projectCacheFreshness,
+} from "@/lib/provider-lookups/project-cache-policy";
 import type { BacklinkRowMode, BacklinkTargetScope } from "@/lib/providers/types";
+import { completedAppendSummary } from "./append-evidence";
 import { backlinksCachedUntil } from "./cache";
+import { BacklinksSnapshotExpiredError } from "./errors";
 import { unknownBacklinksSnapshotId } from "./source-filter";
 import { snapshotProvider } from "./stored";
 
@@ -28,6 +33,7 @@ function snapshotLookupWhere(input: SnapshotLookupInput): Prisma.BacklinkSnapsho
     ...(input.provider
       ? { AND: [{ summary: { equals: input.provider, path: ["_provider"] } }] }
       : {}),
+    ...projectCacheFreshness(input.now, instanceLookupTtl("bl:")),
     expiresAt: { gt: input.now },
     fetchedRowCount: { gte: input.minRows },
     includeSubdomains: input.includeSubdomains,
@@ -127,6 +133,8 @@ export async function persistBacklinksSnapshot(input: {
 }
 
 export function findCurrentBacklinksSnapshot(input: {
+  snapshotId?: string;
+  fetchedRowCount?: number;
   includeSubdomains: boolean;
   now: Date;
   projectId: string;
@@ -137,9 +145,11 @@ export function findCurrentBacklinksSnapshot(input: {
   return prisma.backlinkSnapshot.findFirst({
     orderBy: { fetchedAt: "desc" },
     where: {
+      ...(input.snapshotId ? { id: input.snapshotId, fetchedRowCount: input.fetchedRowCount } : {}),
       ...(input.provider
         ? { AND: [{ summary: { equals: input.provider, path: ["_provider"] } }] }
         : {}),
+      ...projectCacheFreshness(input.now, instanceLookupTtl("bl:")),
       expiresAt: { gt: input.now },
       includeSubdomains: input.includeSubdomains,
       projectId: input.projectId,
@@ -153,19 +163,35 @@ export async function appendBacklinksRows(input: {
   costCents: number;
   rows: BacklinksRow[];
   snapshot: SnapshotRecord;
+  claim: { token: string; summary: Prisma.InputJsonObject };
+  totalRowsAvailable: number;
 }) {
+  const summary = completedAppendSummary(input.snapshot);
   return prisma.$transaction(async (tx) => {
-    if (input.rows.length > 0) {
-      await tx.backlinkRow.createMany({
-        data: input.rows.map((row) => ({ ...rowData(row), snapshotId: input.snapshot.id })),
-      });
-    }
-    return tx.backlinkSnapshot.update({
+    const updated = await tx.backlinkSnapshot.updateMany({
+      where: {
+        id: input.snapshot.id,
+        projectId: input.snapshot.projectId,
+        fetchedRowCount: input.snapshot.fetchedRowCount,
+        summary: { equals: input.claim.summary },
+      },
       data: {
         costCents: { increment: input.costCents },
         fetchedRowCount: { increment: input.rows.length },
+        summary,
+        totalRowsAvailable: input.totalRowsAvailable,
       },
-      where: { id: input.snapshot.id },
     });
+    if (updated.count !== 1) throw new BacklinksSnapshotExpiredError();
+    if (input.rows.length > 0)
+      await tx.backlinkRow.createMany({
+        data: input.rows.map((row) => ({ ...rowData(row), snapshotId: input.snapshot.id })),
+      });
+    return {
+      costCents: input.snapshot.costCents + input.costCents,
+      fetchedRowCount: input.snapshot.fetchedRowCount + input.rows.length,
+      summary,
+      totalRowsAvailable: input.totalRowsAvailable,
+    };
   });
 }

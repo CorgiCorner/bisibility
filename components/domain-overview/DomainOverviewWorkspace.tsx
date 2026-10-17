@@ -1,6 +1,7 @@
 "use client";
-
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
+import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
+import { ProviderAccessGate } from "@/components/ui/ProviderAccessGate";
 import type { DomainOverviewScope, DomainRecentTarget } from "@/lib/domain-overview/types";
 import { researchScopeKey } from "@/lib/research/scope";
 import { appPath } from "@/lib/routing/app-path";
@@ -40,7 +41,7 @@ export function DomainOverviewWorkspace({
   loadPagesPageAction,
   projectId,
   projectRef,
-  researchScope,
+  researchScope = null,
   saveSelectedKeywordsAction,
 }: Readonly<DomainOverviewWorkspaceProps>) {
   const t = useTranslations("projectDomainOverview.workspace");
@@ -48,6 +49,7 @@ export function DomainOverviewWorkspace({
   const router = useRouter();
   const { addSpend } = useSessionSpend();
   const activeResearchScope = supportedResearchScope(researchScope);
+  const providerReady = context.providerStatus === "connected";
   const [target, setTarget] = useState(initialTarget);
   const [domainScopeOverride, setDomainScopeOverride] = useState<DomainOverviewScope | undefined>(
     detectedDomainScope(initialTarget) === "root" ? undefined : initialScope,
@@ -104,7 +106,7 @@ export function DomainOverviewWorkspace({
   }
 
   function changeResearchScope(next: NonNullable<typeof researchScope>) {
-    if (!researchScope || researchScopeKey(next) === researchScopeKey(researchScope)) return;
+    if (researchScope && researchScopeKey(next) === researchScopeKey(researchScope)) return;
     const params = new URLSearchParams({ researchScope: researchScopeKey(next) });
     if (target.trim()) params.set("domain", target.trim());
     if (domainScopeOverride) params.set("scope", domainScopeOverride);
@@ -184,7 +186,14 @@ export function DomainOverviewWorkspace({
 
   return (
     <section aria-label={t("aria")} className="grid min-w-0 gap-4">
-      {researchScope ? (
+      <ProviderAccessGate
+        blocked={
+          context.providerStatus === "no_provider" || context.providerStatus === "needs_reauth"
+        }
+        reconnect={context.providerStatus === "needs_reauth"}
+        providers={context.supportingProviders}
+        href={appPath(projectRef, "integrations")}
+      >
         <DomainOverviewAnalyzeCard
           catalogScopes={context.catalogScopes}
           estimate={estimate}
@@ -208,7 +217,7 @@ export function DomainOverviewWorkspace({
           target={target}
           trackedScopes={context.trackedScopes}
         />
-      ) : null}
+      </ProviderAccessGate>
       <DomainOverviewRecentTargets
         currentTarget={report?.target}
         onOpen={openRecent}
@@ -222,9 +231,9 @@ export function DomainOverviewWorkspace({
           historyError={historyError}
           historyEstimateCents={estimate.historyCostCents}
           historyLoading={historyLoading}
-          onLoadHistory={() => void loadHistory()}
-          onLoadMoreKeywords={() => void loadMore("keywords")}
-          onLoadMorePages={() => void loadMore("pages")}
+          onLoadHistory={providerReady ? () => void loadHistory() : undefined}
+          onLoadMoreKeywords={providerReady ? () => void loadMore("keywords") : undefined}
+          onLoadMorePages={providerReady ? () => void loadMore("pages") : undefined}
           projectRef={projectRef}
           report={report}
           researchScope={activeResearchScope}
@@ -237,6 +246,13 @@ export function DomainOverviewWorkspace({
           tableFetchedCount={tableFetchedCount}
           tableHasMore={tableHasMore}
           tableLoading={loadingTable}
+        />
+      ) : blockedState === "no_provider" || blockedState === "needs_reauth" ? (
+        <ProviderAccessEmptyState
+          surface="domain"
+          href={appPath(projectRef, "integrations")}
+          providers={context.supportingProviders}
+          reconnect={blockedState === "needs_reauth"}
         />
       ) : (
         <DomainOverviewStatePanel

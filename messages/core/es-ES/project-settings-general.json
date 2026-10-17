@@ -47,6 +47,54 @@
       "usageKeywordOnly": "{count, plural, one {# palabra clave la usa.} other {# palabras clave la usan.}}",
       "usageSegmentOnly": "{count, plural, one {# segmento la usa.} other {# segmentos la usan.}}",
       "writeError": "No se ha podido añadir la etiqueta."
+    },
+    "dataCache": {
+      "title": "Caché de datos",
+      "help": "Compartida por los módulos de este proyecto. Un plazo menor limita también resultados existentes; uno mayor se aplica a los nuevos. Se conservan informes, historial y comprobantes de pago.",
+      "lifetime": "Reutilizar durante",
+      "default": "Valor de la instancia",
+      "hours": "{count, plural, one {# hora} other {# horas}}",
+      "days": "{count, plural, one {# día} other {# días}}",
+      "save": "Guardar",
+      "saved": "Guardado",
+      "list": "Resultados guardados",
+      "refresh": "Actualizar lista",
+      "next": "Página siguiente",
+      "back": "Primera página",
+      "empty": "No hay resultados en esta página.",
+      "unavailable": "No se pudo leer la caché. Vuelve a intentar cuando haya conexión.",
+      "error": "No se pudo guardar el cambio. Inténtalo de nuevo.",
+      "conflict": "La configuración cambió en otra pestaña. Actualiza antes de guardar.",
+      "readOnly": "Los editores pueden cambiar el plazo y eliminar resultados.",
+      "delete": "Eliminar",
+      "busy": "Este resultado se está actualizando. Espera a que termine la búsqueda.",
+      "expires": "Caduca {date}",
+      "unknownKeyword": "Métricas de palabras clave",
+      "source": {
+        "related": "Relacionadas",
+        "suggestion": "Sugerencias",
+        "idea": "Ideas",
+        "metrics": "Métricas",
+        "backlinks": "Enlaces entrantes",
+        "overview": "Resumen",
+        "history": "Historial",
+        "keywords": "Palabras clave",
+        "pages": "Páginas",
+        "ai_visibility": "Visibilidad en IA",
+        "prompt_explorer": "Explorador de prompts",
+        "site_audit": "Auditoría web"
+      },
+      "notice": "Eliminar no inicia búsquedas. Una búsqueda posterior puede requerir una solicitud de pago.",
+      "module": {
+        "keyword_research": "Investigación de palabras clave",
+        "keyword_metrics": "Métricas de palabras clave",
+        "ranked_keywords": "Palabras posicionadas",
+        "backlinks": "Enlaces entrantes",
+        "domain_overview": "Resumen del dominio",
+        "ai_visibility": "Visibilidad en IA",
+        "prompt_explorer": "Explorador de prompts",
+        "site_audit": "Auditoría web"
+      }
     }
   }
 }

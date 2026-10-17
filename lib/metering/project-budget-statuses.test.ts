@@ -1,3 +1,4 @@
+import { ownAllocationTag } from "@/lib/provider-usage/credential-version";
 import type { AccessContext, Budget, BudgetStatus } from "@usagekit/core";
 import { createMeter } from "@usagekit/meter";
 import { createMemoryStore } from "@usagekit/store";
@@ -206,4 +207,61 @@ it("keeps allow hard-limit uncertainty distinct from advisory limits and proven 
   };
   expect(paidWorkBlocked([status, known])).toBe(true);
   expect(paidWorkBlocked([{ ...known, used: { ...known.used, value: 150n } }])).toBe(false);
+});
+
+it("serializes header reads while preserving all sources, tags and blocking/redaction results", async () => {
+  const meter = fixture([projectCap(), unresolvedGate()]);
+  const original = meter.applicableBudgets.bind(meter);
+  let active = 0;
+  let peak = 0;
+  const calls = vi.spyOn(meter, "applicableBudgets").mockImplementation(async (...args) => {
+    active++;
+    peak = Math.max(peak, active);
+    await Promise.resolve();
+    try {
+      return await original(...args);
+    } finally {
+      active--;
+    }
+  });
+  const connections = [{ id: "connection", publicId: "conn_public", provider: "dataforseo" }];
+  const expected = await readProjectBudgetStatuses(meter, access, project, connections);
+  const defaultCalls = structuredClone(calls.mock.calls);
+  expect(peak).toBe(4);
+  peak = 0;
+  calls.mockClear();
+  const actual = await readProjectBudgetStatuses(meter, access, project, connections, 1);
+  expect(peak).toBe(1);
+  expect(actual).toEqual(expected);
+  expect(calls.mock.calls).toEqual(defaultCalls);
+  expect(calls).toHaveBeenCalledTimes(14);
+  expect(new Set(calls.mock.calls.map(([, query]) => query.source))).toEqual(
+    new Set(["app", "worker", "api", "sdk", "cli", "mcp", "proxy"]),
+  );
+});
+
+it("keeps shared-tag figures redacted while retaining the private blocking decision in header mode", async () => {
+  const shared: Budget = {
+    ...projectCap(),
+    id: "own-shared",
+    scope: { kind: "tag", namespace: "test", tag: ownAllocationTag("dataforseo", "connection") },
+    limit: { unit: "budget_cents", scale: 0, value: 0n },
+  };
+  const meter = fixture([projectCap(), shared]);
+  const connections = [{ id: "connection", publicId: "conn_public", provider: "dataforseo" }];
+  const standard = await readProjectBudgetStatuses(meter, access, project, connections);
+  const header = await readProjectBudgetStatuses(meter, access, project, connections, 1);
+  expect(header).toEqual(standard);
+  const connectionReads = header.filter((row) => row.connection !== null);
+  expect(connectionReads).toHaveLength(7);
+  for (const row of connectionReads) {
+    expect(row.blocked).toBe(true);
+    expect(row.statuses.find((value) => value.budget.id === shared.id)).toMatchObject({
+      redacted: true,
+      used: null,
+      reserved: null,
+      remaining: null,
+      budget: { limit: null },
+    });
+  }
 });

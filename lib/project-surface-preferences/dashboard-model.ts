@@ -69,6 +69,10 @@ export function dashboardLayoutFor(
   const preset = explicit ?? preference.defaultPreset;
   const stored = preference.presentation.layouts[preset];
   if (stored) return stored;
+  return defaultPersonalDashboardLayout(preset);
+}
+
+export function defaultPersonalDashboardLayout(preset: DashboardPreset): DashboardLayout {
   // Preserve the existing full-width cards and the two secondary cards in the first personal layout.
   const wide = new Set([
     "organic_kpis",

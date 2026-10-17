@@ -37,3 +37,95 @@ For each candidate record evidence, goal relevance, likely benefit mechanism, ef
 Before saving, independently re-read the evidence: could a partial crawl, failed lookup, stale ranking or synthetic answer invalidate the diagnosis? Reduce confidence or change it to a verification task. Keep observations separate from inferred causes, proposed copy and hypothetical outcomes. If no worthwhile action is supported, save that verdict and the specific remaining checks.
 
 401/403: stop that action and report connection/scope/membership problem. 423: migration/read-only hold; reads may continue. 429: honor retry timing, do not tight-loop. Missing tool: report client snapshot/version limitation. A blocked paid extension must not prevent saving the supported free findings. A blocked save must be reported as unsaved with the analysis delivered in chat or a local artifact; never return a fabricated saved-report URL.
+
+## Schema-checked example calls
+
+Illustrative inputs only. Replace placeholder IDs with returned IDs and confirm the exact scope. Caps below are examples, not quotes or approval. Run the free quote first; execute only after explicit approval of the exact operation and cap.
+
+Free quote with a zero cap:
+
+```json mcp-call
+{
+  "tool": "analyze_ai_visibility",
+  "arguments": {
+    "project_id": "prj_a00000000000000000000000",
+    "brand": "Example",
+    "domain": "example.com",
+    "platform": "chat_gpt",
+    "target_type": "domain",
+    "location_code": 2840,
+    "language_code": "en",
+    "limit": 10,
+    "fresh": false,
+    "estimate_only": true,
+    "max_cost_cents": 0
+  }
+}
+```
+
+Approved execution with a hard cap and a stable key for this exact operation:
+
+```json mcp-call
+{
+  "tool": "analyze_ai_visibility",
+  "arguments": {
+    "project_id": "prj_a00000000000000000000000",
+    "brand": "Example",
+    "domain": "example.com",
+    "platform": "chat_gpt",
+    "target_type": "domain",
+    "location_code": 2840,
+    "language_code": "en",
+    "limit": 10,
+    "fresh": false,
+    "estimate_only": false,
+    "max_cost_cents": 100,
+    "idempotency_key": "example-analyze_ai_visibility-approved-1"
+  }
+}
+```
+
+Free quote with a zero cap:
+
+```json mcp-call
+{
+  "tool": "compare_ai_prompts",
+  "arguments": {
+    "project_id": "prj_a00000000000000000000000",
+    "brand": "Example",
+    "domain": "example.com",
+    "prompt": "Compare example.com and example.org for keyword research.",
+    "models": [
+      "gpt-4.1-mini"
+    ],
+    "cost_policy": "hard_cap",
+    "web_search": false,
+    "fresh": false,
+    "estimate_only": true,
+    "max_cost_cents": 0
+  }
+}
+```
+
+Approved execution with a hard cap and a stable key for this exact operation:
+
+```json mcp-call
+{
+  "tool": "compare_ai_prompts",
+  "arguments": {
+    "project_id": "prj_a00000000000000000000000",
+    "brand": "Example",
+    "domain": "example.com",
+    "prompt": "Compare example.com and example.org for keyword research.",
+    "models": [
+      "gpt-4.1-mini"
+    ],
+    "cost_policy": "hard_cap",
+    "web_search": false,
+    "fresh": false,
+    "estimate_only": false,
+    "max_cost_cents": 100,
+    "idempotency_key": "example-compare_ai_prompts-approved-1"
+  }
+}
+```

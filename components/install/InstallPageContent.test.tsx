@@ -16,8 +16,8 @@ const props = {
   hasKeywordAndCheck: false,
   isCloudHosted: true,
   mcpToolCounts: { readOnly: 3, total: 5 },
-  mcpUrl: "https://app.example.com/api/mcp",
-  origin: "https://app.example.com",
+  mcpUrl: "https://example.com/api/mcp",
+  origin: "https://example.com",
   projectRef: "prj_abcdefghijklmnopqrstuvwx",
 };
 
@@ -96,48 +96,66 @@ describe("InstallPageContent", () => {
     expect(within(keySection as HTMLElement).getByText(/Read and write/)).not.toHaveClass(
       "font-mono",
     );
-    expect(screen.getByText("3 available")).not.toHaveClass("font-mono");
+    expect(screen.getByText("18 available")).not.toHaveClass("font-mono");
     expect(container.querySelector("pre")).toHaveClass("font-mono");
   });
 
-  it("links available skill archives while keeping planned tasks distinct", () => {
+  it("distinguishes archive downloads, plugin skills and planned tasks", () => {
     render(<InstallPageContent {...props} />);
 
-    for (const name of ["keyword-import", "provider-setup", "weekly-report"]) {
-      expect(screen.getByRole("link", { name })).toHaveAttribute(
-        "href",
-        `/.well-known/agent-skills/${name}.tar.gz`,
-      );
+    for (const name of [
+      "domain-onboarding",
+      "bisibility",
+      "ai-visibility-audit",
+      "keyword-import",
+      "weekly-report",
+      "alert-triage",
+      "provider-setup",
+      "team-api-governance",
+      "self-host-health",
+    ]) {
+      const link = screen.getByRole("link", { name });
+      expect(link).toHaveAttribute("href", `/.well-known/agent-skills/${name}.tar.gz`);
+      expect(link).toHaveAttribute("download");
+      expect(within(link.parentElement as HTMLElement).getByText("available")).toBeVisible();
     }
-    for (const name of ["project-onboarding", "keyword-clustering", "seo-audit"]) {
-      expect(screen.getByText(name).closest("a, button")).toBeNull();
+    for (const name of [
+      "project-setup",
+      "seo-coach",
+      "seo-audit",
+      "keyword-opportunity-research",
+      "rank-tracking-report",
+      "backlink-profile-analysis",
+      "keyword-clustering",
+      "competitor-analysis",
+      "competitive-landscape",
+    ]) {
+      const label = screen.getByText(name);
+      expect(label.closest("a, button")).toBeNull();
+      expect(
+        within(label.parentElement as HTMLElement).getByText("in the Claude Code plugin"),
+      ).toBeVisible();
+      expect(within(label.parentElement as HTMLElement).queryByText("planned")).toBeNull();
     }
-
-    expect(screen.queryByText("bisibility")).not.toBeInTheDocument();
-    expect(screen.queryByText("Project context")).not.toBeInTheDocument();
-    expect(screen.queryByText("alert-triage")).not.toBeInTheDocument();
-    expect(screen.queryByText("Explain and act on drops")).not.toBeInTheDocument();
-    expect(screen.queryByText("self-host-health")).not.toBeInTheDocument();
-    expect(screen.queryByText("Instance checks")).not.toBeInTheDocument();
-    expect(screen.queryByText("domain-onboarding")).not.toBeInTheDocument();
-
-    expect(screen.getByText("keyword-import")).toBeInTheDocument();
-    expect(screen.getByText("Bulk add, dedupe")).toBeInTheDocument();
-    expect(screen.getByText("project-onboarding")).toBeInTheDocument();
-    expect(screen.getByText("First project setup")).toBeInTheDocument();
-    expect(screen.getByText("seo-audit")).toBeInTheDocument();
-    expect(screen.getByText("Prioritized fixes")).toBeInTheDocument();
-
-    // nav-active is the opaque #EDEAE1 the design calls surface-hover. bg-sunken is a 30%
-    // alpha that composites to roughly the card colour, leaving the pill invisible.
-    expect(screen.getByText("3 available")).toHaveClass("bg-nav-active", "text-yellow-text");
+    for (const name of [
+      "ai-prompt-research",
+      "local-seo",
+      "link-prospecting",
+      "sitemap-change-watch",
+    ]) {
+      const label = screen.getByText(name);
+      expect(label.closest("a, button")).toBeNull();
+      expect(within(label.parentElement as HTMLElement).getByText("planned")).toBeVisible();
+    }
+    expect(screen.queryByText("project-onboarding")).not.toBeInTheDocument();
+    expect(screen.getByText("18 available")).toHaveClass("bg-nav-active", "text-yellow-text");
   });
 
   it("highlights curl syntax and environment variables while keeping the URL neutral", () => {
     render(<InstallPageContent {...props} />);
 
     const expectedCurl =
-      'curl -H "Authorization: Bearer $BISIBILITY_API_KEY" \\\n  https://app.example.com/api/v1/keywords';
+      'curl -H "Authorization: Bearer $BISIBILITY_API_KEY" \\\n  https://example.com/api/v1/keywords';
     const curlBlock = screen.getByText(
       (_content, element) => element?.tagName === "PRE" && element.textContent === expectedCurl,
     );
@@ -156,7 +174,7 @@ describe("InstallPageContent", () => {
     });
     expect(
       [...curlBlock.querySelectorAll("[style]")].some(
-        (element) => element.textContent === "https://app.example.com/api/v1/keywords",
+        (element) => element.textContent === "https://example.com/api/v1/keywords",
       ),
     ).toBe(false);
   });

@@ -13,7 +13,7 @@ it("uses the authorized project Store projection and returns no mixed spend fiel
   data.connections = [{ connectionId: "conn_public", provider: "serpapi" }];
   read.mockResolvedValue(data);
   const result = await loadWorkspaceBudgetSummary("prj_public");
-  expect(read).toHaveBeenCalledWith("prj_public");
+  expect(read).toHaveBeenCalledWith("prj_public", "header");
   expect(result).toMatchObject({
     eligible: true,
     status: { state: "empty" },

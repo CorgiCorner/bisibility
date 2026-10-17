@@ -24,6 +24,7 @@ export async function runHostedPaidProviderCall<
   connection: { credentialsEncrypted: string | null; id: string; provider: string };
   credential?: ProviderCredential;
   correlationId?: string;
+  onNotDispatched?: () => void;
   feature: Exclude<ProviderCostFeature, "rank_check" | "local_scan">;
   itemCount: number;
   projectId: string;
@@ -48,6 +49,7 @@ export async function runHostedPaidProviderCall<
   return runDeploymentPaidCall({
     attribution: usage,
     call: input.call,
+    onNotDispatched: input.onNotDispatched,
     connectionId: input.connection.id,
     credential: input.credential,
     estimatedCostCents: input.estimatedCostCents,

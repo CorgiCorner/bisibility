@@ -9,6 +9,7 @@ export async function backlinksProject(projectId: string) {
   return prisma.project.findFirst({
     select: {
       id: true,
+      lookupCacheTtlSeconds: true,
       providerConnections: {
         orderBy: providerChainOrderBy(),
         select: { credentialsEncrypted: true, id: true, provider: true },

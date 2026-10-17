@@ -7,151 +7,96 @@ export const skill: TaskSkill = {
     "Connect, test, tune, or disconnect a search-data provider for a bisibility project. Use when an agent must wire up bring-your-own provider credentials so rank checks can run, or diagnose a provider that is failing.",
   compatibility: "Requires a bisibility origin and a bearer API key with write scope.",
   kind: "task-skill",
-  version: "0.1.0",
+  version: "0.1.1",
   body: `# Provider setup
 
-Connect a search-data provider to a bisibility project, verify the connection,
-adjust its settings, and disconnect it when no longer needed. Providers are
-bring-your-own: you supply the provider's own credentials and bisibility stores
-them in the instance. Rank checks cannot run until at least one provider is
-connected and passing its test.
-
-**When to use this skill:** an agent needs to enable rank tracking for a project
-(no working provider yet), rotate provider credentials, change a connected
-provider's settings, or triage a provider whose checks are failing.
+Inspect the intended provider and repair only the connection or setting the user
+requested. Providers are bring-your-own; never show credentials in commands,
+responses, chat or logs. Do not disconnect a working provider as routine cleanup.
 
 ## Prerequisites
 
-- A bisibility **origin / base URL**. Resolve it before calling anything:
-  EU hosted region is \`https://eu.bisibility.com/api/v1\`; self-hosted is
-  \`https://your-host.example/api/v1\`. Use whichever the user/instance gives you.
-- A **bearer API key with \`write\` scope** in \`$BISIBILITY_API_KEY\`. Send it as
-  \`Authorization: Bearer $BISIBILITY_API_KEY\`. Never print, log, or echo the key.
-- The target \`project_id\` (\`prj_...\`). If unknown, discover it via
-  \`GET /projects\` (see the bisibility router skill).
-- The provider's own credentials (API token, etc.). These are secrets - pass them
-  only in the connect request body; never store them in logs or chat output.
+Resolve \`$BISIBILITY_BASE\` including \`/api/v1\`, a write-scoped bearer credential
+in \`$BISIBILITY_API_KEY\`, and the target \`$PROJECT_ID\` from \`GET /projects\`.
+Scope alone does not override project permissions. Confirm the provider and
+intended change before writing. Lists use \`data\` and \`meta.next_cursor\`; follow
+pagination, read problem responses, and honor 429 retry windows.
 
-Set up your shell once:
+## 1. Inspect the current connection
 
 \`\`\`bash
-BASE="https://eu.bisibility.com/api/v1"   # or https://your-host.example/api/v1
-AUTH="Authorization: Bearer $BISIBILITY_API_KEY"
-PRJ="\${BISIBILITY_PROJECT_ID:?set a project id returned by GET /projects}"
+curl -fsS "$BISIBILITY_BASE/projects/$PROJECT_ID/providers" -H "Authorization: Bearer $BISIBILITY_API_KEY"
 \`\`\`
 
-## Steps
+Use the entry's \`id\` for \`{provider_id}\` and inspect \`connection_id\`,
+\`connection_status\`, \`enabled\` and \`capabilities\`. A catalog entry alone is not
+an enabled, connected rank-check provider. If it is already correctly configured,
+report that result and stop; do not reconnect or probe just to fill a checklist.
 
-### 1. List available / connected providers - \`GET /projects/{project_id}/providers\` (listProviders)
+## 2. Connect or replace credentials only as requested
 
-See which providers the instance supports and their current connection status
-before changing anything. Note each entry's \`provider_id\` and \`status\`.
+\`POST /projects/{project_id}/providers/{provider_id}/connect\` accepts a
+\`credentials\` object with provider-specific \`api_key\`, \`login\`, \`secret\` or
+\`endpoint\` fields. Use the instance's OpenAPI contract and provider requirements;
+DataForSEO uses login and secret, while SerpAPI uses an API key. Supply secrets
+through a protected request body, not literal values in command history.
 
-\`\`\`bash
-curl -s "$BASE/projects/$PRJ/providers" -H "$AUTH"
-\`\`\`
+This call verifies credentials before saving. Capture its non-secret connection
+metadata and read \`GET /projects/{project_id}/providers\` again to confirm the
+intended connection is enabled and has the required capability. A successful
+connect does not require a second \`/test\` call and does not prove a rank check ran.
+Reuse a stable \`Idempotency-Key\` on retries of the same approved connect.
 
-The response is \`{ "data": [...], "meta": { "next_cursor": "..." } }\`. Paginate
-with \`?limit=<n>&cursor=<next_cursor>\` if the list is long. Each item typically
-carries \`provider_id\`, a display \`name\`, \`status\` (e.g. connected / not
-connected / error), and the settings currently in effect.
+## 3. Test only when diagnosing an existing connection
 
-### 2. Connect the provider - \`POST /projects/{project_id}/providers/{provider_id}/connect\` (connectProvider)
+If a stored connection is failing or verification is the requested task, call
+\`POST /projects/{project_id}/providers/{provider_id}/test\` using the stored
+credentials. It is a live probe and may update recovery state. Check \`data.ok\`
+and \`data.message\`: HTTP 200 alone is not a passing connection test.
 
-Send the provider's bring-your-own credentials in the body. Include an
-\`Idempotency-Key\` so a retried request does not create a duplicate connection.
+If \`ok\` is false, report the returned reason and the specific correction needed.
+Do not repeatedly probe, change credentials or reconnect without an agreed repair.
 
-\`\`\`bash
-curl -s -X POST "$BASE/projects/$PRJ/providers/PROVIDER_ID/connect" \\
-  -H "$AUTH" \\
-  -H "Content-Type: application/json" \\
-  -H "Idempotency-Key: $(uuidgen)" \\
-  -d '{ "credentials": { "api_key": "<provider-token>" } }'
-\`\`\`
+## 4. Change settings only when requested
 
-The exact \`credentials\` fields depend on the provider - inspect the provider
-entry from step 1 (or \`GET /api/v1/openapi.json\`) for the required keys. The
-response confirms the connection and may return non-secret metadata; the stored
-credential is never returned.
+\`PATCH /projects/{project_id}/providers/{provider_id}\` accepts \`enabled\` and
+\`priority\`. For example, the approved change might be \`{"enabled":true,"priority":0}\`.
+It does not accept a nested \`settings\` object or rotate credentials. Use the
+connect endpoint for approved credential replacement; it verifies before save.
+Read back the changed setting. Do not add an unrelated connection test.
 
-### 3. Test the connection - \`POST /projects/{project_id}/providers/{provider_id}/test\` (testProviderConnection)
+## 5. Disconnect only for an approved removal
 
-Always verify before relying on the provider. This performs a live probe against
-the provider using the stored credentials.
+\`DELETE /projects/{project_id}/providers/{provider_id}\` removes the connection.
+Confirm its identity and impact first, then read back the provider list. If rank
+tracking must continue, explain whether a suitable enabled connection remains.
+This step is not part of a normal successful setup.
 
-\`\`\`bash
-curl -s -X POST "$BASE/projects/$PRJ/providers/PROVIDER_ID/test" -H "$AUTH"
-\`\`\`
+## Report the result
 
-A passing test confirms credentials are valid and the provider is reachable. On
-failure, read the \`application/problem+json\` body for the reason (bad
-credential, quota, network) and fix it before proceeding.
-
-### 4. Adjust settings - \`PATCH /projects/{project_id}/providers/{provider_id}\` (updateProviderSettings)
-
-Tune non-secret behaviour (and rotate credentials) without reconnecting. Send
-only the fields you want to change.
-
-\`\`\`bash
-curl -s -X PATCH "$BASE/projects/$PRJ/providers/PROVIDER_ID" \\
-  -H "$AUTH" \\
-  -H "Content-Type: application/json" \\
-  -H "Idempotency-Key: $(uuidgen)" \\
-  -d '{ "enabled": true, "settings": { "default_country": "us" } }'
-\`\`\`
-
-Re-run the test (step 3) after changing credentials. To rotate a credential,
-PATCH the new value (or use connect again) and confirm with a fresh test.
-
-### 5. Disconnect when done - \`DELETE /projects/{project_id}/providers/{provider_id}\` (disconnectProvider)
-
-Remove a provider and its stored credential, e.g. when decommissioning or after
-a leak.
-
-\`\`\`bash
-curl -s -X DELETE "$BASE/projects/$PRJ/providers/PROVIDER_ID" -H "$AUTH"
-\`\`\`
-
-After disconnecting, list providers again (step 1) to confirm, and ensure the
-project still has at least one working provider if rank checks must keep running.
-
-## Notes & gotchas
-
-- **Plan before writing.** Always run step 1 (list) first so you act on a real
-  \`provider_id\` and known status, rather than assuming.
-- **Secrets discipline.** Credentials live only in the request body and in the
-  instance. Never print them, never put them in an \`Idempotency-Key\`, and never
-  read them back - the API does not return stored credentials.
-- **Idempotency.** Connect / PATCH / disconnect accept an \`Idempotency-Key\`
-  header; reuse the same key on retries to avoid duplicate side effects.
-- **Errors.** Failures are \`application/problem+json\`. A \`429\` includes a retry
-  window - back off and retry after it before re-testing.
-- **A connection is not a guarantee.** Treat the test (step 3) as the source of
-  truth; a provider can be "connected" yet failing on quota or an expired token.`,
+Name the project and provider, the change performed, observed connection state,
+enabled flag and relevant capability. For a diagnostic test, give its \`ok\` result
+and non-secret reason. State whether rank checks were requested separately; setup
+and verification do not establish new ranking data.`,
   references: [
     {
       path: "references/api.md",
-      content: `# Provider setup - endpoint cheat-sheet
+      content: `# Provider setup - REST contract
 
-Base path: \`/api/v1\`. Auth: \`Authorization: Bearer <api_key>\` (\`write\` scope).
-Lists return \`{ data, meta: { next_cursor } }\`; paginate with
-\`?limit=<n>&cursor=<next_cursor>\`. Errors: \`application/problem+json\` (429 has a
-retry window). Writes accept an optional \`Idempotency-Key\` header.
+Base: resolved origin + \`/api/v1\`; write scope and appropriate project permissions.
 
-| METHOD path | operationId | key fields |
-|-|-|-|
-| GET /projects/{project_id}/providers | listProviders | - (returns provider_id, name, status, settings) |
-| POST /projects/{project_id}/providers/{provider_id}/connect | connectProvider | \`credentials\` (provider's bring-your-own secrets) |
-| POST /projects/{project_id}/providers/{provider_id}/test | testProviderConnection | - (live probe; returns pass/fail) |
-| PATCH /projects/{project_id}/providers/{provider_id} | updateProviderSettings | \`enabled\`, \`settings\`, credential rotation |
-| DELETE /projects/{project_id}/providers/{provider_id} | disconnectProvider | - (removes stored credential) |
+| Operation | Input / evidence |
+|-|-|
+| GET /projects/{project_id}/providers | data[].id, connection_id, connection_status, enabled, capabilities |
+| POST /projects/{project_id}/providers/{provider_id}/connect | credentials; verifies before save |
+| POST /projects/{project_id}/providers/{provider_id}/test | Stored credentials by default; inspect data.ok and data.message |
+| PATCH /projects/{project_id}/providers/{provider_id} | enabled, priority only |
+| DELETE /projects/{project_id}/providers/{provider_id} | Approved removal only |
 
-Notes:
-- Provider credentials are bring-your-own and stored in the instance; never
-  echoed back by the API. Never print or log them.
-- \`provider_id\` (and exact \`credentials\` fields) come from listProviders or
-  \`GET /api/v1/openapi.json\`.
-- \`project_id\` looks like \`prj_...\`; discover via \`GET /projects\`.`,
+Connect credentials: api_key for SerpAPI; login/secret for DataForSEO. Inspect the
+current instance's OpenAPI/provider requirements. Do not put credentials in chat,
+logs or command history. Reuse stable idempotency keys for retried approved writes.
+Do not routinely retest after connect, which already verifies credentials.`,
     },
   ],
 };

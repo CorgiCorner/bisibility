@@ -14,6 +14,13 @@
     pointer-events: none;
     transform-origin: var(--radix-tooltip-content-transform-origin);
   }
+  .content[data-tone="surface"] {
+    max-width: min(480px, calc(100vw - 24px));
+    padding: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+    color: var(--fg);
+  }
   .content[data-interactive="true"] {
     pointer-events: auto;
   }

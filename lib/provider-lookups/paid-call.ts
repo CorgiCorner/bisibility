@@ -55,6 +55,7 @@ async function executePaidProviderCall<
   connection: { credentialsEncrypted: string | null; id: string; provider: string };
   credential?: ProviderCredential;
   correlationId?: string;
+  onNotDispatched?: () => void;
   feature: Exclude<ProviderCostFeature, "rank_check" | "local_scan">;
   includeClickstream?: boolean;
   historyWindow?: ProviderHistoryWindow;
@@ -100,6 +101,7 @@ async function executePaidProviderCall<
       connection: input.connection,
       credential: input.credential,
       correlationId: input.correlationId,
+      onNotDispatched: input.onNotDispatched,
       feature: input.feature,
       itemCount: input.itemCount,
       maxCostCents: input.maxCostCents,
@@ -189,6 +191,13 @@ async function executePaidProviderCall<
       usage,
     );
   } catch (error) {
+    if (
+      !journal.started &&
+      (error instanceof BudgetExhaustedError ||
+        error instanceof ProviderAllocationExhaustedError ||
+        error instanceof ProviderCostLimitError)
+    )
+      input.onNotDispatched?.();
     if (error instanceof ProviderCostLimitError)
       throw new ProviderLookupSignal({
         ok: false,

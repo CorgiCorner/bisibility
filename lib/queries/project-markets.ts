@@ -1,3 +1,4 @@
+import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { MAX_PROJECT_MARKETS } from "@/lib/markets/limits";
@@ -187,7 +188,7 @@ export async function getProjectMarkets(
         projectId: data.publicId,
       };
     },
-    { isolationLevel: "RepeatableRead" },
+    { ...REPORT_READ_TRANSACTION },
   );
 }
 

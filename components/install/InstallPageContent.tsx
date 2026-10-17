@@ -147,7 +147,9 @@ export function InstallPageContent({
           {/* nav-active is #EDEAE1, the exact value the design calls surface-hover; bg-sunken is
               a 30% alpha that composites to near-invisible on the card. */}
           <span className="ml-auto inline-flex items-center rounded-full bg-nav-active px-[9px] py-[3px] font-sans text-[10px] font-semibold text-yellow-text">
-            {t("skills.availableCount")}
+            {t("skills.availableCount", {
+              count: SKILLS.filter((skill) => skill.status !== "coming-soon").length,
+            })}
           </span>
         </div>
         <p className="m-0 mb-3 text-[12.5px] text-fg-muted">{t("skills.description")}</p>
@@ -172,7 +174,13 @@ export function InstallPageContent({
               )}
               <span className="text-[11.5px] text-fg-muted">{t(`skills.${skill.name}`)}</span>
               <span className="text-[10.5px] text-fg-muted">
-                {t(skill.archivePath ? "skills.available" : "skills.planned")}
+                {t(
+                  skill.archivePath
+                    ? "skills.available"
+                    : skill.plugin
+                      ? "skills.inPlugin"
+                      : "skills.planned",
+                )}
               </span>
             </div>
           ))}

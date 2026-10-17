@@ -2,6 +2,7 @@ import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { NativeRequestGuard, PaidFenceHook } from "@/lib/metering/paid-attempt-types";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
+import { providerConnectionRevision } from "@/lib/providers/connection-revision";
 import { assertComparisonAccess } from "./access";
 import type { FrozenComparison } from "./model";
 import { comparisonRequestKey } from "./request";
@@ -55,7 +56,7 @@ export function comparisonFences(input: {
       connection.status !== "connected" ||
       connection.provider !== input.connection.provider ||
       connection.credentialSource !== input.connection.fundingSource ||
-      connection.updatedAt.toISOString() !== input.connection.revision ||
+      providerConnectionRevision(connection) !== input.connection.revision ||
       ownCredentialVersion(connection.provider, connection.id, connection.credentialsEncrypted) !==
         input.connection.credentialVersion
     )

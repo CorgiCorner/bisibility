@@ -1,3 +1,4 @@
+import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 import { competitorObservation } from "@/lib/competitors/observation-quality";
 import {
@@ -85,6 +86,6 @@ export async function getOverviewCompetitors(
       );
       return rows.length ? { rows: sortOverviewCompetitorRows(rows), limited: false } : null;
     },
-    { isolationLevel: "RepeatableRead" },
+    { ...REPORT_READ_TRANSACTION },
   );
 }

@@ -2,9 +2,9 @@ import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendPro
 import { renderWithDomainOverviewMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { ResearchScope } from "@/lib/research/scope";
 import { routerMock } from "@/tests/next-navigation";
-import { fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainOverviewWorkspace } from "./DomainOverviewWorkspace";
 import { domainOverviewReportFixture, domainOverviewScopeFixture } from "./fixtures";
 
@@ -80,6 +80,7 @@ function renderWorkspace(overrides: Partial<ComponentProps<typeof DomainOverview
 }
 
 describe("DomainOverviewWorkspace research scope state", () => {
+  afterEach(() => vi.useRealTimers());
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.replaceState(null, "", "/");
@@ -118,6 +119,27 @@ describe("DomainOverviewWorkspace research scope state", () => {
     fireEvent.click(screen.getByRole("button", { name: /recent\.example\.com/i }));
     expect(routerMock.push).toHaveBeenCalledWith(
       "/app/prj_1/domain-overview?domain=recent.example.com&researchScope=US%3Aen&scope=root",
+    );
+    expect(analyzeAction).not.toHaveBeenCalled();
+  });
+
+  it("keeps the form visible without a market and lets the user choose the first country", async () => {
+    vi.useFakeTimers();
+    const analyzeAction = vi.fn();
+    renderWorkspace({
+      analyzeAction,
+      context: { ...context, catalogScopes: [unitedKingdomScope] },
+      researchScope: null,
+    });
+    const target = screen.getByRole("textbox", { name: "Domain or subdomain" });
+    expect(target).toBeEnabled();
+    expect(screen.getByRole("button", { name: /analyze domain/i })).toBeDisabled();
+    fireEvent.change(target, { target: { value: "another.example.com" } });
+    await act(async () => vi.advanceTimersByTimeAsync(1000));
+    expect(analyzeAction).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /Country and language/ }));
+    expect(routerMock.push).toHaveBeenCalledWith(
+      "/app/prj_1/domain-overview?researchScope=GB%3Aen&domain=another.example.com",
     );
     expect(analyzeAction).not.toHaveBeenCalled();
   });

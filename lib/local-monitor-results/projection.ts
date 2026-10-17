@@ -82,6 +82,16 @@ export function projectLocalRun(
           binding.definition.grid,
           rows.map((value) => value.target),
         );
+      const matcherVersions = new Set(
+        rows.flatMap((row) => {
+          const version = evidence
+            .get(row.item.id)
+            ?.measurement.normalizationVersion?.split(":")
+            .at(-1);
+          return version && version !== "unknown" ? [version] : [];
+        }),
+      );
+      const mixedMatcherVersions = matcherVersions.size > 1;
       const keys = new Set(rows.map((value) => value.stored.targetKey));
       const report = aggregateGridMeasurements(
         selection,
@@ -103,10 +113,11 @@ export function projectLocalRun(
           .sort((a, b) => a.gridPoint.ordinal - b.gridPoint.ordinal)
           .map((value) => value.stored.publicId),
         expected: report.expectedPoints,
-        observedRate: report.observedRate,
+        observedRate: mixedMatcherVersions ? null : report.observedRate,
         observedCoverage: report.observedCoverage,
         dataCoverage: report.dataCoverage,
-        sampleBounds: report.sampleBounds,
+        sampleBounds: mixedMatcherVersions ? null : report.sampleBounds,
+        ...(mixedMatcherVersions ? { reason: "matcher_version_mixed" as const } : {}),
         counts: report.report.counts,
         freshness: report.report.freshness,
         comparison: "unavailable",

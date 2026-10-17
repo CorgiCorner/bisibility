@@ -1,3 +1,4 @@
+import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 import { RANK_REPORT_CALENDAR_CONFIGURATION } from "@/lib/rank-reports/host-policy";
 import { definitionProjectScope } from "./access";
@@ -49,6 +50,6 @@ export function readHostDefinitionPolicy(
         projectWritable: project.writeMode === "active" && !project.isSample,
       };
     },
-    { isolationLevel: "RepeatableRead" },
+    { ...REPORT_READ_TRANSACTION },
   );
 }

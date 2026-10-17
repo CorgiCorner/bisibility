@@ -80,7 +80,11 @@ export function saveMeasurementScheduleHost(
             schedule: data.schedule,
             scheduleId: data.scheduleId,
           },
-          source: { sourceHash: source.sourceHash, forecast },
+          source: {
+            policyEpoch: source.policy.policyEpoch,
+            sourceHash: source.sourceHash,
+            forecast,
+          },
         },
         now,
       );

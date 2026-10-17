@@ -1,3 +1,4 @@
+import { moduleSupport } from "@/lib/providers/module-support";
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
@@ -76,6 +77,7 @@ export async function getDomainOverviewPageContext(projectId: string) {
   const trackedKeys = new Set(trackedScopes.map(researchScopeKey));
 
   return {
+    ...moduleSupport("domainOverview"),
     catalogScopes: domainOverviewCatalogScopes().filter(
       (scope) => !trackedKeys.has(researchScopeKey(scope)),
     ),

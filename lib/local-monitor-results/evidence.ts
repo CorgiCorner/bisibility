@@ -4,7 +4,7 @@ import {
   projectRetainedBusinessObservation,
   retainedBusinessObservationSelect,
 } from "@/lib/business-location-store/observation-read";
-import { mapsBusinessMatcherVersion } from "@/lib/business-locations/dto";
+import { supportedMapsMatcherVersion } from "@/lib/business-locations/dto";
 import { organicEligibility } from "@/lib/business-locations/match-evidence";
 import type { BusinessMatchDecision, Prisma } from "@/lib/generated/prisma/client";
 import { localDigest } from "@/lib/local-monitoring-store/canonical";
@@ -174,7 +174,7 @@ export function localPointEvidence(
         ...empty,
         id: observation.id,
         execution: "completed" as const,
-        normalizationVersion: `${record.adapterVersion}:${mapsBusinessMatcherVersion}`,
+        normalizationVersion: `${record.adapterVersion}:unknown`,
         configuredScope: scope,
         effectiveScope: acknowledged ? scope : null,
         recordedAt: observation.createdAt,
@@ -207,7 +207,7 @@ export function localPointEvidence(
         value.observationRunId !== observation.id ||
         value.decisionRevision !== 1 ||
         value.source !== "automatic" ||
-        value.matcherVersion !== mapsBusinessMatcherVersion ||
+        !supportedMapsMatcherVersion(value.matcherVersion) ||
         hash !== businessDigest(observed) ||
         businessDigest(source) !== businessDigest(match.observationSource) ||
         match.organicEligible !== organicEligibility(match)
@@ -218,6 +218,9 @@ export function localPointEvidence(
     });
   if (acknowledgedLocalAdapter(record.adapterVersion) && decisions.length !== retained.items.length)
     throw new LocalResultUnavailableError();
+  const matcherVersions = [...new Set(valid.map((value) => value.matcherVersion))];
+  if (matcherVersions.length > 1) throw new LocalResultUnavailableError();
+  const matcherVersion = matcherVersions[0] ?? "unknown";
   const confirmed = valid.filter(
       (value) =>
         value.status === "confirmed" && value.matchedBy === "stable_id" && value.organicEligible,
@@ -230,7 +233,7 @@ export function localPointEvidence(
       id: observation.id,
       execution: "completed" as const,
       position: chosen?.originalOrdinals.group ?? null,
-      normalizationVersion: `${record.adapterVersion}:${mapsBusinessMatcherVersion}`,
+      normalizationVersion: `${record.adapterVersion}:${matcherVersion}`,
       configuredScope: scope,
       effectiveScope: acknowledged ? scope : null,
       observedAt: policy.evidence.observedAt ? new Date(policy.evidence.observedAt) : null,

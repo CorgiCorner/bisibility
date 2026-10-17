@@ -5,7 +5,12 @@ import { Button } from "@/components/ui/Button";
 import { InlineCallout, InlineCode } from "@/components/ui/InlineCallout";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { StatusPill } from "@/components/ui/StatusPill";
-import type { GoogleOAuthSetup, GooglePropertySaveResult } from "@/lib/integrations/types";
+import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
+import type {
+  GoogleOAuthSetup,
+  GooglePropertySaveResult,
+  GooglePropertySelectionResult,
+} from "@/lib/integrations/types";
 import { gscInstallUrl } from "@/lib/providers/analytics/gsc-install-url";
 import { docsLinkProps } from "@/lib/site/site";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
@@ -18,7 +23,7 @@ type StepConnectGscCardProps = {
   completePropertySelection?: (input: {
     projectId: string;
     property: string;
-  }) => Promise<{ property: string }>;
+  }) => Promise<GooglePropertySelectionResult>;
   configured: boolean;
   connectedPropertyLabel?: string | null;
   googleOAuth?: GoogleOAuthSetup | null;
@@ -72,6 +77,7 @@ export function StepConnectGscCard({
   saveStoredProperty,
 }: Readonly<StepConnectGscCardProps>) {
   const t = useTranslations("onboarding.searchConsole");
+  const oauthT = useTranslations("projectIntegrations.oauth");
   const [setup, setSetup] = useState<GoogleOAuthSetup | null>(googleOAuth ?? null);
   const [selectionSource, setSelectionSource] = useState<"pending" | "stored" | null>(
     googleOAuth ? "pending" : null,
@@ -120,10 +126,16 @@ export function StepConnectGscCard({
       if ("status" in result && result.status === "reauth_required") {
         setSetup({
           error: t("errors.reconnect"),
+          ...(result.failure ? { failure: result.failure } : {}),
           properties: [],
           provider: "gsc",
           requiresReauth: true,
         });
+        setProperty("");
+        return;
+      }
+      if ("status" in result && result.status === "failed") {
+        setError(googlePropertyFailureMessage(result.failure, oauthT));
         return;
       }
       setSetup(null);
@@ -234,7 +246,9 @@ export function StepConnectGscCard({
                 size={15}
                 weight="regular"
               />
-              {setup.error ?? t("drawer.noProperties")}
+              {setup.failure
+                ? googlePropertyFailureMessage(setup.failure, oauthT)
+                : (setup.error ?? t("drawer.noProperties"))}
             </p>
           )}
           {error ? (

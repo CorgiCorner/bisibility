@@ -1,3 +1,5 @@
+import { skillArchivePath, skillCatalog } from "@/lib/agent-ready/skill-catalog";
+
 export const API_VERSION = "v1";
 
 export function curlExample(origin: string) {
@@ -48,10 +50,11 @@ export const AGENTS = [
 ] satisfies readonly AgentInstall[];
 
 export const SKILLS = [
-  { archivePath: "/.well-known/agent-skills/keyword-import.tar.gz", name: "keyword-import" },
-  { archivePath: "/.well-known/agent-skills/provider-setup.tar.gz", name: "provider-setup" },
-  { archivePath: null, name: "project-onboarding" },
-  { archivePath: "/.well-known/agent-skills/weekly-report.tar.gz", name: "weekly-report" },
-  { archivePath: null, name: "keyword-clustering" },
-  { archivePath: null, name: "seo-audit" },
-] as const;
+  ...skillCatalog.filter((skill) => skill.status !== "coming-soon"),
+  ...skillCatalog.filter((skill) => skill.status === "coming-soon"),
+].map((skill) => ({
+  name: skill.slug,
+  archivePath: skillArchivePath(skill),
+  status: skill.status,
+  plugin: skill.channels.plugin,
+}));

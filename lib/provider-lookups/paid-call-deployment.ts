@@ -1,10 +1,15 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import {
+  BudgetExhaustedError,
+  ProviderAllocationExhaustedError,
+} from "@/lib/metering/admission-errors";
 import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { ProviderCredential } from "@/lib/provider-usage/surface";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import { chargedProviderCostCents, ProviderCallError } from "@/lib/providers/call-error";
+import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { startDeploymentExecution } from "@/lib/providers/execution-extension";
 import { consumeProviderLimit } from "@/lib/providers/rate-limit";
 import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/dataforseo";
@@ -35,6 +40,7 @@ export function deploymentEstimate(value: number, fractionDigits: 4 | 6): string
 export async function runDeploymentPaidCall<T extends { costCents: number }>(input: {
   attribution: ProviderRequestAttribution;
   call: (credentials: ProviderCredentials, usage: ProviderRequestAttribution) => Promise<T>;
+  onNotDispatched?: () => void;
   connectionId: string;
   credential?: ProviderCredential;
   estimatedCostCents: number;
@@ -71,6 +77,13 @@ export async function runDeploymentPaidCall<T extends { costCents: number }>(inp
     try {
       result = await input.call(execution.credentials, input.attribution);
     } catch (error) {
+      if (
+        !execution.started &&
+        (error instanceof BudgetExhaustedError ||
+          error instanceof ProviderAllocationExhaustedError ||
+          error instanceof ProviderCostLimitError)
+      )
+        input.onNotDispatched?.();
       if (error instanceof ProviderUsagePersistenceError) throw error;
       const measured = execution.costCents;
       if (execution.started && measured === null)

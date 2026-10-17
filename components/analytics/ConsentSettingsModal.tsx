@@ -10,6 +10,7 @@ import { applyAnalyticsConsent, setAnalyticsReplay } from "@/lib/analytics/clien
 import {
   type AnalyticsConsentValues,
   analyticsConsentValuesSchema,
+  type ConsentPromptContext,
   type ConsentState,
 } from "@/lib/analytics/consent";
 import { restrictConsentImmediately } from "@/lib/analytics/consent-client";
@@ -18,7 +19,10 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 
-export type SaveConsent = (values: AnalyticsConsentValues) => Promise<ConsentState>;
+export type SaveConsent = (
+  values: AnalyticsConsentValues,
+  context?: ConsentPromptContext,
+) => Promise<ConsentState>;
 
 type ConsentSettingsModalProps = {
   initialConsent: ConsentState;
@@ -41,8 +45,8 @@ export function ConsentSettingsModal({
   const [actionError, setActionError] = useState<string | null>(null);
   const form = useForm<AnalyticsConsentValues>({
     defaultValues: {
-      analytics: initialConsent.analytics,
-      replay: initialConsent.replay,
+      analytics: initialConsent.status === "pending" || initialConsent.analytics,
+      replay: initialConsent.status === "pending" || initialConsent.replay,
     },
     resolver: zodResolver(analyticsConsentValuesSchema),
   });

@@ -8,6 +8,7 @@ import type {
   ProviderTestResult,
 } from "@/lib/providers/types";
 import { type GoogleFetchContext, googleApiFetch, refreshGoogleAccessToken } from "./google-client";
+import { preserveGoogleRequestFailure } from "./google-failure";
 import { normalizeGa4PropertyId } from "./property-id";
 
 // Credentials are the encrypted ProviderConnection.credentialsEncrypted JSON written by the
@@ -185,6 +186,7 @@ export const ga4AnalyticsProvider: Ga4AnalyticsProvider = {
       });
       return { message: `Connected · ${property}.`, ok: true };
     } catch (error) {
+      preserveGoogleRequestFailure(error);
       return {
         message: error instanceof Error ? error.message : "Analytics 4 connection test failed.",
         ok: false,

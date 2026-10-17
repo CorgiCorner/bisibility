@@ -74,9 +74,7 @@ node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email
 ```
 
 Run it inside the deployed app container, such as `docker compose exec app node --experimental-transform-types scripts/admin/seed-instance-admin.ts --email operator@example.com`.
-Equivalent platform shells include `fly ssh console` and `railway ssh`. A checkout also works when
-`DATABASE_URL` targets the instance. Hosted databases need the public connection string, not an
-internal hostname.
+Equivalent platform shells include `fly ssh console` and `railway ssh`. A checkout also works when `DATABASE_URL` targets the instance; hosted databases need its public connection string.
 
 The seed is idempotent for an existing instance admin. It refuses another grant while an admin exists.
 Pass `--force` to add the named admin without revoking others. `INSTANCE_ADMIN_EMAIL` can provide the
@@ -91,6 +89,8 @@ Without operator Slack, Redis still supplies worker liveness and instance stats 
 Metering separates monthly recorded usage, current-cycle budgets and operations needing attention. Unknown amounts stay unknown; short IDs copy in full.
 Project names require existing ownership or membership. Other scopes show public IDs; administrator status grants no extra project access.
 Recovery actions remain separate from ordinary usage and require review.
+Unavailable budgets do not hide confirmed usage or operations needing attention. Paging reads and replaces only the selected usage or attention page, keeping the other page and budget snapshot unchanged. Failed or forbidden page reads retain previous rows and cursor for retry. Refresh for new budgets.
+Task recovery retries a rolled-back database transaction at most twice, after 10 and 20 seconds, without provider requests or paid replay. Persistent failures remain visible; missing authority and changed business state are not retried.
 
 ## Routine operational checks
 

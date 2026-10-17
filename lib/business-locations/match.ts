@@ -107,10 +107,14 @@ export function matchBusinessCollection(input: {
   for (const target of targets) {
     if (selected && !selected.has(target.entityId)) continue;
     const strong = observations.map((observation) => strongEvidence(target, observation.evidence));
-    const exactCount = strong.filter(
-      (evidence, index) =>
-        evidence.exact.length && !evidence.conflict && !observations[index].anomaly,
-    ).length;
+    // Unknown promotion may still be organic; only proven ads form a separate cohort.
+    const exactCounts = new Map<boolean, number>();
+    strong.forEach((evidence, index) => {
+      if (evidence.exact.length && !evidence.conflict && !observations[index].anomaly) {
+        const cohort = observations[index].item.promotion === "promoted";
+        exactCounts.set(cohort, (exactCounts.get(cohort) ?? 0) + 1);
+      }
+    });
     for (const [index, observation] of observations.entries()) {
       const { item, evidence, anomaly } = observation,
         exact = strong[index];
@@ -133,7 +137,8 @@ export function matchBusinessCollection(input: {
           status = "rejected";
           reason = "stable_identifier_conflict";
         } else if (exact.exact.length && ambiguousRegistry) reason = "ambiguous_registry_identity";
-        else if (exact.exact.length && exactCount > 1) reason = "ambiguous_exact_items";
+        else if (exact.exact.length && (exactCounts.get(item.promotion === "promoted") ?? 0) > 1)
+          reason = "ambiguous_exact_items";
         else if (exact.exact.length) {
           status = "confirmed";
           matchedBy = "stable_id";

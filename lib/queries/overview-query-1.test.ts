@@ -1,3 +1,4 @@
+import { hostOrganicReportPolicy, RANK_REPORT_HOST_LIMITS } from "@/lib/rank-reports/host-policy";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   activeMarketScope,
@@ -181,6 +182,8 @@ describe("overview query", () => {
     expect(keywordFindArgs.select.rankChecks.select).not.toHaveProperty("raw");
     expect(mocks.prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: "RepeatableRead",
+      maxWait: 2_000,
+      timeout: 15_000,
     });
     expect(mocks.metadata).toHaveBeenCalledWith(
       mocks.prisma,
@@ -276,5 +279,31 @@ describe("overview query", () => {
       id: "kw_analytics",
       position: 9,
     });
+  });
+  it("releases the owned read transaction before pure measurement-policy projection", async () => {
+    const { loadOverviewMetricData } = await import("./overview-data");
+    let inTransaction = false;
+    mocks.prisma.$transaction.mockImplementation(async (callback) => {
+      inTransaction = true;
+      try {
+        return await callback(mocks.prisma);
+      } finally {
+        inTransaction = false;
+      }
+    });
+    mocks.prisma.keyword.findMany.mockResolvedValue([keyword()]);
+    const result = await loadOverviewMetricData("project_1", {}, now, {
+      report: {
+        asOf: now,
+        limits: RANK_REPORT_HOST_LIMITS,
+        loadMetadata: mocks.metadata,
+        policyAt: (at) => {
+          expect(inTransaction).toBe(false);
+          return hostOrganicReportPolicy(at, 28);
+        },
+      },
+    });
+    expect(result.keywords).toHaveLength(1);
+    expect(result.keywords[0].measurementPolicy.asOf).toEqual(now);
   });
 });

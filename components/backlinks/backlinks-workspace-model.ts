@@ -27,6 +27,7 @@ type BacklinksWorkspaceContext = {
   };
   defaultTarget: string;
   providerStatus: "connected" | "needs_reauth" | "no_provider";
+  supportingProviders?: string[];
   providers?: { label: string; value: string }[];
   recentTargets: RecentBacklinksTarget[];
 };

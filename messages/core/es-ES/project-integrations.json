@@ -131,7 +131,14 @@
       "emptyGsc": "Esta cuenta de Google no tiene ninguna propiedad de Search Console verificada. Verifica una propiedad o conecta otra cuenta.",
       "googleAccountConnected": "Cuenta de Google conectada",
       "reconnect": "Volver a conectar la cuenta",
-      "disconnect": "Desconectar"
+      "disconnect": "Desconectar",
+      "googlePropertyAuth": "Vuelve a conectar tu cuenta de Google para cargar las propiedades.",
+      "googlePropertyPermission": "Esta cuenta de Google no puede acceder a estas propiedades. Comprueba sus permisos en Search Console o Analytics.",
+      "googlePropertyApiDisabled": "Es necesario revisar la configuración de la API de Google. Pide al administrador de la aplicación que active la API y revise su configuración; después, inténtalo de nuevo.",
+      "googlePropertyQuota": "Se ha alcanzado el límite de solicitudes de Google. Inténtalo más tarde.",
+      "googlePropertyTemporary": "Google no está disponible temporalmente. Inténtalo de nuevo.",
+      "googlePropertyUnknown": "No se pudieron cargar las propiedades. Inténtalo de nuevo.",
+      "googlePropertyScope": "Vuelve a conectar tu cuenta de Google y acepta los permisos que solicita esta aplicación."
     },
     "provider": {
       "logo": "Logotipo de {provider}",

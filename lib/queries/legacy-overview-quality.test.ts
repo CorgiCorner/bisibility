@@ -164,6 +164,15 @@ describe("legacy full-cohort Top3 reuses retained report authority", () => {
     m.checks.mockResolvedValue([legacyDbCheck(keywords[0], 1), foreign]);
     await expect(read()).rejects.toThrow();
   });
+  it("renews nonempty authority once without an extra empty snapshot", async () => {
+    const report = legacyReportOptions();
+    const load = vi.spyOn(report, "loadMetadata");
+    m.checks.mockResolvedValue([legacyDbCheck(keywords[0], 1), legacyDbCheck(keywords[1], 2, 1)]);
+    await readLegacyOverviewQuality(db, scope, keywords, { now: legacyAsOf, horizon: 3, report });
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenCalledWith(db, legacyProject, keywords, legacyAsOf);
+  });
+
   it("renews the explicit metadata port for empty membership and refuses oversized cohorts", async () => {
     const report = legacyReportOptions();
     const load = vi.spyOn(report, "loadMetadata");

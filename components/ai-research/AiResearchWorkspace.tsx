@@ -4,15 +4,14 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
+import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
+import { ProviderAccessGate } from "@/components/ui/ProviderAccessGate";
 import { analyzeAiResearchAction } from "@/lib/actions/ai-research";
 import type { AiCatalogFailureReason, AiResearchCatalog } from "@/lib/ai-research/catalog-types";
-import {
-  LEGACY_MODELS,
-  LEGACY_OUTPUT_TOKENS,
-  LEGACY_PRICING_CHECKED_AT,
-} from "@/lib/ai-research/legacy";
+import { LEGACY_PRICING_CHECKED_AT } from "@/lib/ai-research/legacy";
 import { promptSchema, visibilitySchema } from "@/lib/ai-research/schema";
 import type { AiResearchOutcome } from "@/lib/ai-research/service";
+import { appPath } from "@/lib/routing/app-path";
 import { presentBudgetDenial } from "@/lib/ui/action-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -26,6 +25,7 @@ import { AiResearchResults } from "./AiResearchResults";
 import { AiVisibilityFields } from "./AiVisibilityFields";
 import { failureCopyKey } from "./ai-research-failure-copy";
 import {
+  aiResearchDefaults,
   extendedPromptAvailable,
   freshResearchCatalog,
   legacyResearchInput,
@@ -44,6 +44,7 @@ export function AiResearchWorkspace({
   catalog,
   catalogError,
   catalogFailure,
+  supportingProviders = [],
 }: Readonly<{
   projectId: string;
   domain: string;
@@ -55,35 +56,14 @@ export function AiResearchWorkspace({
   catalog?: AiResearchCatalog;
   catalogError?: string;
   catalogFailure?: AiCatalogFailureReason;
+  supportingProviders?: readonly string[];
 }>) {
   const errors = useSharedErrorMessages();
   const t = useTranslations("projectAiResearch");
   const schema = mode === "visibility" ? visibilitySchema : promptSchema;
   const form = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      brand: "",
-      domain,
-      max_cost_cents: mode === "prompt" ? 60 : 20,
-      estimate_only: true,
-      ...(mode === "prompt"
-        ? {
-            cost_policy: "hard_cap",
-            prompt: "",
-            models: [...LEGACY_MODELS],
-            web_search: false,
-            response_language: "en",
-            country_iso_code: undefined,
-            max_output_tokens: LEGACY_OUTPUT_TOKENS,
-          }
-        : {
-            platform: "chat_gpt",
-            target_type: "domain",
-            language_code: "en",
-            location_code: 2840,
-            limit: 10,
-          }),
-    },
+    defaultValues: aiResearchDefaults(mode, domain),
   });
   const values = form.watch();
   const freshCatalog = freshResearchCatalog(catalog, catalogError);
@@ -126,7 +106,7 @@ export function AiResearchWorkspace({
         {mode === "visibility" ? t("visibilityDescription") : t("promptDescription")}
       </p>
       {!canRun ? <Card className="text-ui-body text-fg-muted">{t("readOnly")}</Card> : null}
-      {unavailable ? (
+      {unavailable && !noSource ? (
         <AiCatalogNotice mode={mode} projectId={projectId} reason={catalogFailure} />
       ) : null}
       {pricingUnavailable ? (
@@ -134,90 +114,98 @@ export function AiResearchWorkspace({
           {t("pricingUnavailableLegacy")}
         </Card>
       ) : null}
-      <Card>
-        <form
-          className="grid gap-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            submit(true);
-          }}
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label htmlFor={"ai-brand"} className="grid gap-2 text-ui-body">
-              {t("brand")}
-              <Input id={"ai-brand"} {...form.register("brand")} placeholder="Acme" />
-            </label>
-            <label htmlFor={"ai-domain"} className="grid gap-2 text-ui-body">
-              {t("domain")}
-              <Input id={"ai-domain"} {...form.register("domain")} placeholder="acme.com" />
-            </label>
-            {mode === "visibility" ? (
-              <AiVisibilityFields form={form} catalog={freshCatalog} disabled={disabled} />
-            ) : (
-              <AiPromptFields form={form} catalog={freshCatalog} disabled={disabled} />
-            )}
-            {mode === "prompt" ? (
-              <AiCostPolicyFields form={form} catalog={freshCatalog} disabled={disabled} />
-            ) : (
-              <label htmlFor="ai-cost-limit" className="grid gap-2 text-ui-body">
-                {t("costCap")}
-                <Input
-                  id="ai-cost-limit"
-                  type="number"
-                  min={0}
-                  max={1000}
-                  {...form.register("max_cost_cents", { valueAsNumber: true })}
-                />
+      <ProviderAccessGate
+        blocked={noSource}
+        providers={supportingProviders}
+        href={appPath(projectId, "integrations")}
+      >
+        <Card>
+          <form
+            className="grid gap-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              submit(true);
+            }}
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label htmlFor={"ai-brand"} className="grid gap-2 text-ui-body">
+                {t("brand")}
+                <Input id={"ai-brand"} {...form.register("brand")} placeholder="Acme" />
               </label>
-            )}
-          </div>
-          {Object.values(form.formState.errors).length ? (
-            <p role="alert" className="text-ui-body text-red-text">
-              {t("validation")}
-            </p>
-          ) : null}
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              type="submit"
-              variant="secondary"
-              loading={pending}
-              disabled={disabled || extendedUnavailable}
-            >
-              {t("estimateCost")}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => submit(false)}
-              loading={pending}
-              disabled={disabled || extendedUnavailable || !estimateAffordable}
-            >
-              {t("runAnalysis")}
-            </Button>
-            <span className="text-ui-xs text-fg-muted">
-              {t(actual ? "actualReplayHint" : "cacheHint")}
-            </span>
-          </div>
-          {retryBlocked ? (
-            <p role="alert" className="m-0 text-ui-body text-red-text">
-              {t("actualCostUsageReview")}
-            </p>
-          ) : null}
-          {completed ? (
-            <Button type="button" variant="secondary" onClick={newRequest}>
-              {t("newRequest")}
-            </Button>
-          ) : null}
-          {!retryBlocked &&
-            !completed &&
-            (!estimateCurrent ? (
-              <p className="m-0 text-ui-xs text-fg-muted">{t("estimateRequired")}</p>
-            ) : !estimateAffordable ? (
-              <p role="alert" className="m-0 text-ui-body text-red-text">
-                {t(credentialsRejected ? "actualCostUnavailable" : "estimateAboveCap")}
+              <label htmlFor={"ai-domain"} className="grid gap-2 text-ui-body">
+                {t("domain")}
+                <Input id={"ai-domain"} {...form.register("domain")} placeholder="acme.com" />
+              </label>
+              {mode === "visibility" ? (
+                <AiVisibilityFields form={form} catalog={freshCatalog} disabled={disabled} />
+              ) : (
+                <AiPromptFields form={form} catalog={freshCatalog} disabled={disabled} />
+              )}
+              {mode === "prompt" ? (
+                <AiCostPolicyFields form={form} catalog={freshCatalog} disabled={disabled} />
+              ) : (
+                <label htmlFor="ai-cost-limit" className="grid gap-2 text-ui-body">
+                  {t("costCap")}
+                  <Input
+                    id="ai-cost-limit"
+                    type="number"
+                    min={0}
+                    max={1000}
+                    {...form.register("max_cost_cents", { valueAsNumber: true })}
+                  />
+                </label>
+              )}
+            </div>
+            {Object.values(form.formState.errors).length ? (
+              <p role="alert" className="text-ui-body text-red-text">
+                {t("validation")}
               </p>
-            ) : null)}
-        </form>
-      </Card>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                type="submit"
+                variant="secondary"
+                loading={pending}
+                disabled={disabled || extendedUnavailable}
+              >
+                {t("estimateCost")}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => submit(false)}
+                loading={pending}
+                disabled={disabled || extendedUnavailable || !estimateAffordable}
+              >
+                {t("runAnalysis")}
+              </Button>
+              <span className="text-ui-xs text-fg-muted">
+                {t(actual ? "actualReplayHint" : "cacheHint")}
+              </span>
+            </div>
+            {retryBlocked ? (
+              <p role="alert" className="m-0 text-ui-body text-red-text">
+                {t("actualCostUsageReview")}
+              </p>
+            ) : null}
+            {completed ? (
+              <Button type="button" variant="secondary" onClick={newRequest}>
+                {t("newRequest")}
+              </Button>
+            ) : null}
+            {!noSource &&
+              canRun &&
+              !retryBlocked &&
+              !completed &&
+              (!estimateCurrent ? (
+                <p className="m-0 text-ui-xs text-fg-muted">{t("estimateRequired")}</p>
+              ) : !estimateAffordable ? (
+                <p role="alert" className="m-0 text-ui-body text-red-text">
+                  {t(credentialsRejected ? "actualCostUnavailable" : "estimateAboveCap")}
+                </p>
+              ) : null)}
+          </form>
+        </Card>
+      </ProviderAccessGate>
       {error || (outcome && !outcome.ok) ? (
         <Card role="alert" className="text-ui-body text-red-text">
           {error
@@ -262,6 +250,12 @@ export function AiResearchWorkspace({
             {t("openReport")}
           </Link>
         </>
+      ) : noSource ? (
+        <ProviderAccessEmptyState
+          surface="ai"
+          href={appPath(projectId, "integrations")}
+          providers={supportingProviders}
+        />
       ) : !outcome ? (
         <EmptyState
           title={mode === "visibility" ? t("visibilityEmpty") : t("promptEmpty")}

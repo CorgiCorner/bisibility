@@ -355,7 +355,14 @@
       "syncToastUnavailable": "Synchronizacja nie jest jeszcze dostępna. Nie wpływa to na nic, co już zaimportowano.",
       "openSearchConsole": "Otwórz Search Console",
       "searchConsoleModule": "Moduł Search Console",
-      "noFinalizedDaysForProperty": "Brak dni ostatecznych dla usługi {property}"
+      "noFinalizedDaysForProperty": "Brak dni ostatecznych dla usługi {property}",
+      "googlePropertyAuth": "Połącz ponownie konto Google, aby wczytać usługi.",
+      "googlePropertyPermission": "To konto Google nie ma dostępu do tych usług. Sprawdź jego uprawnienia w Search Console lub Analytics.",
+      "googlePropertyApiDisabled": "Konfiguracja API Google wymaga sprawdzenia. Poproś administratora aplikacji o włączenie API i sprawdzenie ustawień, a potem spróbuj ponownie.",
+      "googlePropertyQuota": "Osiągnięto limit zapytań Google. Spróbuj ponownie później.",
+      "googlePropertyTemporary": "Google jest chwilowo niedostępne. Spróbuj ponownie.",
+      "googlePropertyUnknown": "Nie udało się wczytać usług. Spróbuj ponownie.",
+      "googlePropertyScope": "Połącz konto Google ponownie i zaakceptuj uprawnienia, o które prosi aplikacja."
     },
     "oauthSelection": {
       "domainBadge": "Domena",

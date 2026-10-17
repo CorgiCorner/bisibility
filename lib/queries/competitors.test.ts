@@ -74,6 +74,8 @@ describe("current competitor query", () => {
     const view = await getCompetitorsView(project.publicId);
     expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: "RepeatableRead",
+      maxWait: 2_000,
+      timeout: 15_000,
     });
     expect(mocks.current).toHaveBeenCalledWith(expect.anything(), actor, project, undefined);
     expect(view.market?.quality).toMatchObject({ expected: 1, measured: 1 });

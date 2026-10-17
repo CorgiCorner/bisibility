@@ -18,6 +18,7 @@ export async function keywordResearchProject(projectId: string) {
     select: {
       defaults: { include: { locationRef: true } },
       id: true,
+      lookupCacheTtlSeconds: true,
       keywords: { select: { device: true, location: true, locationRef: true, text: true } },
       savedKeywords: {
         select: { countryCode: true, languageCode: true, location: true, normalizedText: true },

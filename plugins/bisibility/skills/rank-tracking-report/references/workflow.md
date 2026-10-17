@@ -40,3 +40,5 @@ Do not call `run_rank_check`. It can incur provider cost and requires approval i
 8. Recommended next investigations
 
 For every highlighted keyword, include its keyword text, earliest position and date, latest position and date, delta, and available ranking URL. Distinguish facts returned by MCP from calculations and interpretation.
+
+<!-- paid-tool-prohibited: run_rank_check -->

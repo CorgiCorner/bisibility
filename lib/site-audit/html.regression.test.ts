@@ -68,3 +68,40 @@ describe("HTML audit resolution", () => {
     expect(result.page.robots?.length).toBeLessThanOrEqual(200);
   });
 });
+
+describe("HTML audit heading text", () => {
+  it("omits a script subtree inside a heading", () => {
+    expect(inspect("<h1>Oferta<script>secret()</script></h1>").page.headings).toEqual([
+      { level: 1, text: "Oferta" },
+    ]);
+  });
+
+  for (const tag of ["script", "style"]) {
+    it.each(["", " ", "\t", "\n", "/", " ignored"])(
+      `omits ${tag} with parser-accepted closing separator %j`,
+      (separator) => {
+        const html = `<h2>Oferta<${tag.toUpperCase()}><b>raw source &amp; text</b></${tag.toUpperCase()}${separator}> koniec</h2>`;
+        expect(inspect(html).page.headings).toEqual([{ level: 2, text: "Oferta koniec" }]);
+      },
+    );
+  }
+
+  it("skips raw-text content before applying its text-length bound", () => {
+    expect(
+      inspect(`<h1>Oferta<script>${"x".repeat(3000)}</script> koniec</h1>`).page.headings,
+    ).toEqual([{ level: 1, text: "Oferta koniec" }]);
+  });
+
+  it("preserves ordinary descendants and one-pass entity decoding", () => {
+    expect(
+      inspect("<h1>A&amp;B <span>&amp;lt;tekst&amp;gt;</span><style>.hidden{}</style></h1>").page
+        .headings,
+    ).toEqual([{ level: 1, text: "A&B &lt;tekst&gt;" }]);
+  });
+
+  it("keeps existing hidden, noscript and template text semantics", () => {
+    const html =
+      "<h1>Oferta <span hidden>ukryta</span><noscript>fallback</noscript><template>szablon</template></h1>";
+    expect(inspect(html).page.headings).toEqual([{ level: 1, text: "Oferta ukryta fallback" }]);
+  });
+});

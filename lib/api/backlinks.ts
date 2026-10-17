@@ -42,6 +42,7 @@ const analyzeQuerySchema = z.object({
 });
 
 const rowsBodySchema = z.object({
+  snapshot_ref: z.string().min(1).max(32768).optional(),
   include_subdomains: z.boolean(),
   limit: z.number().int().min(100).max(1000).multipleOf(100),
   target: z.string().trim().min(1),
@@ -188,6 +189,7 @@ export async function postBacklinkRows(ctx: ApiContext, projectId: string) {
       {
         includeSubdomains: input.include_subdomains,
         limit: input.limit,
+        snapshotRef: input.snapshot_ref,
         target: input.target,
         targetScope: input.target_scope,
       },

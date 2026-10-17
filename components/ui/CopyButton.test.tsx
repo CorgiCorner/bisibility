@@ -58,6 +58,27 @@ describe("CopyButton", () => {
     expect(screen.getByRole("button", { name: "Copied!" })).toBeInTheDocument();
   });
 
+  it("shows inline Copy and Copied feedback only after a confirmed clipboard write", async () => {
+    let finish!: () => void;
+    mocks.writeText.mockReturnValue(
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+    );
+    render(<CopyButton label="Copy request" text="Audit example.com" showLabel />);
+    const button = screen.getByRole("button", { name: "Copy request" });
+    expect(button).toHaveTextContent("Copy");
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    expect(button).not.toHaveTextContent("Copied!");
+    await act(async () => {
+      finish();
+    });
+    expect(button).toHaveTextContent("Copied!");
+    expect(mocks.writeText).toHaveBeenCalledWith("Audit example.com");
+  });
+
   it("shows the error path and never Copied when the clipboard promise rejects", async () => {
     mocks.writeText.mockRejectedValue(new Error("denied"));
 

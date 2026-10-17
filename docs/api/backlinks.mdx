@@ -144,17 +144,32 @@ Content-Type: application/json
   "target": "example.com",
   "target_scope": "site",
   "include_subdomains": true,
+  "snapshot_ref": "<snapshot_ref from the report>",
   "limit": 100
 }
 ```
 
-This paid call extends the current unexpired snapshot for the same target.
-`limit` is a multiple of `100` between `100` and `1000`. The response is the
-same envelope, but `rows` contains only the newly fetched rows; append them to
-the rows you already hold and use the updated `fetched_row_count` and
-`cost_cents`. When the snapshot has expired or does not exist, the endpoint
-returns the `snapshot_expired` problem with status `409`; run the analyze
-request again to pay for a fresh snapshot.
+This paid call extends the exact unexpired snapshot identified by `snapshot_ref`,
+not the most recent analysis for the target. Pass the opaque reference from the
+analyze response, then replace it with the new reference returned after each
+append. `limit` is a multiple of `100` between `100` and `1000`.
+
+The response has the same envelope, but `rows` contains only the additional rows.
+Append them to your existing rows and use the updated `fetched_row_count` and
+`total_rows_available`. `cost_cents` is the cost of this additional page, not the
+cumulative cost of the original analysis.
+
+**Compatibility:** `snapshot_ref` is an additional response field. Older clients
+that omit it on the rows endpoint receive `409 snapshot_expired` before any paid
+provider request. A missing, altered, cross-project, expired or stale row revision
+is rejected in the same way. Never retry by silently choosing a newer snapshot.
+
+Concurrent appends cannot purchase the same offset twice. If a paid response was
+retained but writing its rows failed, retrying the same reference restores those
+rows without another provider request (`cached: true`, `cost_cents: 0`).
+A refusal proven to precede dispatch releases the claim for retry. If dispatch
+may have happened but no response was retained, the append remains blocked;
+inspect recorded usage before explicitly starting a new paid analysis.
 
 ## Related operations
 

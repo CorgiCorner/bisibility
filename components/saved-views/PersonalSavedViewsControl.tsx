@@ -1,10 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
-import { Divider } from "@/components/ui/Divider";
-import { Menu } from "@/components/ui/Menu";
-import { MenuItem } from "@/components/ui/MenuItem";
 import { menuSelectTriggerClass } from "@/components/ui/MenuSelect";
+import { StatusPill } from "@/components/ui/StatusPill";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import type { CanonicalSavedViewResource } from "@/lib/saved-views/canonical-model";
@@ -13,6 +11,7 @@ import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist
 import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { useRef, useState } from "react";
 import { PersonalSaveViewModal } from "./PersonalSaveViewModal";
+import { PersonalViewMenu } from "./PersonalViewMenu";
 import type { PersonalSavedViewsControlProps } from "./personal-control-types";
 
 type ConflictScope =
@@ -27,6 +26,7 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
   const { labels } = props;
   const trigger = useRef<HTMLButtonElement>(null);
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const [showNameHint, setShowNameHint] = useState(false);
   const [savingAs, setSavingAs] = useState(false);
   const [pending, setPending] = useState(false);
   const [conflictScope, setConflictScope] = useState<ConflictScope | null>(null);
@@ -47,6 +47,8 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
   );
   const active = views.find((view) => view.id === props.activeViewId) ?? null;
 
+  const activeLabel =
+    active?.name ?? (props.activeViewId ? labels.unavailableView : labels.general);
   const writable = !pending && conflictScope === null;
   const latestRevision =
     conflictScope?.kind === "view"
@@ -89,6 +91,22 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
     setSavingAs(false);
     trigger.current?.focus();
   }
+  function deleteActive() {
+    if (!active?.canDelete) return;
+    void perform(
+      async () => {
+        const result = await props.deleteAction({
+          expectedRevision: active.revision,
+          projectId: props.projectId,
+          viewId: active.id,
+        });
+        if (!result.ok) throw result.error;
+        // Preserve the explicit scope until the user chooses another view.
+        props.onRefresh();
+      },
+      { kind: "view", id: active.id, revision: active.revision },
+    );
+  }
   function setDefault() {
     void perform(
       async () => {
@@ -109,69 +127,60 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
   }
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2">
-      <Tooltip content={props.scopeSummary} semantics="description" placement="bottom">
+      <Tooltip
+        content={activeLabel}
+        disabled={!showNameHint || Boolean(anchor)}
+        semantics="description"
+        placement="bottom"
+      >
         <button
           ref={trigger}
           type="button"
-          className={`${menuSelectTriggerClass} max-w-[190px]`}
+          className={`${menuSelectTriggerClass} max-w-[280px] leading-[1.25]`}
+          aria-label={activeLabel}
+          aria-description={
+            props.modified ? `${props.scopeSummary}. ${labels.modified}` : props.scopeSummary
+          }
           aria-haspopup="menu"
           aria-expanded={Boolean(anchor)}
           disabled={pending}
-          onClick={(event) => setAnchor(event.currentTarget)}
+          onPointerEnter={(event) => {
+            const label = event.currentTarget.querySelector("[data-view-name]");
+            setShowNameHint(Boolean(label && label.scrollWidth > label.clientWidth));
+          }}
+          onPointerLeave={() => setShowNameHint(false)}
+          onClick={(event) => {
+            setShowNameHint(false);
+            setAnchor(event.currentTarget);
+          }}
         >
           <BookmarkSimple className="shrink-0 text-fg-muted" aria-hidden size={15} />
-          <span className="min-w-0 truncate text-fg">
-            {active?.name ?? (props.activeViewId ? labels.unavailableView : labels.general)}
+          <span data-view-name className="min-w-0 truncate text-fg">
+            {activeLabel}
           </span>
+          {props.modified ? (
+            <span aria-hidden className="shrink-0">
+              <StatusPill status="update" label={labels.modified} />
+            </span>
+          ) : null}
           <CaretDown className="shrink-0 text-fg-muted" aria-hidden size={11} />
         </button>
       </Tooltip>
-      <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}>
-        <MenuItem selected={!props.activeViewId} onClick={() => select(null)}>
-          {labels.general}
-        </MenuItem>
-        {views.map((view) => (
-          <MenuItem
-            key={view.id}
-            selected={view.id === props.activeViewId}
-            onClick={() => select(view)}
-          >
-            <span className="min-w-0 flex-1 truncate">{view.name}</span>
-            <span className="ml-3 text-[11px] text-fg-muted">
-              {view.visibility === "private" ? labels.personal : labels.project}
-            </span>
-          </MenuItem>
-        ))}
-        <Divider />
-        <MenuItem
-          disabled={!writable || Boolean(props.activeViewId && !active)}
-          onClick={setDefault}
-        >
-          {labels.setDefault}
-        </MenuItem>
-        {active?.canDelete ? (
-          <MenuItem
-            disabled={!writable}
-            onClick={() =>
-              void perform(
-                async () => {
-                  const result = await props.deleteAction({
-                    expectedRevision: active.revision,
-                    projectId: props.projectId,
-                    viewId: active.id,
-                  });
-                  if (!result.ok) throw result.error;
-                  // Preserve an explicit link to the deleted scope until the user chooses General.
-                  props.onRefresh();
-                },
-                { kind: "view", id: active.id, revision: active.revision },
-              )
-            }
-          >
-            {labels.delete}
-          </MenuItem>
-        ) : null}
-      </Menu>
+      <PersonalViewMenu
+        anchor={anchor}
+        active={active}
+        activeViewId={props.activeViewId}
+        labels={labels}
+        modified={props.modified}
+        pending={pending}
+        views={views}
+        writable={writable}
+        onClose={() => setAnchor(null)}
+        onDelete={deleteActive}
+        onDiscard={props.onDiscard}
+        onSelect={select}
+        onSetDefault={setDefault}
+      />
       <Button
         type="button"
         variant="outline"
@@ -183,46 +192,34 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
       >
         {labels.saveAs}
       </Button>
-      {props.modified ? (
-        <>
-          <span className="text-[12px] text-fg-muted">{labels.modified}</span>
-          {active?.canEdit ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={!writable}
-              onClick={() =>
-                void perform(
-                  async () => {
-                    const updated = await props.updateAction({
-                      config: props.config,
-                      expectedRevision: active.revision,
-                      name: active.name,
-                      projectId: props.projectId,
-                      viewId: active.id,
-                    });
-                    if (!updated.ok) throw updated.error;
-                    props.onSelect(updated.value);
-                    props.onRefresh();
-                  },
-                  { kind: "view", id: active.id, revision: active.revision },
-                )
-              }
-            >
-              {labels.saveChanges}
-            </Button>
-          ) : null}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={pending}
-            onClick={props.onDiscard}
-          >
-            {labels.discard}
-          </Button>
-        </>
+      {props.modified && active?.canEdit ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={toolbarControlClassName}
+          style={{ fontWeight: 400 }}
+          disabled={!writable}
+          onClick={() =>
+            void perform(
+              async () => {
+                const updated = await props.updateAction({
+                  config: props.config,
+                  expectedRevision: active.revision,
+                  name: active.name,
+                  projectId: props.projectId,
+                  viewId: active.id,
+                });
+                if (!updated.ok) throw updated.error;
+                props.onSelect(updated.value);
+                props.onRefresh();
+              },
+              { kind: "view", id: active.id, revision: active.revision },
+            )
+          }
+        >
+          {labels.saveChanges}
+        </Button>
       ) : null}
       {preference.notice ? (
         <span role="status" className="basis-full text-[12px] text-fg-muted">

@@ -1,4 +1,5 @@
 import { requireProjectScope } from "@/lib/actions/_shared";
+import { emitFirstCheckRunCompletion } from "@/lib/actions/rank-check-preview-analytics";
 import { withAppRoute } from "@/lib/api/app-route";
 import { listResponse } from "@/lib/api/responses";
 import { listRankCheckRunItems } from "@/lib/queries/rank-check-runs";
@@ -18,6 +19,14 @@ export const GET = withAppRoute<Context>(async (request, actor, context) => {
     { type: "keyword" },
     { allowReadOnly: true },
   );
-  const page = await listRankCheckRunItems(project.id, (await context.params).publicId, url);
+  const publicId = (await context.params).publicId;
+  const page = await listRankCheckRunItems(project.id, publicId, url);
+  if (page.data.some((item) => item.status === "completed")) {
+    await emitFirstCheckRunCompletion({
+      actorId: actor.id,
+      projectId: project.id,
+      runPublicIds: [publicId],
+    });
+  }
   return listResponse(page.data, page.nextCursor);
 });

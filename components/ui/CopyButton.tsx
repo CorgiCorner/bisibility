@@ -16,6 +16,7 @@ export type CopyButtonProps = Omit<IconButtonProps, "children" | "onClick" | "re
   text: string;
   label?: string;
   size?: "xs" | "sm" | "md" | "lg";
+  showLabel?: boolean;
 };
 
 const copyButtonVariants = cva("", {
@@ -55,6 +56,7 @@ export function CopyButton({
   text,
   label,
   size = "md",
+  showLabel = false,
   style,
   ...props
 }: CopyButtonProps) {
@@ -128,6 +130,7 @@ export function CopyButton({
         aria-label={tooltipTitle}
         className={cn(
           copyButtonVariants({ size }),
+          showLabel && "gap-2 px-3 text-xs font-normal",
           "motion-safe:active:not-focus-visible:not-disabled:scale-[0.97]",
           className,
         )}
@@ -139,6 +142,7 @@ export function CopyButton({
           "--control-hover-color": hoverColor,
           "--control-hover-background-color": hoverBg,
           ...(size === "xs" ? { minHeight: 12, minWidth: 12, padding: 0 } : {}),
+          ...(showLabel ? { borderRadius: "var(--radius-control)" } : {}),
           transition: `background-color ${MOTION_PRESS}ms ease, color ${MOTION_PRESS}ms ease, transform ${MOTION_PRESS}ms ease`,
           ...style,
         }}
@@ -151,6 +155,9 @@ export function CopyButton({
         ) : (
           <Copy size={copyIconSizeBySize[size]} weight="regular" />
         )}
+        {showLabel ? (
+          <span aria-live="polite">{copied ? t("copied") : error ? t("failed") : t("action")}</span>
+        ) : null}
       </IconButton>
     </Tooltip>
   );

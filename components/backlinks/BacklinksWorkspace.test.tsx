@@ -2,10 +2,11 @@ import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendPro
 import { renderWithBacklinksMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { AnalyzeBacklinksAction } from "@/lib/actions/backlinks";
 import sharedMessages from "@/messages/core/en/shared.json";
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BacklinksWorkspace } from "./BacklinksWorkspace";
+import { backlinksSnapshotFixture } from "./backlinks-fixtures";
 
 const context = {
   costContext: { capCents: 5000, spentCents: 1200 },
@@ -137,6 +138,64 @@ describe("BacklinksWorkspace", () => {
     ).not.toBeInTheDocument();
     expect(loadMoreAction).not.toHaveBeenCalled();
   });
+  it.each(["no_provider", "needs_reauth"] as const)(
+    "keeps cached backlinks readable without provider controls under %s",
+    async (providerStatus) => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-07-24T12:00:00Z"));
+      const analyzeAction = vi.fn(async (input: unknown) =>
+        (input as { estimateOnly?: boolean }).estimateOnly
+          ? { ...estimate("example.com"), cached: true, costCents: 0, estimatedCostCents: 0 }
+          : {
+              ...backlinksSnapshotFixture,
+              ...snapshot("example.com"),
+              cached: true,
+              costCents: 0,
+              fetchedRowCount: 100,
+              totalRowsAvailable: 200,
+              rows: backlinksSnapshotFixture.rows,
+            },
+      );
+      renderWorkspace({
+        analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
+        context: {
+          ...context,
+          providerStatus,
+          supportingProviders: ["Fixture provider"],
+          recentTargets: [
+            {
+              cachedUntil: "2026-07-25T12:00:00Z",
+              fetchedAt: "2026-07-24T10:00:00Z",
+              includeSubdomains: true,
+              provider: "dataforseo",
+              resultLimit: 100,
+              target: "example.com",
+              targetScope: "site",
+            },
+          ],
+        },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /^example\.com/ }));
+      await act(async () => vi.advanceTimersByTimeAsync(320));
+      expect(screen.getByRole("region", { name: "Backlinks results" })).toBeVisible();
+      expect(
+        screen.queryByRole("button", { name: /Refresh now|Load 100 more/ }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("region", {
+          name: /Connect a provider to get started|Reconnect to load new results/,
+        }),
+      ).not.toBeInTheDocument();
+      expect(analyzeAction).toHaveBeenCalledWith(
+        expect.objectContaining({ estimateOnly: false, maxCostCents: 0, fresh: false }),
+      );
+      expect(
+        analyzeAction.mock.calls.every(([input]) => !(input as { fresh?: boolean }).fresh),
+      ).toBe(true);
+      expect(loadMoreAction).not.toHaveBeenCalled();
+    },
+  );
+
   it("re-estimates the explicitly selected provider without launching a paid analysis", async () => {
     vi.useFakeTimers();
     const analyzeAction = vi.fn(async (input: unknown) => outcome(input));
@@ -160,19 +219,40 @@ describe("BacklinksWorkspace", () => {
     );
     expect(loadMoreAction).not.toHaveBeenCalled();
   });
-  it("matches Domain Overview when a capable provider is missing", () => {
-    renderWorkspace({ context: { ...context, providerStatus: "no_provider" } });
-
-    expect(screen.getByText("Connect DataForSEO to analyze backlinks")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Backlinks requires a provider with backlink intelligence support. Lookups run on your own key.",
-      ),
-    ).toBeInTheDocument();
-    const connect = screen.getByRole("link", { name: "Connect DataForSEO" });
-    expect(connect).toHaveAttribute("href", "/app/prj_1/integrations");
-    expect(connect).toHaveClass("bg-accent-solid", "rounded-control");
-  });
+  it.each(["no_provider", "needs_reauth"] as const)(
+    "shows a provider action above and below the form for %s",
+    (providerStatus) => {
+      renderWorkspace({
+        context: { ...context, providerStatus, supportingProviders: ["Fixture provider"] },
+      });
+      const reconnect = providerStatus === "needs_reauth";
+      expect(
+        screen.getByText(
+          reconnect
+            ? "Reconnect your provider to unlock these fields."
+            : "Connect a supporting provider to unlock these fields.",
+        ),
+      ).toBeVisible();
+      expect(screen.getAllByText("Supported providers: Fixture provider.")).toHaveLength(2);
+      expect(screen.getAllByRole("link")).toHaveLength(2);
+      const emptyPanel = screen.getByRole("region", {
+        name: reconnect ? "Reconnect to load new results" : "Connect a provider to get started",
+      });
+      expect(within(emptyPanel).getAllByRole("link")).toHaveLength(1);
+      expect(
+        within(emptyPanel).getByRole("link", {
+          name: reconnect ? "Reconnect provider" : "Connect provider",
+        }),
+      ).toHaveAttribute("href", "/app/prj_1/integrations");
+      expect(
+        screen.getAllByRole("link", {
+          name: reconnect ? "Reconnect provider" : "Open Integrations",
+        })[0],
+      ).toHaveAttribute("href", "/app/prj_1/integrations");
+      expect(screen.getByRole("button", { name: /^Analyze/ })).toBeDisabled();
+      expect(screen.queryByText("Connect DataForSEO to analyze backlinks")).not.toBeInTheDocument();
+    },
+  );
 
   it("prefills and prices a target supplied by a linking workspace", () => {
     render(
@@ -367,6 +447,38 @@ describe("BacklinksWorkspace", () => {
     resolveReplay?.(snapshot("example.org"));
     expect(await screen.findByRole("region", { name: "Backlinks results" })).toBeInTheDocument();
   });
+
+  it.each(["no_provider", "needs_reauth"] as const)(
+    "never launches paid work for an expired recent target with %s",
+    async (providerStatus) => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-07-24T15:00:00.000Z"));
+      const analyzeAction = vi.fn(async (input: unknown) => outcome(input));
+      renderWorkspace({
+        analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
+        context: {
+          ...context,
+          providerStatus,
+          recentTargets: [
+            {
+              cachedUntil: "2026-07-24T14:59:59.000Z",
+              fetchedAt: "2026-07-23T15:00:00.000Z",
+              includeSubdomains: true,
+              resultLimit: 100,
+              target: "expired.example.org",
+              targetScope: "site",
+            },
+          ],
+        },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /expired\.example\.org.*whole site/i }));
+      await act(async () => vi.advanceTimersByTimeAsync(1000));
+      expect(analyzeAction).toHaveBeenCalledTimes(1);
+      expect(analyzeAction).toHaveBeenCalledWith(expect.objectContaining({ estimateOnly: true }));
+      expect(screen.getByRole("button", { name: /^Analyze/ })).toBeDisabled();
+      expect(screen.queryByRole("region", { name: "Backlinks results" })).not.toBeInTheDocument();
+    },
+  );
 
   it("only fills the form when a recent target snapshot has expired", async () => {
     vi.useFakeTimers();

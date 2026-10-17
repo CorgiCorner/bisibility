@@ -66,7 +66,7 @@ function workspace(action: AnalyzeBacklinksAction, loadMoreAction = vi.fn()) {
         initialEstimate={{ cached: false, costCents: 5, loading: false, valid: true }}
         initialTarget="example.com"
         loadMoreAction={loadMoreAction}
-        projectId="org_fixture"
+        projectId="prj_backlinks_fixture"
       />
     </SessionSpendProvider>,
   );

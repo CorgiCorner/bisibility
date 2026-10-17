@@ -3,6 +3,7 @@ import { screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   baseData,
+  busyTemporal,
   disabledTemporal,
   staleTemporal,
   unavailableTemporal,
@@ -192,6 +193,85 @@ describe("AdminDashboard", () => {
     const presence = screen.getByRole("region", { name: "URL presence" });
     expect(within(presence).getByText("Deferred URLs").parentElement).toHaveTextContent("7");
     expect(within(presence).getByText("Affected projects").parentElement).toHaveTextContent("2");
+  });
+
+  it("separates cumulative schedule counters from inspection failures without duplicating the raw list", () => {
+    render(
+      <AdminDashboard
+        data={withTemporal({
+          ...busyTemporal,
+          bootstrapErrors: ["Startup check failed"],
+          heartbeat: {
+            ...busyTemporal.heartbeat,
+            inspectionErrors: 1,
+            issueSchedules: [
+              ...busyTemporal.heartbeat.issueSchedules,
+              "custom-task: inspection failed",
+            ],
+          },
+        })}
+      />,
+    );
+
+    const temporal = screen.getByRole("region", { name: "Temporal" });
+    const table = within(temporal).getByRole("table", { name: "Recorded schedule counters" });
+    const rows = within(table).getAllByRole("row");
+    expect(rows).toHaveLength(14);
+    expect(within(rows[1] as HTMLElement).getByText("Deliver alerts")).toBeInTheDocument();
+    expect(within(rows[1] as HTMLElement).getByText("2,170")).toBeInTheDocument();
+    expect(within(rows[1] as HTMLElement).getByText("0")).toBeInTheDocument();
+    expect(within(table).getByText("alert-delivery-sweep")).toBeInTheDocument();
+    expect(within(temporal).getByText(/not a current backlog/)).toBeInTheDocument();
+    expect(within(temporal).getByText("custom-task: inspection failed")).toBeInTheDocument();
+    expect(within(temporal).getByText("Startup check failed")).toBeInTheDocument();
+    expect(within(temporal).queryByText(/catchup 0, overlap/)).not.toBeInTheDocument();
+  });
+
+  it("keeps custom schedule IDs readable even if they match object prototype names", () => {
+    render(
+      <AdminDashboard
+        data={withTemporal({
+          ...busyTemporal,
+          heartbeat: {
+            ...busyTemporal.heartbeat,
+            issueSchedules: [],
+            scheduleIssues: [
+              {
+                scheduleId: "toString",
+                missedCatchup: 2,
+                skippedOverlap: 0,
+                gapAt: null,
+                recoveredAt: null,
+              },
+            ],
+          },
+        })}
+      />,
+    );
+    const table = screen.getByRole("table", { name: "Recorded schedule counters" });
+    expect(within(table).getByText("toString")).toBeInTheDocument();
+    expect(within(table).getByText("2")).toBeInTheDocument();
+  });
+
+  it("does not claim a clear schedule history when inspection failed", () => {
+    render(
+      <AdminDashboard
+        data={withTemporal({
+          ...baseData.temporal,
+          heartbeat: {
+            ...baseData.temporal.heartbeat,
+            inspectionErrors: 1,
+            issueSchedules: ["custom-task: inspection failed"],
+          },
+        })}
+      />,
+    );
+    const temporal = screen.getByRole("region", { name: "Temporal" });
+    expect(within(temporal).getByText(/1 schedule could not be inspected/)).toBeInTheDocument();
+    expect(within(temporal).getByText("custom-task: inspection failed")).toBeInTheDocument();
+    expect(
+      within(temporal).queryByText("No missed or overlapping starts recorded."),
+    ).not.toBeInTheDocument();
   });
 
   it("renders unavailable Temporal metrics as hyphens with an explicit unknown-state note", () => {

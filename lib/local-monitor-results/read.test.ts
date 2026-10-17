@@ -78,7 +78,7 @@ describe("same snapshot read authority and full retained result DTO", () => {
       evidence: "positive",
       scopeClass: "coordinate_seed",
     });
-    expect(result.protocol.matcher).toBe("business-match-maps-v1");
+    expect(result.protocol.matcher).toBe("business-match-maps-v2");
     expect(f.transaction).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: "RepeatableRead",
     });

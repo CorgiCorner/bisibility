@@ -28,10 +28,13 @@ function source(fundingSource: "own" | "hosted" = "own") {
     location: snapshot.location,
     connections: snapshot.connections.map((side) => ({
       ...side,
+      projectId: "project",
+      kind: "serp",
+      providerUiRevision: 4n,
       enabled: true,
       status: "connected",
       credentialSource: fundingSource,
-      updatedAt: new Date(side.revision),
+      updatedAt: new Date("2026-10-14T00:00:00.000Z"),
       credentialsEncrypted: "encrypted-fixture",
     })),
   };
@@ -83,4 +86,15 @@ it("one connected provider never silently selects a fallback or starts quoting t
   await expect(quoteComparison("project", "keyword", new Date())).rejects.toThrow(
     /Both comparison providers/,
   );
+});
+
+it("operational timestamps do not revoke a preview, while semantic configuration does", async () => {
+  const initial = source();
+  mocks.source.mockResolvedValue(initial);
+  const before = await quoteComparison("project", "keyword", new Date());
+  initial.connections[0].updatedAt = new Date("2026-10-15T01:00:00Z");
+  const afterUsage = await quoteComparison("project", "keyword", new Date());
+  expect(afterUsage).toEqual(before);
+  Object.assign(initial.connections[0], { providerUiRevision: 5n });
+  expect(await quoteComparison("project", "keyword", new Date())).not.toEqual(before);
 });

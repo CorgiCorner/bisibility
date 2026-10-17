@@ -604,6 +604,10 @@
             "multipleOf": 100,
             "type": "integer"
           },
+          "snapshot_ref": {
+            "description": "Opaque snapshot_ref from the report being extended. Missing or stale references return snapshot_expired before paid I/O.",
+            "type": "string"
+          },
           "target": {
             "type": "string"
           },
@@ -778,6 +782,10 @@
               "type": "object"
             },
             "type": "array"
+          },
+          "snapshot_ref": {
+            "description": "Opaque reference for extending this exact snapshot revision.",
+            "type": "string"
           },
           "summary": {
             "properties": {
@@ -2044,7 +2052,7 @@
               },
               "fetched_at": {
                 "format": "date-time",
-                "type": "string"
+                "type": ["string", "null"]
               }
             },
             "required": ["cached", "cost_cents", "data", "fetched_at"],
@@ -2190,7 +2198,7 @@
               },
               "fetched_at": {
                 "format": "date-time",
-                "type": "string"
+                "type": ["string", "null"]
               }
             },
             "required": ["cached", "cost_cents", "data", "fetched_at"],
@@ -2443,7 +2451,7 @@
               },
               "fetched_at": {
                 "format": "date-time",
-                "type": "string"
+                "type": ["string", "null"]
               }
             },
             "required": ["cached", "cost_cents", "data", "fetched_at"],
@@ -2519,7 +2527,7 @@
                   },
                   "fetched_at": {
                     "format": "date-time",
-                    "type": "string"
+                    "type": ["string", "null"]
                   },
                   "ok": {
                     "const": true,
@@ -2566,7 +2574,7 @@
                   },
                   "fetched_at": {
                     "format": "date-time",
-                    "type": "string"
+                    "type": ["string", "null"]
                   },
                   "ok": {
                     "const": true,
@@ -4332,6 +4340,11 @@
                   "maxItems": 49,
                   "type": "array"
                 },
+                "reason": {
+                  "description": "Ranking aggregate unavailable across matcher versions; point evidence and coverage remain readable.",
+                  "enum": ["matcher_version_mixed"],
+                  "type": "string"
+                },
                 "sampleBounds": {
                   "anyOf": [
                     {
@@ -5093,6 +5106,11 @@
                       },
                       "maxItems": 49,
                       "type": "array"
+                    },
+                    "reason": {
+                      "description": "Ranking aggregate unavailable across matcher versions; point evidence and coverage remain readable.",
+                      "enum": ["matcher_version_mixed"],
+                      "type": "string"
                     },
                     "sample_bounds": {
                       "anyOf": [
@@ -25847,6 +25865,32 @@
             "application/json": {
               "schema": {
                 "additionalProperties": false,
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "target_type": {
+                          "const": "domain"
+                        }
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "domain": {
+                          "anyOf": [
+                            {
+                              "maxLength": 63
+                            },
+                            {
+                              "maxLength": 67,
+                              "pattern": "^www\\."
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ],
                 "properties": {
                   "brand": {
                     "description": "Brand name to inspect.",
@@ -25855,9 +25899,10 @@
                     "type": "string"
                   },
                   "domain": {
-                    "description": "Public hostname to inspect, without a scheme or path.",
-                    "maxLength": 63,
+                    "description": "Local citation-matching hostname, without a scheme or path. Domain searches remove a leading www. only from the provider filter and require at most 63 characters after removal; local matching keeps the full hostname. Brand searches and prompt comparisons allow up to 253.",
+                    "maxLength": 253,
                     "minLength": 1,
+                    "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$",
                     "type": "string"
                   },
                   "estimate_only": {
@@ -29759,6 +29804,11 @@
                             "maxItems": 49,
                             "type": "array"
                           },
+                          "reason": {
+                            "description": "Ranking aggregate unavailable across matcher versions; point evidence and coverage remain readable.",
+                            "enum": ["matcher_version_mixed"],
+                            "type": "string"
+                          },
                           "sampleBounds": {
                             "anyOf": [
                               {
@@ -31264,6 +31314,11 @@
                                 "maxItems": 49,
                                 "type": "array"
                               },
+                              "reason": {
+                                "description": "Ranking aggregate unavailable across matcher versions; point evidence and coverage remain readable.",
+                                "enum": ["matcher_version_mixed"],
+                                "type": "string"
+                              },
                               "sample_bounds": {
                                 "anyOf": [
                                   {
@@ -32708,9 +32763,10 @@
                     "type": "string"
                   },
                   "domain": {
-                    "description": "Public hostname to inspect, without a scheme or path.",
-                    "maxLength": 63,
+                    "description": "Local citation-matching hostname, without a scheme or path. Domain searches remove a leading www. only from the provider filter and require at most 63 characters after removal; local matching keeps the full hostname. Brand searches and prompt comparisons allow up to 253.",
+                    "maxLength": 253,
                     "minLength": 1,
+                    "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$",
                     "type": "string"
                   },
                   "estimate_credentials_ref": {
@@ -40123,7 +40179,7 @@
     },
     "/projects/{projectId}/backlinks/rows": {
       "post": {
-        "description": "Extends the current unexpired snapshot. The response contains only newly fetched rows plus the updated fetched_row_count and cost_cents.",
+        "description": "Extends the unexpired snapshot identified by snapshot_ref. Pass the reference returned by analyzeBacklinks or the previous loadMoreBacklinkRows response. The response contains only newly fetched rows plus the updated snapshot_ref, fetched_row_count and cost_cents.",
         "operationId": "loadMoreBacklinkRows",
         "parameters": [
           {
@@ -40224,7 +40280,7 @@
                 }
               }
             },
-            "description": "snapshot_expired: no unexpired backlinks snapshot exists; Unsupported API version"
+            "description": "snapshot_expired: the reference is missing, invalid, stale, outside the project scope, or expired; no paid request is dispatched; Unsupported API version"
           },
           "422": {
             "content": {

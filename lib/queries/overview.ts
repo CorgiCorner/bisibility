@@ -1,3 +1,4 @@
+import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 import type { ProjectionId } from "@/lib/dashboard-layout/types";
 import type { LocalReport } from "@/lib/dashboard-local/model";
@@ -86,7 +87,7 @@ export async function getOverview(projectId: string, options: OverviewOptions = 
         report,
       );
     },
-    { isolationLevel: "RepeatableRead" },
+    { ...REPORT_READ_TRANSACTION },
   );
 }
 

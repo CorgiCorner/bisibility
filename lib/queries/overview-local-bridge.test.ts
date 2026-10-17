@@ -78,6 +78,8 @@ describe("Local overview transaction and exact cohort bridge", () => {
     });
     expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: "RepeatableRead",
+      maxWait: 2_000,
+      timeout: 15_000,
     });
     expect(mocks.tx.$executeRaw).toHaveBeenCalledOnce();
     expect(mocks.local).toHaveBeenCalledWith(

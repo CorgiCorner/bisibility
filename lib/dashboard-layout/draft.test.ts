@@ -49,7 +49,9 @@ describe("personal dashboard draft", () => {
     expect(save.request).toMatchObject({ expectedRevision: 7, attempt: 1 });
     expect(Object.keys(save.request)).toEqual(["attempt", "expectedRevision", "layout"]);
     expect(JSON.stringify(save.request)).not.toContain("schedule");
-    expect(updateDashboardDraft(save.state, { type: "preset", preset: "local" })).toBe(save.state);
+    expect(
+      updateDashboardDraft(save.state, { type: "preset", layout: presetDashboardLayout("local") }),
+    ).toBe(save.state);
     expect(cancelDashboardDraft(save.state)).toBe(save.state);
     expect(finishDashboardSave(save.state, { kind: "error", attempt: 0 })).toBe(save.state);
   });

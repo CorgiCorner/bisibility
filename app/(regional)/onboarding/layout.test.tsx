@@ -101,6 +101,7 @@ describe("onboarding setup-first gate", () => {
       "shared",
       "auth",
       "onboarding",
+      "projectIntegrations",
       "projectCostEstimate",
       "projectSettingsTracking",
     ]);

@@ -131,6 +131,11 @@ the current project feed. Snoozing hides a triggered alert until its snooze
 expires; it does not disable the underlying rule. Pause or delete the rule to
 stop future evaluation.
 
+The live feed reconnects after a temporary session, project-access, snapshot, or
+date-format read failure. No notification data is sent until access can be confirmed.
+A confirmed expired session or revoked project membership still stops delivery.
+The next successful connection reloads notifications and active operations.
+
 API automation is documented under
 [Alert rules](/api/alert-rules). The complete endpoint, event, signing,
 timeout, and retry contract is under [Webhook endpoints](/api/webhooks).

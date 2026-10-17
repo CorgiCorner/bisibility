@@ -351,7 +351,7 @@ describe("LoginEmailStep", () => {
     expect(screen.queryByText(/people joined today/)).toBeNull();
   });
 
-  it("renders both cloud meters and the joined-today line", () => {
+  it("hides the positive Google counter while preserving email capacity", () => {
     renderStep(enabledProviders, cloudLegalConsentLinks, {
       emailCodes: { binding: "daily", cap: 200, left: 143 },
       googleSpots: { cap: 100, left: 14 },
@@ -361,7 +361,8 @@ describe("LoginEmailStep", () => {
     expect(
       screen.getByRole("heading", { name: "Sign in or create an account" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("14 of 100 Google sign-up spots left")).toBeInTheDocument();
+    expect(screen.queryByText(/Google sign-up spots left/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Continue with Google" })).toBeEnabled();
     expect(screen.getByText("143 of 200 login codes left today")).toBeInTheDocument();
   });
 

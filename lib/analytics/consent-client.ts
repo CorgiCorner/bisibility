@@ -29,7 +29,8 @@ export function restrictConsentImmediately(values: AnalyticsConsentValues): void
     decidedAt: Math.floor(Date.now() / 1000),
     status: "decided",
   };
-  const options = consentCookieOptions();
+  const options = consentCookieOptions(process.env.NODE_ENV, restricted);
+  // biome-ignore lint/suspicious/noDocumentCookie: Apply a restrictive choice synchronously before awaiting the server.
   document.cookie = `${CONSENT_COOKIE}=${serializeConsentCookie(restricted)}; Path=/; Max-Age=${options.maxAge}; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
   applyAnalyticsConsent(restricted);
   setAnalyticsReplay(restricted.replay);

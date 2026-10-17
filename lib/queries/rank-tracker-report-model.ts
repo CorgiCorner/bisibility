@@ -33,6 +33,15 @@ export type RankTrackerReportOptions = {
     asOf: Date,
   ) => Promise<ReadonlyMap<string, RankTrackerReportMetadata>>;
 };
+/** Optional paired reader captures authority/source once, never across calls or transactions. */
+export type RankTrackerDefinitionLoader = RankTrackerReportOptions["loadMetadata"] & {
+  atDates?: (
+    tx: Prisma.TransactionClient,
+    project: { id: string; publicId: string },
+    targets: readonly { id: string; publicId: string }[],
+    dates: readonly Date[],
+  ) => Promise<ReadonlyMap<string, RankTrackerReportMetadata>[]>;
+};
 export type RankTrackerQualityRow = KeywordRow & {
   rankQuality: ReturnType<typeof rankReportTargetResolution> & {
     currentScopeReason: "current_scope_unavailable" | null;
@@ -51,7 +60,9 @@ export type RankTrackerResolvedRow = {
 };
 
 export class RankTrackerReportConfigurationError extends Error {
-  constructor() {
-    super("Rank tracker report policy and read budgets must be configured by the server.");
+  constructor(
+    message = "Rank tracker report policy and read budgets must be configured by the server.",
+  ) {
+    super(message);
   }
 }

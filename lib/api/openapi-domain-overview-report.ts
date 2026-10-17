@@ -31,7 +31,7 @@ function moduleSuccess(data: object) {
       cached: { type: "boolean" },
       cost_cents: nonnegativeNumber,
       data,
-      fetched_at: { format: "date-time", type: "string" },
+      fetched_at: { format: "date-time", type: ["string", "null"] },
       ok: { const: true, type: "boolean" },
     },
     required: ["ok", "cached", "cost_cents", "data", "fetched_at"],

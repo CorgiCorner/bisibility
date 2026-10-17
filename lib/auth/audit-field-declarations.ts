@@ -250,6 +250,10 @@ declare(
 );
 declare(["keyword.delete"], { before: keyword });
 
+const dataCache = f.numbers("ttlSeconds");
+declare(["settings.data_cache.update"], { before: dataCache, after: dataCache });
+declare(["settings.data_cache.delete"], { after: f.strings("entryDigest") });
+
 registerAdditionalAuditDeclarations(declare, {
   market,
   projectDefaults,

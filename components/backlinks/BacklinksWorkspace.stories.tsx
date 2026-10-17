@@ -1,4 +1,7 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
+import { DateDisplayProvider } from "@/components/dates/DateFormatProvider";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { backlinksFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import type { AnalyzeBacklinksAction, LoadMoreBacklinkRowsAction } from "@/lib/actions/backlinks";
 import type { Meta, StoryObj } from "@storybook/react";
 import { BacklinksWorkspace } from "./BacklinksWorkspace";
@@ -7,11 +10,15 @@ const meta = {
   component: BacklinksWorkspace,
   decorators: [
     (Story) => (
-      <SessionSpendProvider>
-        <div className="min-h-screen bg-bg p-6 text-fg">
-          <Story />
-        </div>
-      </SessionSpendProvider>
+      <FeatureMessagesProvider locale="en" messages={backlinksFeatureTestMessages} timeZone="UTC">
+        <DateDisplayProvider>
+          <SessionSpendProvider>
+            <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
+              <Story />
+            </div>
+          </SessionSpendProvider>
+        </DateDisplayProvider>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen" },
@@ -71,5 +78,16 @@ export const Idle: Story = {
     },
     loadMoreAction,
     projectId: "prj_story",
+  },
+};
+
+export const ProviderMissing: Story = {
+  args: {
+    ...Idle.args,
+    context: {
+      ...Idle.args.context,
+      providerStatus: "no_provider",
+      supportingProviders: ["DataForSEO"],
+    },
   },
 };

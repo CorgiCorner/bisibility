@@ -29,6 +29,8 @@ function Harness({
       <output data-testid="draft-layout">{JSON.stringify(state.draft)}</output>
       {open ? (
         <DashboardLayoutEditor
+          layoutForPreset={presetDashboardLayout}
+          templateForPreset={presetDashboardLayout}
           state={state}
           access={organicAccess}
           translate={dashboardFixtureTranslate}

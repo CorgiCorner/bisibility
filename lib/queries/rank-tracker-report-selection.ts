@@ -1,3 +1,4 @@
+import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
@@ -178,6 +179,6 @@ export async function selectRankTrackerReportKeywords(
   const plan = prepareRankTrackerReportSelection(context, input, options);
   const db = options.db ?? prisma;
   return db.$transaction((tx) => readRankTrackerReportSelection(tx, plan), {
-    isolationLevel: "RepeatableRead",
+    ...REPORT_READ_TRANSACTION,
   });
 }

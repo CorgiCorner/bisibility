@@ -564,3 +564,29 @@ it("preserves confirmed budgets and a proven block when the usage read fails", a
     detail: { state: "unavailable", rows: [] },
   });
 });
+
+it("uses serial header reads without changing the full budget projection", async () => {
+  const { meter } = fixture();
+  const original = meter.applicableBudgets.bind(meter);
+  let active = 0;
+  let peak = 0;
+  const reads = vi.spyOn(meter, "applicableBudgets").mockImplementation(async (...args) => {
+    active++;
+    peak = Math.max(peak, active);
+    await Promise.resolve();
+    try {
+      return await original(...args);
+    } finally {
+      active--;
+    }
+  });
+  const standard = await getProjectMeteringBudgets("prj_public");
+  expect(peak).toBe(4);
+  const requests = structuredClone(reads.mock.calls);
+  reads.mockClear();
+  peak = 0;
+  const header = await getProjectMeteringBudgets("prj_public", "header");
+  expect(peak).toBe(1);
+  expect(header).toEqual(standard);
+  expect(reads.mock.calls).toEqual(requests);
+});

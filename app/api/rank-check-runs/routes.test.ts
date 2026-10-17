@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   actor: { id: "user_1" },
+  emitCompletion: vi.fn(),
   cancel: vi.fn(),
   getRun: vi.fn(),
   getRunCommand: vi.fn(),
@@ -17,6 +18,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/actions/rank-check-preview-analytics", () => ({
+  emitFirstCheckRunCompletion: mocks.emitCompletion,
+}));
 vi.mock("@/lib/api/app-route", () => ({
   withAppRoute:
     (handler: (request: Request, actor: typeof mocks.actor, context?: unknown) => unknown) =>
@@ -103,6 +107,40 @@ describe("rank-check run app routes", () => {
       data: [{ id: publicId }],
       meta: { next_cursor: "next" },
     });
+  });
+
+  it("observes a completed result only after authorized item retrieval", async () => {
+    mocks.listItems.mockResolvedValueOnce({
+      data: [{ id: "item_1", status: "completed" }],
+      nextCursor: null,
+    });
+    const response = await items(
+      new Request(`https://example.com/api/rank-check-runs/${publicId}/items?project=${projectId}`),
+      context,
+    );
+    expect(response.status).toBe(200);
+    expect(mocks.emitCompletion).toHaveBeenCalledWith({
+      actorId: "user_1",
+      projectId: "project_1",
+      runPublicIds: [publicId],
+    });
+    expect(mocks.listItems.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.emitCompletion.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("does not observe activation when item access is rejected or results remain queued", async () => {
+    mocks.requireScope.mockRejectedValueOnce(new Error("forbidden"));
+    const request = () =>
+      new Request(`https://example.com/api/rank-check-runs/${publicId}/items?project=${projectId}`);
+    await expect(items(request(), context)).rejects.toThrow("forbidden");
+    expect(mocks.emitCompletion).not.toHaveBeenCalled();
+    mocks.listItems.mockResolvedValueOnce({
+      data: [{ id: "item_1", status: "queued" }],
+      nextCursor: null,
+    });
+    await items(request(), context);
+    expect(mocks.emitCompletion).not.toHaveBeenCalled();
   });
 
   it("uses the Idempotency-Key header when the launch body omits it", async () => {

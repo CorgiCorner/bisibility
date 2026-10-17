@@ -70,6 +70,9 @@ export function AdminDashboardLoading() {
       <Panel>
         <Bar className="mb-3 h-5 w-32" />
         <Metrics count={6} columns="grid-cols-2 md:grid-cols-3 xl:grid-cols-6" />
+        <Bar className="mt-5 h-5 w-40" />
+        <Bar className="mt-1 h-5 w-96" />
+        <Bar className="mt-3 h-5 w-72" />
       </Panel>
       <Panel>
         <Bar className="h-[34px] w-40 rounded-control" />

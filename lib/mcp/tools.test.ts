@@ -621,6 +621,7 @@ describe("MCP tool dispatch", () => {
     const rows = await dispatchMcpTool(
       "load_more_backlink_rows",
       {
+        snapshot_ref: "opaque-current-snapshot",
         include_subdomains: true,
         limit: 300,
         project_id: projectId,

@@ -23,12 +23,12 @@
           "body": "Wymagane do logowania, bezpieczeństwa i zapisanych ustawień.",
           "title": "Niezbędne"
         },
-        "footer": "Twój wybór zapisujemy na 6 miesięcy. Możesz go zmienić w każdej chwili w sekcji Wybory prywatności w stopce.",
+        "footer": "Akceptację zapamiętujemy na 6 miesięcy, a odrzucenie obu opcji na 7 dni. Wybór możesz zmienić w każdej chwili w sekcji Wybory prywatności w stopce.",
         "intro": "Wybierz osobno analitykę i nagrania. Niezbędne pliki cookie pozostają włączone.",
         "privacyPolicy": "Polityka prywatności",
         "replay": {
           "body": "Opcjonalne nagrania pomagają nam ulepszać stronę i konfigurację. W aplikacji nagrania mogą obejmować pierwsze sprawdzenie i monitor pozycji. Pola formularzy i dane projektu są maskowane. Ekrany logowania, konta i płatności, dane uwierzytelniające oraz dane z Google są wyłączone.",
-          "title": "Nagrania"
+          "title": "Nagrania z maskowaniem danych"
         },
         "saveError": "Nie udało się zapisać zmian. Wyłączone opcje pozostają wyłączone. Spróbuj ponownie.",
         "usage": {
@@ -1510,6 +1510,7 @@
       "title": "Dostosuj dashboard",
       "presentationOnly": "Tylko osobisty wygląd. Harmonogramy i płatne sprawdzenia się nie zmieniają.",
       "preset": "Preset dashboardu",
+      "resetPreset": "Przywróć szablon",
       "show": "Pokaż: {title}",
       "hide": "Ukryj: {title}",
       "moveUp": "Przenieś wyżej: {title}",
@@ -1948,7 +1949,8 @@
         "customHistory": "Własny przedział",
         "historyWindowHelp": "Okres kończy się w czasie zapisanego raportu i obejmuje dni po 24 godziny. Daty pokazujemy w strefie czasowej raportu. Odczyt historii nie uruchamia skanu.",
         "historyBounds": "Od {from} do {to}",
-        "historyCount": "{count, plural, one {# zapisany pomiar w tym okresie} few {# zapisane pomiary w tym okresie} many {# zapisanych pomiarów w tym okresie} other {# zapisanego pomiaru w tym okresie}}"
+        "historyCount": "{count, plural, one {# zapisany pomiar w tym okresie} few {# zapisane pomiary w tym okresie} many {# zapisanych pomiarów w tym okresie} other {# zapisanego pomiaru w tym okresie}}",
+        "matcherVersionMixed": "W tym skanie użyto różnych zasad dopasowania. Wyniki poszczególnych punktów są dostępne, ale wspólna metryka rankingu nie jest wyliczana."
       },
       "retry": {
         "title": "Ponów wybrane nieudane punkty",
@@ -2042,6 +2044,19 @@
       "confirmSave": "Potwierdź sprawdzony zapis",
       "stopAtMatch": "Zatrzymaj po znalezieniu celu.",
       "scanFullDepth": "Sprawdź całą uzgodnioną głębokość."
+    },
+    "providerAccess": {
+      "connect": "Podłącz zgodnego dostawcę, aby odblokować te pola.",
+      "supported": "Obsługiwani dostawcy: {providers}.",
+      "unavailable": "Brak dostępnego dostawcy obsługującego tę funkcję.",
+      "action": "Otwórz integracje",
+      "reconnect": "Połącz ponownie dostawcę, aby odblokować te pola.",
+      "reconnectAction": "Połącz ponownie",
+      "emptyTitle": "Połącz dostawcę, aby rozpocząć",
+      "reconnectTitle": "Połącz ponownie, aby pobrać nowe wyniki",
+      "emptyDescription": "Ta funkcja wymaga obsługiwanego dostawcy. Połącz go w Integracjach, aby rozpocząć wyszukiwanie.",
+      "reconnectDescription": "Połącz ponownie dostawcę w Integracjach przed kolejnym wyszukiwaniem.",
+      "connectAction": "Połącz dostawcę"
     }
   }
 }

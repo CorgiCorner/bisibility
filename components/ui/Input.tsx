@@ -7,6 +7,7 @@ import {
   compactInputGeometryClassName,
   compactInputTypographyClassName,
   inputClassName,
+  inputControlSizeClassName,
 } from "./input-styles";
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement>;
@@ -26,7 +27,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     <input
       className={cn(
         inputClassName,
-        "min-h-10 w-full rounded-control px-[13px] py-[9px] text-ui-body font-medium normal-case tracking-normal",
+        inputControlSizeClassName,
+        "w-full rounded-control font-medium normal-case tracking-normal",
         className,
       )}
       ref={ref}

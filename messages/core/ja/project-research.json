@@ -79,7 +79,8 @@
       "clickstream": "クリックストリームのボリューム",
       "clickstreamHelp": "Google Ads の推定値だけでなく、実ユーザーの閲覧データでボリュームを補正します。検索の費用は約2倍になります。",
       "pricing": "料金はどのように決まりますか？",
-      "button": "{researching, select, true {リサーチ中} other {リサーチ}}{cached, select, true {（キャッシュ・無料）} other {}}{cost, select, none {} other { 約{cost}}}"
+      "button": "{researching, select, true {リサーチ中} other {リサーチ}}{cached, select, true {（キャッシュ・無料）} other {}}{cost, select, none {} other { 約{cost}}}",
+      "seedHelp": "各キーワードの後に Enter キーまたはカンマを入力してください。最大5件。"
     },
     "filters": {
       "reset": "リセット",
@@ -119,7 +120,8 @@
       "export": "エクスポート",
       "exportAria": "結果をエクスポート",
       "exportCsv": "CSV をエクスポート",
-      "exportJson": "JSON をエクスポート"
+      "exportJson": "JSON をエクスポート",
+      "searchKeywords": "キーワードを絞り込む"
     },
     "saved": {
       "remove": "保存済みから削除",

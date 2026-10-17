@@ -19,7 +19,7 @@ describe("backlinks cache", () => {
         scope: "site",
         target: "example.com",
       }),
-    ).toBe("bl:v2:project_1:dataforseo:example.com:site:1:one_per_domain");
+    ).toBe("bl:v3:project_1:dataforseo:example.com:site:1:one_per_domain:100");
   });
 
   it("uses a configurable positive 24 hour TTL", () => {
@@ -35,4 +35,18 @@ describe("backlinks cache", () => {
   it("computes cached until from fetched at", () => {
     expect(backlinksCachedUntil("2026-07-24T10:00:00.000Z")).toBe("2026-07-25T10:00:00.000Z");
   });
+});
+
+it("does not reuse a smaller row sample for a larger requested limit", () => {
+  const scope = {
+    includeSubdomains: true,
+    mode: "as_is" as const,
+    projectId: "p",
+    provider: "dataforseo",
+    scope: "site" as const,
+    target: "example.com",
+  };
+  expect(backlinksCacheKey({ ...scope, resultLimit: 100 })).not.toBe(
+    backlinksCacheKey({ ...scope, resultLimit: 1000 }),
+  );
 });

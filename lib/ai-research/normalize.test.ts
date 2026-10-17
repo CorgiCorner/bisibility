@@ -205,3 +205,47 @@ it("refuses stale, future and non-official model prices before admission", () =>
       }),
     ).toThrow("verified official source");
 });
+
+describe("local AI research host identity versus provider domain search", () => {
+  const domain = `${"a".repeat(50)}.${"b".repeat(12)}.example.com`;
+  const common = { brand: "Example", domain, max_cost_cents: 20 };
+  it("accepts a valid 75-character host for prompts and brand matching without substitution", () => {
+    expect(domain).toHaveLength(75);
+    const prompt = promptSchema.parse({ ...common, prompt: "Where is Example mentioned?" });
+    const brand = visibilitySchema.parse({ ...common, target_type: "brand" });
+    expect(prompt.domain).toBe(domain);
+    expect(brand.domain).toBe(domain);
+    expect(citedDomain(`https://${domain}/page`, prompt.domain)).toBe(true);
+    expect(citedDomain(`https://docs.${domain}/page`, brand.domain)).toBe(true);
+    expect(citedDomain(`https://${domain}.attacker.example.com/page`, domain)).toBe(false);
+  });
+  it("limits only provider domain searches to 63 characters with actionable guidance", () => {
+    expect(() => visibilitySchema.parse(common)).toThrow(
+      /Domain searches support at most 63 characters/,
+    );
+  });
+  it("keeps hostname normalization, www identity, DNS label and total length validation", () => {
+    expect(promptSchema.parse({ ...common, domain: " WWW.Example.COM ", prompt: "q" }).domain).toBe(
+      "www.example.com",
+    );
+    const longest = [
+      "a".repeat(63),
+      "b".repeat(63),
+      "c".repeat(63),
+      "d".repeat(49),
+      "example",
+      "com",
+    ].join(".");
+    expect(longest).toHaveLength(253);
+    expect(promptSchema.parse({ ...common, domain: longest, prompt: "q" }).domain).toBe(longest);
+    for (const invalid of [
+      `https://${domain}`,
+      `ftp://${domain}`,
+      `${"x".repeat(64)}.example.com`,
+      `d${longest}`,
+    ])
+      expect(promptSchema.safeParse({ ...common, domain: invalid, prompt: "q" }).success).toBe(
+        false,
+      );
+  });
+});

@@ -117,6 +117,7 @@ describe("domain overview snapshots", () => {
     expect(mocks.prisma.domainOverviewSnapshot.findFirst).toHaveBeenCalledWith({
       select: { cachedUntil: true, fetchedAt: true, overview: true, provider: true },
       where: {
+        OR: expect.any(Array),
         cachedUntil: { gt: now },
         languageCode: "pl",
         locationCode: 2616,
@@ -253,10 +254,14 @@ describe("domain overview snapshots", () => {
         },
       });
       const expectedWhere = {
+        OR: expect.any(Array),
         ...key,
         provider: "dataforseo",
         ...(demo
-          ? { fetchedAt: { gt: new Date("2026-07-29T10:00:00.000Z") } }
+          ? {
+              cachedUntil: { gt: new Date(0) },
+              fetchedAt: { gt: new Date("2026-07-29T10:00:00.000Z") },
+            }
           : { cachedUntil: { gt: now } }),
       };
       expect(mocks.prisma.domainOverviewSnapshot.findFirst).toHaveBeenLastCalledWith({

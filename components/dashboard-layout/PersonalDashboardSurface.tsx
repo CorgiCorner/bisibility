@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
 import { composeDashboardLayout } from "@/lib/dashboard-layout/compose";
 import type { DashboardSaveRequest } from "@/lib/dashboard-layout/draft";
 import {
@@ -8,7 +7,6 @@ import {
   cancelDashboardDraft,
   dashboardDraftIsDirty,
   finishDashboardSave,
-  reviewDashboardConflict,
 } from "@/lib/dashboard-layout/draft";
 import type {
   DashboardAccess,
@@ -23,11 +21,13 @@ import {
 import {
   type DashboardSurfacePreference,
   dashboardLayoutFor,
+  defaultPersonalDashboardLayout,
 } from "@/lib/project-surface-preferences/dashboard-model";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useRef, useState, useTransition } from "react";
 import { DashboardCompositor, type DashboardCompositorProps } from "./DashboardCompositor";
+import { DashboardConflictReview } from "./DashboardConflictReview";
 import { DashboardLayoutEditor } from "./DashboardLayoutEditor";
 import { DashboardPreferenceRecovery } from "./DashboardPreferenceRecovery";
 import { DashboardToolbarSurface } from "./DashboardToolbarContext";
@@ -74,6 +74,28 @@ export function PersonalDashboardSurface({
     params.set("dashboardView", next);
     router.replace(`${pathname}?${params}`);
   }
+  async function reloadConflict() {
+    try {
+      const latest = await readDashboardPreference(preference.projectId);
+      if (
+        !latest.ok ||
+        latest.value.projectId !== preference.projectId ||
+        latest.value.revision <= state.expectedRevision
+      ) {
+        setMessage(t("preferenceReloadFailed"));
+        return;
+      }
+      setCurrent(latest.value);
+      setMessage(t("conflict"));
+      setState((previous) => ({
+        ...previous,
+        status: "conflict",
+        currentRevision: latest.value.revision,
+      }));
+    } catch {
+      setMessage(t("preferenceReloadFailed"));
+    }
+  }
   function save(request: DashboardSaveRequest) {
     if (recoveryPreference.notice) return;
     startTransition(async () => {
@@ -98,20 +120,8 @@ export function PersonalDashboardSurface({
           if (request.layout.preset !== preset) select(request.layout.preset);
           else router.refresh();
         } else if (result.error.status === 409) {
-          const latest = await readDashboardPreference(preference.projectId);
-          if (latest.ok) {
-            setCurrent(latest.value);
-            setState((previous) =>
-              finishDashboardSave(previous, {
-                kind: "conflict",
-                attempt: request.attempt,
-                currentRevision: latest.value.revision,
-              }),
-            );
-          } else
-            setState((previous) =>
-              finishDashboardSave(previous, { kind: "error", attempt: request.attempt }),
-            );
+          setState((previous) => ({ ...previous, status: "conflict", currentRevision: null }));
+          await reloadConflict();
         } else {
           if (result.error.status === 404) {
             const latest = await readDashboardPreference(preference.projectId);
@@ -138,11 +148,15 @@ export function PersonalDashboardSurface({
           preset: state.draft.preset,
         });
         if (!result.ok) {
-          if (result.error.status === 404) {
+          if (result.error.status === 409) {
+            setMessage(t("conflict"));
+            setState((previous) => ({ ...previous, status: "conflict", currentRevision: null }));
+            await reloadConflict();
+          } else if (result.error.status === 404) {
             const latest = await readDashboardPreference(preference.projectId);
             if (latest.ok && latest.value.notice) setCurrent(latest.value);
           }
-          setMessage(t(result.error.status === 409 ? "conflict" : "saveError"));
+          if (result.error.status !== 409) setMessage(t("saveError"));
           return;
         }
         setPreference(result.value);
@@ -238,6 +252,8 @@ export function PersonalDashboardSurface({
           access={access}
           translate={translate}
           onChange={setState}
+          layoutForPreset={(next) => dashboardLayoutFor(preference, next)}
+          templateForPreset={defaultPersonalDashboardLayout}
           onSave={save}
           canSavePersonalLayout={!recoveryPreference.notice}
           onCancel={(next) => {
@@ -247,42 +263,21 @@ export function PersonalDashboardSurface({
           onClosedFocusReturn={() => trigger.current?.focus()}
         />
       ) : null}
-      {state.status === "conflict" && current && !current.notice ? (
-        <section
-          aria-label={t("reviewCurrent")}
-          className="rounded-control border border-border p-3"
-        >
-          <p>{t("reviewCurrent")}</p>
-          <ol>
-            {dashboardLayoutFor(current, state.draft.preset)
-              .widgets.filter(({ visible }) => visible)
-              .map(({ id }) => (
-                <li key={id}>{t(`widgets.${id}.label`)}</li>
-              ))}
-          </ol>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {(["keep_draft", "use_current"] as const).map((choice) => (
-              <Button
-                key={choice}
-                variant="outline"
-                onClick={() => {
-                  setState(
-                    reviewDashboardConflict(
-                      state,
-                      dashboardLayoutFor(current, state.draft.preset),
-                      current.revision,
-                      choice,
-                    ),
-                  );
-                  setPreference(current);
-                  setCurrent(null);
-                }}
-              >
-                {t(choice === "keep_draft" ? "keepDraft" : "useCurrent")}
-              </Button>
-            ))}
-          </div>
-        </section>
+      {state.status === "conflict" && !recoveryPreference.notice ? (
+        <DashboardConflictReview
+          state={state}
+          current={current}
+          projectId={preference.projectId}
+          pending={pending}
+          onReload={() => startTransition(reloadConflict)}
+          onReview={(next, latest) => {
+            setState(next);
+            setPreference(latest);
+            setCurrent(null);
+            setMessage("");
+            trigger.current?.focus();
+          }}
+        />
       ) : null}
       <DashboardCompositor
         emptyState={emptyState}

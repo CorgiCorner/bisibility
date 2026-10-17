@@ -2,6 +2,7 @@
 
 import { SetupProgressRing } from "@/components/getting-started/SetupProgressRing";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { trackModuleNavigation } from "@/lib/analytics/product-interactions";
 import { appPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -52,7 +53,10 @@ export function GettingStartedNavLink({
         ].join(" ")}
         data-getting-started-nav
         href={href}
-        onClick={onNavigate}
+        onClick={() => {
+          trackModuleNavigation(href, "getting_started_nav");
+          onNavigate?.();
+        }}
       >
         <span className="grid h-[30px] w-[30px] flex-none place-items-center">
           <SetupProgressRing settledCount={settledCount} size={20} totalCount={totalCount} />

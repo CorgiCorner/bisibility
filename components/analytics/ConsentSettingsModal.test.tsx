@@ -6,7 +6,7 @@ import {
 import { pendingConsent } from "@/lib/analytics/consent";
 import sharedMessages from "@/messages/core/en/shared.json";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ applyAnalyticsConsent: vi.fn(), setAnalyticsReplay: vi.fn() }));
 
@@ -48,6 +48,36 @@ const polishConsentMessages = {
 };
 
 describe("ConsentSettingsModal", () => {
+  beforeEach(() => vi.clearAllMocks());
+  it("prefills both purposes without applying or saving them on open", () => {
+    const saveConsent = vi.fn();
+    render(
+      <ConsentSettingsModal
+        initialConsent={pendingConsent()}
+        onClose={vi.fn()}
+        open
+        saveConsent={saveConsent}
+      />,
+    );
+    expect(screen.getByRole("switch", { name: /Usage analytics/ })).toBeChecked();
+    expect(screen.getByRole("switch", { name: /Redacted replays/ })).toBeChecked();
+    expect(saveConsent).not.toHaveBeenCalled();
+    expect(mocks.applyAnalyticsConsent).not.toHaveBeenCalled();
+    expect(mocks.setAnalyticsReplay).not.toHaveBeenCalled();
+  });
+
+  it("preserves a saved refusal when settings reopen", () => {
+    render(
+      <ConsentSettingsModal
+        initialConsent={{ analytics: false, replay: false, status: "decided", decidedAt: 1 }}
+        onClose={vi.fn()}
+        open
+        saveConsent={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("switch", { name: /Usage analytics/ })).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: /Redacted replays/ })).not.toBeChecked();
+  });
   it("allows replay independently from usage analytics", () => {
     render(
       <ConsentSettingsModal
@@ -58,10 +88,8 @@ describe("ConsentSettingsModal", () => {
       />,
     );
 
-    const replay = screen.getByRole("switch", { name: /Replays/ });
+    const replay = screen.getByRole("switch", { name: /Redacted replays/ });
     expect(replay).toBeEnabled();
-    fireEvent.click(replay);
-    fireEvent.click(screen.getByRole("switch", { name: /Usage analytics/ }));
     fireEvent.click(screen.getByRole("switch", { name: /Usage analytics/ }));
     expect(replay).toBeChecked();
   });
@@ -103,7 +131,7 @@ describe("ConsentSettingsModal", () => {
     expect(saveConsent).toHaveBeenCalledOnce();
   });
 
-  it("saves the two switch choices through the shared action", async () => {
+  it("saves the selected defaults through the shared action", async () => {
     const saved = { analytics: true, decidedAt: 1, replay: true, status: "decided" as const };
     const saveConsent = vi.fn().mockResolvedValue(saved);
     const onClose = vi.fn();
@@ -116,8 +144,6 @@ describe("ConsentSettingsModal", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("switch", { name: /Usage analytics/ }));
-    fireEvent.click(screen.getByRole("switch", { name: /Replays/ }));
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() =>

@@ -7,7 +7,6 @@
 [![Site](https://img.shields.io/badge/site-bisibility.com-1f6c40?style=flat&labelColor=1a3b2a)](https://bisibility.com)
 [![Live demo](https://img.shields.io/badge/demo-explore-1f6c40?style=flat&labelColor=1a3b2a)](https://demo.bisibility.com)
 [![Documentation](https://img.shields.io/badge/docs-read-1f6c40?style=flat&labelColor=1a3b2a)](https://bisibility.com/docs)
-[![Discord community](https://img.shields.io/badge/Discord-join-1f6c40?style=flat&labelColor=1a3b2a&logo=discord&logoColor=white)](https://discord.gg/HcYpvfn79w)
 [![X: bisibility_com](https://img.shields.io/badge/X-%40bisibility__com-1f6c40?style=flat&labelColor=1a3b2a&logo=x&logoColor=white)](https://x.com/bisibility_com)
 
 [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-1f6c40?style=flat&labelColor=1a3b2a)](LICENSE)
@@ -151,9 +150,7 @@ and the [changelog](CHANGELOG.md).
   with a minimal reproduction.
 - [Request a feature](https://github.com/CorgiCorner/bisibility/issues/new?template=feature_request.yml)
   or discuss an idea in [GitHub Discussions](https://github.com/CorgiCorner/bisibility/discussions).
-- Ask questions, share workflows, and help other operators on
-  [Discord](https://discord.gg/HcYpvfn79w). Follow updates on
-  [X](https://x.com/bisibility_com).
+- Follow product updates on [X](https://x.com/bisibility_com).
 
 Public issues, feature requests, documentation corrections, and discussions help
 shape the product. Public pull requests are not accepted; use the routes in the

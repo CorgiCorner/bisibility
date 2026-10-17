@@ -45,9 +45,10 @@ const projectContext = perRequestCache(async (projectRef: string) => {
   return { actor, project, connections, empty, restricted, from, to };
 });
 
-const projectBudgetState = perRequestCache(async (projectRef: string) => {
+async function readProjectBudgetState(projectRef: string, header = false) {
   const { actor, project, connections, empty, restricted, to } = await projectContext(projectRef);
   try {
+    const concurrency = header ? 1 : 4;
     const namespace = meteringNamespace();
     const access: AccessContext = {
       namespace,
@@ -61,7 +62,7 @@ const projectBudgetState = perRequestCache(async (projectRef: string) => {
     const scope = { kind: "group" as const, namespace, group: project.id };
     const selected = connections.slice(0, connectionLimit);
     const refs = new Map(connections.map((connection) => [connection.id, connection.publicId]));
-    const statuses = await readProjectBudgetStatuses(meter, access, project, selected);
+    const statuses = await readProjectBudgetStatuses(meter, access, project, selected, concurrency);
     const budgetData = {
       ...empty,
       truncated: connections.length > connectionLimit,
@@ -73,13 +74,16 @@ const projectBudgetState = perRequestCache(async (projectRef: string) => {
     };
     if (restricted)
       return { data: { ...budgetData, status: "restricted" as const }, usageContext: null };
-    const own = await mapAdminQueries(selected, (connection) =>
-      readOwnConnectionBudgets({
-        namespace,
-        actorId: actor.id,
-        projectId: project.id,
-        connectionId: connection.id,
-      }),
+    const own = await mapAdminQueries(
+      selected,
+      (connection) =>
+        readOwnConnectionBudgets({
+          namespace,
+          actorId: actor.id,
+          projectId: project.id,
+          connectionId: connection.id,
+        }),
+      concurrency,
     );
     const epochStarts = statuses
       .flatMap((result) => result.statuses)
@@ -199,12 +203,23 @@ const projectBudgetState = perRequestCache(async (projectRef: string) => {
       usageContext: null,
     };
   }
-});
+}
+
+// React cache supplies one holder per project/request, not a process-wide auth cache.
+// A header reuses body work already in progress; it never starts a duplicate budget scan.
+const requestBudgetRead = perRequestCache((_projectRef: string) => ({
+  promise: undefined as ReturnType<typeof readProjectBudgetState> | undefined,
+}));
+function projectBudgetState(projectRef: string, header = false) {
+  const holder = requestBudgetRead(projectRef);
+  holder.promise ??= readProjectBudgetState(projectRef, header);
+  return holder.promise;
+}
 
 /** Header and runs need budget evidence only, without usage pages or the pending scan. */
 export const getProjectMeteringBudgets = perRequestCache(
-  async (projectRef: string): Promise<ProjectUsageViews> =>
-    (await projectBudgetState(projectRef)).data,
+  async (projectRef: string, mode: "default" | "header" = "default"): Promise<ProjectUsageViews> =>
+    (await projectBudgetState(projectRef, mode === "header")).data,
 );
 
 export const getProjectMeteringUsage = perRequestCache(

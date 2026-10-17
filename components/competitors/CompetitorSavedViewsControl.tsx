@@ -3,8 +3,10 @@
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { presentSafeActionError } from "@/components/keywords/safe-action-error";
 import { Button } from "@/components/ui/Button";
+import { Divider } from "@/components/ui/Divider";
 import { Menu } from "@/components/ui/Menu";
 import { MenuItem } from "@/components/ui/MenuItem";
+import { StatusPill } from "@/components/ui/StatusPill";
 import { useToast } from "@/components/ui/toast-context";
 import {
   type CompetitorSavedViewConfig,
@@ -110,27 +112,23 @@ function SharedCompetitorSavedViewsControl({
     <>
       <div className="flex flex-wrap items-center gap-2">
         <Button
+          aria-label={active?.name ?? t("comparisonViews")}
           onClick={(event) => setAnchorEl(event.currentTarget)}
           size="sm"
           startIcon={<BookmarkSimple weight="regular" aria-hidden size={14} />}
           variant="secondary"
         >
           {active?.name ?? t("comparisonViews")}
+          {modified ? (
+            <span aria-hidden>
+              <StatusPill status="update" label={t("unsavedChanges")} />
+            </span>
+          ) : null}
           <CaretDown weight="regular" aria-hidden size={11} />
         </Button>
-        {modified ? (
-          <span className="rounded-full bg-accent-soft px-2.5 py-1 font-sans tabular-nums text-[10px] font-semibold text-accent-text">
-            {t("unsavedChanges")}
-          </span>
-        ) : null}
         {createSavedViewAction ? (
           <Button onClick={() => setSaveOpen(true)} size="sm" variant="secondary">
             {t("saveView")}
-          </Button>
-        ) : null}
-        {modified ? (
-          <Button onClick={onDiscard} size="sm" variant="ghost">
-            {t("discard")}
           </Button>
         ) : null}
       </div>
@@ -161,6 +159,20 @@ function SharedCompetitorSavedViewsControl({
           </MenuItem>
         ))}
         {savedViews.length === 0 ? <MenuItem disabled>{t("noSavedViews")}</MenuItem> : null}
+        {modified ? (
+          <>
+            <Divider />
+            <MenuItem
+              disabled={pending}
+              onClick={() => {
+                setAnchorEl(null);
+                onDiscard();
+              }}
+            >
+              {t("discard")}
+            </MenuItem>
+          </>
+        ) : null}
       </Menu>
       {saveOpen ? (
         <SaveCompetitorViewModal

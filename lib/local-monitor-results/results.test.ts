@@ -30,7 +30,7 @@ function reportFixture() {
     subject: "Synthetic business",
     protocol: {
       geometry: binding.definition.grid.geometryModel,
-      matcher: "business-match-maps-v1",
+      matcher: "business-match-maps-v2",
       normalizerVersions: [binding.rows[0].record.adapterVersion],
       metricDefinition: "sampled-grid-top-n-v1",
     },
@@ -46,7 +46,7 @@ describe("actual retained Maps evidence to shared report and Local export", () =
     expect(saved.evaluations[0]).toMatchObject({
       status: "confirmed",
       organicEligible: true,
-      matcherVersion: "business-match-maps-v1",
+      matcherVersion: "business-match-maps-v2",
       originalOrdinals: { group: 1, slot: null, absolute: 1 },
     });
     expect(report.points[0]).toMatchObject({

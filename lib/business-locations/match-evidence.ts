@@ -1,5 +1,5 @@
 import type { BusinessObservationItem, IdentityRevision, MatchEvaluation } from "./dto";
-import { mapsBusinessMatcherVersion } from "./dto";
+import { supportedMapsMatcherVersion } from "./dto";
 import {
   businessDomainCandidateKey,
   businessNameCandidateKey,
@@ -99,12 +99,11 @@ export function organicEligibility(
     "status" | "promotion" | "localResult" | "originalOrdinals" | "matcherVersion"
   >,
 ) {
-  const slot =
-    result.matcherVersion === mapsBusinessMatcherVersion
-      ? ["maps_organic", "finder_group"].includes(result.originalOrdinals.scale ?? "")
-        ? (result.originalOrdinals.group ?? null)
-        : null
-      : result.originalOrdinals.slot;
+  const slot = supportedMapsMatcherVersion(result.matcherVersion)
+    ? ["maps_organic", "finder_group"].includes(result.originalOrdinals.scale ?? "")
+      ? (result.originalOrdinals.group ?? null)
+      : null
+    : result.originalOrdinals.slot;
   const ordinalsValid = Object.entries(result.originalOrdinals)
     .filter(([key]) => key !== "scale")
     .map(([, value]) => value)

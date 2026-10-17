@@ -14,7 +14,7 @@ import {
   projectRetainedBusinessObservation,
   retainedBusinessObservationSelect,
 } from "@/lib/business-location-store/observation-read";
-import { mapsBusinessMatcherVersion } from "@/lib/business-locations/dto";
+import { supportedMapsMatcherVersion } from "@/lib/business-locations/dto";
 import { matchBusinessCollection } from "@/lib/business-locations/match";
 import { planCollectedMatch } from "@/lib/business-locations/match-decisions";
 import { executionTargetKey } from "@/lib/local-monitoring/target-key";
@@ -108,7 +108,7 @@ export const retainMapsCollectionMatch: NonNullable<
         !source ||
         original.decision.source !== "automatic" ||
         original.decision.identityRevisionId !== definition.identityRevisionId ||
-        original.decision.matcherVersion !== mapsBusinessMatcherVersion ||
+        !supportedMapsMatcherVersion(original.decision.matcherVersion) ||
         hash !== businessDigest(value) ||
         businessDigest(original.decision.observationSource) !== businessDigest(source)
       )

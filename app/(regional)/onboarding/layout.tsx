@@ -26,6 +26,7 @@ async function onboardingRuntime() {
     "shared",
     "auth",
     "onboarding",
+    "projectIntegrations",
     "projectCostEstimate",
     "projectSettingsTracking",
   ]);

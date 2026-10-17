@@ -50,7 +50,7 @@ export function researchResultsColumns(input: {
         flex: 1.5,
         lockVisible: true,
         pin: "left",
-        sortable: false,
+        sortable: true,
         title: input.messages.columns.keyword,
       },
       minSize: 212,
@@ -92,6 +92,8 @@ export function researchResultsColumns(input: {
       size: 104,
     },
     {
+      accessorFn: (row) => row.difficulty ?? undefined,
+      sortUndefined: "last",
       cell: ({ row }) =>
         input.metricsAvailable ? (
           <span
@@ -105,11 +107,13 @@ export function researchResultsColumns(input: {
         ),
       header: input.messages.columns.difficultyShort,
       id: "difficulty",
-      meta: { sortable: false, title: input.messages.columns.difficulty },
+      meta: { sortable: input.metricsAvailable, title: input.messages.columns.difficulty },
       minSize: 68,
       size: 68,
     },
     {
+      accessorFn: (row) => row.cpcCents ?? undefined,
+      sortUndefined: "last",
       cell: ({ row }) =>
         input.metricsAvailable ? (
           <span className="font-sans tabular-nums text-[11.5px]">
@@ -120,7 +124,11 @@ export function researchResultsColumns(input: {
         ),
       header: input.messages.columns.cpc,
       id: "cpcCents",
-      meta: { align: "end", sortable: false, title: input.messages.columns.cpcTitle },
+      meta: {
+        align: "end",
+        sortable: input.metricsAvailable,
+        title: input.messages.columns.cpcTitle,
+      },
       minSize: 80,
       size: 80,
     },

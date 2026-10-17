@@ -9,6 +9,7 @@ import {
   type KeywordResearchEstimate,
 } from "@/lib/keyword-research/types";
 import { useRef, useState } from "react";
+import { uniqueResearchSeeds } from "./research-tab-identity";
 import { EMPTY_RESEARCH_ESTIMATE } from "./research-workspace-model";
 
 // Debounced server-side estimate for the research button. Estimate-only calls are
@@ -31,7 +32,8 @@ export function useResearchEstimate(
     requestSequence.current += 1;
     const sequence = requestSequence.current;
     if (timer.current) clearTimeout(timer.current);
-    if (nextSeeds.length === 0) {
+    const seeds = uniqueResearchSeeds(nextSeeds);
+    if (seeds.length === 0) {
       setEstimate(EMPTY_RESEARCH_ESTIMATE);
       return;
     }
@@ -39,7 +41,7 @@ export function useResearchEstimate(
     timer.current = setTimeout(async () => {
       try {
         const outcomes = await Promise.all(
-          nextSeeds.map((seed) =>
+          seeds.map((seed) =>
             researchAction(requestInput(seed, { ...overrides, estimateOnly: true })),
           ),
         );

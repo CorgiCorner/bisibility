@@ -1082,7 +1082,7 @@
   {
     "name": "load_more_backlink_rows",
     "title": "Load more backlink rows",
-    "description": "Requires API write scope. Extends the current unexpired backlinks snapshot at the per-100-row provider rate. Returns 409 snapshot_expired when no current snapshot exists; run analyze_backlinks first. This tool cannot extend failed current-response summary evidence.",
+    "description": "Requires API write scope. Extends the current unexpired backlinks snapshot at the per-100-row provider rate. Requires the exact snapshot_ref from the latest successful analysis or append response; use the replacement reference returned by each append. Returns 409 snapshot_expired when no current snapshot exists. Stale, mismatched or expired references return 409 before provider work; read or analyze the current snapshot before retrying. This tool cannot extend failed current-response summary evidence.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -1103,6 +1103,12 @@
           "type": "string",
           "pattern": "^prj_[a-z][a-z0-9]{23}$"
         },
+        "snapshot_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32768,
+          "description": "Exact opaque snapshot_ref from the latest successful analysis or append response. Pass it unchanged; each append returns a replacement reference."
+        },
         "target": {
           "type": "string",
           "minLength": 1,
@@ -1115,7 +1121,7 @@
           "enum": ["site", "page"]
         }
       },
-      "required": ["project_id", "target"]
+      "required": ["project_id", "snapshot_ref", "target"]
     },
     "annotations": {
       "destructiveHint": false,
@@ -5869,8 +5875,9 @@
         "domain": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 63,
-          "description": "Public hostname to inspect, without a scheme or path."
+          "maxLength": 253,
+          "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$",
+          "description": "Local citation-matching hostname, without a scheme or path. Domain searches remove a leading www. only from the provider filter and require at most 63 characters after removal; local matching keeps the full hostname. Brand searches and prompt comparisons allow up to 253."
         },
         "max_cost_cents": {
           "type": "integer",
@@ -5926,7 +5933,33 @@
         }
       },
       "required": ["project_id", "brand", "domain", "max_cost_cents"],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "target_type": {
+                "const": "domain"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "domain": {
+                "anyOf": [
+                  {
+                    "maxLength": 63
+                  },
+                  {
+                    "pattern": "^www\\.",
+                    "maxLength": 67
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "annotations": {
       "destructiveHint": false,
@@ -5985,8 +6018,9 @@
         "domain": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 63,
-          "description": "Public hostname to inspect, without a scheme or path."
+          "maxLength": 253,
+          "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$",
+          "description": "Local citation-matching hostname, without a scheme or path. Domain searches remove a leading www. only from the provider filter and require at most 63 characters after removal; local matching keeps the full hostname. Brand searches and prompt comparisons allow up to 253."
         },
         "max_cost_cents": {
           "type": "integer",

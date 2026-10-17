@@ -3,15 +3,17 @@ import type { RankReportContext } from "@/lib/rank-reports/access";
 import { capturedBaselineWindow } from "@/lib/rank-reports/baseline-window";
 import { hostOrganicReportPolicy, RANK_REPORT_HOST_LIMITS } from "@/lib/rank-reports/host-policy";
 import { loadCapturedRankTrackerMetrics } from "./rank-tracker-captured-metrics";
-import type {
-  RankTrackerReportMetadata,
-  RankTrackerReportOptions,
+import {
+  type RankTrackerDefinitionLoader,
+  RankTrackerReportConfigurationError,
+  type RankTrackerReportMetadata,
+  type RankTrackerReportOptions,
 } from "./rank-tracker-report-model";
 
 /** Shared metadata assembly; the caller supplies its real session/credential authority. */
 export function createRankTrackerHostReportOptions(
   context: RankReportContext | undefined,
-  loadDefinitions: RankTrackerReportOptions["loadMetadata"],
+  loadDefinitions: RankTrackerDefinitionLoader,
   asOf = new Date(),
   comparisonDays = 7,
 ): RankTrackerReportOptions {
@@ -22,11 +24,19 @@ export function createRankTrackerHostReportOptions(
     policyAt: (at) => hostOrganicReportPolicy(at, comparisonDays),
     loadMetadata: async (tx, project, targets, at) => {
       const policy = hostOrganicReportPolicy(at, comparisonDays);
-      const current = await loadDefinitions(tx, project, targets, at);
       const before = policy.baseline.mode === "before" ? policy.baseline.before : null;
-      const baseline = before
-        ? await loadDefinitions(tx, project, targets, before)
-        : new Map<string, RankTrackerReportMetadata>();
+      const dates = before ? [at, before] : [at];
+      const definitions = [];
+      if (loadDefinitions.atDates)
+        definitions.push(...(await loadDefinitions.atDates(tx, project, targets, dates)));
+      else
+        for (const date of dates)
+          definitions.push(await loadDefinitions(tx, project, targets, date));
+      if (definitions.length !== dates.length)
+        throw new RankTrackerReportConfigurationError(
+          "Definition loader returned a mismatched snapshot.",
+        );
+      const [current, baseline = new Map<string, RankTrackerReportMetadata>()] = definitions;
       const metadata = new Map<string, RankTrackerReportMetadata>(
         [...current].map(([id, value]) => [
           id,

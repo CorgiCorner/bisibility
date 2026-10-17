@@ -355,7 +355,14 @@
       "syncToastUnavailable": "Syncing is not available yet. Nothing already imported is affected.",
       "openSearchConsole": "Open Search Console",
       "searchConsoleModule": "Search Console module",
-      "noFinalizedDaysForProperty": "No finalized days yet for {property}"
+      "noFinalizedDaysForProperty": "No finalized days yet for {property}",
+      "googlePropertyAuth": "Reconnect your Google account to load properties.",
+      "googlePropertyPermission": "This Google account cannot access these properties. Check its permissions in Search Console or Analytics.",
+      "googlePropertyApiDisabled": "The Google API configuration needs attention. Ask the app administrator to enable the API and check its setup, then try again.",
+      "googlePropertyQuota": "Google's request limit was reached. Try again later.",
+      "googlePropertyTemporary": "Google is temporarily unavailable. Try again.",
+      "googlePropertyUnknown": "Properties could not be loaded. Try again.",
+      "googlePropertyScope": "Reconnect your Google account and approve the requested permissions for this app."
     },
     "oauthSelection": {
       "domainBadge": "DOMAIN",

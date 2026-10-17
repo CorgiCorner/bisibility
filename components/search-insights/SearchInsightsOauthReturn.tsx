@@ -5,13 +5,19 @@ import { ConnectDrawerOauthSelection } from "@/components/integrations/ConnectDr
 import type { Notice } from "@/components/integrations/ConnectDrawerSchema";
 import { providerActionErrorNotice } from "@/components/integrations/ConnectDrawerSchema";
 import { ConnectedGoogleAccountFooter } from "@/components/integrations/ConnectedGoogleAccountFooter";
+import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { InlineCallout } from "@/components/ui/InlineCallout";
 import { ModuleMark } from "@/components/ui/ModuleMark";
 import type {
   cancelGooglePropertySelection,
   completeGooglePropertySelection,
   disconnectGoogleSearchConsole,
 } from "@/lib/actions/providers";
+import {
+  type GooglePropertyFailure,
+  googlePropertyFailureMessage,
+} from "@/lib/integrations/google-property-failure";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
@@ -57,6 +63,10 @@ export function SearchInsightsOauthReturn({
     setup.preferredProperty ?? setup.properties[0]?.value ?? "",
   );
   const [propertyError, setPropertyError] = useState<string | null>(null);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
+  const [authorizationFailure, setAuthorizationFailure] = useState<GooglePropertyFailure | null>(
+    null,
+  );
   const [manualEntry, setManualEntry] = useState(
     isGa4 && Boolean(setup.error) && setup.properties.length === 0,
   );
@@ -102,12 +112,20 @@ export function SearchInsightsOauthReturn({
   async function select(selection?: SearchSyncSelection) {
     setPending(true);
     setPropertyError(null);
+    setSelectionError(null);
     try {
-      await completeAction({
+      const result = await completeAction({
         ...(isGa4 ? {} : selection),
         projectId,
         property,
       });
+      if ("status" in result && result.status !== "saved") {
+        const failure = result.failure ?? { reason: "auth", action: "reconnect" };
+        setSelectionError(googlePropertyFailureMessage(failure, t));
+        if (result.status === "reauth_required") setAuthorizationFailure(failure);
+        setPending(false);
+        return;
+      }
       startSettling(() => {
         router.refresh();
       });
@@ -119,7 +137,7 @@ export function SearchInsightsOauthReturn({
 
   const switchAccountHref = googleInstallUrl({
     projectId,
-    provider: "gsc",
+    provider: isGa4 ? "ga4" : "gsc",
     returnPath: searchConsolePath(asProjectRef(projectId)),
   });
 
@@ -145,7 +163,28 @@ export function SearchInsightsOauthReturn({
           </p>
         </header>
       ) : null}
-      {isGa4 ? (
+      {selectionError && !authorizationFailure ? (
+        <InlineCallout tint="yellow">{selectionError}</InlineCallout>
+      ) : null}
+      {authorizationFailure || setup.requiresReauth ? (
+        <div className="flex flex-col gap-3 rounded-card border border-border p-4">
+          <InlineCallout tint="yellow">
+            {authorizationFailure
+              ? googlePropertyFailureMessage(authorizationFailure, t)
+              : setup.failure
+                ? googlePropertyFailureMessage(setup.failure, t)
+                : t("reauthRequired")}
+          </InlineCallout>
+          <div className="flex justify-end gap-2">
+            <Button loading={cancelling} onClick={() => void cancel()} variant="ghost">
+              {t("notNow")}
+            </Button>
+            <Button href={switchAccountHref} variant="secondary">
+              {t("tryConnectingAgain")}
+            </Button>
+          </div>
+        </div>
+      ) : isGa4 ? (
         <SearchInsightsGa4PropertyPicker
           cancelling={cancelling}
           manualEntry={manualEntry}

@@ -47,6 +47,54 @@
       "usageKeywordOnly": "{count, plural, one {# keyword uses it.} other {# keywords use it.}}",
       "usageSegmentOnly": "{count, plural, one {# segment uses it.} other {# segments use it.}}",
       "writeError": "Tag could not be added."
+    },
+    "dataCache": {
+      "title": "Data cache",
+      "help": "Shared across this project’s modules. Shorter lifetimes also limit existing results; longer lifetimes apply to newly fetched results. Saved reports, measurement history and payment receipts are kept.",
+      "lifetime": "Reuse results for",
+      "default": "Instance default",
+      "hours": "{count, plural, one {# hour} other {# hours}}",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "save": "Save",
+      "saved": "Saved",
+      "list": "Cached results",
+      "refresh": "Refresh list",
+      "next": "Next page",
+      "back": "First page",
+      "empty": "No cached results on this page.",
+      "unavailable": "Cache could not be read. Retry the list when the connection is available.",
+      "error": "The change could not be saved. Try again.",
+      "conflict": "Settings changed in another tab. Refresh the list before saving again.",
+      "readOnly": "Project editors can change this setting and remove cached results.",
+      "delete": "Remove",
+      "busy": "This result is being refreshed. Wait until the search finishes, then try again.",
+      "expires": "Expires {date}",
+      "unknownKeyword": "Keyword metrics",
+      "source": {
+        "related": "Related",
+        "suggestion": "Suggestions",
+        "idea": "Ideas",
+        "metrics": "Metrics",
+        "backlinks": "Backlinks",
+        "overview": "Overview",
+        "history": "History",
+        "keywords": "Keywords",
+        "pages": "Pages",
+        "ai_visibility": "AI visibility",
+        "prompt_explorer": "Prompt explorer",
+        "site_audit": "Site audit"
+      },
+      "notice": "Removing a result does not run a search. A later search may need a new paid request.",
+      "module": {
+        "keyword_research": "Keyword research",
+        "keyword_metrics": "Keyword metrics",
+        "ranked_keywords": "Ranked keywords",
+        "backlinks": "Backlinks",
+        "domain_overview": "Domain overview",
+        "ai_visibility": "AI visibility",
+        "prompt_explorer": "Prompt explorer",
+        "site_audit": "Site audit"
+      }
     }
   }
 }

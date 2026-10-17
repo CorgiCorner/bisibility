@@ -8,7 +8,7 @@ export const chartColors = {
   blue: "#4f86e8",
   blueText: "#315eac",
   red: "#b7352b",
-  border: "#d0d0d0",
+  border: "#d6d6d6",
 } as const;
 
 /**

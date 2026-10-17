@@ -1,6 +1,14 @@
 export const businessIdentityNormalizerVersion = "business-identity-v2";
-export const businessMatcherVersion = "business-match-v1";
-export const mapsBusinessMatcherVersion = "business-match-maps-v1";
+export const businessMatcherVersion = "business-match-v2";
+export const mapsBusinessMatcherVersion = "business-match-maps-v2";
+
+/** Retained decisions keep their original rules; only new evaluations use the current version. */
+export function supportedBusinessMatcherVersion(value: string) {
+  return value === "business-match-v1" || value === businessMatcherVersion;
+}
+export function supportedMapsMatcherVersion(value: string) {
+  return value === "business-match-maps-v1" || value === mapsBusinessMatcherVersion;
+}
 
 export type BusinessIdentifier = Readonly<{
   namespace: "google_business";

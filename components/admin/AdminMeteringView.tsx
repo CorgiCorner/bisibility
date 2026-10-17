@@ -6,6 +6,7 @@ import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ExceptionsList } from "@/components/usagekit/exceptions-list";
 import { UsageTable } from "@/components/usagekit/usage-table";
 import { loadMeteringAdminPageAction } from "@/lib/actions/metering-admin";
+import { mergeMeteringAdminPage } from "@/lib/metering/admin-page";
 import type { MeteringAdminData } from "@/lib/metering/admin-types";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -46,15 +47,20 @@ export function AdminMeteringView({
       try {
         const next = await loadMeteringAdminPageAction({
           month,
+          section: current ? kind : undefined,
           project: project ?? undefined,
           ...cursors,
         });
+        const value = mergeMeteringAdminPage(current, next.data, kind);
+        if (!value) {
+          setFailedPage({ input: data, kind, cursor });
+          return;
+        }
         setPosition({ input: data, ...cursors });
-        setLoaded({ input: data, value: next.data });
-        setFailedPage(next.data ? null : { input: data, kind, cursor });
+        setLoaded({ input: data, value });
+        setFailedPage(null);
       } catch {
         setFailedPage({ input: data, kind, cursor });
-        setLoaded({ input: data, value: null });
       }
     });
   }
@@ -79,6 +85,14 @@ export function AdminMeteringView({
     );
   return (
     <div className="grid min-w-0 grid-cols-1 gap-6">
+      {failedPage?.input === data && (
+        <div role="status" className="flex flex-wrap items-center gap-3 text-sm text-fg-muted">
+          <span>{t("unavailableNote")}</span>
+          <Button disabled={busy} onClick={() => page(failedPage.kind, failedPage.cursor)}>
+            {common("retry")}
+          </Button>
+        </div>
+      )}
       {current.truncated && <p role="status">{t("truncated")}</p>}
       <section aria-labelledby="admin-usage-heading" className="grid min-w-0 grid-cols-1 gap-3">
         <h2 id="admin-usage-heading" className="text-sm font-semibold">
@@ -135,7 +149,16 @@ export function AdminMeteringView({
           </h2>
           <InfoTooltip text={t("budgetNote")} />
         </div>
-        <AdminBudgetTable busy={busy} rows={current.budgets} references={current.references} />
+        {current.budgetsUnavailable ? (
+          <p
+            role="status"
+            className="rounded-control border border-border p-4 text-sm text-fg-muted"
+          >
+            {t("unavailableNote")}
+          </p>
+        ) : (
+          <AdminBudgetTable busy={busy} rows={current.budgets} references={current.references} />
+        )}
       </section>
       <section
         aria-labelledby="admin-exceptions-heading"

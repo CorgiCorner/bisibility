@@ -5,6 +5,8 @@ description: "Interpret ranks, coverage, time and provider costs in SEO reports.
 
 A report identifies its metric and definition version. Read its scope, observation time and data coverage alongside the value. A missing or incompatible baseline means no comparison. Showing help, changing a view or exporting retained data does not launch a measurement.
 
+The page and header load independently. A loading context control does not change the selected market, saved view or measurement settings.
+
 ## Compare saved results
 
 Rank Tracker shows one saved result for each keyword. **Compare: 7 days earlier** compares
@@ -18,6 +20,15 @@ restore an older list. The comparison date moves with the selected date: a date
 three weeks ago with a seven-day comparison uses an earlier result from about
 four weeks ago. The information icon beside each control explains its
 scope without requiring a dialog.
+
+Current and comparison metadata are evaluated from one authorized database snapshot.
+Each date keeps its own freshness window; a definition captured after the comparison
+date cannot establish an earlier baseline. Rank report reads have a bounded
+15-second database transaction allowance and a separate 2-second pool admission limit.
+These are server safeguards, not a report response-time guarantee; reading reports
+never dispatches provider requests. Larger scopes still read metadata in batches of
+500 targets and can exceed that allowance over a high-latency database connection;
+they fail rather than silently truncating the population.
 
 ## Compare providers once
 
@@ -216,6 +227,11 @@ The migration runner admits only the shared receipt metadata (`scopeSources` and
 
 A confirmed manual launch retains its verified quote digest, source and selection digests, reviewed target count and native estimates in the existing atomic run audit. This records a queued measurement, not a completed provider call. Estimates that were unavailable during review remain unknown; raw quote tokens, credentials and target identities are omitted. Replaying a committed launch retains the original audit without adding another entry.
 
+Manual launches, schedule saves and future-intent saves retain the exact reviewed
+policy revision as a string. A policy change requires a new preview. Previews
+without the signed policy revision must also be refreshed; previously committed
+operations still replay their original response.
+
 
 ## Choose a local measurement center
 
@@ -231,3 +247,11 @@ This is a layout preview, not a geographic basemap or measured ranking result.
 Changing the center, spacing or grid size updates the draft only. Saving and
 launching remain separate actions. The picker uses saved project data and does
 not contact an external geocoding service.
+
+## Provider comparison results and cost certainty
+
+A completed provider response is retained separately from accounting confirmation. A comparison can show a valid position, ranking URL and observation evidence while its cost remains unknown. The unknown status describes the unresolved execution or accounting state; it does not erase an already retained observation. Never start another paid comparison merely to recover the original result or receipt.
+
+Connection checks bind semantic configuration and credential revisions. Routine usage timestamps and synchronization activity do not invalidate the preview or an admitted page. Changes to credentials, funding source, connection availability, rates or keyword scope still require review, and native request deduplication remains enforced.
+
+Older timestamp-based previews and queued first-send snapshots require a fresh preview after upgrade. They are not automatically converted into new permission to spend. Saved results remain readable and original accepted work keeps its existing recovery authority.

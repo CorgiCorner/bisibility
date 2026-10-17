@@ -1,12 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { savedViewNameSchema } from "@/lib/keywords/saved-view-model";
 import type { CanonicalSavedViewResource } from "@/lib/saved-views/canonical-model";
-import { useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useId, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import type { PersonalSavedViewsControlProps } from "./personal-control-types";
 
@@ -25,7 +27,12 @@ export function PersonalSaveViewModal({
   onSaved: (view: CanonicalSavedViewResource) => void;
 }) {
   const request = useRef<{ fingerprint: string; id: string } | null>(null);
+  const inFlight = useRef(false);
+  const [saving, setSaving] = useState(false);
+  const nameId = useId();
+  const nameErrorId = `${nameId}-error`;
   const {
+    control,
     formState: { errors, isSubmitting },
     handleSubmit,
     register,
@@ -35,6 +42,7 @@ export function PersonalSaveViewModal({
     defaultValues: { name: "", visibility: "private" },
     resolver: zodResolver(formSchema),
   });
+  const busy = isSubmitting || saving;
   const labels = props.labels;
   const visibility = watch("visibility");
   const privateBlocked = !props.canCreatePrivate && visibility === "private";
@@ -43,14 +51,17 @@ export function PersonalSaveViewModal({
       setError("root", { message: labels.privateUnavailable });
       return;
     }
-    const fingerprint = JSON.stringify({
-      config: props.config,
-      projectId: props.projectId,
-      ...values,
-    });
-    if (request.current?.fingerprint !== fingerprint)
-      request.current = { fingerprint, id: crypto.randomUUID() };
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setSaving(true);
     try {
+      const fingerprint = JSON.stringify({
+        config: props.config,
+        projectId: props.projectId,
+        ...values,
+      });
+      if (request.current?.fingerprint !== fingerprint)
+        request.current = { fingerprint, id: crypto.randomUUID() };
       const result = await props.createAction({
         config: props.config,
         projectId: props.projectId,
@@ -71,18 +82,21 @@ export function PersonalSaveViewModal({
               ? labels.conflict
               : labels.failed,
       });
+    } finally {
+      inFlight.current = false;
+      setSaving(false);
     }
   }
   return (
     <Modal
       open
       onClose={onClose}
-      dismissDisabled={isSubmitting}
+      dismissDisabled={busy}
       size="sm"
       title={labels.saveAs}
       footer={
         <>
-          <Button type="button" variant="ghost" disabled={isSubmitting} onClick={onClose}>
+          <Button type="button" variant="ghost" disabled={busy} onClick={onClose}>
             {labels.cancel}
           </Button>
           <Button
@@ -90,7 +104,7 @@ export function PersonalSaveViewModal({
             type="submit"
             variant="primary"
             disabled={privateBlocked}
-            loading={isSubmitting}
+            loading={busy}
             loadingLabel={labels.saving}
           >
             {labels.saveAs}
@@ -98,45 +112,44 @@ export function PersonalSaveViewModal({
         </>
       }
     >
-      <form
-        id="personal-save-view"
-        className="grid gap-4"
-        onSubmit={handleSubmit((values) => void submit(values))}
-      >
-        <label className="grid gap-2 text-[13px] text-fg">
+      <form id="personal-save-view" className="grid gap-4" onSubmit={handleSubmit(submit)}>
+        <label htmlFor={nameId} className="grid gap-2 text-[13px] text-fg">
           {labels.name}
-          <input
-            className="rounded-control border border-border-control bg-transparent px-3 py-2 text-fg outline-none focus:border-accent"
+          <Input
+            disabled={busy}
+            id={nameId}
+            className="text-[13px] font-normal leading-5"
+            aria-invalid={Boolean(errors.name)}
+            aria-describedby={errors.name ? nameErrorId : undefined}
             maxLength={48}
             {...register("name")}
           />
         </label>
         {errors.name ? (
-          <p role="alert" className="m-0 text-[12px] text-red-text">
+          <p id={nameErrorId} role="alert" className="m-0 text-[12px] text-red-text">
             {errors.name.message}
           </p>
         ) : null}
-        <fieldset className="flex flex-wrap gap-4 text-[13px] text-fg">
-          <legend className="sr-only">{labels.visibility}</legend>
-          <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              value="private"
-              disabled={!props.canCreatePrivate}
-              {...register("visibility")}
+        <Controller
+          control={control}
+          name="visibility"
+          render={({ field }) => (
+            <SegmentedControl
+              className="m-0 min-w-0"
+              disabled={busy}
+              label={labels.visibility}
+              labelClassName="text-[13px] text-fg"
+              name={field.name}
+              onChange={field.onChange}
+              options={[
+                { value: "private", label: labels.personal, disabled: !props.canCreatePrivate },
+                { value: "project", label: labels.project, disabled: !props.canCreateShared },
+              ]}
+              size="field"
+              value={field.value}
             />
-            {labels.personal}
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              value="project"
-              disabled={!props.canCreateShared}
-              {...register("visibility")}
-            />
-            {labels.project}
-          </label>
-        </fieldset>
+          )}
+        />
         {!props.canCreatePrivate ? (
           <p role="status" className="m-0 text-[12px] text-fg-muted">
             {props.privateCreationReason ?? labels.privateUnavailable}

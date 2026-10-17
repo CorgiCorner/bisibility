@@ -52,7 +52,11 @@ const intent = {
   device: "desktop" as const,
   depth: 20 as const,
 };
-const source = { project: { id: "project" }, sourceHash: "a".repeat(64) };
+const source = {
+  project: { id: "project" },
+  sourceHash: "a".repeat(64),
+  policy: { state: "ready", policyEpoch: "90071992547409931234" },
+};
 const manual = {
   targetIds: ["kw_abcdefghijklmnopqrstuvwx"],
   estimates: [
@@ -72,7 +76,12 @@ function command() {
     providerId: intent.providerId,
     depth: intent.depth,
     selection: { selection: intent, scheduleId: null },
-    source: { sourceHash: source.sourceHash, manual, nativeToken: "synthetic-native-quote" },
+    source: {
+      policyEpoch: source.policy.policyEpoch,
+      sourceHash: source.sourceHash,
+      manual,
+      nativeToken: "synthetic-native-quote",
+    },
   };
   return {
     projectId,
@@ -120,6 +129,7 @@ describe("actual manual host composition", () => {
       outcome: "measurement_queued",
       confirmed: true,
       sourceDigest: source.sourceHash,
+      policyRevision: source.policy.policyEpoch,
       reviewedTargetCount: 1,
       nativeEstimates: [{ quantity: "1.0000" }],
     });
@@ -135,6 +145,16 @@ describe("actual manual host composition", () => {
     ).rejects.toThrow();
     mocks.manual.mockResolvedValue(manual);
     mocks.tx.project.findUnique.mockResolvedValue({ writeMode: "read_only", isSample: false });
+    await expect(
+      launchMeasurementSettingsHost({ actor: { id: actorId } }, request),
+    ).rejects.toThrow();
+  });
+  it("refuses a changed policy epoch even when all other quote inputs are unchanged", async () => {
+    const request = command();
+    mocks.source.mockResolvedValue({
+      ...source,
+      policy: { ...source.policy, policyEpoch: "90071992547409931235" },
+    });
     await expect(
       launchMeasurementSettingsHost({ actor: { id: actorId } }, request),
     ).rejects.toThrow();

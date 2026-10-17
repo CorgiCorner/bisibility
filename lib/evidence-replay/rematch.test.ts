@@ -20,7 +20,7 @@ const command = {
 const context = { actor: { id: "writer", memberships: [] } },
   stamp = {
     sourceHash: "a".repeat(64),
-    parserVersion: "business-match-v1",
+    parserVersion: "business-match-v2",
     codeHash: "b".repeat(64),
   };
 const db = {} as BusinessDatabase;

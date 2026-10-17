@@ -3,15 +3,17 @@ import { prisma } from "@/lib/db/prisma";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { getSerpProvider } from "@/lib/providers/registry";
 import { providerChainWhere } from "@/lib/rank-check/provider-chain-order";
+import { AI_RESEARCH_PROVIDER_ID } from "./catalog-types";
 
 export async function requireAiSource(projectId: string) {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     select: {
       id: true,
+      lookupCacheTtlSeconds: true,
       providerConnections: {
         select: { id: true, provider: true, credentialsEncrypted: true, credentialSource: true },
-        where: { ...providerChainWhere("serp"), provider: "dataforseo" },
+        where: { ...providerChainWhere("serp"), provider: AI_RESEARCH_PROVIDER_ID },
         take: 1,
       },
     },

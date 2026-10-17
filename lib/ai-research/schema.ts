@@ -1,13 +1,18 @@
 import { z } from "zod";
 
+/** Provider retrieval strips www; the local citation-matching target keeps its full hostname. */
+export function aiProviderDomain(domain: string) {
+  return domain.replace(/^www\./, "");
+}
+
 const common = {
   brand: z.string().trim().min(1).max(120),
   domain: z
     .string()
     .trim()
     .toLowerCase()
-    .max(63)
-    .regex(/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/),
+    .max(253)
+    .regex(/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/),
   estimate_only: z.boolean().default(false),
   fresh: z.boolean().default(false),
   max_cost_cents: z.number().int().min(0).max(1000),
@@ -25,7 +30,17 @@ export const visibilitySchema = z
       .default("en"),
     limit: z.number().int().min(1).max(20).default(10),
   })
-  .strict();
+  .strict()
+  .superRefine((value, context) => {
+    // The provider domain-search field is narrower than our local matching hostname.
+    if (value.target_type === "domain" && aiProviderDomain(value.domain).length > 63)
+      context.addIssue({
+        code: "custom",
+        path: ["domain"],
+        message:
+          "Domain searches support at most 63 characters after removing a leading www. Use brand search or Prompt Explorer for this domain.",
+      });
+  });
 export const promptSchema = z
   .object({
     ...common,

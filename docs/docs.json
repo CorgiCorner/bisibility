@@ -497,12 +497,6 @@
         "iconType": "brands"
       },
       {
-        "label": "Discord",
-        "href": "https://discord.gg/HcYpvfn79w",
-        "icon": "discord",
-        "iconType": "brands"
-      },
-      {
         "label": "YouTube",
         "href": "https://www.youtube.com/@bisibility",
         "icon": "youtube",
@@ -518,7 +512,6 @@
   "footer": {
     "socials": {
       "github": "https://github.com/CorgiCorner/bisibility",
-      "discord": "https://discord.gg/HcYpvfn79w",
       "youtube": "https://www.youtube.com/@bisibility"
     }
   },

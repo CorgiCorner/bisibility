@@ -1,6 +1,8 @@
 // Feature modules augment this registry through declaration merging, so the event union stays
 // closed to arbitrary strings.
 export interface AnalyticsEventRegistry {
+  module_navigation_clicked: true;
+  product_action_clicked: true;
   getting_started_cta_clicked: true;
   onboarding_step_skipped: true;
   search_insights_chip_opened: true;

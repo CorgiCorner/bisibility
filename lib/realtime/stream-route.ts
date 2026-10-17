@@ -1,5 +1,6 @@
 import "server-only";
 
+import { requireAvailableSession } from "@/lib/auth/session";
 import { getResolvedDateFormat } from "@/lib/dates/request";
 import {
   getNotificationFeedForScope,
@@ -12,8 +13,10 @@ import {
   subscribeToNotificationEvents,
   subscribeToOperationEvents,
 } from "@/lib/notifications/realtime";
-import { getQueryActor, getQuerySession, resolveProjectAccess } from "@/lib/queries/_auth";
+import { getQueryActorForSession, resolveProjectAccessForActor } from "@/lib/queries/_auth";
 import { readOperationSnapshot } from "@/lib/rank-check/runs/snapshot";
+import { isHTTPAccessFallbackError } from "next/dist/client/components/http-access-fallback/http-access-fallback";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import type { NextRequest } from "next/server";
 import {
   createCoalescedTask,
@@ -30,9 +33,9 @@ import {
 import { canReadStream } from "./stream-access";
 
 function temporarilyUnavailable() {
-  return new Response("Notification stream temporarily unavailable", {
-    headers: { "Retry-After": String(RECONNECT_RETRY_MS / 1_000) },
-    status: 503,
+  // EventSource treats non-200 responses as terminal, even with Retry-After.
+  return new Response(`retry: ${RECONNECT_RETRY_MS}\n\n`, {
+    headers: streamHeaders(),
   });
 }
 
@@ -48,24 +51,27 @@ export async function GET(req: NextRequest) {
   const projectRef = new URL(req.url).searchParams.get("project");
   if (!projectRef) return new Response("Project is required", { status: 400 });
 
-  let session: Awaited<ReturnType<typeof getQuerySession>>;
-  let actor: Awaited<ReturnType<typeof getQueryActor>>;
+  let session: Awaited<ReturnType<typeof requireAvailableSession>>;
+  let actor: Awaited<ReturnType<typeof getQueryActorForSession>>;
   // EventSource follows redirects, so route-control throws become plain auth statuses here.
   try {
-    session = await getQuerySession();
-    actor = await getQueryActor();
-  } catch {
+    session = await requireAvailableSession();
+    actor = await getQueryActorForSession(session);
+  } catch (error) {
+    if (!isRedirectError(error)) return temporarilyUnavailable();
     return new Response("Unauthorized", { status: 401 });
   }
 
-  let access: Awaited<ReturnType<typeof resolveProjectAccess>>;
+  let access: Awaited<ReturnType<typeof resolveProjectAccessForActor>>;
   try {
-    access = await resolveProjectAccess(projectRef);
-  } catch {
+    access = await resolveProjectAccessForActor(projectRef, actor);
+  } catch (error) {
+    if (isRedirectError(error)) return new Response("Unauthorized", { status: 401 });
+    if (!isHTTPAccessFallbackError(error)) return temporarilyUnavailable();
     return new Response("Project not found", { status: 404 });
   }
   const scope = { activeProjectId: access.projectId, userId: actor.id };
-  const { resolved: dateFormat } = await getResolvedDateFormat();
+  let dateFormat: Awaited<ReturnType<typeof getResolvedDateFormat>>["resolved"];
 
   let initial: {
     feed: Awaited<ReturnType<typeof getNotificationFeedForScope>>;
@@ -74,6 +80,7 @@ export async function GET(req: NextRequest) {
   try {
     if (!(await canReadStream(session, access.projectId)))
       return new Response("Unauthorized", { status: 401 });
+    ({ resolved: dateFormat } = await getResolvedDateFormat());
     const [feed, operations] = await Promise.all([
       getNotificationFeedForScope(scope, { dateFormat }),
       readOperationSnapshot(access.projectId),

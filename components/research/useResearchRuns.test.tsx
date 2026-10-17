@@ -86,3 +86,28 @@ it("blocks wallet-denied research without presenting a project budget denial", a
   expect(addSpend).not.toHaveBeenCalled();
   expect(recent.add).not.toHaveBeenCalled();
 });
+
+it("does not submit duplicate normalized seeds or create duplicate tabs in one run", async () => {
+  const researchAction = vi
+    .fn()
+    .mockResolvedValue({ ok: false, reason: "lookup_failed", charged: null });
+  const { result } = renderHook(() =>
+    useResearchRuns({
+      addSpend: vi.fn(),
+      connectionId: "",
+      includeClickstream: false,
+      initialBudgetBlocked: false,
+      scope: researchScopeForLocationKey("US"),
+      mode: "related",
+      projectId: "prj_fixture",
+      recent: { add: vi.fn() },
+      researchAction,
+      resultLimit: 100,
+    }),
+  );
+  await act(async () => result.current.runResearch(["Rank", " rank "]));
+  expect(result.current.tabs).toHaveLength(1);
+  expect(result.current.activeTab).toBe(result.current.tabs[0]);
+  expect(researchAction.mock.calls[0]?.[0].seed).toBe("rank");
+  expect(researchAction.mock.calls.filter(([input]) => !input.estimateOnly)).toHaveLength(1);
+});

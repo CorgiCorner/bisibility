@@ -1,0 +1,199 @@
+{
+  "project_id": "prj_a00000000000000000000000",
+  "kind": "ai_visibility_audit",
+  "title": "AI visibility audit: example.com - 2026-10-15 (fictional fixture)",
+  "idempotency_key": "fixture-ai-visibility-audit-20261015-v1",
+  "body": {
+    "version": 1,
+    "summary": "In eight eligible retained answers, Example was mentioned twice and its domain cited once. Verify the cited answer and investigate the comparison gap before editing pages.",
+    "context": {
+      "goal": "Help small teams evaluate Example's rank tracker.",
+      "assumptions": ["Fictional fixture; the audience and page roles are assumptions."]
+    },
+    "reporting_window": {
+      "start": "2026-10-08T00:00:00.000Z",
+      "end": "2026-10-15T00:00:00.000Z"
+    },
+    "method": "Read retained tracking samples and a saved synthetic report; no fresh research or page retrieval.",
+    "coverage": {
+      "state": "partial",
+      "runs_inspected": 1,
+      "omitted_runs": 0,
+      "omitted_pages": 0,
+      "source_classes": {
+        "retained_provider_answers": {
+          "expected": 10,
+          "answer_present": 8,
+          "aio_not_present": 1,
+          "partial": 0,
+          "failed": 1,
+          "unavailable": 0,
+          "missing": 0,
+          "eligible_mention_denominator": 8,
+          "brand_mentions": 2,
+          "domain_citations": 1
+        },
+        "synthetic_prompt_tests": {
+          "expected": 1,
+          "answer_present": 1,
+          "eligible_test_denominator": 1,
+          "brand_mentions": 1,
+          "domain_citations": 0
+        }
+      },
+      "comparison": "Not attempted; no comparable prior run was retained. No trend is established."
+    },
+    "observations": [
+      {
+        "evidence_ids": ["observed-citation"],
+        "fact": "One complete answer cites the owned tracking guide; its factual accuracy is unverified."
+      },
+      {
+        "evidence_ids": ["observed-gap"],
+        "fact": "One complete comparison answer has neither an Example mention nor an owned-domain citation."
+      },
+      {
+        "evidence_ids": ["synthetic-mention"],
+        "fact": "The saved controlled test mentions Example without a citation; this is not consumer visibility."
+      }
+    ],
+    "recommendations": [
+      {
+        "priority": 1,
+        "action": "Verify the tracking guide's setup facts against the retained cited answer.",
+        "question": "How do I track weekly keyword rankings?",
+        "page": "https://example.com/guides/rank-tracking",
+        "answer_section": "Weekly tracking setup",
+        "facts_needed": "Current setup steps and supported check frequency.",
+        "evidence_ids": ["observed-citation"],
+        "benefit": "Keep the already cited explanation accurate for prospective users.",
+        "effort": "Small manual review before proposing changes.",
+        "confidence": "medium",
+        "uncertainty": "Citation presence does not prove accuracy, traffic or recommendation quality.",
+        "verification": "Unexecuted: manually compare the guide and answer, recording any unsupported claim."
+      },
+      {
+        "priority": 2,
+        "action": "Review whether the comparison page answers the small-team selection question.",
+        "question": "Which rank tracker fits a small team?",
+        "page": "https://example.com/compare",
+        "answer_section": "Team size and evaluation criteria",
+        "facts_needed": "Verified team features and evaluation criteria; page content has not been fetched.",
+        "evidence_ids": ["observed-gap"],
+        "benefit": "Identify a specific answer gap before commissioning comparison content.",
+        "effort": "Manual content review, then a scoped proposal if evidence warrants it.",
+        "confidence": "low",
+        "uncertainty": "A single absent mention cannot diagnose the page or establish demand.",
+        "verification": "Unexecuted: inspect the relevant page section and document supported gaps."
+      },
+      {
+        "priority": 3,
+        "action": "Propose a comparable retained-sample collection plan before claiming a visibility trend.",
+        "question": "Is Example earning more mentions over time?",
+        "page": "https://example.com/",
+        "answer_section": "Brand and product identity",
+        "facts_needed": "A prior run with identical revisions, locale, model and brand configuration.",
+        "evidence_ids": ["observed-gap", "synthetic-mention"],
+        "benefit": "Avoid treating a synthetic mention as measured visibility improvement.",
+        "effort": "Review saved coverage and obtain separate approval for any new collection.",
+        "confidence": "high",
+        "uncertainty": "No comparable baseline exists; future coverage and cost are unknown.",
+        "verification": "Unexecuted: require at least 90% complete coverage in both comparable periods."
+      }
+    ],
+    "deferred_alternative": "Fresh paid research could expand coverage, but no spending was approved and retained evidence should be verified first.",
+    "evidence": [
+      {
+        "id": "observed-citation",
+        "source_class": "retained_provider_answers",
+        "source_tool": "list_ai_tracking_samples",
+        "run_id": "fixture-run-20261014",
+        "sample_id": "fixture-sample-01",
+        "prompt_revision_id": "fixture-revision-setup-1",
+        "source": "retained provider dataset",
+        "engine": "google_ai_overview",
+        "model": null,
+        "requested_locale": "en-US",
+        "effective_locale": "en-US",
+        "configuration": "fixture-config-1; desktop; Example aliases revision 1",
+        "observed_at": "2026-10-14T12:00:00.000Z",
+        "retrieved_at": "2026-10-15T09:00:00.000Z",
+        "cache_state": "retained; original observation time preserved",
+        "status": "answer_present",
+        "matched_alias": "Example",
+        "citation_urls": ["https://example.com/guides/rank-tracking"],
+        "excerpt": "Fictional answer: Example's guide describes a weekly keyword tracking workflow."
+      },
+      {
+        "id": "observed-gap",
+        "source_class": "retained_provider_answers",
+        "source_tool": "list_ai_tracking_samples",
+        "run_id": "fixture-run-20261014",
+        "sample_id": "fixture-sample-03",
+        "prompt_revision_id": "fixture-revision-comparison-1",
+        "source": "retained provider dataset",
+        "engine": "google_ai_overview",
+        "model": null,
+        "requested_locale": "en-US",
+        "effective_locale": "en-US",
+        "configuration": "fixture-config-1; desktop; Example aliases revision 1",
+        "observed_at": "2026-10-14T12:02:00.000Z",
+        "retrieved_at": "2026-10-15T09:00:00.000Z",
+        "cache_state": "retained; original observation time preserved",
+        "status": "answer_present",
+        "matched_alias": null,
+        "citation_urls": [],
+        "excerpt": "Fictional answer: small teams should compare check frequency and collaboration features."
+      },
+      {
+        "id": "synthetic-mention",
+        "source_class": "synthetic_prompt_tests",
+        "source_tool": "get_agent_report",
+        "report_id": "agr_b00000000000000000000000",
+        "run_id": "fixture-synthetic-run-1",
+        "sample_id": "fixture-synthetic-sample-1",
+        "prompt_revision_id": "fixture-synthetic-revision-1",
+        "source": "saved controlled prompt comparison",
+        "engine": "controlled_model_test",
+        "model": null,
+        "requested_locale": "en-US",
+        "effective_locale": null,
+        "configuration": "fixture-test-1; web_search false; not comparable to provider samples",
+        "observed_at": null,
+        "retrieved_at": "2026-10-15T09:01:00.000Z",
+        "cache_state": "saved report; observation date unknown",
+        "status": "answer_present",
+        "matched_alias": "Example",
+        "citation_urls": [],
+        "excerpt": "Fictional controlled answer: Example may be an option to evaluate."
+      }
+    ],
+    "costs": {
+      "fresh_provider_calls": 0,
+      "new_provider_cost_cents": 0,
+      "historical_cost_receipt_state": "unknown",
+      "external_client_fees": "unknown"
+    },
+    "limitations": [
+      "Fictional fixture only; no live customer observations.",
+      "Three illustrative evidence records are excerpts from the stated denominators, not the full sample list.",
+      "One failed sample and one absent overview are excluded from mention denominators.",
+      "Provider samples do not represent all consumer conversations; synthetic results remain separate.",
+      "Citation targets and owned page contents were not retrieved or verified."
+    ]
+  },
+  "provenance": {
+    "skill": "ai-visibility-audit",
+    "skill_version": "0.3.0",
+    "method": "Retained samples and saved synthetic report; fictional fixture.",
+    "source_run_ids": ["fixture-run-20261014", "fixture-synthetic-run-1"],
+    "source_report_ids": ["agr_b00000000000000000000000"],
+    "evidence_ids": ["observed-citation", "observed-gap", "synthetic-mention"],
+    "reporting_window": {
+      "start": "2026-10-08T00:00:00.000Z",
+      "end": "2026-10-15T00:00:00.000Z"
+    },
+    "retrieved_at": "2026-10-15T09:01:00.000Z",
+    "limitations": ["Fictional fixture; synthetic observation date and actual models are unknown."]
+  }
+}

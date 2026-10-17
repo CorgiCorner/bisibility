@@ -4,164 +4,115 @@ export const skill: TaskSkill = {
   slug: "keyword-import",
   title: "Keyword import",
   description:
-    "Bulk-import and update tracked keywords for a bisibility project, set target URLs, and kick off rank checks. Use when an agent needs to seed or reconcile a keyword set from a list, spreadsheet, or competitor research.",
+    "Reconcile a supplied keyword list with tracked identities, add missing keywords and apply requested metadata changes. Fresh paid checks require separate explicit approval. Use for importing or updating a project's keyword set.",
   compatibility: "Requires a bisibility origin and a bearer API key with write scope.",
   kind: "task-skill",
-  version: "0.1.0",
+  version: "0.1.1",
   body: `# Keyword import
 
-Import a batch of keywords into a bisibility project, attach the target URL each
-keyword should rank, optionally update existing rows in bulk, and trigger rank
-checks. Use this skill when you have a list of keywords (from a brief, CSV,
-competitor scan, or a search-console export) and need them tracked under one
-project.
-
-## When to use
-
-- Seeding a new or existing project with many keywords at once.
-- Reconciling a project's keyword set against an external source of truth
-  (add missing, retag, repoint target URLs).
-- Forcing fresh rank checks right after an import instead of waiting for the
-  next scheduled run.
-
-If you still need to create the project or connect a search-data provider first,
-do that via the **domain-onboarding** and **provider-setup** skills, then return
-here.
+Reconcile an agreed list with tracked keywords, add missing identities and apply
+only requested metadata corrections. Finish with verified created/skipped/updated
+counts. Fresh rank checks require separate explicit spending approval.
 
 ## Prerequisites
 
-1. **Origin / base URL.** EU hosted region: \`https://eu.bisibility.com/api/v1\`. Self-hosted:
-   \`https://your-host.example/api/v1\`. Resolve the correct base URL before any
-   call (ask the user or read it from config).
-2. **API key with \`write\` scope.** Put it in an env var and send it as
-   \`Authorization: Bearer $BISIBILITY_API_KEY\`. Never print, echo, or log the
-   key, and never paste it into a file.
-3. **A project id** (\`prj_...\`). List projects (\`GET /projects\`) if you do not
-   have it.
+Resolve \`$BISIBILITY_BASE\` including \`/api/v1\`, \`$PROJECT_ID\` from \`GET /projects\`,
+and a write-scoped bearer credential in \`$BISIBILITY_API_KEY\`. Never display the
+credential. With a personal token, select this project using
+\`X-Bisibility-Project: $PROJECT_ID\` on paths without a project ID.
+
+Confirm the input list, canonical markets, devices, target URLs and intended
+changes before writes. Reuse a stable \`Idempotency-Key\` per logical action on
+retries. Lists paginate with \`meta.next_cursor\`; honor 429 retry windows.
+
+## 1. Compare against existing keyword identities
+
+Read \`GET /projects/{project_id}/keywords\` and follow every page in the agreed
+scope. Compare keyword text together with canonical location and device; the same
+text in a different market or device is a distinct identity. For omitted market or
+device values, read project defaults to resolve what the proposed rows inherit.
+
+Separate new rows, already tracked identities and requested metadata changes.
+Do not silently rewrite keyword text, location or device on an existing identity;
+these identity changes require a new target, not a metadata PATCH.
+
+Confirm scheduling as part of the exact keyword plan. The examples below use
+manual schedules with no cron. Omitting a schedule can inherit recurring project
+defaults; do not do so without showing and approving that effect. Enabling or
+expanding recurring paid checks requires its own cost-aware approval.
+
+## 2. Add missing rows
+
+For a confirmed batch (maximum 500 items):
 
 \`\`\`bash
-export BISIBILITY_API_KEY=placeholder
-export BASE="https://eu.bisibility.com/api/v1"
-export PROJECT="\${BISIBILITY_PROJECT_ID:?set a project id returned by GET /projects}"
+curl -fsS -X POST "$BISIBILITY_BASE/projects/$PROJECT_ID/keywords" -H "Authorization: Bearer $BISIBILITY_API_KEY" -H "Content-Type: application/json" -H "Idempotency-Key: import-running-shoes-batch-1" -d '{"keywords":[{"keyword":"best running shoes","target_url":"https://example.com/shoes","location_key":"US","device":"desktop","tags":["footwear"],"schedule":{"frequency":"manual","cron_expression":null,"timezone":"UTC","jitter_minutes":60}},{"keyword":"trail running shoes","location_key":"US","device":"mobile","schedule":{"frequency":"manual","cron_expression":null,"timezone":"UTC","jitter_minutes":60}}]}'
 \`\`\`
 
-## Steps
+Read \`data.created\`, \`data.skipped\` and \`data.results[]\`. Each result contains
+\`status\` (\`created\` or \`skipped\`) and \`keyword.id\` (\`kw_...\`). Existing identities
+are skipped; this is not a promise that their metadata was reconciled.
 
-### 1. Inspect the existing keyword set - \`GET /projects/{project_id}/keywords\` (listKeywords)
+## 3. Correct metadata only where the input requires it
 
-Avoid duplicates: pull what is already tracked before importing. Paginate with
-\`?limit=<n>&cursor=<next_cursor>\` until \`meta.next_cursor\` is null.
+For one row, \`PATCH /keywords/{id}\` accepts \`target_url\`, tags and other supported
+metadata. For a shared change across rows, \`POST /keywords/bulk\` requires
+\`keyword_ids\` and one \`operation\`, not an \`updates\` array. Examples:
 
-\`\`\`bash
-curl -s "$BASE/projects/$PROJECT/keywords?limit=100" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY"
+\`\`\`json
+{"keyword_ids":["kw_a00000000000000000000000"],"operation":"add_tags","tags":["footwear","priority"]}
 \`\`\`
 
-Compare the returned \`data[].keyword\` values against your import list and only
-add the genuinely new ones.
-
-### 2. Add the new keywords - \`POST /projects/{project_id}/keywords\` (addKeywords)
-
-Send a batch. Each item carries the keyword plus optional targeting metadata
-(\`target_url\`, \`location\`, \`device\`, \`tags\`). Pass an \`Idempotency-Key\` so a
-retried request does not create duplicate rows.
-
-\`\`\`bash
-curl -s -X POST "$BASE/projects/$PROJECT/keywords" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -H "Idempotency-Key: import-2026-06-29-batch-1" \\
-  -d '{
-    "keywords": [
-      { "keyword": "best running shoes", "target_url": "https://example.com/shoes", "location": "US", "device": "desktop", "tags": ["footwear"] },
-      { "keyword": "trail running shoes", "location": "US", "device": "mobile" }
-    ]
-  }'
+\`\`\`json
+{"keyword_ids":["kw_b00000000000000000000000"],"operation":"set_target_url","target_url":"https://example.com/trail-running"}
 \`\`\`
 
-The response returns the created rows with their \`kw_...\` ids - keep them for the
-next steps.
+Use separate calls for different operations or values. Inspect
+\`data.results[].status\`, including \`not_found\`, rather than claiming every
+requested row changed. Do not bulk update rows that already match the input.
 
-### 3. Bulk-update existing rows - \`POST /keywords/bulk\` (bulkUpdateKeywords)
+## 4. Read back and summarize
 
-When reconciling, use one bulk call to retag or repoint many existing keywords
-instead of one PATCH per row. Reference rows by their \`kw_...\` ids.
+Read the affected keyword rows and verify canonical location, device, target URLs
+and tags. Report input count, already tracked identities, created/skipped rows,
+applied corrections and any unresolved rows. Report no fresh ranking data unless
+a separately approved check completed.
 
-\`\`\`bash
-curl -s -X POST "$BASE/keywords/bulk" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "updates": [
-      { "id": "kw_a00000000000000000000000", "tags": ["footwear", "priority"] },
-      { "id": "kw_b00000000000000000000000", "target_url": "https://example.com/trail" }
-    ]
-  }'
-\`\`\`
+## 5. Optional checks only with explicit spending approval
 
-### 4. Fix a single keyword's target URL - \`PATCH /keywords/{id}\` (setKeywordTargetUrl)
+For a requested bounded set with a suitable connected provider, review cost and
+obtain explicit approval before \`POST /keywords/{id}/checks\`. Include the agreed
+\`max_cost_cents\` and stable idempotency key; do not auto-check the whole project.
+A queued 202 returns a run ID (\`rcr_...\`) in \`data.id\`. Follow
+\`GET /projects/{project_id}/rank-check-runs/{run_id}\`; inspect terminal state,
+counts and blocked reason. Read completed measurements through
+\`GET /keywords/{id}/rank-checks?status=completed\` when available. A queued run is
+not a completed ranking result. An inline 201 may return the measurement directly.
 
-For a one-off correction (a keyword pointing at the wrong landing page), patch
-just that row.
-
-\`\`\`bash
-curl -s -X PATCH "$BASE/keywords/kw_b00000000000000000000000" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{ "target_url": "https://example.com/trail-running" }'
-\`\`\`
-
-### 5. Trigger rank checks - \`POST /keywords/{id}/checks\` (runRankCheck)
-
-Optionally force a fresh check per keyword right after import. This is an
-on-demand check that runs against the project's connected provider; the
-response typically references a job you can follow up on.
-
-\`\`\`bash
-curl -s -X POST "$BASE/keywords/kw_a00000000000000000000000/checks" \\
-  -H "Authorization: Bearer $BISIBILITY_API_KEY"
-\`\`\`
-
-Loop over the new \`kw_...\` ids to enqueue checks. Do not hammer the endpoint -
-space them out and respect rate limits (see notes).
-
-## Notes / gotchas
-
-- **Dedupe first.** \`addKeywords\` may reject or silently merge a keyword that
-  already exists for the same location/device. Step 1 keeps the import clean.
-- **Idempotency.** Always send an \`Idempotency-Key\` on \`addKeywords\` and other
-  writes so a network retry does not double-import. Reuse the same key value for
-  the same logical batch.
-- **Batch size.** For very large lists, chunk \`addKeywords\` (e.g. 100-500 per
-  call) and paginate \`listKeywords\` rather than requesting everything at once.
-- **Rate limits.** A 429 returns \`application/problem+json\` with a retry window;
-  back off for that window before retrying. Stagger the step-5 rank checks.
-- **Provider required for checks.** \`runRankCheck\` needs a connected search-data
-  provider on the project. If checks fail with a provider error, run the
-  provider-setup skill, then retry.
-- **Credentials.** Provider credentials are bring-your-own and stored in the
-  instance - never request, echo, or store them here.
-- **Errors.** All errors are \`application/problem+json\`; read \`title\` and
-  \`detail\` and fix the request rather than blind-retrying non-429s.`,
+Never expose bearer or provider credentials. Use **provider-setup** if connection
+repair is needed, and report missing evidence rather than inventing ranks.`,
   references: [
     {
       path: "references/api.md",
-      content: `# Keyword import - endpoint cheat-sheet
+      content: `# Keyword import - REST contract
 
-Base path: \`/api/v1\`. Auth: \`Authorization: Bearer <api_key>\` (write scope).
-Lists return \`{ data: [...], meta: { next_cursor } }\`; paginate with
-\`?limit=<n>&cursor=<next_cursor>\`. Writes accept an \`Idempotency-Key\` header.
-Errors are \`application/problem+json\`; 429 carries a retry window.
+Base: resolved origin + \`/api/v1\`; write scope and project permissions.
+Personal-token paths without a project ID use X-Bisibility-Project when ambiguous.
 
-| METHOD path | operationId | key fields |
-|-|-|-|
-| GET /projects/{project_id}/keywords | listKeywords | query: limit, cursor, tag |
-| POST /projects/{project_id}/keywords | addKeywords | body: keywords[] (keyword, target_url, location, device, tags) |
-| POST /keywords/bulk | bulkUpdateKeywords | body: updates[] (id, target_url, tags) |
-| PATCH /keywords/{id} | setKeywordTargetUrl | body: target_url |
-| POST /keywords/{id}/checks | runRankCheck | path: id; returns a job reference |
+| Operation | Contract |
+|-|-|
+| GET /projects/{project_id}/keywords | Paginate; compare text + canonical location + device |
+| GET /projects/{project_id}/defaults | Resolve omitted market/device |
+| POST /projects/{project_id}/keywords | keywords[]; at most 500; data.created/skipped/results[].keyword |
+| POST /keywords/bulk | keyword_ids[] + operation + its shared fields; no updates[] |
+| PATCH /keywords/{id} | Requested metadata correction; keyword identity is immutable |
+| POST /keywords/{id}/checks | Explicitly approved paid check, max_cost_cents |
+| GET /projects/{project_id}/rank-check-runs/{run_id} | Poll queued rcr_... run |
+| GET /keywords/{id}/rank-checks?status=completed | Read saved check_... measurements |
 
-Id shapes: project \`prj_...\`, keyword \`kw_...\`, API key \`bsb_key_live_...\`.`,
+Bulk operations include add_tags, remove_tags, set_target_url, set_frequency and
+delete; deletion requires the appropriate role and is not routine import cleanup.
+Check created/skipped and per-ID status; read back the final rows. No automatic checks.`,
     },
   ],
 };

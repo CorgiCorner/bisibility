@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { backlinksCacheKey } from "./cache";
 import { analyzeBacklinks, loadMoreBacklinkRows } from "./service";
 import { findBacklinksSnapshot, findCurrentBacklinksSnapshot } from "./snapshot";
+import { backlinksSnapshotReference } from "./snapshot-reference";
 import { findStoredBacklinks, snapshotProvider } from "./stored";
 
 const mocks = vi.hoisted(() => ({
@@ -37,6 +38,7 @@ const lookup = {
   target: "example.com",
 };
 const snapshot = {
+  id: "snapshot_1",
   expiresAt: new Date("2026-10-15T12:00:00Z"),
   fetchedAt: lookup.now,
   fetchedRowCount: 100,
@@ -249,6 +251,11 @@ describe("backlinks provider isolation", () => {
       loadMoreBacklinkRows(context, {
         includeSubdomains: true,
         limit: 100,
+        snapshotRef: backlinksSnapshotReference({
+          id: "snapshot_1",
+          projectId: lookup.projectId,
+          fetchedRowCount: 100,
+        }),
         provider: "fixture_b",
         target: "example.com",
         targetScope: "site",

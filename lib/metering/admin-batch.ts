@@ -2,6 +2,7 @@
 export async function mapAdminQueries<Input, Output>(
   inputs: readonly Input[],
   read: (input: Input) => Promise<Output>,
+  concurrency: 1 | 4 = 4,
 ): Promise<Output[]> {
   const output: Output[] = [];
   let next = 0;
@@ -21,7 +22,7 @@ export async function mapAdminQueries<Input, Output>(
       }
     }
   };
-  await Promise.all(Array.from({ length: Math.min(4, inputs.length) }, worker));
+  await Promise.all(Array.from({ length: Math.min(concurrency, inputs.length) }, worker));
   if (failed) throw firstError;
   return output;
 }

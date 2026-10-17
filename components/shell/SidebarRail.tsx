@@ -6,6 +6,7 @@
 // silently drifted. Sidebar and SidebarNav now compose this; ShellSkeleton mirrors its boxes.
 
 import { Tooltip } from "@/components/ui/Tooltip";
+import { trackModuleNavigation } from "@/lib/analytics/product-interactions";
 import type { NavItem, NavItemGroupDescriptor } from "@/lib/nav/nav-items";
 import { navItemGroups, RAIL_ICON_SIZE } from "@/lib/nav/nav-items";
 import { FlaskIcon as Flask } from "@phosphor-icons/react/dist/ssr/Flask";
@@ -63,7 +64,10 @@ export function SidebarRailRow({
           "hover:bg-bg-sunken active:bg-bg-inset",
         ].join(" ")}
         href={item.href}
-        onClick={onNavigate}
+        onClick={() => {
+          trackModuleNavigation(item.href, "sidebar");
+          onNavigate?.();
+        }}
       >
         {/* Current-page dot. Always in the DOM with only opacity changing, so navigation never
             relayouts the column. --accent-solid, not --accent: as a non-text indicator it needs

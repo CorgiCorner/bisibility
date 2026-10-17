@@ -50,7 +50,10 @@ beforeEach(() => {
         enabled: true,
         status: "connected",
         credentialSource: "own",
-        updatedAt: new Date(connection.revision),
+        updatedAt: new Date("2026-10-14T00:00:00.000Z"),
+        providerUiRevision: 4n,
+        kind: "serp",
+        credentialsEncrypted: "encrypted-fixture",
       })),
     },
   };
@@ -108,4 +111,30 @@ it("cancellation, stale claim and mutated keyword stop the actual native fence",
   side.claimToken = "token";
   tx.keyword.findFirst.mockResolvedValue({ text: "changed" });
   await expect(guard.beforeReserve.lockBusiness(tx, "attempt")).rejects.toThrow(/scope/);
+});
+
+it("accepts telemetry-only updates but fences configuration revisions and legacy timestamp snapshots", async () => {
+  const guard = fences();
+  const current = await tx.providerConnection.findFirst();
+  current.updatedAt = new Date("2026-10-15T00:00:00Z");
+  tx.providerConnection.findFirst.mockResolvedValue(current);
+  await expect(guard.beforeReserve.lockBusiness(tx, "attempt")).resolves.toBeUndefined();
+  current.providerUiRevision = 5n;
+  await expect(guard.beforeReserve.lockBusiness(tx, "attempt")).rejects.toThrow(
+    /connection changed/,
+  );
+  current.providerUiRevision = 4n;
+  const old = { ...connection, revision: "2026-10-14T00:00:00.000Z" };
+  await expect(
+    comparisonFences({
+      projectId: "project",
+      runId: "run",
+      sideId: "side",
+      token: "token",
+      actorId: "actor",
+      snapshot,
+      connection: old,
+      tag: "tag",
+    }).beforeReserve.lockBusiness(tx, "attempt"),
+  ).rejects.toThrow(/connection changed/);
 });

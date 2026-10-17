@@ -22,6 +22,7 @@ export type AnalyzeBacklinksOptions = {
 };
 
 export type LoadMoreBacklinkRowsOptions = {
+  snapshotRef?: string;
   includeSubdomains: boolean;
   limit: number;
   provider?: string;
@@ -67,6 +68,8 @@ export type BacklinksRow = {
 };
 
 export type BacklinksSnapshot = {
+  /** Opaque reference required when extending this exact row revision. */
+  snapshotRef?: string;
   cached: boolean;
   cachedUntil: string;
   costCents: number;

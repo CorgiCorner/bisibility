@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/realtime/stream-access", () => ({ canReadStream: mocks.canReadStream }));
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/auth/session", () => ({ requireAvailableSession: mocks.getQuerySession }));
 vi.mock("@/lib/dates/request", () => ({
   getResolvedDateFormat: vi.fn().mockResolvedValue({ preference: "auto", resolved: "month_first" }),
 }));
@@ -30,9 +31,9 @@ vi.mock("@/lib/notifications/realtime", () => ({
   subscribeToOperationEvents: mocks.subscribeToOperationEvents,
 }));
 vi.mock("@/lib/queries/_auth", () => ({
-  getQueryActor: mocks.getQueryActor,
-  getQuerySession: mocks.getQuerySession,
-  resolveProjectAccess: mocks.resolveProjectAccess,
+  getQueryActorForSession: mocks.getQueryActor,
+
+  resolveProjectAccessForActor: mocks.resolveProjectAccess,
 }));
 vi.mock("@/lib/rank-check/runs/snapshot", () => ({
   readOperationSnapshot: mocks.readOperationSnapshot,
@@ -86,7 +87,11 @@ describe("notification stream route", () => {
   });
 
   it("returns not found when the project reference is inaccessible", async () => {
-    mocks.resolveProjectAccess.mockRejectedValue(new Error("NEXT_NOT_FOUND"));
+    mocks.resolveProjectAccess.mockRejectedValue(
+      Object.assign(new Error("NEXT_HTTP_ERROR_FALLBACK"), {
+        digest: "NEXT_HTTP_ERROR_FALLBACK;404",
+      }),
+    );
 
     const response = await GET(streamRequest());
 
@@ -179,7 +184,7 @@ describe("notification stream route", () => {
   });
 
   it("returns unauthorized when the session scope cannot be resolved", async () => {
-    mocks.getQueryActor.mockRejectedValue(new Error("session unavailable"));
+    mocks.getQueryActor.mockRejectedValue(redirectError());
 
     const response = await GET(streamRequest());
 
@@ -196,15 +201,16 @@ describe("notification stream route", () => {
     expect(await response.text()).toBe("Unauthorized");
   });
 
-  it("returns a paced service-unavailable response when the initial feed cannot load", async () => {
+  it("preserves browser reconnection with a retry-only stream when the initial feed cannot load", async () => {
     mocks.getNotificationFeedForScope.mockRejectedValue(new Error("Database unavailable"));
     const request = streamRequest();
 
     const response = await GET(request);
 
-    expect(response.status).toBe(503);
-    expect(response.headers.get("retry-after")).toBe("15");
-    expect(await response.text()).toBe("Notification stream temporarily unavailable");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/event-stream");
+    expect(await response.text()).toBe("retry: 15000\n\n");
     expect(mocks.subscribeToNotificationEvents).not.toHaveBeenCalled();
+    expect(mocks.subscribeToOperationEvents).not.toHaveBeenCalled();
   });
 });

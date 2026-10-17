@@ -16,7 +16,7 @@ vi.mock("@/lib/local-monitor-results/session-actions", () => ({
   readLocalPointHistoryAction: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-function markup(unavailable = false) {
+function markup(unavailable = false, mixed = false) {
   const { binding, receipt, now } = localResultFixture(),
     row = binding.rows[0],
     saved = resultObservation(row),
@@ -49,13 +49,24 @@ function markup(unavailable = false) {
     receipt,
     ...projection,
   };
+  const displayed = mixed
+    ? {
+        ...report,
+        grids: report.grids.map((grid) => ({
+          ...grid,
+          reason: "matcher_version_mixed" as const,
+          observedRate: null,
+          sampleBounds: null,
+        })),
+      }
+    : report;
   return renderToStaticMarkup(
     featureMessagesElement(
       <QueryClientProvider client={new QueryClient()}>
         <MonitorRunResults
           projectId={report.projectId}
           monitorId={report.monitorId}
-          report={unavailable ? null : report}
+          report={unavailable ? null : displayed}
           unavailable={unavailable}
           initialHistory={{
             version: 1,
@@ -91,6 +102,15 @@ describe("actual saved Maps results UI", () => {
     expect(html).toContain("-21.0000000");
     expect(html).toContain("run=lmr_");
     expect(html).not.toContain("taskIds");
+  });
+  it("explains an unavailable aggregate while retaining its point results and exports", () => {
+    const html = markup(false, true);
+    expect(html).toContain("This scan uses different matching rules");
+    expect(html).toContain("Confirmed positive rank");
+    expect(html).toContain("Export Local CSV v1");
+    expect(html).toMatch(/<dt>Observed Top \d+<\/dt><dd>Unknown<\/dd>/);
+    expect(html).not.toContain("<dd>0%</dd>");
+    expect(html).not.toContain("This saved run is unavailable");
   });
   it("foreign or historical unavailable read shows explicit unavailable without rank or export", () => {
     const html = markup(true);

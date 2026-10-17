@@ -1,3 +1,4 @@
+import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 import {
   BusinessLocationConflictError,
@@ -148,7 +149,7 @@ export async function loadRankTrackerLocalList(
           query.grouped,
         );
       },
-      { isolationLevel: "RepeatableRead" },
+      { ...REPORT_READ_TRANSACTION },
     );
   } catch (cause) {
     if (cause instanceof RankReportCapacityError)

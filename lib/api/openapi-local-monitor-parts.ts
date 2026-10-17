@@ -115,6 +115,13 @@ export function localMonitorPartSchemas(snake = true) {
     comparison: { type: "string", const: "unavailable" },
     scope: { type: "string", const: "sampled_points" },
   });
+  // Optional additive reason; successful homogeneous grids keep the existing shape.
+  grid.properties.reason = {
+    type: "string",
+    enum: ["matcher_version_mixed"],
+    description:
+      "Ranking aggregate unavailable across matcher versions; point evidence and coverage remain readable.",
+  };
   const listing = object({
     id: localText,
     name: localNullable(localText),

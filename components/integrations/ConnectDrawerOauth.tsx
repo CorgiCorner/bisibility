@@ -2,6 +2,7 @@
 
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { normalizeGa4PropertyId } from "@/lib/providers/analytics/property-id";
@@ -166,10 +167,15 @@ export function ConnectDrawerOauth({
       if ("status" in result && result.status === "reauth_required") {
         setSetup({
           error: t("reconnectToChangeProperty"),
+          ...(result.failure ? { failure: result.failure } : {}),
           properties: [],
           provider: oauthProviderId,
           requiresReauth: true,
         });
+        return;
+      }
+      if ("status" in result && result.status === "failed") {
+        setError(googlePropertyFailureMessage(result.failure, t));
         return;
       }
       if (!("property" in result)) throw new Error(t("propertySelectionUnavailable"));

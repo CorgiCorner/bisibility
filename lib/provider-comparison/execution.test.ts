@@ -221,6 +221,52 @@ describe("comparison worker execution remains separate from rank history", () =>
     await executeComparisonSide(input);
     expect(mocks.fetch).toHaveBeenCalledOnce();
   });
+  it("retains a valid observation when its native receipt is still unknown", async () => {
+    mocks.evidence.mockImplementation(async () =>
+      proofs.map((proof) => ({ ...proof, measurementStatus: "unknown", receipt: null })),
+    );
+    await executeComparisonSide(input);
+    expect(row).toMatchObject({
+      status: "unknown",
+      costCents: null,
+      quantity: null,
+      reason: "usage_unconfirmed",
+      result: { position: 3, rankingUrl: "https://example.com/a", evidence: "positive" },
+    });
+    await executeComparisonSide(input);
+    expect(mocks.fetch).toHaveBeenCalledOnce();
+  });
+  it("durably retains the result before hosted accounting finalization fails", async () => {
+    snapshot = comparisonFixture("hosted");
+    usage.finish.mockImplementation(async () => {
+      expect(row.result).toMatchObject({ position: 3 });
+      throw new ProviderUsagePersistenceError();
+    });
+    await executeComparisonSide(input);
+    expect(row).toMatchObject({
+      status: "unknown",
+      costCents: null,
+      customerCostCents: null,
+      quantity: null,
+      result: { position: 3, evidence: "positive" },
+    });
+    await executeComparisonSide(input);
+    expect(mocks.fetch).toHaveBeenCalledOnce();
+  });
+  it("a recovered finish keeps the successful observation without another provider call", async () => {
+    snapshot = comparisonFixture("hosted");
+    usage.finish
+      .mockRejectedValueOnce(new ProviderUsagePersistenceError())
+      .mockResolvedValue(undefined);
+    await executeComparisonSide(input);
+    expect(row).toMatchObject({
+      status: "completed",
+      costCents: 2,
+      reason: null,
+      result: { position: 3 },
+    });
+    expect(mocks.fetch).toHaveBeenCalledOnce();
+  });
   it("an interrupted claimed side is closed unknown without provider transport", async () => {
     row.status = "claimed";
     await executeComparisonSide(input);

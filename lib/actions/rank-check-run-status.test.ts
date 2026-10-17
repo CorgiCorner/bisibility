@@ -7,6 +7,10 @@ const mocks = vi.hoisted(() => ({
   run: vi.fn(),
   runs: vi.fn(),
   checks: vi.fn(),
+  emitCompletion: vi.fn(),
+}));
+vi.mock("@/lib/actions/rank-check-preview-analytics", () => ({
+  emitFirstCheckRunCompletion: mocks.emitCompletion,
 }));
 vi.mock("@/lib/actions/_shared", async () => {
   const actual =
@@ -23,6 +27,7 @@ const runId = "rcr_abcdefghijklmnopqrstuvwx";
 const projectId = "prj_abcdefghijklmnopqrstuvwx";
 const base = {
   publicId: runId,
+  projectId: "project_1",
   status: "queued",
   outcome: null,
   blockedReason: null,
@@ -87,6 +92,11 @@ it("returns the completed attempt, including its actual depth", async () => {
     requestedDepth: 50,
     finishedAt: "2026-09-26T23:35:00.000Z",
   });
+  expect(mocks.emitCompletion).toHaveBeenCalledWith({
+    actorId: "actor_1",
+    projectId: "project_1",
+    runPublicIds: [runId],
+  });
 });
 
 it.each([
@@ -106,6 +116,7 @@ it("does not reveal run results to another project's member", async () => {
   const { AuthorizationError } = await import("@/lib/auth/authorize");
   mocks.scope.mockRejectedValue(new AuthorizationError("forbidden"));
   await expect(getRankCheckStatus({ rankCheckId: runId })).rejects.toThrow("Rank check not found.");
+  expect(mocks.emitCompletion).not.toHaveBeenCalled();
 });
 
 it("supports queued run ids in the batch poll with the authorized project constraint", async () => {

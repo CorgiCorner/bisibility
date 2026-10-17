@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   acquireProviderLookupLock,
   type ProviderLookupLock,
@@ -10,6 +9,7 @@ import {
   withProviderLookupCache,
   writeProviderLookupCache,
 } from "@/lib/provider-lookups/cache";
+import { projectCacheTtl } from "@/lib/provider-lookups/project-cache-policy";
 import type { RankedKeywordRow } from "@/lib/providers/types";
 
 const DEFAULT_TTL_SECONDS = 43_200;
@@ -24,7 +24,9 @@ export type RankedKeywordsCacheEntry = {
 export type RankedKeywordsLock = ProviderLookupLock;
 
 export function rankedKeywordsCacheTtlSeconds() {
-  return positiveTtl(process.env.RANKED_KEYWORDS_CACHE_TTL_SECONDS, DEFAULT_TTL_SECONDS);
+  return projectCacheTtl(
+    positiveTtl(process.env.RANKED_KEYWORDS_CACHE_TTL_SECONDS, DEFAULT_TTL_SECONDS),
+  );
 }
 
 export function rankedKeywordsCacheKey(input: {

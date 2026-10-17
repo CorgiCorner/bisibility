@@ -108,6 +108,7 @@ export type DashboardMessageKey =
   | "title"
   | "presentationOnly"
   | "preset"
+  | "resetPreset"
   | "show"
   | "hide"
   | "moveUp"

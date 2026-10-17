@@ -12,6 +12,11 @@ import {
 } from "@/lib/research/scope";
 import { useState } from "react";
 import {
+  mergeResearchTabs,
+  researchTabIdentity,
+  uniqueResearchSeeds,
+} from "./research-tab-identity";
+import {
   actualResearchCostCents,
   loadDeeperEstimate,
   loadResearchEstimate,
@@ -88,7 +93,7 @@ export function useResearchRuns({
       const runClickstream = overrides.includeClickstream ?? includeClickstream;
       const runMode = (overrides.mode ?? mode) as KeywordResearchMode;
       const perSeed = await mapWithConcurrency(
-        nextSeeds,
+        uniqueResearchSeeds(nextSeeds),
         RESEARCH_SEED_CONCURRENCY,
         async (seed) => {
           let outcome: UiResearchOutcome;
@@ -115,7 +120,7 @@ export function useResearchRuns({
         },
       );
       const nextTabs: ResearchTab[] = [];
-      for (const [index, { deeperEstimate, outcome, retryEstimate, seed }] of perSeed.entries()) {
+      for (const { deeperEstimate, outcome, retryEstimate, seed } of perSeed) {
         if (!outcome.ok && outcome.reason === "wallet_budget_exhausted") {
           setBudgetBlocked(true);
           setWalletBudgetBlocked(true);
@@ -142,7 +147,14 @@ export function useResearchRuns({
         nextTabs.push({
           connectionId: runConnectionId,
           deeperEstimate,
-          id: `${Date.now()}-${index}`,
+          id: researchTabIdentity({
+            connectionId: runConnectionId,
+            includeClickstream: runClickstream,
+            scope: runScope,
+            mode: runMode,
+            requestedLimit,
+            seed,
+          }),
           includeClickstream: runClickstream,
           scope: runScope,
           mode: runMode,
@@ -152,7 +164,7 @@ export function useResearchRuns({
           seed,
         });
       }
-      setTabs(nextTabs);
+      setTabs((current) => mergeResearchTabs(current, nextTabs));
       setActiveTabId(nextTabs[0]?.id ?? null);
     } finally {
       setResearching(false);

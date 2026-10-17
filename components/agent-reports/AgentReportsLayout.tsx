@@ -3,6 +3,7 @@
 import { PageContent } from "@/components/shell/PageContent";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
 import type { ReactNode } from "react";
 import { useAgentWorkspaceAccess } from "./AgentWorkspaceAccessProvider";
 
@@ -22,9 +23,13 @@ export function AgentReportsToolbar({
   action,
 }: Readonly<{ description: string; action?: ReactNode }>) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <p className="m-0 max-w-2xl text-[13px] leading-normal text-fg-muted">{description}</p>
-      {action ? <div>{action}</div> : null}
+    <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="m-0 min-w-0 max-w-2xl text-[13px] leading-normal text-fg-muted">
+        {description}
+      </p>
+      {action ? (
+        <div className="self-end sm:ml-auto sm:shrink-0 sm:self-center">{action}</div>
+      ) : null}
     </div>
   );
 }
@@ -44,7 +49,8 @@ export function AgentReportsLoading({
               <Button
                 disabled
                 tabIndex={-1}
-                variant="secondary"
+                size="sm"
+                startIcon={<PlusIcon aria-hidden size={15} weight="regular" />}
                 className="text-transparent bg-bg-sunken motion-safe:animate-pulse"
               >
                 {addReportLabel}

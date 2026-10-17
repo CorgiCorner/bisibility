@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { ModuleMark } from "@/components/ui/ModuleMark";
+import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import { ArrowLeftIcon as ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react/dist/csr/GoogleLogo";
@@ -34,6 +35,7 @@ export type SearchInsightsGa4PropertyPickerProps = {
 
 function DiscoveryMessage({ setup }: Readonly<{ setup: GoogleOAuthSetup }>) {
   const t = useTranslations("projectSearchInsights.copy");
+  if (setup.failure) return <span>{googlePropertyFailureMessage(setup.failure, t)}</span>;
   if (setup.failureClass) {
     return (
       <span className="flex flex-col gap-1">

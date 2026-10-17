@@ -11,13 +11,15 @@ import { resolveKeywordPersonalView } from "@/lib/project-surface-preferences/ke
 import { getPersonalSurfacePreference } from "@/lib/project-surface-preferences/query";
 import { resolvePersonalViewSelection } from "@/lib/project-surface-preferences/selection-resolver";
 import { privateViewCreationCapability } from "@/lib/saved-views/creation-extension";
+import { cache } from "react";
 import { requireReadableProject } from "./_auth";
 import { listSessionSavedViews } from "./saved-views";
 
-/** Scope validation precedes the data query; suggestions or one table page are not its universe. */
-export async function loadRankTrackerPersonalContext(projectRef: string, params: NextSearchParams) {
+const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn) => fn;
+
+// Page and parallel header share inputs, but each resolves its own URL parameters.
+const loadPersonalInputs = perRequestCache(async (projectRef: string) => {
   const { actor, project } = await requireReadableProject(projectRef);
-  const parsed = parseRankTrackerQuery(params);
   const [views, preference, locations, markets, tags] = await Promise.all([
     listSessionSavedViews(project.publicId, "keywords"),
     getPersonalSurfacePreference(project.publicId, "keywords"),
@@ -32,6 +34,14 @@ export async function loadRankTrackerPersonalContext(projectRef: string, params:
     }),
     prisma.tag.findMany({ where: { projectId: project.id }, select: { name: true } }),
   ]);
+  return { actor, project, views, preference, locations, markets, tags };
+});
+
+/** Scope validation precedes the data query; suggestions or one table page are not its universe. */
+export async function loadRankTrackerPersonalContext(projectRef: string, params: NextSearchParams) {
+  const { actor, project, views, preference, locations, markets, tags } =
+    await loadPersonalInputs(projectRef);
+  const parsed = parseRankTrackerQuery(params);
   const selection = resolvePersonalViewSelection({
     explicitViewId: parsed.state.savedViewId,
     explicitViewPresent: parsed.present.has("savedViewId"),

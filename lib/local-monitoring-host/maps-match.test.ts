@@ -179,6 +179,15 @@ describe("trusted Maps collection match capture and immutable replay", () => {
     await retainMapsCollectionMatch({ ...f.input, replay: true });
     expect(mocked.registry).toHaveBeenCalledTimes(1);
   });
+  it("replays original v1 decisions without rewriting or rematching them", async () => {
+    const f = setup();
+    await retainMapsCollectionMatch(f.input);
+    for (const decision of f.decisions) decision.matcherVersion = "business-match-maps-v1";
+    const before = structuredClone(f.decisions);
+    await retainMapsCollectionMatch({ ...f.input, replay: true });
+    expect(f.decisions).toEqual(before);
+    expect(mocked.registry).toHaveBeenCalledTimes(1);
+  });
   it("missing original authority, changed source or CAS failure blocks collection", async () => {
     const f = setup();
     await expect(retainMapsCollectionMatch({ ...f.input, replay: true })).rejects.toThrow(

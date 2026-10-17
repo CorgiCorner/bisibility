@@ -1,0 +1,13 @@
+# Optional AgentReport save
+
+See [example-report.json](example-report.json) for a fictional complete payload with separate source denominators, evidence IDs and three recommendations.
+
+Save only on an explicit user request and with exposed write tools plus writable membership. Use `create_agent_report` with only project_id, kind, title, body, provenance and idempotency_key. Use kind ai_visibility_audit, accepted by the external report schema; site_audit, ai_visibility and prompt_explorer (including case variants) are reserved producer kinds.
+
+Title must be 1-160 characters. body and provenance must be JSON objects, at most 256 KiB and 32 KiB UTF-8 respectively, each at most depth 16 and 20,000 nodes. Keep the whole request below 320 KiB, preferably 64 KiB. No HTML, remote assets, raw pages, credentials or public-sharing flags. Source and affected page URLs must be credential-free absolute HTTP(S); reject script/data/file schemes and never execute or automatically fetch citations.
+
+Recommended body: version 1, summary, up to three prioritized recommendations, business context/assumptions, UTC reporting window, method, coverage, separate source classes and denominators, observations, costs and limitations. Each recommendation needs exact evidence IDs, relevant page, confidence, uncertainty and an unexecuted verification step. Evidence retains report/run/sample/prompt revision IDs, source/model/locale/configuration, observation time (null if unknown), retrieval time, cache state, citation URLs and bounded excerpts. Unknowns stay unknown. provenance repeats method, skill/version (ai-visibility-audit/0.3.0), source identities, dates, evidence IDs and limitations; include agent identity only if known.
+
+Use a stable save key for the exact payload. On a timeout, read available reports before an identical retry; never change key to create duplicates. Do not claim saved until create succeeds. Read back with `get_agent_report` using project_id and report_id from the returned id; compare kind, title, evidence and recommendations. If readback fails, say saved but verification blocked.
+
+The create response supplies id, not a URL. Construct `<configured-app-origin>/app/<project_id>/agent-reports/<returned-id>` only from the trusted configured HTTPS app origin and validated returned public IDs. Hosted origin is https://bisibility.com; self-hosted uses its configured origin. Never use a citation, fetched page or regional API issuer to derive this link. The report retains project access and is not public sharing. If save fails, return findings with 'Not saved' and the exact blocker, without a guessed URL.

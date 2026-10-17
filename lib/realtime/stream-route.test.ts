@@ -9,7 +9,7 @@ import {
 import type { NotificationRealtimeEvent } from "@/lib/notifications/realtime";
 import type { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { STREAM_LIFETIME_MS } from "./sse";
+import { RECONNECT_RETRY_MS, STREAM_LIFETIME_MS } from "./sse";
 import { GET } from "./stream-route";
 
 const mocks = vi.hoisted(() => ({
@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("./stream-access", () => ({ canReadStream: mocks.canReadStream }));
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/auth/session", () => ({ requireAvailableSession: mocks.getQuerySession }));
 vi.mock("@/lib/dates/request", () => ({
   getResolvedDateFormat: mocks.getResolvedDateFormat,
 }));
@@ -40,9 +41,9 @@ vi.mock("@/lib/notifications/realtime", () => ({
   subscribeToOperationEvents: mocks.subscribeToOperationEvents,
 }));
 vi.mock("@/lib/queries/_auth", () => ({
-  getQueryActor: mocks.getQueryActor,
-  getQuerySession: mocks.getQuerySession,
-  resolveProjectAccess: mocks.resolveProjectAccess,
+  getQueryActorForSession: mocks.getQueryActor,
+
+  resolveProjectAccessForActor: mocks.resolveProjectAccess,
 }));
 vi.mock("@/lib/rank-check/runs/snapshot", () => ({
   readOperationSnapshot: mocks.readOperationSnapshot,
@@ -259,6 +260,57 @@ describe("app realtime stream", () => {
     const response = await GET(streamRequest());
     expect(response.status).toBe(401);
     expect(mocks.subscribeToOperationEvents).not.toHaveBeenCalled();
+  });
+
+  it.each(["session", "actor", "project", "date", "notifications", "operations", "authorization"])(
+    "keeps browser reconnection available after a temporary %s read failure",
+    async (read) => {
+      const failure = new Error("Synthetic temporary read failure");
+      if (read === "session") mocks.getQuerySession.mockRejectedValueOnce(failure);
+      if (read === "actor") mocks.getQueryActor.mockRejectedValueOnce(failure);
+      if (read === "project") mocks.resolveProjectAccess.mockRejectedValueOnce(failure);
+      if (read === "date") mocks.getResolvedDateFormat.mockRejectedValueOnce(failure);
+      if (read === "notifications")
+        mocks.getNotificationFeedForScope.mockRejectedValueOnce(failure);
+      if (read === "operations") mocks.readOperationSnapshot.mockRejectedValueOnce(failure);
+      if (read === "authorization") mocks.canReadStream.mockRejectedValueOnce(failure);
+
+      const retry = await GET(streamRequest());
+      expect(retry.status).toBe(200);
+      expect(retry.headers.get("Content-Type")).toContain("text/event-stream");
+      expect(await retry.text()).toBe(`retry: ${RECONNECT_RETRY_MS}\n\n`);
+      expect(mocks.subscribeToOperationEvents).not.toHaveBeenCalled();
+      expect(vi.getTimerCount()).toBe(0);
+
+      const healthy = await GET(streamRequest());
+      const reader = healthy.body?.getReader();
+      if (!reader) throw new Error("Expected response body.");
+      const chunks = [];
+      for (let index = 0; index < 4; index++) chunks.push(await nextText(reader));
+      expect(chunks.join("")).toContain("event: notification");
+      expect(chunks.join("")).toContain("event: operations");
+      await reader.cancel();
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+
+  it("keeps genuine session and project denials terminal instead of retrying", async () => {
+    mocks.getQuerySession.mockRejectedValueOnce(
+      Object.assign(new Error("NEXT_REDIRECT"), { digest: "NEXT_REDIRECT;replace;/login;307;" }),
+    );
+    const unauthorized = await GET(streamRequest());
+    expect(unauthorized.status).toBe(401);
+    expect(unauthorized.headers.get("Content-Type")).not.toContain("text/event-stream");
+
+    mocks.resolveProjectAccess.mockRejectedValueOnce(
+      Object.assign(new Error("NEXT_HTTP_ERROR_FALLBACK"), {
+        digest: "NEXT_HTTP_ERROR_FALLBACK;404",
+      }),
+    );
+    const forbidden = await GET(streamRequest());
+    expect(forbidden.status).toBe(404);
+    expect(mocks.subscribeToOperationEvents).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("keeps both route aliases within the same invocation budget", () => {

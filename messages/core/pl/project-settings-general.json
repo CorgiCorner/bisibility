@@ -47,6 +47,54 @@
       "usageKeywordOnly": "{count, plural, one {Używany przez # słowo kluczowe.} few {Używany przez # słowa kluczowe.} many {Używany przez # słów kluczowych.} other {Używany przez # słowa kluczowego.}}",
       "usageSegmentOnly": "{count, plural, one {Używany przez # segment.} few {Używany przez # segmenty.} many {Używany przez # segmentów.} other {Używany przez # segmentu.}}",
       "writeError": "Nie udało się dodać tagu."
+    },
+    "dataCache": {
+      "title": "Cache danych",
+      "help": "Wspólny dla modułów tego projektu. Skrócenie czasu obejmuje też zapisane wyniki; wydłużenie dotyczy nowo pobranych. Raporty, historia pomiarów i potwierdzenia rozliczeń zostają.",
+      "lifetime": "Używaj ponownie przez",
+      "default": "Domyślnie dla instancji",
+      "hours": "{count, plural, one {# godzina} few {# godziny} many {# godzin} other {# godziny}}",
+      "days": "{count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
+      "save": "Zapisz",
+      "saved": "Zapisano",
+      "list": "Zapisane wyniki",
+      "refresh": "Odśwież listę",
+      "next": "Następna strona",
+      "back": "Pierwsza strona",
+      "empty": "Na tej stronie nie ma zapisanych wyników.",
+      "unavailable": "Nie udało się odczytać cache. Ponów odczyt po przywróceniu połączenia.",
+      "error": "Nie udało się zapisać zmiany. Spróbuj ponownie.",
+      "conflict": "Ustawienia zmieniły się w innej karcie. Odśwież listę przed zapisem.",
+      "readOnly": "Edytorzy projektu mogą zmieniać czas ważności i usuwać wyniki.",
+      "delete": "Usuń",
+      "busy": "Ten wynik jest właśnie odświeżany. Spróbuj po zakończeniu wyszukiwania.",
+      "expires": "Ważny do {date}",
+      "unknownKeyword": "Metryki frazy",
+      "source": {
+        "related": "Powiązane",
+        "suggestion": "Sugestie",
+        "idea": "Pomysły",
+        "metrics": "Metryki",
+        "backlinks": "Backlinki",
+        "overview": "Podsumowanie",
+        "history": "Historia",
+        "keywords": "Frazy",
+        "pages": "Strony",
+        "ai_visibility": "Widoczność w AI",
+        "prompt_explorer": "Badanie promptów",
+        "site_audit": "Audyt strony"
+      },
+      "notice": "Usunięcie wyniku nie uruchamia wyszukiwania. Kolejne wyszukiwanie może wymagać płatnego zapytania.",
+      "module": {
+        "keyword_research": "Wyszukiwanie fraz",
+        "keyword_metrics": "Metryki fraz",
+        "ranked_keywords": "Rankujące słowa",
+        "backlinks": "Backlinki",
+        "domain_overview": "Przegląd domeny",
+        "ai_visibility": "Widoczność w AI",
+        "prompt_explorer": "Badanie promptów",
+        "site_audit": "Audyt strony"
+      }
     }
   }
 }

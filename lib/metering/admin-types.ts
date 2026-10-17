@@ -1,6 +1,9 @@
 import type { BudgetRow, ExceptionsView, UsageView } from "@usagekit/views";
 export type MeteringAdminFilters = { month: string; project: string | null };
+export type MeteringAdminSection = "usage" | "exceptions";
 export type MeteringAdminCursors = {
+  section?: MeteringAdminSection;
+  includeBudgets?: boolean;
   usageCursor?: string;
   exceptionCursor?: string;
   exceptionTo?: string;
@@ -8,6 +11,8 @@ export type MeteringAdminCursors = {
 export type MeteringAdminData = {
   usage: UsageView;
   budgets: BudgetRow[];
+  budgetsUnavailable?: boolean;
+  budgetsOmitted?: boolean;
   exceptions: ExceptionsView;
   projects: string[];
   truncated: boolean;

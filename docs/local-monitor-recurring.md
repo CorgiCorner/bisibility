@@ -27,3 +27,14 @@ Point history uses the exact captured target, including its immutable keyword, g
 Freshness uses the current explicit project policy together with the original intent linked to each occurrence. A manual run uses configured manual TTL; scheduled runs use two successor slots of their captured monitor calendar plus configured tolerance, preserving real timezone/DST/jitter behavior. Missing policy or original calendar stays unknown. A stale positive rank remains visible with its real observation time, while fresh coverage excludes it. JSON/CSV manifests include the policy epoch, configuration revision and basis; this describes evaluation now, not proof that today's policy existed at the old observation time.
 
 The staged pilot permits1×1,3×3 and5×5 definitions and first-send preparation, subject to the existing explicit quote and budget gates. Retained7×7 geometry/history remains readable; larger grids require a separate scope/budget pilot decision before new authoring or execution. Already accepted runs retain collection and recovery authority.
+
+## Connection configuration and upgrade consent
+
+Usage timestamps and background synchronization do not change a connection's approved configuration. Local consent binds the connection's semantic configuration and credential revision, including rate edits and configuration changes that are later reversed. Definition, calendar, scope, price and capability checks remain independent.
+
+After upgrading from timestamp-based connection stamps, request a new preview and explicitly approve future measurements. Older approvals and queued first-send commands do not silently adopt the new stamp. Previously blocked monitors stay blocked until reviewed; upgrading does not enable a schedule. Original accepted tasks retain their existing collection and accounting recovery path.
+
+
+## Matcher version compatibility
+
+New business decisions use `business-match-v2` or `business-match-maps-v2`, which separates proven paid appearances from organic identity ambiguity while unknown promotion remains potentially organic. Existing v1 decisions remain immutable and readable under their original version; accepted task recovery verifies those retained decisions without rematching. Reports preserve the stored matcher version in evidence and comparison keys. Different matcher versions do not form one comparable series. A grid collected across a matcher upgrade retains every point and receipt, but its ranking rate and sample bounds are unavailable with `matcher_version_mixed`. Coverage and counts stay factual; homogeneous grids in the same run remain available. A new version does not trigger historical rematching, provider requests or schedule activation.

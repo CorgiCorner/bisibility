@@ -82,7 +82,12 @@ export async function previewMeasurementSettingsHost(
         providerId: request.selection.providerId,
         depth: request.selection.depth as SerpDepth,
         selection: { selection: request.selection, scheduleId: request.scheduleId },
-        source: { sourceHash: source.sourceHash, manual, nativeToken: run.previewToken },
+        source: {
+          policyEpoch: source.policy.policyEpoch,
+          sourceHash: source.sourceHash,
+          manual,
+          nativeToken: run.previewToken,
+        },
       };
       const measurement = signSettingsQuote("manual", binding, asOf);
       const schedule =
@@ -96,7 +101,11 @@ export async function previewMeasurementSettingsHost(
                   schedule: request.schedule,
                   scheduleId: request.scheduleId,
                 },
-                source: { sourceHash: source.sourceHash, forecast },
+                source: {
+                  policyEpoch: source.policy.policyEpoch,
+                  sourceHash: source.sourceHash,
+                  forecast,
+                },
               },
               asOf,
             )
@@ -117,7 +126,12 @@ export async function previewMeasurementSettingsHost(
           providerId: null,
           depth: request.selection.depth as SerpDepth,
           selection: { scheduleId: request.scheduleId, selection: intentSelection },
-          source: { sourceHash: source.sourceHash, selection: intentSelection, intentEffect },
+          source: {
+            policyEpoch: source.policy.policyEpoch,
+            sourceHash: source.sourceHash,
+            selection: intentSelection,
+            intentEffect,
+          },
         },
         asOf,
       );

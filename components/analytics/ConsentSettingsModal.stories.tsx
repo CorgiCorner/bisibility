@@ -29,9 +29,10 @@ export const Default: Story = {};
 export const ChooseReplay: Story = {
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
-    const replay = body.getByRole("switch", { name: /Replays/ });
+    const replay = body.getByRole("switch", { name: /Redacted replays/ });
     await expect(replay).toBeEnabled();
-    await userEvent.click(replay);
+    await expect(replay).toBeChecked();
+    await userEvent.click(body.getByRole("switch", { name: /Usage analytics/ }));
     await userEvent.click(body.getByRole("button", { name: "Save" }));
     await expect(saveConsent).toHaveBeenCalledWith({ analytics: false, replay: true });
   },

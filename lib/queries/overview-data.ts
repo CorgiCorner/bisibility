@@ -1,3 +1,4 @@
+import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 
 import { localOverviewKeywordWhere } from "@/lib/dashboard-local/overview-scope";
@@ -115,51 +116,72 @@ export async function loadOverviewMetricData(
       eligible,
       now,
     );
-    const policy = report.policyAt(now);
-    const keywords = eligible.map((keyword) => {
-      const captured = metadata.get(keyword.publicId);
-      return {
-        ...keyword,
-        measurementPolicy: {
-          asOf: new Date(now.getTime()),
-          ...targetReportBaseline({ baselineWindow: captured?.baselineWindow ?? null }, policy),
-          expectedScope: captured?.expectedScope ?? null,
-          freshForMs: captured?.freshForMs ?? null,
-          requireCurrentScope: true,
-        },
-      };
-    });
-    const keywordVolumes = new Map(
-      keywords.map((keyword) => [keyword.id, metadata.get(keyword.publicId)?.volume ?? null]),
-    );
-
     return {
-      addedThisMonth,
-      filteredKeywordCount,
-      eligibleTargetCount: keywords.length,
-      filters,
-      keywordVolumes,
-      keywords,
-      latestCheck,
-      marketKeywords: options.includeMarkets ? keywords : [],
-      projectMarkets: projectMarkets
-        .filter(
-          (market) =>
-            options.keywordIds === undefined ||
-            selectedKeywords.some((keyword) => keyword.locationId === market.locationId),
-        )
-        .map((market) => ({
-          ...market,
-          researchAvailable: supportsResearchScope(
-            market.location.countryCode,
-            market.location.languageCode,
-          ),
-        })),
       projectDefaults,
+      selectedKeywords,
+      projectMarkets,
+      filteredKeywordCount,
+      addedThisMonth,
+      latestCheck,
+      metadata,
       where,
     };
   };
-  return options.tx
-    ? read(options.tx)
-    : prisma.$transaction(read, { isolationLevel: "RepeatableRead" });
+  const {
+    projectDefaults,
+    selectedKeywords,
+    projectMarkets,
+    filteredKeywordCount,
+    addedThisMonth,
+    latestCheck,
+    metadata,
+    where,
+  } = options.tx
+    ? await read(options.tx)
+    : await prisma.$transaction(read, REPORT_READ_TRANSACTION);
+  // Pure display projection runs after our owned transaction releases its connection.
+  const eligible = selectedKeywords;
+  const policy = report.policyAt(now);
+  const keywords = eligible.map((keyword) => {
+    const captured = metadata.get(keyword.publicId);
+    return {
+      ...keyword,
+      measurementPolicy: {
+        asOf: new Date(now.getTime()),
+        ...targetReportBaseline({ baselineWindow: captured?.baselineWindow ?? null }, policy),
+        expectedScope: captured?.expectedScope ?? null,
+        freshForMs: captured?.freshForMs ?? null,
+        requireCurrentScope: true,
+      },
+    };
+  });
+  const keywordVolumes = new Map(
+    keywords.map((keyword) => [keyword.id, metadata.get(keyword.publicId)?.volume ?? null]),
+  );
+
+  return {
+    addedThisMonth,
+    filteredKeywordCount,
+    eligibleTargetCount: keywords.length,
+    filters,
+    keywordVolumes,
+    keywords,
+    latestCheck,
+    marketKeywords: options.includeMarkets ? keywords : [],
+    projectMarkets: projectMarkets
+      .filter(
+        (market) =>
+          options.keywordIds === undefined ||
+          selectedKeywords.some((keyword) => keyword.locationId === market.locationId),
+      )
+      .map((market) => ({
+        ...market,
+        researchAvailable: supportsResearchScope(
+          market.location.countryCode,
+          market.location.languageCode,
+        ),
+      })),
+    projectDefaults,
+    where,
+  };
 }

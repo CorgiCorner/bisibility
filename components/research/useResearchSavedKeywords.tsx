@@ -21,12 +21,10 @@ type UseResearchSavedKeywordsInput = {
 };
 
 function SavedToastMessage({
-  alreadySaved,
-  count,
+  label,
+  linkLabel,
   projectRef,
-}: Readonly<{ alreadySaved: boolean; count: number; projectRef: string }>) {
-  const t = useTranslations("projectResearch.saved");
-  const label = alreadySaved ? t("alreadySaved", { count }) : t("savedCount", { count });
+}: Readonly<{ label: string; linkLabel: string; projectRef: string }>) {
   return (
     <>
       {label} /{" "}
@@ -34,7 +32,7 @@ function SavedToastMessage({
         className="font-semibold hover:underline"
         href={rankTrackerTabPath(projectRef, "saved")}
       >
-        {t("viewSaved")}
+        {linkLabel}
       </Link>
     </>
   );
@@ -48,6 +46,7 @@ export function useResearchSavedKeywords({
   saveKeywordsAction,
 }: UseResearchSavedKeywordsInput) {
   const { showToast } = useToast();
+  const t = useTranslations("projectResearch.saved");
 
   async function save(draft: ResearchSaveDraft) {
     try {
@@ -57,8 +56,8 @@ export function useResearchSavedKeywords({
       if (outcome.savedCount === 0) {
         showToast(
           <SavedToastMessage
-            alreadySaved
-            count={outcome.duplicateCount || draft.rows.length}
+            label={t("alreadySaved", { count: outcome.duplicateCount || draft.rows.length })}
+            linkLabel={t("viewSaved")}
             projectRef={projectId}
           />,
           {
@@ -75,8 +74,8 @@ export function useResearchSavedKeywords({
         .map((row) => row.keyword);
       showToast(
         <SavedToastMessage
-          alreadySaved={false}
-          count={outcome.savedCount}
+          label={t("savedCount", { count: outcome.savedCount })}
+          linkLabel={t("viewSaved")}
           projectRef={projectId}
         />,
         {

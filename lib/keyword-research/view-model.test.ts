@@ -48,3 +48,20 @@ describe("keyword research view model", () => {
     ).toHaveLength(1);
   });
 });
+
+it("filters the full keyword text case-insensitively together with metric filters", () => {
+  const rows = [
+    row({ keyword: "Best Rank Tracker", difficulty: 12 }),
+    row({ keyword: "Rank checker", difficulty: 80 }),
+    row({ keyword: "Backlinks", difficulty: 12 }),
+  ];
+  expect(
+    applyResearchFilters(rows, {
+      ...emptyResearchFilters,
+      query: " RANK ",
+      difficulty: ["easy"],
+    }).map((row) => row.keyword),
+  ).toEqual(["Best Rank Tracker"]);
+  expect(applyResearchFilters(rows, { ...emptyResearchFilters, query: "missing" })).toEqual([]);
+  expect(applyResearchFilters(rows, { ...emptyResearchFilters, query: "  " })).toHaveLength(3);
+});

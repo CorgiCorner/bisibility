@@ -1,3 +1,4 @@
+import { withProjectCachePolicy } from "@/lib/provider-lookups/project-cache-policy";
 import { requestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { RankedKeywordsPage, RelevantPagesResult } from "@/lib/providers/types";
 import { domainOverviewCacheKey, domainOverviewFailure, loadDomainOverviewModule } from "./cache";
@@ -35,34 +36,41 @@ async function loadDomainPage<T extends "keywords" | "pages">(
       offset: Math.max(0, Math.trunc(options.offset)),
     };
     const { project, source } = await requireDomainOverviewSource(context.projectId);
-    const estimate = domainOverviewEstimate({
-      keywordLimit: input.limit,
-      pageLimit: input.limit,
-      source,
-    })[module];
-    const common = {
-      ...input,
-      costLimit: requestCostLimit(options.maxCostCents),
-      origin: context.origin,
-      projectId: project.id,
-      source,
-    };
-    const load = async () => {
-      const data =
-        module === "keywords" ? await fetchDomainKeywords(common) : await fetchDomainPages(common);
-      return { costCents: data.costCents, data };
-    };
-    return (await loadDomainOverviewModule({
-      beforeLoad: () => assertDomainOverviewMaxCost(estimate, options.maxCostCents),
-      fresh: options.fresh,
-      key: domainOverviewCacheKey({
-        ...input,
-        module,
-        projectId: project.id,
-        provider: source.provider.id,
-      }),
-      load,
-    })) as DomainModuleOutcome<DomainPageData[T]>;
+    return await withProjectCachePolicy(
+      project.lookupCacheTtlSeconds,
+      async (): Promise<DomainModuleOutcome<DomainPageData[T]>> => {
+        const estimate = domainOverviewEstimate({
+          keywordLimit: input.limit,
+          pageLimit: input.limit,
+          source,
+        })[module];
+        const common = {
+          ...input,
+          costLimit: requestCostLimit(options.maxCostCents),
+          origin: context.origin,
+          projectId: project.id,
+          source,
+        };
+        const load = async () => {
+          const data =
+            module === "keywords"
+              ? await fetchDomainKeywords(common)
+              : await fetchDomainPages(common);
+          return { costCents: data.costCents, data };
+        };
+        return (await loadDomainOverviewModule({
+          beforeLoad: () => assertDomainOverviewMaxCost(estimate, options.maxCostCents),
+          fresh: options.fresh,
+          key: domainOverviewCacheKey({
+            ...input,
+            module,
+            projectId: project.id,
+            provider: source.provider.id,
+          }),
+          load,
+        })) as DomainModuleOutcome<DomainPageData[T]>;
+      },
+    );
   } catch (error) {
     return domainOverviewFailure(error);
   }

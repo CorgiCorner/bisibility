@@ -17,6 +17,13 @@ export function ResearchSeedTabs({
   tabs: ResearchTab[];
 }>) {
   const t = useTranslations("projectResearch.tabs");
+  const searchT = useTranslations("projectResearch.search");
+  const modeLabels = {
+    auto: searchT("modeAuto"),
+    related: searchT("modeRelated"),
+    suggestions: searchT("modeSuggestions"),
+    ideas: searchT("modeIdeas"),
+  };
   if (tabs.length <= 1) return null;
   return (
     <div
@@ -31,7 +38,7 @@ export function ResearchSeedTabs({
             className={`-mb-px flex items-center gap-1 border-b-2 px-3 transition-colors ${active ? "border-accent" : "border-transparent"}`}
             key={tab.id}
           >
-            <Tooltip content={tab.seed}>
+            <Tooltip content={`${tab.seed} · ${modeLabels[tab.mode]}`}>
               <button
                 aria-selected={active}
                 className={`max-w-[190px] truncate py-2.5 text-[13px] font-semibold transition-colors ${active ? "text-fg" : "text-fg-muted hover:text-fg"}`}
@@ -40,6 +47,9 @@ export function ResearchSeedTabs({
                 type="button"
               >
                 {tab.seed}
+                <span className="ml-2 text-[11px] font-normal text-fg-muted">
+                  {modeLabels[tab.mode]}
+                </span>
               </button>
             </Tooltip>
             {onClose ? (

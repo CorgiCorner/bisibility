@@ -1,4 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
+import { adminUsageFixture } from "./shared-view-fixtures";
 
 const mocks = vi.hoisted(() => ({ guard: vi.fn(), audit: vi.fn(), read: vi.fn() }));
 vi.mock("@/lib/auth/instance-admin", () => ({ requireInstanceAdmin: mocks.guard }));
@@ -110,3 +111,15 @@ it.each([
   expect(mocks.audit).not.toHaveBeenCalled();
   expect(mocks.read).not.toHaveBeenCalled();
 });
+
+it.each(["usage", "exceptions"] as const)(
+  "passes an explicit %s section to the reader",
+  async (section) => {
+    mocks.guard.mockResolvedValue({ user: { id: "admin1" } });
+    mocks.read.mockResolvedValue(adminUsageFixture());
+    await getMeteringAdminPage({ month: "2026-10", section });
+    expect(mocks.read).toHaveBeenCalledWith(
+      expect.objectContaining({ section, includeBudgets: false }),
+    );
+  },
+);

@@ -43,3 +43,44 @@ Rows may include source domain and URL, anchor, target URL, nofollow, UGC, spons
 7. Data limitations and recommended next investigations
 
 Do not perform outreach, publish findings, or recommend a disavow action as an automatic consequence of this report.
+
+## Schema-checked example calls
+
+Illustrative inputs only. Replace placeholder IDs with returned IDs and confirm the exact scope. Caps below are examples, not quotes or approval. Run the free quote first; execute only after explicit approval of the exact operation and cap.
+
+Free quote omits max_cost_cents:
+
+```json mcp-call
+{
+  "tool": "analyze_backlinks",
+  "arguments": {
+    "project_id": "prj_a00000000000000000000000",
+    "target": "example.com",
+    "target_scope": "site",
+    "include_subdomains": true,
+    "mode": "one_per_domain",
+    "result_limit": 100,
+    "fresh": false,
+    "estimate_only": true
+  }
+}
+```
+
+Approval must label the positive cap best-effort (may slightly exceed). Approved execution:
+
+```json mcp-call
+{
+  "tool": "analyze_backlinks",
+  "arguments": {
+    "project_id": "prj_a00000000000000000000000",
+    "target": "example.com",
+    "target_scope": "site",
+    "include_subdomains": true,
+    "mode": "one_per_domain",
+    "result_limit": 100,
+    "fresh": false,
+    "estimate_only": false,
+    "max_cost_cents": 100
+  }
+}
+```

@@ -43,3 +43,27 @@ tracking. Saved phrases also appear on
 you add them as keywords. Already-tracked phrases are marked **Tracked**.
 
 API request shapes stay on [Keyword research](/api/keyword-research).
+
+## Project data cache
+
+In **Settings > General > Data cache**, project editors can choose how long results
+are reused and inspect or remove cached entries. Members with read access can inspect
+the list. The setting is shared by the project across UI, API and agent requests.
+
+It covers keyword research, keyword metrics, ranked keywords, backlinks, domain
+overview, AI Research and site-audit reuse. The instance default preserves each
+module's existing retention; an explicit duration applies across these modules.
+Shortening the duration also limits existing results. Extending it applies to new
+results and does not revive expired data. The list identifies the module, provider,
+scope and expiry when known. Keyword modes remain separate in the workspace; Auto
+may reuse the same source results as a specific mode.
+
+Removing cache does not run provider requests or delete saved reports and measurement
+history. It also leaves accepted tasks, accounting receipts, authentication sessions
+and provider capability catalogs intact. A later explicit search may require a new
+paid request and still follows its normal preview and budget controls. A refresh in
+progress keeps its lock; retry removal after it completes.
+
+Self-host upgrades require the accompanying database migration before the updated
+application starts. Rollback must retain the additive columns. Existing result
+payloads remain readable during the upgrade.

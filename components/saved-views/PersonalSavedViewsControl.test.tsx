@@ -6,6 +6,7 @@ import {
   viewProjectId,
 } from "@/lib/saved-views/view-test-fixture";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PersonalSavedViewsControl } from "./PersonalSavedViewsControl";
 import type { PersonalSavedViewsControlProps } from "./personal-control-types";
@@ -82,6 +83,26 @@ describe("personal saved-view explicit commands", () => {
     );
   });
 
+  it("closes a truncated-name hint when selecting a view without reopening it on restored focus", async () => {
+    const user = userEvent.setup();
+    const props = propsFixture();
+    render(<PersonalSavedViewsControl {...props} />);
+    const trigger = screen.getByRole("button", { name: "Service mobile" });
+    const name = within(trigger).getByText("Service mobile");
+    Object.defineProperties(name, {
+      scrollWidth: { value: 300 },
+      clientWidth: { value: 100 },
+    });
+    await user.hover(trigger);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Service mobile");
+    await user.click(trigger);
+    await user.click(await screen.findByRole("menuitem", { name: "General" }));
+    await waitFor(() => expect(screen.queryByRole("tooltip")).not.toBeInTheDocument());
+    fireEvent.focus(trigger);
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    expect(props.onSelect).toHaveBeenCalledWith(null);
+  });
+
   it("keeps a shared view unchanged while a viewer has an unsaved variant", () => {
     const props = propsFixture();
     props.views = props.views.map((view) => ({
@@ -94,7 +115,11 @@ describe("personal saved-view explicit commands", () => {
     expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save as" })).toBeEnabled();
     expect(props.updateAction).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+    const viewTrigger = screen.getByRole("button", { name: "Service mobile" });
+    expect(within(viewTrigger).getByText("Unsaved changes")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Discard" })).not.toBeInTheDocument();
+    fireEvent.click(viewTrigger);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Discard" }));
     expect(props.onDiscard).toHaveBeenCalledOnce();
     expect(props.createAction).not.toHaveBeenCalled();
   });

@@ -1,12 +1,12 @@
 import "server-only";
 
 import { ProviderAuthError } from "@/lib/providers/auth-error";
-import { ProviderHttpError } from "@/lib/providers/failure-class";
 import {
   consumeProviderLimit,
   ProviderRateLimitedError,
   writeCooldown,
 } from "@/lib/providers/rate-limit";
+import { googleResponseError } from "./google-failure";
 
 // Shared runtime client for the Google analytics adapters (GSC + GA4). The OAuth
 // connect flow stores a refresh token; adapters mint short-lived access tokens on
@@ -97,15 +97,7 @@ type GoogleTokenPayload = {
   error_description?: unknown;
 };
 
-function tokenError(payload: GoogleTokenPayload | null, fallback: string): string {
-  const reason = stringValue(payload?.error_description) ?? stringValue(payload?.error);
-  return reason ? `${fallback}: ${reason}.` : `${fallback}.`;
-}
-
-async function postToken(
-  body: URLSearchParams,
-  options: { invalidGrantIsAuthError?: boolean } = {},
-): Promise<GoogleTokenPayload | null> {
+async function postToken(body: URLSearchParams): Promise<GoogleTokenPayload | null> {
   const response = await fetch(GOOGLE_TOKEN_URL, {
     body,
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -113,13 +105,7 @@ async function postToken(
   });
   const payload = (await response.json().catch(() => null)) as GoogleTokenPayload | null;
   if (!response.ok) {
-    if (options.invalidGrantIsAuthError && stringValue(payload?.error) === "invalid_grant") {
-      throw new ProviderAuthError("google");
-    }
-    throw new ProviderHttpError(
-      response.status,
-      tokenError(payload, "Google token request failed"),
-    );
+    throw googleResponseError(response.status, payload);
   }
   return payload;
 }
@@ -173,7 +159,6 @@ export async function refreshGoogleAccessToken(
       grant_type: "refresh_token",
       refresh_token: refreshToken,
     }),
-    { invalidGrantIsAuthError: true },
   );
   const accessToken = stringValue(payload?.access_token);
   if (!accessToken) {
@@ -221,7 +206,7 @@ export async function googleApiFetch<T>(
   const payload = (await response.json().catch(() => null)) as (T & GoogleApiErrorPayload) | null;
   if (!response.ok) {
     if (response.status === 401) {
-      throw new ProviderAuthError(context?.providerId ?? "google");
+      throw googleResponseError(response.status, payload, context?.providerId);
     }
     if (response.status === 429 && context) {
       const resetAt = writeCooldown(context.accountKey);
@@ -232,11 +217,7 @@ export async function googleApiFetch<T>(
         source: "provider",
       });
     }
-    const message = stringValue(payload?.error?.message);
-    throw new ProviderHttpError(
-      response.status,
-      message ?? `Google API request failed with status ${response.status}.`,
-    );
+    throw googleResponseError(response.status, payload, context?.providerId);
   }
   return (payload ?? {}) as T;
 }

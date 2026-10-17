@@ -30,6 +30,8 @@ type TrackServerEventOptions = {
   consent: ConsentState;
   distinctId?: string;
   properties?: Record<string, unknown>;
+  timestamp?: Date;
+  uuid?: string;
 };
 
 export async function readConsentFromCookies(): Promise<ConsentState> {
@@ -58,7 +60,7 @@ export async function readAnalyticsSurfaceFromHeaders(): Promise<ServerAnalytics
 
 export async function trackServerEvent(
   event: ServerAnalyticsEvent,
-  { consent, distinctId, properties = {} }: TrackServerEventOptions,
+  { consent, distinctId, properties = {}, timestamp, uuid }: TrackServerEventOptions,
 ): Promise<void> {
   const provider = resolveAnalyticsProvider(process.env);
   if (provider !== "posthog") return;
@@ -67,7 +69,13 @@ export async function trackServerEvent(
 
   const validated = validateEventProps(event, properties);
   try {
-    await captureServerEvent({ distinctId, event, properties: validated });
+    await captureServerEvent({
+      distinctId,
+      event,
+      properties: validated,
+      ...(timestamp ? { timestamp } : {}),
+      ...(uuid ? { uuid } : {}),
+    });
   } catch {
     // Analytics delivery is best effort and must not fail the product mutation it follows.
   }

@@ -1,5 +1,4 @@
 import "server-only";
-
 import { requireApiPublicId } from "@/lib/api/public-id";
 import { rankedKeywordPageRate } from "@/lib/cost-estimate/provider-rates";
 import { prisma } from "@/lib/db/prisma";
@@ -7,6 +6,7 @@ import { normalizeDomain } from "@/lib/domains/normalize";
 import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
 import { requiredConnectionEstimate } from "@/lib/provider-lookups/connection-estimate";
 import { ProviderLookupSignal, paidProviderCall } from "@/lib/provider-lookups/paid-call";
+import { withProjectCachePolicy } from "@/lib/provider-lookups/project-cache-policy";
 import { loadProviderRateContext } from "@/lib/provider-rates/connection-context";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
@@ -77,6 +77,7 @@ async function projectState(projectId: string) {
       defaults: { include: { locationRef: true } },
       domain: true,
       id: true,
+      lookupCacheTtlSeconds: true,
       keywords: { select: { device: true, location: true, locationRef: true, text: true } },
       providerConnections: {
         orderBy: providerChainOrderBy(),
@@ -164,114 +165,120 @@ export async function fetchRankedKeywords(input: {
 }): Promise<RankedKeywordsOutcome> {
   const project = await projectState(input.projectId);
   if (!project) return { ok: false, reason: "no_source" };
-  const domain = normalizeDomain(trackedProjectDomain(project.domain) ?? "");
-  if (!domain) return { ok: false, reason: "no_domain" };
-  const eligible = eligibleConnections(project);
-  const requestedConnectionId = input.connectionId
-    ? requireApiPublicId(input.connectionId, "conn")
-    : undefined;
-  const selected = requestedConnectionId
-    ? eligible.find(({ connection }) => connection.publicId === requestedConnectionId)
-    : eligible[0];
-  if (!selected) return { ok: false, reason: "no_source" };
-  const connections = eligible.map(({ connection, provider }) => ({
-    id: requireApiPublicId(connection.publicId ?? "", "conn"),
-    label: provider.label,
-    provider: provider.id,
-  }));
-  const location = await resolvedLocation(project);
-  const key = rankedKeywordsCacheKey({
-    connectionId: selected.connection.id,
-    limit: input.limit,
-    locationKey: location.key,
-    normalizedDomain: domain,
-    offset: input.offset,
-    projectId: project.id,
-  });
-  try {
-    const lookup = await withRankedKeywordsCache({
-      fresh: input.fresh,
-      key,
-      load: async () => {
-        const rateContext =
-          selected.provider.id === "dataforseo"
-            ? LIST_PROVIDER_RATE_CONTEXT
-            : await loadProviderRateContext(selected.connection.id, "ranked_keywords");
-        const estimatedCostCents = await requiredConnectionEstimate({
-          connection: selected.connection,
-          feature: "ranked_keywords",
-          context: rateContext,
-          itemCount: input.limit,
-          providerId: selected.provider.id,
-          rate: rankedKeywordPageRate(selected.provider.id),
+  return withProjectCachePolicy(
+    project.lookupCacheTtlSeconds,
+    async (): Promise<RankedKeywordsOutcome> => {
+      const domain = normalizeDomain(trackedProjectDomain(project.domain) ?? "");
+      if (!domain) return { ok: false, reason: "no_domain" };
+      const eligible = eligibleConnections(project);
+      const requestedConnectionId = input.connectionId
+        ? requireApiPublicId(input.connectionId, "conn")
+        : undefined;
+      const selected = requestedConnectionId
+        ? eligible.find(({ connection }) => connection.publicId === requestedConnectionId)
+        : eligible[0];
+      if (!selected) return { ok: false, reason: "no_source" };
+      const connections = eligible.map(({ connection, provider }) => ({
+        id: requireApiPublicId(connection.publicId ?? "", "conn"),
+        label: provider.label,
+        provider: provider.id,
+      }));
+      const location = await resolvedLocation(project);
+      const key = rankedKeywordsCacheKey({
+        connectionId: selected.connection.id,
+        limit: input.limit,
+        locationKey: location.key,
+        normalizedDomain: domain,
+        offset: input.offset,
+        projectId: project.id,
+      });
+      try {
+        const lookup = await withRankedKeywordsCache({
+          fresh: input.fresh,
+          key,
+          load: async () => {
+            const rateContext =
+              selected.provider.id === "dataforseo"
+                ? LIST_PROVIDER_RATE_CONTEXT
+                : await loadProviderRateContext(selected.connection.id, "ranked_keywords");
+            const estimatedCostCents = await requiredConnectionEstimate({
+              connection: selected.connection,
+              feature: "ranked_keywords",
+              context: rateContext,
+              itemCount: input.limit,
+              providerId: selected.provider.id,
+              rate: rankedKeywordPageRate(selected.provider.id),
+            });
+            if (input.maxCostCents !== undefined && estimatedCostCents > input.maxCostCents) {
+              throw new RankedKeywordsOutcomeSignal({
+                estimatedCostCents,
+                ok: false,
+                reason: "cost_limit_exceeded",
+              });
+            }
+            const page = await paidProviderCall({
+              call: (credentials, usage) =>
+                selected.provider.fetchRankedKeywords(credentials, {
+                  domain,
+                  limit: input.limit,
+                  location: location.value,
+                  offset: input.offset,
+                  attribution: usage,
+                  tag: usage?.tag,
+                }),
+              connection: selected.connection,
+              credential: input.origin.credential,
+              feature: "ranked_keywords",
+              itemCount: input.limit,
+              projectId: project.id,
+              maxCostCents: input.maxCostCents,
+              provider: selected.provider,
+              rate: rankedKeywordPageRate(selected.provider.id),
+              rateContext,
+              source: input.origin.source,
+              trigger: "manual",
+            });
+            const entry = { ...page, fetchedAt: new Date().toISOString() };
+            return entry;
+          },
         });
-        if (input.maxCostCents !== undefined && estimatedCostCents > input.maxCostCents) {
-          throw new RankedKeywordsOutcomeSignal({
-            estimatedCostCents,
-            ok: false,
-            reason: "cost_limit_exceeded",
-          });
+        if (lookup.status === "contended") {
+          return { ok: false, reason: "rate_limited", resetAt: lookup.resetAt };
         }
-        const page = await paidProviderCall({
-          call: (credentials, usage) =>
-            selected.provider.fetchRankedKeywords(credentials, {
-              domain,
-              limit: input.limit,
-              location: location.value,
-              offset: input.offset,
-              attribution: usage,
-              tag: usage?.tag,
-            }),
-          connection: selected.connection,
-          credential: input.origin.credential,
-          feature: "ranked_keywords",
-          itemCount: input.limit,
-          projectId: project.id,
-          maxCostCents: input.maxCostCents,
-          provider: selected.provider,
-          rate: rankedKeywordPageRate(selected.provider.id),
-          rateContext,
-          source: input.origin.source,
-          trigger: "manual",
-        });
-        const entry = { ...page, fetchedAt: new Date().toISOString() };
-        return entry;
-      },
-    });
-    if (lookup.status === "contended") {
-      return { ok: false, reason: "rate_limited", resetAt: lookup.resetAt };
-    }
-    return success(
-      lookup.value,
-      lookup.cached,
-      input.offset,
-      connections,
-      project.keywords.map((row) => row.text),
-    );
-  } catch (error) {
-    if (error instanceof ProviderLookupSignal) {
-      if (error.outcome.reason === "cost_limit_exceeded")
-        return { ...error.outcome, reason: "cost_limit_exceeded" };
-      if (
-        error.outcome.reason === "budget_exhausted" ||
-        error.outcome.reason === "needs_reauth" ||
-        error.outcome.reason === "rate_limited" ||
-        error.outcome.reason === "unsupported_location"
-      ) {
-        return {
-          ok: false,
-          reason: error.outcome.reason,
-          ...(error.outcome.reason === "budget_exhausted"
-            ? { budgetReason: error.outcome.budgetReason }
-            : {}),
-          ...(error.outcome.reason === "budget_exhausted" && error.outcome.provider !== undefined
-            ? { provider: error.outcome.provider }
-            : {}),
-          ...(error.outcome.resetAt === undefined ? {} : { resetAt: error.outcome.resetAt }),
-        };
+        return success(
+          lookup.value,
+          lookup.cached,
+          input.offset,
+          connections,
+          project.keywords.map((row) => row.text),
+        );
+      } catch (error) {
+        if (error instanceof ProviderLookupSignal) {
+          if (error.outcome.reason === "cost_limit_exceeded")
+            return { ...error.outcome, reason: "cost_limit_exceeded" };
+          if (
+            error.outcome.reason === "budget_exhausted" ||
+            error.outcome.reason === "needs_reauth" ||
+            error.outcome.reason === "rate_limited" ||
+            error.outcome.reason === "unsupported_location"
+          ) {
+            return {
+              ok: false,
+              reason: error.outcome.reason,
+              ...(error.outcome.reason === "budget_exhausted"
+                ? { budgetReason: error.outcome.budgetReason }
+                : {}),
+              ...(error.outcome.reason === "budget_exhausted" &&
+              error.outcome.provider !== undefined
+                ? { provider: error.outcome.provider }
+                : {}),
+              ...(error.outcome.resetAt === undefined ? {} : { resetAt: error.outcome.resetAt }),
+            };
+          }
+        }
+        if (error instanceof RankedKeywordsOutcomeSignal) return error.outcome;
+        throw error;
       }
-    }
-    if (error instanceof RankedKeywordsOutcomeSignal) return error.outcome;
-    throw error;
-  }
+    },
+  );
 }

@@ -753,6 +753,40 @@ describe("SearchInsightsPropertyPicker", () => {
     expect(dialog.textContent).not.toContain("caterful.com?Importing");
   });
 
+  it("shows the safe Google permission action instead of untrusted prose", async () => {
+    renderPicker({
+      loadPropertiesAction: vi.fn().mockResolvedValue({
+        properties: [],
+        error: "access_secret must not appear",
+        failure: { reason: "permission", action: "check_permissions", httpStatus: 403 },
+      }),
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Search Console property" }));
+    expect(
+      await screen.findByText(
+        "This Google account cannot access these properties. Check its permissions in Search Console or Analytics.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/access_secret/)).toBeNull();
+    expect(screen.queryByText("Reconnect the Google account to load its properties.")).toBeNull();
+  });
+
+  it("explains missing OAuth consent before the generic reconnect notice", async () => {
+    renderPicker({
+      loadPropertiesAction: vi.fn().mockResolvedValue({
+        properties: [],
+        requiresReauth: true,
+        failure: { reason: "scope", action: "reauthorize", httpStatus: 403 },
+      }),
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Search Console property" }));
+    expect(
+      await screen.findByText(
+        "Reconnect your Google account and approve the requested permissions for this app.",
+      ),
+    ).toBeVisible();
+  });
+
   it("offers the reconnect message instead of an empty list after a lost consent", async () => {
     renderPicker({
       loadPropertiesAction: vi.fn().mockResolvedValue({ properties: [], requiresReauth: true }),

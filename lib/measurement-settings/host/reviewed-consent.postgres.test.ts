@@ -116,7 +116,12 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
           providerId: null,
           depth: 50,
           selection: { scheduleId: null, selection },
-          source: { sourceHash: captured.sourceHash, selection, intentEffect },
+          source: {
+            policyEpoch: captured.policy.policyEpoch,
+            sourceHash: captured.sourceHash,
+            selection,
+            intentEffect,
+          },
         },
         new Date(),
       );
@@ -155,7 +160,7 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
           purpose: "intent",
           outcome: "settings_saved",
           sourceDigest: captured.sourceHash,
-          policyRevision: null,
+          policyRevision: captured.policy.policyEpoch,
           impact: intentEffect,
           nativeEstimates: null,
         },
@@ -216,7 +221,11 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
           providerId: selection.providerId,
           depth: 50,
           selection: { selection, schedule: draft, scheduleId: schedule.publicId },
-          source: { sourceHash: captured.sourceHash, forecast },
+          source: {
+            policyEpoch: captured.policy.policyEpoch,
+            sourceHash: captured.sourceHash,
+            forecast,
+          },
         },
         asOf,
       );
@@ -240,6 +249,7 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
         consent: {
           confirmed: true,
           purpose: "schedule",
+          policyRevision: captured.policy.policyEpoch,
           sourceDigest: captured.sourceHash,
           calendar: { dueOccurrences: forecast.calendar.dueOccurrences, targetCount: 1 },
           nativeEstimates: forecast.calendar.recurringEstimates,

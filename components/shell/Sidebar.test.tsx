@@ -10,6 +10,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppThemeRoot } from "./AppThemeRoot";
 import { Sidebar } from "./Sidebar";
 
+const interaction = vi.hoisted(() => ({ trackModuleNavigation: vi.fn() }));
+vi.mock("@/lib/analytics/product-interactions", () => interaction);
+
 vi.mock("@/components/shell/SidebarFooter", () => ({
   SidebarFooter: ({ collapsed }: { collapsed: boolean }) => (
     <span data-testid="sidebar-footer">{collapsed ? "icons" : "labels"}</span>
@@ -71,6 +74,25 @@ beforeEach(() => {
 });
 
 describe("Sidebar", () => {
+  it("measures module selection from the shared navigation rail", () => {
+    interaction.trackModuleNavigation.mockClear();
+    render(
+      <AppThemeRoot defaultTheme="light">
+        <Sidebar
+          activeProjectId={mockWorkspaces[0].id}
+          canCreateWorkspace
+          projectRef={mockWorkspaces[0].publicId}
+          workspaces={mockWorkspaces}
+        />
+      </AppThemeRoot>,
+    );
+    const link = screen.getByRole("link", { name: "Rank Tracker" });
+    fireEvent.click(link);
+    expect(interaction.trackModuleNavigation).toHaveBeenCalledExactlyOnceWith(
+      link.getAttribute("href"),
+      "sidebar",
+    );
+  });
   it("keeps Timeline out of the desktop rail while restoring enabled module rows", () => {
     const disabled = render(
       <AppThemeRoot data-collapsed="false" defaultTheme="light">

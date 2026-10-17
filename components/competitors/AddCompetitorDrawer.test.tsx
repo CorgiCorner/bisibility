@@ -13,9 +13,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/actions/competitors", () => ({
   addManagedCompetitor: mocks.addManagedCompetitor,
 }));
-vi.mock("@/components/ui/input-styles", () => ({
-  inputClassName: "border border-border-control bg-transparent",
-}));
 vi.mock("@/components/ui/Button", () => ({
   Button: ({
     children,

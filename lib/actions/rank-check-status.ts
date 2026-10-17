@@ -11,6 +11,7 @@ import {
   requireKeywordScope,
   requireProjectScope,
 } from "./_shared";
+import { emitFirstCheckRunCompletion } from "./rank-check-preview-analytics";
 import { singleRankCheckRunStatus, singleRankCheckRunStatuses } from "./rank-check-run-status";
 
 const rankCheckIdSchema = z.string().trim().min(1).max(120);
@@ -106,6 +107,16 @@ export async function getRankCheckStatuses(input: unknown): Promise<GetRankCheck
     uniqueIds.filter((id) => parsePublicId(id)?.prefix === "rcr"),
     project.id,
   );
+  const completedRunIds = runStatuses
+    .filter((run) => run.status === "completed")
+    .map((run) => run.rankCheckId);
+  if (completedRunIds.length) {
+    await emitFirstCheckRunCompletion({
+      actorId: actor.id,
+      projectId: project.id,
+      runPublicIds: completedRunIds,
+    });
+  }
   const rankChecks = [];
   for (let offset = 0; offset < ids.length; offset += RANK_CHECK_QUERY_CHUNK_SIZE) {
     const chunk = ids.slice(offset, offset + RANK_CHECK_QUERY_CHUNK_SIZE);

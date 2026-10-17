@@ -10,9 +10,6 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NewRuleDrawer } from "./NewRuleDrawer";
 
-vi.mock("@/components/ui/input-styles", () => ({
-  inputClassName: "border border-border-control bg-transparent",
-}));
 vi.mock("@/components/ui/Button", () => ({
   Button: ({
     children,

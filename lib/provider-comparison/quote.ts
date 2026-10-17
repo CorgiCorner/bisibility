@@ -4,6 +4,7 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { loadProviderRateContext } from "@/lib/provider-rates/connection-context";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
+import { providerConnectionRevision } from "@/lib/providers/connection-revision";
 import {
   hostedRankCheckEstimatedCostCents,
   quoteDeploymentRankReservations,
@@ -56,7 +57,7 @@ export async function quoteComparison(
     sides.push({
       provider,
       id: connection.id,
-      revision: connection.updatedAt.toISOString(),
+      revision: providerConnectionRevision(connection),
       credentialVersion: ownCredentialVersion(
         provider,
         connection.id,

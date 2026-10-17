@@ -97,6 +97,7 @@ export function ResearchSearchCard({
   });
 
   const noSeedHintId = useId();
+  const seedHelpId = useId();
   const modeOptions = [
     { label: t("modeAuto"), value: "auto" },
     { label: t("modeRelated"), value: "related" },
@@ -144,7 +145,11 @@ export function ResearchSearchCard({
     <Card className="min-w-0 w-full p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(submit)}>
         <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-start">
-          <div className="flex min-h-[34px] flex-1 flex-wrap items-center gap-1.5 rounded-control border border-border-control bg-transparent px-2.5 py-0.5 focus-within:border-accent md:min-w-[240px]">
+          <div
+            data-input-shell
+            data-disabled={disabled || researching}
+            className="flex min-h-[34px] flex-1 flex-wrap items-center gap-1.5 rounded-control border border-border-control bg-transparent px-2.5 py-0.5 focus-within:border-accent data-[disabled=true]:cursor-not-allowed data-[disabled=true]:bg-bg-sunken md:min-w-[240px]"
+          >
             {seeds.map((seed) => (
               <InlineToken
                 dismissLabel={t("removeSeed", { seed })}
@@ -154,9 +159,11 @@ export function ResearchSearchCard({
               />
             ))}
             <input
+              data-input-inner
               {...register("seed")}
               aria-label={t("seedAria")}
-              className={`${compactInputTypographyClassName} min-w-[160px] flex-1 bg-transparent px-1 font-medium text-fg outline-none`}
+              aria-describedby={seedHelpId}
+              className={`${compactInputTypographyClassName} disabled:cursor-not-allowed disabled:text-fg-muted min-w-0 w-40 flex-1 bg-transparent px-1 font-medium text-fg outline-none`}
               disabled={disabled || researching || seeds.length >= 5}
               id="research-seed"
               onKeyDown={handleSeedKeyDown}
@@ -192,6 +199,9 @@ export function ResearchSearchCard({
           />
         </div>
 
+        <p id={seedHelpId} className="m-0 text-[11px] leading-4 text-fg-muted">
+          {t("seedHelp")}
+        </p>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="inline-flex items-center gap-1.5">
             <Switch

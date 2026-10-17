@@ -95,6 +95,7 @@ export function AnalyzeCard({
       <form className="grid gap-3" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-3 md:flex-row md:items-start">
           <div
+            data-input-shell
             className={`flex ${analyzeControlHeightClassName} flex-1 items-center gap-2 rounded-control border border-border-control bg-transparent px-2.5 text-[13px] focus-within:border-accent md:min-w-[240px]`}
           >
             <GlobeSimple
@@ -121,6 +122,7 @@ export function AnalyzeCard({
                   {t("targetLabel")}
                 </label>
                 <input
+                  data-input-inner
                   {...targetField}
                   autoCapitalize="none"
                   autoCorrect="off"

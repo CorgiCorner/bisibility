@@ -8,11 +8,24 @@ const mocks = vi.hoisted(() => ({
   crawl: vi.fn(),
   authorize: vi.fn(),
   write: vi.fn(),
+  policy: vi.fn(),
 }));
 vi.mock("@/lib/agent-reports/service", () => ({
   createAgentReport: mocks.create,
   getAgentReport: mocks.get,
   listAgentReports: mocks.list,
+}));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    project: { findUniqueOrThrow: mocks.policy },
+    agentReport: {
+      findMany: async () =>
+        (await mocks.list()).map((row: { id: string; createdAt: string }) => ({
+          publicId: row.id,
+          createdAt: new Date(row.createdAt),
+        })),
+    },
+  },
 }));
 vi.mock("@/lib/api/ratelimit", () => ({ consume: mocks.consume }));
 vi.mock("@/lib/redis/redis", () => ({
@@ -47,6 +60,7 @@ const result = {
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.list.mockResolvedValue([]);
+  mocks.policy.mockResolvedValue({ lookupCacheTtlSeconds: null });
   mocks.consume.mockResolvedValue({ success: true });
   mocks.crawl.mockResolvedValue(result);
   mocks.create.mockResolvedValue({ id: "agr_result", createdAt: result.completedAt });

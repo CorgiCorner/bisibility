@@ -1,7 +1,10 @@
 import { businessDigest } from "@/lib/business-location-store/canonical";
 import { storedMatch } from "@/lib/business-location-store/match-repository";
 import { projectRetainedBusinessObservation } from "@/lib/business-location-store/observation-read";
-import { businessMatcherVersion } from "@/lib/business-locations/dto";
+import {
+  businessMatcherVersion,
+  supportedBusinessMatcherVersion,
+} from "@/lib/business-locations/dto";
 import type { BusinessMatchDecision } from "@/lib/generated/prisma/client";
 import { objectValue } from "@/lib/rank-measurements/recorded-check";
 import { resolveMeasurements } from "@/lib/rank-measurements/resolve";
@@ -100,8 +103,16 @@ export function projectLocalCheck(
         completeThrough: organic.length ? base.completeThrough : 3,
       }
     : unknown(base);
+  const matcherVersions = new Set(
+    organic.flatMap((item) => {
+      const version = decisions.get(item.itemId)?.matcherVersion;
+      return version ? [version] : [];
+    }),
+  );
+  const matcherVersion = matcherVersions.values().next().value ?? businessMatcherVersion;
   const confirmed: number[] = [];
-  let matchProof = timeProof && slotProof && !unknownPromotion && identitySafe;
+  let matchProof =
+    timeProof && slotProof && !unknownPromotion && identitySafe && matcherVersions.size <= 1;
   if (!identitySafe) reasons.push("local_pack_identity_unavailable");
   for (const item of organic) {
     const row = decisions.get(item.itemId);
@@ -115,7 +126,7 @@ export function projectLocalCheck(
         decision.projectId !== scope.projectId ||
         decision.entityId !== scope.entityId ||
         decision.identityRevisionId !== scope.identityRevisionId ||
-        decision.matcherVersion !== businessMatcherVersion ||
+        !supportedBusinessMatcherVersion(decision.matcherVersion) ||
         decision.observationRunId !== run.id ||
         !decision.localResult ||
         (decision.status === "confirmed" && !decision.organicEligible) ||
@@ -138,8 +149,8 @@ export function projectLocalCheck(
   const target = targetProven
     ? {
         ...base,
-        configuredScope: localScope(base.configuredScope, scope.identityRevisionId),
-        effectiveScope: localScope(base.effectiveScope, scope.identityRevisionId),
+        configuredScope: localScope(base.configuredScope, scope.identityRevisionId, matcherVersion),
+        effectiveScope: localScope(base.effectiveScope, scope.identityRevisionId, matcherVersion),
         position: confirmed.length ? Math.min(...confirmed) : null,
       }
     : unknown(base);

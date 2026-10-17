@@ -57,4 +57,32 @@ describe("saveAnalyticsConsent", () => {
     expect(mocks.cookieStore.set).not.toHaveBeenCalled();
     expect(mocks.trackServerEvent).not.toHaveBeenCalled();
   });
+
+  it("remembers a full refusal for seven days", async () => {
+    await saveAnalyticsConsent({ analytics: false, replay: false });
+    expect(mocks.cookieStore.set).toHaveBeenCalledWith(
+      "bv_consent",
+      "v2.a0.r0.t1788552000",
+      expect.objectContaining({ maxAge: 604_800 }),
+    );
+  });
+
+  it("records the prompt variant and decision timing without an identity or an exposure event", async () => {
+    await saveAnalyticsConsent(
+      { analytics: false, replay: false },
+      { variant: "delayed_5s", source: "banner", decision_ms: 2100 },
+    );
+    expect(mocks.trackServerEvent).toHaveBeenCalledOnce();
+    expect(mocks.trackServerEvent).toHaveBeenCalledWith("consent_updated", {
+      consent: expect.objectContaining({ analytics: false, replay: false }),
+      properties: {
+        analytics: false,
+        replay: false,
+        version: 2,
+        prompt_variant: "delayed_5s",
+        decision_source: "banner",
+        decision_ms: 2100,
+      },
+    });
+  });
 });

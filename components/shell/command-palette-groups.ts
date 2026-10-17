@@ -2,6 +2,7 @@
 
 import type { KeywordHit } from "@/components/shell/keyword-search";
 import { applyTheme, readTheme } from "@/components/shell/set-theme";
+import { trackKeywordAction, trackModuleNavigation } from "@/lib/analytics/product-interactions";
 import { authClient } from "@/lib/auth/client";
 import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
 import { rankTrackerActionHref } from "@/lib/keywords/rank-tracker-command";
@@ -80,7 +81,10 @@ export function commandGroups(
         ? () => {
             window.open(item.href, "_blank", "noopener,noreferrer");
           }
-        : () => push(item.href),
+        : () => {
+            trackModuleNavigation(item.href, "command_palette");
+            push(item.href);
+          },
     }),
   );
 
@@ -147,7 +151,11 @@ function marketItems(
       id: `market:${market.ref}:${item.segments.join("/")}`,
       label: copy.marketNavigation(navigationLabel(copy, item.label), market.label),
       hint: copy.hints.market,
-      run: () => push(marketPath(projectRef, market.ref, ...item.segments)),
+      run: () => {
+        const href = marketPath(projectRef, market.ref, ...item.segments);
+        trackModuleNavigation(href, "command_palette");
+        push(href);
+      },
     })),
   );
 }
@@ -163,19 +171,28 @@ function actionItems(
       icon: Plus,
       label: copy.actionItems.addKeyword,
       hint: copy.hints.newKeyword,
-      run: () => push(rankTrackerActionHref(projectRef, "add")),
+      run: () => {
+        trackKeywordAction("add");
+        push(rankTrackerActionHref(projectRef, "add"));
+      },
     },
     {
       icon: UploadSimple,
       label: copy.actionItems.importCsv,
       hint: copy.hints.uploadFile,
-      run: () => push(rankTrackerActionHref(projectRef, "import")),
+      run: () => {
+        trackKeywordAction("import");
+        push(rankTrackerActionHref(projectRef, "import"));
+      },
     },
     {
       icon: DownloadSimple,
       label: copy.actionItems.exportKeywords,
       hint: copy.hints.downloadFile,
-      run: () => push(rankTrackerActionHref(projectRef, "export")),
+      run: () => {
+        trackKeywordAction("export");
+        push(rankTrackerActionHref(projectRef, "export"));
+      },
     },
     {
       icon: Palette,

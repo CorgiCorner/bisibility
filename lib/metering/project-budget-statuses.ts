@@ -20,6 +20,7 @@ export async function readProjectBudgetStatuses(
   access: AccessContext,
   project: { id: string; ownerId: string },
   connections: readonly Connection[],
+  concurrency: 1 | 4 = 4,
 ) {
   return mapAdminQueries(
     [...connections, null].flatMap((connection) =>
@@ -66,6 +67,7 @@ export async function readProjectBudgetStatuses(
           : result.value.filter((status) => status.budget.scope.kind === "group"),
       };
     },
+    concurrency,
   );
 }
 

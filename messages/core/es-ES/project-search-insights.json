@@ -355,7 +355,14 @@
       "syncToastUnavailable": "La sincronización todavía no está disponible. No afecta a nada de lo que ya se ha importado.",
       "openSearchConsole": "Abrir Search Console",
       "searchConsoleModule": "Módulo de Search Console",
-      "noFinalizedDaysForProperty": "Todavía no hay días consolidados para {property}"
+      "noFinalizedDaysForProperty": "Todavía no hay días consolidados para {property}",
+      "googlePropertyAuth": "Vuelve a conectar tu cuenta de Google para cargar las propiedades.",
+      "googlePropertyPermission": "Esta cuenta de Google no puede acceder a estas propiedades. Comprueba sus permisos en Search Console o Analytics.",
+      "googlePropertyApiDisabled": "Es necesario revisar la configuración de la API de Google. Pide al administrador de la aplicación que active la API y revise su configuración; después, inténtalo de nuevo.",
+      "googlePropertyQuota": "Se ha alcanzado el límite de solicitudes de Google. Inténtalo más tarde.",
+      "googlePropertyTemporary": "Google no está disponible temporalmente. Inténtalo de nuevo.",
+      "googlePropertyUnknown": "No se pudieron cargar las propiedades. Inténtalo de nuevo.",
+      "googlePropertyScope": "Vuelve a conectar tu cuenta de Google y acepta los permisos que solicita esta aplicación."
     },
     "oauthSelection": {
       "domainBadge": "DOMINIO",

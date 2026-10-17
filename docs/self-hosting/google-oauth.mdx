@@ -68,6 +68,10 @@ If Google does not return a refresh token, remove the app's existing grant at
 [myaccount.google.com/permissions](https://myaccount.google.com/permissions)
 and reconnect.
 
+## Property discovery errors
+
+Reconnect the Google account when authorization expires (`invalid_grant`, `UNAUTHENTICATED`, or a `401` without a more specific configuration code). An `invalid_client` or `unauthorized_client` response means the instance administrator must repair the OAuth client configuration, even if Google returns `401`; reconnecting a user cannot repair the app credentials. A `403` does not by itself mean that authorization expired: check the account's property permissions, enable the required API in the instance's Google Cloud project, or retry later when Google reports a quota limit. When Google explicitly reports missing OAuth scopes, reconnect and approve the permissions requested by this app; changing property roles alone does not grant those scopes. The property picker and final connection check preserve the applicable action without displaying raw Google error details, including when completing the first connection. Failed checks keep the pending selection available and do not save the connection or start its import.
+
 ## Worker and traffic-sync schedule
 
 Scheduled Search Console and traffic sync need the Temporal worker. Set:

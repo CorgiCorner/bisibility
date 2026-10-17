@@ -134,6 +134,22 @@ describe("search insights actions", () => {
     });
   });
 
+  it("keeps safe diagnostic fields through the load and selection actions", async () => {
+    const failure = {
+      reason: "quota",
+      action: "retry_later",
+      httpStatus: 403,
+      code: "dailyLimitExceeded",
+    };
+    mocks.loadProperties.mockResolvedValue({ properties: [], failure });
+    expect(await loadSearchInsightsProperties({ projectId: "prj_1" })).toMatchObject({ failure });
+    mocks.saveProperty.mockResolvedValue({ status: "failed", failure });
+    expect(
+      await selectSearchInsightsProperty({ projectId: "prj_1", property: "sc-domain:example.com" }),
+    ).toEqual({ status: "failed", failure });
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
   it("stores the selected property and refreshes the module route", async () => {
     await expect(
       selectSearchInsightsProperty({ projectId: "prj_1", property: "sc-domain:example.com" }),

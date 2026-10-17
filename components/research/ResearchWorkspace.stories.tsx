@@ -1,4 +1,7 @@
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
+import { DateDisplayProvider } from "@/components/dates/DateFormatProvider";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { researchFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import type { Meta, StoryObj } from "@storybook/react";
 import { ResearchWorkspace } from "./ResearchWorkspace";
 import type { ResearchWorkspaceProps } from "./research-workspace-model";
@@ -7,11 +10,15 @@ const meta = {
   component: ResearchWorkspace,
   decorators: [
     (Story) => (
-      <SessionSpendProvider>
-        <div className="min-h-screen bg-bg p-6 text-fg">
-          <Story />
-        </div>
-      </SessionSpendProvider>
+      <FeatureMessagesProvider locale="en" messages={researchFeatureTestMessages} timeZone="UTC">
+        <DateDisplayProvider>
+          <SessionSpendProvider>
+            <div className="min-h-screen bg-bg p-4 text-fg sm:p-6">
+              <Story />
+            </div>
+          </SessionSpendProvider>
+        </DateDisplayProvider>
+      </FeatureMessagesProvider>
     ),
   ],
   parameters: { layout: "fullscreen", nextjs: { appDirectory: true } },
@@ -107,5 +114,12 @@ export const CountryAndLanguage: Story = {
         researchAvailable: true,
       },
     },
+  },
+};
+
+export const ProviderMissing: Story = {
+  args: {
+    ...Idle.args,
+    context: { ...context, connections: [], supportingProviders: ["DataForSEO"] },
   },
 };

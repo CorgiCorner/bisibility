@@ -47,6 +47,54 @@
       "usageKeywordOnly": "{count, plural, other {#件のキーワードで使用されています。}}",
       "usageSegmentOnly": "{count, plural, other {#件のセグメントで使用されています。}}",
       "writeError": "タグを追加できませんでした。"
+    },
+    "dataCache": {
+      "title": "データキャッシュ",
+      "help": "プロジェクトの各モジュールで共有します。短縮は既存の結果にも、延長は新しく取得した結果に適用されます。レポート、計測履歴、決済記録は保持されます。",
+      "lifetime": "結果の再利用期間",
+      "default": "インスタンスの既定値",
+      "hours": "{count, plural, other {#時間}}",
+      "days": "{count, plural, other {#日}}",
+      "save": "保存",
+      "saved": "保存しました",
+      "list": "保存された結果",
+      "refresh": "一覧を更新",
+      "next": "次のページ",
+      "back": "最初のページ",
+      "empty": "このページにキャッシュされた結果はありません。",
+      "unavailable": "キャッシュを読み込めませんでした。接続後に再試行してください。",
+      "error": "変更を保存できませんでした。再試行してください。",
+      "conflict": "別のタブで設定が変更されました。一覧を更新してください。",
+      "readOnly": "プロジェクトの編集者が期間を変更し、結果を削除できます。",
+      "delete": "削除",
+      "busy": "この結果は更新中です。検索が完了してから再試行してください。",
+      "expires": "有効期限: {date}",
+      "unknownKeyword": "キーワード指標",
+      "source": {
+        "related": "関連",
+        "suggestion": "候補",
+        "idea": "アイデア",
+        "metrics": "指標",
+        "backlinks": "被リンク",
+        "overview": "概要",
+        "history": "履歴",
+        "keywords": "キーワード",
+        "pages": "ページ",
+        "ai_visibility": "AIでの可視性",
+        "prompt_explorer": "プロンプト調査",
+        "site_audit": "サイト監査"
+      },
+      "notice": "削除しても検索は実行されません。次の検索には有料リクエストが必要になる場合があります。",
+      "module": {
+        "keyword_research": "キーワード調査",
+        "keyword_metrics": "キーワード指標",
+        "ranked_keywords": "ランキングキーワード",
+        "backlinks": "被リンク",
+        "domain_overview": "ドメイン概要",
+        "ai_visibility": "AIでの可視性",
+        "prompt_explorer": "プロンプト調査",
+        "site_audit": "サイト監査"
+      }
     }
   }
 }

@@ -79,7 +79,8 @@
       "clickstream": "Wolumeny z danych clickstream",
       "clickstreamHelp": "Wolumeny skorygowane rzeczywistymi danymi o przeglądaniu, a nie wyłącznie szacunkami Google Ads. Koszt wyszukiwania około dwa razy wyższy.",
       "pricing": "Jak naliczana jest opłata?",
-      "button": "{researching, select, true {Analizowanie} other {Analizuj}}{cached, select, true { bezpłatnie, z pamięci podręcznej} other {}}{cost, select, none {} other { ~{cost}}}"
+      "button": "{researching, select, true {Analizowanie} other {Analizuj}}{cached, select, true { bezpłatnie, z pamięci podręcznej} other {}}{cost, select, none {} other { ~{cost}}}",
+      "seedHelp": "Po każdej frazie naciśnij Enter lub przecinek. Maksymalnie 5 fraz."
     },
     "filters": {
       "reset": "Resetuj",
@@ -119,7 +120,8 @@
       "export": "Eksportuj",
       "exportAria": "Eksportuj wyniki",
       "exportCsv": "Eksportuj CSV",
-      "exportJson": "Eksportuj JSON"
+      "exportJson": "Eksportuj JSON",
+      "searchKeywords": "Filtruj frazy"
     },
     "saved": {
       "remove": "Usuń z zapisanych",

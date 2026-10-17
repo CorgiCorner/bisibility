@@ -23,7 +23,12 @@ import {
 import { isLegacyModel, isLegacyPrompt } from "./legacy";
 import { observedRow, promptRow } from "./normalize";
 import { aiUsageReceipt } from "./provider-receipt";
-import type { PromptInput, VisibilityInput } from "./schema";
+import {
+  aiProviderDomain,
+  type PromptInput,
+  type VisibilityInput,
+  visibilitySchema,
+} from "./schema";
 
 const BASE = "https://api.dataforseo.com/v3/ai_optimization/";
 export const VISIBILITY_PATH = "llm_mentions/search_mentions/live";
@@ -95,10 +100,11 @@ export async function fetchObserved(
   deadlineAt = Date.now() + AI_REQUEST_BUDGET_MS,
   onDispatch?: () => void,
 ) {
+  input = visibilitySchema.parse(input);
   const target =
     input.target_type === "domain"
       ? {
-          domain: input.domain,
+          domain: aiProviderDomain(input.domain),
           search_filter: "include",
           search_scope: ["sources"],
           include_subdomains: true,

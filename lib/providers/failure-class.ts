@@ -14,6 +14,7 @@ export class ProviderHttpError extends Error {
   constructor(
     readonly status: number,
     message = `Provider request failed with status ${status}.`,
+    readonly failureClass?: ProviderFailureClass,
   ) {
     super(message);
     this.name = "ProviderHttpError";
@@ -42,6 +43,7 @@ export function classifyProviderFailure(error: unknown): ProviderFailureClass {
   if (error instanceof ProviderConfigurationError) return "config_invalid";
   if (error instanceof ProviderRateLimitedError) return "rate_limit";
   if (error instanceof ProviderHttpError) {
+    if (error.failureClass) return error.failureClass;
     if (error.status >= 500) return "provider_5xx";
     if (isInvalidPropertyResponse(error)) return "config_invalid";
     if (error.status >= 400) return "provider_4xx";

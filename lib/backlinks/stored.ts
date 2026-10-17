@@ -1,9 +1,10 @@
 import "server-only";
-
 import { prisma } from "@/lib/db/prisma";
 import { demoResearchFreshUntil, demoResearchStorageState } from "@/lib/demo/research-storage";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { instanceLookupTtl, projectCacheTtl } from "@/lib/provider-lookups/project-cache-policy";
 import type { BacklinkRowMode, BacklinkTargetScope } from "@/lib/providers/types";
+import { backlinksSnapshotReference } from "./snapshot-reference";
 import { unknownBacklinksSnapshotId } from "./source-filter";
 import { normalizeBacklinksTarget } from "./target";
 import type {
@@ -113,8 +114,14 @@ export function snapshotEnvelope(
 ): BacklinksSnapshot {
   const rows = input.rows ?? snapshot.rows.map(publicRow);
   return {
+    snapshotRef: backlinksSnapshotReference(snapshot),
     cached: input.cached,
-    cachedUntil: snapshot.expiresAt.toISOString(),
+    cachedUntil: new Date(
+      Math.min(
+        snapshot.expiresAt.getTime(),
+        snapshot.fetchedAt.getTime() + projectCacheTtl(instanceLookupTtl("bl:")) * 1000,
+      ),
+    ).toISOString(),
     costCents: input.costCents,
     fetchedAt: snapshot.fetchedAt.toISOString(),
     fetchedRowCount: snapshot.fetchedRowCount,
