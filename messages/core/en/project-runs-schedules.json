@@ -59,6 +59,23 @@
       "useProjectTimeZone": "Uses project time zone",
       "useProjectTimeZoneNamed": "Uses project time zone - {timezone}",
       "weekday": "Day of week",
+      "ai": {
+        "archiveBody": "Future prompt monitoring runs will stop. Runs already launched can finish, and past results remain available. Archived prompt monitoring schedules cannot be restored.",
+        "archiveFailed": "Could not archive the prompt monitoring schedule.",
+        "archived": "Prompt monitoring schedule archived. Past runs and results are preserved.",
+        "archivedReadOnlyHint": "Archived prompt monitoring schedules are kept for history and cannot be edited or restored.",
+        "emptyNext": "Add prompts to start",
+        "kindAi": "Prompt monitoring",
+        "kindRank": "Rank checks",
+        "newSchedule": "New prompt monitoring schedule",
+        "nextPending": "Pending",
+        "prompts": "{count, plural, one {# prompt} other {# prompts}}",
+        "readOnly": "Read-only",
+        "resumeTitle": "Opens the schedule to review its configuration, preview the cost and approve it before it runs again.",
+        "loadFailed": "Prompt monitoring schedules could not be loaded. Rank schedules are shown below.",
+        "retry": "Try again",
+        "addPromptFirst": "Add or activate a prompt in AI tracking first."
+      },
       "archiveDialog": {
         "body": "Future runs will stop. Runs already launched can finish, and past results remain available.",
         "defaultNotice": "This is the default schedule. New keywords will use manual checks until you choose another default.",

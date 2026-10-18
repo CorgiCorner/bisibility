@@ -11,7 +11,7 @@ import { useState, useTransition } from "react";
 export function useTrackingWorkspace(
   initialData: TrackingWorkspaceData,
   initialSamples: TrackingSampleRow[],
-  initialTab: "prompts" | "runs" | "schedules",
+  initialTab: "prompts" | "runs",
   actions: TrackingWorkspaceActions,
 ) {
   const t = useTranslations("projectAiTracking");
@@ -19,12 +19,9 @@ export function useTrackingWorkspace(
   const [tab, setTab] = useState(initialTab);
   const [selection, setSelection] = useState<ReadonlySet<string>>(new Set());
   const [topic, setTopic] = useState("all");
-  const [drawer, setDrawer] = useState<"prompt" | "topic" | "run" | "schedule" | null>(null);
+  const [drawer, setDrawer] = useState<"prompt" | "topic" | "run" | null>(null);
   const [editingTopic, setEditingTopic] = useState<
     TrackingWorkspaceData["topics"][number] | undefined
-  >();
-  const [editingSchedule, setEditingSchedule] = useState<
-    TrackingWorkspaceData["schedules"][number] | undefined
   >();
   const [draft, setDraft] = useState<TrackingPromptDraft | undefined>();
   const [editing, setEditing] = useState<TrackingPromptRow | undefined>();
@@ -62,8 +59,6 @@ export function useTrackingWorkspace(
     setTopic,
     drawer,
     setDrawer,
-    editingSchedule,
-    setEditingSchedule,
     editingTopic,
     setEditingTopic,
     draft,

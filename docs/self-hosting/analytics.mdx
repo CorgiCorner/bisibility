@@ -34,6 +34,8 @@ details, passwords, API keys, and credentials are never event properties.
 | Event | Side | Emitted when | Properties |
 | - | - | - | - |
 | `$pageview` | Client | The SDK records a page view. | Redacted `$current_url` |
+| `module_navigation_clicked` | Client | A product module is selected. | `module`, `source` |
+| `product_action_clicked` | Client | An add, import or export action is selected. | `module`, `action`, `source` |
 | `landing_hero_viewed` | Client | A resolved hero experiment variant is rendered with analytics consent. | `experiment`, `$feature/landing-hero-actions: "control" \| "dual_cta"` |
 | `onboarding_entered` | Client | The authenticated onboarding page renders with analytics consent. | None |
 | `landing_cta_submitted` | Client | The landing-page call to action is submitted. | `has_website: boolean` |
@@ -55,6 +57,26 @@ details, passwords, API keys, and credentials are never event properties.
 
 The `surface` property is derived on the server from the active product flow. It
 is not accepted from client input.
+
+Server events also have validated `client` and `auth_kind` metadata, with an
+optional semantic `client_version`. Project events carry the project's public
+identifier. Raw client headers and user text are never forwarded.
+
+## Account analytics consent
+
+Personal credentials can read `GET /api/v1/me/analytics-consent` and set
+`PUT /api/v1/me/analytics-consent` with `{ "analytics": true }` or
+`{ "analytics": false }`. No stored decision means analytics is off. Project
+keys cannot change account consent. Third-party OAuth grants cannot change it. An API retry preserves its original time and source while it is current.
+An explicit browser save records a new decision time. Acceptance expires after six months and
+refusal after seven days; an expired choice is pending until an explicit new
+decision. Account synchronization retains the original decision time.
+
+The existing browser controls save the same account choice after sign-in.
+A valid browser choice can initialize an account without a stored decision;
+an existing account decision takes precedence. Session replay stays a separate
+browser choice and cannot be enabled through this API. Consent storage by
+itself does not enable a tracker in self-hosted builds.
 
 ## Disable analytics
 

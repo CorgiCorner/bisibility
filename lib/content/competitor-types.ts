@@ -86,6 +86,17 @@ export type ProviderComparison = {
   }[];
 };
 
+/** A first-person note on a comparison page; `id` is the stable page anchor. */
+export type FounderNote = {
+  id: string;
+  title: string;
+  paragraphs: readonly string[];
+  pointsIntro: string;
+  points: readonly { title: string; body: string }[];
+  closing: string;
+  signature: string;
+};
+
 export type EntityFirstContent = {
   title: string;
   metaDescription: string;
@@ -131,6 +142,7 @@ export type CompetitorContent = {
   lastVerified: string;
   sources: readonly CompetitorSource[];
   entityFirst?: EntityFirstContent;
+  founderNote?: FounderNote;
 };
 
 export const cell = (status: CompareStatus, label?: string): CompareCell => ({ status, label });

@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   getActionActor: vi.fn(),
   getSession: vi.fn(),
   admissionDetails: vi.fn(),
+  rankUsesNativeUnits: vi.fn(),
   quoteReservations: vi.fn(),
 }));
 
@@ -14,6 +15,7 @@ vi.mock("@/lib/actions/_shared", async (importOriginal) => {
 });
 vi.mock("@/lib/auth/session", () => ({ getSession: mocks.getSession }));
 vi.mock("@/lib/providers/execution-extension", () => ({
+  deploymentRankUsesNativeUnits: mocks.rankUsesNativeUnits,
   quoteDeploymentRankReservations: mocks.quoteReservations,
 }));
 vi.mock("@/lib/providers/admission-error-details", () => ({
@@ -52,6 +54,7 @@ describe("withAppRoute", () => {
     mocks.getSession.mockResolvedValue({ user: { id: "user_1" } });
     mocks.getActionActor.mockResolvedValue({ id: "user_1" });
     mocks.admissionDetails.mockResolvedValue(null);
+    mocks.rankUsesNativeUnits.mockResolvedValue(false);
   });
 
   it("rejects a missing session before resolving the actor", async () => {
@@ -147,7 +150,8 @@ describe("withAppRoute", () => {
       });
       return new Response();
     })(request);
-    expect(mocks.quoteReservations).toHaveBeenCalled();
+    expect(mocks.rankUsesNativeUnits).toHaveBeenCalledExactlyOnceWith("dataforseo");
+    expect(mocks.quoteReservations).toHaveBeenCalledOnce();
     expect(response.status).toBe(429);
     expect(response.headers.get("Retry-After")).toBeTruthy();
     await expect(response.json()).resolves.toMatchObject({

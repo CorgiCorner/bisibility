@@ -1,18 +1,19 @@
+import { resolveSentryBuild } from "@/lib/observability/build-identity";
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import packageJson from "./package.json";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
-// Server runtime env is baked into a server-only module (scripts/deploy/bake-runtime-env.mjs),
-// never Next's `env` config, which would inline the values into the client bundle.
+// Server runtime secrets stay in the baked server-only module. Next's `env` below
+// contains only public build identity, which is also inlined into the browser bundle.
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
 const sentryOrg = process.env.SENTRY_ORG;
 const canUploadSentrySourceMaps = Boolean(sentryAuthToken && sentryOrg);
-// Uploaded source maps only resolve when the upload release matches the release
-// the SDK reports at runtime; sentry.server.config.ts falls back to APP_VERSION,
-// which amplify.yml pins to the exact commit SHA.
-const sentryRelease = process.env.SENTRY_RELEASE || process.env.APP_VERSION;
+// All Next runtimes and uploaded source maps must use the same build-time release.
+const sentryBuild = resolveSentryBuild(process.env, packageJson.version);
+const sentryRelease = sentryBuild.release;
 
 export function resolveNextDistDir(value?: string) {
   return value?.trim() || ".next";
@@ -36,6 +37,11 @@ export function resolveNextBuildCpus(env: Record<string, string | undefined>) {
 // scripts/ci/node-memory-limit.mjs both set it) has to keep the worker cap below. A local
 // dev run has no such cap and should not pay for one.
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_APP_VERSION: sentryBuild.version,
+    NEXT_PUBLIC_APP_REVISION: sentryBuild.revision || "",
+    NEXT_PUBLIC_SENTRY_RELEASE: sentryRelease || "",
+  },
   // Release E2E intentionally reaches the dev server through the IPv4 loopback address.
   // Next 16 blocks that origin unless it is explicitly allowlisted.
   allowedDevOrigins: ["127.0.0.1"],
@@ -72,6 +78,8 @@ const nextConfig: NextConfig = {
     return config;
   },
   outputFileTracingIncludes: {
+    "/activity/badge/*/image": ["./public/achievements/badge-characters-clean.png"],
+    "/api/achievements/badge/*": ["./public/achievements/badge-characters-clean.png"],
     "/CLA.md": ["./.github/CLA.md"],
     "/CONTRIBUTING.md": ["./.github/CONTRIBUTING.md"],
     // Middleware and instrumentation entry names have no leading slash.

@@ -168,11 +168,7 @@ export function SegmentedControl<T extends string>({
                         ? "min-h-8 px-2 py-1 text-[12.5px] font-semibold"
                         : "min-h-9 px-2 py-1.5 text-[12.5px] font-semibold",
                   active
-                    ? cn(
-                        "border-border-control text-fg",
-                        size === "toolbar" ? "bg-bg-sunken" : "bg-nav-active",
-                        activeClassName,
-                      )
+                    ? cn("border-border text-fg", "bg-bg-sunken", activeClassName)
                     : "text-fg-muted hover:bg-bg-sunken hover:text-fg",
                   optionDisabled &&
                     "cursor-not-allowed text-fg-muted hover:bg-transparent hover:text-fg-muted",

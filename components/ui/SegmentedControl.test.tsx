@@ -81,7 +81,7 @@ describe("SegmentedControl", () => {
     );
 
     const span = screen.getByRole("radio", { name: "A" }).nextElementSibling;
-    expect(span).toHaveClass("h-[26px]", "w-full", "bg-bg-sunken", "border-border-control");
+    expect(span).toHaveClass("h-[26px]", "w-full", "bg-bg-sunken", "border-border");
   });
 
   it("preserves the fixed height of xs-size options", () => {
@@ -99,7 +99,7 @@ describe("SegmentedControl", () => {
     expect(span).toHaveClass("h-6", "w-full");
   });
 
-  it("frames the extra-small track and keeps a control border on the selected option", () => {
+  it("frames the extra-small track and uses a softer selected-option border", () => {
     render(
       <SegmentedControl<Mode>
         name="xs-fill"
@@ -115,7 +115,7 @@ describe("SegmentedControl", () => {
     const track = radio.parentElement?.parentElement;
 
     expect(track).toHaveClass("border", "border-border-control");
-    expect(span).toHaveClass("bg-nav-active", "border-border-control");
+    expect(span).toHaveClass("bg-bg-sunken", "border-border");
   });
 
   it("preserves native radio semantics and keyboard navigation", () => {

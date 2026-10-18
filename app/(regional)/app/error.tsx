@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { reportAppError } from "@/lib/observability/error-reporting";
 import { FEEDBACK_URL, GITHUB_ISSUES_URL } from "@/lib/site/site";
+import { retryViewError } from "@/lib/ui/retry-view-error";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { CopyIcon as Copy } from "@phosphor-icons/react/dist/csr/Copy";
 import { WarningCircleIcon as WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
@@ -136,7 +137,7 @@ export default function AppErrorBoundary({ error, reset }: Readonly<AppErrorBoun
             <Button
               loading={isRetrying}
               loadingLabel={t("retrying")}
-              onClick={() => startRetry(() => reset())}
+              onClick={() => startRetry(() => retryViewError(error, reset))}
               size="lg"
               type="button"
             >

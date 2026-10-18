@@ -5,6 +5,12 @@ import {
   publicTrackingRevision,
   publicTrackingSchedule,
 } from "@/lib/ai-tracking/projections/public";
+import {
+  canWriteAiTracking,
+  type TrackingScheduleList,
+  trackingPromptStatus,
+  trackingScheduleListItems,
+} from "@/lib/ai-tracking/projections/schedule-list";
 import type { TrackingWorkspaceData } from "@/lib/ai-tracking/projections/workspace";
 import { getTrackingPromptOperations } from "@/lib/ai-tracking/queries/prompt-operations";
 import { auditTrackingCatalog, auditTrackingRun } from "@/lib/api/ai-tracking-audit";
@@ -17,12 +23,10 @@ import {
   trackingSamples,
   trackingScope,
 } from "@/lib/api/ai-tracking-service";
-import { getProjectRole } from "@/lib/auth/authorize";
-import { canProjectAction } from "@/lib/auth/capabilities";
-import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
+import { AuthorizationError, getProjectRole } from "@/lib/auth/authorize";
 import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { revalidatePath } from "next/cache";
-import { getActionActor } from "./_shared";
+import { getActionActor, ProjectNotFoundError } from "./_shared";
 import { actionFailureResult, handledActionResult } from "./action-result";
 
 export async function getAiTrackingPage(projectId: string): Promise<TrackingWorkspaceData> {
@@ -48,9 +52,7 @@ export async function getAiTrackingPage(projectId: string): Promise<TrackingWork
   );
   return {
     domain: project.domain ?? "",
-    canWrite:
-      canProjectAction(getProjectRole(actor, project.id), "update", "project") &&
-      !isProjectReadOnly(project.writeMode),
+    canWrite: canWriteAiTracking(getProjectRole(actor, project.id), project.writeMode),
     topics: topics.map((topic) => ({
       id: topic.publicId,
       name: topic.name,
@@ -74,13 +76,7 @@ export async function getAiTrackingPage(projectId: string): Promise<TrackingWork
             ? "provider_dataset"
             : "manual"
         : "manual",
-      status: prompt.archivedAt
-        ? "archived"
-        : prompt.pausedAt ||
-            topics.find((topic) => topic.id === prompt.topicId)?.pausedAt ||
-            topics.find((topic) => topic.id === prompt.topicId)?.archivedAt
-          ? "paused"
-          : "active",
+      status: trackingPromptStatus(prompt, topics),
     })),
     schedules: schedules
       .filter((schedule) => !schedule.archivedAt)
@@ -104,6 +100,37 @@ export async function getAiTrackingPage(projectId: string): Promise<TrackingWork
       createdAt: run.createdAt.toISOString(),
       sampleCount: run._count?.samples ?? 0,
     })),
+  };
+}
+/**
+ * Narrow AI schedule loader for the common Schedules page. Skips prompt operations and runs.
+ * Returns null only when AI tracking access is denied; storage failures still propagate.
+ */
+export async function getAiTrackingScheduleList(
+  projectId: string,
+  status: "current" | "archived",
+): Promise<TrackingScheduleList | null> {
+  const actor = await getActionActor();
+  const project = await trackingScope(actor, projectId).catch((error: unknown) => {
+    if (error instanceof AuthorizationError || error instanceof ProjectNotFoundError) return null;
+    throw error;
+  });
+  if (!project) return null;
+  const [topics, prompts, schedules] = await Promise.all([
+    trackingCatalog(project.id, "topics"),
+    trackingCatalog(project.id, "prompts"),
+    trackingCatalog(project.id, "schedules"),
+  ]);
+  return {
+    canWrite: canWriteAiTracking(getProjectRole(actor, project.id), project.writeMode),
+    activePromptIds: prompts
+      .filter((prompt) => trackingPromptStatus(prompt, topics) === "active")
+      .map((prompt) => prompt.publicId),
+    schedules: trackingScheduleListItems(
+      schedules,
+      prompts,
+      status === "archived" ? "archived" : "current",
+    ),
   };
 }
 export async function mutateAiTrackingAction(
@@ -131,6 +158,7 @@ export async function mutateAiTrackingAction(
   const result = await mutateTrackingCatalog(project.id, resource, method, value, member);
   await auditTrackingCatalog(actor, project, resource, method, value, result);
   revalidatePath(`/app/${projectId}/ai-tracking`);
+  if (resource === "schedules") revalidatePath(`/app/${projectId}/runs/schedules`);
   return getAiTrackingPage(projectId);
 }
 async function trackingActionResult<T>(run: () => Promise<T>) {

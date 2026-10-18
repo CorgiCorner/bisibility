@@ -59,6 +59,23 @@
       "useProjectTimeZone": "Używa strefy czasowej projektu",
       "useProjectTimeZoneNamed": "Używa strefy czasowej projektu – {timezone}",
       "weekday": "Dzień tygodnia",
+      "ai": {
+        "archiveBody": "Przyszłe przebiegi monitorowania promptów zostaną zatrzymane. Już uruchomione przebiegi mogą się zakończyć, a wcześniejsze wyniki pozostaną dostępne. Zarchiwizowanych harmonogramów monitorowania promptów nie można przywrócić.",
+        "archiveFailed": "Nie udało się zarchiwizować harmonogramu monitorowania promptów.",
+        "archived": "Zarchiwizowano harmonogram monitorowania promptów. Wcześniejsze przebiegi i wyniki zostały zachowane.",
+        "archivedReadOnlyHint": "Zarchiwizowane harmonogramy monitorowania promptów są zachowane w historii i nie można ich edytować ani przywrócić.",
+        "emptyNext": "Dodaj prompty, aby zacząć",
+        "kindAi": "Monitorowanie promptów",
+        "kindRank": "Sprawdzanie pozycji",
+        "newSchedule": "Nowy harmonogram monitorowania promptów",
+        "nextPending": "Oczekuje",
+        "prompts": "{count, plural, one {# prompt} few {# prompty} many {# promptów} other {# promptu}}",
+        "readOnly": "Tylko do odczytu",
+        "resumeTitle": "Otwiera harmonogram, aby sprawdzić konfigurację, zobaczyć podgląd kosztu i zatwierdzić go przed ponownym uruchomieniem.",
+        "loadFailed": "Nie udało się wczytać harmonogramów promptów. Poniżej są harmonogramy pozycji.",
+        "retry": "Spróbuj ponownie",
+        "addPromptFirst": "Najpierw dodaj lub aktywuj prompt w monitorowaniu AI."
+      },
       "archiveDialog": {
         "body": "Przyszłe przebiegi zostaną zatrzymane. Już uruchomione przebiegi mogą się zakończyć, a wcześniejsze wyniki pozostaną dostępne.",
         "defaultNotice": "To jest domyślny harmonogram. Nowe słowa kluczowe będą sprawdzane ręcznie, dopóki nie wybierzesz innego harmonogramu domyślnego.",

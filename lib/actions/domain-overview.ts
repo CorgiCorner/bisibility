@@ -1,5 +1,5 @@
 "use server";
-
+import { withAchievementUse } from "@/lib/achievements/record-use";
 import {
   analyzeDomainOverview,
   loadDomainKeywordsPage,
@@ -87,19 +87,21 @@ async function mutationScope(data: { projectId: string }, type: "keyword" | "pro
 export async function analyzeDomainOverviewAction(input: unknown) {
   const data = parseActionInput(analyzeSchema, input);
   const { actor, project } = await mutationScope(data);
-  return withLookupBudgetResult(() =>
-    analyzeDomainOverview(
-      { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
-      {
-        estimateOnly: data.estimateOnly,
-        fresh: data.fresh,
-        ...(data.countryCode ? { countryCode: data.countryCode } : {}),
-        languageCode: data.languageCode,
-        locationCode: data.locationCode,
-        maxCostCents: data.maxCostCents,
-        scopeOverride: data.scopeOverride,
-        target: data.target,
-      },
+  return withAchievementUse(actor.id, "analyzeDomainOverview", data.estimateOnly, () =>
+    withLookupBudgetResult(() =>
+      analyzeDomainOverview(
+        { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
+        {
+          estimateOnly: data.estimateOnly,
+          fresh: data.fresh,
+          ...(data.countryCode ? { countryCode: data.countryCode } : {}),
+          languageCode: data.languageCode,
+          locationCode: data.locationCode,
+          maxCostCents: data.maxCostCents,
+          scopeOverride: data.scopeOverride,
+          target: data.target,
+        },
+      ),
     ),
   );
 }

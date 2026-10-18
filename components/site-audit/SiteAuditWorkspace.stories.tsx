@@ -75,3 +75,11 @@ export const PageDetails: Story = {
     ).toBeVisible();
   },
 };
+
+export const LoadingResults: Story = {
+  args: { runAction: async () => new Promise(() => {}) },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Run audit" }));
+    await expect(within(canvasElement).getByRole("table")).toBeVisible();
+  },
+};

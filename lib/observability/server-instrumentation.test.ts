@@ -1,13 +1,19 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const sentry = vi.hoisted(() => ({
   captureRequestError: vi.fn(),
+  getActiveSpan: vi.fn(),
 }));
 const serverConfigLoaded = vi.hoisted(() => vi.fn());
 const edgeConfigLoaded = vi.hoisted(() => vi.fn());
+const sdkModuleLoaded = vi.hoisted(() => vi.fn());
 const bakedRuntimeEnv = vi.hoisted(() => ({ sentryDsn: undefined as string | undefined }));
 
-vi.mock("@sentry/nextjs", () => sentry);
+vi.mock("@sentry/nextjs", () => {
+  sdkModuleLoaded();
+  return sentry;
+});
 vi.mock("../../sentry.server.config", () => {
   serverConfigLoaded();
   return {};
@@ -35,6 +41,10 @@ const ENV_KEYS = ["NEXT_RUNTIME", "SENTRY_DSN", "NEXT_PUBLIC_SENTRY_DSN"] as con
 // vi.doMock inside a test replaces the registry entry for the rest of the file, and a
 // cached mocked module does not re-run its factory, so each test re-registers its own.
 function reregisterModuleMocks() {
+  vi.doMock("@sentry/nextjs", () => {
+    sdkModuleLoaded();
+    return sentry;
+  });
   vi.doMock("../../sentry.server.config", () => {
     serverConfigLoaded();
     return {};
@@ -52,20 +62,26 @@ function reregisterModuleMocks() {
 describe("server instrumentation", () => {
   let snapshots: Record<string, string | undefined>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     bakedRuntimeEnv.sentryDsn = undefined;
     snapshots = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
     for (const key of ENV_KEYS) {
       delete process.env[key];
     }
     vi.resetModules();
+    const { registerRequestDiagnosticSink } = await import("./request-diagnostics");
+    registerRequestDiagnosticSink(undefined);
     reregisterModuleMocks();
     serverConfigLoaded.mockReset();
     edgeConfigLoaded.mockReset();
     sentry.captureRequestError.mockReset();
+    sentry.getActiveSpan.mockReset();
+    sdkModuleLoaded.mockReset();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    const { registerRequestDiagnosticSink } = await import("./request-diagnostics");
+    registerRequestDiagnosticSink(undefined);
     for (const key of ENV_KEYS) {
       if (snapshots[key] === undefined) {
         delete process.env[key];
@@ -82,7 +98,94 @@ describe("server instrumentation", () => {
     await instrumentation.register();
 
     expect(serverConfigLoaded).not.toHaveBeenCalled();
+    expect(sdkModuleLoaded).not.toHaveBeenCalled();
+    const { setRequestDiagnosticAttribute } = await import("./request-diagnostics");
+    setRequestDiagnosticAttribute("auth.oauth.error", "invalid_grant");
+    expect(sentry.getActiveSpan).not.toHaveBeenCalled();
   });
+
+  it("attributes diagnostics to each current request without replaying earlier attributes", async () => {
+    process.env.NEXT_RUNTIME = "nodejs";
+    const { setRequestDiagnosticAttribute } = await import("./request-diagnostics");
+    setRequestDiagnosticAttribute("auth.oauth.error", "unclassified");
+    process.env.SENTRY_DSN = "https://public@example.com/1";
+    const instrumentation = await import("../../instrumentation");
+    await instrumentation.register();
+    expect(sentry.getActiveSpan).not.toHaveBeenCalled();
+    expect(sdkModuleLoaded).toHaveBeenCalledOnce();
+    const first = { setAttribute: vi.fn() };
+    const second = { setAttribute: vi.fn() };
+    sentry.getActiveSpan.mockReturnValueOnce(first).mockReturnValueOnce(second);
+    setRequestDiagnosticAttribute("auth.oauth.error", "invalid_grant");
+    setRequestDiagnosticAttribute("auth.oauth.error", "invalid_client");
+    expect(first.setAttribute).toHaveBeenCalledExactlyOnceWith("auth.oauth.error", "invalid_grant");
+    expect(second.setAttribute).toHaveBeenCalledExactlyOnceWith(
+      "auth.oauth.error",
+      "invalid_client",
+    );
+    expect(sentry.getActiveSpan).toHaveBeenCalledTimes(2);
+  });
+
+  it("shares registration across module instances and preserves concurrent request contexts", async () => {
+    process.env.NEXT_RUNTIME = "nodejs";
+    const instrumentationLayer = await import("./request-diagnostics");
+    instrumentationLayer.setRequestDiagnosticAttribute("auth.oauth.error", "unclassified");
+    process.env.SENTRY_DSN = "configured-for-test";
+    const instrumentation = await import("../../instrumentation");
+    await instrumentation.register();
+    expect(sentry.getActiveSpan).not.toHaveBeenCalled();
+
+    vi.resetModules();
+    const routeLayer = await import("./request-diagnostics");
+    expect(routeLayer.setRequestDiagnosticAttribute).not.toBe(
+      instrumentationLayer.setRequestDiagnosticAttribute,
+    );
+    const first = { setAttribute: vi.fn() };
+    const second = { setAttribute: vi.fn() };
+    const contexts = new AsyncLocalStorage<typeof first>();
+    sentry.getActiveSpan.mockImplementation(() => contexts.getStore());
+    let releaseFirst: () => void = () => undefined;
+    const secondRecorded = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    await Promise.all([
+      contexts.run(first, async () => {
+        await secondRecorded;
+        instrumentationLayer.setRequestDiagnosticAttribute("auth.oauth.error", "invalid_grant");
+      }),
+      contexts.run(second, async () => {
+        routeLayer.setRequestDiagnosticAttribute("auth.oauth.error", "invalid_client");
+        releaseFirst();
+      }),
+    ]);
+    expect(first.setAttribute).toHaveBeenCalledExactlyOnceWith("auth.oauth.error", "invalid_grant");
+    expect(second.setAttribute).toHaveBeenCalledExactlyOnceWith(
+      "auth.oauth.error",
+      "invalid_client",
+    );
+    expect(sentry.getActiveSpan).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(["nodejs", "edge"])(
+    "disables an earlier sink without loading the SDK on %s without a DSN",
+    async (runtime) => {
+      const previousLayer = await import("./request-diagnostics");
+      const staleSink = vi.fn();
+      previousLayer.registerRequestDiagnosticSink(staleSink);
+      vi.resetModules();
+      process.env.NEXT_RUNTIME = runtime;
+      const instrumentation = await import("../../instrumentation");
+      await instrumentation.register();
+      const routeLayer = await import("./request-diagnostics");
+      previousLayer.setRequestDiagnosticAttribute("auth.oauth.error", "invalid_grant");
+      routeLayer.setRequestDiagnosticAttribute("auth.oauth.error", "invalid_client");
+      expect(staleSink).not.toHaveBeenCalled();
+      expect(sentry.getActiveSpan).not.toHaveBeenCalled();
+      expect(serverConfigLoaded).not.toHaveBeenCalled();
+      expect(edgeConfigLoaded).not.toHaveBeenCalled();
+      expect(sdkModuleLoaded).not.toHaveBeenCalled();
+    },
+  );
 
   it("reads the DSN only after the baked environment module has filled it in", async () => {
     process.env.NEXT_RUNTIME = "nodejs";

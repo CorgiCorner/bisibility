@@ -90,6 +90,7 @@ export default async function RunsPage({ params, searchParams }: Readonly<RunsPa
             query={query}
             runNowAction={runPlannedProjectRunNow}
             skipAction={skipPlannedProjectRun}
+            readAt={new Date().toISOString()}
           />
         </PageContent>
       </ProjectRunsFeatureBoundary>

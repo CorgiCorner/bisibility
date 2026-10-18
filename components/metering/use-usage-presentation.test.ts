@@ -25,16 +25,13 @@ beforeEach(() => {
 });
 
 describe("usage display precision", () => {
-  it.each(["cents", "customer_cents", "budget_cents"])(
-    "shows %s as currency with two decimal places",
-    (unit) => {
-      const p = useUsagePresentation();
-      expect(p.figure(amount("7.4071", unit))).toBe("$0.07");
-      expect(p.figure(amount("5000", unit))).toBe("$50.00");
-      expect(p.figure(amount("0.0001", unit))).toBe("$0.00");
-      expect(p.unit(unit)).toBe("");
-    },
-  );
+  it.each(["cents", "budget_cents"])("shows %s as currency with two decimal places", (unit) => {
+    const p = useUsagePresentation();
+    expect(p.figure(amount("7.4071", unit))).toBe("$0.07");
+    expect(p.figure(amount("5000", unit))).toBe("$50.00");
+    expect(p.figure(amount("0.0001", unit))).toBe("$0.00");
+    expect(p.unit(unit)).toBe("");
+  });
 
   it("preserves exact large amounts without a number conversion", () => {
     const p = useUsagePresentation();
@@ -126,4 +123,40 @@ it("formats budget amounts without replacing original figures or geometry", () =
 it("keeps project name context in budget labels", () => {
   const row = { ...budgetFixture(), target: "webscraping" };
   expect(useUsagePresentation().bound(row)).toContain("webscraping");
+});
+
+describe("funding-aware credit presentation", () => {
+  it("shows retained customer charges in credits for any provider, without applying a second margin", () => {
+    const p = useUsagePresentation();
+    expect(p.figure(amount("1000", "customer_cents"))).toBe("1,000");
+    expect(p.unit("customer_cents")).toBe("Credits");
+    expect(p.figure(amount("12.5", "customer_cents"))).toBe("12.5");
+    expect(p.figure(amount("25", "customer_cents"))).toBe("25");
+    expect(p.figure(amount("3", "requests"))).toBe("3");
+    expect(p.unit("requests")).toBe("Requests");
+  });
+
+  it("keeps tiny credit balances visible and exact without a currency conversion", () => {
+    const p = useUsagePresentation();
+    expect(p.figure(amount("0.0001", "customer_cents"))).toBe("0.0001");
+    expect(p.figure(amount("-7.4071", "customer_cents"))).toBe("-7.4071");
+    expect(p.figure(amount("0", "customer_cents"))).toBe("0");
+  });
+
+  it("does not turn BYOK amounts or mixed project caps into credits", () => {
+    const p = useUsagePresentation();
+    expect(p.figure(amount("1000", "cents"))).toBe("$10.00");
+    expect(p.figure(amount("1000", "budget_cents"))).toBe("$10.00");
+    expect(p.figure(amount("3", "units"))).toBe("3");
+    expect(p.unit("units")).toBe("Units");
+  });
+
+  it("does not let the BYOK currency/raw-unit preference change the credit denomination", () => {
+    saved.options = { moneyDisplay: "raw-unit", moneyFractionDigits: 0 };
+    const p = useUsagePresentation();
+    expect(p.figure(amount("1000", "customer_cents"))).toBe("1,000");
+    expect(p.figure(amount("0.0001", "customer_cents"))).toBe("0.0001");
+    expect(p.unit("customer_cents")).toBe("Credits");
+    expect(p.figure({ ...amount("", "customer_cents"), certainty: "unknown" })).toBe("");
+  });
 });

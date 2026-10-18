@@ -61,7 +61,7 @@ function DashboardCustomizationMenu({
         ref={trigger}
         size="sm"
         variant="outline"
-        className="min-w-0 px-2 sm:px-3"
+        className="min-w-0 px-2 sm:px-3 [--control-background-color:transparent]"
         disabled={pending}
         aria-label={t("title")}
         aria-haspopup="menu"

@@ -32,7 +32,7 @@ export async function quoteComparison(
       ? LIST_PROVIDER_RATE_CONTEXT
       : await loadProviderRateContext(connection.id, "rank_check", now, db);
     const providerCost =
-      (hosted ? hostedRankCheckEstimatedCostCents(provider, comparisonDepth) : null) ??
+      (hosted ? await hostedRankCheckEstimatedCostCents(provider, comparisonDepth) : null) ??
       estimatedRankCheckCostCents(provider, comparisonDepth, null, context);
     if (providerCost === null || !Number.isFinite(providerCost) || providerCost <= 0)
       throw new Error("Comparison quote is unavailable.");

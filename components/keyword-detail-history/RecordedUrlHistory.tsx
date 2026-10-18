@@ -16,7 +16,7 @@ export function RecordedUrlHistory({
   const format = useFormatter();
   return (
     <Card className="overflow-visible rounded-card p-0" size="lg">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
+      <div className="flex items-center justify-between px-5 py-4">
         <div>
           <SectionTitle>{t("urlHistoryTitle")}</SectionTitle>
           <p className="m-0 mt-1 text-xs text-fg-muted">{t("urlHistoryMeaning")}</p>

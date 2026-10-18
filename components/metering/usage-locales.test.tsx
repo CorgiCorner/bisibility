@@ -49,6 +49,11 @@ it.each([
     maximumFractionDigits: 2,
   }).format(0.123456);
   expect(screen.getAllByText(expected.replace(/\s/g, " ")).length).toBeGreaterThan(0);
+  const credits = new Intl.NumberFormat(locale, { maximumFractionDigits: 4 }).format(12.3456);
+  expect(screen.getAllByText(credits.replace(/\s/g, " ")).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(shared.shared.usageViews.units.customer_cents).length).toBeGreaterThan(
+    0,
+  );
   expect(screen.queryByText("projectSettingsUsage.views")).not.toBeInTheDocument();
 });
 

@@ -31,15 +31,17 @@ describe("HTML audit resolution", () => {
     expect(result.page).toMatchObject({ internalLinkCount: 1, externalLinkCount: 1 });
   });
 
-  it.each(["http://[", "data:text/plain,base", "javascript:alert(1)"])(
-    "falls back for an unusable first base %s and ignores later bases",
-    (href) => {
-      const result = inspect(
-        `<base href="${href}"><base href="/ignored/"><a href="guide">Guide</a>`,
-      );
-      expect(result.discovered).toEqual(["https://example.com/news/guide"]);
-    },
-  );
+  it.each([
+    "http://[",
+    "data:text/plain,base",
+    "javascript:alert(1)",
+    "ftp://example.com/docs/",
+    "file:///docs/",
+    "vbscript:alert(1)",
+  ])("falls back for an unusable first base %s and ignores later bases", (href) => {
+    const result = inspect(`<base href="${href}"><base href="/ignored/"><a href="guide">Guide</a>`);
+    expect(result.discovered).toEqual(["https://example.com/news/guide"]);
+  });
 
   it("retains credential and query guards when the base changes", () => {
     expect(

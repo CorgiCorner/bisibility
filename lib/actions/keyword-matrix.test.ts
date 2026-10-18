@@ -285,7 +285,7 @@ describe("addKeywordsMatrix", () => {
     expect(mocks.prisma.keyword.createMany).toHaveBeenCalledTimes(1);
     expect(mocks.trackServerEvent).toHaveBeenNthCalledWith(1, "keywords_added", {
       consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
-      distinctId: "user_1",
+      userId: "user_1",
       properties: {
         keyword_count: 2,
         market_count: 1,

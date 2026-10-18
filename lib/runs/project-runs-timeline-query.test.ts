@@ -53,7 +53,11 @@ beforeEach(() => {
 
 describe("timeline scope projection", () => {
   it("shows current runnable schedule members only for unlaunched occurrences", async () => {
-    const ranks = [row(1, "planned"), row(3, "queued"), row(2, "completed")];
+    const ranks = [
+      row(1, "planned"),
+      { ...row(3, "queued"), plannedFor: new Date("2026-10-01T00:00:00Z") },
+      row(2, "completed"),
+    ];
     mocks.ranks.mockResolvedValue(ranks);
     mocks.raw
       .mockResolvedValueOnce(
@@ -75,6 +79,8 @@ describe("timeline scope projection", () => {
       { kind: "rank_check", description: null, keywordCount: 1 },
       { kind: "rank_check", description: null, keywordCount: 7 },
     ]);
+    // Waiting projections must use the SQL cursor instant, including queued retries.
+    expect(page.runs[1].timestamps).toMatchObject({ nextCheckAt: at.toISOString() });
     expect(page.counts.total).toBe(3);
     expect(mocks.ranks).toHaveBeenCalledWith(
       expect.objectContaining({

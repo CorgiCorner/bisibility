@@ -47,7 +47,7 @@ function documentBase(nodes: DefaultTreeAdapterMap["element"][], fallback: URL) 
   if (!node) return fallback;
   try {
     const base = new URL(attribute(node, "href") ?? "", fallback);
-    return ["data:", "javascript:"].includes(base.protocol) ? fallback : base;
+    return ["http:", "https:"].includes(base.protocol) ? base : fallback;
   } catch {
     return fallback;
   }

@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/Card";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { Meta, StoryObj } from "@storybook/react";
 
-type ActiveSection = "profile" | "preferences" | "security";
+type ActiveSection = "profile" | "preferences" | "security" | "activity";
 
 function AccountShellFrame({ active }: Readonly<{ active: ActiveSection }>) {
   return (

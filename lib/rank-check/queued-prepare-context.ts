@@ -63,7 +63,7 @@ export async function loadContext(
   if (!eligibilityReason && connection) {
     try {
       if (connection.credentialSource === "hosted") {
-        if (!queuedDeploymentCredentialsAvailable("dataforseo")) {
+        if (!(await queuedDeploymentCredentialsAvailable("dataforseo"))) {
           eligibilityReason = "DataForSEO credentials are unavailable.";
         }
       } else {

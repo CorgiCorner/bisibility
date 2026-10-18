@@ -181,6 +181,7 @@
     "observationTimeUnknown": "Observation time unknown",
     "citedSources": "Cited sources",
     "contextMissingHint": "Add project context or enter prompts manually. Saving prompts does not start an analysis.",
-    "contextDraftReviewHint": "Drafts use your saved context, not measured search demand. Review and edit them before saving."
+    "contextDraftReviewHint": "Drafts use your saved context, not measured search demand. Review and edit them before saving.",
+    "noActivePrompts": "Add or activate a prompt in AI tracking before previewing this schedule."
   }
 }

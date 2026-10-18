@@ -23,6 +23,7 @@ model MeteringOperation {
   paidAttemptContext     MeteringPaidAttemptContext?
   historyImports         MeteringHistoryImport[] @ignore
   historyReferences      MeteringHistoryReference[] @ignore
+  historyCloseout        MeteringHistoryCloseout? @ignore
 
   @@unique([namespace, operation_id])
   @@index([namespace, state, reservation_expires_at], map: "metering_operation_expiry_idx")

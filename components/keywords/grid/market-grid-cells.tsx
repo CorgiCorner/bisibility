@@ -102,9 +102,11 @@ export function MarketLocationCell({ row }: Readonly<{ row: KeywordRow }>) {
         size={13}
         weight="regular"
       />
-      <span className="truncate text-[12.5px] text-fg-muted">
-        <span>{row.location.displayName}</span>
-        {parent ? null : <span>{` / ${row.location.languageLabel ?? row.location.hl}`}</span>}
+      <span className="grid min-w-0 gap-0.5 text-[12.5px] leading-tight text-fg-muted">
+        <span className="break-words">{row.location.displayName}</span>
+        {parent ? null : (
+          <span className="text-[11px]">{row.location.languageLabel ?? row.location.hl}</span>
+        )}
       </span>
     </span>
   );

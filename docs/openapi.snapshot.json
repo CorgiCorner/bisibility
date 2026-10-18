@@ -31,6 +31,28 @@
       }
     },
     "schemas": {
+      "AccountAnalyticsConsent": {
+        "additionalProperties": false,
+        "properties": {
+          "analytics": {
+            "type": "boolean"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "type": ["string", "null"]
+          },
+          "source": {
+            "enum": ["web", "ios", "api", null],
+            "type": ["string", "null"]
+          },
+          "version": {
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": ["analytics", "decided_at", "source", "version"],
+        "type": "object"
+      },
       "AlertRule": {
         "properties": {
           "change_pct": {
@@ -15603,6 +15625,136 @@
           }
         ],
         "summary": "Update the authenticated user",
+        "tags": ["account-access"]
+      }
+    },
+    "/me/analytics-consent": {
+      "get": {
+        "description": "Replay permission is local to the browser and is not returned here.",
+        "operationId": "getAnalyticsConsent",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountAnalyticsConsent"
+                }
+              }
+            },
+            "description": "Account analytics consent; a null decision means pending."
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient token scope"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          }
+        },
+        "security": [
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Read account analytics consent",
+        "tags": ["account-access"]
+      },
+      "put": {
+        "description": "Idempotently stores an explicit decision. Does not change browser replay permission.",
+        "operationId": "updateAnalyticsConsent",
+        "parameters": [
+          {
+            "description": "API contract version requested by the client. Omit this header to use the current backward-compatible behavior.",
+            "in": "header",
+            "name": "Bisibility-API-Version",
+            "required": false,
+            "schema": {
+              "enum": ["v1"],
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/SourceHeader"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "analytics": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["analytics"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountAnalyticsConsent"
+                }
+              }
+            },
+            "description": "Account analytics consent; a null decision means pending."
+          },
+          "400": {
+            "description": "Invalid consent decision"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient token scope"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unsupported API version"
+          }
+        },
+        "security": [
+          {
+            "PersonalAccessToken": []
+          }
+        ],
+        "summary": "Set account analytics consent",
         "tags": ["account-access"]
       }
     },

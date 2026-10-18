@@ -249,7 +249,7 @@ function observeRestoredValue(value: string) {
   return { restored, stop: () => observer.disconnect() };
 }
 function expectFinancialRedaction() {
-  expect(screen.queryByText("98.76")).toBeNull();
+  expect(screen.queryByText("9,876")).toBeNull();
   expect(observationAt(firstObserved)).toBeNull();
   expect(screen.queryAllByText(/this month.*last month/)).toHaveLength(0);
 }
@@ -289,7 +289,7 @@ describe("current financial evidence and retained drafts", () => {
     async (outcome) => {
       render(<AllocationHarness />);
       const input = await screen.findByLabelText<HTMLInputElement>(appLabel);
-      await screen.findByText("98.76");
+      await screen.findByText("9,876");
       expect(observationAt(firstObserved)).toBeInTheDocument();
       expect(screen.queryAllByText(/this month.*last month/)).toHaveLength(0);
       fireEvent.change(input, { target: { value: "7.23" } });
@@ -303,7 +303,7 @@ describe("current financial evidence and retained drafts", () => {
       expectNoWrite();
       nextEvidence();
       fireEvent.click(reload);
-      await screen.findByText("45.67");
+      await screen.findByText("4,567");
       expect(screen.getByLabelText(appLabel)).toHaveValue("11.00");
       expect(screen.getByLabelText(appLabel)).not.toBeDisabled();
       expect(observationAt(nextObserved)).toBeInTheDocument();
@@ -315,12 +315,12 @@ describe("current financial evidence and retained drafts", () => {
   it("uses new wallet and observation evidence after a successful background refresh without replacing the dirty cap draft", async () => {
     render(<AllocationHarness />);
     const input = await screen.findByLabelText<HTMLInputElement>(appLabel);
-    await screen.findByText("98.76");
+    await screen.findByText("9,876");
     fireEvent.change(input, { target: { value: "7.23" } });
     nextEvidence();
     fireEvent.click(screen.getByText("Refresh allocation evidence"));
-    await screen.findByText("45.67");
-    expect(screen.queryByText("98.76")).toBeNull();
+    await screen.findByText("4,567");
+    expect(screen.queryByText("9,876")).toBeNull();
     expect(observationAt(firstObserved)).toBeNull();
     expect(observationAt(nextObserved)).toBeInTheDocument();
     expect(screen.getByLabelText(appLabel)).toHaveValue("7.23");
@@ -364,14 +364,14 @@ describe("current financial evidence and retained drafts", () => {
     creditReserved = "300";
     render(<AllocationHarness />);
     await screen.findByLabelText(creditAppLabel);
-    await screen.findByText("98.76");
+    await screen.findByText("9,876");
     nextEvidence();
     wallet = "5543";
     creditReserved = "500";
     fireEvent.click(screen.getByText("Refresh allocation evidence"));
-    await screen.findByText("55.43");
+    await screen.findByText("5,543");
     fireEvent.click(screen.getByRole("button", { name: "Use credit balance" }));
-    expect(screen.getByLabelText(creditAppLabel)).toHaveValue("72.43");
+    expect(screen.getByLabelText(creditAppLabel)).toHaveValue("7243");
     expect(screen.getByLabelText(appLabel)).toHaveValue("");
     expectNoWrite();
     host.execute.mockImplementation(async (_project, command) => ({
@@ -397,7 +397,7 @@ describe("current financial evidence and retained drafts", () => {
   it("remounts a dismissed modal from current evidence instead of the discarded draft", async () => {
     render(<AllocationHarness toggle />);
     const input = await screen.findByLabelText<HTMLInputElement>(appLabel);
-    await screen.findByText("98.76");
+    await screen.findByText("9,876");
     fireEvent.change(input, { target: { value: "7.23" } });
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
@@ -409,9 +409,9 @@ describe("current financial evidence and retained drafts", () => {
       ),
     );
     fireEvent.click(screen.getByRole("button", { name: "Open budgets" }));
-    await screen.findByText("45.67");
+    await screen.findByText("4,567");
     expect(screen.getByLabelText(appLabel)).toHaveValue("11.00");
-    expect(screen.queryByText("98.76")).toBeNull();
+    expect(screen.queryByText("9,876")).toBeNull();
     expect(observationAt(nextObserved)).toBeInTheDocument();
     expectNoWrite();
   });
@@ -429,7 +429,7 @@ describe("current financial evidence and retained drafts", () => {
     expect(row.getByRole("button", { name: "Save" })).toBeDisabled();
     rateView.unmount();
     render(<AllocationHarness />);
-    await screen.findByText("98.76");
+    await screen.findByText("9,876");
     expect(screen.getByLabelText(appLabel)).toBeDisabled();
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
     expect(screen.getAllByRole("button", { name: "Refresh provider balance" })[0]).toBeDisabled();
@@ -442,7 +442,7 @@ describe("current financial evidence and retained drafts", () => {
   it("redacts open financial evidence during binding failure even if stored reads succeed", async () => {
     render(<AllocationHarness />);
     const input = await screen.findByLabelText<HTMLInputElement>(appLabel);
-    await screen.findByText("98.76");
+    await screen.findByText("9,876");
     fireEvent.change(input, { target: { value: "7.23" } });
     host.binding.mockRejectedValueOnce(new Error("Synthetic authorization outage"));
     fireEvent.click(screen.getByText("Refresh provider access"));
@@ -453,15 +453,15 @@ describe("current financial evidence and retained drafts", () => {
     expectNoWrite();
     nextEvidence();
     wallet = "5543";
-    const observation = observeRestoredValue("98.76");
+    const observation = observeRestoredValue("9,876");
     try {
       fireEvent.click(screen.getByRole("button", { name: "Reload settings" }));
-      await screen.findByText("55.43");
+      await screen.findByText("5,543");
     } finally {
       observation.stop();
     }
     expect(observation.restored).toEqual([]);
-    expect(screen.queryByText("98.76")).toBeNull();
+    expect(screen.queryByText("9,876")).toBeNull();
     expect(observationAt(nextObserved)).toBeInTheDocument();
     expect(screen.getByLabelText(appLabel)).toHaveValue("11.00");
     expectNoWrite();
@@ -510,7 +510,7 @@ describe("current financial evidence and retained drafts", () => {
   it("hides evidence and fences the draft while a background allocation read is still pending", async () => {
     render(<AllocationHarness />);
     const input = await screen.findByLabelText<HTMLInputElement>(appLabel);
-    await screen.findByText("98.76");
+    await screen.findByText("9,876");
     fireEvent.change(input, { target: { value: "7.23" } });
     let complete: (result: ProviderReadResult) => void = () => {};
     host.read.mockImplementation((_project: string, query: ProviderQuery) =>
@@ -527,7 +527,7 @@ describe("current financial evidence and retained drafts", () => {
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
     nextEvidence();
     complete(read({ kind: "allocations", connectionIds: [connections[1].connectionId] }));
-    await screen.findByText("45.67");
+    await screen.findByText("4,567");
     expect(screen.getByLabelText(appLabel)).toHaveValue("7.23");
     expect(screen.getByLabelText(appLabel)).not.toBeDisabled();
     expectNoWrite();
@@ -540,7 +540,7 @@ describe("current financial evidence and retained drafts", () => {
     });
     render(<AllocationHarness />);
     const input = await screen.findByLabelText<HTMLInputElement>(appLabel);
-    await screen.findByText("98.76");
+    await screen.findByText("9,876");
     fireEvent.change(input, { target: { value: "7.23" } });
     fireEvent.click(screen.getAllByRole("button", { name: "Refresh provider balance" })[0]);
     await screen.findByText(/\$12\.34/);
@@ -560,12 +560,12 @@ describe("current financial evidence and retained drafts", () => {
     });
     render(<AllocationHarness />);
     await screen.findByLabelText(appLabel);
-    await screen.findByText("98.76");
+    await screen.findByText("9,876");
     fireEvent.click(screen.getAllByRole("button", { name: "Refresh provider balance" })[0]);
     await screen.findByText(/\$12\.34/);
     nextEvidence();
     fireEvent.click(screen.getByText("Refresh allocation evidence"));
-    await screen.findByText("45.67");
+    await screen.findByText("4,567");
     expect(screen.queryByText(/\$12\.34/)).toBeNull();
     expect(host.native).toHaveBeenCalledTimes(1);
     expect(host.execute).not.toHaveBeenCalled();
@@ -574,7 +574,7 @@ describe("current financial evidence and retained drafts", () => {
   it("reverifies current evidence on automatic focus recovery without restoring cached wallet values or resetting the draft", async () => {
     render(<AllocationHarness />);
     const input = await screen.findByLabelText<HTMLInputElement>(appLabel);
-    await screen.findByText("98.76");
+    await screen.findByText("9,876");
     fireEvent.change(input, { target: { value: "7.23" } });
     host.binding.mockRejectedValueOnce(new Error("Synthetic focus authorization outage"));
     focusManager.setFocused(false);
@@ -585,16 +585,16 @@ describe("current financial evidence and retained drafts", () => {
     expect(screen.getByLabelText(appLabel)).toBeDisabled();
     nextEvidence();
     wallet = "5543";
-    const observation = observeRestoredValue("98.76");
+    const observation = observeRestoredValue("9,876");
     try {
       focusManager.setFocused(false);
       focusManager.setFocused(true);
-      await screen.findByText("55.43");
+      await screen.findByText("5,543");
     } finally {
       observation.stop();
     }
     expect(observation.restored).toEqual([]);
-    expect(screen.queryByText("98.76")).toBeNull();
+    expect(screen.queryByText("9,876")).toBeNull();
     expect(observationAt(nextObserved)).toBeInTheDocument();
     expect(screen.getByLabelText(appLabel)).toHaveValue("7.23");
     expect(screen.getByLabelText(appLabel)).not.toBeDisabled();

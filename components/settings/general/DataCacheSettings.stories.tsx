@@ -69,3 +69,28 @@ export const Unavailable: Story = {
     initial: { ttlSeconds: null, page: { available: false, cursor: "0", entries: [] } },
   },
 };
+
+export const Partial: Story = {
+  args: {
+    ...CachedResults.args,
+    initial: {
+      ttlSeconds: 43200,
+      page: {
+        available: false,
+        cursor: "next-page",
+        entries: [
+          {
+            token: "synthetic-known-result",
+            country: "Poland",
+            language: "en",
+            keyword: "rank tracker",
+            module: "keyword_research",
+            provider: "DataForSEO",
+            source: "related",
+            expiresAt: "2030-10-16T20:00:00.000Z",
+          },
+        ],
+      },
+    },
+  },
+};

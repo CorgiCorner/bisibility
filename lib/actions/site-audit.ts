@@ -1,5 +1,5 @@
 "use server";
-
+import { withAchievementUse } from "@/lib/achievements/record-use";
 import { siteAuditActionSchema } from "@/lib/site-audit/schema";
 import { listSiteAudits, readSiteAudit, runSiteAudit } from "@/lib/site-audit/service";
 import { z } from "zod";
@@ -11,7 +11,9 @@ export async function runSiteAuditAction(input: unknown) {
   const { projectId, ...options } = parseActionInput(siteAuditActionSchema, input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "create", projectId, { type: "project" });
-  return runSiteAudit({ actor, actorId: actor.id, project }, options);
+  return withAchievementUse(actor.id, "runSiteAudit", false, () =>
+    runSiteAudit({ actor, actorId: actor.id, project }, options),
+  );
 }
 export async function listSiteAuditsAction(input: unknown) {
   const { projectId } = parseActionInput(historySchema, input);
@@ -23,5 +25,7 @@ export async function readSiteAuditAction(input: unknown) {
   const { projectId, reportId } = parseActionInput(readSchema, input);
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "read", projectId, { type: "project" });
-  return readSiteAudit(project.id, reportId);
+  return withAchievementUse(actor.id, "getSiteAudit", false, () =>
+    readSiteAudit(project.id, reportId),
+  );
 }

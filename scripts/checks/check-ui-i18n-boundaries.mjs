@@ -655,7 +655,7 @@ export async function discoverScopedSources(root, scope = coreUiI18nScope) {
 
   return [
     ...renderFiles.map((path) => ({ kind: "render", path: relativeSource(root, path) })),
-    ...dataFiles.map((path) => ({ kind: "ui-data", path: relativeSource(root, path) })),
+    ...[...new Set(dataFiles)].map((path) => ({ kind: "ui-data", path: relativeSource(root, path) })),
   ].sort((left, right) => left.path.localeCompare(right.path) || left.kind.localeCompare(right.kind));
 }
 

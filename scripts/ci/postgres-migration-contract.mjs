@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { verifyMigrationDiff } from "./migration-diff.mjs";
 import { verifySavedKeywordMarketMigration } from "./saved-keyword-market-migration-postgres.ts";
 import { verifyWelcomeIntentMigration } from "./welcome-intent-migration-postgres.ts";
 
@@ -153,19 +154,7 @@ async function runScopedMigrationContract(env, runCommand) {
     ],
     configuredEnv,
   );
-  runCommand(
-    "npx",
-    [
-      "prisma",
-      "migrate",
-      "diff",
-      "--from-config-datasource",
-      "--to-schema",
-      "./prisma/schema",
-      "--exit-code",
-    ],
-    configuredEnv,
-  );
+  await verifyMigrationDiff(configuredEnv);
   runCommand(
     "node",
     [

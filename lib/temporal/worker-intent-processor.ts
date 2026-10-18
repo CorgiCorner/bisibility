@@ -1,4 +1,6 @@
 import "server-only";
+import { sweepAchievementMail } from "../achievements/mail";
+import { sweepAchievementFacts } from "../achievements/process";
 import { produceDueRecurringMonitors } from "../local-monitor-recurring/producer";
 import { reconcileRequestedSearchInsightsSyncs } from "../search-insights/sync/requested-sync-reconciler";
 import { hasPendingWorkerIntent } from "../worker-intents/pending-probe";
@@ -19,6 +21,8 @@ type SweepOptions = {
   dispatchTraffic?: typeof dispatchFirstTrafficSyncIntent;
   reconcileSearchInsights?: typeof reconcileRequestedSearchInsightsSyncs;
   sweepWelcome?: typeof sweepWelcomeFollowupIntents;
+  sweepAchievements?: typeof sweepAchievementFacts;
+  sweepAchievementMail?: typeof sweepAchievementMail;
 };
 
 export async function sweepWorkerIntents(options: SweepOptions = {}) {
@@ -30,6 +34,16 @@ export async function sweepWorkerIntents(options: SweepOptions = {}) {
   const tracking = await (options.dispatchTracking ?? dispatchAiTrackingIntents)();
   const search = await (options.reconcileSearchInsights ?? reconcileRequestedSearchInsightsSyncs)();
   const traffic = await (options.dispatchTraffic ?? dispatchFirstTrafficSyncIntent)();
+  for (const sweep of [
+    options.sweepAchievements ?? sweepAchievementFacts,
+    options.sweepAchievementMail ?? sweepAchievementMail,
+  ]) {
+    try {
+      await sweep();
+    } catch {
+      console.error("[achievements] intent sweep failed");
+    }
+  }
   const welcome = await (options.sweepWelcome ?? sweepWelcomeFollowupIntents)();
   return {
     rankRuns,

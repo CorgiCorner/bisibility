@@ -157,7 +157,7 @@ describe("StepCreateProject", () => {
   });
 
   it("creates the project from the website input only", async () => {
-    const createProjectAction = vi.fn(async () => project);
+    const createProjectAction = vi.fn(async () => ({ ok: true as const, project }));
     const onComplete = vi.fn();
     renderCreateProjectStep({ browserTimezone: "Europe/Madrid", createProjectAction, onComplete });
 
@@ -173,7 +173,10 @@ describe("StepCreateProject", () => {
   });
 
   it("sends the resolved browser timezone but keeps onComplete to visible form values", async () => {
-    const createProjectAction = vi.fn(async () => ({ ...project, timezone: "Europe/Madrid" }));
+    const createProjectAction = vi.fn(async () => ({
+      ok: true as const,
+      project: { ...project, timezone: "Europe/Madrid" },
+    }));
     const onComplete = vi.fn();
     renderCreateProjectStep({ browserTimezone: "Europe/Madrid", createProjectAction, onComplete });
 
@@ -189,6 +192,29 @@ describe("StepCreateProject", () => {
     expect(values).toEqual({ website: "example.com" });
     expect(values).not.toHaveProperty("timezone");
     expect(created).toMatchObject({ publicId: "prj_1", timezone: "Europe/Madrid" });
+  });
+
+  it("shows the project limit without advancing and allows a corrected retry", async () => {
+    const createProjectAction = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, error: { code: "PROJECT_LIMIT_REACHED", limit: 2 } })
+      .mockResolvedValueOnce({ ok: true, project });
+    const onComplete = vi.fn();
+    renderCreateProjectStep({ createProjectAction, onComplete });
+
+    submitProject();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This account is limited to 2 projects. Delete a project before creating another.",
+    );
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(routerMock.push).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Your website")).toHaveValue("example.com");
+
+    submitProject();
+    await waitFor(() =>
+      expect(onComplete).toHaveBeenCalledWith({ website: "example.com" }, project),
+    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("surfaces create failures without advancing", async () => {

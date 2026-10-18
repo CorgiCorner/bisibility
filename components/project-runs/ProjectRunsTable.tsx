@@ -1,10 +1,12 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { type ProjectRunsQuery, updateProjectRunsQuery } from "@/lib/runs/filters";
 import type { ProjectRun } from "@/lib/runs/project-run";
+import { runTimelineSection } from "@/lib/runs/project-run-time-presentation";
 import { projectRunTimelineAt, projectRunTimelineGroup } from "@/lib/runs/project-runs-timeline";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
 import { useRouter } from "next/navigation";
@@ -12,9 +14,10 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useMemo, useState, useTransition } from "react";
 import { RunActions } from "./ProjectRunActions";
 import type { ProjectRunWithOperationSnapshot } from "./project-runs-presentation";
-import { progressFor, scopeLabelFor, titleFor } from "./project-runs-table-copy";
+import { titleFor } from "./project-runs-table-copy";
 import { RunStatusChip } from "./RunStatusChip";
 import { RunStatusLegend } from "./RunStatusLegend";
+import { RunStatusSummary } from "./RunStatusSummary";
 import { RunTimelineSection } from "./RunTimelineSection";
 import { RunTimelineTime } from "./RunTimelineTime";
 import { RunTitleCell } from "./RunTitleCell";
@@ -38,6 +41,7 @@ type ProjectRunsTableProps = {
   projectRef: string;
   rows: readonly ProjectRunWithOperationSnapshot[];
   query?: ProjectRunsQuery;
+  readAt?: string;
 };
 
 export function ProjectRunsTable({
@@ -49,12 +53,13 @@ export function ProjectRunsTable({
   projectRef,
   rows,
   query,
+  readAt,
 }: Readonly<ProjectRunsTableProps>) {
   const t = useTranslations("projectRuns.table");
   const timelineT = useTranslations("projectRuns.timeline");
   const timeline = query?.view === "timeline";
   const statusCopy = useRunStatusCopy();
-  const isDesktop = useMediaQuery("(min-width:1024px)");
+  const isDesktop = useMediaQuery("(min-width:1280px)");
   const router = useRouter();
   const [pendingRunId, setPendingRunId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -83,7 +88,9 @@ export function ProjectRunsTable({
       {
         accessorKey: "title",
         enableSorting: false,
-        cell: ({ row }) => <RunTitleCell run={row.original.run} compact={!isDesktop} />,
+        cell: ({ row }) => (
+          <RunTitleCell run={row.original.run} compact={!isDesktop} readAt={readAt} />
+        ),
         header: () => (
           <span className="inline-flex items-center gap-0.5">
             {t("operation")}
@@ -93,62 +100,26 @@ export function ProjectRunsTable({
           </span>
         ),
         meta: { flex: 1, pin: "left", title: t("operation") },
-        minSize: 210,
-        size: 260,
+        minSize: 240,
+        size: 280,
       },
       {
         id: "when",
         accessorFn: (row) => projectRunTimelineAt(row.run),
-        cell: ({ row }) => <RunTimelineTime run={row.original.run} />,
+        cell: ({ row }) => <RunTimelineTime run={row.original.run} readAt={readAt} />,
         enableSorting: timeline,
         sortDescFirst: true,
         header: timelineT("when"),
         meta: { title: timelineT("when"), sortField: "when" },
-        minSize: 166,
-        size: 184,
-      },
-      {
-        id: "type",
-        enableSorting: false,
-        cell: ({ row }) =>
-          row.original.run.kind === "rank_check" ? t("rankCheck") : t("searchConsoleImport"),
-        header: t("type"),
-        meta: { title: t("type") },
-        minSize: 150,
-        size: 170,
-      },
-      {
-        id: "scope",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <span className="block min-w-0">
-            <span className="block truncate text-fg" title={scopeLabelFor(row.original.run, t)}>
-              {scopeLabelFor(row.original.run, t)}
-            </span>
-            {row.original.run.scope.description ? (
-              <span
-                className="block truncate text-[10.5px] text-fg-muted"
-                title={row.original.run.scope.description}
-              >
-                {row.original.run.scope.description}
-              </span>
-            ) : null}
-          </span>
-        ),
-        header: t("scope"),
-        meta: { title: t("scope") },
-        minSize: 180,
-        size: 230,
+        minSize: 224,
+        size: 224,
       },
       {
         id: "status",
         cell: ({ row }) => (
           <span className="grid gap-1">
             <RunStatusChip {...statusCopy.forRun(row.original.run)} />
-            {row.original.run.kind === "rank_check" &&
-            row.original.run.details.blockedReason === "no_active_keywords" ? (
-              <span className="text-[10.5px] text-fg-muted">{timelineT("noActiveKeywords")}</span>
-            ) : null}
+            <RunStatusSummary run={row.original.run} />
           </span>
         ),
         enableSorting: false,
@@ -159,58 +130,54 @@ export function ProjectRunsTable({
           </span>
         ),
         meta: { title: t("status") },
-        minSize: 168,
-        size: 192,
-      },
-      {
-        id: "progress",
-        enableSorting: false,
-        cell: ({ row }) => <span className="tabular-nums">{progressFor(row.original.run, t)}</span>,
-        header: t("progress"),
-        meta: { align: "end", title: t("progress") },
-        minSize: 120,
-        size: 140,
-      },
-      {
-        id: "unit",
-        enableSorting: false,
-        cell: ({ row }) =>
-          row.original.run.progress.unit === "days" ? t("finalizedDays") : t("targets"),
-        header: t("unit"),
-        meta: { title: t("unit") },
-        minSize: 118,
-        size: 128,
+        minSize: 200,
+        size: 240,
       },
       {
         id: "actions",
         enableSorting: false,
         cell: ({ row }) => (
-          <RunActions
-            canMutate={canMutate}
-            onDelete={
-              onDelete
-                ? async (run) => {
-                    await onDelete({ projectRef, runId: run.id });
-                    router.refresh();
-                  }
-                : undefined
-            }
-            onRunNow={(run) => mutate(run, onRunNow)}
-            onSkip={(run) => mutate(run, onSkip)}
-            pendingRunId={pendingRunId}
-            run={row.original.run}
-          />
+          <span className="flex items-center justify-end gap-2">
+            {isDesktop &&
+            row.original.run.attention &&
+            projectRunTimelineGroup(row.original.run) !== 2 ? (
+              <Button
+                href={row.original.run.href}
+                className="whitespace-nowrap"
+                size="xs"
+                variant="secondary"
+              >
+                {t("reviewIssue")}
+              </Button>
+            ) : null}
+            <RunActions
+              canMutate={canMutate}
+              onDelete={
+                onDelete
+                  ? async (run) => {
+                      await onDelete({ projectRef, runId: run.id });
+                      router.refresh();
+                    }
+                  : undefined
+              }
+              onRunNow={(run) => mutate(run, onRunNow)}
+              onSkip={(run) => mutate(run, onSkip)}
+              pendingRunId={pendingRunId}
+              run={row.original.run}
+            />
+          </span>
         ),
         header: () => <span className="sr-only">{t("actions")}</span>,
-        maxSize: 48,
+        maxSize: isDesktop ? 180 : 48,
         meta: { align: "end", lockResize: true, pin: "right", title: t("actions") },
-        minSize: 48,
-        size: 48,
+        minSize: isDesktop ? 180 : 48,
+        size: isDesktop ? 180 : 48,
       },
     ],
     [
       canMutate,
       isDesktop,
+      readAt,
       mutate,
       onRunNow,
       onSkip,
@@ -237,11 +204,7 @@ export function ProjectRunsTable({
             ? undefined
             : {
                 when: false,
-                type: false,
-                scope: false,
                 status: false,
-                progress: false,
-                unit: false,
               }
         }
         columns={columns}
@@ -257,14 +220,25 @@ export function ProjectRunsTable({
             ),
           )
         }
-        renderSection={(row) => <RunTimelineSection run={row.run} order={query?.order} />}
+        renderSection={(row) => (
+          <RunTimelineSection
+            run={row.run}
+            order={query?.order}
+            readAt={readAt}
+            attention={query?.status === "attention"}
+          />
+        )}
         rows={rows.flatMap((run, index) => {
           const row: ProjectRunsTableRow = { id: run.id, run, title: titleFor(run, t) };
           return timeline &&
             (index === 0 ||
-              projectRunTimelineGroup(rows[index - 1]) !== projectRunTimelineGroup(run))
+              runTimelineSection(rows[index - 1], readAt) !== runTimelineSection(run, readAt))
             ? [
-                { ...row, id: `section-${projectRunTimelineGroup(run)}`, kind: "section" as const },
+                {
+                  ...row,
+                  id: `section-${runTimelineSection(run, readAt)}`,
+                  kind: "section" as const,
+                },
                 row,
               ]
             : [row];
@@ -275,7 +249,14 @@ export function ProjectRunsTable({
             : null
         }
         rowClassName={(row) =>
-          projectRunTimelineGroup(row.run) === 2 ? "text-fg-muted" : undefined
+          [
+            projectRunTimelineGroup(row.run) === 2 ? "text-fg-muted" : "",
+            row.kind === "section"
+              ? "!h-auto min-h-9 py-2"
+              : isDesktop
+                ? "!h-auto min-h-[68px] [&>[role=cell]]:py-3"
+                : "!h-auto min-h-28 [&>[role=cell]]:py-3",
+          ].join(" ")
         }
       />
       {actionError ? (

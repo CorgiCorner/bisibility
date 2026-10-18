@@ -23,6 +23,10 @@ export function PATCH(req: NextRequest, context: RouteContext) {
   return handleApiRequest(req, context);
 }
 
+export function PUT(req: NextRequest, context: RouteContext) {
+  return handleApiRequest(req, context);
+}
+
 export function DELETE(req: NextRequest, context: RouteContext) {
   return handleApiRequest(req, context);
 }

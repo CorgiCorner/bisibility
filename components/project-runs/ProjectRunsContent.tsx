@@ -32,6 +32,7 @@ type ProjectRunsContentProps = {
   query: ProjectRunsQuery;
   runNowAction: ProjectRunAction;
   skipAction: ProjectRunAction;
+  readAt?: string;
 };
 
 type ProjectRunsLoadErrorProps = {
@@ -168,6 +169,7 @@ export function ProjectRunsContent({
   query,
   runNowAction,
   skipAction,
+  readAt,
 }: Readonly<ProjectRunsContentProps>) {
   const t = useTranslations("projectRuns.content");
   // The API schema validates this transport shape; R1's presentation type carries its stricter ID brands.
@@ -198,6 +200,7 @@ export function ProjectRunsContent({
           projectRef={projectRef}
           rows={rows}
           query={query}
+          readAt={readAt}
         />
       </Card>
       {nextHref ? (

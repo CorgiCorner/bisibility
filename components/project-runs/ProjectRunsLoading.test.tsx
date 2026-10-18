@@ -12,7 +12,7 @@ describe("Project runs loading boundaries", () => {
     {
       Component: () => <ProjectRunsLoading />,
       label: "runs",
-      columns: ["Operation", "Type", "Scope", "Status", "Progress", "Unit", "Submitted", "Started"],
+      columns: ["Task", "When", "Status"],
     },
     {
       Component: () => <ProjectRunsLoading active="schedules" />,
@@ -36,7 +36,9 @@ describe("Project runs loading boundaries", () => {
       const rows = container.querySelectorAll("[data-loading-table-row]");
       expect(rows).toHaveLength(5);
       for (const row of rows)
-        expect(row).toHaveStyle({ height: `${dataTableRowHeight("standard")}px` });
+        expect(row).toHaveStyle({
+          minHeight: `${label === "runs" ? 112 : dataTableRowHeight("standard")}px`,
+        });
       expect(container.querySelector(".overflow-x-auto")).not.toBeNull();
       expect(container.querySelector(".motion-safe\\:animate-pulse")).not.toBeNull();
     },

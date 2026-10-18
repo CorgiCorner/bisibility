@@ -1,4 +1,6 @@
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { ThemeRoot } from "@/components/ui/ThemeRoot";
+import { projectRunsFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
 import { type ScheduleListRow, SchedulesList } from "./SchedulesList";
@@ -83,11 +85,13 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <ThemeRoot className="min-h-screen bg-bg p-5 text-fg" data-theme="light">
-        <div className="mx-auto max-w-[1180px]">
-          <Story />
-        </div>
-      </ThemeRoot>
+      <FeatureMessagesProvider locale="en" timeZone="UTC" messages={projectRunsFeatureTestMessages}>
+        <ThemeRoot className="min-h-screen bg-bg p-5 text-fg">
+          <div className="mx-auto max-w-[1180px]">
+            <Story />
+          </div>
+        </ThemeRoot>
+      </FeatureMessagesProvider>
     ),
   ],
   args: {
@@ -157,6 +161,40 @@ export const EditorExisting: Story = {
     link.removeEventListener("click", preventNavigation);
 
     await expect(clicks).toBe(1);
+  },
+};
+
+export const WithPromptMonitoring: Story = {
+  name: "with-prompt-monitoring",
+  args: {
+    ai: {
+      canWrite: true,
+      activePromptCount: 2,
+      onArchive: async () => undefined,
+      onPause: async () => undefined,
+      rows: [
+        {
+          archivedAt: null,
+          cron: "0 9 * * 1",
+          enabled: true,
+          name: "Weekly prompt check",
+          nextRunAt: "2030-01-07T08:00:00.000Z",
+          promptCount: 12,
+          publicId: "ais_weekly",
+          timezone: "Europe/Warsaw",
+        },
+        {
+          archivedAt: null,
+          cron: "0 6 1 * *",
+          enabled: false,
+          name: "Monthly comparison prompts",
+          nextRunAt: null,
+          promptCount: 4,
+          publicId: "ais_monthly",
+          timezone: "UTC",
+        },
+      ],
+    },
   },
 };
 

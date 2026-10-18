@@ -13,6 +13,7 @@ export const DEFAULT_WORKER_INTENT_POLL_INTERVAL_MS = 2_000;
 export const WORKER_INTENT_PUBLISH_TIMEOUT_MS = 2_000;
 
 export const WORKER_INTENT_KINDS = [
+  "achievements",
   "search_insights_sync",
   "traffic_first_sync",
   "welcome_followup",

@@ -127,10 +127,11 @@ Check failed activities, unconfirmed/overdue counts and the completed `provider_
 A page with `hasMore` is incomplete; unknown evidence older than 15 minutes raises a warning and keeps its scope blocked.
 Never clear gates or change namespaces to bypass uncertainty. See [Accounting migration](/self-hosting/upgrades#accounting-migration).
 
+For imported legacy operations without a modern paid-request context, use the evidence-based [historical accounting recovery](/self-hosting/historical-accounting) preview and operator command.
+
 ## Back up and restore PostgreSQL
 
-Back up and restore the application database, secrets, and Temporal persistence on the canonical
-page: [Backup and restore](/self-hosting/backup-restore).
+Back up and restore the application database, secrets, and Temporal persistence on the canonical page: [Backup and restore](/self-hosting/backup-restore).
 
 ## Database growth
 
@@ -147,8 +148,7 @@ Terminal queued-task evidence remains for 30 days. The worker deletes it at 03:4
 submissions disabled. Override the schedule with `QUEUED_RANK_CHECK_RETENTION_CRON`. Each activity
 deletes at most 100 batches; more expired pages continue in a new workflow run.
 
-Each completed purge keeps a content-free retry fence. Results are scrubbed promptly; daily
-maintenance catches missed completed rows. Fences stay closed for
+Each completed purge keeps a content-free retry fence. Results are scrubbed promptly; daily maintenance catches missed completed rows. Fences stay closed for
 `RANK_CHECK_RAW_PROGRESS_FENCE_RETENTION_DAYS`. An indexed sweeper deletes at most four 500-row
 pages per phase and invocation, so daily runs converge without one large transaction. Fences store
 no raw provider content, URL, domain, or keyword text. See

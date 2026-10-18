@@ -44,7 +44,7 @@ export async function queuedRankCheckRoute(
   }
   try {
     if (primary.credentialSource === "hosted") {
-      return queuedDeploymentCredentialsAvailable("dataforseo")
+      return (await queuedDeploymentCredentialsAvailable("dataforseo"))
         ? { mode: "queued", provider: "dataforseo" }
         : { mode: "deferred", reason: "credentials_unavailable" };
     }

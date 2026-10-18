@@ -19,13 +19,13 @@ export function KeywordReportSummary({
   if (pending)
     return (
       <div data-testid="keyword-full-scope-report" aria-busy="true">
-        <SummaryStrip loading className="rounded-none px-4" />
+        <SummaryStrip loading className="rounded-none border-t border-border-soft px-4" />
       </div>
     );
   if (!report)
     return (
       <SummaryStrip
-        className="rounded-none px-4"
+        className="rounded-none border-t border-border-soft px-4"
         sentence={t("summaryUnavailable", { expected: format.number(expected) })}
       />
     );
@@ -72,7 +72,7 @@ export function KeywordReportSummary({
   return (
     <div
       data-testid="keyword-full-scope-report"
-      className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 bg-bg-sunken px-4 py-1.5 text-[12.5px]"
+      className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-t border-border-soft bg-bg-sunken px-4 py-1.5 text-[12.5px]"
     >
       <span role="status" aria-label={`${title}: ${value}`} className="font-medium">
         {title}: {value}

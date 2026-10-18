@@ -59,6 +59,23 @@
       "useProjectTimeZone": "Usa la zona horaria del proyecto",
       "useProjectTimeZoneNamed": "Usa la zona horaria del proyecto: {timezone}",
       "weekday": "Día de la semana",
+      "ai": {
+        "archiveBody": "Las ejecuciones futuras de monitorización de prompts se detendrán. Las que ya han empezado podrán terminar y los resultados anteriores seguirán disponibles. Las programaciones de monitorización de prompts archivadas no se pueden restaurar.",
+        "archiveFailed": "No se pudo archivar la programación de monitorización de prompts.",
+        "archived": "Programación de monitorización de prompts archivada. Las ejecuciones y los resultados anteriores se conservan.",
+        "archivedReadOnlyHint": "Las programaciones de monitorización de prompts archivadas se conservan como historial y no se pueden editar ni restaurar.",
+        "emptyNext": "Añade prompts para empezar",
+        "kindAi": "Monitorización de prompts",
+        "kindRank": "Comprobaciones de posición",
+        "newSchedule": "Nueva programación de monitorización de prompts",
+        "nextPending": "Pendiente",
+        "prompts": "{count, plural, one {# prompt} other {# prompts}}",
+        "readOnly": "Solo lectura",
+        "resumeTitle": "Abre la programación para revisar su configuración, previsualizar el coste y aprobarla antes de que vuelva a ejecutarse.",
+        "loadFailed": "No se pudieron cargar los horarios de prompts. Los horarios de posiciones se muestran abajo.",
+        "retry": "Reintentar",
+        "addPromptFirst": "Primero añade o activa un prompt en el seguimiento de IA."
+      },
       "archiveDialog": {
         "body": "Las ejecuciones futuras se detendrán. Las que ya han empezado podrán terminar y los resultados anteriores seguirán disponibles.",
         "defaultNotice": "Esta es la programación predeterminada. Las palabras clave nuevas usarán comprobaciones manuales hasta que elijas otra.",

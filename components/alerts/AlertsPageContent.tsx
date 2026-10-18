@@ -122,21 +122,23 @@ export function AlertsPageContent({
 
   return (
     <div className="flex min-w-0 flex-col gap-4.5">
-      <AlertsLiveToolbar
-        actions={actions}
-        canCreate={canCreate}
-        canManage={canManage}
-        projectDomain={resolvedProjectDomain}
-        projectId={projectId}
-        targets={targets}
-      />
-      {localizedFacetOptions ? (
-        <FacetBar
-          facets={facets}
-          labels={alertFeedFacetLabels(t)}
-          options={localizedFacetOptions}
+      <div className="flex min-w-0 flex-wrap items-center justify-end gap-3">
+        {localizedFacetOptions ? (
+          <FacetBar
+            facets={facets}
+            labels={alertFeedFacetLabels(t)}
+            options={localizedFacetOptions}
+          />
+        ) : null}
+        <AlertsLiveToolbar
+          actions={actions}
+          canCreate={canCreate}
+          canManage={canManage}
+          projectDomain={resolvedProjectDomain}
+          projectId={projectId}
+          targets={targets}
         />
-      ) : null}
+      </div>
       {!hasTrackedKeywords ? (
         <AlertBanner
           action={{

@@ -8,7 +8,9 @@ const mocks = vi.hoisted(() => ({
   compare: vi.fn(),
   history: vi.fn(),
   catalog: vi.fn(),
+  record: vi.fn(),
 }));
+vi.mock("@/lib/achievements/record-use", () => ({ recordQualifiedUse: mocks.record }));
 vi.mock("./_shared", () => ({ getActionActor: mocks.actor, requireProjectScope: mocks.scope }));
 vi.mock("@/lib/ai-research/catalog-service", () => ({ getAiResearchCatalog: mocks.catalog }));
 vi.mock("@/lib/ai-research/service", () => ({
@@ -134,4 +136,15 @@ it("rejects unsupported provider domain mode before authorization or paid servic
   ).rejects.toThrow(/Domain searches support at most 63 characters/);
   expect(mocks.actor).not.toHaveBeenCalled();
   expect(mocks.analyze).not.toHaveBeenCalled();
+});
+
+it("excludes estimate-only AI results from practice attribution", async () => {
+  mocks.analyze.mockResolvedValue({ ok: true, costCents: 0 });
+  await analyzeAiResearchAction("prj_public", "visibility", { ...input, estimate_only: true });
+  expect(mocks.record).toHaveBeenCalledWith({
+    actorId: "actor",
+    operation: "runAiResearch",
+    estimate: true,
+    success: true,
+  });
 });

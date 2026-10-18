@@ -166,7 +166,7 @@ export async function completePendingGooglePropertySelection(input: {
   property: string;
 }): Promise<GooglePropertySelectionResult> {
   const context = await pendingForProject(input.projectId);
-  if (!context) throw new Error("Google connection expired. Connect the account again.");
+  if (!context) return { status: "reauth_required" };
 
   let property: string;
   let permissionLevel: string | undefined;

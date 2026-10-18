@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   tx: {
     $executeRaw: vi.fn(),
     auditLog: { create: vi.fn() },
+    analyticsPersonDeletion: { createMany: vi.fn() },
     user: {
       count: vi.fn(),
       delete: vi.fn(),
@@ -21,6 +22,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/analytics/deletion-provider", () => ({
+  shouldQueueAnalyticsPersonDeletion: () => true,
+  deleteServerPersons: vi.fn().mockResolvedValue(false),
+}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/account/profile-service", () => ({ updateProfileNameRecord: vi.fn() }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
@@ -46,6 +51,7 @@ describe("deleteAccount instance-admin guard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.tx.$executeRaw.mockImplementation(mocks.executeRaw);
+    mocks.tx.analyticsPersonDeletion.createMany.mockResolvedValue({ count: 2 });
     mocks.tx.user.count.mockImplementation(mocks.count);
     mocks.tx.user.delete.mockImplementation(mocks.delete);
     mocks.tx.user.findUnique.mockImplementation(mocks.findUnique);
@@ -70,6 +76,7 @@ describe("deleteAccount instance-admin guard", () => {
     });
 
     expect(mocks.delete).not.toHaveBeenCalled();
+    expect(mocks.tx.analyticsPersonDeletion.createMany).not.toHaveBeenCalled();
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       {
         action: "instance_admin.delete_blocked",
@@ -85,6 +92,7 @@ describe("deleteAccount instance-admin guard", () => {
     );
     expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: "Serializable",
+      timeout: 30_000,
     });
   });
 
@@ -95,6 +103,10 @@ describe("deleteAccount instance-admin guard", () => {
     await deleteAccount({ email: "user_1@example.test" });
 
     expect(mocks.delete).toHaveBeenCalledWith({ where: { id: "user_1" } });
+    expect(mocks.tx.analyticsPersonDeletion.createMany).toHaveBeenCalledWith({
+      data: [{ distinctId: "user_1" }, { distinctId: "usr_a00000000000000000000000" }],
+      skipDuplicates: true,
+    });
     expect(redirect).toHaveBeenCalledWith("/login");
   });
 
@@ -105,6 +117,10 @@ describe("deleteAccount instance-admin guard", () => {
 
     expect(mocks.count).not.toHaveBeenCalled();
     expect(mocks.delete).toHaveBeenCalledWith({ where: { id: "user_1" } });
+    expect(mocks.tx.analyticsPersonDeletion.createMany).toHaveBeenCalledWith({
+      data: [{ distinctId: "user_1" }, { distinctId: "usr_a00000000000000000000000" }],
+      skipDuplicates: true,
+    });
   });
 
   it("leaves one admin when the final two admins delete concurrently", async () => {
@@ -150,6 +166,7 @@ describe("deleteAccount instance-admin guard", () => {
     expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
     expect([...users.values()].filter((entry) => entry.isInstanceAdmin)).toHaveLength(1);
     expect(mocks.executeRaw).toHaveBeenCalledTimes(2);
+    expect(mocks.tx.analyticsPersonDeletion.createMany).toHaveBeenCalledOnce();
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: "instance_admin.delete_blocked" }),
       mocks.tx,

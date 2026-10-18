@@ -6,6 +6,7 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { captureDefinitionItemIntent } from "@/lib/measurement-definitions/worker-intent";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import {
+  deploymentRankUsesNativeUnits,
   hostedRankCheckEstimatedCostCents,
   quoteDeploymentRankReservations,
 } from "@/lib/providers/execution-extension";
@@ -61,7 +62,7 @@ export async function wrapLegacyRankCheck(
               keywordId: input.keywordId,
               estimatedCostCents: exactExecutionEstimate(
                 reservation.allocationConnection.provider === "serpapi"
-                  ? hostedRankCheckEstimatedCostCents(
+                  ? await hostedRankCheckEstimatedCostCents(
                       reservation.allocationConnection.provider,
                       reservation.depth,
                     )
@@ -74,7 +75,11 @@ export async function wrapLegacyRankCheck(
                 4,
               ),
               // Depth changes estimated cost; one rank task is one native operation.
-              estimatedQuantity: "1.000000",
+              estimatedQuantity: (await deploymentRankUsesNativeUnits(
+                reservation.allocationConnection.provider,
+              ))
+                ? String(pagesPerCheck(reservation.depth))
+                : "1.000000",
             },
           ],
         })

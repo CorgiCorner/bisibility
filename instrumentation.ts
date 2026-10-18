@@ -15,6 +15,8 @@ async function resolveErrorSinkDsn() {
 
 export async function register() {
   const errorSinkDsn = await resolveErrorSinkDsn();
+  const { registerRequestDiagnosticSink } = await import("./lib/observability/request-diagnostics");
+  registerRequestDiagnosticSink(undefined);
 
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const { assertCanonicalHostedMcpOrigin } = await import(
@@ -34,6 +36,11 @@ export async function register() {
 
   if (process.env.NEXT_RUNTIME === "edge" && errorSinkDsn) {
     await import("./sentry.edge.config");
+  }
+
+  if (errorSinkDsn && ["nodejs", "edge"].includes(process.env.NEXT_RUNTIME ?? "")) {
+    const sdk = await import("@sentry/nextjs");
+    registerRequestDiagnosticSink((name, value) => sdk.getActiveSpan()?.setAttribute(name, value));
   }
 }
 

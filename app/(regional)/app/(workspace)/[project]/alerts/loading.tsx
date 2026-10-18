@@ -19,10 +19,8 @@ export default function AlertsLoading() {
   return (
     <PageContent aria-busy="true" aria-hidden className="flex flex-col gap-4.5">
       <div className="flex flex-wrap items-center justify-end gap-3">
-        <Bar className="h-8 w-[104px]" />
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Bar className="h-8 w-[104px]" />
+        <Bar className="h-8.5 w-[104px]" />
+        <Bar className="h-8.5 w-[104px]" />
       </div>
       <Card className="flex flex-col gap-3 px-4.5 py-3.5 sm:flex-row sm:items-center">
         <Bar className="h-3.5 w-[100px]" />

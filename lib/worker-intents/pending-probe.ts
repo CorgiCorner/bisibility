@@ -1,4 +1,5 @@
 import "server-only";
+import { hasAchievementIntent } from "@/lib/achievements/process";
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { recurringMonitorsEnabled } from "@/lib/local-monitor-recurring/config";
@@ -71,6 +72,13 @@ export const WORKER_INTENT_PENDING_PROBE = Prisma.sql`
 export async function hasPendingWorkerIntent() {
   const [result] = await prisma.$queryRaw<Array<{ pending: boolean }>>(WORKER_INTENT_PENDING_PROBE);
   if (result?.pending) return true;
+  if (
+    await hasAchievementIntent().catch(() => {
+      console.error("[achievements] pending probe failed");
+      return false;
+    })
+  )
+    return true;
   if (!recurringMonitorsEnabled()) return false;
   const [due] = await prisma.$queryRaw<
     Array<{ pending: boolean }>

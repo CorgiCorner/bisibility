@@ -53,7 +53,7 @@
       "finalizedDays": "Días consolidados",
       "notAvailable": "No disponible",
       "notStarted": "Sin iniciar",
-      "operation": "Operación",
+      "operation": "Tarea",
       "plannedUpdateFailed": "No se ha podido actualizar la ejecución prevista. Inténtalo de nuevo.",
       "progress": "Progreso",
       "progressValue": "{completed, number} / {total, number}",
@@ -74,7 +74,18 @@
       "type": "Tipo",
       "unit": "Unidad",
       "updatingPlannedRun": "Actualizando la ejecución prevista",
-      "keywordCount": "{count, plural, one {# palabra clave} other {# palabras clave}}"
+      "keywordCount": "{count, plural, one {# palabra clave} other {# palabras clave}}",
+      "reviewIssue": "Revisar problema",
+      "reviewUsage": "Revisar presupuesto y uso",
+      "usageUnconfirmed": "Uso pendiente de confirmación",
+      "connectProvider": "Conecta un proveedor compatible",
+      "providerUnavailable": "Proveedor no disponible",
+      "workerUnavailable": "Proceso en segundo plano no disponible",
+      "marketPaused": "Mercado en pausa",
+      "noActiveKeywords": "Sin palabras clave activas",
+      "reviewBlocker": "Revisa el motivo del bloqueo",
+      "targetProgress": "{completed, number} / {total, number} {total, plural, one {objetivo} other {objetivos}}",
+      "dayProgress": "{completed, number} / {total, number} {total, plural, one {día consolidado} other {días consolidados}}"
     },
     "actions": {
       "actionsFor": "Acciones para {title}",
@@ -87,7 +98,7 @@
     "timeline": {
       "all": "Todos",
       "active": "En curso",
-      "upcoming": "Próximas",
+      "upcoming": "Pendientes de inicio",
       "history": "Historial",
       "sections": "Etapas de ejecución",
       "activeHint": "Primero los iniciados antes",
@@ -101,7 +112,17 @@
       "readyFrom": "Disponible desde",
       "parallelWorkers": "Los workers pueden ejecutarse en paralelo.",
       "oldestFirst": "Más antiguas primero",
-      "newestFirst": "Más recientes primero"
+      "newestFirst": "Más recientes primero",
+      "waiting": "Pendientes de inicio",
+      "waitingHint": "Ejecuciones en espera. Se muestran las fechas registradas.",
+      "due": "Fecha ya pasada",
+      "dueHint": "Trabajo pendiente cuya fecha de inicio o reintento ya pasó.",
+      "later": "Programadas para después",
+      "laterHint": "Esperando una fecha futura.",
+      "pastFailuresHint": "Ejecuciones anteriores que terminaron con un problema. No son ejecuciones pendientes actuales.",
+      "attention": "Requiere atención",
+      "pastScheduled": "Fecha prevista superada",
+      "pastScheduledDays": "Sin iniciar · {count, plural, one {# día desde la fecha prevista} other {# días desde la fecha prevista}}"
     }
   }
 }

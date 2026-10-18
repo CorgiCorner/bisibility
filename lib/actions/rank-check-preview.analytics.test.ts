@@ -98,7 +98,7 @@ describe("runFirstCheckPreview analytics", () => {
 
     expect(mocks.trackServerEvent).toHaveBeenCalledWith("rank_check_preview_completed", {
       consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
-      distinctId: "user_1",
+      userId: "user_1",
       properties: {
         duration_ms: 25,
         provider: "serpapi",

@@ -13,6 +13,8 @@ export type UsagePresentationFigure = Exclude<Figure, "unavailable"> & {
 export const isMoneyUnit = (unit: string) =>
   unit === "cents" || unit === "customer_cents" || unit === "budget_cents";
 
+export const isCreditUnit = (unit: string) => unit === "customer_cents";
+
 function precision(value = 2) {
   if (!Number.isInteger(value) || value < 0 || value > 20) {
     throw new RangeError("Usage display precision must be an integer from 0 to 20.");
@@ -40,9 +42,10 @@ export function createUsageNumberFormat(locale: string, options: UsagePresentati
   const formatters = new Map<string, Intl.NumberFormat>();
   const figure = (value: UsagePresentationFigure): string | null => {
     if (value.certainty === "unknown" || !/^-?\d+(?:\.\d+)?$/.test(value.text)) return null;
-    const money = isMoneyUnit(value.unit);
+    const credits = isCreditUnit(value.unit);
+    const money = isMoneyUnit(value.unit) && !credits;
     const currency = value.currency ?? "USD";
-    const digits = money ? moneyDigits : quantityDigits;
+    const digits = credits ? 4 : money ? moneyDigits : quantityDigits;
     const roundingMode = value.certainty === "estimated" ? "floor" : "halfExpand";
     const key = `${money ? "money" : "quantity"}:${money && currencyDisplay ? currency : "decimal"}:${digits}:${roundingMode}`;
     let formatter = formatters.get(key);
@@ -62,6 +65,6 @@ export function createUsageNumberFormat(locale: string, options: UsagePresentati
   };
   return {
     figure,
-    showCurrency: (unit: string) => currencyDisplay && isMoneyUnit(unit),
+    showCurrency: (unit: string) => currencyDisplay && isMoneyUnit(unit) && !isCreditUnit(unit),
   };
 }

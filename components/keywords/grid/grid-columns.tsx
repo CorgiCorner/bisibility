@@ -131,8 +131,8 @@ export function keywordColumns(
       header: labels.positionShort,
       id: "position",
       meta: { align: "end", title: labels.position },
-      minSize: 172,
-      size: 172,
+      minSize: 220,
+      size: 220,
     },
     {
       accessorFn: keywordRankMovement,
@@ -149,8 +149,8 @@ export function keywordColumns(
       header: labels.location,
       id: "location",
       meta: { flex: 0.9, title: labels.location },
-      minSize: 152,
-      size: 152,
+      minSize: 220,
+      size: 220,
     },
     {
       accessorFn: (row) => row.device,

@@ -20,7 +20,12 @@ vi.mock("@/lib/cost-estimate/project-estimate", () => ({ unitCostCentsFor: mocks
 vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.loadProviderChain,
 }));
-vi.mock("@/lib/metering/project-budget-read", () => ({ projectBudgetCapCents: async () => 5000 }));
+vi.mock("./budget-presentation", () => ({
+  projectRunBudgetAmounts: async (_project: string, spentCents: number) => ({
+    capCents: 5000,
+    spentCents,
+  }),
+}));
 vi.mock("@/lib/rank-check/budget", () => ({ monthlySpendCents: mocks.monthlySpend }));
 vi.mock("@/lib/search-insights/sync/operation-snapshot", () => ({
   readActiveSearchImportSnapshot: mocks.activeSearchImport,

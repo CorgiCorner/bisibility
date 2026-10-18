@@ -1,4 +1,5 @@
 import { registerErrorReportSink } from "@/lib/observability/error-reporting";
+import { sentryNextBuildIdentity } from "@/lib/observability/next-build-identity";
 import type * as Sentry from "@sentry/nextjs";
 
 function parseSampleRate(value: string | undefined, fallback: number) {
@@ -29,7 +30,7 @@ async function initializeSentry() {
   sentry.init({
     dsn,
     environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || process.env.NODE_ENV,
-    release: process.env.NEXT_PUBLIC_SENTRY_RELEASE,
+    ...sentryNextBuildIdentity("browser"),
     sendDefaultPii: false,
     tracesSampleRate: parseSampleRate(
       process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE,

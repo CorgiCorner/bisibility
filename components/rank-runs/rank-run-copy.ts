@@ -6,7 +6,7 @@ type ClientDeploymentMode = "self-host" | "cloud";
 type RankCheckRunBudget = NonNullable<RankCheckOperation["budget"]>;
 
 type BlockedCopy = {
-  action: "connection_settings" | "edit_budget" | "worker_status" | null;
+  action: "connection_settings" | "edit_budget" | "worker_status" | "review_usage" | null;
   compact: string;
   description: string;
   title: string;
@@ -40,6 +40,20 @@ export function localizedBlockedRunCopy(
           title: t("blocked.workerWaiting"),
         };
   }
+  if (
+    reason === "usage_reconciliation_required" ||
+    ((reason === "budget_exhausted" || reason === "budget_missing") && !budget)
+  ) {
+    const unconfirmed = reason === "usage_reconciliation_required";
+    return {
+      action: "review_usage",
+      compact: t(unconfirmed ? "blocked.usageUnconfirmed" : "blocked.reviewUsage"),
+      description: t(
+        unconfirmed ? "blocked.usageUnconfirmedDescription" : "blocked.reviewUsageDescription",
+      ),
+      title: t(unconfirmed ? "blocked.usageUnconfirmed" : "blocked.reviewUsage"),
+    };
+  }
   if (reason === "budget_exhausted") {
     const spent = budget
       ? new Intl.NumberFormat(locale, { currency: "USD", style: "currency" }).format(
@@ -52,14 +66,14 @@ export function localizedBlockedRunCopy(
         )
       : null;
     return {
-      action: "edit_budget",
-      compact: t("blocked.budgetReached"),
+      action: "review_usage",
+      compact: t("blocked.reviewUsage"),
       description: t("blocked.budgetDescription", {
         cap: cap ?? "",
         spent: spent ?? "",
         withBudget: budget ? "yes" : "no",
       }),
-      title: t("blocked.budgetReached"),
+      title: t("blocked.reviewUsage"),
     };
   }
   if (reason === "no_provider" || reason === "credentials_unavailable") {

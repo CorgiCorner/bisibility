@@ -12,9 +12,11 @@ vi.mock("@/lib/auth/auth", () => {
 vi.mock("@/lib/db/prisma", () => ({ prisma: {} }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 
-it("loads the authentication engine only when reading a request session", async () => {
-  const { enforceActiveSession, getSessionReference } = await import("./session");
+// Complete cold module loading during collection; the assertions still detect an
+// eager auth-engine import anywhere in the real dependency graph.
+const { enforceActiveSession, getSessionReference } = await import("./session");
 
+it("loads the authentication engine only when reading a request session", async () => {
   expect(mocks.loadAuth).not.toHaveBeenCalled();
   await expect(enforceActiveSession(null)).resolves.toBeNull();
   expect(mocks.loadAuth).not.toHaveBeenCalled();

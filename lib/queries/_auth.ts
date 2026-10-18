@@ -49,9 +49,9 @@ export const getQueryActor = perRequestCache(async () =>
   getQueryActorForSession(await getQuerySession()),
 );
 
-async function loadProject(projectId: string) {
+async function loadProject(projectId: string, onMissing: () => never) {
   if (parsePublicId(projectId)?.prefix !== "prj") {
-    throw new Error("Project not found.");
+    onMissing();
   }
 
   const project = await prisma.project.findFirst({
@@ -68,7 +68,7 @@ async function loadProject(projectId: string) {
     where: { publicId: projectId },
   });
   if (!project) {
-    throw new Error("Project not found.");
+    onMissing();
   }
 
   return project;
@@ -76,11 +76,14 @@ async function loadProject(projectId: string) {
 
 const loadReadableProject = perRequestCache(async (projectId: string) => ({
   actor: await getQueryActor(),
-  project: await loadProject(projectId),
+  project: await loadProject(projectId, notFound),
 }));
 
 export async function requireReadableProjectFor(actor: Actor, projectId: string) {
-  const project = await loadProject(projectId);
+  // Actor-based reads also serve API adapters, which map domain errors to HTTP responses.
+  const project = await loadProject(projectId, () => {
+    throw new Error("Project not found.");
+  });
   authorize(actor, "read", { projectId: project.id, type: "project" });
   return { actor, project };
 }

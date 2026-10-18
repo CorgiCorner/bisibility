@@ -61,6 +61,9 @@ describe("header budget summary", () => {
 });
 
 describe("header budget currency", () => {
+  it("leaves customer credits to the normal formatter with its unit suffix", () => {
+    expect(headerBudgetFigure({ ...figure("1000"), unit: "customer_cents" }, "en")).toBeNull();
+  });
   it("shows all money in dollars with two visible decimal places", () => {
     expect(headerBudgetFigure(figure("7.4071"), "en")).toBe("$0.07");
     expect(headerBudgetFigure(figure("5000"), "en")).toBe("$50.00");

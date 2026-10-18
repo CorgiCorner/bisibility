@@ -7,6 +7,7 @@ import { DataTable } from "@/components/ui/data-table/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { TableCardHeader } from "@/components/ui/TableCardHeader";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { useToast } from "@/components/ui/toast-context";
 import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
@@ -14,8 +15,15 @@ import { CalendarBlankIcon as CalendarBlank } from "@phosphor-icons/react/dist/c
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
+import { AiArchiveScheduleModal } from "./AiArchiveScheduleModal";
 import { ArchiveScheduleModal } from "./ArchiveScheduleModal";
-import { type SchedulesTableRow, schedulesTableColumns } from "./schedules-table-columns";
+import { type AiSchedulesController, aiScheduleHref } from "./ai-schedule-rows";
+import { nextRunLabel } from "./schedule-next-run";
+import {
+  type AiSchedulesTableRow,
+  type SchedulesTableRow,
+  schedulesTableColumns,
+} from "./schedules-table-columns";
 
 type ScheduleFrequency = "custom_cron" | "daily" | "manual" | "monthly" | "paused" | "weekly";
 export type ScheduleListRow = {
@@ -44,6 +52,8 @@ export type ScheduleListRow = {
 };
 
 type SchedulesListProps = {
+  /** AI schedules and their per-kind write rule; omitted when AI tracking is unavailable. */
+  ai?: AiSchedulesController;
   canUpdate: boolean;
   canManage?: boolean;
   status?: "current" | "archived";
@@ -52,45 +62,8 @@ type SchedulesListProps = {
   schedules: readonly ScheduleListRow[];
 };
 
-function calendarDay(value: Date, locale: string, timeZone: string) {
-  const parts = new Intl.DateTimeFormat(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone,
-    year: "numeric",
-  }).formatToParts(value);
-  const part = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((entry) => entry.type === type)?.value ?? "00";
-  return Date.UTC(Number(part("year")), Number(part("month")) - 1, Number(part("day")));
-}
-
-function nextRunLabel(
-  value: string | null | undefined,
-  timeZone: string | null | undefined,
-  locale: string,
-  t: ReturnType<typeof useTranslations<"projectRuns.schedules">>,
-) {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  const zone = timeZone ?? "UTC";
-  const now = new Date();
-  const days = Math.round(
-    (calendarDay(date, locale, zone) - calendarDay(now, locale, zone)) / 86_400_000,
-  );
-  const time = new Intl.DateTimeFormat(locale, {
-    hour: "2-digit",
-    hourCycle: "h23",
-    minute: "2-digit",
-    timeZone: zone,
-  }).format(date);
-  if (days === 0) return t("nextRun.today", { time });
-  if (days === 1) return t("nextRun.tomorrow", { time });
-  const day = new Intl.DateTimeFormat(locale, { timeZone: zone, weekday: "short" }).format(date);
-  return t("nextRun.at", { day, time });
-}
-
 export function SchedulesList({
+  ai,
   canUpdate,
   canManage = false,
   status = "current",
@@ -102,23 +75,61 @@ export function SchedulesList({
   const usage = useNativeUsageFormat();
   const locale = useLocale();
   const router = useRouter();
-  const [archiveTarget, setArchiveTarget] = useState<ScheduleListRow | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<SchedulesTableRow | null>(null);
   const { showToast } = useToast();
   const [pendingScheduleId, setPendingScheduleId] = useState<string | null>(null);
   const rows = useMemo<readonly SchedulesTableRow[]>(
-    () =>
-      schedules.map((schedule) => ({
+    () => [
+      ...schedules.map((schedule) => ({
         ...schedule,
-        id: schedule.publicId,
+        scheduleKind: "rank" as const,
+        id: `rank:${schedule.publicId}`,
         nextRunLabel: nextRunLabel(schedule.nextRunAt, schedule.timezone, locale, t),
       })),
-    [locale, schedules, t],
+      ...(ai?.rows ?? []).map((schedule) => ({
+        ...schedule,
+        scheduleKind: "ai" as const,
+        id: `ai:${schedule.publicId}`,
+        nextRunLabel: nextRunLabel(schedule.nextRunAt, schedule.timezone, locale, t),
+      })),
+    ],
+    [ai?.rows, locale, schedules, t],
+  );
+  const aiCanWrite = ai?.canWrite ?? false;
+  const aiHref = useCallback(
+    (row: AiSchedulesTableRow) =>
+      aiCanWrite && !row.archivedAt ? aiScheduleHref(projectRef, row.publicId) : null,
+    [aiCanWrite, projectRef],
+  );
+  const openRow = useCallback(
+    (row: SchedulesTableRow) => {
+      if (row.scheduleKind === "rank") {
+        router.push(projectSchedulesPath(projectRef, row.publicId));
+        return;
+      }
+      const href = aiHref(row);
+      if (href) router.push(href);
+    },
+    [aiHref, projectRef, router],
   );
 
   const togglePause = useCallback(
     async (row: SchedulesTableRow) => {
+      if (row.scheduleKind === "ai") {
+        // Only pausing is direct. Resuming re-enters review, preview and consent in the drawer.
+        if (!ai || !row.enabled) return;
+        setPendingScheduleId(row.id);
+        try {
+          await ai.onPause(row);
+        } catch {
+          showToast(t("list.toggleFailed"), { severity: "error" });
+        } finally {
+          setPendingScheduleId(null);
+        }
+        return;
+      }
       const enabled = row.enabled;
-      setPendingScheduleId(row.publicId);
+      setPendingScheduleId(row.id);
       try {
         const response = await fetch(`/api/check-schedules/${row.publicId}`, {
           body: JSON.stringify({ enabled: !enabled, projectId }),
@@ -137,33 +148,51 @@ export function SchedulesList({
         setPendingScheduleId(null);
       }
     },
-    [projectId, router, showToast, t],
+    [ai, projectId, router, showToast, t],
   );
 
   const columns = useMemo(
     () =>
       schedulesTableColumns({
         usage,
+        aiCanWrite,
+        aiHref,
         canUpdate,
         canManage,
         projectId,
         onArchive: setArchiveTarget,
+        onOpenAi: openRow,
         onTogglePause: togglePause,
         pendingScheduleId,
-        projectRef,
+        rankHref: (row) => projectSchedulesPath(projectRef, row.publicId),
+        showKind: Boolean(ai),
         locale,
         t,
       }),
-    [canUpdate, canManage, locale, projectId, pendingScheduleId, projectRef, t, togglePause, usage],
+    [
+      ai,
+      aiCanWrite,
+      aiHref,
+      canUpdate,
+      canManage,
+      locale,
+      openRow,
+      projectId,
+      pendingScheduleId,
+      projectRef,
+      t,
+      togglePause,
+      usage,
+    ],
   );
 
   return (
     <Card className="min-w-0 overflow-hidden p-0" size="sm">
       <section aria-labelledby="schedules-list-title">
         <TableCardHeader
-          className={schedules.length === 0 ? "border-b border-border" : undefined}
+          className={rows.length === 0 ? "border-b border-border" : undefined}
           titleId="schedules-list-title"
-          title={t("scheduleCount", { count: schedules.length })}
+          title={t("scheduleCount", { count: rows.length })}
           actions={
             <>
               <MenuSelect
@@ -189,10 +218,27 @@ export function SchedulesList({
                   {t("newSchedule")}
                 </Button>
               ) : null}
+              {aiCanWrite ? (
+                <Tooltip content={t("ai.addPromptFirst")} disabled={ai?.activePromptCount !== 0}>
+                  <span
+                    className="inline-flex"
+                    tabIndex={ai?.activePromptCount === 0 ? 0 : undefined}
+                  >
+                    <Button
+                      href={aiScheduleHref(projectRef, "new")}
+                      disabled={ai?.activePromptCount === 0}
+                      size="sm"
+                      variant="secondary"
+                    >
+                      {t("ai.newSchedule")}
+                    </Button>
+                  </span>
+                </Tooltip>
+              ) : null}
             </>
           }
         />
-        {schedules.length === 0 ? (
+        {rows.length === 0 ? (
           <div className="p-8">
             <EmptyState
               compact
@@ -213,19 +259,27 @@ export function SchedulesList({
               columns={columns}
               id="schedules-list"
               layout="auto"
-              onRowClick={(row) => router.push(projectSchedulesPath(projectRef, row.publicId))}
+              onRowClick={openRow}
               onSortingChange={() => undefined}
               rows={rows}
               sorting={null}
             />
           </div>
         )}
-        {archiveTarget ? (
+        {archiveTarget?.scheduleKind === "rank" ? (
           <ArchiveScheduleModal
-            key={archiveTarget.publicId}
+            key={archiveTarget.id}
             projectId={projectId}
             schedule={archiveTarget}
             schedules={schedules}
+            onClose={() => setArchiveTarget(null)}
+          />
+        ) : null}
+        {archiveTarget?.scheduleKind === "ai" && ai ? (
+          <AiArchiveScheduleModal
+            key={archiveTarget.id}
+            schedule={archiveTarget}
+            onArchive={ai.onArchive}
             onClose={() => setArchiveTarget(null)}
           />
         ) : null}

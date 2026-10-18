@@ -1,3 +1,6 @@
+import { oauthProvider } from "@better-auth/oauth-provider";
+import { betterAuth } from "better-auth";
+import { jwt } from "better-auth/plugins";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -5,8 +8,12 @@ const mocks = vi.hoisted(() => ({
   firstRunPending: vi.fn(),
   requestContext: vi.fn(),
   withFirstRunCreation: vi.fn(),
+  setAttribute: vi.fn(),
 }));
 
+vi.mock("@/lib/observability/request-diagnostics", () => ({
+  setRequestDiagnosticAttribute: mocks.setAttribute,
+}));
 vi.mock("@/lib/auth/auth", () => ({ auth: {} }));
 vi.mock("@/lib/auth/first-run", () => ({
   isFirstRunAdministratorPending: mocks.firstRunPending,
@@ -64,6 +71,131 @@ describe("auth route first-run registration context", () => {
     );
     expect(mocks.authPost).toHaveBeenCalledOnce();
     expect(mocks.authPost.mock.calls[0]?.[0].url).toBe(request.url);
+  });
+
+  it.each(["invalid_grant", "invalid_client", "unsupported_grant_type"])(
+    "preserves an OAuth rejection and records only its %s category",
+    async (error) => {
+      const payload = {
+        error,
+        error_description: "sensitive fixture",
+        client_secret: "fixture-secret",
+      };
+      const response = Response.json(payload, {
+        status: 400,
+        headers: { "cache-control": "no-store" },
+      });
+      mocks.authPost.mockResolvedValue(response);
+      const result = await POST(
+        new Request("https://example.com/api/auth/oauth2/token", { method: "POST" }),
+      );
+      expect(result).toBe(response);
+      expect(result.status).toBe(400);
+      expect(result.headers.get("cache-control")).toBe("no-store");
+      expect(await result.json()).toEqual(payload);
+      expect(mocks.setAttribute).toHaveBeenCalledExactlyOnceWith("auth.oauth.error", error);
+    },
+  );
+
+  it.each([
+    ["password", {}, { code: "VALIDATION_ERROR" }, "validation_error", undefined],
+    [
+      "refresh_token",
+      { client_id: "fixture-client" },
+      { error: "invalid_grant" },
+      "invalid_grant",
+      undefined,
+    ],
+    [
+      "refresh_token",
+      { client_id: "fixture-client", refresh_token: "missing-fixture-token" },
+      { error: "invalid_grant" },
+      "invalid_grant",
+      undefined,
+    ],
+    [
+      "refresh_token",
+      {},
+      { error: "invalid_client" },
+      "invalid_client",
+      "Basic bWlzc2luZy1jb2xvbg==",
+    ],
+  ] as const)(
+    "preserves the real %s token endpoint refusal",
+    async (grant_type, fields, payload, category, authorization) => {
+      const auth = betterAuth({
+        baseURL: "https://auth.example.com",
+        secret: "test-fixture-secret-".repeat(3),
+        rateLimit: { enabled: false },
+        plugins: [
+          jwt(),
+          oauthProvider({
+            loginPage: "/login",
+            consentPage: "/oauth/consent",
+            scopes: ["read"],
+            validAudiences: ["https://api.example.com/api/mcp"],
+            silenceWarnings: { oauthAuthServerConfig: true, openidConfig: true },
+          }),
+        ],
+      });
+      mocks.authPost.mockImplementation((request) => auth.handler(request));
+      const response = await POST(
+        new Request("https://auth.example.com/api/auth/oauth2/token", {
+          method: "POST",
+          headers: {
+            "content-type": "application/x-www-form-urlencoded",
+            ...(authorization ? { authorization } : {}),
+          },
+          body: new URLSearchParams({ grant_type, ...fields }),
+        }),
+      );
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject(payload);
+      expect(mocks.setAttribute).toHaveBeenCalledExactlyOnceWith("auth.oauth.error", category);
+      expect(mocks.firstRunPending).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ["/api/auth/oauth2/token", 400, { error: "untrusted arbitrary credential" }, "unclassified"],
+    ["/api/auth/oauth2/token", 400, null, "unclassified"],
+    ["/api/auth/oauth2/token", 200, { access_token: "fixture-token" }, null],
+    ["/api/auth/oauth2/token", 500, { error: "invalid_grant" }, null],
+    ["/api/auth/sign-in/email-otp", 400, { error: "invalid_grant" }, null],
+  ] as const)(
+    "does not expose arbitrary response fields for %s status %s",
+    async (path, status, body, category) => {
+      const response = Response.json(body, { status });
+      mocks.authPost.mockResolvedValue(response);
+      const result = await POST(new Request(`https://example.com${path}`, { method: "POST" }));
+      expect(result).toBe(response);
+      expect(await result.json()).toEqual(body);
+      if (category)
+        expect(mocks.setAttribute).toHaveBeenCalledExactlyOnceWith("auth.oauth.error", category);
+      else expect(mocks.setAttribute).not.toHaveBeenCalled();
+    },
+  );
+
+  it("preserves the token rejection when optional diagnostics fail", async () => {
+    const response = Response.json({ error: "invalid_grant" }, { status: 400 });
+    mocks.authPost.mockResolvedValue(response);
+    mocks.setAttribute.mockImplementationOnce(() => {
+      throw new Error("Diagnostic sink unavailable");
+    });
+    const result = await POST(
+      new Request("https://example.com/api/auth/oauth2/token", { method: "POST" }),
+    );
+    expect(result).toBe(response);
+    expect(await result.json()).toEqual({ error: "invalid_grant" });
+  });
+
+  it("preserves unexpected handler errors", async () => {
+    const failure = new Error("unexpected transport failure");
+    mocks.authPost.mockRejectedValue(failure);
+    await expect(
+      POST(new Request("https://example.com/api/auth/oauth2/token", { method: "POST" })),
+    ).rejects.toBe(failure);
+    expect(mocks.setAttribute).not.toHaveBeenCalled();
   });
 
   it("ignores the wizard marker after an administrator exists", async () => {

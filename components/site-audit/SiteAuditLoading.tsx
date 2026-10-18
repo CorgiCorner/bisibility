@@ -79,7 +79,12 @@ export function SiteAuditResultsLoading({
     ...siteAuditTableLayout[key],
     enableSorting: false,
     cell: () => (
-      <div className="h-[54px] w-full max-w-60 rounded-control bg-bg-sunken motion-safe:animate-pulse" />
+      <div className="grid w-full max-w-60 gap-1.5 py-2" aria-hidden>
+        <div className="h-3 w-3/4 rounded-sm bg-bg-sunken motion-safe:animate-pulse" />
+        {key === "url" || key === "issues" ? (
+          <div className="h-3 w-1/2 rounded-sm bg-bg-sunken motion-safe:animate-pulse" />
+        ) : null}
+      </div>
     ),
   }));
   return (

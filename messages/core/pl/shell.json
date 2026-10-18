@@ -117,8 +117,8 @@
       },
       "rank": {
         "blocked": {
-          "budgetWithAmounts": "W tym miesiącu wydano {spent} z {cap}; sprawdzenia wznowią się po zresetowaniu budżetu.",
-          "budgetWithoutAmounts": "Sprawdzenia wznowią się po zresetowaniu budżetu.",
+          "budgetWithAmounts": "Zgłoszony koszt dostawcy w tym miesiącu (UTC): {spent}. Miesięczny limit budżetu projektu: {cap}. Sprawdź aktualne limity i nierozliczone operacje w zużyciu.",
+          "budgetWithoutAmounts": "Zużycie wymaga sprawdzenia. Sprawdź budżet i nierozliczone operacje przed ponowieniem.",
           "keywordArchived": "To słowo kluczowe zostało zarchiwizowane przed startem sprawdzenia, więc zatrzymano je, zanim zdążyło wygenerować koszt.",
           "marketInactive": "Rynek tego słowa kluczowego jest wstrzymany, więc sprawdzenie zatrzymano, zanim zdążyło wygenerować koszt.",
           "noProvider": "Połącz dostawcę lub połącz go ponownie, aby uruchomić ten przebieg.",
@@ -180,7 +180,8 @@
       "signOut": "Wyloguj się",
       "signOutError": "Nie udało się wylogować. Spróbuj ponownie.",
       "fallbackName": "Twoje konto",
-      "opensInNewTab": "{label} (otwiera się w nowej karcie)"
+      "opensInNewTab": "{label} (otwiera się w nowej karcie)",
+      "activity": "Aktywność i odznaki"
     },
     "market": {
       "add": "Dodaj rynek",

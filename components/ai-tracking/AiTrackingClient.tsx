@@ -23,6 +23,8 @@ import {
   unwrapTrackingGenerationActionResult,
 } from "@/lib/ai-tracking/projections/generation-result";
 import type { TrackingWorkspaceData } from "@/lib/ai-tracking/projections/workspace";
+import { asProjectRef } from "@/lib/routing/app-path";
+import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { AiTrackingWorkspace } from "./AiTrackingWorkspace";
 export function AiTrackingClient({
   projectId,
@@ -37,6 +39,7 @@ export function AiTrackingClient({
   return (
     <AiTrackingWorkspace
       initialData={data}
+      schedulesHref={projectSchedulesPath(asProjectRef(projectId))}
       shellOwnsHeading
       actions={{
         generation: {

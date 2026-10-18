@@ -1,5 +1,9 @@
+import { SaxesParser } from "saxes";
+
 export const MAX_SITEMAP_ENTRIES = 5000;
 export const MAX_CHILD_SITEMAPS = 5;
+const MAX_XML_DEPTH = 32;
+const SITEMAP_NAMESPACE = "http://www.sitemaps.org/schemas/sitemap/0.9";
 
 export type SitemapEntry = {
   lastmod?: string;
@@ -21,137 +25,11 @@ type ParseOptions = {
   maxEntries?: number;
 };
 
-const namedEntities: Record<string, string> = {
-  amp: "&",
-  apos: "'",
-  gt: ">",
-  lt: "<",
-  quot: '"',
-};
+type Field = keyof SitemapEntry;
+type PendingEntry = { seen: Set<Field>; value: Partial<SitemapEntry> };
+type Capture = { field: Field; nested: boolean; parts: string[] };
 
-function decodeEntity(entity: string) {
-  const normalized = entity.toLowerCase();
-  if (normalized.startsWith("#x")) {
-    const codePoint = Number.parseInt(normalized.slice(2), 16);
-    try {
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : `&${entity};`;
-    } catch {
-      return `&${entity};`;
-    }
-  }
-  if (normalized.startsWith("#")) {
-    const codePoint = Number.parseInt(normalized.slice(1), 10);
-    try {
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : `&${entity};`;
-    } catch {
-      return `&${entity};`;
-    }
-  }
-  return namedEntities[normalized] ?? `&${entity};`;
-}
-
-function decodeXmlText(value: string) {
-  return value
-    .replace(/&(#x[0-9a-f]+|#\d+|amp|apos|gt|lt|quot);/gi, (_, entity: string) =>
-      decodeEntity(entity),
-    )
-    .trim();
-}
-
-function firstTagText(xml: string, tag: "lastmod" | "loc") {
-  const pattern = new RegExp(String.raw`<${tag}\b[^>]*>([\s\S]*?)<\/${tag}>`, "i"); // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp - tag is a closed literal union.
-  const match = pattern.exec(xml);
-  if (!match?.[1]) return null;
-  const decoded = decodeXmlText(match[1]);
-  return decoded.length > 0 ? decoded : null;
-}
-
-function documentXml(xml: string) {
-  // Escape CDATA before structural matching so text cannot become live XML entries.
-  return xml.replace(
-    /<!\[CDATA\[([\s\S]*?)\]\]>|<!--[\s\S]*?-->|<\?[\s\S]*?\?>/g,
-    (_token, text: string | undefined) =>
-      text === undefined
-        ? ""
-        : text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"),
-  );
-}
-
-function hasRoot(xml: string, root: "sitemapindex" | "urlset") {
-  const pattern =
-    root === "sitemapindex"
-      ? /^\s*<sitemapindex\b(?:[^>]*?\/\s*>|[^>]*>[\s\S]*<\/sitemapindex>)\s*$/i
-      : /^\s*<urlset\b(?:[^>]*?\/\s*>|[^>]*>[\s\S]*<\/urlset>)\s*$/i;
-  return pattern.test(xml);
-}
-
-function entryFromBlock(block: string): SitemapEntry | null {
-  const loc = firstTagText(block, "loc");
-  if (!loc) return null;
-
-  const lastmod = firstTagText(block, "lastmod");
-  return lastmod ? { lastmod, loc } : { loc };
-}
-
-function parseBlocks(xml: string, tag: "sitemap" | "url", maxEntries: number) {
-  const pattern = new RegExp(String.raw`<${tag}\b[^>]*>([\s\S]*?)<\/${tag}>`, "gi"); // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp - tag is a closed literal union.
-  const entries: SitemapEntry[] = [];
-  let total = 0;
-
-  for (const match of xml.matchAll(pattern)) {
-    const block = match[1];
-    if (!block) continue;
-
-    const entry = entryFromBlock(block);
-    if (!entry) continue;
-
-    total += 1;
-    if (entries.length < maxEntries) {
-      entries.push(entry);
-    }
-  }
-
-  return { entries, total, truncated: total > entries.length };
-}
-
-function parseUrlset(xml: string, maxEntries: number): ParsedSitemap {
-  const parsed = parseBlocks(xml, "url", maxEntries);
-  return {
-    childSitemapCount: 0,
-    childSitemaps: [],
-    childSitemapUrls: [],
-    entries: parsed.entries,
-    kind: "urlset",
-    truncated: parsed.truncated,
-    urlCount: parsed.total,
-  };
-}
-
-function parseSitemapIndex(xml: string, maxChildSitemaps: number): ParsedSitemap {
-  const parsed = parseBlocks(xml, "sitemap", maxChildSitemaps);
-  return {
-    childSitemapCount: parsed.total,
-    childSitemaps: parsed.entries,
-    childSitemapUrls: parsed.entries.map((entry) => entry.loc),
-    entries: [],
-    kind: "sitemapindex",
-    truncated: parsed.truncated,
-    urlCount: 0,
-  };
-}
-
-export function parseSitemapXml(xml: string, options: ParseOptions = {}): ParsedSitemap {
-  const maxEntries = Math.max(0, options.maxEntries ?? MAX_SITEMAP_ENTRIES);
-  const maxChildSitemaps = Math.max(0, options.maxChildSitemaps ?? MAX_CHILD_SITEMAPS);
-
-  xml = documentXml(xml);
-  if (hasRoot(xml, "sitemapindex")) {
-    return parseSitemapIndex(xml, maxChildSitemaps);
-  }
-  if (hasRoot(xml, "urlset")) {
-    return parseUrlset(xml, maxEntries);
-  }
-
+function unknownSitemap(): ParsedSitemap {
   return {
     childSitemapCount: 0,
     childSitemaps: [],
@@ -160,5 +38,105 @@ export function parseSitemapXml(xml: string, options: ParseOptions = {}): Parsed
     kind: "unknown",
     truncated: false,
     urlCount: 0,
+  };
+}
+
+export function parseSitemapXml(xml: string, options: ParseOptions = {}): ParsedSitemap {
+  const maxEntries = Math.max(0, options.maxEntries ?? MAX_SITEMAP_ENTRIES);
+  const maxChildSitemaps = Math.max(0, options.maxChildSitemaps ?? MAX_CHILD_SITEMAPS);
+  const parser = new SaxesParser({ xmlns: true });
+  const entries: SitemapEntry[] = [];
+  const root: { kind: ParsedSitemap["kind"]; namespace: string } = {
+    kind: "unknown",
+    namespace: "",
+  };
+  let depth = 0;
+  let total = 0;
+  let entry: PendingEntry | null = null;
+  let capture: Capture | null = null;
+
+  parser.on("doctype", () => {
+    throw new Error("Sitemap document types are not supported.");
+  });
+  parser.on("opentag", (tag) => {
+    depth += 1;
+    if (depth > MAX_XML_DEPTH) throw new Error("Sitemap XML nesting limit exceeded.");
+    if (depth === 1) {
+      if (
+        (tag.uri === "" || tag.uri === SITEMAP_NAMESPACE) &&
+        (tag.local === "urlset" || tag.local === "sitemapindex")
+      ) {
+        root.kind = tag.local;
+      }
+      root.namespace = tag.uri;
+      return;
+    }
+    if (capture) {
+      capture.nested = true;
+      return;
+    }
+    if (root.kind === "unknown" || tag.uri !== root.namespace) return;
+    if (depth === 2 && tag.local === (root.kind === "urlset" ? "url" : "sitemap")) {
+      entry = { seen: new Set(), value: {} };
+      return;
+    }
+    if (depth !== 3 || !entry || (tag.local !== "loc" && tag.local !== "lastmod")) return;
+    if (entry.seen.has(tag.local)) return;
+    entry.seen.add(tag.local);
+    capture = { field: tag.local, nested: false, parts: [] };
+  });
+  const collectText = (text: string) => {
+    if (capture && !capture.nested) capture.parts.push(text);
+  };
+  parser.on("text", collectText);
+  parser.on("cdata", collectText);
+  parser.on("closetag", () => {
+    if (depth === 3 && capture) {
+      const value = capture.parts.join("").trim();
+      if (entry && !capture.nested && value) entry.value[capture.field] = value;
+      capture = null;
+    }
+    if (depth === 2 && entry) {
+      if (entry.value.loc) {
+        total += 1;
+        const limit = root.kind === "sitemapindex" ? maxChildSitemaps : maxEntries;
+        if (entries.length < limit) {
+          entries.push({
+            loc: entry.value.loc,
+            ...(entry.value.lastmod ? { lastmod: entry.value.lastmod } : {}),
+          });
+        }
+      }
+      entry = null;
+    }
+    depth -= 1;
+  });
+
+  try {
+    parser.write(xml).close();
+  } catch {
+    // A malformed document must not publish entries collected before its error.
+    return unknownSitemap();
+  }
+  if (root.kind === "unknown") return unknownSitemap();
+  if (root.kind === "sitemapindex") {
+    return {
+      childSitemapCount: total,
+      childSitemaps: entries,
+      childSitemapUrls: entries.map((entry) => entry.loc),
+      entries: [],
+      kind: root.kind,
+      truncated: total > entries.length,
+      urlCount: 0,
+    };
+  }
+  return {
+    childSitemapCount: 0,
+    childSitemaps: [],
+    childSitemapUrls: [],
+    entries,
+    kind: root.kind,
+    truncated: total > entries.length,
+    urlCount: total,
   };
 }

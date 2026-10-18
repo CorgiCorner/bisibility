@@ -477,7 +477,7 @@ describe("provider actions", () => {
     );
     expect(mocks.trackServerEvent).toHaveBeenCalledWith("provider_connected", {
       consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
-      distinctId: "user_1",
+      userId: "user_1",
       properties: { provider: "dataforseo", surface: "onboarding" },
     });
     expect(JSON.stringify(mocks.writeAudit.mock.calls)).not.toContain("password");
@@ -901,7 +901,7 @@ describe("provider actions", () => {
     );
     expect(mocks.trackServerEvent).toHaveBeenCalledWith("provider_connection_tested", {
       consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
-      distinctId: "user_1",
+      userId: "user_1",
       properties: { error_category: null, ok: true, provider: "serpapi" },
     });
   });

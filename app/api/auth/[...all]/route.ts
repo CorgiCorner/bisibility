@@ -3,6 +3,7 @@ import { withAuthClientIp } from "@/lib/auth/client-ip";
 import { isFirstRunAdministratorPending } from "@/lib/auth/first-run";
 import { withFirstRunCreation } from "@/lib/auth/first-run-context";
 import { isFirstRunSignInRequest } from "@/lib/auth/first-run-request";
+import { withOAuthTokenDiagnostics } from "@/lib/auth/oauth-token-diagnostics";
 import { auditRequestContextFromHeaders } from "@/lib/auth/request-context";
 import { toNextJsHandler } from "better-auth/next-js";
 
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
   const authRequest = withAuthClientIp(request);
 
   if (!isFirstRunSignInRequest(request) || !(await isFirstRunAdministratorPending())) {
-    return handlers.POST(authRequest);
+    return withOAuthTokenDiagnostics(authRequest, handlers.POST);
   }
 
   const requestContext = auditRequestContextFromHeaders(request.headers);

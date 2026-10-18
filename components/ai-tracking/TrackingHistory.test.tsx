@@ -11,7 +11,7 @@ import {
   trackingWorkspaceFixture,
 } from "./fixtures";
 
-function workspace(actions = trackingFixtureActions, initialTab: "runs" | "schedules" = "runs") {
+function workspace(actions = trackingFixtureActions, initialTab: "runs" = "runs") {
   return render(
     <FeatureMessagesProvider locale="en" messages={{ ...shared, ...messages }} timeZone="UTC">
       <AiTrackingWorkspace
@@ -22,7 +22,7 @@ function workspace(actions = trackingFixtureActions, initialTab: "runs" | "sched
     </FeatureMessagesProvider>,
   );
 }
-describe("history pagination and schedule preservation", () => {
+describe("history pagination", () => {
   it("loads run/sample cursors, deduplicates pages and drills citations into retained answers", async () => {
     const user = userEvent.setup();
     const samples = vi
@@ -74,28 +74,5 @@ describe("history pagination and schedule preservation", () => {
       screen.queryByRole("button", { name: /Which rank trackers.*Consumer scraper/ }),
     ).toBeNull();
     expect(screen.getByText("1 of 3 expected samples loaded")).toBeVisible();
-  });
-  it("saves metadata while keeping the saved source/prompt subset and requires explicit replacement review", async () => {
-    const user = userEvent.setup();
-    const save = vi.fn().mockResolvedValue(trackingWorkspaceFixture);
-    const preview = vi.fn(trackingFixtureActions.preview);
-    workspace({ ...trackingFixtureActions, save, preview }, "schedules");
-    await user.click(screen.getByRole("button", { name: "Edit" }));
-    const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText(/1 saved prompts/)).toBeVisible();
-    expect(within(dialog).getByText(/consumer_scrape.*Poland/)).toBeVisible();
-    await user.click(within(dialog).getByRole("button", { name: "Save schedule" }));
-    expect(save).toHaveBeenCalledWith(
-      "schedules",
-      "PATCH",
-      {
-        name: "Weekly consumer check",
-        cron: "0 9 * * 1",
-        timezone: "Europe/Warsaw",
-        enabled: false,
-      },
-      "ais_weekly",
-    );
-    expect(preview).not.toHaveBeenCalled();
   });
 });

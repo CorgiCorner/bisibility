@@ -1,19 +1,67 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  cookieStore: { set: vi.fn() },
+  cookieStore: { set: vi.fn(), get: vi.fn(), delete: vi.fn() },
+  getSession: vi.fn(),
+  saveAccount: vi.fn(),
+  resolveUser: vi.fn(),
+  reconcile: vi.fn(),
   trackServerEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("next/headers", () => ({ cookies: async () => mocks.cookieStore }));
 vi.mock("@/lib/analytics/server", () => ({ trackServerEvent: mocks.trackServerEvent }));
+vi.mock("@/lib/auth/session", () => ({ getOptionalAvailableSession: mocks.getSession }));
+vi.mock("@/lib/analytics/account-consent", () => ({
+  saveAccountAnalyticsConsent: mocks.saveAccount,
+}));
+vi.mock("@/lib/analytics/server-user", () => ({ resolveServerAnalyticsUser: mocks.resolveUser }));
+vi.mock("@/lib/analytics/web-consent", () => ({ reconcileWebConsent: mocks.reconcile }));
 
-import { saveAnalyticsConsent } from "@/lib/actions/analytics-consent";
+import { saveAnalyticsConsent, syncAccountAnalyticsConsent } from "@/lib/actions/analytics-consent";
 
 describe("saveAnalyticsConsent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getSession.mockResolvedValue(null);
     vi.spyOn(Date, "now").mockReturnValue(1_788_552_000_000);
+  });
+
+  it("writes the same signed-in decision to the account without coupling replay", async () => {
+    mocks.getSession.mockResolvedValue({ user: { id: "internal" } });
+    mocks.resolveUser.mockResolvedValue({ distinctId: "usr_a00000000000000000000000" });
+    await saveAnalyticsConsent({ analytics: false, replay: true });
+    expect(mocks.saveAccount).toHaveBeenCalledWith(
+      "internal",
+      false,
+      "web",
+      new Date(1_788_552_000_000),
+      { authKind: "session" },
+      true,
+    );
+  });
+
+  it("does not seed a new account from a previous account's browser decision", async () => {
+    mocks.getSession.mockResolvedValue({ user: { id: "internal" } });
+    mocks.resolveUser.mockResolvedValue({ distinctId: "usr_current" });
+    mocks.cookieStore.get.mockImplementation((name) => ({
+      value: name === "bv_consent" ? "v2.a1.r1.t1788552000" : "usr_previous",
+    }));
+    await syncAccountAnalyticsConsent("usr_current");
+    expect(mocks.reconcile).toHaveBeenCalledWith(
+      "internal",
+      expect.objectContaining({ analytics: false, replay: false, status: "pending" }),
+    );
+  });
+
+  it("does not resolve a stale request after the signed-in account changes", async () => {
+    mocks.getSession.mockResolvedValue({ user: { id: "internal" } });
+    mocks.resolveUser.mockResolvedValue({ distinctId: "usr_current" });
+    await expect(syncAccountAnalyticsConsent("usr_previous")).resolves.toMatchObject({
+      analytics: false,
+      status: "pending",
+    });
+    expect(mocks.reconcile).not.toHaveBeenCalled();
   });
 
   it("stores a valid choice and emits an anonymous update", async () => {

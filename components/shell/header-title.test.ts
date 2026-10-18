@@ -59,6 +59,7 @@ const routeCases = [
 
   { path: appRootPath(), pattern: `${appRootPath()}/`, title: "Overview" },
   { path: "/app/account", pattern: "/app/account", title: "Account settings" },
+  { path: "/app/account/activity", pattern: "/app/account/activity", title: "Account settings" },
   { path: "/app/account/preferences", pattern: "/app/account/preferences", title: "Preferences" },
   { path: "/app/account/security", pattern: "/app/account/security", title: "Security" },
   { path: "/app/admin", pattern: "/app/admin", title: "Instance administration" },
