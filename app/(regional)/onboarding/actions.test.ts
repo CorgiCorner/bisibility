@@ -1,3 +1,4 @@
+import { ProjectLimitExceededError } from "@/lib/api/resource-limits";
 import { computeNextCheckAt, type RankCheckFrequency } from "@/lib/rank-check/schedule";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createOnboardingProject, deriveOnboardingWebsite, saveOnboardingMarkets } from "./actions";
@@ -75,8 +76,8 @@ describe("onboarding actions", () => {
     const input = { website: "https://www.example.co.uk/products?source=onboarding" };
 
     await expect(createOnboardingProject(input)).resolves.toMatchObject({
-      publicId: "prj_public_1",
-      timezone: "UTC",
+      ok: true,
+      project: { publicId: "prj_public_1", timezone: "UTC" },
     });
 
     expect(mocks.createProject).toHaveBeenCalledWith({
@@ -87,9 +88,27 @@ describe("onboarding actions", () => {
     expect(mocks.prisma.apiKey.create).not.toHaveBeenCalled();
     expect(mocks.trackServerEvent).toHaveBeenCalledWith("onboarding_project_created", {
       consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
-      distinctId: "user_1",
+      userId: "user_1",
       properties: { frequency: "manual" },
     });
+  });
+
+  it("returns project capacity rejection as data without tracking a created project", async () => {
+    mocks.createProject.mockRejectedValueOnce(new ProjectLimitExceededError(2));
+
+    await expect(createOnboardingProject({ website: "example.com" })).resolves.toEqual({
+      ok: false,
+      error: { code: "PROJECT_LIMIT_REACHED", limit: 2 },
+    });
+    expect(mocks.trackServerEvent).not.toHaveBeenCalled();
+  });
+
+  it("preserves unexpected creation failures", async () => {
+    const failure = new Error("Database unavailable");
+    mocks.createProject.mockRejectedValueOnce(failure);
+
+    await expect(createOnboardingProject({ website: "example.com" })).rejects.toBe(failure);
+    expect(mocks.trackServerEvent).not.toHaveBeenCalled();
   });
 
   it("preserves the browser timezone in manual defaults", async () => {
@@ -99,7 +118,8 @@ describe("onboarding actions", () => {
     };
 
     await expect(createOnboardingProject(input)).resolves.toMatchObject({
-      timezone: "Europe/Madrid",
+      ok: true,
+      project: { timezone: "Europe/Madrid" },
     });
 
     expect(mocks.createProject).toHaveBeenCalledWith({

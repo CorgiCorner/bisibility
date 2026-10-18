@@ -38,9 +38,11 @@ FROM node:22.23.1-alpine AS builder
 WORKDIR /workspace
 ARG APP_REVISION
 ARG APP_VERSION
+ARG SENTRY_RELEASE
 ARG NEXT_PUBLIC_DOCS_URL=https://bisibility.com/docs
 ENV APP_REVISION=$APP_REVISION \
   APP_VERSION=$APP_VERSION \
+  SENTRY_RELEASE=$SENTRY_RELEASE \
   NEXT_PUBLIC_DOCS_URL=$NEXT_PUBLIC_DOCS_URL \
   NEXT_BUILD_MEMORY_CAPPED=1 \
   NEXT_TELEMETRY_DISABLED=1
@@ -62,6 +64,7 @@ CMD ["npm", "run", "db:migrate"]
 FROM node:22.23.1-alpine AS runner
 ARG APP_REVISION
 ARG APP_VERSION
+ARG SENTRY_RELEASE
 ARG CORGICORNER_EPHEMERAL=0
 
 LABEL org.opencontainers.image.title="bisibility" \
@@ -75,6 +78,7 @@ LABEL org.opencontainers.image.title="bisibility" \
 WORKDIR /workspace
 ENV APP_VERSION=${APP_VERSION} \
   APP_REVISION=${APP_REVISION} \
+  SENTRY_RELEASE=${SENTRY_RELEASE} \
   NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
@@ -120,6 +124,7 @@ COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/pre-data-mig
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/completed-data-migrations.ts ./scripts/deploy/completed-data-migrations.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/deploy/accounting-cutover-preflight.ts ./scripts/deploy/accounting-cutover-preflight.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/data-migrations ./scripts/data-migrations
+COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/closeout-historical-finances.ts ./scripts/ops/closeout-historical-finances.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/locked-verification.ts ./scripts/ops/locked-verification.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/provider-secret-rotation.ts ./scripts/ops/provider-secret-rotation.ts
 COPY --from=builder --chown=nextjs:nodejs /workspace/scripts/ops/rotate-provider-secrets.ts ./scripts/ops/rotate-provider-secrets.ts

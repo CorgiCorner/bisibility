@@ -33,6 +33,7 @@ vi.mock("@/lib/operations/access-extension", () => ({
   assertOperationAccess: vi.fn(),
 }));
 vi.mock("@/lib/providers/execution-extension", () => ({
+  deploymentRankUsesNativeUnits: async () => false,
   hostedRankCheckEstimatedCostCents: mocks.hostedRankEstimate,
   startDeploymentExecution: mocks.startExecution,
 }));

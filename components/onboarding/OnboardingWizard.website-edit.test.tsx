@@ -9,7 +9,7 @@ it("preserves the corrected project through 1 > 2 > 1 and another visit to step 
     changed: true,
     project: saved,
   }));
-  const createProjectAction = vi.fn(async () => project);
+  const createProjectAction = vi.fn(async () => ({ ok: true as const, project }));
   renderWizard({ actions: { createProjectAction, updateProjectAction } });
   fireEvent.change(screen.getByLabelText("Your website"), { target: { value: "example.com" } });
   fireEvent.click(screen.getByRole("button", { name: "Continue" }));

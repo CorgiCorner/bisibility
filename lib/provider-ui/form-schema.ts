@@ -42,7 +42,7 @@ export function parseNativeAllocation(text: string, unit: string): string | null
 
 export function allocationInputIssue(text: string, unit: string) {
   if (!text.trim()) return null;
-  const monetary = unit === "cents" || unit === "customer_cents";
+  const monetary = unit === "cents";
   const parsed = monetary ? nativeCentsFromDollars(text, 2) : parseProviderDecimal(text, unit, 0);
   if (parsed === null || (typeof parsed !== "string" && parsed.outcome !== "valid")) {
     return monetary ? "invalidDecimal" : "wholeUnits";
@@ -56,8 +56,7 @@ export function allocationInputIssue(text: string, unit: string) {
 
 export function allocationFromInput(text: string, unit: string): string | null | undefined {
   if (!text.trim()) return null;
-  const native =
-    unit === "cents" || unit === "customer_cents" ? nativeCentsFromDollars(text, 2) : text.trim();
+  const native = unit === "cents" ? nativeCentsFromDollars(text, 2) : text.trim();
   return native === null ? undefined : (parseNativeAllocation(native, unit) ?? undefined);
 }
 

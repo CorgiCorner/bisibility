@@ -31,10 +31,10 @@ export async function quoteDeploymentRankReservations(
   return null;
 }
 
-export function hostedRankCheckEstimatedCostCents(
+export async function hostedRankCheckEstimatedCostCents(
   _provider: string,
   _depth: number,
-): number | null {
+): Promise<number | null> {
   return null;
 }
 
@@ -54,7 +54,7 @@ export async function recoverQueuedDeploymentExecution(
   return null;
 }
 
-export function queuedDeploymentCredentialsAvailable(_provider: string): boolean {
+export async function queuedDeploymentCredentialsAvailable(_provider: string): Promise<boolean> {
   return false;
 }
 
@@ -67,4 +67,8 @@ export async function readDeploymentMeteringEvidence(
   _operationKey: string,
 ): Promise<HostedMeteringEvidence | null> {
   return null;
+}
+
+export async function deploymentRankUsesNativeUnits(_provider: string): Promise<boolean> {
+  return false;
 }

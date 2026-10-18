@@ -39,6 +39,14 @@ for (const [, specifier] of deployMigration.matchAll(
   });
   assert(copied, `Final Docker runner must copy migration dependency ${dependency}`);
 }
+const historicalCloseoutOperator = "scripts/ops/closeout-historical-finances.ts";
+assert(
+  runnerCopies.some(([, source, destination]) =>
+    posix.normalize(source) === `/workspace/${historicalCloseoutOperator}` &&
+    posix.normalize(destination) === historicalCloseoutOperator,
+  ),
+  "Final Docker runner must package the historical financial closeout operator entrypoint",
+);
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 // The RUN may carry BuildKit flags such as a --mount cache; the guard is about what the
 // closure installs, not how the layer is built.

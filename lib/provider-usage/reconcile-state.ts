@@ -3,7 +3,16 @@ import { Prisma as SQL } from "@/lib/metering/store/host-sql";
 
 // Both health and uncertainty gates read the final receipt, never a business projection.
 export const unknownAccounting = SQL.sql`(o.state IN ('pending','dispatch_intended') OR
-  (o.state='settled' AND (o.input->>'provider'='historical-unknown' OR r.body IS NULL OR
+  (o.state='settled' AND ((o.input->>'provider'='historical-unknown' AND NOT EXISTS(
+    SELECT 1 FROM metering_history_closeout h JOIN metering_history_import j
+      ON j.migration_id=h.migration_id AND j.source_id=h.source_id
+    WHERE h.operation_pk=o.operation_pk AND h.namespace=o.namespace AND h.operation_id=o.operation_id
+      AND h.version=o.version AND h.receipt_id=r.body->>'id'
+      AND h.original_receipt_id=r.body->>'supersedes' AND h.source_hash=j.source_hash AND h.target_hash=j.target_hash
+      AND j.namespace=o.namespace AND j.operation_id=o.operation_id AND j.created_operation
+      AND h.policy='known-cost-incomplete-byok-v1' AND h.disposition='financially_closed_identity_incomplete'
+      AND o.input->>'fundingSource'='byok' AND r.body->'metadata'->'historicalCloseout'->>'policy'=h.policy
+  )) OR r.body IS NULL OR
     r.body->'cost'->>'certainty' IS DISTINCT FROM 'measured' OR
     EXISTS(SELECT 1 FROM jsonb_array_elements(r.body->'measurements') m
       WHERE m->>'certainty' IS DISTINCT FROM 'measured' OR m->'quantity'='null'::jsonb))))`;

@@ -11,6 +11,24 @@ export function registerAccountAuditDeclarations(
   declare: Declare,
   { projectCounts }: { projectCounts: AuditFieldPolicy },
 ) {
+  declare(["account.achievements_preferences"], {
+    after: {
+      ...f.booleans("enabled", "showHeader", "emailEnabled"),
+      ...strings("timeZone"),
+      ...f.numbers("epoch", "revision"),
+    },
+  });
+  declare(["account.achievements_sharing"], {
+    after: { ...strings("kind"), ...f.booleans("published") },
+  });
+  declare(["account.analytics_consent_updated"], {
+    before: f.booleans("analytics"),
+    after: {
+      ...f.booleans("analytics"),
+      ...f.numbers("version"),
+      ...strings("source", "authKind", "credentialId"),
+    },
+  });
   declare(["account.profile_updated"], {
     after: strings("name"),
     before: strings("name"),

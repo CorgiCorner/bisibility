@@ -55,6 +55,12 @@ can exceed these caps.
 
 ## Change detection and retention
 
+If the root or any fetched child contains malformed XML or is not a sitemap,
+the sync fails without replacing the previous snapshot or emitting URL changes.
+Sitemap XML containing a document type declaration is also rejected. The standard
+`http://www.sitemaps.org/schemas/sitemap/0.9` namespace and legacy documents without
+a namespace are supported; unrelated namespaces are rejected.
+
 The first successful sync stores a baseline and emits no signal. Later syncs
 compare each URL with the previous snapshot and detect:
 

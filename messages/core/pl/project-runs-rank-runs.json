@@ -110,10 +110,11 @@
       "actions": {
         "editBudget": "Edytuj budżet",
         "connectionSettings": "Ustawienia połączenia",
-        "workerStatus": "Status workera"
+        "workerStatus": "Status workera",
+        "reviewUsage": "Sprawdź zużycie"
       },
       "blocked": {
-        "budgetDescription": "{withBudget, select, yes {W tym miesiącu wydano {spent} z {cap}; sprawdzenia wznowią się po zresetowaniu budżetu.} other {Sprawdzenia wznowią się po zresetowaniu budżetu.}}",
+        "budgetDescription": "{withBudget, select, yes {Zgłoszony koszt dostawcy w tym miesiącu (UTC): {spent}. Miesięczny limit budżetu projektu: {cap}. } other {}}Sprawdź aktualne limity i nierozliczone operacje w zużyciu.",
         "budgetReached": "Osiągnięto limit budżetu",
         "guidance": "Wskazówki dla zablokowanego przebiegu",
         "keywordArchived": "Słowo kluczowe zarchiwizowane",
@@ -127,10 +128,14 @@
         "providerUnavailableDescription": "Dostawca jest teraz nieosiągalny. Przebieg ruszy sam, gdy połączenie wróci.",
         "targetPaused": "Cel wstrzymany – ruszy, gdy go wznowisz",
         "waiting": "Oczekiwanie na start",
-        "waitingDescription": "Ten przebieg czeka na start. Ruszy automatycznie, gdy będzie to możliwe.",
+        "waitingDescription": "Sprawdź, co uniemożliwia rozpoczęcie tego wykonania.",
         "workerCloudDescription": "Worker w tle jest teraz nieosiągalny. Przebieg ruszy sam, gdy połączenie wróci.",
         "workerSelfHostDescription": "Worker w tle nie działa. Uruchom go ponownie, a przebieg ruszy sam.",
-        "workerWaiting": "Oczekiwanie na workera w tle"
+        "workerWaiting": "Oczekiwanie na workera w tle",
+        "reviewUsage": "Sprawdź budżet i zużycie",
+        "reviewUsageDescription": "Wykonanie jest zablokowane. Sprawdź zużycie i nierozliczone operacje przed ponowieniem. Reset miesiąca może nie rozwiązać problemu.",
+        "usageUnconfirmed": "Zużycie wymaga potwierdzenia",
+        "usageUnconfirmedDescription": "Wcześniejsze zużycie nie zostało potwierdzone. Sprawdź je przed ponowieniem."
       },
       "cancelDialog": {
         "body": "Anulowanie dotyczy tylko tego przebiegu. Nie zmienia harmonogramu ani nie usuwa ukończonych wyników.",

@@ -62,6 +62,88 @@ describe("useCloudImportJobPoll", () => {
     expect(result.current.job.state).toBe("receiving");
   });
 
+  it("continues polling after a transport failure without losing the last job", async () => {
+    const pollAction = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("Load failed"))
+      .mockResolvedValueOnce(job("done", { progress: 100 }));
+    const onTerminal = vi.fn();
+    const initialJob = job("importing", { progress: 35 });
+    const { result } = renderHook(() =>
+      useCloudImportJobPoll({ active: true, initialJob, onTerminal, pollAction, projectId }),
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(600);
+    });
+    expect(result.current.job).toEqual(initialJob);
+    expect(result.current.pollError).toBeInstanceOf(TypeError);
+    expect(onTerminal).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000);
+    });
+    expect(result.current.job.state).toBe("done");
+    expect(result.current.pollError).toBeNull();
+    expect(onTerminal).toHaveBeenCalledExactlyOnceWith(job("done", { progress: 100 }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+    expect(pollAction).toHaveBeenCalledTimes(2);
+  });
+
+  it("bounds repeated transport failures and allows a user to retry status reads", async () => {
+    const failure = new TypeError("Load failed");
+    const pollAction = vi.fn().mockRejectedValue(failure);
+    const initialJob = job("importing", { progress: 35 });
+    const { result } = renderHook(() =>
+      useCloudImportJobPoll({ active: true, initialJob, pollAction, projectId }),
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+    expect(pollAction).toHaveBeenCalledTimes(3);
+    expect(result.current.job).toEqual(initialJob);
+    expect(result.current.pollError).toBe(failure);
+
+    pollAction.mockResolvedValueOnce(job("done", { progress: 100 }));
+    act(() => result.current.retry());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(600);
+    });
+    expect(pollAction).toHaveBeenCalledTimes(4);
+    expect(result.current.job.state).toBe("done");
+    expect(result.current.pollError).toBeNull();
+  });
+
+  it("does not retry a failed poll after unmounting", async () => {
+    let rejectPoll: (reason: Error) => void = () => undefined;
+    const pollAction = vi.fn().mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectPoll = reject;
+        }),
+    );
+    const { unmount } = renderHook(() =>
+      useCloudImportJobPoll({
+        active: true,
+        initialJob: job("importing"),
+        pollAction,
+        projectId,
+      }),
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(600);
+    });
+    unmount();
+    await act(async () => {
+      rejectPoll(new TypeError("Load failed"));
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+    expect(pollAction).toHaveBeenCalledTimes(1);
+  });
+
   it("does not poll an idle job when no token exists", async () => {
     const pollAction = vi.fn();
     renderHook(() =>

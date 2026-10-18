@@ -1,6 +1,20 @@
 # Changelog
 
-## Unreleased
+## [0.37.0] - 2026-10-18
+
+### Added
+
+- Add idempotent account analytics consent endpoints while keeping browser replay choices independent.
+
+- Add audited historical BYOK recovery and known-cost closeout while retaining missing evidence (CorgiCorner/bisibility#3, thanks @chapter42).
+
+- Add optional activity streaks, badges, sharing and milestone email preferences; clarify run attention, retries and overdue plan dates.
+
+### Fixed
+
+- Validate sitemap XML before replacing snapshots and keep site audits working with unsupported document base URLs.
+
+- Improve account, setup, import and error recovery, provider/OAuth diagnostics and error version tags; reject secret and unsupported probe paths.
 
 ## [0.36.0] - 2026-10-17
 

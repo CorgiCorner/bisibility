@@ -54,7 +54,7 @@ export async function completeProjectOnboarding(input: unknown) {
     ]);
     await trackServerEvent("onboarding_completed", {
       consent: await readConsentFromCookies(),
-      distinctId: actor.id,
+      userId: actor.id,
       properties: {
         first_check_ran: firstCheckCount > 0,
         has_provider: providerCount > 0,

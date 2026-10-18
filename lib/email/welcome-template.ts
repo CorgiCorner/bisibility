@@ -68,7 +68,6 @@ export function welcomeEmail(input: WelcomeEmailInput) {
   const meFirst = founder ? "me" : "the team";
   const readEverything = founder ? "I read everything" : "Every reply is read";
   const tellWhere = founder ? "reply and tell me where" : "reply and let the team know where";
-  const throughUs = founder ? "nothing goes through us" : "nothing goes through bisibility";
 
   let text: string;
   let html: string;
@@ -127,7 +126,9 @@ export function welcomeEmail(input: WelcomeEmailInput) {
       "",
       `Thanks for signing up. Looks like setup did not get all the way through - all good, nothing is lost. Pick it up here: ${appUrl}`,
       "",
-      `Most people stall on the data provider step, so the quick version: you connect your own provider account and pay them directly, ${throughUs}. DataForSEO is pay-as-you-go (early usage is usually a few dollars a month); SerpAPI is a subscription. The cost summary shows the numbers before you commit to anything.`,
+      "If the provider step held you up, you can connect your own provider account and pay them directly.",
+      "",
+      "Prefer to skip that step? Credits are coming soon to bisibility Cloud. You will be able to top up in the app and use supported features without connecting your own provider account.",
       "",
       `If it broke or was confusing, ${tellWhere}. That is what the beta is for.`,
       "",
@@ -140,7 +141,10 @@ export function welcomeEmail(input: WelcomeEmailInput) {
         `Thanks for signing up. Looks like setup did not get all the way through - all good, nothing is lost. Pick it up here: ${anchor(appUrl, appUrl)}`,
       ),
       paragraph(
-        `Most people stall on the data provider step, so the quick version: you connect your own provider account and pay them directly, ${escapeHtml(throughUs)}. DataForSEO is pay-as-you-go (early usage is usually a few dollars a month); SerpAPI is a subscription. The cost summary shows the numbers before you commit to anything.`,
+        "If the provider step held you up, you can connect your own provider account and pay them directly.",
+      ),
+      paragraph(
+        "Prefer to skip that step? Credits are coming soon to bisibility Cloud. You will be able to top up in the app and use supported features without connecting your own provider account.",
       ),
       paragraph(
         `If it broke or was confusing, ${escapeHtml(tellWhere)}. That is what the beta is for.`,

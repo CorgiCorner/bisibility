@@ -17,18 +17,8 @@ import { useTranslations } from "next-intl";
 
 const layouts = {
   runs: {
-    columns: [
-      "Operation",
-      "Type",
-      "Scope",
-      "Status",
-      "Progress",
-      "Unit",
-      "Submitted",
-      "Started",
-      "Actions",
-    ],
-    grid: "min-w-[1496px] grid-cols-[260px_170px_230px_152px_140px_128px_184px_184px_48px]",
+    columns: ["Task", "When", "Status", "Actions"],
+    grid: "grid-cols-[minmax(0,1fr)_48px] xl:grid-cols-[minmax(240px,1fr)_224px_240px_180px]",
   },
   schedules: {
     columns: ["Schedule", "Cadence", "Members", "Per run", "Next", "Actions"],
@@ -68,6 +58,8 @@ export function ProjectRunsLoading({
   active = "runs",
 }: Readonly<{ active?: keyof typeof layouts }>) {
   const t = useTranslations("projectRuns.schedules.loading");
+  const tableT = useTranslations("projectRuns.table");
+  const timelineT = useTranslations("projectRuns.timeline");
   const layout = layouts[active];
   const label = active === "runs" ? t("loadingRuns") : t("loadingSchedules");
   return (
@@ -88,6 +80,15 @@ export function ProjectRunsLoading({
               </>
             }
           />
+          {active === "runs" ? (
+            <div className="flex flex-wrap gap-2 px-3 pb-3">
+              <Bar className="h-8 w-16" />
+              <Bar className="h-8 w-24" />
+              <Bar className="h-8 w-28" />
+              <Bar className="h-8 w-20" />
+              <Bar className="h-8 w-28" />
+            </div>
+          ) : null}
           <div className="min-w-0 overflow-x-auto">
             <div
               className={cn(tableHeaderClassName, "grid items-center", layout.grid)}
@@ -95,8 +96,22 @@ export function ProjectRunsLoading({
               data-loading-table-header
             >
               {layout.columns.map((column) => (
-                <span key={column} className="px-3">
-                  {column === "Actions" ? null : column}
+                <span
+                  key={column}
+                  className={cn(
+                    "px-3",
+                    active === "runs" && ["When", "Status"].includes(column) && "hidden xl:block",
+                  )}
+                >
+                  {column === "Actions"
+                    ? null
+                    : column === "Task"
+                      ? tableT("operation")
+                      : column === "When"
+                        ? timelineT("when")
+                        : column === "Status"
+                          ? tableT("status")
+                          : column}
                 </span>
               ))}
             </div>
@@ -105,13 +120,20 @@ export function ProjectRunsLoading({
                 key={row}
                 className={cn(
                   "grid items-center border-b border-border-soft last:border-b-0",
+                  active === "runs" && "xl:!min-h-[68px]",
                   layout.grid,
                 )}
-                style={{ height: dataTableRowHeight("standard") }}
+                style={{ minHeight: active === "runs" ? 112 : dataTableRowHeight("standard") }}
                 data-loading-table-row
               >
                 {layout.columns.map((column) => (
-                  <div key={column} className="min-w-0 px-3">
+                  <div
+                    key={column}
+                    className={cn(
+                      "min-w-0 px-3",
+                      active === "runs" && ["When", "Status"].includes(column) && "hidden xl:block",
+                    )}
+                  >
                     <Bar className={column === "Actions" ? "h-4 w-4" : "h-3 w-3/4"} />
                   </div>
                 ))}

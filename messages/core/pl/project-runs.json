@@ -53,7 +53,7 @@
       "finalizedDays": "Dni ostateczne",
       "notAvailable": "Niedostępne",
       "notStarted": "Nie rozpoczęto",
-      "operation": "Operacja",
+      "operation": "Zadanie",
       "plannedUpdateFailed": "Nie udało się zaktualizować zaplanowanego przebiegu. Spróbuj ponownie.",
       "progress": "Postęp",
       "progressValue": "{completed, number} / {total, number}",
@@ -74,7 +74,18 @@
       "type": "Typ",
       "unit": "Jednostka",
       "updatingPlannedRun": "Aktualizowanie zaplanowanego przebiegu",
-      "keywordCount": "{count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}"
+      "keywordCount": "{count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}}",
+      "reviewIssue": "Sprawdź problem",
+      "reviewUsage": "Sprawdź budżet i zużycie",
+      "usageUnconfirmed": "Zużycie wymaga potwierdzenia",
+      "connectProvider": "Podłącz obsługiwanego dostawcę",
+      "providerUnavailable": "Dostawca jest niedostępny",
+      "workerUnavailable": "Worker jest niedostępny",
+      "marketPaused": "Rynek jest wstrzymany",
+      "noActiveKeywords": "Brak aktywnych fraz",
+      "reviewBlocker": "Sprawdź przyczynę blokady",
+      "targetProgress": "{completed, number} / {total, number} {total, plural, one {cel} few {cele} many {celów} other {celu}}",
+      "dayProgress": "{completed, number} / {total, number} {total, plural, one {dzień z ostatecznymi danymi} few {dni z ostatecznymi danymi} many {dni z ostatecznymi danymi} other {dnia z ostatecznymi danymi}}"
     },
     "actions": {
       "actionsFor": "Akcje – {title}",
@@ -87,7 +98,7 @@
     "timeline": {
       "all": "Wszystkie",
       "active": "W toku",
-      "upcoming": "Nadchodzące",
+      "upcoming": "Czekają na start",
       "history": "Historia",
       "sections": "Etapy wykonania",
       "activeHint": "Od najwcześniej rozpoczętego",
@@ -101,7 +112,17 @@
       "readyFrom": "Gotowe od",
       "parallelWorkers": "Workery mogą działać równolegle.",
       "oldestFirst": "Najstarsze najpierw",
-      "newestFirst": "Najnowsze najpierw"
+      "newestFirst": "Najnowsze najpierw",
+      "waiting": "Czekają na start",
+      "waitingHint": "Oczekujące wykonania. Daty zgodne z zapisanym terminem.",
+      "due": "Termin już minął",
+      "dueHint": "Zadania czekające po zapisanym terminie startu lub ponowienia.",
+      "later": "Zaplanowane na później",
+      "laterHint": "Czekają na przyszły termin wykonania.",
+      "pastFailuresHint": "Dawne wykonania zakończone problemem. Nie są obecnie oczekującymi zadaniami.",
+      "attention": "Wymaga uwagi",
+      "pastScheduled": "Po zaplanowanym terminie",
+      "pastScheduledDays": "Nie uruchomiono · {count, plural, one {# dzień po terminie} few {# dni po terminie} many {# dni po terminie} other {# dnia po terminie}}"
     }
   }
 }

@@ -1,9 +1,11 @@
+import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { createProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import {
+  deploymentRankUsesNativeUnits,
   hostedRankCheckEstimatedCostCents,
   startDeploymentExecution,
 } from "@/lib/providers/execution-extension";
@@ -106,12 +108,14 @@ export async function prepareLiveRankExecution(
           connectionId: input.connection.id,
           credential: providerUsage.credential,
           estimatedCostCents: exactExecutionEstimate(
-            hostedRankCheckEstimatedCostCents(provider, depth) ??
+            (await hostedRankCheckEstimatedCostCents(provider, depth)) ??
               estimatedRankCheckCostCents(provider, depth, null, LIST_PROVIDER_RATE_CONTEXT),
             4,
           ),
           // Depth changes estimated cost; one rank task is one native operation.
-          estimatedQuantity: "1.000000",
+          estimatedQuantity: (await deploymentRankUsesNativeUnits(provider))
+            ? String(pagesPerCheck(depth))
+            : "1.000000",
           keywordId: input.keyword.id,
           operationKey: `rank-check:${input.rankCheckId}`,
           provider,

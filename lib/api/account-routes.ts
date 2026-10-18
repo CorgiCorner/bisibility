@@ -24,6 +24,13 @@ export function dispatchAccountRoute(ctx: PersonalApiContext) {
     return null;
   }
   if (first !== "me") return null;
+  if (second === "analytics-consent" && ctx.path.length === 2) {
+    if (ctx.method === "GET")
+      return import("./analytics-consent").then((routes) => routes.getAnalyticsConsent(ctx));
+    if (ctx.method === "PUT")
+      return import("./analytics-consent").then((routes) => routes.updateAnalyticsConsent(ctx));
+    return null;
+  }
   if (ctx.path.length === 1) {
     if (ctx.method === "GET") {
       return import("./me").then((routes) => routes.getMe(ctx));

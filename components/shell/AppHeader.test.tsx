@@ -38,6 +38,22 @@ vi.mock("./NotificationBell", () => ({
 }));
 
 describe("AppHeader", () => {
+  it("keeps personal activity immediately before the account menu", () => {
+    render(
+      <AppHeader
+        activeProjectId="proj_example"
+        canCreateWorkspace={false}
+        projectRef="prj_example"
+        workspaces={[]}
+        user={{ name: "Preview", email: "preview@example.com" }}
+        accountActions={<a href="/app/account/activity">Activity streak</a>}
+      />,
+    );
+    const activity = screen.getByRole("link", { name: "Activity streak" });
+    const account = screen.getByRole("button", { name: "Account menu" });
+    expect(activity.nextElementSibling).toBe(account);
+    expect(screen.getByRole("button", { name: "Notifications" }).nextElementSibling).toBe(activity);
+  });
   it("threads setup progress into mobile navigation", () => {
     render(
       <AppHeader

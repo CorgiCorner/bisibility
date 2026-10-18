@@ -137,7 +137,7 @@ describe("keyword suggestions", () => {
     });
     expect(mocks.trackServerEvent).toHaveBeenCalledWith("keywords_added", {
       consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
-      distinctId: "user_1",
+      userId: "user_1",
       properties: {
         keyword_count: 2,
         market_count: 0,

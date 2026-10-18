@@ -105,6 +105,20 @@ function renderTray(
 describe("OperationsTray", () => {
   afterEach(() => vi.useRealTimers());
 
+  it.each(["budget_exhausted", "usage_reconciliation_required"])(
+    "does not promise recovery at reset for %s without confirmed amounts",
+    (blockedReason) => {
+      renderTray([{ ...rankCheck, status: "blocked", blockedReason, budget: null }]);
+      expect(
+        screen.getByText(
+          "Usage needs review. Check budget and unresolved accounting before trying again.",
+        ),
+      ).toBeVisible();
+      expect(screen.queryByText(/checks resume/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/\$0\.00/)).not.toBeInTheDocument();
+    },
+  );
+
   it("anchors the popover below the trigger with the notification-menu gap", () => {
     expect(operationsTrayPopoverOrigins).toEqual({
       anchorOrigin: { horizontal: "right", vertical: "bottom" },

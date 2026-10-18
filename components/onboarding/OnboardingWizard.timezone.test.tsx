@@ -4,7 +4,10 @@ import { project, renderWizard } from "./OnboardingWizard.test-utils";
 
 describe("OnboardingWizard timezone", () => {
   it("adopts the captured timezone into the schedule draft after project creation", async () => {
-    const createProjectAction = vi.fn(async () => ({ ...project, timezone: "Europe/Madrid" }));
+    const createProjectAction = vi.fn(async () => ({
+      ok: true as const,
+      project: { ...project, timezone: "Europe/Madrid" },
+    }));
     renderWizard({ actions: { createProjectAction } });
 
     fireEvent.change(screen.getByLabelText("Your website"), {

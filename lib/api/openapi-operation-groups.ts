@@ -22,6 +22,8 @@ export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly s
     "account-access",
     [
       "getMe",
+      "getAnalyticsConsent",
+      "updateAnalyticsConsent",
       "updateMe",
       "listPersonalAccessTokens",
       "createPersonalAccessToken",

@@ -1,10 +1,12 @@
-import { type AccountSectionId, accountSections } from "@/components/account/account-sections";
+"use client";
+import type { AccountSectionId } from "@/components/account/account-sections";
 import {
   settingsContentColumnClassName,
   settingsShellGridClassName,
 } from "@/components/settings/shell/settings-layout";
 import { cn } from "@/lib/ui/cn";
 import type { ReactNode } from "react";
+import { useAccountSections } from "./AccountNavigationProvider";
 
 type AccountLoadingBarProps = { className?: string };
 
@@ -26,6 +28,7 @@ function AccountLoadingMobileMenu() {
 }
 
 function AccountLoadingSubnav({ activeSection }: Readonly<{ activeSection: AccountSectionId }>) {
+  const accountSections = useAccountSections();
   return (
     <nav
       aria-hidden

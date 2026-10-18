@@ -1,8 +1,23 @@
+import { ApiNotFoundError } from "@/lib/api/errors";
+import { runDomain } from "@/lib/api/surface";
 import { notFound, redirect } from "@/tests/next-navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getQueryActor, requireReadableProject, resolveProjectAccess } from "./_auth";
+import {
+  getQueryActor,
+  requireReadableProject,
+  requireReadableProjectFor,
+  resolveProjectAccess,
+} from "./_auth";
 
 const mocks = vi.hoisted(() => ({
+  AuthorizationError: class extends Error {
+    constructor(
+      readonly code: "unauthenticated" | "forbidden",
+      message: string,
+    ) {
+      super(message);
+    }
+  },
   authorize: vi.fn(),
   cacheEntries: new Map<unknown, Map<string, unknown>>(),
   prisma: {
@@ -28,7 +43,10 @@ vi.mock("react", () => ({
       return entries.get(key);
     },
 }));
-vi.mock("@/lib/auth/authorize", () => ({ authorize: mocks.authorize }));
+vi.mock("@/lib/auth/authorize", () => ({
+  AuthorizationError: mocks.AuthorizationError,
+  authorize: mocks.authorize,
+}));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 
@@ -44,7 +62,9 @@ describe("resolveProjectAccess", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     notFound.mockImplementation(() => {
-      throw new Error("NEXT_NOT_FOUND");
+      throw Object.assign(new Error("NEXT_HTTP_ERROR_FALLBACK;404"), {
+        digest: "NEXT_HTTP_ERROR_FALLBACK;404",
+      });
     });
     redirect.mockImplementation(() => {
       throw new Error("NEXT_REDIRECT");
@@ -80,7 +100,7 @@ describe("resolveProjectAccess", () => {
     });
 
     await expect(resolveProjectAccess("prj_h00000000000000000000000")).rejects.toThrow(
-      "NEXT_NOT_FOUND",
+      "NEXT_HTTP_ERROR_FALLBACK;404",
     );
     expect(notFound).toHaveBeenCalledOnce();
   });
@@ -89,19 +109,19 @@ describe("resolveProjectAccess", () => {
     mocks.prisma.project.findUnique.mockResolvedValue(null);
 
     await expect(resolveProjectAccess("prj_i00000000000000000000000")).rejects.toThrow(
-      "NEXT_NOT_FOUND",
+      "NEXT_HTTP_ERROR_FALLBACK;404",
     );
     expect(notFound).toHaveBeenCalledOnce();
   });
 
   it("rejects a ref that is not a project public id without touching the database", async () => {
-    await expect(resolveProjectAccess("overview")).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(resolveProjectAccess("overview")).rejects.toThrow("NEXT_HTTP_ERROR_FALLBACK;404");
     expect(mocks.prisma.project.findUnique).not.toHaveBeenCalled();
   });
 
   it("rejects a public id from another resource", async () => {
     await expect(resolveProjectAccess("kw_aaaaaaaaaaaaaaaaaaaaaaaa")).rejects.toThrow(
-      "NEXT_NOT_FOUND",
+      "NEXT_HTTP_ERROR_FALLBACK;404",
     );
     expect(mocks.prisma.project.findUnique).not.toHaveBeenCalled();
   });
@@ -111,7 +131,9 @@ describe("requireReadableProject", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     notFound.mockImplementation(() => {
-      throw new Error("NEXT_NOT_FOUND");
+      throw Object.assign(new Error("NEXT_HTTP_ERROR_FALLBACK;404"), {
+        digest: "NEXT_HTTP_ERROR_FALLBACK;404",
+      });
     });
     redirect.mockImplementation(() => {
       throw new Error("NEXT_REDIRECT");
@@ -141,18 +163,82 @@ describe("requireReadableProject", () => {
   });
 
   it("rejects an internal project id before querying the database", async () => {
-    await expect(requireReadableProject("project_1")).rejects.toThrow("Project not found.");
+    await expect(requireReadableProject("project_1")).rejects.toThrow(
+      "NEXT_HTTP_ERROR_FALLBACK;404",
+    );
 
     expect(mocks.prisma.project.findFirst).not.toHaveBeenCalled();
     expect(mocks.authorize).not.toHaveBeenCalled();
+    expect(notFound).toHaveBeenCalledOnce();
   });
+
+  it("returns a framework 404 for a deleted project through the cached lookup", async () => {
+    mocks.prisma.project.findFirst.mockResolvedValue(null);
+    await expect(requireReadableProject("prj_a00000000000000000000000")).rejects.toMatchObject({
+      digest: "NEXT_HTTP_ERROR_FALLBACK;404",
+    });
+    expect(notFound).toHaveBeenCalledOnce();
+    expect(mocks.authorize).not.toHaveBeenCalled();
+  });
+
+  it.each(["project_1", "prj_a00000000000000000000000"])(
+    "preserves the API not-found mapping for explicit-actor lookup of %s",
+    async (ref) => {
+      mocks.prisma.project.findFirst.mockResolvedValue(null);
+      const result = runDomain(() =>
+        requireReadableProjectFor({ id: "user_1", role: null, memberships: [] }, ref),
+      );
+      await expect(result).rejects.toBeInstanceOf(ApiNotFoundError);
+      await expect(result).rejects.toThrow("Project not found.");
+      expect(notFound).not.toHaveBeenCalled();
+      expect(mocks.authorize).not.toHaveBeenCalled();
+      expect(mocks.requireSession).not.toHaveBeenCalled();
+      if (ref === "project_1") expect(mocks.prisma.project.findFirst).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["cached", "explicit actor"])(
+    "preserves a database outage through %s lookup",
+    async (mode) => {
+      const failure = new Error("database connection unavailable");
+      mocks.prisma.project.findFirst.mockRejectedValue(failure);
+      const ref = "prj_a00000000000000000000000";
+      const result =
+        mode === "cached"
+          ? requireReadableProject(ref)
+          : requireReadableProjectFor({ id: "user_1", role: null, memberships: [] }, ref);
+      await expect(result).rejects.toBe(failure);
+      expect(notFound).not.toHaveBeenCalled();
+      expect(mocks.authorize).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["cached", "explicit actor"])(
+    "continues checking authorization through %s lookup",
+    async (mode) => {
+      mocks.prisma.project.findFirst.mockResolvedValue({ id: "other-project" });
+      const failure = new mocks.AuthorizationError("forbidden", "access denied");
+      mocks.authorize.mockImplementationOnce(() => {
+        throw failure;
+      });
+      const ref = "prj_a00000000000000000000000";
+      const result =
+        mode === "cached"
+          ? requireReadableProject(ref)
+          : requireReadableProjectFor({ id: "user_1", role: null, memberships: [] }, ref);
+      await expect(result).rejects.toBe(failure);
+      expect(notFound).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("getQueryActor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     notFound.mockImplementation(() => {
-      throw new Error("NEXT_NOT_FOUND");
+      throw Object.assign(new Error("NEXT_HTTP_ERROR_FALLBACK;404"), {
+        digest: "NEXT_HTTP_ERROR_FALLBACK;404",
+      });
     });
     redirect.mockImplementation(() => {
       throw new Error("NEXT_REDIRECT");

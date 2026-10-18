@@ -29,7 +29,9 @@ describe("provider UI exact decimal forms", () => {
   it("keeps clear distinct from invalid native allocation input", () => {
     expect(allocationFromInput("", "cents")).toBeNull();
     expect(allocationFromInput("garbage", "cents")).toBeUndefined();
-    expect(allocationFromInput("0.01", "customer_cents")).toBe("1");
+    expect(allocationFromInput("1000", "customer_cents")).toBe("1000");
+    expect(allocationFromInput("0.01", "customer_cents")).toBeUndefined();
+    expect(allocationFromInput("1000", "cents")).toBe("100000");
     expect(allocationFromInput("21474836.47", "cents")).toBe("2147483647");
     expect(allocationInputIssue("21474836.48", "cents")).toBe("tooLarge");
     expect(allocationInputIssue("1.5", "units")).toBe("wholeUnits");

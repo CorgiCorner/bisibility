@@ -112,6 +112,40 @@ describe("pending Google OAuth property selection", () => {
     ]);
   });
 
+  it.each(["missing", "expired", "different actor", "different project"] as const)(
+    "requests reconnect without provider calls when pending OAuth state is %s",
+    async (state) => {
+      if (state === "missing") mocks.cookieStore.get.mockReturnValue(undefined);
+      else {
+        const changes = {
+          expired: { issuedAt: Date.now() - 11 * 60 * 1000 },
+          "different actor": { actorId: "another_user" },
+          "different project": { projectId: "another_project" },
+        }[state];
+        mocks.decryptSecret.mockReturnValue(JSON.stringify({ ...pending, ...changes }));
+      }
+
+      await expect(
+        completePendingGooglePropertySelection({
+          projectId: "prj_1",
+          property: "sc-domain:example.com",
+        }),
+      ).resolves.toEqual({ status: "reauth_required" });
+
+      expect(mocks.requireProjectScope).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "user_1" }),
+        "manage",
+        "prj_1",
+        { type: "provider_connection" },
+      );
+      expect(mocks.refreshGoogleAccessToken).not.toHaveBeenCalled();
+      expect(mocks.verifyProviderConnectionBeforeSave).not.toHaveBeenCalled();
+      expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+      expect(mocks.queueSearchInsightsImport).not.toHaveBeenCalled();
+      expect(mocks.cookieStore.delete).not.toHaveBeenCalled();
+    },
+  );
+
   it("exposes GA4 account summaries as display-name and numeric-id options", async () => {
     mocks.decryptSecret.mockReturnValue(JSON.stringify({ ...pending, provider: "ga4" }));
 

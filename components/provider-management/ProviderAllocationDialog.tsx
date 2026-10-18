@@ -150,7 +150,7 @@ export function ProviderAllocationDialog(props: ProviderAllocationDialogProps) {
                 formAdapter={formAdapter}
                 inputPolicy={(row) => ({
                   ...allocationPolicy(row),
-                  unitLabel: row.unit === "units" ? t("searchesAdornment") : "USD",
+                  unitLabel: row.unit === "cents" ? "USD" : labels.formatUnit(row.unit),
                 })}
                 evidenceAvailable={status.state === "ready" && !result.refreshing}
                 canEdit={status.state === "ready"}

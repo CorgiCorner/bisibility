@@ -117,8 +117,8 @@
       },
       "rank": {
         "blocked": {
-          "budgetWithAmounts": "今月は {cap} のうち {spent} を利用しました。予算がリセットされるとチェックが再開します。",
-          "budgetWithoutAmounts": "予算がリセットされるとチェックが再開します。",
+          "budgetWithAmounts": "今月（UTC）の報告されたプロバイダー費用: {spent}。月次プロジェクト予算上限: {cap}。 現在の上限と未確定の処理は使用量で確認してください。",
+          "budgetWithoutAmounts": "使用量の確認が必要です。再試行する前に予算と未確定の処理を確認してください。",
           "keywordArchived": "このキーワードはチェック開始前にアーカイブされたため、費用が発生する前に停止しました。",
           "marketInactive": "このキーワードの市場が一時停止中のため、費用が発生する前にチェックを停止しました。",
           "noProvider": "この実行を開始するには、プロバイダーを接続または再接続してください。",
@@ -180,7 +180,8 @@
       "signOut": "サインアウト",
       "signOutError": "サインアウトできませんでした。再試行してください。",
       "fallbackName": "アカウント",
-      "opensInNewTab": "{label}（新しいタブで開きます）"
+      "opensInNewTab": "{label}（新しいタブで開きます）",
+      "activity": "アクティビティとバッジ"
     },
     "market": {
       "add": "市場を追加",

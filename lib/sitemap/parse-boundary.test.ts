@@ -60,4 +60,51 @@ describe("sitemap XML document boundaries", () => {
       ),
     ).toMatchObject({ kind: "urlset", entries: [{ loc: "https://example.com/live" }] });
   });
+
+  it.each([
+    "<urlset><!<!-- ignored -->--><url><loc>https://example.com/ghost</loc></url>--></urlset>",
+    "<urlset><ur<!-- ignored -->l><loc>https://example.com/ghost</loc></url></urlset>",
+    "<urlset><ur<?instruction?>l><loc>https://example.com/ghost</loc></url></urlset>",
+    "<urlset><url><loc>https://example.com/live</loc></url><broken></urlset>",
+    "<urlset><url><loc>https://example.com/&unknown;</loc></url></urlset>",
+  ])("rejects malformed XML instead of manufacturing entries: %s", (xml) => {
+    expect(parseSitemapXml(xml)).toMatchObject({ kind: "unknown", entries: [], urlCount: 0 });
+  });
+
+  it("reads only direct entries and fields in the sitemap namespace", () => {
+    const xml =
+      '<s:urlset xmlns:s="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:x="https://example.org/extension"><x:url><x:loc>https://example.com/extension</x:loc></x:url><x:wrapper><s:url><s:loc>https://example.com/nested</s:loc></s:url></x:wrapper><s:url><x:loc>https://example.com/wrong-field</x:loc><s:loc>https://example.com/live</s:loc><s:lastmod>2026-10-12</s:lastmod></s:url></s:urlset>';
+    expect(parseSitemapXml(xml)).toMatchObject({
+      kind: "urlset",
+      entries: [{ loc: "https://example.com/live", lastmod: "2026-10-12" }],
+      urlCount: 1,
+    });
+  });
+
+  it.each([
+    '<x:urlset xmlns:x="urn:unrelated-feed"/>',
+    '<x:urlset xmlns:x="urn:unrelated-feed"><x:url><x:loc>https://example.com/live</x:loc></x:url></x:urlset>',
+  ])("rejects an unrelated root namespace: %s", (xml) => {
+    expect(parseSitemapXml(xml)).toMatchObject({ kind: "unknown", entries: [], urlCount: 0 });
+  });
+
+  it("combines XML text and CDATA without reinterpreting their contents", () => {
+    const xml =
+      "<urlset><url><loc>https://example.com/<![CDATA[page?a=1&amp;b=2]]>&amp;c=3</loc></url></urlset>";
+    expect(parseSitemapXml(xml).entries).toEqual([
+      { loc: "https://example.com/page?a=1&amp;b=2&c=3" },
+    ]);
+  });
+
+  it.each([
+    '<!DOCTYPE urlset SYSTEM "https://example.com/external.dtd"><urlset/>',
+    '<!DOCTYPE urlset [<!ENTITY link "https://example.com/expanded">]><urlset><url><loc>&link;</loc></url></urlset>',
+  ])("rejects document types without expanding entities: %s", (xml) => {
+    expect(parseSitemapXml(xml)).toMatchObject({ kind: "unknown", entries: [] });
+  });
+
+  it("rejects excessive nesting instead of retaining an unbounded XML stack", () => {
+    const xml = `<urlset>${"<nested>".repeat(100)}${"</nested>".repeat(100)}</urlset>`;
+    expect(parseSitemapXml(xml)).toMatchObject({ kind: "unknown", entries: [] });
+  });
 });

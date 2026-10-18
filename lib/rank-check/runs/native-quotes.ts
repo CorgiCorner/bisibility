@@ -11,7 +11,7 @@ export async function quoteRunRows(
   connection: Parameters<typeof estimateRunRows>[3],
   db: Prisma.TransactionClient = prisma,
 ) {
-  const draft = estimateRunRows(rows, projectDepth, input, connection);
+  const draft = await estimateRunRows(rows, projectDepth, input, connection);
   const costs = await loadNativeRankRequestCosts(
     db,
     { ...connection, credentialsEncrypted: connection.credentialsEncrypted ?? null },
@@ -20,5 +20,5 @@ export async function quoteRunRows(
       keyword: rows[index].text,
     })),
   );
-  return costs ? estimateRunRows(rows, projectDepth, input, connection, costs) : draft;
+  return costs ? await estimateRunRows(rows, projectDepth, input, connection, costs) : draft;
 }

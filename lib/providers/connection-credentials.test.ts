@@ -49,6 +49,18 @@ describe("resolveConnectionCredentials", () => {
     expect(ownCredentials).not.toHaveBeenCalled();
   });
 
+  it("marks free catalog resolution explicitly without inspecting stored credentials", async () => {
+    hostedCredentials.mockResolvedValue({ login: "catalog", password: "fixture" });
+    const connection = {
+      provider: "dataforseo",
+      credentialSource: "hosted" as const,
+      credentialsEncrypted: "unused-own-value",
+    };
+    await resolveConnectionCredentials(connection, "free_catalog");
+    expect(hostedCredentials).toHaveBeenCalledWith("dataforseo", "free_catalog");
+    expect(ownCredentials).not.toHaveBeenCalled();
+  });
+
   it("never falls back to own credentials when hosted resolution yields null", async () => {
     hostedCredentials.mockResolvedValue(null);
 

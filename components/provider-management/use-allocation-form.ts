@@ -20,8 +20,8 @@ import { type Resolver, useForm } from "react-hook-form";
 export function allocationPolicy(row: ProviderAllocationRow): AllocationInputPolicy {
   return {
     blank: "unlimited",
-    denomination: row.unit === "units" ? "native" : "dollars",
-    precision: row.unit === "units" ? 0 : 2,
+    denomination: row.unit === "cents" ? "dollars" : "native",
+    precision: row.unit === "cents" ? 2 : 0,
     nativePrecision: 0,
     min: "1",
     max: String(MAX_ALLOCATION_AMOUNT),
@@ -74,12 +74,14 @@ export function useAllocationForm(
   const values = form.watch("limits");
   function validation(message: string | undefined, row: ProviderAllocationRow) {
     if (!message) return undefined;
+    if (row.unit === "customer_cents" && ["positiveUnits", "wholeUnits"].includes(message))
+      return t(message === "positiveUnits" ? "positiveBudget" : "invalidBudget");
     if (message === "positiveMoney") return t("positiveBudget");
     if (message === "positiveUnits") return t("positiveUnits");
     if (message === "wholeUnits") return t("wholeUnits");
     if (message !== "tooLarge") return t("invalidDecimal");
     const maximum =
-      row.unit === "units"
+      row.unit !== "cents"
         ? new Intl.NumberFormat(locale).format(MAX_ALLOCATION_AMOUNT)
         : new Intl.NumberFormat(locale, {
             style: "currency",

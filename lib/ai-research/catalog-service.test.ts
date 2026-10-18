@@ -19,7 +19,7 @@ vi.mock("@/lib/provider-lookups/paid-call", async () => ({
     .ProviderLookupSignal,
 }));
 
-import { getAiResearchCatalog } from "./catalog-service";
+import { getAiResearchCatalog, loadAiResearchCapabilities } from "./catalog-service";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -75,6 +75,7 @@ describe("AI catalog source failures", () => {
       ok: true,
       catalog: { actualCostAvailable: true },
     });
+    expect(mocks.credentials).toHaveBeenCalledWith(expect.any(Object), "free_catalog");
     expect(mocks.fetch).toHaveBeenCalledWith(
       { login: "fixture", password: "fictional" },
       expect.any(Number),
@@ -82,6 +83,19 @@ describe("AI catalog source failures", () => {
     expect(mocks.cache).toHaveBeenCalledWith(
       expect.objectContaining({ fresh: false, ttlSeconds: 300 }),
     );
+  });
+  it("does not reuse free pool credentials for paid admission pricing", async () => {
+    const source = await mocks.source();
+    mocks.credentials.mockImplementation(async (_connection, purpose) => {
+      if (purpose !== "free_catalog")
+        throw new Error("Pooled credentials require an admitted execution.");
+      return { login: "catalog-only", password: "fictional" };
+    });
+    await expect(loadAiResearchCapabilities(source)).rejects.toThrow(
+      "Pooled credentials require an admitted execution.",
+    );
+    expect(mocks.fetch).not.toHaveBeenCalled();
+    expect(await getAiResearchCatalog("project")).toMatchObject({ ok: true });
   });
   it("keeps transport failures distinct without disclosing their private error", async () => {
     mocks.fetch.mockRejectedValue(new Error("fictional-private-credential-detail"));

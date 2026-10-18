@@ -4,8 +4,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   cookieValue: undefined as string | undefined,
   requiresConsent: false,
+  session: vi.fn(),
+  resolveUser: vi.fn(),
 }));
 
+vi.mock("@/lib/auth/session", () => ({ getOptionalAvailableSession: mocks.session }));
+vi.mock("@/lib/analytics/server-user", () => ({ resolveServerAnalyticsUser: mocks.resolveUser }));
 vi.mock("next/headers", () => ({
   cookies: async () => ({
     get: () => (mocks.cookieValue ? { value: mocks.cookieValue } : undefined),
@@ -46,6 +50,27 @@ describe("ConsentSlot", () => {
     expect(await ConsentSlot()).toBeNull();
   });
 
+  it("prompts when account analytics expires while preserving browser replay", async () => {
+    mocks.requiresConsent = true;
+    mocks.cookieValue = "v2.a1.r1.t1788552000";
+    mocks.session.mockResolvedValueOnce({ user: { id: "internal" } });
+    mocks.resolveUser.mockResolvedValueOnce({
+      consent: {
+        analytics: false,
+        replay: true,
+        status: "decided",
+        decidedAt: 1788552000,
+        analyticsNeedsDecision: true,
+      },
+    });
+    render(await ConsentSlot());
+    expect(screen.getByText("Consent banner")).toBeInTheDocument();
+  });
+  it("keeps the analytics slot from failing page rendering when session availability is unavailable", async () => {
+    mocks.requiresConsent = true;
+    mocks.session.mockRejectedValueOnce(new Error("session database unavailable"));
+    await expect(ConsentSlot()).resolves.toBeNull();
+  });
   it("requests a new decision for legacy replay consent", async () => {
     mocks.requiresConsent = true;
     mocks.cookieValue = "v1.a1.r1.t1788552000";

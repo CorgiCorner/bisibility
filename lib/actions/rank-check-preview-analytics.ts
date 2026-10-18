@@ -24,7 +24,7 @@ export async function emitFirstCheckPreviewResult(input: {
     if (!provider) return;
     await trackServerEvent("rank_check_preview_completed", {
       consent: await readConsentFromCookies(),
-      distinctId: input.actorId,
+      userId: input.actorId,
       properties: {
         duration_ms: Math.max(0, Date.now() - input.startedAt),
         provider,
@@ -91,7 +91,7 @@ export async function emitFirstCheckRunCompletion(input: {
         try {
           await trackServerEvent("rank_check_preview_completed", {
             consent,
-            distinctId: input.actorId,
+            userId: input.actorId,
             uuid: uuidv5(
               `bisibility/first-check/${input.actorId}/${run.publicId}/completed`,
               uuidv5.URL,

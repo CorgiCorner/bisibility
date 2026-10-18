@@ -8,10 +8,16 @@ import type { ActiveMigrationToken, IssuedMigrationToken } from "./cloud-token";
 
 const mocks = vi.hoisted(() => {
   const setJob = vi.fn();
+  const retry = vi.fn();
+  const pollState = { error: null as Error | null };
   return {
+    retry,
+    pollState,
     setJob,
     useCloudImportJobPoll: vi.fn(() => ({
       job: { id: "imp_abcdefghijklmnopqrstuvwx", progress: 0, state: "idle" },
+      pollError: pollState.error,
+      retry,
       setJob,
     })),
   };
@@ -116,6 +122,7 @@ function renderImport(overrides: Record<string, unknown> = {}) {
 describe("CloudImport", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.pollState.error = null;
   });
 
   it("renders migration state without token or transfer controls below admin", () => {
@@ -142,6 +149,18 @@ describe("CloudImport", () => {
     expect(mocks.useCloudImportJobPoll).toHaveBeenCalledWith(
       expect.objectContaining({ active: true }),
     );
+  });
+
+  it("shows a recoverable status-read error without changing the transfer token", () => {
+    mocks.pollState.error = new TypeError("Load failed");
+    const actions = renderImport({ activeToken });
+
+    expect(screen.getByText("The action could not be completed.")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(mocks.retry).toHaveBeenCalledOnce();
+    expect(actions.mintMigrationTokenAction).not.toHaveBeenCalled();
+    expect(actions.regenerateMigrationTokenAction).not.toHaveBeenCalled();
+    expect(actions.revokeMigrationTokenAction).not.toHaveBeenCalled();
   });
 
   it("mints and revokes a migration token", async () => {

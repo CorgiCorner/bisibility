@@ -3,8 +3,10 @@ import { syncSitemapForProject } from "./sync";
 
 const mocks = vi.hoisted(() => ({
   lookup: vi.fn(),
+  emitSignal: vi.fn(),
   fetch: vi.fn(),
   prisma: {
+    $transaction: vi.fn(),
     project: { findFirst: vi.fn() },
     sitemapSnapshot: { findFirst: vi.fn(), create: vi.fn() },
   },
@@ -15,7 +17,7 @@ vi.mock("undici", async (importOriginal) => {
   return { ...original, fetch: mocks.fetch };
 });
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/signals/emit", () => ({ emitSignal: vi.fn() }));
+vi.mock("@/lib/signals/emit", () => ({ emitSignal: mocks.emitSignal }));
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -26,6 +28,11 @@ function prepare() {
   mocks.lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
   mocks.prisma.project.findFirst.mockResolvedValue({ id: "project_1", domain: "example.com" });
   mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue(null);
+  mocks.prisma.sitemapSnapshot.create.mockResolvedValue({ id: "snapshot_new" });
+  mocks.emitSignal.mockResolvedValue({ id: "signal_new" });
+  mocks.prisma.$transaction.mockImplementation((callback) =>
+    callback({ sitemapSnapshot: { create: mocks.prisma.sitemapSnapshot.create } }),
+  );
   mocks.fetch.mockResolvedValue(
     new Response("<urlset><url><loc>https://example.com/live</loc></url></urlset>"),
   );
@@ -33,6 +40,43 @@ function prepare() {
 }
 
 describe("sitemap outbound boundaries", () => {
+  it.each([
+    ["root", ["<urlset><url><loc>https://example.com/live</loc></url><broken></urlset>"]],
+    [
+      "child after a valid child",
+      [
+        "<sitemapindex><sitemap><loc>valid.xml</loc></sitemap><sitemap><loc>broken.xml</loc></sitemap></sitemapindex>",
+        "<urlset><url><loc>https://example.com/live</loc></url></urlset>",
+        "<urlset><url><loc>https://example.com/old</loc></url><broken></urlset>",
+      ],
+    ],
+    ["foreign namespace root", ['<x:urlset xmlns:x="urn:unrelated-feed"/>']],
+    [
+      "foreign namespace child after a valid child",
+      [
+        "<sitemapindex><sitemap><loc>valid.xml</loc></sitemap><sitemap><loc>foreign.xml</loc></sitemap></sitemapindex>",
+        "<urlset><url><loc>https://example.com/live</loc></url></urlset>",
+        '<x:urlset xmlns:x="urn:unrelated-feed"/>',
+      ],
+    ],
+  ])("keeps the previous snapshot when the %s sitemap is invalid", async (_scope, documents) => {
+    prepare();
+    mocks.prisma.sitemapSnapshot.findFirst.mockResolvedValue({
+      id: "snapshot_previous",
+      contentHash: "previous-hash",
+      entries: [{ loc: "https://example.com/old" }],
+    });
+    for (const document of documents) mocks.fetch.mockResolvedValueOnce(new Response(document));
+
+    await expect(syncSitemapForProject("project_1")).rejects.toThrow(
+      "not a urlset or sitemapindex",
+    );
+    expect(mocks.fetch).toHaveBeenCalledTimes(documents.length);
+    expect(mocks.prisma.sitemapSnapshot.findFirst).not.toHaveBeenCalled();
+    expect(mocks.prisma.sitemapSnapshot.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    expect(mocks.emitSignal).not.toHaveBeenCalled();
+  });
   it("refuses a private root DNS answer before fetching", async () => {
     prepare();
     mocks.lookup.mockResolvedValue([{ address: "::ffff:7f00:1", family: 6 }]);

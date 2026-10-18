@@ -1,5 +1,6 @@
 "use server";
 
+import { withAchievementUse } from "@/lib/achievements/record-use";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { researchKeywords } from "@/lib/keyword-research/service";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
@@ -37,13 +38,15 @@ export async function researchKeywordsAction(input: unknown) {
   const project = await requireProjectScope(actor, "create", data.projectId, { type: "keyword" });
 
   try {
-    return await withLookupBudgetResult(() =>
-      researchKeywords({
-        ...data,
-        actorId: actor.id,
-        origin: APP_REQUEST_ORIGIN,
-        projectId: project.id,
-      }),
+    return await withAchievementUse(actor.id, "researchKeywords", data.estimateOnly, () =>
+      withLookupBudgetResult(() =>
+        researchKeywords({
+          ...data,
+          actorId: actor.id,
+          origin: APP_REQUEST_ORIGIN,
+          projectId: project.id,
+        }),
+      ),
     );
   } catch (error) {
     if (error instanceof ProviderCallError && error.code === "provider_account_restricted") {

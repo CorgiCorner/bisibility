@@ -235,6 +235,8 @@
             "pages": [
               "GET /me",
               "PATCH /me",
+              "GET /me/analytics-consent",
+              "PUT /me/analytics-consent",
               "GET /me/tokens",
               "POST /me/tokens",
               "DELETE /me/tokens/{token_id}"
@@ -464,6 +466,7 @@
             "pages": [
               "self-hosting/temporal",
               "self-hosting/operations",
+              "self-hosting/historical-accounting",
               "self-hosting/upgrades",
               "self-hosting/store-0-32",
               "self-hosting/backup-restore",

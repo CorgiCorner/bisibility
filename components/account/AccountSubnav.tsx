@@ -1,8 +1,8 @@
 "use client";
-
-import { type AccountSectionId, accountSections } from "@/components/account/account-sections";
+import type { AccountSectionId } from "@/components/account/account-sections";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useAccountSections } from "./AccountNavigationProvider";
 
 type AccountSubnavProps = {
   activeSection: AccountSectionId;
@@ -10,6 +10,7 @@ type AccountSubnavProps = {
 
 export function AccountSubnav({ activeSection }: Readonly<AccountSubnavProps>) {
   const t = useTranslations("account.navigation");
+  const accountSections = useAccountSections();
 
   return (
     <nav

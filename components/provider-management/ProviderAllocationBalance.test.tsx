@@ -109,7 +109,7 @@ describe("verified wallet allocation suggestion", () => {
       surfaceLabel(dialogCopy.creditsAppBudgetField, "DataForSEO"),
     );
     fireEvent.click(screen.getByRole("button", { name: "Use credit balance" }));
-    expect(field).toHaveValue("100.00");
+    expect(field).toHaveValue("10000");
     expect(screen.getByText("Oct 7, 2026, 1:30 PM")).toHaveAttribute(
       "datetime",
       "2026-10-07T13:30:00.000Z",

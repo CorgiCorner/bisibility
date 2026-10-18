@@ -1,4 +1,5 @@
 "use server";
+import { recordQualifiedUse } from "@/lib/achievements/record-use";
 import { listAgentReports } from "@/lib/agent-reports/service";
 import { getAiResearchCatalog } from "@/lib/ai-research/catalog-service";
 import { promptSchema, visibilitySchema } from "@/lib/ai-research/schema";
@@ -25,6 +26,12 @@ export async function analyzeAiResearchAction(
       { projectId: project.id, actorId: actor.id, origin: APP_REQUEST_ORIGIN },
       data,
     );
+    recordQualifiedUse({
+      actorId: actor.id,
+      operation: "runAiResearch",
+      estimate: data.estimate_only,
+      success: result != null && result.ok !== false,
+    });
     return result;
   } catch (error) {
     const budget = budgetFailureResult(error);

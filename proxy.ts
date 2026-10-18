@@ -11,6 +11,9 @@ import {
   lastMarketCookieWrite,
 } from "@/lib/markets/last-market-cookie";
 import { appAnchorRedirect, legacyKeywordPathRedirect } from "@/lib/routing/app-route-redirects";
+import { additionalAppSurfacePaths } from "@/lib/routing/app-surface-extension";
+import { securityHeaders } from "@/lib/routing/security-headers";
+import { unsupportedProbeResponse } from "@/lib/routing/unsupported-probe-path";
 import { type NextRequest, NextResponse } from "next/server";
 import {
   createMarkdownForRequest,
@@ -31,10 +34,13 @@ const REGIONAL_AUTH_METADATA_PATHS = new Set([
   "/.well-known/openid-configuration",
 ]);
 const MARKETING_HOSTS = new Set([CANONICAL_MARKETING_HOST, "www.bisibility.com"]);
-// Interactive and API routes stay in the user's regional cell. Everything else
-// is a public surface whose canonical production origin is the marketing apex.
+// Anonymous API routes that apex marketing pages fetch from their own origin. A
+// redirect to the regional host would turn those fetches into CORS failures.
+const APEX_PUBLIC_API_PATHS = new Set(["/api/v1/cost-estimate"]);
+// Interactive and API routes stay in the regional cell; public surfaces use the apex.
 const APP_SURFACE_PATHS = [
   "/api",
+  "/activity",
   "/app",
   "/cloud",
   "/invite",
@@ -44,17 +50,8 @@ const APP_SURFACE_PATHS = [
   "/onboarding",
   "/setup",
   "/two-factor",
+  ...additionalAppSurfacePaths,
 ] as const;
-const securityHeaders = {
-  "Content-Security-Policy":
-    "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; upgrade-insecure-requests",
-  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "SAMEORIGIN",
-} as const;
-
 function hasSessionCookie(request: NextRequest) {
   return sessionCookieNames.some((name) => request.cookies.has(name));
 }
@@ -119,6 +116,10 @@ function canonicalSurfaceRedirect(request: NextRequest) {
   // The advertised MCP transport is the apex URL. Keep it there so an
   // Authorization header never crosses hosts while following a redirect.
   if (request.nextUrl.pathname === "/api/mcp") {
+    return null;
+  }
+
+  if (APEX_PUBLIC_API_PATHS.has(request.nextUrl.pathname)) {
     return null;
   }
 
@@ -222,6 +223,11 @@ function withResponsePolicies(request: NextRequest, response: NextResponse) {
 }
 
 export function proxy(request: NextRequest) {
+  const unsupportedProbe = unsupportedProbeResponse(request.nextUrl.pathname);
+  if (unsupportedProbe) {
+    return unsupportedProbe;
+  }
+
   if (matchesPathSegment(request.nextUrl.pathname, "/api/v1")) {
     const versionError = unsupportedApiVersionResponse(request);
     if (versionError) {
@@ -290,9 +296,12 @@ export function proxy(request: NextRequest) {
     ),
   );
 }
-
 export const config = {
   matcher: [
+    "/.git/:path*",
+    "/.env:extension(.*)",
+    "/wp-admin/:path*",
+    "/wp-content/:path*",
     "/app/:path*",
     "/onboarding/:path*",
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:avif|css|gif|ico|jpeg|jpg|js|map|png|svg|webp|xml)$).*)",

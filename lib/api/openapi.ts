@@ -1,5 +1,9 @@
 import { API_VERSION_HEADER } from "./api-versions";
 import { analyticsPaths } from "./openapi-analytics";
+import {
+  accountAnalyticsConsentPaths,
+  accountAnalyticsConsentSchema,
+} from "./openapi-analytics-consent";
 import { apiKeyPaths } from "./openapi-api-keys";
 import { backlinksPaths, backlinksSchemas } from "./openapi-backlinks";
 import { ref, schemas } from "./openapi-components";
@@ -102,6 +106,7 @@ export function getOpenApiDocument() {
     components: {
       parameters: { ...projectSelectionParameterComponents, ...sourceHeaderParameterComponents },
       schemas: {
+        AccountAnalyticsConsent: accountAnalyticsConsentSchema,
         ...schemas,
         ...backlinksSchemas,
         ...domainOverviewSchemas,
@@ -123,6 +128,7 @@ export function getOpenApiDocument() {
     paths: withSourceHeaderParameter(
       withProjectSelectionParameters(
         tagOpenApiPaths({
+          ...accountAnalyticsConsentPaths,
           ...apiKeyPaths({
             bearer: bearerOperation,
             created: createdBearerOperation,

@@ -15,11 +15,14 @@ services:
       <<: *temporal-env
 
   worker:
-    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.36.0}
+    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.37.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     environment:
       <<: *temporal-env
+      ACHIEVEMENTS_ENABLED: ${ACHIEVEMENTS_ENABLED:-}
+      ACHIEVEMENTS_EMAIL_ENABLED: ${ACHIEVEMENTS_EMAIL_ENABLED:-}
+      SITE_URL: ${SITE_URL:-}
       ALERT_DELIVERY_FAILURE_RATE_THRESHOLD: ${ALERT_DELIVERY_FAILURE_RATE_THRESHOLD:-}
       ALERT_DELIVERY_MIN_ATTEMPTS: ${ALERT_DELIVERY_MIN_ATTEMPTS:-}
       ALERT_DELIVERY_SWEEP_ENABLED: ${ALERT_DELIVERY_SWEEP_ENABLED:-}

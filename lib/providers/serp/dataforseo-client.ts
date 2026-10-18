@@ -71,6 +71,12 @@ function readResponse(
   data: DataForSeoResponse | null,
   creds: ProviderCredentials,
 ) {
+  if (
+    (response.ok || response.status === 403) &&
+    (data?.status_code === 40104 || data?.tasks?.some((task) => task.status_code === 40104))
+  ) {
+    throw new DataForSeoAccountVerificationError(dataForSeoUsageReceipt(data, response).costCents);
+  }
   if (!response.ok) {
     const retryable = response.status === 429 || response.status >= 500;
     const message = safeStatusMessage(
@@ -207,11 +213,6 @@ export async function requestEnvelope(
         measure: dataForSeoUsageReceipt,
       });
       const data = readResponse(observed.response, observed.data, creds);
-      if (data.status_code === 40104 || data.tasks?.some((task) => task.status_code === 40104)) {
-        throw new DataForSeoAccountVerificationError(
-          dataForSeoUsageReceipt(data, observed.response).costCents,
-        );
-      }
 
       if (envelopeRetryable(data) && attempt < MAX_ATTEMPTS - 1) {
         await wait(retryDelay(attempt));

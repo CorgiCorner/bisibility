@@ -86,7 +86,7 @@ describe("first-check completion analytics", () => {
     const [name, event] = mocks.track.mock.calls[0];
     expect(name).toBe("rank_check_preview_completed");
     expect(event).toMatchObject({
-      distinctId: "user-fixture",
+      userId: "user-fixture",
       timestamp: finishedAt,
       properties: {
         duration_ms: 20_000,

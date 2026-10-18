@@ -73,7 +73,7 @@ describe("OnboardingWizard", () => {
   });
 
   it("submits step 1 as one website value", async () => {
-    const createProjectAction = vi.fn(async (_input: unknown) => project);
+    const createProjectAction = vi.fn(async (_input: unknown) => ({ ok: true as const, project }));
     renderWizard({ actions: { createProjectAction } });
 
     fireEvent.change(screen.getByLabelText("Your website"), {

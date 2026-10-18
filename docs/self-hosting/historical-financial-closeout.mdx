@@ -1,0 +1,77 @@
+---
+title: Historical financial closeout
+description: Review known-cost BYOK imports whose original provider identity and native units are irrecoverable.
+---
+
+This operator workflow requires explicit instance-owner approval. Preparing a
+preview does not authorize applying it. Keep ordinary uncertainty gates in place
+until the exact policy, target and preview digest have been approved. Acceptance
+of a policy does not approve a later apply digest or an administrator role change.
+
+Use this only for untouched original BYOK imports from the completed accounting
+history migration. Cost must already be measured in USD. The original connection
+must be retired. Active attempts, unknown money, hosted charges, retained native
+proof, native/custom budgets and retrospective alert configurations are refused.
+The tool never accepts an amount, provider identity or native quantity to invent.
+
+This is a new trusted host operator policy. It uses the normal typed transaction-bound Store correction and an atomic host disposition journal. The new receipt retains source `import`; it is not a native provider probe or a fabricated invoice. Public Meter and HTTP import restrictions remain unchanged. Original snapshots and receipts
+remain unchanged. Provider identity and native units stay unknown, with an explicit
+`financially_closed_identity_incomplete` disposition. This does not prove provider
+execution or native consumption. Existing exact financial budget epochs receive
+the retained cost; attached paid-attempt epochs receive their normal count. A
+remaining unresolved operation keeps its shared gate blocked.
+
+## Preview
+
+Use the privileged database operator procedure for your selected instance. An
+administrator public ID identifies the responsible, verified active instance
+administrator; supplying that ID is not database authentication. A missing or
+ineligible administrator still permits a diagnostic eligibility preview, but
+returns `actorBlock`, `applyReady: false` and `planHash: null`. It cannot authorize
+a write. Do not grant a role just to turn the preview green; obtain separate owner
+authorization for any role change, then run a fresh approval preview. Use the same
+database role for preview and apply. Keep connection credentials out of manifests,
+logs, command arguments and review artifacts.
+
+Prepare a JSON manifest with policy `known-cost-incomplete-byok-v1`, namespace,
+projectPublicId, retired connection ID, operator public ID, an evidence-search
+reference and reason, recordedAt, and sorted unique operations. Each operation
+contains only operationId, expectedVersion and original receiptId. Maximum batch:
+100 operations from one project and connection. The timestamp must be current.
+
+```sh
+node --experimental-transform-types --import ./lib/temporal/register-loader.mjs \
+  scripts/ops/closeout-historical-finances.ts --manifest ./closeout.json
+```
+
+The dedicated operator transaction defaults to 180000 ms, explicitly bounded by
+`--timeout-ms` to 30000..300000 ms. This does not change application transaction
+timeouts. Default execution is a RepeatableRead read-only transaction, with no adoption,
+provider calls or wallet writes. Its target fingerprint hides database connection
+details. Preview can run before the closeout schema exists; apply requires migration
+`20261018190000_historical_financial_closeout` and matching application code.
+
+## Approved apply and retained evidence
+
+Only after owner policy and exact target/digest approval, invoke the same command
+with `--approve` and the exact preview planHash. Changed evidence, budgets, target,
+role, actor authority or versions require a fresh preview and approval. A failed
+batch rolls back corrections, counters, dispositions, audit and gate changes.
+Concurrent identical applies serialize; an exact successful replay does not recount.
+
+The disposition table `metering_history_closeout` retains the manifest, plan and
+target hashes, original source and receipt identity, and final normal Store
+operation. Original unknown-unit evidence remains in the original receipt and
+immutable legacy source. The ordinary audit action is
+`instance_admin.metering_history_closed`. Preserve these records for recovery.
+
+Closed operations, receipt measurements, import journals and dispositions are
+sealed. Do not disable triggers to reopen them. Later recovered native evidence
+requires an explicit reviewed reopening policy. Ordinary new native budget IDs
+remain supported; they do not retroactively attach these historical epochs.
+
+Run the database migration before upgraded app and worker processes. Keep their
+source, schema and metering namespace aligned. Database restore changes the target
+fingerprint, so an old approval cannot authorize a new apply. Existing dispositions
+remain part of restored history; do not run the original migration finalizer again
+against runtime-corrected operations.

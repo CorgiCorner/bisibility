@@ -74,6 +74,8 @@ export const operationPolicy = {
   getKeyword: policy("GET", "/keywords/{id}", "read"),
   getKeywordMetrics: policy("POST", "/projects/{project_id}/keyword-metrics", "write", "read"),
   getMe: policy("GET", "/me", "read"),
+  getAnalyticsConsent: policy("GET", "/me/analytics-consent", "read"),
+  updateAnalyticsConsent: policy("PUT", "/me/analytics-consent", "write"),
   getNotificationPreferences: policy(
     "GET",
     "/projects/{project_id}/notification-preferences",
