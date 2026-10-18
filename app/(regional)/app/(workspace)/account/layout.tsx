@@ -1,7 +1,9 @@
 import { WorkspaceShell } from "@/app/(regional)/app/(workspace)/workspace-shell";
+import { AccountNavigationProvider } from "@/components/account/AccountNavigationProvider";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
+import { achievementsEnabled } from "@/lib/achievements/config";
 import { resolveProjectAccess } from "@/lib/queries/_auth";
 import { listWorkspaces } from "@/lib/queries/workspaces";
 import { redirect } from "next/navigation";
@@ -32,7 +34,9 @@ export default async function AccountLayout({ children }: Readonly<AccountLayout
         messages={messages}
         timeZone={runtime.timeZone}
       >
-        {children}
+        <AccountNavigationProvider activityEnabled={achievementsEnabled()}>
+          {children}
+        </AccountNavigationProvider>
       </FeatureMessagesProvider>
     </WorkspaceShell>
   );

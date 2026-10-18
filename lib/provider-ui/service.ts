@@ -1,6 +1,7 @@
 import "server-only";
 import { type Actor, AuthorizationError } from "@/lib/auth/authorize";
 import { prisma } from "@/lib/db/prisma";
+import { retryTransientDatabaseRead } from "@/lib/db/transient-read";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
 import type {
   ProviderActionResult,
@@ -35,11 +36,15 @@ export function createProviderUiService(database: Pick<PrismaClient, "$transacti
   return {
     async binding(scope: Scope): Promise<ProviderBinding | null> {
       try {
-        return await database.$transaction(
-          async (tx) =>
-            (await loadProviderUiState(tx, scope.actor, scope.projectPublicId, "read")).binding,
-          { isolationLevel: "RepeatableRead" },
+        const result = await retryTransientDatabaseRead(() =>
+          database.$transaction(
+            async (tx) =>
+              (await loadProviderUiState(tx, scope.actor, scope.projectPublicId, "read")).binding,
+            { isolationLevel: "RepeatableRead" },
+          ),
         );
+        if (!result.ok) throw new Error("Provider binding read unavailable.");
+        return result.value;
       } catch (error) {
         if (error instanceof AuthorizationError) return null;
         throw new Error("Provider settings could not be confirmed.");

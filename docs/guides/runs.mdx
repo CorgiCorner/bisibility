@@ -27,6 +27,25 @@ A [single check](/api/checks) retrieves one current position for one keyword
 target. A run coordinates multiple checks, including the targets that are still
 waiting, the ones that finished, and the final result of the whole selection.
 
+## Read the timeline
+
+The project Runs table combines rank checks and Search Console imports. Each row
+shows the task and scope, its recorded date, status with progress, and actions.
+AI tracking retains its own run history.
+
+**Start time passed** contains waiting work whose recorded start or retry time has passed.
+**Scheduled later** contains waiting work with a future date. An unstarted
+scheduled occurrence shows **Past scheduled time**, with elapsed full days when
+at least one day has passed. This describes the recorded timing; it does not
+mean that the run started or that its status changed.
+
+**Needs attention** filters blocked work and past failures. Current waiting
+blockers remain separate from terminal failures in **History**. Open
+**Review issue** to inspect a current blocker. Viewing it does not start checks
+or change a schedule. If accounting is unresolved, review usage; a monthly
+budget reset alone may not resolve the block. A missing or uncertain budget is
+not displayed as a zero-dollar cap.
+
 ## Filter runs
 
 **Runs** lists every execution. Use **Source** to show rank checks, Search

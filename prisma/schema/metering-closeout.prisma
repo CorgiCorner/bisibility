@@ -1,0 +1,24 @@
+// Append-only host disposition, guarded by the SQL migration. Original imports stay intact.
+model MeteringHistoryCloseout {
+  operation_pk        String   @id
+  namespace           String
+  operation_id        String
+  migration_id        String
+  source_id           String
+  source_hash         String
+  target_hash         String
+  original_receipt_id String
+  receipt_id          String
+  version             Int
+  policy              String
+  disposition         String
+  body                Json
+  recorded_at         DateTime @db.Timestamptz
+  operation           MeteringOperation @relation(fields: [operation_pk], references: [operation_pk], onDelete: NoAction, onUpdate: NoAction, map: "metering_history_closeout_operation_pk_fkey")
+  source              MeteringHistoryImport @relation(fields: [migration_id, source_id], references: [migration_id, source_id], onDelete: NoAction, onUpdate: NoAction, map: "metering_history_closeout_migration_id_source_id_fkey")
+
+  @@unique([namespace, operation_id])
+  @@unique([migration_id, source_id])
+  @@map("metering_history_closeout")
+  @@ignore
+}

@@ -28,6 +28,49 @@ const page = (rows: UsageRow[], nextCursor?: string): UsagePage => ({
 });
 
 describe("customer shared views", () => {
+  it.each([false, true])(
+    "missing platform prices never produce a partial numeric total (reverse=%s)",
+    (reverse) => {
+      const priced = row("owner", "platform");
+      const unpriced = { ...row("owner", "platform"), measurements: [] };
+      const rows = reverse ? [unpriced, priced] : [priced, unpriced];
+      const direct = views.ownerSummary(
+        [page(rows.map((value, index) => ({ ...value, costOwner: String(index) })))],
+        "owner",
+      );
+      const detail = views.ownerDetailSummary([page(rows)], "owner");
+      for (const summary of [direct, detail]) {
+        expect(summary.measurements.customer_cents).toBe("unavailable");
+        expect(summary.complete).toBe(true);
+      }
+    },
+  );
+  it.each([false, true])(
+    "excludes BYOK customer amounts and uncertainty from the credit total (unknown=%s)",
+    (unknown) => {
+      const platform = row("owner", "platform");
+      const byok = row("owner");
+      byok.measurements = [
+        ...byok.measurements,
+        unknown
+          ? { unit: "customer_cents", certainty: "unknown", quantity: null }
+          : {
+              unit: "customer_cents",
+              certainty: "measured",
+              quantity: { unit: "customer_cents", value: 999n, scale: 0 },
+            },
+      ];
+      const result = views.ownerSummary([page([platform, byok])], "owner");
+      expect(result.measurements.customer_cents).toEqual({
+        text: "1.2345",
+        unit: "customer_cents",
+        certainty: "measured",
+      });
+      expect(
+        result.funding.find((value) => value.fundingSource === "byok")?.measurements,
+      ).not.toHaveProperty("customer_cents");
+    },
+  );
   it("filters former owners before aggregation and strips identity-bearing keys and watermarks", () => {
     const view = views.ownerSummary([page([row("former")], "next"), page([row("owner")])], "owner");
     expect(view.cost).toEqual({ text: "123.4567", unit: "cents", certainty: "measured" });

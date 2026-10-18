@@ -7,8 +7,13 @@ import { fetchAiResearchCapabilities } from "./catalog";
 import type { AiCatalogOutcome } from "./catalog-types";
 import { requireAiSource } from "./context";
 
-async function catalogCredentials(source: Awaited<ReturnType<typeof requireAiSource>>) {
-  const credentials = await resolveConnectionCredentials(source.connection);
+async function catalogCredentials(
+  source: Awaited<ReturnType<typeof requireAiSource>>,
+  purpose?: "free_catalog",
+) {
+  const credentials = purpose
+    ? await resolveConnectionCredentials(source.connection, purpose)
+    : await resolveConnectionCredentials(source.connection);
   if (!credentials?.login || !credentials.password)
     throw new ProviderLookupSignal({ ok: false, reason: "no_source" });
   return credentials;
@@ -18,12 +23,13 @@ export async function loadAiResearchCapabilities(
   source: Awaited<ReturnType<typeof requireAiSource>>,
   deadlineAt = Date.now() + 10_000,
 ) {
+  // Admission pricing must use its bound account, never a free catalog pool member.
   return fetchAiResearchCapabilities(await catalogCredentials(source), deadlineAt);
 }
 export async function getAiResearchCatalog(projectId: string): Promise<AiCatalogOutcome> {
   try {
     const source = await requireAiSource(projectId);
-    const credentials = await catalogCredentials(source);
+    const credentials = await catalogCredentials(source, "free_catalog");
     const credentialIdentity = createHash("sha256")
       .update(
         `${source.connection.credentialSource}:${source.connection.credentialsEncrypted ?? ""}`,

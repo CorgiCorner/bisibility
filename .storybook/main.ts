@@ -21,6 +21,9 @@ export const rankRunActionBoundaries = {
   "@/lib/actions/rank-check-run-launch": rankRunActionStub,
 } as const;
 export const keywordActionBoundaries = {
+  "@/lib/actions/achievements": fileURLToPath(
+    new URL("./achievement-action-stubs.ts", import.meta.url),
+  ),
   "@/lib/actions/project-data-cache": fileURLToPath(
     new URL("./data-cache-action-stubs.ts", import.meta.url),
   ),

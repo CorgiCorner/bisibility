@@ -110,10 +110,11 @@
       "actions": {
         "editBudget": "予算を編集",
         "connectionSettings": "接続設定",
-        "workerStatus": "ワーカーのステータス"
+        "workerStatus": "ワーカーのステータス",
+        "reviewUsage": "使用量を確認"
       },
       "blocked": {
-        "budgetDescription": "{withBudget, select, yes {今月は {cap} のうち {spent} を使用しました。} other {}}予算がリセットされるとチェックが再開されます。",
+        "budgetDescription": "{withBudget, select, yes {今月（UTC）の報告されたプロバイダー費用: {spent}。月次プロジェクト予算上限: {cap}。 } other {}}現在の上限と未確定の処理は使用量で確認してください。",
         "budgetReached": "予算の上限に到達",
         "guidance": "ブロックされた実行の案内",
         "keywordArchived": "キーワードはアーカイブ済み",
@@ -127,10 +128,14 @@
         "providerUnavailableDescription": "現在プロバイダーに接続できません。再接続されると実行は自動的に開始されます。",
         "targetPaused": "一時停止中のターゲットです。再開すると処理が続行されます。",
         "waiting": "開始待ち",
-        "waitingDescription": "この実行は開始待ちです。可能になり次第、自動的に続行されます。",
+        "waitingDescription": "この実行の開始を妨げている原因を確認してください。",
         "workerCloudDescription": "現在バックグラウンドワーカーに接続できません。再接続されると実行は自動的に開始されます。",
         "workerSelfHostDescription": "バックグラウンドワーカーが動作していません。再起動すると実行は自動的に開始されます。",
-        "workerWaiting": "バックグラウンドワーカーの応答待ち"
+        "workerWaiting": "バックグラウンドワーカーの応答待ち",
+        "reviewUsage": "予算と使用量を確認",
+        "reviewUsageDescription": "この実行はブロックされています。再試行する前に使用量と未確定の処理を確認してください。月次リセットでは解決しない場合があります。",
+        "usageUnconfirmed": "使用量の確認が必要",
+        "usageUnconfirmedDescription": "以前の使用量が確定していません。再試行する前に確認してください。"
       },
       "cancelDialog": {
         "body": "キャンセルはこの実行にのみ影響します。スケジュールの変更や完了済みの結果の削除は行われません。",

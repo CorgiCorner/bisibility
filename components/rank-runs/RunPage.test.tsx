@@ -333,7 +333,8 @@ describe("RunPage", () => {
 
     const targets = within(screen.getByRole("table", { name: "Targets in this run" }));
     expect(targets.getByText("Paused target - resumes when you unpause it")).toBeInTheDocument();
-    expect(targets.getByText("Budget reached")).toBeInTheDocument();
+    expect(targets.getByText("Review budget and usage")).toBeInTheDocument();
+    expect(targets.queryByText("Budget reached")).toBeNull();
   });
 
   it("names the stopped market on a cancelled target instead of printing its reason code", () => {

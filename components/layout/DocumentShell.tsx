@@ -10,6 +10,7 @@ import type { IntlTranslationContext } from "@/i18n/formats";
 import { pendingConsent } from "@/lib/analytics/consent";
 import { providerRequiresConsent, resolveAnalyticsProvider } from "@/lib/analytics/provider";
 import { readConsentFromCookies } from "@/lib/analytics/server";
+import { resolveServerAnalyticsUser } from "@/lib/analytics/server-user";
 import { appExtensions } from "@/lib/app-extensions";
 import { getSessionReference } from "@/lib/auth/session";
 import { sessionHintInitScript } from "@/lib/auth/session-hint";
@@ -43,6 +44,7 @@ export async function DocumentShell({
   const [consent, session] = providerRequiresConsent(provider)
     ? await Promise.all([readConsentFromCookies(), getSessionReference()])
     : [pendingConsent(), null];
+  const analyticsUser = session ? await resolveServerAnalyticsUser(session.user.id, consent) : null;
 
   return (
     <html
@@ -59,7 +61,12 @@ export async function DocumentShell({
         {appExtensions.renderHead()}
       </head>
       <body suppressHydrationWarning>
-        <AnalyticsRuntime consent={consent} provider={provider} userId={session?.user.id} />
+        <AnalyticsRuntime
+          authenticated={Boolean(session)}
+          consent={consent}
+          provider={provider}
+          userId={analyticsUser?.distinctId}
+        />
         <Providers locale={locale} messages={messages} timeZone={timeZone}>
           <ConsentSlot />
           <TooltipProvider>

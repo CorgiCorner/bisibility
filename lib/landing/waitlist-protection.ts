@@ -39,27 +39,29 @@ export async function resolveClientIdentity(): Promise<ClientIdentity> {
   };
 }
 
+// A scope gives another public email form the same limits in its own buckets.
 export async function enforceWaitlistRateLimits(
   clientDigest: string,
   emailDigest: string,
+  scope = "waitlist",
 ): Promise<void> {
   const buckets = [
     {
       bucketKey: clientDigest,
       limit: 5,
-      prefix: "bisibility:waitlist:client:short",
+      prefix: `bisibility:${scope}:client:short`,
       windowSeconds: TEN_MINUTES,
     },
     {
       bucketKey: clientDigest,
       limit: 20,
-      prefix: "bisibility:waitlist:client:daily",
+      prefix: `bisibility:${scope}:client:daily`,
       windowSeconds: ONE_DAY,
     },
     {
       bucketKey: emailDigest,
       limit: 3,
-      prefix: "bisibility:waitlist:email:hourly",
+      prefix: `bisibility:${scope}:email:hourly`,
       windowSeconds: ONE_HOUR,
     },
   ];
@@ -72,11 +74,14 @@ export async function enforceWaitlistRateLimits(
   }
 }
 
-export async function enforceDistinctNewEmailLimit(clientDigest: string): Promise<void> {
+export async function enforceDistinctNewEmailLimit(
+  clientDigest: string,
+  scope = "waitlist",
+): Promise<void> {
   const result = await consume({
     bucketKey: clientDigest,
     limit: 10,
-    prefix: "bisibility:waitlist:client:new-emails",
+    prefix: `bisibility:${scope}:client:new-emails`,
     windowSeconds: ONE_DAY,
   });
   if (!result.success) {
@@ -99,6 +104,19 @@ export async function enforceHumanVerification(
     if (session) {
       return;
     }
+  }
+
+  await enforcePublicFormVerification(verificationToken, rawIp, clientDigest);
+}
+
+/** The cloud human check for an anonymous public form; self-host has no challenge. */
+export async function enforcePublicFormVerification(
+  verificationToken: string | undefined,
+  rawIp: string | null,
+  clientDigest: string,
+): Promise<void> {
+  if (deploymentMode() !== "cloud") {
+    return;
   }
 
   const result = await verifyHumanChallenge(verificationToken, rawIp, clientDigest);

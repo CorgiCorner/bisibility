@@ -1,3 +1,4 @@
+import { sentryNextBuildIdentity } from "@/lib/observability/next-build-identity";
 import * as Sentry from "@sentry/nextjs";
 
 function parseSampleRate(value: string | undefined, fallback: number) {
@@ -18,8 +19,7 @@ Sentry.init({
     process.env.SENTRY_ENVIRONMENT ||
     process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ||
     process.env.NODE_ENV,
-  release:
-    process.env.SENTRY_RELEASE || process.env.NEXT_PUBLIC_SENTRY_RELEASE || process.env.APP_VERSION,
+  ...sentryNextBuildIdentity("edge"),
   sendDefaultPii: false,
   tracesSampleRate: parseSampleRate(
     process.env.SENTRY_TRACES_SAMPLE_RATE || process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE,

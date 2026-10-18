@@ -1,6 +1,10 @@
 "use server";
 
 import { updateProfileNameRecord } from "@/lib/account/profile-service";
+import {
+  flushAnalyticsPersonDeletions,
+  queueAnalyticsPersonDeletion,
+} from "@/lib/analytics/person-deletion";
 import { writeAudit } from "@/lib/auth/audit";
 import { revokeOtherSessions } from "@/lib/auth/session-revocation";
 import { prisma } from "@/lib/db/prisma";
@@ -14,6 +18,7 @@ import { z } from "zod";
 const MAX_AVATAR_URL = 2048;
 const MAX_NAME = 120;
 const MAX_DELETE_TRANSACTION_ATTEMPTS = 3;
+const DELETE_TRANSACTION_TIMEOUT_MS = 30_000;
 const LAST_INSTANCE_ADMIN_MESSAGE =
   "Transfer instance administration first - seed another admin, then delete this account.";
 
@@ -233,10 +238,12 @@ export async function deleteAccount(input: unknown) {
             tx,
           );
 
+          await queueAnalyticsPersonDeletion(tx, { id: session.user.id, publicId: user.publicId });
           await tx.user.delete({ where: { id: session.user.id } });
           return "deleted" as const;
         },
-        { isolationLevel: "Serializable" },
+        // Cascading an account can outlast the five-second interactive default.
+        { isolationLevel: "Serializable", timeout: DELETE_TRANSACTION_TIMEOUT_MS },
       );
       break;
     } catch (error) {
@@ -253,5 +260,6 @@ export async function deleteAccount(input: unknown) {
     throw new Error("Account could not be deleted.");
   }
 
+  await flushAnalyticsPersonDeletions();
   redirect("/login");
 }

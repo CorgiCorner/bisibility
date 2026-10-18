@@ -7,6 +7,7 @@ export { analyzeAiResearchAction } from "./ai-research-action-stubs";
 export { competitorDetailsFormSchema } from "./competitor-action-stubs";
 export { previewKeywordDeletion, refreshKeywordViewsAfterImport } from "./keyword-action-stubs";
 export { loadMeteringAdminPageAction } from "./metering-admin-action-stubs";
+export { createOnboardingProject } from "./onboarding-action-stubs";
 
 export async function getProviderUiBindingAction() {
   return null;
@@ -663,7 +664,6 @@ export const createCloudMigrationHandoffAction = asyncNoop;
 export const createCloudImportWorkspace = asyncNoop;
 export const createKeywordAlertRule = asyncNoop;
 export const createProject = asyncNoop;
-export const createOnboardingProject = asyncNoop;
 export const createSavedView = asyncNoop;
 export const createSlackInstallUrl = asyncNoop;
 export const deleteAlertRule = asyncNoop;

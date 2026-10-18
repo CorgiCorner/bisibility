@@ -801,7 +801,7 @@
       },
       "units": {
         "cents": "米セント",
-        "customer_cents": "クレジットのセント",
+        "customer_cents": "クレジット",
         "units": "単位",
         "requests": "リクエスト",
         "budget_cents": "米セント",

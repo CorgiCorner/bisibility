@@ -206,7 +206,7 @@ describe("ProjectRunsContent", () => {
     });
 
     expect(screen.getByRole("table", { name: "Project runs" })).toBeInTheDocument();
-    expect(screen.getByText("28 / 488")).toBeInTheDocument();
+    expect(screen.getByText("28 / 488 finalized days")).toBeInTheDocument();
     expect(screen.getByText("Waiting for Google")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Actions for Search Console import" }));
     expect(routerMock.push).not.toHaveBeenCalled();

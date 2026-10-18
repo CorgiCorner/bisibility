@@ -8,7 +8,12 @@ import sharedMessages from "@/messages/core/en/shared.json";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ applyAnalyticsConsent: vi.fn(), setAnalyticsReplay: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  applyAnalyticsConsent: vi.fn(),
+  readAppliedAnalyticsConsent: vi.fn(),
+  readAnalyticsConsentScope: vi.fn(() => 0),
+  setAnalyticsReplay: vi.fn(),
+}));
 
 vi.mock("@/lib/analytics/client", () => mocks);
 

@@ -4,6 +4,7 @@ import { makePublicId } from "@/lib/db/public-id-resources";
 import { PrismaClient } from "@/lib/generated/prisma/client";
 import { ensureProjectSpendingBudget } from "@/lib/metering/project-budget-bootstrap";
 import { createPostgresStore } from "@/lib/metering/store";
+import { verifyMigrationDiff } from "@/scripts/ci/migration-diff.mjs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Client } from "pg";
 
@@ -33,16 +34,7 @@ export async function isolatedTrackingDatabase() {
     const repeat = command(["migrate", "deploy"]);
     if (!repeat.includes("No pending migrations"))
       throw new Error("Second migration deployment was not idempotent.");
-    const diff = command([
-      "migrate",
-      "diff",
-      "--from-config-datasource",
-      "--to-schema",
-      "prisma/schema",
-      "--script",
-    ]);
-    if (diff.trim() !== "-- This is an empty migration.")
-      throw new Error(`Migration schema drift: ${diff}`);
+    await verifyMigrationDiff({ ...process.env, DATABASE_URL: url.href, DIRECT_URL: url.href });
     const client = new PrismaClient({
       adapter: new PrismaPg(
         { connectionString, options: `-c search_path="${schema}"` },

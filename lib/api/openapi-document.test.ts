@@ -100,7 +100,7 @@ describe("OpenAPI document", () => {
         "migration",
       ].map((name) => expect.objectContaining({ name })),
     );
-    expect(operations).toHaveLength(148);
+    expect(operations).toHaveLength(150);
     expect(
       Object.entries(doc.paths)
         .filter(([path]) => path.includes("/local-monitors/"))

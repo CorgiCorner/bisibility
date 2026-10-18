@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 
 export type AppHeaderFrameProps = {
   actions?: ReactNode;
+  accountActions?: ReactNode;
   activeProjectId: string;
   canCreateWorkspace: boolean;
   canSetDefault?: boolean;
@@ -36,6 +37,7 @@ export type AppHeaderFrameProps = {
 
 export function AppHeaderFrame({
   actions,
+  accountActions,
   activeProjectId,
   canCreateWorkspace,
   canSetDefault,
@@ -89,6 +91,7 @@ export function AppHeaderFrame({
           <CommandPaletteTrigger variant="header" />
         </div>
         {notificationControl}
+        {accountActions}
         {user ? (
           <SidebarUserButton collapsed showHostedLinks={showHostedLinks} user={user} />
         ) : null}

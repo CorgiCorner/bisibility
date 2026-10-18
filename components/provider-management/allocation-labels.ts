@@ -1,5 +1,6 @@
 "use client";
 
+import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
 import type { AllocationProps } from "@/components/usagekit/provider-allocation-editor";
 import type { UsageConnection } from "@/lib/metering/user-views";
 import { dollarsFromNativeCents } from "@/lib/provider-ui/form-schema";
@@ -11,6 +12,7 @@ export function useAllocationLabels(
   rows: readonly ProviderAllocationRow[],
 ) {
   const locale = useLocale();
+  const presentation = useUsagePresentation();
   const t = useTranslations("projectSettingsUsage.provider.budgetDialog");
   const common = useTranslations("projectIntegrations.providerManagement");
   const meter = useTranslations("projectSettingsUsage.meter");
@@ -103,7 +105,7 @@ export function useAllocationLabels(
     maximumFractionDigits: 2,
   });
   const formatFigure: NonNullable<AllocationProps["formatFigure"]> = (figure) => {
-    const monetary = figure.unit === "cents" || figure.unit === "customer_cents";
+    const monetary = figure.unit === "cents";
     const text = monetary ? dollarsFromNativeCents(figure.text) : figure.text;
     if (text === null) return meter("unknown");
     // Intl preserves decimal string precision; TypeScript's Intl types omit string input.
@@ -115,8 +117,10 @@ export function useAllocationLabels(
   const formatUnit = (unit: string) =>
     unit === "units"
       ? t("searchesAdornment")
-      : unit === "cents" || unit === "customer_cents"
-        ? ""
-        : unit;
+      : unit === "customer_cents"
+        ? presentation.unit(unit)
+        : unit === "cents"
+          ? ""
+          : unit;
   return { labels, feedbackLabels, rowLabels, formatFigure, formatUnit };
 }

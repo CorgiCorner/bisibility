@@ -17,6 +17,8 @@ import {
 import { TransferPanel } from "@/components/cloud/TransferPanel";
 import { useCloudImportJobPoll } from "@/components/cloud/use-cloud-import-job";
 import { useCloudImportActionError } from "@/components/cloud/useCloudImportActionError";
+import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { AlertBanner } from "@/components/ui/AlertBanner";
 import { type ActionResult, unwrapActionResult } from "@/lib/actions/action-result";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { useRouter } from "next/navigation";
@@ -72,6 +74,7 @@ export function CloudImport({
   const router = useRouter();
   const t = useTranslations("cloudImport");
   const presentActionError = useCloudImportActionError();
+  const sharedErrors = useSharedErrorMessages();
   const [issuedToken, setIssuedToken] = useState<IssuedMigrationToken | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [tokensInvalidated, setTokensInvalidated] = useState(false);
@@ -89,7 +92,7 @@ export function CloudImport({
   const visibleIssuedToken = tokensInvalidated ? null : issuedToken;
   const visibleActiveToken = tokensInvalidated ? null : activeToken;
   const visibleToken = visibleIssuedToken ?? visibleActiveToken;
-  const { job, setJob } = useCloudImportJobPoll({
+  const { job, pollError, retry, setJob } = useCloudImportJobPoll({
     active: Boolean(visibleToken),
     initialJob: importJob,
     pollAction: pollJobAction,
@@ -193,6 +196,13 @@ export function CloudImport({
         <p className="m-0 mt-3 text-[12px] leading-normal text-yellow-text" role="status">
           {t("token.error.writeLocked")}
         </p>
+      ) : null}
+      {pollError ? (
+        <AlertBanner
+          action={{ icon: "retry", label: t("token.tryAgain"), onClick: retry }}
+          tint="red"
+          title={sharedErrors.genericFallback()}
+        />
       ) : null}
       <TransferPanel
         hasToken={Boolean(visibleToken)}

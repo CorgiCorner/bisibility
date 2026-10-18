@@ -40,7 +40,7 @@ export function renderWizard({ actions: actionOverrides, ...props }: RenderWizar
       languageLabel: languageLabels[input.languageCode] ?? input.languageCode,
       publicId: `pmkt_${"a".repeat(24)}`,
     })),
-    createProjectAction: vi.fn(async () => project),
+    createProjectAction: vi.fn(async () => ({ ok: true as const, project })),
     deriveWebsiteAction: vi.fn(async () => ({ domain: "example.com", name: "example" })),
     fetchRankedKeywordSuggestionsAction: vi.fn(async () => ({ reason: "no_source" as const })),
     getObservedPositionsAction: vi.fn(async () => []),

@@ -6,6 +6,7 @@ import {
   dataForSeoLabsLocationParams,
   envelopeMessage,
   extractDataForSeoBalance,
+  requestAuthenticatedEnvelope,
   requestEnvelope,
 } from "./dataforseo-client";
 
@@ -83,6 +84,51 @@ describe("DataForSEO balance extraction", () => {
 });
 
 describe("DataForSEO account verification receipts", () => {
+  it.each([429, 503])(
+    "retains HTTP %s retry semantics with a mismatched verification body",
+    async (status) => {
+      const fetchMock = vi
+        .fn()
+        .mockImplementation(() => Response.json({ cost: 0, status_code: 40104 }, { status }));
+      vi.stubGlobal("fetch", fetchMock);
+      try {
+        await expect(
+          requestEnvelope("https://api.dataforseo.com/fixture", { method: "GET" }, {}),
+        ).rejects.toMatchObject({
+          code: "provider_transient",
+          retryable: true,
+          httpStatus: status,
+        });
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    },
+  );
+  it.each([0, 0.002])("classifies HTTP 403 verification with settled cost %s", async (cost) => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(Response.json({ cost, status_code: 40104 }, { status: 403 }));
+    const observer = { begin: vi.fn().mockResolvedValue("attempt_fixture"), settle: vi.fn() };
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      await expect(
+        requestAuthenticatedEnvelope(
+          "https://api.dataforseo.com/fixture",
+          { login: "owner@example.com", password: "fixture-password", usageObserver: observer },
+          { method: "POST", body: "[]" },
+        ),
+      ).rejects.toMatchObject({ code: "provider_account_restricted", costCents: cost * 100 });
+      expect(fetchMock).toHaveBeenCalledOnce();
+      expect(observer.settle).toHaveBeenCalledExactlyOnceWith(
+        "attempt_fixture",
+        expect.objectContaining({ failed: true, costCents: cost * 100, quantity: 1 }),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it.each([0, 0.002, undefined])(
     "preserves receipt cost %s for numeric account failures",
     async (cost) => {

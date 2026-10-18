@@ -179,6 +179,18 @@ hand.
 | `AUDIT_RETENTION_DAYS`, `AUDIT_IP_HMAC_SECRET`, `APP_VERSION` | Audit retention, optional source-IP HMAC hashing, and an audit version label. |
 | `DATA_REGION` | Optional data-residency label shown in auth and onboarding surfaces. |
 
+Sentry errors include `app.version` (the packaged application version), `app.revision`
+(the source commit when known), and `app.runtime` (`browser`, `server`, `edge`, or
+`worker`). Browser, server, and edge identity is fixed when the application is built,
+so an older open tab reports its own version. Set the Sentry release before building
+to keep error reports aligned with uploaded source maps. Standalone workers use their
+own packaged version and deployment revision; a reused Sentry client retains its release.
+For a custom Docker release, pass `--build-arg SENTRY_RELEASE=<release>` when building.
+The web bundle and native worker inherit that release from the image. Set
+`--build-arg APP_REVISION=<commit>` to identify the source. Changing only a running
+container's release cannot relabel the web bundle; retain the image defaults for
+the worker to keep both on the same release.
+
 ### Usage accounting
 
 | Variable | Purpose |
@@ -254,3 +266,44 @@ values for the operator record. App reads refresh within about 60 seconds.
 | `SEARCH_INSIGHTS_TIMING_RECORD_RATE` | Fraction from `0` through `1` of Search Insights renders that emit phase timing logs. Defaults to `0.05`. |
 | `SEARCH_SYNC_IMPORT_MONTHS` | Default historical import depth. Valid values are `16`, `12`, `6`, and `3`; invalid values fall back to `16`. |
 | `SEARCH_SYNC_PACE` | Default import pace. Use `normal` or `gentle`; gentle uses half the request throughput. Invalid values fall back to `normal`. Project settings override this default. |
+
+## Activity milestones
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `ACHIEVEMENTS_ENABLED` | Off in self-hosting | Set `true` to offer personal activity streaks and seven-day badges. Cloud enables them by default. |
+| `ACHIEVEMENTS_EMAIL_ENABLED` | Off in self-hosting | Set `true` to allow milestone emails through the configured mail transport. Set `SITE_URL` to this installation's public application origin. |
+
+Account > Activity shows separate visit and practice streaks. A signed-in visible
+app visit counts for presence. Successful explicit supported research, audit,
+report, keyword and personal API or MCP operations count for practice, including
+cached and empty results. Health checks, estimates, denied or failed operations,
+schedules, internal polling and shared project API keys do not count. Seven
+consecutive calendar days earn a permanent badge.
+
+Each person can stop tracking, hide the header counter and disable milestone
+email. Changing their calendar time zone starts a new current streak after
+confirmation, while preserving their longest streaks and earned badges. Facts,
+preferences, awards and delivery records are deleted with the account.
+
+Badges are private until the owner creates an opaque public link. Public pages
+and images contain the badge and award date without names, emails, project
+identities or SEO data. Revoke the link to stop live public access; previously
+downloaded or social-platform-cached copies cannot be recalled. A private PNG
+download does not publish the badge. No leaderboard is created.
+
+The existing worker sends one combined milestone email the next morning, at
+09:00 in the saved calendar zone. Both feature and email switches must be enabled
+when the award is processed. Delivery requires a verified active recipient,
+the personal email preference, no global marketing opt-out and a configured mail transport.
+The bulk daily mail limit applies. `SITE_URL` must identify this installation's
+application origin; mail never falls back to another installation. Messages
+delayed more than 72 hours past the original due time are skipped. Uncertain
+sends remain `unknown` and are not retried automatically. The unsubscribe link
+disables milestone mail only.
+
+Apply the additive migration before deploying the matching app and worker, using
+the same feature flags in both. No additional scheduler is needed and this
+feature never buys provider requests. Disabling it stops capture and delivery
+while retaining earned history. Demo instances never capture activity or send
+milestone mail.

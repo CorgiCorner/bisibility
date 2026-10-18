@@ -8,6 +8,7 @@ vi.mock("@/lib/provider-rates/connection-context", () => ({
   loadProviderRateContext: mocks.context,
 }));
 vi.mock("@/lib/providers/execution-extension", () => ({
+  deploymentRankUsesNativeUnits: async () => false,
   hostedRankCheckEstimatedCostCents: (provider: string) => (provider === "serpapi" ? 4 : null),
   quoteDeploymentRankReservations: mocks.hostQuote,
 }));

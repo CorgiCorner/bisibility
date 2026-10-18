@@ -13,6 +13,7 @@ import { FieldLabel } from "@/components/ui/FieldLabel";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type {
   OnboardingProjectIdentity as CreatedProject,
+  CreateOnboardingProjectResult,
   UpdateOnboardingProjectResult,
 } from "@/lib/onboarding/project-update-result";
 import type {
@@ -36,7 +37,7 @@ type CreateProjectActionInput = OnboardingWebsiteInput & { timezone?: string };
 
 type StepCreateProjectProps = {
   browserTimezone?: string;
-  createProjectAction?: (input: CreateProjectActionInput) => Promise<CreatedProject>;
+  createProjectAction?: (input: CreateProjectActionInput) => Promise<CreateOnboardingProjectResult>;
   updateProjectAction?: (
     input: OnboardingWebsiteInput & { projectId: string },
   ) => Promise<UpdateOnboardingProjectResult>;
@@ -177,8 +178,12 @@ export function StepCreateProject({
       if (!createProjectAction) {
         return;
       }
-      const project = await createProjectAction({ ...values, timezone: browserTimezone });
-      advance(values, project);
+      const result = await createProjectAction({ ...values, timezone: browserTimezone });
+      if (!result.ok) {
+        setActionError(t("errors.projectLimit", { limit: result.error.limit }));
+        return;
+      }
+      advance(values, result.project);
     } catch (error) {
       setActionError(presentActionError(error, sharedErrors));
     }
@@ -263,16 +268,21 @@ export function StepCreateProject({
               </span>
             ) : null}
           </div>
+          {/* One text child avoids removing detached nodes after external text replacement. */}
           <p aria-live="polite" className="m-0 text-[12.5px] leading-[1.5] text-fg-muted">
-            {isDeriving ? t("checking") : null}
-            {!isDeriving && identity ? t("projectName", { name: identity.name }) : null}
-            {!isDeriving && !identity ? t("projectNameFallback") : null}
+            {isDeriving
+              ? t("checking")
+              : identity
+                ? t("projectName", { name: identity.name })
+                : t("projectNameFallback")}
           </p>
         </div>
       )}
 
       {actionError ? (
-        <p className={`m-0 mt-3 ${feedbackClass} text-red-text`}>{actionError}</p>
+        <p className={`m-0 mt-3 ${feedbackClass} text-red-text`} role="alert">
+          {actionError}
+        </p>
       ) : null}
       {isSubmitting ? (
         <p className={`m-0 mt-3 ${feedbackClass} text-fg-muted`}>{t("saving")}</p>

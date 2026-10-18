@@ -152,7 +152,7 @@ export async function connectProvider(input: unknown) {
   if (surface) {
     await trackServerEvent("provider_connected", {
       consent: await readConsentFromCookies(),
-      distinctId: scope.actorId ?? undefined,
+      userId: scope.actorId ?? undefined,
       properties: { provider: data.providerId, surface },
     });
   }
@@ -166,7 +166,7 @@ export async function testConnection(input: unknown) {
   const result = await testProviderConnection(data, scope);
   await trackServerEvent("provider_connection_tested", {
     consent: await readConsentFromCookies(),
-    distinctId: scope.actorId ?? undefined,
+    userId: scope.actorId ?? undefined,
     properties: {
       error_category: result.ok
         ? null

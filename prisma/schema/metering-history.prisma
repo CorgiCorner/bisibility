@@ -61,6 +61,7 @@ model MeteringHistoryImport {
   created_operation Boolean
   body              Json
   operation         MeteringOperation @relation(fields: [namespace, operation_id], references: [namespace, operation_id], onDelete: NoAction, onUpdate: NoAction)
+  closeout          MeteringHistoryCloseout? @ignore
 
   @@id([migration_id, source_id])
   @@index([namespace, operation_id], map: "metering_history_import_operation_idx")

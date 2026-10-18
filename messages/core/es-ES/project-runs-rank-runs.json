@@ -110,10 +110,11 @@
       "actions": {
         "editBudget": "Editar el presupuesto",
         "connectionSettings": "Ajustes de conexión",
-        "workerStatus": "Estado del proceso en segundo plano"
+        "workerStatus": "Estado del proceso en segundo plano",
+        "reviewUsage": "Revisar uso"
       },
       "blocked": {
-        "budgetDescription": "{withBudget, select, yes {Has gastado {spent} de {cap} este mes. } other {}}Las comprobaciones se reanudarán cuando se reinicie el presupuesto.",
+        "budgetDescription": "{withBudget, select, yes {Coste registrado del proveedor este mes (UTC): {spent}. Límite mensual del presupuesto del proyecto: {cap}. } other {}}Revisa los límites actuales y las operaciones sin conciliar en Uso.",
         "budgetReached": "Presupuesto agotado",
         "guidance": "Información sobre la ejecución bloqueada",
         "keywordArchived": "Palabra clave archivada",
@@ -127,10 +128,14 @@
         "providerUnavailableDescription": "Ahora mismo no se puede contactar con el proveedor. La ejecución se iniciará sola en cuanto se restablezca la conexión.",
         "targetPaused": "Objetivo en pausa: se reanudará cuando lo reactives",
         "waiting": "Esperando para empezar",
-        "waitingDescription": "Esta ejecución está esperando para empezar. Continuará automáticamente en cuanto sea posible.",
+        "waitingDescription": "Revisa qué impide iniciar esta ejecución.",
         "workerCloudDescription": "Ahora mismo no se puede contactar con el proceso en segundo plano. La ejecución se iniciará sola en cuanto se restablezca la conexión.",
         "workerSelfHostDescription": "El proceso en segundo plano no se está ejecutando. Reinícialo y la ejecución se iniciará sola.",
-        "workerWaiting": "Esperando al proceso en segundo plano"
+        "workerWaiting": "Esperando al proceso en segundo plano",
+        "reviewUsage": "Revisar presupuesto y uso",
+        "reviewUsageDescription": "Esta ejecución está bloqueada. Revisa el uso y las operaciones sin conciliar antes de reintentarlo. El reinicio mensual puede no resolver el problema.",
+        "usageUnconfirmed": "Uso pendiente de confirmación",
+        "usageUnconfirmedDescription": "El uso anterior no se ha confirmado. Revísalo antes de reintentarlo."
       },
       "cancelDialog": {
         "body": "Cancelar afecta solo a esta ejecución. No modifica la programación ni elimina los resultados ya completados.",

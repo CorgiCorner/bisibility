@@ -8,22 +8,24 @@ import type { RunPageData } from "./RunPageTypes";
 import { localizedBlockedRunCopy } from "./rank-run-copy";
 
 function actionHref(
-  action: "connection_settings" | "edit_budget" | "worker_status" | null,
+  action: "connection_settings" | "edit_budget" | "worker_status" | "review_usage" | null,
   projectRef: ProjectRef,
 ) {
   if (action === "connection_settings") return appPath(projectRef, "integrations");
   if (action === "edit_budget") return appPath(projectRef, "settings", "usage?budget=edit");
   if (action === "worker_status") return appRootPath("admin");
+  if (action === "review_usage") return `${appPath(projectRef, "integrations")}?tab=usage`;
   return null;
 }
 
 function actionLabel(
-  action: "connection_settings" | "edit_budget" | "worker_status" | null,
+  action: "connection_settings" | "edit_budget" | "worker_status" | "review_usage" | null,
   t: ReturnType<typeof useTranslations<"projectRuns.rankRuns">>,
 ) {
   if (action === "connection_settings") return t("actions.connectionSettings");
   if (action === "edit_budget") return t("actions.editBudget");
   if (action === "worker_status") return t("actions.workerStatus");
+  if (action === "review_usage") return t("actions.reviewUsage");
   return null;
 }
 

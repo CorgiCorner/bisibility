@@ -5,6 +5,7 @@ import { type ActiveLocale, assertActiveLocale } from "@/i18n/config";
 import type { CoreMessages } from "@/i18n/core-messages.generated";
 import { getAnonymousLocalePreference } from "@/i18n/request-locale.server";
 import { getSessionReference } from "@/lib/auth/session";
+import { isTransientDatabaseReadError } from "@/lib/db/transient-read";
 import { getLocalePreferenceForUser } from "@/lib/queries/account";
 import { cache } from "react";
 import { DEFAULT_TIME_ZONE, type IntlTranslationContext } from "./formats";
@@ -36,10 +37,15 @@ export const resolveAnonymousDocumentLocale = perRequestCache(async () => {
  */
 export const resolveRegionalDocumentLocale = perRequestCache(async () => {
   const session = await getSessionReference();
-  const preference = session
-    ? await getLocalePreferenceForUser(session.user.id)
-    : await getAnonymousLocalePreference();
-  return runtimeFor(preference.locale);
+  if (session) {
+    try {
+      return runtimeFor((await getLocalePreferenceForUser(session.user.id)).locale);
+    } catch (error) {
+      if (!isTransientDatabaseReadError(error)) throw error;
+      // Locale is a display preference; account authorization remains with the route.
+    }
+  }
+  return runtimeFor((await getAnonymousLocalePreference()).locale);
 });
 
 /** A prefixed marketing route is URL-owned and does not need a request read. */

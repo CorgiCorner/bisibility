@@ -30,10 +30,32 @@ type QueuedEvent = { event: AnalyticsEvent; props?: AnalyticsProps; ts: number }
 
 type AnalyticsProviderRuntime = {
   applyConsent(state: ConsentState): void;
+  pauseConsent(state: ConsentState): void;
   identifyUser(userId: string): void;
   resetIdentity(): void;
   setReplay(enabled: boolean): void;
 };
+
+let consentScope = "anonymous";
+let consentScopeRevision = 0;
+
+export function readAnalyticsConsentScope(): number {
+  return consentScopeRevision;
+}
+
+export function setAnalyticsConsentScope(userId?: string, authenticated = Boolean(userId)): void {
+  const scope = authenticated ? `account:${userId ?? "unavailable"}` : "anonymous";
+  if (scope !== consentScope) {
+    consentScope = scope;
+    consentScopeRevision += 1;
+  }
+}
+
+let appliedConsent: ConsentState | undefined;
+
+export function readAppliedAnalyticsConsent(): ConsentState | undefined {
+  return appliedConsent;
+}
 
 let providerRuntime: AnalyticsProviderRuntime | undefined;
 
@@ -70,7 +92,15 @@ export function installAnalyticsProviderRuntime(runtime: AnalyticsProviderRuntim
 }
 
 export function applyAnalyticsConsent(state: ConsentState): void {
+  appliedConsent = { ...state };
   providerRuntime?.applyConsent(state);
+}
+
+// A same-account refresh blocks capture without treating unknown permission as withdrawal.
+export function pauseAnalyticsConsent(state: ConsentState): void {
+  const paused = { ...state, analytics: false };
+  appliedConsent = paused;
+  providerRuntime?.pauseConsent(paused);
 }
 
 export function setAnalyticsReplay(enabled: boolean): void {

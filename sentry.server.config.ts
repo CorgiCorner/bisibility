@@ -1,5 +1,7 @@
 import "@/lib/deployment/runtime-env.generated";
 
+import { sentryNextBuildIdentity } from "@/lib/observability/next-build-identity";
+import { redactRequestSecrets, secretBearingRequest } from "@/lib/observability/secret-request";
 import * as Sentry from "@sentry/nextjs";
 
 function parseSampleRate(value: string | undefined, fallback: number) {
@@ -16,15 +18,19 @@ const sentryEnvironment =
   process.env.SENTRY_ENVIRONMENT ||
   process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ||
   process.env.NODE_ENV;
-const sentryRelease =
-  process.env.SENTRY_RELEASE || process.env.NEXT_PUBLIC_SENTRY_RELEASE || process.env.APP_VERSION;
 
 Sentry.init({
   dsn,
   enabled: Boolean(dsn),
   environment: sentryEnvironment,
-  release: sentryRelease,
+  ...sentryNextBuildIdentity("server"),
   sendDefaultPii: false,
+  integrations: [
+    Sentry.nativeNodeFetchIntegration({ ignoreOutgoingRequests: secretBearingRequest }),
+  ],
+  beforeSend: (event) => redactRequestSecrets(event),
+  beforeSendTransaction: (event) => redactRequestSecrets(event),
+  beforeBreadcrumb: (breadcrumb) => redactRequestSecrets(breadcrumb),
   tracesSampleRate: parseSampleRate(
     process.env.SENTRY_TRACES_SAMPLE_RATE || process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE,
     process.env.NODE_ENV === "production" ? 0.05 : 1,

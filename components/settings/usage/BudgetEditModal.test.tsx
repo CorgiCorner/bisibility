@@ -103,7 +103,7 @@ describe("BudgetEditModal", () => {
     });
     fireEvent.change(input("app"), { target: { value: "40.50" } });
     fireEvent.change(input("programmatic"), { target: { value: "25.00" } });
-    fireEvent.change(input("app", "credits"), { target: { value: "100.01" } });
+    fireEvent.change(input("app", "credits"), { target: { value: "10001" } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(host.execute).toHaveBeenCalledTimes(1));
     expect(host.execute).toHaveBeenCalledWith(
@@ -323,12 +323,19 @@ it("localizes exact unit and money figures in Polish allocation rows", async () 
   expect(within(modal).getAllByText(`${copy.perMonth} (${copy.searchesAdornment})`)).toHaveLength(
     2,
   );
-  expect(within(modal).getAllByText(`${copy.perMonth} (USD)`)).toHaveLength(6);
+  expect(within(modal).getAllByText(`${copy.perMonth} (USD)`)).toHaveLength(2);
+  expect(within(modal).getAllByText(`${copy.perMonth} (Credits)`)).toHaveLength(4);
   expect(within(modal).getAllByText("9 007 199 254 740 993 wyszukiwań")).toHaveLength(2);
-  expect(within(modal).getAllByText("9 007 199 254 741,00 $")).toHaveLength(6);
+  expect(within(modal).getAllByText("9 007 199 254 741,00 $")).toHaveLength(2);
+  expect(within(modal).getAllByText("900 719 925 474 099,5 Credits")).toHaveLength(4);
   expect(
     within(modal)
       .getAllByText("17,42 $")
       .filter((node) => node.previousElementSibling?.textContent === copy.used),
-  ).toHaveLength(6);
+  ).toHaveLength(2);
+  expect(
+    within(modal)
+      .getAllByText("1742 Credits")
+      .filter((node) => node.previousElementSibling?.textContent === copy.used),
+  ).toHaveLength(4);
 });

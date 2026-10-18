@@ -110,10 +110,11 @@
       "actions": {
         "editBudget": "Edit budget",
         "connectionSettings": "Connection settings",
-        "workerStatus": "Worker status"
+        "workerStatus": "Worker status",
+        "reviewUsage": "Review usage"
       },
       "blocked": {
-        "budgetDescription": "{withBudget, select, yes {Spent {spent} of {cap} this month; } other {}}checks resume when the budget resets.",
+        "budgetDescription": "{withBudget, select, yes {Provider cost reported this month (UTC): {spent}. Monthly project budget limit: {cap}. } other {}}Review usage for current limits and any unresolved accounting.",
         "budgetReached": "Budget reached",
         "guidance": "Blocked run guidance",
         "keywordArchived": "Keyword archived",
@@ -127,10 +128,14 @@
         "providerUnavailableDescription": "The provider isn't reachable right now. The run starts on its own once it reconnects.",
         "targetPaused": "Paused target - resumes when you unpause it",
         "waiting": "Waiting to start",
-        "waitingDescription": "This run is waiting to start. It will continue automatically when it can.",
+        "waitingDescription": "Review what is preventing this run from starting.",
         "workerCloudDescription": "The background worker isn't reachable right now. The run starts on its own once it reconnects.",
         "workerSelfHostDescription": "The background worker isn't running. Restart it and the run starts on its own.",
-        "workerWaiting": "Waiting for the background worker"
+        "workerWaiting": "Waiting for the background worker",
+        "reviewUsage": "Review budget and usage",
+        "reviewUsageDescription": "This run is blocked. Review usage and any unresolved accounting before trying again. A monthly reset may not resolve the issue.",
+        "usageUnconfirmed": "Usage needs confirmation",
+        "usageUnconfirmedDescription": "Earlier usage has not been confirmed. Review usage before trying again."
       },
       "cancelDialog": {
         "body": "Cancelling changes only this run. It does not change the schedule or remove completed results.",

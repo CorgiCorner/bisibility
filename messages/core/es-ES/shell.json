@@ -117,8 +117,8 @@
       },
       "rank": {
         "blocked": {
-          "budgetWithAmounts": "Has gastado {spent} de {cap} este mes; las comprobaciones se reanudarán cuando se restablezca el presupuesto.",
-          "budgetWithoutAmounts": "Las comprobaciones se reanudarán cuando se restablezca el presupuesto.",
+          "budgetWithAmounts": "Coste registrado del proveedor este mes (UTC): {spent}. Límite mensual del presupuesto del proyecto: {cap}. Revisa los límites actuales y las operaciones sin conciliar en Uso.",
+          "budgetWithoutAmounts": "El uso requiere revisión. Revisa el presupuesto y las operaciones sin conciliar antes de reintentarlo.",
           "keywordArchived": "Esta palabra clave se ha archivado antes de que empezara la comprobación, así que se ha detenido sin llegar a costar nada.",
           "marketInactive": "El mercado de esta palabra clave está en pausa, así que la comprobación se ha detenido sin llegar a costar nada.",
           "noProvider": "Conecta o vuelve a conectar un proveedor para iniciar esta ejecución.",
@@ -180,7 +180,8 @@
       "signOut": "Cerrar sesión",
       "signOutError": "No se ha podido cerrar la sesión. Inténtalo de nuevo.",
       "fallbackName": "Tu cuenta",
-      "opensInNewTab": "{label} (se abre en una pestaña nueva)"
+      "opensInNewTab": "{label} (se abre en una pestaña nueva)",
+      "activity": "Actividad e insignias"
     },
     "market": {
       "add": "Añadir mercado",

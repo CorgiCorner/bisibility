@@ -1,3 +1,4 @@
+import type { ApiAnalyticsIdentity } from "@/lib/analytics/api-server";
 import type { Actor } from "@/lib/auth/authorize";
 import type { AuthenticatedApiKey, PersonalTokenAuth } from "./auth";
 import { ApiForbiddenError } from "./errors";
@@ -5,6 +6,7 @@ import type { ApiRequestOrigin } from "./request-origin";
 import { errorResponse } from "./responses";
 
 export type ApiContext = {
+  analyticsIdentity?: ApiAnalyticsIdentity;
   actor?: Actor;
   // User id when the request is authenticated by a personal token; null for
   // project keys (which carry no user identity). Used for audit attribution.

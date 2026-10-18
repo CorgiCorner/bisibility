@@ -1,5 +1,6 @@
 import {
   createUsageNumberFormat,
+  isCreditUnit,
   isMoneyUnit,
   type UsagePresentationFigure,
   type UsagePresentationOptions,
@@ -50,7 +51,8 @@ export function headerBudgetFigure(
   locale: string,
   options: UsagePresentationOptions = {},
 ) {
-  if (!isMoneyUnit(value.unit) || options.moneyDisplay === "raw-unit") return null;
+  if (!isMoneyUnit(value.unit) || isCreditUnit(value.unit) || options.moneyDisplay === "raw-unit")
+    return null;
   const parsed = parseProviderDecimal(value.text, value.unit);
   if (parsed.outcome !== "valid") return null;
   return createUsageNumberFormat(locale, options).figure(value);

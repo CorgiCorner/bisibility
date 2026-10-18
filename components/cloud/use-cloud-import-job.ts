@@ -46,15 +46,28 @@ export function useCloudImportJobPoll({
   projectId,
 }: UseCloudImportJobPollInput) {
   const [job, setJobState] = useState(initialJob);
+  const [pollError, setPollError] = useState<unknown>(null);
+  const [retryVersion, setRetryVersion] = useState(0);
+  const retry = useCallback(() => setRetryVersion((value) => value + 1), []);
   const jobRef = useRef(job);
   jobRef.current = job;
 
-  const setJob = useCallback((update: Parameters<typeof setJobState>[0]) => {
+  const applyJob = useCallback((update: Parameters<typeof setJobState>[0]) => {
     setJobState((prev) => {
       const next = typeof update === "function" ? update(prev) : update;
       return jobsEqual(prev, next) ? prev : next;
     });
   }, []);
+
+  // Token creation can keep an identical idle job while starting a fresh polling session.
+  const setJob = useCallback(
+    (update: Parameters<typeof setJobState>[0]) => {
+      applyJob(update);
+      setPollError(null);
+      setRetryVersion((value) => value + 1);
+    },
+    [applyJob],
+  );
 
   const refresh = useCallback(async () => {
     const next = await pollAction({ projectId });
@@ -65,15 +78,34 @@ export function useCloudImportJobPoll({
 
   // Polling is synchronization with the persisted Cloud import job.
   useEffect(() => {
-    if (!shouldPoll(active, jobRef.current)) return undefined;
+    if (!shouldPoll(active, jobRef.current)) {
+      setPollError(null);
+      return undefined;
+    }
 
     let cancelled = false;
+    let consecutiveTransportFailures = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     async function tick() {
-      const next = await pollAction({ projectId });
+      let next: CloudImportJobData;
+      try {
+        next = await pollAction({ projectId });
+      } catch (error) {
+        if (cancelled) return;
+        setPollError(() => error);
+        // Only the status read is retried; persistent failures remain visible for manual retry.
+        if (error instanceof TypeError && ++consecutiveTransportFailures <= 2) {
+          timer = setTimeout(tick, 2000);
+          return;
+        }
+        if (error instanceof TypeError) return;
+        throw error;
+      }
       if (cancelled) return;
-      setJob(next);
+      consecutiveTransportFailures = 0;
+      setPollError(null);
+      applyJob(next);
       if (isTerminal(next)) {
         onTerminal?.(next);
         return;
@@ -83,13 +115,13 @@ export function useCloudImportJobPoll({
       }
     }
 
-    timer = setTimeout(tick, 600);
+    timer = setTimeout(tick, retryVersion === 0 ? 600 : 0);
 
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [active, onTerminal, pollAction, projectId, setJob]);
+  }, [active, applyJob, onTerminal, pollAction, projectId, retryVersion]);
 
-  return { job, refresh, setJob };
+  return { job, pollError, refresh, retry, setJob };
 }

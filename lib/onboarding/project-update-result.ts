@@ -8,6 +8,10 @@ export type OnboardingProjectIdentity = {
   trackingStartedAt?: string | null;
 };
 
+export type CreateOnboardingProjectResult =
+  | { ok: true; project: OnboardingProjectIdentity }
+  | { ok: false; error: { code: "PROJECT_LIMIT_REACHED"; limit: number } };
+
 // Expected conflicts cross the Server Action boundary as data, not Error properties.
 export type UpdateOnboardingProjectResult =
   | { ok: true; changed: boolean; project: OnboardingProjectIdentity }
