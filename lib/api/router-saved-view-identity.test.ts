@@ -20,6 +20,9 @@ const mocks = vi.hoisted(() => {
     prisma: { ...prisma, $transaction: vi.fn(async (body) => body(prisma)) },
   };
 });
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.session }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/auth/audit", () => ({

@@ -33,7 +33,7 @@ const strictPublicId = (prefix: PublicIdPrefix) =>
 const nullableTextSchema = z.string().min(1).max(160).nullable().optional();
 const nullableNumberSchema = z.number().nullable().optional();
 const rankPositionSchema = z.number().int().min(1).nullable().optional();
-const alertChannelSchema = z.enum(["email", "slack", "webhook"]);
+const alertChannelSchema = z.enum(["email", "slack", "webhook", "push"]);
 const alertConditionSchema = z.enum([
   "change_pct",
   "competitor_overtake",

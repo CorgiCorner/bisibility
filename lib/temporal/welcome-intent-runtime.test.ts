@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   heartbeat: vi.fn(),
   snapshot: vi.fn(),
   close: vi.fn(),
+  closeRedis: vi.fn(),
 }));
 vi.mock("../ops/heartbeat-temporal", () => ({ collectTemporalHeartbeat: vi.fn() }));
 vi.mock("../ops/liveness", () => ({
@@ -24,6 +25,7 @@ vi.mock("./worker-extensions", () => ({ startWorkerExtensions: () => ({ close: m
 vi.mock("./worker-intent-processor", () => ({
   startWorkerIntentProcessor: () => ({ close: mocks.close }),
 }));
+vi.mock("../redis/redis", () => ({ closeRedisClient: mocks.closeRedis }));
 vi.mock("@/lib/metering/recovery/processor", () => ({
   startRecoveryProcessor: () => ({ close: async () => undefined }),
 }));
@@ -37,6 +39,7 @@ beforeEach(() => {
   mocks.heartbeat.mockResolvedValue(undefined);
   mocks.snapshot.mockResolvedValue(undefined);
   mocks.monitor.mockResolvedValue(undefined);
+  mocks.closeRedis.mockResolvedValue(undefined);
 });
 afterEach(() => {
   vi.useRealTimers();
@@ -71,4 +74,28 @@ describe("worker accounting watchdog wiring", () => {
       expect(mocks.close).toHaveBeenCalledTimes(2);
     },
   );
+});
+
+describe("worker shutdown", () => {
+  it("closes the shared Redis client after the processors so a drained worker can exit", async () => {
+    const order: string[] = [];
+    mocks.close.mockImplementation(async () => order.push("processor"));
+    mocks.closeRedis.mockImplementation(async () => order.push("redis"));
+    const worker = { run: async () => undefined };
+    await runWelcomeIntentRuntime({
+      connectionOptions: {} as never,
+      worker,
+      deliveryWorker: worker,
+    });
+    expect(order).toEqual(["processor", "processor", "redis"]);
+  });
+
+  it("still closes Redis when a worker fails, and keeps the worker error", async () => {
+    mocks.closeRedis.mockRejectedValue(new Error("redis gone"));
+    const worker = { run: async () => Promise.reject(new Error("worker failed")) };
+    await expect(
+      runWelcomeIntentRuntime({ connectionOptions: {} as never, worker, deliveryWorker: worker }),
+    ).rejects.toThrow("worker failed");
+    expect(mocks.closeRedis).toHaveBeenCalledTimes(1);
+  });
 });

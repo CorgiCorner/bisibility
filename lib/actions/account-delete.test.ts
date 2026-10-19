@@ -29,8 +29,15 @@ vi.mock("@/lib/analytics/deletion-provider", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/account/profile-service", () => ({ updateProfileNameRecord: vi.fn() }));
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
+vi.mock("@/lib/account/account-deletion-extension", () => ({ onAccountDeletion: vi.fn() }));
 vi.mock("@/lib/auth/session", () => ({ requireSession: mocks.requireSession }));
-vi.mock("@/lib/db/prisma", () => ({ prisma: { $transaction: mocks.transaction } }));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    $transaction: mocks.transaction,
+    account: { findMany: async () => [] },
+    user: { findUnique: (input: unknown) => mocks.findUnique(input) },
+  },
+}));
 
 import { deleteAccount } from "./account";
 

@@ -60,7 +60,11 @@ it("advertises only five authenticated GET routes with bounded signed history cu
     expect(operation).toBeDefined();
     if (!operation) throw new Error("Missing Local read operation");
     expect(expected.delete(operation.operationId)).toBe(true);
-    expect(operation.security).toEqual([{ ProjectApiKey: [] }, { PersonalAccessToken: [] }]);
+    expect(operation.security).toEqual([
+      { ProjectApiKey: [] },
+      { PersonalAccessToken: [] },
+      { AppOAuth: ["api:read"] },
+    ]);
     expect(operation.responses["402"]).toBeUndefined();
     expect(operation.responses["409"]).toBeDefined();
     expect(operation.responses["413"]).toBeDefined();

@@ -44,10 +44,14 @@ function legacyRequiredScope(method: string, path: string[]): ApiScope {
   if (path[0] === "api-keys" || (path[0] === "projects" && path[2] === "api-keys")) {
     return "admin";
   }
+  // Device push registration is device plumbing, available to read-scope tokens.
+  if (path[0] === "me" && path[1] === "push-tokens") return "read";
   if (path[0] === "me" && path[1] === "tokens") {
     if (method === "DELETE" && path[2] === "current" && path.length === 3) return "read";
     return "admin";
   }
+  // Account deletion is destructive and requires an admin-scope personal token.
+  if (method === "DELETE" && path[0] === "me" && path.length === 1) return "admin";
   if (method === "DELETE" && path[0] === "projects" && path.length === 2) return "admin";
   if (method === "DELETE" && path[0] === "projects" && path[2] === "webhooks") return "admin";
   if (path[0] === "projects" && path[2] === "team" && method !== "GET") return "admin";
@@ -108,7 +112,7 @@ describe("operation policy", () => {
 
     expect(after).toEqual(before);
     // Existing rank-run list/detail reads are now documented at the top level.
-    expect(before).toHaveLength(137);
+    expect(before).toHaveLength(141);
     const localReads = before.filter(({ path }) => path.includes("/local-monitors/"));
     expect(localReads).toHaveLength(5);
     expect(
@@ -153,7 +157,7 @@ describe("operation policy", () => {
       { admin: 0, read: 0, write: 0 },
     );
 
-    expect(counts).toEqual({ admin: 16, read: 56, write: 65 });
+    expect(counts).toEqual({ admin: 17, read: 59, write: 65 });
   });
 
   it("declares self-revocation and prefers it over the token-id route", () => {

@@ -18,10 +18,11 @@ import {
   snakeizeKeys,
 } from "./surface";
 
-const preferencePatchSchema = z
+export const preferencePatchSchema = z
   .object({
     alertEmail: z.boolean().optional(),
     alertInApp: z.boolean().optional(),
+    alertPush: z.boolean().optional(),
     alertSlack: z.boolean().optional(),
     alertWebhook: z.boolean().optional(),
     checkEmail: z.boolean().optional(),
@@ -62,6 +63,7 @@ export async function updateProjectNotificationPreferences(ctx: ApiContext, proj
   const input: NotificationPreferencesForm = {
     alertEmail: patch.alertEmail ?? current.alertEmail,
     alertInApp: patch.alertInApp ?? current.alertInApp,
+    alertPush: patch.alertPush ?? current.alertPush,
     alertSlack: patch.alertSlack ?? current.alertSlack,
     alertWebhook: patch.alertWebhook ?? current.alertWebhook,
     checkEmail: patch.checkEmail ?? current.checkEmail,

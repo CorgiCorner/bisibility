@@ -1,7 +1,8 @@
 import "server-only";
 
-import { ApiInputError, ApiNotFoundError } from "@/lib/api/errors";
-import { decodeCursor, encodeCursor, parseLimit } from "@/lib/api/pagination";
+import { ApiNotFoundError } from "@/lib/api/errors";
+import { decodeCursor, encodeCursor } from "@/lib/api/pagination";
+import { parseRankRunListQuery } from "@/lib/api/rank-run-list-query";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { getRequestMonthlySpendCents } from "@/lib/queries/workspace-request-data";
@@ -77,13 +78,11 @@ export async function listRankCheckRuns(
   url: URL,
   options: { includeUnlaunched?: boolean } = {},
 ) {
-  const segment = url.searchParams.get("segment") ?? "history";
-  if (segment !== "history" && segment !== "planned") {
-    throw new ApiInputError("Segment must be history or planned.");
-  }
-  const limit = parseLimit(url, 50, 200);
-  const cursor = decodeCursor(url.searchParams.get("cursor"), "rcr");
-  const statuses = statusCsv(url.searchParams.get("status"), RUN_STATUSES);
+  const query = parseRankRunListQuery(url);
+  const segment = query.segment ?? "history";
+  const limit = query.limit ?? 50;
+  const cursor = decodeCursor(query.cursor ?? null, "rcr");
+  const statuses = statusCsv(query.status ?? null, RUN_STATUSES);
   const cursorDate = cursor ? new Date(cursor.t) : null;
   const cursorId = cursor?.public_id;
   const history = segment === "history";

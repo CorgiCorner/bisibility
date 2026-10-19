@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.38.0] - 2026-10-20
+
+### Added
+
+- Add iOS app support to the API: OAuth tokens with rotating refresh, `DELETE /me` account deletion, and push alerts with device token endpoints.
+
+- Price the next page of backlink rows with `estimate_only` before any provider request, and cap its spend with `max_cost_cents`.
+
+### Changed
+
+- Make the OpenAPI document client-ready: public-ID path parameters, problem+json errors, per-operation provider cost and accurate response shapes; URLs unchanged.
+
+- Reject unknown `sort` and `status` values on keyword and rank-check lists with 400, and malformed AI tracking run IDs with 422 instead of 404.
+
+### Fixed
+
+- Exit the worker after a graceful shutdown when Redis is configured, instead of staying alive until it is force-killed.
+
 ## [0.37.0] - 2026-10-19
 
 ### Added

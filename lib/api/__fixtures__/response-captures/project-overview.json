@@ -1,0 +1,294 @@
+{
+  "captures": [
+    {
+      "body": null,
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getOpenApi",
+      "path": "/openapi.json",
+      "status": 200
+    },
+    {
+      "body": {
+        "average_position": 3,
+        "average_position_delta": null,
+        "keywords_added_this_month": 0,
+        "last_check_at": "2026-07-27T10:00:00.000Z",
+        "next_check_at": "2026-07-28T03:20:53.000Z",
+        "position_distribution": [
+          {
+            "count": 1,
+            "max": 3,
+            "min": 1
+          },
+          {
+            "count": 0,
+            "max": 10,
+            "min": 4
+          },
+          {
+            "count": 0,
+            "max": 20,
+            "min": 11
+          },
+          {
+            "count": 0,
+            "max": 50,
+            "min": 21
+          },
+          {
+            "count": 0,
+            "max": 100,
+            "min": 51
+          }
+        ],
+        "project_id": "prj_a00000000000000000000000",
+        "top_3_count": 1,
+        "top_10_count": 1,
+        "top_10_delta": null,
+        "top_100_count": 1,
+        "tracked_keyword_count": 1,
+        "visibility": 36.66666666666667,
+        "visibility_delta": null
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getProjectOverview",
+      "path": "/projects/{project_id}/overview",
+      "status": 200
+    },
+    {
+      "body": {
+        "average_position": 6,
+        "average_position_delta": 4,
+        "keywords_added_this_month": 1,
+        "last_check_at": "2026-07-27T10:00:00.000Z",
+        "next_check_at": "2026-07-27T20:11:44.000Z",
+        "position_distribution": [
+          {
+            "count": 1,
+            "max": 3,
+            "min": 1
+          },
+          {
+            "count": 1,
+            "max": 10,
+            "min": 4
+          },
+          {
+            "count": 0,
+            "max": 20,
+            "min": 11
+          },
+          {
+            "count": 0,
+            "max": 50,
+            "min": 21
+          },
+          {
+            "count": 0,
+            "max": 100,
+            "min": 51
+          }
+        ],
+        "project_id": "prj_a00000000000000000000000",
+        "top_3_count": 1,
+        "top_10_count": 2,
+        "top_10_delta": 1,
+        "top_100_count": 2,
+        "tracked_keyword_count": 3,
+        "visibility": 33.83333333333334,
+        "visibility_delta": 22.500000000000007
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getProjectOverview",
+      "path": "/projects/{project_id}/overview",
+      "status": 200
+    },
+    {
+      "body": {
+        "average_position": null,
+        "average_position_delta": null,
+        "keywords_added_this_month": 0,
+        "last_check_at": "2026-07-27T10:00:00.000Z",
+        "next_check_at": "2026-07-27T22:40:27.000Z",
+        "position_distribution": [
+          {
+            "count": 0,
+            "max": 3,
+            "min": 1
+          },
+          {
+            "count": 0,
+            "max": 10,
+            "min": 4
+          },
+          {
+            "count": 0,
+            "max": 20,
+            "min": 11
+          },
+          {
+            "count": 0,
+            "max": 50,
+            "min": 21
+          },
+          {
+            "count": 0,
+            "max": 100,
+            "min": 51
+          }
+        ],
+        "project_id": "prj_a00000000000000000000000",
+        "top_3_count": 0,
+        "top_10_count": 0,
+        "top_10_delta": null,
+        "top_100_count": 0,
+        "tracked_keyword_count": 1,
+        "visibility": 0,
+        "visibility_delta": null
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getProjectOverview",
+      "path": "/projects/{project_id}/overview",
+      "status": 200
+    },
+    {
+      "body": {
+        "average_position": null,
+        "average_position_delta": null,
+        "keywords_added_this_month": 0,
+        "last_check_at": "2026-07-27T10:00:00.000Z",
+        "next_check_at": null,
+        "position_distribution": [
+          {
+            "count": null,
+            "max": 3,
+            "min": 1
+          },
+          {
+            "count": null,
+            "max": 10,
+            "min": 4
+          },
+          {
+            "count": null,
+            "max": 20,
+            "min": 11
+          },
+          {
+            "count": null,
+            "max": 50,
+            "min": 21
+          },
+          {
+            "count": null,
+            "max": 100,
+            "min": 51
+          }
+        ],
+        "project_id": "prj_a00000000000000000000000",
+        "top_3_count": null,
+        "top_10_count": null,
+        "top_10_delta": null,
+        "top_100_count": null,
+        "tracked_keyword_count": 0,
+        "visibility": null,
+        "visibility_delta": null
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getProjectOverview",
+      "path": "/projects/{project_id}/overview",
+      "status": 200
+    },
+    {
+      "body": {
+        "average_position": null,
+        "average_position_delta": null,
+        "keywords_added_this_month": 0,
+        "last_check_at": null,
+        "next_check_at": "2026-07-27T20:11:44.000Z",
+        "position_distribution": [
+          {
+            "count": null,
+            "max": 3,
+            "min": 1
+          },
+          {
+            "count": null,
+            "max": 10,
+            "min": 4
+          },
+          {
+            "count": null,
+            "max": 20,
+            "min": 11
+          },
+          {
+            "count": null,
+            "max": 50,
+            "min": 21
+          },
+          {
+            "count": null,
+            "max": 100,
+            "min": 51
+          }
+        ],
+        "project_id": "prj_a00000000000000000000000",
+        "top_3_count": null,
+        "top_10_count": null,
+        "top_10_delta": null,
+        "top_100_count": null,
+        "tracked_keyword_count": 2,
+        "visibility": null,
+        "visibility_delta": null
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getProjectOverview",
+      "path": "/projects/{project_id}/overview",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key is not scoped to this project.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/overview",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getProjectOverview",
+      "path": "/projects/{project_id}/overview",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/overview",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "range": ["Invalid option: expected one of \"7d\"|\"28d\"|\"90d\""]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getProjectOverview",
+      "path": "/projects/{project_id}/overview",
+      "status": 400
+    }
+  ],
+  "source": "lib/api/project-overview.test.ts"
+}

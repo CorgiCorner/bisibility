@@ -3,6 +3,7 @@ import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BacklinksSnapshotExpiredError, loadMoreBacklinkRows } from "./service";
 import { backlinksSnapshotReference } from "./snapshot-reference";
+import type { LoadMoreBacklinkRowsOptions } from "./types";
 
 const mocks = vi.hoisted(() => ({
   getProvider: vi.fn(),
@@ -87,6 +88,7 @@ const snapshot = {
 function run(
   origin = APP_REQUEST_ORIGIN,
   reference: string | null = backlinksSnapshotReference(snapshot),
+  options: Partial<LoadMoreBacklinkRowsOptions> = {},
 ) {
   return loadMoreBacklinkRows(
     { origin, projectId: "prj_1" },
@@ -96,6 +98,7 @@ function run(
       snapshotRef: reference ?? undefined,
       target: "acme-store.com",
       targetScope: "site",
+      ...options,
     },
   );
 }
@@ -146,6 +149,85 @@ describe("backlinks load-more service", () => {
         trigger: "manual",
       }),
     );
+    expect(mocks.paidCall.mock.calls[0][0].costLimit).toBeUndefined();
+  });
+
+  it.each([
+    [100, 2.76],
+    [300, 3.48],
+    [1000, 6],
+  ])(
+    "estimates only the requested %i rows without paid calls or writes",
+    async (limit, estimate) => {
+      const result = await run(APP_REQUEST_ORIGIN, backlinksSnapshotReference(snapshot), {
+        estimateOnly: true,
+        limit,
+      });
+      expect(result).toMatchObject({
+        ok: true,
+        estimate: true,
+        cached: false,
+        costCents: estimate,
+        estimatedCostCents: estimate,
+      });
+      expect(provider.fetchBacklinksRows).not.toHaveBeenCalled();
+      expect(provider.fetchBacklinksSummary).not.toHaveBeenCalled();
+      expect(provider.fetchBacklinksHistory).not.toHaveBeenCalled();
+      expect(mocks.paidCall).not.toHaveBeenCalled();
+      expect(mocks.prisma.backlinkSnapshot.updateMany).not.toHaveBeenCalled();
+      expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    },
+  );
+
+  it("estimates a retained page as zero without applying it or requiring a connection", async () => {
+    mocks.prisma.project.findFirst.mockResolvedValue({ ...project, providerConnections: [] });
+    mocks.prisma.backlinkSnapshot.findFirst.mockResolvedValue({
+      ...snapshot,
+      summary: {
+        ...snapshot.summary,
+        _appendPending: "retained",
+        _appendPage: { costCents: 1, totalCount: 1685, rows: [row] },
+      },
+    });
+    await expect(
+      run(APP_REQUEST_ORIGIN, backlinksSnapshotReference(snapshot), {
+        estimateOnly: true,
+        maxCostCents: 0,
+      }),
+    ).resolves.toMatchObject({
+      ok: true,
+      estimate: true,
+      cached: true,
+      costCents: 0,
+      estimatedCostCents: 0,
+      cachedUntil: snapshot.expiresAt.toISOString(),
+    });
+    expect(mocks.paidCall).not.toHaveBeenCalled();
+    expect(provider.fetchBacklinksRows).not.toHaveBeenCalled();
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    expect(mocks.prisma.backlinkSnapshot.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("refuses a cap below the estimate before claiming or calling a provider", async () => {
+    await expect(
+      run(APP_REQUEST_ORIGIN, backlinksSnapshotReference(snapshot), { maxCostCents: 0 }),
+    ).resolves.toMatchObject({
+      ok: false,
+      reason: "cost_limit_exceeded",
+      estimatedCostCents: 2.76,
+    });
+    expect(mocks.paidCall).not.toHaveBeenCalled();
+    expect(provider.fetchBacklinksRows).not.toHaveBeenCalled();
+    expect(mocks.prisma.backlinkSnapshot.updateMany).not.toHaveBeenCalled();
+  });
+
+  it.each([6, 7])("allows cap %i and threads it into paid admission", async (maxCostCents) => {
+    await expect(
+      run(APP_REQUEST_ORIGIN, backlinksSnapshotReference(snapshot), { limit: 1000, maxCostCents }),
+    ).resolves.toMatchObject({ ok: true });
+    expect(provider.fetchBacklinksRows).toHaveBeenCalledOnce();
+    const input = mocks.paidCall.mock.calls[0][0];
+    expect(input.costLimit.remaining()).toBe(String(maxCostCents));
   });
 
   it("threads the paying request origin into the load-more paid call", async () => {

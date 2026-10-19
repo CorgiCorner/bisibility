@@ -39,6 +39,20 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
+// Competitor, saved-view deletion, notification and migration-token mutations return generic
+// stubs here, so only the routes backed by real resource builders are recorded.
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal(), {
+    skip: [
+      "addCompetitor",
+      "deleteProjectSavedView",
+      "listMigrationTokens",
+      "removeProjectCompetitor",
+      "revokeProjectMigrationToken",
+      "updateNotificationPreferences",
+    ],
+  }),
+);
 vi.mock("./auth", () => ({
   ApiAuthError: class ApiAuthError extends Error {},
   authenticateBearer: mocks.authenticateBearer,
@@ -247,6 +261,7 @@ describe("public API remaining app surface routes", () => {
     mocks.queries.readNotificationPreferencesFor.mockResolvedValue({
       alertEmail: true,
       alertInApp: true,
+      alertPush: true,
       alertSlack: false,
       alertWebhook: false,
       checkEmail: false,

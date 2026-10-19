@@ -1,5 +1,7 @@
 import { apiFeatures, getApiVersionCapabilities } from "./api-versions";
 import { costEstimateParameters } from "./openapi-parameters";
+import { problemResponse } from "./openapi-problem";
+import { openEnum, sdkName } from "./openapi-sdk-schema";
 
 const json = (schema: object) => ({ "application/json": { schema } });
 const response = (schema: object, description = "JSON response") => ({
@@ -7,36 +9,55 @@ const response = (schema: object, description = "JSON response") => ({
   description,
 });
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
-const envelope = (schema: object) => ({
+const envelope = (schema: object, name: string) => ({
   properties: { data: schema },
   required: ["data"],
   type: "object",
+  ...sdkName(name),
 });
-const probeStatus = { enum: ["degraded", "ok"], type: "string" };
+const probeStatus = { enum: ["degraded", "ok"], type: "string", ...openEnum("HealthState") };
 const rankCheckSchedulerMode = {
   enum: ["cutover", "dispatcher", "invalid", "legacy"],
   type: "string",
+  ...openEnum("RankCheckSchedulerMode"),
 };
-const schedulerDriver = { enum: ["invalid", "legacy-auto", "none", "temporal"], type: "string" };
+const schedulerDriver = {
+  enum: ["invalid", "legacy-auto", "none", "temporal"],
+  type: "string",
+  ...openEnum("SchedulerDriver"),
+};
 const livenessResponse = {
   properties: { status: { enum: ["ok"], type: "string" } },
   required: ["status"],
   type: "object",
 };
-const statusResponse = {
-  properties: { status: probeStatus },
-  required: ["status"],
-  type: "object",
+export const publicSchemas = {
+  HealthStatus: {
+    properties: { status: probeStatus },
+    required: ["status"],
+    type: "object",
+  },
 };
+const statusResponse = ref("HealthStatus");
 const apiVersions = getApiVersionCapabilities().apiVersions;
 const capabilitiesResponse = {
   properties: {
     apiVersions: {
-      items: { enum: apiVersions, type: "string" },
+      items: { enum: apiVersions, type: "string", ...openEnum("ApiVersion") },
       minItems: 1,
       type: "array",
     },
+    authentication: {
+      properties: {
+        scheme: { const: "bearer", type: "string" },
+        scope: { type: "string" },
+      },
+      required: ["scheme", "scope"],
+      type: "object",
+      ...sdkName("CapabilitiesAuthentication"),
+    },
     data: { items: ref("Capability"), type: "array" },
+    description: { type: "string" },
     features: {
       description: "Supported request protocols, independent of the caller's permissions.",
       properties: {
@@ -44,12 +65,22 @@ const capabilitiesResponse = {
       },
       required: ["reviewed_project_defaults"],
       type: "object",
+      ...sdkName("CapabilitiesFeatures"),
     },
     rank_check_scheduler_mode: rankCheckSchedulerMode,
     scheduler_driver: schedulerDriver,
   },
-  required: ["apiVersions", "data", "features", "rank_check_scheduler_mode", "scheduler_driver"],
+  required: [
+    "apiVersions",
+    "authentication",
+    "data",
+    "description",
+    "features",
+    "rank_check_scheduler_mode",
+    "scheduler_driver",
+  ],
   type: "object",
+  ...sdkName("Capabilities"),
 };
 
 export const publicPaths = {
@@ -64,10 +95,10 @@ export const publicPaths = {
       operationId: "getCostEstimate",
       parameters: costEstimateParameters,
       responses: {
-        "200": response(envelope(ref("CostEstimate"))),
-        "400": response(ref("Problem"), "Bad request"),
-        "404": response(ref("Problem"), "Not found"),
-        "429": response(ref("Problem"), "Rate limited"),
+        "200": response(envelope(ref("CostEstimate"), "CostEstimateResponse")),
+        "400": problemResponse("Bad request"),
+        "404": problemResponse("Not found"),
+        "429": problemResponse("Rate limited"),
       },
       summary: "Estimate monthly SERP provider cost",
     },
@@ -107,8 +138,10 @@ export const publicPaths = {
     get: {
       operationId: "getProviderRates",
       responses: {
-        "200": response(envelope({ items: ref("ProviderRateCard"), type: "array" })),
-        "429": response(ref("Problem"), "Rate limited"),
+        "200": response(
+          envelope({ items: ref("ProviderRateCard"), type: "array" }, "ProviderRateCardList"),
+        ),
+        "429": problemResponse("Rate limited"),
       },
       summary: "List public SERP provider rate cards",
     },

@@ -10,6 +10,9 @@ const mocks = vi.hoisted(() => ({
   project: vi.fn(),
   keyword: vi.fn(),
 }));
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
 vi.mock("@/lib/api/auth", async (original) => ({
   ...(await original<typeof import("./auth")>()),
   authenticateBearer: mocks.authenticate,

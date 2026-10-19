@@ -10,6 +10,7 @@ import type { ApiScope } from "./scope-policy";
 const ESTIMATE_ONLY_SHAPES = {
   analyzeBacklinks: "query",
   analyzeDomainOverview: "body",
+  loadMoreBacklinkRows: "body",
   researchKeywords: "query",
 } as const;
 
@@ -44,7 +45,7 @@ export function estimateOnlyScope(input: {
 
 /**
  * Request-facing wrapper for the router: reads the JSON body from a clone of
- * the request, only for the one POST operation, so the handler can still read
+ * the request, only for body-based estimate operations, so the handler can still read
  * the original body. A body that is not valid JSON is not estimate-only.
  */
 export async function scopeToEnforce(
@@ -52,7 +53,7 @@ export async function scopeToEnforce(
   req: Request,
   url: URL,
 ): Promise<ApiScope> {
-  if (operation.operationId !== "analyzeDomainOverview") {
+  if (ESTIMATE_ONLY_SHAPES[operation.operationId as keyof typeof ESTIMATE_ONLY_SHAPES] !== "body") {
     return estimateOnlyScope({ ...operation, url });
   }
   let parsedBody: unknown;

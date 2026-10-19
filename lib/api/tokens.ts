@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 import { allowedOAuthTokenScopes } from "@/lib/auth/oauth-consent-guard";
+import { isFirstPartyApiOAuthClient } from "@/lib/auth/oauth-policy";
 import { prisma } from "@/lib/db/prisma";
 import { ZodError, z } from "zod";
 import { notFound, type PersonalApiContext } from "./context";
@@ -79,7 +80,8 @@ export async function exchangeOauthToken(
     });
   }
   const scopes = await allowedOAuthTokenScopes(accessToken.clientId, accessToken.scopes);
-  if (!scopes.includes(EXCHANGE_SCOPE)) {
+  // App grants stay short-lived and rotating (ADR-021); they never become a long-lived PAT.
+  if (isFirstPartyApiOAuthClient(accessToken.clientId) || !scopes.includes(EXCHANGE_SCOPE)) {
     return errorResponse(
       "forbidden",
       `The OAuth access token is missing the "${EXCHANGE_SCOPE}" scope.`,

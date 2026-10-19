@@ -1,4 +1,6 @@
+import { COMPETITOR_SOV_DEFINITION } from "@/lib/rank-measurements/competitor-share";
 import { publicIdSchema } from "./openapi-public-id";
+import { openEnum, sdkName } from "./openapi-sdk-schema";
 
 export const competitorSchemas = {
   Competitor: {
@@ -22,9 +24,18 @@ export const competitorSchemas = {
     properties: {
       quality: {
         type: "object",
+        ...sdkName("CompetitorMarketQuality"),
         properties: {
-          metric_id: { type: "string", enum: ["competitor_share_of_voice_top10"] },
-          definition_version: { type: "string", enum: ["bisibility-sov-top10-v1"] },
+          metric_id: {
+            type: "string",
+            enum: ["competitor_share_of_voice_top10"],
+            ...openEnum("CompetitorQualityMetric"),
+          },
+          definition_version: {
+            type: "string",
+            enum: [COMPETITOR_SOV_DEFINITION],
+            ...openEnum("CompetitorQualityDefinition"),
+          },
           domain_set: { type: "array", items: { type: "string" } },
           expected: { type: "integer" },
           measured: { type: "integer" },
@@ -64,8 +75,13 @@ export const competitorSchemas = {
           "filter_excludes_all",
         ],
         type: "string",
+        ...openEnum("CompetitorMarketDataState"),
       },
-      device: { enum: ["Desktop", "Mobile"], type: "string" },
+      device: {
+        enum: ["Desktop", "Mobile"],
+        type: "string",
+        ...openEnum("CompetitorMarketDevice"),
+      },
       domains: {
         items: {
           properties: {
@@ -74,6 +90,7 @@ export const competitorSchemas = {
           },
           required: ["domain", "managed"],
           type: "object",
+          ...sdkName("CompetitorMarketDomain"),
         },
         type: "array",
       },
@@ -115,6 +132,7 @@ export const competitorSchemas = {
             "ranks",
           ],
           type: "object",
+          ...sdkName("CompetitorMarketObservation"),
         },
         type: "array",
       },
@@ -135,6 +153,7 @@ export const competitorSchemas = {
           },
           required: ["domain", "shared_keywords", "share_of_voice"],
           type: "object",
+          ...sdkName("CompetitorShare"),
         },
         type: "array",
       },

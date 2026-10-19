@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { iosOAuthClientCreateData, iosOAuthClientFields } from "../lib/auth/ios-oauth-client.ts";
+import { IOS_OAUTH_CLIENT_ID } from "../lib/auth/oauth-policy.ts";
 import { databaseConnectionConfig, databaseSchemaFromUrl } from "../lib/db/pool-config.ts";
 import type { PublicIdPrefix } from "../lib/db/public-id.ts";
 import { withPublicIdWrites } from "../lib/db/public-id-writes.ts";
@@ -269,6 +271,15 @@ export async function seed() {
       tokenEndpointAuthMethod: "none",
       type: "native",
     },
+  });
+
+  // Development only: production registers the app client through an operator script.
+  const authOrigin =
+    process.env.BETTER_AUTH_URL ?? `http://localhost:${process.env.PORT ?? "3000"}`;
+  await prisma.oauthClient.upsert({
+    where: { clientId: IOS_OAUTH_CLIENT_ID },
+    update: iosOAuthClientFields(authOrigin),
+    create: iosOAuthClientCreateData(authOrigin),
   });
 
   const owner = await prisma.user.upsert({

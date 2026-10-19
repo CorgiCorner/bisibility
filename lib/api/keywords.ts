@@ -11,12 +11,12 @@ import {
   KeywordIdentityImmutableError,
 } from "@/lib/keywords/identity";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
-import { intentSchema, topicSchema } from "@/lib/schemas/keyword";
 import { LocationInputError, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { type ApiContext, forbidden, notFound, projectMatches } from "./context";
 import { ApiConflictError, ApiInputError } from "./errors";
+import { type KeywordListQuery, parseKeywordListQuery } from "./keyword-list-query";
 import { scheduleFromPatch } from "./keyword-utils";
 import { legacyMarketFilterValues, legacyMarketLocationSelection } from "./legacy-market-input";
 import {
@@ -24,54 +24,13 @@ import {
   decodeOffsetCursor,
   encodeCursor,
   encodeOffsetCursor,
-  parseLimit,
   splitPage,
 } from "./pagination";
 import { keywordInclude, keywordResources } from "./resources";
 import { listResponse, resourceResponse } from "./responses";
 import { keywordPatchSchema } from "./schemas";
 
-function textParam(url: URL, ...names: string[]) {
-  for (const name of names) {
-    const value = url.searchParams.get(name);
-    if (value) {
-      return value;
-    }
-  }
-  return null;
-}
-
-function numberParam(url: URL, ...names: string[]) {
-  const raw = textParam(url, ...names);
-  if (!raw) {
-    return null;
-  }
-  const value = Number(raw);
-  if (!Number.isFinite(value)) {
-    throw new ApiInputError(`${names[0]} must be a number.`);
-  }
-  return value;
-}
-
-function metadataParam(
-  url: URL,
-  schema: typeof topicSchema,
-  label: "intent" | "topic",
-  ...names: string[]
-) {
-  const raw = textParam(url, ...names);
-  if (!raw) {
-    return null;
-  }
-  const parsed = schema.safeParse(raw);
-  if (!parsed.success || !parsed.data) {
-    throw new ApiInputError(`${label} must be a non-empty string up to 80 characters.`);
-  }
-  return parsed.data;
-}
-
-function locationKeyParam(url: URL) {
-  const raw = textParam(url, "filter[location_key]", "location_key");
+function locationKeyParam(raw: string | undefined) {
   if (!raw) {
     return null;
   }
@@ -87,23 +46,15 @@ function locationKeyParam(url: URL) {
   }
 }
 
-function keywordWhere(ctx: ApiContext) {
+function keywordWhere(ctx: ApiContext, query: KeywordListQuery) {
   const where: Prisma.KeywordWhereInput = { projectId: ctx.auth.project.id };
   const and: Prisma.KeywordWhereInput[] = [];
-  const device = textParam(ctx.url, "filter[device]", "device");
-  const country = textParam(ctx.url, "filter[country]", "country");
-  const locationKey = locationKeyParam(ctx.url);
-  const intent = metadataParam(ctx.url, intentSchema, "intent", "filter[intent]", "intent");
-  const search = textParam(ctx.url, "search", "q");
-  const tag = textParam(ctx.url, "filter[tag]", "tag");
-  const topic = metadataParam(ctx.url, topicSchema, "topic", "filter[topic]", "topic");
-  const positionGt = numberParam(ctx.url, "filter[position_gt]", "position_gt");
-  const positionLt = numberParam(ctx.url, "filter[position_lt]", "position_lt");
+  const { country, device, intent, search, tag, topic } = query;
+  const locationKey = locationKeyParam(query.location_key);
+  const positionGt = query.position_gt ?? null;
+  const positionLt = query.position_lt ?? null;
 
   if (device) {
-    if (device !== "desktop" && device !== "mobile") {
-      throw new ApiInputError("device must be desktop or mobile.");
-    }
     where.device = device === "mobile" ? Device.mobile : Device.desktop;
   }
   if (country) {
@@ -140,8 +91,7 @@ function keywordWhere(ctx: ApiContext) {
   return where;
 }
 
-function orderBy(url: URL): Prisma.KeywordOrderByWithRelationInput[] {
-  const sort = url.searchParams.get("sort") ?? "-created_at";
+function orderBy(sort: string): Prisma.KeywordOrderByWithRelationInput[] {
   const direction = sort.startsWith("-") ? "desc" : "asc";
   const field = sort.replace(/^-/, "");
 
@@ -159,13 +109,14 @@ export async function listKeywords(ctx: ApiContext, projectId: string) {
     return forbidden(ctx, "API key is not scoped to this project.");
   }
 
-  const limit = parseLimit(ctx.url, 50, 200);
-  const sort = ctx.url.searchParams.get("sort") ?? "-created_at";
+  const query = parseKeywordListQuery(ctx.url);
+  const limit = query.limit ?? 50;
+  const sort = query.sort ?? "-created_at";
   const keysetPagination = sort === "-created_at";
-  const rawCursor = ctx.url.searchParams.get("cursor");
+  const rawCursor = query.cursor ?? null;
   const cursor = keysetPagination ? decodeCursor(rawCursor, "kw") : null;
   const offset = keysetPagination ? 0 : decodeOffsetCursor(rawCursor);
-  const where = keywordWhere(ctx);
+  const where = keywordWhere(ctx, query);
   if (cursor) {
     where.OR = [
       { createdAt: { lt: new Date(cursor.t) } },
@@ -175,7 +126,7 @@ export async function listKeywords(ctx: ApiContext, projectId: string) {
 
   const keywords = await prisma.keyword.findMany({
     include: keywordInclude,
-    orderBy: orderBy(ctx.url),
+    orderBy: orderBy(sort),
     skip: keysetPagination ? undefined : offset,
     take: limit + 1,
     where,

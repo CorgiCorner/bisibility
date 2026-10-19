@@ -6,6 +6,8 @@ import { dirname } from "node:path";
 import { pathToFileURL } from "node:url";
 
 export const bakedRuntimeEnvKeys = [
+  "ACHIEVEMENTS_ENABLED",
+  "ACHIEVEMENTS_EMAIL_ENABLED",
   "APP_REVISION",
   "APP_VERSION",
   "METERING_NAMESPACE",

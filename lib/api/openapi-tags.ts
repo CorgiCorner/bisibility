@@ -1,4 +1,5 @@
 import { openApiOperationPresentation } from "./openapi-operation-presentation";
+import { openApiSdkOperations } from "./openapi-sdk-operations";
 import { withApiVersionContract } from "./openapi-versioning";
 import { assertOperationPolicy } from "./operation-policy";
 
@@ -193,6 +194,7 @@ export function tagOpenApiPaths<T extends Record<string, Record<string, object>>
               ...(presentation ?? {}),
               ...(description ? { description } : {}),
               ...withApiVersionContract(operation),
+              ...openApiSdkOperations[operation.operationId],
               tags: [tag],
             },
           ] as const;

@@ -1,4 +1,5 @@
 import { publicIdSchema } from "./openapi-public-id";
+import { sdkName, usdCents } from "./openapi-sdk-schema";
 
 const time = { format: "date-time", type: ["string", "null"] } as const;
 const count = { minimum: 0, type: "integer" } as const;
@@ -19,6 +20,7 @@ export const rankRunSchemas = {
       trigger: { type: "string" },
       counts_basis: { type: "string" },
       counts: {
+        ...sdkName("RankCheckRunCounts"),
         type: "object",
         properties: {
           requested: count,
@@ -39,8 +41,9 @@ export const rankRunSchemas = {
       finished_at: time,
       blocked_reason: { type: ["string", "null"] },
       parent_run_id: { ...publicIdSchema("rcr"), type: ["string", "null"] },
-      cost_cents: { minimum: 0, type: ["number", "null"] },
+      cost_cents: { ...usdCents, minimum: 0, type: ["number", "null"] },
       usage: {
+        ...sdkName("RankCheckRunUsage"),
         type: ["object", "null"],
         properties: {
           actual: { ...count, type: ["integer", "null"] },
@@ -50,6 +53,7 @@ export const rankRunSchemas = {
         required: ["actual", "estimated", "unit"],
       },
       native_estimate: {
+        ...sdkName("RankCheckRunNativeEstimate"),
         type: ["object", "null"],
         properties: {
           provider_id: { type: ["string", "null"] },
@@ -88,6 +92,7 @@ export const rankRunSchemas = {
     properties: {
       data: { type: "array", items: { $ref: "#/components/schemas/RankCheckRunRead" } },
       meta: {
+        ...sdkName("RankCheckRunListMeta"),
         type: "object",
         properties: { next_cursor: { type: ["string", "null"] } },
         required: ["next_cursor"],

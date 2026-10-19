@@ -45,13 +45,13 @@ describe("OpenAPI document", () => {
       ["/projects/{project_id}/keyword-metrics", "post"],
       ["/projects/{project_id}/keyword-research", "get"],
       ["/projects/{project_id}/ranked-keyword-suggestions", "get"],
-      ["/projects/{projectId}/backlinks", "get"],
-      ["/projects/{projectId}/backlinks/rows", "post"],
-      ["/projects/{projectId}/domain-overview/analyze", "post"],
-      ["/projects/{projectId}/domain-overview/history", "post"],
-      ["/projects/{projectId}/domain-overview/keywords", "post"],
-      ["/projects/{projectId}/domain-overview/pages", "post"],
-      ["/keywords/{id}/checks", "post"],
+      ["/projects/{project_id}/backlinks", "get"],
+      ["/projects/{project_id}/backlinks/rows", "post"],
+      ["/projects/{project_id}/domain-overview/analyze", "post"],
+      ["/projects/{project_id}/domain-overview/history", "post"],
+      ["/projects/{project_id}/domain-overview/keywords", "post"],
+      ["/projects/{project_id}/domain-overview/pages", "post"],
+      ["/keywords/{keyword_id}/checks", "post"],
     ] as const;
     for (const [path, method] of paid) {
       const operation = (paths[path] as Record<string, { responses: Record<string, unknown> }>)[
@@ -100,7 +100,7 @@ describe("OpenAPI document", () => {
         "migration",
       ].map((name) => expect.objectContaining({ name })),
     );
-    expect(operations).toHaveLength(150);
+    expect(operations).toHaveLength(154);
     expect(
       Object.entries(doc.paths)
         .filter(([path]) => path.includes("/local-monitors/"))
@@ -135,15 +135,15 @@ describe("OpenAPI document", () => {
     expect(doc.paths["/projects/{project_id}/keywords"].get.tags).toEqual(["keywords"]);
     expect(doc.paths["/projects/{project_id}/alert-rules"].post.tags).toEqual(["alerts"]);
     expect(doc.paths["/projects/{project_id}/webhooks"].get.tags).toEqual(["webhooks"]);
-    expect(doc.paths["/projects/{projectId}/domain-overview/analyze"].post.tags).toEqual([
+    expect(doc.paths["/projects/{project_id}/domain-overview/analyze"].post.tags).toEqual([
       "domain-overview",
     ]);
   });
 
   it("documents the paid Domain Overview safety contract", () => {
     const doc = getOpenApiDocument();
-    const analyze = doc.paths["/projects/{projectId}/domain-overview/analyze"].post;
-    const history = doc.paths["/projects/{projectId}/domain-overview/history"].post;
+    const analyze = doc.paths["/projects/{project_id}/domain-overview/analyze"].post;
+    const history = doc.paths["/projects/{project_id}/domain-overview/history"].post;
 
     expect(analyze).toMatchObject({
       operationId: "analyzeDomainOverview",
@@ -217,7 +217,12 @@ describe("OpenAPI document", () => {
         in: "header",
         name: API_VERSION_HEADER,
         required: false,
-        schema: { enum: ["v1"], type: "string" },
+        schema: {
+          enum: ["v1"],
+          type: "string",
+          "x-bisibility-enum": "open",
+          "x-bisibility-name": "ApiVersion",
+        },
       });
       expect(operation.responses["409"]).toMatchObject({
         description: expect.stringContaining("Unsupported API version"),
@@ -240,7 +245,9 @@ describe("OpenAPI document", () => {
       },
       required: [
         "apiVersions",
+        "authentication",
         "data",
+        "description",
         "features",
         "rank_check_scheduler_mode",
         "scheduler_driver",
@@ -256,7 +263,12 @@ describe("OpenAPI document", () => {
       in: "header",
       name: "X-Bisibility-Source",
       required: false,
-      schema: { enum: ["sdk", "cli", "mcp"], type: "string" },
+      schema: {
+        enum: ["sdk", "cli", "mcp"],
+        type: "string",
+        "x-bisibility-enum": "open",
+        "x-bisibility-name": "RequestSource",
+      },
     });
 
     const operations = Object.values(doc.paths).flatMap((path) => Object.values(path)) as Array<{

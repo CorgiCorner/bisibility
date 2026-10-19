@@ -14,7 +14,7 @@ import { historyApiAuthority } from "./rank-history-export";
 import { resourceResponse } from "./responses";
 import { scopedProject } from "./surface";
 
-const projectOverviewQuerySchema = z.object({
+export const projectOverviewQuerySchema = z.object({
   device: z.enum(["all", "desktop", "mobile"]).default("all"),
   range: z.enum(["7d", "28d", "90d"]).default("28d"),
   tag: z

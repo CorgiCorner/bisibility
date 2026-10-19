@@ -1,0 +1,227 @@
+{
+  "captures": [
+    {
+      "body": null,
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getOpenApi",
+      "path": "/openapi.json",
+      "status": 200
+    },
+    {
+      "body": {
+        "city": "Austin, Texas, United States",
+        "country": "United States",
+        "cron_expression": null,
+        "device": "desktop",
+        "frequency": "daily",
+        "jitter_minutes": 60,
+        "last_checked_at": null,
+        "location_key": "US/Texas/Austin",
+        "next_check_at": null,
+        "project_id": "prj_a00000000000000000000000",
+        "serp_depth": 100,
+        "serp_stop_on_match": true,
+        "source": "explicit",
+        "timezone": "UTC",
+        "updated_at": "2026-01-03T00:00:00.000Z"
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateProjectDefaults",
+      "path": "/projects/{project_id}/defaults",
+      "status": 200
+    },
+    {
+      "body": {
+        "city": null,
+        "country": "Germany",
+        "cron_expression": null,
+        "device": "mobile",
+        "frequency": "daily",
+        "jitter_minutes": 60,
+        "last_checked_at": null,
+        "location_key": "DE",
+        "next_check_at": null,
+        "project_id": "prj_a00000000000000000000000",
+        "serp_depth": 100,
+        "serp_stop_on_match": true,
+        "source": "explicit",
+        "timezone": "UTC",
+        "updated_at": "2026-01-03T00:00:00.000Z"
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getProjectDefaults",
+      "path": "/projects/{project_id}/defaults",
+      "status": 200
+    },
+    {
+      "body": {
+        "city": null,
+        "country": "Germany",
+        "cron_expression": null,
+        "device": "mobile",
+        "frequency": "manual",
+        "jitter_minutes": 0,
+        "last_checked_at": null,
+        "location_key": "DE",
+        "next_check_at": null,
+        "project_id": "prj_a00000000000000000000000",
+        "serp_depth": 100,
+        "serp_stop_on_match": false,
+        "source": "explicit",
+        "timezone": "UTC",
+        "updated_at": "2026-01-03T00:00:00.000Z"
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateProjectDefaults",
+      "path": "/projects/{project_id}/defaults",
+      "status": 200
+    },
+    {
+      "body": {
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "domain": "",
+        "id": "prj_a00000000000000000000000",
+        "name": "Renamed",
+        "updated_at": "2026-01-02T00:00:00.000Z",
+        "write_mode": "active"
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateProject",
+      "path": "/projects/{project_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "domain": "example.com",
+        "id": "prj_a00000000000000000000000",
+        "name": "Example",
+        "updated_at": "2026-01-02T00:00:00.000Z",
+        "write_mode": "active",
+        "readiness": {
+          "backlinks": {
+            "available": true,
+            "reason": null
+          },
+          "domain_overview": {
+            "available": true,
+            "reason": null
+          },
+          "keyword_research": {
+            "available": true,
+            "reason": null
+          },
+          "search_performance": {
+            "available": false,
+            "reason": "provider_not_connected"
+          },
+          "serp": {
+            "available": true,
+            "primary_provider": "dataforseo",
+            "reason": null
+          },
+          "token_scope": "write",
+          "write_mode": "active"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getProject",
+      "path": "/projects/{project_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/defaults",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "device": ["country and device must be provided together."]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateProjectDefaults",
+      "path": "/projects/{project_id}/defaults",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Review the current settings preview and explicitly confirm before saving.",
+        "docs_url": "https://bisibility.com/docs/api/errors#conflict",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/defaults",
+        "status": 428,
+        "title": "Conflict",
+        "type": "https://bisibility.com/problems/conflict",
+        "details": {
+          "reason": "preview_required"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateProjectDefaults",
+      "path": "/projects/{project_id}/defaults",
+      "status": 428
+    },
+    {
+      "body": {
+        "detail": "Settings or quote changed. Preview again.",
+        "docs_url": "https://bisibility.com/docs/api/errors#conflict",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/defaults",
+        "status": 409,
+        "title": "Conflict",
+        "type": "https://bisibility.com/problems/conflict",
+        "details": {
+          "reason": "preview_mismatch"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateProjectDefaults",
+      "path": "/projects/{project_id}/defaults",
+      "status": 409
+    },
+    {
+      "body": {
+        "detail": "You are not authorized to perform this action.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/defaults",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateProjectDefaults",
+      "path": "/projects/{project_id}/defaults",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Your project role does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "DELETE",
+      "operationId": "deleteProject",
+      "path": "/projects/{project_id}",
+      "status": 403
+    }
+  ],
+  "source": "lib/api/projects.test.ts"
+}

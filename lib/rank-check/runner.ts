@@ -13,6 +13,7 @@ import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
 import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import { assertOwnKeyStored } from "@/lib/providers/own-key-guard";
 import { consumeProviderLimit, writeCooldown } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
 import type { ProviderCredentials, SerpRankResult } from "@/lib/providers/types";
@@ -63,6 +64,14 @@ async function runCheckScoped(original: RunCheckInput): Promise<RankCheckRunResu
     requestedDepth,
   );
   let credentials: ProviderCredentials;
+  if (!execution && !input.connection.credentials && input.projectId) {
+    await assertOwnKeyStored({
+      capability: "rank_check",
+      credentialsEncrypted: input.connection.credentialsEncrypted,
+      projectId: input.projectId,
+      provider: provider.id,
+    });
+  }
 
   try {
     credentials = execution?.credentials ?? credentialsFromConnection(input.connection);
@@ -239,9 +248,9 @@ async function runCheckScoped(original: RunCheckInput): Promise<RankCheckRunResu
   };
 }
 
-export {
-  type RankCheckConnectionInput,
-  type RankCheckKeywordInput,
-  type RunCheckInput,
+export type {
+  RankCheckConnectionInput,
+  RankCheckKeywordInput,
+  RunCheckInput,
 } from "./runner-input";
 export { fallbackSchedule, PROVIDER_NOT_CONNECTED_MESSAGE } from "./runner-support";

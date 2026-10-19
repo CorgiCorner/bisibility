@@ -11,8 +11,14 @@ import {
   jitterMinutesContractSchema,
   scheduleTimezoneContractSchema,
 } from "./openapi-schedule-schema";
+import { openEnum, sdkName } from "./openapi-sdk-schema";
 
-const serpDeviceSchema = { enum: serpDeviceValues, type: "string" };
+const serpDeviceSchema = { enum: serpDeviceValues, type: "string", ...openEnum("Device") };
+const writeModeSchema = {
+  enum: ["active", "migration_hold", "migrated"],
+  type: "string",
+  ...openEnum("ProjectWriteMode"),
+};
 const locationKeySchema = { example: "ES/Andalusia/Malaga@en", type: "string" };
 
 // Mirrors READINESS_REASONS in lib/projects/readiness; pinned by
@@ -29,6 +35,8 @@ const readinessReasonSchema = {
   description: "Closed reason enum; null when the area is available.",
   enum: [...readinessReasonValues, null],
   type: ["string", "null"],
+  // Open in SDKs like every response enum: a new reason must not break an older client.
+  ...openEnum("ReadinessReason"),
 };
 
 const readinessAreaSchema = {
@@ -38,6 +46,7 @@ const readinessAreaSchema = {
   },
   required: ["available", "reason"],
   type: "object",
+  ...sdkName("ReadinessArea"),
 };
 
 const readinessSchema = {
@@ -59,13 +68,15 @@ const readinessSchema = {
       },
       required: ["available", "reason", "primary_provider"],
       type: "object",
+      ...sdkName("SerpReadiness"),
     },
     token_scope: {
       description: "What this credential may do: read or write.",
       enum: ["read", "write"],
       type: "string",
+      ...openEnum("TokenScope"),
     },
-    write_mode: { enum: ["active", "migration_hold", "migrated"], type: "string" },
+    write_mode: writeModeSchema,
   },
   required: [
     "token_scope",
@@ -77,6 +88,7 @@ const readinessSchema = {
     "search_performance",
   ],
   type: "object",
+  ...sdkName("ProjectReadiness"),
 };
 
 export const projectSchemas = {
@@ -89,7 +101,7 @@ export const projectSchemas = {
       name: { type: "string" },
       readiness: readinessSchema,
       updated_at: { format: "date-time", type: "string" },
-      write_mode: { enum: ["active", "migration_hold", "migrated"], type: "string" },
+      write_mode: writeModeSchema,
     },
     required: ["id", "name", "domain", "created_at", "updated_at", "write_mode"],
     type: "object",
@@ -214,6 +226,7 @@ export const projectSchemas = {
           },
           required: ["min", "max", "count"],
           type: "object",
+          ...sdkName("PositionBucket"),
         },
         type: "array",
       },

@@ -1,4 +1,5 @@
 import { apiVersionHeaderParameter } from "./api-versions";
+import { problemContent } from "./openapi-problem";
 
 type OpenApiVersionedOperation = {
   parameters?: object[];
@@ -18,9 +19,7 @@ export function withApiVersionContract(operation: OpenApiVersionedOperation) {
       "409": {
         ...existingConflict,
         content: {
-          "application/problem+json": {
-            schema: { $ref: "#/components/schemas/Problem" },
-          },
+          ...problemContent(),
           ...existingConflict?.content,
         },
         description: conflictDescriptions.filter(Boolean).join("; "),

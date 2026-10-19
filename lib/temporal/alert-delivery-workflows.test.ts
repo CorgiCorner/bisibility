@@ -15,9 +15,11 @@ const mocks = vi.hoisted(() => {
   const activities = {
     claimAlertDeliveryActivity: vi.fn(),
     deliverAlertDigestEmailActivity: vi.fn(),
+    deliverAlertDigestPushActivity: vi.fn(),
     deliverAlertDigestSlackActivity: vi.fn(),
     deliverAlertDigestWebhookActivity: vi.fn(),
     deliverAlertEmailActivity: vi.fn(),
+    deliverAlertPushActivity: vi.fn(),
     deliverAlertSlackActivity: vi.fn(),
     deliverAlertWebhookActivity: vi.fn(),
     finalizeAlertDeliveryActivity: vi.fn(),
@@ -102,6 +104,39 @@ describe("alertDeliveryWorkflow", () => {
         ],
       }),
     );
+  });
+
+  it("delivers push with the context message and records a skipped push without devices", async () => {
+    const push = { body: "b", collapseId: "c", data: {}, threadId: "t", title: "t" };
+    mocks.activities.loadAlertDeliveryContextActivity.mockResolvedValue(
+      context({ channels: ["push"], push }),
+    );
+    mocks.activities.deliverAlertPushActivity.mockResolvedValueOnce({
+      delivered: false,
+      skipped: true,
+    });
+    const result = await alertDeliveryWorkflow({ alertId: "alert_1" });
+    expect(mocks.activities.deliverAlertPushActivity).toHaveBeenCalledWith({
+      alertId: "triggered_alert_db_1",
+      message: push,
+      projectInternalId: "project_db_1",
+    });
+    expect(result.outcomes).toEqual([{ channel: "push", delivered: false, skipped: true }]);
+  });
+
+  it("records a failed push without blocking other channels", async () => {
+    const push = { body: "b", collapseId: "c", data: {}, threadId: "t", title: "t" };
+    mocks.activities.loadAlertDeliveryContextActivity.mockResolvedValue(
+      context({ channels: ["email", "push"], push }),
+    );
+    mocks.activities.deliverAlertPushActivity.mockRejectedValueOnce(
+      ApplicationFailure.nonRetryable("Push delivery is not configured."),
+    );
+    const result = await alertDeliveryWorkflow({ alertId: "alert_1" });
+    expect(result.outcomes).toEqual([
+      { channel: "email", delivered: true },
+      { channel: "push", delivered: false, reason: "Push delivery is not configured." },
+    ]);
   });
 
   it("sends one alert email per enabled recipient", async () => {
@@ -342,6 +377,13 @@ describe("alertDigestDeliveryWorkflow", () => {
     mocks.activities.finalizeAlertDigestDeliveryActivity.mockResolvedValue({
       deliveryState: "digested",
     });
+  });
+
+  it("sends one summary push for a digest", async () => {
+    mocks.activities.deliverAlertDigestPushActivity.mockResolvedValueOnce(true);
+    const result = await alertDigestDeliveryWorkflow({ ...job, channels: ["push"] });
+    expect(mocks.activities.deliverAlertDigestPushActivity).toHaveBeenCalledOnce();
+    expect(result.outcomes).toEqual([{ channel: "push", delivered: true, skipped: false }]);
   });
 
   it("delivers one digest on every configured channel and finalizes it", async () => {

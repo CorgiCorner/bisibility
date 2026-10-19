@@ -19,8 +19,12 @@ const booleanParam = z
   .enum(["true", "false"])
   .transform((value) => value === "true")
   .default(false);
-const researchQuerySchema = z.object({
-  connectionId: z.string().trim().min(1).max(120).optional(),
+export const researchQuerySchema = z.object({
+  connectionId: z
+    .string()
+    .trim()
+    .regex(/^conn_[a-z][a-z0-9]{23}$/)
+    .optional(),
   estimateOnly: booleanParam,
   fresh: booleanParam,
   includeClickstream: booleanParam,
@@ -29,7 +33,7 @@ const researchQuerySchema = z.object({
   resultLimit: z.coerce.number().pipe(z.union([z.literal(100), z.literal(300), z.literal(500)])),
   seed: z.string().trim().min(1).max(80),
 });
-const metricsBodySchema = z.object({
+export const metricsBodySchema = z.object({
   connection_id: z.string().trim().min(1).max(120).optional(),
   estimate_only: z.boolean().default(false),
   fresh: z.boolean().default(false),
@@ -39,6 +43,9 @@ const metricsBodySchema = z.object({
 });
 
 function query(ctx: ApiContext) {
+  const connectionId = ctx.url.searchParams.get("connection_id")?.trim();
+  // A malformed ID keeps its invalid_public_id error; the schema pattern then always passes.
+  if (connectionId) requireApiPublicId(connectionId, "conn");
   const input = researchQuerySchema.parse({
     connectionId: ctx.url.searchParams.get("connection_id") ?? undefined,
     estimateOnly: ctx.url.searchParams.get("estimate_only") ?? undefined,

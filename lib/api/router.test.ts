@@ -113,6 +113,9 @@ const mocks = vi.hoisted(() => {
   };
 });
 
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
 vi.mock("@/lib/actions/_shared", () => ({
   makePublicId: mocks.makePublicId,
   parseActionInput: vi.fn((schema, input) => schema.parse(input)),

@@ -23,6 +23,7 @@ vi.mock("@/lib/actions/notification-prefs", () => ({
 const preferences: NotificationPreferencesView = {
   alertEmail: true,
   alertInApp: true,
+  alertPush: true,
   alertSlack: true,
   alertWebhook: true,
   checkEmail: false,

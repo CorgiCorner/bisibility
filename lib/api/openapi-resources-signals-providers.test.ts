@@ -77,11 +77,19 @@ describe("OpenAPI document", () => {
         expect.objectContaining({ name: "page_path" }),
         expect.objectContaining({
           name: "page_path_match",
-          schema: { default: "contains", enum: ["contains", "prefix"], type: "string" },
+          schema: expect.objectContaining({
+            default: "contains",
+            enum: ["contains", "prefix"],
+            type: "string",
+          }),
         }),
         expect.objectContaining({
           name: "query_match",
-          schema: { default: "equals", enum: ["equals", "contains"], type: "string" },
+          schema: expect.objectContaining({
+            default: "equals",
+            enum: ["equals", "contains"],
+            type: "string",
+          }),
         }),
         expect.objectContaining({ name: "clicks_min" }),
         expect.objectContaining({ name: "impressions_min" }),
@@ -172,8 +180,9 @@ describe("OpenAPI document", () => {
       (listSignals.parameters as Parameter[]).map((parameter) => parameter.name ?? parameter.$ref),
     ).toEqual([
       API_VERSION_HEADER,
-      "limit",
-      "cursor",
+      "project_id",
+      "#/components/parameters/Limit",
+      "#/components/parameters/Cursor",
       "source",
       "type",
       "from",
@@ -268,6 +277,7 @@ describe("OpenAPI document", () => {
         { $ref: "#/components/schemas/KeywordResearchEstimate" },
         { $ref: "#/components/schemas/KeywordResearchResult" },
       ],
+      "x-bisibility-union": { cases: ["estimate", "result"], style: "tagged", tag: "estimate" },
     });
     expect(schemas.KeywordResearchResult).toMatchObject({
       properties: {

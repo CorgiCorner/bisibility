@@ -9,6 +9,7 @@ const object = (properties: Record<string, object>, required = Object.keys(prope
   required,
 });
 const array = (items: object) => ({ type: "array", items });
+const nullableText = { type: ["string", "null"] };
 const reportSummary = object({ id: text, title: text, kind: text, created_at: date });
 const report = object({ ...reportSummary.properties, body: opaque, provenance: opaque });
 const context = object({
@@ -155,50 +156,6 @@ const aiCatalog = object({
       "The project currently uses own provider credentials. This is rechecked authoritatively before paid execution.",
   },
 });
-const issue = object({
-  code: text,
-  severity: { type: "string", enum: ["error", "warning", "info"] },
-  message: text,
-});
-const nullableText = { type: ["string", "null"] };
-const auditPage = object({
-  url: text,
-  final_url: text,
-  status: { type: ["integer", "null"] },
-  response_time_ms: number,
-  title: nullableText,
-  description: nullableText,
-  canonical: nullableText,
-  headings: array(object({ level: { type: "integer" }, text })),
-  h1_count: number,
-  indexable: flag,
-  robots: nullableText,
-  internal_link_count: number,
-  external_link_count: number,
-  internal_links: array(text),
-  image_count: number,
-  missing_alt_count: number,
-  issues: array(issue),
-});
-const auditResult = object({
-  version: { const: 1 },
-  target: text,
-  started_at: date,
-  completed_at: date,
-  state: { type: "string", enum: ["complete", "partial"] },
-  stop_reason: { type: "string", enum: ["finished", "page_limit", "time_limit", "request_limit"] },
-  limits: object({
-    max_pages: number,
-    max_requests: number,
-    max_duration_ms: number,
-    max_page_bytes: number,
-  }),
-  requests: number,
-  pages: array(auditPage),
-  summary: object({ pages: number, errors: number, warnings: number, indexable: number }),
-  limitations: array(text),
-});
-const audit = object({ id: text, created_at: date, cached: flag, result: auditResult });
 
 export function researchWorkspaceResponse(operationId: string) {
   if (operationId === "listAgentReports")
@@ -206,8 +163,6 @@ export function researchWorkspaceResponse(operationId: string) {
   let data: object;
   if (operationId === "getAiResearchCatalog") data = aiCatalog;
   else if (operationId.endsWith("ProjectContext")) data = context;
-  else if (operationId === "listSiteAudits") data = array(reportSummary);
-  else if (["runSiteAudit", "getSiteAudit"].includes(operationId)) data = audit;
   else if (["analyzeAiVisibility", "compareAiPrompts"].includes(operationId)) data = aiOutcome;
   else data = report;
   return object({ data });

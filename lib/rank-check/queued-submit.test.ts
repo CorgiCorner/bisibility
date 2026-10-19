@@ -149,6 +149,7 @@ const mocks = vi.hoisted(() => {
   return {
     assertQueuedRankCheckBatchAllocation: vi.fn(),
     assertOperationAccess: vi.fn(),
+    assertOwnKeyStored: vi.fn(),
     beginJournal: vi.fn(),
     nativeCosts: vi.fn(),
     consumeProviderLimit: vi.fn(),
@@ -175,6 +176,9 @@ vi.mock("./allocation-enforcement", () => ({
 }));
 vi.mock("@/lib/providers/credentials", () => ({
   resolveProviderCredentials: mocks.resolveProviderCredentials,
+}));
+vi.mock("@/lib/providers/own-key-guard", () => ({
+  assertOwnKeyStored: mocks.assertOwnKeyStored,
 }));
 vi.mock("@/lib/providers/rate-limit", () => ({
   consumeProviderLimit: mocks.consumeProviderLimit,
@@ -222,6 +226,7 @@ describe("queued paid-call fence", () => {
       password: "password",
     });
     mocks.assertQueuedRankCheckBatchAllocation.mockResolvedValue(undefined);
+    mocks.assertOwnKeyStored.mockResolvedValue(undefined);
     mocks.consumeProviderLimit.mockResolvedValue({
       accountKey: "dataforseo:account",
       success: true,
@@ -565,6 +570,27 @@ describe("queued paid-call fence", () => {
     );
     expect(mocks.state.batch).toBe("prepared");
     expect(mocks.state.task).toBe("prepared");
+    expect(mocks.resolveProviderCredentials).not.toHaveBeenCalled();
+    expect(mocks.consumeProviderLimit).not.toHaveBeenCalled();
+    expect(mocks.submit).not.toHaveBeenCalled();
+  });
+
+  it("defers an own-key batch whose key would come from the environment for a tester account", async () => {
+    const { OwnProviderKeyRequiredError } = await import(
+      "@/lib/providers/execution-extension-errors"
+    );
+    const refusal = new OwnProviderKeyRequiredError({
+      capability: "rank_check",
+      provider: "dataforseo",
+    });
+    mocks.assertOwnKeyStored.mockRejectedValueOnce(refusal);
+
+    await expect(submitQueuedRankCheckBatch("batch_1")).resolves.toEqual({ state: "deferred" });
+
+    expect(mocks.assertOwnKeyStored).toHaveBeenCalledWith(
+      expect.objectContaining({ capability: "rank_check", projectId: "project_1" }),
+    );
+    expect(mocks.deferQueuedRankCheckBatch).toHaveBeenCalledWith("batch_1", refusal.message);
     expect(mocks.resolveProviderCredentials).not.toHaveBeenCalled();
     expect(mocks.consumeProviderLimit).not.toHaveBeenCalled();
     expect(mocks.submit).not.toHaveBeenCalled();

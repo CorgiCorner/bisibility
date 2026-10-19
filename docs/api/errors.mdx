@@ -28,6 +28,7 @@ Errors use `application/problem+json`.
 | <span id="unauthorized"></span>`unauthorized` | 401 | Missing or invalid bearer API key. |
 | `unauthorized` | 419 | Instance import migration token is invalid, expired, or already used. |
 | <span id="forbidden"></span>`forbidden` | 403 | API key scope or project scope does not allow the operation. |
+| <span id="byok_required"></span>`byok_required` | 403 | The account runs paid provider work only on its own provider keys, and none serves this request. `details.provider` and `details.capability` name the key to connect. Nothing was sent to a provider or charged. |
 | <span id="not_found"></span>`not_found` | 404 | Route or resource was not found. |
 | <span id="method_not_allowed"></span>`method_not_allowed` | 405 | HTTP method is not handled by the router. |
 | <span id="credits_exhausted"></span>`credits_exhausted` | 402 | Deployment credits are exhausted. Ask the project owner to add credits in Billing or connect their own provider key. This is separate from a monthly budget cap. |
@@ -97,6 +98,16 @@ the likely cause and the next action.
 | Problem type | `credits_exhausted` |
 
 For a hosted wallet admission with a trusted affected project, `details.top_up_url` is the relative `/app/{projectPublicId}/settings/billing` route. `details.balance_cents` is the current spendable wallet balance, after holds, only when a personal token belongs to the project's current owner. It is `null` for project API keys, other members, a missing principal, or an owner without a wallet. The value is read when the error response is built and can differ from the admission-time balance. If the affected project cannot be verified, `balance_cents` is `null` and `top_up_url` is omitted. Self-hosted own-key requests have no hosted billing link or wallet read. Provider account billing errors for connected keys retain their existing provider error behavior.
+
+### 403 byok_required
+
+| Field | Value |
+| - | - |
+| What happened | The account is set to run paid provider work only on its own provider keys, and no usable key of its own serves this request. |
+| Retry? | After a key for `details.provider` is connected in the project's **Integrations** settings. Adding credits does not help. |
+| Fix | Connect the named provider key on the web, then retry. `GET /me` reports `provider_keys_required` and, per project, `missing_provider_keys`. Estimates remain free. |
+| HTTP | `403` |
+| Problem type | `byok_required` |
 
 ### 429 rate_limited or budget_exhausted
 

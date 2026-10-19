@@ -268,7 +268,8 @@ export async function finalizeAlertDigestDeliveryActivity(input: {
     }
     return true;
   });
-  if (delivered && finalized) {
+  // In-app notifications do not depend on an external digest channel succeeding.
+  if (finalized) {
     await Promise.all(
       input.job.alerts.flatMap((payload, index) => {
         const triggeredAlertId = input.job.alertIds[index];

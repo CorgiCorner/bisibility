@@ -1,3 +1,5 @@
+import { openEnum, sdkName } from "./openapi-sdk-schema";
+
 export const analyticsSchemas = {
   SearchPerformanceQueryStat: {
     properties: {
@@ -17,6 +19,7 @@ export const analyticsSchemas = {
     properties: {
       connection: { $ref: "#/components/schemas/AnalyticsConnection" },
       result: {
+        ...sdkName("SearchPerformanceQueryResult"),
         properties: {
           row_cap: {
             description: "Maximum number of rows this request can return.",
@@ -29,6 +32,7 @@ export const analyticsSchemas = {
           sort: {
             description: "Rows are ordered by clicks, highest first.",
             enum: ["clicks_desc"],
+            ...openEnum("SearchPerformanceSort"),
             type: "string",
           },
           truncated: {
@@ -45,6 +49,7 @@ export const analyticsSchemas = {
         type: "array",
       },
       scope: {
+        ...sdkName("SearchPerformanceQueryScope"),
         properties: {
           country: {
             description:
@@ -59,7 +64,11 @@ export const analyticsSchemas = {
           dimensions: {
             description:
               "Dimensions the source grouped rows by: query, or query and page when page_path is set.",
-            items: { enum: ["query", "page"], type: "string" },
+            items: {
+              enum: ["query", "page"],
+              type: "string",
+              ...openEnum("SearchPerformanceDimension"),
+            },
             type: "array",
           },
           end_date: { format: "date", type: "string" },
@@ -71,6 +80,7 @@ export const analyticsSchemas = {
             description:
               "Match semantics applied to the query filter: exact match unless query_match=contains.",
             enum: ["equals", "contains"],
+            ...openEnum("SearchPerformanceQueryMatch"),
             type: "string",
           },
           start_date: { format: "date", type: "string" },

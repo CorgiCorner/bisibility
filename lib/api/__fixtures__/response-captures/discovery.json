@@ -1,0 +1,35 @@
+{
+  "captures": [
+    {
+      "body": {
+        "status": "ok"
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getHealth",
+      "path": "/health",
+      "status": 200
+    },
+    {
+      "body": {
+        "status": "ok"
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getLiveness",
+      "path": "/liveness",
+      "status": 200
+    },
+    {
+      "body": {
+        "status": "ok"
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getReadiness",
+      "path": "/readiness",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/discovery.test.ts"
+}

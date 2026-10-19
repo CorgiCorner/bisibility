@@ -7,6 +7,7 @@ import { getQueryActor } from "./_auth";
 export type NotificationPreferencesView = {
   alertEmail: boolean;
   alertInApp: boolean;
+  alertPush: boolean;
   alertSlack: boolean;
   alertWebhook: boolean;
   checkEmail: boolean;
@@ -26,6 +27,7 @@ export type NotificationPreferencesView = {
 const defaultPreferences = {
   alertEmail: true,
   alertInApp: true,
+  alertPush: true,
   checkEmail: false,
   checkInApp: false,
   importEmail: true,
@@ -38,6 +40,7 @@ const defaultPreferences = {
 const preferenceSelect = {
   alertEmail: true,
   alertInApp: true,
+  alertPush: true,
   checkEmail: true,
   checkInApp: true,
   importEmail: true,

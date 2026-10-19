@@ -1,0 +1,193 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listTeamInvites",
+      "path": "/projects/{project_id}/team/invites",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listTeamMembers",
+      "path": "/projects/{project_id}/team/members",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_aaaaaaaaaaaaaaaaaaaaaaaa/team/invites/inv_aaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "DELETE",
+      "operationId": "revokeProjectTeamInvite",
+      "path": "/projects/{project_id}/team/invites/{invite_id}",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_aaaaaaaaaaaaaaaaaaaaaaaa/team/invites/inv_aaaaaaaaaaaaaaaaaaaaaaaa/resend",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "resendTeamInvite",
+      "path": "/projects/{project_id}/team/invites/{invite_id}/resend",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_aaaaaaaaaaaaaaaaaaaaaaaa/team/members/mbr_aaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "DELETE",
+      "operationId": "removeTeamMember",
+      "path": "/projects/{project_id}/team/members/{member_id}",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_aaaaaaaaaaaaaaaaaaaaaaaa/team/members/mbr_aaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateTeamMemberRole",
+      "path": "/projects/{project_id}/team/members/{member_id}",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Project not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_bbbbbbbbbbbbbbbbbbbbbbbb/team/invites/inv_aaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "DELETE",
+      "operationId": "revokeProjectTeamInvite",
+      "path": "/projects/{project_id}/team/invites/{invite_id}",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Project not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_bbbbbbbbbbbbbbbbbbbbbbbb/team/invites/inv_aaaaaaaaaaaaaaaaaaaaaaaa/resend",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "resendTeamInvite",
+      "path": "/projects/{project_id}/team/invites/{invite_id}/resend",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Project not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_bbbbbbbbbbbbbbbbbbbbbbbb/team/members/mbr_aaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "DELETE",
+      "operationId": "removeTeamMember",
+      "path": "/projects/{project_id}/team/members/{member_id}",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Project not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_bbbbbbbbbbbbbbbbbbbbbbbb/team/members/mbr_aaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateTeamMemberRole",
+      "path": "/projects/{project_id}/team/members/{member_id}",
+      "status": 404
+    },
+    {
+      "body": {
+        "id": "inv_a00000000000000000000000"
+      },
+      "contentType": "application/json",
+      "method": "DELETE",
+      "operationId": "revokeProjectTeamInvite",
+      "path": "/projects/{project_id}/team/invites/{invite_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "id": "mbr_a00000000000000000000000",
+        "role": "viewer"
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateTeamMemberRole",
+      "path": "/projects/{project_id}/team/members/{member_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "id": "mbr_a00000000000000000000000"
+      },
+      "contentType": "application/json",
+      "method": "DELETE",
+      "operationId": "removeTeamMember",
+      "path": "/projects/{project_id}/team/members/{member_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "status": "success",
+        "id": "inv_a00000000000000000000000"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "resendTeamInvite",
+      "path": "/projects/{project_id}/team/invites/{invite_id}/resend",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/router-team-rbac.test.ts"
+}

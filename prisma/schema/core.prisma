@@ -111,6 +111,7 @@ enum AlertChannel {
   email
   slack
   webhook
+  push
 }
 
 enum TriggeredAlertStatus {
@@ -268,6 +269,7 @@ model User {
   slackConnections             SlackConnection[]
   createdMigrationTokens       MigrationToken[]
   personalAccessTokens         PersonalAccessToken[]
+  devicePushTokens             DevicePushToken[]
   writeModeChangedProjects     Project[]                @relation("ProjectWriteModeChangedBy")
   signalsCreated               Signal[]                 @relation("SignalCreator")
   createdIngestHooks           IngestHook[]
@@ -1599,6 +1601,27 @@ model ApiKey {
   @@map("api_keys")
 }
 
+// Mobile push token for one device of one user. A token belongs to exactly
+// one user: registering it again from another account moves it. Tokens are
+// deleted with the user and when the push service reports them unregistered.
+model DevicePushToken {
+  id          String    @id @default(cuid())
+  publicId    String    @unique
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token       String    @unique
+  /// "sandbox" | "production" push environment of the app build.
+  environment String
+  bundleId    String
+  lastSeenAt  DateTime  @default(now())
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId, revokedAt])
+  @@map("device_push_tokens")
+}
+
 // User-scoped bearer credential (bsb_pat_live_*) that acts as the user across all
 // their project memberships, unlike project-scoped api_keys. Effective access
 // per project is the intersection of the token scope tier and the membership
@@ -2003,6 +2026,8 @@ model NotificationPreference {
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   alertEmail  Boolean  @default(true)
   alertInApp  Boolean  @default(true)
+  /// Mobile push for fired alerts, on the member's registered devices.
+  alertPush   Boolean  @default(true)
   checkEmail  Boolean  @default(false)
   checkInApp  Boolean  @default(false)
   inviteEmail Boolean  @default(true)

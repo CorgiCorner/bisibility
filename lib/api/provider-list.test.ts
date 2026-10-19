@@ -7,6 +7,9 @@ const mocks = vi.hoisted(() => ({
   providerConnection: { findMany: vi.fn() },
 }));
 
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
 vi.mock("./auth", () => ({
   ApiAuthError: class ApiAuthError extends Error {},
   authenticateBearer: mocks.authenticateBearer,

@@ -43,7 +43,7 @@ const savedKeywordItemSchema = z.union([
   }),
 ]);
 
-const createSavedKeywordsSchema = z.object({
+export const createSavedKeywordsSchema = z.object({
   keywords: z.array(savedKeywordItemSchema).min(1).max(500),
 });
 

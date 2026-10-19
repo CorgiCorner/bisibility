@@ -11,7 +11,8 @@ const entries = [
   ["apr", "ai_prompt_revisions"], ["ais", "ai_tracking_schedules"], ["air", "ai_tracking_runs"],
   ["asm", "ai_tracking_samples"], ["asg", "ai_tracking_suggestion_generations"],
   ["al", "triggered_alerts"], ["alr", "alert_rules"], ["audit", "audit_logs"],
-  ["cmp", "competitors"], ["conn", "provider_connections"], ["dwh", "ingest_hooks"],
+  ["cmp", "competitors"], ["conn", "provider_connections"], ["dpt", "device_push_tokens"],
+  ["dwh", "ingest_hooks"],
   ["ferry", "migration_tokens"], ["imp", "cloud_import_jobs"], ["inv", "invites"],
   ["key", "api_keys"], ["mbr", "memberships"], ["ntf", "notifications"],
   ["pat", "personal_access_tokens"], ["pmkt", "project_markets"], ["rcr", "rank_check_runs"],
@@ -29,12 +30,12 @@ function catalog() {
     async query(sql: string, args?: string[][]) {
       if (sql.includes("information_schema.columns")) {
         expect(sql).toContain("table_schema = current_schema()");
-        expect(args?.[0]).toHaveLength(39);
+        expect(args?.[0]).toHaveLength(40);
         return { rows: columns };
       }
       if (sql.includes("pg_constraint")) {
         expect(sql).toContain("namespace_meta.nspname = current_schema()");
-        expect(args?.[0]).toHaveLength(39);
+        expect(args?.[0]).toHaveLength(40);
         return { rows: constraints };
       }
       return { rows: [{ schema: "owned_fixture" }] };
@@ -44,8 +45,8 @@ function catalog() {
 }
 
 describe("baseline public-ID catalog authority", () => {
-  it("accepts all 39 current canonical table guards after the identifier migration", async () => {
-    expect(entries).toHaveLength(39);
+  it("accepts all 40 current canonical table guards after the identifier migration", async () => {
+    expect(entries).toHaveLength(40);
     await expect(assertBaselinePublicIdCatalog(catalog().db, "owned_fixture")).resolves.toBeUndefined();
   });
 

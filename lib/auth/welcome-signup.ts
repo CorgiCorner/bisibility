@@ -29,8 +29,10 @@ type UserCreationContext = {
 
 export function signupMethodFromContext(
   context: UserCreationContext,
-): "github" | "google" | "otp" | null {
+): "apple" | "github" | "google" | "otp" | null {
   if (context?.path === "/sign-in/email-otp") return "otp";
+  // Native Sign in with Apple from the iOS app (apple-native-sign-in.ts).
+  if (context?.path === "/ios/apple") return "apple";
   const provider = context?.params?.id;
   if (provider === "github" || provider === "google") return provider;
   const callbackProvider = context?.path?.match(/^\/callback\/(github|google)$/)?.[1];

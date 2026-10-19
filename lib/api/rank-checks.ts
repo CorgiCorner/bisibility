@@ -6,36 +6,20 @@ import { prisma } from "@/lib/db/prisma";
 import type { ApiContext } from "./context";
 import { notFound } from "./context";
 import { ApiInputError } from "./errors";
-import { decodeCursor, encodeCursor, parseLimit, splitPage } from "./pagination";
+import { decodeCursor, encodeCursor, splitPage } from "./pagination";
 import { requireApiPublicId } from "./public-id";
 import { rankCheckResources } from "./rank-check-accounting";
+import { type RankCheckListQuery, rankCheckListQuery } from "./rank-check-list-query";
 import { requestRankCheck } from "./rank-check-request";
-import {
-  RANK_CHECK_COMPLETED_STATUS,
-  RANK_CHECK_FAILED_STATUS,
-  RANK_CHECK_RUNNING_STATUS,
-  rankCheckSelect,
-} from "./resources";
+import { rankCheckSelect } from "./resources";
 import { listResponse, resourceResponse } from "./responses";
 import { runRankCheckSchema } from "./schemas";
 
-function statusFilter(url: URL) {
-  const status = url.searchParams.get("status");
-  if (status === RANK_CHECK_FAILED_STATUS) {
-    return { status: RANK_CHECK_FAILED_STATUS };
-  }
-  if (status === RANK_CHECK_COMPLETED_STATUS) {
-    return { status: RANK_CHECK_COMPLETED_STATUS };
-  }
-  if (status === RANK_CHECK_RUNNING_STATUS) {
-    return { status: RANK_CHECK_RUNNING_STATUS };
-  }
-  return whereExecutedChecks();
+function statusFilter(status: RankCheckListQuery["status"]) {
+  return status ? { status } : whereExecutedChecks();
 }
 
-function dateFilter(url: URL) {
-  const since = url.searchParams.get("since");
-  const until = url.searchParams.get("until");
+function dateFilter({ since, until }: RankCheckListQuery) {
   const sinceDate = since ? new Date(since) : null;
   const untilDate = until ? new Date(until) : null;
   if (
@@ -70,9 +54,10 @@ export async function listRankChecks(ctx: ApiContext, keywordId: string) {
     return notFound(ctx, "Keyword not found.");
   }
 
-  const limit = parseLimit(ctx.url, 50, 200);
-  const cursor = decodeCursor(ctx.url.searchParams.get("cursor"), "check");
-  const checkedAt = dateFilter(ctx.url);
+  const query = rankCheckListQuery(ctx.url);
+  const limit = query.limit ?? 50;
+  const cursor = decodeCursor(query.cursor ?? null, "check");
+  const checkedAt = dateFilter(query);
   const rankChecks = await prisma.rankCheck.findMany({
     orderBy: [{ checkedAt: "desc" }, { publicId: "desc" }],
     select: rankCheckSelect,
@@ -92,7 +77,7 @@ export async function listRankChecks(ctx: ApiContext, keywordId: string) {
           : []),
       ],
       keywordId: keyword.id,
-      ...statusFilter(ctx.url),
+      ...statusFilter(query.status),
     },
   });
   const { nextCursor, page } = splitPage(rankChecks, limit, (check) =>

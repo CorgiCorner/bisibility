@@ -6,6 +6,7 @@ import type {
   AlertDigestDeliveryOutcome,
   claimAlertDeliveryActivity as claimActivity,
   deliverAlertDigestEmailActivity as digestEmailActivity,
+  deliverAlertDigestPushActivity as digestPushActivity,
   deliverAlertDigestSlackActivity as digestSlackActivity,
   deliverAlertDigestWebhookActivity as digestWebhookActivity,
   deliverAlertEmailActivity as emailActivity,
@@ -13,6 +14,7 @@ import type {
   finalizeAlertDigestDeliveryActivity as finalizeDigestActivity,
   loadAlertDeliveryContextActivity as loadActivity,
   prepareAlertDigestDeliveryActivity as prepareDigestActivity,
+  deliverAlertPushActivity as pushActivity,
   reserveAlertDeliveryBudgetActivity as reserveBudgetActivity,
   deliverAlertSlackActivity as slackActivity,
   sweepAlertDeliveriesActivity as sweepActivity,
@@ -52,8 +54,13 @@ const { deliverAlertSlackActivity } = proxyActivities<{
   retry: { ...channelRetry, maximumAttempts: 3 },
   startToCloseTimeout: "1 minute",
 });
+// Push retries less: a late notification is worth less than an on-time one.
+const { deliverAlertPushActivity } = proxyActivities<{
+  deliverAlertPushActivity: typeof pushActivity;
+}>({ retry: { ...channelRetry, maximumAttempts: 3 }, startToCloseTimeout: "1 minute" });
 const digestChannels = proxyActivities<{
   deliverAlertDigestEmailActivity: typeof digestEmailActivity;
+  deliverAlertDigestPushActivity: typeof digestPushActivity;
   deliverAlertDigestSlackActivity: typeof digestSlackActivity;
   deliverAlertDigestWebhookActivity: typeof digestWebhookActivity;
 }>({ retry: channelRetry, startToCloseTimeout: "1 minute" });
@@ -149,6 +156,20 @@ async function deliverSlack(context: AlertDeliveryContext, outcomes: AlertDelive
   }
 }
 
+async function deliverPush(context: AlertDeliveryContext, outcomes: AlertDeliveryOutcome[]) {
+  if (!context.channels.includes("push") || !context.push) return;
+  try {
+    const result = await deliverAlertPushActivity({
+      alertId: context.triggeredAlertId,
+      message: context.push,
+      projectInternalId: context.projectInternalId,
+    });
+    outcomes.push({ channel: "push", ...result });
+  } catch (error) {
+    outcomes.push({ channel: "push", delivered: false, reason: reason(error) });
+  }
+}
+
 export async function alertDeliveryWorkflow(input: { alertId: string }) {
   const ownedInput = { ...input, deliveryClaimToken: uuid4() };
   const claim = await lifecycle.claimAlertDeliveryActivity(ownedInput);
@@ -162,6 +183,7 @@ export async function alertDeliveryWorkflow(input: { alertId: string }) {
   await deliverEmail(context, outcomes);
   await deliverWebhooks(context, outcomes);
   await deliverSlack(context, outcomes);
+  await deliverPush(context, outcomes);
   const finalized = await lifecycle.finalizeAlertDeliveryActivity({
     alertId: input.alertId,
     deliveryClaimToken: ownedInput.deliveryClaimToken,
@@ -226,6 +248,14 @@ export async function alertDigestDeliveryWorkflow(input: AlertDigestJob) {
       outcomes.push({ channel: "slack", delivered, skipped: !delivered });
     } catch (error) {
       outcomes.push({ channel: "slack", delivered: false, reason: reason(error) });
+    }
+  }
+  if (job.channels.includes("push")) {
+    try {
+      const delivered = await digestChannels.deliverAlertDigestPushActivity(job);
+      outcomes.push({ channel: "push", delivered, skipped: !delivered });
+    } catch (error) {
+      outcomes.push({ channel: "push", delivered: false, reason: reason(error) });
     }
   }
   const finalized = await finalizeAlertDigestDeliveryActivity({ job, outcomes });

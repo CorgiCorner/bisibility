@@ -1,0 +1,170 @@
+{
+  "captures": [
+    {
+      "body": {
+        "created_at": "2026-07-04T19:31:00.000Z",
+        "happened_at": "2026-07-04T19:30:00.000Z",
+        "id": "sig_a00000000000000000000000",
+        "keyword_id": "kw_a00000000000000000000000",
+        "payload": {
+          "version": "1.2.3"
+        },
+        "project_id": "prj_a00000000000000000000000",
+        "public_id": "sig_a00000000000000000000000",
+        "severity": "warning",
+        "source": "deploy",
+        "type": "deploy.completed",
+        "url": "https://example.com/releases/1"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createSignal",
+      "path": "/signals",
+      "status": 201
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "created_at": "2026-07-04T19:31:00.000Z",
+            "happened_at": "2026-07-04T19:30:00.000Z",
+            "id": "sig_a00000000000000000000000",
+            "keyword_id": "kw_a00000000000000000000000",
+            "payload": {
+              "version": "1.2.3"
+            },
+            "project_id": "prj_a00000000000000000000000",
+            "public_id": "sig_a00000000000000000000000",
+            "severity": "warning",
+            "source": "deploy",
+            "type": "deploy.completed",
+            "url": "https://example.com/releases/1"
+          }
+        ],
+        "meta": {
+          "next_cursor": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSignals",
+      "path": "/projects/{project_id}/signals",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "Expected a v3 public resource ID.",
+        "docs_url": "https://bisibility.com/docs/api/errors#invalid_public_id",
+        "instance": "urn:bisibility:api:v1:/api/v1/signals",
+        "status": 400,
+        "title": "Invalid public ID",
+        "type": "https://bisibility.com/problems/invalid_public_id"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createSignal",
+      "path": "/signals",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Keyword not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/signals",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createSignal",
+      "path": "/signals",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/signals",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "payload": ["payload must serialize to 8KB or less."]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createSignal",
+      "path": "/signals",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/signals",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "source": ["Invalid option: expected one of \"deploy\"|\"cms\"|\"api\""]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createSignal",
+      "path": "/signals",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/signals",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "type": ["Invalid string: must match pattern /^[a-z_]+\\.[a-z_]+$/"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createSignal",
+      "path": "/signals",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/signals",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "url": ["url must use http or https."]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createSignal",
+      "path": "/signals",
+      "status": 400
+    }
+  ],
+  "source": "lib/api/signals.test.ts"
+}

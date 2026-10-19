@@ -4,6 +4,7 @@ import { trackedProjectDomain } from "@/lib/schemas/project";
 import { recordSuppressed, reserveDeliveryBudgetOnce } from "../alerts/daily-cap";
 import type { AlertDeliveryChannel, AlertExternalDeliveryPayload } from "../alerts/delivery";
 import { sendAlertOverflowNotice } from "../alerts/overflow-notice";
+import { alertPushMessage } from "../alerts/push-content";
 import {
   type AlertEmailRecipient,
   filterAlertEmailRecipients,
@@ -12,10 +13,13 @@ import {
 import { deliverableAlertWhere } from "../alerts/transitions";
 import { prisma } from "../db/prisma";
 import { isPublicIdOfType } from "../db/public-id";
+import type { PushMessage } from "../notifications/apns";
 import { startAlertDeliveryWorkflow } from "./alert-delivery-client";
 
 export type AlertDeliveryContext = {
   channels: AlertDeliveryChannel[];
+  /** Present when the rule delivers to mobile push. */
+  push?: PushMessage | null;
   emailRecipientsConfigured?: boolean;
   payload: AlertExternalDeliveryPayload;
   projectInternalId: string;
@@ -122,6 +126,7 @@ export async function loadAlertDeliveryContextActivity(
         select: {
           channels: true,
           conditionType: true,
+          topN: true,
           createdBy: {
             select: { email: true, id: true },
           },
@@ -160,23 +165,25 @@ export async function loadAlertDeliveryContextActivity(
   const presentation = payloadStrings(alert.payload);
   const configuredRecipients = resolveAlertRuleRecipients(alert.rule);
   const recipients = await filterAlertEmailRecipients(project.id, configuredRecipients);
+  const payload: AlertExternalDeliveryPayload = {
+    ...presentation,
+    afterPosition: alert.afterPosition,
+    alertId: requireDeliveryPublicId(alert.publicId, "al"),
+    beforePosition: alert.beforePosition,
+    conditionType: alert.rule.conditionType,
+    firedAt: alert.firedAt.toISOString(),
+    keyword: alert.keyword.text,
+    keywordId: requireDeliveryPublicId(alert.keyword.publicId, "kw"),
+    projectDomain: trackedProjectDomain(project.domain) ?? "",
+    projectId: requireDeliveryPublicId(project.publicId, "prj"),
+    ruleId: requireDeliveryPublicId(alert.rule.publicId, "alr"),
+    ruleName: alert.rule.name,
+  };
   return {
     channels: alert.rule.channels,
     emailRecipientsConfigured: configuredRecipients.length > 0,
-    payload: {
-      ...presentation,
-      afterPosition: alert.afterPosition,
-      alertId: requireDeliveryPublicId(alert.publicId, "al"),
-      beforePosition: alert.beforePosition,
-      conditionType: alert.rule.conditionType,
-      firedAt: alert.firedAt.toISOString(),
-      keyword: alert.keyword.text,
-      keywordId: requireDeliveryPublicId(alert.keyword.publicId, "kw"),
-      projectDomain: trackedProjectDomain(project.domain) ?? "",
-      projectId: requireDeliveryPublicId(project.publicId, "prj"),
-      ruleId: requireDeliveryPublicId(alert.rule.publicId, "alr"),
-      ruleName: alert.rule.name,
-    },
+    payload,
+    push: alert.rule.channels.includes("push") ? alertPushMessage(alert.rule, payload) : null,
     projectInternalId: project.id,
     recipients,
     slackConnectionId: project.slackConnection?.enabled ? project.slackConnection.id : null,

@@ -1,13 +1,27 @@
-import { domainOverviewReportSchemas } from "./openapi-domain-overview-report";
+import {
+  domainOverviewReportSchemas,
+  domainOverviewScope,
+  echoedLimit,
+} from "./openapi-domain-overview-report";
+import {
+  closedEnum,
+  constraintUnion,
+  openEnum,
+  sdkName,
+  taggedUnion,
+  usdCents,
+} from "./openapi-sdk-schema";
 
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
 const nullableNumber = { type: ["number", "null"] };
 const nonnegativeInteger = { minimum: 0, type: "integer" };
 const nonnegativeNumber = { minimum: 0, type: "number" };
+const cents = { ...nonnegativeNumber, ...usdCents };
+const nullableCents = { ...nullableNumber, ...usdCents };
 
 const metricsProperties = {
   count: { type: ["integer", "null"] },
-  estimated_traffic_cost_cents: nullableNumber,
+  estimated_traffic_cost_cents: nullableCents,
   etv: nullableNumber,
   is_down: nonnegativeInteger,
   is_lost: nonnegativeInteger,
@@ -33,22 +47,27 @@ const commonRequestProperties = {
   fresh: { default: false, type: "boolean" },
   language_code: { maxLength: 12, minLength: 2, type: "string" },
   location_code: { minimum: 1, type: "integer" },
-  scope_override: { enum: ["root", "subdomain"], type: "string" },
+  scope_override: {
+    enum: ["root", "subdomain"],
+    type: "string",
+    ...closedEnum("DomainOverviewScopeOverride"),
+  },
   target: { maxLength: 253, minLength: 1, type: "string" },
 };
 
 const commonRequestRequired = ["target", "location_code", "language_code"];
 
-function topLevelModule(data: object) {
+function topLevelModule(data: object, name: string) {
   return {
     properties: {
       cached: { type: "boolean" },
-      cost_cents: nonnegativeNumber,
+      cost_cents: cents,
       data,
       fetched_at: { format: "date-time", type: ["string", "null"] },
     },
     required: ["cached", "cost_cents", "data", "fetched_at"],
     type: "object",
+    ...sdkName(name),
   };
 }
 
@@ -62,12 +81,13 @@ function dataEnvelope(data: object) {
 
 const rankedKeywordRow = {
   properties: {
-    cpc_cents: nullableNumber,
+    cpc_cents: nullableCents,
     difficulty: nullableNumber,
     estimated_traffic: nullableNumber,
     intent: {
       enum: ["informational", "navigational", "commercial", "transactional", null],
       type: ["string", "null"],
+      ...openEnum("DomainOverviewKeywordIntent"),
     },
     keyword: { type: "string" },
     position: nullableNumber,
@@ -91,6 +111,7 @@ const rankedKeywordRow = {
     "rank_absolute",
   ],
   type: "object",
+  ...sdkName("DomainOverviewKeywordRow"),
 };
 
 const relevantPageRow = {
@@ -111,6 +132,7 @@ const relevantPageRow = {
     "top_keyword_position",
   ],
   type: "object",
+  ...sdkName("DomainOverviewPageRow"),
 };
 
 export const domainOverviewSchemas = {
@@ -118,8 +140,9 @@ export const domainOverviewSchemas = {
     additionalProperties: false,
     anyOf: [
       { properties: { estimate_only: { const: true } }, required: ["estimate_only"] },
-      { required: ["max_cost_cents"] },
+      { properties: { estimate_only: { const: false } }, required: ["max_cost_cents"] },
     ],
+    ...constraintUnion,
     properties: {
       ...commonRequestProperties,
       estimate_only: { default: false, type: "boolean" },
@@ -128,6 +151,7 @@ export const domainOverviewSchemas = {
         description: "Required for paid analysis; estimate_only may omit it.",
         minimum: 0,
         type: "integer",
+        ...usdCents,
       },
       page_limit: { default: 100, maximum: 1_000, minimum: 1, type: "integer" },
     },
@@ -136,21 +160,25 @@ export const domainOverviewSchemas = {
   },
   DomainOverviewAnalyzeResponse: dataEnvelope({
     oneOf: [ref("DomainOverviewEstimate"), ref("DomainOverviewReport")],
+    ...taggedUnion("estimate", ["estimate", "report"]),
+    ...sdkName("DomainOverviewAnalyzeResult"),
   }),
   DomainOverviewEstimate: {
     properties: {
       cached: { type: "boolean" },
       estimate: { const: true, type: "boolean" },
-      estimated_cost_cents: nonnegativeNumber,
-      fresh_estimated_cost_cents: nonnegativeNumber,
-      history_estimated_cost_cents: nonnegativeNumber,
+      estimated_cost_cents: cents,
+      fresh_estimated_cost_cents: cents,
+      history_estimated_cost_cents: cents,
       history_mode: { const: "lazy", type: "string" },
-      keyword_page_estimated_cost_cents: nonnegativeNumber,
+      keyword_limit: echoedLimit,
+      keyword_page_estimated_cost_cents: cents,
       language_code: { type: "string" },
       location_code: { type: "integer" },
-      page_page_estimated_cost_cents: nonnegativeNumber,
+      page_limit: echoedLimit,
+      page_page_estimated_cost_cents: cents,
       provider: { type: "string" },
-      scope: { enum: ["root", "subdomain"], type: "string" },
+      scope: domainOverviewScope,
       target: { type: "string" },
     },
     required: [
@@ -172,14 +200,18 @@ export const domainOverviewSchemas = {
   },
   DomainOverviewHistoryRequest: {
     additionalProperties: false,
-    properties: { ...commonRequestProperties, max_cost_cents: nonnegativeInteger },
+    properties: {
+      ...commonRequestProperties,
+      max_cost_cents: { ...nonnegativeInteger, ...usdCents },
+    },
     required: [...commonRequestRequired, "max_cost_cents"],
     type: "object",
   },
   DomainOverviewHistoryResponse: dataEnvelope({
+    ...sdkName("DomainOverviewHistoryModule"),
     properties: {
       cached: { type: "boolean" },
-      cost_cents: nonnegativeNumber,
+      cost_cents: cents,
       data: { items: ref("DomainOverviewHistoricalRow"), type: "array" },
       fetched_at: { format: "date-time", type: ["string", "null"] },
     },
@@ -197,14 +229,16 @@ export const domainOverviewSchemas = {
   },
   DomainOverviewKeywordsData: {
     properties: {
-      cost_cents: nonnegativeNumber,
+      cost_cents: cents,
       rows: { items: rankedKeywordRow, type: "array" },
       total_count: { type: ["integer", "null"] },
     },
     required: ["rows", "total_count", "cost_cents"],
     type: "object",
   },
-  DomainOverviewKeywordsResponse: dataEnvelope(topLevelModule(ref("DomainOverviewKeywordsData"))),
+  DomainOverviewKeywordsResponse: dataEnvelope(
+    topLevelModule(ref("DomainOverviewKeywordsData"), "DomainOverviewKeywordsPageModule"),
+  ),
   DomainOverviewMetrics: {
     properties: metricsProperties,
     required: metricsRequired,
@@ -215,7 +249,7 @@ export const domainOverviewSchemas = {
     properties: {
       ...commonRequestProperties,
       limit: { maximum: 100, minimum: 1, type: "integer" },
-      max_cost_cents: nonnegativeInteger,
+      max_cost_cents: { ...nonnegativeInteger, ...usdCents },
       offset: nonnegativeInteger,
     },
     required: [...commonRequestRequired, "limit", "offset", "max_cost_cents"],
@@ -226,7 +260,7 @@ export const domainOverviewSchemas = {
     properties: {
       ...commonRequestProperties,
       limit: { maximum: 1_000, minimum: 1, type: "integer" },
-      max_cost_cents: nonnegativeInteger,
+      max_cost_cents: { ...nonnegativeInteger, ...usdCents },
       offset: nonnegativeInteger,
     },
     required: [...commonRequestRequired, "limit", "offset", "max_cost_cents"],
@@ -234,13 +268,15 @@ export const domainOverviewSchemas = {
   },
   DomainOverviewPagesData: {
     properties: {
-      cost_cents: nonnegativeNumber,
+      cost_cents: cents,
       rows: { items: relevantPageRow, type: "array" },
       total_count: nonnegativeInteger,
     },
     required: ["rows", "total_count", "cost_cents"],
     type: "object",
   },
-  DomainOverviewPagesResponse: dataEnvelope(topLevelModule(ref("DomainOverviewPagesData"))),
+  DomainOverviewPagesResponse: dataEnvelope(
+    topLevelModule(ref("DomainOverviewPagesData"), "DomainOverviewPagesPageModule"),
+  ),
   ...domainOverviewReportSchemas,
 } as const;

@@ -1,4 +1,6 @@
 import { backlinksSummary } from "./openapi-backlinks-parts";
+import { problemResponse } from "./openapi-problem";
+import { sdkName } from "./openapi-sdk-schema";
 
 export const backlinksFailedSummaryProblem = {
   allOf: [
@@ -42,7 +44,11 @@ export const backlinksFailedSummaryProblem = {
             reason: { const: "history_failed", type: "string" },
             rows_status: { const: "not_requested", type: "string" },
             status: { const: "failed", type: "string" },
-            summary: { ...backlinksSummary, additionalProperties: false },
+            summary: {
+              ...backlinksSummary,
+              additionalProperties: false,
+              ...sdkName("BacklinksFailedSummary"),
+            },
             target: { type: "string" },
             target_scope: { enum: ["site", "page"], type: "string" },
           },
@@ -76,20 +82,15 @@ export function withBacklinksFailedSummaryProblem(operation: object) {
     ...operation,
     responses: {
       ...responses,
-      "500": {
-        content: {
-          "application/problem+json": {
-            schema: {
-              anyOf: [
-                { $ref: "#/components/schemas/Problem" },
-                { $ref: "#/components/schemas/BacklinksFailedSummaryProblem" },
-              ],
-            },
-          },
+      "500": problemResponse(
+        "Unexpected failure, optionally carrying completed summary evidence after history failed. No rows were requested and total cost remains unknown.",
+        {
+          anyOf: [
+            { $ref: "#/components/schemas/Problem" },
+            { $ref: "#/components/schemas/BacklinksFailedSummaryProblem" },
+          ],
         },
-        description:
-          "Unexpected failure, optionally carrying completed summary evidence after history failed. No rows were requested and total cost remains unknown.",
-      },
+      ),
     },
   };
 }

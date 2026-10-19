@@ -1,4 +1,5 @@
 import { localMonitorResultSchemas } from "./openapi-local-monitor-results";
+import { problemResponse } from "./openapi-problem";
 import { publicIdSchema } from "./openapi-public-id";
 
 type Bearer = (
@@ -40,10 +41,7 @@ const pointParameters = [...runParameters, path("target_id", "lmt")];
 export function localMonitorResultPaths(baseBearer: Bearer) {
   const bearer: Bearer = (...args) => {
     const operation = baseBearer(...args);
-    const problem = (description: string) => ({
-      description,
-      content: { "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } } },
-    });
+    const problem = problemResponse;
     return {
       ...operation,
       responses: {

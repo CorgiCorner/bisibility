@@ -18,7 +18,7 @@ import {
   snakeizeKeys,
 } from "./surface";
 
-const mintTokenSchema = z.object({
+export const mintTokenSchema = z.object({
   projectId: z.string().trim().min(1).max(160),
   scope: z.enum(["full", "keywords"]).default("full"),
 });

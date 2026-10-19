@@ -18,6 +18,9 @@ const mocks = vi.hoisted(() => ({
   resolveSnapshot: vi.fn(),
 }));
 
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
 vi.mock("./auth", () => ({
   ApiAuthError: class ApiAuthError extends Error {},
   LEGACY_BEARER_PREFIXES: ["bsk_", "bsp_"],
@@ -83,6 +86,37 @@ const domainSource = {
     label: "DataForSEO",
   },
 };
+const overviewMetrics = {
+  count: 1,
+  estimatedTrafficCostCents: null,
+  etv: 1,
+  isDown: 0,
+  isLost: 0,
+  isNew: 0,
+  isUp: 0,
+  pos1: 0,
+  pos11_20: 0,
+  pos21_30: 0,
+  pos2_3: 1,
+  pos31_40: 0,
+  pos41_50: 0,
+  pos4_10: 0,
+  pos51_60: 0,
+  pos61_70: 0,
+  pos71_80: 0,
+  pos81_90: 0,
+  pos91_100: 0,
+};
+const snapshotData = {
+  cachedUntil: "2026-09-18T12:00:00.000Z",
+  fetchedAt: "2026-09-17T12:00:00.000Z",
+  overview: overviewMetrics,
+  previousFetchedAt: null,
+  previousOverview: null,
+  previousSourceSnapshotAt: null,
+  provider: "dataforseo",
+  sourceSnapshotAt: "2026-09-17T12:00:00.000Z",
+};
 const estimateBody = {
   estimate_only: true,
   language_code: "en",
@@ -129,7 +163,7 @@ describe("estimate-only scope for the domain overview estimate operation", () =>
     mocks.resolveSnapshot.mockImplementation(
       async ({ beforeLoad }: { beforeLoad?: () => void }) => {
         beforeLoad?.();
-        return { cached: false, costCents: 1, data: { count: 1, etv: 1 } };
+        return { cached: false, costCents: 1, data: snapshotData };
       },
     );
     mocks.fetchDomainKeywords.mockResolvedValue({ costCents: 2, rows: [], totalCount: 0 });
@@ -139,10 +173,11 @@ describe("estimate-only scope for the domain overview estimate operation", () =>
     mocks.persistDomainHistory.mockResolvedValue({ id: "snapshot_1" });
     mocks.loadDomainModule.mockImplementation(
       async ({ load }: { load: () => Promise<unknown> }) => {
-        const value = (await load()) as { costCents: number };
+        const value = (await load()) as { costCents: number; data: unknown };
         return {
           cached: false,
           costCents: value.costCents,
+          data: value.data,
           fetchedAt: "2026-09-17T12:00:00.000Z",
           ok: true,
         };

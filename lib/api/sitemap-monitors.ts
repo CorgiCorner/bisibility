@@ -17,7 +17,7 @@ import {
   snakeizeKeys,
 } from "./surface";
 
-const updateSchema = z.object({ enabled: z.boolean() });
+export const updateSchema = z.object({ enabled: z.boolean() });
 
 function sitemapMonitorResource(
   monitor: Awaited<ReturnType<typeof listSitemapMonitorsCore>>[number],

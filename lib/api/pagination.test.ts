@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ZodError } from "zod";
 import { ApiInputError } from "./errors";
 import {
   decodeCursor,
@@ -8,6 +9,7 @@ import {
   encodeOffsetCursor,
   encodeUnprefixedCursor,
   paginateArray,
+  parsePageQuery,
 } from "./pagination";
 
 function expectInvalidCursor(callback: () => unknown) {
@@ -134,5 +136,24 @@ describe("v3 API cursors", () => {
       v: 3,
     });
     expectInvalidCursor(() => decodeCursor(cursor, "rcr"));
+  });
+});
+
+describe("list page query", () => {
+  const url = (query: string) => new URL(`https://example.com/api/v1/projects${query}`);
+
+  it("treats empty values as absent and applies the fallback limit", () => {
+    expect(parsePageQuery(url("?limit=&cursor="))).toEqual({ cursor: null, limit: 50 });
+    expect(parsePageQuery(url("?limit=20&cursor=abc"), 50, 100)).toEqual({
+      cursor: "abc",
+      limit: 20,
+    });
+  });
+
+  it("enforces the limit bounds of the shared Limit parameter", () => {
+    expect(() => parsePageQuery(url("?limit=0"))).toThrow(ZodError);
+    expect(() => parsePageQuery(url("?limit=201"))).toThrow(ZodError);
+    expect(() => parsePageQuery(url("?limit=101"), 50, 100)).toThrow(ZodError);
+    expect(() => parsePageQuery(url("?limit=1.5"))).toThrow(ZodError);
   });
 });

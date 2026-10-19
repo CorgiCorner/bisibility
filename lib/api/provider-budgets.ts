@@ -44,7 +44,7 @@ const creditsBudget = z
   .nullable();
 
 /** Omitted fields keep their stored budget; null clears it. */
-const providerBudgetsPatchSchema = z
+export const providerBudgetsPatchSchema = z
   .object({
     credits: z
       .object({ app: creditsBudget.optional(), programmatic: creditsBudget.optional() })

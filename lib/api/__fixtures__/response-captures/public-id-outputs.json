@@ -1,0 +1,28 @@
+{
+  "captures": [
+    {
+      "body": {
+        "email": "owner@example.com",
+        "id": "usr_a00000000000000000000000",
+        "name": "Owner",
+        "projects": [
+          {
+            "domain": "example.com",
+            "id": "prj_a00000000000000000000000",
+            "missing_provider_keys": [],
+            "name": "Example",
+            "provider_keys_required": false,
+            "role": "owner"
+          }
+        ],
+        "provider_keys_required": false
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getMe",
+      "path": "/me",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/public-id-outputs.test.ts"
+}

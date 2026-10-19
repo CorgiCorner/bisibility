@@ -1,15 +1,11 @@
 "use server";
 
+import { deleteAccountRecords } from "@/lib/account/account-deletion";
 import { updateProfileNameRecord } from "@/lib/account/profile-service";
-import {
-  flushAnalyticsPersonDeletions,
-  queueAnalyticsPersonDeletion,
-} from "@/lib/analytics/person-deletion";
 import { writeAudit } from "@/lib/auth/audit";
 import { revokeOtherSessions } from "@/lib/auth/session-revocation";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
-import { assertEditableDemoIdentityPreserved } from "@/lib/demo/identity";
 import { requireMutableAccountSession as requireSession } from "@/lib/demo/mutable-account-session";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -17,24 +13,6 @@ import { z } from "zod";
 
 const MAX_AVATAR_URL = 2048;
 const MAX_NAME = 120;
-const MAX_DELETE_TRANSACTION_ATTEMPTS = 3;
-const DELETE_TRANSACTION_TIMEOUT_MS = 30_000;
-const LAST_INSTANCE_ADMIN_MESSAGE =
-  "Transfer instance administration first - seed another admin, then delete this account.";
-
-class LastInstanceAdminDeletionError extends Error {
-  readonly code = "last_instance_admin";
-
-  constructor() {
-    super(LAST_INSTANCE_ADMIN_MESSAGE);
-    this.name = "LastInstanceAdminDeletionError";
-  }
-}
-
-function isTransactionConflict(error: unknown) {
-  return typeof error === "object" && error !== null && "code" in error && error.code === "P2034";
-}
-
 async function currentUserPublicId(userId: string) {
   const user = await prisma.user.findUnique({ select: { publicId: true }, where: { id: userId } });
   if (!user?.publicId) throw new Error("User public ID is not available.");
@@ -174,92 +152,10 @@ const deleteAccountSchema = z.object({
 export async function deleteAccount(input: unknown) {
   const data = deleteAccountSchema.parse(input);
   const session = await requireSession();
-  await assertEditableDemoIdentityPreserved(session.user.id);
-
-  if (data.email.trim().toLowerCase() !== session.user.email.trim().toLowerCase()) {
-    throw new Error("Email confirmation does not match this account.");
-  }
-
-  let result: "blocked" | "deleted" | undefined;
-  for (let attempt = 1; attempt <= MAX_DELETE_TRANSACTION_ATTEMPTS; attempt += 1) {
-    try {
-      result = await prisma.$transaction(
-        async (tx) => {
-          // Account deletion is rare. Serializing this critical section prevents
-          // two administrators from concurrently deleting the final two admins.
-          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('instance-admin-delete'))`;
-
-          const user = await tx.user.findUnique({
-            select: {
-              _count: {
-                select: { accounts: true, memberships: true, projects: true, sessions: true },
-              },
-              email: true,
-              isInstanceAdmin: true,
-              name: true,
-              publicId: true,
-            },
-            where: { id: session.user.id },
-          });
-          if (!user) {
-            throw new Error("Account not found.");
-          }
-          if (!user.publicId) {
-            throw new Error("User public ID is not available.");
-          }
-
-          if (user.isInstanceAdmin) {
-            const adminCount = await tx.user.count({ where: { isInstanceAdmin: true } });
-            if (adminCount <= 1) {
-              await writeAudit(
-                {
-                  action: "instance_admin.delete_blocked",
-                  actorId: session.user.id,
-                  before: { isInstanceAdmin: true },
-                  status: "failed",
-                  statusReason: LAST_INSTANCE_ADMIN_MESSAGE,
-                  targetId: user.publicId,
-                  targetType: "user",
-                },
-                tx,
-              );
-              return "blocked" as const;
-            }
-          }
-
-          await writeAudit(
-            {
-              action: "account.deleted",
-              actorId: session.user.id,
-              before: { counts: user._count, email: user.email, name: user.name },
-              targetId: user.publicId,
-              targetType: "user",
-            },
-            tx,
-          );
-
-          await queueAnalyticsPersonDeletion(tx, { id: session.user.id, publicId: user.publicId });
-          await tx.user.delete({ where: { id: session.user.id } });
-          return "deleted" as const;
-        },
-        // Cascading an account can outlast the five-second interactive default.
-        { isolationLevel: "Serializable", timeout: DELETE_TRANSACTION_TIMEOUT_MS },
-      );
-      break;
-    } catch (error) {
-      if (!isTransactionConflict(error) || attempt === MAX_DELETE_TRANSACTION_ATTEMPTS) {
-        throw error;
-      }
-    }
-  }
-
-  if (result === "blocked") {
-    throw new LastInstanceAdminDeletionError();
-  }
-  if (result !== "deleted") {
-    throw new Error("Account could not be deleted.");
-  }
-
-  await flushAnalyticsPersonDeletions();
+  await deleteAccountRecords({
+    confirmEmail: data.email,
+    source: "web",
+    userId: session.user.id,
+  });
   redirect("/login");
 }

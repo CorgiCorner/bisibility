@@ -21,10 +21,10 @@ respectively.
 
 ## REST check correlation
 
-The versioned REST check request, `POST /api/v1/keywords/{id}/checks`, returns
+The versioned REST check request, `POST /api/v1/keywords/{keyword_id}/checks`, returns
 `202` with `{ "id": "rcr_...", "status": "queued" }` when it queues work. Its
 `id` is the run ID, not a rank-check ID. Poll
-`GET /api/v1/keywords/{id}/rank-checks?status=completed` and select the history
+`GET /api/v1/keywords/{keyword_id}/rank-checks?status=completed` and select the history
 row whose `run_id` equals that ID. The matching row includes the final position
 and rank-check ID. `run_id` is `null` only for legacy history rows that predate
 runs.

@@ -18,18 +18,10 @@ const MIN_NON_KEY_VALUE_LENGTH = 1;
 
 export const PROVIDER_REQUEST_SOURCES = ["app", "worker", "api", "cli", "mcp", "sdk"] as const;
 export type ProviderRequestSource = (typeof PROVIDER_REQUEST_SOURCES)[number];
-export const PROVIDER_REQUEST_FEATURES = [
-  "ai_visibility",
-  "ai_tracking",
-  "prompt_explorer",
-  "backlinks",
-  "domain_overview",
-  "keyword_metrics",
-  "keyword_research",
-  "local_scan",
-  "rank_check",
-  "ranked_keywords",
-] as const satisfies readonly ProviderCostFeature[];
+
+import { PROVIDER_REQUEST_FEATURES } from "./request-features";
+
+export { PROVIDER_REQUEST_FEATURES };
 export const PROVIDER_REQUEST_TRIGGERS = ["manual", "scheduled"] as const;
 export type ProviderRequestTrigger = (typeof PROVIDER_REQUEST_TRIGGERS)[number];
 export const PROVIDER_CREDENTIAL_SOURCES = ["own", "hosted"] as const;

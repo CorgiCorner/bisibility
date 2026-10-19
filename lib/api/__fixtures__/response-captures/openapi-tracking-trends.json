@@ -1,0 +1,181 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": {
+          "category": "neutral",
+          "previous": {
+            "expected": 1,
+            "observed": 1,
+            "eligible": 1,
+            "mentioned": 1,
+            "absent_aio": 0,
+            "partial": 0,
+            "failed": 0,
+            "unknown": 0,
+            "missing": 0,
+            "coverage": 1,
+            "mention_rate": 1
+          },
+          "current": {
+            "expected": 1,
+            "observed": 1,
+            "eligible": 1,
+            "mentioned": 1,
+            "absent_aio": 0,
+            "partial": 0,
+            "failed": 0,
+            "unknown": 0,
+            "missing": 0,
+            "coverage": 1,
+            "mention_rate": 1
+          },
+          "comparable": true,
+          "reason": null,
+          "delta": 0,
+          "baseline": "neutral",
+          "strata": [
+            {
+              "category": "neutral",
+              "previous": {
+                "expected": 1,
+                "observed": 1,
+                "eligible": 1,
+                "mentioned": 1,
+                "absent_aio": 0,
+                "partial": 0,
+                "failed": 0,
+                "unknown": 0,
+                "missing": 0,
+                "coverage": 1,
+                "mention_rate": 1
+              },
+              "current": {
+                "expected": 1,
+                "observed": 1,
+                "eligible": 1,
+                "mentioned": 1,
+                "absent_aio": 0,
+                "partial": 0,
+                "failed": 0,
+                "unknown": 0,
+                "missing": 0,
+                "coverage": 1,
+                "mention_rate": 1
+              },
+              "comparable": true,
+              "reason": null,
+              "delta": 0
+            },
+            {
+              "category": "comparative",
+              "previous": {
+                "expected": 0,
+                "observed": 0,
+                "eligible": 0,
+                "mentioned": 0,
+                "absent_aio": 0,
+                "partial": 0,
+                "failed": 0,
+                "unknown": 0,
+                "missing": 0,
+                "coverage": 0,
+                "mention_rate": null
+              },
+              "current": {
+                "expected": 0,
+                "observed": 0,
+                "eligible": 0,
+                "mentioned": 0,
+                "absent_aio": 0,
+                "partial": 0,
+                "failed": 0,
+                "unknown": 0,
+                "missing": 0,
+                "coverage": 0,
+                "mention_rate": null
+              },
+              "comparable": false,
+              "reason": "At least 90% complete coverage is required in both periods",
+              "delta": null
+            },
+            {
+              "category": "branded",
+              "previous": {
+                "expected": 0,
+                "observed": 0,
+                "eligible": 0,
+                "mentioned": 0,
+                "absent_aio": 0,
+                "partial": 0,
+                "failed": 0,
+                "unknown": 0,
+                "missing": 0,
+                "coverage": 0,
+                "mention_rate": null
+              },
+              "current": {
+                "expected": 0,
+                "observed": 0,
+                "eligible": 0,
+                "mentioned": 0,
+                "absent_aio": 0,
+                "partial": 0,
+                "failed": 0,
+                "unknown": 0,
+                "missing": 0,
+                "coverage": 0,
+                "mention_rate": null
+              },
+              "comparable": false,
+              "reason": "At least 90% complete coverage is required in both periods",
+              "delta": null
+            },
+            {
+              "category": "unknown",
+              "previous": {
+                "expected": 0,
+                "observed": 0,
+                "eligible": 0,
+                "mentioned": 0,
+                "absent_aio": 0,
+                "partial": 0,
+                "failed": 0,
+                "unknown": 0,
+                "missing": 0,
+                "coverage": 0,
+                "mention_rate": null
+              },
+              "current": {
+                "expected": 0,
+                "observed": 0,
+                "eligible": 0,
+                "mentioned": 0,
+                "absent_aio": 0,
+                "partial": 0,
+                "failed": 0,
+                "unknown": 0,
+                "missing": 0,
+                "coverage": 0,
+                "mention_rate": null
+              },
+              "comparable": false,
+              "reason": "Historical prompt category is unknown",
+              "delta": null
+            }
+          ],
+          "current_run_id": "air_a00000000000000000000000",
+          "previous_run_id": "air_a00000000000000000000000",
+          "next_cursor": null,
+          "previous_next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getAiTrackingTrends",
+      "path": "/projects/{project_id}/ai-tracking/trends",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/openapi-tracking-trends.test.ts"
+}

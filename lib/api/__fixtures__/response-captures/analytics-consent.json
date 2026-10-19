@@ -1,0 +1,101 @@
+{
+  "captures": [
+    {
+      "body": {
+        "analytics": false,
+        "decided_at": null,
+        "source": null,
+        "version": 2
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getAnalyticsConsent",
+      "path": "/me/analytics-consent",
+      "status": 200
+    },
+    {
+      "body": {
+        "analytics": true,
+        "decided_at": "2026-07-10T23:00:00.000Z",
+        "source": "ios",
+        "version": 2
+      },
+      "contentType": "application/json",
+      "method": "PUT",
+      "operationId": "updateAnalyticsConsent",
+      "path": "/me/analytics-consent",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "Account consent requires a personal token or first-party client.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/me/analytics-consent",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "PUT",
+      "operationId": "updateAnalyticsConsent",
+      "path": "/me/analytics-consent",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/me/analytics-consent",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": ["Unrecognized key: \"email\""],
+          "fieldErrors": {}
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "PUT",
+      "operationId": "updateAnalyticsConsent",
+      "path": "/me/analytics-consent",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/me/analytics-consent",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "analytics": ["Invalid input: expected boolean, received string"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "PUT",
+      "operationId": "updateAnalyticsConsent",
+      "path": "/me/analytics-consent",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "This route requires a personal access token.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/me/analytics-consent",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getAnalyticsConsent",
+      "path": "/me/analytics-consent",
+      "status": 404
+    }
+  ],
+  "source": "lib/api/analytics-consent.test.ts"
+}

@@ -2227,6 +2227,7 @@ export type CoreMessages = {
       readonly newTitle: "New alert rule";
       readonly optional: "optional";
       readonly preview: "Preview";
+      readonly push: "Mobile push";
       readonly recipients: "Recipients";
       readonly recipientsAria: "Alert email recipients";
       readonly reviewFields: "Review the highlighted fields.";

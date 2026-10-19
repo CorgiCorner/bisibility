@@ -29,6 +29,7 @@ import { chargedProviderCostCents, ProviderCallError } from "@/lib/providers/cal
 import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import type { ProviderHistoryWindow } from "@/lib/providers/history-window";
+import { assertOwnKeyStored } from "@/lib/providers/own-key-guard";
 import { consumeProviderLimit } from "@/lib/providers/rate-limit";
 import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/dataforseo";
 import type { SerpProvider } from "@/lib/providers/types";
@@ -142,6 +143,12 @@ async function executePaidProviderCall<
     throw new ProviderUsagePersistenceError({ cause: new Error("Provider connection changed.") });
   }
   assertOwnCredentialSnapshot(input, ownConnection);
+  await assertOwnKeyStored({
+    capability: input.feature,
+    credentialsEncrypted: input.connection.credentialsEncrypted,
+    projectId: input.projectId,
+    provider: input.provider.id,
+  });
   const estimatedCostCents = await requiredConnectionEstimate({
     connection: input.connection,
     feature: input.feature,

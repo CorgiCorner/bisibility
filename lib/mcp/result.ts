@@ -104,7 +104,30 @@ function trustedTopUpPath(payload: Record<string, unknown>): string | null {
  * problem gets a sentence an agent can act on; everything else keeps the
  * generic failure message.
  */
+const BYOK_REQUIRED_MESSAGE =
+  "This account runs paid provider work only on its own provider keys. Connect the provider key in the project's Integrations settings on the web, then retry.";
+
+function ownKeyRequiredMessage(payload: Record<string, unknown>) {
+  return typeof payload.detail === "string" && payload.detail.length > 0
+    ? payload.detail
+    : BYOK_REQUIRED_MESSAGE;
+}
+
 export function restFailureToolError(payload: unknown, status: number | undefined) {
+  if (
+    status === 403 &&
+    payload &&
+    typeof payload === "object" &&
+    !Array.isArray(payload) &&
+    (payload as { type?: unknown }).type === "https://bisibility.com/problems/byok_required"
+  ) {
+    return {
+      code: "byok_required",
+      message: ownKeyRequiredMessage(payload as Record<string, unknown>),
+      payload,
+      status: 403,
+    };
+  }
   if (
     status === 402 &&
     payload &&

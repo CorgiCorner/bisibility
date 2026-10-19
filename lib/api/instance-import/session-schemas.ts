@@ -211,6 +211,9 @@ export const importSessionChunkSchema = z.preprocess(
   z.union([keywordChunkSchema, sectionsChunkSchema]),
 );
 
+/** Finalizing a session takes no options; an empty body is allowed. */
+export const importSessionFinalizeSchema = z.object({}).strict();
+
 /** Version 7 sessions never recover a location identity from a display label. */
 export function sessionChunkHasCanonicalLocationKeys(chunk: ImportSessionChunk) {
   if (chunk.kind === "keywords") {

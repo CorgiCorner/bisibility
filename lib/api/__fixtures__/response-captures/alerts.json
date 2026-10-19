@@ -1,0 +1,167 @@
+{
+  "captures": [
+    {
+      "body": {
+        "change_pct": null,
+        "channels": ["email"],
+        "condition_type": "threshold",
+        "competitor_domain": null,
+        "drop_positions": null,
+        "enabled": true,
+        "id": "alr_a00000000000000000000000",
+        "market_ids": [],
+        "name": "Drop",
+        "recipient_ids": [],
+        "serp_feature": null,
+        "severity": "urgent",
+        "status": "active",
+        "target_ids": [],
+        "target_type": "all",
+        "threshold_position": 10,
+        "top_n": null,
+        "channel": "Email",
+        "condition": "rank crosses below #10",
+        "fires": "0 this week",
+        "period": "Each check",
+        "scope": "All keywords"
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateAlertRule",
+      "path": "/alert-rules/{rule_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "change_pct": null,
+        "channels": ["email"],
+        "condition_type": "threshold",
+        "competitor_domain": null,
+        "drop_positions": null,
+        "enabled": true,
+        "id": "alr_a00000000000000000000000",
+        "market_ids": [],
+        "name": "Drop",
+        "recipient_ids": [],
+        "serp_feature": null,
+        "severity": "urgent",
+        "status": "active",
+        "target_ids": [],
+        "target_type": "all",
+        "threshold_position": 10,
+        "top_n": null,
+        "channel": "Email",
+        "condition": "rank crosses below #10",
+        "fires": "0 this week",
+        "period": "Each check",
+        "scope": "All keywords"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createAlertRule",
+      "path": "/projects/{project_id}/alert-rules",
+      "status": 201
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "action": "Review the latest rank check.",
+            "ctas": ["Open keyword"],
+            "current": "#12",
+            "delivery_attempts": [],
+            "delivery_state": "delivered",
+            "feed_meta": {
+              "engine": "Google",
+              "module": "rank",
+              "severity": "urgent",
+              "source": "RANK"
+            },
+            "headline": "Drop",
+            "id": "al_a00000000000000000000000",
+            "keyword": "Unknown keyword",
+            "previous": "#8",
+            "ranking_url": null,
+            "rule": "Drop",
+            "severity": "urgent",
+            "target_url": null,
+            "unread": true,
+            "when": "187d ago"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listTriggeredAlerts",
+      "path": "/projects/{project_id}/triggered-alerts",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "change_pct": null,
+            "channels": ["email"],
+            "condition_type": "threshold",
+            "competitor_domain": null,
+            "drop_positions": null,
+            "enabled": true,
+            "id": "alr_a00000000000000000000000",
+            "market_ids": [],
+            "name": "Drop",
+            "recipient_ids": [],
+            "serp_feature": null,
+            "severity": "urgent",
+            "status": "active",
+            "target_ids": [],
+            "target_type": "all",
+            "threshold_position": 10,
+            "top_n": null,
+            "channel": "Email",
+            "condition": "rank crosses below #10",
+            "fires": "0 this week",
+            "period": "Each check",
+            "scope": "All keywords"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAlertRules",
+      "path": "/projects/{project_id}/alert-rules",
+      "status": 200
+    },
+    {
+      "body": {
+        "deleted": true
+      },
+      "contentType": "application/json",
+      "method": "DELETE",
+      "operationId": "deleteAlertRule",
+      "path": "/alert-rules/{rule_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "Alert rule not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/alert-rules/alr_000000000000000000000000",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateAlertRule",
+      "path": "/alert-rules/{rule_id}",
+      "status": 404
+    }
+  ],
+  "source": "lib/api/alerts.test.ts"
+}

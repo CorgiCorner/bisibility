@@ -30,7 +30,7 @@ const resultLimitSchema = z.coerce
   .number()
   .pipe(z.union([z.literal(100), z.literal(300), z.literal(500), z.literal(1000)]));
 
-const analyzeQuerySchema = z.object({
+export const analyzeQuerySchema = z.object({
   estimate_only: falseParam,
   fresh: falseParam,
   include_subdomains: trueParam,
@@ -41,7 +41,9 @@ const analyzeQuerySchema = z.object({
   target_scope: z.enum(["site", "page"]).default("site"),
 });
 
-const rowsBodySchema = z.object({
+export const rowsBodySchema = z.object({
+  estimate_only: z.boolean().optional(),
+  max_cost_cents: z.number().int().min(0).optional(),
   snapshot_ref: z.string().min(1).max(32768).optional(),
   include_subdomains: z.boolean(),
   limit: z.number().int().min(100).max(1000).multipleOf(100),
@@ -187,6 +189,8 @@ export async function postBacklinkRows(ctx: ApiContext, projectId: string) {
     const outcome = await loadMoreBacklinkRows(
       { actorId: ctx.actorId, origin: providerOrigin(ctx.origin), projectId: ctx.auth.project.id },
       {
+        ...(input.estimate_only === undefined ? {} : { estimateOnly: input.estimate_only }),
+        ...(input.max_cost_cents === undefined ? {} : { maxCostCents: input.max_cost_cents }),
         includeSubdomains: input.include_subdomains,
         limit: input.limit,
         snapshotRef: input.snapshot_ref,

@@ -1,0 +1,242 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": {
+          "cached": true,
+          "cost_cents": 0,
+          "data": [],
+          "fetched_at": "2026-08-13T10:00:00.000Z"
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "loadDomainOverviewHistory",
+      "path": "/projects/{project_id}/domain-overview/history",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "cached": true,
+          "cost_cents": 0,
+          "data": {
+            "cost_cents": 0,
+            "rows": [],
+            "total_count": 0
+          },
+          "fetched_at": "2026-08-13T10:00:00.000Z"
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "loadDomainOverviewKeywords",
+      "path": "/projects/{project_id}/domain-overview/keywords",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "cached": true,
+          "cost_cents": 0,
+          "data": {
+            "cost_cents": 0,
+            "rows": [],
+            "total_count": 0
+          },
+          "fetched_at": "2026-08-13T10:00:00.000Z"
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "loadDomainOverviewPages",
+      "path": "/projects/{project_id}/domain-overview/pages",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "cached": true,
+          "estimate": true,
+          "estimated_cost_cents": 0,
+          "fresh_estimated_cost_cents": 5,
+          "history_estimated_cost_cents": 12,
+          "history_mode": "lazy",
+          "keyword_page_estimated_cost_cents": 2,
+          "language_code": "en",
+          "location_code": 2840,
+          "page_page_estimated_cost_cents": 2,
+          "provider": "dataforseo",
+          "scope": "root",
+          "target": "example.com"
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "analyzeDomainOverview",
+      "path": "/projects/{project_id}/domain-overview/analyze",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/domain-overview/analyze",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "analyzeDomainOverview",
+      "path": "/projects/{project_id}/domain-overview/analyze",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/domain-overview/analyze",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": ["Unrecognized key: \"include_subdomains\""],
+          "fieldErrors": {}
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "analyzeDomainOverview",
+      "path": "/projects/{project_id}/domain-overview/analyze",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/domain-overview/analyze",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "max_cost_cents": ["max_cost_cents is required unless estimate_only is true"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "analyzeDomainOverview",
+      "path": "/projects/{project_id}/domain-overview/analyze",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/domain-overview/history",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "max_cost_cents": ["Invalid input: expected number, received undefined"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadDomainOverviewHistory",
+      "path": "/projects/{project_id}/domain-overview/history",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/domain-overview/keywords",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "limit": ["Too big: expected number to be <=100"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadDomainOverviewKeywords",
+      "path": "/projects/{project_id}/domain-overview/keywords",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/domain-overview/keywords",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "max_cost_cents": ["Invalid input: expected number, received undefined"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadDomainOverviewKeywords",
+      "path": "/projects/{project_id}/domain-overview/keywords",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/domain-overview/pages",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "limit": ["Too big: expected number to be <=1000"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadDomainOverviewPages",
+      "path": "/projects/{project_id}/domain-overview/pages",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/domain-overview/pages",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "max_cost_cents": ["Invalid input: expected number, received undefined"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadDomainOverviewPages",
+      "path": "/projects/{project_id}/domain-overview/pages",
+      "status": 400
+    }
+  ],
+  "source": "lib/api/domain-overview-router.test.ts"
+}

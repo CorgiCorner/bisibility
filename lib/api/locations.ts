@@ -9,7 +9,7 @@ type LocationApiContext = {
   url: URL;
 };
 
-const querySchema = z.object({
+export const querySchema = z.object({
   country: z.string().trim().min(1).max(120).nullable(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   query: z.string().trim().min(2).max(120),

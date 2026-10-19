@@ -1,0 +1,124 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [
+          {
+            "id": "aip_a00000000000000000000000",
+            "topic_id": "ait_a00000000000000000000000",
+            "label": "Best rank tracker",
+            "archived_at": null,
+            "paused_at": null,
+            "created_at": "2026-09-01T08:00:00.000Z",
+            "updated_at": "2026-09-02T08:00:00.000Z",
+            "revisions": [
+              {
+                "id": "apr_a00000000000000000000000",
+                "ordinal": 1,
+                "category": "neutral",
+                "text": "Which rank tracker do agencies use for daily checks?",
+                "text_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "created_at": "2026-09-01T08:00:00.000Z"
+              }
+            ]
+          }
+        ],
+        "meta": {
+          "next_cursor": "000000000000000000"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAiTrackingPrompts",
+      "path": "/projects/{project_id}/ai-tracking/prompts",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "aip_a00000000000000000000000",
+            "topic_id": null,
+            "label": null,
+            "archived_at": null,
+            "paused_at": null,
+            "created_at": "2026-09-01T08:00:00.000Z",
+            "updated_at": "2026-09-02T08:00:00.000Z",
+            "revisions": [
+              {
+                "id": "apr_a00000000000000000000000",
+                "ordinal": 1,
+                "category": "neutral",
+                "text": "Which rank tracker do agencies use for daily checks?",
+                "text_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "created_at": "2026-09-01T08:00:00.000Z"
+              }
+            ]
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAiTrackingPrompts",
+      "path": "/projects/{project_id}/ai-tracking/prompts",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "air_a00000000000000000000000",
+            "state": "completed",
+            "created_at": "2026-09-01T08:00:00.000Z",
+            "updated_at": "2026-09-02T08:00:00.000Z",
+            "finished_at": "2026-09-02T08:00:00.000Z",
+            "planned_at": "2026-09-01T08:00:00.000Z",
+            "sample_count": 3
+          },
+          {
+            "id": "air_a00000000000000000000000",
+            "state": "running",
+            "created_at": "2026-09-01T08:00:00.000Z",
+            "updated_at": "2026-09-02T08:00:00.000Z",
+            "finished_at": null,
+            "planned_at": "2026-09-01T08:00:00.000Z",
+            "sample_count": 3
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getAiTrackingHistory",
+      "path": "/projects/{project_id}/ai-tracking/history",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "Tracking input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:error",
+        "status": 422,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "limit": ["Too big: expected number to be <=100"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listAiTrackingPrompts",
+      "path": "/projects/{project_id}/ai-tracking/prompts",
+      "status": 422
+    }
+  ],
+  "source": "lib/api/ai-tracking-reads-router.test.ts"
+}

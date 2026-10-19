@@ -1,5 +1,7 @@
+import { OWN_KEY_CAPABILITIES } from "@/lib/providers/own-key-capabilities";
 import { publicIdSchema } from "./openapi-public-id";
 import { scheduleInputContractSchema } from "./openapi-schedule-schema";
+import { closedEnum, openEnum, sdkName } from "./openapi-sdk-schema";
 
 export const personalAccessSchemas = {
   Me: {
@@ -12,16 +14,112 @@ export const personalAccessSchemas = {
           properties: {
             domain: { type: "string" },
             id: publicIdSchema("prj"),
+            missing_provider_keys: {
+              description:
+                "Paid capabilities this project cannot run on its own provider keys, each with the providers that would serve it. Empty unless `provider_keys_required` is true. Connect a key in the project's Integrations settings on the web.",
+              items: {
+                properties: {
+                  capability: {
+                    enum: [...OWN_KEY_CAPABILITIES],
+                    type: "string",
+                    ...openEnum("OwnKeyCapability"),
+                  },
+                  providers: { items: { type: "string" }, type: "array" },
+                },
+                required: ["capability", "providers"],
+                type: "object",
+                ...sdkName("MissingProviderKey"),
+              },
+              type: "array",
+            },
             name: { type: "string" },
-            role: { enum: ["admin", "auditor", "member", "owner", "viewer"], type: "string" },
+            provider_keys_required: {
+              description:
+                "True when the project's owner account runs paid provider work only on its own provider keys. A paid request without a usable own key fails with the `byok_required` problem type before any provider call.",
+              type: "boolean",
+            },
+            role: {
+              enum: ["admin", "auditor", "member", "owner", "viewer"],
+              type: "string",
+              ...openEnum("ProjectRole"),
+            },
           },
-          required: ["id", "name", "domain", "role"],
+          required: [
+            "id",
+            "name",
+            "domain",
+            "role",
+            "provider_keys_required",
+            "missing_provider_keys",
+          ],
           type: "object",
+          ...sdkName("MeProject"),
         },
         type: "array",
       },
+      provider_keys_required: {
+        description:
+          "True when this account runs paid provider work only on its own provider keys, connected in each project's Integrations settings on the web. Estimates remain free.",
+        type: "boolean",
+      },
     },
-    required: ["id", "email", "name", "projects"],
+    required: ["id", "email", "name", "projects", "provider_keys_required"],
+    type: "object",
+  },
+  DevicePushToken: {
+    properties: {
+      bundle_id: { type: "string" },
+      created_at: { format: "date-time", type: "string" },
+      environment: {
+        enum: ["production", "sandbox"],
+        type: "string",
+        ...openEnum("DevicePushEnvironment"),
+      },
+      id: publicIdSchema("dpt"),
+      last_seen_at: { format: "date-time", type: "string" },
+      token_suffix: {
+        description: "Last 8 characters of the token; the token itself is never returned.",
+        type: "string",
+      },
+    },
+    required: ["id", "bundle_id", "environment", "created_at", "last_seen_at", "token_suffix"],
+    type: "object",
+  },
+  DevicePushTokenRegister: {
+    additionalProperties: false,
+    properties: {
+      bundle_id: {
+        description: "App bundle identifier, for example com.bisibility.app.",
+        minLength: 1,
+        pattern: "^[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+$",
+        maxLength: 155,
+        type: "string",
+      },
+      environment: {
+        description: "APNs environment of the build: sandbox for development builds.",
+        ...closedEnum("DevicePushEnvironmentInput"),
+        enum: ["production", "sandbox"],
+        type: "string",
+      },
+      token: {
+        description: "APNs device token as hexadecimal.",
+        pattern: "^[0-9A-Fa-f]{32,200}$",
+        type: "string",
+      },
+    },
+    required: ["token", "environment", "bundle_id"],
+    type: "object",
+  },
+  MeDelete: {
+    additionalProperties: false,
+    description: "Confirms account deletion with the account's email address.",
+    properties: { confirm_email: { maxLength: 320, minLength: 3, type: "string" } },
+    required: ["confirm_email"],
+    type: "object",
+  },
+  MeDeleted: {
+    properties: { deleted: { const: true, type: "boolean" } },
+    required: ["deleted"],
     type: "object",
   },
   MePatch: {

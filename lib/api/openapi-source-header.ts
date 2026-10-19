@@ -1,3 +1,5 @@
+import { openEnum } from "./openapi-sdk-schema";
+
 type SecuredOperation = {
   parameters?: object[];
   security?: unknown;
@@ -10,7 +12,8 @@ export const sourceHeaderParameterComponents = {
     in: "header",
     name: "X-Bisibility-Source",
     required: false,
-    schema: { enum: ["sdk", "cli", "mcp"], type: "string" },
+    // Open: the server counts any other value as api instead of rejecting it.
+    schema: { enum: ["sdk", "cli", "mcp"], type: "string", ...openEnum("RequestSource") },
   },
 } as const;
 

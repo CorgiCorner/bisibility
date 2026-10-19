@@ -1,0 +1,218 @@
+{
+  "captures": [
+    {
+      "body": null,
+      "contentType": "text/csv; charset=utf-8",
+      "method": "GET",
+      "operationId": "exportRankHistory",
+      "path": "/projects/{project_id}/exports/rank-history",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "checked_at": "2026-07-20T10:00:00.000Z",
+            "id": "check_a00000000000000000000000",
+            "keyword": "rank tracker",
+            "keyword_id": "kw_a00000000000000000000000",
+            "normalization_version": "fixture-v1",
+            "position": 4,
+            "previous_position": 7,
+            "provider": "synthetic",
+            "ranking_url": "https://example.com/rank",
+            "requested_depth": 100
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "exportRankHistory",
+      "path": "/projects/{project_id}/exports/rank-history",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "enabled": true,
+            "id": "prj_a00000000000000000000000",
+            "latest_snapshot": {
+              "fetched_at": "2026-07-21T04:45:00.000Z",
+              "id": "snapshot_1",
+              "sitemap_url": "https://example.com/sitemap.xml",
+              "url_count": 42
+            },
+            "project_id": "prj_a00000000000000000000000",
+            "sitemap_url": "https://example.com/sitemap.xml",
+            "status": "active"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSitemapMonitors",
+      "path": "/projects/{project_id}/sitemap-monitors",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key is not scoped to this project.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_zyxwvutsrqponmlkjihgfedc/sitemap-monitors",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSitemapMonitors",
+      "path": "/projects/{project_id}/sitemap-monitors",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_abcdefghijklmnopqrstuvwx/sitemap-monitors/prj_abcdefghijklmnopqrstuvwx",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateSitemapMonitor",
+      "path": "/projects/{project_id}/sitemap-monitors/{monitor_id}",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_abcdefghijklmnopqrstuvwx/triggered-alerts/al_abcdefghijklmnopqrstuvwx/mute",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "muteTriggeredAlert",
+      "path": "/projects/{project_id}/triggered-alerts/{alert_id}/mute",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_abcdefghijklmnopqrstuvwx/triggered-alerts/mark-read",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "markProjectAlertsRead",
+      "path": "/projects/{project_id}/triggered-alerts/mark-read",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_abcdefghijklmnopqrstuvwx/exports/rank-history",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "range": ["Invalid option: expected one of \"30\"|\"90\"|\"all\""]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "exportRankHistory",
+      "path": "/projects/{project_id}/exports/rank-history",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Sitemap monitor not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_abcdefghijklmnopqrstuvwx/sitemap-monitors/prj_zyxwvutsrqponmlkjihgfedc",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "PATCH",
+      "operationId": "updateSitemapMonitor",
+      "path": "/projects/{project_id}/sitemap-monitors/{monitor_id}",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Triggered alert not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_abcdefghijklmnopqrstuvwx/triggered-alerts/al_zyxwvutsrqponmlkjihgfedc/mute",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "muteTriggeredAlert",
+      "path": "/projects/{project_id}/triggered-alerts/{alert_id}/mute",
+      "status": 404
+    },
+    {
+      "body": {
+        "enabled": false,
+        "id": "prj_a00000000000000000000000",
+        "latest_snapshot": {
+          "fetched_at": "2026-07-21T04:45:00.000Z",
+          "id": "snapshot_1",
+          "sitemap_url": "https://example.com/sitemap.xml",
+          "url_count": 42
+        },
+        "project_id": "prj_a00000000000000000000000",
+        "sitemap_url": "https://example.com/sitemap.xml",
+        "status": "disabled"
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateSitemapMonitor",
+      "path": "/projects/{project_id}/sitemap-monitors/{monitor_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "muted": true,
+        "snoozed_until": "2026-10-13T12:00:00.000Z"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "muteTriggeredAlert",
+      "path": "/projects/{project_id}/triggered-alerts/{alert_id}/mute",
+      "status": 200
+    },
+    {
+      "body": {
+        "updated": 2
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "markProjectAlertsRead",
+      "path": "/projects/{project_id}/triggered-alerts/mark-read",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/loop-closure.test.ts"
+}

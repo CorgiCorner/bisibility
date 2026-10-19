@@ -1,3 +1,7 @@
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -106,6 +110,16 @@ describe("account analytics consent API", () => {
     expect((await handleApiRequest(request("PUT", { analytics: false }), path)).status).toBe(403);
     expect(mocks.upsert).not.toHaveBeenCalled();
   });
+  it("accepts consent changes from the first-party app with write scope", async () => {
+    mocks.authenticate.mockResolvedValue({
+      ...personal,
+      oauthClientId: "bisibility-ios",
+      token: { ...personal.token, scopes: ["read", "write"] },
+    });
+    const response = await handleApiRequest(request("PUT", { analytics: true }), path);
+    expect(response.status).toBe(200);
+    expect(mocks.upsert).toHaveBeenCalledOnce();
+  });
   it("refuses consent changes by third-party OAuth grants", async () => {
     mocks.authenticate.mockResolvedValue({ ...personal, oauthClientId: "external-client" });
     const response = await handleApiRequest(request("PUT", { analytics: true }), path);
@@ -115,7 +129,8 @@ describe("account analytics consent API", () => {
   it("documents the exact methods, request fields and personal authentication", () => {
     const entry = getOpenApiDocument().paths["/me/analytics-consent"];
     expect(Object.keys(entry).sort()).toEqual(["get", "put"]);
-    expect(entry.put.security).toEqual([{ PersonalAccessToken: [] }]);
+    expect(entry.get.security).toEqual([{ PersonalAccessToken: [] }, { AppOAuth: ["api:read"] }]);
+    expect(entry.put.security).toEqual([{ PersonalAccessToken: [] }, { AppOAuth: ["api:write"] }]);
     expect(entry.put.requestBody.content["application/json"].schema).toMatchObject({
       additionalProperties: false,
       required: ["analytics"],

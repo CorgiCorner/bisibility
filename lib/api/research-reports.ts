@@ -29,21 +29,21 @@ const trueParam = z
   .default("true")
   .transform((value) => value === "true");
 
-const backlinksQuerySchema = z.object({
+export const backlinksQuerySchema = z.object({
   include_subdomains: trueParam,
   mode: z.enum(["as_is", "one_per_domain"]).default("as_is"),
   target: z.string().trim().min(1),
   target_scope: z.enum(["site", "page"]).default("site"),
 });
 
-const domainOverviewQuerySchema = z.object({
+export const domainOverviewQuerySchema = z.object({
   language_code: z.string().trim().min(2).max(12),
   location_code: z.coerce.number().int().positive(),
   target: z.string().trim().min(1).max(253),
   target_scope: z.enum(["root", "subdomain"]).default("root"),
 });
 
-const keywordResearchQuerySchema = z.object({
+export const keywordResearchQuerySchema = z.object({
   connection_id: z.string().trim().min(1).max(120).optional(),
   include_clickstream: falseParam,
   mode: z.enum(["auto", "ideas", "related", "suggestions"]).default("auto"),

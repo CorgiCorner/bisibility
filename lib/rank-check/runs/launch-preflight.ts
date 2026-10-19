@@ -17,7 +17,9 @@ import {
   hostedRankCheckEstimatedCostCents,
   quoteDeploymentRankReservations,
 } from "@/lib/providers/execution-extension";
+import { OwnProviderKeyRequiredError } from "@/lib/providers/execution-extension-errors";
 import { exactExecutionEstimate } from "@/lib/providers/execution-extension-estimate";
+import { ownProviderKeysRequired } from "@/lib/providers/own-key-policy-extension";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
@@ -165,6 +167,20 @@ export async function quoteRankRunReservation(
 export async function quoteRankRunReservationForLaunch(
   ...args: Parameters<typeof quoteRankRunReservation>
 ) {
+  const [tx, input] = args;
+  if (input.connection.credentialSource === "hosted") {
+    // Refuse a tester's run at launch; each execution is refused again at admission.
+    const project = await tx.project.findUnique({
+      select: { ownerId: true },
+      where: { id: input.projectId },
+    });
+    if (project && (await ownProviderKeysRequired(project.ownerId, tx)))
+      throw new OwnProviderKeyRequiredError({
+        capability: "rank_check",
+        projectId: input.projectId,
+        provider: input.connection.provider,
+      });
+  }
   try {
     return await quoteRankRunReservation(...args);
   } catch (error) {

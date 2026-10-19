@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   fence: vi.fn(),
   evidence: vi.fn(),
   hostedEvidence: vi.fn(),
+  ownKey: vi.fn(),
 }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
@@ -47,6 +48,7 @@ vi.mock("@/lib/provider-usage/tag", () => ({
 vi.mock("@/lib/providers/credentials", () => ({
   resolveProviderCredentials: () => ({ apiKey: "fake-isolated" }),
 }));
+vi.mock("@/lib/providers/own-key-guard", () => ({ assertOwnKeyStored: mocks.ownKey }));
 vi.mock("@/lib/providers/rate-limit", () => ({
   consumeProviderLimit: async () => ({ success: true }),
 }));
@@ -132,6 +134,7 @@ describe("comparison worker execution remains separate from rank history", () =>
     });
     mocks.connection.mockResolvedValue({ credentialsEncrypted: "fake" });
     mocks.access.mockResolvedValue(undefined);
+    mocks.ownKey.mockResolvedValue(undefined);
     mocks.quote.mockImplementation(async () => snapshot);
     mocks.fence.mockReturnValue({
       beforeReserve: { lockBusiness: vi.fn(), assertRequest: vi.fn() },
@@ -271,6 +274,20 @@ describe("comparison worker execution remains separate from rank history", () =>
     row.status = "claimed";
     await executeComparisonSide(input);
     expect(row.status).toBe("unknown");
+    expect(mocks.fetch).not.toHaveBeenCalled();
+  });
+  it("never dispatches an own-key side whose key would come from the environment for a tester", async () => {
+    const { OwnProviderKeyRequiredError } = await import(
+      "@/lib/providers/execution-extension-errors"
+    );
+    mocks.ownKey.mockRejectedValue(
+      new OwnProviderKeyRequiredError({ capability: "rank_check", provider: "serpapi" }),
+    );
+    await executeComparisonSide(input);
+    expect(mocks.ownKey).toHaveBeenCalledWith(
+      expect.objectContaining({ capability: "rank_check", projectId: "project" }),
+    );
+    expect(row.status).not.toBe("completed");
     expect(mocks.fetch).not.toHaveBeenCalled();
   });
   it("changed quotes or revoked write access never start native accounting or transport", async () => {

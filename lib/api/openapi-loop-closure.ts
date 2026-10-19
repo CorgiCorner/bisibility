@@ -1,4 +1,6 @@
 import type { schemas } from "./openapi-components";
+import { publicIdSchema } from "./openapi-public-id";
+import { closedEnum } from "./openapi-sdk-schema";
 
 type Bearer = (
   summary: string,
@@ -104,7 +106,12 @@ export function loopClosurePaths(input: {
             {
               in: "query",
               name: "segment",
-              schema: { type: "string", enum: ["history", "planned"], default: "history" },
+              schema: {
+                type: "string",
+                enum: ["history", "planned"],
+                default: "history",
+                ...closedEnum("RankCheckRunSegment"),
+              },
             },
             {
               in: "query",
@@ -126,7 +133,13 @@ export function loopClosurePaths(input: {
     },
     "/projects/{project_id}/rank-check-runs/{run_id}": {
       get: {
-        ...input.bearer("Get a rank-check run", "getRankCheckRun", input.ref("RankCheckRunRead")),
+        ...input.bearer(
+          "Get a rank-check run",
+          "getRankCheckRun",
+          input.ref("RankCheckRunRead"),
+          undefined,
+          [{ in: "path", name: "run_id", required: true, schema: publicIdSchema("rcr") }],
+        ),
         description: "Read an existing run without launching a measurement.",
       },
     },
@@ -153,6 +166,11 @@ export function loopClosurePaths(input: {
         "Mute one triggered alert for 24 hours",
         "muteTriggeredAlert",
         input.ref("TriggeredAlertMuteResult"),
+        undefined,
+        [
+          { in: "path", name: "alert_id", required: true, schema: publicIdSchema("al") },
+          { $ref: "#/components/parameters/IdempotencyKey" },
+        ],
       ),
     },
     "/projects/{project_id}/triggered-alerts/mark-read": {
@@ -160,6 +178,8 @@ export function loopClosurePaths(input: {
         "Mark all firing project alerts as read",
         "markProjectAlertsRead",
         input.ref("TriggeredAlertsReadResult"),
+        undefined,
+        [{ $ref: "#/components/parameters/IdempotencyKey" }],
       ),
     },
   };

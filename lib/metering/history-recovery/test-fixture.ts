@@ -48,6 +48,9 @@ export async function historyFixture(
     f.client().$transaction(
       async (tx) => {
         if (readOnly) await tx.$executeRaw`SET TRANSACTION READ ONLY`;
+        // Same session as the production writer (createSql): the metering_utc_writers trigger
+        // rejects any other TimeZone name, including the server default Etc/UTC.
+        await tx.$executeRaw`SET LOCAL TIME ZONE 'UTC'`;
         await tx.$executeRaw(SQL.sql`SET LOCAL search_path TO ${SQL.raw(f.schema)}`);
         return body(tx);
       },

@@ -43,7 +43,7 @@ const payloadSchema = z.record(z.string(), z.unknown()).superRefine((value, ctx)
   }
 });
 
-const createSignalSchema = z.object({
+export const createSignalSchema = z.object({
   happenedAt: z.iso
     .datetime()
     .optional()

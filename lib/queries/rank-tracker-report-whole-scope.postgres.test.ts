@@ -19,9 +19,15 @@ vi.mock("@/lib/auth/audit", () => ({ writeAuditFailure: vi.fn(async () => ({})) 
 describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
   "rank tracker actual whole-filter current-quality oracle",
   () => {
+    // The report instant is pinned so the default 7-day comparison cutoff (2026-10-07T12:00Z)
+    // always falls between the 2026-09-30 baseline and the 2026-10-12 current checks. A
+    // wall-clock asOf moved that cutoff past the current checks from 2026-10-19T10:01Z onward.
+    const reportAt = new Date("2026-10-14T12:00:00.000Z");
     let fixture: Awaited<ReturnType<typeof rankReportTestDatabase>>;
     let extraIds: string[];
-    let snapshotAt: Date;
+    // Definition heads are captured with the database clock_timestamp(), so they can only be
+    // read at an instant after fixture setup, never at the pinned historical report instant.
+    let definitionsAt: Date;
     beforeAll(async () => {
       fixture = await rankReportTestDatabase(101, true);
       const extras = Array.from({ length: 102 }, (_, i) => ({
@@ -78,7 +84,7 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
         },
         where: { rankCheckId: oldId },
       });
-      snapshotAt = new Date();
+      definitionsAt = new Date();
     }, 60000);
     afterAll(async () => {
       await fixture?.close();
@@ -86,7 +92,7 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
 
     function options(): RankTrackerReportOptions {
       return {
-        asOf: snapshotAt,
+        asOf: reportAt,
         context: fixture.context,
         db: fixture.db,
         limits: { maxChecks: 1000, maxItems: 1000, maxTargets: 1000 },
@@ -105,7 +111,7 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
             fixture.context,
             project.publicId,
             targets.map(({ publicId }) => publicId),
-            snapshotAt,
+            definitionsAt,
             { cadenceIntervalMs: async () => null },
           );
           return new Map([...actual].map(([id, value]) => [id, { ...value, volume: 100 }]));

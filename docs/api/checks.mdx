@@ -15,7 +15,7 @@ keyword ID. An unqualified key uses the country's default language. See
 ## Run rank check
 
 ```http
-POST /api/v1/keywords/{id}/checks
+POST /api/v1/keywords/{keyword_id}/checks
 Authorization: Bearer <api_key>
 Content-Type: application/json
 Idempotency-Key: run-check-001
@@ -99,7 +99,7 @@ When inline execution is unavailable, the request queues a rank-check run. The
 response status is `202`; `id` is the public run ID and `status` is `queued`:
 
 ```http
-POST /api/v1/keywords/{id}/checks
+POST /api/v1/keywords/{keyword_id}/checks
 Authorization: Bearer <api_key>
 Content-Type: application/json
 Idempotency-Key: run-check-001
@@ -117,7 +117,7 @@ Poll the keyword's completed rank-check history and select the row whose
 `position` and its rank-check `id`:
 
 ```http
-GET /api/v1/keywords/{id}/rank-checks?limit=10&status=completed
+GET /api/v1/keywords/{keyword_id}/rank-checks?limit=10&status=completed
 Authorization: Bearer <api_key>
 ```
 

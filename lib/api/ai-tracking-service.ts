@@ -14,11 +14,7 @@ import {
 import { resolveTrackingConnection } from "@/lib/ai-tracking/queries/connections";
 import { listTrackingRuns } from "@/lib/ai-tracking/queries/runs";
 import { listTrackingSamples } from "@/lib/ai-tracking/queries/samples";
-import {
-  planTrackingRunSchema,
-  scheduleInputSchema,
-  sourceConfigurationSchema,
-} from "@/lib/ai-tracking/schema";
+import { planTrackingRunSchema, scheduleInputSchema } from "@/lib/ai-tracking/schema";
 import {
   archivePrompt,
   createPrompt,
@@ -41,7 +37,7 @@ import {
 } from "@/lib/ai-tracking/stores/topics";
 import type { Actor } from "@/lib/auth/authorize";
 import { isPublicIdOfType } from "@/lib/db/public-id-resources";
-import { z } from "zod";
+import { parseTrackingRunApiPlan, trackingPreviewSchema } from "./ai-tracking-run-input";
 
 export async function trackingScope(actor: Actor, project: string, write = false) {
   return requireProjectScope(actor, write ? "update" : "read", project, { type: "project" });
@@ -214,7 +210,7 @@ export async function trackingLaunch(projectId: string, value: unknown, preview:
     const { credentialConnectionPublicId, ...result } = preview;
     return { ...result, credentialConnectionId: credentialConnectionPublicId };
   }
-  const input = await trackingPlan(projectId, value);
+  const input = await trackingPlan(projectId, parseTrackingRunApiPlan(value));
   return launchTrackingRun(projectId, {
     ...input,
     consent: (value as { consent?: boolean }).consent === true,
@@ -223,9 +219,3 @@ export async function trackingLaunch(projectId: string, value: unknown, preview:
 export async function trackingRevisions(projectId: string, publicId: string) {
   return listPromptRevisions(projectId, await resolveTrackingId(projectId, "prompts", publicId));
 }
-
-export const trackingPreviewSchema = z.object({
-  promptIds: z.array(z.string().min(1)).min(1).max(100),
-  configurations: z.array(sourceConfigurationSchema).min(1).max(20),
-  credentialConnectionId: z.string().optional(),
-});

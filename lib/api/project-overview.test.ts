@@ -21,6 +21,9 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
 vi.mock("@/lib/queries/overview-data", () => ({
   loadOverviewMetricData: mocks.loadOverviewMetricData,
 }));
@@ -330,9 +333,16 @@ describe("project overview API", () => {
       operationId: "getProjectOverview",
       parameters: [
         expect.objectContaining({ name: API_VERSION_HEADER }),
+        expect.objectContaining({ in: "path", name: "project_id", required: true }),
         expect.objectContaining({
           name: "range",
-          schema: { default: "28d", enum: ["7d", "28d", "90d"], type: "string" },
+          schema: {
+            default: "28d",
+            enum: ["7d", "28d", "90d"],
+            type: "string",
+            "x-bisibility-enum": "closed",
+            "x-bisibility-name": "OverviewRange",
+          },
         }),
         expect.objectContaining({
           name: "device",
@@ -340,6 +350,8 @@ describe("project overview API", () => {
             default: "all",
             enum: ["all", "desktop", "mobile"],
             type: "string",
+            "x-bisibility-enum": "closed",
+            "x-bisibility-name": "OverviewDevice",
           },
         }),
         expect.objectContaining({

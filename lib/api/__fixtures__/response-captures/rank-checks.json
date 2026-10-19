@@ -1,0 +1,110 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [
+          {
+            "usage": {
+              "quantity": 3,
+              "status": "confirmed",
+              "unit": "operations"
+            },
+            "attempts": null,
+            "checked_at": "2026-09-05T12:00:00.000Z",
+            "cost_cents": 1.5,
+            "error": null,
+            "error_code": null,
+            "id": "check_a00000000000000000000000",
+            "keyword_id": "kw_a00000000000000000000000",
+            "observation_completeness": null,
+            "position": 3,
+            "previous_position": null,
+            "provider": "serpapi",
+            "ranking_url": null,
+            "run": null,
+            "run_id": null,
+            "status": "completed"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listRankChecks",
+      "path": "/keywords/{keyword_id}/rank-checks",
+      "status": 200
+    },
+    {
+      "body": {
+        "id": "rcr_a00000000000000000000000",
+        "status": "queued"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "runRankCheck",
+      "path": "/keywords/{keyword_id}/checks",
+      "status": 202
+    },
+    {
+      "body": {
+        "usage": {
+          "quantity": 3,
+          "status": "confirmed",
+          "unit": "operations"
+        },
+        "attempts": null,
+        "checked_at": "2026-09-05T12:00:00.000Z",
+        "cost_cents": 1.5,
+        "error": null,
+        "error_code": null,
+        "id": "check_a00000000000000000000000",
+        "keyword_id": "kw_a00000000000000000000000",
+        "observation_completeness": null,
+        "position": 3,
+        "previous_position": null,
+        "provider": "serpapi",
+        "ranking_url": null,
+        "run": null,
+        "run_id": null,
+        "status": "completed"
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getRankCheckResult",
+      "path": "/rank-checks/{check_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "usage": {
+          "quantity": 3,
+          "status": "confirmed",
+          "unit": "operations"
+        },
+        "attempts": null,
+        "checked_at": "2026-09-05T12:00:00.000Z",
+        "cost_cents": 1.5,
+        "error": null,
+        "error_code": null,
+        "id": "check_a00000000000000000000000",
+        "keyword_id": "kw_a00000000000000000000000",
+        "observation_completeness": null,
+        "position": 3,
+        "previous_position": null,
+        "provider": "serpapi",
+        "ranking_url": null,
+        "run": null,
+        "run_id": null,
+        "status": "completed"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "runRankCheck",
+      "path": "/keywords/{keyword_id}/checks",
+      "status": 201
+    }
+  ],
+  "source": "lib/api/rank-checks.test.ts"
+}

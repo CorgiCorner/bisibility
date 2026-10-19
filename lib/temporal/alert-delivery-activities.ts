@@ -8,9 +8,11 @@ export {
   finalizeAlertDigestDeliveryActivity,
   prepareAlertDigestDeliveryActivity,
 } from "../alerts/digest-delivery";
+export { deliverAlertDigestPushActivity } from "../alerts/digest-push";
 export {
   type AlertDeliveryOutcome,
   deliverAlertEmailActivity,
+  deliverAlertPushActivity,
   deliverAlertSlackActivity,
   deliverAlertWebhookActivity,
   finalizeAlertDeliveryActivity,

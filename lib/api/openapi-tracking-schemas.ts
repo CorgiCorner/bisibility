@@ -1,3 +1,10 @@
+import { openEnum, sdkName, usdCents } from "./openapi-sdk-schema";
+import {
+  trackingEngineSchema as engine,
+  trackingSampleSchema as sample,
+  trackingSourceSchema as source,
+  trackingRawEvidenceSchema,
+} from "./openapi-tracking-evidence";
 import {
   aiTrackingSuggestionResponseSchemas,
   aiTrackingSuggestionSnapshotSchema,
@@ -16,25 +23,18 @@ const object = (properties: Record<string, object>, required = Object.keys(prope
   required,
   additionalProperties: false,
 });
+const named = <T extends object>(name: string, schema: T) => ({ ...schema, ...sdkName(name) });
+const component = (name: string): { $ref: string } => ({
+  $ref: `#/components/schemas/${name}`,
+});
+const promptCategory = {
+  type: "string",
+  enum: ["neutral", "comparative", "branded"],
+  ...openEnum("AiTrackingPromptCategory"),
+};
 const array = (items: object) => ({ type: "array", items });
 const nullable = (schema: object) => ({ oneOf: [schema, { type: "null" }] });
 const id = (prefix: string) => ({ type: "string", pattern: `^${prefix}_[a-z][a-z0-9]{23}$` });
-const source = { type: "string", enum: ["consumer_scrape", "model_api", "google_aio"] };
-const engine = { type: "string", enum: ["chat_gpt", "gemini", "claude", "perplexity", "google"] };
-const measurement = {
-  type: "string",
-  enum: ["answer_present", "aio_not_present", "partial", "unavailable", "failed", "unknown"],
-};
-const costState = {
-  type: "string",
-  enum: ["unknown", "pending", "confirmed", "refund_pending", "derived"],
-};
-const usd = {
-  type: ["string", "null"],
-  pattern: "^\\d+(?:\\.\\d+)?$",
-  description:
-    "Decimal USD string from the provider cost receipt, or null when unknown. Never an invented zero.",
-};
 const configuration = object({
   provider: { const: "dataforseo" },
   endpoint: text,
@@ -54,21 +54,21 @@ const topic = object({
 });
 const revision = object({
   id: id("apr"),
-  category: { type: "string", enum: ["neutral", "comparative", "branded"] },
+  category: promptCategory,
   ordinal: { type: "integer", minimum: 1 },
   text,
   text_hash: { type: "string", pattern: "^[a-f0-9]{64}$" },
   created_at: date,
 });
 Object.assign(revision.properties, {
-  generation_reference: object({
-    generation_id: id("asg"),
-    draft_id: { type: "string", format: "uuid" },
-  }),
-  provider_dataset_reference: object({
-    report_id: id("agr"),
-    row_index: { type: "integer", minimum: 0 },
-  }),
+  generation_reference: named(
+    "AiTrackingPromptGenerationReference",
+    object({ generation_id: id("asg"), draft_id: { type: "string", format: "uuid" } }),
+  ),
+  provider_dataset_reference: named(
+    "AiTrackingPromptDatasetReference",
+    object({ report_id: id("agr"), row_index: { type: "integer", minimum: 0 } }),
+  ),
 });
 const prompt = object({
   id: id("aip"),
@@ -78,7 +78,7 @@ const prompt = object({
   paused_at: nullableDate,
   created_at: date,
   updated_at: date,
-  revisions: array(revision),
+  revisions: array(named("AiTrackingPromptRevision", revision)),
 });
 const schedule = object({
   id: id("ais"),
@@ -88,7 +88,10 @@ const schedule = object({
   enabled: flag,
   archived_at: nullableDate,
   next_run_at: nullableDate,
-  configuration: object({ configurations: array(configuration), prompt_ids: array(id("aip")) }),
+  configuration: object({
+    configurations: array(named("AiTrackingConfiguration", configuration)),
+    prompt_ids: array(id("aip")),
+  }),
   created_at: date,
   updated_at: date,
 });
@@ -106,6 +109,7 @@ const run = object({
       "cancelled",
       "skipped",
     ],
+    ...openEnum("AiTrackingRunState"),
   },
   created_at: date,
   updated_at: date,
@@ -114,63 +118,27 @@ const run = object({
   sample_count: { type: ["integer", "null"], minimum: 0 },
 });
 const preview = object({
-  configurations: array(configuration),
+  configurations: array(named("AiTrackingConfiguration", configuration)),
   credential_connection_id: id("conn"),
   credential_version: text,
   budget_revision: text,
   consent_revision: text,
-  estimated_cost_cents: { type: "number", minimum: 0 },
+  estimated_cost_cents: { ...usdCents, type: "number", minimum: 0 },
 });
-const citation = object({
-  url: { type: "string", format: "uri" },
-  title: nullableText,
-  position: count,
-});
-const evidence = object({
-  answer_text: nullableText,
-  raw: { description: "Bounded provider evidence projection; null when unavailable." },
-  answer_truncated: flag,
-  raw_truncated: flag,
-  search_results: array(citation),
-  requested_locale: nullableText,
-  effective_locale: nullableText,
-  locale_mechanism: nullableText,
-  requested_model: nullableText,
-  actual_model: nullableText,
-  provider_status: nullableText,
-  observed_at: nullableDate,
-  fetched_at: date,
-  recorded_source: {
-    type: "string",
-    enum: ["fresh", "cache"],
-    description:
-      "Cached evidence keeps its original observation time and cannot become a fresh tracker sample.",
-  },
-});
-const sample = object({
-  id: id("asm"),
-  measurement,
-  source,
-  engine,
-  prompt: text,
-  prompt_revision_id: id("apr"),
-  evidence: nullable(evidence),
-  citations: array(citation),
-  cost_usd: usd,
-  cost_state: costState,
-});
-const denominator = object({
-  expected: count,
-  observed: count,
-  eligible: count,
-  mentioned: count,
-  absent_aio: count,
-  partial: count,
-  failed: count,
-  unknown: count,
-  missing: count,
-  coverage: { type: "number", minimum: 0, maximum: 1 },
-  mention_rate: { type: ["number", "null"], minimum: 0, maximum: 1 },
+const denominator = named("AiTrackingTrendCounts", {
+  ...object({
+    expected: count,
+    observed: count,
+    eligible: count,
+    mentioned: count,
+    absent_aio: count,
+    partial: count,
+    failed: count,
+    unknown: count,
+    missing: count,
+    coverage: { type: "number", minimum: 0, maximum: 1 },
+    mention_rate: { type: ["number", "null"], minimum: 0, maximum: 1 },
+  }),
 });
 const trendComparison = {
   current: denominator,
@@ -187,10 +155,17 @@ const trends = object(
     baseline: { const: "neutral" },
     category: { const: "neutral" },
     strata: array(
-      object({
-        category: { type: "string", enum: ["neutral", "comparative", "branded", "unknown"] },
-        ...trendComparison,
-      }),
+      named(
+        "AiTrackingTrendStratum",
+        object({
+          category: {
+            type: "string",
+            enum: ["neutral", "comparative", "branded", "unknown"],
+            ...openEnum("AiTrackingTrendCategory"),
+          },
+          ...trendComparison,
+        }),
+      ),
     ),
     next_cursor: nullableText,
     previous_next_cursor: nullableText,
@@ -217,9 +192,23 @@ const suggestions = object({
 const page = (resource: object) =>
   object({
     data: array(resource),
-    meta: object({ next_cursor: nullableText }),
+    meta: named("AiTrackingPageMeta", object({ next_cursor: nullableText })),
   });
 const data = (resource: object) => object({ data: resource });
+
+/** App-owned AI tracking components; the MCP contract has no say in these shapes. */
+export const aiTrackingComponentSchemas = {
+  AiTrackingRawEvidence: trackingRawEvidenceSchema,
+  AiTrackingPrompt: prompt,
+  AiTrackingPromptPage: page({ $ref: "#/components/schemas/AiTrackingPrompt" }),
+  AiTrackingRun: run,
+  AiTrackingRunResponse: data(component("AiTrackingRun")),
+  AiTrackingRunPreviewResponse: data(named("AiTrackingRunPreview", preview)),
+  AiTrackingSamplePage: page(named("AiTrackingSample", sample)),
+  AiTrackingRunPage: page({ $ref: "#/components/schemas/AiTrackingRun" }),
+  AiTrackingTrends: trends,
+  AiTrackingTrendsResponse: data({ $ref: "#/components/schemas/AiTrackingTrends" }),
+};
 
 export const aiTrackingResponseSchemas = {
   ...aiTrackingSuggestionResponseSchemas,
@@ -227,23 +216,23 @@ export const aiTrackingResponseSchemas = {
   createAiTrackingTopic: data(topic),
   updateAiTrackingTopic: data(topic),
   archiveAiTrackingTopic: data(topic),
-  listAiTrackingPrompts: page(prompt),
-  createAiTrackingPrompt: data(prompt),
-  updateAiTrackingPrompt: data(prompt),
-  archiveAiTrackingPrompt: data(prompt),
+  listAiTrackingPrompts: component("AiTrackingPromptPage"),
+  createAiTrackingPrompt: data(component("AiTrackingPrompt")),
+  updateAiTrackingPrompt: data(component("AiTrackingPrompt")),
+  archiveAiTrackingPrompt: data(component("AiTrackingPrompt")),
   listAiTrackingSchedules: page(schedule),
   createAiTrackingSchedule: data(schedule),
   updateAiTrackingSchedule: data(schedule),
   archiveAiTrackingSchedule: data(schedule),
-  previewAiTrackingRun: data(preview),
-  createAiTrackingRun: data(run),
-  listAiTrackingRuns: page(run),
-  getAiTrackingRun: data(run),
-  listAiTrackingSamples: page(sample),
-  cancelAiTrackingRun: data(run),
-  retryAiTrackingRun: data(run),
-  getAiTrackingHistory: page(run),
-  getAiTrackingTrends: data(trends),
+  previewAiTrackingRun: component("AiTrackingRunPreviewResponse"),
+  createAiTrackingRun: component("AiTrackingRunResponse"),
+  listAiTrackingRuns: component("AiTrackingRunPage"),
+  getAiTrackingRun: component("AiTrackingRunResponse"),
+  listAiTrackingSamples: component("AiTrackingSamplePage"),
+  cancelAiTrackingRun: data(component("AiTrackingRun")),
+  retryAiTrackingRun: data(component("AiTrackingRun")),
+  getAiTrackingHistory: component("AiTrackingRunPage"),
+  getAiTrackingTrends: component("AiTrackingTrendsResponse"),
   exportAiTrackingEvidence: data(
     object(
       {
@@ -261,7 +250,7 @@ export const aiTrackingResponseSchemas = {
     ),
   ),
   suggestAiTrackingPrompts: data(suggestions),
-  acceptAiTrackingSuggestions: data(object({ prompts: array(prompt) })),
+  acceptAiTrackingSuggestions: data(object({ prompts: array(component("AiTrackingPrompt")) })),
 } as const;
 
 export function aiTrackingResponseSchema(operationId: keyof typeof aiTrackingResponseSchemas) {

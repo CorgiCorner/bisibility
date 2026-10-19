@@ -16,6 +16,7 @@ const projectRef = "prj_story";
 const preferences: NotificationPreferencesView = {
   alertEmail: true,
   alertInApp: true,
+  alertPush: true,
   alertSlack: false,
   alertWebhook: false,
   checkEmail: false,

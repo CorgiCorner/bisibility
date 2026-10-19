@@ -280,4 +280,8 @@ if (!smokeMode) {
     console.error("[temporal] worker failed:", error);
     process.exit(1);
   }
+  // run() returns only after both workers drained on a shutdown signal. Exit explicitly so a
+  // handle nothing closed (a pool, a socket) cannot hold the stopped worker open.
+  console.error("[temporal] worker stopped");
+  process.exit(0);
 }

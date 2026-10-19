@@ -1,0 +1,385 @@
+{
+  "captures": [
+    {
+      "body": null,
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getOpenApi",
+      "path": "/openapi.json",
+      "status": 200
+    },
+    {
+      "body": {
+        "alert_email": true,
+        "alert_in_app": true,
+        "alert_push": true,
+        "alert_slack": false,
+        "alert_webhook": false,
+        "check_email": false,
+        "check_in_app": true,
+        "email": "owner@example.com",
+        "email_verification": "verified",
+        "import_email": true,
+        "import_in_app": true,
+        "invite_email": true,
+        "invite_in_app": true,
+        "project_id": "prj_a00000000000000000000000",
+        "slack_available": false,
+        "webhook_available": false
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getNotificationPreferences",
+      "path": "/projects/{project_id}/notification-preferences",
+      "status": 200
+    },
+    {
+      "body": {
+        "can_delete": true,
+        "config": {
+          "filters": {
+            "change": "any",
+            "contains": "",
+            "intents": [],
+            "last_check": "any",
+            "position": [],
+            "serp": [],
+            "tags": [],
+            "topics": [],
+            "url_changed": false,
+            "vol_max": 50,
+            "vol_min": 0,
+            "wrong_url": false
+          },
+          "lens": {
+            "device": "all",
+            "location_id": null
+          },
+          "search": "",
+          "surface": "keywords",
+          "version": 1
+        },
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "definition": {
+          "filters": {
+            "change": "any",
+            "contains": "",
+            "intents": [],
+            "last_check": "any",
+            "position": [],
+            "serp": [],
+            "tags": [],
+            "topics": [],
+            "url_changed": false,
+            "vol_max": 50,
+            "vol_min": 0,
+            "wrong_url": false
+          },
+          "lens": {
+            "device": "all",
+            "location_id": null
+          },
+          "search": "",
+          "surface": "keywords",
+          "version": 1
+        },
+        "id": "viw_a00000000000000000000000",
+        "name": "Mine",
+        "revision": 1,
+        "surface": "keywords",
+        "visibility": "project"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createSavedView",
+      "path": "/projects/{project_id}/saved-views",
+      "status": 201
+    },
+    {
+      "body": {
+        "can_delete": true,
+        "config": {
+          "filters": {
+            "excluded_keyword_ids": ["kw_a00000000000000000000000"],
+            "position": "all",
+            "tag": null
+          },
+          "scope": {
+            "device": "desktop",
+            "engine": "google",
+            "location_id": "location_us"
+          },
+          "surface": "competitors",
+          "version": 1
+        },
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "definition": {
+          "filters": {
+            "excluded_keyword_ids": ["kw_a00000000000000000000000"],
+            "position": "all",
+            "tag": null
+          },
+          "scope": {
+            "device": "desktop",
+            "engine": "google",
+            "location_id": "location_us"
+          },
+          "surface": "competitors",
+          "version": 1
+        },
+        "id": "viw_a00000000000000000000000",
+        "name": "US desktop",
+        "revision": 1,
+        "surface": "competitors",
+        "visibility": "project"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createSavedView",
+      "path": "/projects/{project_id}/saved-views",
+      "status": 201
+    },
+    {
+      "body": {
+        "created_at": "2026-01-01T00:00:00.000Z",
+        "expires_at": "2026-01-01T01:00:00.000Z",
+        "id": "ferry_a00000000000000000000000",
+        "import_job": {
+          "id": "imp_a00000000000000000000000",
+          "state": "idle"
+        },
+        "scope": "keywords",
+        "single_use": true,
+        "token": "mig_secret"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "mintMigrationToken",
+      "path": "/projects/{project_id}/migration-tokens",
+      "status": 201
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "can_delete": true,
+            "config": {
+              "filters": {
+                "change": "any",
+                "contains": "",
+                "intents": [],
+                "last_check": "any",
+                "position": [],
+                "serp": [],
+                "tags": [],
+                "topics": [],
+                "url_changed": false,
+                "vol_max": 50,
+                "vol_min": 0,
+                "wrong_url": false
+              },
+              "lens": {
+                "device": "all",
+                "location_id": null
+              },
+              "search": "",
+              "surface": "keywords",
+              "version": 1
+            },
+            "created_at": "2026-01-01T00:00:00.000Z",
+            "definition": {
+              "filters": {
+                "change": "any",
+                "contains": "",
+                "intents": [],
+                "last_check": "any",
+                "position": [],
+                "serp": [],
+                "tags": [],
+                "topics": [],
+                "url_changed": false,
+                "vol_max": 50,
+                "vol_min": 0,
+                "wrong_url": false
+              },
+              "lens": {
+                "device": "all",
+                "location_id": null
+              },
+              "search": "",
+              "surface": "keywords",
+              "version": 1
+            },
+            "id": "viw_a00000000000000000000000",
+            "name": "All",
+            "revision": 1,
+            "surface": "keywords",
+            "visibility": "project"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSavedViews",
+      "path": "/projects/{project_id}/saved-views",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "can_delete": true,
+            "config": {
+              "filters": {
+                "excluded_keyword_ids": [],
+                "position": "all",
+                "tag": null
+              },
+              "scope": {
+                "device": "desktop",
+                "engine": "google",
+                "location_id": "location_us"
+              },
+              "surface": "competitors",
+              "version": 1
+            },
+            "created_at": "2026-01-01T00:00:00.000Z",
+            "definition": {
+              "filters": {
+                "excluded_keyword_ids": [],
+                "position": "all",
+                "tag": null
+              },
+              "scope": {
+                "device": "desktop",
+                "engine": "google",
+                "location_id": "location_us"
+              },
+              "surface": "competitors",
+              "version": 1
+            },
+            "id": "viw_a00000000000000000000000",
+            "name": "All",
+            "revision": 1,
+            "surface": "competitors",
+            "visibility": "project"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSavedViews",
+      "path": "/projects/{project_id}/saved-views",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "domain": "competitor.example.com",
+            "id": "cmp_a00000000000000000000000",
+            "label": "Competitor"
+          }
+        ],
+        "meta": {
+          "markets": [
+            {
+              "quality": {
+                "definition_version": "bisibility-sov-top10-v2",
+                "metric_id": "competitor_share_of_voice_top10",
+                "domain_set": ["competitor.example.com", "example.com"],
+                "expected": 1,
+                "measured": 1,
+                "unknown": 0,
+                "stale": 0,
+                "observed_coverage": 1,
+                "data_coverage": 1,
+                "imputed_weight_share": 0
+              },
+              "checked_keyword_count": 1,
+              "country": "United States",
+              "data_state": "ranked",
+              "device": "Desktop",
+              "domains": [
+                {
+                  "domain": "example.com",
+                  "managed": false
+                },
+                {
+                  "domain": "competitor.example.com",
+                  "managed": true
+                }
+              ],
+              "engine": "Google",
+              "id": "location_us::desktop::google",
+              "measured_at": "2026-09-10T08:00:00.000Z",
+              "observations": [
+                {
+                  "checked_at": "2026-09-10T08:00:00.000Z",
+                  "completed": true,
+                  "id": "kw_a00000000000000000000000",
+                  "keyword": "rank tracker",
+                  "keyword_id": "kw_a00000000000000000000000",
+                  "ranked": true,
+                  "ranks": {
+                    "competitor.example.com": 1,
+                    "example.com": 3
+                  },
+                  "tags": []
+                }
+              ],
+              "shared_keyword_count": 1,
+              "shares": [
+                {
+                  "domain": "example.com",
+                  "shared_keywords": 1,
+                  "share_of_voice": 0.4444444444444444
+                },
+                {
+                  "domain": "competitor.example.com",
+                  "shared_keywords": 1,
+                  "share_of_voice": 0.5555555555555556
+                }
+              ]
+            }
+          ],
+          "suggestions": [],
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listCompetitors",
+      "path": "/projects/{project_id}/competitors",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_aaaaaaaaaaaaaaaaaaaaaaaa/saved-views",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "config": ["Invalid input"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createSavedView",
+      "path": "/projects/{project_id}/saved-views",
+      "status": 400
+    }
+  ],
+  "source": "lib/api/app-surface-more.test.ts"
+}

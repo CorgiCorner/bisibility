@@ -22,6 +22,8 @@ export type AnalyzeBacklinksOptions = {
 };
 
 export type LoadMoreBacklinkRowsOptions = {
+  estimateOnly?: boolean;
+  maxCostCents?: number;
   snapshotRef?: string;
   includeSubdomains: boolean;
   limit: number;
@@ -145,5 +147,5 @@ export function isBacklinksEstimate(
 ): outcome is BacklinksEstimate {
   return "estimate" in outcome && outcome.estimate === true;
 }
-/** Loading more rows always extends a stored snapshot; it never produces a dry run. */
-export type BacklinksRowsOutcome = BacklinksSnapshot | ProviderLookupFailure;
+/** A dry run prices the next page without extending its stored snapshot. */
+export type BacklinksRowsOutcome = BacklinksSnapshot | BacklinksEstimate | ProviderLookupFailure;

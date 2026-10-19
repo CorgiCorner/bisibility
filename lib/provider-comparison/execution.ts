@@ -9,6 +9,7 @@ import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { startDeploymentExecution } from "@/lib/providers/execution-extension";
 import { exactExecutionEstimate } from "@/lib/providers/execution-extension-estimate";
 import type { DeploymentExecution } from "@/lib/providers/execution-extension-types";
+import { assertOwnKeyStored } from "@/lib/providers/own-key-guard";
 import { consumeProviderLimit } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
@@ -134,6 +135,13 @@ export async function executeComparisonSide(input: {
     const live = await prisma.providerConnection.findFirst({
       where: { id: connection.id, projectId: input.projectId },
     });
+    if (!execution)
+      await assertOwnKeyStored({
+        capability: "rank_check",
+        credentialsEncrypted: live?.credentialsEncrypted,
+        projectId: input.projectId,
+        provider: connection.provider,
+      });
     const credentials = execution?.credentials ?? {
       ...resolveProviderCredentials(connection.provider, live?.credentialsEncrypted),
       usageObserver: journal?.observer,

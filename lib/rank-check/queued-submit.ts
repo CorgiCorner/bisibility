@@ -11,8 +11,12 @@ import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import { startQueuedDeploymentExecution } from "@/lib/providers/execution-extension";
-import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import {
+  DeploymentAdmissionExhaustedError,
+  OwnProviderKeyRequiredError,
+} from "@/lib/providers/execution-extension-errors";
 import type { QueuedDeploymentExecution } from "@/lib/providers/execution-extension-types";
+import { assertOwnKeyStored } from "@/lib/providers/own-key-guard";
 import { consumeProviderLimit, writeCooldown } from "@/lib/providers/rate-limit";
 import { DataForSeoError } from "@/lib/providers/serp/dataforseo-errors";
 import {
@@ -31,6 +35,14 @@ import { beginQueuedTaskUsageJournal, type QueuedTaskUsageJournal } from "./queu
 import { rankCheckSchedulerMode } from "./scheduler-mode";
 
 const TERMINAL_STATES = new Set(["completed", "deferred", "failed"]);
+
+/** Own-key refusals keep their actionable message; the other refusals keep their reason codes. */
+function admissionDeferral(error: DeploymentAdmissionExhaustedError) {
+  if (error instanceof OwnProviderKeyRequiredError) return error.message;
+  return error.reason === "balance"
+    ? "credits_exhausted"
+    : `budget_exhausted:${error.surface ?? "app"}`;
+}
 export function submitQueuedRankCheckBatch(batchId: string) {
   return submitBatch(batchId);
 }
@@ -102,16 +114,28 @@ async function submitBatch(batchId: string) {
         : null;
   } catch (error) {
     if (error instanceof DeploymentAdmissionExhaustedError) {
-      // Credits map to the wallet comparison and allocation to the budget one.
-      const progress = await deferQueuedRankCheckBatch(
-        batchId,
-        error.reason === "balance"
-          ? "credits_exhausted"
-          : `budget_exhausted:${error.surface ?? "app"}`,
-      );
+      const progress = await deferQueuedRankCheckBatch(batchId, admissionDeferral(error));
       return { state: progress.state };
     }
     throw error;
+  }
+  if (!execution) {
+    const refused = await assertOwnKeyStored({
+      capability: "rank_check",
+      credentialsEncrypted: connection.credentialsEncrypted,
+      projectId: claimed.batch.projectId,
+      provider: "dataforseo",
+    }).then(
+      () => null,
+      (error: unknown) => {
+        if (error instanceof OwnProviderKeyRequiredError) return error;
+        throw error;
+      },
+    );
+    if (refused) {
+      const progress = await deferQueuedRankCheckBatch(batchId, refused.message);
+      return { state: progress.state };
+    }
   }
   const credentials =
     execution?.credentials ??
@@ -247,12 +271,7 @@ async function submitBatch(batchId: string) {
       return { state: progress.state };
     }
     if (error instanceof DeploymentAdmissionExhaustedError) {
-      const progress = await deferQueuedRankCheckBatch(
-        batchId,
-        error.reason === "balance"
-          ? "credits_exhausted"
-          : `budget_exhausted:${error.surface ?? "app"}`,
-      );
+      const progress = await deferQueuedRankCheckBatch(batchId, admissionDeferral(error));
       return { state: progress.state };
     }
     if (

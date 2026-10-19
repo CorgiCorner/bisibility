@@ -21,12 +21,12 @@ import {
   snakeizeKeys,
 } from "./surface";
 
-const inviteSchema = z.object({
+export const inviteSchema = z.object({
   email: z.string().trim().max(320).pipe(z.email()),
   projectId: z.string().trim().min(1).max(120),
   role: z.enum(["admin", "member", "viewer"]),
 });
-const memberRoleSchema = z.object({ role: z.enum(["admin", "member", "viewer"]) });
+export const memberRoleSchema = z.object({ role: z.enum(["admin", "member", "viewer"]) });
 
 export async function listTeamMembers(ctx: ApiContext, projectId: string) {
   const scoped = scopedProject(ctx, projectId);

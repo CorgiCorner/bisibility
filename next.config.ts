@@ -31,6 +31,12 @@ export function resolveNextBuildCpus(env: Record<string, string | undefined>) {
   return isNextBuildMemoryCapped(env) ? 2 : undefined;
 }
 
+// The managed hosting build checks types in its own step before `next build` and fails on
+// errors there, so the build does not hold the compiled app in memory while the checker runs.
+export function areTypesCheckedBeforeBuild(env: Record<string, string | undefined>) {
+  return env.NEXT_TYPES_CHECKED_BEFORE_BUILD === "1";
+}
+
 // Hosting targets that need a config branch. Railway, Fly, and Render all run the Docker
 // image, so they are the unflagged default rather than a flag of their own.
 // Every build that runs under a pinned `--max-old-space-size=4096` (amplify.yml and
@@ -51,6 +57,9 @@ const nextConfig: NextConfig = {
   agentRules: false,
   // Keep framework chrome from intercepting bottom-aligned mobile actions.
   devIndicators: false,
+  typescript: {
+    ignoreBuildErrors: areTypesCheckedBeforeBuild(process.env),
+  },
   experimental: {
     useTypeScriptCli: true,
     // Managed webpack builds release each compiler process before TypeScript starts.

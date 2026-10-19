@@ -1,19 +1,37 @@
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import { beforeEach, expect, it, vi } from "vitest";
 
-const service = vi.hoisted(() => ({ run: vi.fn(), samples: vi.fn() }));
+const service = vi.hoisted(() => ({
+  authenticateBearer: vi.fn(),
+  run: vi.fn(),
+  samples: vi.fn(),
+  scope: vi.fn(),
+}));
 vi.mock("./ai-tracking-service", () => ({
   trackingRun: service.run,
   trackingSamples: service.samples,
+  trackingScope: service.scope,
+}));
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
+vi.mock("./auth", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./auth")>()),
+  authenticateBearer: service.authenticateBearer,
 }));
 
 import { trackingSnakeizeKeys } from "./ai-tracking-keys";
 import { trackingTrends } from "./ai-tracking-trends";
-import { aiTrackingResponseSchemas } from "./openapi-tracking-schemas";
+import { aiTrackingComponentSchemas } from "./openapi-tracking-schemas";
+import { handleApiRequest } from "./router";
 
-const validate = new AjvJsonSchemaValidator().getValidator(
-  aiTrackingResponseSchemas.getAiTrackingTrends as never,
-);
+// The REST response is `AiTrackingTrendsResponse`, `{ data: AiTrackingTrends }` with no other key.
+const validate = new AjvJsonSchemaValidator().getValidator({
+  additionalProperties: false,
+  properties: { data: aiTrackingComponentSchemas.AiTrackingTrends },
+  required: ["data"],
+  type: "object",
+} as never);
 const currentId = `air_${"current".padEnd(24, "a")}`;
 const previousId = `air_${"previous".padEnd(24, "a")}`;
 const sample = {
@@ -93,4 +111,37 @@ it("keeps trend metadata closed and rejects unsupported baselines and category e
     validate({ data: { ...body.data, strata: [{ ...strata[0], current: { coverage: 2 } }] } })
       .valid,
   ).toBe(false);
+});
+
+it("serves the trend comparison through the API router", async () => {
+  service.scope.mockResolvedValue({ id: "project", publicId: "prj_a00000000000000000000000" });
+  service.authenticateBearer.mockResolvedValue({
+    apiKey: {
+      id: "key_1",
+      name: "Key",
+      prefix: "bsb_key_live_",
+      projectId: "project",
+      scopes: ["read"],
+    },
+    kind: "project_key",
+    project: {
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      domain: "example.com",
+      id: "project",
+      name: "Example",
+      publicId: "prj_a00000000000000000000000",
+      updatedAt: new Date("2026-01-02T00:00:00.000Z"),
+    },
+  });
+  const path = ["projects", "prj_a00000000000000000000000", "ai-tracking", "trends"];
+
+  const routed = await handleApiRequest(
+    new Request(
+      `https://example.com/api/v1/${path.join("/")}?run_id=${currentId}&previous_run_id=${previousId}`,
+      { headers: { Authorization: "Bearer bsb_key_live_test" } },
+    ),
+    path,
+  );
+
+  expect(routed.status).toBe(200);
 });

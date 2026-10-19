@@ -1,0 +1,107 @@
+{
+  "captures": [
+    {
+      "body": {
+        "can_delete": true,
+        "config": {
+          "filters": {
+            "change": "any",
+            "contains": "",
+            "intents": [],
+            "last_check": "any",
+            "position": [],
+            "serp": [],
+            "tags": [],
+            "topics": [],
+            "url_changed": false,
+            "vol_max": 50,
+            "vol_min": 0,
+            "wrong_url": false
+          },
+          "lens": {
+            "device": "all",
+            "location_id": null
+          },
+          "search": "",
+          "surface": "keywords",
+          "version": 1
+        },
+        "created_at": "2026-07-10T23:00:00.000Z",
+        "definition": {
+          "filters": {
+            "change": "any",
+            "contains": "",
+            "intents": [],
+            "last_check": "any",
+            "position": [],
+            "serp": [],
+            "tags": [],
+            "topics": [],
+            "url_changed": false,
+            "vol_max": 50,
+            "vol_min": 0,
+            "wrong_url": false
+          },
+          "lens": {
+            "device": "all",
+            "location_id": null
+          },
+          "search": "",
+          "surface": "keywords",
+          "version": 1
+        },
+        "id": "viw_a00000000000000000000000",
+        "name": "API view",
+        "revision": 1,
+        "surface": "keywords",
+        "visibility": "project"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createSavedView",
+      "path": "/projects/{project_id}/saved-views",
+      "status": 201
+    },
+    {
+      "body": {
+        "deleted": false
+      },
+      "contentType": "application/json",
+      "method": "DELETE",
+      "operationId": "deleteProjectSavedView",
+      "path": "/projects/{project_id}/saved-views/{view_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "Project is in read-only mode while migration hold is active. Release the migration hold before writing to this project.",
+        "docs_url": "https://bisibility.com/docs/api/errors#project_read_only",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_aaaaaaaaaaaaaaaaaaaaaaaa/saved-views/viw_aaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": 423,
+        "title": "Project read-only",
+        "type": "https://bisibility.com/problems/project_read_only"
+      },
+      "contentType": "application/problem+json",
+      "method": "DELETE",
+      "operationId": "deleteProjectSavedView",
+      "path": "/projects/{project_id}/saved-views/{view_id}",
+      "status": 423
+    },
+    {
+      "body": {
+        "detail": "You are not authorized to perform this action.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_aaaaaaaaaaaaaaaaaaaaaaaa/saved-views/viw_aaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "DELETE",
+      "operationId": "deleteProjectSavedView",
+      "path": "/projects/{project_id}/saved-views/{view_id}",
+      "status": 403
+    }
+  ],
+  "source": "lib/api/router-saved-view-identity.test.ts"
+}

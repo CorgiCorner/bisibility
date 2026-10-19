@@ -37,7 +37,10 @@ import { ApiConflictError, ApiInputError, ApiNotFoundError } from "@/lib/api/err
 import { AuthorizationError } from "@/lib/auth/authorize";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
-import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import {
+  DeploymentAdmissionExhaustedError,
+  OwnProviderKeyRequiredError,
+} from "@/lib/providers/execution-extension-errors";
 import { BudgetExhaustedError } from "@/lib/rank-check/budget";
 import { quoteRankRunReservationForLaunch } from "@/lib/rank-check/runs/launch-preflight";
 import { LaunchRankCheckRunError } from "@/lib/rank-check/runs/launch-types";
@@ -135,19 +138,26 @@ describe("withAppRoute", () => {
   ])("keeps a real launch reservation refusal at 429", async (failure) => {
     mocks.quoteReservations.mockRejectedValueOnce(failure);
     const response = await withAppRoute(async () => {
-      await quoteRankRunReservationForLaunch({} as Prisma.TransactionClient, {
-        connection: {
-          id: "connection_1",
-          provider: "dataforseo",
-          credentialSource: "hosted",
-          credentialsEncrypted: null,
-          costPerCheckCents: null,
-          rateContext: undefined,
+      await quoteRankRunReservationForLaunch(
+        {
+          // An unflagged owner: the launch keeps its hosted reservation path.
+          billingAccess: { findUnique: async () => null },
+          project: { findUnique: async () => ({ ownerId: "owner_1" }) },
+        } as unknown as Prisma.TransactionClient,
+        {
+          connection: {
+            id: "connection_1",
+            provider: "dataforseo",
+            credentialSource: "hosted",
+            credentialsEncrypted: null,
+            costPerCheckCents: null,
+            rateContext: undefined,
+          },
+          projectId: "project_1",
+          source: "app",
+          targets: [{ keywordId: "keyword_1", cost: 1, depth: 10 }],
         },
-        projectId: "project_1",
-        source: "app",
-        targets: [{ keywordId: "keyword_1", cost: 1, depth: 10 }],
-      });
+      );
       return new Response();
     })(request);
     expect(mocks.rankUsesNativeUnits).toHaveBeenCalledExactlyOnceWith("dataforseo");
@@ -157,6 +167,18 @@ describe("withAppRoute", () => {
     await expect(response.json()).resolves.toMatchObject({
       details: { surface: "app", resets_at: expect.any(String) },
       type: "https://bisibility.com/problems/budget_exhausted",
+    });
+  });
+
+  it("maps an own-key refusal in session app routes to byok_required", async () => {
+    const response = await withAppRoute(async () => {
+      throw new OwnProviderKeyRequiredError({ capability: "rank_check", provider: "serpapi" });
+    })(request);
+    expect(response.status).toBe(403);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    await expect(response.json()).resolves.toMatchObject({
+      details: { capability: "rank_check", provider: "serpapi" },
+      type: "https://bisibility.com/problems/byok_required",
     });
   });
 

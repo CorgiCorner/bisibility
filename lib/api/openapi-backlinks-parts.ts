@@ -1,3 +1,12 @@
+import { closedEnum, openEnum, sdkName, usdCents } from "./openapi-sdk-schema";
+
+/** Site or page scope; shared by the request filter and every backlinks response. */
+export const backlinksTargetScope = {
+  enum: ["site", "page"],
+  type: "string",
+  ...openEnum("BacklinksTargetScope"),
+} as const;
+
 export const backlinksSummary = {
   properties: {
     backlinks_total: { minimum: 0, type: "integer" },
@@ -44,6 +53,7 @@ export const backlinksSummary = {
     "lost_referring_domains",
   ],
   type: "object",
+  ...sdkName("BacklinksSummary"),
 } as const;
 
 /**
@@ -67,13 +77,14 @@ export const backlinksEstimateSchema = {
       description: "0 when cached, otherwise equal to estimated_cost_cents.",
       minimum: 0,
       type: "number",
+      ...usdCents,
     },
     estimate: { const: true, type: "boolean" },
-    estimated_cost_cents: { minimum: 0, type: "number" },
+    estimated_cost_cents: { minimum: 0, type: "number", ...usdCents },
     include_subdomains: { type: "boolean" },
     provider: { type: "string" },
     target: { type: "string" },
-    target_scope: { enum: ["site", "page"], type: "string" },
+    target_scope: backlinksTargetScope,
   },
   required: [
     "target",
@@ -95,12 +106,12 @@ export const backlinksQueryParameters = [
     in: "query",
     name: "target",
     required: true,
-    schema: { type: "string" },
+    schema: { minLength: 1, type: "string" },
   },
   {
     in: "query",
     name: "target_scope",
-    schema: { default: "site", enum: ["site", "page"], type: "string" },
+    schema: { default: "site", ...backlinksTargetScope },
   },
   {
     description: "Ignored when target_scope is page.",
@@ -111,7 +122,12 @@ export const backlinksQueryParameters = [
   {
     in: "query",
     name: "result_limit",
-    schema: { default: 100, enum: [100, 300, 500, 1000], type: "integer" },
+    schema: {
+      default: 100,
+      enum: [100, 300, 500, 1000],
+      type: "integer",
+      ...closedEnum("BacklinksResultLimit"),
+    },
   },
   {
     description: "Provider-side row mode applied over the full corpus.",
@@ -121,6 +137,7 @@ export const backlinksQueryParameters = [
       default: "as_is",
       enum: ["as_is", "one_per_domain"],
       type: "string",
+      ...closedEnum("BacklinksMode"),
     },
   },
   {
@@ -135,6 +152,6 @@ export const backlinksQueryParameters = [
       "Limit admitted cost estimates across summary, history, rows and retries, in cents. Confirmed provider charges can differ from estimates.",
     in: "query",
     name: "max_cost_cents",
-    schema: { minimum: 1, type: "integer" },
+    schema: { minimum: 1, type: "integer", ...usdCents },
   },
 ];

@@ -196,6 +196,7 @@
       "email": "メール",
       "slack": "Slack",
       "webhook": "Webhook",
+      "push": "プッシュ通知",
       "slackUnavailable": "API のみのプレビューです。ダッシュボードからは設定できません。",
       "selected": "選択中",
       "optional": "任意",

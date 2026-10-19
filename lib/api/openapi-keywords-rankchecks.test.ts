@@ -11,8 +11,9 @@ describe("OpenAPI document", () => {
 
     expect(parameters.map((parameter) => parameter.name ?? parameter.$ref)).toEqual([
       API_VERSION_HEADER,
-      "limit",
-      "cursor",
+      "project_id",
+      "#/components/parameters/Limit",
+      "#/components/parameters/Cursor",
       "search",
       "tag",
       "topic",
@@ -23,8 +24,20 @@ describe("OpenAPI document", () => {
       "position_gt",
       "position_lt",
       "sort",
+      "filter[country]",
+      "filter[device]",
+      "filter[intent]",
+      "filter[location_key]",
+      "filter[position_gt]",
+      "filter[position_lt]",
+      "filter[tag]",
+      "filter[topic]",
+      "q",
       "#/components/parameters/SourceHeader",
     ]);
+    expect(parameters.find((parameter) => parameter.name === "filter[topic]")?.schema).toEqual(
+      parameters.find((parameter) => parameter.name === "topic")?.schema,
+    );
     expect(parameters.find((parameter) => parameter.name === "topic")?.schema).toMatchObject({
       maxLength: 80,
       minLength: 1,
@@ -168,14 +181,15 @@ describe("OpenAPI document", () => {
   });
 
   it("documents rank-check list filters and cursor pagination", () => {
-    const operation = getOpenApiDocument().paths["/keywords/{id}/rank-checks"].get;
+    const operation = getOpenApiDocument().paths["/keywords/{keyword_id}/rank-checks"].get;
     const parameters = operation.parameters as Parameter[];
     const responseSchema = operation.responses["200"].content["application/json"].schema;
 
     expect(parameters.map((parameter) => parameter.name ?? parameter.$ref)).toEqual([
       API_VERSION_HEADER,
-      "limit",
-      "cursor",
+      "keyword_id",
+      "#/components/parameters/Limit",
+      "#/components/parameters/Cursor",
       "status",
       "since",
       "until",

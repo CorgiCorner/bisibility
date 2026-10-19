@@ -410,5 +410,14 @@ describe("queued alert digest delivery", () => {
         status: "failed",
       }),
     });
+    // The in-app notification does not depend on the external channel.
+    expect(mocks.notifyTriggeredAlertDelivered).toHaveBeenCalledTimes(2);
+  });
+
+  it("notifies in-app for digested rules without external channels", async () => {
+    await expect(
+      finalizeAlertDigestDeliveryActivity({ job: { ...job(), channels: [] }, outcomes: [] }),
+    ).resolves.toEqual({ deliveryState: "skipped" });
+    expect(mocks.notifyTriggeredAlertDelivered).toHaveBeenCalledTimes(2);
   });
 });

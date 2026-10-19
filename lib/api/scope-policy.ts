@@ -37,6 +37,16 @@ export function grantedApiScopes(scopes: readonly string[]): readonly ApiScope[]
   return tier ? scopesForTier(tier) : [];
 }
 
+/**
+ * API scopes for a first-party app OAuth token. `api:*` never maps to `admin`, and the
+ * generic `read`/`write`/`admin` OAuth scopes are deliberately ignored here.
+ */
+export function firstPartyAppApiScopes(scopes: readonly string[]): readonly ApiScope[] {
+  if (scopes.includes("api:write")) return scopesForTier("write");
+  if (scopes.includes("api:read")) return scopesForTier("read");
+  return [];
+}
+
 /** Stored credentials must never gain permissions from malformed or missing scopes. */
 export function parseStoredApiScopes(value: unknown): readonly ApiScope[] | null {
   if (!Array.isArray(value) || value.length === 0 || !value.every(isApiScope)) return null;

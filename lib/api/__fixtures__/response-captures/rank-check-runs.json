@@ -1,0 +1,287 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [
+          {
+            "id": "rcr_a00000000000000000000000",
+            "project_id": "prj_a00000000000000000000000",
+            "status": "cancelled",
+            "outcome": null,
+            "terminal": true,
+            "polling_state": "terminal",
+            "trigger": "manual",
+            "counts": {
+              "requested": 1,
+              "total": 1,
+              "completed": 0,
+              "failed": 0,
+              "deferred": 0,
+              "skipped": 0,
+              "cancelled": 1
+            },
+            "counts_basis": "planned_or_unlaunched",
+            "keyword_count": 1,
+            "target_count": 1,
+            "planned_for": null,
+            "launched_at": null,
+            "started_at": null,
+            "finished_at": "2026-10-12T10:00:00.000Z",
+            "blocked_reason": null,
+            "parent_run_id": null,
+            "cost_cents": null,
+            "usage": {
+              "actual": null,
+              "estimated": null,
+              "unit": "operations"
+            },
+            "native_estimate": {
+              "provider_id": null,
+              "unit": null,
+              "quantity": null,
+              "unknown_targets": 1
+            }
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listRankCheckRuns",
+      "path": "/projects/{project_id}/rank-check-runs",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/keywords/kw_aaaaaaaaaaaaaaaaaaaaaaaa/checks",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "runRankCheck",
+      "path": "/keywords/{keyword_id}/checks",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Invalid API key.",
+        "docs_url": "https://bisibility.com/docs/api/errors#unauthorized",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_aaaaaaaaaaaaaaaaaaaaaaaa/rank-check-runs/rcr_aaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": 401,
+        "title": "Unauthorized",
+        "type": "https://bisibility.com/problems/unauthorized"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getRankCheckRun",
+      "path": "/projects/{project_id}/rank-check-runs/{run_id}",
+      "status": 401
+    },
+    {
+      "body": {
+        "detail": "Project not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_bbbbbbbbbbbbbbbbbbbbbbbb/rank-check-runs/rcr_aaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getRankCheckRun",
+      "path": "/projects/{project_id}/rank-check-runs/{run_id}",
+      "status": 404
+    },
+    {
+      "body": {
+        "id": "rcr_a00000000000000000000000",
+        "project_id": "prj_a00000000000000000000000",
+        "status": "blocked",
+        "outcome": null,
+        "terminal": false,
+        "polling_state": "blocked",
+        "trigger": "manual",
+        "counts": {
+          "requested": 1,
+          "total": 1,
+          "completed": 0,
+          "failed": 0,
+          "deferred": 0,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        "counts_basis": "planned_or_unlaunched",
+        "keyword_count": 1,
+        "target_count": 1,
+        "planned_for": null,
+        "launched_at": null,
+        "started_at": null,
+        "finished_at": null,
+        "blocked_reason": "budget_exhausted",
+        "parent_run_id": null,
+        "cost_cents": null,
+        "usage": {
+          "actual": null,
+          "estimated": null,
+          "unit": "operations"
+        },
+        "native_estimate": {
+          "provider_id": null,
+          "unit": null,
+          "quantity": null,
+          "unknown_targets": 1
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getRankCheckRun",
+      "path": "/projects/{project_id}/rank-check-runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "id": "rcr_a00000000000000000000000",
+        "project_id": "prj_a00000000000000000000000",
+        "status": "cancelled",
+        "outcome": null,
+        "terminal": true,
+        "polling_state": "terminal",
+        "trigger": "manual",
+        "counts": {
+          "requested": 1,
+          "total": 1,
+          "completed": 0,
+          "failed": 0,
+          "deferred": 0,
+          "skipped": 0,
+          "cancelled": 1
+        },
+        "counts_basis": "planned_or_unlaunched",
+        "keyword_count": 1,
+        "target_count": 1,
+        "planned_for": null,
+        "launched_at": null,
+        "started_at": null,
+        "finished_at": "2026-10-12T10:00:00.000Z",
+        "blocked_reason": null,
+        "parent_run_id": null,
+        "cost_cents": null,
+        "usage": {
+          "actual": null,
+          "estimated": null,
+          "unit": "operations"
+        },
+        "native_estimate": {
+          "provider_id": null,
+          "unit": null,
+          "quantity": null,
+          "unknown_targets": 1
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getRankCheckRun",
+      "path": "/projects/{project_id}/rank-check-runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "id": "rcr_a00000000000000000000000",
+        "project_id": "prj_a00000000000000000000000",
+        "status": "completed",
+        "outcome": "deferred",
+        "terminal": true,
+        "polling_state": "terminal",
+        "trigger": "manual",
+        "counts": {
+          "requested": 1,
+          "total": 1,
+          "completed": 0,
+          "failed": 0,
+          "deferred": 1,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        "counts_basis": "planned_or_unlaunched",
+        "keyword_count": 1,
+        "target_count": 1,
+        "planned_for": null,
+        "launched_at": null,
+        "started_at": null,
+        "finished_at": "2026-10-12T10:00:00.000Z",
+        "blocked_reason": null,
+        "parent_run_id": null,
+        "cost_cents": null,
+        "usage": {
+          "actual": null,
+          "estimated": null,
+          "unit": "operations"
+        },
+        "native_estimate": {
+          "provider_id": null,
+          "unit": null,
+          "quantity": null,
+          "unknown_targets": 1
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getRankCheckRun",
+      "path": "/projects/{project_id}/rank-check-runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "id": "rcr_a00000000000000000000000",
+        "project_id": "prj_a00000000000000000000000",
+        "status": "future_status",
+        "outcome": null,
+        "terminal": false,
+        "polling_state": "unknown",
+        "trigger": "manual",
+        "counts": {
+          "requested": 1,
+          "total": 1,
+          "completed": 0,
+          "failed": 0,
+          "deferred": 0,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        "counts_basis": "planned_or_unlaunched",
+        "keyword_count": 1,
+        "target_count": 1,
+        "planned_for": null,
+        "launched_at": null,
+        "started_at": null,
+        "finished_at": null,
+        "blocked_reason": null,
+        "parent_run_id": null,
+        "cost_cents": null,
+        "usage": {
+          "actual": null,
+          "estimated": null,
+          "unit": "operations"
+        },
+        "native_estimate": {
+          "provider_id": null,
+          "unit": null,
+          "quantity": null,
+          "unknown_targets": 1
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getRankCheckRun",
+      "path": "/projects/{project_id}/rank-check-runs/{run_id}",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/rank-check-runs.test.ts"
+}

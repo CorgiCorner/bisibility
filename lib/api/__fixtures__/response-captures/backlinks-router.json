@@ -1,0 +1,441 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": {
+          "cached": true,
+          "cached_until": "2026-07-25T15:00:00.000Z",
+          "cost_cents": 0,
+          "fetched_at": "2026-07-24T15:00:00.000Z",
+          "fetched_row_count": 0,
+          "history": [],
+          "include_subdomains": true,
+          "provider": "dataforseo",
+          "rows": [],
+          "summary": {
+            "backlinks_total": 0,
+            "broken_backlinks": 0,
+            "broken_pages": 0,
+            "dofollow_pct": 0,
+            "domain_rank": 0,
+            "lost_backlinks": 0,
+            "lost_referring_domains": 0,
+            "new_backlinks": 0,
+            "new_referring_domains": 0,
+            "referring_domains_total": 0,
+            "referring_pages": 0,
+            "spam_score": 0
+          },
+          "target": "example.com",
+          "target_scope": "site",
+          "total_rows_available": 0
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "cached": true,
+          "cached_until": "2026-07-25T15:00:00.000Z",
+          "cost_cents": 0,
+          "fetched_at": "2026-07-24T15:00:00.000Z",
+          "fetched_row_count": 0,
+          "history": [],
+          "include_subdomains": true,
+          "provider": "dataforseo",
+          "rows": [],
+          "summary": {
+            "backlinks_total": 0,
+            "broken_backlinks": 0,
+            "broken_pages": 0,
+            "dofollow_pct": 0,
+            "domain_rank": 0,
+            "lost_backlinks": 0,
+            "lost_referring_domains": 0,
+            "new_backlinks": 0,
+            "new_referring_domains": 0,
+            "referring_domains_total": 0,
+            "referring_pages": 0,
+            "spam_score": 0
+          },
+          "target": "example.com",
+          "target_scope": "site",
+          "total_rows_available": 0
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "loadMoreBacklinkRows",
+      "path": "/projects/{project_id}/backlinks/rows",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "estimate": true,
+          "cached": false,
+          "cached_until": null,
+          "cost_cents": 0.6,
+          "estimated_cost_cents": 0.6,
+          "provider": "dataforseo",
+          "include_subdomains": true,
+          "target": "example.com",
+          "target_scope": "site"
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "loadMoreBacklinkRows",
+      "path": "/projects/{project_id}/backlinks/rows",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks/rows",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadMoreBacklinkRows",
+      "path": "/projects/{project_id}/backlinks/rows",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "estimate_only": ["Invalid option: expected one of \"true\"|\"false\""]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "fresh": ["Invalid option: expected one of \"true\"|\"false\""]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "include_subdomains": ["Invalid option: expected one of \"true\"|\"false\""]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "max_cost_cents": ["Invalid input: expected int, received number"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "mode": ["Invalid option: expected one of \"as_is\"|\"one_per_domain\""]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "result_limit": ["Invalid input"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "target": ["Invalid input: expected string, received undefined"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "target_scope": ["Invalid option: expected one of \"site\"|\"page\""]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks/rows",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "estimate_only": ["Invalid input: expected boolean, received string"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadMoreBacklinkRows",
+      "path": "/projects/{project_id}/backlinks/rows",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks/rows",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "include_subdomains": ["Invalid input: expected boolean, received string"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadMoreBacklinkRows",
+      "path": "/projects/{project_id}/backlinks/rows",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks/rows",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "limit": ["Invalid number: must be a multiple of 100"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadMoreBacklinkRows",
+      "path": "/projects/{project_id}/backlinks/rows",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks/rows",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "max_cost_cents": ["Invalid input: expected int, received number"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadMoreBacklinkRows",
+      "path": "/projects/{project_id}/backlinks/rows",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks/rows",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "target": ["Invalid input: expected string, received undefined"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadMoreBacklinkRows",
+      "path": "/projects/{project_id}/backlinks/rows",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks/rows",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "target_scope": ["Invalid option: expected one of \"site\"|\"page\""]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadMoreBacklinkRows",
+      "path": "/projects/{project_id}/backlinks/rows",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "The estimated provider cost exceeds max_cost_cents.",
+        "docs_url": "https://bisibility.com/docs/api/errors#cost_limit_exceeded",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks/rows",
+        "status": 422,
+        "title": "Cost limit exceeded",
+        "type": "https://bisibility.com/problems/cost_limit_exceeded",
+        "details": {
+          "estimated_cost_cents": 0.6
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "loadMoreBacklinkRows",
+      "path": "/projects/{project_id}/backlinks/rows",
+      "status": 422
+    }
+  ],
+  "source": "lib/api/backlinks-router.test.ts"
+}

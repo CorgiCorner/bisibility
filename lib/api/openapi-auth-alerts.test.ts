@@ -91,10 +91,10 @@ describe("OpenAPI document", () => {
     for (const schemaName of ["AlertRuleInput", "CloudImportAlertRule"] as const) {
       const channels = doc.components.schemas[schemaName].properties.channels;
       expect(channels).toMatchObject({
-        items: { enum: ["email", "slack", "webhook"], type: "string" },
+        items: { enum: ["email", "slack", "webhook", "push"], type: "string" },
         type: "array",
       });
-      expect(channels.items.enum).toEqual(["email", "slack", "webhook"]);
+      expect(channels.items.enum).toEqual(["email", "slack", "webhook", "push"]);
       expect(normalizeWhitespace(channels.description)).toContain(slackPreviewStatus);
     }
     expect(doc.paths["/projects/{project_id}/alert-rules"].post).toMatchObject({
@@ -107,7 +107,7 @@ describe("OpenAPI document", () => {
     expect(doc.paths["/alert-rules/{rule_id}"].patch).toMatchObject({
       requestBody: {
         content: {
-          "application/json": { schema: { $ref: "#/components/schemas/AlertRuleInput" } },
+          "application/json": { schema: { $ref: "#/components/schemas/AlertRulePatch" } },
         },
       },
     });
@@ -116,25 +116,30 @@ describe("OpenAPI document", () => {
   it("states which credential each authenticated operation accepts", () => {
     const doc = getOpenApiDocument();
     const personalOnlyOperations = [
-      doc.paths["/me"].get,
-      doc.paths["/me"].patch,
-      doc.paths["/me/tokens"].get,
-      doc.paths["/me/tokens"].post,
-      doc.paths["/me/tokens/{token_id}"].delete,
-      doc.paths["/projects"].post,
-    ];
+      [doc.paths["/me"].get, "api:read"],
+      [doc.paths["/me"].patch, "api:write"],
+      [doc.paths["/me/tokens"].get, null],
+      [doc.paths["/me/tokens"].post, null],
+      [doc.paths["/me/tokens/{token_id}"].delete, null],
+      [doc.paths["/projects"].post, "api:write"],
+    ] as const;
 
     expect(doc.components.securitySchemes).toMatchObject({
       PersonalAccessToken: { bearerFormat: "bsb_pat_live_...", scheme: "bearer", type: "http" },
       ProjectApiKey: { bearerFormat: "bsb_key_live_...", scheme: "bearer", type: "http" },
     });
-    for (const operation of personalOnlyOperations) {
-      expect(operation.security).toEqual([{ PersonalAccessToken: [] }]);
+    // Admin operations stay PAT-only; the first-party app may call the rest (ADR-021).
+    for (const [operation, appScope] of personalOnlyOperations) {
+      expect(operation.security).toEqual([
+        { PersonalAccessToken: [] },
+        ...(appScope ? [{ AppOAuth: [appScope] }] : []),
+      ]);
       expect(operation.security).not.toContainEqual({ ProjectApiKey: [] });
     }
     expect(doc.paths["/projects"].get.security).toEqual([
       { ProjectApiKey: [] },
       { PersonalAccessToken: [] },
+      { AppOAuth: ["api:read"] },
     ]);
     expect(doc.paths["/projects/{project_id}/keywords"].get.security).toContainEqual({
       ProjectApiKey: [],
