@@ -554,6 +554,7 @@ describe("role capabilities", () => {
     expect(mocks.dispatchRoute).toHaveBeenCalledWith(
       expect.objectContaining({
         actor: { id: "owner_1", memberships: [{ projectId: project.id, role: "admin" }] },
+        actorId: null,
       }),
     );
   });

@@ -462,6 +462,7 @@
       "checking": "Checking website...",
       "description": "Enter the website you want to track.",
       "errors": {
+        "projectLimit": "This account is limited to {limit, plural, one {# project} other {# projects}}. Delete a project before creating another.",
         "invalid": "Enter a website like example.com.",
         "required": "Enter your website.",
         "tooLong": "Enter a shorter website URL.",

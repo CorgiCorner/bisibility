@@ -132,6 +132,9 @@ async function resolveSitemap(sitemapUrl: string): Promise<ResolvedSitemap> {
         maxEntries: remaining,
       },
     );
+    if (child.kind === "unknown") {
+      throw new Error("Child sitemap response is not a urlset or sitemapindex document");
+    }
     childSitemapsFetched += 1;
     urlCount += child.urlCount;
     truncated = truncated || child.truncated || child.kind === "sitemapindex";

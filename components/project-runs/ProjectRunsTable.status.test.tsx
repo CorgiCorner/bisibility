@@ -85,7 +85,7 @@ describe("ProjectRunsTable status chips", () => {
       renderTable([importRun]);
       const row = screen.getAllByText("Search Console import")[0]?.closest('[role="row"]');
       expect(
-        row?.querySelector(desktop ? '[data-column-id="progress"]' : '[data-column-id="title"]'),
+        row?.querySelector(desktop ? '[data-column-id="status"]' : '[data-column-id="title"]'),
       ).toHaveTextContent("Not available");
       if (desktop)
         expect(row?.querySelector('[data-column-id="when"]')).toHaveTextContent("Submitted");
@@ -115,7 +115,7 @@ describe("ProjectRunsTable status chips", () => {
       expect(screen.queryByText("Failed")).not.toBeInTheDocument();
       const row = screen.getByText("Manual rank check").closest('[role="row"]');
       expect(
-        row?.querySelector(desktop ? '[data-column-id="progress"]' : '[data-column-id="title"]'),
+        row?.querySelector(desktop ? '[data-column-id="status"]' : '[data-column-id="title"]'),
       ).toHaveTextContent("0 / 3");
       if (desktop)
         expect(row?.querySelector('[data-column-id="when"]')).toHaveTextContent("Ready from");

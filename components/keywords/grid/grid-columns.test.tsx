@@ -70,7 +70,7 @@ describe("LocationCell", () => {
       "aria-label",
       row.location.displayName,
     );
-    expect(screen.getByText(`/ ${row.location.languageLabel ?? row.location.hl}`)).toBeVisible();
+    expect(screen.getByText(row.location.languageLabel ?? row.location.hl)).toBeVisible();
   });
 });
 
@@ -243,8 +243,8 @@ describe("keywordColumns", () => {
       impressions: { minSize: 96, size: 96 },
       intent: { minSize: 132, size: 132 },
       keyword: { minSize: 160, size: 300 },
-      location: { minSize: 152, size: 152 },
-      position: { minSize: 172, size: 172 },
+      location: { minSize: 220, size: 220 },
+      position: { minSize: 220, size: 220 },
       tags: { minSize: 172, size: 172 },
       topic: { minSize: 132, size: 132 },
     });

@@ -53,7 +53,7 @@
       "finalizedDays": "確定日数",
       "notAvailable": "該当なし",
       "notStarted": "未開始",
-      "operation": "処理",
+      "operation": "タスク",
       "plannedUpdateFailed": "予定された実行を更新できませんでした。再試行してください。",
       "progress": "進捗",
       "progressValue": "{completed, number} / {total, number}",
@@ -74,7 +74,18 @@
       "type": "種別",
       "unit": "単位",
       "updatingPlannedRun": "予定された実行を更新中",
-      "keywordCount": "{count, plural, other {#件のキーワード}}"
+      "keywordCount": "{count, plural, other {#件のキーワード}}",
+      "reviewIssue": "問題を確認",
+      "reviewUsage": "予算と使用量を確認",
+      "usageUnconfirmed": "使用量の確認が必要",
+      "connectProvider": "対応プロバイダーを接続",
+      "providerUnavailable": "プロバイダーを利用できません",
+      "workerUnavailable": "ワーカーを利用できません",
+      "marketPaused": "市場は一時停止中",
+      "noActiveKeywords": "有効なキーワードがありません",
+      "reviewBlocker": "ブロックの原因を確認",
+      "targetProgress": "{completed, number} / {total, number} {total, plural, one {対象} other {対象}}",
+      "dayProgress": "{completed, number} / {total, number} {total, plural, one {確定日数} other {確定日数}}"
     },
     "actions": {
       "actionsFor": "{title}の操作",
@@ -87,7 +98,7 @@
     "timeline": {
       "all": "すべて",
       "active": "実行中",
-      "upcoming": "今後の実行",
+      "upcoming": "開始待ち",
       "history": "履歴",
       "sections": "実行の段階",
       "activeHint": "開始が早い順",
@@ -101,7 +112,17 @@
       "readyFrom": "実行可能日時",
       "parallelWorkers": "ワーカーは並列に実行される場合があります。",
       "oldestFirst": "古い順",
-      "newestFirst": "新しい順"
+      "newestFirst": "新しい順",
+      "waiting": "開始待ち",
+      "waitingHint": "待機中の実行です。記録された日時を表示します。",
+      "due": "予定時刻を経過",
+      "dueHint": "記録された開始時刻または再試行時刻を過ぎている待機中の実行です。",
+      "later": "今後の予定",
+      "laterHint": "今後の予定時刻を待っています。",
+      "pastFailuresHint": "問題が発生して終了した過去の実行です。現在の開始待ちとは異なります。",
+      "attention": "要確認",
+      "pastScheduled": "予定時刻を経過",
+      "pastScheduledDays": "未開始 · {count, plural, one {予定から#日経過} other {予定から#日経過}}"
     }
   }
 }

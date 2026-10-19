@@ -6,6 +6,7 @@ import { MenuItem as Item } from "./primitives/menu";
 export type MenuItemProps = Omit<ComponentProps<typeof Item>, "asChild"> & {
   component?: ElementType;
   href?: string;
+  download?: string;
   target?: string;
   rel?: string;
   selected?: boolean;

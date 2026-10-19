@@ -8,7 +8,10 @@ const mocks = vi.hoisted(() => ({
   ledgerRaw: vi.fn(),
   loadProviderChain: vi.fn(),
   monthlySpend: vi.fn(),
-  budgetCap: vi.fn().mockResolvedValue(777),
+  budgetCap: vi.fn().mockImplementation(async (_project: string, spentCents: number) => ({
+    capCents: 777,
+    spentCents,
+  })),
   raw: vi.fn(),
   projectMarket: { findMany: vi.fn() },
   runCount: vi.fn(),
@@ -18,7 +21,9 @@ const mocks = vi.hoisted(() => ({
   unitCost: vi.fn(),
 }));
 
-vi.mock("@/lib/metering/project-budget-read", () => ({ projectBudgetCapCents: mocks.budgetCap }));
+vi.mock("@/lib/rank-check/runs/budget-presentation", () => ({
+  projectRunBudgetAmounts: mocks.budgetCap,
+}));
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {

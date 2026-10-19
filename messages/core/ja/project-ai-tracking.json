@@ -181,6 +181,7 @@
     "observationTimeUnknown": "観測時刻不明",
     "citedSources": "引用元",
     "contextMissingHint": "プロジェクトの情報を追加するか、プロンプトを手入力してください。保存しても分析は開始されません。",
-    "contextDraftReviewHint": "質問案は保存した情報に基づき、検索需要の測定結果ではありません。保存前に確認・編集してください。"
+    "contextDraftReviewHint": "質問案は保存した情報に基づき、検索需要の測定結果ではありません。保存前に確認・編集してください。",
+    "noActivePrompts": "このスケジュールをプレビューする前に、AIトラッキングでプロンプトを追加または有効にしてください。"
   }
 }

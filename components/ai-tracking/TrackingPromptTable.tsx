@@ -5,7 +5,7 @@ import type { DataTableColumn } from "@/components/ui/data-table/data-table-type
 import { PillBadge } from "@/components/ui/Pill";
 import type { TrackingPromptRow } from "@/lib/ai-tracking/projections/workspace";
 import { useMediaQuery } from "@/lib/ui/use-media-query";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 export function TrackingPromptTable({
   prompts,
   canWrite,
@@ -22,6 +22,14 @@ export function TrackingPromptTable({
   onSelectionChange: (next: ReadonlySet<string>) => void;
 }>) {
   const t = useTranslations("projectAiTracking");
+  const format = useFormatter();
+  function timestamp(value: string | null | undefined) {
+    if (!value) return t("observationTimeUnknown");
+    const date = new Date(value);
+    return Number.isFinite(date.getTime())
+      ? format.dateTime(date, { dateStyle: "medium", timeStyle: "short" })
+      : t("observationTimeUnknown");
+  }
   const narrow = useMediaQuery("(max-width:640px)");
   const columns: DataTableColumn<TrackingPromptRow>[] = [
     {
@@ -35,12 +43,11 @@ export function TrackingPromptTable({
           <button
             type="button"
             disabled={!canWrite}
-            className="line-clamp-2 text-left text-sm font-medium leading-5 hover:text-accent-text focus-visible:outline-2 focus-visible:outline-accent"
+            className="line-clamp-2 border-0 bg-transparent p-0 text-left text-sm font-medium leading-5 hover:text-accent-text focus-visible:outline-2 focus-visible:outline-accent"
             onClick={() => onEdit(row.original)}
           >
             {row.original.text}
           </button>
-          <p className="mt-1 font-mono text-[10px] text-fg-muted">{row.original.id}</p>
         </div>
       ),
     },
@@ -102,12 +109,7 @@ export function TrackingPromptTable({
         row.original.lastResult ? (
           <div className="text-xs" title={row.original.lastResult.text}>
             <PillBadge>{row.original.lastResult.measurement.replaceAll("_", " ")}</PillBadge>
-            <p className="mt-1 text-fg-muted">
-              {row.original.lastResult.observedAt ?? t("observationTimeUnknown")}
-            </p>
-            <p className="mt-1 font-mono text-[10px] text-fg-muted">
-              {row.original.lastResult.revisionId}
-            </p>
+            <p className="mt-1 text-fg-muted">{timestamp(row.original.lastResult.observedAt)}</p>
           </div>
         ) : (
           <span className="text-xs text-fg-muted">{t("noResultYet")}</span>
@@ -123,7 +125,11 @@ export function TrackingPromptTable({
             row.original.status
           ) : (
             <>
-              {row.original.nextRunAt ?? (!row.original.nextRunPending ? t("notScheduled") : "")}
+              {row.original.nextRunAt
+                ? timestamp(row.original.nextRunAt)
+                : !row.original.nextRunPending
+                  ? t("notScheduled")
+                  : ""}
               {row.original.nextRunPending && <span className="block">{t("nextRunPending")}</span>}
             </>
           )}

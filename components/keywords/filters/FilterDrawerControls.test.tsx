@@ -57,12 +57,15 @@ describe("FilterSegment", () => {
     expect(group).toBeInTheDocument();
     expect(selected).toBeChecked();
     expect(control).toHaveClass("border-border-control");
+    expect(control).not.toHaveClass("border-border");
     expect(selectedSurface).toHaveClass(
-      "border-border-control",
+      "border-border",
       "bg-bg-sunken",
       "text-[12.5px]",
       "font-normal",
     );
+    expect(selectedSurface).not.toHaveClass("border-border-control");
+    expect(screen.getByRole("radio", { name: "Any" })).not.toBeChecked();
   });
 
   it("calls onChange when a radio is selected", async () => {

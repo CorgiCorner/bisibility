@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 
 export type AppHeaderProps = {
   actions?: ReactNode;
+  accountActions?: ReactNode;
   activeProjectId: string;
   canCreateWorkspace: boolean;
   canSetDefault?: boolean;
@@ -26,6 +27,7 @@ export type AppHeaderProps = {
 
 export function AppHeader({
   actions,
+  accountActions,
   activeProjectId,
   canCreateWorkspace,
   canSetDefault,
@@ -44,6 +46,7 @@ export function AppHeader({
   return (
     <AppHeaderFrame
       actions={actions}
+      accountActions={accountActions}
       activeProjectId={activeProjectId}
       canCreateWorkspace={canCreateWorkspace}
       canSetDefault={canSetDefault}

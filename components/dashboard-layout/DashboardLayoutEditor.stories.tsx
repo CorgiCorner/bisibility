@@ -2,8 +2,9 @@ import { beginDashboardDraft, finishDashboardSave } from "@/lib/dashboard-layout
 import { presetDashboardLayout } from "@/lib/dashboard-layout/layout";
 import { dashboardFixtureTranslate, organicAccess } from "@/lib/dashboard-layout/test-fixtures";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { DashboardLayoutEditor } from "./DashboardLayoutEditor";
+import { DashboardLayoutControl, DashboardPresetControl } from "./DashboardViewControls";
 
 function EditorStory({ conflict = false, local = false }: { conflict?: boolean; local?: boolean }) {
   const [state, setState] = useState(() =>
@@ -59,3 +60,22 @@ export const General: Story = {};
 export const SaveConflict: Story = { args: { conflict: true } };
 export const LocalNeedsExplicitSubject: Story = { args: { local: true } };
 export const NarrowViewport: Story = { parameters: { viewport: { defaultViewport: "mobile1" } } };
+
+function ControlsPreview() {
+  const trigger = useRef<HTMLButtonElement>(null);
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-2 bg-bg p-6 text-fg">
+      <DashboardPresetControl value="general" disabled={false} onChange={() => undefined} />
+      <DashboardLayoutControl
+        menu
+        trigger={trigger}
+        pending={false}
+        editing={false}
+        defaultDisabled={false}
+        onToggleEditing={() => undefined}
+        onSetDefault={() => undefined}
+      />
+    </div>
+  );
+}
+export const Toolbar: Story = { render: () => <ControlsPreview /> };

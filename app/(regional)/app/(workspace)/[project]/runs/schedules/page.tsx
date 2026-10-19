@@ -1,35 +1,66 @@
-import { ProjectRunsFeatureBoundary } from "@/components/project-runs/ProjectRunsFeatureBoundary";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { ProjectRunsTabs } from "@/components/project-runs/ProjectRunsTabs";
-import { type ScheduleListRow, SchedulesList } from "@/components/schedules/SchedulesList";
+import type { ScheduleListRow } from "@/components/schedules/SchedulesList";
+import { SchedulesWorkspace } from "@/components/schedules/SchedulesWorkspace";
 import { PageContent } from "@/components/shell/PageContent";
+import { loadCoreMessages } from "@/i18n/catalog-loader.server";
+import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
+import { getAiTrackingScheduleList } from "@/lib/actions/ai-tracking";
 import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { listCheckScheduleRows } from "@/lib/queries/check-schedule-list";
 import { listRankCheckRuns } from "@/lib/queries/rank-check-runs";
 import { asProjectRef } from "@/lib/routing/app-path";
+import { unstable_rethrow } from "next/navigation";
 
 type SchedulesPageProps = {
   params: Promise<{ project: string }>;
-  searchParams?: Promise<{ status?: string }>;
+  searchParams?: Promise<{ ai?: string; status?: string }>;
 };
+
+/** The common schedules boundary owns every catalog its client subtree reads. */
+async function loadSchedulesMessages() {
+  const runtime = await resolveRegionalDocumentLocale();
+  return {
+    ...runtime,
+    messages: await loadCoreMessages(runtime.locale, [
+      "shared",
+      "projectRuns",
+      "projectAiTracking",
+    ]),
+  };
+}
 
 export default async function SchedulesPage({
   params,
   searchParams,
 }: Readonly<SchedulesPageProps>) {
   const { project } = await params;
-  const status = (await searchParams)?.status === "archived" ? "archived" : "current";
+  const query = await searchParams;
+  const status = query?.status === "archived" ? "archived" : "current";
   const { publicId } = await resolveProjectAccess(project);
   const readable = await requireReadableProject(publicId);
   const projectRef = asProjectRef(publicId);
-  const [schedules, planned] = await Promise.all([
+  const [schedules, planned, aiResult] = await Promise.all([
     listCheckScheduleRows(readable.project.id, status),
     listRankCheckRuns(
       readable.project.id,
       new URL("http://localhost/api/rank-check-runs?segment=planned&limit=200"),
     ),
+    getAiTrackingScheduleList(publicId, status).then(
+      (value) => ({ value, unavailable: false }),
+      (error: unknown) => {
+        unstable_rethrow(error);
+        console.warn("AI schedules could not be loaded", {
+          errorType: error instanceof Error ? error.name : "unknown",
+        });
+        return { value: null, unavailable: true };
+      },
+    ),
   ]);
+  const ai = aiResult.value;
+  const runtime = await loadSchedulesMessages();
   const nextRunBySchedule = new Map(
     [...planned.data]
       .reverse()
@@ -66,10 +97,17 @@ export default async function SchedulesPage({
   const role = getProjectRole(readable.actor, readable.project.id);
 
   return (
-    <ProjectRunsFeatureBoundary>
+    <FeatureMessagesProvider
+      locale={runtime.locale}
+      messages={runtime.messages}
+      timeZone={runtime.timeZone}
+    >
       <PageContent className="grid gap-4">
         <ProjectRunsTabs active="schedules" projectRef={projectRef} />
-        <SchedulesList
+        <SchedulesWorkspace
+          ai={ai}
+          aiUnavailable={aiResult.unavailable}
+          aiTarget={typeof query?.ai === "string" ? query.ai : null}
           status={status}
           canManage={canProjectAction(role, "manage", "check_schedule")}
           canUpdate={canProjectAction(role, "update", "check_schedule")}
@@ -78,6 +116,6 @@ export default async function SchedulesPage({
           schedules={rows}
         />
       </PageContent>
-    </ProjectRunsFeatureBoundary>
+    </FeatureMessagesProvider>
   );
 }

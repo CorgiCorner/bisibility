@@ -22,6 +22,8 @@ COPY prisma ./prisma
 RUN npm run db:download-rds-ca && npx prisma generate && npm prune --omit=dev
 
 COPY lib ./lib
+COPY i18n ./i18n
+COPY messages/core ./messages/core
 ARG APP_REVISION
 RUN APP_REVISION="${APP_REVISION}" node scripts/deploy/bake-runtime-env.mjs
 
@@ -48,6 +50,8 @@ COPY --from=worker-build /app/package.json ./package.json
 COPY --from=worker-build /app/node_modules ./node_modules
 COPY --from=worker-build /app/prisma ./prisma
 COPY --from=worker-build /app/lib ./lib
+COPY --from=worker-build /app/i18n ./i18n
+COPY --from=worker-build /app/messages/core ./messages/core
 
 RUN chown worker:worker lib/deployment/runtime-env.generated.ts
 
@@ -62,5 +66,17 @@ LABEL org.opencontainers.image.title="bisibility worker" \
   corgicorner.ephemeral="${CORGICORNER_EPHEMERAL}"
 
 USER worker
+
+# Validate the pruned runtime and lazy mail catalogs without a backend or credentials.
+RUN --network=none TEMPORAL_WORKER_SMOKE=1 node --experimental-transform-types \
+  --import ./lib/temporal/register-loader.mjs --input-type=module --eval \
+  'await import("./lib/temporal/worker.ts"); \
+   const {loadCoreMessages} = await import("./i18n/catalog-loader.server.ts"); \
+   const {activeLocaleValues} = await import("./i18n/config.ts"); \
+   for (const locale of activeLocaleValues) { \
+     const messages = await loadCoreMessages(locale, ["account"]); \
+     if (!messages.account?.achievements?.emailSubject) throw new Error("Missing activity mail catalog"); \
+   } \
+   console.log("worker image import and account catalogs ok");'
 
 CMD ["node", "--experimental-transform-types", "--import", "./lib/temporal/register-loader.mjs", "lib/temporal/worker.ts"]

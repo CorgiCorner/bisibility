@@ -92,6 +92,16 @@ it.each(locales.flatMap(([locale, messages]) => paths.map((path) => ({ locale, m
   },
 );
 
+it("points AI schedules at the common project Schedules page", () => {
+  renderWithFeatureMessages(
+    <AiTrackingClient projectId="prj_fixture" data={trackingWorkspaceFixture} />,
+    { messages: en },
+  );
+  expect(mocks.workspace.mock.calls[0][0]).toMatchObject({
+    schedulesHref: "/app/prj_fixture/runs/schedules",
+  });
+});
+
 it("preserves exhausted budget metadata through the generation caller", async () => {
   mocks.generate.mockResolvedValue({
     ok: false,

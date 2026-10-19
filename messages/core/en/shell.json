@@ -117,8 +117,8 @@
       },
       "rank": {
         "blocked": {
-          "budgetWithAmounts": "Spent {spent} of {cap} this month; checks resume when the budget resets.",
-          "budgetWithoutAmounts": "Checks resume when the budget resets.",
+          "budgetWithAmounts": "Provider cost reported this month (UTC): {spent}. Monthly project budget limit: {cap}. Review usage for current limits and any unresolved accounting.",
+          "budgetWithoutAmounts": "Usage needs review. Check budget and unresolved accounting before trying again.",
           "keywordArchived": "This keyword was archived before the check started, so it was stopped before it cost anything.",
           "marketInactive": "This keyword's market is paused, so the check was stopped before it cost anything.",
           "noProvider": "Connect or reconnect a provider to start this run.",
@@ -180,7 +180,8 @@
       "signOut": "Sign out",
       "signOutError": "Could not sign out. Please try again.",
       "fallbackName": "Your account",
-      "opensInNewTab": "{label} (opens in a new tab)"
+      "opensInNewTab": "{label} (opens in a new tab)",
+      "activity": "Activity & badges"
     },
     "market": {
       "add": "Add market",

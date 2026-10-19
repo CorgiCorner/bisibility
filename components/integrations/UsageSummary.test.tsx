@@ -144,3 +144,44 @@ it("keeps a connection without an identifier as a plain retained label", async (
   await userEvent.click(screen.getByText("Usage details"));
   expect(within(screen.getByRole("table")).queryByRole("button", { name: "Copy ID" })).toBeNull();
 });
+
+it("shows the retained SerpAPI customer price as Credits, independently of requests", async () => {
+  const data = projectUsageFixture();
+  const row = data.detail.rows[0];
+  if (!row) throw new Error("Missing usage fixture");
+  data.detail.units = ["requests", "customer_cents", "units"];
+  data.detail.rows = [
+    {
+      ...row,
+      fundingSource: "platform",
+      units: {
+        requests: { text: "3", unit: "requests", certainty: "measured" },
+        units: { text: "3", unit: "units", certainty: "measured" },
+        customer_cents: { text: "13.0001", unit: "customer_cents", certainty: "measured" },
+      },
+    },
+  ];
+  render(<UsageSummary data={data} />);
+  await userEvent.click(screen.getByText("Usage details"));
+  const table = screen.getByRole("table");
+  expect(table).toHaveTextContent("13.0001 Credits");
+  expect(table).toHaveTextContent("Requests");
+  expect(table).not.toHaveTextContent("$0.12");
+  expect(within(table).queryByRole("columnheader", { name: "Units" })).toBeNull();
+});
+
+it("omits an empty funding counter card while retaining its provider cost", () => {
+  const data = projectUsageFixture();
+  render(<UsageSummary data={data} />);
+  expect(screen.queryByRole("region", { name: "Own key" })).toBeNull();
+  expect(screen.getByRole("region", { name: "Provider cost" })).toHaveTextContent("$0.12");
+});
+
+it("retains unresolved-operation warnings without an empty card frame", () => {
+  const data = projectUsageFixture();
+  data.summary.funding = data.summary.funding.map((row) => ({ ...row, unknownOperations: "1" }));
+  render(<UsageSummary data={data} />);
+  const summary = screen.getByRole("region", { name: "Own key" });
+  expect(summary).toHaveTextContent("Operations with unknown measurements: 1");
+  expect(summary.querySelector(".border")).toBeNull();
+});

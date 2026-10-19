@@ -3,18 +3,15 @@ import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
-import type { AiCatalogOutcome } from "@/lib/ai-research/catalog-types";
 import type { SourceConfiguration } from "@/lib/ai-tracking/contract";
 import { trackingConfigurationForm } from "@/lib/ai-tracking/projections/forms";
-import type {
-  TrackingPreview,
-  TrackingWorkspaceData,
-} from "@/lib/ai-tracking/projections/workspace";
+import type { TrackingPreview } from "@/lib/ai-tracking/projections/workspace";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
+import type { TrackingRunDrawerProps } from "./TrackingRunDrawer.types";
 import { TrackingSourceControls } from "./TrackingSourceControls";
 
 export type { TrackingPreview } from "@/lib/ai-tracking/projections/workspace";
@@ -30,27 +27,7 @@ export function TrackingRunDrawer({
   onCatalog,
   mutationError,
   onSaveMetadata,
-}: Readonly<{
-  open: boolean;
-  count: number;
-  onClose: () => void;
-  onPreview: (configurations: SourceConfiguration[]) => Promise<TrackingPreview>;
-  onLaunch: (
-    preview: TrackingPreview,
-    schedule?: { name: string; cron: string; timezone: string; enabled: boolean },
-  ) => Promise<void>;
-  pending: boolean;
-  schedule?: TrackingWorkspaceData["schedules"][number];
-  onSaveMetadata?: (metadata: {
-    name: string;
-    cron: string;
-    timezone: string;
-    enabled: boolean;
-  }) => Promise<void>;
-  scheduleMode?: boolean;
-  onCatalog?: () => Promise<AiCatalogOutcome>;
-  mutationError?: string | null;
-}>) {
+}: Readonly<TrackingRunDrawerProps>) {
   const t = useTranslations("projectAiTracking");
   const [previewPending, startPreview] = useTransition();
   const [replaceConfiguration, setReplaceConfiguration] = useState(false);
@@ -60,7 +37,7 @@ export function TrackingRunDrawer({
   const busy = pending || previewPending;
   const [preview, setPreview] = useState<TrackingPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { register, control, watch, handleSubmit } = useForm<
+  const { register, control, watch, handleSubmit, setValue } = useForm<
     z.infer<typeof trackingConfigurationForm>
   >({
     resolver: zodResolver(trackingConfigurationForm),
@@ -85,6 +62,11 @@ export function TrackingRunDrawer({
       : source === "consumer_scrape"
         ? ["chat_gpt", "gemini"]
         : ["chat_gpt"];
+  function invalidatePreview() {
+    version.current++;
+    setPreview(null);
+    setValue("consent", false);
+  }
   async function submit(values: z.infer<typeof trackingConfigurationForm>) {
     if (schedule && !reviewing) {
       try {
@@ -97,6 +79,10 @@ export function TrackingRunDrawer({
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : t("couldNotSaveChanges"));
       }
+      return;
+    }
+    if (count === 0) {
+      setError(t("noActivePrompts"));
       return;
     }
     const requestedVersion = ++version.current;
@@ -152,8 +138,7 @@ export function TrackingRunDrawer({
             !(target instanceof HTMLInputElement) ||
             (target.name !== "consent" && target.name !== "enabled")
           ) {
-            version.current++;
-            setPreview(null);
+            invalidatePreview();
           }
         }}
       >
@@ -180,6 +165,7 @@ export function TrackingRunDrawer({
                   checked={field.value}
                   onChange={(event) => {
                     field.onChange(event.target.checked);
+                    invalidatePreview();
                     if (event.target.checked && !schedule?.enabled) setReplaceConfiguration(true);
                   }}
                   label={t("enableSchedule")}
@@ -221,17 +207,24 @@ export function TrackingRunDrawer({
               source={source}
               engines={engines}
               onCatalog={onCatalog}
-              onInvalidate={() => {
-                version.current++;
-                setPreview(null);
-              }}
+              onInvalidate={invalidatePreview}
             />
           </>
         )}
         <p className="rounded-card border border-border bg-bg-sunken p-3 text-xs leading-5 text-fg-muted">
           {t("consumerScrapersMeasureTheConsumerSurfaceModelAPI")}
         </p>
-        <Button type="submit" variant="secondary" loading={busy}>
+        {reviewing && count === 0 ? (
+          <p role="status" className="m-0 text-sm text-fg-muted">
+            {t("noActivePrompts")}
+          </p>
+        ) : null}
+        <Button
+          type="submit"
+          variant="secondary"
+          loading={busy}
+          disabled={reviewing && count === 0}
+        >
           {reviewing ? t("previewConfigurationAndCost") : t("saveSchedule")}
         </Button>
         {(error || mutationError) && (
@@ -273,6 +266,7 @@ export function TrackingRunDrawer({
                           cron: watch("cron"),
                           timezone: watch("timezone"),
                           enabled: watch("enabled"),
+                          consent: watch("consent"),
                         }
                       : undefined,
                   );

@@ -7,6 +7,17 @@ export { analyzeAiResearchAction } from "./ai-research-action-stubs";
 export { competitorDetailsFormSchema } from "./competitor-action-stubs";
 export { previewKeywordDeletion, refreshKeywordViewsAfterImport } from "./keyword-action-stubs";
 export { loadMeteringAdminPageAction } from "./metering-admin-action-stubs";
+export { createOnboardingProject } from "./onboarding-action-stubs";
+
+// Keep instanceof checks in isolated UI stories compatible with the action boundary.
+export class ProjectNotFoundError extends Error {
+  constructor() {
+    super("Project not found");
+    this.name = "ProjectNotFoundError";
+  }
+}
+
+export function revalidateKeywordViews() {}
 
 export async function getProviderUiBindingAction() {
   return null;
@@ -663,7 +674,6 @@ export const createCloudMigrationHandoffAction = asyncNoop;
 export const createCloudImportWorkspace = asyncNoop;
 export const createKeywordAlertRule = asyncNoop;
 export const createProject = asyncNoop;
-export const createOnboardingProject = asyncNoop;
 export const createSavedView = asyncNoop;
 export const createSlackInstallUrl = asyncNoop;
 export const deleteAlertRule = asyncNoop;
@@ -715,3 +725,11 @@ export const updateProviderSettings = asyncNoop;
 export const updateRankCheckFrequency = asyncNoop;
 
 export const updateProjectUsageDisplay = asyncNoop;
+
+// Persisted view mutations require an explicit story fixture, never a real server action.
+async function savedViewFixtureRequired() {
+  throw new Error("Use a story-provided saved view action.");
+}
+export const createSavedViewV2 = savedViewFixtureRequired;
+export const updateSavedViewV2 = savedViewFixtureRequired;
+export const deleteSavedViewV2 = savedViewFixtureRequired;

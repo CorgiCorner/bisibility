@@ -6,7 +6,11 @@ import { ExternalLink } from "@/components/ui/ExternalLink";
 import { Modal } from "@/components/ui/Modal";
 import { Switch } from "@/components/ui/Switch";
 import { saveAnalyticsConsent } from "@/lib/actions/analytics-consent";
-import { applyAnalyticsConsent, setAnalyticsReplay } from "@/lib/analytics/client";
+import {
+  applyAnalyticsConsent,
+  readAnalyticsConsentScope,
+  setAnalyticsReplay,
+} from "@/lib/analytics/client";
 import {
   type AnalyticsConsentValues,
   analyticsConsentValuesSchema,
@@ -55,14 +59,17 @@ export function ConsentSettingsModal({
   const analyticsField = form.register("analytics");
 
   async function persist(values: AnalyticsConsentValues) {
+    const scope = readAnalyticsConsentScope();
     restrictConsentImmediately(values);
     setActionError(null);
     setSaving(true);
     try {
       const saved = await saveConsent(values);
-      applyAnalyticsConsent(saved);
-      setAnalyticsReplay(saved.replay);
-      onSaved?.(saved);
+      if (scope === readAnalyticsConsentScope()) {
+        applyAnalyticsConsent(saved);
+        setAnalyticsReplay(saved.replay);
+        onSaved?.(saved);
+      }
       onClose();
     } catch {
       setActionError(t("modal.saveError"));

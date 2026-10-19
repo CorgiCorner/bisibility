@@ -213,6 +213,11 @@ enum OnboardingQuizStatus {
 }
 
 model User {
+  achievementState AchievementState?
+  achievementDays AchievementDay[]
+  achievementAwards AchievementAward[]
+  achievementMails AchievementMail[]
+  analyticsConsent             UserAnalyticsConsent?
   providerComparisonPreviews ProviderComparisonPreview[]
   providerComparisonRuns ProviderComparisonRun[]
   measurementSettingsMutations MeasurementSettingsMutation[]
@@ -540,6 +545,20 @@ model Waitlist {
   createdAt             DateTime  @default(now())
 
   @@map("waitlists")
+}
+
+// One row per address and named interest, such as a beta list it joined. Kept apart from
+// Waitlist so an address already on the waitlist can still record each later interest.
+model WaitlistInterest {
+  id              String   @id @default(cuid())
+  email           String
+  interest        String
+  submissions     Int      @default(1)
+  lastSubmittedAt DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@unique([email, interest])
+  @@map("waitlist_interests")
 }
 
 model Project {
@@ -2665,4 +2684,69 @@ model AgentReport {
   @@index([projectId, createdAt, id])
   @@index([projectId, kind, createdAt, id])
   @@map("agent_reports")
+}
+
+model AchievementState {
+  userId String @id
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  enabled Boolean @default(true)
+  showHeader Boolean @default(true)
+  emailEnabled Boolean @default(true)
+  timeZone String @default("UTC")
+  epoch Int @default(1)
+  revision Int @default(0)
+  presenceCurrent Int @default(0)
+  presenceLongest Int @default(0)
+  presenceLastDay String?
+  practiceCurrent Int @default(0)
+  practiceLongest Int @default(0)
+  practiceLastDay String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("achievement_states")
+}
+model AchievementDay {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  epoch Int
+  kind String
+  localDay String
+  timeZone String
+  acceptedAt DateTime @default(now())
+  processedAt DateTime?
+  @@unique([userId, epoch, kind, localDay])
+  @@index([processedAt, userId])
+  @@index([userId, epoch, localDay])
+  @@map("achievement_days")
+}
+model AchievementAward {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  kind String
+  epoch Int
+  definitionVersion Int @default(1)
+  earnedDay String
+  earnedAt DateTime @default(now())
+  timeZone String
+  shareTokenHash String? @unique
+  @@unique([userId,kind,definitionVersion])
+  @@map("achievement_awards")
+}
+model AchievementMail {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  epoch Int
+  awardDay String
+  timeZone String
+  dueAt DateTime
+  status String @default("queued")
+  claimedAt DateTime?
+  finishedAt DateTime?
+  reason String?
+  @@unique([userId,epoch,awardDay])
+  @@index([status,dueAt])
+  @@map("achievement_mails")
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { withAchievementUse } from "@/lib/achievements/record-use";
 import { analyzeBacklinks, loadMoreBacklinkRows } from "@/lib/backlinks/service";
 import { UnsupportedBacklinksTargetError } from "@/lib/backlinks/target";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
@@ -52,20 +53,22 @@ export async function analyzeBacklinksAction(input: unknown) {
     type: "project",
   });
 
-  return withTargetValidation(() =>
-    analyzeBacklinks(
-      { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
-      {
-        estimateOnly: data.estimateOnly,
-        fresh: data.fresh,
-        includeSubdomains: data.includeSubdomains,
-        maxCostCents: data.maxCostCents,
-        mode: data.mode,
-        provider: data.provider,
-        resultLimit: data.resultLimit,
-        target: data.target,
-        targetScope: data.targetScope,
-      },
+  return withAchievementUse(actor.id, "analyzeBacklinks", data.estimateOnly, () =>
+    withTargetValidation(() =>
+      analyzeBacklinks(
+        { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
+        {
+          estimateOnly: data.estimateOnly,
+          fresh: data.fresh,
+          includeSubdomains: data.includeSubdomains,
+          maxCostCents: data.maxCostCents,
+          mode: data.mode,
+          provider: data.provider,
+          resultLimit: data.resultLimit,
+          target: data.target,
+          targetScope: data.targetScope,
+        },
+      ),
     ),
   );
 }

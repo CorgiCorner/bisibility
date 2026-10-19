@@ -108,7 +108,7 @@ describe("operation policy", () => {
 
     expect(after).toEqual(before);
     // Existing rank-run list/detail reads are now documented at the top level.
-    expect(before).toHaveLength(135);
+    expect(before).toHaveLength(137);
     const localReads = before.filter(({ path }) => path.includes("/local-monitors/"));
     expect(localReads).toHaveLength(5);
     expect(
@@ -153,7 +153,7 @@ describe("operation policy", () => {
       { admin: 0, read: 0, write: 0 },
     );
 
-    expect(counts).toEqual({ admin: 16, read: 55, write: 64 });
+    expect(counts).toEqual({ admin: 16, read: 56, write: 65 });
   });
 
   it("declares self-revocation and prefers it over the token-id route", () => {

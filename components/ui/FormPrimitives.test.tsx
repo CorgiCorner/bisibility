@@ -167,20 +167,29 @@ describe("form primitives", () => {
     const daily = screen.getByRole("radio", { name: "Daily" });
     const weekly = screen.getByRole("radio", { name: "Weekly" });
 
-    expect(daily.nextElementSibling).toHaveClass("bg-nav-active");
+    expect(daily).toBeChecked();
+    expect(daily.nextElementSibling).toHaveClass("bg-bg-sunken", "border-border");
+    expect(weekly).not.toBeChecked();
     expect(weekly.nextElementSibling).toHaveClass("hover:bg-bg-sunken");
 
     fireEvent.click(weekly);
     expect(weekly).toBeChecked();
+    expect(daily).not.toBeChecked();
+    expect(weekly.nextElementSibling).toHaveClass("bg-bg-sunken", "border-border");
     expect(screen.getByText("weekly")).toBeInTheDocument();
 
     weekly.focus();
     fireEvent.keyDown(weekly, { key: "ArrowRight" });
     expect(screen.getByRole("radio", { name: "Manual" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Manual" }).nextElementSibling).toHaveClass(
+      "bg-bg-sunken",
+      "border-border",
+    );
 
     daily.focus();
     fireEvent.keyDown(daily, { key: "Enter" });
     expect(daily).toBeChecked();
+    expect(daily.nextElementSibling).toHaveClass("bg-bg-sunken", "border-border");
   });
 
   it("uses the unified active treatment at the select-sized toolbar variant", () => {
@@ -195,7 +204,7 @@ describe("form primitives", () => {
     expect(daily.nextElementSibling).toHaveClass(
       "h-[26px]",
       "bg-bg-sunken",
-      "border-border-control",
+      "border-border",
       "text-fg",
       "font-normal",
     );
@@ -214,7 +223,7 @@ describe("form primitives", () => {
   });
 
   it("ignores the deprecated activeVariant prop and uses one canonical active style", () => {
-    const CANONICAL = ["border-border-control", "bg-nav-active", "text-fg"];
+    const CANONICAL = ["border-border", "bg-bg-sunken", "text-fg"];
 
     function VariantHarness({ activeVariant }: { activeVariant: "accent" | "neutral" }) {
       const [value, setValue] = useState<Frequency>("daily");

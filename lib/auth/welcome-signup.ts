@@ -46,7 +46,7 @@ export async function handleCreatedUser(
   if (!method) return;
   await trackServerEvent("user_signed_up", {
     consent: await readConsentFromCookies(),
-    distinctId: user.id,
+    userId: user.id,
     properties: { method },
   });
 }

@@ -1,7 +1,7 @@
 "use client";
 
+import { tabCountClassName, tabTriggerClassName } from "@/components/ui/Tabs";
 import { type RankTrackerTab, rankTrackerTabPath } from "@/lib/routing/app-path";
-import { cn } from "@/lib/ui/cn";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 
@@ -12,19 +12,6 @@ type RankTrackerTabsProps = {
   savedCount: number;
   trackedCount: number;
 };
-
-function countChip() {
-  return "rounded-control bg-bg-sunken px-[7px] py-0.5 font-sans tabular-nums text-[11px] text-fg-muted";
-}
-
-function tabClass(active: boolean) {
-  return cn(
-    "-mb-px flex items-center gap-2 border-b-2 px-3.5 py-[9px] text-[13.5px] transition-colors",
-    active
-      ? "border-accent font-semibold text-fg"
-      : "border-transparent text-fg-muted hover:text-fg",
-  );
-}
 
 export function RankTrackerTabs({
   activeTab,
@@ -42,20 +29,20 @@ export function RankTrackerTabs({
       <Link
         aria-current={trackedActive ? "page" : undefined}
         aria-label={t("trackedAriaLabel", { count: trackedCount })}
-        className={tabClass(trackedActive)}
+        className={tabTriggerClassName(trackedActive)}
         href={rankTrackerTabPath(projectRef, "tracked")}
       >
         <span>{t("tracked")}</span>
-        <span className={countChip()}>{format.number(trackedCount)}</span>
+        <span className={tabCountClassName}>{format.number(trackedCount)}</span>
       </Link>
       <Link
         aria-current={savedActive ? "page" : undefined}
         aria-label={t("savedAriaLabel", { count: savedCount })}
-        className={tabClass(savedActive)}
+        className={tabTriggerClassName(savedActive)}
         href={rankTrackerTabPath(projectRef, "saved")}
       >
         <span>{t("saved")}</span>
-        <span className={countChip()}>{format.number(savedCount)}</span>
+        <span className={tabCountClassName}>{format.number(savedCount)}</span>
       </Link>
     </nav>
   );

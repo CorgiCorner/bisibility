@@ -52,7 +52,7 @@ export const Viewer: Story = {
 export const History: Story = {
   args: { initialTab: "runs", initialSamples: trackingSampleFixtures },
 };
-export const DisabledSchedule: Story = { args: { initialTab: "schedules" } };
+export const SchedulesLink: Story = { args: { schedulesHref: "/app/prj_fixture/runs/schedules" } };
 export const EvidenceAuditReport: Story = { render: () => <TrackingAuditReportFixture /> };
 
 export const BlockedPreview: Story = {

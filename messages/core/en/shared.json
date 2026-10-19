@@ -801,7 +801,7 @@
       },
       "units": {
         "cents": "cents",
-        "customer_cents": "credit cents",
+        "customer_cents": "Credits",
         "units": "Units",
         "requests": "Requests",
         "budget_cents": "cents",

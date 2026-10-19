@@ -1,3 +1,4 @@
+import { withPracticeRequest } from "@/lib/achievements/api";
 import "server-only";
 
 import type { Actor } from "@/lib/auth/authorize";
@@ -6,6 +7,7 @@ import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/projec
 import { handleAccountRequest } from "./account-router";
 import { isAccountRoute, isPersonalTokenOnlyRoute } from "./account-routes";
 import { apiAdmissionErrorDetails } from "./admission-error-details";
+import { requestAnalyticsIdentity } from "./analytics-context";
 import { unsupportedApiVersionResponse } from "./api-versions";
 import {
   type ApiAuth,
@@ -37,7 +39,7 @@ type AuthResult = { auth: ApiAuth; headers: Headers } | { response: Response };
 type PreauthenticatedApiRequest = { auth: ApiAuth; headers?: Headers };
 type AnonymousLimitResult = { headers: Headers } | { response: Response };
 
-const methods = ["DELETE", "GET", "PATCH", "POST"] as const;
+const methods = ["DELETE", "GET", "PATCH", "POST", "PUT"] as const;
 
 function instance(url: URL) {
   return `urn:bisibility:api:v1:${url.pathname}`;
@@ -187,15 +189,17 @@ async function dispatchApiRequest(
   if (auth.kind === "personal_token") {
     actorId = auth.user.id;
     if (isAccountRoute(path)) {
-      return handleAccountRequest({
-        allowed: hasScope(auth.token.scopes, requiredScope),
-        auth,
-        headers: authResult.headers,
-        method,
-        path,
-        req,
-        url,
-      });
+      return withPracticeRequest({ actorId, req, url }, declaredOperation.operationId, () =>
+        handleAccountRequest({
+          allowed: hasScope(auth.token.scopes, requiredScope),
+          auth,
+          headers: authResult.headers,
+          method,
+          path,
+          req,
+          url,
+        }),
+      );
     }
     const resolved = await resolvePersonalProjectScope(req, url, path, auth, {
       headers: authResult.headers,
@@ -246,6 +250,7 @@ async function dispatchApiRequest(
   }
 
   const ctx: ApiContext = {
+    analyticsIdentity: requestAnalyticsIdentity(auth, projectAuth.project.publicId, req.headers),
     actor,
     actorId,
     auth: projectAuth,
@@ -259,7 +264,9 @@ async function dispatchApiRequest(
   };
   const execute = async () => {
     try {
-      const response = await dispatchRoute(ctx);
+      const response = await withPracticeRequest(ctx, declaredOperation.operationId, () =>
+        dispatchRoute(ctx),
+      );
       return response ?? routeNotFound({ headers: ctx.headers, instance: ctx.instance });
     } catch (error) {
       const details = await apiAdmissionErrorDetails(error, ctx);

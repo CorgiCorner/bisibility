@@ -462,6 +462,7 @@
       "checking": "Sprawdzanie witryny…",
       "description": "Podaj witrynę, którą chcesz śledzić.",
       "errors": {
+        "projectLimit": "To konto może mieć maksymalnie {limit, plural, one {# projekt} few {# projekty} many {# projektów} other {# projektu}}. Usuń projekt, zanim utworzysz kolejny.",
         "invalid": "Podaj witrynę w formacie example.com.",
         "required": "Podaj swoją witrynę.",
         "tooLong": "Podaj krótszy adres URL witryny.",

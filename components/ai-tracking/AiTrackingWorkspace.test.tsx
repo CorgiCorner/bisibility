@@ -1,7 +1,7 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import tracking from "@/messages/core/en/project-ai-tracking.json";
 import shared from "@/messages/core/en/shared.json";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AiTrackingWorkspace } from "./AiTrackingWorkspace";
@@ -153,15 +153,51 @@ describe("tracking approval and evidence UI", () => {
     }
     await user.click(screen.getByRole("button", { name: "Preview run" }));
     expect(screen.queryByRole("dialog")).toBeNull();
-    await user.click(screen.getByRole("button", { name: "Run history" }));
+    await user.click(screen.getByRole("tab", { name: "Run history" }));
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     await user.click(screen.getByRole("button", { name: /air_oct08.*samples/ }));
     expect(await screen.findByText("3 of 3 expected samples loaded")).toBeVisible();
     expect(samples).toHaveBeenCalledWith("air_oct08");
-    await user.click(screen.getByRole("button", { name: "Schedules" }));
-    for (const name of ["Add schedule", "Edit", "Archive"])
-      expect(screen.getByRole("button", { name })).toBeDisabled();
+    // Schedule read-only coverage lives with the common Schedules controller
+    // (components/schedules/SchedulesList.ai.test.tsx).
+    expect(screen.queryByRole("tab", { name: "Schedules" })).toBeNull();
     for (const action of [save, launch, preview, cancel]) expect(action).not.toHaveBeenCalled();
+  });
+  it("links schedules to the common Schedules page instead of a private tab", () => {
+    workspace({ schedulesHref: "/app/prj_fixture/runs/schedules" });
+    expect(screen.queryByRole("tab", { name: "Schedules" })).toBeNull();
+    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+      "Prompts",
+      "Run history",
+    ]);
+    expect(screen.getByRole("link", { name: "Schedules" })).toHaveAttribute(
+      "href",
+      "/app/prj_fixture/runs/schedules",
+    );
+    expect(screen.queryByRole("button", { name: "Add schedule" })).toBeNull();
+  });
+  it("still lands on run history after an approved manual launch", async () => {
+    const user = userEvent.setup();
+    const launch = vi.fn().mockResolvedValue(trackingWorkspaceFixture);
+    workspace({ actions: { ...trackingFixtureActions, launch } });
+    await user.click(screen.getByRole("button", { name: "Preview run" }));
+    const dialog = screen.getByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: "Preview configuration and cost" }),
+    );
+    await user.click(
+      await within(dialog).findByRole("checkbox", {
+        name: "I approve this run and the provider actual cost",
+      }),
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Approve and queue run" }));
+    expect(launch).toHaveBeenCalledOnce();
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: "Run history" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      ),
+    );
   });
 });

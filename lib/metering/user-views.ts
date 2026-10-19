@@ -50,14 +50,19 @@ export function emptyProjectUsage(now = new Date()): ProjectUsageViews {
 }
 /** Only ungrouped current-owner rows enter the additive shared summary. */
 export function ownerSummary(pages: readonly UsagePage[], owner: string): UsageSummaryView {
-  const summary = usageSummaryFromPages(
-    pages.map((page) => ({
+  const ownerPages = pages.map((page) => ({
+    ...page,
+    rows: page.rows
+      .filter((row) => row.dimensions.principal === owner)
+      .map((row) => ({ ...row, dimensions: {} })),
+  }));
+  const summary = usageSummaryFromPages(ownerPages, usageUnits);
+  const platform = usageSummaryFromPages(
+    ownerPages.map((page) => ({
       ...page,
-      rows: page.rows
-        .filter((row) => row.dimensions.principal === owner)
-        .map((row) => ({ ...row, dimensions: {} })),
+      rows: page.rows.filter((row) => row.fundingSource === "platform"),
     })),
-    usageUnits,
+    ["customer_cents"],
   );
   const funding = summary.funding.map((row, index) => ({
     ...row,
@@ -80,7 +85,10 @@ export function ownerSummary(pages: readonly UsagePage[], owner: string): UsageS
     ...summary,
     cost: funding.some((row) => row.fundingSource === "platform") ? "unavailable" : summary.cost,
     measurements: Object.fromEntries(
-      Object.entries(summary.measurements).filter(([unit]) => unit !== "cents" && unit !== "units"),
+      Object.entries({
+        ...summary.measurements,
+        customer_cents: platform.measurements.customer_cents,
+      }).filter(([unit]) => unit !== "cents" && unit !== "units"),
     ),
     funding,
     watermark: null,

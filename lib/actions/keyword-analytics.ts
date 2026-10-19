@@ -26,7 +26,7 @@ export async function emitMatrixKeywordsAdded(input: {
   if (!surface || input.result.created === 0) return;
   await trackServerEvent("keywords_added", {
     consent: await readConsentFromCookies(),
-    distinctId: input.actorId,
+    userId: input.actorId,
     properties: {
       keyword_count: new Set(input.data.keywords.map((keyword) => keyword.toLocaleLowerCase()))
         .size,

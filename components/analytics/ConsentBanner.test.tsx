@@ -7,7 +7,12 @@ import sharedMessages from "@/messages/core/en/shared.json";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ applyAnalyticsConsent: vi.fn(), setAnalyticsReplay: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  applyAnalyticsConsent: vi.fn(),
+  readAppliedAnalyticsConsent: vi.fn(),
+  readAnalyticsConsentScope: vi.fn(() => 0),
+  setAnalyticsReplay: vi.fn(),
+}));
 
 vi.mock("@/lib/analytics/client", () => mocks);
 
@@ -48,6 +53,7 @@ const polishConsentMessages = {
 
 describe("ConsentBanner", () => {
   beforeEach(() => {
+    mocks.readAnalyticsConsentScope.mockReturnValue(0);
     // biome-ignore lint/suspicious/noDocumentCookie: Reset only the consent cookie in the test DOM.
     document.cookie = "bv_consent=; Max-Age=0; Path=/";
   });
@@ -64,6 +70,45 @@ describe("ConsentBanner", () => {
       "delayed_5s",
     );
     expect(saveConsent).not.toHaveBeenCalled();
+  });
+  it("prompts immediately for expired account analytics despite a valid replay cookie", () => {
+    // biome-ignore lint/suspicious/noDocumentCookie: Retain the independent replay decision in the fixture.
+    document.cookie = "bv_consent=v2.a1.r1.t1788552000; Path=/";
+    render(
+      <ConsentBanner
+        initialConsent={{
+          analytics: false,
+          analyticsNeedsDecision: true,
+          replay: true,
+          decidedAt: 1788552000,
+          status: "decided",
+        }}
+        saveConsent={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("region", { name: "Analytics consent" })).toHaveAttribute(
+      "data-consent-variant",
+      "immediate",
+    );
+  });
+  it("does not apply a completed choice after the account scope changed", async () => {
+    let finish!: (value: import("@/lib/analytics/consent").ConsentState) => void;
+    const saveConsent = vi.fn(
+      () =>
+        new Promise<import("@/lib/analytics/consent").ConsentState>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    render(<ConsentBanner delayMs={0} saveConsent={saveConsent} />);
+    fireEvent.click(screen.getByRole("button", { name: "Accept all" }));
+    mocks.applyAnalyticsConsent.mockClear();
+    mocks.setAnalyticsReplay.mockClear();
+    mocks.readAnalyticsConsentScope.mockReturnValue(1);
+    await act(async () =>
+      finish({ analytics: true, replay: true, decidedAt: 1788552000, status: "decided" }),
+    );
+    expect(mocks.applyAnalyticsConsent).not.toHaveBeenCalled();
+    expect(mocks.setAnalyticsReplay).not.toHaveBeenCalled();
   });
   it("makes refusal a single click and applies the result immediately", async () => {
     const consent = {

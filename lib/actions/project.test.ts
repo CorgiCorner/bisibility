@@ -299,7 +299,7 @@ describe("project actions", () => {
     });
     expect(mocks.trackServerEvent).toHaveBeenCalledWith("onboarding_completed", {
       consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
-      distinctId: "user_1",
+      userId: "user_1",
       properties: { first_check_ran: true, has_provider: true, keyword_count: 3 },
     });
 

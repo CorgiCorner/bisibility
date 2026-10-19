@@ -78,7 +78,7 @@ export function SiteAuditResults({ result }: Readonly<{ result: SiteAuditResult 
       header: t("columns.1"),
       ...siteAuditTableLayout.status,
       cell: ({ row }) => (
-        <span className="font-mono">{row.original.status ?? t("notFetched")}</span>
+        <span className="font-sans tabular-nums">{row.original.status ?? t("notFetched")}</span>
       ),
     },
     {

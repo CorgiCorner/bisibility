@@ -1,0 +1,108 @@
+---
+title: "Resolve historical accounting"
+description: "Preview and audit evidence-based corrections for unresolved legacy BYOK imports."
+---
+
+Upgrades through the accounting-history migration can retain measured provider costs alongside
+unknown request units. The imported operation stays pending, and unresolved financial evidence
+can block its project and connection. These imports have no modern paid-request context.
+Normal request recovery cannot invent that context or mark unknown charges as zero.
+
+This operator command resolves **untouched, pending BYOK imports** from migration
+`20261011021000_accounting_history`. It does not send provider requests, change credentials,
+credit wallets, bypass budgets, or enable paused schedules. It requires direct operator database
+access; it is not an application-user action. Back up the database first using
+[Backup and restore](/self-hosting/backup-restore).
+
+## Inspect retained evidence
+
+Run from the upgraded application checkout with its installed dependencies and generated Prisma
+client. Supply `DATABASE_URL` through the protected environment you normally use. Preserve its
+TLS verification and schema settings. Do not put credentials in the manifest or command line.
+
+```bash
+npm run db:metering:resolve-history -- --list --namespace default
+```
+
+The read-only list returns up to 100 candidates, their connection, version, receipt ID and
+whether costs and units are known. Follow `nextAfter` with `--after <operationId>` until null.
+Listing is discovery; preview performs the full eligibility check. If retained native proof is
+available, run normal provider-usage reconciliation first instead of attesting it manually.
+
+## Prepare a manifest
+
+Use one retained connection and at most 25 operations per file. Copy each current version and
+original receipt ID from the list. The namespace must match `METERING_NAMESPACE` (default
+`default`). `recordedAt` is the fixed UTC time of this resolution, not a new usage date.
+
+```json
+{
+  "namespace": "default",
+  "connection": "connection-id-from-list",
+  "operator": "operator-reference",
+  "reason": "Verified retained provider statement and original costs",
+  "evidenceRef": "invoice:statement-reference",
+  "recordedAt": "2026-10-18T12:00:00.000Z",
+  "operations": [
+    {
+      "operationId": "legacy:source-id-from-list",
+      "expectedVersion": 1,
+      "receiptId": "legacy-receipt:id-from-list",
+      "omitUnknownUnits": true
+    }
+  ]
+}
+```
+
+Retained measured cost is preserved exactly. If cost is unknown, supply `costCents` as an exact
+nonnegative decimal string supported by evidence, for example `"1.2345"`. A zero is an explicit
+attestation of zero, never a default. A supplied value cannot replace a different measured value.
+`units`, when supplied, is an exact decimal string with at most six fractional digits; costs
+allow four. Do not derive either amount from current provider prices.
+
+Unknown generic DataForSEO units may be excluded from the new financial receipt **only** with
+`omitUnknownUnits: true` and no retained estimate or original/current matching units budget.
+Even unlimited, tagged or other-surface units budgets prevent this exception. The original
+unknown receipt remains intact, and the correction records the explicit omission. Unit totals
+exclude these unknown quantities; exclusion is not proof of zero requests. If you need complete
+unit reporting, supply observed units instead and remove the omission flag.
+
+SerpApi always needs measured units. Supply `units` and leave `omitUnknownUnits` false. Platform
+funding, unknown providers, modified imports, live request contexts and other measurement
+dimensions require their own supported recovery, not this command. Never guess missing amounts.
+
+## Preview, then apply
+
+```bash
+npm run db:metering:resolve-history -- --manifest history-resolution.json
+```
+
+Preview runs in a read-only repeatable-read transaction and prints proposed costs, measurements,
+original usage times and a `planHash`. Review the file and output before applying:
+
+```bash
+npm run db:metering:resolve-history -- --manifest history-resolution.json --apply --confirm <planHash>
+```
+
+The hash binds the full manifest, database target and database role, original import journal,
+operation versions, receipts and matching budgets. Changed evidence, versions, budgets or target
+require a new preview. Each batch commits atomically; a failure rolls back the whole batch.
+Large histories need multiple reviewed batches. The command uses a bounded 30-second transaction.
+Use the same direct database endpoint and database role for preview, apply and replay. A changed
+backend address after failover or a different role is refused safely; retain the original audit
+and inspect the new target before attempting further work.
+
+Each accepted correction appends evidence with the real database role, the operator-supplied
+label, reason and evidence reference. The label is descriptive, not a verified application-user
+identity. The receipt and command journal retain the approval hash and before/after lineage.
+The original occurrence time and budget epochs stay unchanged; historical settlement can affect
+those epochs and their budget-threshold alerts.
+
+Exact replays return the original result without another correction, event or budget write.
+Keep the manifest unchanged, including `recordedAt`, and keep its original approval hash. Later
+evidence is never overwritten by replay. A partially applied or inconsistent manifest is refused.
+
+Only after **all** unknown accounting in a project or connection is resolved does its uncertainty
+gate become inactive. Ordinary budgets and other projects/connections remain enforced. Verify
+the remaining accounting issues and budgets in instance administration afterward. A retained
+unknown still blocking the scope needs evidence; do not delete its gate or switch namespaces.

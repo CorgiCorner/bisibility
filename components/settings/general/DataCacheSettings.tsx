@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { SectionTitle } from "@/components/ui/SectionTitle";
+import { Tooltip } from "@/components/ui/Tooltip";
 import {
   deleteProjectDataCache,
   readProjectDataCache,
@@ -35,7 +36,9 @@ export function DataCacheSettings({ projectId, canEdit, initial }: Props) {
   );
   const [loaded, setLoaded] = useState(initial !== null);
   const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState<"saved" | "error" | "conflict" | "busy" | null>(null);
+  const [message, setMessage] = useState<
+    "saved" | "error" | "loadError" | "conflict" | "busy" | null
+  >(null);
   const form = useForm<Data>({
     resolver: zodResolver(cacheSettingsSchema),
     defaultValues: {
@@ -57,7 +60,7 @@ export function DataCacheSettings({ projectId, canEdit, initial }: Props) {
           expectedTtlSeconds: result.ttlSeconds,
         });
       } catch {
-        setMessage("error");
+        setMessage("loadError");
       }
     });
   }
@@ -135,17 +138,21 @@ export function DataCacheSettings({ projectId, canEdit, initial }: Props) {
       {!canEdit ? <p className="text-xs text-fg-muted">{t("readOnly")}</p> : null}
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-medium">{t("list")}</h3>
-        <Button size="xs" variant="ghost" onClick={() => load()} disabled={pending}>
-          {t("refresh")}
-        </Button>
+        <Tooltip content={t("refreshHelp")} semantics="description">
+          <Button size="xs" variant="ghost" onClick={() => load()} disabled={pending}>
+            {t(page.available ? "refresh" : "retry")}
+          </Button>
+        </Tooltip>
       </div>
       {!page.available ? (
         <p role="status" className="text-xs text-fg-muted">
-          {t("unavailable")}
+          {t(page.entries.length ? "partial" : "unavailable")}
         </p>
-      ) : page.entries.length === 0 ? (
+      ) : null}
+      {page.available && page.entries.length === 0 ? (
         <p className="text-xs text-fg-muted">{t("empty")}</p>
-      ) : (
+      ) : null}
+      {page.entries.length ? (
         <ul className="m-0 list-none p-0 divide-y divide-border-soft rounded-md border border-border-soft">
           {page.entries.map((entry) => (
             <li key={entry.token} className="flex min-w-0 items-center justify-between gap-3 p-3">
@@ -181,8 +188,8 @@ export function DataCacheSettings({ projectId, canEdit, initial }: Props) {
             </li>
           ))}
         </ul>
-      )}
-      {page.available && page.cursor !== "0" ? (
+      ) : null}
+      {page.cursor !== "0" ? (
         <Button size="xs" variant="outline" disabled={pending} onClick={() => load(page.cursor)}>
           {t("next")}
         </Button>

@@ -3,6 +3,7 @@
 import { EmergencyRecovery } from "@/components/i18n/EmergencyRecovery";
 import { EmergencyMessagesProvider } from "@/i18n/EmergencyMessagesProvider";
 import { reportAppError } from "@/lib/observability/error-reporting";
+import { retryViewError } from "@/lib/ui/retry-view-error";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
@@ -20,7 +21,7 @@ export default function ErrorBoundary({ error, reset }: Readonly<ErrorPageProps>
 
   return (
     <EmergencyMessagesProvider>
-      <EmergencyRecovery kind="error" onReset={reset} />
+      <EmergencyRecovery kind="error" onReset={() => retryViewError(error, reset)} />
     </EmergencyMessagesProvider>
   );
 }

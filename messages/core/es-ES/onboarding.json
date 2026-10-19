@@ -462,6 +462,7 @@
       "checking": "Comprobando el sitio web…",
       "description": "Introduce el sitio web al que quieres hacer seguimiento.",
       "errors": {
+        "projectLimit": "Esta cuenta admite un máximo de {limit, plural, one {# proyecto} other {# proyectos}}. Elimina un proyecto antes de crear otro.",
         "invalid": "Introduce un sitio web con el formato example.com.",
         "required": "Introduce tu sitio web.",
         "tooLong": "Introduce una URL de sitio web más corta.",

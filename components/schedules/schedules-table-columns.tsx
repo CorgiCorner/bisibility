@@ -1,121 +1,64 @@
 import type { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
-import { Button } from "@/components/ui/Button";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { PillBadge } from "@/components/ui/Pill";
-import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import Link from "next/link";
-import type { useTranslations } from "next-intl";
-import { RestoreScheduleButton, ScheduleArchiveMenu } from "./ScheduleLifecycleActions";
+import type { AiScheduleListRow } from "./ai-schedule-rows";
+import { ScheduleRowActions, type ScheduleRowActionsOptions } from "./ScheduleRowActions";
 import type { ScheduleListRow } from "./SchedulesList";
+import {
+  cadenceLabel,
+  cadenceMeta,
+  memberLabel,
+  nextLabel,
+  perRunLabel,
+  type SchedulesT,
+  scheduleStateMeta,
+  stateFor,
+} from "./schedules-table-labels";
 
-export type SchedulesTableRow = ScheduleListRow & { id: string; nextRunLabel: string | null };
+type TableRowFields = { id: string; nextRunLabel: string | null };
+/** `scheduleKind` is the discriminator; DataTable reserves `kind` for row grouping. */
+export type RankSchedulesTableRow = ScheduleListRow & TableRowFields & { scheduleKind: "rank" };
+export type AiSchedulesTableRow = AiScheduleListRow & TableRowFields & { scheduleKind: "ai" };
+export type SchedulesTableRow = RankSchedulesTableRow | AiSchedulesTableRow;
 
-type SchedulesTableColumnsOptions = {
+type SchedulesTableColumnsOptions = Omit<ScheduleRowActionsOptions, "aiCanWrite" | "onOpenAi"> & {
+  t: SchedulesT;
+  aiCanWrite?: boolean;
+  /** Returns the drawer href for an editable AI row, or null when the row is read-only. */
+  aiHref?: (row: AiSchedulesTableRow) => string | null;
+  onOpenAi?: (row: SchedulesTableRow) => void;
+  rankHref: (row: RankSchedulesTableRow) => string;
+  showKind?: boolean;
   usage: ReturnType<typeof useNativeUsageFormat>;
-  canUpdate: boolean;
-  canManage?: boolean;
-  onArchive?: (row: SchedulesTableRow) => void;
-  projectId?: string;
-  onTogglePause: (row: SchedulesTableRow) => void;
-  pendingScheduleId: string | null;
-  projectRef: string;
   locale: string;
-  t: ReturnType<typeof useTranslations<"projectRuns.schedules">>;
 };
 
-type ScheduleState = "blocked" | "paused" | "empty";
+const linkClassName =
+  "text-[12.5px] font-semibold text-fg underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid";
 
-function scheduleStateMeta(t: SchedulesTableColumnsOptions["t"]) {
-  return {
-    empty: { label: t("list.empty"), tone: "text-fg-muted" },
-    blocked: { label: t("list.blocked"), tone: "text-fg-muted" },
-    paused: { label: t("list.paused"), tone: "text-fg-muted" },
-  } satisfies Record<ScheduleState, { label: string; tone: string }>;
-}
-
-function stateFor(row: SchedulesTableRow): ScheduleState | null {
-  if (row.archivedAt) return null;
-  if ((row.assignedKeywordCount ?? row.targetCount ?? row.keywordCount) === 0) return "empty";
-  if (!row.enabled || row.frequency === "paused") return "paused";
-  return row.blocked ? "blocked" : null;
-}
-
-function memberLabel(row: SchedulesTableRow, t: SchedulesTableColumnsOptions["t"]) {
-  if (row.archivedAt) return t("list.noAssignedKeywords");
-  if (row.targetCount === null || row.targetCount === undefined) {
-    return t("checks", { count: row.keywordCount });
-  }
-  return t("list.members", {
-    keywords: row.keywordCount,
-    targets: row.targetCount,
-  });
-}
-
-function perRunLabel(cents: number | null | undefined, locale: string) {
-  if (cents === null || cents === undefined) return "-";
-  return `~${new Intl.NumberFormat(locale, { currency: "USD", style: "currency" }).format(cents / 100)}`;
-}
-
-function pauseTitle(enabled: boolean, t: SchedulesTableColumnsOptions["t"]) {
-  return enabled ? t("list.pauseTitle") : t("list.resumeTitle");
-}
-
-const weekdayKeys = {
-  Friday: "Friday",
-  Monday: "Monday",
-  Saturday: "Saturday",
-  Sunday: "Sunday",
-  Thursday: "Thursday",
-  Tuesday: "Tuesday",
-  Wednesday: "Wednesday",
-} as const;
-
-function cadenceLabel(row: SchedulesTableRow, t: SchedulesTableColumnsOptions["t"]) {
-  const time = row.timeOfDay ?? "-";
-  if (row.timeOfDay === null && ["daily", "weekly", "monthly"].includes(row.frequency)) {
-    const interval =
-      row.frequency === "daily"
-        ? t("intervalDay")
-        : row.frequency === "weekly"
-          ? t("intervalWeek")
-          : t("intervalMonth");
-    return t("cadenceLabels.every", { interval });
-  }
-  if (row.frequency === "daily") return t("cadenceLabels.daily", { time });
-  if (row.frequency === "weekly") {
-    const day =
-      row.weekday && row.weekday in weekdayKeys
-        ? t(`weekdays.${weekdayKeys[row.weekday as keyof typeof weekdayKeys]}`)
-        : t("frequencyWeekly");
-    return t("cadenceLabels.weekly", { day, time });
-  }
-  if (row.frequency === "monthly") {
-    return t("cadenceLabels.monthly", {
-      day: row.dayOfMonth ? t("cadenceLabels.dayOfMonth", { day: row.dayOfMonth }) : "-",
-      time,
-    });
-  }
-  if (row.frequency === "custom_cron")
-    return t("cadenceLabels.custom", { expression: row.cronExpression ?? "-" });
-  return row.frequency === "manual" ? t("cadenceLabels.manual") : t("cadenceLabels.paused");
-}
-
-function cadenceMeta(row: SchedulesTableRow, t: SchedulesTableColumnsOptions["t"]) {
-  const timezone = row.timezone ?? t("useProjectTimeZone");
-  return !row.timeOfDay
-    ? timezone
-    : t("cadenceMeta", { minutes: row.jitterMinutes ?? 0, time: row.timeOfDay, timezone });
+function ScheduleNameLink({ href, name }: Readonly<{ href: string | null; name: string }>) {
+  if (!href) return <span className="text-[12.5px] font-semibold text-fg">{name}</span>;
+  return (
+    <Link className={linkClassName} href={href} onClick={(event) => event.stopPropagation()}>
+      {name}
+    </Link>
+  );
 }
 
 export function schedulesTableColumns({
   usage,
+  aiCanWrite = false,
+  aiHref,
   canUpdate,
   canManage,
   onArchive,
+  onOpenAi = () => undefined,
   projectId,
   onTogglePause,
   pendingScheduleId,
-  projectRef,
+  rankHref,
+  showKind = false,
   locale,
   t,
 }: Readonly<SchedulesTableColumnsOptions>): readonly DataTableColumn<SchedulesTableRow>[] {
@@ -129,15 +72,21 @@ export function schedulesTableColumns({
         return (
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
-              <Link
-                className="text-[12.5px] font-semibold text-fg underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid"
-                href={projectSchedulesPath(projectRef, schedule.publicId)}
-                onClick={(event) => event.stopPropagation()}
-              >
-                {schedule.name}
-              </Link>
+              <ScheduleNameLink
+                href={
+                  schedule.scheduleKind === "rank"
+                    ? rankHref(schedule)
+                    : (aiHref?.(schedule) ?? null)
+                }
+                name={schedule.name}
+              />
+              {showKind ? (
+                <PillBadge size="xs">
+                  {schedule.scheduleKind === "ai" ? t("ai.kindAi") : t("ai.kindRank")}
+                </PillBadge>
+              ) : null}
               {schedule.archivedAt ? <PillBadge size="xs">{t("archived")}</PillBadge> : null}
-              {schedule.isDefault ? (
+              {schedule.scheduleKind === "rank" && schedule.isDefault ? (
                 <PillBadge size="xs" title={t("list.defaultHint")}>
                   {t("default")}
                 </PillBadge>
@@ -183,7 +132,8 @@ export function schedulesTableColumns({
         return (
           <div className="min-w-0">
             <span className="block leading-[1.45] text-fg">{memberLabel(schedule, t)}</span>
-            {schedule.memberMarketCount !== undefined &&
+            {schedule.scheduleKind === "rank" &&
+            schedule.memberMarketCount !== undefined &&
             schedule.memberDeviceCount !== undefined ? (
               <span className="mt-0.5 block text-[10.5px] leading-[1.5] text-fg-muted">
                 {t("list.memberMeta", {
@@ -192,7 +142,7 @@ export function schedulesTableColumns({
                 })}
               </span>
             ) : null}
-            {schedule.sharedTag ? (
+            {schedule.scheduleKind === "rank" && schedule.sharedTag ? (
               <span className="mt-0.5 block text-[10.5px] leading-[1.5] text-fg-muted">
                 {t("list.tagScope", { tag: schedule.sharedTag })}
               </span>
@@ -208,21 +158,30 @@ export function schedulesTableColumns({
       size: 240,
     },
     {
-      accessorKey: "perRunCents",
-      cell: ({ row }) => (
-        <div>
-          <span className="block font-sans text-[12px] font-semibold tabular-nums text-fg">
-            {row.original.archivedAt
-              ? "-"
-              : row.original.nativeEstimate
-                ? `~${usage.format(row.original.nativeEstimate)}`
-                : perRunLabel(row.original.perRunCents, locale)}
-          </span>
-          {!row.original.archivedAt ? (
-            <span className="mt-0.5 block text-[10px] text-fg-muted">{t("list.perRun")}</span>
-          ) : null}
-        </div>
-      ),
+      cell: ({ row }) => {
+        const schedule = row.original;
+        // AI schedules carry no stored per-run estimate; preview prices them on demand.
+        if (schedule.scheduleKind === "ai")
+          return (
+            <span className="block font-sans text-[12px] font-semibold tabular-nums text-fg">
+              -
+            </span>
+          );
+        return (
+          <div>
+            <span className="block font-sans text-[12px] font-semibold tabular-nums text-fg">
+              {schedule.archivedAt
+                ? "-"
+                : schedule.nativeEstimate
+                  ? `~${usage.format(schedule.nativeEstimate)}`
+                  : perRunLabel(schedule.perRunCents, locale)}
+            </span>
+            {!schedule.archivedAt ? (
+              <span className="mt-0.5 block text-[10px] text-fg-muted">{t("list.perRun")}</span>
+            ) : null}
+          </div>
+        );
+      },
       enableSorting: false,
       header: t("perRun"),
       id: "per-run",
@@ -236,11 +195,7 @@ export function schedulesTableColumns({
         const schedule = row.original;
         return (
           <span className={`text-[11px] ${stateFor(schedule) ? "text-fg-muted" : "text-fg"}`}>
-            {stateFor(schedule) === "empty"
-              ? t("list.emptyNext")
-              : !schedule.archivedAt && schedule.enabled
-                ? (schedule.nextRunLabel ?? "-")
-                : "-"}
+            {nextLabel(schedule, t)}
           </span>
         );
       },
@@ -252,33 +207,20 @@ export function schedulesTableColumns({
       size: 140,
     },
     {
-      cell: ({ row }) => {
-        const schedule = row.original;
-        const pauseLabel = schedule.enabled ? t("list.pause") : t("list.resume");
-        if (schedule.archivedAt)
-          return canManage && projectId ? (
-            <RestoreScheduleButton projectId={projectId} scheduleId={schedule.publicId} />
-          ) : null;
-        return (
-          <div className="flex items-center justify-end gap-1">
-            {canUpdate ? (
-              <Button
-                aria-label={`${pauseLabel} ${schedule.name}`}
-                disabled={pendingScheduleId === schedule.publicId}
-                onClick={() => onTogglePause(schedule)}
-                size="xs"
-                title={pauseTitle(schedule.enabled, t)}
-                variant="secondary"
-              >
-                {pauseLabel}
-              </Button>
-            ) : null}
-            {canManage && onArchive ? (
-              <ScheduleArchiveMenu name={schedule.name} onArchive={() => onArchive(schedule)} />
-            ) : null}
-          </div>
-        );
-      },
+      cell: ({ row }) => (
+        <ScheduleRowActions
+          row={row.original}
+          aiCanWrite={aiCanWrite}
+          canManage={canManage}
+          canUpdate={canUpdate}
+          onArchive={onArchive}
+          onOpenAi={onOpenAi}
+          onTogglePause={onTogglePause}
+          pendingScheduleId={pendingScheduleId}
+          projectId={projectId}
+          t={t}
+        />
+      ),
       enableSorting: false,
       header: t("actions"),
       id: "actions",

@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  bulkBarButtonStyle,
-  outlinedSplitChromeStyle,
-} from "@/components/keywords/grid/bulk-action-styles";
+import { bulkBarButtonStyle } from "@/components/keywords/grid/bulk-action-styles";
 import { settingsSectionHref } from "@/components/settings/shell/settings-sections";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
@@ -48,7 +45,7 @@ const caretStyle = { minWidth: 34, paddingLeft: 6, paddingRight: 6 } as const;
 
 function splitButtonStyle(size: CheckDepthSplitButtonSize) {
   if (size === "xs") return bulkBarButtonStyle;
-  return { ...outlinedSplitChromeStyle, minHeight: 36 };
+  return { minHeight: 36 };
 }
 
 export function CheckDepthSplitButton({

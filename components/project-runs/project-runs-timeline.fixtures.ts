@@ -78,3 +78,14 @@ export const timelineFixtureRuns: RankRun[] = [
 ].sort((left, right) =>
   compareTimelineTuples(projectRunTimelineSortTuple(left), projectRunTimelineSortTuple(right)),
 );
+
+/** One current waiting blocker, one future occurrence, and three terminal past failures. */
+export const attentionFixtureRuns: RankRun[] = [
+  rank(11, "blocked", "2026-10-14T00:00:00.000Z", {
+    blockedReason: "usage_reconciliation_required",
+  }),
+  rank(12, "planned", "2026-10-21T00:00:00.000Z"),
+  rank(13, "completed", "2026-09-28T21:14:00.000Z", { outcome: "failed" }),
+  rank(14, "completed", "2026-09-21T20:06:00.000Z", { outcome: "failed" }),
+  rank(15, "completed", "2026-09-04T16:05:00.000Z", { outcome: "failed" }),
+];

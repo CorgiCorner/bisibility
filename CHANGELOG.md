@@ -1,6 +1,22 @@
 # Changelog
 
-## Unreleased
+## [0.37.0] - 2026-10-19
+
+### Added
+
+- Add optional activity streaks, shareable badges and account analytics consent controls.
+
+- Add audited historical BYOK recovery and known-cost closeout while retaining missing evidence (CorgiCorner/bisibility#3, thanks @chapter42).
+
+### Changed
+
+- Share schedules across rank and AI tracking; improve overdue run details, blocker guidance, controls, columns, loading states and cache recovery.
+
+### Fixed
+
+- Validate sitemap XML before replacing snapshots and keep site audits working with unsupported document base URLs.
+
+- Improve account/provider recovery, error reports, worker emails, translations and migration validation; reject secret-file and unsupported probe paths.
 
 ## [0.36.0] - 2026-10-17
 

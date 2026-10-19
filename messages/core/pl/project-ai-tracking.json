@@ -181,6 +181,7 @@
     "observationTimeUnknown": "Nieznany czas obserwacji",
     "citedSources": "Cytowane źródła",
     "contextMissingHint": "Dodaj kontekst projektu lub wpisz prompty ręcznie. Zapisanie promptów nie uruchamia analizy.",
-    "contextDraftReviewHint": "Propozycje opierają się na zapisanym kontekście, a nie pomiarach zainteresowania w wyszukiwarce. Sprawdź i edytuj je przed zapisaniem."
+    "contextDraftReviewHint": "Propozycje opierają się na zapisanym kontekście, a nie pomiarach zainteresowania w wyszukiwarce. Sprawdź i edytuj je przed zapisaniem.",
+    "noActivePrompts": "Dodaj lub aktywuj prompt w monitorowaniu AI przed podglądem harmonogramu."
   }
 }

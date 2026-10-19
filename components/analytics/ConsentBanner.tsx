@@ -9,7 +9,11 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Portal } from "@/components/ui/Portal";
 import { saveAnalyticsConsent } from "@/lib/actions/analytics-consent";
-import { applyAnalyticsConsent, setAnalyticsReplay } from "@/lib/analytics/client";
+import {
+  applyAnalyticsConsent,
+  readAnalyticsConsentScope,
+  setAnalyticsReplay,
+} from "@/lib/analytics/client";
 import {
   type ConsentPromptContext,
   type ConsentState,
@@ -34,7 +38,8 @@ export function ConsentBanner({
 }: Readonly<ConsentBannerProps>) {
   const t = useTranslations("shared.analyticsConsent");
   const consentCopy = localizedConsentCopy(t);
-  const delay = initialConsent.replayNeedsDecision ? 0 : delayMs;
+  const delay =
+    initialConsent.replayNeedsDecision || initialConsent.analyticsNeedsDecision ? 0 : delayMs;
   const [display] = useState(() => createConsentBannerState(initialConsent, delay));
   const presentation = useSyncExternalStore(
     display.subscribe,
@@ -63,13 +68,16 @@ export function ConsentBanner({
   }
 
   async function choose(analytics: boolean) {
+    const scope = readAnalyticsConsentScope();
     restrictConsentImmediately({ analytics, replay: analytics });
     setSaving(true);
     setActionError(null);
     try {
       const consent = await saveConsent({ analytics, replay: analytics }, context("banner"));
-      applyAnalyticsConsent(consent);
-      setAnalyticsReplay(consent.replay);
+      if (scope === readAnalyticsConsentScope()) {
+        applyAnalyticsConsent(consent);
+        setAnalyticsReplay(consent.replay);
+      }
       display.close();
     } catch {
       setActionError(t("banner.saveError"));

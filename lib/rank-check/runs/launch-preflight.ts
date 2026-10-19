@@ -13,6 +13,7 @@ import {
 import { type ProviderRequestSurface, surfaceOf } from "@/lib/provider-usage/surface";
 import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
 import {
+  deploymentRankUsesNativeUnits,
   hostedRankCheckEstimatedCostCents,
   quoteDeploymentRankReservations,
 } from "@/lib/providers/execution-extension";
@@ -81,7 +82,7 @@ type ProviderAllocationReservationInput = {
   surface: ProviderRequestSurface;
 };
 
-export function estimateRunRows(
+export async function estimateRunRows(
   rows: RunSelectionKeyword[],
   projectDepth: number | null | undefined,
   input: Pick<LaunchRankCheckRunInput, "depth">,
@@ -96,6 +97,10 @@ export function estimateRunRows(
     connection.credentialSource === "hosted"
       ? { ...loadedRateContext, manualAmountCents: null }
       : loadedRateContext;
+  const hostedUnitCost =
+    connection.credentialSource === "hosted" && connection.provider === "serpapi"
+      ? await hostedRankCheckEstimatedCostCents(connection.provider, 10)
+      : null;
   const targets = rows.map((row, index) => {
     const depth = resolveEffectiveSerpDepth({
       projectDepth,
@@ -103,15 +108,13 @@ export function estimateRunRows(
       checkScheduleDepth: row.checkSchedule?.serpDepth,
       scheduleDepth: row.schedule?.serpDepth,
     });
-    const hostedEstimate =
-      connection.credentialSource === "hosted"
-        ? hostedRankCheckEstimatedCostCents(connection.provider, depth)
-        : null;
     return {
       cost: targetCosts
         ? (targetCosts[index] ?? null)
         : connection.credentialSource === "hosted" && connection.provider === "serpapi"
-          ? hostedEstimate
+          ? hostedUnitCost === null
+            ? null
+            : hostedUnitCost * pagesPerCheck(depth)
           : estimatedRankCheckCostCents(connection.provider, depth, override, rateContext),
       depth,
       keywordId: row.id,
@@ -143,6 +146,7 @@ export async function quoteRankRunReservation(
   },
 ) {
   if (!input.connection.id || input.connection.credentialSource !== "hosted") return {};
+  const nativeUnits = await deploymentRankUsesNativeUnits(input.connection.provider);
   const quote = await quoteDeploymentRankReservations(tx, {
     connectionId: input.connection.id,
     projectId: input.projectId,
@@ -151,7 +155,7 @@ export async function quoteRankRunReservation(
       keywordId: target.keywordId,
       estimatedCostCents: exactExecutionEstimate(target.cost, 4),
       // Depth changes estimated cost; one rank task is one native operation.
-      estimatedQuantity: "1.000000",
+      estimatedQuantity: nativeUnits ? String(pagesPerCheck(target.depth)) : "1.000000",
     })),
   });
   if (!quote) throw new Error("Hosted run reservation unavailable.");
@@ -171,13 +175,13 @@ export async function quoteRankRunReservationForLaunch(
   }
 }
 
-export function estimatedRunUsageQuantity(estimate: ReturnType<typeof estimateRunRows>) {
+export function estimatedRunUsageQuantity(estimate: Awaited<ReturnType<typeof estimateRunRows>>) {
   return estimate.targets.reduce((sum, target) => sum + pagesPerCheck(target.depth), 0);
 }
 
 export function runUsageEstimate(
   connection: ProviderConnection,
-  estimate: ReturnType<typeof estimateRunRows>,
+  estimate: Awaited<ReturnType<typeof estimateRunRows>>,
 ) {
   return {
     providerAtLaunch: connection.provider,
@@ -224,7 +228,7 @@ export async function reserveProviderAllocation(
 export async function assertLaunchBudget(
   input: LaunchRankCheckRunInput,
   connection: ProviderConnection,
-  estimate: ReturnType<typeof estimateRunRows>,
+  estimate: Awaited<ReturnType<typeof estimateRunRows>>,
   now: Date,
   client?: Prisma.TransactionClient,
 ) {

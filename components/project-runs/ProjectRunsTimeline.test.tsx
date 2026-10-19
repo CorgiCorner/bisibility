@@ -32,9 +32,9 @@ describe("run timeline", () => {
     renderTimeline();
     const table = screen.getByRole("table", { name: "Project runs" });
     expect(within(table).getByText("In progress")).toBeVisible();
-    expect(within(table).getByText("Upcoming")).toBeVisible();
+    expect(within(table).getByText("Waiting to start")).toBeVisible();
     expect(within(table).getByText("History")).toBeVisible();
-    expect(within(table).getByText(/Workers can run in parallel./)).toBeVisible();
+    expect(within(table).getByText("Waiting runs. Dates are shown as recorded.")).toBeVisible();
     expect(within(table).getByText("Retry from")).toBeVisible();
     expect(within(table).getAllByText("Planned for")).toHaveLength(2);
     expect(within(table).getAllByText("Finished")).toHaveLength(4);
@@ -42,7 +42,7 @@ describe("run timeline", () => {
     expect(
       within(table)
         .getAllByText("No active keywords")
-        .some((node) => node.classList.contains("text-fg-muted")),
+        .some((node) => node.closest(".text-fg-muted")),
     ).toBe(true);
   });
 
@@ -50,7 +50,7 @@ describe("run timeline", () => {
     renderTimeline();
     fireEvent.click(screen.getByRole("button", { name: /When/ }));
     expect(routerMock.push).toHaveBeenCalledWith(`/app/${timelineProjectRef}/runs?order=desc`);
-    expect(screen.getByRole("link", { name: "Upcoming" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Waiting to start" })).toHaveAttribute(
       "href",
       `/app/${timelineProjectRef}/runs?section=upcoming`,
     );

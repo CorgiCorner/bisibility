@@ -105,7 +105,7 @@ export async function importTopQueries(input: unknown): Promise<ImportTopQueries
   if (surface && suggestions.length > 0) {
     await trackServerEvent("keywords_added", {
       consent: await readConsentFromCookies(),
-      distinctId: actor.id,
+      userId: actor.id,
       properties: {
         keyword_count: suggestions.length,
         market_count: 0,

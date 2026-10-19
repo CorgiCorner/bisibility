@@ -3,6 +3,18 @@
 import { cn } from "@/lib/ui/cn";
 import { useRef } from "react";
 
+export function tabTriggerClassName(active: boolean) {
+  return cn(
+    "-mb-px flex items-center gap-2 whitespace-nowrap border-x-0 border-t-0 border-b-2 bg-transparent px-3.5 py-[9px] text-[13.5px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-solid",
+    active
+      ? "border-accent font-semibold text-fg"
+      : "border-transparent text-fg-muted hover:text-fg",
+  );
+}
+
+export const tabCountClassName =
+  "rounded-control bg-bg-sunken px-[7px] py-0.5 font-sans tabular-nums text-[11px] text-fg-muted";
+
 type TabsProps<T extends string> = {
   ariaLabel: string;
   onChange: (value: T) => void;
@@ -26,12 +38,7 @@ export function Tabs<T extends string>({
         <button
           aria-controls={panelId}
           aria-selected={value === option.value}
-          className={cn(
-            "-mb-px whitespace-nowrap border-b-2 px-4 py-2.5 text-[13px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-solid",
-            value === option.value
-              ? "border-accent text-fg"
-              : "border-transparent text-fg-muted hover:text-fg",
-          )}
+          className={tabTriggerClassName(value === option.value)}
           id={`${panelId}-${option.value}-tab`}
           key={option.value}
           onClick={() => onChange(option.value)}

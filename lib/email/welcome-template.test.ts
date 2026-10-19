@@ -184,7 +184,9 @@ describe("welcome email variant B (onboarding incomplete)", () => {
     "",
     `Thanks for signing up. Looks like setup did not get all the way through - all good, nothing is lost. Pick it up here: ${appUrl}`,
     "",
-    "Most people stall on the data provider step, so the quick version: you connect your own provider account and pay them directly, nothing goes through us. DataForSEO is pay-as-you-go (early usage is usually a few dollars a month); SerpAPI is a subscription. The cost summary shows the numbers before you commit to anything.",
+    "If the provider step held you up, you can connect your own provider account and pay them directly.",
+    "",
+    "Prefer to skip that step? Credits are coming soon to bisibility Cloud. You will be able to top up in the app and use supported features without connecting your own provider account.",
     "",
     "If it broke or was confusing, reply and tell me where. That is what the beta is for.",
     "",
@@ -197,11 +199,15 @@ describe("welcome email variant B (onboarding incomplete)", () => {
     expect(message.text).toBe(expectedText);
   });
 
-  it("includes DataForSEO pay-as-you-go and SerpAPI subscription wording", () => {
-    expect(message.text).toContain("DataForSEO is pay-as-you-go");
-    expect(message.text).toContain("SerpAPI is a subscription");
-    expect(message.html).toContain("DataForSEO is pay-as-you-go");
-    expect(message.html).toContain("SerpAPI is a subscription");
+  it("presents BYOK and upcoming Cloud Credits consistently in text and HTML", () => {
+    for (const body of [message.text, message.html]) {
+      expect(body).toContain("connect your own provider account and pay them directly");
+      expect(body).toContain("Credits are coming soon to bisibility Cloud");
+      expect(body).toContain("top up in the app");
+      expect(body).toContain("supported features without connecting your own provider account");
+      expect(body).not.toContain("nothing goes through");
+      expect(body).not.toContain("a few dollars a month");
+    }
   });
 
   it("has only the /app absolute URL as a bare link and no step query", () => {
@@ -232,11 +238,10 @@ describe("welcome email founder-null fallback", () => {
     expect(completed.text).not.toContain("I read everything");
   });
 
-  it("variant B uses neutral forms for 'tell me where' and 'nothing goes through us'", () => {
+  it("variant B keeps neutral reply wording when no founder is configured", () => {
     expect(incomplete.text).toContain("reply and let the team know where");
     expect(incomplete.text).not.toContain("tell me where");
-    expect(incomplete.text).toContain("nothing goes through bisibility");
-    expect(incomplete.text).not.toContain("goes through us");
+    expect(incomplete.text).toContain("Credits are coming soon to bisibility Cloud");
   });
 
   it("uses the generic bisibility team signature and has no null leaks", () => {

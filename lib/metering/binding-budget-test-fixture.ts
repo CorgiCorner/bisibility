@@ -75,6 +75,7 @@ export async function bindingBudgetFixture(
       return executor.execute(sql);
     },
     providerConnection: { findUnique: vi.fn(async () => connection) },
+    hostedProviderSelection: { findUnique: vi.fn(async () => null) },
     hostedProviderCredentialVersion: {
       findUnique: vi.fn(async () => ({
         id: "host-version",

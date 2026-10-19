@@ -53,7 +53,7 @@
       "finalizedDays": "Finalized days",
       "notAvailable": "Not available",
       "notStarted": "Not started",
-      "operation": "Operation",
+      "operation": "Task",
       "plannedUpdateFailed": "The planned run could not be updated. Try again.",
       "progress": "Progress",
       "progressValue": "{completed, number} / {total, number}",
@@ -74,7 +74,18 @@
       "type": "Type",
       "unit": "Unit",
       "updatingPlannedRun": "Updating planned run",
-      "keywordCount": "{count, plural, one {# keyword} other {# keywords}}"
+      "keywordCount": "{count, plural, one {# keyword} other {# keywords}}",
+      "reviewIssue": "Review issue",
+      "reviewUsage": "Review budget and usage",
+      "usageUnconfirmed": "Usage needs confirmation",
+      "connectProvider": "Connect a supporting provider",
+      "providerUnavailable": "Provider unavailable",
+      "workerUnavailable": "Worker unavailable",
+      "marketPaused": "Market is paused",
+      "noActiveKeywords": "No active keywords",
+      "reviewBlocker": "Review what is blocking this run",
+      "targetProgress": "{completed, number} / {total, number} {total, plural, one {target} other {targets}}",
+      "dayProgress": "{completed, number} / {total, number} {total, plural, one {finalized day} other {finalized days}}"
     },
     "actions": {
       "actionsFor": "Actions for {title}",
@@ -87,7 +98,7 @@
     "timeline": {
       "all": "All",
       "active": "In progress",
-      "upcoming": "Upcoming",
+      "upcoming": "Waiting to start",
       "history": "History",
       "sections": "Run timeline",
       "activeHint": "Started first",
@@ -101,7 +112,17 @@
       "readyFrom": "Ready from",
       "parallelWorkers": "Workers can run in parallel.",
       "oldestFirst": "Oldest first",
-      "newestFirst": "Newest first"
+      "newestFirst": "Newest first",
+      "waiting": "Waiting to start",
+      "waitingHint": "Waiting runs. Dates are shown as recorded.",
+      "due": "Start time passed",
+      "dueHint": "Waiting work whose recorded start or retry time has passed.",
+      "later": "Scheduled later",
+      "laterHint": "Waiting for a future scheduled time.",
+      "pastFailuresHint": "Past runs that ended with a problem. These are not current waiting runs.",
+      "attention": "Needs attention",
+      "pastScheduled": "Past scheduled time",
+      "pastScheduledDays": "Not started · {count, plural, one {# day past scheduled time} other {# days past scheduled time}}"
     }
   }
 }

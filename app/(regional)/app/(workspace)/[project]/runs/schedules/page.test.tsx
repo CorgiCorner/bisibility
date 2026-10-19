@@ -1,21 +1,47 @@
-import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import {
+  projectRunsFeatureTestMessages,
+  renderWithProjectRunsMessages as render,
+} from "@/i18n/test-support/render-with-feature-messages";
+import { unstable_rethrow } from "@/tests/next-navigation";
 import { screen } from "@testing-library/react";
-import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SchedulesPage from "./page";
 
 const mocks = vi.hoisted(() => ({
   canProjectAction: vi.fn(),
+  getAiTrackingScheduleList: vi.fn(),
   getProjectRole: vi.fn(),
   listCheckScheduleRows: vi.fn(),
   listRankCheckRuns: vi.fn(),
+  loadCoreMessages: vi.fn(),
   requireReadableProject: vi.fn(),
   resolveProjectAccess: vi.fn(),
+  resolveRegionalDocumentLocale: vi.fn(),
 }));
 
 let capturedListProps: Record<string, unknown> = {};
+let capturedDrawerProps: Record<string, unknown> | null = null;
 
-vi.mock("@/lib/queries/_auth", () => mocks);
+vi.mock("@/lib/queries/_auth", () => ({
+  requireReadableProject: mocks.requireReadableProject,
+  resolveProjectAccess: mocks.resolveProjectAccess,
+}));
+vi.mock("@/lib/actions/ai-tracking", () => ({
+  getAiTrackingScheduleList: mocks.getAiTrackingScheduleList,
+  mutateAiTrackingAction: vi.fn(),
+  previewAiTrackingAction: vi.fn(),
+}));
+vi.mock("@/lib/actions/ai-research", () => ({ getAiResearchCatalogAction: vi.fn() }));
+vi.mock("@/i18n/catalog-loader.server", () => ({ loadCoreMessages: mocks.loadCoreMessages }));
+vi.mock("@/i18n/document-locale.server", () => ({
+  resolveRegionalDocumentLocale: mocks.resolveRegionalDocumentLocale,
+}));
+vi.mock("@/components/ai-tracking/AiScheduleDrawerHost", () => ({
+  AiScheduleDrawerHost: (props: Record<string, unknown>) => {
+    capturedDrawerProps = props;
+    return <div data-testid="ai-schedule-drawer" />;
+  },
+}));
 vi.mock("@/lib/auth/authorize", () => ({ getProjectRole: mocks.getProjectRole }));
 vi.mock("@/lib/auth/capabilities", () => ({ canProjectAction: mocks.canProjectAction }));
 vi.mock("@/lib/queries/check-schedule-list", () => ({
@@ -30,14 +56,33 @@ vi.mock("@/components/schedules/SchedulesList", () => ({
     return <div data-testid="schedules-list" />;
   },
 }));
-vi.mock("@/components/project-runs/ProjectRunsFeatureBoundary", () => ({
-  ProjectRunsFeatureBoundary: ({ children }: { children: ReactNode }) => children,
-}));
+
+const aiList = {
+  canWrite: true,
+  activePromptIds: ["aip_neutral"],
+  schedules: [
+    {
+      id: "ais_weekly",
+      name: "Weekly prompts",
+      cron: "0 9 * * 1",
+      timezone: "UTC",
+      enabled: false,
+      nextRunAt: null,
+      archivedAt: null,
+      promptIds: ["aip_neutral"],
+      configurations: [],
+    },
+  ],
+};
 
 describe("SchedulesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     capturedListProps = {};
+    capturedDrawerProps = null;
+    mocks.getAiTrackingScheduleList.mockResolvedValue(null);
+    mocks.resolveRegionalDocumentLocale.mockResolvedValue({ locale: "en", timeZone: "UTC" });
+    mocks.loadCoreMessages.mockResolvedValue(projectRunsFeatureTestMessages);
     mocks.canProjectAction.mockReturnValue(true);
     mocks.getProjectRole.mockReturnValue("owner");
     mocks.listCheckScheduleRows.mockResolvedValue([
@@ -114,6 +159,124 @@ describe("SchedulesPage", () => {
     vi.useRealTimers();
   });
 
+  it("renders rank rows unchanged when AI tracking is unavailable", async () => {
+    render(await SchedulesPage({ params: Promise.resolve({ project: "prj_1" }) }));
+
+    expect(mocks.getAiTrackingScheduleList).toHaveBeenCalledWith("prj_1", "current");
+    expect(capturedListProps.ai).toBeUndefined();
+    expect(capturedListProps.schedules).toEqual([
+      expect.not.objectContaining({ scheduleKind: expect.anything() }),
+    ]);
+    expect(mocks.loadCoreMessages).toHaveBeenCalledWith("en", [
+      "shared",
+      "projectRuns",
+      "projectAiTracking",
+    ]);
+    expect(capturedDrawerProps).toBeNull();
+  });
+
+  it("keeps rank schedules visible and names an AI storage failure", async () => {
+    mocks.getAiTrackingScheduleList.mockRejectedValue(new Error("database unavailable"));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    try {
+      render(await SchedulesPage({ params: Promise.resolve({ project: "prj_1" }) }));
+      expect(screen.getByTestId("schedules-list")).toBeVisible();
+      expect(
+        screen.getByText(
+          "Prompt monitoring schedules could not be loaded. Rank schedules are shown below.",
+        ),
+      ).toBeVisible();
+      expect(capturedListProps.ai).toBeUndefined();
+      expect(warn).toHaveBeenCalledWith("AI schedules could not be loaded", { errorType: "Error" });
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it("preserves framework navigation failures before degrading optional AI data", async () => {
+    const controlFlow = new Error("framework control flow");
+    mocks.getAiTrackingScheduleList.mockRejectedValue(controlFlow);
+    unstable_rethrow.mockImplementationOnce((error) => {
+      throw error;
+    });
+    await expect(SchedulesPage({ params: Promise.resolve({ project: "prj_1" }) })).rejects.toBe(
+      controlFlow,
+    );
+    expect(unstable_rethrow).toHaveBeenCalledWith(controlFlow);
+  });
+  it("passes AI rows with their own write rule and opens the drawer from ?ai=", async () => {
+    mocks.getAiTrackingScheduleList.mockResolvedValue(aiList);
+    mocks.canProjectAction.mockReturnValue(false);
+
+    render(
+      await SchedulesPage({
+        params: Promise.resolve({ project: "prj_1" }),
+        searchParams: Promise.resolve({ ai: "ais_weekly" }),
+      }),
+    );
+
+    expect(capturedListProps).toMatchObject({
+      canManage: false,
+      canUpdate: false,
+      ai: {
+        canWrite: true,
+        rows: [
+          {
+            archivedAt: null,
+            cron: "0 9 * * 1",
+            enabled: false,
+            name: "Weekly prompts",
+            nextRunAt: null,
+            promptCount: 1,
+            publicId: "ais_weekly",
+            timezone: "UTC",
+          },
+        ],
+      },
+    });
+    expect(mocks.loadCoreMessages).toHaveBeenCalledWith("en", [
+      "shared",
+      "projectRuns",
+      "projectAiTracking",
+    ]);
+    expect(capturedDrawerProps).toMatchObject({
+      activePromptIds: ["aip_neutral"],
+      projectId: "prj_1",
+      target: "ais_weekly",
+    });
+  });
+
+  it("does not open the AI drawer for read-only AI access or archived views", async () => {
+    mocks.getAiTrackingScheduleList.mockResolvedValue({ ...aiList, canWrite: false });
+    render(
+      await SchedulesPage({
+        params: Promise.resolve({ project: "prj_1" }),
+        searchParams: Promise.resolve({ ai: "ais_weekly" }),
+      }),
+    );
+    expect(capturedDrawerProps).toBeNull();
+    expect(mocks.loadCoreMessages).toHaveBeenCalledWith("en", [
+      "shared",
+      "projectRuns",
+      "projectAiTracking",
+    ]);
+
+    mocks.getAiTrackingScheduleList.mockResolvedValue(aiList);
+    render(
+      await SchedulesPage({
+        params: Promise.resolve({ project: "prj_1" }),
+        searchParams: Promise.resolve({ ai: "ais_weekly", status: "archived" }),
+      }),
+    );
+    expect(mocks.getAiTrackingScheduleList).toHaveBeenLastCalledWith("prj_1", "archived");
+    expect(mocks.loadCoreMessages).toHaveBeenLastCalledWith("en", [
+      "shared",
+      "projectRuns",
+      "projectAiTracking",
+    ]);
+    expect(capturedDrawerProps).toBeNull();
+  });
+
   it("rejects an unauthorized actor before rendering the route", async () => {
     mocks.requireReadableProject.mockRejectedValue(new Error("Unauthorized"));
 
@@ -121,5 +284,6 @@ describe("SchedulesPage", () => {
       "Unauthorized",
     );
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
+    expect(mocks.loadCoreMessages).not.toHaveBeenCalled();
   });
 });

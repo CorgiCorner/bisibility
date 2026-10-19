@@ -92,7 +92,7 @@ describe("signup welcome sequence", () => {
     expect(mocks.readConsentFromCookies).toHaveBeenCalledOnce();
     expect(mocks.trackServerEvent).toHaveBeenCalledWith("user_signed_up", {
       consent: { analytics: true, decidedAt: 1, replay: false, status: "decided" },
-      distinctId: "user_1",
+      userId: "user_1",
       properties: { method: "otp" },
     });
   });

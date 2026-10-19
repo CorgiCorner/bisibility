@@ -181,6 +181,7 @@
     "observationTimeUnknown": "Hora de observación desconocida",
     "citedSources": "Fuentes citadas",
     "contextMissingHint": "Añade contexto al proyecto o escribe los prompts manualmente. Guardarlos no inicia un análisis.",
-    "contextDraftReviewHint": "Los borradores usan tu contexto guardado, no datos de demanda de búsqueda. Revísalos y edítalos antes de guardarlos."
+    "contextDraftReviewHint": "Los borradores usan tu contexto guardado, no datos de demanda de búsqueda. Revísalos y edítalos antes de guardarlos.",
+    "noActivePrompts": "Añade o activa un prompt en el seguimiento de IA antes de previsualizar este horario."
   }
 }

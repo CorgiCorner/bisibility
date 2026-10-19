@@ -1481,6 +1481,286 @@
     "en": [
       {
         "arguments": [],
+        "key": "account.achievements.badgeOptions",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.calendarLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.completedDay",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.conflict",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.copied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.copy",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.createLink",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.criteria",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "account.achievements.days",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.disabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.download",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "account.achievements.earned",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.email",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.emailCta",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.emailIntro",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.emailNotice",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.emailSubject",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.emailUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.emailUnsubscribe",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.emptyDay",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.error",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "zone",
+            1
+          ]
+        ],
+        "key": "account.achievements.help",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.intro",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.locked",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ]
+        ],
+        "key": "account.achievements.longest",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            1
+          ]
+        ],
+        "key": "account.achievements.milestone",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.next",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.participate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.practiceDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.practiceTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.presenceDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.presenceTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.publicDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.publicHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.publicTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.refresh",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.replay",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.restart",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.restartHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.restartRequired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.revoke",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.save",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.saved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.settings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.share",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.shareError",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.showHeader",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.today",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.unsubscribed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.achievements.zone",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "account.connected.connect",
         "tags": []
       },
@@ -1747,6 +2027,11 @@
       {
         "arguments": [],
         "key": "account.email.verifiedFallback",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.navigation.activity",
         "tags": []
       },
       {
@@ -9972,6 +10257,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "limit",
+            6
+          ]
+        ],
+        "key": "onboarding.website.errors.projectLimit",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "onboarding.website.errors.required",
         "tags": []
@@ -11377,6 +11672,11 @@
       {
         "arguments": [],
         "key": "projectAiTracking.nextRunPending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiTracking.noActivePrompts",
         "tags": []
       },
       {
@@ -36476,6 +36776,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.rankRuns.actions.reviewUsage",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.rankRuns.actions.workerStatus",
         "tags": []
       },
@@ -36589,7 +36894,27 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.rankRuns.blocked.reviewUsage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.blocked.reviewUsageDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.rankRuns.blocked.targetPaused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.blocked.usageUnconfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.blocked.usageUnconfirmedDescription",
         "tags": []
       },
       {
@@ -37802,6 +38127,86 @@
       {
         "arguments": [],
         "key": "projectRuns.schedules.addKeywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.addPromptFirst",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.archiveBody",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.archived",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.archivedReadOnlyHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.archiveFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.emptyNext",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.kindAi",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.kindRank",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.loadFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.newSchedule",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.nextPending",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectRuns.schedules.ai.prompts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.readOnly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.resumeTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.ai.retry",
         "tags": []
       },
       {
@@ -39048,7 +39453,26 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.table.connectProvider",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.table.cost",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "completed",
+            2
+          ],
+          [
+            "total",
+            6
+          ]
+        ],
+        "key": "projectRuns.table.dayProgress",
         "tags": []
       },
       {
@@ -39064,6 +39488,16 @@
           ]
         ],
         "key": "projectRuns.table.keywordCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.table.marketPaused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.table.noActiveKeywords",
         "tags": []
       },
       {
@@ -39112,6 +39546,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.table.providerUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.table.rankCheck",
         "tags": []
       },
@@ -39133,6 +39572,21 @@
       {
         "arguments": [],
         "key": "projectRuns.table.rankCheckScheduled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.table.reviewBlocker",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.table.reviewIssue",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.table.reviewUsage",
         "tags": []
       },
       {
@@ -39171,6 +39625,20 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "completed",
+            2
+          ],
+          [
+            "total",
+            6
+          ]
+        ],
+        "key": "projectRuns.table.targetProgress",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRuns.table.targets",
         "tags": []
@@ -39192,6 +39660,16 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.table.usageUnconfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.table.workerUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.timeline.active",
         "tags": []
       },
@@ -39207,6 +39685,21 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.timeline.attention",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.due",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.dueHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.timeline.finishedAt",
         "tags": []
       },
@@ -39218,6 +39711,16 @@
       {
         "arguments": [],
         "key": "projectRuns.timeline.historyHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.later",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.laterHint",
         "tags": []
       },
       {
@@ -39238,6 +39741,26 @@
       {
         "arguments": [],
         "key": "projectRuns.timeline.parallelWorkers",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.pastFailuresHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.pastScheduled",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectRuns.timeline.pastScheduledDays",
         "tags": []
       },
       {
@@ -39268,6 +39791,16 @@
       {
         "arguments": [],
         "key": "projectRuns.timeline.upcomingHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.waiting",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.timeline.waitingHint",
         "tags": []
       },
       {
@@ -42989,6 +43522,11 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.loadError",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsGeneral.dataCache.module.ai_visibility",
         "tags": []
       },
@@ -43039,12 +43577,27 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.partial",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsGeneral.dataCache.readOnly",
         "tags": []
       },
       {
         "arguments": [],
         "key": "projectSettingsGeneral.dataCache.refresh",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.refreshHelp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsGeneral.dataCache.retry",
         "tags": []
       },
       {
@@ -58629,6 +59182,11 @@
       {
         "arguments": [],
         "key": "shell.userMenu.accountSettings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.userMenu.activity",
         "tags": []
       },
       {

@@ -1,3 +1,4 @@
+import { AchievementHeader } from "@/components/achievements/AchievementHeader";
 import {
   HeaderProviderSpendData,
   HeaderProviderSpendSkeleton,
@@ -221,12 +222,19 @@ export async function WorkspaceShell({
                   )}
                   {accountNotice?.content}
                   <AppHeader
+                    accountActions={
+                      <Suspense fallback={null}>
+                        <AchievementHeader />
+                      </Suspense>
+                    }
                     actions={
-                      active.role === "owner" ? (
-                        <Suspense fallback={<HeaderProviderSpendSkeleton />}>
-                          <HeaderProviderSpendData projectRef={projectRef} />
-                        </Suspense>
-                      ) : undefined
+                      <>
+                        {active.role === "owner" ? (
+                          <Suspense fallback={<HeaderProviderSpendSkeleton />}>
+                            <HeaderProviderSpendData projectRef={projectRef} />
+                          </Suspense>
+                        ) : null}
+                      </>
                     }
                     activeProjectId={active.publicId}
                     canCreateWorkspace={canCreateWorkspace}

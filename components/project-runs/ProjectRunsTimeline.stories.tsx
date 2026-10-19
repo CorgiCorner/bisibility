@@ -6,9 +6,20 @@ import runMessages from "@/messages/core/pl/project-runs.json";
 import sharedMessages from "@/messages/core/pl/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
 import { ProjectRunsContent } from "./ProjectRunsContent";
-import { timelineFixtureRuns, timelineProjectRef } from "./project-runs-timeline.fixtures";
+import {
+  attentionFixtureRuns,
+  timelineFixtureRuns,
+  timelineProjectRef,
+} from "./project-runs-timeline.fixtures";
 
-function TimelinePreview({ canMutate }: Readonly<{ canMutate: boolean }>) {
+function TimelinePreview({
+  canMutate,
+  attention = false,
+  filtered = false,
+}: Readonly<{ canMutate: boolean; attention?: boolean; filtered?: boolean }>) {
+  const runs = attention
+    ? attentionFixtureRuns.filter((run) => !filtered || run.attention)
+    : timelineFixtureRuns;
   return (
     <FeatureMessagesProvider
       locale="pl"
@@ -25,15 +36,16 @@ function TimelinePreview({ canMutate }: Readonly<{ canMutate: boolean }>) {
                 operations={[]}
                 page={{
                   counts: {
-                    rankChecks: timelineFixtureRuns.length,
+                    rankChecks: runs.length,
                     searchConsole: 0,
-                    total: timelineFixtureRuns.length,
+                    total: runs.length,
                   },
                   nextCursor: null,
-                  runs: timelineFixtureRuns,
+                  runs,
                 }}
                 projectRef={timelineProjectRef}
-                query={PROJECT_RUNS_DEFAULT_QUERY}
+                query={{ ...PROJECT_RUNS_DEFAULT_QUERY, status: filtered ? "attention" : "all" }}
+                readAt={attention ? "2026-10-18T12:00:00.000Z" : "2026-10-08T00:00:00.000Z"}
                 runNowAction={async () => {}}
                 skipAction={async () => {}}
               />
@@ -54,3 +66,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 export const Editor: Story = { args: { canMutate: true } };
 export const Viewer: Story = { args: { canMutate: false } };
+
+export const PastDueAndFuture: Story = { args: { canMutate: false, attention: true } };
+export const NeedsAttention: Story = {
+  args: { canMutate: false, attention: true, filtered: true },
+};

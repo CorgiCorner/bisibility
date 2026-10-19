@@ -80,14 +80,18 @@ describe("ThemeSegments", () => {
     expect(segment("Light").nextElementSibling?.className).not.toContain("bg-accent");
   });
 
-  it("uses the control-border token on the track and the selected option", () => {
+  it("keeps the control border on the track and a softer border on the selected option", () => {
     renderWithSharedMessages(<ThemeSegments defaultPreference="light" />);
 
     const selected = segment("Light");
     const track = selected.closest(".border-border-control");
     expect(track).toHaveClass("border-border-control");
     expect(track).not.toHaveClass("border-border");
-    expect(selected.nextElementSibling).toHaveClass("border-border-control");
+    expect(selected).toBeChecked();
+    expect(selected.nextElementSibling).toHaveClass("border-border");
+    expect(selected.nextElementSibling).not.toHaveClass("border-border-control");
     expect(selected.nextElementSibling).toHaveClass("bg-bg-elev");
+    expect(segment("Dark")).not.toBeChecked();
+    expect(segment("Dark").nextElementSibling).not.toHaveClass("bg-bg-elev");
   });
 });

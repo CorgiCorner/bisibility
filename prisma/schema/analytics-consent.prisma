@@ -1,0 +1,24 @@
+enum AnalyticsConsentSource {
+  web
+  ios
+  api
+}
+
+model UserAnalyticsConsent {
+  userId    String                 @id
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analytics Boolean                @default(false)
+  decidedAt DateTime
+  source    AnalyticsConsentSource
+  version   Int
+
+  @@map("user_analytics_consents")
+}
+
+model AnalyticsPersonDeletion {
+  distinctId String   @id
+  createdAt  DateTime @default(now())
+  lastAttemptAt DateTime?
+
+  @@map("analytics_person_deletions")
+}

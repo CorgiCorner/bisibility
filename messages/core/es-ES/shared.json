@@ -801,7 +801,7 @@
       },
       "units": {
         "cents": "centavos USD",
-        "customer_cents": "centavos de crédito",
+        "customer_cents": "Credits",
         "units": "Unidades",
         "requests": "Solicitudes",
         "budget_cents": "centavos USD",

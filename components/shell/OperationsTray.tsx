@@ -85,6 +85,8 @@ function blockedStateLine(
       ? t("rank.blocked.workerSelfHost")
       : t("rank.blocked.workerCloud");
   }
+  if (operation.blockedReason === "usage_reconciliation_required")
+    return t("rank.blocked.budgetWithoutAmounts");
   if (operation.blockedReason === "budget_exhausted") {
     if (!operation.budget) return t("rank.blocked.budgetWithoutAmounts");
     const formatCurrency = (cents: number) =>

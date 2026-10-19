@@ -4,6 +4,7 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 import { Context } from "@temporalio/activity";
+import { flushAnalyticsPersonDeletions } from "../analytics/person-deletion";
 import { purgeAuditLogs } from "../audit/retention";
 import { purgeExpiredSessions } from "../auth/session-retention";
 import { prisma } from "../db/prisma";
@@ -156,6 +157,7 @@ export async function purgeQueuedRankCheckBatchesActivity(): Promise<PurgeQueued
  */
 export async function purgeExpiredSessionsActivity(): Promise<PurgeExpiredSessionsActivityResult> {
   const summary = await purgeExpiredSessions();
+  await flushAnalyticsPersonDeletions();
   return {
     cutoff: summary.cutoff.toISOString(),
     sessionsDeleted: summary.sessionsDeleted,

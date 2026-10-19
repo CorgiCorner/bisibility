@@ -22,7 +22,6 @@ export function TrackingWorkspaceDrawers({
     pending,
     save,
     editingTopic,
-    editingSchedule,
     activePrompts,
     setData,
     setTab,
@@ -56,43 +55,20 @@ export function TrackingWorkspaceDrawers({
         }}
       />
       <TrackingRunDrawer
-        key={`run-${drawer === "run" || drawer === "schedule" ? (editingSchedule?.id ?? drawer) : "closed"}`}
-        open={drawer === "run" || drawer === "schedule"}
-        scheduleMode={drawer === "schedule"}
-        schedule={editingSchedule}
+        key={`run-${drawer === "run" ? "open" : "closed"}`}
+        open={drawer === "run"}
         mutationError={error}
         onCatalog={actions.catalog}
-        count={editingSchedule?.promptIds?.length ?? activePrompts.length}
+        count={activePrompts.length}
         onClose={() => setDrawer(null)}
         pending={pending}
-        onSaveMetadata={(metadata) => save("schedules", "PATCH", metadata, editingSchedule?.id)}
         onPreview={(configurations) =>
           actions.preview(
-            editingSchedule?.promptIds ?? activePrompts.map((prompt) => prompt.id),
+            activePrompts.map((prompt) => prompt.id),
             configurations,
           )
         }
-        onLaunch={async (preview, schedule) => {
-          if (schedule) {
-            await save(
-              "schedules",
-              editingSchedule ? "PATCH" : "POST",
-              {
-                ...schedule,
-                consent: schedule.enabled,
-                configuration: {
-                  ...preview,
-                  promptIds: editingSchedule?.promptIds ?? activePrompts.map((prompt) => prompt.id),
-                  idempotencyKey: crypto.randomUUID(),
-                  origin: "manual",
-                  entrySource: "app",
-                  deadline: new Date(Date.now() + 86_400_000).toISOString(),
-                },
-              },
-              editingSchedule?.id,
-            );
-            return;
-          }
+        onLaunch={async (preview) => {
           setData(
             await actions.launch(
               activePrompts.map((prompt) => prompt.id),
