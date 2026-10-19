@@ -1,7 +1,10 @@
 import { KEYWORD_TEXT_MAX } from "@/lib/schemas/keyword";
 import type { schemas } from "./openapi-components";
+import { keywordBulkRequest, keywordBulkResponse } from "./openapi-keyword-bulk";
+import { keywordCreateRequest } from "./openapi-keyword-create";
 import { withRequiredBody } from "./openapi-operations";
 import { publicIdSchema } from "./openapi-public-id";
+import { openEnum, sdkName } from "./openapi-sdk-schema";
 import { KEYWORD_MATCH_MAX_TEXTS } from "./schemas";
 
 type BearerOperation = (
@@ -39,10 +42,15 @@ export const keywordCheckStateSchemas = {
           "Persisted coverage, or null when legacy metadata is absent. Only complete coverage supports absence within depth; a valid positive rank remains valid with truncated coverage.",
         enum: ["complete", "truncated_by_stop_on_match", "unknown", null],
         type: ["string", "null"],
+        ...openEnum("ObservationCompleteness"),
       },
       position: { type: ["integer", "null"] },
       run_id: latestCheckRunIdSchema,
-      status: { enum: ["completed", "failed", "running"], type: "string" },
+      status: {
+        enum: ["completed", "failed", "running"],
+        type: "string",
+        ...openEnum("RankCheckStatus"),
+      },
     },
     required: [
       "checked_at",
@@ -67,6 +75,7 @@ export const keywordCheckStateSchemas = {
           "Persisted coverage, or null when legacy metadata is absent. Only complete coverage supports absence within depth; a valid positive rank remains valid with truncated coverage.",
         enum: ["complete", "truncated_by_stop_on_match", "unknown", null],
         type: ["string", "null"],
+        ...openEnum("ObservationCompleteness"),
       },
       position: { type: ["integer", "null"] },
       ranking_url: { type: ["string", "null"] },
@@ -169,13 +178,37 @@ export const keywordMatchSchemas = {
 
 export function keywordPaths({ bearer, keywordListParameters, list, ref }: KeywordPathHelpers) {
   const keywordMutationResult = {
-    additionalProperties: true,
-    description: "Created, skipped, and updated keyword rows for a write.",
-    properties: {
-      created: { items: ref("Keyword"), type: "array" },
-    },
+    ...sdkName("KeywordCreateResult"),
     type: "object",
+    properties: {
+      created: { type: "integer", minimum: 0 },
+      skipped: { type: "integer", minimum: 0 },
+      warnings: { type: "array", items: { type: "string" } },
+      results: {
+        type: "array",
+        items: {
+          ...sdkName("KeywordCreateItemResult"),
+          type: "object",
+          properties: {
+            keyword: ref("Keyword"),
+            status: {
+              type: "string",
+              enum: ["created", "skipped"],
+              ...openEnum("KeywordCreateStatus"),
+            },
+            warning: { type: "string" },
+          },
+          required: ["keyword", "status"],
+        },
+      },
+    },
+    required: ["created", "skipped", "results"],
   };
+  const addOperation = withRequiredBody(
+    bearer("Add one or more keywords", "addKeywords", keywordMutationResult, keywordCreateRequest, [
+      { $ref: "#/components/parameters/IdempotencyKey" },
+    ]),
+  );
   const matchOperation = bearer(
     "Match exact tracked keyword texts across project markets",
     "matchProjectKeywords",
@@ -184,13 +217,21 @@ export function keywordPaths({ bearer, keywordListParameters, list, ref }: Keywo
   );
 
   return {
-    "/keywords/{id}": {
+    "/keywords/{keyword_id}": {
       delete: bearer("Delete one keyword", "deleteKeyword", ref("Keyword")),
       get: bearer("Get one keyword", "getKeyword", ref("Keyword")),
       patch: bearer("Set keyword target URL or metadata", "setKeywordTargetUrl", ref("Keyword")),
     },
     "/keywords/bulk": {
-      post: bearer("Bulk mutate keywords", "bulkUpdateKeywords", keywordMutationResult),
+      post: withRequiredBody(
+        bearer(
+          "Bulk mutate keywords",
+          "bulkUpdateKeywords",
+          keywordBulkResponse,
+          keywordBulkRequest,
+          [{ $ref: "#/components/parameters/IdempotencyKey" }],
+        ),
+      ),
     },
     "/projects/{project_id}/keyword-matches": {
       post: withRequiredBody(matchOperation),
@@ -203,7 +244,16 @@ export function keywordPaths({ bearer, keywordListParameters, list, ref }: Keywo
         undefined,
         keywordListParameters,
       ),
-      post: bearer("Add one or more keywords", "addKeywords", keywordMutationResult),
+      post: {
+        ...addOperation,
+        responses: {
+          ...(addOperation.responses as object),
+          "201": {
+            description: "At least one keyword created",
+            content: { "application/json": { schema: keywordMutationResult } },
+          },
+        },
+      },
     },
   };
 }

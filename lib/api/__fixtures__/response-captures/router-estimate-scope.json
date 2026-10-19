@@ -1,0 +1,177 @@
+{
+  "captures": [
+    {
+      "body": {
+        "cached": false,
+        "connections": [
+          {
+            "id": "conn_a00000000000000000000000",
+            "label": "DataForSEO",
+            "provider": "dataforseo"
+          }
+        ],
+        "cost_cents": 1,
+        "fetched_at": "2026-10-11T12:00:00.000Z",
+        "provider": "DataForSEO",
+        "rows": [],
+        "sources": [
+          {
+            "cached": false,
+            "cost_cents": 1,
+            "returned": 0,
+            "source": "related",
+            "status": "ok"
+          },
+          {
+            "cached": false,
+            "cost_cents": 0,
+            "reason": "provider_error",
+            "returned": 0,
+            "source": "suggestion",
+            "status": "failed"
+          },
+          {
+            "cached": false,
+            "cost_cents": 0,
+            "reason": "previous_source_failed",
+            "returned": 0,
+            "source": "idea",
+            "status": "skipped"
+          }
+        ],
+        "total_count": 0
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 200
+    },
+    {
+      "body": {
+        "cached": false,
+        "connections": [
+          {
+            "id": "conn_a00000000000000000000000",
+            "label": "DataForSEO",
+            "provider": "dataforseo"
+          }
+        ],
+        "cost_cents": 7.199999999999999,
+        "estimate": true,
+        "provider": "DataForSEO",
+        "sources": [
+          {
+            "cached": false,
+            "cost_cents": 2.4,
+            "source": "related"
+          },
+          {
+            "cached": false,
+            "cost_cents": 2.4,
+            "source": "suggestion"
+          },
+          {
+            "cached": false,
+            "cost_cents": 2.4,
+            "source": "idea"
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "cached": false,
+          "cached_until": null,
+          "cost_cents": 7.6068,
+          "estimate": true,
+          "estimated_cost_cents": 7.6068,
+          "include_subdomains": true,
+          "provider": "dataforseo",
+          "target": "example.com",
+          "target_scope": "site"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "snapshot_ref": "00:00000000:0000000000000000:0000000000000000000000==:000000000000000000000000000000000000000000000000000000000000000000==",
+          "cached": false,
+          "cached_until": "2026-09-18T12:00:00.000Z",
+          "cost_cents": 5,
+          "fetched_at": "2026-09-17T12:00:00.000Z",
+          "fetched_row_count": 0,
+          "history": [],
+          "include_subdomains": true,
+          "provider": "unknown",
+          "rows": [],
+          "summary": {
+            "backlinks_total": 0,
+            "broken_backlinks": 0,
+            "broken_pages": 0,
+            "dofollow_pct": 0,
+            "domain_rank": 0,
+            "lost_backlinks": 0,
+            "lost_referring_domains": 0,
+            "new_backlinks": 0,
+            "new_referring_domains": 0,
+            "referring_domains_total": 0,
+            "referring_pages": 0,
+            "spam_score": 0
+          },
+          "target": "example.com",
+          "target_scope": "site",
+          "total_rows_available": 0
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/backlinks",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "analyzeBacklinks",
+      "path": "/projects/{project_id}/backlinks",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-research",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 403
+    }
+  ],
+  "source": "lib/api/router-estimate-scope.test.ts"
+}

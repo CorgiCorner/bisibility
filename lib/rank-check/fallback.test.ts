@@ -21,7 +21,10 @@ import { OperationAccessDeniedError } from "@/lib/operations/access-error";
 import { byokTestEvidence, testOwnAdmission } from "@/lib/provider-usage/byok-test-evidence";
 import { ProviderCallError } from "@/lib/providers/call-error";
 import { encryptSecret } from "@/lib/providers/crypto";
-import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import {
+  DeploymentAdmissionExhaustedError,
+  OwnProviderKeyRequiredError,
+} from "@/lib/providers/execution-extension-errors";
 import { clearProviderRateLimitState, ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { dataForSeoProvider } from "@/lib/providers/serp/dataforseo";
 import { serpApiProvider } from "@/lib/providers/serp/serpapi";
@@ -76,6 +79,7 @@ const mocks = vi.hoisted(() => ({
     $queryRaw: vi.fn(),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
+    billingAccess: { findUnique: vi.fn() },
     keyword: { count: vi.fn(), findUnique: vi.fn(), groupBy: vi.fn() },
     keywordSchedule: { update: vi.fn() },
     observationItem: { createMany: vi.fn() },
@@ -274,6 +278,53 @@ describe("runCheckWithFallback", () => {
     },
   );
 
+  it("runs an own-key provider after the account's hosted provider is refused", async () => {
+    const hosted = provider(
+      "primary",
+      vi
+        .fn()
+        .mockRejectedValue(
+          new OwnProviderKeyRequiredError({ capability: "rank_check", provider: "dataforseo" }),
+        ),
+    );
+    const own = provider("secondary", vi.fn().mockResolvedValue(ranked(3)));
+    const outcome = await runCheckWithFallback({
+      keyword: KEYWORD,
+      schedule: { frequency: "manual" },
+      connections: [
+        { provider: "primary", credentials: { apiKey: "fixture-primary" } },
+        { provider: "secondary", credentials: { apiKey: "fixture-secondary" } },
+      ],
+      resolveProvider: (id) => (id === "primary" ? hosted : own),
+    });
+    expect(outcome.provider).toBe("secondary");
+    expect(own.fetchRank).toHaveBeenCalledOnce();
+  });
+
+  it("answers byok_required when no own-key provider is left", async () => {
+    const refusal = new OwnProviderKeyRequiredError({
+      capability: "rank_check",
+      provider: "dataforseo",
+    });
+    const chain = await runCheckWithFallback({
+      connections: [{ provider: "dataforseo" }],
+      keyword: KEYWORD,
+      resolveProvider: () => {
+        throw refusal;
+      },
+      schedule: { frequency: "manual" },
+      source: "api",
+    }).catch((error: unknown) => error);
+    expect((chain as ProviderChainError).admissionExhaustion).toBe(refusal);
+    const response = errorFromUnknown(
+      chain,
+      new Headers(),
+      new URL("https://example.com/api/v1/keywords/kw_1/checks"),
+    );
+    expect(response.status).toBe(403);
+    expect((await response.json()).type).toBe("https://bisibility.com/problems/byok_required");
+  });
+
   it("does not reuse an earlier balance error when the last provider fails", async () => {
     const admission = new DeploymentAdmissionExhaustedError("balance");
     const chain = await runCheckWithFallback({
@@ -393,6 +444,49 @@ describe("runCheckWithFallback", () => {
       }),
     ]);
   });
+
+  it.each([
+    [true, 0],
+    [false, 1],
+  ])(
+    "refuses an own connection without a stored key for a tester account (flagged: %s)",
+    async (flagged, dispatched) => {
+      const own = provider("serpapi", vi.fn().mockResolvedValue(ranked(4)));
+      mocks.prisma.project.findUnique.mockResolvedValue({
+        ownerId: "owner_1",
+        publicId: "prj_abcdefghijklmnopqrstuvwx",
+        budgetCapCents: 5000,
+        providerAllocationsInitializedAt: new Date(),
+      });
+      mocks.prisma.billingAccess.findUnique.mockResolvedValue({
+        requiresOwnProviderKeys: flagged,
+      });
+      mocks.prisma.providerConnection.findFirst.mockResolvedValue({
+        allocationAmountPerMonth: null,
+        allocationUnit: null,
+      });
+      mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({
+        _count: { _all: 0 },
+        _sum: { costCents: 0, usageQuantity: 0 },
+      });
+
+      const outcome = await runCheckWithFallback({
+        connections: [{ id: "connection_secondary", provider: "serpapi" }],
+        keyword: KEYWORD,
+        projectId: "project_1",
+        resolveProvider: () => own,
+        schedule: { frequency: "manual" },
+        source: "api",
+      }).catch((error: unknown) => error);
+
+      expect(own.fetchRank).toHaveBeenCalledTimes(dispatched);
+      if (flagged) {
+        expect((outcome as ProviderChainError).admissionExhaustion).toBeInstanceOf(
+          OwnProviderKeyRequiredError,
+        );
+      }
+    },
+  );
 
   it("records the exhausted surface and derives it from the chain source", async () => {
     const primary = provider(

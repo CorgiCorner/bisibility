@@ -1,4 +1,4 @@
-import { grantedApiScopes } from "@/lib/api/scope-policy";
+import { firstPartyAppApiScopes, grantedApiScopes } from "@/lib/api/scope-policy";
 import { canCreateOAuthApiTokens } from "@/lib/auth/oauth-consent-copy";
 import { useTranslations } from "next-intl";
 
@@ -11,6 +11,8 @@ const knownScopes = new Set([
   "write",
   "admin",
   "tokens:write",
+  "api:read",
+  "api:write",
 ]);
 
 type IdentityKey = "profileAndEmail" | "profile" | "email" | "openid";
@@ -26,7 +28,7 @@ function identityAccessKey(scopes: string[]): IdentityKey | null {
 }
 
 function projectAccessKey(scopes: string[]): ProjectKey | null {
-  const granted = grantedApiScopes(scopes);
+  const granted = [...grantedApiScopes(scopes), ...firstPartyAppApiScopes(scopes)];
   if (granted.includes("admin")) return "admin";
   if (granted.includes("write")) return "write";
   if (granted.includes("read")) return "read";

@@ -1,6 +1,10 @@
 import { researchWorkspaceSchemas } from "@/lib/mcp/research-workspace-contract";
+import { BYOK_REQUIRED_RESPONSE } from "./openapi-operations";
 import { apiCredentialSecurity } from "./openapi-pat";
+import { problemResponse } from "./openapi-problem";
+import { publicIdSchema } from "./openapi-public-id";
 import { researchWorkspaceResponse } from "./openapi-research-workspace-schemas";
+import { siteAuditRequest, siteAuditResponse } from "./openapi-site-audits";
 import { researchWorkspaceOperationPolicy } from "./research-workspace-policy";
 
 const titles = {
@@ -18,16 +22,22 @@ const titles = {
 } as const;
 
 const json = (schema: object) => ({ "application/json": { schema } });
-const problem = (description: string) => ({
-  content: { "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } } },
-  description,
-});
+const problem = problemResponse;
 
 export function researchWorkspacePaths() {
   const paths: Record<string, Record<string, object>> = {};
   for (const [key, policy] of Object.entries(researchWorkspaceOperationPolicy)) {
     const operationId = key as keyof typeof titles;
-    const input = researchWorkspaceSchemas[operationId];
+    const audit = ["runSiteAudit", "listSiteAudits", "getSiteAudit"].includes(operationId);
+    const input = audit
+      ? {
+          properties: {
+            project_id: publicIdSchema("prj"),
+            ...(operationId === "getSiteAudit" ? { report_id: publicIdSchema("agr") } : {}),
+          },
+          required: ["project_id"],
+        }
+      : researchWorkspaceSchemas[operationId];
     const pathParameters = ["project_id", "report_id"]
       .filter((name) => policy.path.includes(`{${name}}`))
       .map((name) => ({ in: "path", name, required: true, schema: input.properties?.[name] }));
@@ -44,12 +54,18 @@ export function researchWorkspacePaths() {
     const paid = ["analyzeAiVisibility", "compareAiPrompts"].includes(operationId);
     const responses = {
       [operationId === "createAgentReport" ? "201" : "200"]: {
-        content: json(researchWorkspaceResponse(operationId)),
+        content: json(
+          audit ? siteAuditResponse(operationId) : researchWorkspaceResponse(operationId),
+        ),
         description: "Project-scoped result",
       },
       "400": problem("Invalid input"),
       "401": problem("Unauthorized"),
-      "403": problem("Project role or token scope denied"),
+      "403": problem(
+        paid
+          ? `Project role or token scope denied, or ${BYOK_REQUIRED_RESPONSE}`
+          : "Project role or token scope denied",
+      ),
       "404": problem("Project or report not found"),
       "422": problem("Provider unavailable or analysis cost cap exceeded"),
       "423": problem("Project is read-only"),
@@ -77,35 +93,45 @@ export function researchWorkspacePaths() {
           : "Access follows existing project membership and token scopes.",
       security: apiCredentialSecurity,
       responses,
-      parameters: mutation ? pathParameters : [...pathParameters, ...parameters],
+      parameters: mutation
+        ? [
+            ...pathParameters,
+            ...(audit ? [{ $ref: "#/components/parameters/IdempotencyKey" }] : []),
+          ]
+        : [...pathParameters, ...parameters],
       ...(mutation
         ? {
             requestBody: {
-              content: json({
-                additionalProperties: false,
-                ...(operationId === "analyzeAiVisibility" ? { allOf: input.allOf } : {}),
-                properties,
-                required,
-                type: "object",
-                ...(operationId === "compareAiPrompts" && Array.isArray(input.oneOf)
-                  ? {
-                      oneOf: (input.oneOf as { not?: { anyOf?: object[] } }[] | undefined)?.map(
-                        (branch, index) =>
-                          index === 0
-                            ? {
-                                ...branch,
-                                not: {
-                                  anyOf: [
-                                    ...(branch.not?.anyOf ?? []),
-                                    { required: ["idempotency_key"] },
-                                  ],
-                                },
-                              }
-                            : branch,
-                      ),
-                    }
-                  : {}),
-              }),
+              content: json(
+                audit
+                  ? siteAuditRequest
+                  : {
+                      additionalProperties: false,
+                      ...(operationId === "analyzeAiVisibility" ? { allOf: input.allOf } : {}),
+                      properties,
+                      required,
+                      type: "object",
+                      ...(operationId === "compareAiPrompts" && Array.isArray(input.oneOf)
+                        ? {
+                            oneOf: (
+                              input.oneOf as { not?: { anyOf?: object[] } }[] | undefined
+                            )?.map((branch, index) =>
+                              index === 0
+                                ? {
+                                    ...branch,
+                                    not: {
+                                      anyOf: [
+                                        ...(branch.not?.anyOf ?? []),
+                                        { required: ["idempotency_key"] },
+                                      ],
+                                    },
+                                  }
+                                : branch,
+                            ),
+                          }
+                        : {}),
+                    },
+              ),
               required: true,
             },
           }

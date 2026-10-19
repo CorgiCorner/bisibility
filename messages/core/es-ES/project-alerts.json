@@ -196,6 +196,7 @@
       "email": "Correo electrónico",
       "slack": "Slack",
       "webhook": "Webhook",
+      "push": "Notificaciones push",
       "slackUnavailable": "Vista previa solo por API: la configuración desde el panel no está disponible",
       "selected": "seleccionado",
       "optional": "opcional",

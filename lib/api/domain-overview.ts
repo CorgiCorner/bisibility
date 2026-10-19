@@ -32,7 +32,7 @@ const commonFields = {
   target: z.string().trim().min(1).max(253),
 };
 
-const analyzeBodySchema = z
+export const analyzeBodySchema = z
   .object({
     ...commonFields,
     estimate_only: z.boolean().default(false),
@@ -51,7 +51,7 @@ const analyzeBodySchema = z
     }
   });
 
-const historyBodySchema = z
+export const historyBodySchema = z
   .object({
     ...commonFields,
     max_cost_cents: z.number().int().nonnegative(),
@@ -64,14 +64,14 @@ const pageFields = {
   offset: z.number().int().nonnegative(),
 };
 
-const keywordPageBodySchema = z
+export const keywordPageBodySchema = z
   .object({
     ...pageFields,
     limit: z.number().int().min(1).max(100),
   })
   .strict();
 
-const relevantPageBodySchema = z
+export const relevantPageBodySchema = z
   .object({
     ...pageFields,
     limit: z.number().int().min(1).max(1_000),

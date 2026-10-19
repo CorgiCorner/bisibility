@@ -47,6 +47,7 @@ function channelLabel(
   t: ReturnType<typeof useTranslations<"projectAlerts.drawer">>,
 ) {
   if (channel === "email") return t("email");
+  if (channel === "push") return t("push");
   if (channel === "slack") return t("slack");
   if (channel === "webhook") return t("webhook");
   return channel;

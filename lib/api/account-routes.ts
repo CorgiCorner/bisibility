@@ -1,5 +1,6 @@
 import "server-only";
 
+import { dispatchAccountRouteExtension } from "./account-route-extension";
 import type { PersonalApiContext } from "./context";
 import { requireAccountPathPublicIds } from "./public-id";
 
@@ -38,6 +39,9 @@ export function dispatchAccountRoute(ctx: PersonalApiContext) {
     if (ctx.method === "PATCH") {
       return import("./me").then((routes) => routes.updateMe(ctx));
     }
+    if (ctx.method === "DELETE") {
+      return import("./me").then((routes) => routes.deleteMe(ctx));
+    }
     return null;
   }
   if (second === "tokens" && ctx.path.length === 2) {
@@ -49,8 +53,20 @@ export function dispatchAccountRoute(ctx: PersonalApiContext) {
     }
     return null;
   }
+  if (second === "push-tokens" && ctx.path.length === 2) {
+    if (ctx.method === "GET") {
+      return import("./push-tokens").then((routes) => routes.listDevicePushTokens(ctx));
+    }
+    if (ctx.method === "POST") {
+      return import("./push-tokens").then((routes) => routes.registerDevicePushToken(ctx));
+    }
+    return null;
+  }
+  if (second === "push-tokens" && third && ctx.path.length === 3 && ctx.method === "DELETE") {
+    return import("./push-tokens").then((routes) => routes.deleteDevicePushToken(ctx, third));
+  }
   if (second === "tokens" && third && ctx.path.length === 3 && ctx.method === "DELETE") {
     return import("./tokens").then((routes) => routes.revokeToken(ctx, third));
   }
-  return null;
+  return dispatchAccountRouteExtension(ctx);
 }

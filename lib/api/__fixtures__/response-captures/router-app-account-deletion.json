@@ -1,0 +1,64 @@
+{
+  "captures": [
+    {
+      "body": {
+        "deleted": true
+      },
+      "contentType": "application/json",
+      "method": "DELETE",
+      "operationId": "deleteMe",
+      "path": "/me",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "Personal token scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/me",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "DELETE",
+      "operationId": "deleteMe",
+      "path": "/me",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "Sign in again to confirm this action.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/me",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden",
+        "details": {
+          "code": "reauthentication_required",
+          "max_age_seconds": 600
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "DELETE",
+      "operationId": "deleteMe",
+      "path": "/me",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "The OAuth access token is missing the \"tokens:write\" scope.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/me/tokens",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createPersonalAccessToken",
+      "path": "/me/tokens",
+      "status": 403
+    }
+  ],
+  "source": "lib/api/router-app-account-deletion.test.ts"
+}

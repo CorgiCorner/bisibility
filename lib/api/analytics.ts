@@ -16,7 +16,7 @@ const validRange = (value: { endDate: string; startDate: string }) =>
   value.startDate <= value.endDate;
 const rangeError = { message: "start_date must not be after end_date." };
 
-const snapshotQuery = z
+export const snapshotQuery = z
   .object({
     ...dateFields,
     limit: z.coerce.number().int().min(1).max(200).default(50),

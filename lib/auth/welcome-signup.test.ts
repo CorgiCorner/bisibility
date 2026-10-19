@@ -102,6 +102,7 @@ describe("signup welcome sequence", () => {
       "github",
     );
     expect(signupMethodFromContext({ path: "/callback/google" })).toBe("google");
+    expect(signupMethodFromContext({ path: "/ios/apple" })).toBe("apple");
     expect(signupMethodFromContext({ path: "/sign-up/email" })).toBeNull();
   });
 });

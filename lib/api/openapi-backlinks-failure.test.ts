@@ -34,7 +34,7 @@ describe("backlinks failed evidence API contract", () => {
         responses: { "200": { description: "Success" }, "500": { description: "Error" } },
       }),
     });
-    const operation = paths["/projects/{projectId}/backlinks"].get as {
+    const operation = paths["/projects/{project_id}/backlinks"].get as {
       responses: Record<string, { content?: Record<string, { schema: { anyOf: unknown[] } }> }>;
     };
     expect(

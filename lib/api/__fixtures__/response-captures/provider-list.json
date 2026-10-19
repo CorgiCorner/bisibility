@@ -1,0 +1,624 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_id": "conn_a00000000000000000000000",
+            "connection_status": "needs_reauth",
+            "enabled": true,
+            "id": "dataforseo",
+            "kind": "serp",
+            "last_used_at": "2026-02-03T04:05:06.000Z",
+            "logo_domain": "dataforseo.com",
+            "meta": [
+              {
+                "label": "Last rank check",
+                "value": "3786h ago"
+              },
+              {
+                "label": "Fallback priority",
+                "value": "0"
+              },
+              {
+                "label": "Est. provider cost",
+                "value": "$0.0001 / check"
+              },
+              {
+                "label": "State",
+                "value": "Enabled"
+              }
+            ],
+            "name": "DataForSEO",
+            "priority": 0,
+            "status": "needs_reauth",
+            "category_id": "serp",
+            "category_title": "SERP providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "serpapi",
+            "kind": "serp",
+            "last_used_at": null,
+            "logo_domain": "serpapi.com",
+            "meta": [
+              {
+                "label": "Last rank check",
+                "value": "Never"
+              },
+              {
+                "label": "Fallback priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Est. provider cost",
+                "value": "Not set"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "SerpApi",
+            "status": "ready",
+            "category_id": "serp",
+            "category_title": "SERP providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "gsc",
+            "kind": "analytics",
+            "last_used_at": null,
+            "logo_domain": "google.com",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "Never"
+              },
+              {
+                "label": "Priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Billing",
+                "value": "Your provider account"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "Google Search Console",
+            "status": "optional",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "ga4",
+            "kind": "analytics",
+            "last_used_at": null,
+            "logo_domain": "google.com",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "Never"
+              },
+              {
+                "label": "Priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Billing",
+                "value": "Your provider account"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "Google Analytics 4",
+            "status": "optional",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "plausible",
+            "kind": "analytics",
+            "last_used_at": null,
+            "logo_domain": "plausible.io",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "Never"
+              },
+              {
+                "label": "Priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Billing",
+                "value": "Your provider account"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "Plausible",
+            "status": "optional",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listProviders",
+      "path": "/projects/{project_id}/providers",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "dataforseo",
+            "kind": "serp",
+            "last_used_at": null,
+            "logo_domain": "dataforseo.com",
+            "meta": [
+              {
+                "label": "Last rank check",
+                "value": "Never"
+              },
+              {
+                "label": "Fallback priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Est. provider cost",
+                "value": "Not set"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "DataForSEO",
+            "status": "ready",
+            "category_id": "serp",
+            "category_title": "SERP providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "serpapi",
+            "kind": "serp",
+            "last_used_at": null,
+            "logo_domain": "serpapi.com",
+            "meta": [
+              {
+                "label": "Last rank check",
+                "value": "Never"
+              },
+              {
+                "label": "Fallback priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Est. provider cost",
+                "value": "Not set"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "SerpApi",
+            "status": "ready",
+            "category_id": "serp",
+            "category_title": "SERP providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "gsc",
+            "kind": "analytics",
+            "last_used_at": null,
+            "logo_domain": "google.com",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "Never"
+              },
+              {
+                "label": "Priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Billing",
+                "value": "Your provider account"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "Google Search Console",
+            "status": "optional",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "ga4",
+            "kind": "analytics",
+            "last_used_at": null,
+            "logo_domain": "google.com",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "Never"
+              },
+              {
+                "label": "Priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Billing",
+                "value": "Your provider account"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "Google Analytics 4",
+            "status": "optional",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "plausible",
+            "kind": "analytics",
+            "last_used_at": null,
+            "logo_domain": "plausible.io",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "Never"
+              },
+              {
+                "label": "Priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Billing",
+                "value": "Your provider account"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "Plausible",
+            "status": "optional",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listProviders",
+      "path": "/projects/{project_id}/providers",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "dataforseo",
+            "kind": "serp",
+            "last_used_at": null,
+            "logo_domain": "dataforseo.com",
+            "meta": [
+              {
+                "label": "Last rank check",
+                "value": "Never"
+              },
+              {
+                "label": "Fallback priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Est. provider cost",
+                "value": "Not set"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "DataForSEO",
+            "status": "ready",
+            "category_id": "serp",
+            "category_title": "SERP providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "serpapi",
+            "kind": "serp",
+            "last_used_at": null,
+            "logo_domain": "serpapi.com",
+            "meta": [
+              {
+                "label": "Last rank check",
+                "value": "Never"
+              },
+              {
+                "label": "Fallback priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Est. provider cost",
+                "value": "Not set"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "SerpApi",
+            "status": "ready",
+            "category_id": "serp",
+            "category_title": "SERP providers"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": true
+            },
+            "connected": true,
+            "connection_id": "conn_a00000000000000000000000",
+            "connection_status": "connected",
+            "enabled": true,
+            "id": "gsc",
+            "kind": "analytics",
+            "last_used_at": "2026-02-03T04:05:06.000Z",
+            "logo_domain": "google.com",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "3786h ago"
+              },
+              {
+                "label": "Priority",
+                "value": "0"
+              },
+              {
+                "label": "Billing",
+                "value": "$0.0001 / check"
+              },
+              {
+                "label": "State",
+                "value": "Enabled"
+              }
+            ],
+            "name": "Google Search Console",
+            "primary": true,
+            "priority": 0,
+            "status": "connected",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "ga4",
+            "kind": "analytics",
+            "last_used_at": null,
+            "logo_domain": "google.com",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "Never"
+              },
+              {
+                "label": "Priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Billing",
+                "value": "Your provider account"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "Google Analytics 4",
+            "status": "optional",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          },
+          {
+            "capabilities": {
+              "backlinks": false,
+              "domain_overview": false,
+              "keyword_metrics": false,
+              "keyword_research": false,
+              "rank_checks": false,
+              "search_performance": false
+            },
+            "connected": false,
+            "connection_status": "not_connected",
+            "id": "plausible",
+            "kind": "analytics",
+            "last_used_at": null,
+            "logo_domain": "plausible.io",
+            "meta": [
+              {
+                "label": "Last sync",
+                "value": "Never"
+              },
+              {
+                "label": "Priority",
+                "value": "Not connected"
+              },
+              {
+                "label": "Billing",
+                "value": "Your provider account"
+              },
+              {
+                "label": "State",
+                "value": "Ready"
+              }
+            ],
+            "name": "Plausible",
+            "status": "optional",
+            "category_id": "analytics",
+            "category_title": "Analytics sources"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listProviders",
+      "path": "/projects/{project_id}/providers",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/provider-list.test.ts"
+}

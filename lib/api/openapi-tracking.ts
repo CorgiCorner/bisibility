@@ -1,6 +1,8 @@
 import { aiTrackingSchemas } from "@/lib/mcp/tracking-contract";
-import { ref } from "./openapi-components";
 import { apiCredentialSecurity } from "./openapi-pat";
+import { problemResponse } from "./openapi-problem";
+import { appOwnedTrackingParameters } from "./openapi-tracking-parameters";
+import { appOwnedTrackingRunOperations } from "./openapi-tracking-run-inputs";
 import { aiTrackingResponseSchema } from "./openapi-tracking-schemas";
 import { aiTrackingPolicies } from "./operation-policy-ai-tracking";
 
@@ -34,7 +36,7 @@ const summaries: Record<keyof typeof aiTrackingPolicies, string> = {
 };
 
 const json = (schema: object) => ({ "application/json": { schema } });
-const problem = (description: string) => ({ description, content: json(ref("Problem")) });
+const problem = (description: string) => problemResponse(description);
 
 function withComponentReferences(value: unknown, operationId: string): unknown {
   if (Array.isArray(value)) return value.map((item) => withComponentReferences(item, operationId));
@@ -53,12 +55,25 @@ function withComponentReferences(value: unknown, operationId: string): unknown {
 export function aiTrackingSchemaComponents(): Record<string, object> {
   return Object.fromEntries(
     Object.entries(aiTrackingSchemas()).flatMap(([operationId, input]) =>
-      Object.entries((input.definitions ?? {}) as Record<string, object>).map(([name, schema]) => [
-        `${operationId}_${name}`,
-        withComponentReferences(schema, operationId) as object,
-      ]),
+      operationId in appOwnedTrackingParameters || operationId in appOwnedTrackingRunOperations
+        ? []
+        : Object.entries((input.definitions ?? {}) as Record<string, object>).map(
+            ([name, schema]) => [
+              `${operationId}_${name}`,
+              withComponentReferences(schema, operationId) as object,
+            ],
+          ),
     ),
   );
+}
+
+function queryParameters(properties: Record<string, unknown>, required: readonly string[]) {
+  return Object.entries(properties).map(([field, schema]) => ({
+    in: "query",
+    name: field,
+    required: required.includes(field),
+    schema,
+  }));
 }
 
 export function aiTrackingPaths() {
@@ -66,12 +81,18 @@ export function aiTrackingPaths() {
   const paths: Record<string, Record<string, object>> = {};
   for (const [name, operation] of Object.entries(aiTrackingPolicies)) {
     const operationId = name as keyof typeof inputs;
-    const input = inputs[operationId];
+    const runOwned = appOwnedTrackingRunOperations[operationId];
+    const owned =
+      runOwned?.parameters ??
+      appOwnedTrackingParameters[operationId as keyof typeof appOwnedTrackingParameters];
+    const input: { properties?: Record<string, unknown>; required?: string[] } = owned
+      ? {}
+      : inputs[operationId];
     const properties = withComponentReferences(input.properties ?? {}, operationId) as Record<
       string,
       unknown
     >;
-    const parameters: object[] = [];
+    const parameters: object[] = owned ? [...owned] : [];
     for (const [field, schema] of Object.entries(properties)) {
       if (operation.path.includes(`{${field}}`)) {
         parameters.push({ in: "path", name: field, required: true, schema });
@@ -81,13 +102,7 @@ export function aiTrackingPaths() {
     delete properties.idempotency_key;
     const mutation = operation.method !== "GET";
     if (!mutation) {
-      for (const [field, schema] of Object.entries(properties))
-        parameters.push({
-          in: "query",
-          name: field,
-          required: Boolean(input.required?.includes(field)),
-          schema,
-        });
+      parameters.push(...queryParameters(properties, input.required ?? []));
     } else {
       parameters.push({
         in: "header",
@@ -97,6 +112,7 @@ export function aiTrackingPaths() {
         schema: {
           type: "string",
           maxLength: 200,
+          ...(operationId === "createAiTrackingRun" ? { minLength: 1 } : {}),
           ...(operationId === "aiTrackingSuggestionsGenerate" ? { format: "uuid" } : {}),
         },
       });
@@ -129,12 +145,14 @@ export function aiTrackingPaths() {
         ? {
             requestBody: {
               required: true,
-              content: json({
-                type: "object",
-                properties,
-                required: (input.required ?? []).filter((field) => field in properties),
-                additionalProperties: false,
-              }),
+              content: json(
+                runOwned?.body ?? {
+                  type: "object",
+                  properties,
+                  required: (input.required ?? []).filter((field) => field in properties),
+                  additionalProperties: false,
+                },
+              ),
             },
           }
         : {}),

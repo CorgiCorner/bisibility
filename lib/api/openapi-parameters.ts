@@ -1,10 +1,48 @@
+import { keywordListQueryAliases, keywordSortValues } from "./keyword-list-query";
 import { legacyMarketDeprecationNote } from "./legacy-market-input";
+import { closedEnum, openEnum } from "./openapi-sdk-schema";
 import { signalSourceValues } from "./openapi-signal-components";
 import { COST_ESTIMATE_MAX_KEYWORDS, COST_ESTIMATE_MAX_LOCATIONS } from "./public-cost";
+import { rankCheckListStatuses } from "./rank-check-list-query";
 
 function queryParameter(name: string, description: string, schema: object, required?: boolean) {
   return { description, in: "query", name, ...(required ? { required } : {}), schema };
 }
+
+/** Shared list paging parameters; `pageQuerySchema` in pagination.ts validates them. */
+export const pageParameterComponents = {
+  Cursor: queryParameter(
+    "cursor",
+    "Opaque v3 cursor returned as meta.next_cursor from the previous page.",
+    { type: "string" },
+  ),
+  Limit: queryParameter("limit", "Maximum items to return. Defaults to 50.", {
+    default: 50,
+    maximum: 200,
+    minimum: 1,
+    type: "integer",
+  }),
+};
+
+/**
+ * The router replays the first response to a repeated key on any non-GET request for 24 hours
+ * (`idempotency.ts`); operations that declare this header document that for their clients.
+ */
+export const idempotencyParameterComponents = {
+  IdempotencyKey: {
+    description:
+      "Optional key that makes a retry of this request return the first response instead of running it again. Replays last 24 hours and are scoped to the credential, method and path.",
+    in: "header",
+    name: "Idempotency-Key",
+    required: false,
+    schema: { maxLength: 200, type: "string" },
+  },
+};
+
+export const pageParameters = [
+  { $ref: "#/components/parameters/Limit" },
+  { $ref: "#/components/parameters/Cursor" },
+];
 
 export const asyncParameter = queryParameter(
   "async",
@@ -17,11 +55,13 @@ export const projectOverviewParameters = [
     default: "28d",
     enum: ["7d", "28d", "90d"],
     type: "string",
+    ...closedEnum("OverviewRange"),
   }),
   queryParameter("device", "Filter tracked keywords by SERP device.", {
     default: "all",
     enum: ["all", "desktop", "mobile"],
     type: "string",
+    ...closedEnum("OverviewDevice"),
   }),
   queryParameter("tag", "Filter tracked keywords by exact tag name.", {
     maxLength: 48,
@@ -30,22 +70,11 @@ export const projectOverviewParameters = [
 ];
 
 export const rankCheckListParameters = [
-  queryParameter("limit", "Maximum rank checks to return. Defaults to 50.", {
-    default: 50,
-    maximum: 200,
-    minimum: 1,
-    type: "integer",
-  }),
-  queryParameter(
-    "cursor",
-    "Opaque v3 cursor returned as meta.next_cursor from the previous page.",
-    {
-      type: "string",
-    },
-  ),
+  ...pageParameters,
   queryParameter("status", "Filter by persisted rank-check status.", {
-    enum: ["completed", "failed", "running"],
+    enum: [...rankCheckListStatuses],
     type: "string",
+    ...openEnum("RankCheckStatus"),
   }),
   queryParameter("since", "Return checks at or after this ISO-8601 date-time.", {
     format: "date-time",
@@ -57,20 +86,7 @@ export const rankCheckListParameters = [
   }),
 ];
 
-export const keywordListParameters = [
-  queryParameter("limit", "Maximum keywords to return. Defaults to 50.", {
-    default: 50,
-    maximum: 200,
-    minimum: 1,
-    type: "integer",
-  }),
-  queryParameter(
-    "cursor",
-    "Opaque v3 cursor returned as meta.next_cursor from the previous page.",
-    {
-      type: "string",
-    },
-  ),
+const keywordFilterParameters = [
   queryParameter("search", "Case-insensitive keyword text search. Also accepted as q.", {
     type: "string",
   }),
@@ -94,6 +110,7 @@ export const keywordListParameters = [
   queryParameter("device", "Filter by SERP device. Also accepted as filter[device].", {
     enum: ["desktop", "mobile"],
     type: "string",
+    ...openEnum("Device"),
   }),
   queryParameter(
     "location_key",
@@ -124,34 +141,34 @@ export const keywordListParameters = [
   ),
   queryParameter("sort", "Sort order for the keyword list.", {
     default: "-created_at",
-    enum: [
-      "created_at",
-      "-created_at",
-      "keyword",
-      "-keyword",
-      "text",
-      "-text",
-      "updated_at",
-      "-updated_at",
-    ],
+    enum: [...keywordSortValues],
     type: "string",
+    ...closedEnum("KeywordSort"),
   }),
 ];
 
+function keywordAliasParameter([alias, canonical]: [string, string]) {
+  const target = keywordFilterParameters.find((parameter) => parameter.name === canonical);
+  if (!target) throw new Error(`Unknown keyword list parameter: ${canonical}`);
+  const precedence = alias === "q" ? `${canonical} wins` : "this alias wins";
+  return {
+    ...queryParameter(
+      alias,
+      `Alias of ${canonical}. When both are sent, ${precedence}.`,
+      target.schema,
+    ),
+    ...("deprecated" in target ? { deprecated: target.deprecated } : {}),
+  };
+}
+
+export const keywordListParameters = [
+  ...pageParameters,
+  ...keywordFilterParameters,
+  ...Object.entries(keywordListQueryAliases).map(keywordAliasParameter),
+];
+
 export const signalListParameters = [
-  queryParameter("limit", "Maximum signals to return. Defaults to 50.", {
-    default: 50,
-    maximum: 200,
-    minimum: 1,
-    type: "integer",
-  }),
-  queryParameter(
-    "cursor",
-    "Opaque v3 cursor returned as meta.next_cursor from the previous page.",
-    {
-      type: "string",
-    },
-  ),
+  ...pageParameters,
   queryParameter("source", "Filter by signal source.", {
     enum: signalSourceValues,
     type: "string",
@@ -255,6 +272,7 @@ export const costEstimateParameters = [
     default: 100,
     enum: [10, 20, 50, 100],
     type: "integer",
+    ...closedEnum("SerpDepth"),
   }),
   queryParameter(
     "locations",
@@ -268,25 +286,29 @@ export const costEstimateParameters = [
   ),
   queryParameter("devices", "Device count per keyword.", {
     default: 1,
-    enum: [1, 2],
+    maximum: 2,
+    minimum: 1,
     type: "integer",
   }),
   queryParameter("frequency", "Rank-check frequency used to estimate monthly checks.", {
     default: "daily",
     enum: ["daily", "weekly", "monthly", "manual", "paused", "custom_cron"],
     type: "string",
+    ...closedEnum("CostEstimateFrequency"),
   }),
-  queryParameter("provider", "Provider rate card to use.", {
-    default: "dataforseo",
-    enum: ["dataforseo", "serpapi"],
-    type: "string",
-  }),
-  queryParameter("option", "Flat-rate provider option key.", {
-    enum: ["standard", "priority", "live"],
-    type: "string",
-  }),
-  queryParameter("plan", "Plan-model provider plan key; unknown values use auto selection.", {
-    enum: ["free", "starter", "developer", "production", "bigdata"],
-    type: "string",
-  }),
+  queryParameter(
+    "provider",
+    "Provider rate card ID from GET /provider-rates. An unknown provider returns 404.",
+    { default: "dataforseo", maxLength: 80, minLength: 1, type: "string" },
+  ),
+  queryParameter(
+    "option",
+    "Flat-rate provider option key from the provider's rate card, such as standard, priority or live.",
+    { maxLength: 80, minLength: 1, type: "string" },
+  ),
+  queryParameter(
+    "plan",
+    "Plan-model provider plan key from the provider's rate card; unknown values use auto selection.",
+    { maxLength: 80, minLength: 1, type: "string" },
+  ),
 ];

@@ -5,7 +5,7 @@ import { getOpenApiDocument } from "./openapi";
 describe("rank-check OpenAPI resources", () => {
   it("documents queued runs, project selectors, and omits jobs", () => {
     const document = getOpenApiDocument();
-    const runCheck = document.paths["/keywords/{id}/checks"].post;
+    const runCheck = document.paths["/keywords/{keyword_id}/checks"].post;
 
     expect(document.paths).not.toHaveProperty("/jobs/{job_id}");
     expect(runCheck).toMatchObject({

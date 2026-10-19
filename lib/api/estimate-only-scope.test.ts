@@ -40,17 +40,18 @@ describe("estimateOnlyScope", () => {
     }
   });
 
-  it("downgrades the POST operation only for a boolean body flag", () => {
-    expect(
-      scope({ operationId: "analyzeDomainOverview", parsedBody: { estimate_only: true } }),
-    ).toBe("read");
-    expect(
-      scope({
-        operationId: "analyzeDomainOverview",
-        parsedBody: { estimate_only: true, max_cost_cents: 0 },
-      }),
-    ).toBe("read");
-  });
+  it.each(["analyzeDomainOverview", "loadMoreBacklinkRows"])(
+    "downgrades %s only for a boolean body flag",
+    (operationId) => {
+      expect(scope({ operationId, parsedBody: { estimate_only: true } })).toBe("read");
+      expect(
+        scope({
+          operationId,
+          parsedBody: { estimate_only: true, max_cost_cents: 0 },
+        }),
+      ).toBe("read");
+    },
+  );
 
   it.each([
     ["string flag", { estimate_only: "true" }],
@@ -59,9 +60,9 @@ describe("estimateOnlyScope", () => {
     ["missing flag", { max_cost_cents: 0 }],
     ["array body", [{ estimate_only: true }]],
   ])("keeps the declared scope for the body %s", (_case, parsedBody) => {
-    expect(
-      scope({ operationId: "analyzeDomainOverview", parsedBody, requiredScope: "write" }),
-    ).toBe("write");
+    for (const operationId of ["analyzeDomainOverview", "loadMoreBacklinkRows"]) {
+      expect(scope({ operationId, parsedBody, requiredScope: "write" })).toBe("write");
+    }
   });
 
   it("keeps the declared scope for every other operation", () => {
@@ -75,23 +76,26 @@ describe("estimateOnlyScope", () => {
 });
 
 describe("scopeToEnforce", () => {
-  it("reads the POST body from a clone so the handler can still read it", async () => {
-    const body = { estimate_only: true, language_code: "en", location_code: 2840 };
-    const request = new Request("https://example.test/api/v1/projects/prj_1/backlinks", {
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" },
-      method: "POST",
-    });
+  it.each(["analyzeDomainOverview", "loadMoreBacklinkRows"])(
+    "reads %s body from a clone so the handler can still read it",
+    async (operationId) => {
+      const body = { estimate_only: true, language_code: "en", location_code: 2840 };
+      const request = new Request("https://example.test/api/v1/projects/prj_1/backlinks", {
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
 
-    expect(
-      await scopeToEnforce(
-        { operationId: "analyzeDomainOverview", requiredScope: "write" },
-        request,
-        new URL(request.url),
-      ),
-    ).toBe("read");
-    await expect(request.json()).resolves.toEqual(body);
-  });
+      expect(
+        await scopeToEnforce(
+          { operationId, requiredScope: "write" },
+          request,
+          new URL(request.url),
+        ),
+      ).toBe("read");
+      await expect(request.json()).resolves.toEqual(body);
+    },
+  );
 
   it("keeps the declared scope for a body that is not valid JSON", async () => {
     const request = new Request("https://example.test/api/v1/projects/prj_1/backlinks", {
@@ -109,7 +113,7 @@ describe("scopeToEnforce", () => {
     ).toBe("write");
   });
 
-  it("never reads the request body for GET or non-estimate operations", async () => {
+  it("never consumes the request body for GET or non-estimate requests", async () => {
     const get = new Request(
       "https://example.test/api/v1/projects/prj_1/backlinks?estimate_only=true",
     );

@@ -2,6 +2,8 @@ import { redirect } from "@/tests/next-navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  appleAccounts: vi.fn(),
+  currentUser: vi.fn(),
   transaction: vi.fn(),
   writeAudit: vi.fn(),
 }));
@@ -23,7 +25,14 @@ vi.mock("@/lib/demo/mutable-account-session", () => ({
 vi.mock("@/lib/demo/identity", () => ({
   assertEditableDemoIdentityPreserved: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock("@/lib/db/prisma", () => ({ prisma: { $transaction: mocks.transaction } }));
+// Deletion confirms the email and revokes Apple sign-in tokens before its transaction.
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    $transaction: mocks.transaction,
+    account: { findMany: mocks.appleAccounts },
+    user: { findUnique: mocks.currentUser },
+  },
+}));
 
 import { deleteAccount } from "./account";
 
@@ -34,6 +43,7 @@ function deletionDatabase(elapsedMs: number) {
   const pending = { auditActions: [] as string[], deleted: false, deletionIds: [] as string[] };
   const tx = {
     $executeRaw: vi.fn().mockResolvedValue(1),
+    billingAppStoreAccount: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
     analyticsPersonDeletion: {
       createMany: vi.fn(async ({ data }: { data: { distinctId: string }[] }) => {
         pending.deletionIds.push(...data.map((row) => row.distinctId));
@@ -79,6 +89,11 @@ function deletionDatabase(elapsedMs: number) {
 describe("deleteAccount transaction deadline", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.appleAccounts.mockResolvedValue([]);
+    mocks.currentUser.mockResolvedValue({
+      email: "account@example.com",
+      publicId: "usr_a00000000000000000000000",
+    });
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-10-07T22:28:00Z"));
   });
@@ -96,6 +111,9 @@ describe("deleteAccount transaction deadline", () => {
       deletionIds: ["user_1", "usr_a00000000000000000000000"],
     });
     expect(tx.$executeRaw).toHaveBeenCalledOnce();
+    expect(tx.billingAppStoreAccount.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: "user_1" } }),
+    );
     expect(mocks.transaction).toHaveBeenCalledOnce();
     expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: "Serializable",

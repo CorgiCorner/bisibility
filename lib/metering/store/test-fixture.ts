@@ -46,6 +46,7 @@ export async function fixture(
       "../../../prisma/migrations/20261011010000_shared_paid_attempt_context/migration.sql",
       "../../../prisma/migrations/20261011020000_accounting_history_snapshot/migration.sql",
       "../../../prisma/migrations/20261012001000_metering_utc_writers/migration.sql",
+      "../../../prisma/migrations/20261018190000_historical_financial_closeout/migration.sql",
     ].map((path) => readFileSync(new URL(path, import.meta.url), "utf8"));
     await prisma.$transaction(async (tx) => {
       await tx.$executeRaw(Prisma.sql`SET LOCAL search_path TO ${Prisma.raw(schema)}`);
@@ -169,14 +170,17 @@ export async function createScalingFixture(): Promise<ScalingFixture> {
   };
 }
 
-/** Function bodies contain semicolons; keep dollar-quoted SQL intact for real fixture migrations. */
+/**
+ * Function bodies and line comments contain semicolons; keep dollar-quoted SQL intact and never
+ * split inside a `--` comment for real fixture migrations.
+ */
 function migrationStatements(source: string) {
   const statements: string[] = [];
   let quoted = false,
     start = 0;
-  for (const token of source.matchAll(/\$\$|;/g)) {
+  for (const token of source.matchAll(/\$\$|--[^\n]*|;/g)) {
     if (token[0] === "$$") quoted = !quoted;
-    else if (!quoted) {
+    else if (token[0] === ";" && !quoted) {
       const statement = source.slice(start, token.index).trim();
       if (statement) statements.push(statement);
       start = token.index + 1;

@@ -17,13 +17,13 @@ import { providerSchemas } from "./openapi-provider-components";
 import { publicIdSchema } from "./openapi-public-id";
 import { resourceSchemas } from "./openapi-resource-components";
 import {
-  jitterMinutesContractSchema,
+  keywordScheduleResourceContractSchema,
   scheduleInputContractSchema,
-  scheduleTimezoneContractSchema,
 } from "./openapi-schedule-schema";
+import { openEnum, sdkName, usdCents } from "./openapi-sdk-schema";
 import { signalSchemas } from "./openapi-signal-components";
 
-const serpDeviceSchema = { enum: serpDeviceValues, type: "string" };
+const serpDeviceSchema = { enum: serpDeviceValues, type: "string", ...openEnum("Device") };
 const publicIdPattern = "^[a-z]+_[a-z][a-z0-9]{23}$";
 const locationKeySchema = {
   description:
@@ -36,35 +36,6 @@ const keywordLocationSchema = {
   example: "Austin, Texas, United States",
   type: "string",
 };
-const keywordScheduleResourceSchema = {
-  properties: {
-    cron_expression: { type: ["string", "null"] },
-    frequency: {
-      enum: ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
-      type: "string",
-    },
-    jitter_minutes: jitterMinutesContractSchema,
-    last_checked_at: { format: "date-time", type: ["string", "null"] },
-    next_check_at: { format: "date-time", type: ["string", "null"] },
-    source: {
-      description:
-        "Whether these schedule values come from the keyword's own row or from the project defaults.",
-      enum: ["keyword", "project_default"],
-      type: "string",
-    },
-    timezone: scheduleTimezoneContractSchema,
-  },
-  required: [
-    "frequency",
-    "cron_expression",
-    "timezone",
-    "jitter_minutes",
-    "last_checked_at",
-    "next_check_at",
-    "source",
-  ],
-  type: ["object", "null"],
-};
 // biome-ignore format: grouped fields keep the central schema below the enforced line limit.
 const keywordResourceRequiredFields = [
   "id", "project_id", "text", "country", "location", "device", "latest_check",
@@ -72,6 +43,21 @@ const keywordResourceRequiredFields = [
   "location_key", "previous_position", "ranking_url", "schedule", "tags", "target_url",
   "topic", "intent", "created_at", "updated_at",
 ];
+
+const problemSchema = {
+  properties: {
+    detail: { type: "string" },
+    details: { additionalProperties: true, type: "object" },
+    docs_url: { type: "string" },
+    errors: {},
+    instance: { type: "string" },
+    status: { type: "integer" },
+    title: { type: "string" },
+    type: { type: "string" },
+  },
+  required: ["type", "title", "status", "detail", "instance", "docs_url"],
+  type: "object",
+};
 
 export const schemas = {
   PublicIdV3: {
@@ -122,7 +108,7 @@ export const schemas = {
         type: "string",
       },
       ranking_url: { type: ["string", "null"] },
-      schedule: keywordScheduleResourceSchema,
+      schedule: keywordScheduleResourceContractSchema,
       tags: { items: { type: "string" }, type: "array" },
       target_url: { type: ["string", "null"] },
       text: { example: "rank tracker api", type: "string" },
@@ -185,19 +171,22 @@ export const schemas = {
     type: "object",
   },
   KeywordPatch: keywordPatchSchema,
-  Problem: {
+  Problem: problemSchema,
+  MeDeletionForbidden: {
+    ...problemSchema,
     properties: {
-      detail: { type: "string" },
-      details: { additionalProperties: true, type: "object" },
-      docs_url: { type: "string" },
-      errors: {},
-      instance: { type: "string" },
-      status: { type: "integer" },
-      title: { type: "string" },
-      type: { type: "string" },
+      ...problemSchema.properties,
+      details: {
+        description: "Present when the app must sign in again; absent for insufficient scope.",
+        properties: {
+          code: { const: "reauthentication_required", type: "string" },
+          max_age_seconds: { const: 600, type: "integer" },
+        },
+        required: ["code", "max_age_seconds"],
+        type: "object",
+        ...sdkName("MeDeletionReauthenticationDetails"),
+      },
     },
-    required: ["type", "title", "status", "detail", "instance", "docs_url"],
-    type: "object",
   },
   ...providerSchemas,
   ...agentSchemas,
@@ -209,11 +198,16 @@ export const schemas = {
           "Confirmed provider usage; null quantity means unconfirmed and is never inferred from requested depth. Costs may take up to 15 minutes to update.",
         properties: {
           quantity: { minimum: 0, type: ["number", "null"] },
-          status: { enum: ["confirmed", "unconfirmed"], type: "string" },
-          unit: { enum: ["operations", "cents"], type: "string" },
+          status: {
+            enum: ["confirmed", "unconfirmed"],
+            type: "string",
+            ...openEnum("UsageStatus"),
+          },
+          unit: { enum: ["operations", "cents"], type: "string", ...openEnum("UsageUnit") },
         },
         required: ["quantity", "status", "unit"],
         type: "object",
+        ...sdkName("RankCheckUsage"),
       },
       attempts: {
         description: "Provider fallback attempts recorded before the final rank-check status.",
@@ -224,11 +218,12 @@ export const schemas = {
           },
           required: ["provider", "message"],
           type: "object",
+          ...sdkName("RankCheckAttempt"),
         },
         type: ["array", "null"],
       },
       checked_at: { format: "date-time", type: "string" },
-      cost_cents: { type: ["number", "null"] },
+      cost_cents: { type: ["number", "null"], ...usdCents },
       error: { type: ["string", "null"] },
       error_code: {
         description:
@@ -242,6 +237,7 @@ export const schemas = {
           "Persisted coverage, or null when legacy metadata is absent. Only complete coverage supports absence within depth; a valid positive rank remains valid with truncated coverage.",
         enum: ["complete", "truncated_by_stop_on_match", "unknown", null],
         type: ["string", "null"],
+        ...openEnum("ObservationCompleteness"),
       },
       position: { type: ["integer", "null"] },
       previous_position: { type: ["integer", "null"] },
@@ -258,13 +254,18 @@ export const schemas = {
         },
         required: ["id", "status", "trigger", "started_at", "finished_at"],
         type: ["object", "null"],
+        ...sdkName("RankCheckRunReference"),
       },
       run_id: {
         ...publicIdSchema("rcr"),
         description: "Rank-check run that produced this result, or null for a legacy row.",
         type: ["string", "null"],
       },
-      status: { enum: ["completed", "failed", "running"], type: "string" },
+      status: {
+        enum: ["completed", "failed", "running"],
+        type: "string",
+        ...openEnum("RankCheckStatus"),
+      },
     },
     required: [
       "id",
@@ -286,7 +287,7 @@ export const schemas = {
     type: "object",
   },
   // biome-ignore format: compact schema preserves the central file line cap.
-  RankCheckRunQueued: { properties: { id: publicIdSchema("rcr"), status: { enum: ["queued"], type: "string" } }, required: ["id", "status"], type: "object" },
+  RankCheckRunQueued: { properties: { id: publicIdSchema("rcr"), status: { enum: ["queued"], type: "string", ...openEnum("RankCheckQueuedStatus") } }, required: ["id", "status"], type: "object" },
 };
 
 export function ref(name: keyof typeof schemas) {

@@ -11,9 +11,11 @@ import {
   stampWebhookDelivery,
   type TriggeredAlertDeliveryPayload,
 } from "../alerts/delivery";
+import { deliverPushToProject } from "../alerts/push-delivery";
 import { PRIVATE_NETWORK_WEBHOOK_ERROR } from "../alerts/webhook-target";
 import { prisma } from "../db/prisma";
 import { EmailBudgetExceededError, EmailSendError } from "../email/send";
+import { defaultPushSender, type PushMessage } from "../notifications/apns";
 import { notifyTriggeredAlertDelivered } from "../notifications/events";
 import {
   classifyPermanentDeliveryFailure,
@@ -22,6 +24,8 @@ import {
   nonRetryableFailure,
   rateLimitedFailure,
 } from "./delivery-failures";
+
+export const PUSH_NOT_CONFIGURED = "Push delivery is not configured.";
 
 export type AlertDeliveryOutcome = {
   channel: AlertDeliveryChannel;
@@ -125,6 +129,38 @@ export async function deliverAlertSlackActivity(input: {
   }
 }
 
+export type PushActivityResult = { delivered: boolean; skipped: boolean };
+
+/**
+ * Sends the alert to every registered device of the project's members. A
+ * partial success counts as delivered so retries never duplicate pushes on
+ * devices that already received it.
+ */
+export async function deliverAlertPushActivity(input: {
+  alertId: string;
+  message: PushMessage;
+  projectInternalId: string;
+}): Promise<PushActivityResult> {
+  const sender = defaultPushSender();
+  if (!sender) {
+    await recordDeliveryAttempt(input.alertId, "push", "failed", PUSH_NOT_CONFIGURED);
+    throw nonRetryableFailure(PUSH_NOT_CONFIGURED);
+  }
+  const result = await deliverPushToProject(sender, input.projectInternalId, input.message);
+  if (result.sent > 0) {
+    await recordDeliveryAttempt(input.alertId, "push", "sent", null);
+    return { delivered: true, skipped: false };
+  }
+  if (result.failures.length === 0) {
+    await recordDeliveryAttempt(input.alertId, "push", "skipped", "No registered devices.");
+    return { delivered: false, skipped: true };
+  }
+  const message = `Push delivery failed: ${[...new Set(result.failures)].join(", ")}`;
+  await recordDeliveryAttempt(input.alertId, "push", "failed", message);
+  if (result.retryable) throw new Error(message);
+  throw nonRetryableFailure(message);
+}
+
 export async function finalizeAlertDeliveryActivity(input: {
   alertId: string;
   deliveryClaimToken: string;
@@ -157,7 +193,9 @@ export async function finalizeAlertDeliveryActivity(input: {
       id: input.alertId,
     },
   });
-  if (delivered && updated.count === 1) {
+  // The in-app notification is its own channel: it must not depend on an external channel
+  // being configured or succeeding. Suppressed alerts (snooze, daily cap) never reach here.
+  if (updated.count === 1) {
     await notifyTriggeredAlertDelivered({
       payload: input.payload,
       projectInternalId: input.projectInternalId,

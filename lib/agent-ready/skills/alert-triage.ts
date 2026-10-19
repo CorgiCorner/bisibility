@@ -96,7 +96,7 @@ widen its window. Use an \`Idempotency-Key\` so a retried write applies once.
 curl -s -X PATCH -H "$AUTH" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: triage-$(date +%s)" \\
-  -d '{"threshold": 5, "direction": "drop", "enabled": true}' \\
+  -d '{"drop_positions": 5, "enabled": true}' \\
   "$BASE/alert-rules/$RULE_ID"
 \`\`\`
 
@@ -108,7 +108,7 @@ If triage shows a gap (e.g. a top keyword has no drop alert), create a rule.
 curl -s -X POST -H "$AUTH" \\
   -H "Content-Type: application/json" \\
   -H "Idempotency-Key: rule-$(date +%s)" \\
-  -d "$(printf '{"keyword_id":"%s","metric":"position","direction":"drop","threshold":3,"enabled":true}' "$KEYWORD_ID")" \\
+  -d "$(printf '{"name":"Dropped 3+ positions","condition_type":"position_drop","drop_positions":3,"target_type":"keyword","target_ids":["%s"],"channels":["email"],"enabled":true}' "$KEYWORD_ID")" \\
   "$BASE/projects/$PROJECT_ID/alert-rules"
 \`\`\`
 
@@ -116,9 +116,12 @@ curl -s -X POST -H "$AUTH" \\
 
 - **Plan before any write.** Steps 1-4 are read-only investigation. Only edit or
   create rules (5a/5b) after you have confirmed the alerts are noisy or missing.
-- **Confirm the field names** for a rule body (\`metric\`, \`direction\`,
-  \`threshold\`, \`window\`) against \`GET /api/v1/openapi.json\` for the resolved
-  origin before writing - exact shapes can vary by version.
+- **Rule bodies** need \`name\` and \`condition_type\` (for example \`position_drop\`
+  with \`drop_positions\`, \`exits_top_n\` or \`enters_top_n\` with \`top_n\`) plus
+  \`target_type\` (\`all\`, \`keyword\`, \`tag\`) and \`target_ids\`. Check the
+  \`AlertRuleInput\` schema in \`GET /api/v1/openapi.json\` before writing.
+- **Channels** are optional: every fired alert creates an in-app notification;
+  \`email\`, \`webhook\`, \`slack\` and \`push\` add external delivery.
 - **Errors** use \`application/problem+json\`; read the \`detail\` field. On \`429\`
   honor the retry window in the response before retrying.
 - **One outlier is not a trend** - always corroborate a triggered alert with the
@@ -139,8 +142,8 @@ Errors use \`application/problem+json\`; \`429\` includes a retry window.
 |-|-|-|
 | GET /projects/{project_id}/triggered-alerts | listTriggeredAlerts | \`limit\`, \`cursor\`, \`since\` |
 | GET /projects/{project_id}/alert-rules | listAlertRules | \`limit\`, \`cursor\` |
-| POST /projects/{project_id}/alert-rules | createAlertRule | \`keyword_id\`, \`metric\`, \`direction\`, \`threshold\` |
-| PATCH /alert-rules/{rule_id} | updateAlertRule | \`threshold\`, \`direction\`, \`enabled\` |
+| POST /projects/{project_id}/alert-rules | createAlertRule | \`name\`, \`condition_type\`, \`target_type\`, \`target_ids\`, \`channels\` |
+| PATCH /alert-rules/{rule_id} | updateAlertRule | \`drop_positions\` / \`top_n\`, \`channels\`, \`enabled\` |
 | GET /keywords/{id}/rank-checks | listRankChecks | \`limit\`, \`cursor\` |
 | GET /rank-checks/{check_id} | getRankCheckResult | path: \`check_id\` |
 

@@ -74,6 +74,12 @@ export const mePatchSchema = z.object({
   name: z.string().trim().min(1).max(120),
 });
 
+export const meDeleteSchema = z
+  .object({
+    confirmEmail: z.string().trim().min(3).max(320),
+  })
+  .strict();
+
 export const webhookCreateSchema = z.object({
   description: z.string().trim().max(160).nullable().default(null),
   enabled: z.boolean().default(true),
@@ -132,7 +138,10 @@ export const keywordMatchRequestSchema = z.object({
 export const keywordBulkSchema = z
   .object({
     frequency: rankCheckFrequencySchema.optional(),
-    keyword_ids: z.array(idSchema).min(1).max(500),
+    keyword_ids: z
+      .array(idSchema.regex(/^kw_[a-z][a-z0-9]{23}$/))
+      .min(1)
+      .max(500),
     operation: z.enum(["add_tags", "delete", "remove_tags", "set_frequency", "set_target_url"]),
     schedule: apiKeywordScheduleSchema.optional(),
     tags: z.array(tagSchema).max(12).optional(),

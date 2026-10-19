@@ -1,3 +1,5 @@
+import { problemResponse } from "./openapi-problem";
+
 type Bearer = (
   summary: string,
   operationId: string,
@@ -11,10 +13,8 @@ import { withCreditsExhausted } from "./openapi-operations";
 
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
 
-const problemResponse = (description: string) => ({
-  content: { "application/json": { schema: ref("DomainOverviewProblem") } },
-  description,
-});
+const domainOverviewProblem = (description: string) =>
+  problemResponse(description, ref("DomainOverviewProblem"));
 
 function operation(
   bearer: Bearer,
@@ -30,22 +30,23 @@ function operation(
   };
   return withCreditsExhausted({
     ...base,
+    parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }],
     description: options.description,
     requestBody: { ...base.requestBody, required: true },
     responses: {
       ...base.responses,
-      ...(options.conflict ? { "409": problemResponse("snapshot_expired") } : {}),
-      "422": problemResponse(
+      ...(options.conflict ? { "409": domainOverviewProblem("snapshot_expired") } : {}),
+      "422": domainOverviewProblem(
         "unsupported_target, unsupported_location, needs_reauth, lookup_failed, or cost_limit_exceeded",
       ),
-      "429": problemResponse("budget_exhausted, in_progress, or rate_limited"),
+      "429": domainOverviewProblem("budget_exhausted, in_progress, or rate_limited"),
     },
   });
 }
 
 export function domainOverviewPaths(input: { bearer: Bearer }) {
   return {
-    "/projects/{projectId}/domain-overview/analyze": {
+    "/projects/{project_id}/domain-overview/analyze": {
       post: operation(
         input.bearer,
         "Estimate or analyze Domain Overview. Requires write scope.",
@@ -58,7 +59,7 @@ export function domainOverviewPaths(input: { bearer: Bearer }) {
         },
       ),
     },
-    "/projects/{projectId}/domain-overview/history": {
+    "/projects/{project_id}/domain-overview/history": {
       post: operation(
         input.bearer,
         "Load Domain Overview history. Requires write scope.",
@@ -72,7 +73,7 @@ export function domainOverviewPaths(input: { bearer: Bearer }) {
         },
       ),
     },
-    "/projects/{projectId}/domain-overview/keywords": {
+    "/projects/{project_id}/domain-overview/keywords": {
       post: operation(
         input.bearer,
         "Load a Domain Overview keyword page. Requires write scope.",
@@ -86,7 +87,7 @@ export function domainOverviewPaths(input: { bearer: Bearer }) {
         },
       ),
     },
-    "/projects/{projectId}/domain-overview/pages": {
+    "/projects/{project_id}/domain-overview/pages": {
       post: operation(
         input.bearer,
         "Load a Domain Overview relevant-pages page. Requires write scope.",

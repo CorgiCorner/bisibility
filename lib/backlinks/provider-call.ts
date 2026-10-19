@@ -249,6 +249,7 @@ export async function fetchBacklinksAnalysis(input: {
 }
 
 export async function fetchMoreBacklinksRows(input: {
+  maxCostCents?: number;
   correlationId?: string;
   onProviderCall?: () => void;
   onNotDispatched?: () => void;
@@ -265,7 +266,11 @@ export async function fetchMoreBacklinksRows(input: {
   const rates = backlinksRates(input.source.provider.id);
   const target = providerTarget(input);
   return paidProviderCall({
-    ...paidCallInput(input),
+    ...paidCallInput({
+      ...input,
+      costLimit:
+        input.maxCostCents === undefined ? undefined : requestCostLimit(input.maxCostCents),
+    }),
     correlationId: input.correlationId,
     onNotDispatched: input.onNotDispatched,
     call: (credentials, usage) => {

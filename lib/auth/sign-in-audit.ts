@@ -5,6 +5,8 @@ import { type AuditStatus, writeAudit } from "./audit";
 
 type SignInAuditInput = {
   email: string;
+  /** Sign-in method recorded on the event; email codes are the historical default. */
+  method?: "apple_native" | "email_otp";
   userId?: string | null;
   status: AuditStatus;
   statusReason?: string;
@@ -18,14 +20,20 @@ const accountSelect = {
 
 // Attribute known-account attempts to each project membership; unknown emails still
 // produce one global event.
-export async function recordSignInAudit({ email, userId, status, statusReason }: SignInAuditInput) {
+export async function recordSignInAudit({
+  email,
+  method = "email_otp",
+  userId,
+  status,
+  statusReason,
+}: SignInAuditInput) {
   const account = await resolveAccount(email, userId);
   const base = {
     action: "auth.sign_in",
     // Failed attempts target the account but keep actorId null so the victim is not
     // recorded as the actor.
     actorId: status === "success" ? (account?.id ?? null) : null,
-    after: { email, method: "email_otp" },
+    after: { email, method },
     status,
     statusReason,
     targetId: account?.publicId ?? "unknown-account",

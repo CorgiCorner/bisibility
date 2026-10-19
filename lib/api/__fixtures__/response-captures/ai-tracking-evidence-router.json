@@ -1,0 +1,403 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [
+          {
+            "id": "asm_a00000000000000000000000",
+            "measurement": "answer_present",
+            "source": "model_api",
+            "engine": "chat_gpt",
+            "prompt": "Example?",
+            "prompt_revision_id": "apr_a00000000000000000000000",
+            "evidence": {
+              "answer_text": "Example answer",
+              "answer_truncated": false,
+              "raw": "{\"status_code\":20000,\"result\":[",
+              "raw_truncated": true,
+              "search_results": [],
+              "requested_locale": null,
+              "effective_locale": null,
+              "locale_mechanism": "prompt_or_web_search_bias",
+              "requested_model": "gpt-4.1-mini",
+              "actual_model": null,
+              "provider_status": "20000",
+              "observed_at": "2026-10-18T00:00:00.000Z",
+              "fetched_at": "2026-10-18T00:00:00.000Z",
+              "recorded_source": "fresh"
+            },
+            "citations": [],
+            "cost_usd": null,
+            "cost_state": "unknown"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAiTrackingSamples",
+      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "asm_a00000000000000000000000",
+            "measurement": "answer_present",
+            "source": "model_api",
+            "engine": "chat_gpt",
+            "prompt": "Example?",
+            "prompt_revision_id": "apr_a00000000000000000000000",
+            "evidence": {
+              "answer_text": "Example answer",
+              "answer_truncated": false,
+              "raw": null,
+              "raw_truncated": false,
+              "search_results": [],
+              "requested_locale": null,
+              "effective_locale": null,
+              "locale_mechanism": "prompt_or_web_search_bias",
+              "requested_model": "gpt-4.1-mini",
+              "actual_model": null,
+              "provider_status": "20000",
+              "observed_at": "2026-10-18T00:00:00.000Z",
+              "fetched_at": "2026-10-18T00:00:00.000Z",
+              "recorded_source": "fresh"
+            },
+            "citations": [],
+            "cost_usd": null,
+            "cost_state": "unknown"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAiTrackingSamples",
+      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "asm_a00000000000000000000000",
+            "measurement": "answer_present",
+            "source": "model_api",
+            "engine": "chat_gpt",
+            "prompt": "Example?",
+            "prompt_revision_id": "apr_a00000000000000000000000",
+            "evidence": {
+              "answer_text": "Example answer",
+              "answer_truncated": false,
+              "raw": {
+                "status_code": 20000,
+                "result": [
+                  {
+                    "type": "message",
+                    "text": "Example answer",
+                    "ProviderCase": {
+                      "nestedKey": [
+                        1,
+                        true,
+                        null,
+                        {
+                          "sourceUrl": "https://example.com"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "raw_truncated": false,
+              "search_results": [],
+              "requested_locale": null,
+              "effective_locale": null,
+              "locale_mechanism": "prompt_or_web_search_bias",
+              "requested_model": "gpt-4.1-mini",
+              "actual_model": null,
+              "provider_status": "20000",
+              "observed_at": "2026-10-18T00:00:00.000Z",
+              "fetched_at": "2026-10-18T00:00:00.000Z",
+              "recorded_source": "fresh"
+            },
+            "citations": [],
+            "cost_usd": null,
+            "cost_state": "unknown"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAiTrackingSamples",
+      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "asm_a00000000000000000000000",
+            "measurement": "answer_present",
+            "source": "model_api",
+            "engine": "chat_gpt",
+            "prompt": "Example?",
+            "prompt_revision_id": "apr_a00000000000000000000000",
+            "evidence": {
+              "answer_text": "Example answer",
+              "answer_truncated": false,
+              "raw": {
+                "truncated": true,
+                "preview": "{\"result\":["
+              },
+              "raw_truncated": true,
+              "search_results": [],
+              "requested_locale": null,
+              "effective_locale": null,
+              "locale_mechanism": "prompt_or_web_search_bias",
+              "requested_model": "gpt-4.1-mini",
+              "actual_model": null,
+              "provider_status": "20000",
+              "observed_at": "2026-10-18T00:00:00.000Z",
+              "fetched_at": "2026-10-18T00:00:00.000Z",
+              "recorded_source": "fresh"
+            },
+            "citations": [],
+            "cost_usd": null,
+            "cost_state": "unknown"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAiTrackingSamples",
+      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "run_id": "air_a00000000000000000000000",
+          "items": [
+            {
+              "id": "asm_a00000000000000000000000",
+              "measurement": "answer_present",
+              "source": "model_api",
+              "engine": "chat_gpt",
+              "prompt": "Example?",
+              "prompt_revision_id": "apr_a00000000000000000000000",
+              "evidence": {
+                "answer_text": "Example answer",
+                "answer_truncated": false,
+                "raw": "{\"status_code\":20000,\"result\":[",
+                "raw_truncated": true,
+                "search_results": [],
+                "requested_locale": null,
+                "effective_locale": null,
+                "locale_mechanism": "prompt_or_web_search_bias",
+                "requested_model": "gpt-4.1-mini",
+                "actual_model": null,
+                "provider_status": "20000",
+                "observed_at": "2026-10-18T00:00:00.000Z",
+                "fetched_at": "2026-10-18T00:00:00.000Z",
+                "recorded_source": "fresh"
+              },
+              "citations": [],
+              "cost_usd": null,
+              "cost_state": "unknown"
+            }
+          ],
+          "next_cursor": null,
+          "scope": {
+            "complete": true,
+            "max_pages": 20,
+            "loaded": 1,
+            "resumed": false
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "exportAiTrackingEvidence",
+      "path": "/projects/{project_id}/ai-tracking/export",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "run_id": "air_a00000000000000000000000",
+          "items": [
+            {
+              "id": "asm_a00000000000000000000000",
+              "measurement": "answer_present",
+              "source": "model_api",
+              "engine": "chat_gpt",
+              "prompt": "Example?",
+              "prompt_revision_id": "apr_a00000000000000000000000",
+              "evidence": {
+                "answer_text": "Example answer",
+                "answer_truncated": false,
+                "raw": null,
+                "raw_truncated": false,
+                "search_results": [],
+                "requested_locale": null,
+                "effective_locale": null,
+                "locale_mechanism": "prompt_or_web_search_bias",
+                "requested_model": "gpt-4.1-mini",
+                "actual_model": null,
+                "provider_status": "20000",
+                "observed_at": "2026-10-18T00:00:00.000Z",
+                "fetched_at": "2026-10-18T00:00:00.000Z",
+                "recorded_source": "fresh"
+              },
+              "citations": [],
+              "cost_usd": null,
+              "cost_state": "unknown"
+            }
+          ],
+          "next_cursor": null,
+          "scope": {
+            "complete": true,
+            "max_pages": 20,
+            "loaded": 1,
+            "resumed": false
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "exportAiTrackingEvidence",
+      "path": "/projects/{project_id}/ai-tracking/export",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "run_id": "air_a00000000000000000000000",
+          "items": [
+            {
+              "id": "asm_a00000000000000000000000",
+              "measurement": "answer_present",
+              "source": "model_api",
+              "engine": "chat_gpt",
+              "prompt": "Example?",
+              "prompt_revision_id": "apr_a00000000000000000000000",
+              "evidence": {
+                "answer_text": "Example answer",
+                "answer_truncated": false,
+                "raw": {
+                  "status_code": 20000,
+                  "result": [
+                    {
+                      "type": "message",
+                      "text": "Example answer",
+                      "ProviderCase": {
+                        "nestedKey": [
+                          1,
+                          true,
+                          null,
+                          {
+                            "sourceUrl": "https://example.com"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "raw_truncated": false,
+                "search_results": [],
+                "requested_locale": null,
+                "effective_locale": null,
+                "locale_mechanism": "prompt_or_web_search_bias",
+                "requested_model": "gpt-4.1-mini",
+                "actual_model": null,
+                "provider_status": "20000",
+                "observed_at": "2026-10-18T00:00:00.000Z",
+                "fetched_at": "2026-10-18T00:00:00.000Z",
+                "recorded_source": "fresh"
+              },
+              "citations": [],
+              "cost_usd": null,
+              "cost_state": "unknown"
+            }
+          ],
+          "next_cursor": null,
+          "scope": {
+            "complete": true,
+            "max_pages": 20,
+            "loaded": 1,
+            "resumed": false
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "exportAiTrackingEvidence",
+      "path": "/projects/{project_id}/ai-tracking/export",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "run_id": "air_a00000000000000000000000",
+          "items": [
+            {
+              "id": "asm_a00000000000000000000000",
+              "measurement": "answer_present",
+              "source": "model_api",
+              "engine": "chat_gpt",
+              "prompt": "Example?",
+              "prompt_revision_id": "apr_a00000000000000000000000",
+              "evidence": {
+                "answer_text": "Example answer",
+                "answer_truncated": false,
+                "raw": {
+                  "truncated": true,
+                  "preview": "{\"result\":["
+                },
+                "raw_truncated": true,
+                "search_results": [],
+                "requested_locale": null,
+                "effective_locale": null,
+                "locale_mechanism": "prompt_or_web_search_bias",
+                "requested_model": "gpt-4.1-mini",
+                "actual_model": null,
+                "provider_status": "20000",
+                "observed_at": "2026-10-18T00:00:00.000Z",
+                "fetched_at": "2026-10-18T00:00:00.000Z",
+                "recorded_source": "fresh"
+              },
+              "citations": [],
+              "cost_usd": null,
+              "cost_state": "unknown"
+            }
+          ],
+          "next_cursor": null,
+          "scope": {
+            "complete": true,
+            "max_pages": 20,
+            "loaded": 1,
+            "resumed": false
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "exportAiTrackingEvidence",
+      "path": "/projects/{project_id}/ai-tracking/export",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/ai-tracking-evidence-router.test.ts"
+}

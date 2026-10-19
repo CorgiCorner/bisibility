@@ -1,3 +1,6 @@
+import { backlinksRowsSchemas } from "./openapi-backlinks-rows";
+import { problemResponse } from "./openapi-problem";
+
 type Bearer = (
   summary: string,
   operationId: string,
@@ -14,25 +17,21 @@ import {
   backlinksEstimateSchema,
   backlinksQueryParameters,
   backlinksSummary,
+  backlinksTargetScope,
 } from "./openapi-backlinks-parts";
 import { withCreditsExhausted } from "./openapi-operations";
+import { constraintUnion, openEnum, sdkName, taggedUnion, usdCents } from "./openapi-sdk-schema";
 
 type BacklinksSchemaName =
   | "BacklinksEstimate"
   | "BacklinksResponse"
   | "BacklinksRowsRequest"
+  | "BacklinksRowsResponse"
   | "BacklinksSnapshot"
   | "BacklinksSnapshotResponse";
 
 const ref = (name: BacklinksSchemaName) => ({
   $ref: `#/components/schemas/${name}`,
-});
-
-const problemResponse = (description: string) => ({
-  content: {
-    "application/json": { schema: { $ref: "#/components/schemas/Problem" } },
-  },
-  description,
 });
 
 function withBacklinksMetadata(
@@ -71,6 +70,7 @@ const backlinkHistory = {
     },
     required: ["month", "new_links", "lost_links"],
     type: "object",
+    ...sdkName("BacklinksHistoryMonth"),
   },
   maxItems: 12,
   type: "array",
@@ -92,6 +92,7 @@ const backlinkRows = {
         items: {
           enum: ["nofollow", "ugc", "sponsored", "image", "sitewide"],
           type: "string",
+          ...openEnum("BacklinkFlag"),
         },
         type: "array",
         uniqueItems: true,
@@ -109,6 +110,7 @@ const backlinkRows = {
         description: "Derived from provider is_new and is_lost.",
         enum: ["active", "new", "lost"],
         type: "string",
+        ...openEnum("BacklinkStatus"),
       },
       target_url: { type: "string" },
     },
@@ -126,31 +128,24 @@ const backlinkRows = {
       "status",
     ],
     type: "object",
+    ...sdkName("BacklinkRow"),
   },
   type: "array",
 } as const;
 
 export const backlinksSchemas = {
+  ...backlinksRowsSchemas,
   BacklinksFailedSummaryProblem: backlinksFailedSummaryProblem,
   BacklinksEstimate: backlinksEstimateSchema,
   BacklinksResponse: {
-    properties: { data: { oneOf: [ref("BacklinksEstimate"), ref("BacklinksSnapshot")] } },
-    required: ["data"],
-    type: "object",
-  },
-  BacklinksRowsRequest: {
     properties: {
-      snapshot_ref: {
-        type: "string",
-        description:
-          "Opaque snapshot_ref from the report being extended. Missing or stale references return snapshot_expired before paid I/O.",
+      data: {
+        oneOf: [ref("BacklinksEstimate"), ref("BacklinksSnapshot")],
+        ...taggedUnion("estimate", ["estimate", "snapshot"]),
+        ...sdkName("BacklinksResult"),
       },
-      include_subdomains: { type: "boolean" },
-      limit: { maximum: 1000, minimum: 100, multipleOf: 100, type: "integer" },
-      target: { type: "string" },
-      target_scope: { enum: ["site", "page"], type: "string" },
     },
-    required: ["target", "target_scope", "include_subdomains", "limit"],
+    required: ["data"],
     type: "object",
   },
   BacklinksSnapshot: {
@@ -179,14 +174,17 @@ export const backlinksSchemas = {
         required: ["target_scope"],
       },
     ],
+    ...constraintUnion,
     properties: {
       snapshot_ref: {
+        minLength: 1,
+        maxLength: 32768,
         type: "string",
         description: "Opaque reference for extending this exact snapshot revision.",
       },
       cached: { type: "boolean" },
       cached_until: { format: "date-time", type: "string" },
-      cost_cents: { minimum: 0, type: "number" },
+      cost_cents: { minimum: 0, type: "number", ...usdCents },
       fetched_at: { format: "date-time", type: "string" },
       fetched_row_count: { minimum: 0, type: "integer" },
       history: backlinkHistory,
@@ -200,7 +198,7 @@ export const backlinksSchemas = {
       rows: backlinkRows,
       summary: backlinksSummary,
       target: { type: "string" },
-      target_scope: { enum: ["site", "page"], type: "string" },
+      target_scope: backlinksTargetScope,
       total_rows_available: { minimum: 0, type: "integer" },
     },
     required: [
@@ -229,7 +227,7 @@ export const backlinksSchemas = {
 
 export function backlinksPaths(input: { bearer: Bearer }) {
   return {
-    "/projects/{projectId}/backlinks": {
+    "/projects/{project_id}/backlinks": {
       get: withBacklinksFailedSummaryProblem(
         withBacklinksMetadata(
           input.bearer(
@@ -243,17 +241,18 @@ export function backlinksPaths(input: { bearer: Bearer }) {
         ),
       ),
     },
-    "/projects/{projectId}/backlinks/rows": {
+    "/projects/{project_id}/backlinks/rows": {
       post: withBacklinksMetadata(
         withRequiredBody(
           input.bearer(
             "Load more rows into an unexpired backlinks snapshot. Requires write scope.",
             "loadMoreBacklinkRows",
-            ref("BacklinksSnapshotResponse"),
+            ref("BacklinksRowsResponse"),
             ref("BacklinksRowsRequest"),
+            [{ $ref: "#/components/parameters/IdempotencyKey" }],
           ),
         ),
-        "Extends the unexpired snapshot identified by snapshot_ref. Pass the reference returned by analyzeBacklinks or the previous loadMoreBacklinkRows response. The response contains only newly fetched rows plus the updated snapshot_ref, fetched_row_count and cost_cents.",
+        "Extends the unexpired snapshot identified by snapshot_ref. Pass the reference returned by analyzeBacklinks or the previous loadMoreBacklinkRows response. estimate_only=true requires only read scope and returns a free upper-bound next-page estimate without changing the snapshot; retained pages estimate zero. max_cost_cents optionally caps the admitted estimate, with cost_limit_exceeded (422) before provider I/O. Otherwise the response contains only newly fetched rows plus the updated snapshot_ref, fetched_row_count and cost_cents.",
         "snapshot_expired: the reference is missing, invalid, stale, outside the project scope, or expired; no paid request is dispatched",
       ),
     },

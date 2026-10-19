@@ -29,9 +29,9 @@ const projectSelect = {
   writeMode: true,
 } as const;
 
-const apiCreateProjectSchema = createProjectSchema.extend({ domain: domainSchema });
+export const apiCreateProjectSchema = createProjectSchema.extend({ domain: domainSchema });
 
-const projectPatchSchema = createProjectSchema
+export const projectPatchSchema = createProjectSchema
   .pick({ domain: true, name: true })
   .extend({ domain: domainSchema })
   .partial()

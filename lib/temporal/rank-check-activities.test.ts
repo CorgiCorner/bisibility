@@ -13,7 +13,10 @@ import {
   ProjectDomainRequiredError,
 } from "../projects/tracked-domain";
 import { ownAllocationTag } from "../provider-usage/credential-version";
-import { DeploymentAdmissionExhaustedError } from "../providers/execution-extension-errors";
+import {
+  DeploymentAdmissionExhaustedError,
+  OwnProviderKeyRequiredError,
+} from "../providers/execution-extension-errors";
 import { ProviderRateLimitedError } from "../providers/rate-limit";
 import { ProviderUsagePersistenceError } from "../providers/usage";
 import { BudgetExhaustedError } from "../rank-check/budget";
@@ -1384,6 +1387,30 @@ describe("rank-check activities", () => {
       expect(chainError.attempts).toHaveLength(earlierFailure ? 2 : 1);
     },
   );
+
+  it("defers a scheduled check without an own key, without retrying or spending", async () => {
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
+    const refusal = new OwnProviderKeyRequiredError({
+      capability: "rank_check",
+      provider: "dataforseo",
+    });
+    const chainError = new ProviderChainError(
+      [{ provider: "dataforseo", message: refusal.message, reason: "allocation_exhausted" }],
+      refusal,
+    );
+    mocks.runKeywordCheckWithFallback.mockRejectedValue(chainError);
+    mocks.prisma.rankCheck.updateMany.mockResolvedValue({ count: 1 });
+    const failure = await runRankCheckActivity({
+      keywordId: "keyword_1",
+      rankCheckId: "rank_scheduled_1",
+      source: "dispatcher",
+    }).catch((error: unknown) => error);
+    // The workflow treats this type as deferred: the occurrence is discarded with this message
+    // and the schedule continues; nothing was dispatched.
+    expect(failure).toMatchObject({ nonRetryable: true, type: "credits_exhausted" });
+    expect((failure as Error).message).toContain("Connect your own DataForSEO key");
+    expect(mocks.paidProvider.fetchRank).not.toHaveBeenCalled();
+  });
 
   it("re-throws transient chain errors so Temporal retries them", async () => {
     const chainError = new ProviderChainError([

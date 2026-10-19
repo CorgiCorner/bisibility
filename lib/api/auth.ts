@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { Role } from "@/lib/generated/prisma/client";
 import { verifyApiKey } from "@/lib/providers/crypto";
+import { authenticateAppOAuthToken, isOpaqueOAuthAccessToken } from "./oauth-app-auth";
 import { type ApiScope, parseStoredApiScopes } from "./scope-policy";
 
 const API_KEY_PREFIX_LENGTH = 21;
@@ -48,9 +49,11 @@ export type ProjectKeyAuth = AuthenticatedApiKey & { kind: "project_key" };
 export type MembershipFact = { projectId: string; role: Role };
 
 export type PersonalTokenAuth = {
+  /** When the user last signed in for the app OAuth grant behind this token; app tokens only. */
+  authTime?: Date | null;
   kind: "personal_token";
   memberships: readonly MembershipFact[];
-  /** OAuth client id from the MCP access token claims; set only by authenticateMcpOAuthRequest. */
+  /** OAuth client id: from MCP token claims, or the first-party app client on /api/v1. */
   oauthClientId?: string;
   token: {
     id: string;
@@ -158,6 +161,15 @@ export async function authenticateBearer(req: Request): Promise<ApiAuth> {
     return authenticatePersonalToken(rawKey);
   }
 
+  if (
+    !rawKey.startsWith(PROJECT_API_KEY_PREFIX) &&
+    !LEGACY_BEARER_PREFIXES.some((prefix) => rawKey.startsWith(prefix)) &&
+    isOpaqueOAuthAccessToken(rawKey)
+  ) {
+    const appAuth = await authenticateAppOAuthToken(rawKey);
+    if (!appAuth) throw new ApiAuthError("Invalid or expired access token.");
+    return appAuth;
+  }
   return { kind: "project_key", ...(await authenticateApiKey(req)) };
 }
 

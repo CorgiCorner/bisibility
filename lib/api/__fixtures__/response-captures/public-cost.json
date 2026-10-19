@@ -1,0 +1,535 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [
+          {
+            "checked_at": "2026-09-25",
+            "label": "DataForSEO",
+            "notes": "Reserve the full base rate for each requested SERP page. Actual provider receipts determine the final cost.",
+            "provider_id": "dataforseo",
+            "pricing_model": "flat",
+            "source_url": "https://dataforseo.com/pricing/serp/google-organic-serp-api",
+            "options": [
+              {
+                "additional_page_cost_cents": 0.06,
+                "additional_page_cost_usd": 0.0006,
+                "key": "standard",
+                "label": "Standard queue",
+                "short_label": "Standard",
+                "turnaround": "~5 min",
+                "top_100_check_cost_cents": 0.6,
+                "top_100_check_cost_usd": 0.006,
+                "unit_cost_cents": 0.06,
+                "unit_cost_usd": 0.0006
+              },
+              {
+                "additional_page_cost_cents": 0.12,
+                "additional_page_cost_usd": 0.0012,
+                "key": "priority",
+                "label": "Priority queue",
+                "short_label": "Priority",
+                "turnaround": "~1 min",
+                "top_100_check_cost_cents": 1.2,
+                "top_100_check_cost_usd": 0.012,
+                "unit_cost_cents": 0.12,
+                "unit_cost_usd": 0.0012
+              },
+              {
+                "additional_page_cost_cents": 0.2,
+                "additional_page_cost_usd": 0.002,
+                "key": "live",
+                "label": "Live",
+                "short_label": "Live",
+                "turnaround": "~6 s",
+                "top_100_check_cost_cents": 2,
+                "top_100_check_cost_usd": 0.02,
+                "unit_cost_cents": 0.2,
+                "unit_cost_usd": 0.002
+              }
+            ]
+          },
+          {
+            "checked_at": "2026-09-25",
+            "label": "SerpApi",
+            "notes": "Subscription plans; only successful searches count; unused searches do not roll over. Enterprise tier not modeled.",
+            "provider_id": "serpapi",
+            "pricing_model": "plan",
+            "source_url": "https://serpapi.com/pricing",
+            "plans": [
+              {
+                "included_checks": 250,
+                "label": "Free (250 searches per month)",
+                "monthly_price_cents": 0,
+                "monthly_price_usd": 0,
+                "plan_key": "free"
+              },
+              {
+                "included_checks": 1000,
+                "label": "Starter (25 USD, 1,000 searches per month)",
+                "monthly_price_cents": 2500,
+                "monthly_price_usd": 25,
+                "plan_key": "starter"
+              },
+              {
+                "included_checks": 5000,
+                "label": "Developer (75 USD, 5,000 searches per month)",
+                "monthly_price_cents": 7500,
+                "monthly_price_usd": 75,
+                "plan_key": "developer"
+              },
+              {
+                "included_checks": 15000,
+                "label": "Production (150 USD, 15,000 searches per month)",
+                "monthly_price_cents": 15000,
+                "monthly_price_usd": 150,
+                "plan_key": "production"
+              },
+              {
+                "included_checks": 30000,
+                "label": "Big Data (275 USD, 30,000 searches per month)",
+                "monthly_price_cents": 27500,
+                "monthly_price_usd": 275,
+                "plan_key": "bigdata"
+              },
+              {
+                "included_checks": 100000,
+                "label": "Searcher (725 USD, 100,000 searches per month)",
+                "monthly_price_cents": 72500,
+                "monthly_price_usd": 725,
+                "plan_key": "searcher"
+              },
+              {
+                "included_checks": 250000,
+                "label": "Volume (1,475 USD, 250,000 searches per month)",
+                "monthly_price_cents": 147500,
+                "monthly_price_usd": 1475,
+                "plan_key": "volume"
+              },
+              {
+                "included_checks": 500000,
+                "label": "Infrastructure (2,750 USD, 500,000 searches per month)",
+                "monthly_price_cents": 275000,
+                "monthly_price_usd": 2750,
+                "plan_key": "infrastructure"
+              }
+            ]
+          },
+          {
+            "checked_at": "2026-07-26",
+            "label": "Local sequence",
+            "notes": "Self-hosted deterministic provider with no external usage charge.",
+            "provider_id": "local-sequence",
+            "pricing_model": "flat",
+            "source_url": "https://github.com/CorgiCorner/bisibility",
+            "options": [
+              {
+                "additional_page_cost_cents": 0,
+                "additional_page_cost_usd": 0,
+                "key": "live",
+                "label": "Local",
+                "short_label": "Local",
+                "turnaround": "Immediate",
+                "top_100_check_cost_cents": 0,
+                "top_100_check_cost_usd": 0,
+                "unit_cost_cents": 0,
+                "unit_cost_usd": 0
+              }
+            ]
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getProviderRates",
+      "path": "/provider-rates",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "checks_per_run": 1,
+          "depth": 10,
+          "billing_units_per_check": 1,
+          "result_pages_per_run": 1,
+          "runs_per_month": 30,
+          "effective_cost_per_check_cents": 0.05999999999999999,
+          "exceeds_largest_plan": false,
+          "exceeds_selected_plan": false,
+          "monthly_checks": 30,
+          "monthly_billing_units": 30,
+          "monthly_cost_cents": 1.7999999999999998,
+          "monthly_cost_usd": 0.018,
+          "provider_id": "dataforseo",
+          "pricing_model": "flat",
+          "rate_checked_at": "2026-09-25",
+          "rate_source_url": "https://dataforseo.com/pricing/serp/google-organic-serp-api",
+          "selected_option": {
+            "additional_page_cost_cents": 0.06,
+            "additional_page_cost_usd": 0.0006,
+            "key": "standard",
+            "label": "Standard queue",
+            "short_label": "Standard",
+            "turnaround": "~5 min",
+            "top_100_check_cost_cents": 0.6,
+            "top_100_check_cost_usd": 0.006,
+            "unit_cost_cents": 0.06,
+            "unit_cost_usd": 0.0006
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "checks_per_run": 1,
+          "depth": 100,
+          "billing_units_per_check": 10,
+          "result_pages_per_run": 10,
+          "runs_per_month": 30,
+          "effective_cost_per_check_cents": 0.6,
+          "exceeds_largest_plan": false,
+          "exceeds_selected_plan": false,
+          "monthly_checks": 30,
+          "monthly_billing_units": 300,
+          "monthly_cost_cents": 18,
+          "monthly_cost_usd": 0.18,
+          "provider_id": "dataforseo",
+          "pricing_model": "flat",
+          "rate_checked_at": "2026-09-25",
+          "rate_source_url": "https://dataforseo.com/pricing/serp/google-organic-serp-api",
+          "selected_option": {
+            "additional_page_cost_cents": 0.06,
+            "additional_page_cost_usd": 0.0006,
+            "key": "standard",
+            "label": "Standard queue",
+            "short_label": "Standard",
+            "turnaround": "~5 min",
+            "top_100_check_cost_cents": 0.6,
+            "top_100_check_cost_usd": 0.006,
+            "unit_cost_cents": 0.06,
+            "unit_cost_usd": 0.0006
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "checks_per_run": 1,
+          "depth": 20,
+          "billing_units_per_check": 2,
+          "result_pages_per_run": 2,
+          "runs_per_month": 0,
+          "effective_cost_per_check_cents": 0,
+          "exceeds_largest_plan": false,
+          "exceeds_selected_plan": false,
+          "monthly_checks": 0,
+          "monthly_billing_units": 0,
+          "monthly_cost_cents": 0,
+          "monthly_cost_usd": 0,
+          "provider_id": "dataforseo",
+          "pricing_model": "flat",
+          "rate_checked_at": "2026-09-25",
+          "rate_source_url": "https://dataforseo.com/pricing/serp/google-organic-serp-api",
+          "selected_option": {
+            "additional_page_cost_cents": 0.06,
+            "additional_page_cost_usd": 0.0006,
+            "key": "standard",
+            "label": "Standard queue",
+            "short_label": "Standard",
+            "turnaround": "~5 min",
+            "top_100_check_cost_cents": 0.6,
+            "top_100_check_cost_usd": 0.006,
+            "unit_cost_cents": 0.06,
+            "unit_cost_usd": 0.0006
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "checks_per_run": 1,
+          "depth": 20,
+          "billing_units_per_check": 2,
+          "result_pages_per_run": 2,
+          "runs_per_month": null,
+          "effective_cost_per_check_cents": null,
+          "exceeds_largest_plan": false,
+          "exceeds_selected_plan": false,
+          "monthly_checks": null,
+          "monthly_billing_units": null,
+          "monthly_cost_cents": null,
+          "monthly_cost_usd": null,
+          "provider_id": "dataforseo",
+          "pricing_model": "flat",
+          "rate_checked_at": "2026-09-25",
+          "rate_source_url": "https://dataforseo.com/pricing/serp/google-organic-serp-api",
+          "selected_option": {
+            "additional_page_cost_cents": 0.06,
+            "additional_page_cost_usd": 0.0006,
+            "key": "standard",
+            "label": "Standard queue",
+            "short_label": "Standard",
+            "turnaround": "~5 min",
+            "top_100_check_cost_cents": 0.6,
+            "top_100_check_cost_usd": 0.006,
+            "unit_cost_cents": 0.06,
+            "unit_cost_usd": 0.0006
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "checks_per_run": 30000,
+          "depth": 10,
+          "billing_units_per_check": 1,
+          "result_pages_per_run": 30000,
+          "runs_per_month": 1,
+          "effective_cost_per_check_cents": 0.2,
+          "exceeds_largest_plan": false,
+          "exceeds_selected_plan": false,
+          "monthly_checks": 30000,
+          "monthly_billing_units": 30000,
+          "monthly_cost_cents": 6000,
+          "monthly_cost_usd": 60,
+          "provider_id": "dataforseo",
+          "pricing_model": "flat",
+          "rate_checked_at": "2026-09-25",
+          "rate_source_url": "https://dataforseo.com/pricing/serp/google-organic-serp-api",
+          "selected_option": {
+            "additional_page_cost_cents": 0.2,
+            "additional_page_cost_usd": 0.002,
+            "key": "live",
+            "label": "Live",
+            "short_label": "Live",
+            "turnaround": "~6 s",
+            "top_100_check_cost_cents": 2,
+            "top_100_check_cost_usd": 0.02,
+            "unit_cost_cents": 0.2,
+            "unit_cost_usd": 0.002
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "checks_per_run": 50,
+          "depth": 100,
+          "billing_units_per_check": 10,
+          "result_pages_per_run": 500,
+          "runs_per_month": 30,
+          "effective_cost_per_check_cents": 1.6666666666666667,
+          "exceeds_largest_plan": false,
+          "exceeds_selected_plan": true,
+          "monthly_checks": 1500,
+          "monthly_billing_units": 15000,
+          "monthly_cost_cents": 2500,
+          "monthly_cost_usd": 25,
+          "provider_id": "serpapi",
+          "pricing_model": "plan",
+          "rate_checked_at": "2026-09-25",
+          "rate_source_url": "https://serpapi.com/pricing",
+          "selected_plan": {
+            "included_checks": 1000,
+            "label": "Starter (25 USD, 1,000 searches per month)",
+            "monthly_price_cents": 2500,
+            "monthly_price_usd": 25,
+            "plan_key": "starter"
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "checks_per_run": 50,
+          "depth": 100,
+          "billing_units_per_check": 10,
+          "result_pages_per_run": 500,
+          "runs_per_month": 30,
+          "effective_cost_per_check_cents": 10,
+          "exceeds_largest_plan": false,
+          "exceeds_selected_plan": false,
+          "monthly_checks": 1500,
+          "monthly_billing_units": 15000,
+          "monthly_cost_cents": 15000,
+          "monthly_cost_usd": 150,
+          "provider_id": "serpapi",
+          "pricing_model": "plan",
+          "rate_checked_at": "2026-09-25",
+          "rate_source_url": "https://serpapi.com/pricing",
+          "selected_plan": {
+            "included_checks": 15000,
+            "label": "Production (150 USD, 15,000 searches per month)",
+            "monthly_price_cents": 15000,
+            "monthly_price_usd": 150,
+            "plan_key": "production"
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "Provider rate not found.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/cost-estimate",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/cost-estimate",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "depth": ["Invalid input"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/cost-estimate",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "devices": ["Too big: expected number to be <=2"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/cost-estimate",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "frequency": [
+              "Invalid option: expected one of \"daily\"|\"weekly\"|\"monthly\"|\"manual\"|\"paused\"|\"custom_cron\""
+            ]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/cost-estimate",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "keywords": ["Too big: expected number to be <=100000"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/cost-estimate",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "locations": ["Too big: expected number to be <=100"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getCostEstimate",
+      "path": "/cost-estimate",
+      "status": 400
+    }
+  ],
+  "source": "lib/api/public-cost.test.ts"
+}

@@ -30,7 +30,7 @@ const SLACK_POST_MESSAGE_ENDPOINT = "https://slack.com/api/chat.postMessage";
 const MAX_DELIVERY_ERROR_LENGTH = 500;
 const DELIVERY_FETCH_TIMEOUT_MS = 10_000;
 
-export type AlertDeliveryChannel = "email" | "slack" | "webhook";
+export type AlertDeliveryChannel = "email" | "push" | "slack" | "webhook";
 
 export type AlertWebhookEndpoint = {
   hmacSecret: string;

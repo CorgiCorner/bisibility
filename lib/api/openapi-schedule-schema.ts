@@ -1,4 +1,5 @@
 import { JITTER_MINUTES_MAX, JITTER_MINUTES_MIN } from "@/lib/schemas/keyword";
+import { openEnum, sdkName } from "./openapi-sdk-schema";
 
 export const jitterMinutesContractSchema = {
   description: `Whole-minute random delay from ${JITTER_MINUTES_MIN} to ${JITTER_MINUTES_MAX}. Set 0 to disable jitter.`,
@@ -26,3 +27,37 @@ export const scheduleInputContractSchema = {
   required: ["frequency"],
   type: "object",
 } as const;
+
+/** The schedule a keyword resource reports, with the source of its values. */
+export const keywordScheduleResourceContractSchema = {
+  properties: {
+    cron_expression: { type: ["string", "null"] },
+    frequency: {
+      enum: ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
+      type: "string",
+      ...openEnum("ScheduleFrequency"),
+    },
+    jitter_minutes: jitterMinutesContractSchema,
+    last_checked_at: { format: "date-time", type: ["string", "null"] },
+    next_check_at: { format: "date-time", type: ["string", "null"] },
+    source: {
+      description:
+        "Whether these schedule values come from the keyword's own row or from the project defaults.",
+      enum: ["keyword", "project_default"],
+      type: "string",
+      ...openEnum("ScheduleSource"),
+    },
+    timezone: scheduleTimezoneContractSchema,
+  },
+  required: [
+    "frequency",
+    "cron_expression",
+    "timezone",
+    "jitter_minutes",
+    "last_checked_at",
+    "next_check_at",
+    "source",
+  ],
+  type: ["object", "null"],
+  ...sdkName("KeywordSchedule"),
+};

@@ -71,13 +71,30 @@ export function encodeUnprefixedCursor(input: { publicId: string; timestamp: Dat
   ).toString("base64url");
 }
 
-export function parseLimit(url: URL, fallback = 50, max = 200) {
-  const raw = url.searchParams.get("limit");
-  if (!raw) {
-    return fallback;
-  }
+/**
+ * The wire `limit`/`cursor` query of a list operation. It matches the shared OpenAPI `Limit`
+ * and `Cursor` parameters when `max` is the default.
+ */
+export function pageQuerySchema(max = 200) {
+  return z.object({
+    cursor: z.string().optional(),
+    limit: z.coerce.number().int().min(1).max(max).optional(),
+  });
+}
 
-  return z.coerce.number().int().min(1).max(max).parse(raw);
+export const pageQuery = pageQuerySchema();
+
+/** Empty values count as absent, as they always have for these parameters. */
+export function parsePageQuery(url: URL, fallback = 50, max = 200) {
+  const query = (max === 200 ? pageQuery : pageQuerySchema(max)).parse({
+    cursor: url.searchParams.get("cursor") || undefined,
+    limit: url.searchParams.get("limit") || undefined,
+  });
+  return { cursor: query.cursor ?? null, limit: query.limit ?? fallback };
+}
+
+export function parseLimit(url: URL, fallback = 50, max = 200) {
+  return parsePageQuery(url, fallback, max).limit;
 }
 
 export function splitPage<T>(items: T[], limit: number, cursorFor: (item: T) => string) {
@@ -105,8 +122,14 @@ export function decodeOffsetCursor(value: string | null) {
 }
 
 export function paginateArray<T>(url: URL, items: T[], fallback = 50, max = 200) {
-  const limit = parseLimit(url, fallback, max);
-  const offset = decodeOffsetCursor(url.searchParams.get("cursor"));
+  const { cursor, limit } = parsePageQuery(url, fallback, max);
+  return paginateItems(items, { cursor, limit });
+}
+
+/** Offset-paginates items with an already validated page query. */
+export function paginateItems<T>(items: T[], query: { cursor?: string | null; limit: number }) {
+  const { limit } = query;
+  const offset = decodeOffsetCursor(query.cursor ?? null);
   const page = items.slice(offset, offset + limit);
   const nextOffset = offset + page.length;
   const nextCursor = nextOffset < items.length ? encodeOffsetCursor(nextOffset) : null;

@@ -1,3 +1,11 @@
+import { openEnum, sdkName, taggedUnion, usdCents } from "./openapi-sdk-schema";
+
+const sourceSchema = {
+  enum: ["related", "suggestion", "idea"],
+  type: "string",
+  ...openEnum("KeywordResearchSource"),
+};
+
 const monthlyTrend = {
   items: {
     properties: {
@@ -7,6 +15,7 @@ const monthlyTrend = {
     },
     required: ["year", "month", "search_volume"],
     type: "object",
+    ...sdkName("MonthlySearchVolume"),
   },
   maxItems: 12,
   type: "array",
@@ -14,10 +23,11 @@ const monthlyTrend = {
 
 const metrics = {
   competition: { maximum: 1, minimum: 0, type: ["number", "null"] },
-  cpc_cents: { minimum: 0, type: ["integer", "null"] },
+  cpc_cents: { minimum: 0, type: ["integer", "null"], ...usdCents },
   difficulty: { maximum: 100, minimum: 0, type: ["number", "null"] },
   intent: {
     enum: ["informational", "commercial", "transactional", "navigational", "unknown", null],
+    ...openEnum("KeywordIntent"),
   },
   monthly_trend: monthlyTrend,
   search_volume: { minimum: 0, type: ["number", "null"] },
@@ -31,6 +41,7 @@ const connection = {
   },
   required: ["id", "label", "provider"],
   type: "object",
+  ...sdkName("ResearchConnection"),
 };
 
 export const keywordResearchSchemas = {
@@ -90,18 +101,19 @@ export const keywordResearchSchemas = {
     properties: {
       cached: { description: "Every planned source is cached.", type: "boolean" },
       connections: { items: connection, type: "array" },
-      cost_cents: { minimum: 0, type: "number" },
+      cost_cents: { minimum: 0, type: "number", ...usdCents },
       estimate: { const: true, type: "boolean" },
       provider: { type: "string" },
       sources: {
         items: {
           properties: {
             cached: { type: "boolean" },
-            cost_cents: { minimum: 0, type: "number" },
-            source: { enum: ["related", "suggestion", "idea"], type: "string" },
+            cost_cents: { minimum: 0, type: "number", ...usdCents },
+            source: sourceSchema,
           },
           required: ["source", "cost_cents", "cached"],
           type: "object",
+          ...sdkName("KeywordResearchSourceEstimate"),
         },
         type: "array",
       },
@@ -114,12 +126,13 @@ export const keywordResearchSchemas = {
       { $ref: "#/components/schemas/KeywordResearchEstimate" },
       { $ref: "#/components/schemas/KeywordResearchResult" },
     ],
+    ...taggedUnion("estimate", ["estimate", "result"]),
   },
   KeywordResearchResult: {
     properties: {
       cached: { type: "boolean" },
       connections: { items: connection, type: "array" },
-      cost_cents: { minimum: 0, type: "number" },
+      cost_cents: { minimum: 0, type: "number", ...usdCents },
       fetched_at: { format: "date-time", type: "string" },
       provider: { type: "string" },
       rows: {
@@ -127,11 +140,12 @@ export const keywordResearchSchemas = {
           properties: {
             already_tracked: { type: "boolean" },
             keyword: { type: "string" },
-            source: { enum: ["related", "suggestion", "idea"], type: "string" },
+            source: sourceSchema,
             ...metrics,
           },
           required: ["keyword", "source", "already_tracked", ...Object.keys(metrics)],
           type: "object",
+          ...sdkName("KeywordResearchRow"),
         },
         type: "array",
       },
@@ -139,7 +153,7 @@ export const keywordResearchSchemas = {
         items: {
           properties: {
             cached: { type: "boolean" },
-            cost_cents: { minimum: 0, type: "number" },
+            cost_cents: { minimum: 0, type: "number", ...usdCents },
             reason: {
               enum: [
                 "budget_exhausted",
@@ -154,13 +168,19 @@ export const keywordResearchSchemas = {
                 "unsupported_location",
               ],
               type: "string",
+              ...openEnum("KeywordResearchSourceReason"),
             },
             returned: { minimum: 0, type: "integer" },
-            source: { enum: ["related", "suggestion", "idea"], type: "string" },
-            status: { enum: ["ok", "failed", "skipped"], type: "string" },
+            source: sourceSchema,
+            status: {
+              enum: ["ok", "failed", "skipped"],
+              type: "string",
+              ...openEnum("KeywordResearchSourceStatus"),
+            },
           },
           required: ["source", "status", "returned", "cost_cents", "cached"],
           type: "object",
+          ...sdkName("KeywordResearchSourceResult"),
         },
         type: "array",
       },

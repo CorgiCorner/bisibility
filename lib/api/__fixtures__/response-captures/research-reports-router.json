@@ -1,0 +1,48 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [],
+        "meta": {
+          "freshness_days": 30
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listStoredResearchReports",
+      "path": "/projects/{project_id}/research/reports",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key is not scoped to this project.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/research/reports",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listStoredResearchReports",
+      "path": "/projects/{project_id}/research/reports",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "No stored research report matches this request.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/research/reports/backlinks",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "getStoredResearchReport",
+      "path": "/projects/{project_id}/research/reports/{kind}",
+      "status": 404
+    }
+  ],
+  "source": "lib/api/research-reports-router.test.ts"
+}

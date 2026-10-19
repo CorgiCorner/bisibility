@@ -11,7 +11,7 @@ import {
 import { invalidateBacklinksCache } from "./cache";
 import { backlinksProject, backlinksSource } from "./context";
 import { BacklinksSnapshotExpiredError } from "./errors";
-import { fetchMoreBacklinksRows } from "./provider-call";
+import { assertBacklinksMaxCost, backlinksEstimate, fetchMoreBacklinksRows } from "./provider-call";
 import {
   appendBacklinksRows,
   findCurrentBacklinksSnapshot,
@@ -22,6 +22,7 @@ import {
 import { openBacklinksSnapshotReference } from "./snapshot-reference";
 import { normalizeBacklinksTarget } from "./target";
 import type {
+  BacklinksEstimate,
   BacklinksRowsOutcome,
   BacklinksServiceContext,
   LoadMoreBacklinkRowsOptions,
@@ -56,6 +57,14 @@ async function finishAppend(
   );
 }
 
+export function loadMoreBacklinkRows(
+  context: BacklinksServiceContext,
+  options: LoadMoreBacklinkRowsOptions & { estimateOnly?: false },
+): Promise<Exclude<BacklinksRowsOutcome, BacklinksEstimate>>;
+export function loadMoreBacklinkRows(
+  context: BacklinksServiceContext,
+  options: LoadMoreBacklinkRowsOptions,
+): Promise<BacklinksRowsOutcome>;
 export async function loadMoreBacklinkRows(
   context: BacklinksServiceContext,
   options: LoadMoreBacklinkRowsOptions,
@@ -91,17 +100,44 @@ export async function loadMoreBacklinkRows(
   if (provider === "unknown" || (options.provider && options.provider !== provider))
     return { ok: false, reason: "no_source" };
   const retained = retainedBacklinksPage(snapshot);
-  if (retained) return finishAppend(snapshot, retained.claim, retained.page, now, true);
-  if (snapshot.fetchedRowCount >= snapshot.totalRowsAvailable)
+  if (retained && !options.estimateOnly)
+    return finishAppend(snapshot, retained.claim, retained.page, now, true);
+  if (!retained && snapshot.fetchedRowCount >= snapshot.totalRowsAvailable)
     throw new BacklinksSnapshotExpiredError();
-  const source = backlinksSource(project, provider);
+  const source = retained ? null : backlinksSource(project, provider);
+  if (!source && !retained) return { ok: false, reason: "no_source" };
+  const estimatedCostCents =
+    source && (options.estimateOnly || options.maxCostCents !== undefined)
+      ? backlinksEstimate({ resultLimit: input.limit, scope: input.scope, source }).rows
+      : 0;
+  if (options.estimateOnly) {
+    return {
+      ok: true,
+      estimate: true,
+      cached: Boolean(retained),
+      cachedUntil: retained ? snapshot.expiresAt.toISOString() : null,
+      costCents: estimatedCostCents,
+      estimatedCostCents,
+      includeSubdomains: input.includeSubdomains,
+      provider,
+      target: input.target,
+      targetScope: input.scope,
+    };
+  }
   if (!source) return { ok: false, reason: "no_source" };
+  try {
+    assertBacklinksMaxCost(estimatedCostCents, options.maxCostCents);
+  } catch (error) {
+    if (error instanceof ProviderLookupSignal) return error.outcome;
+    throw error;
+  }
   const claim = await claimBacklinksAppend(snapshot);
   let providerInvoked = false,
     notDispatched = false;
   try {
     const page = await fetchMoreBacklinksRows({
       ...input,
+      maxCostCents: options.maxCostCents,
       correlationId: `backlinks-append:${snapshot.id}:${reference.fetchedRowCount}:${claim.token}`,
       onProviderCall: () => {
         providerInvoked = true;

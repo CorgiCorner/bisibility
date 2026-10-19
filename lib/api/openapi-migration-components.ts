@@ -42,7 +42,7 @@ export const migrationSchemas = {
       change_pct: { type: ["number", "null"] },
       channels: {
         description: ALERT_CHANNELS_OPENAPI_DESCRIPTION,
-        items: { enum: ["email", "slack", "webhook"], type: "string" },
+        items: { enum: ["email", "slack", "webhook", "push"], type: "string" },
         type: "array",
       },
       competitor_domain: nullableText,

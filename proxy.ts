@@ -28,6 +28,9 @@ const sessionCookieNames = ["better-auth.session_token", "__Secure-better-auth.s
 const CANONICAL_APP_HOST = new URL(MANAGED_AUTHORIZATION_SERVER_ORIGIN).hostname;
 const CANONICAL_MARKETING_HOST = new URL(MANAGED_MCP_RESOURCE_ORIGIN).hostname;
 const REGIONAL_MCP_PATHS = new Set(["/api/mcp", "/.well-known/oauth-protected-resource/api/mcp"]);
+// Served on whichever host was requested. Apple fetches the app-site association from each
+// associated domain and does not follow redirects, so it must never be canonicalized.
+const HOST_NEUTRAL_PATHS = new Set(["/api/mcp", "/.well-known/apple-app-site-association"]);
 const REGIONAL_AUTH_METADATA_PATHS = new Set([
   "/.well-known/oauth-authorization-server",
   "/.well-known/oauth-protected-resource",
@@ -115,7 +118,7 @@ function canonicalSurfaceRedirect(request: NextRequest) {
 
   // The advertised MCP transport is the apex URL. Keep it there so an
   // Authorization header never crosses hosts while following a redirect.
-  if (request.nextUrl.pathname === "/api/mcp") {
+  if (HOST_NEUTRAL_PATHS.has(request.nextUrl.pathname)) {
     return null;
   }
 

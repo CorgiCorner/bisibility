@@ -1,0 +1,57 @@
+{
+  "captures": [
+    {
+      "body": {
+        "bundle_id": "com.example.app",
+        "created_at": "2026-10-17T12:00:00.000Z",
+        "environment": "sandbox",
+        "id": "dpt_a00000000000000000000000",
+        "last_seen_at": "2026-10-17T12:00:00.000Z",
+        "token_suffix": "abababab"
+      },
+      "contentType": "application/json",
+      "method": "DELETE",
+      "operationId": "deleteDevicePushToken",
+      "path": "/me/push-tokens/{push_token_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "bundle_id": "com.example.app",
+        "created_at": "2026-10-17T12:00:00.000Z",
+        "environment": "sandbox",
+        "id": "dpt_a00000000000000000000000",
+        "last_seen_at": "2026-10-17T12:00:00.000Z",
+        "token_suffix": "abababab"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "registerDevicePushToken",
+      "path": "/me/push-tokens",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "bundle_id": "com.example.app",
+            "created_at": "2026-10-17T12:00:00.000Z",
+            "environment": "sandbox",
+            "id": "dpt_a00000000000000000000000",
+            "last_seen_at": "2026-10-17T12:00:00.000Z",
+            "token_suffix": "abababab"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listDevicePushTokens",
+      "path": "/me/push-tokens",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/push-tokens.test.ts"
+}

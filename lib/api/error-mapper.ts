@@ -7,7 +7,10 @@ import {
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { ProjectDomainRequiredError } from "@/lib/projects/tracked-domain";
 import type { AdmissionErrorDetails } from "@/lib/providers/admission-error-details";
-import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import {
+  DeploymentAdmissionExhaustedError,
+  OwnProviderKeyRequiredError,
+} from "@/lib/providers/execution-extension-errors";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { ProviderChainError } from "@/lib/rank-check/provider-chain-error";
 import { RankCheckRunnerError } from "@/lib/rank-check/runner-error";
@@ -18,6 +21,7 @@ import {
 import { SavedViewConflictError } from "@/lib/saved-views/errors";
 import { ZodError, z } from "zod";
 import { budgetExhaustedResponse } from "./budget-exhausted";
+import { ownProviderKeyRequiredResponse } from "./byok-required";
 import { ApiConflictError, ApiForbiddenError, ApiInputError, ApiNotFoundError } from "./errors";
 import { errorResponse } from "./responses";
 
@@ -38,6 +42,9 @@ export function errorFromUnknown(
         reason: error.budgetReason,
       },
     );
+  if (error instanceof OwnProviderKeyRequiredError) {
+    return ownProviderKeyRequiredResponse(error, { headers, instance });
+  }
   if (error instanceof DeploymentAdmissionExhaustedError) {
     if (error.reason === "budget") {
       return budgetExhaustedResponse(

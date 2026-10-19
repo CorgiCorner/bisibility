@@ -1,4 +1,5 @@
 import { ref } from "./openapi-components";
+import { problemResponse } from "./openapi-problem";
 
 function json(schema: object) {
   return { "application/json": { schema } };
@@ -17,18 +18,18 @@ function pathParameter(name: string, schema: object = stringSchema) {
 
 const migrationSecurity = [{ MigrationToken: [] }];
 const migrationProblemResponses = {
-  "400": response(ref("Problem"), "Bad request"),
-  "401": response(ref("Problem"), "Unauthorized"),
-  "409": response(ref("Problem"), "Conflict"),
-  "413": response(ref("Problem"), "Payload too large"),
-  "419": response(ref("Problem"), "Migration token invalid or expired"),
-  "423": response(ref("Problem"), "Project read-only"),
-  "429": response(ref("Problem"), "Rate limited"),
-  "500": response(ref("Problem"), "Import failed"),
+  "400": problemResponse("Bad request"),
+  "401": problemResponse("Unauthorized"),
+  "409": problemResponse("Conflict"),
+  "413": problemResponse("Payload too large"),
+  "419": problemResponse("Migration token invalid or expired"),
+  "423": problemResponse("Project read-only"),
+  "429": problemResponse("Rate limited"),
+  "500": problemResponse("Import failed"),
 };
 const sessionProblemResponses = {
   ...migrationProblemResponses,
-  "404": response(ref("Problem"), "Import session not found"),
+  "404": problemResponse("Import session not found"),
 };
 
 export const migrationSecuritySchemes = {
@@ -58,7 +59,7 @@ export const migrationPaths = {
       operationId: "getCloudImportCompatibility",
       responses: {
         "200": response(ref("CloudImportCompatibility"), "Compatibility preflight"),
-        "429": response(ref("Problem"), "Rate limited"),
+        "429": problemResponse("Rate limited"),
       },
       summary: "Check instance import schema compatibility",
     },

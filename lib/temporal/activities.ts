@@ -9,9 +9,11 @@ export {
 export {
   claimAlertDeliveryActivity,
   deliverAlertDigestEmailActivity,
+  deliverAlertDigestPushActivity,
   deliverAlertDigestSlackActivity,
   deliverAlertDigestWebhookActivity,
   deliverAlertEmailActivity,
+  deliverAlertPushActivity,
   deliverAlertSlackActivity,
   deliverAlertWebhookActivity,
   finalizeAlertDeliveryActivity,

@@ -18,6 +18,7 @@ import { ruleStatusMeta, severityMeta } from "@/lib/alerts/alert-data";
 import { MAX_ALERT_DELIVERIES_PER_RULE_PER_DAY } from "@/lib/alerts/limits";
 import { BellRingingIcon as BellRinging } from "@phosphor-icons/react/dist/csr/BellRinging";
 import { ClockCountdownIcon as ClockCountdown } from "@phosphor-icons/react/dist/csr/ClockCountdown";
+import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
 import { EnvelopeSimpleIcon as EnvelopeSimple } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
 import { FunnelSimpleIcon as FunnelSimple } from "@phosphor-icons/react/dist/csr/FunnelSimple";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
@@ -43,6 +44,7 @@ export type AlertRulesListProps = {
 
 const channelIcons: Record<AlertRuleView["channels"][number], Icon> = {
   email: EnvelopeSimple,
+  push: DeviceMobile,
   slack: SlackLogo,
   webhook: WebhooksLogo,
 };
@@ -93,6 +95,7 @@ function channelLabel(
   t: ReturnType<typeof useTranslations<"projectAlerts.drawer">>,
 ) {
   if (channel === "email") return t("email");
+  if (channel === "push") return t("push");
   if (channel === "slack") return t("slack");
   if (channel === "webhook") return t("webhook");
   return t("inAppFeed");

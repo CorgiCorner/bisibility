@@ -3,6 +3,7 @@ import "server-only";
 import { getActionActor, ProjectNotFoundError } from "@/lib/actions/_shared";
 import { appAdmissionErrorDetails } from "@/lib/api/admission-error-details";
 import { budgetExhaustedResponse } from "@/lib/api/budget-exhausted";
+import { ownProviderKeyRequiredResponse } from "@/lib/api/byok-required";
 import { ApiConflictError, ApiInputError, ApiNotFoundError } from "@/lib/api/errors";
 import { errorResponse } from "@/lib/api/responses";
 import { type Actor, AuthorizationError } from "@/lib/auth/authorize";
@@ -13,7 +14,10 @@ import {
 } from "@/lib/metering/admission-errors";
 import { ProjectDomainRequiredError } from "@/lib/projects/tracked-domain";
 import type { AdmissionErrorDetails } from "@/lib/providers/admission-error-details";
-import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
+import {
+  DeploymentAdmissionExhaustedError,
+  OwnProviderKeyRequiredError,
+} from "@/lib/providers/execution-extension-errors";
 import { ProviderChainError } from "@/lib/rank-check/provider-chain-error";
 import { LaunchRankCheckRunError, SampleProjectError } from "@/lib/rank-check/runs/launch-types";
 import { PreviewTokenError } from "@/lib/rank-check/runs/preview-token";
@@ -51,6 +55,12 @@ function mappedError(
     error.admissionExhaustion instanceof DeploymentAdmissionExhaustedError
   ) {
     return mappedError(error.admissionExhaustion, admissionDetails);
+  }
+  if (error instanceof OwnProviderKeyRequiredError) {
+    return ownProviderKeyRequiredResponse(error, {
+      headers: new Headers(CACHE_HEADERS),
+      instance: APP_INSTANCE,
+    });
   }
   if (error instanceof DeploymentAdmissionExhaustedError) {
     if (error.reason === "budget") {

@@ -235,11 +235,15 @@
             "pages": [
               "GET /me",
               "PATCH /me",
+              "DELETE /me",
               "GET /me/analytics-consent",
               "PUT /me/analytics-consent",
               "GET /me/tokens",
               "POST /me/tokens",
-              "DELETE /me/tokens/{token_id}"
+              "DELETE /me/tokens/{token_id}",
+              "GET /me/push-tokens",
+              "POST /me/push-tokens",
+              "DELETE /me/push-tokens/{push_token_id}"
             ]
           },
           {
@@ -269,9 +273,9 @@
             "pages": [
               "GET /projects/{project_id}/keywords",
               "POST /projects/{project_id}/keywords",
-              "GET /keywords/{id}",
-              "PATCH /keywords/{id}",
-              "DELETE /keywords/{id}",
+              "GET /keywords/{keyword_id}",
+              "PATCH /keywords/{keyword_id}",
+              "DELETE /keywords/{keyword_id}",
               "POST /keywords/bulk",
               "POST /projects/{project_id}/keyword-matches"
             ]
@@ -279,8 +283,8 @@
           {
             "group": "Rank Checks",
             "pages": [
-              "POST /keywords/{id}/checks",
-              "GET /keywords/{id}/rank-checks",
+              "POST /keywords/{keyword_id}/checks",
+              "GET /keywords/{keyword_id}/rank-checks",
               "GET /rank-checks/{check_id}",
               "GET /projects/{project_id}/exports/rank-history",
               "GET /projects/{project_id}/local-monitors/{monitor_id}/runs",
@@ -304,17 +308,17 @@
           {
             "group": "Backlinks",
             "pages": [
-              "GET /projects/{projectId}/backlinks",
-              "POST /projects/{projectId}/backlinks/rows"
+              "GET /projects/{project_id}/backlinks",
+              "POST /projects/{project_id}/backlinks/rows"
             ]
           },
           {
             "group": "Domain Overview",
             "pages": [
-              "POST /projects/{projectId}/domain-overview/analyze",
-              "POST /projects/{projectId}/domain-overview/history",
-              "POST /projects/{projectId}/domain-overview/keywords",
-              "POST /projects/{projectId}/domain-overview/pages"
+              "POST /projects/{project_id}/domain-overview/analyze",
+              "POST /projects/{project_id}/domain-overview/history",
+              "POST /projects/{project_id}/domain-overview/keywords",
+              "POST /projects/{project_id}/domain-overview/pages"
             ]
           },
           {

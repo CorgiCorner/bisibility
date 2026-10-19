@@ -320,4 +320,31 @@ describe("MCP OAuth authentication", () => {
     expect(result).toMatchObject({ response: expect.objectContaining({ status: 401 }) });
     expect(mocks.userFindUnique).not.toHaveBeenCalled();
   });
+
+  it("refuses the first-party app client before evaluating any scope", async () => {
+    mocks.verifyAccessToken.mockResolvedValue({
+      azp: "bisibility-ios",
+      scope: "openid read write admin",
+      sub: "user_1",
+    });
+
+    const result = await authenticateMcpOAuthRequest(request("app-access-token"));
+
+    expect(result).toMatchObject({ response: expect.objectContaining({ status: 401 }) });
+    expect(mocks.getOAuthClientScopePolicy).not.toHaveBeenCalled();
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
+  });
+
+  it("rejects api-only scopes, which never map to MCP access", async () => {
+    mocks.verifyAccessToken.mockResolvedValue({
+      client_id: "custom-client",
+      scope: "openid api:read api:write",
+      sub: "user_1",
+    });
+
+    const result = await authenticateMcpOAuthRequest(request("app-access-token"));
+
+    expect(result).toMatchObject({ response: expect.objectContaining({ status: 401 }) });
+    expect(mocks.userFindUnique).not.toHaveBeenCalled();
+  });
 });

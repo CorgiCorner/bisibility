@@ -1,6 +1,5 @@
 import "server-only";
 
-import { parseActionInput } from "@/lib/actions/_shared";
 import { createKeywordBatchSet } from "@/lib/actions/keyword-helpers";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
@@ -18,31 +17,14 @@ import {
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { type ApiContext, forbidden, projectMatches } from "./context";
+import { parseKeywordCreateBody } from "./keyword-create-input";
 import { scheduleFromCreate } from "./keyword-utils";
 import { legacyMarketLocationKey, legacyMarketLocationSelection } from "./legacy-market-input";
 import { KeywordLimitExceededError } from "./resource-limits";
 import { keywordInclude, keywordResources } from "./resources";
 import { errorResponse, resourceResponse } from "./responses";
-import { keywordCreateItemSchema } from "./schemas";
 
 export const KEYWORD_CREATE_TRANSACTION_TIMEOUT_MS = 10_000;
-
-function normalizeCreateBody(body: unknown) {
-  if (Array.isArray(body)) {
-    return body;
-  }
-  if (
-    body &&
-    typeof body === "object" &&
-    Array.isArray((body as { keywords?: unknown }).keywords)
-  ) {
-    return (body as { keywords: unknown[] }).keywords.map((item) =>
-      typeof item === "string" ? { keyword: item } : item,
-    );
-  }
-
-  return [body];
-}
 
 // Every create item ends as a location key; legacy names pass through the translator.
 type CreateMarket = {
@@ -175,10 +157,7 @@ export async function createKeywords(
   }
 
   const body = await ctx.req.json();
-  const items = parseActionInput(
-    keywordCreateItemSchema.array().min(1).max(500),
-    normalizeCreateBody(body),
-  );
+  const items = parseKeywordCreateBody(body);
   const defaultMarket = await loadCreateDefaultMarket(ctx.auth.project.id, client);
   const warnings = new Set<string>();
   const preparedItems: Array<{

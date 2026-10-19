@@ -1,5 +1,6 @@
 import type { schemas } from "./openapi-components";
 import { withCreditsExhausted } from "./openapi-operations";
+import { problemResponse } from "./openapi-problem";
 
 type Bearer = (
   summary: string,
@@ -15,12 +16,7 @@ function withUnprocessable(operation: object) {
     ...operation,
     responses: {
       ...responses,
-      "422": {
-        content: {
-          "application/json": { schema: { $ref: "#/components/schemas/Problem" } },
-        },
-        description: "Unprocessable request",
-      },
+      "422": problemResponse("Unprocessable request"),
     },
   };
 }

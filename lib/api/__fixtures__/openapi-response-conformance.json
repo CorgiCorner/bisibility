@@ -1,0 +1,564 @@
+[
+  {
+    "kinds": ["no-capture"],
+    "operation": "acceptAiTrackingSuggestions",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "addCompetitor",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "aiTrackingSuggestionsGenerate",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "aiTrackingSuggestionsPreview",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "analyzeAiVisibility",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "archiveAiTrackingPrompt",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "archiveAiTrackingSchedule",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "archiveAiTrackingTopic",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "cancelAiTrackingRun",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "compareAiPrompts",
+    "status": "none"
+  },
+  {
+    "details": ["undeclared-status status 201"],
+    "kinds": ["undeclared-status"],
+    "operation": "connectProvider",
+    "sources": ["lib/api/router.test.ts"],
+    "status": "201"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "createAgentReport",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "createAiTrackingPrompt",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "createAiTrackingSchedule",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "createAiTrackingTopic",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "createCloudImportSession",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-success-capture"],
+    "operation": "createPersonalAccessToken",
+    "status": "2xx"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "createProject",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "createProjectApiKey",
+    "status": "none"
+  },
+  {
+    "details": [
+      "missing-required /definition/filters/change",
+      "missing-required /definition/filters/contains",
+      "missing-required /definition/filters/excluded_keyword_ids",
+      "missing-required /definition/filters/intents",
+      "missing-required /definition/filters/last_check",
+      "missing-required /definition/filters/serp",
+      "missing-required /definition/filters/tag",
+      "missing-required /definition/filters/tags",
+      "missing-required /definition/filters/topics",
+      "missing-required /definition/filters/url_changed",
+      "missing-required /definition/filters/vol_max",
+      "missing-required /definition/filters/vol_min",
+      "missing-required /definition/filters/wrong_url",
+      "missing-required /definition/grouped",
+      "missing-required /definition/lens",
+      "missing-required /definition/page_size",
+      "missing-required /definition/presentation",
+      "missing-required /definition/report_scope",
+      "missing-required /definition/scope",
+      "missing-required /definition/search",
+      "missing-required /definition/sort",
+      "type-mismatch /definition/filters/position must be array",
+      "type-mismatch /definition/filters/position must be string",
+      "type-mismatch /definition/filters/tag must be string",
+      "type-mismatch /definition/lens/location_id must be string",
+      "... 3 more"
+    ],
+    "kinds": ["missing-required", "type-mismatch", "value-mismatch"],
+    "operation": "createSavedView",
+    "sources": ["lib/api/app-surface-more.test.ts", "lib/api/router-saved-view-identity.test.ts"],
+    "status": "201"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "createTeamInvite",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-success-capture"],
+    "operation": "createWebhookEndpoint",
+    "status": "2xx"
+  },
+  {
+    "kinds": ["no-success-capture"],
+    "operation": "deleteProject",
+    "status": "2xx"
+  },
+  {
+    "details": [
+      "missing-required /can_delete",
+      "missing-required /config",
+      "missing-required /created_at",
+      "missing-required /definition",
+      "missing-required /id",
+      "missing-required /name",
+      "missing-required /revision",
+      "missing-required /surface",
+      "missing-required /visibility",
+      "undeclared-property /deleted"
+    ],
+    "kinds": ["missing-required", "undeclared-property"],
+    "operation": "deleteProjectSavedView",
+    "sources": ["lib/api/router-saved-view-identity.test.ts"],
+    "status": "200"
+  },
+  {
+    "details": ["undeclared-status status 423"],
+    "kinds": ["undeclared-status"],
+    "operation": "deleteProjectSavedView",
+    "sources": ["lib/api/router-saved-view-identity.test.ts"],
+    "status": "423"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "deleteSavedView",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "deleteWebhookEndpoint",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "disconnectProvider",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "exportLocalMonitorRun",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "finalizeCloudImportSession",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "getAgentReport",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "getAiResearchCatalog",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "getCloudImportCompatibility",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "getLlmsTxt",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "getLocalMonitorRunResults",
+    "status": "none"
+  },
+  {
+    "details": [
+      "undeclared-property /email",
+      "undeclared-property /email_verification",
+      "undeclared-property /project_id",
+      "undeclared-property /slack_available",
+      "undeclared-property /webhook_available"
+    ],
+    "kinds": ["undeclared-property"],
+    "operation": "getNotificationPreferences",
+    "sources": ["lib/api/app-surface-more.test.ts"],
+    "status": "200"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "getProjectContext",
+    "status": "none"
+  },
+  {
+    "details": ["missing-required /data/*/id"],
+    "kinds": ["missing-required"],
+    "operation": "getProviderRates",
+    "sources": ["lib/api/public-cost.test.ts"],
+    "status": "200"
+  },
+  {
+    "details": [
+      "missing-required /data/cached_until",
+      "missing-required /data/country_code",
+      "missing-required /data/data_state",
+      "missing-required /data/fetched_row_count",
+      "missing-required /data/history",
+      "missing-required /data/history/*/metrics",
+      "missing-required /data/history/*/year",
+      "missing-required /data/history_unavailable",
+      "missing-required /data/include_clickstream",
+      "missing-required /data/include_subdomains",
+      "missing-required /data/keywords",
+      "missing-required /data/language_code",
+      "missing-required /data/location_code",
+      "missing-required /data/mode",
+      "missing-required /data/overview",
+      "missing-required /data/pages",
+      "missing-required /data/partial",
+      "missing-required /data/previous_fetched_at",
+      "missing-required /data/previous_overview",
+      "missing-required /data/previous_source_snapshot_at",
+      "missing-required /data/request_key",
+      "missing-required /data/result_limit",
+      "missing-required /data/rows",
+      "missing-required /data/rows/*/already_saved",
+      "missing-required /data/rows/*/already_tracked",
+      "... 32 more"
+    ],
+    "kinds": ["missing-required", "type-mismatch"],
+    "operation": "getStoredResearchReport",
+    "sources": ["lib/api/research-reports.test.ts"],
+    "status": "200"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "importCloudExport",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listAgentReports",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listAiTrackingRuns",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listAiTrackingSchedules",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listAiTrackingTopics",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listApiKeys",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listLocalMonitorPointHistory",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listLocalMonitorPointListings",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listLocalMonitorRuns",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listMigrationTokens",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listPersonalAccessTokens",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listProjectApiKeys",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listProviderBudgets",
+    "status": "none"
+  },
+  {
+    "details": ["undeclared-property /data/*/logo_domain", "undeclared-property /data/*/meta"],
+    "kinds": ["undeclared-property"],
+    "operation": "listProviders",
+    "sources": ["lib/api/provider-list.test.ts", "lib/api/router.test.ts"],
+    "status": "200"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listRankedKeywordSuggestions",
+    "status": "none"
+  },
+  {
+    "details": [
+      "missing-required /data/*/definition/filters/change",
+      "missing-required /data/*/definition/filters/contains",
+      "missing-required /data/*/definition/filters/excluded_keyword_ids",
+      "missing-required /data/*/definition/filters/intents",
+      "missing-required /data/*/definition/filters/last_check",
+      "missing-required /data/*/definition/filters/serp",
+      "missing-required /data/*/definition/filters/tag",
+      "missing-required /data/*/definition/filters/tags",
+      "missing-required /data/*/definition/filters/topics",
+      "missing-required /data/*/definition/filters/url_changed",
+      "missing-required /data/*/definition/filters/vol_max",
+      "missing-required /data/*/definition/filters/vol_min",
+      "missing-required /data/*/definition/filters/wrong_url",
+      "missing-required /data/*/definition/grouped",
+      "missing-required /data/*/definition/lens",
+      "missing-required /data/*/definition/page_size",
+      "missing-required /data/*/definition/presentation",
+      "missing-required /data/*/definition/report_scope",
+      "missing-required /data/*/definition/scope",
+      "missing-required /data/*/definition/search",
+      "missing-required /data/*/definition/sort",
+      "type-mismatch /data/*/definition/filters/position must be array",
+      "type-mismatch /data/*/definition/filters/position must be string",
+      "type-mismatch /data/*/definition/filters/tag must be string",
+      "type-mismatch /data/*/definition/lens/location_id must be string",
+      "... 3 more"
+    ],
+    "kinds": ["missing-required", "type-mismatch", "value-mismatch"],
+    "operation": "listSavedViews",
+    "sources": ["lib/api/app-surface-more.test.ts"],
+    "status": "200"
+  },
+  {
+    "details": ["undeclared-property /data/*/latest_snapshot/id"],
+    "kinds": ["undeclared-property"],
+    "operation": "listSitemapMonitors",
+    "sources": ["lib/api/loop-closure.test.ts"],
+    "status": "200"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listTrafficSnapshots",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "listWebhookEndpoints",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "matchProjectKeywords",
+    "status": "none"
+  },
+  {
+    "details": ["undeclared-status status 201"],
+    "kinds": ["undeclared-status"],
+    "operation": "mintMigrationToken",
+    "sources": ["lib/api/app-surface-more.test.ts"],
+    "status": "201"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "removeCompetitor",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "removeProjectCompetitor",
+    "status": "none"
+  },
+  {
+    "details": [
+      "missing-required /expires_at",
+      "missing-required /invite_link",
+      "undeclared-property /status"
+    ],
+    "kinds": ["missing-required", "undeclared-property"],
+    "operation": "resendTeamInvite",
+    "sources": ["lib/api/router-team-rbac.test.ts"],
+    "status": "200"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "retryAiTrackingRun",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "revokeApiKey",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "revokeMigrationToken",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "revokePersonalAccessToken",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "revokeProjectMigrationToken",
+    "status": "none"
+  },
+  {
+    "details": ["missing-required /email", "missing-required /role"],
+    "kinds": ["missing-required"],
+    "operation": "revokeProjectTeamInvite",
+    "sources": ["lib/api/router-team-rbac.test.ts"],
+    "status": "200"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "revokeTeamInvite",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "searchLocations",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "suggestAiTrackingPrompts",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "syncProjectTraffic",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "testProviderConnection",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "updateAiTrackingPrompt",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "updateAiTrackingSchedule",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "updateAiTrackingTopic",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "updateMe",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "updateNotificationPreferences",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "updateProjectContext",
+    "status": "none"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "updateProviderBudgets",
+    "status": "none"
+  },
+  {
+    "details": [
+      "missing-required /capabilities",
+      "missing-required /category_id",
+      "missing-required /category_title",
+      "missing-required /connected",
+      "missing-required /connection_status",
+      "missing-required /last_used_at",
+      "missing-required /name",
+      "undeclared-property /cost_per_check_cents",
+      "undeclared-property /provider"
+    ],
+    "kinds": ["missing-required", "undeclared-property"],
+    "operation": "updateProviderSettings",
+    "sources": ["lib/api/router.test.ts"],
+    "status": "200"
+  },
+  {
+    "details": ["undeclared-property /latest_snapshot/id"],
+    "kinds": ["undeclared-property"],
+    "operation": "updateSitemapMonitor",
+    "sources": ["lib/api/loop-closure.test.ts"],
+    "status": "200"
+  },
+  {
+    "kinds": ["no-capture"],
+    "operation": "uploadCloudImportChunk",
+    "status": "none"
+  }
+]

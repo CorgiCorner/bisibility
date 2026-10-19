@@ -91,4 +91,7 @@ export function requireAccountPathPublicIds(path: string[]) {
   if (path[0] === "me" && path[1] === "tokens" && path[2] && path[2] !== "current") {
     requireApiPublicId(path[2], "pat");
   }
+  if (path[0] === "me" && path[1] === "push-tokens" && path[2]) {
+    requireApiPublicId(path[2], "dpt");
+  }
 }

@@ -8,6 +8,9 @@ const mocks = vi.hoisted(() => ({
   temporalSnapshot: vi.fn(),
 }));
 
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
 vi.mock("@/lib/deployment/runtime-env.generated", () => ({
   getBakedAppRevision: mocks.appRevision,
 }));
@@ -19,6 +22,7 @@ vi.mock("@/lib/data-migrations/readiness", () => ({
 }));
 
 import { capabilities, getHealth, getLiveness, getReadiness } from "./discovery";
+import { handleApiRequest } from "./router";
 
 async function result(response: Response | Promise<Response>) {
   const resolved = await response;
@@ -315,6 +319,15 @@ describe("API health worker and Temporal liveness", () => {
       body: { status: "ok" },
       status: 200,
     });
+  });
+
+  it("serves the anonymous probes through the API router", async () => {
+    for (const probe of ["health", "liveness", "readiness"]) {
+      const response = await handleApiRequest(new Request(`https://example.com/api/v1/${probe}`), [
+        probe,
+      ]);
+      expect(response.status).toBe(200);
+    }
   });
 
   it("fails probes readably when the scheduler driver is invalid", async () => {

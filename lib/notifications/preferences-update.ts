@@ -16,6 +16,8 @@ const idSchema = z.string().trim().min(1).max(120);
 export const notificationPreferenceSchema = z.object({
   alertEmail: z.boolean(),
   alertInApp: z.boolean(),
+  /** Optional: forms without a push toggle keep the stored value. */
+  alertPush: z.boolean().optional(),
   alertSlack: z.boolean(),
   alertWebhook: z.boolean(),
   checkEmail: z.boolean(),
@@ -33,6 +35,7 @@ export type NotificationPreferencesForm = z.infer<typeof notificationPreferenceS
 const preferenceSelect = {
   alertEmail: true,
   alertInApp: true,
+  alertPush: true,
   checkEmail: true,
   checkInApp: true,
   importEmail: true,
@@ -46,6 +49,7 @@ function preferenceData(data: NotificationPreferencesForm) {
   return {
     alertEmail: data.alertEmail,
     alertInApp: data.alertInApp,
+    ...(data.alertPush === undefined ? {} : { alertPush: data.alertPush }),
     checkEmail: data.checkEmail,
     checkInApp: data.checkInApp,
     importEmail: data.importEmail,

@@ -33,7 +33,7 @@ export const alertConditionTypes = [
   "url_mismatch",
 ] as const;
 
-export const alertChannels = ["email", "slack", "webhook"] as const;
+export const alertChannels = ["email", "slack", "webhook", "push"] as const;
 export const alertTargetTypes = ["all", "keyword", "tag"] as const;
 
 export type AlertConditionTypeInput = (typeof alertConditionTypes)[number];

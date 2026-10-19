@@ -4,6 +4,7 @@ import {
   UNRESOLVED_USAGE_MESSAGE,
 } from "@/lib/metering/budget-denial";
 import type { ProviderRequestSurface } from "@/lib/provider-usage/surface";
+import { PROVIDER_CATALOG } from "./catalog-metadata";
 
 const affectedProjectIds = new WeakMap<DeploymentAdmissionExhaustedError, string>();
 
@@ -46,5 +47,29 @@ export class DeploymentAdmissionExhaustedError extends Error {
 
   get projectId(): string | undefined {
     return affectedProjectIds.get(this);
+  }
+}
+
+/**
+ * The account runs paid provider work only on its own provider keys, and no usable own key serves
+ * this request. Raised before any provider dispatch, so nothing was spent. It extends the
+ * deployment admission refusal so every path that already stops or falls back on a refused
+ * admission (rank-check provider chains, deferred scheduled checks, lookup results) treats it the
+ * same way; API surfaces map it to the `byok_required` problem type.
+ */
+export class OwnProviderKeyRequiredError extends DeploymentAdmissionExhaustedError {
+  /** Provider whose own key would serve the request, for example `dataforseo`. */
+  readonly provider: string;
+  /** Paid capability that needs the key, for example `keyword_research` or `rank_check`. */
+  readonly capability: string;
+
+  constructor(input: { provider: string; capability: string; projectId?: string }) {
+    super("balance", input.projectId ? { projectId: input.projectId } : undefined);
+    this.name = "OwnProviderKeyRequiredError";
+    const label =
+      PROVIDER_CATALOG.find((entry) => entry.id === input.provider)?.label ?? input.provider;
+    this.message = `This account runs paid provider work only on its own provider keys. Connect your own ${label} key in the project's provider settings to run ${input.capability.replaceAll("_", " ")}.`;
+    this.provider = input.provider;
+    this.capability = input.capability;
   }
 }

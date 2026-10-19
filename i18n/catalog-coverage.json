@@ -12275,6 +12275,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAlerts.drawer.push",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAlerts.drawer.recipients",
         "tags": []
       },

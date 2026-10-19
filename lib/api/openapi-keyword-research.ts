@@ -1,5 +1,7 @@
 import type { schemas } from "./openapi-components";
 import { withCreditsExhausted, withRequiredBody } from "./openapi-operations";
+import { problemResponse } from "./openapi-problem";
+import { closedEnum, usdCents } from "./openapi-sdk-schema";
 
 type Bearer = (
   summary: string,
@@ -15,12 +17,7 @@ function withUnprocessable(operation: object) {
     ...operation,
     responses: {
       ...responses,
-      "422": {
-        content: {
-          "application/json": { schema: { $ref: "#/components/schemas/Problem" } },
-        },
-        description: "Unsupported provider location or provider reauthorization required",
-      },
+      "422": problemResponse("Unsupported provider location or provider reauthorization required"),
     },
   };
 }
@@ -66,12 +63,18 @@ export function keywordResearchPaths(input: {
                   default: "auto",
                   enum: ["auto", "related", "suggestions", "ideas"],
                   type: "string",
+                  ...closedEnum("KeywordResearchMode"),
                 },
               },
               {
                 in: "query",
                 name: "result_limit",
-                schema: { default: 100, enum: [100, 300, 500], type: "integer" },
+                schema: {
+                  default: 100,
+                  enum: [100, 300, 500],
+                  type: "integer",
+                  ...closedEnum("KeywordResearchResultLimit"),
+                },
               },
               {
                 in: "query",
@@ -95,7 +98,7 @@ export function keywordResearchPaths(input: {
                 description: "Best-effort maximum provider cost for this request, in cents.",
                 in: "query",
                 name: "max_cost_cents",
-                schema: { minimum: 1, type: "integer" },
+                schema: { minimum: 1, type: "integer", ...usdCents },
               },
             ],
           ),

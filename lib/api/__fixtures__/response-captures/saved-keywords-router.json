@@ -1,0 +1,105 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [
+          {
+            "cpc": null,
+            "difficulty": null,
+            "id": "svkw_a00000000000000000000000",
+            "intent": null,
+            "location": "US",
+            "saved_at": "2026-08-01T12:00:00.000Z",
+            "source_seed": null,
+            "text": "rank tracker",
+            "trend": [
+              {
+                "year": 2026,
+                "month": 7,
+                "search_volume": null
+              }
+            ],
+            "variant_count": 0,
+            "volume": null
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSavedKeywords",
+      "path": "/projects/{project_id}/saved-keywords",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "Cursor must be a valid v3 cursor.",
+        "docs_url": "https://bisibility.com/docs/api/errors#invalid_cursor",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/saved-keywords",
+        "status": 400,
+        "title": "Invalid cursor",
+        "type": "https://bisibility.com/problems/invalid_cursor"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSavedKeywords",
+      "path": "/projects/{project_id}/saved-keywords",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/saved-keywords",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "limit": ["Invalid input: expected number, received NaN"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSavedKeywords",
+      "path": "/projects/{project_id}/saved-keywords",
+      "status": 400
+    },
+    {
+      "body": {
+        "duplicate_count": 1,
+        "results": [
+          {
+            "keyword": "rank tracker",
+            "status": "created"
+          },
+          {
+            "keyword": "existing",
+            "status": "skipped"
+          }
+        ],
+        "saved_count": 1
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createSavedKeywords",
+      "path": "/projects/{project_id}/saved-keywords",
+      "status": 201
+    },
+    {
+      "body": {
+        "removed_count": 1
+      },
+      "contentType": "application/json",
+      "method": "DELETE",
+      "operationId": "deleteProjectSavedKeyword",
+      "path": "/projects/{project_id}/saved-keywords/{saved_keyword_id}",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/saved-keywords-router.test.ts"
+}

@@ -4,6 +4,7 @@ import "server-only";
 import type { Actor } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { isProjectReadOnly, ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
+import { accountRouteExtensionPolicy } from "./account-route-extension";
 import { handleAccountRequest } from "./account-router";
 import { isAccountRoute, isPersonalTokenOnlyRoute } from "./account-routes";
 import { apiAdmissionErrorDetails } from "./admission-error-details";
@@ -26,6 +27,7 @@ import { withIdempotency } from "./idempotency";
 import { operationPolicyForRequest } from "./operation-policy";
 import { resolvePersonalProjectScope } from "./personal-scope";
 import { checkRateLimit, rateLimitExceeded } from "./ratelimit";
+import { appRequiredScope, recentAppAuthenticationResponse } from "./recent-auth";
 import { apiRequestOrigin } from "./request-origin";
 import { hasScope } from "./request-scope";
 import { errorResponse, methodNotAllowed, routeNotFound } from "./responses";
@@ -146,7 +148,8 @@ async function dispatchApiRequest(
       routes.exchangeOauthToken(req, url, { headers: limited.headers, instance: instance(url) }),
     );
   }
-  const declaredOperation = operationPolicyForRequest(method, path);
+  const declaredOperation =
+    operationPolicyForRequest(method, path) ?? accountRouteExtensionPolicy(method, path);
 
   const authResult = preauthenticated
     ? { auth: preauthenticated.auth, headers: preauthenticated.headers ?? new Headers() }
@@ -165,7 +168,13 @@ async function dispatchApiRequest(
   if (!declaredOperation) {
     return routeNotFound({ headers: authResult.headers, instance: instance(url) });
   }
-  const requiredScope = await scopeToEnforce(declaredOperation, req, url);
+  const reauth = recentAppAuthenticationResponse(auth, method, path, authResult.headers, url);
+  if (reauth) return reauth;
+  const requiredScope = appRequiredScope(
+    auth,
+    declaredOperation.operationId,
+    await scopeToEnforce(declaredOperation, req, url),
+  );
   if (method === "GET" && path[0] === "locations" && path[1] === "search" && path.length === 2) {
     const scopes = auth.kind === "personal_token" ? auth.token.scopes : auth.apiKey.scopes;
     if (!hasScope(scopes, requiredScope)) {

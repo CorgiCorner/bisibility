@@ -8,6 +8,9 @@ const mocks = vi.hoisted(() => ({
   SnapshotExpiredError: class BacklinksSnapshotExpiredError extends Error {},
 }));
 
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
 vi.mock("./auth", () => ({
   ApiAuthError: class ApiAuthError extends Error {},
   LEGACY_BEARER_PREFIXES: ["bsk_", "bsp_"],
@@ -134,6 +137,89 @@ describe("backlinks router", () => {
     expect(mocks.analyze).not.toHaveBeenCalled();
     expect(mocks.loadMore).not.toHaveBeenCalled();
   });
+
+  it("returns the named next-page estimate and forwards both body options", async () => {
+    authenticate(["read"]);
+    mocks.loadMore.mockResolvedValue({
+      ok: true,
+      estimate: true,
+      cached: false,
+      cachedUntil: null,
+      costCents: 0.6,
+      estimatedCostCents: 0.6,
+      provider: "dataforseo",
+      includeSubdomains: true,
+      target: "example.com",
+      targetScope: "site",
+    });
+    const response = await route("POST", `/projects/${projectPublicId}/backlinks/rows`, {
+      include_subdomains: true,
+      target: "example.com",
+      target_scope: "site",
+      limit: 300,
+      estimate_only: true,
+      max_cost_cents: 0,
+    });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      data: { estimate: true, estimated_cost_cents: 0.6, cost_cents: 0.6 },
+    });
+    expect(mocks.loadMore).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ estimateOnly: true, maxCostCents: 0, limit: 300 }),
+    );
+  });
+
+  it.each([false, "true", 1, undefined])(
+    "keeps write scope for rows estimate_only=%j",
+    async (estimate_only) => {
+      authenticate(["read"]);
+      const response = await route("POST", `/projects/${projectPublicId}/backlinks/rows`, {
+        include_subdomains: true,
+        target: "example.com",
+        target_scope: "site",
+        limit: 300,
+        estimate_only,
+      });
+      expect(response.status).toBe(403);
+      expect(mocks.loadMore).not.toHaveBeenCalled();
+    },
+  );
+
+  it("returns 422 with estimated_cost_cents when the next page exceeds the cap", async () => {
+    mocks.loadMore.mockResolvedValue({
+      ok: false,
+      reason: "cost_limit_exceeded",
+      estimatedCostCents: 0.6,
+    });
+    const response = await route("POST", `/projects/${projectPublicId}/backlinks/rows`, {
+      include_subdomains: true,
+      target: "example.com",
+      target_scope: "site",
+      limit: 300,
+      max_cost_cents: 0,
+    });
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toMatchObject({
+      type: "https://bisibility.com/problems/cost_limit_exceeded",
+      details: { estimated_cost_cents: 0.6 },
+    });
+  });
+
+  it.each([{ estimate_only: "true" }, { max_cost_cents: -1 }, { max_cost_cents: 0.5 }])(
+    "rejects invalid new body options %j",
+    async (options) => {
+      const response = await route("POST", `/projects/${projectPublicId}/backlinks/rows`, {
+        include_subdomains: true,
+        target: "example.com",
+        target_scope: "site",
+        limit: 300,
+        ...options,
+      });
+      expect(response.status).toBe(400);
+      expect(mocks.loadMore).not.toHaveBeenCalled();
+    },
+  );
 
   it.each([
     ["missing target", "target", ""],

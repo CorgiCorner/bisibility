@@ -21,6 +21,7 @@ const publicIdTables = {
   audit: "audit_logs",
   check: "rank_checks",
   cmp: "competitors",
+  dpt: "device_push_tokens",
   conn: "provider_connections",
   dwh: "ingest_hooks",
   ferry: "migration_tokens",

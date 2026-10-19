@@ -131,4 +131,22 @@ describe("OAuth consent scope guard", () => {
     await expect(allowedOAuthTokenScopes("missing", ["read", "write"])).resolves.toEqual(["read"]);
     await expect(allowedOAuthTokenScopes(null, ["admin"])).resolves.toEqual([]);
   });
+
+  it("keeps api scopes for the first-party app only and caps the app to its fixed scopes", async () => {
+    mocks.getPolicy.mockResolvedValue({ name: "Custom", redirectUris: [] });
+    await expect(
+      allowedOAuthTokenScopes("registered-client", ["openid", "read", "api:read", "api:write"]),
+    ).resolves.toEqual(["openid", "read"]);
+    await expect(
+      allowedOAuthTokenScopes("bisibility-ios", [
+        "openid",
+        "offline_access",
+        "api:read",
+        "api:write",
+        "read",
+        "admin",
+        "tokens:write",
+      ]),
+    ).resolves.toEqual(["openid", "offline_access", "api:read", "api:write"]);
+  });
 });

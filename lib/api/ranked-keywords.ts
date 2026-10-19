@@ -14,7 +14,7 @@ const booleanParam = z
   .enum(["true", "false"])
   .transform((value) => value === "true")
   .default(false);
-const querySchema = z.object({
+export const querySchema = z.object({
   connectionId: z.string().trim().min(1).max(120).optional(),
   fresh: booleanParam,
   limit: z.coerce.number().int().min(1).max(100).default(100),

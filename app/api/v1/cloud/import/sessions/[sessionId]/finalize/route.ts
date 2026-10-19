@@ -1,6 +1,11 @@
 import "server-only";
 
-import { finalizeImportSession, importSessionIdSchema, jobView } from "@/lib/api/cloud-import";
+import {
+  finalizeImportSession,
+  importSessionFinalizeSchema,
+  importSessionIdSchema,
+  jobView,
+} from "@/lib/api/cloud-import";
 import {
   anonymousRateLimit,
   authorizeMigrationRequest,
@@ -14,7 +19,6 @@ import {
 } from "@/lib/api/instance-import/session-http";
 import { resourceResponse } from "@/lib/api/responses";
 import type { NextRequest } from "next/server";
-import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -22,8 +26,6 @@ export const runtime = "nodejs";
 type RouteContext = {
   params: Promise<{ sessionId: string }>;
 };
-
-const finalizeBodySchema = z.object({}).strict();
 
 export async function POST(req: NextRequest, context: RouteContext) {
   const limit = maxBodyBytes();
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const { rawBody } = await readJsonBody(req, { allowEmpty: true, limit });
     const tokenMissing = requireMigrationToken(req, anonymous.headers);
     if (tokenMissing) return tokenMissing;
-    const body = finalizeBodySchema.safeParse(rawBody);
+    const body = importSessionFinalizeSchema.safeParse(rawBody);
     if (!body.success) return validationError(req, body.error, anonymous.headers);
 
     const auth = await authorizeMigrationRequest(req, anonymous.headers);

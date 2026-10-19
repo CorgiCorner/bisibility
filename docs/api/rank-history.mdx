@@ -56,7 +56,7 @@ for row labels and interpretation.
 ## List rank checks for a keyword
 
 ```http
-GET /api/v1/keywords/{id}/rank-checks
+GET /api/v1/keywords/{keyword_id}/rank-checks
 Authorization: Bearer <api_key>
 ```
 
@@ -239,14 +239,14 @@ estimate quantities remain `null`. The resource excludes actor details,
 selection payloads, internal workflow/task identifiers and credentials.
 
 ```http
-POST /api/v1/keywords/{id}/checks
+POST /api/v1/keywords/{keyword_id}/checks
 Authorization: Bearer <api_key>
 Content-Type: application/json
 ```
 
 The API returns `202` with `{ "id": "rcr_...", "status": "queued" }` when the
 workflow is queued. Read the project run for its outcome. When a completed check
-exists, read `GET /keywords/{id}/rank-checks?status=completed` and select the row
+exists, read `GET /keywords/{keyword_id}/rank-checks?status=completed` and select the row
 whose `run_id` equals the queued run ID. That row holds the position and rank-check
 ID. If the queue worker is unavailable, the request returns `503` and no run is kept.
 

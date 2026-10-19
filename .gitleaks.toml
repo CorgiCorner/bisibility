@@ -14,6 +14,7 @@ paths = [
   '''^docs/api/''',
   '''^docs/openapi\.snapshot\.json$''',
   '''^lib/.+\.test\.[jt]sx?$''',
+  '''^lib/api/__fixtures__/response-captures/[^/]+\.json$''',
   '''^lib/mcp/canonical-contract\.json$''',
   '''^scripts/smoke/''',
 ]
@@ -45,3 +46,17 @@ regexTarget = "match"
 regexes = [
   '''bsk_live_a71c93ef25d6''',
 ]
+
+[[allowlists]]
+description = """The synthetic legacy encryption secret in the Apple refresh token storage test.
+It only exercises Better Auth's legacy envelope; the regex pins that one literal in that one
+test file rather than opening the path."""
+condition = "AND"
+regexTarget = "match"
+paths = [
+  '''^lib/auth/apple-code-exchange\.test\.ts$''',
+]
+regexes = [
+  '''legacySecret: "legacy-secret-for-tests-000001"''',
+]
+

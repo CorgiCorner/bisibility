@@ -1,0 +1,1987 @@
+[
+  {
+    "problems": [
+      "enum-without-kind /requestBody/application/json/properties/drafts/items/properties/category",
+      "enum-without-kind /requestBody/application/json/properties/drafts/items/properties/provenance",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/drafts/items",
+      "unnamed /requestBody/application/json/properties/drafts/items/properties/category",
+      "unnamed /requestBody/application/json/properties/drafts/items/properties/generation_reference",
+      "unnamed /requestBody/application/json/properties/drafts/items/properties/provenance",
+      "unnamed /requestBody/application/json/properties/drafts/items/properties/provider_dataset_reference",
+      "unnamed /responses/201 application/json",
+      "unnamed /responses/201 application/json/properties/data"
+    ],
+    "subject": "operation acceptAiTrackingSuggestions"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation addCompetitor"
+  },
+  {
+    "problems": [
+      "enum-without-kind /responses/200 application/json/properties/data/properties/cost_state",
+      "enum-without-kind /responses/200 application/json/properties/data/properties/drafts/items/properties/category",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "money-without-kind /requestBody/application/json/properties/preview/properties/configuration/properties/advisory_cost_limit_cents",
+      "money-without-kind /requestBody/application/json/properties/preview/properties/estimated_cost_cents",
+      "money-without-kind /responses/200 application/json/properties/data/properties/cost_usd",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/preview",
+      "unnamed /requestBody/application/json/properties/preview/properties/configuration",
+      "unnamed /requestBody/application/json/properties/preview/properties/input_snapshot",
+      "unnamed /requestBody/application/json/properties/preview/properties/input_snapshot/properties/competitors/items",
+      "unnamed /requestBody/application/json/properties/preview/properties/input_snapshot/properties/context",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/cost_state",
+      "unnamed /responses/200 application/json/properties/data/properties/drafts/items",
+      "unnamed /responses/200 application/json/properties/data/properties/drafts/items/properties/category"
+    ],
+    "subject": "operation aiTrackingSuggestionsGenerate"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "money-without-kind /requestBody/application/json/properties/configuration/properties/advisory_cost_limit_cents",
+      "money-without-kind /responses/200 application/json/properties/data/properties/configuration/properties/advisory_cost_limit_cents",
+      "money-without-kind /responses/200 application/json/properties/data/properties/estimated_cost_cents",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/configuration",
+      "unnamed /requestBody/application/json/properties/input_snapshot",
+      "unnamed /requestBody/application/json/properties/input_snapshot/properties/competitors/items",
+      "unnamed /requestBody/application/json/properties/input_snapshot/properties/context",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/configuration",
+      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot",
+      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot/properties/competitors/items",
+      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot/properties/context"
+    ],
+    "subject": "operation aiTrackingSuggestionsPreview"
+  },
+  {
+    "problems": [
+      "enum-without-kind /requestBody/application/json/properties/platform",
+      "enum-without-kind /requestBody/application/json/properties/target_type",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/credential_source",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/estimate_kind",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/evidence",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/pricing_policy",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/cost_status",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/evidence",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "money-without-kind /requestBody/application/json/properties/max_cost_cents",
+      "money-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/estimated_cost_cents",
+      "money-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/cost_cents",
+      "money-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/cost_cents",
+      "union-without-cases /requestBody/application/json/allOf/0/then/properties/domain",
+      "union-without-cases /responses/200 application/json/properties/data",
+      "union-without-cases /responses/200 application/json/properties/data/oneOf/0/properties/pricing_checked_at",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/platform",
+      "unnamed /requestBody/application/json/properties/target_type",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0/properties/credential_source",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0/properties/estimate_kind",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0/properties/evidence",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0/properties/pricing_checked_at",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0/properties/pricing_policy",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/cost_status",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/evidence",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/citations/items"
+    ],
+    "subject": "operation analyzeAiVisibility"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json"
+    ],
+    "subject": "operation archiveAiTrackingPrompt"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/configuration"
+    ],
+    "subject": "operation archiveAiTrackingSchedule"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data"
+    ],
+    "subject": "operation archiveAiTrackingTopic"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json"
+    ],
+    "subject": "operation cancelAiTrackingRun"
+  },
+  {
+    "problems": [
+      "enum-without-kind /requestBody/application/json/oneOf/0/properties/cost_policy",
+      "enum-without-kind /requestBody/application/json/properties/cost_policy",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/credential_source",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/estimate_kind",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/evidence",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/pricing_policy",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/cost_status",
+      "enum-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/evidence",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "money-without-kind /requestBody/application/json/oneOf/0/properties/max_cost_cents",
+      "money-without-kind /requestBody/application/json/oneOf/1/properties/estimated_cost_limit_cents",
+      "money-without-kind /requestBody/application/json/properties/estimated_cost_limit_cents",
+      "money-without-kind /requestBody/application/json/properties/max_cost_cents",
+      "money-without-kind /responses/200 application/json/properties/data/oneOf/0/properties/estimated_cost_cents",
+      "money-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/cost_cents",
+      "money-without-kind /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/cost_cents",
+      "union-without-cases /requestBody/application/json",
+      "union-without-cases /requestBody/application/json/oneOf/0/not",
+      "union-without-cases /responses/200 application/json/properties/data",
+      "union-without-cases /responses/200 application/json/properties/data/oneOf/0/properties/pricing_checked_at",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/oneOf/0",
+      "unnamed /requestBody/application/json/oneOf/0/properties/cost_policy",
+      "unnamed /requestBody/application/json/oneOf/1",
+      "unnamed /requestBody/application/json/properties/cost_policy",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0/properties/credential_source",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0/properties/estimate_kind",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0/properties/evidence",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0/properties/pricing_checked_at",
+      "unnamed /responses/200 application/json/properties/data/oneOf/0/properties/pricing_policy",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/cost_status",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/evidence",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items",
+      "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/citations/items"
+    ],
+    "subject": "operation compareAiPrompts"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema Provider"
+    ],
+    "subject": "operation connectProvider"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /requestBody/application/json",
+      "unnamed /responses/201 application/json",
+      "unnamed /responses/201 application/json/properties/data"
+    ],
+    "subject": "operation createAgentReport"
+  },
+  {
+    "problems": [
+      "enum-without-kind /requestBody/application/json/properties/category",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/category",
+      "unnamed /requestBody/application/json/properties/generation_reference",
+      "unnamed /requestBody/application/json/properties/provider_dataset_reference",
+      "unnamed /responses/201 application/json"
+    ],
+    "subject": "operation createAiTrackingPrompt"
+  },
+  {
+    "problems": [
+      "enum-without-kind /requestBody/application/json/properties/configuration/properties/configurations/items/properties/engine",
+      "enum-without-kind /requestBody/application/json/properties/configuration/properties/configurations/items/properties/source",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema createAiTrackingSchedule___schema0",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/configuration",
+      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items",
+      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items/properties/engine",
+      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items/properties/source",
+      "unnamed /responses/201 application/json",
+      "unnamed /responses/201 application/json/properties/data",
+      "unnamed /responses/201 application/json/properties/data/properties/configuration"
+    ],
+    "subject": "operation createAiTrackingSchedule"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /requestBody/application/json",
+      "unnamed /responses/201 application/json",
+      "unnamed /responses/201 application/json/properties/data"
+    ],
+    "subject": "operation createAiTrackingTopic"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema ApiKey",
+      "schema ApiKeyCreate"
+    ],
+    "subject": "operation createApiKey"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema CloudImportSessionCreate",
+      "schema CloudImportSessionCreateResponse"
+    ],
+    "subject": "operation createCloudImportSession"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema PersonalAccessToken",
+      "schema PersonalAccessTokenCreate"
+    ],
+    "subject": "operation createPersonalAccessToken"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema ProjectCreate"
+    ],
+    "subject": "operation createProject"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema ApiKey",
+      "schema ApiKeyCreate"
+    ],
+    "subject": "operation createProjectApiKey"
+  },
+  {
+    "problems": [
+      "enum-without-kind /requestBody/application/json/properties/surface",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/0/properties/filters/properties/change",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/0/properties/filters/properties/last_check",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/0/properties/filters/properties/position/items",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/0/properties/filters/properties/serp/items",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/0/properties/lens/properties/device",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/0/properties/surface",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/0/properties/version",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/1/properties/filters/properties/position",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/1/properties/scope/properties/device",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/1/properties/scope/properties/engine",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/1/properties/surface",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/1/properties/version",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/filters/properties/change",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/filters/properties/last_check",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/filters/properties/position/items",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/filters/properties/serp/items",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/lens/properties/device",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/page_size/anyOf/0",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/page_size/anyOf/1",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/page_size/anyOf/2",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/presentation/properties/version",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/0",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/1",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/2",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/0/properties/kind",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/1/properties/kind",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/view",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/sort/properties/direction",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/sort/properties/field",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/surface",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/2/properties/version",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/3/properties/filters/properties/position",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/3/properties/page_size/anyOf/0",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/3/properties/page_size/anyOf/1",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/3/properties/page_size/anyOf/2",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/3/properties/presentation/properties/version",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/3/properties/scope/properties/device",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/3/properties/scope/properties/engine",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/3/properties/sort/properties/direction",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/3/properties/surface",
+      "enum-without-kind /responses/201 application/json/properties/definition/anyOf/3/properties/version",
+      "enum-without-kind /responses/201 application/json/properties/surface",
+      "enum-without-kind /responses/201 application/json/properties/visibility",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "union-without-cases /responses/201 application/json/properties/definition",
+      "union-without-cases /responses/201 application/json/properties/definition/anyOf/2/properties/page_size",
+      "union-without-cases /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days",
+      "union-without-cases /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope",
+      "union-without-cases /responses/201 application/json/properties/definition/anyOf/3/properties/page_size",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/surface",
+      "unnamed /responses/201 application/json",
+      "unnamed /responses/201 application/json/properties/definition",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/0",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/0/properties/filters",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/0/properties/filters/properties/change",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/0/properties/filters/properties/last_check",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/0/properties/filters/properties/position/items",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/0/properties/filters/properties/serp/items",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/0/properties/lens",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/0/properties/lens/properties/device",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/0/properties/surface",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/0/properties/version",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/1",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/1/properties/filters",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/1/properties/filters/properties/position",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/1/properties/scope",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/1/properties/scope/properties/device",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/1/properties/scope/properties/engine",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/1/properties/surface",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/1/properties/version",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/filters",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/filters/properties/change",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/filters/properties/last_check",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/filters/properties/position/items",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/filters/properties/serp/items",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/lens",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/lens/properties/device",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/page_size",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/page_size/anyOf/0",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/page_size/anyOf/1",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/page_size/anyOf/2",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/presentation",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/presentation/properties/version",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/0",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/1",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/2",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/subject",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/0",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/0/properties/kind",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/1",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/1/properties/kind",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/report_scope/properties/view",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/sort",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/sort/properties/direction",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/sort/properties/field",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/surface",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/2/properties/version",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/filters",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/filters/properties/position",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/page_size",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/page_size/anyOf/0",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/page_size/anyOf/1",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/page_size/anyOf/2",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/presentation",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/presentation/properties/version",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/scope",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/scope/properties/device",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/scope/properties/engine",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/sort",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/sort/properties/direction",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/surface",
+      "unnamed /responses/201 application/json/properties/definition/anyOf/3/properties/version",
+      "unnamed /responses/201 application/json/properties/surface",
+      "unnamed /responses/201 application/json/properties/visibility"
+    ],
+    "subject": "operation createSavedView"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema Signal",
+      "schema SignalCreate"
+    ],
+    "subject": "operation createSignal"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema TeamInvite",
+      "schema TeamInviteCreate"
+    ],
+    "subject": "operation createTeamInvite"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation createWebhookEndpoint"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation deleteKeyword"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation deleteProject"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema SavedView"
+    ],
+    "subject": "operation deleteProjectSavedView"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema SavedView"
+    ],
+    "subject": "operation deleteSavedView"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation deleteWebhookEndpoint"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema Provider"
+    ],
+    "subject": "operation disconnectProvider"
+  },
+  {
+    "problems": [
+      "enum-without-kind /parameters/query/format/schema",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /parameters/query/format/schema",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/items/items",
+      "unnamed /responses/200 application/json/properties/data/properties/scope"
+    ],
+    "subject": "operation exportAiTrackingEvidence"
+  },
+  {
+    "problems": [
+      "enum-without-kind /parameters/query/format/schema",
+      "enum-without-kind /parameters/query/version/schema",
+      "enum-without-kind /responses/200 application/json/properties/freshnessPolicy/anyOf/0/properties/basis/anyOf/0",
+      "enum-without-kind /responses/200 application/json/properties/grids/items/properties/reason",
+      "enum-without-kind /responses/200 application/json/properties/grids/items/properties/size",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /parameters/query/format/schema",
+      "unnamed /parameters/query/version/schema",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/freshnessPolicy/anyOf/0",
+      "unnamed /responses/200 application/json/properties/freshnessPolicy/anyOf/0/properties/basis/anyOf/0",
+      "unnamed /responses/200 application/json/properties/grids/items",
+      "unnamed /responses/200 application/json/properties/grids/items/properties/counts",
+      "unnamed /responses/200 application/json/properties/grids/items/properties/reason",
+      "unnamed /responses/200 application/json/properties/grids/items/properties/size",
+      "unnamed /responses/200 application/json/properties/points/items",
+      "unnamed /responses/200 application/json/properties/points/items/properties/receipt",
+      "unnamed /responses/200 application/json/properties/protocol"
+    ],
+    "subject": "operation exportLocalMonitorRun"
+  },
+  {
+    "problems": [
+      "enum-without-kind /parameters/query/aggregation/schema",
+      "enum-without-kind /parameters/query/basis/schema",
+      "enum-without-kind /parameters/query/format/schema",
+      "enum-without-kind /parameters/query/granularity/schema",
+      "enum-without-kind /parameters/query/range/schema",
+      "enum-without-kind /parameters/query/stream/schema",
+      "enum-without-kind /parameters/query/version/schema",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema RankHistoryExportResponse",
+      "schema RankHistoryReportMetadata",
+      "schema RankHistoryReportRecord",
+      "schema RankHistoryReportResponse",
+      "union-without-cases /responses/200 application/json",
+      "unnamed /parameters/query/aggregation/schema",
+      "unnamed /parameters/query/basis/schema",
+      "unnamed /parameters/query/format/schema",
+      "unnamed /parameters/query/granularity/schema",
+      "unnamed /parameters/query/range/schema",
+      "unnamed /parameters/query/stream/schema",
+      "unnamed /parameters/query/version/schema",
+      "unnamed /responses/200 application/json"
+    ],
+    "subject": "operation exportRankHistory"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema CloudImportFinalizeResponse"
+    ],
+    "subject": "operation finalizeCloudImportSession"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data"
+    ],
+    "subject": "operation getAgentReport"
+  },
+  {
+    "problems": [
+      "enum-without-kind /responses/200 application/json/properties/data/properties/visibility_markets/items/properties/platform",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/limits",
+      "unnamed /responses/200 application/json/properties/data/properties/models/items",
+      "unnamed /responses/200 application/json/properties/data/properties/response_countries/items",
+      "unnamed /responses/200 application/json/properties/data/properties/response_languages/items",
+      "unnamed /responses/200 application/json/properties/data/properties/visibility_markets/items",
+      "unnamed /responses/200 application/json/properties/data/properties/visibility_markets/items/properties/languages/items",
+      "unnamed /responses/200 application/json/properties/data/properties/visibility_markets/items/properties/platform"
+    ],
+    "subject": "operation getAiResearchCatalog"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema CloudImportCompatibility"
+    ],
+    "subject": "operation getCloudImportCompatibility"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema KeywordMetricsRequest",
+      "schema KeywordMetricsResponse"
+    ],
+    "subject": "operation getKeywordMetrics"
+  },
+  {
+    "problems": [
+      "enum-without-kind /responses/200 application/json/properties/status",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/status"
+    ],
+    "subject": "operation getLiveness"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation getLlmsTxt"
+  },
+  {
+    "problems": [
+      "enum-without-kind /responses/200 application/json/properties/data/properties/freshness_policy/anyOf/0/properties/basis/anyOf/0",
+      "enum-without-kind /responses/200 application/json/properties/data/properties/grids/items/properties/reason",
+      "enum-without-kind /responses/200 application/json/properties/data/properties/grids/items/properties/size",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/freshness_policy/anyOf/0",
+      "unnamed /responses/200 application/json/properties/data/properties/freshness_policy/anyOf/0/properties/basis/anyOf/0",
+      "unnamed /responses/200 application/json/properties/data/properties/grids/items",
+      "unnamed /responses/200 application/json/properties/data/properties/grids/items/properties/counts",
+      "unnamed /responses/200 application/json/properties/data/properties/grids/items/properties/reason",
+      "unnamed /responses/200 application/json/properties/data/properties/grids/items/properties/size",
+      "unnamed /responses/200 application/json/properties/data/properties/points/items",
+      "unnamed /responses/200 application/json/properties/data/properties/points/items/properties/receipt",
+      "unnamed /responses/200 application/json/properties/data/properties/protocol",
+      "unnamed /responses/200 application/json/properties/data/properties/receipt",
+      "unnamed /responses/200 application/json/properties/data/properties/receipt/properties/counts",
+      "unnamed /responses/200 application/json/properties/data/properties/receipt/properties/items/items"
+    ],
+    "subject": "operation getLocalMonitorRunResults"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation getNotificationPreferences"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation getOpenApi"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data"
+    ],
+    "subject": "operation getProjectContext"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema ProjectDefaults"
+    ],
+    "subject": "operation getProjectDefaults"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation getProviderRates"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation getReadiness"
+  },
+  {
+    "problems": [
+      "enum-without-kind /parameters/path/kind/schema",
+      "enum-without-kind /parameters/query/result_limit/schema",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema StoredBacklinksReport",
+      "schema StoredDomainOverviewReport",
+      "schema StoredKeywordResearchReport",
+      "schema StoredResearchReportResponse",
+      "unnamed /parameters/path/kind/schema",
+      "unnamed /parameters/query/result_limit/schema"
+    ],
+    "subject": "operation getStoredResearchReport"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema CloudImportAlertRule",
+      "schema CloudImportFinalizeResponse",
+      "schema CloudImportKeyword",
+      "schema CloudImportKeywordAlertTarget",
+      "schema CloudImportPackage",
+      "schema CloudImportRankingHistory",
+      "schema CloudImportSavedView"
+    ],
+    "subject": "operation importCloudExport"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data/items",
+      "unnamed /responses/200 application/json/properties/meta"
+    ],
+    "subject": "operation listAgentReports"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation listAiTrackingRuns"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data/items",
+      "unnamed /responses/200 application/json/properties/data/items/properties/configuration"
+    ],
+    "subject": "operation listAiTrackingSchedules"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data/items"
+    ],
+    "subject": "operation listAiTrackingTopics"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema ApiKey"
+    ],
+    "subject": "operation listApiKeys"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/items/items",
+      "unnamed /responses/200 application/json/properties/data/properties/window/anyOf/0"
+    ],
+    "subject": "operation listLocalMonitorPointHistory"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data/items"
+    ],
+    "subject": "operation listLocalMonitorPointListings"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/items/items",
+      "unnamed /responses/200 application/json/properties/data/properties/window/anyOf/0"
+    ],
+    "subject": "operation listLocalMonitorRuns"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation listMigrationTokens"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema PersonalAccessToken"
+    ],
+    "subject": "operation listPersonalAccessTokens"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema ApiKey"
+    ],
+    "subject": "operation listProjectApiKeys"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema ProviderBudgets"
+    ],
+    "subject": "operation listProviderBudgets"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema Provider"
+    ],
+    "subject": "operation listProviders"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "money-without-kind /parameters/query/max_cost_cents/schema",
+      "schema RankedKeywordConnection",
+      "schema RankedKeywordSuggestionsResponse"
+    ],
+    "subject": "operation listRankedKeywordSuggestions"
+  },
+  {
+    "problems": [
+      "enum-without-kind /parameters/query/surface/schema",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/filters/properties/change",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/filters/properties/last_check",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/filters/properties/position/items",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/filters/properties/serp/items",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/lens/properties/device",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/surface",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/version",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/filters/properties/position",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/scope/properties/device",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/scope/properties/engine",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/surface",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/version",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/filters/properties/change",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/filters/properties/last_check",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/filters/properties/position/items",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/filters/properties/serp/items",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/lens/properties/device",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/page_size/anyOf/0",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/page_size/anyOf/1",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/page_size/anyOf/2",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/presentation/properties/version",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/0",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/1",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/2",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/0/properties/kind",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/1/properties/kind",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/view",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/sort/properties/direction",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/sort/properties/field",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/surface",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/version",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/filters/properties/position",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/page_size/anyOf/0",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/page_size/anyOf/1",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/page_size/anyOf/2",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/presentation/properties/version",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/scope/properties/device",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/scope/properties/engine",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/sort/properties/direction",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/surface",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/version",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/surface",
+      "enum-without-kind /responses/200 application/json/properties/data/items/properties/visibility",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "union-without-cases /responses/200 application/json/properties/data/items/properties/definition",
+      "union-without-cases /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/page_size",
+      "union-without-cases /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days",
+      "union-without-cases /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope",
+      "union-without-cases /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/page_size",
+      "unnamed /parameters/query/surface/schema",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data/items",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/0",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/filters",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/filters/properties/change",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/filters/properties/last_check",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/filters/properties/position/items",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/filters/properties/serp/items",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/lens",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/lens/properties/device",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/surface",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/0/properties/version",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/1",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/filters",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/filters/properties/position",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/scope",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/scope/properties/device",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/scope/properties/engine",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/surface",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/1/properties/version",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/filters",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/filters/properties/change",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/filters/properties/last_check",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/filters/properties/position/items",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/filters/properties/serp/items",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/lens",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/lens/properties/device",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/page_size",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/page_size/anyOf/0",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/page_size/anyOf/1",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/page_size/anyOf/2",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/presentation",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/presentation/properties/version",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/0",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/1",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/2",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/subject",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/0",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/0/properties/kind",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/1",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/1/properties/kind",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/report_scope/properties/view",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/sort",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/sort/properties/direction",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/sort/properties/field",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/surface",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/2/properties/version",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/filters",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/filters/properties/position",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/page_size",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/page_size/anyOf/0",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/page_size/anyOf/1",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/page_size/anyOf/2",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/presentation",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/presentation/properties/version",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/scope",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/scope/properties/device",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/scope/properties/engine",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/sort",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/sort/properties/direction",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/surface",
+      "unnamed /responses/200 application/json/properties/data/items/properties/definition/anyOf/3/properties/version",
+      "unnamed /responses/200 application/json/properties/data/items/properties/surface",
+      "unnamed /responses/200 application/json/properties/data/items/properties/visibility"
+    ],
+    "subject": "operation listSavedViews"
+  },
+  {
+    "problems": [
+      "enum-without-kind /parameters/query/source/schema",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema Signal",
+      "unnamed /parameters/query/source/schema"
+    ],
+    "subject": "operation listSignals"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema SitemapMonitor",
+      "schema SitemapMonitorList"
+    ],
+    "subject": "operation listSitemapMonitors"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema StoredResearchReportSummary",
+      "schema StoredResearchReportsResponse"
+    ],
+    "subject": "operation listStoredResearchReports"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema TeamInvite"
+    ],
+    "subject": "operation listTeamInvites"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema TeamMember"
+    ],
+    "subject": "operation listTeamMembers"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation listTrafficSnapshots"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation listWebhookEndpoints"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema KeywordMatchMarket",
+      "schema KeywordMatchResponse"
+    ],
+    "subject": "operation matchProjectKeywords"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation mintMigrationToken"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation removeCompetitor"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation removeProjectCompetitor"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation removeTeamMember"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation resendTeamInvite"
+  },
+  {
+    "problems": [
+      "enum-without-kind /requestBody/application/json/properties/configurations/items/properties/engine",
+      "enum-without-kind /requestBody/application/json/properties/configurations/items/properties/source",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema retryAiTrackingRun___schema0",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/configurations/items",
+      "unnamed /requestBody/application/json/properties/configurations/items/properties/engine",
+      "unnamed /requestBody/application/json/properties/configurations/items/properties/source",
+      "unnamed /responses/200 application/json"
+    ],
+    "subject": "operation retryAiTrackingRun"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema ApiKey"
+    ],
+    "subject": "operation revokeApiKey"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation revokeMigrationToken"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema PersonalAccessToken"
+    ],
+    "subject": "operation revokePersonalAccessToken"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation revokeProjectMigrationToken"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema TeamInvite"
+    ],
+    "subject": "operation revokeProjectTeamInvite"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema TeamInvite"
+    ],
+    "subject": "operation revokeTeamInvite"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema LocationSuggestion",
+      "schema LocationSuggestionsResponse"
+    ],
+    "subject": "operation searchLocations"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation setKeywordTargetUrl"
+  },
+  {
+    "problems": [
+      "enum-without-kind /responses/200 application/json/properties/data/properties/drafts/items/properties/category",
+      "enum-without-kind /responses/200 application/json/properties/data/properties/drafts/items/properties/provenance",
+      "enum-without-kind /responses/200 application/json/properties/data/properties/method",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "money-without-kind /responses/200 application/json/properties/data/properties/cost_usd",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/drafts/items",
+      "unnamed /responses/200 application/json/properties/data/properties/drafts/items/properties/category",
+      "unnamed /responses/200 application/json/properties/data/properties/drafts/items/properties/provenance",
+      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot",
+      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot/properties/competitors/items",
+      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot/properties/context",
+      "unnamed /responses/200 application/json/properties/data/properties/method"
+    ],
+    "subject": "operation suggestAiTrackingPrompts"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema TrafficSyncRun",
+      "schema TrafficSyncSummary"
+    ],
+    "subject": "operation syncProjectTraffic"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation testProviderConnection"
+  },
+  {
+    "problems": [
+      "enum-without-kind /requestBody/application/json/properties/category",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/category",
+      "unnamed /requestBody/application/json/properties/generation_reference",
+      "unnamed /requestBody/application/json/properties/provider_dataset_reference",
+      "unnamed /responses/200 application/json"
+    ],
+    "subject": "operation updateAiTrackingPrompt"
+  },
+  {
+    "problems": [
+      "enum-without-kind /requestBody/application/json/properties/configuration/properties/configurations/items/properties/engine",
+      "enum-without-kind /requestBody/application/json/properties/configuration/properties/configurations/items/properties/source",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema updateAiTrackingSchedule___schema0",
+      "unnamed /requestBody/application/json",
+      "unnamed /requestBody/application/json/properties/configuration",
+      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items",
+      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items/properties/engine",
+      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items/properties/source",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data",
+      "unnamed /responses/200 application/json/properties/data/properties/configuration"
+    ],
+    "subject": "operation updateAiTrackingSchedule"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /requestBody/application/json",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data"
+    ],
+    "subject": "operation updateAiTrackingTopic"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation updateMe"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation updateNotificationPreferences"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation updateProject"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "unnamed /requestBody/application/json",
+      "unnamed /responses/200 application/json",
+      "unnamed /responses/200 application/json/properties/data"
+    ],
+    "subject": "operation updateProjectContext"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema ProjectDefaults",
+      "schema ProjectDefaultsPatch",
+      "schema ProjectDefaultsPreview",
+      "union-without-cases /responses/200 application/json",
+      "unnamed /responses/200 application/json"
+    ],
+    "subject": "operation updateProjectDefaults"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema ProviderBudgets",
+      "schema ProviderBudgetsUpdate"
+    ],
+    "subject": "operation updateProviderBudgets"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema Provider"
+    ],
+    "subject": "operation updateProviderSettings"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema SitemapMonitor"
+    ],
+    "subject": "operation updateSitemapMonitor"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema TeamMemberRolePatch",
+      "schema TeamMemberRoleResult"
+    ],
+    "subject": "operation updateTeamMemberRole"
+  },
+  {
+    "problems": [
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk"
+    ],
+    "subject": "operation updateWebhookEndpoint"
+  },
+  {
+    "problems": [
+      "enum-without-kind /parameters/header/Content-Encoding/schema",
+      "missing x-bisibility-idempotency",
+      "missing x-bisibility-pagination",
+      "missing x-bisibility-sdk",
+      "schema CloudImportAlertRule",
+      "schema CloudImportChunkResponse",
+      "schema CloudImportKeyword",
+      "schema CloudImportKeywordAlertTarget",
+      "schema CloudImportRankingHistory",
+      "schema CloudImportSavedView",
+      "schema CloudImportSourceKeyword",
+      "schema CloudImportUploadChunk",
+      "unnamed /parameters/header/Content-Encoding/schema"
+    ],
+    "subject": "operation uploadCloudImportChunk"
+  },
+  {
+    "problems": ["enum-without-kind /properties/scope", "unnamed /properties/scope"],
+    "subject": "schema ApiKey"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/expires_in_days",
+      "enum-without-kind /properties/scope",
+      "unnamed /properties/expires_in_days",
+      "unnamed /properties/scope"
+    ],
+    "subject": "schema ApiKeyCreate"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/channels/items",
+      "enum-without-kind /properties/condition_type",
+      "enum-without-kind /properties/severity",
+      "enum-without-kind /properties/target_type",
+      "unnamed /properties/channels/items",
+      "unnamed /properties/condition_type",
+      "unnamed /properties/severity",
+      "unnamed /properties/target_type"
+    ],
+    "subject": "schema CloudImportAlertRule"
+  },
+  {
+    "problems": ["enum-without-kind /properties/state", "unnamed /properties/state"],
+    "subject": "schema CloudImportChunkResponse"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/schema_versions_supported/items",
+      "unnamed /properties/schema_versions_supported/items"
+    ],
+    "subject": "schema CloudImportCompatibility"
+  },
+  {
+    "problems": ["enum-without-kind /properties/state", "unnamed /properties/state"],
+    "subject": "schema CloudImportFinalizeResponse"
+  },
+  {
+    "problems": ["enum-without-kind /properties/device", "unnamed /properties/device"],
+    "subject": "schema CloudImportKeyword"
+  },
+  {
+    "problems": ["enum-without-kind /properties/device", "unnamed /properties/device"],
+    "subject": "schema CloudImportKeywordAlertTarget"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/scope",
+      "enum-without-kind /properties/version",
+      "unnamed /properties/scope",
+      "unnamed /properties/version"
+    ],
+    "subject": "schema CloudImportPackage"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/normalizationVersion",
+      "enum-without-kind /properties/requestedDepth",
+      "unnamed /properties/normalizationVersion",
+      "unnamed /properties/requestedDepth"
+    ],
+    "subject": "schema CloudImportRankingHistory"
+  },
+  {
+    "problems": ["enum-without-kind /properties/surface", "unnamed /properties/surface"],
+    "subject": "schema CloudImportSavedView"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/version",
+      "unnamed /properties/totals",
+      "unnamed /properties/version"
+    ],
+    "subject": "schema CloudImportSessionCreate"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/state",
+      "unnamed /properties/chunk_limits",
+      "unnamed /properties/state"
+    ],
+    "subject": "schema CloudImportSessionCreateResponse"
+  },
+  {
+    "problems": ["enum-without-kind /properties/device", "unnamed /properties/device"],
+    "subject": "schema CloudImportSourceKeyword"
+  },
+  {
+    "problems": ["union-without-cases /", "unnamed /oneOf/0", "unnamed /oneOf/1"],
+    "subject": "schema CloudImportUploadChunk"
+  },
+  {
+    "problems": ["union-without-cases /"],
+    "subject": "schema createAiTrackingSchedule___schema0"
+  },
+  {
+    "problems": ["enum-without-kind /properties/device", "unnamed /properties/device"],
+    "subject": "schema KeywordMatchMarket"
+  },
+  {
+    "problems": ["unnamed /properties/meta"],
+    "subject": "schema KeywordMatchResponse"
+  },
+  {
+    "problems": ["money-without-kind /properties/max_cost_cents"],
+    "subject": "schema KeywordMetricsRequest"
+  },
+  {
+    "problems": [
+      "money-without-kind /properties/cost_cents",
+      "money-without-kind /properties/estimated_cost_cents",
+      "unnamed /properties/rows/items"
+    ],
+    "subject": "schema KeywordMetricsResponse"
+  },
+  {
+    "problems": ["enum-without-kind /properties/kind", "unnamed /properties/kind"],
+    "subject": "schema LocationSuggestion"
+  },
+  {
+    "problems": ["unnamed /properties/meta"],
+    "subject": "schema LocationSuggestionsResponse"
+  },
+  {
+    "problems": ["enum-without-kind /properties/scope", "unnamed /properties/scope"],
+    "subject": "schema PersonalAccessToken"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/expires_in_days",
+      "enum-without-kind /properties/scope",
+      "unnamed /properties/expires_in_days",
+      "unnamed /properties/scope"
+    ],
+    "subject": "schema PersonalAccessTokenCreate"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/defaults/properties/frequency",
+      "enum-without-kind /properties/tracking_scope",
+      "unnamed /properties/defaults",
+      "unnamed /properties/defaults/properties/frequency",
+      "unnamed /properties/tracking_scope"
+    ],
+    "subject": "schema ProjectCreate"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/frequency",
+      "enum-without-kind /properties/serp_depth",
+      "enum-without-kind /properties/source",
+      "unnamed /properties/frequency",
+      "unnamed /properties/serp_depth",
+      "unnamed /properties/source"
+    ],
+    "subject": "schema ProjectDefaults"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/country",
+      "enum-without-kind /properties/frequency",
+      "enum-without-kind /properties/serp_depth",
+      "unnamed /properties/country",
+      "unnamed /properties/frequency",
+      "unnamed /properties/serp_depth"
+    ],
+    "subject": "schema ProjectDefaultsPatch"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/impact/properties/recurring_estimate",
+      "enum-without-kind /properties/resolved/properties/device",
+      "unnamed /properties/draft",
+      "unnamed /properties/impact",
+      "unnamed /properties/impact/properties/recurring_estimate",
+      "unnamed /properties/request",
+      "unnamed /properties/request/properties/values",
+      "unnamed /properties/resolved",
+      "unnamed /properties/resolved/properties/device"
+    ],
+    "subject": "schema ProjectDefaultsPreview"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/category_id",
+      "enum-without-kind /properties/connection_status",
+      "enum-without-kind /properties/kind",
+      "unnamed /properties/capabilities",
+      "unnamed /properties/category_id",
+      "unnamed /properties/connection_status",
+      "unnamed /properties/kind"
+    ],
+    "subject": "schema Provider"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/credential_source",
+      "enum-without-kind /properties/credits/properties/app/oneOf/0/properties/unit",
+      "enum-without-kind /properties/credits/properties/programmatic/oneOf/0/properties/unit",
+      "enum-without-kind /properties/own/properties/app/oneOf/0/properties/unit",
+      "enum-without-kind /properties/own/properties/programmatic/oneOf/0/properties/unit",
+      "enum-without-kind /properties/source",
+      "unnamed /properties/credential_source",
+      "unnamed /properties/credits",
+      "unnamed /properties/credits/properties/app/oneOf/0",
+      "unnamed /properties/credits/properties/app/oneOf/0/properties/unit",
+      "unnamed /properties/credits/properties/programmatic/oneOf/0",
+      "unnamed /properties/credits/properties/programmatic/oneOf/0/properties/unit",
+      "unnamed /properties/own",
+      "unnamed /properties/own/properties/app/oneOf/0",
+      "unnamed /properties/own/properties/app/oneOf/0/properties/unit",
+      "unnamed /properties/own/properties/programmatic/oneOf/0",
+      "unnamed /properties/own/properties/programmatic/oneOf/0/properties/unit",
+      "unnamed /properties/source"
+    ],
+    "subject": "schema ProviderBudgets"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/credits/properties/app/oneOf/0/properties/unit",
+      "enum-without-kind /properties/credits/properties/programmatic/oneOf/0/properties/unit",
+      "enum-without-kind /properties/own/properties/app/oneOf/0/properties/unit",
+      "enum-without-kind /properties/own/properties/programmatic/oneOf/0/properties/unit",
+      "unnamed /properties/credits",
+      "unnamed /properties/credits/properties/app/oneOf/0",
+      "unnamed /properties/credits/properties/app/oneOf/0/properties/unit",
+      "unnamed /properties/credits/properties/programmatic/oneOf/0",
+      "unnamed /properties/credits/properties/programmatic/oneOf/0/properties/unit",
+      "unnamed /properties/own",
+      "unnamed /properties/own/properties/app/oneOf/0",
+      "unnamed /properties/own/properties/app/oneOf/0/properties/unit",
+      "unnamed /properties/own/properties/programmatic/oneOf/0",
+      "unnamed /properties/own/properties/programmatic/oneOf/0/properties/unit"
+    ],
+    "subject": "schema ProviderBudgetsUpdate"
+  },
+  {
+    "problems": ["enum-without-kind /properties/provider", "unnamed /properties/provider"],
+    "subject": "schema RankedKeywordConnection"
+  },
+  {
+    "problems": ["money-without-kind /properties/cost_cents"],
+    "subject": "schema RankedKeywordSuggestionsResponse"
+  },
+  {
+    "problems": ["unnamed /properties/meta"],
+    "subject": "schema RankHistoryExportResponse"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/window/properties/basis",
+      "unnamed /properties/normalized_items",
+      "unnamed /properties/resolutions/items",
+      "unnamed /properties/resolutions/items/properties/baseline/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/comparison_boundary/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/comparison_boundary/anyOf/0/properties/point/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/comparison_window/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/current/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/last_known",
+      "unnamed /properties/resolutions/items/properties/last_known/properties/baseline/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/last_known/properties/comparison_boundary/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/last_known/properties/comparison_boundary/anyOf/0/properties/point/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/last_known/properties/comparison_window/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/last_known/properties/current/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/last_known/properties/last_success/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/last_known/properties/latest_attempt/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/last_success/anyOf/0",
+      "unnamed /properties/resolutions/items/properties/latest_attempt/anyOf/0",
+      "unnamed /properties/summary",
+      "unnamed /properties/summary/properties/metric",
+      "unnamed /properties/summary/properties/metric/properties/contributions/items",
+      "unnamed /properties/summary/properties/metric/properties/counts",
+      "unnamed /properties/summary/properties/metric/properties/exclusions/items",
+      "unnamed /properties/summary/properties/metric/properties/weight_provenance",
+      "unnamed /properties/summary/properties/movement_counts/anyOf/0",
+      "unnamed /properties/summary/properties/retained_history",
+      "unnamed /properties/summary/properties/time_basis",
+      "unnamed /properties/summary/properties/time_basis/properties/baseline/anyOf/0",
+      "unnamed /properties/window",
+      "unnamed /properties/window/properties/basis"
+    ],
+    "subject": "schema RankHistoryReportMetadata"
+  },
+  {
+    "problems": [
+      "enum-without-kind /oneOf/3/properties/scope_membership",
+      "union-without-cases /",
+      "unnamed /oneOf/0",
+      "unnamed /oneOf/0/properties/configured_scope/anyOf/0",
+      "unnamed /oneOf/0/properties/effective_scope/anyOf/0",
+      "unnamed /oneOf/0/properties/normalized_items/items",
+      "unnamed /oneOf/1",
+      "unnamed /oneOf/2",
+      "unnamed /oneOf/3",
+      "unnamed /oneOf/3/properties/counts",
+      "unnamed /oneOf/3/properties/scope_membership"
+    ],
+    "subject": "schema RankHistoryReportRecord"
+  },
+  {
+    "problems": ["unnamed /properties/meta"],
+    "subject": "schema RankHistoryReportResponse"
+  },
+  {
+    "problems": ["union-without-cases /"],
+    "subject": "schema retryAiTrackingRun___schema0"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/definition/anyOf/0/properties/filters/properties/change",
+      "enum-without-kind /properties/definition/anyOf/0/properties/filters/properties/last_check",
+      "enum-without-kind /properties/definition/anyOf/0/properties/filters/properties/position/items",
+      "enum-without-kind /properties/definition/anyOf/0/properties/filters/properties/serp/items",
+      "enum-without-kind /properties/definition/anyOf/0/properties/lens/properties/device",
+      "enum-without-kind /properties/definition/anyOf/0/properties/surface",
+      "enum-without-kind /properties/definition/anyOf/0/properties/version",
+      "enum-without-kind /properties/definition/anyOf/1/properties/filters/properties/position",
+      "enum-without-kind /properties/definition/anyOf/1/properties/scope/properties/device",
+      "enum-without-kind /properties/definition/anyOf/1/properties/scope/properties/engine",
+      "enum-without-kind /properties/definition/anyOf/1/properties/surface",
+      "enum-without-kind /properties/definition/anyOf/1/properties/version",
+      "enum-without-kind /properties/definition/anyOf/2/properties/filters/properties/change",
+      "enum-without-kind /properties/definition/anyOf/2/properties/filters/properties/last_check",
+      "enum-without-kind /properties/definition/anyOf/2/properties/filters/properties/position/items",
+      "enum-without-kind /properties/definition/anyOf/2/properties/filters/properties/serp/items",
+      "enum-without-kind /properties/definition/anyOf/2/properties/lens/properties/device",
+      "enum-without-kind /properties/definition/anyOf/2/properties/page_size/anyOf/0",
+      "enum-without-kind /properties/definition/anyOf/2/properties/page_size/anyOf/1",
+      "enum-without-kind /properties/definition/anyOf/2/properties/page_size/anyOf/2",
+      "enum-without-kind /properties/definition/anyOf/2/properties/presentation/properties/version",
+      "enum-without-kind /properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/0",
+      "enum-without-kind /properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/1",
+      "enum-without-kind /properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/2",
+      "enum-without-kind /properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/0/properties/kind",
+      "enum-without-kind /properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/1/properties/kind",
+      "enum-without-kind /properties/definition/anyOf/2/properties/report_scope/properties/view",
+      "enum-without-kind /properties/definition/anyOf/2/properties/sort/properties/direction",
+      "enum-without-kind /properties/definition/anyOf/2/properties/sort/properties/field",
+      "enum-without-kind /properties/definition/anyOf/2/properties/surface",
+      "enum-without-kind /properties/definition/anyOf/2/properties/version",
+      "enum-without-kind /properties/definition/anyOf/3/properties/filters/properties/position",
+      "enum-without-kind /properties/definition/anyOf/3/properties/page_size/anyOf/0",
+      "enum-without-kind /properties/definition/anyOf/3/properties/page_size/anyOf/1",
+      "enum-without-kind /properties/definition/anyOf/3/properties/page_size/anyOf/2",
+      "enum-without-kind /properties/definition/anyOf/3/properties/presentation/properties/version",
+      "enum-without-kind /properties/definition/anyOf/3/properties/scope/properties/device",
+      "enum-without-kind /properties/definition/anyOf/3/properties/scope/properties/engine",
+      "enum-without-kind /properties/definition/anyOf/3/properties/sort/properties/direction",
+      "enum-without-kind /properties/definition/anyOf/3/properties/surface",
+      "enum-without-kind /properties/definition/anyOf/3/properties/version",
+      "enum-without-kind /properties/surface",
+      "enum-without-kind /properties/visibility",
+      "union-without-cases /properties/definition",
+      "union-without-cases /properties/definition/anyOf/2/properties/page_size",
+      "union-without-cases /properties/definition/anyOf/2/properties/report_scope/properties/comparison_days",
+      "union-without-cases /properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope",
+      "union-without-cases /properties/definition/anyOf/3/properties/page_size",
+      "unnamed /properties/definition",
+      "unnamed /properties/definition/anyOf/0",
+      "unnamed /properties/definition/anyOf/0/properties/filters",
+      "unnamed /properties/definition/anyOf/0/properties/filters/properties/change",
+      "unnamed /properties/definition/anyOf/0/properties/filters/properties/last_check",
+      "unnamed /properties/definition/anyOf/0/properties/filters/properties/position/items",
+      "unnamed /properties/definition/anyOf/0/properties/filters/properties/serp/items",
+      "unnamed /properties/definition/anyOf/0/properties/lens",
+      "unnamed /properties/definition/anyOf/0/properties/lens/properties/device",
+      "unnamed /properties/definition/anyOf/0/properties/surface",
+      "unnamed /properties/definition/anyOf/0/properties/version",
+      "unnamed /properties/definition/anyOf/1",
+      "unnamed /properties/definition/anyOf/1/properties/filters",
+      "unnamed /properties/definition/anyOf/1/properties/filters/properties/position",
+      "unnamed /properties/definition/anyOf/1/properties/scope",
+      "unnamed /properties/definition/anyOf/1/properties/scope/properties/device",
+      "unnamed /properties/definition/anyOf/1/properties/scope/properties/engine",
+      "unnamed /properties/definition/anyOf/1/properties/surface",
+      "unnamed /properties/definition/anyOf/1/properties/version",
+      "unnamed /properties/definition/anyOf/2",
+      "unnamed /properties/definition/anyOf/2/properties/filters",
+      "unnamed /properties/definition/anyOf/2/properties/filters/properties/change",
+      "unnamed /properties/definition/anyOf/2/properties/filters/properties/last_check",
+      "unnamed /properties/definition/anyOf/2/properties/filters/properties/position/items",
+      "unnamed /properties/definition/anyOf/2/properties/filters/properties/serp/items",
+      "unnamed /properties/definition/anyOf/2/properties/lens",
+      "unnamed /properties/definition/anyOf/2/properties/lens/properties/device",
+      "unnamed /properties/definition/anyOf/2/properties/page_size",
+      "unnamed /properties/definition/anyOf/2/properties/page_size/anyOf/0",
+      "unnamed /properties/definition/anyOf/2/properties/page_size/anyOf/1",
+      "unnamed /properties/definition/anyOf/2/properties/page_size/anyOf/2",
+      "unnamed /properties/definition/anyOf/2/properties/presentation",
+      "unnamed /properties/definition/anyOf/2/properties/presentation/properties/version",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope/properties/comparison_days",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/0",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/1",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope/properties/comparison_days/anyOf/2",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope/properties/subject",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/0",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/0/properties/kind",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/1",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope/properties/subject/properties/scope/oneOf/1/properties/kind",
+      "unnamed /properties/definition/anyOf/2/properties/report_scope/properties/view",
+      "unnamed /properties/definition/anyOf/2/properties/sort",
+      "unnamed /properties/definition/anyOf/2/properties/sort/properties/direction",
+      "unnamed /properties/definition/anyOf/2/properties/sort/properties/field",
+      "unnamed /properties/definition/anyOf/2/properties/surface",
+      "unnamed /properties/definition/anyOf/2/properties/version",
+      "unnamed /properties/definition/anyOf/3",
+      "unnamed /properties/definition/anyOf/3/properties/filters",
+      "unnamed /properties/definition/anyOf/3/properties/filters/properties/position",
+      "unnamed /properties/definition/anyOf/3/properties/page_size",
+      "unnamed /properties/definition/anyOf/3/properties/page_size/anyOf/0",
+      "unnamed /properties/definition/anyOf/3/properties/page_size/anyOf/1",
+      "unnamed /properties/definition/anyOf/3/properties/page_size/anyOf/2",
+      "unnamed /properties/definition/anyOf/3/properties/presentation",
+      "unnamed /properties/definition/anyOf/3/properties/presentation/properties/version",
+      "unnamed /properties/definition/anyOf/3/properties/scope",
+      "unnamed /properties/definition/anyOf/3/properties/scope/properties/device",
+      "unnamed /properties/definition/anyOf/3/properties/scope/properties/engine",
+      "unnamed /properties/definition/anyOf/3/properties/sort",
+      "unnamed /properties/definition/anyOf/3/properties/sort/properties/direction",
+      "unnamed /properties/definition/anyOf/3/properties/surface",
+      "unnamed /properties/definition/anyOf/3/properties/version",
+      "unnamed /properties/surface",
+      "unnamed /properties/visibility"
+    ],
+    "subject": "schema SavedView"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/severity",
+      "enum-without-kind /properties/source",
+      "unnamed /properties/severity",
+      "unnamed /properties/source"
+    ],
+    "subject": "schema Signal"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/severity",
+      "enum-without-kind /properties/source",
+      "unnamed /properties/severity",
+      "unnamed /properties/source"
+    ],
+    "subject": "schema SignalCreate"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/status",
+      "unnamed /properties/latest_snapshot",
+      "unnamed /properties/status"
+    ],
+    "subject": "schema SitemapMonitor"
+  },
+  {
+    "problems": ["unnamed /properties/meta"],
+    "subject": "schema SitemapMonitorList"
+  },
+  {
+    "problems": [
+      "enum-without-kind /allOf/1/properties/state",
+      "unnamed /allOf/1/properties/state"
+    ],
+    "subject": "schema StoredBacklinksReport"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/data_state",
+      "enum-without-kind /properties/scope",
+      "enum-without-kind /properties/state",
+      "money-without-kind /properties/cost_cents",
+      "unnamed /properties/data_state",
+      "unnamed /properties/scope",
+      "unnamed /properties/state"
+    ],
+    "subject": "schema StoredDomainOverviewReport"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/rows/items/properties/intent",
+      "enum-without-kind /properties/rows/items/properties/source",
+      "enum-without-kind /properties/sources/items/properties/reason",
+      "enum-without-kind /properties/sources/items/properties/source",
+      "enum-without-kind /properties/sources/items/properties/status",
+      "enum-without-kind /properties/state",
+      "money-without-kind /properties/cost_cents",
+      "money-without-kind /properties/rows/items/properties/cpc_cents",
+      "money-without-kind /properties/sources/items/properties/cost_cents",
+      "unnamed /properties/rows/items",
+      "unnamed /properties/rows/items/properties/intent",
+      "unnamed /properties/rows/items/properties/monthly_trend/items",
+      "unnamed /properties/rows/items/properties/source",
+      "unnamed /properties/sources/items",
+      "unnamed /properties/sources/items/properties/reason",
+      "unnamed /properties/sources/items/properties/source",
+      "unnamed /properties/sources/items/properties/status",
+      "unnamed /properties/state"
+    ],
+    "subject": "schema StoredKeywordResearchReport"
+  },
+  {
+    "problems": ["union-without-cases /properties/data", "unnamed /properties/data"],
+    "subject": "schema StoredResearchReportResponse"
+  },
+  {
+    "problems": ["unnamed /properties/meta"],
+    "subject": "schema StoredResearchReportsResponse"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/kind",
+      "enum-without-kind /properties/state",
+      "unnamed /properties/kind",
+      "unnamed /properties/state"
+    ],
+    "subject": "schema StoredResearchReportSummary"
+  },
+  {
+    "problems": ["enum-without-kind /properties/role", "unnamed /properties/role"],
+    "subject": "schema TeamInvite"
+  },
+  {
+    "problems": ["enum-without-kind /properties/role", "unnamed /properties/role"],
+    "subject": "schema TeamInviteCreate"
+  },
+  {
+    "problems": ["enum-without-kind /properties/role", "unnamed /properties/role"],
+    "subject": "schema TeamMember"
+  },
+  {
+    "problems": ["enum-without-kind /properties/role", "unnamed /properties/role"],
+    "subject": "schema TeamMemberRolePatch"
+  },
+  {
+    "problems": ["enum-without-kind /properties/role", "unnamed /properties/role"],
+    "subject": "schema TeamMemberRoleResult"
+  },
+  {
+    "problems": ["enum-without-kind /properties/status", "unnamed /properties/status"],
+    "subject": "schema TrafficSyncRun"
+  },
+  {
+    "problems": [
+      "enum-without-kind /properties/skipped/items/properties/reason",
+      "unnamed /properties/skipped/items",
+      "unnamed /properties/skipped/items/properties/reason"
+    ],
+    "subject": "schema TrafficSyncSummary"
+  },
+  {
+    "problems": ["union-without-cases /"],
+    "subject": "schema updateAiTrackingSchedule___schema0"
+  }
+]

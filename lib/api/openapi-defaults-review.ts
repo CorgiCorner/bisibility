@@ -121,10 +121,9 @@ export function reviewedDefaultsPaths(input: {
     request?: object,
     parameters?: object[],
   ) => object;
-  ref: (
-    name: "ProjectDefaults" | "ProjectDefaultsPatch" | "ProjectDefaultsPreview" | "Problem",
-  ) => object;
+  ref: (name: "ProjectDefaults" | "ProjectDefaultsPatch" | "ProjectDefaultsPreview") => object;
   response: (schema: object, description?: string) => object;
+  problemResponse: (description: string) => object;
   problemResponses: object;
 }) {
   return {
@@ -153,11 +152,8 @@ export function reviewedDefaultsPaths(input: {
           "200": input.response({
             anyOf: [input.ref("ProjectDefaults"), input.ref("ProjectDefaultsPreview")],
           }),
-          "409": input.response(input.ref("Problem"), "Quote, source or command changed"),
-          "428": input.response(
-            input.ref("Problem"),
-            "Current preview and explicit confirmation required",
-          ),
+          "409": input.problemResponse("Quote, source or command changed"),
+          "428": input.problemResponse("Current preview and explicit confirmation required"),
         },
       },
     },

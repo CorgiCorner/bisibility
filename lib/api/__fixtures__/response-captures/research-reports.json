@@ -1,0 +1,141 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [
+          {
+            "kind": "backlinks",
+            "target": "example.com",
+            "target_scope": "site",
+            "mode": "as_is",
+            "include_subdomains": true,
+            "saved_at": "2026-08-13T10:00:00.000Z",
+            "fresh_until": "2026-09-12T10:00:00.000Z",
+            "state": "fresh"
+          },
+          {
+            "kind": "domain_overview",
+            "target": "example.com",
+            "target_scope": "root",
+            "language_code": "en",
+            "location_code": 2840,
+            "saved_at": "2026-01-01T10:00:00.000Z",
+            "fresh_until": "2026-01-31T10:00:00.000Z",
+            "state": "stale"
+          }
+        ],
+        "meta": {
+          "freshness_days": 30
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listStoredResearchReports",
+      "path": "/projects/{project_id}/research/reports",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "cached": true,
+          "cached_until": "2026-08-14T10:00:00.000Z",
+          "cost_cents": 0,
+          "fetched_at": "2026-08-13T10:00:00.000Z",
+          "fetched_row_count": 2,
+          "history": [
+            {
+              "lost_links": 1,
+              "month": "2026-07",
+              "new_links": 2
+            }
+          ],
+          "include_subdomains": true,
+          "provider": "stored-source",
+          "rows": [
+            {
+              "anchor": "example",
+              "source_domain": "referrer.example",
+              "source_url": "https://referrer.example/page",
+              "status": "active",
+              "target_url": "https://example.com/"
+            }
+          ],
+          "summary": {
+            "backlinks_total": 10,
+            "domain_rank": 70,
+            "referring_domains_total": 5
+          },
+          "target": "example.com",
+          "target_scope": "site",
+          "total_rows_available": 10,
+          "fresh_until": "2026-09-12T10:00:00.000Z",
+          "saved_at": "2026-08-13T10:00:00.000Z",
+          "stale": false,
+          "state": "fresh"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getStoredResearchReport",
+      "path": "/projects/{project_id}/research/reports/{kind}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "cached": true,
+          "cost_cents": 0,
+          "country_code": "US",
+          "fetched_at": "2026-08-13T10:00:00.000Z",
+          "fresh_until": "2026-09-12T10:00:00.000Z",
+          "include_clickstream": false,
+          "language_code": "en",
+          "mode": "auto",
+          "provider": "stored-source",
+          "request_key": "abc123",
+          "result_limit": 100,
+          "rows": [],
+          "saved_at": "2026-08-13T10:00:00.000Z",
+          "seed": "rank tracker",
+          "sources": [],
+          "stale": false,
+          "state": "fresh"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getStoredResearchReport",
+      "path": "/projects/{project_id}/research/reports/{kind}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "cached": true,
+          "cost_cents": 0,
+          "fetched_at": "2026-01-01T10:00:00.000Z",
+          "fresh_until": "2026-01-31T10:00:00.000Z",
+          "history": [],
+          "language_code": "en",
+          "location_code": 2840,
+          "overview": null,
+          "pages": null,
+          "previous_fetched_at": null,
+          "provider": "stored-source",
+          "saved_at": "2026-01-01T10:00:00.000Z",
+          "scope": "root",
+          "stale": true,
+          "state": "stale",
+          "target": "example.com",
+          "data_state": "no_data"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getStoredResearchReport",
+      "path": "/projects/{project_id}/research/reports/{kind}",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/research-reports.test.ts"
+}

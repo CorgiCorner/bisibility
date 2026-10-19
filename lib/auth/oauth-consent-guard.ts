@@ -4,9 +4,25 @@ import { getOAuthClientScopePolicy, getOAuthConsentClient } from "@/lib/queries/
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
 import { oauthConsentScopes, readOnlyOAuthScopes } from "./oauth-consent-copy";
+import {
+  IOS_OAUTH_CLIENT_SCOPES,
+  isFirstPartyApiOAuthClient,
+  isFirstPartyApiOAuthScope,
+} from "./oauth-policy";
+
+/** First-party app clients hold only their fixed scopes; nobody else holds `api:*`. */
+function firstPartyApiScopeCeiling(clientId: string | null, requested: string[]) {
+  if (!isFirstPartyApiOAuthClient(clientId)) {
+    return requested.filter((scope) => !isFirstPartyApiOAuthScope(scope));
+  }
+  return requested.filter((scope) =>
+    (IOS_OAUTH_CLIENT_SCOPES as readonly string[]).includes(scope),
+  );
+}
 
 /** Apply the same ceiling to existing grants and refresh-derived access tokens. */
-export async function allowedOAuthTokenScopes(clientId: string | null, requested: string[]) {
+export async function allowedOAuthTokenScopes(clientId: string | null, unchecked: string[]) {
+  const requested = firstPartyApiScopeCeiling(clientId, unchecked);
   const policy = clientId ? await getOAuthClientScopePolicy(clientId) : null;
   if (!policy) return readOnlyOAuthScopes(requested);
   const redirects = policy.redirectUris.length ? policy.redirectUris : [null];

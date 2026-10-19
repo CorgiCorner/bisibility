@@ -3,6 +3,7 @@ import { collectTemporalHeartbeat } from "../ops/heartbeat-temporal";
 import { refreshWorkerLiveness, WORKER_LIVENESS_REFRESH_MS } from "../ops/liveness";
 import { publishTemporalSnapshot } from "../ops/temporal-snapshot";
 import { monitorProviderUsageReconciliation } from "../provider-usage/reconciliation-monitor";
+import { closeRedisClient } from "../redis/redis";
 import { type TemporalConnectionOptions, temporalWebUiUrl } from "./connection-options";
 import { isScheduledMaintenanceEnabled } from "./maintenance-schedule-bootstrap";
 import { startWorkerExtensions } from "./worker-extensions";
@@ -56,5 +57,8 @@ export async function runWelcomeIntentRuntime({
       workerExtensions.close(),
       recoveryProcessor.close(),
     ]);
+    // The shared client has no idle timeout: left open, it keeps a drained worker alive
+    // after SIGTERM until the container runtime kills it.
+    await closeRedisClient().catch(() => console.error("[temporal] redis close failed"));
   }
 }

@@ -165,7 +165,7 @@ export const analyticsEventSchemas = {
   search_insights_track_clicked: z.object({ source: z.enum(["drawer", "row"]) }),
   setup_video_opened: z.object({ step: setupStep }),
   ui_option_selected: uiOptionSelectedSchema,
-  user_signed_up: z.object({ method: z.enum(["github", "google", "otp"]) }),
+  user_signed_up: z.object({ method: z.enum(["apple", "github", "google", "otp"]) }),
 } as const;
 
 export type AnalyticsSchemaEvent = keyof typeof analyticsEventSchemas;

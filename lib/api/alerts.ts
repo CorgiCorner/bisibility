@@ -4,11 +4,8 @@ import {
   markProjectAlertsRead as markProjectAlertsReadCore,
   muteTriggeredAlert as muteTriggeredAlertCore,
 } from "@/lib/alerts/feed-mutations";
-import {
-  alertRuleDeleteSchema,
-  alertRuleFormSchema,
-  alertRuleUpdateFormSchema,
-} from "@/lib/alerts/schema";
+import { alertRuleDeleteSchema } from "@/lib/alerts/schema";
+import { alertCreateInput, alertUpdateInput } from "./alert-input";
 import { listAlertRuleViews, listTriggeredAlertViews } from "./alert-list";
 import { alertRuleApiResources, triggeredAlertApiResources } from "./alert-resources";
 import {
@@ -58,7 +55,7 @@ export async function createAlertRuleForProject(ctx: ApiContext, projectId: stri
   if (scoped) return scoped;
 
   const body = await readJsonBody(ctx);
-  const input = parseApiInput(alertRuleFormSchema, { ...objectBody(body), project_id: projectId });
+  const input = parseApiInput(alertCreateInput, { ...objectBody(body), project_id: projectId });
   requireApiAlertRulePublicIds(input);
   const rule = await runDomain(() => createAlertRuleRecord(input, alertContext(ctx)));
   const resource = await runDomain(() =>
@@ -70,7 +67,7 @@ export async function createAlertRuleForProject(ctx: ApiContext, projectId: stri
 
 export async function updateAlertRuleById(ctx: ApiContext, ruleId: string) {
   const body = await readJsonBody(ctx);
-  const input = parseApiInput(alertRuleUpdateFormSchema, {
+  const input = parseApiInput(alertUpdateInput, {
     ...objectBody(body),
     project_id: ctx.auth.project.id,
     rule_id: ruleId,

@@ -1,5 +1,6 @@
-import { alertRuleToolProperties } from "@/lib/alerts/tool-schema";
+import { alertRuleSchema, triggeredAlertSchema } from "./openapi-alert-response-components";
 import { competitorSchemas } from "./openapi-competitor-components";
+import { costEstimateSchema } from "./openapi-cost-estimate-components";
 import { publicIdSchema } from "./openapi-public-id";
 import { rankRunSchemas } from "./openapi-rank-run-components";
 import { savedViewInputSchema, savedViewSchema } from "./openapi-saved-views";
@@ -8,33 +9,28 @@ const dateTime = { format: "date-time", type: "string" } as const;
 
 export const resourceSchemas = {
   ...rankRunSchemas,
-  AlertRule: {
-    properties: {
-      ...alertRuleToolProperties,
-      id: publicIdSchema("alr"),
-    },
-    required: ["id", "name", "condition_type"],
-    type: "object",
-  },
+  AlertRule: alertRuleSchema,
   Capability: {
-    additionalProperties: true,
+    description: "One operation in the public capability catalog.",
     properties: {
-      id: { type: "string" },
+      description: { type: "string" },
+      input_schema: {
+        additionalProperties: true,
+        description: "JSON Schema for the operation input.",
+        type: "object",
+      },
+      mcp_tool: {
+        description: "MCP tool name, or null when no MCP tool exposes the operation.",
+        type: ["string", "null"],
+      },
       name: { type: "string" },
+      operationId: { type: "string" },
     },
-    required: ["id"],
+    required: ["description", "input_schema", "mcp_tool", "name", "operationId"],
     type: "object",
   },
   ...competitorSchemas,
-  CostEstimate: {
-    additionalProperties: true,
-    description: "Estimated rank-check volume and provider spend for a keyword portfolio.",
-    properties: {
-      currency: { type: "string" },
-      monthly_cost: { type: ["number", "null"] },
-    },
-    type: "object",
-  },
+  CostEstimate: costEstimateSchema,
   MigrationToken: {
     properties: {
       created_at: dateTime,
@@ -49,6 +45,10 @@ export const resourceSchemas = {
     properties: {
       alert_email: { type: "boolean" },
       alert_in_app: { type: "boolean" },
+      alert_push: {
+        description: "Mobile push for fired alerts on this member's registered devices.",
+        type: "boolean",
+      },
       alert_slack: { type: "boolean" },
       alert_webhook: { type: "boolean" },
       check_email: { type: "boolean" },
@@ -61,6 +61,7 @@ export const resourceSchemas = {
     required: [
       "alert_email",
       "alert_in_app",
+      "alert_push",
       "alert_slack",
       "alert_webhook",
       "check_email",
@@ -131,14 +132,5 @@ export const resourceSchemas = {
     required: ["id", "email", "role"],
     type: "object",
   },
-  TriggeredAlert: {
-    additionalProperties: true,
-    properties: {
-      created_at: dateTime,
-      id: publicIdSchema("tal"),
-      rule_id: publicIdSchema("alr"),
-    },
-    required: ["id"],
-    type: "object",
-  },
+  TriggeredAlert: triggeredAlertSchema,
 } as const;

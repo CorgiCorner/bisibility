@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 export type ApiErrorCode =
   | "bad_request"
   | "budget_exhausted"
+  | "byok_required"
   | "conflict"
   | "credits_exhausted"
   | "cost_limit_exceeded"
@@ -60,6 +61,7 @@ const docsBaseUrl = "https://bisibility.com/docs/api/errors";
 const errorTitles = {
   bad_request: "Bad request",
   budget_exhausted: "Budget exhausted",
+  byok_required: "Own provider key required",
   conflict: "Conflict",
   credits_exhausted: "Credits exhausted",
   cost_limit_exceeded: "Cost limit exceeded",

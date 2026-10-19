@@ -1,4 +1,6 @@
 import type { schemas } from "./openapi-components";
+import { problemResponse } from "./openapi-problem";
+import { closedEnum } from "./openapi-sdk-schema";
 
 type Bearer = (
   summary: string,
@@ -29,12 +31,8 @@ function withUnprocessable(operation: object) {
     ...operation,
     responses: {
       ...responses,
-      "422": {
-        content: {
-          "application/json": { schema: { $ref: "#/components/schemas/Problem" } },
-        },
-        description: "Unprocessable request",
-      },
+      "404": problemResponse("No eligible search-performance source is connected."),
+      "422": problemResponse("Provider authorization must be renewed (re-auth needed)."),
     },
   };
 }
@@ -52,13 +50,25 @@ export function analyticsPaths(input: {
           input.ref("SearchPerformanceQueryStatsResponse"),
           undefined,
           [
-            ...dateParameters,
+            ...dateParameters.map((parameter) => ({
+              ...parameter,
+              schema: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+            })),
             {
               in: "query",
               name: "connection_id",
-              schema: { pattern: "^conn_[a-z][a-z0-9]{23}$", type: "string" },
+              schema: {
+                minLength: 1,
+                maxLength: 120,
+                pattern: "^conn_[a-z][a-z0-9]{23}$",
+                type: "string",
+              },
             },
-            { in: "query", name: "query", schema: { maxLength: 1000, type: "string" } },
+            {
+              in: "query",
+              name: "query",
+              schema: { minLength: 1, maxLength: 1000, type: "string" },
+            },
             {
               in: "query",
               name: "limit",
@@ -86,20 +96,30 @@ export function analyticsPaths(input: {
               description: "Page path filter; setting it also groups rows by page.",
               in: "query",
               name: "page_path",
-              schema: { maxLength: 2048, type: "string" },
+              schema: { minLength: 1, maxLength: 2048, type: "string" },
             },
             {
               description:
                 "contains keeps rows whose page URL contains the given path; prefix matches pages whose URL starts with the source property host followed by the path.",
               in: "query",
               name: "page_path_match",
-              schema: { default: "contains", enum: ["contains", "prefix"], type: "string" },
+              schema: {
+                ...closedEnum("SearchPerformancePagePathMatchInput"),
+                default: "contains",
+                enum: ["contains", "prefix"],
+                type: "string",
+              },
             },
             {
               description: "Match semantics for the query filter; default equals is exact match.",
               in: "query",
               name: "query_match",
-              schema: { default: "equals", enum: ["equals", "contains"], type: "string" },
+              schema: {
+                ...closedEnum("SearchPerformanceQueryMatchInput"),
+                default: "equals",
+                enum: ["equals", "contains"],
+                type: "string",
+              },
             },
           ],
         ),

@@ -1,0 +1,339 @@
+{
+  "captures": [
+    {
+      "body": {
+        "cached": false,
+        "connections": [],
+        "cost_cents": 0,
+        "fetched_at": "2026-07-22T10:00:00.000Z",
+        "provider": "DataForSEO",
+        "rows": [],
+        "sources": [
+          {
+            "cached": false,
+            "cost_cents": 0,
+            "reason": "cost_limit",
+            "returned": 0,
+            "source": "related",
+            "status": "skipped"
+          }
+        ],
+        "total_count": 0
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 200
+    },
+    {
+      "body": {
+        "cached": true,
+        "connections": [],
+        "cost_cents": 2,
+        "fetched_at": "2026-07-22T10:00:00.000Z",
+        "provider": "DataForSEO",
+        "rows": [],
+        "sources": [],
+        "total_count": 0
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 200
+    },
+    {
+      "body": {
+        "cached_count": 0,
+        "connections": [],
+        "cost_cents": 1,
+        "fetched_at": "2026-07-22T10:00:00.000Z",
+        "fetched_count": 1,
+        "provider": "DataForSEO",
+        "rows": [],
+        "total_count": 0
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "getKeywordMetrics",
+      "path": "/projects/{project_id}/keyword-metrics",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-metrics",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "getKeywordMetrics",
+      "path": "/projects/{project_id}/keyword-metrics",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-research",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 403
+    },
+    {
+      "body": {
+        "detail": "API, MCP and SDK budget reached for July 2026.",
+        "docs_url": "https://bisibility.com/docs/api/errors#budget_exhausted",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-metrics",
+        "status": 429,
+        "title": "Budget exhausted",
+        "type": "https://bisibility.com/problems/budget_exhausted",
+        "details": {
+          "surface": "programmatic",
+          "resets_at": "2026-08-01T00:00:00.000Z"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "getKeywordMetrics",
+      "path": "/projects/{project_id}/keyword-metrics",
+      "status": 429
+    },
+    {
+      "body": {
+        "detail": "API, MCP and SDK budget reached for July 2026.",
+        "docs_url": "https://bisibility.com/docs/api/errors#budget_exhausted",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-research",
+        "status": 429,
+        "title": "Budget exhausted",
+        "type": "https://bisibility.com/problems/budget_exhausted",
+        "details": {
+          "surface": "programmatic",
+          "resets_at": "2026-08-01T00:00:00.000Z"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 429
+    },
+    {
+      "body": {
+        "detail": "An identical cached lookup is still in progress. Try again after the cache lock expires.",
+        "docs_url": "https://bisibility.com/docs/api/errors#lookup_in_progress",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-metrics",
+        "status": 429,
+        "title": "Lookup in progress",
+        "type": "https://bisibility.com/problems/lookup_in_progress"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "getKeywordMetrics",
+      "path": "/projects/{project_id}/keyword-metrics",
+      "status": 429
+    },
+    {
+      "body": {
+        "detail": "An identical cached lookup is still in progress. Try again after the cache lock expires.",
+        "docs_url": "https://bisibility.com/docs/api/errors#lookup_in_progress",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-research",
+        "status": 429,
+        "title": "Lookup in progress",
+        "type": "https://bisibility.com/problems/lookup_in_progress"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 429
+    },
+    {
+      "body": {
+        "detail": "Deployment credits are exhausted. Ask the project owner to add credits in Billing or connect their own provider key.",
+        "docs_url": "https://bisibility.com/docs/api/errors#credits_exhausted",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-research",
+        "status": 402,
+        "title": "Credits exhausted",
+        "type": "https://bisibility.com/problems/credits_exhausted",
+        "details": {
+          "balance_cents": 12.5,
+          "top_up_url": "/app/prj_000000000000000000000000/settings/billing"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 402
+    },
+    {
+      "body": {
+        "detail": "Deployment credits are exhausted. Ask the project owner to add credits in Billing or connect their own provider key.",
+        "docs_url": "https://bisibility.com/docs/api/errors#credits_exhausted",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-research",
+        "status": 402,
+        "title": "Credits exhausted",
+        "type": "https://bisibility.com/problems/credits_exhausted",
+        "details": {
+          "balance_cents": null,
+          "top_up_url": "/app/prj_000000000000000000000000/settings/billing"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 402
+    },
+    {
+      "body": {
+        "detail": "Deployment credits are exhausted. Ask the project owner to add credits in Billing or connect their own provider key.",
+        "docs_url": "https://bisibility.com/docs/api/errors#credits_exhausted",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-research",
+        "status": 402,
+        "title": "Credits exhausted",
+        "type": "https://bisibility.com/problems/credits_exhausted",
+        "details": {
+          "balance_cents": null
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 402
+    },
+    {
+      "body": {
+        "detail": "Deployment spending budget is exhausted for this month.",
+        "docs_url": "https://bisibility.com/docs/api/errors#budget_exhausted",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-research",
+        "status": 429,
+        "title": "Budget exhausted",
+        "type": "https://bisibility.com/problems/budget_exhausted",
+        "details": {
+          "surface": "programmatic",
+          "scope": "connection",
+          "resets_at": "2026-08-01T00:00:00.000Z"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 429
+    },
+    {
+      "body": {
+        "detail": "Keyword research is not available for this location on DataForSEO.",
+        "docs_url": "https://bisibility.com/docs/api/errors#unsupported_location",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-metrics",
+        "status": 422,
+        "title": "Unsupported location",
+        "type": "https://bisibility.com/problems/unsupported_location"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "getKeywordMetrics",
+      "path": "/projects/{project_id}/keyword-metrics",
+      "status": 422
+    },
+    {
+      "body": {
+        "detail": "Keyword research is not available for this location on DataForSEO.",
+        "docs_url": "https://bisibility.com/docs/api/errors#unsupported_location",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-research",
+        "status": 422,
+        "title": "Unsupported location",
+        "type": "https://bisibility.com/problems/unsupported_location"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 422
+    },
+    {
+      "body": {
+        "detail": "No eligible keyword research source is connected. Reason: provider_not_connected.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-metrics",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "getKeywordMetrics",
+      "path": "/projects/{project_id}/keyword-metrics",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "No eligible keyword research source is connected. Reason: provider_not_connected.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-research",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Project spending budget is missing. Ask the project owner to configure a monthly budget in Settings > Usage.",
+        "docs_url": "https://bisibility.com/docs/api/errors#budget_exhausted",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-research",
+        "status": 429,
+        "title": "Budget exhausted",
+        "type": "https://bisibility.com/problems/budget_exhausted",
+        "details": {
+          "surface": "programmatic",
+          "reason": "budget_missing"
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "researchKeywords",
+      "path": "/projects/{project_id}/keyword-research",
+      "status": 429
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/keyword-metrics",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "keywords": ["Too small: expected array to have >=1 items"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "getKeywordMetrics",
+      "path": "/projects/{project_id}/keyword-metrics",
+      "status": 400
+    }
+  ],
+  "source": "lib/api/keyword-research-router.test.ts"
+}

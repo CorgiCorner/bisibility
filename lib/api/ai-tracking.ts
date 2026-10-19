@@ -2,6 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { collectTrackingDownload } from "@/lib/ai-tracking/exports/download";
 import { trackingSampleProjection } from "@/lib/ai-tracking/projections/evidence";
+import { trackingPageSchema } from "@/lib/ai-tracking/projections/forms";
 import {
   publicTrackingPrompt,
   publicTrackingRevision,
@@ -30,6 +31,7 @@ import {
   trackingSnakeizeKeys as snakeizeKeys,
 } from "./ai-tracking-keys";
 import { aiTrackingOperationPolicy } from "./ai-tracking-policy";
+import { trackingQueryInput, trackingTrendsQuerySchema } from "./ai-tracking-query";
 import {
   mutateTrackingCatalog,
   trackingCatalog,
@@ -45,7 +47,7 @@ import { handleAiTrackingSuggestionGeneration } from "./ai-tracking-suggestions"
 import { trackingTrends } from "./ai-tracking-trends";
 import type { ApiContext } from "./context";
 import { requireApiActor } from "./context";
-import { paginateArray } from "./pagination";
+import { paginateItems } from "./pagination";
 import { dataResponse, errorResponse, listResponse } from "./responses";
 import { domainError, readJsonBody, scopedProject } from "./surface";
 
@@ -85,7 +87,8 @@ export async function aiTrackingRoute(ctx: ApiContext): Promise<Response | null>
       if (["topics", "prompts", "schedules"].includes(resource)) {
         if (ctx.method === "GET") {
           const items = await trackingCatalog(project.id, resource);
-          const { page, nextCursor } = paginateArray(ctx.url, items, 50, 100);
+          const query = trackingPageSchema.parse(trackingQueryInput(ctx.url.searchParams));
+          const { page, nextCursor } = paginateItems(items, query);
           return listResponse(
             (await Promise.all(page.map(publicCatalog))).map(snakeizeKeys),
             nextCursor,
@@ -177,9 +180,11 @@ export async function aiTrackingRoute(ctx: ApiContext): Promise<Response | null>
         );
       }
       if (resource === "export" || resource === "trends") {
+        if (resource === "trends") {
+          const query = trackingTrendsQuerySchema.parse(trackingQueryInput(ctx.url.searchParams));
+          return response(await trackingTrends(project.id, query.run_id, query.previous_run_id));
+        }
         const runId = z.string().min(1).parse(page.run_id);
-        if (resource === "trends")
-          return response(await trackingTrends(project.id, runId, page.previous_run_id));
         const limit = z.coerce.number().int().min(1).max(100).default(50).parse(page.limit);
         const format = z.enum(["csv", "json"]).default("json").parse(page.format);
         const download = await collectTrackingDownload(

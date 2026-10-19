@@ -1,0 +1,445 @@
+{
+  "captures": [
+    {
+      "body": {
+        "connection": {
+          "id": "conn_a00000000000000000000000",
+          "label": "Google Search Console",
+          "provider": "gsc"
+        },
+        "result": {
+          "row_cap": 10,
+          "rows_returned": 1,
+          "sort": "clicks_desc",
+          "truncated": false
+        },
+        "rows": [
+          {
+            "query": "example",
+            "clicks": 1,
+            "impressions": 10,
+            "ctr": 0.1,
+            "position": 2.5
+          }
+        ],
+        "scope": {
+          "country": null,
+          "device": null,
+          "dimensions": ["query"],
+          "end_date": "2026-10-18",
+          "page_path": null,
+          "query_match": "contains",
+          "start_date": "2026-10-01"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSearchPerformanceQueryStats",
+      "path": "/projects/{project_id}/analytics/query-stats",
+      "status": 200
+    },
+    {
+      "body": {
+        "connection": {
+          "id": "conn_a00000000000000000000000",
+          "label": "Google Search Console",
+          "provider": "gsc"
+        },
+        "result": {
+          "row_cap": 10,
+          "rows_returned": 1,
+          "sort": "clicks_desc",
+          "truncated": false
+        },
+        "rows": [
+          {
+            "query": "example",
+            "page": "https://example.com/about",
+            "clicks": 1,
+            "impressions": 10,
+            "ctr": 0.1,
+            "position": 2.5
+          }
+        ],
+        "scope": {
+          "country": null,
+          "device": null,
+          "dimensions": ["query", "page"],
+          "end_date": "2026-10-18",
+          "page_path": "/about",
+          "query_match": "contains",
+          "start_date": "2026-10-01"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSearchPerformanceQueryStats",
+      "path": "/projects/{project_id}/analytics/query-stats",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "agr_a00000000000000000000000",
+            "kind": "site_audit",
+            "title": "Site audit: example.com",
+            "created_at": "2026-10-18T00:00:00.000Z"
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listSiteAudits",
+      "path": "/projects/{project_id}/site-audits",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "asm_a00000000000000000000000",
+            "measurement": "answer_present",
+            "source": "model_api",
+            "engine": "chat_gpt",
+            "prompt": "Example?",
+            "prompt_revision_id": "apr_a00000000000000000000000",
+            "evidence": null,
+            "citations": [],
+            "cost_usd": null,
+            "cost_state": "unknown"
+          }
+        ],
+        "meta": {
+          "next_cursor": "next-page"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAiTrackingSamples",
+      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "asm_a00000000000000000000000",
+            "measurement": "answer_present",
+            "source": "model_api",
+            "engine": "chat_gpt",
+            "prompt": "Example?",
+            "prompt_revision_id": "apr_a00000000000000000000000",
+            "evidence": {
+              "answer_truncated": false,
+              "raw_truncated": false,
+              "search_results": [],
+              "requested_locale": "en",
+              "effective_locale": null,
+              "locale_mechanism": null,
+              "requested_model": "example-model",
+              "actual_model": null,
+              "provider_status": null,
+              "observed_at": "2026-10-18T00:00:00.000Z",
+              "fetched_at": "2026-10-18T00:00:00.000Z",
+              "recorded_source": "fresh",
+              "answer_text": "Example",
+              "raw": {
+                "values": [
+                  1,
+                  true,
+                  null,
+                  {
+                    "text": "Example"
+                  }
+                ]
+              }
+            },
+            "citations": [
+              {
+                "url": "https://example.com/",
+                "title": null,
+                "position": 0
+              }
+            ],
+            "cost_usd": "0.0125",
+            "cost_state": "confirmed"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAiTrackingSamples",
+      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/samples",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "configurations": [
+            {
+              "provider": "dataforseo",
+              "endpoint": "ai_optimization/llm_responses/live",
+              "engine": "chat_gpt",
+              "source": "model_api",
+              "model": "example-model",
+              "parameters": {}
+            }
+          ],
+          "credential_connection_id": "conn_a00000000000000000000000",
+          "credential_version": "v1",
+          "budget_revision": "b1",
+          "consent_revision": "c1",
+          "estimated_cost_cents": 1.25
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "previewAiTrackingRun",
+      "path": "/projects/{project_id}/ai-tracking/runs/preview",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "agr_a00000000000000000000000",
+          "created_at": "2026-10-18T00:00:00.000Z",
+          "cached": false,
+          "result": {
+            "version": 1,
+            "target": "https://example.com/",
+            "started_at": "2026-10-18T00:00:00.000Z",
+            "completed_at": "2026-10-18T00:00:00.000Z",
+            "state": "partial",
+            "stop_reason": "page_limit",
+            "limits": {
+              "max_pages": 1,
+              "max_requests": 20,
+              "max_duration_ms": 15000,
+              "max_page_bytes": 524288
+            },
+            "requests": 1,
+            "pages": [
+              {
+                "url": "https://example.com/",
+                "final_url": "https://example.com/",
+                "status": 200,
+                "response_time_ms": 12,
+                "title": "Example",
+                "description": null,
+                "canonical": null,
+                "headings": [
+                  {
+                    "level": 1,
+                    "text": "Example"
+                  }
+                ],
+                "h1_count": 1,
+                "indexable": true,
+                "robots": null,
+                "internal_link_count": 1,
+                "external_link_count": 0,
+                "internal_links": ["https://example.com/about"],
+                "image_count": 1,
+                "missing_alt_count": 1,
+                "issues": [
+                  {
+                    "code": "missing_alt",
+                    "severity": "warning",
+                    "message": "Image needs alt text."
+                  }
+                ]
+              }
+            ],
+            "summary": {
+              "pages": 1,
+              "errors": 0,
+              "warnings": 1,
+              "indexable": 1
+            },
+            "limitations": ["Bounded crawl."]
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "runSiteAudit",
+      "path": "/projects/{project_id}/site-audits",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "agr_a00000000000000000000000",
+          "created_at": "2026-10-18T00:00:00.000Z",
+          "cached": true,
+          "result": {
+            "version": 1,
+            "target": "https://example.com/",
+            "started_at": "2026-10-18T00:00:00.000Z",
+            "completed_at": "2026-10-18T00:00:00.000Z",
+            "state": "partial",
+            "stop_reason": "page_limit",
+            "limits": {
+              "max_pages": 1,
+              "max_requests": 20,
+              "max_duration_ms": 15000,
+              "max_page_bytes": 524288
+            },
+            "requests": 1,
+            "pages": [
+              {
+                "url": "https://example.com/",
+                "final_url": "https://example.com/",
+                "status": 200,
+                "response_time_ms": 12,
+                "title": "Example",
+                "description": null,
+                "canonical": null,
+                "headings": [
+                  {
+                    "level": 1,
+                    "text": "Example"
+                  }
+                ],
+                "h1_count": 1,
+                "indexable": true,
+                "robots": null,
+                "internal_link_count": 1,
+                "external_link_count": 0,
+                "internal_links": ["https://example.com/about"],
+                "image_count": 1,
+                "missing_alt_count": 1,
+                "issues": [
+                  {
+                    "code": "missing_alt",
+                    "severity": "warning",
+                    "message": "Image needs alt text."
+                  }
+                ]
+              }
+            ],
+            "summary": {
+              "pages": 1,
+              "errors": 0,
+              "warnings": 1,
+              "indexable": 1
+            },
+            "limitations": ["Bounded crawl."]
+          }
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getSiteAudit",
+      "path": "/projects/{project_id}/site-audits/{report_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "air_a00000000000000000000000",
+          "state": "planned",
+          "created_at": "2026-10-18T00:00:00.000Z",
+          "updated_at": "2026-10-18T00:00:00.000Z",
+          "finished_at": null,
+          "planned_at": null,
+          "sample_count": 0
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getAiTrackingRun",
+      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "air_a00000000000000000000000",
+          "state": "planned",
+          "created_at": "2026-10-18T00:00:00.000Z",
+          "updated_at": "2026-10-18T00:00:00.000Z",
+          "finished_at": null,
+          "planned_at": null,
+          "sample_count": 0
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createAiTrackingRun",
+      "path": "/projects/{project_id}/ai-tracking/runs",
+      "status": 201
+    },
+    {
+      "body": {
+        "detail": "Idempotency-Key is required.",
+        "docs_url": "https://bisibility.com/docs/api/errors#bad_request",
+        "instance": "urn:bisibility:api:v1:error",
+        "status": 400,
+        "title": "Bad request",
+        "type": "https://bisibility.com/problems/bad_request"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "createAiTrackingRun",
+      "path": "/projects/{project_id}/ai-tracking/runs",
+      "status": 400
+    },
+    {
+      "body": {
+        "detail": "No eligible search-performance source is connected. Reason: provider_not_connected.",
+        "docs_url": "https://bisibility.com/docs/api/errors#not_found",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/analytics/query-stats",
+        "status": 404,
+        "title": "Not found",
+        "type": "https://bisibility.com/problems/not_found"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSearchPerformanceQueryStats",
+      "path": "/projects/{project_id}/analytics/query-stats",
+      "status": 404
+    },
+    {
+      "body": {
+        "detail": "Provider authorization must be renewed.",
+        "docs_url": "https://bisibility.com/docs/api/errors#provider_unavailable",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/analytics/query-stats",
+        "status": 422,
+        "title": "Provider unavailable",
+        "type": "https://bisibility.com/problems/provider_unavailable"
+      },
+      "contentType": "application/problem+json",
+      "method": "GET",
+      "operationId": "listSearchPerformanceQueryStats",
+      "path": "/projects/{project_id}/analytics/query-stats",
+      "status": 422
+    },
+    {
+      "body": {
+        "detail": "Request input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/site-audits",
+        "status": 400,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "maxPages": ["Too big: expected number to be <=15"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "runSiteAudit",
+      "path": "/projects/{project_id}/site-audits",
+      "status": 400
+    }
+  ],
+  "source": "lib/api/sdk-wave3-router.test.ts"
+}

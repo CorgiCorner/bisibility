@@ -1,0 +1,117 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": {
+          "language_code": "en",
+          "location_code": 2840,
+          "scope": "root",
+          "target": "example.com",
+          "keyword_limit": 100,
+          "page_limit": 100,
+          "cached": false,
+          "estimate": true,
+          "estimated_cost_cents": 6,
+          "fresh_estimated_cost_cents": 6,
+          "history_estimated_cost_cents": 10,
+          "history_mode": "lazy",
+          "keyword_page_estimated_cost_cents": 2,
+          "page_page_estimated_cost_cents": 3,
+          "provider": "dataforseo"
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "analyzeDomainOverview",
+      "path": "/projects/{project_id}/domain-overview/analyze",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "language_code": "en",
+          "location_code": 2840,
+          "scope": "root",
+          "target": "example.com",
+          "keyword_limit": 100,
+          "page_limit": 100,
+          "cached_until": "2026-09-18T12:00:00.000Z",
+          "fetched_at": "2026-09-17T12:00:00.000Z",
+          "overview": {
+            "count": 1,
+            "estimated_traffic_cost_cents": null,
+            "etv": 1,
+            "is_down": 0,
+            "is_lost": 0,
+            "is_new": 0,
+            "is_up": 0,
+            "pos1": 0,
+            "pos11_20": 0,
+            "pos21_30": 0,
+            "pos2_3": 1,
+            "pos31_40": 0,
+            "pos41_50": 0,
+            "pos4_10": 0,
+            "pos51_60": 0,
+            "pos61_70": 0,
+            "pos71_80": 0,
+            "pos81_90": 0,
+            "pos91_100": 0
+          },
+          "previous_fetched_at": null,
+          "previous_overview": null,
+          "previous_source_snapshot_at": null,
+          "provider": "dataforseo",
+          "source_snapshot_at": "2026-09-17T12:00:00.000Z",
+          "cached": false,
+          "cost_cents": 6,
+          "history_mode": "lazy",
+          "keywords": {
+            "cached": false,
+            "cost_cents": 2,
+            "data": {
+              "cost_cents": 2,
+              "rows": [],
+              "total_count": 0
+            },
+            "fetched_at": "2026-09-17T12:00:00.000Z",
+            "ok": true
+          },
+          "pages": {
+            "cached": false,
+            "cost_cents": 3,
+            "data": {
+              "cost_cents": 3,
+              "rows": [],
+              "total_count": 0
+            },
+            "fetched_at": "2026-09-17T12:00:00.000Z",
+            "ok": true
+          },
+          "state": "ok"
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "analyzeDomainOverview",
+      "path": "/projects/{project_id}/domain-overview/analyze",
+      "status": 200
+    },
+    {
+      "body": {
+        "detail": "API key scope does not allow this operation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#forbidden",
+        "instance": "urn:bisibility:api:v1:/api/v1/projects/prj_000000000000000000000000/domain-overview/analyze",
+        "status": 403,
+        "title": "Forbidden",
+        "type": "https://bisibility.com/problems/forbidden"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "analyzeDomainOverview",
+      "path": "/projects/{project_id}/domain-overview/analyze",
+      "status": 403
+    }
+  ],
+  "source": "lib/api/router-estimate-scope-post.test.ts"
+}

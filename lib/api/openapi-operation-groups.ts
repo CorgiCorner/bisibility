@@ -25,9 +25,13 @@ export const operationGroups: ReadonlyArray<readonly [OpenApiTagName, readonly s
       "getAnalyticsConsent",
       "updateAnalyticsConsent",
       "updateMe",
+      "deleteMe",
       "listPersonalAccessTokens",
       "createPersonalAccessToken",
       "revokePersonalAccessToken",
+      "listDevicePushTokens",
+      "registerDevicePushToken",
+      "deleteDevicePushToken",
     ],
   ],
   [

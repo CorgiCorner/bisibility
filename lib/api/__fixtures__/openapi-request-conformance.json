@@ -1,0 +1,1175 @@
+[
+  {
+    "operation": "acceptAiTrackingSuggestions",
+    "path": "drafts[].generation_reference.generation_id",
+    "detail": "pattern spec=^asg_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "acceptAiTrackingSuggestions",
+    "path": "drafts[].provider_dataset_reference.report_id",
+    "detail": "pattern spec=^agr_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "acceptAiTrackingSuggestions",
+    "path": "drafts[].provider_dataset_reference.row_index",
+    "detail": "maximum spec=none validator=9999",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "acceptAiTrackingSuggestions",
+    "path": "drafts[].text",
+    "detail": "maxLength spec=4000 validator=64000; minLength spec=3 validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "acceptAiTrackingSuggestions",
+    "kind": "spec-missing-field",
+    "path": "drafts[].draft_id",
+    "location": "body"
+  },
+  {
+    "operation": "acceptAiTrackingSuggestions",
+    "kind": "spec-missing-field",
+    "path": "drafts[].generation_id",
+    "location": "body"
+  },
+  {
+    "operation": "addCompetitor",
+    "path": "domain",
+    "detail": "minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "addCompetitor",
+    "path": "label",
+    "detail": "maxLength spec=none validator=80",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "aiTrackingSuggestionsGenerate",
+    "path": "preview.configuration.model",
+    "detail": "maxLength spec=120 validator=none; minLength spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "aiTrackingSuggestionsGenerate",
+    "path": "preview.credential_connection_id",
+    "detail": "pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "aiTrackingSuggestionsGenerate",
+    "path": "preview.input_snapshot.competitors[].id",
+    "detail": "pattern spec=^cmp_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "aiTrackingSuggestionsPreview",
+    "path": "configuration.model",
+    "detail": "maxLength spec=120 validator=none; minLength spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "aiTrackingSuggestionsPreview",
+    "path": "credential_connection_id",
+    "detail": "pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "aiTrackingSuggestionsPreview",
+    "path": "input_snapshot.competitors[].id",
+    "detail": "pattern spec=^cmp_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "analyzeAiVisibility",
+    "path": "domain",
+    "detail": "minLength spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "cancelAiTrackingRun",
+    "detail": "reads nothing",
+    "kind": "raw-body",
+    "location": "body"
+  },
+  {
+    "operation": "compareAiPrompts",
+    "path": "domain",
+    "detail": "minLength spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "compareAiPrompts",
+    "path": "idempotency_key",
+    "detail": "maxLength spec=160 validator=none; minLength spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "connectProvider",
+    "kind": "spec-missing-field",
+    "path": "cost_per_check",
+    "location": "body"
+  },
+  {
+    "operation": "connectProvider",
+    "kind": "spec-missing-field",
+    "path": "enabled",
+    "location": "body"
+  },
+  {
+    "operation": "connectProvider",
+    "kind": "spec-missing-field",
+    "path": "expected_connection_id",
+    "location": "body"
+  },
+  {
+    "operation": "connectProvider",
+    "kind": "spec-missing-field",
+    "path": "expected_connection_updated_at",
+    "location": "body"
+  },
+  {
+    "operation": "connectProvider",
+    "kind": "spec-missing-field",
+    "path": "expected_credential_source",
+    "location": "body"
+  },
+  {
+    "operation": "connectProvider",
+    "kind": "spec-missing-field",
+    "path": "login",
+    "location": "body"
+  },
+  {
+    "operation": "connectProvider",
+    "kind": "spec-missing-field",
+    "path": "priority",
+    "location": "body"
+  },
+  {
+    "operation": "connectProvider",
+    "kind": "spec-missing-field",
+    "path": "secret",
+    "location": "body"
+  },
+  {
+    "operation": "connectProvider",
+    "kind": "validator-missing-field",
+    "path": "primary",
+    "location": "body"
+  },
+  {
+    "operation": "createAgentReport",
+    "path": "kind",
+    "detail": "minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createAgentReport",
+    "detail": "Custom types cannot be represented in JSON Schema",
+    "kind": "schema-not-convertible",
+    "location": "body"
+  },
+  {
+    "operation": "createAiTrackingPrompt",
+    "path": "generation_reference.generation_id",
+    "detail": "pattern spec=^asg_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createAiTrackingPrompt",
+    "path": "provider_dataset_reference.report_id",
+    "detail": "pattern spec=^agr_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createAiTrackingPrompt",
+    "path": "provider_dataset_reference.row_index",
+    "detail": "maximum spec=none validator=9999",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createAiTrackingPrompt",
+    "path": "topic_id",
+    "detail": "pattern spec=^ait_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createAiTrackingSchedule",
+    "path": "configuration.credential_connection_id",
+    "detail": "minLength spec=none validator=1; pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createAiTrackingSchedule",
+    "path": "configuration.prompt_ids",
+    "detail": "minItems spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createAiTrackingSchedule",
+    "path": "configuration.prompt_ids[]",
+    "detail": "minLength spec=none validator=1; pattern spec=^aip_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createAiTrackingSchedule",
+    "path": "configuration.schedule_id",
+    "detail": "pattern spec=^ais_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createAiTrackingSchedule",
+    "kind": "spec-missing-field",
+    "path": "configuration.retry_of_run_id",
+    "location": "body"
+  },
+  {
+    "operation": "createAiTrackingSchedule",
+    "kind": "validator-missing-field",
+    "path": "configuration.consent",
+    "location": "body"
+  },
+  {
+    "operation": "createCloudImportSession",
+    "path": "source_project_id",
+    "detail": "pattern spec=^prj_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createProject",
+    "path": "defaults.cron_expression",
+    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createProject",
+    "path": "defaults.timezone",
+    "detail": "maxLength spec=none validator=80; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createProject",
+    "path": "domain",
+    "detail": "maxLength spec=none validator=253; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createProject",
+    "path": "name",
+    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createProject",
+    "kind": "spec-missing-field",
+    "path": "defaults.serp_depth",
+    "location": "body"
+  },
+  {
+    "operation": "createSignal",
+    "path": "keyword_id",
+    "detail": "maxLength spec=none validator=160; minLength spec=none validator=1; pattern spec=^kw_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createSignal",
+    "path": "url",
+    "detail": "pattern spec=none validator=^https?:\\/\\/",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createTeamInvite",
+    "path": "email",
+    "detail": "maxLength spec=none validator=320",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createWebhookEndpoint",
+    "path": "description",
+    "detail": "maxLength spec=none validator=160",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createWebhookEndpoint",
+    "path": "hmac_secret",
+    "detail": "maxLength spec=none validator=500",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "createWebhookEndpoint",
+    "path": "url",
+    "detail": "maxLength spec=none validator=500",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "exportAiTrackingEvidence",
+    "detail": "reads cursor, format, limit, run_id",
+    "kind": "raw-query",
+    "location": "query"
+  },
+  {
+    "operation": "exportLocalMonitorRun",
+    "path": "as_of",
+    "detail": "maxLength spec=24 validator=none; minLength spec=24 validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "exportRankHistory",
+    "path": "cursor",
+    "detail": "maxLength spec=none validator=8192; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "getKeywordMetrics",
+    "path": "connection_id",
+    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1; pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "getLocalMonitorRunResults",
+    "path": "as_of",
+    "detail": "maxLength spec=24 validator=none; minLength spec=24 validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "getStoredResearchReport",
+    "path": "connection_id",
+    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "getStoredResearchReport",
+    "path": "language_code",
+    "detail": "maxLength spec=none validator=12; minLength spec=none validator=2",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "getStoredResearchReport",
+    "path": "location_code",
+    "detail": "minimum spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "getStoredResearchReport",
+    "path": "seed",
+    "detail": "maxLength spec=none validator=80; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "getStoredResearchReport",
+    "path": "target",
+    "detail": "minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "getStoredResearchReport",
+    "path": "mode",
+    "detail": "spec=any validator=[\"as_is\",\"auto\",\"ideas\",\"one_per_domain\",\"related\",\"suggestions\"]",
+    "kind": "enum-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "getStoredResearchReport",
+    "path": "target_scope",
+    "detail": "spec=any validator=[\"page\",\"root\",\"site\",\"subdomain\"]",
+    "kind": "enum-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "importCloudExport",
+    "path": "alert_rules[].competitor_domain",
+    "detail": "maxLength spec=none validator=160; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "path": "alert_rules[].id",
+    "detail": "pattern spec=^alr_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "path": "alert_rules[].serp_feature",
+    "detail": "maxLength spec=none validator=160; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "path": "alert_rules[].targets[].keyword_id",
+    "detail": "pattern spec=^kw_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "path": "alert_rules[].targets[].location_key",
+    "detail": "maxLength spec=none validator=260",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "path": "competitors[].id",
+    "detail": "pattern spec=^cmp_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "path": "keywords[].id",
+    "detail": "pattern spec=^kw_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "path": "keywords[].location_key",
+    "detail": "maxLength spec=none validator=260",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "path": "keywords[].target_url",
+    "detail": "minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "path": "project_id",
+    "detail": "pattern spec=^prj_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "path": "saved_views[].id",
+    "detail": "pattern spec=^viw_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "alert_rules",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "competitors",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "keywords",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "keywords[].device",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "keywords[].rankingHistory[].normalizationVersion",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "keywords[].rankingHistory[].position",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "keywords[].rankingHistory[].previousPosition",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "keywords[].rankingHistory[].provider",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "keywords[].rankingHistory[].rankingUrl",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "keywords[].rankingHistory[].requestedDepth",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "notification_preferences",
+    "location": "body"
+  },
+  {
+    "operation": "importCloudExport",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "saved_views",
+    "location": "body"
+  },
+  {
+    "operation": "listAgentReports",
+    "path": "kind",
+    "detail": "minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listAgentReports",
+    "kind": "spec-missing-field",
+    "path": "before",
+    "location": "query"
+  },
+  {
+    "operation": "listApiKeys",
+    "detail": "reads cursor, limit",
+    "kind": "raw-query",
+    "location": "query"
+  },
+  {
+    "operation": "listApiKeys",
+    "kind": "spec-missing-field",
+    "path": "cursor",
+    "location": "query"
+  },
+  {
+    "operation": "listApiKeys",
+    "kind": "spec-missing-field",
+    "path": "limit",
+    "location": "query"
+  },
+  {
+    "operation": "listLocalMonitorPointHistory",
+    "path": "as_of",
+    "detail": "maxLength spec=24 validator=none; minLength spec=24 validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listLocalMonitorPointHistory",
+    "path": "cursor",
+    "detail": "minLength spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listLocalMonitorPointHistory",
+    "path": "from",
+    "detail": "maxLength spec=24 validator=none; minLength spec=24 validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listLocalMonitorPointHistory",
+    "path": "to",
+    "detail": "maxLength spec=24 validator=none; minLength spec=24 validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listLocalMonitorPointListings",
+    "path": "as_of",
+    "detail": "maxLength spec=24 validator=none; minLength spec=24 validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listLocalMonitorRuns",
+    "path": "as_of",
+    "detail": "maxLength spec=24 validator=none; minLength spec=24 validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listLocalMonitorRuns",
+    "path": "cursor",
+    "detail": "minLength spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listLocalMonitorRuns",
+    "path": "from",
+    "detail": "maxLength spec=24 validator=none; minLength spec=24 validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listLocalMonitorRuns",
+    "path": "to",
+    "detail": "maxLength spec=24 validator=none; minLength spec=24 validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listProjectApiKeys",
+    "detail": "reads cursor, limit",
+    "kind": "raw-query",
+    "location": "query"
+  },
+  {
+    "operation": "listProjectApiKeys",
+    "kind": "spec-missing-field",
+    "path": "cursor",
+    "location": "query"
+  },
+  {
+    "operation": "listProjectApiKeys",
+    "kind": "spec-missing-field",
+    "path": "limit",
+    "location": "query"
+  },
+  {
+    "operation": "listProviders",
+    "detail": "reads cursor, limit",
+    "kind": "raw-query",
+    "location": "query"
+  },
+  {
+    "operation": "listProviders",
+    "kind": "spec-missing-field",
+    "path": "cursor",
+    "location": "query"
+  },
+  {
+    "operation": "listProviders",
+    "kind": "spec-missing-field",
+    "path": "limit",
+    "location": "query"
+  },
+  {
+    "operation": "listRankedKeywordSuggestions",
+    "path": "connection_id",
+    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1; pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listSavedViews",
+    "detail": "reads cursor, limit, surface",
+    "kind": "raw-query",
+    "location": "query"
+  },
+  {
+    "operation": "listSavedViews",
+    "kind": "spec-missing-field",
+    "path": "cursor",
+    "location": "query"
+  },
+  {
+    "operation": "listSavedViews",
+    "kind": "spec-missing-field",
+    "path": "limit",
+    "location": "query"
+  },
+  {
+    "operation": "listSignals",
+    "detail": "reads cursor, from, limit, source, to, type",
+    "kind": "raw-query",
+    "location": "query"
+  },
+  {
+    "operation": "listTeamInvites",
+    "detail": "reads cursor, limit",
+    "kind": "raw-query",
+    "location": "query"
+  },
+  {
+    "operation": "listTeamInvites",
+    "kind": "spec-missing-field",
+    "path": "cursor",
+    "location": "query"
+  },
+  {
+    "operation": "listTeamInvites",
+    "kind": "spec-missing-field",
+    "path": "limit",
+    "location": "query"
+  },
+  {
+    "operation": "listTeamMembers",
+    "detail": "reads cursor, limit",
+    "kind": "raw-query",
+    "location": "query"
+  },
+  {
+    "operation": "listTeamMembers",
+    "kind": "spec-missing-field",
+    "path": "cursor",
+    "location": "query"
+  },
+  {
+    "operation": "listTeamMembers",
+    "kind": "spec-missing-field",
+    "path": "limit",
+    "location": "query"
+  },
+  {
+    "operation": "listTrafficSnapshots",
+    "path": "end_date",
+    "detail": "pattern spec=none validator=^\\d{4}-\\d{2}-\\d{2}$",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listTrafficSnapshots",
+    "path": "path[]",
+    "detail": "maxLength spec=none validator=2048; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "listTrafficSnapshots",
+    "path": "start_date",
+    "detail": "pattern spec=none validator=^\\d{4}-\\d{2}-\\d{2}$",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "mintMigrationToken",
+    "detail": "validator reads scope",
+    "kind": "spec-missing-body",
+    "location": "body"
+  },
+  {
+    "operation": "retryAiTrackingRun",
+    "path": "credential_connection_id",
+    "detail": "minLength spec=none validator=1; pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "retryAiTrackingRun",
+    "path": "prompt_ids",
+    "detail": "minItems spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "retryAiTrackingRun",
+    "path": "prompt_ids[]",
+    "detail": "minLength spec=none validator=1; pattern spec=^aip_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "retryAiTrackingRun",
+    "path": "schedule_id",
+    "detail": "pattern spec=^ais_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "retryAiTrackingRun",
+    "kind": "spec-missing-field",
+    "path": "retry_of_run_id",
+    "location": "body"
+  },
+  {
+    "operation": "searchLocations",
+    "path": "country",
+    "detail": "minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "query"
+  },
+  {
+    "operation": "setKeywordTargetUrl",
+    "detail": "validator reads city, country, device, frequency, intent, keyword, location, location_key, schedule, tags, target_url, topic",
+    "kind": "spec-missing-body",
+    "location": "body"
+  },
+  {
+    "operation": "suggestAiTrackingPrompts",
+    "detail": "reads nothing",
+    "kind": "raw-body",
+    "location": "body"
+  },
+  {
+    "operation": "testProviderConnection",
+    "kind": "spec-missing-field",
+    "path": "login",
+    "location": "body"
+  },
+  {
+    "operation": "testProviderConnection",
+    "kind": "spec-missing-field",
+    "path": "secret",
+    "location": "body"
+  },
+  {
+    "operation": "testProviderConnection",
+    "kind": "validator-missing-field",
+    "path": "primary",
+    "location": "body"
+  },
+  {
+    "operation": "updateAiTrackingPrompt",
+    "path": "generation_reference.generation_id",
+    "detail": "pattern spec=^asg_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateAiTrackingPrompt",
+    "path": "provider_dataset_reference.report_id",
+    "detail": "pattern spec=^agr_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateAiTrackingPrompt",
+    "path": "provider_dataset_reference.row_index",
+    "detail": "maximum spec=none validator=9999",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateAiTrackingPrompt",
+    "path": "topic_id",
+    "detail": "pattern spec=^ait_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateAiTrackingSchedule",
+    "path": "configuration.credential_connection_id",
+    "detail": "minLength spec=none validator=1; pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateAiTrackingSchedule",
+    "path": "configuration.prompt_ids",
+    "detail": "minItems spec=1 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateAiTrackingSchedule",
+    "path": "configuration.prompt_ids[]",
+    "detail": "minLength spec=none validator=1; pattern spec=^aip_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateAiTrackingSchedule",
+    "path": "configuration.schedule_id",
+    "detail": "pattern spec=^ais_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateAiTrackingSchedule",
+    "kind": "spec-missing-field",
+    "path": "configuration.retry_of_run_id",
+    "location": "body"
+  },
+  {
+    "operation": "updateAiTrackingSchedule",
+    "kind": "validator-missing-field",
+    "path": "configuration.consent",
+    "location": "body"
+  },
+  {
+    "operation": "updateNotificationPreferences",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "alert_email",
+    "location": "body"
+  },
+  {
+    "operation": "updateNotificationPreferences",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "alert_in_app",
+    "location": "body"
+  },
+  {
+    "operation": "updateNotificationPreferences",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "alert_push",
+    "location": "body"
+  },
+  {
+    "operation": "updateNotificationPreferences",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "alert_slack",
+    "location": "body"
+  },
+  {
+    "operation": "updateNotificationPreferences",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "alert_webhook",
+    "location": "body"
+  },
+  {
+    "operation": "updateNotificationPreferences",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "check_email",
+    "location": "body"
+  },
+  {
+    "operation": "updateNotificationPreferences",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "check_in_app",
+    "location": "body"
+  },
+  {
+    "operation": "updateNotificationPreferences",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "import_email",
+    "location": "body"
+  },
+  {
+    "operation": "updateNotificationPreferences",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "import_in_app",
+    "location": "body"
+  },
+  {
+    "operation": "updateNotificationPreferences",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "invite_email",
+    "location": "body"
+  },
+  {
+    "operation": "updateNotificationPreferences",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "invite_in_app",
+    "location": "body"
+  },
+  {
+    "operation": "updateProject",
+    "detail": "validator reads domain, name",
+    "kind": "spec-missing-body",
+    "location": "body"
+  },
+  {
+    "operation": "updateProjectDefaults",
+    "path": "city",
+    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateProjectDefaults",
+    "path": "cron_expression",
+    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateProjectDefaults",
+    "path": "location_key",
+    "detail": "maxLength spec=none validator=260",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateProjectDefaults",
+    "path": "timezone",
+    "detail": "maxLength spec=none validator=80; minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateProjectDefaults",
+    "detail": "spec=optional validator=required",
+    "kind": "required-mismatch",
+    "path": "frequency",
+    "location": "body"
+  },
+  {
+    "operation": "updateProjectDefaults",
+    "detail": "reads preview_only",
+    "kind": "raw-query",
+    "location": "query"
+  },
+  {
+    "operation": "updateProviderSettings",
+    "kind": "spec-missing-field",
+    "path": "enabled",
+    "location": "body"
+  },
+  {
+    "operation": "updateProviderSettings",
+    "kind": "spec-missing-field",
+    "path": "priority",
+    "location": "body"
+  },
+  {
+    "operation": "updateProviderSettings",
+    "kind": "validator-missing-field",
+    "path": "credentials",
+    "location": "body"
+  },
+  {
+    "operation": "updateProviderSettings",
+    "kind": "validator-missing-field",
+    "path": "primary",
+    "location": "body"
+  },
+  {
+    "operation": "updateWebhookEndpoint",
+    "path": "description",
+    "detail": "maxLength spec=none validator=160",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateWebhookEndpoint",
+    "path": "hmac_secret",
+    "detail": "maxLength spec=none validator=500",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "updateWebhookEndpoint",
+    "path": "url",
+    "detail": "maxLength spec=none validator=500",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "uploadCloudImportChunk",
+    "path": "keywords[].id",
+    "detail": "pattern spec=^kw_[a-z][a-z0-9]{23}$ validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "uploadCloudImportChunk",
+    "path": "keywords[].location_key",
+    "detail": "maxLength spec=none validator=260",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "uploadCloudImportChunk",
+    "path": "keywords[].target_url",
+    "detail": "minLength spec=none validator=1",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "uploadCloudImportChunk",
+    "path": "sections.alert_rules",
+    "detail": "maxItems spec=500 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "uploadCloudImportChunk",
+    "path": "sections.competitors",
+    "detail": "maxItems spec=500 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "uploadCloudImportChunk",
+    "path": "sections.notification_preferences",
+    "detail": "maxItems spec=50 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "uploadCloudImportChunk",
+    "path": "sections.saved_views",
+    "detail": "maxItems spec=500 validator=none",
+    "kind": "bound-mismatch",
+    "location": "body"
+  },
+  {
+    "operation": "uploadCloudImportChunk",
+    "detail": "spec=required validator=optional",
+    "kind": "required-mismatch",
+    "path": "keywords[].device",
+    "location": "body"
+  }
+]

@@ -1,9 +1,22 @@
+import { openEnum, sdkName, taggedUnion, usdCents } from "./openapi-sdk-schema";
+
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
 const nonnegativeNumber = { minimum: 0, type: "number" };
+const cents = { ...nonnegativeNumber, ...usdCents };
+export const domainOverviewScope = {
+  enum: ["root", "subdomain"],
+  type: "string",
+  ...openEnum("DomainOverviewScope"),
+};
+export const echoedLimit = {
+  description: "Requested page size, echoed from the analyze request.",
+  minimum: 1,
+  type: "integer",
+};
 
 const moduleFailure = {
   properties: {
-    cost_cents: nonnegativeNumber,
+    cost_cents: cents,
     ok: { const: false, type: "boolean" },
     reason: {
       enum: [
@@ -18,6 +31,7 @@ const moduleFailure = {
         "unsupported_location",
       ],
       type: "string",
+      ...openEnum("DomainOverviewFailureReason"),
     },
     reset_at: { type: "number" },
   },
@@ -25,19 +39,27 @@ const moduleFailure = {
   type: "object",
 };
 
-function moduleSuccess(data: object) {
+function moduleSuccess(data: object, name: string) {
   return {
     properties: {
       cached: { type: "boolean" },
-      cost_cents: nonnegativeNumber,
+      cost_cents: cents,
       data,
       fetched_at: { format: "date-time", type: ["string", "null"] },
       ok: { const: true, type: "boolean" },
     },
     required: ["ok", "cached", "cost_cents", "data", "fetched_at"],
     type: "object",
+    ...sdkName(name),
   };
 }
+
+/** A report module: its data, or the failure that kept it out (tagged by `ok`). */
+const reportModule = (data: string, name: string) => ({
+  oneOf: [moduleSuccess(ref(data), `${name}Success`), ref("DomainOverviewModuleFailure")],
+  ...taggedUnion("ok", ["success", "failure"]),
+  ...sdkName(name),
+});
 
 export const domainOverviewReportSchemas = {
   DomainOverviewModuleFailure: moduleFailure,
@@ -65,28 +87,27 @@ export const domainOverviewReportSchemas = {
     properties: {
       cached: { type: "boolean" },
       cached_until: { format: "date-time", type: "string" },
-      cost_cents: nonnegativeNumber,
+      cost_cents: cents,
       fetched_at: { format: "date-time", type: "string" },
       history_mode: { const: "lazy", type: "string" },
-      keywords: {
-        oneOf: [
-          moduleSuccess(ref("DomainOverviewKeywordsData")),
-          ref("DomainOverviewModuleFailure"),
-        ],
-      },
+      keyword_limit: echoedLimit,
+      keywords: reportModule("DomainOverviewKeywordsData", "DomainOverviewKeywordsModule"),
       language_code: { type: "string" },
       location_code: { type: "integer" },
       overview: { oneOf: [ref("DomainOverviewMetrics"), { type: "null" }] },
-      pages: {
-        oneOf: [moduleSuccess(ref("DomainOverviewPagesData")), ref("DomainOverviewModuleFailure")],
-      },
+      page_limit: echoedLimit,
+      pages: reportModule("DomainOverviewPagesData", "DomainOverviewPagesModule"),
       previous_fetched_at: { format: "date-time", type: ["string", "null"] },
       previous_overview: { oneOf: [ref("DomainOverviewMetrics"), { type: "null" }] },
       previous_source_snapshot_at: { format: "date-time", type: ["string", "null"] },
       provider: { type: "string" },
-      scope: { enum: ["root", "subdomain"], type: "string" },
+      scope: domainOverviewScope,
       source_snapshot_at: { format: "date-time", type: ["string", "null"] },
-      state: { enum: ["no_data", "ok", "partial"], type: "string" },
+      state: {
+        enum: ["no_data", "ok", "partial"],
+        type: "string",
+        ...openEnum("DomainOverviewReportState"),
+      },
       target: { type: "string" },
     },
     required: [

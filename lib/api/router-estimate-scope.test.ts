@@ -21,6 +21,9 @@ const mocks = vi.hoisted(() => ({
   rateContext: vi.fn(),
 }));
 
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
 vi.mock("./auth", () => ({
   ApiAuthError: class ApiAuthError extends Error {},
   LEGACY_BEARER_PREFIXES: ["bsk_", "bsp_"],

@@ -3,6 +3,7 @@ import "server-only";
 // Must run before the process.env reads in this module - fills runtime env on
 // platforms that omit it at request time (no-op where the platform injects env).
 import "@/lib/deployment/runtime-env.generated";
+import { appleNativeSignInPlugin } from "@/lib/auth/apple-native-sign-in";
 import { authDatabase } from "@/lib/auth/auth-database";
 import { AUTH_IP_ADDRESS_OPTIONS } from "@/lib/auth/client-ip";
 import { demoEmailOtpRateLimit } from "@/lib/auth/demo-email-otp";
@@ -15,7 +16,10 @@ import { firstRunCreationState } from "@/lib/auth/first-run-context";
 import { loginCodeGuardPlugin, withOtpEmailRequest } from "@/lib/auth/login-code-guard";
 import { oauthConsentGuard } from "@/lib/auth/oauth-consent-guard";
 import {
+  FIRST_PARTY_API_OAUTH_SCOPES,
+  IOS_OAUTH_CLIENT_ID,
   OAUTH_ACCESS_TOKEN_TTL_SECONDS,
+  OAUTH_API_ACCESS_TOKEN_TTL_SECONDS,
   OAUTH_AUTHORIZATION_TTL_SECONDS,
   OAUTH_REFRESH_TOKEN_TTL_SECONDS,
 } from "@/lib/auth/oauth-policy";
@@ -275,14 +279,28 @@ export const auth = betterAuth({
         oauthAuthServerConfig: true,
         openidConfig: true,
       },
-      scopes: [...oidcScopes],
+      // Registered clients keep exactly the public scope list; `api:*` exists only for the
+      // first-party app client, whose opaque tokens `/api/v1` accepts (ADR-021).
+      clientRegistrationDefaultScopes: [...oidcScopes],
+      scopes: [...oidcScopes, ...FIRST_PARTY_API_OAUTH_SCOPES],
+      // A number here is an absolute expiry timestamp for the provider; pass a duration string.
+      scopeExpirations: Object.fromEntries(
+        FIRST_PARTY_API_OAUTH_SCOPES.map((scope) => [
+          scope,
+          `${OAUTH_API_ACCESS_TOKEN_TTL_SECONDS}s`,
+        ]),
+      ),
+      advertisedMetadata: { scopes_supported: [...oidcScopes] },
       // GHSA-p2fr-6hmx-4528: on this provider line a grant or refresh token bound to one
       // allowed audience can be exchanged for a token addressed to another allowed audience.
       // Listing exactly one resource removes the second audience to switch to. Keep this list
-      // at one entry until the provider gains per-client resource binding.
+      // at one entry until the provider gains per-client resource binding. `/api/v1` accepts
+      // only opaque tokens, which are issued when the request names no resource.
       validAudiences: [MCP_RESOURCE_URL],
     }),
     oauthConsentGuard(),
+    // ADR-021 native Sign in with Apple: issues only the iOS app token pair, never a session.
+    appleNativeSignInPlugin({ refreshGrant: redeemIosAppGrant }),
     authAuditPlugin,
     emailOtpTwoFactorPlugin,
     loginCodeGuardPlugin({ fixedOtpEnabled: FIXED_OTP_ENABLED }),
@@ -290,3 +308,14 @@ export const auth = betterAuth({
     nextCookies(),
   ],
 });
+
+/** The provider's own refresh-token grant for the iOS app client (used by native Apple sign-in). */
+function redeemIosAppGrant(refreshToken: string): Promise<unknown> {
+  return auth.api.oauth2Token({
+    body: {
+      client_id: IOS_OAUTH_CLIENT_ID,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    },
+  });
+}

@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMe } from "./me";
 import { getProjectOverview } from "./project-overview";
+import { handleApiRequest } from "./router";
 
 const mocks = vi.hoisted(() => ({
+  authenticateBearer: vi.fn(),
   fetchProjectKeywordVolumes: vi.fn(),
   prisma: {
     keyword: { count: vi.fn(), findMany: vi.fn() },
@@ -12,12 +14,40 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
+vi.mock("./auth", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./auth")>()),
+  authenticateBearer: mocks.authenticateBearer,
+}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
+vi.mock("@/lib/providers/own-key-policy-extension", () => ({
+  ownProviderKeysRequired: vi.fn().mockResolvedValue(false),
+}));
 vi.mock("@/lib/queries/keyword-metrics-query", () => ({
   fetchProjectKeywordVolumes: mocks.fetchProjectKeywordVolumes,
 }));
 
 const invalidProjectIds = ["project_db_1", "kw_a00000000000000000000000"];
+const personalAuth = {
+  kind: "personal_token",
+  memberships: [],
+  token: {
+    id: "pat_db_1",
+    name: "CLI",
+    prefix: "bsb_pat_live_",
+    publicId: "pat_a00000000000000000000000",
+    scopes: ["read"],
+    userId: "user_db_1",
+  },
+  user: {
+    email: "owner@example.com",
+    id: "user_db_1",
+    name: "Owner",
+    publicId: "usr_a00000000000000000000000",
+  },
+} as const;
 
 describe("public API project ID outputs", () => {
   beforeEach(() => {
@@ -32,6 +62,29 @@ describe("public API project ID outputs", () => {
     mocks.prisma.rankCheck.findFirst.mockResolvedValue(null);
   });
 
+  it("serializes /me through the API router", async () => {
+    mocks.authenticateBearer.mockResolvedValue(personalAuth);
+    mocks.prisma.membership.findMany.mockResolvedValue([
+      {
+        project: {
+          domain: "example.com",
+          name: "Example",
+          publicId: "prj_a00000000000000000000000",
+        },
+        role: "owner",
+      },
+    ]);
+
+    const response = await handleApiRequest(
+      new Request("https://example.com/api/v1/me", {
+        headers: { Authorization: "Bearer bsb_pat_live_test" },
+      }),
+      ["me"],
+    );
+
+    expect(response.status).toBe(200);
+  });
+
   it.each(invalidProjectIds)(
     "fails closed instead of serializing /me project ID %s",
     async (publicId) => {
@@ -44,24 +97,7 @@ describe("public API project ID outputs", () => {
 
       await expect(
         getMe({
-          auth: {
-            kind: "personal_token",
-            memberships: [],
-            token: {
-              id: "pat_db_1",
-              name: "CLI",
-              prefix: "bsb_pat_live_",
-              publicId: "pat_a00000000000000000000000",
-              scopes: ["read"],
-              userId: "user_db_1",
-            },
-            user: {
-              email: "owner@example.com",
-              id: "user_db_1",
-              name: "Owner",
-              publicId: "usr_a00000000000000000000000",
-            },
-          },
+          auth: personalAuth,
           headers: new Headers(),
           instance: "urn:test",
           method: "GET",

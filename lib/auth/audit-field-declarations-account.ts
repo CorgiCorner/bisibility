@@ -53,7 +53,11 @@ export function registerAccountAuditDeclarations(
     before: { ...strings("email"), ...f.booleans("emailVerified") },
   });
   declare(["account.deleted"], {
+    after: strings("source"),
     before: { ...strings("email", "name"), counts: projectCounts },
+  });
+  declare(["account.apple_tokens_revoked"], {
+    after: { ...f.numbers("attempted", "revoked"), ...strings("skipped") },
   });
   declare(["account.session_revoked"], { before: strings("id", "ipAddress", "userAgent") });
   declare(["account.sessions_revoked"], { after: f.numbers("revokedCount") });

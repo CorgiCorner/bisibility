@@ -196,6 +196,7 @@
       "email": "Email",
       "slack": "Slack",
       "webhook": "Webhook",
+      "push": "Mobile push",
       "slackUnavailable": "API-only preview - dashboard setup not available",
       "selected": "selected",
       "optional": "optional",

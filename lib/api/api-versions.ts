@@ -1,3 +1,4 @@
+import { openEnum } from "./openapi-sdk-schema";
 import { errorResponse } from "./responses";
 
 export const API_VERSION_HEADER = "Bisibility-API-Version";
@@ -49,5 +50,6 @@ export const apiVersionHeaderParameter = {
   schema: {
     enum: [...servedApiVersions],
     type: "string",
+    ...openEnum("ApiVersion"),
   },
 } as const;

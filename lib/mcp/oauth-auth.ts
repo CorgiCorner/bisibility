@@ -6,6 +6,7 @@ import { errorResponse } from "@/lib/api/responses";
 import { grantedApiScopes } from "@/lib/api/scope-policy";
 import { AUTH_URL, AUTH_URL_CONFIGURED, MCP_RESOURCE_URL } from "@/lib/auth/auth";
 import { allowedOAuthTokenScopes } from "@/lib/auth/oauth-consent-guard";
+import { isFirstPartyApiOAuthClient } from "@/lib/auth/oauth-policy";
 import { prisma } from "@/lib/db/prisma";
 import { protectedResourceMetadataUrl } from "@/lib/deployment/mcp-origin-contract";
 import { APIError } from "better-auth/api";
@@ -87,7 +88,10 @@ export async function authenticateMcpOAuthRequest(req: Request): Promise<OAuthAu
 
   const userId = typeof payload.sub === "string" ? payload.sub : null;
   const clientId = oauthClientId(payload);
-  const scopes = grantedApiScopes(await allowedOAuthTokenScopes(clientId, tokenScopes(payload)));
+  // App grants belong to /api/v1 only (ADR-021); `api:*` never maps to MCP scopes either.
+  const scopes = isFirstPartyApiOAuthClient(clientId)
+    ? []
+    : grantedApiScopes(await allowedOAuthTokenScopes(clientId, tokenScopes(payload)));
   if (!userId || scopes.length === 0) {
     return { response: unauthorized(req, "Invalid OAuth access token claims.") };
   }

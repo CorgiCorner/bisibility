@@ -1,3 +1,7 @@
+import { pageParameters } from "./openapi-parameters";
+import { publicIdSchema } from "./openapi-public-id";
+import { sdkName } from "./openapi-sdk-schema";
+
 type Bearer = (
   summary: string,
   operationId: string,
@@ -11,14 +15,27 @@ type List = (schema: object) => object;
 
 export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
   const { bearer, list, ref } = input;
+  const ruleParameters = [
+    { in: "path", name: "rule_id", required: true, schema: publicIdSchema("alr") },
+    { $ref: "#/components/parameters/IdempotencyKey" },
+  ];
   return {
     "/alert-rules/{rule_id}": {
-      delete: bearer("Delete an alert rule", "deleteAlertRule", ref("AlertRule")),
-      patch: bearer(
-        "Update an alert rule",
-        "updateAlertRule",
-        ref("AlertRule"),
-        ref("AlertRuleInput"),
+      delete: bearer(
+        "Delete an alert rule",
+        "deleteAlertRule",
+        ref("AlertRuleDeleteResult"),
+        undefined,
+        ruleParameters,
+      ),
+      patch: alertRuleMutation(
+        bearer(
+          "Update an alert rule",
+          "updateAlertRule",
+          ref("AlertRule"),
+          ref("AlertRulePatch"),
+          ruleParameters,
+        ),
       ),
     },
     "/competitors/{competitor_id}": {
@@ -28,31 +45,45 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
       delete: bearer("Revoke a migration token", "revokeMigrationToken", ref("MigrationToken")),
     },
     "/projects/{project_id}/alert-rules": {
-      get: bearer("List alert rules", "listAlertRules", list(ref("AlertRule"))),
-      post: bearer(
-        "Create an alert rule",
-        "createAlertRule",
-        ref("AlertRule"),
-        ref("AlertRuleInput"),
+      get: bearer(
+        "List alert rules",
+        "listAlertRules",
+        list(ref("AlertRule")),
+        undefined,
+        pageParameters,
+      ),
+      post: alertRuleMutation(
+        bearer("Create an alert rule", "createAlertRule", ref("AlertRule"), ref("AlertRuleInput"), [
+          { $ref: "#/components/parameters/IdempotencyKey" },
+        ]),
+        true,
       ),
     },
     "/projects/{project_id}/competitors": {
-      get: bearer("List competitors", "listCompetitors", {
-        properties: {
-          data: { items: ref("Competitor"), type: "array" },
-          meta: {
-            properties: {
-              markets: { items: ref("CompetitorMarket"), type: "array" },
-              next_cursor: { type: ["string", "null"] },
-              suggestions: { items: ref("CompetitorSuggestion"), type: "array" },
+      get: bearer(
+        "List competitors",
+        "listCompetitors",
+        {
+          properties: {
+            data: { items: ref("Competitor"), type: "array" },
+            meta: {
+              properties: {
+                markets: { items: ref("CompetitorMarket"), type: "array" },
+                next_cursor: { type: ["string", "null"] },
+                suggestions: { items: ref("CompetitorSuggestion"), type: "array" },
+              },
+              required: ["next_cursor"],
+              type: "object",
+              ...sdkName("CompetitorPageMeta"),
             },
-            required: ["next_cursor"],
-            type: "object",
           },
+          required: ["data", "meta"],
+          type: "object",
+          ...sdkName("CompetitorPage"),
         },
-        required: ["data", "meta"],
-        type: "object",
-      }),
+        undefined,
+        pageParameters,
+      ),
       post: bearer("Add a competitor", "addCompetitor", ref("Competitor"), ref("CompetitorCreate")),
     },
     "/projects/{project_id}/competitors/{competitor_id}": {
@@ -140,7 +171,13 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
       get: bearer("List team members", "listTeamMembers", list(ref("TeamMember"))),
     },
     "/projects/{project_id}/triggered-alerts": {
-      get: bearer("List triggered alerts", "listTriggeredAlerts", list(ref("TriggeredAlert"))),
+      get: bearer(
+        "List triggered alerts",
+        "listTriggeredAlerts",
+        list(ref("TriggeredAlert")),
+        undefined,
+        pageParameters,
+      ),
     },
     "/saved-views/{view_id}": {
       delete: bearer("Delete a saved view", "deleteSavedView", ref("SavedView")),
@@ -148,5 +185,15 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
     "/team/invites/{invite_id}": {
       delete: bearer("Revoke a team invite", "revokeTeamInvite", ref("TeamInvite")),
     },
+  };
+}
+
+function alertRuleMutation(operation: object, created = false) {
+  const raw = operation as { requestBody: object; responses: Record<string, object> };
+  const { "200": success, ...errors } = raw.responses;
+  return {
+    ...operation,
+    requestBody: { ...raw.requestBody, required: true },
+    responses: { [created ? "201" : "200"]: success, ...errors },
   };
 }

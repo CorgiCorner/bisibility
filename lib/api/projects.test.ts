@@ -33,6 +33,9 @@ const mocks = vi.hoisted(() => ({
   writeAudit: vi.fn(),
 }));
 
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
 vi.mock("@/lib/metering/project-budget-bootstrap", () => ({
   ensureProjectSpendingBudget: vi.fn(),
 }));
@@ -981,6 +984,16 @@ describe("project write API routes", () => {
         token_scope: "read",
       },
     });
+  });
+
+  it("serves project details through the API router", async () => {
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      providerConnectionRow({ provider: fullSerpCatalogId }),
+    ]);
+
+    const response = await call("GET", "/projects/prj_a00000000000000000000000");
+
+    expect(response.status).toBe(200);
   });
 
   it("lists project write routes in openapi", async () => {

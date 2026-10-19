@@ -43,6 +43,9 @@ const mocks = vi.hoisted(() => {
   };
 });
 
+vi.mock("./router", async (importOriginal) =>
+  (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
+);
 vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/auth/session", () => ({
   getSession: mocks.getSession,
