@@ -1,7 +1,9 @@
+import { sourceConfigurationSchema } from "@/lib/ai-tracking/schema";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import { describe, expect, it } from "vitest";
 import { API_VERSION_HEADER } from "./api-versions";
 import { getOpenApiDocument } from "./openapi";
+import { appOwnedTrackingRunOperations } from "./openapi-tracking-run-inputs";
 
 describe("OpenAPI document", () => {
   it("resolves every local reference, including recursive AI tracking input definitions", () => {
@@ -29,14 +31,31 @@ describe("OpenAPI document", () => {
     expect(unresolved).toEqual([]);
   });
 
-  it("retains executable recursive JSON constraints on AI tracking provider parameters", () => {
-    const schemas = getOpenApiDocument().components.schemas as Record<string, object>;
-    const validate = new AjvJsonSchemaValidator().getValidator({
-      ...schemas.createAiTrackingSchedule___schema0,
-      components: { schemas },
-    } as never);
-    expect(validate({ nested: [null, true, 1, "text", { nested: [false] }] }).valid).toBe(true);
-    expect(validate({ nested: [() => null] }).valid).toBe(false);
+  it("keeps provider JSON opaque for SDKs and validated by the runtime", () => {
+    const parameters = { nested: [null, true, 1, "text", { nested: [false] }] };
+    const input = appOwnedTrackingRunOperations.retryAiTrackingRun.body as {
+      properties: { configurations: { items: { properties: { parameters: object } } } };
+    };
+    const parameterSchema = input.properties.configurations.items.properties.parameters;
+    expect(parameterSchema).toMatchObject({ type: "object", additionalProperties: true });
+    expect(JSON.stringify(parameterSchema)).not.toContain("$ref");
+    const validate = new AjvJsonSchemaValidator().getValidator(parameterSchema as never);
+    expect(validate(parameters).valid).toBe(true);
+    const configuration = {
+      provider: "dataforseo",
+      endpoint: "example",
+      engine: "chat_gpt",
+      source: "model_api",
+      model: null,
+      parameters,
+    };
+    expect(sourceConfigurationSchema.safeParse(configuration).success).toBe(true);
+    expect(
+      sourceConfigurationSchema.safeParse({
+        ...configuration,
+        parameters: { nested: [() => null] },
+      }).success,
+    ).toBe(false);
   });
 
   it("advertises 402 only on operations that can issue paid provider requests", () => {

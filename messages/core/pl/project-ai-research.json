@@ -48,7 +48,7 @@
     "partialFailure": "Analiza nie została zakończona. Potwierdzone wyniki zachowano. Sprawdź zużycie dostawcy przed ponowieniem.",
     "contentTruncated": "Fragmenty odpowiedzi skrócono, aby mieściły się w zapisanym raporcie.",
     "readOnly": "Projekt jest tylko do odczytu lub Twoja rola nie pozwala uruchamiać płatnych analiz. Możesz otwierać zapisane raporty.",
-    "noSource": "Połącz DataForSEO w integracjach, aby oszacować koszt lub uruchomić analizę.",
+    "noSource": "Wybierz źródło DataForSEO w Integracjach, aby oszacować koszty lub uruchomić analizę.",
     "country": "Kraj",
     "language": "Język",
     "firstModel": "Pierwszy model",
@@ -110,6 +110,8 @@
     "modelUnavailable": "Ten model nie jest jeszcze obsługiwany w analizach promptów.",
     "catalogUnavailableVisibility": "Lista rynków jest niedostępna. ChatGPT dla Stanów Zjednoczonych po angielsku nadal jest dostępny.",
     "catalogHelp": "Informacje o dostępnych ustawieniach AI",
-    "openIntegrations": "Otwórz integracje"
+    "catalogRefreshing": "Odświeżanie katalogu dostawcy",
+    "openIntegrations": "Otwórz integracje",
+    "sourceRetry": "Spróbuj ponownie"
   }
 }

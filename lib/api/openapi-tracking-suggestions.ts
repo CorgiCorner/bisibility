@@ -1,3 +1,6 @@
+import { paymentReceiptWireSchema, paymentResponseFields } from "./openapi-action-payment";
+import { sdkName } from "./openapi-sdk-schema";
+
 const text = { type: "string" };
 const object = (properties: Record<string, unknown>) => ({
   type: "object",
@@ -19,16 +22,25 @@ const configuration = object({
   type: "string",
   pattern: "^[A-Z]{2}$",
 };
-export const aiTrackingSuggestionSnapshotSchema = object({
-  context: object({
-    business: text,
-    audience: text,
-    products: text,
-    goals: text,
-    agent_rules: text,
+export const aiTrackingSuggestionSnapshotSchema = {
+  ...sdkName("AiTrackingSuggestionSnapshot"),
+  ...object({
+    context: {
+      ...sdkName("AiTrackingSuggestionContext"),
+      ...object({
+        business: text,
+        audience: text,
+        products: text,
+        goals: text,
+        agent_rules: text,
+      }),
+    },
+    competitors: array({
+      ...sdkName("AiTrackingSuggestionCompetitor"),
+      ...object({ id: id("cmp"), label: { type: ["string", "null"] }, domain: text }),
+    }),
   }),
-  competitors: array(object({ id: id("cmp"), label: { type: ["string", "null"] }, domain: text })),
-});
+};
 export const aiTrackingSuggestionPreviewSchema = object({
   version: { const: 1 },
   configuration,
@@ -66,3 +78,9 @@ export const aiTrackingSuggestionResponseSchemas = {
   aiTrackingSuggestionsPreview: object({ data: aiTrackingSuggestionPreviewSchema }),
   aiTrackingSuggestionsGenerate: object({ data: aiTrackingSuggestionGenerationSchema }),
 };
+
+Object.assign(aiTrackingSuggestionPreviewSchema.properties, paymentResponseFields);
+Object.assign(aiTrackingSuggestionGenerationSchema.properties, {
+  ...paymentResponseFields,
+  original_payment: paymentReceiptWireSchema,
+});

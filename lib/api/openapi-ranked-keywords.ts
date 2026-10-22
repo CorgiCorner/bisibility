@@ -1,6 +1,7 @@
 import type { schemas } from "./openapi-components";
 import { withCreditsExhausted } from "./openapi-operations";
 import { problemResponse } from "./openapi-problem";
+import { usdCents } from "./openapi-sdk-schema";
 
 type Bearer = (
   summary: string,
@@ -35,10 +36,27 @@ export function rankedKeywordSuggestionPaths(input: {
             input.ref("RankedKeywordSuggestionsResponse"),
             undefined,
             [
+              { in: "query", name: "estimate_only", schema: { type: "boolean", default: false } },
+              { in: "query", name: "require_payment", schema: { type: "boolean", default: false } },
+              {
+                in: "query",
+                name: "payment_option_id",
+                schema: { type: "string", minLength: 1, maxLength: 120 },
+              },
+              {
+                in: "query",
+                name: "payment_quote_token",
+                schema: { type: "string", minLength: 1, maxLength: 12000 },
+              },
               {
                 in: "query",
                 name: "connection_id",
-                schema: { pattern: "^conn_[a-z][a-z0-9]{23}$", type: "string" },
+                schema: {
+                  minLength: 1,
+                  maxLength: 120,
+                  pattern: "^conn_[a-z][a-z0-9]{23}$",
+                  type: "string",
+                },
               },
               {
                 in: "query",
@@ -62,10 +80,11 @@ export function rankedKeywordSuggestionPaths(input: {
                 schema: { default: false, type: "boolean" },
               },
               {
-                description: "Best-effort pre-estimate provider cost gate, in cents.",
+                description:
+                  "Best-effort pre-estimate provider cost gate, in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before paid work.",
                 in: "query",
                 name: "max_cost_cents",
-                schema: { minimum: 1, type: "integer" },
+                schema: { minimum: 0, type: "integer", ...usdCents },
               },
             ],
           ),

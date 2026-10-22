@@ -39,6 +39,7 @@ async function loadFromDatabase(
         ? null
         : (contexts.get(providerRateContextKey(connection.id, "rank_check"))?.manualAmountCents ??
           null),
+    publicId: connection.publicId,
     credentialsEncrypted: connection.credentialsEncrypted,
     credentialSource: connection.credentialSource,
     id: connection.id,

@@ -117,6 +117,39 @@
     "trackedMarkets": "追跡中の市場",
     "updateFailed": "市場のステータスを更新できませんでした。",
     "updateMarketFailed": "市場を更新できませんでした。",
-    "visibility": "可視性"
+    "visibility": "可視性",
+    "openMarket": "市場を開く",
+    "viewMarkets": "市場一覧を見る",
+    "alreadyTrackedShort": "追跡済み",
+    "deviceTracking": {
+      "title": "デバイスの追跡を追加",
+      "description": "この市場に不足しているデバイスの追跡を追加します。",
+      "device": "追加するデバイス",
+      "manualNotice": "追加は無料です。チェックはまだ実行されません。",
+      "scheduledNotice": "追加は無料です。選択したスケジュールに沿ってチェックします。",
+      "costNotice": "追加は無料です。チェックにはクレジットまたはプロバイダーのアカウントを使用します。",
+      "scope": "{checks, plural, other {# キーワード}}の{device}追跡。",
+      "skipped": "スキップ: 追跡中 {existing, number}、アーカイブ済み {archived, number}。",
+      "review": "変更を確認",
+      "confirm": "{device}の追跡を追加（{count, number}）",
+      "added": "{count, number} キーワードの追跡を追加しました。",
+      "failed": "変更を確認できませんでした。再試行する前にもう一度確認してください。",
+      "errors": {
+        "market_unavailable": "この市場は一時停止、アーカイブ、または利用不可です。市場一覧で確認してください。",
+        "selection_too_large": "大きな市場では、キーワード追加から少量ずつデバイスを追加してください。",
+        "selection_changed": "キーワードまたはスケジュールが変更されました。最新の範囲をもう一度確認してください。",
+        "schedule_unavailable": "このスケジュールは一時停止、アーカイブ、または利用不可です。別のスケジュールか手動を選択してください。",
+        "ambiguous_keywords": "一致するキーワードの追跡設定が異なります。キーワード追加からデバイスを個別に追加してください。"
+      },
+      "keywords": "キーワード",
+      "selectedCount": "{total, number} 件中 {count, number} 件",
+      "selectAll": "すべて選択",
+      "noAvailableKeywords": "このデバイスに追加できるキーワードはありません。",
+      "selectionLimit": "最大500個のキーワードを選択してください。"
+    },
+    "trackedTargets": "{count, plural, other {# ターゲット}}",
+    "pauseTracking": "追跡を一時停止",
+    "resumeTracking": "追跡を再開",
+    "trackingStatusFor": "{market}: {status}"
   }
 }

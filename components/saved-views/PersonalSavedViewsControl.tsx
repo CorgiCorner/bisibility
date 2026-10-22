@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/Button";
 import { menuSelectTriggerClass } from "@/components/ui/MenuSelect";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { toolbarControlClassName } from "@/components/ui/toolbar-control-styles";
 import type { CanonicalSavedViewResource } from "@/lib/saved-views/canonical-model";
 import { canonicalSavedViewHref } from "@/lib/saved-views/navigation";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
@@ -125,6 +124,24 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
       { kind: "preference", revision: preference.revision },
     );
   }
+  function saveChanges() {
+    if (!active?.canEdit) return;
+    void perform(
+      async () => {
+        const updated = await props.updateAction({
+          config: props.config,
+          expectedRevision: active.revision,
+          name: active.name,
+          projectId: props.projectId,
+          viewId: active.id,
+        });
+        if (!updated.ok) throw updated.error;
+        props.onSelect(updated.value);
+        props.onRefresh();
+      },
+      { kind: "view", id: active.id, revision: active.revision },
+    );
+  }
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2">
       <Tooltip
@@ -154,7 +171,12 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
             setAnchor(event.currentTarget);
           }}
         >
-          <BookmarkSimple className="shrink-0 text-fg-muted" aria-hidden size={15} />
+          <BookmarkSimple
+            weight="regular"
+            className="shrink-0 text-fg-muted"
+            aria-hidden
+            size={15}
+          />
           <span data-view-name className="min-w-0 truncate text-fg">
             {activeLabel}
           </span>
@@ -163,7 +185,7 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
               <StatusPill status="update" label={labels.modified} />
             </span>
           ) : null}
-          <CaretDown className="shrink-0 text-fg-muted" aria-hidden size={11} />
+          <CaretDown weight="regular" className="shrink-0 text-fg-muted" aria-hidden size={11} />
         </button>
       </Tooltip>
       <PersonalViewMenu
@@ -180,47 +202,12 @@ function PersonalSavedViewsSession(props: PersonalSavedViewsControlProps) {
         onDiscard={props.onDiscard}
         onSelect={select}
         onSetDefault={setDefault}
+        onSaveAs={() => {
+          setAnchor(null);
+          setSavingAs(true);
+        }}
+        onSaveChanges={saveChanges}
       />
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className={toolbarControlClassName}
-        style={{ fontWeight: 400 }}
-        disabled={pending}
-        onClick={() => setSavingAs(true)}
-      >
-        {labels.saveAs}
-      </Button>
-      {props.modified && active?.canEdit ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className={toolbarControlClassName}
-          style={{ fontWeight: 400 }}
-          disabled={!writable}
-          onClick={() =>
-            void perform(
-              async () => {
-                const updated = await props.updateAction({
-                  config: props.config,
-                  expectedRevision: active.revision,
-                  name: active.name,
-                  projectId: props.projectId,
-                  viewId: active.id,
-                });
-                if (!updated.ok) throw updated.error;
-                props.onSelect(updated.value);
-                props.onRefresh();
-              },
-              { kind: "view", id: active.id, revision: active.revision },
-            )
-          }
-        >
-          {labels.saveChanges}
-        </Button>
-      ) : null}
       {preference.notice ? (
         <span role="status" className="basis-full text-[12px] text-fg-muted">
           {labels.unavailableDefault}

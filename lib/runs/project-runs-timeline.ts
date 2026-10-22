@@ -1,9 +1,12 @@
+import { aiRunState } from "./ai-run-state";
 import type { ProjectRunsTimelineSortTuple } from "./cursor";
 import type { ProjectRunsQuery } from "./filters";
 import type { ProjectRun } from "./project-run";
 
 export function projectRunTimelineGroup(run: ProjectRun): 0 | 1 | 2 {
-  if (run.kind === "rank_check") {
+  if (run.kind === "ai")
+    return aiRunState(run.details.state, run.timestamps.finishedAt, run.details.reason).group;
+  if (run.kind === "rank") {
     if (["completed", "cancelled"].includes(run.details.status)) return 2;
     return ["running", "cancelling"].includes(run.details.status) ||
       (run.details.status === "blocked" && run.timestamps.startedAt)
@@ -16,7 +19,15 @@ export function projectRunTimelineGroup(run: ProjectRun): 0 | 1 | 2 {
 
 export function projectRunTimelineAt(run: ProjectRun): string {
   const group = projectRunTimelineGroup(run);
-  if (run.kind === "gsc_import") {
+  if (run.kind === "ai")
+    return (
+      (group === 2
+        ? run.timestamps.finishedAt
+        : group === 0
+          ? run.timestamps.startedAt
+          : run.timestamps.plannedFor) ?? run.timestamps.createdAt
+    );
+  if (run.kind === "gsc") {
     return (
       (group === 2
         ? run.timestamps.lastSyncFinishedAt

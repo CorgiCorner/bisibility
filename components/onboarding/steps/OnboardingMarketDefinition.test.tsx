@@ -120,9 +120,12 @@ describe("OnboardingMarketDefinition", () => {
     });
     await user.click(screen.getByRole("menuitem", { name: "United States" }));
     await user.click(screen.getByRole("button", { name: "Language" }));
-    await user.click(screen.getByRole("menuitem", { name: "English" }));
+    // Tracked options stay selectable and carry the "Already tracked" hint in their name.
+    await user.click(screen.getByRole("menuitem", { name: /^English.*Already tracked$/ }));
     await user.click(screen.getByRole("button", { name: "Location" }));
-    await user.click(screen.getByRole("menuitem", { name: "United States (Country)" }));
+    const location = screen.getByRole("menuitem", { name: "United States (Country)" });
+    expect(location).toHaveTextContent("Already tracked");
+    await user.click(location);
 
     expect(screen.getByRole("alert")).toHaveTextContent("This market is already active.");
     expect(screen.getByRole("button", { name: "Create market" })).toBeDisabled();

@@ -11,6 +11,7 @@ type MarketsRowMenuProps = {
   canRunChecks?: boolean;
   market: MarketsPageRow;
   onAddKeywords?: (market: MarketsPageRow) => void;
+  onAddDevice?: (market: MarketsPageRow) => void;
   onArchive: (market: MarketsPageRow) => void;
   onEdit: (market: MarketsPageRow) => void;
   onRunChecks?: (market: MarketsPageRow) => void;
@@ -23,6 +24,7 @@ export function MarketsRowMenu({
   canRunChecks = false,
   market,
   onAddKeywords,
+  onAddDevice,
   onArchive,
   onEdit,
   onRunChecks,
@@ -51,6 +53,9 @@ export function MarketsRowMenu({
                 onSelect: () => onAddKeywords(market),
               },
             ]
+          : []),
+        ...(canAddKeywords && market.status === "active" && onAddDevice
+          ? [{ label: t("deviceTracking.title"), onSelect: () => onAddDevice(market) }]
           : []),
         { disabled: !canEdit, label: t("edit"), onSelect: () => onEdit(market) },
         {

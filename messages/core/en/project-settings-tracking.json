@@ -35,8 +35,6 @@
       "serpDepth": "Default SERP depth",
       "serpDepthHelp": "How far down each result page a check reads.",
       "serpDepthWarning": "From the next check, keywords ranking past {depth, number} record as not found instead of their position. That gap stays in history.",
-      "stopOnMatch": "Stop checks at first domain match",
-      "stopOnMatchDescription": "On stops reading when {domain} first appears, recording the best position. Off reads the full configured depth.",
       "projectDomain": "the project domain",
       "frequencyDaily": "Daily",
       "frequencyWeekly": "Weekly",
@@ -46,7 +44,14 @@
       "frequencyCustomCron": "Custom cron",
       "deviceDesktop": "Desktop",
       "deviceMobile": "Mobile",
-      "depthOption": "Top {depth, number}"
+      "depthOption": "Top {depth, number}",
+      "resultsCollection": "Results to collect",
+      "positionOnly": "My position",
+      "fullResults": "Full search results",
+      "positionOnlyDescription": "Stops once {domain} is found. Competitor results may be incomplete.",
+      "fullResultsDescription": "Collects results up to Top {depth, number} for competitor comparisons. May use more credits or provider requests.",
+      "visibilityDepthWarning": "Checks below Top 20 do not update Visibility.",
+      "fullTop20Description": "Collects the requested Top 20 even when your site is found early. May use more credits or provider requests."
     },
     "matchScope": {
       "title": "Matching scope",
@@ -154,6 +159,10 @@
         "invalid": "Enter a non-negative duration with at most three decimal places, or leave blank.",
         "error": "Policy could not be saved. Refresh and try again."
       }
+    },
+    "schedules": {
+      "description": "New keywords start without a schedule. Add them to a schedule for automatic checks.",
+      "manage": "Manage schedules"
     }
   }
 }

@@ -63,6 +63,16 @@ function propsFixture(): PersonalSavedViewsControlProps {
   };
 }
 
+function openViewMenu() {
+  const trigger = document.querySelector<HTMLButtonElement>('button[aria-haspopup="menu"]');
+  if (!trigger) throw new Error("Expected view menu");
+  fireEvent.click(trigger);
+}
+function chooseViewAction(name: string) {
+  openViewMenu();
+  fireEvent.click(screen.getByRole("menuitem", { name }));
+}
+
 describe("personal saved-view explicit commands", () => {
   it("selects without writing the default and requires a separate default command", async () => {
     const props = propsFixture();
@@ -113,7 +123,9 @@ describe("personal saved-view explicit commands", () => {
     }));
     render(<PersonalSavedViewsControl {...props} />);
     expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save as" })).toBeEnabled();
+    openViewMenu();
+    expect(screen.getByRole("menuitem", { name: "Save as" })).toBeEnabled();
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
     expect(props.updateAction).not.toHaveBeenCalled();
     const viewTrigger = screen.getByRole("button", { name: "Service mobile" });
     expect(within(viewTrigger).getByText("Unsaved changes")).toBeVisible();
@@ -132,7 +144,7 @@ describe("personal saved-view explicit commands", () => {
     }));
     const before = structuredClone(props.preference);
     render(<PersonalSavedViewsControl {...props} />);
-    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    chooseViewAction("Save changes");
     expect(await screen.findByRole("alert")).toHaveTextContent("Reload before saving");
     expect(props.preference).toEqual(before);
     expect(props.onSelect).not.toHaveBeenCalled();
@@ -147,9 +159,14 @@ describe("personal saved-view explicit commands", () => {
       error: { code: "conflict" as const, message: "Conflict", status: 409 as const },
     }));
     const rendered = render(<PersonalSavedViewsControl {...props} />);
-    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    chooseViewAction("Save changes");
     await screen.findByRole("alert");
-    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+    openViewMenu();
+    expect(screen.getByRole("menuitem", { name: "Save changes" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
     fireEvent.click(screen.getByRole("button", { name: "Reload latest revision" }));
     expect(props.onRefresh).toHaveBeenCalledOnce();
     expect(props.onDiscard).not.toHaveBeenCalled();
@@ -163,7 +180,12 @@ describe("personal saved-view explicit commands", () => {
         views={props.views.map((view) => ({ ...view, revision: 9 }))}
       />,
     );
-    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+    openViewMenu();
+    expect(screen.getByRole("menuitem", { name: "Save changes" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
     expect(screen.getByText("Unsaved changes")).toBeVisible();
     expect(screen.getByText("Latest revision: 9")).toBeVisible();
     expect(screen.getByRole("link", { name: "Open latest view in a new tab" })).toHaveAttribute(
@@ -175,7 +197,7 @@ describe("personal saved-view explicit commands", () => {
       expect.stringContaining(props.views[0].id),
     );
     fireEvent.click(screen.getByRole("button", { name: "Keep draft and use latest revision" }));
-    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    chooseViewAction("Save changes");
     await waitFor(() =>
       expect(props.updateAction).toHaveBeenLastCalledWith(
         expect.objectContaining({
@@ -225,7 +247,7 @@ describe("personal saved-view explicit commands", () => {
       };
     });
     render(<PersonalSavedViewsControl {...props} />);
-    fireEvent.click(screen.getByRole("button", { name: "Save as" }));
+    chooseViewAction("Save as");
     expect(screen.getByRole("radio", { name: "Personal" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "Project" })).toBeDisabled();
     fireEvent.change(screen.getByRole("textbox", { name: "View name" }), {
@@ -246,7 +268,7 @@ describe("personal saved-view explicit commands", () => {
   it("discards the former identity's unsaved modal when the session scope changes", () => {
     const props = propsFixture();
     const rendered = render(<PersonalSavedViewsControl {...props} />);
-    fireEvent.click(screen.getByRole("button", { name: "Save as" }));
+    chooseViewAction("Save as");
     fireEvent.change(screen.getByRole("textbox", { name: "View name" }), {
       target: { value: "Previous user draft" },
     });
@@ -263,7 +285,7 @@ it.each([false, true])(
   async (canCreateShared) => {
     const props = { ...propsFixture(), canCreatePrivate: false, canCreateShared };
     render(<PersonalSavedViewsControl {...props} />);
-    fireEvent.click(screen.getByRole("button", { name: "Save as" }));
+    chooseViewAction("Save as");
     const modal = within(screen.getByRole("dialog"));
     const privateOption = modal.getByRole("radio", { name: "Personal" });
     expect(privateOption).toBeChecked();
@@ -297,7 +319,7 @@ it("shows the private gate reason when an allowed stale page receives a typed de
     error: { code: "private_view_creation_unavailable", status: 403, message: "denied" },
   });
   render(<PersonalSavedViewsControl {...props} />);
-  fireEvent.click(screen.getByRole("button", { name: "Save as" }));
+  chooseViewAction("Save as");
   const modal = within(screen.getByRole("dialog"));
   fireEvent.change(modal.getByRole("textbox", { name: "View name" }), {
     target: { value: "Private draft" },
@@ -314,7 +336,7 @@ it("can review a view conflict after the resource disappears without writing a G
     error: { code: "conflict" as const, message: "Conflict", status: 409 as const },
   }));
   const rendered = render(<PersonalSavedViewsControl {...props} />);
-  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  chooseViewAction("Save changes");
   await screen.findByRole("alert");
   fireEvent.click(screen.getByRole("button", { name: "Reload latest revision" }));
   rendered.rerender(<PersonalSavedViewsControl {...props} views={[]} />);
@@ -331,7 +353,7 @@ it("clears the source draft once after successful Save as before selecting its c
   const clearDraft = vi.fn();
   const props = { ...propsFixture(), onClearDraft: clearDraft };
   render(<PersonalSavedViewsControl {...props} />);
-  fireEvent.click(screen.getByRole("button", { name: "Save as" }));
+  chooseViewAction("Save as");
   fireEvent.change(screen.getByRole("textbox", { name: "View name" }), {
     target: { value: "My copy" },
   });

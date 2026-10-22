@@ -3,6 +3,7 @@ import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { RankReportCapacityError } from "@/lib/rank-reports/errors";
 import type { RankReportLimits } from "@/lib/rank-reports/model";
+import { keywordCheckScheduleSelect } from "./keyword-row-types";
 
 const schedule = {
   cronExpression: true,
@@ -40,7 +41,13 @@ export async function loadRankTrackerReportCandidates(
     ...(asOf ? { createdAt: { lte: asOf } } : {}),
     locationRef: { projectMarkets: { none: { projectId, status: { not: "active" as const } } } },
     ...(pausedSchedules === "exclude"
-      ? { OR: [{ schedule: null }, { schedule: { frequency: { not: "paused" as const } } }] }
+      ? {
+          OR: [
+            { checkSchedule: null },
+            { checkSchedule: { archivedAt: { not: null } } },
+            { checkSchedule: { enabled: true, frequency: { not: "paused" as const } } },
+          ],
+        }
       : {}),
   };
   const where = selection ? { AND: [base, selection] } : base;
@@ -49,7 +56,7 @@ export async function loadRankTrackerReportCandidates(
   const rows = await tx.keyword.findMany({
     orderBy: [{ createdAt: "desc" }, { publicId: "asc" }],
     select: {
-      checkSchedule: { select: { name: true, publicId: true, serpDepth: true } },
+      checkSchedule: { select: keywordCheckScheduleSelect },
       createdAt: true,
       device: true,
       id: true,

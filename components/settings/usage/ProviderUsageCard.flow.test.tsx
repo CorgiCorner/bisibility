@@ -272,16 +272,34 @@ it("keeps an unknown pricing action failure localized for a non-English locale",
 it("shows a fresh native balance without inferring scoped evidence or automatically saving", async () => {
   const user = userEvent.setup();
   actions.updateProviderAllocation.mockClear();
-  refreshBalance.mockResolvedValue({
-    availableAtProvider: { status: "available", amount: 0.86, unit: "usd" },
-  });
+  refreshBalance.mockImplementation(async (_project, _connection, identity) => ({
+    nativeObservation: {
+      identity,
+      value: { text: "0.86", unit: "USD", certainty: "measured" },
+      observedAt: new Date(Date.now() - 60_000).toISOString(),
+      expiresAt: new Date(Date.now() + 14 * 60_000).toISOString(),
+    },
+  }));
   renderUsage();
   await openBudgetEditor(user);
   const field = await screen.findByLabelText("DataForSEO app and schedules budget");
   await user.click(screen.getAllByRole("button", { name: "Refresh provider balance" })[2]);
-  expect(refreshBalance).toHaveBeenCalledWith("prj_story", "conn_data");
+  expect(refreshBalance).toHaveBeenCalledWith("prj_story", "conn_data", {
+    id: "conn_data:byok:app",
+    connectionId: "conn_data",
+    fundingSource: "byok",
+    surface: "app",
+    unit: "cents",
+    revision: "row-1",
+  });
   expect(await screen.findByText(/\$0.86/)).toBeInTheDocument();
-  expect(screen.getAllByText(/Scoped usage and reservations/)[0]).toBeInTheDocument();
+  expect(
+    screen.getAllByText(
+      usageSettingsFeatureTestMessages.projectSettingsUsage.provider.budgetDialog
+        .availabilityReasons.usage_unavailable,
+    )[0],
+  ).toBeInTheDocument();
+  expect(screen.getAllByRole("button", { name: "Use provider balance" })[1]).toBeDisabled();
   expect(field).toHaveValue("30.00");
   expect(host.execute).not.toHaveBeenCalled();
   expect(actions.updateProviderAllocation).not.toHaveBeenCalled();

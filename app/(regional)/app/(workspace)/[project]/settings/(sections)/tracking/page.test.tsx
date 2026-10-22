@@ -1,6 +1,7 @@
 import TrackingSettingsPage from "@/app/(regional)/app/(workspace)/[project]/settings/(sections)/tracking/page";
 import type { Role } from "@/lib/generated/prisma/client";
-import { render } from "@testing-library/react";
+import trackingMessages from "@/messages/core/en/project-settings-tracking.json";
+import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -10,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   requireReadableProject: vi.fn(),
   resolveRegionalDocumentLocale: vi.fn(),
   sectionProps: undefined as unknown,
+  genericHost: vi.fn(),
+  policy: vi.fn(),
 }));
 
 vi.mock("@/components/settings/shell/SettingsShell", () => ({
@@ -22,10 +25,16 @@ vi.mock("@/components/settings/tracking/TrackingSettingsSection", () => ({
   },
 }));
 vi.mock("@/components/measurement-settings/MeasurementPolicySettingsSection", () => ({
-  MeasurementPolicySettingsSection: () => null,
+  MeasurementPolicySettingsSection: () => {
+    mocks.policy();
+    return <div data-testid="measurement-policy" />;
+  },
 }));
 vi.mock("@/components/measurement-settings/MeasurementSettingsHostSection", () => ({
-  MeasurementSettingsHostSection: () => null,
+  MeasurementSettingsHostSection: () => {
+    mocks.genericHost();
+    return <div data-testid="duplicate-measurement-settings" />;
+  },
 }));
 vi.mock("@/i18n/catalog-loader.server", () => ({ loadCoreMessages: mocks.loadCoreMessages }));
 vi.mock("@/i18n/document-locale.server", () => ({
@@ -61,7 +70,7 @@ function mockPage(
 describe("TrackingSettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.loadCoreMessages.mockResolvedValue({});
+    mocks.loadCoreMessages.mockResolvedValue(trackingMessages);
     mocks.resolveRegionalDocumentLocale.mockResolvedValue({ locale: "en", timeZone: "UTC" });
   });
 
@@ -78,6 +87,20 @@ describe("TrackingSettingsPage", () => {
     ]);
     expect(mocks.sectionProps).toEqual(
       expect.objectContaining({ canEdit: true, domain: "example.com", projectId: "prj_1" }),
+    );
+  });
+
+  it("keeps one defaults editor and the unique policy while linking to schedules", async () => {
+    mockPage("member");
+    render(await TrackingSettingsPage({ params: Promise.resolve({ project: "prj_1" }) }));
+
+    expect(mocks.genericHost).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("duplicate-measurement-settings")).not.toBeInTheDocument();
+    expect(mocks.policy).toHaveBeenCalledOnce();
+    expect(document.querySelectorAll("[data-tracking-section-test]")).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "Manage schedules" })).toHaveAttribute(
+      "href",
+      "/app/prj_1/runs/schedules",
     );
   });
 

@@ -6,7 +6,7 @@ import { writeAudit } from "@/lib/auth/audit";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { prisma } from "@/lib/db/prisma";
 import { deleteKeywordTargets } from "@/lib/keywords/delete";
-import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
+import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
 import { type ApiContext, actorProjectRole, forbidden } from "./context";
 import { scheduleFromBulk } from "./keyword-utils";
 import { requireApiPublicId } from "./public-id";
@@ -67,19 +67,9 @@ export async function bulkKeywords(ctx: ApiContext) {
     });
   } else if (data.operation === "set_frequency") {
     await prisma.$transaction(async (tx) => {
-      await Promise.all(
-        foundIds.map((keywordId) => {
-          const schedule = scheduleFromBulk(data, keywordId);
-          return schedule
-            ? tx.keywordSchedule.upsert({
-                create: { ...schedule, keywordId },
-                update: schedule,
-                where: { keywordId },
-              })
-            : Promise.resolve();
-        }),
-      );
-      await refreshKeywordDispatchStates({ keywordIds: foundIds }, tx);
+      const schedule = scheduleFromBulk(data, foundIds[0]);
+      if (schedule)
+        await setKeywordCadence(tx, ctx.auth.project.id, foundIds, schedule, ctx.actorId ?? null);
     });
   } else if (data.operation === "add_tags") {
     await addTags(prisma, ctx.auth.project.id, foundIds, data.tags ?? []);

@@ -30,6 +30,7 @@ function consentProps(overrides: Partial<OAuthConsentFormProps> = {}): OAuthCons
       dynamic: true,
       id: "client_1",
       name: "Codex",
+      redirectTarget: "http://127.0.0.1:51008/callback/request",
       redirectUri: "127.0.0.1:51008/callback/request",
     },
     expiresAt: Date.now() + 300_000,
@@ -65,12 +66,15 @@ describe("OAuthConsentForm", () => {
     expect(
       screen.getByText(/Registered automatically, not reviewed by bisibility/),
     ).toBeInTheDocument();
-    expect(screen.getByText(/delete projects and manage members and API keys/)).toBeInTheDocument();
-    expect(screen.getByText(/Within your existing permissions/)).toBeInTheDocument();
-    expect(screen.getByText(/They keep working after disconnection/)).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Read and write" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /create API tokens/i })).not.toBeChecked();
+    expect(screen.getByText(/read and change your project/)).toBeInTheDocument();
+    expect(screen.getByText(/charged to the project's payment source/)).toBeInTheDocument();
+    expect(screen.getByText(/at most/).closest("label")?.textContent).toMatch(/90 days/);
     expect(screen.getByText(/Access renews until revoked/)).toBeInTheDocument();
     expect(screen.getByText("client_1")).not.toBeVisible();
-    expect(screen.getByText("127.0.0.1:51008/callback/request")).not.toBeVisible();
+    expect(screen.getByText("http://127.0.0.1:51008/callback/request")).not.toBeVisible();
+    expect(screen.queryByText("This redirect uses HTTP on a public host.")).not.toBeInTheDocument();
     expect(screen.getByText("Technical details").closest("details")).not.toHaveAttribute("open");
     expect(screen.getByText("Request expires in 5:00")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Allow Codex" })).toBeEnabled();
@@ -104,6 +108,8 @@ describe("OAuthConsentForm", () => {
     expect(screen.getByRole("button", { name: "Allow ChatGPT" })).toBeEnabled();
     expect(screen.getByText("chatgpt.com")).toBeVisible();
     expect(screen.getByText(/read your project and rank data/i)).toBeVisible();
+    expect(screen.queryByRole("radio", { name: "Full access" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/payment source/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Create API tokens/)).not.toBeInTheDocument();
     expect(screen.queryByText(/change|administer/)).not.toBeInTheDocument();
     expect(screen.getByText("Access lasts up to 1 hour.")).toBeVisible();
@@ -130,6 +136,8 @@ describe("OAuthConsentForm", () => {
     await screen.findByText("Consent response did not include a redirect URI.");
     expect(mocks.consent).toHaveBeenCalledWith({
       accept: true,
+      access_level: "read",
+      allow_api_tokens: false,
       scope: "openid profile email offline_access read",
     });
   });
@@ -156,10 +164,12 @@ describe("OAuthConsentForm", () => {
     expect(screen.getByRole("button", { name: "Deny" })).toBeEnabled();
   });
 
-  it("also warns about persistent credentials when admin grants API key creation", () => {
+  it("offers API tokens without project admin when only admin was requested", () => {
     render(<OAuthConsentForm {...consentProps({ scopes: ["admin"] })} />);
+    expect(screen.getByRole("checkbox", { name: /create API tokens/i })).not.toBeChecked();
     expect(screen.getByText("Create API tokens")).toBeVisible();
-    expect(screen.getByText(/delete projects and manage members and API keys/)).toBeVisible();
+    expect(screen.queryByText(/delete projects/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Full access" })).not.toBeInTheDocument();
   });
 
   it("disables consent when the client identifier is missing", () => {
@@ -200,7 +210,10 @@ describe("OAuthConsentForm", () => {
       />,
     );
 
-    expect(screen.getByText("Create API tokens")).toBeInTheDocument();
+    expect(screen.getByText("Create API tokens").closest("li")?.textContent).toMatch(/never/);
+    expect(screen.queryByRole("checkbox", { name: /create API tokens/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: "Read and write" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/at most 90 days/)).not.toBeInTheDocument();
 
     view.rerender(<OAuthConsentForm {...consentProps({ client, expiresAt: Date.now() - 1 })} />);
     expect(screen.getByText("bisibility auth login")).toBeInTheDocument();
@@ -236,7 +249,12 @@ describe("OAuthConsentForm", () => {
     expect(
       await screen.findByText("Consent response did not include a redirect URI."),
     ).toBeInTheDocument();
-    expect(mocks.consent).toHaveBeenCalledWith({ accept: true, scope: "email" });
+    expect(mocks.consent).toHaveBeenCalledWith({
+      accept: true,
+      access_level: null,
+      allow_api_tokens: false,
+      scope: "email",
+    });
   });
 
   it("posts denial and maps provider and network failures", async () => {
@@ -280,5 +298,31 @@ describe("OAuthConsentForm", () => {
     view.rerender(<OAuthConsentForm {...consentProps({ scopes: ["openid"] })} />);
     fireEvent.click(screen.getByRole("button", { name: "Allow Codex" }));
     expect(await screen.findByText("Could not complete the consent request.")).toBeInTheDocument();
+  });
+
+  it("submits the selected level and token choice and warns on public HTTP", async () => {
+    mocks.consent.mockResolvedValue({ data: {}, error: null });
+    const view = render(<OAuthConsentForm {...consentProps()} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Read only" }));
+    expect(screen.queryByText(/payment source/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "Full access" }));
+    expect(screen.getByText(/delete projects/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: /create API tokens/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Allow Codex" }));
+    await screen.findByText("Consent response did not include a redirect URI.");
+    expect(mocks.consent).toHaveBeenCalledWith({
+      accept: true,
+      access_level: "full",
+      allow_api_tokens: true,
+      scope: "openid profile email offline_access read write admin tokens:write",
+    });
+    const client = {
+      ...consentProps().client,
+      redirectTarget: "http://public.example.com/callback",
+      redirectUri: "public.example.com/callback",
+    };
+    view.rerender(<OAuthConsentForm {...consentProps({ client })} />);
+    expect(screen.getByText("http://public.example.com/callback")).toBeInTheDocument();
+    expect(screen.getByText("This redirect uses HTTP on a public host.")).toBeInTheDocument();
   });
 });

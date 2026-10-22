@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderReadyStep } from "./step-first-check-test-support";
 
@@ -34,18 +34,22 @@ describe("StepFirstCheck", () => {
 
     expect(screen.getByText("First check")).toBeInTheDocument();
     expect(
-      screen.getByText("Your schedule is set to Daily. You can also run a sample check now."),
+      screen.getByText(
+        "Everything's ready. Run your first check whenever you like - nothing runs until you start it.",
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByLabelText("Tracking: 3 keywords · Google · United States (English) · 2 devices"),
     ).toBeVisible();
-    expect(screen.getByLabelText("Schedule: Daily · UTC")).toBeVisible();
+    expect(
+      screen.getByLabelText("Schedule: Manual - checks run when you start them"),
+    ).toBeVisible();
     expect(screen.getByLabelText(/Data source: DataForSEO/)).toBeVisible();
     expect(screen.queryByText(/Sample keyword/i)).toBeNull();
     expect(screen.queryByText("Project")).toBeNull();
     expect(screen.queryByText("Review")).toBeNull();
     expect(screen.queryByRole("button", { name: "Keyword used for the sample checks" })).toBeNull();
-    expect(screen.getByRole("button", { name: "Project timezone" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Project timezone" })).not.toBeInTheDocument();
     for (const row of screen.getAllByLabelText(/^(Tracking|Schedule|Data source):/)) {
       const value = row.closest("[data-summary-value]");
       expect(value).toHaveClass("font-normal");
@@ -65,13 +69,8 @@ describe("StepFirstCheck", () => {
     expect(runSampleChecksButton).toHaveAttribute("type", "button");
   });
 
-  // This case opens the timezone menu, which renders the full IANA zone list. It measures ~800ms
-  // locally while every other case in this file stays between 4ms and 164ms, so it is the only one
-  // here with no headroom under the 5s default. On a slower runner that packs more files into a
-  // single shard it crosses 5s repeatably while passing everywhere else. The timeout covers the
-  // measured cost; it does not paper over a hang, and shrinking the rendered zone list would
-  // remove the need for it.
-  it("restores the saved timezone when an update fails", async () => {
+  it("does not expose a project timezone editor for an unscheduled first check", () => {
+    const onTimezoneChange = vi.fn();
     renderReadyStep({
       defaults: {
         country: "United States",
@@ -82,17 +81,14 @@ describe("StepFirstCheck", () => {
         projectId: "prj_1",
         timezone: "UTC",
       },
-      onTimezoneChange: vi.fn(async () => {
-        throw new Error("save failed");
-      }),
+      onTimezoneChange,
     });
-
-    fireEvent.click(screen.getByRole("button", { name: "Project timezone" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /Europe\/Warsaw/ }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent("Timezone could not be saved");
-    expect(screen.getByRole("button", { name: "Project timezone" })).toHaveTextContent("UTC");
-  }, 20_000);
+    expect(screen.queryByRole("button", { name: "Project timezone" })).not.toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Schedule: Manual - checks run when you start them"),
+    ).toBeVisible();
+    expect(onTimezoneChange).not.toHaveBeenCalled();
+  });
 
   it("combines keyword, engine, market, and device facts into Tracking", () => {
     renderReadyStep({
@@ -160,7 +156,7 @@ describe("StepFirstCheck", () => {
     ).toHaveLength(1);
     expect(
       screen.getByText(
-        "Almost ready. Everything is set - connect a data provider whenever you want to run checks.",
+        "Your keywords are ready. Choose a data source whenever you are ready to run checks.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Data source: Not connected")).toBeVisible();
@@ -199,12 +195,18 @@ describe("StepFirstCheck", () => {
     });
 
     expect(screen.getByRole("button", { name: "Run check" })).not.toBeDisabled();
-    expect(screen.getByLabelText("Schedule: Paused - no checks are scheduled")).toBeVisible();
     expect(
-      screen.getByText("Everything's ready. Checks are paused until you resume the schedule."),
+      screen.getByLabelText("Schedule: Manual - checks run when you start them"),
+    ).toBeVisible();
+    expect(
+      screen.getByText(
+        "Everything's ready. Run your first check whenever you like - nothing runs until you start it.",
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Manual preview can run now. Scheduled checks stay paused."),
+      screen.getByText(
+        "1 check runs once now so you can see it working. Nothing else runs automatically.",
+      ),
     ).toBeInTheDocument();
   });
 

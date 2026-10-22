@@ -51,10 +51,21 @@ Content-Type: application/json
 }
 ```
 
-`expires_in_days` accepts `30`, `90`, `365`, or `null` for no expiry. The
-response includes `token` exactly once; only its hash is stored.
+`expires_in_days` accepts `30`, `90`, `365`, or `null` for no expiry. Omitting
+`scope` defaults to `read`. A token with no expiry, or with `admin` scope, can
+do everything your role allows until revoked. An app can create one if you
+allowed it to create API tokens. An app registered automatically must use 30
+or 90 days; omitting expiry, no expiry, and 365 days are rejected for that
+app. See [Agent permissions](/agents/permissions). The response includes
+`token` exactly once; only its hash is stored.
 
 ## List and revoke tokens
+
+Review OAuth app access in **Account > Security > Connected apps**. Revoking an
+app stops renewal; access already issued can keep working for up to 1 hour.
+API tokens created by the app remain valid unless you revoke them too. When
+retained issuance history identifies those tokens, you can include them in the
+app revocation. Review older or unlinked tokens in the personal tokens section.
 
 ```http
 GET /api/v1/me/tokens

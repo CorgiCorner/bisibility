@@ -2,6 +2,7 @@
 
 import { CommandPaletteTrigger } from "@/components/shell/CommandPalette";
 import { GettingStartedNavLink } from "@/components/shell/GettingStartedNavLink";
+import type { PlanStatus } from "@/components/shell/plan-status";
 import { useSidebarCollapsed } from "@/components/shell/SidebarCollapsedState";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarFooter } from "@/components/shell/SidebarFooter";
@@ -24,6 +25,7 @@ export type SidebarProps = {
   canCreateWorkspace: boolean;
   canSetDefault?: boolean;
   enabledExperimentalModules?: readonly ExperimentalModuleKey[];
+  planStatus?: PlanStatus | null;
   projectRef: string;
   setupCompleted?: boolean;
   setupDoneCount?: number;
@@ -41,6 +43,7 @@ export function Sidebar({
   canCreateWorkspace,
   canSetDefault,
   enabledExperimentalModules = [],
+  planStatus = null,
   projectRef,
   setupCompleted = false,
   setupDoneCount = 0,
@@ -140,6 +143,8 @@ export function Sidebar({
       </nav>
       <SidebarFooter
         collapsed={collapsed}
+        planStatus={planStatus}
+        projectRef={projectRef}
         showBrand
         showHostedLinks={showHostedLinks}
         user={user}

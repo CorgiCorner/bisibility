@@ -298,8 +298,8 @@ describe("domain overview rename characterization foundations", () => {
     expect(trace({ durable, errors })).toEqual({
       durable: liveReplay,
       errors: [
-        { costCents: 0, ok: false, reason: "budget_exhausted" },
-        { costCents: 0, ok: false, reason: "lookup_failed" },
+        { costCents: 0, ok: false, reason: "budget_exhausted", phase: "before_dispatch" },
+        { costCents: 0, ok: false, reason: "unexpected", phase: "provider" },
       ],
     });
   });

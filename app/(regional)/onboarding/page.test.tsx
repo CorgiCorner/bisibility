@@ -117,6 +117,9 @@ vi.mock("./actions", () => ({
 vi.mock("@/lib/metering/project-budget-read", () => ({
   projectBudgetCapCents: mocks.projectBudgetCapCents,
 }));
+vi.mock("@/lib/metering/rank-check-budget-read", () => ({
+  rankCheckBudgetCapCents: mocks.projectBudgetCapCents,
+}));
 
 const project = {
   budgetCapCents: 5_000,

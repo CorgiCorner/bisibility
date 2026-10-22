@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => {
     AllocationError,
     assertAllocation: vi.fn(),
     assertBudget: vi.fn(),
+    customerCents: vi.fn(async (): Promise<number | undefined> => undefined),
     cost: vi.fn(),
     isBudgetError: vi.fn(),
     loadChain: vi.fn(),
@@ -56,6 +57,9 @@ vi.mock("./selection", async (importOriginal) => ({
   resolveRunSelection: mocks.resolveSelection,
 }));
 vi.mock("./preview-token", () => ({ createPreviewToken: mocks.token }));
+vi.mock("./customer-charge", () => ({
+  hostedReservationCustomerCents: mocks.customerCents,
+}));
 
 function row(
   id: string,
@@ -124,6 +128,7 @@ describe("rank-check run preview", () => {
       },
     ]);
     mocks.cost.mockReturnValue(10);
+    mocks.customerCents.mockResolvedValue(undefined);
     mocks.assertBudget.mockResolvedValue({ capCents: 100, spentCents: 20 });
     mocks.isBudgetError.mockReturnValue(false);
     mocks.assertAllocation.mockResolvedValue({ mode: "allocation", remaining: 50 });
@@ -193,6 +198,36 @@ describe("rank-check run preview", () => {
       "project_1",
       expect.any(Date),
       expect.objectContaining({ estimatedCostCents: 30 }),
+    );
+    expect(mocks.assertBudget.mock.calls[0]?.[2]).not.toHaveProperty("estimatedCustomerCents");
+  });
+
+  it("compares a hosted preview with the reservation customer charge", async () => {
+    mocks.loadChain.mockResolvedValue([
+      {
+        costPerCheckCents: 10,
+        credentialSource: "hosted",
+        credentialsEncrypted: "encrypted",
+        id: "connection_1",
+        provider: "dataforseo",
+      },
+    ]);
+    mocks.customerCents.mockResolvedValue(9);
+
+    await previewRankCheckRun({ origin: APP_REQUEST_ORIGIN, project, spec: spec() });
+
+    expect(mocks.assertBudget).toHaveBeenCalledWith(
+      "project_1",
+      expect.any(Date),
+      expect.objectContaining({
+        estimatedCostCents: 30,
+        estimatedCustomerCents: 9,
+        funding: "platform",
+      }),
+    );
+    expect(mocks.assertAllocation).toHaveBeenCalledWith(
+      expect.objectContaining({ estimatedCostCents: 30, estimatedCustomerCents: 9 }),
+      mocks.prisma,
     );
   });
 
@@ -510,6 +545,7 @@ describe("manual rank-check run preview", () => {
       { costPerCheckCents: 10, id: "connection_1", provider: "serpapi" },
     ]);
     mocks.cost.mockReturnValue(10);
+    mocks.customerCents.mockResolvedValue(undefined);
     mocks.assertBudget.mockResolvedValue({ capCents: 100, spentCents: 20 });
     mocks.isBudgetError.mockReturnValue(false);
     mocks.token.mockReturnValue({ expiresAt: new Date("2026-09-02T10:10:00.000Z"), token: "t" });

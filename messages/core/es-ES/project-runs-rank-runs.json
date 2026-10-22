@@ -123,7 +123,7 @@
         "marketInactive": "Mercado inactivo",
         "marketInactiveDescription": "El mercado de esta palabra clave está en pausa, así que la comprobación se ha detenido sin generar ningún coste.",
         "noProvider": "Sin proveedor operativo",
-        "noProviderDescription": "Conecta o vuelve a conectar un proveedor para iniciar esta ejecución.",
+        "noProviderDescription": "Revisa la fuente de datos seleccionada en Integraciones para iniciar esta ejecución.",
         "providerUnavailable": "Proveedor no disponible",
         "providerUnavailableDescription": "Ahora mismo no se puede contactar con el proveedor. La ejecución se iniciará sola en cuanto se restablezca la conexión.",
         "targetPaused": "Objetivo en pausa: se reanudará cuando lo reactives",
@@ -155,11 +155,92 @@
         "skippedBeforeStart": "{count, plural, one {# omitido antes de empezar} other {# omitidos antes de empezar}}",
         "skippedOrBlocked": "Omitidos o bloqueados: {count}"
       },
+      "deferral": {
+        "budget_exhausted": {
+          "detail": "Se alcanzó el presupuesto antes de calcular el precio de esta comprobación.",
+          "label": "Presupuesto alcanzado"
+        },
+        "budget_missing": {
+          "detail": "No hay un presupuesto mensual configurado para este proyecto.",
+          "label": "Falta el presupuesto"
+        },
+        "credentials_unavailable": {
+          "detail": "Las credenciales del proveedor para esta comprobación no están disponibles.",
+          "label": "Credenciales no disponibles"
+        },
+        "credits_exhausted": {
+          "detail": "El saldo de pago se agotó antes de ejecutar esta comprobación.",
+          "label": "Créditos agotados"
+        },
+        "dispatcher_disabled": {
+          "detail": "El dispatcher de comprobaciones de posición está desactivado en esta instalación.",
+          "label": "Dispatcher desactivado"
+        },
+        "keyword_archived": {
+          "detail": "La palabra clave se archivó antes de que pudiera empezar esta comprobación.",
+          "label": "Palabra clave archivada"
+        },
+        "market_inactive": {
+          "detail": "El mercado de esta palabra clave ya no está activo.",
+          "label": "Mercado inactivo"
+        },
+        "migration_hold": {
+          "detail": "Las comprobaciones están en pausa mientras este proyecto está en una retención de migración.",
+          "label": "Retención por migración"
+        },
+        "no_provider": {
+          "detail": "No había un proveedor disponible para esta comprobación.",
+          "label": "Sin proveedor"
+        },
+        "openIntegrations": "Abrir Integraciones",
+        "primary_provider_not_dataforseo": {
+          "detail": "Las comprobaciones programadas en cola solo se ejecutan cuando DataForSEO es el proveedor principal.",
+          "label": "Las comprobaciones en cola requieren DataForSEO"
+        },
+        "project_ineligible": {
+          "detail": "Este proyecto no puede ejecutar comprobaciones de posición programadas.",
+          "label": "El proyecto no puede ejecutar comprobaciones"
+        },
+        "project_read_only": {
+          "detail": "Este proyecto es de solo lectura, así que la comprobación se aplazó.",
+          "label": "Proyecto de solo lectura"
+        },
+        "queued_dataforseo_disabled": {
+          "detail": "Las comprobaciones programadas de DataForSEO están desactivadas en esta instalación.",
+          "label": "Comprobaciones programadas desactivadas"
+        },
+        "queued_submission_disabled": {
+          "detail": "El envío de comprobaciones en cola está desactivado para el modo de programación actual.",
+          "label": "Envío desactivado"
+        },
+        "quote_unavailable": {
+          "detail": "El precio del proveedor no estaba disponible. Este objetivo se reintenta en la próxima ejecución.",
+          "label": "Precio no disponible"
+        },
+        "rate_limited": {
+          "detail": "El límite de frecuencia del proveedor aplazó esta comprobación hasta la próxima ejecución.",
+          "label": "Límite de frecuencia"
+        },
+        "reviewBudget": "Revisar el presupuesto",
+        "schedule_ineligible": {
+          "detail": "Esta programación de palabras clave ya no permite una comprobación automática.",
+          "label": "La programación no es automática"
+        },
+        "unknown": {
+          "detail": "Esta comprobación se aplazó y se reintentará en la próxima ejecución.",
+          "label": "Aplazada"
+        },
+        "usage_unconfirmed": {
+          "detail": "El uso del proveedor no está del todo confirmado, así que esta comprobación se aplazó.",
+          "label": "Uso sin confirmar"
+        }
+      },
       "facts": {
         "actual": "real",
         "blockedSince": "Bloqueada desde",
         "chosenAtLaunch": "se elige al iniciar",
         "cost": "Coste",
+        "deferredBeforeProvider": "aplazada antes de elegir un proveedor",
         "elapsed": "Tiempo transcurrido",
         "estimated": "Coste estimado",
         "estimate": "estimación",
@@ -244,7 +325,9 @@
         "providerUnknown": "El proveedor no ha podido completar esta comprobación.",
         "skippedBeforeStart": "Omitido antes de empezar",
         "sendUnconfirmed": "Resultado sin confirmar; no se reintentó para evitar un consumo duplicado.",
-        "stoppedAfterStart": "Detenido después de empezar"
+        "stoppedAfterStart": "Detenido después de empezar",
+        "providerCapacityUnavailable": "Las comprobaciones no están disponibles temporalmente para este proveedor. No se te ha cobrado. Inténtalo más tarde o conecta tus propias claves del proveedor.",
+        "scheduleChanged": "La programación ha cambiado. Cancelada antes de empezar."
       },
       "operations": "Operaciones",
       "usageNotRecorded": "Sin registrar",

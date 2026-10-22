@@ -12,13 +12,13 @@ import { resolveSerpDepth } from "@/lib/serp/constants";
 import { ArrowUpRightIcon as ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { KeywordCheckProvider } from "./KeywordCheckProvider";
 import { KeywordCheckScope } from "./KeywordCheckScope";
 import { KeywordConnectedSchedules } from "./KeywordConnectedSchedules";
 import { KeywordDetailAttemptSlot } from "./KeywordDetailAttemptSlot";
 import { KeywordDetailHeaderSlot } from "./KeywordDetailHeaderSlot";
 import { KeywordDetailRankSlot } from "./KeywordDetailRankSlot";
 import { KeywordDetailRetainedUrl } from "./KeywordDetailRetainedUrl";
-import { KeywordDetailScopeProof } from "./KeywordDetailScopeProof";
 import { KeywordIndexStatus } from "./KeywordIndexStatus";
 import { KeywordSearchMetrics } from "./KeywordSearchMetrics";
 import {
@@ -122,13 +122,11 @@ export function KeywordDetailHeaderChrome({
         </div>
         {actions}
       </div>
-      <div className="mt-3">
-        {quality ? (
-          <KeywordDetailScopeProof quality={quality} />
-        ) : (
+      {!quality ? (
+        <div className="mt-3">
           <KeywordCheckScope keyword={keyword} />
-        )}
-      </div>
+        </div>
+      ) : null}
       {chips.topic || chips.intent || chips.tags.length > 0 ? (
         <div className="mt-3 flex flex-wrap items-center gap-[7px]">
           {chips.topic ? (
@@ -212,9 +210,7 @@ export function KeywordDetailHeaderChrome({
             detail={
               <span className="flex flex-wrap gap-x-2 gap-y-0.5">
                 <span>
-                  {t("header.provider", {
-                    provider: providerLabel ?? keyword.dataProvider ?? t("common.unknown"),
-                  })}
+                  <KeywordCheckProvider provider={providerLabel ?? keyword.dataProvider} />
                 </span>
               </span>
             }

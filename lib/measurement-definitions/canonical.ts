@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { trackedProjectDomain } from "@/lib/schemas/project";
 import {
   resolveEffectiveSerpDepth,
+  resolveEffectiveSerpStopOnMatch,
   resolveSerpStopOnMatch,
   type SerpDepth,
 } from "@/lib/serp/constants";
@@ -45,18 +46,31 @@ export function targetHeadMatches(head: DefinitionHead, source: DefinitionSource
     sameDefinitionBytes(head.targetSource, source.target)
   );
 }
-export function frozenRequest(
+function compileRequest(
   source: DefinitionSource,
   providerId: string,
-  requestedDepth?: SerpDepth,
+  requestedDepth: SerpDepth | undefined,
+  compilerVersion: 1 | 2,
 ): FrozenWebRequest {
   const config = source.policy.config;
   const adapter = config?.adapters.find((entry) => entry.providerId === providerId);
   const domain = trackedProjectDomain(source.target.domain);
   if (!config || !adapter || !domain || source.target.archivedAt)
     throw new DefinitionUnavailableError();
-  const stopOnMatch = resolveSerpStopOnMatch(source.policy.defaults?.serpStopOnMatch);
+  const depth = resolveEffectiveSerpDepth({
+    requestedDepth,
+    projectDepth: source.policy.defaults?.serpDepth,
+    scheduleDepth: source.policy.keywordSchedule?.serpDepth,
+    checkScheduleDepth: source.policy.checkSchedule
+      ? source.policy.checkSchedule.serpDepth
+      : undefined,
+  });
+  const stopOnMatch =
+    compilerVersion === 2
+      ? resolveEffectiveSerpStopOnMatch(source.policy.defaults?.serpStopOnMatch, depth)
+      : resolveSerpStopOnMatch(source.policy.defaults?.serpStopOnMatch);
   return requestSchema.parse({
+    ...(compilerVersion === 2 ? { compilerVersion: 2 } : {}),
     engine: "google",
     surface: "web_serp",
     resultKind: "organic_result",
@@ -70,14 +84,7 @@ export function frozenRequest(
     domain,
     targetUrl: source.target.targetUrl,
     location: source.target.location,
-    depth: resolveEffectiveSerpDepth({
-      requestedDepth,
-      projectDepth: source.policy.defaults?.serpDepth,
-      scheduleDepth: source.policy.keywordSchedule?.serpDepth,
-      checkScheduleDepth: source.policy.checkSchedule
-        ? source.policy.checkSchedule.serpDepth
-        : undefined,
-    }),
+    depth,
     stopOnMatch,
     findTargetsIn:
       adapter.nativeFindTargetsIn === "with_subdomains_on_match" && stopOnMatch
@@ -85,6 +92,27 @@ export function frozenRequest(
         : null,
     forcedAiOverview: config.forcedAiOverview,
   });
+}
+
+/** New captures always use v2. Callers cannot choose legacy semantics. */
+export function frozenRequest(
+  source: DefinitionSource,
+  providerId: string,
+  requestedDepth?: SerpDepth,
+): FrozenWebRequest {
+  return compileRequest(source, providerId, requestedDepth, 2);
+}
+/** Equality only, not an execution grant. Callers must first read/verify the exact DB binding. */
+export function retainedRequestMatchesSource(
+  source: DefinitionSource,
+  request: FrozenWebRequest,
+  providerId: string,
+  requestedDepth: SerpDepth | undefined,
+) {
+  const parsed = requestSchema.safeParse(request);
+  if (!parsed.success) return false;
+  const version = "compilerVersion" in parsed.data ? 2 : 1;
+  return sameDefinitionBytes(request, compileRequest(source, providerId, requestedDepth, version));
 }
 
 /** Actual current SERP transports use primaryGeoName + hl; display labels are not semantic scope keys. */

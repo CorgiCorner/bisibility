@@ -87,6 +87,7 @@ vi.mock("@/lib/provider-usage/tag", async (importOriginal) => {
       return actual.createProviderRequestAttribution(
         { ...args[0], correlationId: mocks.correlationId },
         args[1],
+        args[2],
       );
     },
   };
@@ -230,6 +231,9 @@ describe("paid provider lookup", () => {
         scope: "site",
         source: {
           connection: {
+            credentialSource: "own",
+            publicId: "conn_a00000000000000000000000",
+            updatedAt: new Date("2026-10-21T12:00:00Z"),
             credentialsEncrypted: "encrypted",
             id: "connection_1",
             provider: "dataforseo",
@@ -1076,6 +1080,40 @@ describe("paid provider lookup", () => {
       expect(mocks.ledger).toEqual([]);
     },
   );
+
+  it("uses deployment credentials and credit attribution despite a retained own key", async () => {
+    mocks.prisma.providerConnection.findUnique.mockResolvedValue({
+      credentialSource: "hosted",
+      credentialsEncrypted: "retained-key",
+      projectId: "project_1",
+      provider: "dataforseo",
+    });
+    const credentials = { login: "shared", password: "hosted-only" };
+    const finish = vi.fn();
+    mocks.startExecution.mockResolvedValue({
+      credentials,
+      started: true,
+      costCents: 1.25,
+      quantity: 1,
+      finish,
+    });
+    const call = vi.fn().mockResolvedValue({ rows: [], costCents: 99 });
+    await expect(runSuggestions(call)).resolves.toMatchObject({ costCents: 1.25 });
+    expect(call).toHaveBeenCalledOnce();
+    expect(call).toHaveBeenCalledWith(
+      credentials,
+      expect.objectContaining({ seed: "rank tracker" }),
+    );
+    expect(mocks.startExecution).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attribution: expect.objectContaining({ tag: expect.stringContaining(";cs=hosted;") }),
+        connectionId: "connection_1",
+      }),
+    );
+    expect(mocks.resolveCredentials).not.toHaveBeenCalled();
+    expect(mocks.ledger).toEqual([]);
+    expect(finish).toHaveBeenCalledOnce();
+  });
 
   it("finishes a hosted rate-limit refusal without calling the provider", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue({

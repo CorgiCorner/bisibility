@@ -25,7 +25,11 @@
       "takeawaySlippedLast": "Średnia pozycja pogorszyła się o {value, number} {days, plural, one {w ciągu ostatniego dnia} few {w ciągu ostatnich # dni} many {w ciągu ostatnich # dni} other {w ciągu ostatnich # dnia}}. Największy spadek: {leader}.",
       "takeawaySteadyFirst": "Średnia pozycja utrzymała się na stałym poziomie {days, plural, one {w ciągu pierwszego dnia} few {w ciągu pierwszych # dni} many {w ciągu pierwszych # dni} other {w ciągu pierwszych # dnia}} monitorowania.",
       "takeawaySteadyLast": "Średnia pozycja utrzymała się na stałym poziomie {days, plural, one {w ciągu ostatniego dnia} few {w ciągu ostatnich # dni} many {w ciągu ostatnich # dni} other {w ciągu ostatnich # dnia}}.",
-      "title": "Trend pozycji"
+      "title": "Trend pozycji",
+      "tooltipAverage": "Średnia pozycja {position, number, ::.#}",
+      "tooltipKeyword": "{keyword}: poz. {position, number, ::.#}",
+      "tooltipKeywordQualified": "{keyword} ({device}{hasMarket, select, true {, {market}} other {}}): poz. {position, number, ::.#}",
+      "tooltipMore": "+{count, number} więcej"
     },
     "distribution": {
       "bucketAriaLabel": "Pozycje od {start, number} do {end, number}: {count, number} {count, plural, one {słowo kluczowe} few {słowa kluczowe} many {słów kluczowych} other {słowa kluczowego}}",
@@ -50,7 +54,8 @@
       "rankCheckFailedDetail": "{keyword}: Nie udało się wykonać sprawdzenia pozycji z powodu błędu dostawcy. Spróbuj ponownie lub otwórz szczegóły sprawdzenia, aby dowiedzieć się więcej.",
       "kpisAriaLabel": "Kluczowe wskaźniki przeglądu",
       "viewAllKeywords": "Zobacz wszystkie słowa kluczowe",
-      "viewCheckRuns": "Zobacz przebiegi sprawdzeń"
+      "viewCheckRuns": "Zobacz przebiegi sprawdzeń",
+      "providerCapacityUnavailableDetail": "Sprawdzanie pozycji u tego dostawcy jest tymczasowo niedostępne. Nie naliczono opłat. Spróbuj później lub podłącz własne klucze dostawcy."
     },
     "kpis": {
       "averageComparison": "{direction, select, up {w górę o {value, number, ::.0} wobec poprzedniego sprawdzenia} down {w dół o {value, number, ::.0} wobec poprzedniego sprawdzenia} other {bez zmian wobec poprzedniego sprawdzenia}}",
@@ -74,7 +79,7 @@
     "noData": {
       "addKeywords": "Dodaj słowa kluczowe",
       "checkInProgress": "sprawdzenie w toku",
-      "connect": "Połącz",
+      "connect": "Wybierz źródło danych",
       "firstCheckInProgressDetail": "Pozycje pojawią się tutaj, gdy bieżące sprawdzenie się zakończy.",
       "firstCheckInProgressTitle": "Pierwsze sprawdzenie pozycji w toku.",
       "migrationHoldDetail": "Ten projekt jest wstrzymany na czas migracji. Monitorowanie pozycji wznowi się po jej zakończeniu.",
@@ -84,17 +89,22 @@
       "noData": "brak danych",
       "noRankingsYet": "Brak pozycji",
       "pausedMigrationHold": "wstrzymano – migracja",
-      "providerMissingDetail": "Połącz DataForSEO lub SerpApi, aby zacząć monitorować pozycje.",
-      "providerMissingTitle": "Wymagany dostawca SERP",
+      "providerMissingDetail": "Wybierz źródło danych w Integracjach, aby uruchamiać sprawdzanie.",
+      "providerMissingTitle": "Wybierz źródło danych",
       "providerNeedsAttention": "dostawca wymaga reakcji",
-      "providerNeedsAttentionDetail": "{count, number} {count, plural, one {słowo kluczowe jest gotowe} few {słowa kluczowe są gotowe} many {słów kluczowych jest gotowych} other {słowa kluczowego jest gotowe}}. Włącz dostawcę SERP lub połącz go ponownie przed pierwszym sprawdzeniem pozycji.",
+      "providerNeedsAttentionDetail": "{count, number} {count, plural, one {słowo kluczowe jest gotowe} few {słowa kluczowe są gotowe} many {słów kluczowych jest gotowych} other {słowa kluczowego są gotowe}}. Sprawdź wybrane źródło danych przed pierwszym sprawdzeniem.",
       "providerNeedsAttentionTitle": "Dostawca SERP wymaga reakcji.",
-      "providerNotConnected": "dostawca nie jest połączony",
+      "providerNotConnected": "źródło nieskonfigurowane",
       "readyToCheck": "gotowe do sprawdzenia",
       "readyDetail": "{count, plural, =0 {Dodaj słowa kluczowe, aby zacząć monitorować pozycje.} one {# słowo kluczowe jest gotowe do pierwszego sprawdzenia pozycji.} few {# słowa kluczowe są gotowe do pierwszego sprawdzenia pozycji.} many {# słów kluczowych jest gotowych do pierwszego sprawdzenia pozycji.} other {# słowa kluczowego jest gotowe do pierwszego sprawdzenia pozycji.}}",
-      "viewerAskAdmin": "Poproś administratora projektu o połączenie DataForSEO lub SerpApi, zanim zacznie się monitorowanie pozycji.",
+      "viewerAskAdmin": "Poproś administratora projektu o wybór źródła danych do sprawdzania.",
       "viewCheckRuns": "Zobacz przebiegi sprawdzeń",
-      "viewKeywords": "Zobacz słowa kluczowe"
+      "viewKeywords": "Zobacz słowa kluczowe",
+      "firstCheckIntro": {
+        "title": "Sprawdź swoją pierwszą pozycję",
+        "description": "Zobacz, gdzie jesteś w wynikach. Pierwsze sprawdzenie ożywi ten dashboard.",
+        "dismiss": "Ukryj to wprowadzenie"
+      }
     },
     "sampleProject": {
       "createProject": "Utwórz własny projekt",

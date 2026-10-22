@@ -1,5 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import type { PaidCallPayment } from "@/lib/action-payment/paid-call";
 import type { ProviderCostFeature } from "@/lib/generated/prisma/client";
 import type { RequestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { ProviderCredential } from "@/lib/provider-usage/surface";
@@ -34,10 +35,11 @@ export async function runHostedPaidProviderCall<
   estimatedCostCents: number;
   maxCostCents?: number;
   costLimit?: RequestCostLimit;
+  payment?: PaidCallPayment;
 }): Promise<T> {
   const usage = await createProviderRequestAttribution(
     {
-      correlationId: input.correlationId ?? randomUUID(),
+      correlationId: input.payment?.operationKey ?? input.correlationId ?? randomUUID(),
       feature: input.feature,
       projectId: input.projectId,
       source: input.source,
@@ -47,6 +49,7 @@ export async function runHostedPaidProviderCall<
     "hosted",
   );
   return runDeploymentPaidCall({
+    payment: input.payment,
     attribution: usage,
     call: input.call,
     onNotDispatched: input.onNotDispatched,

@@ -34,9 +34,18 @@ describe("PositionTrendCard date display", () => {
               comparisonKey: "synthetic-series",
               dateKey: "2026-08-24",
               label: "2026-08-24",
+              rankedKeywordCount: 0,
+              rankedKeywords: [],
               value: 9,
             },
-            { comparisonKey: "synthetic-series", dateKey: "2026-08-25", label: null, value: 7 },
+            {
+              comparisonKey: "synthetic-series",
+              dateKey: "2026-08-25",
+              label: null,
+              rankedKeywordCount: 0,
+              rankedKeywords: [],
+              value: 7,
+            },
           ]}
         />
       </ProjectDashboardMessages>,

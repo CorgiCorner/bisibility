@@ -1,7 +1,15 @@
 "use client";
 
 import { authClient } from "@/lib/auth/client";
-import { oauthConsentScopes } from "@/lib/auth/oauth-consent-copy";
+import {
+  defaultOAuthAccessLevel,
+  type OAuthAccessLevel,
+  oauthApiTokenChoiceRequested,
+  oauthConsentChoiceSchema,
+  oauthConsentScopes,
+  offeredOAuthAccessLevels,
+  selectOAuthConsentScopes,
+} from "@/lib/auth/oauth-consent-copy";
 import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { useTranslations } from "next-intl";
@@ -13,8 +21,9 @@ import { OAuthConsentExpired } from "./OAuthConsentExpired";
 import { OAuthConsentRequest } from "./OAuthConsentRequest";
 import { useOAuthConsentCountdown } from "./useOAuthConsentCountdown";
 
-const consentSchema = z.object({ accept: z.boolean() });
+const consentSchema = oauthConsentChoiceSchema.extend({ accept: z.boolean() });
 type ConsentValues = z.infer<typeof consentSchema>;
+type ConsentRequest = Parameters<typeof authClient.oauth2.consent>[0];
 
 export type OAuthConsentFormProps = {
   account: { avatarUrl?: string | null; email: string; initials: string };
@@ -53,13 +62,27 @@ export function OAuthConsentForm({
 }: Readonly<OAuthConsentFormProps>) {
   const t = useTranslations("auth.oauthConsent");
   const secondsLeft = useOAuthConsentCountdown(expiresAt);
-  const grantedScopes = oauthConsentScopes(client, scopes);
+  const ceiling = oauthConsentScopes(client, scopes);
+  const offered = offeredOAuthAccessLevels(ceiling);
   const [pendingChoice, setPendingChoice] = useState<"accept" | "deny" | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<ConsentValues>({
-    defaultValues: { accept: true },
+    defaultValues: {
+      accept: true,
+      accessLevel: defaultOAuthAccessLevel(ceiling),
+      allowApiTokens: false,
+    },
     resolver: zodResolver(consentSchema),
   });
+  const watchedLevel = form.watch("accessLevel");
+  const level: OAuthAccessLevel | null =
+    watchedLevel && offered.includes(watchedLevel)
+      ? watchedLevel
+      : defaultOAuthAccessLevel(ceiling);
+  const allowApiTokens = oauthApiTokenChoiceRequested(ceiling) && form.watch("allowApiTokens");
+  const grantedScopes = client.dynamic
+    ? selectOAuthConsentScopes(ceiling, { accessLevel: level, allowApiTokens })
+    : ceiling;
 
   async function submitConsent(values: ConsentValues) {
     setFormError(null);
@@ -71,8 +94,13 @@ export function OAuthConsentForm({
     try {
       const response = await authClient.oauth2.consent({
         accept: values.accept,
-        ...(values.accept ? { scope: grantedScopes.join(" ") } : {}),
-      });
+        ...(values.accept
+          ? {
+              ...(client.dynamic ? { access_level: level, allow_api_tokens: allowApiTokens } : {}),
+              scope: grantedScopes.join(" "),
+            }
+          : {}),
+      } as ConsentRequest);
       if (response.error) return setFormError(errorMessage(response.error, t("consentError")));
       const redirectUrl = response.data?.url;
       if (typeof redirectUrl !== "string" || !redirectUrl) {
@@ -105,10 +133,15 @@ export function OAuthConsentForm({
         initials={account.initials}
       />
       <OAuthConsentRequest
+        allowApiTokens={allowApiTokens}
+        ceiling={ceiling}
         client={client}
         disabled={!client.id || pendingChoice !== null}
         error={formError}
+        level={level}
+        onAllowApiTokens={(value) => form.setValue("allowApiTokens", value)}
         onChoose={choose}
+        onLevel={(value) => form.setValue("accessLevel", value)}
         pendingChoice={pendingChoice}
         scopes={grantedScopes}
         secondsLeft={secondsLeft}

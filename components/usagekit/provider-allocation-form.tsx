@@ -3,7 +3,6 @@ import type { AllocationProps } from "@/components/usagekit/provider-allocation-
 
 export type { AllocationProps } from "@/components/usagekit/provider-allocation-policy";
 
-import { Button } from "@/components/usagekit/primitives/button";
 import {
   Card,
   CardContent,
@@ -28,10 +27,11 @@ import {
   ProviderActionFeedback,
   providerFeedbackLabels,
 } from "@/components/usagekit/provider-feedback";
-import { UsageNotice, UsageSpinner } from "@/components/usagekit/usage-motion";
+import { UsageNotice } from "@/components/usagekit/usage-motion";
 import { useProviderAction } from "@usagekit/react";
 import type { ProviderAllocationRow, ProviderReconciliation } from "@usagekit/views";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { AllocationSaveAction } from "./AllocationSaveAction";
 
 export { providerAllocationLabels } from "@/components/usagekit/provider-allocation-row";
 export function ProviderAllocationEditor(props: AllocationProps) {
@@ -69,6 +69,7 @@ function AllocationEditor({
   variant = "card",
   onSaved,
   formAdapter,
+  actionsContainer,
   rowLabels,
   canRefreshBalance,
   onRefreshNative,
@@ -79,6 +80,7 @@ function AllocationEditor({
   refreshing,
   beginRefresh,
 }: AllocationProps & { refreshing: boolean; beginRefresh: () => () => void }) {
+  const formId = useId();
   const labels = { ...providerAllocationLabels, ...custom };
   const feedback = { ...providerFeedbackLabels, ...feedbackLabels };
   const sharedAction = useProviderAction();
@@ -216,7 +218,7 @@ function AllocationEditor({
         <CardDescription>{labels.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <AllocationFormSurface adapter={formAdapter} editable={editable} save={save}>
+        <AllocationFormSurface id={formId} adapter={formAdapter} editable={editable} save={save}>
           {typeof evidenceBefore === "function" ? evidenceBefore(evidenceRows) : evidenceBefore}
           {help}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -264,16 +266,14 @@ function AllocationEditor({
             </UsageNotice>
           )}
           {rows.length > 0 && (
-            <div className="border-t border-border pt-4">
-              <Button
-                type={formAdapter ? "submit" : "button"}
-                onClick={formAdapter ? undefined : () => void save()}
-                disabled={!editable || invalidated || !changedRows.length}
-              >
-                {action.pending && submitted?.kind === "allocations" && <UsageSpinner />}
-                {labels.save}
-              </Button>
-            </div>
+            <AllocationSaveAction
+              container={actionsContainer}
+              formId={formAdapter ? formId : undefined}
+              save={save}
+              disabled={!editable || invalidated || !changedRows.length}
+              pending={action.pending && submitted?.kind === "allocations"}
+              label={labels.save}
+            />
           )}
           <ProviderActionFeedback
             action={feedbackAction}

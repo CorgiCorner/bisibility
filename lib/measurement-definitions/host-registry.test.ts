@@ -34,7 +34,14 @@ describe("actual host observation registry", () => {
       await expect(
         assertHostDefinitionAdapter(tx, value, provider, request),
       ).resolves.toBeUndefined();
-      expect(request.findTargetsIn).toBe(provider === "dataforseo" ? "with_subdomains" : null);
+      expect(request).toMatchObject({ stopOnMatch: false, findTargetsIn: null });
+      await expect(
+        assertHostDefinitionAdapter(tx, value, provider, {
+          ...request,
+          stopOnMatch: true,
+          findTargetsIn: provider === "dataforseo" ? "with_subdomains" : null,
+        }),
+      ).rejects.toThrow();
       await expect(
         assertHostDefinitionAdapter(tx, value, provider, { ...request, adapterVersion: "stale" }),
       ).rejects.toThrow();
@@ -47,6 +54,29 @@ describe("actual host observation registry", () => {
           findTargetsIn: "invented",
         }),
       ).toThrow();
+    },
+  );
+  it.each(["dataforseo", "serpapi"] as const)(
+    "validates retained v1 %s semantics without weakening v2 validation",
+    async (provider) => {
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("BISIBILITY_FAKE_PROVIDER", "0");
+      const value = source();
+      const current = frozenRequest(value, provider, 20);
+      const { compilerVersion: _version, ...fields } = current as typeof current & {
+        compilerVersion?: 2;
+      };
+      const legacy = {
+        ...fields,
+        stopOnMatch: true,
+        findTargetsIn: provider === "dataforseo" ? "with_subdomains" : null,
+      };
+      await expect(
+        assertHostDefinitionAdapter(tx, value, provider, legacy),
+      ).resolves.toBeUndefined();
+      await expect(
+        assertHostDefinitionAdapter(tx, value, provider, { ...legacy, keyword: "forged" }),
+      ).rejects.toThrow();
     },
   );
   it("does not register manifest-only production local-sequence", () => {

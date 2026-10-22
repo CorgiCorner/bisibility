@@ -1,4 +1,5 @@
 "use server";
+import { paymentFailure } from "@/lib/action-payment/session";
 import { trackingSampleProjection } from "@/lib/ai-tracking/projections/evidence";
 import { trackingPromptOperationProjection } from "@/lib/ai-tracking/projections/operations";
 import {
@@ -148,6 +149,7 @@ export async function mutateAiTrackingAction(
           ...(input as object),
           configuration: {
             ...(input as { configuration: object }).configuration,
+            requirePayment: true,
             actorId: actor.id,
             actorCredential: undefined,
             entrySource: "app",
@@ -165,6 +167,9 @@ async function trackingActionResult<T>(run: () => Promise<T>) {
   try {
     return await handledActionResult(run);
   } catch (error) {
+    const payment = paymentFailure(error);
+    if (payment)
+      return actionFailureResult({ code: "conflict", message: payment.reason, status: 409 });
     const budget = budgetFailureResult(error);
     if (!budget) throw error;
     return actionFailureResult({ code: budget.code, message: budget.message, status: 429 });
@@ -172,8 +177,15 @@ async function trackingActionResult<T>(run: () => Promise<T>) {
 }
 
 export async function previewAiTrackingAction(projectId: string, input: unknown) {
-  const project = await trackingScope(await getActionActor(), projectId);
-  return trackingActionResult(() => trackingLaunch(project.id, input, true));
+  const actor = await getActionActor();
+  const project = await trackingScope(actor, projectId);
+  return trackingActionResult(() =>
+    trackingLaunch(
+      project.id,
+      { ...(input as object), actorId: actor.id, entrySource: "app" },
+      true,
+    ),
+  );
 }
 export async function launchAiTrackingAction(projectId: string, input: unknown) {
   const actor = await getActionActor();
@@ -183,6 +195,7 @@ export async function launchAiTrackingAction(projectId: string, input: unknown) 
       project.id,
       {
         ...(input as object),
+        requirePayment: true,
         actorId: actor.id,
         actorCredential: undefined,
         entrySource: "app",
@@ -227,6 +240,7 @@ export async function aiTrackingRunAction(
   const project = await trackingScope(actor, projectId, true);
   const result = await trackingRunOperation(project.id, runId, operation, {
     ...(input as object),
+    requirePayment: operation === "retry",
     actorId: actor.id,
     actorCredential: undefined,
     entrySource: "app",

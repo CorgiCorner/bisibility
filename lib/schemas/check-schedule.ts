@@ -97,10 +97,11 @@ function requireCustomCron(
 }
 
 function requireCalendarCron(
-  value: { cronExpression?: string | null; frequency?: string },
+  value: { cronExpression?: string | null; frequency?: string; timeOfDay?: string | null },
   ctx: z.RefinementCtx,
 ) {
   if (value.frequency !== "weekly" && value.frequency !== "monthly") return;
+  if (value.cronExpression == null && value.timeOfDay === null) return;
   if (!value.cronExpression || !parseCronExpression(value.cronExpression).ok) {
     ctx.addIssue({
       code: "custom",

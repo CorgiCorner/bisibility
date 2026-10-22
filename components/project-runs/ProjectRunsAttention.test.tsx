@@ -1,9 +1,10 @@
 import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
-import { PROJECT_RUNS_DEFAULT_QUERY } from "@/lib/runs/filters";
+import { PROJECT_RUNS_DEFAULT_QUERY, parseProjectRunsQuery } from "@/lib/runs/filters";
 import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen, within } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { ProjectRunsContent } from "./ProjectRunsContent";
+import { ProjectRunsTimelineTabs } from "./ProjectRunsTimelineTabs";
 import {
   attentionFixtureRuns,
   timelineFixtureRuns,
@@ -36,6 +37,7 @@ function preview(status: "all" | "attention" = "all") {
       operations={[]}
       page={{
         counts: {
+          aiTracking: 0,
           rankChecks: status === "attention" ? 4 : 61,
           searchConsole: 0,
           total: status === "attention" ? 4 : 61,
@@ -61,7 +63,9 @@ it.each([true, false])(
     expect(within(table).getByText("Scheduled later")).toBeVisible();
     expect(within(table).getByText(/4 days past scheduled time/)).toBeVisible();
     expect(within(table).getByText("Review budget and usage")).toBeVisible();
-    expect(table).not.toHaveTextContent("$0.00");
+    expect(
+      within(table).getByText("Review budget and usage").closest('[role="row"]'),
+    ).not.toHaveTextContent("$0.00");
     expect(table).not.toHaveTextContent("resets");
     expect(screen.getByRole("heading", { name: "61 runs" })).toBeVisible();
   },
@@ -75,9 +79,7 @@ it("keeps current blocked work separate from terminal failures and resets the at
   const table = screen.getByRole("table", { name: "Project runs" });
   expect(within(table).getAllByText("Failed")).toHaveLength(3);
   expect(within(table).getAllByText("Blocked")).toHaveLength(1);
-  const attention = screen.getByRole("link", { name: "Needs attention" });
-  expect(attention).toHaveAttribute("aria-current", "page");
-  expect(attention).toHaveAttribute("href", `/app/${timelineProjectRef}/runs?status=attention`);
+  expect(screen.getByRole("button", { name: "Run status" })).toHaveTextContent("Needs attention");
   const review = screen.getByRole("link", { name: "Review issue" });
   fireEvent.click(review);
   expect(routerMock.push).not.toHaveBeenCalled();
@@ -90,7 +92,7 @@ it("shows the retained waiting section while attention is active", () => {
       canMutate={false}
       operations={[]}
       page={{
-        counts: { rankChecks: 1, searchConsole: 0, total: 1 },
+        counts: { aiTracking: 0, rankChecks: 1, searchConsole: 0, total: 1 },
         nextCursor: null,
         runs: [rows[0]],
       }}
@@ -106,14 +108,11 @@ it("shows the retained waiting section while attention is active", () => {
       skipAction={vi.fn()}
     />,
   );
-  expect(screen.getByRole("link", { name: "Waiting to start" })).toHaveAttribute(
-    "aria-current",
+  expect(screen.getByRole("radio", { name: "Waiting to start" })).toHaveAttribute(
+    "aria-checked",
     "true",
   );
-  expect(screen.getByRole("link", { name: "Needs attention" })).toHaveAttribute(
-    "href",
-    `/app/${timelineProjectRef}/runs?section=upcoming&status=attention`,
-  );
+  expect(screen.getByRole("button", { name: "Run status" })).toHaveTextContent("Needs attention");
 });
 
 it("retains the past-failure explanation when attention history is explicitly sorted", () => {
@@ -124,4 +123,54 @@ it("retains the past-failure explanation when attention history is explicitly so
     screen.getByText("Past runs that ended with a problem. These are not current waiting runs."),
   ).toBeVisible();
   expect(screen.queryByText("Newest first")).not.toBeInTheDocument();
+});
+
+it.each([
+  ["", "All", false],
+  ["section=history", "History", false],
+  ["section=active", "In progress", false],
+  ["section=upcoming", "Waiting to start", false],
+  ["view=planned", "Waiting to start", false],
+  ["status=attention", "All", true],
+  ["section=history&status=attention", "History", true],
+  ["section=active&status=attention", "In progress", true],
+  ["section=upcoming&status=attention", "Waiting to start", true],
+  ["view=planned&status=attention", "Waiting to start", true],
+  [
+    "status=attention&source=rank_checks&section=history&order=asc&limit=50&cursor=older",
+    "History",
+    true,
+  ],
+  ["section=history&status=failed&source=search_console", "History", false],
+])("derives one section and the independent attention state from URL %s", (search, label) => {
+  render(
+    <ProjectRunsTimelineTabs
+      projectRef={timelineProjectRef}
+      query={parseProjectRunsQuery(new URLSearchParams(search))}
+    />,
+  );
+  const group = screen.getByRole("radiogroup", { name: "Run timeline" });
+  expect(within(group).getAllByRole("radio", { checked: true })).toHaveLength(1);
+  expect(within(group).getByRole("radio", { name: label })).toHaveAttribute("aria-checked", "true");
+  expect(screen.queryByRole("button", { name: "Needs attention" })).not.toBeInTheDocument();
+});
+
+it("restores selection from route changes and refreshes", () => {
+  const view = (search: string) => (
+    <ProjectRunsTimelineTabs
+      projectRef={timelineProjectRef}
+      query={parseProjectRunsQuery(new URLSearchParams(search))}
+    />
+  );
+  const { rerender } = render(view("section=history&source=rank_checks&cursor=older"));
+  for (const search of [
+    "section=history&status=attention",
+    "section=history&status=attention",
+    "section=history",
+    "section=history&status=attention",
+  ]) {
+    rerender(view(search));
+    expect(screen.getByRole("radio", { name: "History" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.queryByRole("button", { name: "Needs attention" })).not.toBeInTheDocument();
+  }
 });

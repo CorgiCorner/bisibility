@@ -1,3 +1,8 @@
+import {
+  assertTrackingPayment,
+  trackingPaymentDefinition,
+  trackingPaymentQuote,
+} from "@/lib/ai-tracking/payment";
 import "server-only";
 import type { PlanTrackingRunInput, SamplePlan } from "@/lib/ai-tracking/contract";
 import { payloadHash } from "@/lib/ai-tracking/identity";
@@ -15,6 +20,11 @@ import { TRACKING_PRICE_CHECKED_AT, trackingModelForecast } from "./pricing";
 
 export type TrackingPreviewInput = Pick<PlanTrackingRunInput, "promptIds" | "configurations"> & {
   credentialConnectionId?: string;
+  actorId?: string;
+  entrySource?: PlanTrackingRunInput["entrySource"];
+  paymentScope?: "manual" | "recurring";
+  paymentScheduleId?: string;
+  paymentRecurrence?: { cron: string; timezone: string };
 };
 export function trackingConsentRevision(
   configurations: PlanTrackingRunInput["configurations"],
@@ -61,7 +71,7 @@ export async function previewTrackingRun(projectId: string, input: TrackingPrevi
       );
   }
   if (!input.configurations.length) throw new Error("Tracking requires a source configuration.");
-  return {
+  const preview = {
     configurations: input.configurations,
     credentialConnectionId: context.connection.id,
     credentialConnectionPublicId: context.connection.publicId,
@@ -76,6 +86,22 @@ export async function previewTrackingRun(projectId: string, input: TrackingPrevi
       })),
     ),
     estimatedCostCents,
+  };
+  const payment = input.actorId
+    ? trackingPaymentQuote(
+        context,
+        {
+          ...input,
+          ...preview,
+          actorId: input.actorId,
+          entrySource: input.entrySource ?? "app",
+        },
+        estimatedCostCents,
+      )
+    : null;
+  return {
+    ...preview,
+    ...(payment ? { payment: payment.payment, paymentOptions: payment.paymentOptions } : {}),
   };
 }
 export async function approveTrackingConfiguration(
@@ -95,15 +121,57 @@ export async function approveTrackingConfiguration(
     estimatedCostCents: preview.estimatedCostCents,
     surface: surfaceOf(input.entrySource),
   });
-  return preview;
+  if (input.paymentConsent && input.origin === "scheduled") {
+    assertTrackingPayment(projectId, input);
+    return { ...preview, paymentConsent: input.paymentConsent };
+  }
+  const payment =
+    input.actorId && (input.requirePayment || input.acceptedPayment)
+      ? trackingPaymentQuote(
+          await trackingAdmissionContext(projectId, preview.credentialConnectionId),
+          input,
+          preview.estimatedCostCents,
+        )
+      : null;
+  return {
+    ...preview,
+    paymentConsent: payment?.accept(input.acceptedPayment, input.requirePayment),
+  };
 }
 export async function launchTrackingRun(
   projectId: string,
   input: PlanTrackingRunInput & { consent: boolean },
 ) {
-  await approveTrackingConfiguration(projectId, input);
-  const { consent: _consent, ...plan } = input;
-  return planTrackingRun(projectId, plan);
+  await reauthorizeTrackingActor(projectId, input);
+  if (input.origin === "manual" && input.paymentScope === "recurring")
+    throw new Error("Manual tracking requires a manual payment review.");
+  const prior = await prisma.aiTrackingRun.findUnique({
+    where: { projectId_idempotencyKey: { projectId, idempotencyKey: input.idempotencyKey } },
+    include: { samples: true },
+  });
+  if (prior) {
+    const stored = prior.launchPayload as unknown as PlanTrackingRunInput;
+    const identity = (value: PlanTrackingRunInput) =>
+      payloadHash([
+        trackingPaymentDefinition(value),
+        value.paymentScope ?? "manual",
+        value.credentialConnectionId,
+        value.actorId,
+        value.actorCredential ?? null,
+        value.origin,
+        value.entrySource,
+        value.deadline,
+        value.scheduleId ?? null,
+        value.plannedAt ?? null,
+        value.retryOfRunId ?? null,
+      ]);
+    if (identity(input) !== identity(stored))
+      throw new Error("Tracking idempotency key is bound to another request.");
+    return prior;
+  }
+  const approved = await approveTrackingConfiguration(projectId, input);
+  const { consent: _consent, acceptedPayment: _accepted, ...plan } = input;
+  return planTrackingRun(projectId, { ...plan, paymentConsent: approved.paymentConsent });
 }
 export async function recheckTrackingAdmission(plan: SamplePlan) {
   await reauthorizeTrackingActor(plan.projectId, plan);
@@ -141,6 +209,9 @@ export async function recheckTrackingAdmission(plan: SamplePlan) {
       include: { samples: { select: { plan: true } } },
     });
     const payload = run?.launchPayload as unknown as PlanTrackingRunInput | undefined;
+    if (payload) assertTrackingPayment(plan.projectId, payload, plan.runId);
+    if (payloadHash(payload?.paymentConsent ?? null) !== payloadHash(plan.paymentConsent ?? null))
+      throw new Error("Tracking payment authority changed after planning.");
     if (plan.origin === "scheduled") {
       const schedule = run?.scheduleId
         ? await prisma.aiTrackingSchedule.findFirst({

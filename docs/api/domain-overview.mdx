@@ -19,7 +19,8 @@ Content-Type: application/json
 ```
 
 Domain Overview can spend the project's connected provider account, so start
-with `estimate_only: true`. To accept a paid result, repeat the request with an
+with `estimate_only: true`. The MCP tool is `analyze_domain_overview`. See
+[Paid MCP tools](/agents/paid-tools). To accept a paid result, repeat the request with an
 explicit `max_cost_cents`. Provider estimates and charges may contain fractional
 cents, but request caps must be nonnegative whole cents; round an accepted
 estimate up. A cap of `0` permits cache hits only. A cache miss returns

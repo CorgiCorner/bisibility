@@ -1,5 +1,6 @@
 "use client";
 
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import type { RetrievedResults } from "@/lib/checks/contract";
 import type { TrackedCompetitor } from "@/lib/competitors/serp-comparison";
 import { useTranslations } from "next-intl";
@@ -36,6 +37,9 @@ export function SnapshotExtensionResults({
             <span>
               {t("added", { count: page.rows.length, duplicates: page.skippedDuplicates })}
             </span>
+          </div>
+          <div className="px-4 py-2 sm:px-5">
+            <PaymentChargeLine original payment={page.payment} />
           </div>
           {page.rows.length ? (
             <RetrievedResultsLadder

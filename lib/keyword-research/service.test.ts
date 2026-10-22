@@ -131,6 +131,42 @@ function run(overrides: Partial<Parameters<typeof researchKeywords>[0]> = {}) {
 }
 
 describe("keyword research service", () => {
+  it.each(["auto", "related", "suggestions", "ideas"] as const)(
+    "zero cap refuses a %s cache miss with its price before paid work",
+    async (mode) => {
+      await expect(run({ maxCostCents: 0, mode })).resolves.toMatchObject({
+        ok: false,
+        reason: "cost_limit_exceeded",
+        estimatedCostCents: expect.any(Number),
+      });
+      expect(mocks.paidCall).not.toHaveBeenCalled();
+      expect(mocks.related).not.toHaveBeenCalled();
+      expect(mocks.suggestions).not.toHaveBeenCalled();
+      expect(mocks.ideas).not.toHaveBeenCalled();
+      expect(mocks.snapshot).not.toHaveBeenCalled();
+    },
+  );
+
+  it("zero cap returns cached research for free", async () => {
+    mocks.withCache.mockResolvedValue({
+      cached: true,
+      status: "success",
+      value: {
+        costCents: 3,
+        fetchedAt: "2026-10-11T10:00:00.000Z",
+        rows: [row("Alpha")],
+      },
+    });
+    await expect(run({ maxCostCents: 0, mode: "ideas" })).resolves.toMatchObject({
+      ok: true,
+      cached: true,
+      costCents: 0,
+      rows: [{ keyword: "Alpha" }],
+      sources: [{ cached: true, costCents: 0 }],
+    });
+    expect(mocks.paidCall).not.toHaveBeenCalled();
+  });
+
   it("passes the exact remaining request consent to each source", async () => {
     mocks.related.mockResolvedValue({ costCents: 1.55, rows: [row("seed"), row("Alpha")] });
     await expect(run({ maxCostCents: 3.65 })).resolves.toMatchObject({ ok: true, costCents: 3.55 });

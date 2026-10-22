@@ -1,5 +1,6 @@
 import "server-only";
-
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
+import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
 import { prisma } from "@/lib/db/prisma";
 import { demoResearchStorageState } from "@/lib/demo/research-storage";
 import { z } from "zod";
@@ -56,12 +57,18 @@ function parseStoredSnapshot(snapshot: { rows: unknown; sources: unknown }) {
   const sources = z.array(sourceDiagnosticSchema).safeParse(snapshot.sources);
   if (!rows.success || !sources.success) return null;
   return {
+    originalPayment: (() => {
+      const raw = snapshot.sources as Array<{ _payment?: unknown }>;
+      const payment = actionPaymentReceiptSchema.safeParse(raw[0]?._payment);
+      return payment.success ? payment.data : undefined;
+    })(),
     rows: rows.data as Array<Omit<KeywordResearchRow, "alreadySaved" | "alreadyTracked">>,
     sources: sources.data as KeywordResearchSourceDiagnostic[],
   };
 }
 
 export type StoredKeywordResearchResult = {
+  originalPayment?: ActionPaymentReceipt;
   cached: true;
   costCents: 0;
   countryCode: string;
@@ -123,6 +130,7 @@ export async function findStoredKeywordResearch(input: {
     ),
     seed: snapshot.seed,
     sources: parsed.sources,
+    ...(parsed.originalPayment ? { originalPayment: parsed.originalPayment } : {}),
     ...demoResearchStorageState({
       freshUntil: snapshot.freshUntil,
       now: input.now,

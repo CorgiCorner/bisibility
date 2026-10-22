@@ -1,7 +1,10 @@
 "use client";
 
+import { ActionPaymentPrice } from "@/components/action-payment/ActionPaymentPrice";
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import { useDateFormat } from "@/components/dates/DateFormatProvider";
 import type { StoredResultFreshness } from "@/components/demo-research/StoredResultFreshness";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import type { SaveSelectedKeywordsAction } from "@/lib/actions/domain-overview";
 import type { DomainModuleOutcome, DomainOverviewReport } from "@/lib/domain-overview/types";
 import type {
@@ -11,18 +14,33 @@ import type {
 } from "@/lib/providers/types";
 import type { ResearchScope } from "@/lib/research/scope";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { DomainOverviewBacklinksTeaser } from "./DomainOverviewBacklinksTeaser";
 import { DomainOverviewContextBar } from "./DomainOverviewContextBar";
 import { DomainOverviewDistribution } from "./DomainOverviewDistribution";
 import { DomainOverviewKeywordsTable } from "./DomainOverviewKeywordsTable";
 import { DomainOverviewKpiRow } from "./DomainOverviewKpiRow";
+import { DomainOverviewMissingModule } from "./DomainOverviewMissingModule";
 import { DomainOverviewPagesTable } from "./DomainOverviewPagesTable";
 import { DomainOverviewPerformanceChart } from "./DomainOverviewPerformanceChart";
 import { DomainOverviewNoDataCard, DomainOverviewStatePanel } from "./DomainOverviewStatePanel";
 import { DomainOverviewWhatChanged } from "./DomainOverviewWhatChanged";
 import { saveDomainKeywords } from "./domain-overview-keyword-tracking";
+import { DomainOverviewRefreshPrice } from "./domain-overview-refresh-price";
 
 type DomainOverviewResultsProps = {
+  historyPrice?: ReactNode;
+  historyBlocked?: boolean;
+  historyPayment?: ActionPaymentReceipt;
+  tableBlocked?: readonly ("keywords" | "pages")[];
+  tablePayments?: Partial<Record<"keywords" | "pages", ActionPaymentReceipt>>;
+  onRefresh?: () => void;
+  paymentActions?: Partial<
+    Record<"analyze" | "history" | "keywords" | "pages", (input: unknown) => Promise<unknown>>
+  >;
+  paymentInputs?: Record<"history" | "keywords" | "pages", Record<string, unknown> | null>;
+  refreshing?: boolean;
+  refreshInput?: Record<string, unknown> | null;
   history: HistoricalOverviewRow[] | null;
   historyError: boolean;
   historyEstimateCents?: number | null;
@@ -49,20 +67,28 @@ type DomainOverviewResultsProps = {
 };
 
 export function DomainOverviewResults({
+  historyPrice,
+  historyBlocked,
+  historyPayment,
+  tableBlocked,
+  tablePayments,
   history,
   historyError,
-  historyEstimateCents,
   historyLoading,
   onLoadHistory,
   onLoadMoreKeywords,
   onLoadMorePages,
+  onRefresh,
+  paymentActions,
+  paymentInputs,
   projectRef,
+  refreshing = false,
+  refreshInput = null,
   readOnly = false,
   report,
   researchScope,
   storedFreshness,
   storedModules,
-  tableEstimateCents,
   tableError,
   tableFetchedCount,
   tableHasMore = { keywords: false, pages: false },
@@ -82,13 +108,39 @@ export function DomainOverviewResults({
     : report.pages?.ok
       ? report.pages.data
       : null;
+  const showRefresh = !readOnly && Boolean(onRefresh);
+  function refreshPrice() {
+    return showRefresh && paymentActions?.analyze ? (
+      <DomainOverviewRefreshPrice action={paymentActions.analyze} input={refreshInput} />
+    ) : null;
+  }
   return (
     <div aria-live="polite" className="grid min-w-0 gap-4.5">
       <DomainOverviewContextBar
+        countryCode={researchScope?.countryCode}
         dateFormat={dateFormat}
+        history={history}
+        refresh={
+          showRefresh && onRefresh
+            ? { busy: refreshing, onClick: onRefresh, price: refreshPrice() }
+            : undefined
+        }
         report={report}
         storedFreshness={storedFreshness}
       />
+      {readOnly ? (
+        <PaymentChargeLine original payment={report.originalPayment ?? report.payment} />
+      ) : (
+        <PaymentChargeLine payment={report.payment} />
+      )}
+      {!readOnly &&
+      report.originalPayment &&
+      report.originalPayment.actionId !== report.payment?.actionId ? (
+        <PaymentChargeLine original payment={report.originalPayment} />
+      ) : null}
+      {historyPayment ? <PaymentChargeLine payment={historyPayment} /> : null}
+      {tablePayments?.keywords ? <PaymentChargeLine payment={tablePayments.keywords} /> : null}
+      {tablePayments?.pages ? <PaymentChargeLine payment={tablePayments.pages} /> : null}
       {report.state === "no_data" || !metrics ? (
         <>
           <DomainOverviewKpiRow
@@ -123,7 +175,18 @@ export function DomainOverviewResults({
           />
           <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
             <DomainOverviewPerformanceChart
-              estimateCents={historyEstimateCents}
+              estimateCents={null}
+              price={
+                paymentActions?.history && paymentInputs ? (
+                  <ActionPaymentPrice
+                    action={paymentActions.history}
+                    input={paymentInputs.history}
+                  />
+                ) : (
+                  historyPrice
+                )
+              }
+              blocked={historyBlocked}
               failed={historyError}
               history={history}
               loading={historyLoading}
@@ -139,7 +202,16 @@ export function DomainOverviewResults({
           <DomainOverviewDistribution metrics={metrics} />
           {keywords ? (
             <DomainOverviewKeywordsTable
-              estimateCents={tableEstimateCents?.keywords}
+              estimateCents={null}
+              price={
+                paymentActions?.keywords && paymentInputs ? (
+                  <ActionPaymentPrice
+                    action={paymentActions.keywords}
+                    input={paymentInputs.keywords}
+                  />
+                ) : undefined
+              }
+              loadMoreBlocked={tableBlocked?.includes("keywords")}
               fetchedCount={tableFetchedCount.keywords}
               hasMore={tableHasMore.keywords}
               key={`${report.target}:${report.scope}:${report.fetchedAt}:keywords`}
@@ -161,15 +233,29 @@ export function DomainOverviewResults({
               readOnly={readOnly}
             />
           ) : (
-            <DomainOverviewNoDataCard
-              description={t("keywordRowsMissing")}
-              sectionTitle={t("topOrganicKeywords")}
-              title={t("keywordRowsTitle")}
+            <DomainOverviewMissingModule
+              blocked={tableBlocked?.includes("keywords")}
+              failed={tableError === "keywords"}
+              kind="keywords"
+              loading={tableLoading === "keywords"}
+              module={report.keywords}
+              onLoad={readOnly ? undefined : onLoadMoreKeywords}
+              onRefresh={showRefresh ? onRefresh : undefined}
+              paymentAction={paymentActions?.keywords}
+              paymentInput={paymentInputs?.keywords}
+              refreshPrice={refreshPrice()}
+              refreshing={refreshing}
             />
           )}
           {pages ? (
             <DomainOverviewPagesTable
-              estimateCents={tableEstimateCents?.pages}
+              estimateCents={null}
+              price={
+                paymentActions?.pages && paymentInputs ? (
+                  <ActionPaymentPrice action={paymentActions.pages} input={paymentInputs.pages} />
+                ) : undefined
+              }
+              loadMoreBlocked={tableBlocked?.includes("pages")}
               fetchedCount={tableFetchedCount.pages}
               hasMore={tableHasMore.pages}
               key={`${report.target}:${report.scope}:${report.fetchedAt}:pages`}
@@ -179,10 +265,18 @@ export function DomainOverviewResults({
               result={pages}
             />
           ) : (
-            <DomainOverviewNoDataCard
-              description={t("pageRowsMissing")}
-              sectionTitle={t("topPages")}
-              title={t("pageRowsTitle")}
+            <DomainOverviewMissingModule
+              blocked={tableBlocked?.includes("pages")}
+              failed={tableError === "pages"}
+              kind="pages"
+              loading={tableLoading === "pages"}
+              module={report.pages}
+              onLoad={readOnly ? undefined : onLoadMorePages}
+              onRefresh={showRefresh ? onRefresh : undefined}
+              paymentAction={paymentActions?.pages}
+              paymentInput={paymentInputs?.pages}
+              refreshPrice={refreshPrice()}
+              refreshing={refreshing}
             />
           )}
           {!readOnly ? (

@@ -126,7 +126,7 @@ describe("KeywordHeaderActions", () => {
     expect(screen.getByRole("button", { name: "Check top 50" })).toBeInTheDocument();
   });
 
-  it("keeps cost in the split menu, never in the primary action", () => {
+  it("keeps cost out of the split action and depth menu, leaving the price to payment review", () => {
     renderActions({
       effectiveDepth: 100,
       providerRate: { overrideCents: 0, providerId: "local-sequence" },
@@ -139,8 +139,9 @@ describe("KeywordHeaderActions", () => {
     expect(screen.queryByText("Top 100 · $0.00")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Choose check depth" }));
     for (const depth of [10, 20, 50, 100]) {
-      expect(screen.getByRole("menuitem", { name: `Top ${depth} · $0.00` })).toBeInTheDocument();
+      expect(screen.getByRole("menuitem", { name: `Top ${depth}` })).toBeInTheDocument();
     }
+    expect(screen.queryByText(/\$0\.00/)).not.toBeInTheDocument();
   });
 
   it("marks the selected depth in the menu", () => {

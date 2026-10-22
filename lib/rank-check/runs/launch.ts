@@ -1,4 +1,6 @@
 import { materializeRankRun } from "./launch-write";
+import { findPaymentRunReplay } from "./payment-replay";
+import { loadRankPaymentSources } from "./payment-sources";
 import "server-only";
 import { ApiConflictError } from "@/lib/api/errors";
 import { prisma } from "@/lib/db/prisma";
@@ -60,6 +62,8 @@ export async function launchRankCheckRun(
     await host.assertReplay?.(prisma, idempotencyKey);
     return existing;
   }
+  const paymentReplay = await findPaymentRunReplay(input);
+  if (paymentReplay) return paymentReplay;
   const now = new Date();
   const resolved = await resolveRunSelection(input.project, input.spec);
   const activeLocationIds = await activeMarketLocationIds(input.project.id, prisma);
@@ -80,7 +84,7 @@ export async function launchRankCheckRun(
         projectId: input.project.id,
       },
     }),
-    loadSerpProviderChain(input.project.id, input.providerId),
+    loadRankPaymentSources(input.project.id, input.providerId, input.paymentOptionId),
   ]);
   if (!project) throw new Error("Project not found.");
   // A retry may bypass the in-progress check, never runnability: a paused market or an
@@ -130,7 +134,13 @@ export async function launchRankCheckRun(
   const publicId = makePublicId("rcr");
   const orchestrationWorkflowId = `rank-check-run-${publicId}`;
   let created:
-    | { estimatedCostCents: number; id: string; keywordCount: number; targetCount: number }
+    | {
+        estimatedCostCents: number;
+        id: string;
+        keywordCount: number;
+        targetCount: number;
+        payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
+      }
     | { existing: Exclude<Awaited<ReturnType<typeof findIdempotentRun>>, null> }
     | ReturnType<typeof launchRankCheckRunNothingToRun>;
   try {
@@ -141,7 +151,14 @@ export async function launchRankCheckRun(
           connection: currentConnection,
           project: currentProject,
           measurementPolicy: currentPolicy,
-        } = await lockLaunchSourceSnapshot(tx, input.project.id, input.providerId);
+        } = await lockLaunchSourceSnapshot(
+          tx,
+          input.project.id,
+          input.providerId,
+          input.paymentOptionId,
+        );
+        const paymentReplay = await findPaymentRunReplay(input, tx);
+        if (paymentReplay) return { existing: paymentReplay };
         const concurrent = await findIdempotentRun(input.project.id, idempotencyKey, tx);
         if (concurrent) {
           await host.assertReplay?.(tx, idempotencyKey);
@@ -198,9 +215,7 @@ export async function launchRankCheckRun(
             }),
           );
         }
-        if (currentConnection.credentialSource !== "hosted") {
-          await assertLaunchBudget(input, currentConnection, estimate, now, tx);
-        }
+        await assertLaunchBudget(input, currentConnection, estimate, now, tx);
         return materializeRankRun(tx, {
           input,
           currentConnection,
@@ -229,6 +244,7 @@ export async function launchRankCheckRun(
   // The committed row is the intent; this wake only shortens the worker's pickup latency.
   void publishWorkerIntent("rank_run").catch(() => undefined);
   return {
+    ...(created.payment ? { payment: created.payment } : {}),
     estimatedCostCents: created.estimatedCostCents,
     keywordCount: created.keywordCount,
     publicId,

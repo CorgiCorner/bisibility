@@ -286,4 +286,34 @@ describe("domain overview actions", () => {
     ).rejects.toThrow();
     expect(mocks.requireScope).not.toHaveBeenCalled();
   });
+  it.each([
+    [analyzeDomainOverviewAction, mocks.analyze],
+    [loadDomainHistoryAction, mocks.history],
+    [loadDomainKeywordsPageAction, mocks.keywords],
+    [loadDomainPagesPageAction, mocks.pages],
+  ])(
+    "delegates exact accepted quote without a client currency conversion for %s",
+    async (action, service) => {
+      service.mockResolvedValue({ ok: false, costCents: 0, reason: "payment_quote_expired" });
+      const acceptedPayment = { quoteToken: "signed-consent" };
+      await action({
+        ...base,
+        estimateOnly: false,
+        limit: 100,
+        offset: 0,
+        paymentOptionId: "option-a",
+        acceptedPayment,
+        requirePayment: true,
+      });
+      expect(service).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          acceptedPayment,
+          paymentOptionId: "option-a",
+          requirePayment: true,
+          maxCostCents: undefined,
+        }),
+      );
+    },
+  );
 });

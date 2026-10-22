@@ -20,6 +20,8 @@ type Props = {
   onDiscard: () => void;
   onSelect: (view: CanonicalSavedViewResource | null) => void;
   onSetDefault: () => void;
+  onSaveAs: () => void;
+  onSaveChanges: () => void;
 };
 
 export function PersonalViewMenu({
@@ -36,6 +38,8 @@ export function PersonalViewMenu({
   onDiscard,
   onSelect,
   onSetDefault,
+  onSaveAs,
+  onSaveChanges,
 }: Readonly<Props>) {
   return (
     <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={onClose}>
@@ -51,6 +55,14 @@ export function PersonalViewMenu({
         </MenuItem>
       ))}
       <Divider />
+      <MenuItem disabled={pending} onClick={onSaveAs}>
+        {labels.saveAs}
+      </MenuItem>
+      {modified && active?.canEdit ? (
+        <MenuItem disabled={!writable} onClick={onSaveChanges}>
+          {labels.saveChanges}
+        </MenuItem>
+      ) : null}
       {modified ? (
         <>
           <MenuItem

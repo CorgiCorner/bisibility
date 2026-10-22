@@ -120,6 +120,7 @@
       "organicSessions": "Organic sessions",
       "sessionsConnectTitle": "Organic sessions (GA4)",
       "sessionsConnectBody": "See which queries and landing pages bring engaged visitors, and which convert.",
+      "sessionsConnectDismiss": "Dismiss organic sessions prompt",
       "connect": "Connect",
       "sessionsJoinTip": "Joined from GA4 by landing page. Search Console counts clicks and GA4 counts sessions, so the two never match exactly and a gap is normal.",
       "noSessionsMatch": "No GA4 landing page matched this URL",

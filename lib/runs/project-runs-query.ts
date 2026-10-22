@@ -7,6 +7,7 @@ import {
   type ActiveSearchImportSnapshot,
   readActiveSearchImportSnapshot,
 } from "@/lib/search-insights/sync/operation-snapshot";
+import { readAiRunRows } from "./ai-runs-read";
 import {
   decodeProjectRunsCursor,
   type ProjectRunsPlannedSortTuple,
@@ -91,7 +92,7 @@ function rankCursorWhere(
 ) {
   if (!cursor) return where;
   const at = new Date(cursor.sortAt);
-  if (cursor.kind === "gsc_import") {
+  if (cursor.kind !== "rank") {
     return { AND: [where, { [field]: { lte: at } }] };
   }
   return {
@@ -105,7 +106,12 @@ function gscCursorWhere(
 ) {
   if (!cursor) return where;
   const at = new Date(cursor.sortAt);
-  const equal = cursor.kind === "gsc_import" ? { createdAt: at, id: { gt: cursor.id } } : null;
+  const equal =
+    cursor.kind === "gsc"
+      ? { createdAt: at, id: { gt: cursor.id } }
+      : cursor.kind === "ai"
+        ? { createdAt: at }
+        : null;
   return { AND: [where, { OR: [{ createdAt: { lt: at } }, ...(equal ? [equal] : [])] }] };
 }
 
@@ -147,8 +153,9 @@ export async function listProjectRuns(
     view: "runs",
   } as const);
   const take = query.limit + 1;
-  const includeRanks = query.source !== "search_console";
-  const includeGsc = query.source !== "rank_checks";
+  const includeRanks = query.source === "all" || query.source === "rank_checks";
+  const includeGsc = query.source === "all" || query.source === "search_console";
+  const includeAi = query.source === "all" || query.source === "ai_tracking";
   const includeUpcoming = includeRanks && includesUpcomingRuns(query.status);
   const upcomingWhere = plannedWhere(project.id, query.status);
   const activeSnapshot =
@@ -183,6 +190,7 @@ export async function listProjectRuns(
     importCount,
     upcoming,
     upcomingCount,
+    aiPage,
   ] = await Promise.all([
     includeRanks
       ? prisma.rankCheckRun.findMany({
@@ -222,8 +230,10 @@ export async function listProjectRuns(
         })
       : [],
     includeUpcoming ? prisma.rankCheckRun.count({ where: upcomingWhere }) : 0,
+    includeAi ? readAiRunRows(displayProject, query, cursor) : { runs: [], count: 0 },
   ]);
   const candidates = [
+    ...aiPage.runs,
     ...launched.map((row) => rankProjectRun(row, displayProject)),
     ...cancelled.map((row) => rankProjectRun(row, displayProject)),
     ...upcoming.map((row) => rankProjectRun(row, displayProject)),
@@ -232,10 +242,16 @@ export async function listProjectRuns(
       .filter((row): row is ProjectRunGscImport => row !== null),
   ];
   const page = pageProjectRuns(candidates, query);
+  const aiTracking = aiPage.count;
   const rankChecks = launchedCount + cancelledCount + upcomingCount;
   const searchConsole = adjustedGscCount(importCount, activeSnapshot, query.status);
   return projectRunsApiResponseSchema.parse({
-    counts: { rankChecks, searchConsole, total: rankChecks + searchConsole },
+    counts: {
+      aiTracking,
+      rankChecks,
+      searchConsole,
+      total: rankChecks + aiTracking + searchConsole,
+    },
     nextCursor: page.nextCursor,
     runs: page.data,
   });
@@ -246,7 +262,7 @@ async function listPlannedProjectRuns(
   project: ProjectRunsPresentationProject,
   query: ProjectRunsQuery,
 ): Promise<ProjectRunsApiResponse> {
-  if (query.source === "search_console") {
+  if (query.source === "search_console" || query.source === "ai_tracking") {
     return projectRunsApiResponseSchema.parse({
       counts: { rankChecks: 0, searchConsole: 0, total: 0 },
       nextCursor: null,

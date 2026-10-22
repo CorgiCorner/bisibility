@@ -1,3 +1,4 @@
+import type { PaidCallPayment } from "@/lib/action-payment/paid-call";
 import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
@@ -33,8 +34,12 @@ import { assertOwnKeyStored } from "@/lib/providers/own-key-guard";
 import { consumeProviderLimit } from "@/lib/providers/rate-limit";
 import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/dataforseo";
 import type { SerpProvider } from "@/lib/providers/types";
-import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import {
+  ProviderConnectionChangedError,
+  ProviderUsagePersistenceError,
+} from "@/lib/providers/usage";
 import { requiredConnectionEstimate } from "./connection-estimate";
+import { markProviderFailurePhase, providerFailurePhase } from "./failure-phase";
 import { ProviderLookupSignal } from "./lookup-failure";
 import { assertOwnCredentialSnapshot } from "./own-credential-guard";
 import { requiredEstimatedCostCents } from "./paid-call-estimate";
@@ -66,6 +71,7 @@ async function executePaidProviderCall<
   projectId: string;
   provider: SerpProvider;
   requiredCredentialSource?: "own";
+  payment?: PaidCallPayment;
   rateContext?: Pick<ResolveProviderRateInput, "entries" | "manualAmountCents">;
   rate: ProviderFeatureRate | null;
   source: ProviderRequestSource;
@@ -82,9 +88,10 @@ async function executePaidProviderCall<
     currentConnection.provider !== input.provider.id ||
     input.connection.provider !== input.provider.id
   ) {
-    throw new ProviderUsagePersistenceError({ cause: new Error("Provider connection mismatch.") });
+    throw new ProviderConnectionChangedError({ cause: new Error("Provider connection mismatch.") });
   }
-  assertOwnCredentialSnapshot(input, currentConnection);
+  const paymentSnapshot = { ...input, requiredPaymentSnapshot: input.payment?.snapshot };
+  assertOwnCredentialSnapshot(paymentSnapshot, currentConnection);
   const context =
     (input.provider.id === "dataforseo" && currentConnection.credentialSource === "own"
       ? LIST_PROVIDER_RATE_CONTEXT
@@ -98,6 +105,7 @@ async function executePaidProviderCall<
       : await loadProviderRateContext(input.connection.id, input.feature));
   if (currentConnection.credentialSource === "hosted") {
     return runHostedPaidProviderCall({
+      payment: input.payment,
       call: input.call,
       connection: input.connection,
       credential: input.credential,
@@ -140,9 +148,9 @@ async function executePaidProviderCall<
     ownConnection.projectId !== input.projectId ||
     ownConnection.provider !== input.provider.id
   ) {
-    throw new ProviderUsagePersistenceError({ cause: new Error("Provider connection changed.") });
+    throw new ProviderConnectionChangedError({ cause: new Error("Provider connection changed.") });
   }
-  assertOwnCredentialSnapshot(input, ownConnection);
+  assertOwnCredentialSnapshot(paymentSnapshot, ownConnection);
   await assertOwnKeyStored({
     capability: input.feature,
     credentialsEncrypted: input.connection.credentialsEncrypted,
@@ -169,7 +177,7 @@ async function executePaidProviderCall<
   );
   const usage = await createProviderRequestAttribution(
     {
-      correlationId: input.correlationId ?? randomUUID(),
+      correlationId: input.payment?.operationKey ?? input.correlationId ?? randomUUID(),
       feature: input.feature,
       projectId: input.projectId,
       source: input.source,
@@ -185,6 +193,7 @@ async function executePaidProviderCall<
   }
   let result: T;
   const journal = createOwnPaidCallJournal(prisma, {
+    payment: input.payment,
     attribution: usage,
     connection: input.connection,
     projectId: input.projectId,
@@ -246,6 +255,8 @@ async function executePaidProviderCall<
     if (error instanceof ProviderCallError && chargedCostCents !== null)
       throw new ProviderCallError(error.message, chargedCostCents, error.code);
     throw error;
+  } finally {
+    if (input.payment) await input.payment.record({ attemptIds: journal.attemptIds });
   }
   if (journal?.started) {
     if (journal.costCents === null) throw new ProviderUsagePersistenceError();
@@ -259,5 +270,16 @@ async function executePaidProviderCall<
 export function paidProviderCall<
   T extends { costCents: number; providerRequestId?: string; usageQuantity?: number },
 >(input: Parameters<typeof executePaidProviderCall<T>>[0]): Promise<T> {
-  return executePaidProviderCall(input);
+  let providerCalled = false;
+  return executePaidProviderCall({
+    ...input,
+    call: (...args) => {
+      providerCalled = true;
+      return input.call(...args);
+    },
+  }).catch((error: unknown) => {
+    if (!providerCalled && !providerFailurePhase(error))
+      markProviderFailurePhase(error, "before_dispatch");
+    throw error;
+  });
 }

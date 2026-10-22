@@ -1,13 +1,17 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { renderWithResearchMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ResearchSearchCard } from "./ResearchSearchCard";
 
+const quote = paymentQuote({
+  charge: { value: "0.03", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+});
 const baseProps = {
   connectionId: "conn_a00000000000000000000000",
   connectionOptions: [{ label: "DataForSEO", value: "conn_a00000000000000000000000" }],
-  estimate: { cached: false, costCents: 3, loading: false },
+  estimate: { cached: false, costCents: 3, loading: false, payments: [quote] },
   includeClickstream: false,
   scope: {
     countryCode: "US",
@@ -50,7 +54,7 @@ describe("ResearchSearchCard", () => {
     await user.type(screen.getByRole("textbox", { name: "Search countries" }), "germany");
     await user.click(screen.getByRole("menuitem", { name: "Germany" }));
     expect(onScopeChange).toHaveBeenCalledWith(expect.objectContaining({ countryCode: "DE" }));
-    expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Research ≈ $0.03" })).toBeDisabled();
     rerender(<ResearchSearchCard {...baseProps} researching />);
     expect(screen.getByRole("button", { name: "Country" })).toBeDisabled();
   });
@@ -77,12 +81,27 @@ describe("ResearchSearchCard", () => {
 
   it("renders the action estimate and its cached-free state", () => {
     const { rerender } = render(<ResearchSearchCard {...baseProps} />);
-    expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Research ≈ $0.03" })).toBeInTheDocument();
 
     rerender(
       <ResearchSearchCard
         {...baseProps}
-        estimate={{ cached: true, costCents: 0, loading: false }}
+        estimate={{
+          cached: true,
+          costCents: 0,
+          loading: false,
+          payments: [
+            {
+              ...quote,
+              cache: {
+                state: "hit",
+                freeUntil: "2099-01-01T00:00:00Z",
+                windowSeconds: null,
+              },
+              charge: { ...quote.charge, value: "0", certainty: "free" },
+            },
+          ],
+        }}
       />,
     );
     expect(screen.getByRole("button", { name: "Research free, cached" })).toBeInTheDocument();
@@ -102,7 +121,7 @@ describe("ResearchSearchCard", () => {
   it("disables provider work for an unsupported pair but keeps the scope editable", () => {
     render(<ResearchSearchCard {...baseProps} lookupDisabled />);
 
-    expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Research ≈ $0.03" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Country" })).toBeEnabled();
   });
 
@@ -137,52 +156,26 @@ describe("ResearchSearchCard", () => {
     expect(seed).not.toHaveClass("min-h-[34px]", "py-1");
   });
 
-  it("matches the Domain Overview pricing action layout", () => {
-    render(<ResearchSearchCard {...baseProps} />);
-
-    const pricing = screen.getByRole("button", { name: "How is this priced?" });
-    const actions = pricing.parentElement;
-    const submitWrapper = screen.getByRole("button", { name: "Research ~$0.03" }).parentElement;
-
-    expect(actions).toHaveClass("ml-auto", "flex", "items-center", "gap-4");
-    expect(actions).not.toHaveClass(
-      "w-full",
-      "flex-col",
-      "flex-wrap",
-      "flex-row",
-      "justify-between",
-    );
-    expect(
-      pricing.compareDocumentPosition(submitWrapper as HTMLSpanElement) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    expect(pricing).not.toHaveClass("min-w-0", "shrink", "text-left", "order-2", "self-end");
-    expect(submitWrapper).not.toHaveClass("shrink-0", "order-1", "self-end");
-  });
-
-  it("opens a pricing popover with source rows and an in-popover docs link", () => {
-    render(<ResearchSearchCard {...baseProps} />);
-
-    const trigger = screen.getByRole("button", { name: "How is this priced?" });
-    fireEvent.click(trigger);
-
-    expect(screen.queryByRole("link", { name: "How is this priced?" })).toBeNull();
-
-    expect(screen.getByText("Related keywords")).toBeInTheDocument();
-    expect(screen.getByText("Keyword suggestions")).toBeInTheDocument();
-    expect(screen.getByText("Keyword ideas")).toBeInTheDocument();
-    expect(screen.getByText("Repeat within 12 hours")).toBeInTheDocument();
-
-    expect(screen.getByRole("link", { name: "Read the pricing docs" })).toHaveAttribute(
-      "href",
-      "https://bisibility.com/docs/api/keyword-research#research-keywords",
-    );
-  });
+  it.each([null, 999])(
+    "does not invent a payable price from scalar estimate %s or the catalogue",
+    (costCents) => {
+      render(
+        <ResearchSearchCard
+          {...baseProps}
+          estimate={{ cached: false, costCents, loading: false }}
+          seeds={["seo"]}
+        />,
+      );
+      expect(screen.getByRole("button", { name: "Research" })).toBeEnabled();
+      expect(screen.queryByRole("button", { name: "How is this priced?" })).not.toBeInTheDocument();
+      expect(screen.queryByText(/\$9.99/)).not.toBeInTheDocument();
+    },
+  );
 
   it("disables the submit button and shows a hover-reachable hint when no seed is committed or typed", () => {
     render(<ResearchSearchCard {...baseProps} />);
 
-    const button = screen.getByRole("button", { name: "Research ~$0.03" });
+    const button = screen.getByRole("button", { name: "Research ≈ $0.03" });
     expect(button).toBeDisabled();
 
     const describedBy = button.getAttribute("aria-describedby");
@@ -205,7 +198,7 @@ describe("ResearchSearchCard", () => {
     const input = screen.getByRole("textbox", { name: "Seed keyword" });
     fireEvent.change(input, { target: { value: "x" } });
 
-    const button = screen.getByRole("button", { name: "Research ~$0.03" });
+    const button = screen.getByRole("button", { name: "Research" });
     expect(button).toBeEnabled();
     expect(button).not.toHaveAttribute("title");
     expect(button).not.toHaveAttribute("aria-describedby");
@@ -215,7 +208,7 @@ describe("ResearchSearchCard", () => {
   it("keeps the submit button disabled for the budget prop even with a committed seed", () => {
     render(<ResearchSearchCard {...baseProps} disabled seeds={["seo"]} />);
 
-    expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Research ≈ $0.03" })).toBeDisabled();
   });
 
   it("keeps the submit button disabled when lookup is blocked even with a typed seed", () => {
@@ -224,7 +217,7 @@ describe("ResearchSearchCard", () => {
     const input = screen.getByRole("textbox", { name: "Seed keyword" });
     fireEvent.change(input, { target: { value: "seo" } });
 
-    expect(screen.getByRole("button", { name: "Research ~$0.03" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Research" })).toBeDisabled();
   });
 
   it("creates seed chips before submit and clears the pending seed list", async () => {
@@ -251,8 +244,10 @@ describe("ResearchSearchCard", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Seed keyword" }), {
       target: { value: "seo tool" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Research ~$0.03" }));
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(["rank tracker", "seo tool"]));
+    fireEvent.click(screen.getByRole("button", { name: "Research" }));
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(["rank tracker", "seo tool"], quote.option),
+    );
     expect(onSeedsChange).toHaveBeenLastCalledWith([]);
   });
 

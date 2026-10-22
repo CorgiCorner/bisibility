@@ -15,7 +15,12 @@ export const keywordResearchMcpSchemas = {
         minItems: 1,
         type: "array",
       },
-      max_cost_cents: { minimum: 1, type: "integer" },
+      max_cost_cents: {
+        minimum: 0,
+        type: "integer",
+        description:
+          "0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before paid work.",
+      },
       project_id: mcpPublicIdSchema("prj"),
     },
     required: ["project_id", "keywords"],
@@ -27,7 +32,12 @@ export const keywordResearchMcpSchemas = {
       estimate_only: booleanSchema,
       fresh: booleanSchema,
       include_clickstream: booleanSchema,
-      max_cost_cents: { minimum: 1, type: "integer" },
+      max_cost_cents: {
+        minimum: 0,
+        type: "integer",
+        description:
+          "0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before paid work.",
+      },
       mode: { enum: ["auto", "related", "suggestions", "ideas"], type: "string" },
       project_id: mcpPublicIdSchema("prj"),
       result_limit: { enum: [100, 300, 500], type: "integer" },

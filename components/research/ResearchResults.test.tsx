@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import {
   renderWithFeatureMessages,
   researchFeatureTestMessages,
@@ -223,5 +224,26 @@ describe("ResearchResults diagnostics", () => {
       />,
     );
     expect(screen.getByText(/Your 100 results/)).toBeInTheDocument();
+  });
+  it("shows a stored original charge without inventing a charge for the current read", () => {
+    const quote = paymentQuote();
+    const originalPayment = {
+      actionId: "original",
+      quoteId: quote.id,
+      option: quote.option,
+      state: "settled" as const,
+      charge: { ...quote.charge, certainty: "measured" as const },
+    };
+    render(
+      <ResearchResults
+        readOnly
+        requestedLimit={100}
+        result={{ ...makeResult([]), originalPayment }}
+        seed="seed"
+      />,
+    );
+    expect(screen.getByText("Original lookup:")).toBeInTheDocument();
+    expect(screen.getByText("4 tokens")).toBeInTheDocument();
+    expect(screen.queryByText("Payment details unavailable")).not.toBeInTheDocument();
   });
 });

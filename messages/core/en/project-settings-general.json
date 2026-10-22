@@ -55,6 +55,7 @@
       "default": "Instance default",
       "hours": "{count, plural, one {# hour} other {# hours}}",
       "days": "{count, plural, one {# day} other {# days}}",
+      "weeks": "{count, plural, one {# week} other {# weeks}}",
       "save": "Save",
       "saved": "Saved",
       "list": "Cached results",

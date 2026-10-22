@@ -121,14 +121,36 @@ export async function mutateTrackingCatalog(
     if (id && !input.configuration) {
       if (input.enabled && !saved?.enabled)
         throw new Error("Enabling requires reviewed configuration and explicit budget consent.");
+      if (
+        (saved?.configuration as unknown as PlanTrackingRunInput | undefined)?.paymentConsent &&
+        ((input.cron !== undefined && input.cron !== saved?.cron) ||
+          (input.timezone !== undefined && input.timezone !== saved?.timezone))
+      )
+        throw new Error("Changing cadence requires a new recurring payment review.");
       return updateSchedule(projectId, id, input);
     }
-    const configuration = await trackingPlan(projectId, input.configuration);
-    if (input.enabled ?? saved?.enabled ?? false)
-      await approveTrackingConfiguration(projectId, {
+    let configuration = await trackingPlan(projectId, input.configuration);
+    if (configuration.requirePayment || configuration.acceptedPayment) {
+      if (
+        configuration.paymentScope !== "recurring" ||
+        (configuration.paymentScheduleId ?? null) !== (saved?.publicId ?? null) ||
+        configuration.paymentRecurrence?.cron !== (input.cron ?? saved?.cron) ||
+        configuration.paymentRecurrence?.timezone !== (input.timezone ?? saved?.timezone)
+      )
+        throw new Error("Review the recurring payment scope and schedule cadence.");
+    }
+    if (input.enabled ?? saved?.enabled ?? false) {
+      const approved = await approveTrackingConfiguration(projectId, {
         ...configuration,
         consent: (value as { consent?: boolean }).consent === true,
       });
+      configuration = {
+        ...configuration,
+        paymentConsent: approved.paymentConsent,
+        acceptedPayment: undefined,
+      };
+    }
+    configuration = { ...configuration, acceptedPayment: undefined };
     return id
       ? updateSchedule(projectId, id, { ...input, configuration })
       : createSchedule(projectId, { ...scheduleInputSchema.parse(value), configuration });
@@ -139,7 +161,11 @@ export async function trackingPlan(
   projectId: string,
   value: unknown,
 ): Promise<PlanTrackingRunInput> {
-  const input = planTrackingRunSchema.parse(value);
+  const { paymentConsent: _untrustedConsent, ...untrusted } = (value ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const input = planTrackingRunSchema.parse(untrusted);
   const promptIds = await Promise.all(
     input.promptIds.map((id: string) => resolveTrackingId(projectId, "prompts", id)),
   );

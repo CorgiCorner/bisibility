@@ -99,12 +99,13 @@
       "duplicate": "選択したキーワードはすべて別の実行でチェック中のため、開始するものがありません。",
       "editBudget": "予算を編集",
       "noProvider": "プロバイダーなし",
-      "noProviderBlocked": "プロバイダーが接続されていないため、これらのターゲットの送信先がありません。ご自身のキーを使用し、料金は直接請求されます。",
+      "noProviderBlocked": "これらのチェックを実行する前に、連携でデータソースを選択してください。",
       "openIntegrations": "連携を開く",
       "openRun": "実行を開く",
       "pricePerTarget": "ターゲット単価",
       "primaryProvider": "プライマリプロバイダー",
       "primaryProviderAria": "プライマリプロバイダー",
+      "paymentUnavailable": "このプロバイダーの支払い情報は利用できません。利用状況で支払い元を確認してください。",
       "previewChanged": "実行内容が変更されました。更新して現在の見積もりを確認してください。",
       "runInProgress": "実行中",
       "runOptions": "実行オプション",
@@ -139,7 +140,9 @@
       "measurementPolicy": "計測ポリシー",
       "configureMeasurementPolicy": "ポリシーを設定",
       "measurementPolicyUnconfigured": "新しいチェックの前に計測ポリシーを設定してください。",
-      "measurementPolicyUnsupported": "現在のアダプターとポリシーが一致しません。確認して再設定してください。"
+      "measurementPolicyUnsupported": "現在のアダプターとポリシーが一致しません。確認して再設定してください。",
+      "nextScheduledCheck": "次のチェック予定",
+      "futureScheduledCheck": "このうち {count, plural, other {# 件のキーワード}}は {time} にチェック予定です。今すぐチェックすることもできます。"
     },
     "globalError": {
       "description": "アプリはこのページを表示できませんでした。再読み込みしてもう一度お試しください。",
@@ -305,7 +308,7 @@
       "notices": {
         "budgetExhausted": "月間の順位チェック予算の上限に達しました。",
         "noneReady": "最初のチェックの準備ができたキーワードはありません。",
-        "providerMissing": "チェックを実行する前に SERP プロバイダーを接続してください。",
+        "providerMissing": "チェックを実行する前にデータソースを選択してください。",
         "raiseBudget": "予算の引き上げ",
         "sampleProject": "サンプルプロジェクトでは実際のチェックは行われません。",
         "reviewUsage": "利用状況を確認"
@@ -388,7 +391,7 @@
         "reactivateAccountDangerLabel": "アカウントを再有効化",
         "reactivateAccountTitle": "アカウントを再有効化",
         "reactivateAccountToastMessage": "アカウント操作をリクエストしました",
-        "removeIntegrationBody": "別の SERP プロバイダーを接続するまで順位チェックは停止します。保存済みの認証情報はこのインスタンスから削除されます。",
+        "removeIntegrationBody": "このプロバイダー接続と保存された認証情報を削除します。チェックを続けるには、別の有効なソースが必要です。",
         "removeIntegrationDangerLabel": "プロバイダーを切断",
         "removeIntegrationTitle": "プロバイダーを切断",
         "removeIntegrationToastMessage": "プロバイダーを切断しました",
@@ -427,7 +430,11 @@
         "deleteTimelineNoteBody": "このタイムラインノートを削除しますか？この操作は取り消せません。",
         "deleteTimelineNoteDangerLabel": "ノートを削除",
         "deleteTimelineNoteTitle": "タイムラインノートを削除しますか？",
-        "deleteTimelineNoteToastMessage": "タイムラインノートを削除しました。"
+        "deleteTimelineNoteToastMessage": "タイムラインノートを削除しました。",
+        "removeProviderKeyTitle": "保存済みのキーを削除しますか？",
+        "removeProviderKeyBody": "保存済みのキーを削除し、このプロバイダーを切断します。引き続き使用するには、別のソースを選択してください。",
+        "removeProviderKeyDangerLabel": "キーを削除",
+        "removeProviderKeyToastMessage": "キーを削除しました"
       },
       "copy": {
         "action": "コピー",
@@ -781,7 +788,13 @@
         "loading": "予算を読み込み中。",
         "empty": "適用される予算はありません。",
         "forbidden": "これらの予算は表示できません。",
-        "failed": "予算は現在利用できません。"
+        "failed": "予算は現在利用できません。",
+        "noLimit": "上限なし",
+        "setLimit": "上限を設定",
+        "perMonth": "/ 月",
+        "overBy": "{amount} 超過",
+        "reservedHint": "実行中または待機中のチェックのために確保されています。自動更新され、編集できません。",
+        "reservedInfo": "確保された使用量について"
       },
       "overview": {
         "unknown": "使用量不明",
@@ -1414,6 +1427,8 @@
         "duplicate": "実行中の測定がこの範囲をすでに含んでいます。",
         "budget_blocked": "予算により開始がブロックされています。",
         "nothing_eligible": "この手動測定で実行できる対象がありません。",
+        "payment_already_executed": "この支払いは、すでに測定の実行に使われています。",
+        "payment_unavailable": "このプロバイダーの支払い情報は利用できません。利用状況で支払い元を確認してください。",
         "cost_limit_exceeded": "操作の見積もりが費用上限を超えています。",
         "sample_project": "サンプルプロジェクトでは有料測定を開始できません。",
         "preview_failed": "見積もりを読み込めませんでした。下書きは保持されています。",
@@ -2014,7 +2029,7 @@
       "asOf": "レポート基準日時:",
       "baselineAsOf": "要求した比較基準日時:",
       "providerConnected": "順位プロバイダーが接続されています。この読み取りでチェックは開始しません。",
-      "providerMissing": "順位プロバイダーは接続されていません。保存済みの観測は読み取れます。",
+      "providerMissing": "順位データソースが設定されていません。保存済みの観測結果は引き続き閲覧できます。",
       "state": {
         "missing": "保存済みの比較を選択して結果を表示します。",
         "invalid": "この比較リンクは無効です。保存済みの比較を選択してください。",
@@ -2046,17 +2061,55 @@
       "scanFullDepth": "確認した深さ全体を確認します。"
     },
     "providerAccess": {
-      "connect": "対応プロバイダーを接続して入力欄を有効にしてください。",
+      "connect": "これらの項目を使用するにはデータソースを選択してください。",
       "supported": "対応プロバイダー: {providers}。",
-      "unavailable": "この機能に対応するプロバイダーはありません。",
+      "unavailable": "この機能に対応するデータソースは利用できません。",
       "action": "連携設定を開く",
-      "reconnect": "これらの項目を使うにはプロバイダーを再接続してください。",
+      "reconnect": "これらの項目を使用するには、選択したデータソースを再接続してください。",
       "reconnectAction": "プロバイダーを再接続",
-      "emptyTitle": "プロバイダーを接続して開始",
-      "reconnectTitle": "再接続して新しい結果を取得",
-      "emptyDescription": "この機能には対応プロバイダーが必要です。連携設定で接続すると検索できます。",
-      "reconnectDescription": "次の検索を実行する前に、連携設定でプロバイダーを再接続してください。",
-      "connectAction": "プロバイダーを接続"
+      "emptyTitle": "データソースを選択",
+      "reconnectTitle": "選択したデータソースを再接続",
+      "emptyDescription": "検索を実行するには、連携で対応するデータソースを選択してください。",
+      "reconnectDescription": "次の検索を実行する前に、連携で選択したデータソースを再接続してください。",
+      "connectAction": "データソースを選択",
+      "askAdmin": "チェックを開始するには、プロジェクト管理者にデータソースの選択を依頼してください。"
+    },
+    "durationUnits": {
+      "minutes": "{count, plural, other {#分}}",
+      "hours": "{count, plural, other {#時間}}",
+      "days": "{count, plural, other {#日間}}",
+      "weeks": "{count, plural, other {#週間}}"
+    },
+    "actionPayment": {
+      "title": "料金の確認",
+      "description": "開始前に料金を確認してください。",
+      "confirm": "開始",
+      "cancel": "キャンセル",
+      "payer": "支払い元",
+      "byok": "自分のプロバイダーアカウント",
+      "platform": "クレジット",
+      "wallet": "利用可能: {amount}",
+      "freeUntil": "{date} までキャッシュを無料で利用可能",
+      "cacheWindow": "取得結果は{duration}無料で再表示できます",
+      "changeCache": "変更",
+      "refreshEstimate": "見積もりを更新",
+      "addCredits": "クレジットを追加",
+      "loading": "料金を確認中…",
+      "unavailable": "支払い情報を取得できません",
+      "expired": "料金の有効期限が切れました。更新して現在の料金を確認してください。",
+      "blocked": "この方法は利用できません。別の方法を選ぶか、アカウントを確認してください。",
+      "pending": "料金の確定待ち",
+      "unknown": "料金を確認できません",
+      "byokRoute": "自分の {provider} キー",
+      "maximum": "上限: {amount}",
+      "total": "合計",
+      "originalCharge": "元の取得:",
+      "reviewPrice": "料金を確認",
+      "insufficientCredits": "クレジットが不足しています。",
+      "refreshPrice": "料金を更新",
+      "forecast": "予測",
+      "forecastRisk": "実際のプロバイダー料金は予測を超える場合があります。",
+      "requestUnconfirmed": "再実行する前に前のリクエストを確認してください。"
     }
   }
 }

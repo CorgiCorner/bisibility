@@ -23,6 +23,10 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/metering/project-budget-read", () => ({
   projectBudgetCapCents: async () => (await mocks.prisma.project.findUnique())?.budgetCapCents ?? 0,
 }));
+vi.mock("@/lib/metering/rank-check-budget-read", () => ({
+  rankCheckBudgetCapCents: async () =>
+    (await mocks.prisma.project.findUnique())?.budgetCapCents ?? 0,
+}));
 vi.mock("./_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
 }));

@@ -5,6 +5,7 @@ import { dataForSeoProvider } from "@/lib/providers/serp/dataforseo";
 import { serpApiProvider } from "@/lib/providers/serp/serpapi";
 import { locationForProvider } from "@/lib/rank-check/fallback-location";
 import { admittedDefinitionSource } from "@/lib/rank-check/runs/definition.test-fixture";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { serpRankLocation } from "@/lib/serp/location";
 import type { ProviderRequest } from "@usagekit/providers";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -22,6 +23,7 @@ const providerIds: RankProviderId[] = ["dataforseo", "serpapi"];
 function rankFixture(
   providerId: RankProviderId,
   scope: "country" | "city" | "city-fallback" = "country",
+  depth: SerpDepth = 20,
 ) {
   const source = admittedDefinitionSource("fixture-project", "fixture-keyword", "synthetic query");
   Object.assign(source.target.location, {
@@ -34,7 +36,7 @@ function rankFixture(
     secondaryGeoName: scope === "country" ? "United States" : "Synthetic City, United States",
   });
   if (source.policy.defaults) source.policy.defaults.serpStopOnMatch = scope !== "country";
-  const request = frozenRequest(source, providerId, 20);
+  const request = frozenRequest(source, providerId, depth);
   const binding: DefinitionBinding = {
     id: "fixture-binding",
     projectId: source.projectId,
@@ -243,7 +245,8 @@ describe("synthetic provider accounting receipts", () => {
     "DataForSEO refuses a mismatching %s in the actual native task",
     async (mismatch) => {
       vi.stubEnv("BISIBILITY_FAKE_PROVIDER", "1");
-      const { binding, input } = rankFixture("dataforseo", "city");
+      // Top20 always crawls its full depth, so stop on match is only part of other depths.
+      const { binding, input } = rankFixture("dataforseo", "city", 100);
       if (mismatch === "depth") input.depth = 50;
       if (mismatch === "stop on match") input.stopOnMatch = false;
       if (mismatch === "tracked domain") input.domain = "example.org";

@@ -16,6 +16,7 @@ import type { PreflightProvider, PreflightScope } from "./preflight-presentation
 export const preflightFormSchema = z
   .object({
     depth: z.union(serpDepthValues.map((depth) => z.literal(depth))).optional(),
+    paymentOptionId: z.string().min(1).max(256).optional(),
     providerId: z.string().trim().min(1).max(120).optional(),
   })
   .strict();

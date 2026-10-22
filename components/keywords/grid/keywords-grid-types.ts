@@ -72,10 +72,10 @@ export type KeywordsGridProps = KeywordActions.KeywordWorkspaceActions & {
   searchConsoleConnected?: boolean;
   projectMarkets?: ProjectMarketsView;
   query: RankTrackerQueryState;
-  queueFirstChecksAction: FirstCheckActions.QueueFirstChecksAction;
   local?: RankTrackerLocalPresentation;
   report?: ReportSummaryPresentation;
   rows: MarketGridViewRow[];
+  viewDevices?: readonly import("@/lib/keywords/view-devices").KeywordViewDevice[];
   runCheckNowAction?: KeywordActions.KeywordDetailActions["runCheckNowAction"];
   savedViews?: KeywordSavedView[];
   tagSuggestions?: readonly string[];

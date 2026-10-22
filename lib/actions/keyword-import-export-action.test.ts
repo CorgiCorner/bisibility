@@ -121,6 +121,8 @@ describe("keyword workbook import action", () => {
     mocks.prisma.$executeRaw.mockResolvedValue(0);
     mocks.prisma.$queryRaw.mockImplementation(async (parts: TemplateStringsArray) => {
       const sql = parts.join("?");
+      if (sql === 'SELECT "id" FROM "projects" WHERE "id" = ? FOR UPDATE')
+        return [{ id: "project_1" }];
       if (sql.includes("FROM users")) return [{ id: "user_1" }];
       if (sql.includes("FROM memberships")) return [{ role: "admin" }];
       if (sql.includes("to_regclass")) return [{ tables: 0, source: false, guard: false }];

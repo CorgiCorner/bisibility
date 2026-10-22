@@ -25,7 +25,11 @@
       "takeawaySlippedLast": "Average position slipped {value, number} in the last {days, number} {days, plural, one {day} other {days}}. Biggest drop: {leader}.",
       "takeawaySteadyFirst": "Average position held steady over the first {days, number} {days, plural, one {day} other {days}} of tracking.",
       "takeawaySteadyLast": "Average position held steady over the last {days, number} {days, plural, one {day} other {days}}.",
-      "title": "Position trend"
+      "title": "Position trend",
+      "tooltipAverage": "Average position {position, number, ::.#}",
+      "tooltipKeyword": "{keyword}: #{position, number, ::.#}",
+      "tooltipKeywordQualified": "{keyword} ({device}{hasMarket, select, true {, {market}} other {}}): #{position, number, ::.#}",
+      "tooltipMore": "+{count, number} more"
     },
     "distribution": {
       "bucketAriaLabel": "Positions {start, number} to {end, number}: {count, number} {count, plural, one {keyword} other {keywords}}",
@@ -50,7 +54,8 @@
       "rankCheckFailedDetail": "{keyword}: The rank check could not run because of a provider error. Try again, or view check details for more information.",
       "kpisAriaLabel": "Overview KPIs",
       "viewAllKeywords": "View all keywords",
-      "viewCheckRuns": "View check runs"
+      "viewCheckRuns": "View check runs",
+      "providerCapacityUnavailableDetail": "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys."
     },
     "kpis": {
       "averageComparison": "{direction, select, up {up {value, number, ::.0} vs previous ranked check} down {down {value, number, ::.0} vs previous ranked check} other {0 vs previous ranked check}}",
@@ -74,7 +79,7 @@
     "noData": {
       "addKeywords": "Add keywords",
       "checkInProgress": "check in progress",
-      "connect": "Connect",
+      "connect": "Choose a data source",
       "firstCheckInProgressDetail": "Rankings will appear here when the current check finishes.",
       "firstCheckInProgressTitle": "First rank check in progress.",
       "migrationHoldDetail": "This project is on migration hold. Rank tracking will resume when the hold ends.",
@@ -84,17 +89,22 @@
       "noData": "no data",
       "noRankingsYet": "No rankings yet",
       "pausedMigrationHold": "paused - migration hold",
-      "providerMissingDetail": "Connect DataForSEO or SerpApi to start rank tracking.",
-      "providerMissingTitle": "SERP provider required",
+      "providerMissingDetail": "Choose a data source in Integrations to run checks.",
+      "providerMissingTitle": "Choose a data source",
       "providerNeedsAttention": "provider needs attention",
-      "providerNeedsAttentionDetail": "{count, number} {count, plural, one {keyword is} other {keywords are}} ready. Enable or reconnect a SERP provider before the first rank check.",
+      "providerNeedsAttentionDetail": "{count, number} {count, plural, one {keyword is} other {keywords are}} ready. Review the selected data source before the first check.",
       "providerNeedsAttentionTitle": "SERP provider needs attention.",
-      "providerNotConnected": "provider not connected",
+      "providerNotConnected": "source not configured",
       "readyToCheck": "ready to check",
       "readyDetail": "{count, plural, =0 {Add keywords to start rank tracking.} one {# keyword is ready for the first rank check.} other {# keywords are ready for the first rank check.}}",
-      "viewerAskAdmin": "Ask a project admin to connect DataForSEO or SerpApi before rank tracking can start.",
+      "viewerAskAdmin": "Ask a project admin to choose a data source before checks can start.",
       "viewCheckRuns": "View check runs",
-      "viewKeywords": "View keywords"
+      "viewKeywords": "View keywords",
+      "firstCheckIntro": {
+        "title": "Run your first check",
+        "description": "Find out where you rank. Your first check brings this dashboard to life.",
+        "dismiss": "Dismiss this introduction"
+      }
     },
     "sampleProject": {
       "createProject": "Create your real project",

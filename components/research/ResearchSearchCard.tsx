@@ -1,28 +1,24 @@
 "use client";
 
+import { ActionPaymentOptionPicker } from "@/components/action-payment/ActionPaymentOptionPicker";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { InlineToken } from "@/components/ui/InlineToken";
 import { compactInputTypographyClassName } from "@/components/ui/input-styles";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { pricingTriggerClassName } from "@/components/ui/PricingPopover";
 import { Switch } from "@/components/ui/Switch";
-import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
+import type { ActionPaymentOption, ActionPaymentQuote } from "@/lib/action-payment/contract";
+import { formatPaymentAmount } from "@/lib/action-payment/format";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
 import type { ResearchScope } from "@/lib/research/scope";
 import { MagnifyingGlassIcon as MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { KeyboardEvent } from "react";
-import { useId, useState } from "react";
+import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-  ResearchPricingPopover,
-  researchFallbackCostCents,
-  researchPricingRows,
-} from "./ResearchPricingPopover";
 import { ResearchScopePicker } from "./ResearchScopePicker";
 
 const formSchema = z.object({ seed: z.string().trim().max(80) });
@@ -32,6 +28,8 @@ export type ResearchEstimateView = {
   cached: boolean;
   costCents: number | null;
   loading: boolean;
+  payments?: ActionPaymentQuote[];
+  paymentOptions?: ActionPaymentOption[];
 };
 
 type ResearchSearchCardProps = {
@@ -45,29 +43,33 @@ type ResearchSearchCardProps = {
   scopes: readonly ResearchScope[];
   mode: KeywordResearchMode;
   onConnectionChange: (value: string) => void;
+  onPaymentOptionChange?: (option: ActionPaymentOption) => void;
   onIncludeClickstreamChange: (value: boolean) => void;
   onLimitChange: (value: 100 | 300 | 500) => void;
   onScopeChange: (scope: ResearchScope) => void;
   onModeChange: (value: KeywordResearchMode) => void;
   onSeedsChange: (seeds: string[]) => void;
-  onSubmit: (seeds: string[]) => void;
+  onSubmit: (seeds: string[], option?: ActionPaymentOption) => void;
   resultLimit: 100 | 300 | 500;
   researching: boolean;
   seeds: string[];
 };
 
-// The button always carries a price: the server estimate when one is in, otherwise
-// the provider price list computed client-side ("cost visible before every lookup").
 function researchButtonLabel(
   researching: boolean,
   estimate: ResearchEstimateView,
-  fallbackCostCents: number | null,
+  locale: string,
   t: ReturnType<typeof useTranslations<"projectResearch.search">>,
 ) {
-  const costCents = estimate.costCents ?? fallbackCostCents;
+  const payments = estimate.loading ? [] : (estimate.payments ?? []);
+  const cost =
+    payments.length && !payments.every((quote) => quote.cache.state === "hit")
+      ? payments.map((quote) => formatPaymentAmount(quote.charge, locale)).join(" + ")
+      : "none";
   return t("button", {
-    cached: estimate.cached ? "true" : "false",
-    cost: estimate.cached || costCents == null ? "none" : formatEstimateCents(costCents),
+    cached:
+      payments.length && payments.every((quote) => quote.cache.state === "hit") ? "true" : "false",
+    cost,
     researching: researching ? "true" : "false",
   });
 }
@@ -81,6 +83,7 @@ export function ResearchSearchCard({
   scopes,
   mode,
   onIncludeClickstreamChange,
+  onPaymentOptionChange,
   onLimitChange,
   onScopeChange,
   onModeChange,
@@ -91,6 +94,7 @@ export function ResearchSearchCard({
   seeds,
 }: Readonly<ResearchSearchCardProps>) {
   const t = useTranslations("projectResearch.search");
+  const locale = useLocale();
   const { getValues, handleSubmit, register, resetField, watch } = useForm<FormValues>({
     defaultValues: { seed: "" },
     resolver: zodResolver(formSchema),
@@ -111,6 +115,7 @@ export function ResearchSearchCard({
 
   const typedSeed = watch("seed") ?? "";
   const hasSeed = seeds.length > 0 || typedSeed.trim().length > 0;
+  const buttonEstimate = typedSeed.trim() ? { ...estimate, payments: [] } : estimate;
 
   function commitSeed() {
     const seed = getValues("seed").trim();
@@ -132,15 +137,11 @@ export function ResearchSearchCard({
     if (lookupDisabled) return;
     const next = commitSeed();
     if (next.length === 0) return;
-    onSubmit(next);
+    onSubmit(next, estimate.loading ? undefined : estimate.payments?.[0]?.option);
     onSeedsChange([]);
     resetField("seed");
   }
 
-  const [pricingAnchor, setPricingAnchor] = useState<HTMLElement | null>(null);
-
-  const pricingRows = researchPricingRows(mode, resultLimit, includeClickstream);
-  const fallbackCostCents = researchFallbackCostCents(pricingRows, seeds.length);
   return (
     <Card className="min-w-0 w-full p-4 sm:p-5" size="md">
       <form className="grid gap-3" onSubmit={handleSubmit(submit)}>
@@ -214,24 +215,28 @@ export function ResearchSearchCard({
             <InfoTooltip text={t("clickstreamHelp")} />
           </span>
           <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-4">
-            <button
-              className={pricingTriggerClassName}
-              onClick={(event) => setPricingAnchor(event.currentTarget)}
-              type="button"
-            >
-              {t("pricing")}
-            </button>
+            {onPaymentOptionChange ? (
+              <ActionPaymentOptionPicker
+                options={estimate.paymentOptions ?? []}
+                disabled={estimate.loading || researching}
+                value={estimate.payments?.[0]?.option.id ?? ""}
+                onChange={(id) => {
+                  const option = estimate.paymentOptions?.find((item) => item.id === id);
+                  if (option) onPaymentOptionChange(option);
+                }}
+              />
+            ) : null}
             <span className="inline-flex" title={!hasSeed ? t("noSeedHint") : undefined}>
               <Button
                 aria-describedby={!hasSeed ? noSeedHintId : undefined}
-                disabled={disabled || lookupDisabled || researching || !hasSeed}
+                disabled={disabled || lookupDisabled || researching || estimate.loading || !hasSeed}
                 loading={researching}
-                loadingLabel={researchButtonLabel(true, estimate, fallbackCostCents, t)}
+                loadingLabel={researchButtonLabel(true, buttonEstimate, locale, t)}
                 startIcon={<MagnifyingGlass size={15} weight="regular" />}
                 style={{ minWidth: 216 }}
                 type="submit"
               >
-                {researchButtonLabel(false, estimate, fallbackCostCents, t)}
+                {researchButtonLabel(false, buttonEstimate, locale, t)}
               </Button>
               {!hasSeed ? (
                 <span className="sr-only" id={noSeedHintId}>
@@ -242,14 +247,6 @@ export function ResearchSearchCard({
           </div>
         </div>
       </form>
-      <ResearchPricingPopover
-        anchor={pricingAnchor}
-        includeClickstream={includeClickstream}
-        mode={mode}
-        onClose={() => setPricingAnchor(null)}
-        resultLimit={resultLimit}
-        seedCount={Math.max(seeds.length, 1)}
-      />
     </Card>
   );
 }

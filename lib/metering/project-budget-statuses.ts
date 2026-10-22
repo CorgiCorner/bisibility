@@ -10,8 +10,14 @@ import type {
 import { addQuantity, compareQuantity } from "@usagekit/core";
 import { mapAdminQueries } from "./admin-batch";
 import { platformAllocationTag } from "./paid-quote";
+import { parseProjectFundingBudgetId, projectFundingTag } from "./project-funding-budgets";
 
-type Connection = { id: string; publicId: string; provider: string };
+type Connection = {
+  id: string;
+  publicId: string;
+  provider: string;
+  credentialSource?: string | null;
+};
 const sources: readonly Source[] = ["app", "worker", "api", "sdk", "cli", "mcp", "proxy"];
 
 /** Raw figures stay on the server; readers receive only the blocking decision. */
@@ -33,14 +39,17 @@ export async function readProjectBudgetStatuses(
           principal: project.ownerId,
           group: project.id,
           connection: connection?.id ?? "project-budget-observer",
-          ...(connection
-            ? {
-                tags: [
-                  ownAllocationTag(connection.provider, connection.id),
-                  platformAllocationTag(connection.provider, connection.id),
-                ],
-              }
-            : {}),
+          // A connection meets the project limit of its active source; the project view shows both.
+          tags: connection
+            ? [
+                ownAllocationTag(connection.provider, connection.id),
+                platformAllocationTag(connection.provider, connection.id),
+                projectFundingTag(
+                  connection.credentialSource === "hosted" ? "platform" : "byok",
+                  project.id,
+                ),
+              ]
+            : [projectFundingTag("byok", project.id), projectFundingTag("platform", project.id)],
         },
         source,
         surface: source === "app" || source === "worker" ? "app" : "programmatic",
@@ -50,21 +59,25 @@ export async function readProjectBudgetStatuses(
       if (result.outcome !== "ok") throw new Error("Meter limits unavailable");
       // Shared figures are never a reader's grant. The service reduces them to
       // an admission decision here; only the original redacted rows leave this helper.
-      let blocked = paidWorkBlocked(result.value);
+      const projectWide = (status: BudgetStatus) =>
+        status.budget.scope.kind === "group" ||
+        parseProjectFundingBudgetId(status.budget.id) !== null;
+      // One source reaching its project limit never blocks work funded by the other.
+      const deciding = (rows: readonly BudgetStatus[]) =>
+        connection ? rows : rows.filter((status) => status.budget.scope.kind === "group");
+      let blocked = paidWorkBlocked(deciding(result.value));
       if (blocked !== true && result.value.some((status) => status.redacted)) {
         const decision = await meter.applicableBudgets(
           { ...access, readablePrincipals: "*" },
           query,
         );
         if (decision.outcome !== "ok") throw new Error("Meter limits unavailable");
-        blocked = paidWorkBlocked(decision.value);
+        blocked = paidWorkBlocked(deciding(decision.value));
       }
       return {
         connection,
         blocked,
-        statuses: connection
-          ? result.value
-          : result.value.filter((status) => status.budget.scope.kind === "group"),
+        statuses: connection ? result.value : result.value.filter(projectWide),
       };
     },
     concurrency,

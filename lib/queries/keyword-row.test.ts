@@ -107,7 +107,7 @@ describe("mapKeyword traffic fields", () => {
       metrics,
     );
     expect(row.projectTimezone).toBe("Europe/Warsaw");
-    expect(row.schedule.timezone).toBe("UTC");
+    expect(row.schedule.timezone).toBe("Europe/Warsaw");
   });
 
   it("maps the assigned CheckSchedule and keeps an unassigned keyword manual", () => {
@@ -286,7 +286,7 @@ describe("mapKeyword traffic fields", () => {
     ]);
   });
 
-  it("keeps malformed ranking URLs and inherits project schedule defaults", () => {
+  it("keeps malformed ranking URLs without applying project schedule defaults", () => {
     expect(pathFromUrl("http://[invalid")).toBe("http://[invalid");
     const defaults = {
       cronExpression: "0 9 * * *",
@@ -297,11 +297,11 @@ describe("mapKeyword traffic fields", () => {
       timezone: "UTC",
     };
     const row = mapKeyword(keywordRow(), { defaults, domain: "example.com" }, metrics);
-    expect(row.scheduleSource).toBe("project");
-    expect(row.schedule.frequency).toBe("daily");
+    expect(row.scheduleSource).toBe("fallback");
+    expect(row.schedule.frequency).toBe("manual");
   });
 
-  it("derives keyword-specific next times for inherited interval defaults", () => {
+  it("does not invent next times for unassigned keywords", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-12T00:00:00.000Z"));
     const defaults = {
@@ -323,9 +323,8 @@ describe("mapKeyword traffic fields", () => {
       metrics,
     );
 
-    expect(first.schedule.next_check_at).not.toBeNull();
-    expect(second.schedule.next_check_at).not.toBeNull();
-    expect(first.schedule.next_check_at).not.toBe(second.schedule.next_check_at);
+    expect(first.schedule.next_check_at).toBeNull();
+    expect(second.schedule.next_check_at).toBeNull();
   });
 
   it("retains unqualified legacy observations without inventing a two-check comparable window", () => {

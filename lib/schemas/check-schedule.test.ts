@@ -65,6 +65,28 @@ describe("check schedule schemas", () => {
     ).toBe(false);
   });
 
+  it.each(["weekly", "monthly"])("accepts %s schedules without a fixed time", (frequency) => {
+    const input = { cronExpression: null, frequency, name: "Flexible", projectId, timeOfDay: null };
+    expect(createCheckScheduleSchema.safeParse(input).success).toBe(true);
+    expect(updateCheckScheduleSchema.safeParse({ ...input, scheduleId }).success).toBe(true);
+  });
+
+  it.each(["weekly", "monthly"])(
+    "rejects invalid or ambiguous %s calendar updates",
+    (frequency) => {
+      for (const fields of [
+        { cronExpression: null, timeOfDay: "06:00" },
+        { cronExpression: "invalid", timeOfDay: null },
+        { cronExpression: null },
+      ]) {
+        expect(
+          updateCheckScheduleSchema.safeParse({ ...fields, frequency, projectId, scheduleId })
+            .success,
+        ).toBe(false);
+      }
+    },
+  );
+
   it("accepts the enabled toggle in partial updates", () => {
     expect(updateCheckScheduleSchema.parse({ enabled: false, projectId, scheduleId })).toEqual({
       enabled: false,

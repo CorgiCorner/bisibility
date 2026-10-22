@@ -185,3 +185,29 @@ it("retains unresolved-operation warnings without an empty card frame", () => {
   expect(summary).toHaveTextContent("Operations with unknown measurements: 1");
   expect(summary.querySelector(".border")).toBeNull();
 });
+
+it("omits measured certainty across summaries and detail while retaining estimates and unknowns", async () => {
+  const data = projectUsageFixture();
+  data.summary.funding[0].measurements = {
+    requests: { text: "3", unit: "requests", certainty: "measured" },
+    units: { text: "2", unit: "units", certainty: "estimated" },
+  };
+  const row = data.detail.rows[0];
+  data.detail.rows = [
+    row,
+    ...(["estimated", "unknown"] as const).map((certainty) => ({
+      ...row,
+      key: certainty,
+      certainty,
+      cost: { ...row.cost, certainty },
+    })),
+  ];
+  const original = structuredClone(data);
+  render(<UsageSummary data={data} />);
+  await userEvent.click(screen.getByText("Usage details"));
+  expect(screen.queryByText("Measured")).toBeNull();
+  expect(screen.getAllByText("Estimated").length).toBeGreaterThan(0);
+  expect(screen.getAllByText("Unknown").length).toBeGreaterThan(0);
+  expect(screen.getByRole("region", { name: "Provider cost" })).toHaveTextContent("$0.12");
+  expect(data).toEqual(original);
+});

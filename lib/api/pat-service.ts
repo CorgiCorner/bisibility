@@ -5,6 +5,7 @@ import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { assertEditableDemoAccountMutable } from "@/lib/demo/identity";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { hashApiKey } from "@/lib/providers/crypto";
 import type { ApiKeyScope } from "@/lib/schemas/apiKey";
 import { personalTokenAuditResource } from "./audit-resources";
@@ -70,7 +71,7 @@ export async function issuePersonalToken(
   await writeAudit({
     action: audit.action ?? "pat.issue",
     actorId: userId,
-    after: personalTokenAuditResource(token),
+    after: { ...personalTokenAuditResource(token), viaClientId: audit.viaClientId ?? null },
     targetId: requireApiPublicId(token.publicId, "pat"),
     targetType: "personal_access_token",
   });
@@ -86,9 +87,13 @@ export async function listPersonalTokens(userId: string) {
   });
 }
 
-export async function revokePersonalToken(userId: string, tokenId: string) {
+export async function revokePersonalToken(
+  userId: string,
+  tokenId: string,
+  client: Pick<Prisma.TransactionClient, "personalAccessToken" | "auditLog"> = prisma,
+) {
   await assertEditableDemoAccountMutable(userId);
-  const before = await prisma.personalAccessToken.findFirst({
+  const before = await client.personalAccessToken.findFirst({
     select: tokenSelect,
     where: { publicId: tokenId, userId },
   });
@@ -96,20 +101,23 @@ export async function revokePersonalToken(userId: string, tokenId: string) {
     return null;
   }
 
-  const token = await prisma.personalAccessToken.update({
+  const token = await client.personalAccessToken.update({
     data: { revokedAt: before.revokedAt ?? new Date() },
     select: tokenSelect,
     where: { id: before.id },
   });
 
-  await writeAudit({
-    action: "pat.revoke",
-    actorId: userId,
-    after: personalTokenAuditResource(token),
-    before: personalTokenAuditResource(before),
-    targetId: requireApiPublicId(token.publicId, "pat"),
-    targetType: "personal_access_token",
-  });
+  await writeAudit(
+    {
+      action: "pat.revoke",
+      actorId: userId,
+      after: personalTokenAuditResource(token),
+      before: personalTokenAuditResource(before),
+      targetId: requireApiPublicId(token.publicId, "pat"),
+      targetType: "personal_access_token",
+    },
+    client,
+  );
 
   return token;
 }

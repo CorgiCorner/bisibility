@@ -111,7 +111,7 @@ describe("ses email provider", () => {
     expect(clientConfigs.at(-1)).toEqual({
       maxAttempts: 1,
       region: "eu-north-1",
-      requestHandler: { requestTimeout: 10_000 },
+      requestHandler: { requestTimeout: 10_000, throwOnRequestTimeout: true },
     });
   });
 

@@ -1,4 +1,9 @@
 import "server-only";
+import { snapshotMetrics } from "./metrics";
+
+export { snapshotMetrics } from "./metrics";
+
+import type { PaidCallPayment } from "@/lib/action-payment/paid-call";
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
@@ -17,6 +22,8 @@ import {
   domainOverviewSnapshotFreshness,
 } from "./cache-policy";
 import type { DomainOverviewProject, DomainOverviewSource } from "./context";
+import { readDomainOverviewFailure, type StoredDomainOverviewModule } from "./failure-details";
+import { domainPaymentHistory } from "./payment-history";
 import { fetchDomainOverviewMetrics } from "./provider-call";
 import type { DomainOverviewResearchScope, DomainOverviewScope } from "./types";
 
@@ -30,38 +37,6 @@ function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
-}
-function number(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-function nullableNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-export function snapshotMetrics(value: unknown): DomainRankMetrics | null {
-  if (value === null) return null;
-  const source = record(value);
-  if (Object.keys(source).length === 0) return null;
-  return {
-    count: nullableNumber(source.count),
-    etv: nullableNumber(source.etv),
-    estimatedTrafficCostCents: nullableNumber(source.estimatedTrafficCostCents),
-    isDown: number(source.isDown),
-    isLost: number(source.isLost),
-    isNew: number(source.isNew),
-    isUp: number(source.isUp),
-    pos1: number(source.pos1),
-    pos11_20: number(source.pos11_20),
-    pos21_30: number(source.pos21_30),
-    pos2_3: number(source.pos2_3),
-    pos31_40: number(source.pos31_40),
-    pos41_50: number(source.pos41_50),
-    pos4_10: number(source.pos4_10),
-    pos51_60: number(source.pos51_60),
-    pos61_70: number(source.pos61_70),
-    pos71_80: number(source.pos71_80),
-    pos81_90: number(source.pos81_90),
-    pos91_100: number(source.pos91_100),
-  };
 }
 
 function snapshotWhere(input: SnapshotKey) {
@@ -81,18 +56,18 @@ export function shouldRollPrevious(previous: Date | string | null, next: Date | 
     previous !== null && next !== null && new Date(previous).getTime() !== new Date(next).getTime()
   );
 }
-
 function overviewJson(value: DomainRankMetrics | null) {
   return value === null ? Prisma.JsonNull : (value as Prisma.InputJsonObject);
 }
-
-function pageJson(value: RankedKeywordsPage | RelevantPagesResult | null) {
+function pageJson(value: StoredDomainOverviewModule<RankedKeywordsPage | RelevantPagesResult>) {
   return value === null ? Prisma.DbNull : (value as Prisma.InputJsonObject);
 }
 
 function snapshotPage<T extends RankedKeywordsPage | RelevantPagesResult>(
   value: unknown,
-): T | null {
+): StoredDomainOverviewModule<T> {
+  const failure = readDomainOverviewFailure(value);
+  if (failure) return failure;
   const source = record(value);
   if (!Array.isArray(source.rows) || typeof source.costCents !== "number") return null;
   if (source.totalCount !== null && typeof source.totalCount !== "number") return null;
@@ -101,6 +76,7 @@ function snapshotPage<T extends RankedKeywordsPage | RelevantPagesResult>(
 
 export function domainOverviewSnapshotData(snapshot: Snapshot) {
   return {
+    ...domainPaymentHistory(snapshot.overview),
     cachedUntil: domainOverviewSnapshotCachedUntil(snapshot),
     fetchedAt: snapshot.fetchedAt.toISOString(),
     overview: snapshotMetrics(snapshot.overview),
@@ -203,8 +179,8 @@ export async function persistDomainOverviewSnapshot(
 export function persistDomainOverviewModules(
   input: SnapshotKey & {
     expectedFetchedAt: Date | string;
-    keywords: RankedKeywordsPage | null;
-    pages: RelevantPagesResult | null;
+    keywords: StoredDomainOverviewModule<RankedKeywordsPage>;
+    pages: StoredDomainOverviewModule<RelevantPagesResult>;
     provider: string;
   },
 ) {
@@ -233,11 +209,11 @@ export function persistDomainOverviewHistory(
     where: snapshotWhere(input),
   });
 }
-
 export async function resolveDomainOverviewSnapshot(
   input: SnapshotKey & {
     costLimit?: RequestCostLimit;
     beforeLoad?: () => void;
+    payment?: () => PaidCallPayment | undefined;
     fresh?: boolean;
     key: string;
     origin: ProviderRequestOrigin;
@@ -268,6 +244,7 @@ export async function resolveDomainOverviewSnapshot(
       input.beforeLoad?.();
       const result = await fetchDomainOverviewMetrics({
         costLimit: input.costLimit,
+        payment: input.payment?.(),
         languageCode: input.languageCode,
         origin: input.origin,
         locationCode: input.locationCode,

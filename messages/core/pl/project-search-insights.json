@@ -120,6 +120,7 @@
       "organicSessions": "Sesje organiczne",
       "sessionsConnectTitle": "Sesje organiczne (GA4)",
       "sessionsConnectBody": "Zobacz, które zapytania i strony docelowe przyciągają zaangażowanych odwiedzających i które konwertują.",
+      "sessionsConnectDismiss": "Ukryj podpowiedź o sesjach organicznych",
       "connect": "Połącz",
       "sessionsJoinTip": "Dane połączone z GA4 według strony docelowej. Search Console liczy kliknięcia, a GA4 sesje, więc nigdy nie zgadzają się dokładnie – różnica jest normalna.",
       "noSessionsMatch": "Żadna strona docelowa z GA4 nie pasuje do tego adresu URL",

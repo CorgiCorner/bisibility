@@ -1,61 +1,61 @@
 "use client";
+
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/ToggleGroup";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
-import type { ProjectRunsQuery } from "@/lib/runs/filters";
-import { cn } from "@/lib/ui/cn";
-import Link from "next/link";
+import { PROJECT_RUNS_SECTIONS, type ProjectRunsQuery } from "@/lib/runs/filters";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-export function ProjectRunsTimelineTabs({
-  projectRef,
-  query,
-}: Readonly<{ projectRef: string; query?: ProjectRunsQuery }>) {
-  const t = useTranslations("projectRuns.timeline");
+type TimelineTabsProps = Readonly<{ projectRef: string; query?: ProjectRunsQuery }>;
+
+export function ProjectRunsTimelineTabs({ projectRef, query }: TimelineTabsProps) {
+  const router = useRouter();
   if (!query || query.view === "runs") return null;
-  const selectedSection = query.view === "planned" ? "upcoming" : (query.section ?? "all");
   return (
-    <div className="flex flex-wrap gap-2">
-      <nav aria-label={t("sections")} className="flex flex-wrap gap-1">
-        {(["all", "active", "upcoming", "history"] as const).map((section) => (
-          <Link
-            aria-current={
-              selectedSection === section
-                ? query.status === "attention" || query.view === "planned"
-                  ? "true"
-                  : "page"
-                : undefined
-            }
-            className={cn(
-              "rounded-btn px-3 py-1.5 text-[12px] font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid",
-              selectedSection === section ? "bg-bg-elev text-fg" : "text-fg-muted hover:text-fg",
-            )}
-            href={projectRunsPath(projectRef, {
-              ...query,
-              view: "timeline",
-              section,
-              status: query.status === "attention" ? "all" : query.status,
-              cursor: null,
-            })}
-            key={section}
-          >
-            {t(section)}
-          </Link>
-        ))}
-      </nav>
-      <Link
-        aria-current={query.status === "attention" ? "page" : undefined}
-        className={cn(
-          "rounded-btn px-3 py-1.5 text-[12px] font-medium no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid",
-          query.status === "attention" ? "bg-bg-elev text-fg" : "text-fg-muted hover:text-fg",
-        )}
-        href={projectRunsPath(projectRef, {
-          ...query,
-          view: "timeline",
-          status: "attention",
-          cursor: null,
-        })}
-      >
-        {t("attention")}
-      </Link>
+    <ProjectRunsTimelineControls
+      query={query}
+      onQueryChange={(next) => router.push(projectRunsPath(projectRef, next))}
+    />
+  );
+}
+
+export function ProjectRunsTimelineControls({
+  query,
+  onQueryChange,
+}: Readonly<{
+  query: ProjectRunsQuery;
+  onQueryChange: (query: ProjectRunsQuery) => void;
+}>) {
+  const t = useTranslations("projectRuns.timeline");
+  const selectedSection = query.view === "planned" ? "upcoming" : (query.section ?? "all");
+  const navigate = (updates: Partial<ProjectRunsQuery>) =>
+    onQueryChange({
+      ...query,
+      view: "timeline",
+      section: selectedSection,
+      ...updates,
+      cursor: null,
+    });
+
+  return (
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="min-w-0 max-w-full overflow-x-auto">
+        <ToggleGroup
+          aria-label={t("sections")}
+          type="single"
+          value={selectedSection}
+          onValueChange={(value) => {
+            const section = PROJECT_RUNS_SECTIONS.find((section) => section === value);
+            if (section) navigate({ section });
+          }}
+        >
+          {PROJECT_RUNS_SECTIONS.map((section) => (
+            <ToggleGroupItem key={section} value={section}>
+              {t(section)}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </div>
     </div>
   );
 }

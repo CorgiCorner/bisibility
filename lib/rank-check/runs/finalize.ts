@@ -7,6 +7,7 @@ import {
   runCountsFromItemGroups,
 } from "./counts";
 import { outcomeFromCounts } from "./status";
+import { normalizeTerminalRunState } from "./terminal-state";
 
 type FinalizerClient = Pick<Prisma.TransactionClient, "rankCheckRun" | "rankCheckRunItem">;
 
@@ -27,8 +28,10 @@ export function finalRunData(input: {
     ...runCounterData(counts, input.groups),
     costCents: input.groups.reduce((sum, group) => sum + (group._sum.actualCostCents ?? 0), 0),
     finishedAt: input.now,
-    outcome: outcomeFromCounts(counts),
-    status: input.run.status === "cancelling" ? "cancelled" : "completed",
+    ...normalizeTerminalRunState({
+      outcome: outcomeFromCounts(counts),
+      status: input.run.status === "cancelling" ? "cancelled" : "completed",
+    }),
   };
 }
 

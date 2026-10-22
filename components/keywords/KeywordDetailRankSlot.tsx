@@ -2,12 +2,12 @@
 
 import { HistoryTime } from "@/components/keyword-detail-history/HistoryTime";
 import { positivePoint } from "@/components/keywords/grid/keyword-rank-quality-view";
-import { LocalizedMeasurementHelp } from "@/components/measurement-help/LocalizedMeasurementHelp";
-import { providerLabel } from "@/lib/checks/provider-label";
 import type { KeywordDetailQuality } from "@/lib/keyword-detail/quality-model";
 import { useFormatter, useTranslations } from "next-intl";
+import { KeywordCheckProvider } from "./KeywordCheckProvider";
 import { KeywordDetailComparison } from "./KeywordDetailComparison";
 import { KeywordDetailHeaderSlot } from "./KeywordDetailHeaderSlot";
+import { KeywordDetailRankEvidence } from "./KeywordDetailRankEvidence";
 
 export function KeywordDetailRankSlot({
   quality,
@@ -26,28 +26,49 @@ export function KeywordDetailRankSlot({
   return (
     <KeywordDetailHeaderSlot
       label={detail("header.position")}
-      prominent
+      prominent={Boolean(positive)}
       state={positive ? "numeric" : "textual"}
       detail={
-        <div className="grid gap-1" data-testid="keyword-detail-qualified-position">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-            <span>{history(`freshness.${current?.freshness ?? "unknown"}`)}</span>
-            {q.currentScopeState === "unavailable" ? (
-              <span>{t("currentScopeUnavailable")}</span>
-            ) : null}
-            <LocalizedMeasurementHelp metricId="organic_rank" definitionVersion="help-v1" />
-          </div>
+        <div className="grid gap-1.5 text-[12px]" data-testid="keyword-detail-qualified-position">
           {current ? (
-            <div>
-              {t("observed")} <HistoryTime value={current.observedAt} timeZone={timeZone} /> ·{" "}
-              {t("recorded")} <HistoryTime value={current.recordedAt} timeZone={timeZone} /> ·{" "}
-              {detail("header.provider", {
-                provider: current.provider
-                  ? providerLabel(current.provider)
-                  : detail("common.unknown"),
-              })}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span>
+                {t("checked")} <HistoryTime value={current.observedAt} timeZone={timeZone} />
+              </span>
+              <span>
+                <KeywordCheckProvider provider={current.provider} />
+              </span>
             </div>
           ) : null}
+          {!positive ||
+          (quality.best?.qualifyingCount ?? 0) > 1 ||
+          current?.freshness === "stale" ||
+          q.currentScopeState === "unavailable" ? (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              {!positive ? (
+                <KeywordDetailComparison
+                  quality={quality}
+                  timeZone={timeZone}
+                  showBaseline={false}
+                />
+              ) : null}
+              {quality.best && quality.best.qualifyingCount > 1 ? (
+                <span className="font-medium text-fg">
+                  {t(
+                    quality.best.definitionOrigin === "current_definition"
+                      ? "bestSummary"
+                      : "historicalBestSummary",
+                    { position: quality.best.position },
+                  )}
+                </span>
+              ) : null}
+              {current?.freshness === "stale" ? <span>{history("freshness.stale")}</span> : null}
+              {q.currentScopeState === "unavailable" ? (
+                <span>{t("currentScopeUnavailable")}</span>
+              ) : null}
+            </div>
+          ) : null}
+
           {!positive && historical ? (
             <div data-testid="keyword-detail-last-known">
               {t("lastKnown", { position: historical.position })} ·{" "}
@@ -60,41 +81,26 @@ export function KeywordDetailRankSlot({
               · <HistoryTime value={legacy.observedAt ?? legacy.recordedAt} timeZone={timeZone} />
             </div>
           ) : null}
-          <KeywordDetailComparison quality={quality} timeZone={timeZone} />
-          {quality.best ? (
-            <div data-testid="keyword-detail-retained-best">
-              {t(
-                quality.best.definitionOrigin === "current_definition"
-                  ? "bestCurrentDefinition"
-                  : "bestLastKnownDefinition",
-                { position: quality.best.position },
-              )}{" "}
-              · <HistoryTime value={quality.best.observedAt} timeZone={timeZone} /> ·{" "}
-              {detail("header.provider", {
-                provider: quality.best.provider
-                  ? providerLabel(quality.best.provider)
-                  : detail("common.unknown"),
-              })}
-              <span className="block">
-                {t("bestCount", { count: quality.best.qualifyingCount })}
-              </span>
-            </div>
-          ) : null}
-          <div>
-            {t("asOf")} <HistoryTime value={quality.asOf} timeZone={timeZone} />
-          </div>
+          <KeywordDetailRankEvidence quality={quality} timeZone={timeZone} />
         </div>
       }
     >
-      {positive
-        ? history("rank", { position: format.number(positive.position) })
-        : !current
-          ? history("evidence.not_observed")
-          : current.evidence === "known_absent"
-            ? history("evidence.known_absent")
-            : current.evidence === "unsupported"
-              ? history("evidence.unsupported")
-              : t("currentUnknown")}
+      <span className="min-w-0">
+        {positive
+          ? history("rank", { position: format.number(positive.position) })
+          : !current
+            ? history("evidence.not_observed")
+            : current.evidence === "known_absent"
+              ? history("evidence.known_absent")
+              : current.evidence === "unsupported"
+                ? history("evidence.unsupported")
+                : t("currentUnknown")}
+      </span>
+      {positive && q.event !== "first" ? (
+        <div className="ml-2">
+          <KeywordDetailComparison quality={quality} timeZone={timeZone} showBaseline={false} />
+        </div>
+      ) : null}
     </KeywordDetailHeaderSlot>
   );
 }

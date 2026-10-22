@@ -17,7 +17,11 @@ export type OverviewKpi = OverviewReturn["kpis"][number];
 export type TrendPoint = Omit<OverviewReturn["trend"][number], "label"> & { label: string | null };
 export type TrendTakeaway = OverviewReturn["trendTakeaway"];
 export type KpiDeltaTone = OverviewKpi["deltaTone"];
-export type OverviewView = Omit<OverviewReturn, "projectReadOnly" | "state"> & {
+export type OverviewView = Omit<
+  OverviewReturn,
+  "projectReadOnly" | "state" | "firstCheckSourceReady"
+> & {
+  firstCheckSourceReady?: boolean;
   projectReadOnly: boolean;
   state: WorkspaceDataState;
 };

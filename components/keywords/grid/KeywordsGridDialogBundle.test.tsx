@@ -56,7 +56,6 @@ const baseProps = {
   preflightDialog: null,
   projectId: "prj_1",
   projectMarkets: undefined,
-  queueFirstChecksAction: vi.fn(),
   requestRows: [],
   retryRunChecks: vi.fn(),
   runChecksFlow: null,

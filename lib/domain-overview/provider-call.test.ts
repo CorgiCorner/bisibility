@@ -35,6 +35,9 @@ const provider = {
 };
 const source = {
   connection: {
+    credentialSource: "own" as const,
+    publicId: "conn_a00000000000000000000000",
+    updatedAt: new Date("2026-10-21T12:00:00Z"),
     credentialsEncrypted: "encrypted",
     id: "connection_1",
     provider: "dataforseo",

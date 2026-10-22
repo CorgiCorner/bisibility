@@ -1,4 +1,5 @@
 import "server-only";
+import { requireAdminTwoFactorForDangerousAction } from "@/lib/auth/admin-dangerous-action";
 import { writeAudit } from "@/lib/auth/audit";
 import { requireInstanceAdmin } from "@/lib/auth/instance-admin";
 import { prisma } from "@/lib/db/prisma";
@@ -11,8 +12,9 @@ import { recoveryScope } from "./read";
 import { openRecoveryCase, openRecoveryPreview, recoveryHash } from "./tokens";
 
 export async function commitRecovery(input: unknown): Promise<RecoveryCommandResult> {
-  const session = await requireInstanceAdmin(),
-    value = recoveryCommitInputSchema.parse(input),
+  const session = await requireInstanceAdmin();
+  await requireAdminTwoFactorForDangerousAction(session, "commit_metering_recovery");
+  const value = recoveryCommitInputSchema.parse(input),
     now = new Date();
   const scope = recoveryScope(session.user.id),
     preview = openRecoveryPreview(value.previewToken, scope, now, true);

@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/provider-lookups/paid-call-budget", () => ({ preflightProviderBudget: vi.fn() }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     providerConnection: {
@@ -39,7 +40,8 @@ vi.mock("@/lib/db/prisma", () => ({
 vi.mock("@/lib/provider-rates/connection-context", () => ({
   loadProviderRateContext: () => Promise.resolve({ entries: [], manualAmountCents: null }),
 }));
-vi.mock("@/lib/provider-lookups/cache", () => ({
+vi.mock("@/lib/provider-lookups/cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/provider-lookups/cache")>()),
   acquireProviderLookupLock: mocks.acquire,
   providerLookupCacheConfigured: () => true,
   providerLookupContentionResetAt: mocks.resetAt,
@@ -47,7 +49,8 @@ vi.mock("@/lib/provider-lookups/cache", () => ({
   releaseProviderLookupLock: mocks.release,
   waitForProviderLookupCache: mocks.wait,
 }));
-vi.mock("./cache", () => ({
+vi.mock("./cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./cache")>()),
   keywordMetricsCacheKey: ({ keyword }: { keyword: string }) => `km:${keyword}`,
   writeKeywordMetricsCache: mocks.write,
 }));
@@ -105,6 +108,34 @@ function run(overrides: Partial<Parameters<typeof fetchKeywordMetrics>[0]> = {})
 }
 
 describe("keyword metrics service", () => {
+  it("zero cap returns cached metrics for free without paid work", async () => {
+    mocks.read.mockResolvedValue({
+      ...metrics,
+      keyword: "Alpha",
+      fetchedAt: "2026-10-11T10:00:00.000Z",
+    });
+    await expect(run({ maxCostCents: 0 })).resolves.toMatchObject({
+      ok: true,
+      cachedCount: 2,
+      fetchedCount: 0,
+      costCents: 0,
+    });
+    expect(mocks.paidCall).not.toHaveBeenCalled();
+    expect(mocks.fetch).not.toHaveBeenCalled();
+  });
+
+  it("zero cap refuses missing metrics with a price before paid work", async () => {
+    mocks.read.mockResolvedValue(null);
+    await expect(run({ maxCostCents: 0 })).resolves.toMatchObject({
+      ok: false,
+      reason: "cost_limit_exceeded",
+      estimatedCostCents: expect.any(Number),
+    });
+    expect(mocks.paidCall).not.toHaveBeenCalled();
+    expect(mocks.fetch).not.toHaveBeenCalled();
+    expect(mocks.write).not.toHaveBeenCalled();
+  });
+
   it("carries consent into admission and retains an earlier paid retry cost on refusal", async () => {
     mocks.read.mockResolvedValue(null);
     mocks.paidCall.mockRejectedValueOnce(
@@ -273,5 +304,126 @@ describe("keyword metrics service", () => {
         trigger: "manual",
       }),
     );
+  });
+});
+
+describe("metrics payable failure receipts", () => {
+  it("returns unknown retained payment on provider failure instead of reporting free", async () => {
+    const pricing = vi
+      .spyOn(
+        await import("@/lib/provider-lookups/connection-estimate"),
+        "requiredConnectionEstimate",
+      )
+      .mockResolvedValue(2);
+    const selected = project.eligible[0];
+    mocks.project.mockResolvedValue({
+      ...project,
+      ownerId: "owner_1",
+      eligible: [
+        {
+          connection: { ...selected.connection, credentialSource: "own" },
+          provider: {
+            ...provider,
+            payment: { basis: "provider_cost", unit: { kind: "currency", code: "USD" } },
+          },
+        },
+      ],
+    });
+    mocks.supportsResearchScope.mockReturnValue(true);
+    mocks.read.mockResolvedValue(null);
+    mocks.acquire.mockResolvedValue({ key: "lock", token: "token" });
+    mocks.paidCall.mockImplementationOnce(async ({ payment }) => {
+      await payment.record({ attemptIds: ["possibly-paid-proof"] });
+      throw new Error("provider failed after dispatch");
+    });
+    const result = await run({ actorId: "owner_1" });
+    expect(result).toMatchObject({
+      ok: false,
+      reason: "provider_error",
+      payment: { state: "unknown", charge: { value: null, certainty: "unknown" } },
+    });
+    pricing.mockRestore();
+  });
+});
+
+describe("accepted metrics cache transitions", () => {
+  it("executes only the remaining fresh subset and retains its actual charge", async () => {
+    vi.clearAllMocks();
+    const pricing = vi
+      .spyOn(
+        await import("@/lib/provider-lookups/connection-estimate"),
+        "requiredConnectionEstimate",
+      )
+      .mockImplementation(async ({ itemCount }) => itemCount * 2);
+    const selected = project.eligible[0];
+    mocks.project.mockResolvedValue({
+      ...project,
+      ownerId: "owner_1",
+      eligible: [
+        {
+          connection: { ...selected.connection, credentialSource: "own" },
+          provider: {
+            ...provider,
+            payment: { basis: "provider_cost", unit: { kind: "currency", code: "USD" } },
+          },
+        },
+      ],
+    });
+    mocks.supportsResearchScope.mockReturnValue(true);
+    mocks.read.mockResolvedValue(null);
+    const preview = await run({ actorId: "owner_1", estimateOnly: true, requirePayment: true });
+    if (
+      !preview.ok ||
+      !("payment" in preview) ||
+      !preview.payment ||
+      !("quoteToken" in preview.payment)
+    )
+      throw new Error("quote missing");
+    expect(preview.payment.charge.value).toBe("0.04");
+    mocks.read.mockImplementation(async (key: string) =>
+      key === "km:alpha"
+        ? { keyword: "Alpha", fetchedAt: "2026-10-21T12:00:00Z", ...metrics }
+        : null,
+    );
+    mocks.acquire.mockResolvedValue({ key: "lock", token: "token" });
+    mocks.fetch.mockResolvedValue({ costCents: 2, rows: [{ keyword: "Beta", ...metrics }] });
+    mocks.paidCall.mockImplementationOnce(async ({ call, payment }) => {
+      const result = await call({});
+      await payment.record({ attemptIds: ["retained-subset-attempt"] });
+      return result;
+    });
+    const evidence = vi
+      .spyOn(await import("@/lib/provider-usage/byok-evidence-storage"), "loadByokEvidence")
+      .mockResolvedValue({
+        measurementStatus: "recorded",
+        costMeasurement: "recorded",
+        quantityMeasurement: "recorded",
+        costCents: "2",
+        usageQuantity: "1",
+      } as never);
+    const result = await run({
+      actorId: "owner_1",
+      requirePayment: true,
+      acceptedPayment: { quoteToken: preview.payment.quoteToken },
+    });
+    expect(result.ok, JSON.stringify(result)).toBe(true);
+    expect(result).toMatchObject({
+      ok: true,
+      fetchedCount: 1,
+      cachedCount: 1,
+      payment: { state: "settled", charge: { value: "0.02", certainty: "measured" } },
+    });
+    expect(mocks.fetch).toHaveBeenCalledExactlyOnceWith(
+      {},
+      expect.objectContaining({ keywords: ["Beta"] }),
+    );
+    expect(mocks.paidCall).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itemCount: 1,
+        payment: expect.objectContaining({ operationKey: expect.any(String) }),
+      }),
+    );
+    pricing.mockRestore();
+    evidence.mockRestore();
   });
 });

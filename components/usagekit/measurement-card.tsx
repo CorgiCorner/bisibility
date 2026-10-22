@@ -23,6 +23,8 @@ export type MeasurementCardProps = {
   title: string;
   value: Figure;
   description?: string;
+  /** Hide only exact certainty; estimates and missing evidence remain visible. */
+  hideMeasured?: boolean;
   labels?: Partial<MeasurementCardLabels>;
   /** "plain" drops the card chrome so several measurements can share one surface. */
   variant?: "card" | "plain";
@@ -89,12 +91,15 @@ export function MeasurementValue({
 export function MeasurementCertainty({
   value,
   labels: custom,
+  hideMeasured = false,
 }: {
   value: Figure;
   labels?: Partial<MeasurementCardLabels>;
+  hideMeasured?: boolean;
 }) {
   const labels = { ...measurementCardLabels, ...custom };
   const certainty = value === "unavailable" ? "unavailable" : value.certainty;
+  if (hideMeasured && certainty === "measured") return null;
   return (
     <UsageStatus key={certainty} tone={certaintyTone[certainty]} className={usageMotion.enter}>
       {labels[certainty]}
@@ -106,6 +111,7 @@ export function MeasurementCard({
   title,
   value,
   description,
+  hideMeasured,
   labels,
   variant = "card",
   className = "",
@@ -118,7 +124,7 @@ export function MeasurementCard({
       <div className={`min-w-0 space-y-3 ${className}`} data-certainty={certainty}>
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <p className="text-sm min-w-0 break-words font-medium">{title}</p>
-          <MeasurementCertainty value={value} labels={labels} />
+          <MeasurementCertainty value={value} labels={labels} hideMeasured={hideMeasured} />
         </div>
         {description && <p className="text-xs/relaxed text-fg-muted">{description}</p>}
         <MeasurementValue
@@ -134,7 +140,7 @@ export function MeasurementCard({
       <CardHeader>
         <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1">
           <CardTitle className="min-w-0 break-words leading-snug">{title}</CardTitle>
-          <MeasurementCertainty value={value} labels={labels} />
+          <MeasurementCertainty value={value} labels={labels} hideMeasured={hideMeasured} />
         </div>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>

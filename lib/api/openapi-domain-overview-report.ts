@@ -1,3 +1,6 @@
+import { DOMAIN_OVERVIEW_FAILURE_REASONS } from "@/lib/domain-overview/failure-details";
+import { PROVIDER_ERROR_CODES } from "@/lib/providers/provider-error-code";
+import { paymentReceiptWireSchema, paymentResponseFields } from "./openapi-action-payment";
 import { openEnum, sdkName, taggedUnion, usdCents } from "./openapi-sdk-schema";
 
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
@@ -19,19 +22,19 @@ const moduleFailure = {
     cost_cents: cents,
     ok: { const: false, type: "boolean" },
     reason: {
-      enum: [
-        "budget_exhausted",
-        "cost_limit_exceeded",
-        "in_progress",
-        "lookup_failed",
-        "needs_reauth",
-        "no_source",
-        "rate_limited",
-        "snapshot_expired",
-        "unsupported_location",
-      ],
+      enum: DOMAIN_OVERVIEW_FAILURE_REASONS,
       type: "string",
       ...openEnum("DomainOverviewFailureReason"),
+    },
+    phase: {
+      enum: ["before_dispatch", "provider", "persistence"],
+      type: "string",
+      ...openEnum("DomainOverviewFailurePhase"),
+    },
+    provider_code: {
+      enum: PROVIDER_ERROR_CODES,
+      type: "string",
+      ...openEnum("DomainOverviewProviderCode"),
     },
     reset_at: { type: "number" },
   },
@@ -72,6 +75,8 @@ export const domainOverviewReportSchemas = {
             properties: {
               cost_cents: nonnegativeNumber,
               reason: { type: "string" },
+              phase: moduleFailure.properties.phase,
+              provider_code: moduleFailure.properties.provider_code,
               reset_at: { type: ["number", "null"] },
             },
             required: ["reason", "cost_cents"],
@@ -85,6 +90,10 @@ export const domainOverviewReportSchemas = {
   },
   DomainOverviewReport: {
     properties: {
+      ...paymentResponseFields,
+      original_payment: paymentReceiptWireSchema,
+      append_payment: paymentReceiptWireSchema,
+      history_payment: paymentReceiptWireSchema,
       cached: { type: "boolean" },
       cached_until: { format: "date-time", type: "string" },
       cost_cents: cents,

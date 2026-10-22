@@ -1,5 +1,7 @@
+import type { AcceptedActionPayment, ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import type {
   RankedKeywordSuggestion,
+  RankedKeywordsEstimate,
   RankedKeywordsOutcome,
   RankedKeywordsSuccess,
 } from "@/lib/ranked-keywords/service";
@@ -17,11 +19,16 @@ export type FetchRankedKeywordSuggestionsAction = (input: {
   connectionId?: string;
   offset?: number;
   projectId: string;
+  estimateOnly?: boolean;
+  paymentOptionId?: string;
+  acceptedPayment?: AcceptedActionPayment;
 }) => Promise<
   | RankedKeywordsPage
+  | RankedKeywordsEstimate
   | {
       reason: RankedKeywordError;
       budgetReason?: "budget_missing" | "usage_reconciliation_required";
+      payment?: ActionPaymentReceipt;
     }
 >;
 
@@ -72,18 +79,4 @@ export function groupRankedKeywords(pages: RankedKeywordsPage[]): RankedKeywordG
     }
   }
   return [...grouped.entries()].map(([key, value]) => ({ key, ...value }));
-}
-
-export function rankedKeywordErrorCopy(reason: RankedKeywordError) {
-  const messages: Record<RankedKeywordError, string> = {
-    wallet_budget_exhausted: "Deployment spending budget is exhausted.",
-    budget_exhausted: "Monthly rank-check budget reached.",
-    cost_limit_exceeded: "The estimated provider cost exceeds the requested limit.",
-    needs_reauth: "DataForSEO authorization has expired.",
-    no_domain: "Add a valid project domain before looking up ranked keywords.",
-    no_source: "No eligible DataForSEO connection is available.",
-    rate_limited: "Provider rate limit reached. Try again shortly.",
-    unsupported_location: "Ranked-keyword lookup is not available for this location on DataForSEO.",
-  };
-  return messages[reason];
 }

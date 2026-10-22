@@ -8,7 +8,7 @@
     "consumerScrapersMeasureTheConsumerSurfaceModelAPI": "Skrapery wersji konsumenckiej mierzą tę wersję usługi. Odpowiedzi z API modeli stanowią inne źródło. Zbiory danych dostawcy nie są próbkami śledzenia na żywo. Rzeczywisty model i ustawienia regionalne mogą pozostać nieznane.",
     "previewConfigurationAndCost": "Podgląd konfiguracji i kosztu",
     "budgetAndCredentialsAreCheckedAgainBeforeLaunch": "Przed uruchomieniem ponownie sprawdzamy budżet i dane uwierzytelniające. Harmonogramy są domyślnie wyłączone.",
-    "approveAndQueueRun": "Zatwierdź i dodaj uruchomienie do kolejki",
+    "approveAndQueueRun": "Uruchom sprawdzenia",
     "configureARun": "Skonfiguruj uruchomienie",
     "exactProviderModelIdentifier": "Dokładny identyfikator modelu u dostawcy",
     "iApproveThisRunAndTheProviderActual": "Zatwierdzam to uruchomienie i rzeczywisty koszt naliczony przez dostawcę",

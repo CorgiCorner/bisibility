@@ -87,6 +87,42 @@ beforeEach(() => {
 });
 
 describe("snapshot extension claim", () => {
+  it("retains a pending payment identity before dispatch so a crash cannot look free", async () => {
+    const payment = {
+      actionId: "extension-quote",
+      quoteId: "extension-quote",
+      option: {
+        id: "option",
+        connectionId: "conn_abcdefghijklmnopqrstuvwx",
+        providerId: "serpapi",
+        providerLabel: "SerpApi",
+        fundingSource: "byok" as const,
+        payableUnit: {
+          kind: "provider_native" as const,
+          providerId: "serpapi",
+          key: "searches",
+          singular: "search",
+          plural: "searches",
+        },
+      },
+      state: "pending" as const,
+      charge: {
+        value: null,
+        certainty: "unknown" as const,
+        unit: {
+          kind: "provider_native" as const,
+          providerId: "serpapi",
+          key: "searches",
+          singular: "search",
+          plural: "searches",
+        },
+      },
+    };
+    const claim = await claimSnapshotExtension({ ...input, payment });
+    expect(claim.ok).toBe(true);
+    expect(stored.snapshotExtension).toMatchObject({ state: "running", payment });
+    expect(JSON.stringify(stored)).not.toContain("quoteToken");
+  });
   it.each(["deactivated", "removed_membership", "viewer"])(
     "refuses a snapshot claim for an actor whose fresh database authority is %s",
     async (reason) => {
@@ -158,7 +194,7 @@ describe("snapshot extension claim", () => {
         where: expect.objectContaining({
           id: context.connectionId,
           projectId: input.projectId,
-          credentialSource: "own",
+          credentialSource: { in: ["own", "hosted"] },
           provider: "serpapi",
         }),
       }),
@@ -222,5 +258,98 @@ describe("snapshot extension claim", () => {
     await expect(
       finishSnapshotExtension({ ...input, claim, state: { ...claim.state, state: "idle" } }),
     ).rejects.toThrow("changed");
+  });
+});
+
+function proveUnsent(state: "failed" | "retryable" = "failed") {
+  stored.snapshotExtension = {
+    version: 1,
+    state,
+    nextStart: 20,
+    ended: false,
+    pages: [],
+    requestId: "old-request",
+    leaseUntil: new Date(Date.now() - 60000).toISOString(),
+  };
+  const original = db.$queryRaw.getMockImplementation();
+  if (!original) throw new Error("Missing SQL fixture");
+  db.$queryRaw.mockImplementation(async (parts: TemplateStringsArray, ...values: unknown[]) => {
+    if (parts.join("?").includes("SELECT b.binding")) {
+      const ext = stored.snapshotExtension as {
+        requestId: string;
+        nextStart: number;
+        leaseUntil: string;
+      };
+      return [
+        {
+          binding: {
+            id: ext.requestId,
+            projectId: input.projectId,
+            keywordId: "keyword-1",
+            rankCheckId: "internal-check",
+            connectionId: context.connectionId,
+            nextStart: ext.nextStart,
+            requestDepth: 10,
+            leaseUntil: ext.leaseUntil,
+            context: stored.snapshotContinuation,
+          },
+          prepared: 0n,
+          dispatched: 0n,
+          intents: 0n,
+        },
+      ];
+    }
+    return original(parts, ...values);
+  });
+}
+it("recovers an existing failed extension only after fresh locked zero-attempt proof", async () => {
+  proveUnsent();
+  const result = await claimSnapshotExtension(input);
+  expect(result.ok).toBe(true);
+  if (!result.ok) throw new Error("Expected claim");
+  expect(result.requestId).not.toBe("old-request");
+  expect(stored.snapshotExtension).toMatchObject({
+    state: "running",
+    nextStart: 20,
+    requestId: result.requestId,
+  });
+  expect(await claimSnapshotExtension(input)).toEqual({ ok: false, reason: "running" });
+});
+it("never renews the original deadline for an old proven-unsent extension", async () => {
+  proveUnsent();
+  stored.snapshotContinuation = {
+    ...context,
+    capturedAt: new Date(Date.now() - 16 * 60000).toISOString(),
+  };
+  expect(await claimSnapshotExtension(input)).toEqual({ ok: false, reason: "expired" });
+  expect(db.rankCheck.updateMany).not.toHaveBeenCalled();
+});
+it("does not recover an ambiguous prepared attempt even with no pages", async () => {
+  proveUnsent();
+  const original = db.$queryRaw.getMockImplementation();
+  if (!original) throw new Error("Missing SQL fixture");
+  db.$queryRaw.mockImplementation(async (parts: TemplateStringsArray, ...values: unknown[]) => {
+    const rows = await original(parts, ...values);
+    return parts.join("?").includes("SELECT b.binding")
+      ? rows.map((row: Record<string, unknown>) => ({ ...row, prepared: 1n }))
+      : rows;
+  });
+  expect(await claimSnapshotExtension(input)).toEqual({ ok: false, reason: "failed" });
+  expect(db.rankCheck.updateMany).not.toHaveBeenCalled();
+});
+it("persists retryable only when a failing current request has durable no-send proof", async () => {
+  const claim = await claimSnapshotExtension(input);
+  if (!claim.ok) throw new Error("Expected claim");
+  proveUnsent();
+  stored.snapshotExtension = { ...claim.state, state: "running" };
+  const saved = await finishSnapshotExtension({
+    ...input,
+    claim,
+    state: { ...claim.state, state: "failed" },
+  });
+  expect(saved).toEqual({ state: "retryable" });
+  expect(stored.snapshotExtension).toMatchObject({
+    state: "retryable",
+    requestId: claim.requestId,
   });
 });

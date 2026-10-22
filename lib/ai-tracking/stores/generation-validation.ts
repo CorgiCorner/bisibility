@@ -1,3 +1,4 @@
+import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
 import { canonicalJson } from "@/lib/ai-tracking/identity";
 import { SuggestionGenerationError } from "@/lib/ai-tracking/suggestions/generation-schema";
 import { Prisma } from "@/lib/generated/prisma/client";
@@ -21,6 +22,8 @@ const draftSchema = z
   .strict();
 export const resultSchema = z
   .object({
+    payment: actionPaymentReceiptSchema.optional(),
+    originalPayment: actionPaymentReceiptSchema.optional(),
     generationId: z.string(),
     drafts: z.array(draftSchema).min(1).max(30),
     costUsd: z

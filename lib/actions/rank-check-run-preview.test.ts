@@ -48,6 +48,8 @@ describe("previewRankCheckRunAction", () => {
       type: "keyword",
     });
     expect(mocks.preview).toHaveBeenCalledWith({
+      actorId: "user_1",
+      paymentOptionId: undefined,
       depth: 50,
       origin: APP_REQUEST_ORIGIN,
       project,

@@ -12,8 +12,10 @@ export type GscSearchType = "discover" | "googleNews" | "image" | "news" | "vide
 export type GscDataState = "all" | "final";
 
 export type GscQueryInput = {
+  country?: AnalyticsQueryStatsInput["country"];
   credentials: ProviderCredentials;
   dataState?: GscDataState;
+  device?: AnalyticsQueryStatsInput["device"];
   dimensions?: string[];
   endDate: string;
   pagePath?: AnalyticsQueryStatsInput["pagePath"];

@@ -109,17 +109,31 @@ describe("tracking project REST boundary", () => {
     expect(payload.data[0]).not.toHaveProperty("public_id");
   });
   it("runs previews with read scope and never launches a paid execution", async () => {
-    mocks.launch.mockResolvedValue({ estimatedCostCents: 0.12 });
+    mocks.launch.mockResolvedValue({
+      estimatedCostCents: 0.12,
+      payment: { id: "quote", quoteToken: "signed-preview" },
+    });
     const response = await aiTrackingRoute(
-      context("POST", ["runs", "preview"], { prompt_ids: ["aip_public"] }, {}, ["read"]),
+      context(
+        "POST",
+        ["runs", "preview"],
+        { prompt_ids: ["aip_public"], actor_id: "untrusted", entry_source: "app" },
+        {},
+        ["read"],
+      ),
     );
     expect(response?.status).toBe(200);
     expect(mocks.launch).toHaveBeenCalledWith(
       "internal_project",
-      { promptIds: ["aip_public"] },
+      { promptIds: ["aip_public"], actorId: "trusted_actor", entrySource: "mcp" },
       true,
     );
     expect(mocks.scope).toHaveBeenCalledWith({ id: "trusted_actor" }, "prj_public", false);
+    const payload = await response?.json();
+    expect(payload.data.payment).toMatchObject({
+      kind: "quote",
+      quote_token: "signed-preview",
+    });
   });
   it("injects trusted actor and credential instead of client provenance", async () => {
     mocks.launch.mockResolvedValue({ publicId: "air_public", state: "planned" });

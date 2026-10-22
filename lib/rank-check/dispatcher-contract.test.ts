@@ -93,8 +93,15 @@ describe("dispatcher persistence contract", () => {
       expect(readFileSync(path, "utf8"), path).toMatch(/createKeywordBatch(?:Set)?/);
     }
     for (const path of schedulePaths) {
-      expect(readFileSync(path, "utf8"), path).toContain("refreshKeywordDispatchStates");
+      expect(readFileSync(path, "utf8"), path).toContain("setKeywordCadence");
     }
+    const cadence = readFileSync("lib/rank-check/schedules/keyword-cadence.ts", "utf8");
+    expect(cadence).toContain("await mirrorScheduleToKeywords(");
+    expect(cadence).toContain("await mirrorManualToKeywords(");
+    const membership = readFileSync("lib/rank-check/schedules/service-membership.ts", "utf8");
+    expect(
+      membership.match(/await refreshKeywordDispatchStates\(\{ keywordIds \}, tx\)/g),
+    ).toHaveLength(2);
     const reviewedDefaults = readFileSync("lib/actions/defaults-reviewed.ts", "utf8");
     const defaultsHost = readFileSync("lib/measurement-settings/host/defaults.ts", "utf8");
     const defaultsService = readFileSync("lib/settings/project-defaults-service.ts", "utf8");

@@ -8,11 +8,9 @@ import type { DashboardLocalSelection } from "@/lib/dashboard-local/selection";
 import { prisma } from "@/lib/db/prisma";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import {
-  resolveEffectiveSchedule,
-  summarizeEffectiveSchedules,
-} from "@/lib/keywords/effective-schedule";
+import { createKeywordMembershipProjector } from "@/lib/keywords/schedule-membership";
 import { isGoogleOAuthConfigured } from "@/lib/providers/analytics/google-client";
+import { readFirstCheckSourceReady } from "@/lib/providers/first-check-readiness";
 import {
   primaryProviderConnection,
   providerChainOrderBy,
@@ -106,7 +104,7 @@ async function readOverview(project: Awaited<ReturnType<typeof requireReadablePr
   const [metricData, unfilteredKeywordCount, providerConnections, monthlyCost, tags] = await Promise.all([
     loadOverviewMetricData(project.id, filters, now, { includeMarkets: true, keywordIds, ...(localReport ? { tx: db } : {}), report }),
     hasKeywordFilter && !localReport ? db.keyword.count({ where: { projectId: project.id } }) : Promise.resolve(null),
-    db.providerConnection.findMany({ orderBy: providerChainOrderBy(), select: { enabled: true, kind: true, priority: true, provider: true, status: true }, where: { OR: [{ kind: "serp" }, { enabled: true, kind: "analytics", status: "connected" }], projectId: project.id } }),
+    db.providerConnection.findMany({ orderBy: providerChainOrderBy(), select: { credentialSource: true, credentialsEncrypted: true, enabled: true, kind: true, priority: true, provider: true, status: true }, where: { OR: [{ kind: "serp" }, { enabled: true, kind: "analytics", status: "connected" }], projectId: project.id } }),
     readOverviewMonthlyCost(project.id, where, now, db, Boolean(localReport)),
     db.tag.findMany({ orderBy: { name: "asc" }, select: { name: true }, where: { projectId: project.id } }),
   ]);
@@ -129,13 +127,11 @@ async function readOverview(project: Awaited<ReturnType<typeof requireReadablePr
     keywordVolumes, { asOf: now, range: filters.range, timeZone: projectDefaults?.timezone ?? null },
   );
   const positions = overviewRankedPositions(snapshots);
-  const effectiveSchedules = keywords.length
-    ? keywords.map((keyword) =>
-        resolveEffectiveSchedule(keyword.schedule, projectDefaults, keyword.id, now),
-      )
-    : [resolveEffectiveSchedule(null, projectDefaults)];
-  const scheduleSummary = summarizeEffectiveSchedules(effectiveSchedules);
-  const upcoming = scheduleSummary.nextCheckAt;
+  const membership = createKeywordMembershipProjector(now);
+  const upcoming = keywords.flatMap((keyword) => {
+    const next = membership(keyword.checkSchedule, keyword.id, projectDefaults?.timezone ?? "UTC").nextCheckAt;
+    return next ? [next] : [];
+  }).sort((a, b) => a.getTime() - b.getTime())[0] ?? null;
   const projectReadOnly = isProjectReadOnly(project.writeMode);
   const hasEverChecked = Boolean(latestCheck);
   const lastCheckEverAt = latestCheck?.checkedAt ?? null;
@@ -143,6 +139,9 @@ async function readOverview(project: Awaited<ReturnType<typeof requireReadablePr
   const provider = configuredPrimary;
   const providerConnected = Boolean(provider);
   const serpProviderState: SerpProviderState = providerConnected ? "ready" : serpProviders.length > 0 ? "needs_attention" : "missing";
+  const firstCheckSourceReady = !projectReadOnly && !hasEverChecked && totalKeywordCount > 0
+    ? await readFirstCheckSourceReady(project.id, serpProviders, now)
+    : false;
   const hasAnalyticsSource = providerConnections.some((connection) => connection.kind === "analytics");
   const state = totalKeywordCount === 0 ? "empty" : deriveWorkspaceState({ hasEverChecked, keywordCount: Math.max(1, keywords.length) });
   const { checksThisMonth, providerCostCents } = monthlyCost;
@@ -182,6 +181,7 @@ async function readOverview(project: Awaited<ReturnType<typeof requireReadablePr
     distribution: buildDistribution(positions),
     domain: trackedProjectDomain(project.domain) ?? "",
     estimatedProviderCostCents: providerCostCents,
+    firstCheckSourceReady,
     firstPendingKeywordId: state === "no-data" ? (keywords[0]?.publicId ?? null) : null,
     gettingStarted: { gscOAuthConfigured: isGoogleOAuthConfigured(), hasAnalyticsSource, hasCheck: hasEverChecked, hasKeywords: totalKeywordCount > 0, projectId: project.publicId, projectRef: asProjectRef(project.publicId), providerConnected } as { gscOAuthConfigured: boolean; hasAnalyticsSource: boolean; hasCheck: boolean; hasKeywords: boolean; projectId: string; projectRef?: import("@/lib/routing/app-path").ProjectRef; providerConnected: boolean },
     hasEverChecked,
@@ -218,7 +218,12 @@ async function readOverview(project: Awaited<ReturnType<typeof requireReadablePr
     reportHistory,
     contributors: needs("contributions") ? overviewContributors(keywords, overviewMetrics.qualityReport) : [],
     trend: needs("position_history") ? reportHistory.days.map((day) => ({
-      comparisonKey: day.comparisonKey, dateKey: day.id, label: day.id, value: day.averageRankedPosition,
+      comparisonKey: day.comparisonKey,
+      dateKey: day.id,
+      label: day.id,
+      rankedKeywordCount: day.rankedKeywordCount,
+      rankedKeywords: day.rankedKeywords,
+      value: day.averageRankedPosition,
     })) : [],
     trendTakeaway: null as import("./overview-trend").TrendTakeaway,
     workspaceName: project.name,

@@ -8,6 +8,7 @@ export type WorkspaceBudgetSummary = {
   budgets: BudgetsView;
   eligible: boolean;
   paidWorkBlocked: boolean | null;
+  canEditBudget?: boolean;
 };
 
 const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn) => fn;
@@ -43,6 +44,7 @@ export const loadWorkspaceBudgetSummary = perRequestCache(async function loadWor
   return {
     status: headerStatusFromBudgets(budgets),
     paidWorkBlocked: data.paidWorkBlocked,
+    canEditBudget: data.canEditBudget === true,
     budgets,
     eligible: data.connections.length > 0 || data.budgets.length > 0,
   };

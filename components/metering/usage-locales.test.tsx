@@ -1,4 +1,5 @@
 import { UsageSummary } from "@/components/integrations/UsageSummary";
+import { NativeAllocationObservation } from "@/components/provider-management/AllocationEvidence";
 import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
 import { featureMessagesElement } from "@/i18n/test-support/render-with-feature-messages";
 import { projectUsageFixture } from "@/lib/metering/shared-view-fixtures";
@@ -54,6 +55,7 @@ it.each([
   expect(screen.getAllByText(shared.shared.usageViews.units.customer_cents).length).toBeGreaterThan(
     0,
   );
+  expect(screen.queryByText(shared.shared.usageViews.measurement.measured)).toBeNull();
   expect(screen.queryByText("projectSettingsUsage.views")).not.toBeInTheDocument();
 });
 
@@ -78,5 +80,44 @@ it.each([
     });
     expect(result.current.unit("paid_attempts")).toBe(label);
     expect(result.current.unit("budget_cents")).toBe("");
+  },
+);
+
+it.each([
+  ["en", en, sharedEn, "As of"],
+  ["pl", pl, sharedPl, "Stan na"],
+  ["es-ES", es, sharedEs, "A fecha de"],
+  ["ja", ja, sharedJa, "確認時刻"],
+] as const)(
+  "shows native balance observation time without exact-certainty noise in %s",
+  (locale, messages, shared, label) => {
+    const observedAt = "2026-10-21T16:52:00.000Z";
+    const { container } = render(
+      featureMessagesElement(
+        <NativeAllocationObservation
+          providerName="SerpApi"
+          observation={{
+            identity: {
+              id: "row",
+              connectionId: "conn",
+              fundingSource: "byok",
+              surface: "app",
+              unit: "units",
+              revision: "rev",
+            },
+            value: { text: "239", unit: "searches", certainty: "measured" },
+            observedAt,
+          }}
+        />,
+        { locale, messages: mergeMessageCatalogs(shared, messages) },
+      ),
+    );
+    expect(
+      screen.getByRole("button", { name: (name) => name.includes(label) }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(messages.projectSettingsUsage.meter.certaintyValue.measured),
+    ).toBeNull();
+    expect(container.querySelector("time")).toHaveAttribute("datetime", observedAt);
   },
 );

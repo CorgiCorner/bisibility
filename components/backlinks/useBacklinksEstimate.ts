@@ -35,6 +35,8 @@ export function useBacklinksEstimate(
         const dryRun = outcome.ok && isBacklinksEstimate(outcome) ? outcome : null;
         setEstimate({
           cached: dryRun?.cached ?? false,
+          payment: dryRun?.payment,
+          paymentOptions: dryRun?.paymentOptions,
           costCents: dryRun?.estimatedCostCents ?? null,
           loading: false,
           valid: outcome.ok || outcome.reason !== "unsupported_target",

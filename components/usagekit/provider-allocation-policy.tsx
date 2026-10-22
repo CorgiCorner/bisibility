@@ -102,11 +102,13 @@ export type AllocationFormAdapter = {
 /** Only adapter-backed editors own a form and participate in submit/Enter behavior. */
 export function AllocationFormSurface({
   adapter,
+  id,
   editable,
   save,
   children,
 }: {
   adapter?: AllocationFormAdapter;
+  id?: string;
   editable: boolean;
   save: () => Promise<void>;
   children: ReactNode;
@@ -114,6 +116,7 @@ export function AllocationFormSurface({
   const className = "gap-4 flex flex-col";
   return adapter ? (
     <form
+      id={id}
       className={className}
       onSubmit={(event) => {
         event.preventDefault();
@@ -134,20 +137,18 @@ export type AllocationRowLabels = {
   available: string;
   refreshBalance: string;
 };
-export type AllocationRowIdentity = Pick<
-  ProviderAllocationRow,
-  "id" | "connectionId" | "fundingSource" | "surface" | "unit" | "revision"
->;
-/** Account-wide evidence, never an allocation or scoped Meter availability. */
-export type AllocationNativeObservation = {
-  identity: AllocationRowIdentity;
-  value: Figure;
-  observedAt?: string;
-};
+export type {
+  AllocationNativeObservation,
+  AllocationRowIdentity,
+} from "@/lib/provider-ui/native-allocation-evidence";
+
+import type { AllocationNativeObservation } from "@/lib/provider-ui/native-allocation-evidence";
 export type AllocationRefreshState = { pending: boolean; failed: boolean };
 export type AllocationProps = {
   rows: readonly ProviderAllocationRow[];
   formAdapter?: AllocationFormAdapter;
+  /** Undefined renders actions inline; null waits for the host footer to mount. */
+  actionsContainer?: HTMLElement | null;
   rowLabels?: (row: ProviderAllocationRow) => Partial<AllocationRowLabels>;
   canRefreshBalance?: (row: ProviderAllocationRow) => boolean;
   onRefreshNative?: (row: ProviderAllocationRow) => Promise<AllocationNativeObservation | null>;
@@ -226,7 +227,19 @@ export const providerAllocationLabels = {
   within: "Within this period",
   noUsage: "No measured usage yet",
   unknown: "Unknown",
-  reload: "Reload allocations",
+  reload: "Refresh",
+  refreshing: "Refreshing provider balance…",
+  balanceShared:
+    "This provider balance is shared. Suggested limit = usage this month + provider balance.",
+  balanceWarning: "The remaining budget exceeds this provider account’s balance.",
+  availabilityReasons: {
+    owner_only: "Only the project owner can see usage for this key.",
+    usage_unavailable: "Current usage is unavailable. Refresh to try again.",
+    balance_unavailable: "Provider balance is unavailable. Refresh the provider balance.",
+    balance_stale: "Provider balance is out of date. Refresh the provider balance.",
+    balance_mismatch: "Provider balance does not match this key or unit. Refresh to try again.",
+    budget_precision: "The suggested amount is not a valid whole budget unit.",
+  },
   refreshBalance: "Refresh balance",
   refreshFailed: "Balance refresh is unavailable.",
 };

@@ -1,7 +1,9 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
+  useFormatter: () => ({ dateTime: (value: unknown) => String(value) }),
   useLocale: () => "en",
   useTranslations: () => (key: string) => key,
 }));
@@ -13,6 +15,9 @@ import { aiResearchCatalogFixture } from "./ai-research-fixtures";
 const forecast = {
   ok: true,
   estimate: true,
+  payment: paymentQuote({
+    charge: { value: "0.12", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+  }),
   estimatedCostCents: 12,
   evidence: "synthetic_prompt_test",
   estimateKind: "forecast",
@@ -47,7 +52,7 @@ function optIn() {
 async function estimate() {
   await waitFor(() => expect(screen.getByRole("button", { name: "estimateCost" })).toBeEnabled());
   fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
-  await waitFor(() => expect(screen.getByRole("button", { name: "runAnalysis" })).toBeEnabled());
+  await waitFor(() => expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeEnabled());
 }
 function acknowledge() {
   fireEvent.click(screen.getByRole("checkbox", { name: "actualCostAcknowledgement" }));
@@ -118,9 +123,9 @@ describe("BYOK actual-cost opt-in", () => {
       web_search: true,
     });
     expect(analyze.mock.calls[0][2]).not.toHaveProperty("max_cost_cents");
-    expect(screen.getByText("actualCostForecast")).toBeVisible();
+    expect(screen.getByText(/^forecast:/)).toBeVisible();
     expect(screen.queryByText("conservativeBound")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
     await waitFor(() => expect(analyze).toHaveBeenCalledTimes(2));
     expect(analyze.mock.calls[1][2]).toMatchObject({
       estimate_only: false,
@@ -148,8 +153,8 @@ describe("BYOK actual-cost opt-in", () => {
     optIn();
     acknowledge();
     fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
-    await waitFor(() => expect(screen.getByText("actualCostForecast")).toBeVisible());
-    expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+    await waitFor(() => expect(screen.getByText(/^forecast:/)).toBeVisible());
+    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
   });
   it.each(["timeout", "unknown receipt"])(
     "prevents another paid attempt after %s, including edited advisory limits",
@@ -160,14 +165,14 @@ describe("BYOK actual-cost opt-in", () => {
       optIn();
       acknowledge();
       await estimate();
-      fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+      fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
       await waitFor(() => expect(screen.getByText("actualCostUsageReview")).toBeVisible());
       fireEvent.change(screen.getByLabelText("estimatedCostLimit"), { target: { value: "99" } });
       fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
-      fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+      fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
       expect(analyze).toHaveBeenCalledTimes(2);
       expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
-      expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
       expect(screen.queryByRole("button", { name: "newRequest" })).toBeNull();
     },
   );
@@ -188,15 +193,15 @@ describe("BYOK actual-cost opt-in", () => {
     optIn();
     acknowledge();
     await estimate();
-    fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
     await waitFor(() => expect(screen.getByText("credentialsChanged")).toBeVisible());
     await waitFor(() => expect(screen.getByRole("button", { name: "newRequest" })).toBeEnabled());
-    expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
     expect(analyze).toHaveBeenCalledTimes(2);
     fireEvent.click(screen.getByRole("button", { name: "newRequest" }));
     await estimate();
-    fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
     await waitFor(() => expect(analyze).toHaveBeenCalledTimes(4));
     expect(analyze.mock.calls[3][2]).toMatchObject({
       estimate_credentials_ref: "b".repeat(64),
@@ -222,10 +227,10 @@ describe("BYOK actual-cost opt-in", () => {
       optIn();
       acknowledge();
       await estimate();
-      fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+      fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
       await waitFor(() => expect(screen.getByText("actualCostUsageReview")).toBeVisible());
       expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
-      expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
       expect(screen.queryByRole("button", { name: "newRequest" })).toBeNull();
       expect(analyze).toHaveBeenCalledTimes(2);
     },
@@ -236,12 +241,12 @@ describe("BYOK actual-cost opt-in", () => {
     acknowledge();
     await estimate();
     acknowledge();
-    expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
     acknowledge();
     fireEvent.change(screen.getByLabelText("estimatedCostLimit"), { target: { value: "11" } });
     fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
     await waitFor(() => expect(analyze).toHaveBeenCalledTimes(2));
-    expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
     expect(screen.getByRole("alert")).toHaveTextContent("estimateAboveCap");
   });
   it("blocks retries when the server returns an unknown receipt with a saved report", async () => {
@@ -262,11 +267,11 @@ describe("BYOK actual-cost opt-in", () => {
     optIn();
     acknowledge();
     await estimate();
-    fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
     await waitFor(() => expect(screen.getByText("actualCostUsageReview")).toBeVisible());
-    expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "newRequest" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
     expect(analyze).toHaveBeenCalledTimes(2);
     expect(screen.getByRole("link", { name: "openReport" })).toHaveAttribute(
       "href",
@@ -290,14 +295,14 @@ describe("BYOK actual-cost opt-in", () => {
     optIn();
     acknowledge();
     await estimate();
-    fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
     await waitFor(() => expect(screen.getByRole("button", { name: "newRequest" })).toBeVisible());
     expect(analyze).toHaveBeenCalledTimes(2);
-    expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "newRequest" }));
     await estimate();
-    fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
     await waitFor(() => expect(analyze).toHaveBeenCalledTimes(4));
     expect(analyze.mock.calls[3][2].idempotency_key).not.toBe(
       analyze.mock.calls[1][2].idempotency_key,
@@ -315,12 +320,12 @@ describe("BYOK actual-cost opt-in", () => {
     optIn();
     acknowledge();
     await estimate();
-    fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
     await waitFor(() => expect(screen.getByRole("button", { name: "newRequest" })).toBeVisible());
     expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "newRequest" }));
     await estimate();
-    fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
     await waitFor(() => expect(analyze).toHaveBeenCalledTimes(4));
     expect(analyze.mock.calls[3][2].idempotency_key).not.toBe(
       analyze.mock.calls[1][2].idempotency_key,

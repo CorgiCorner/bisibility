@@ -10,14 +10,20 @@ import type {
   AllocationRowLabels,
   ProviderAllocationLabels,
 } from "@/components/usagekit/provider-allocation-policy";
-import { allocationDisplay } from "@/components/usagekit/provider-allocation-policy";
+import {
+  allocationDisplay,
+  allocationInput,
+} from "@/components/usagekit/provider-allocation-policy";
 import type { ProviderFeedbackLabels } from "@/components/usagekit/provider-feedback";
 import { figureText, fundingLabel } from "@/components/usagekit/provider-feedback";
-import { UsageStatus, usageMotion } from "@/components/usagekit/usage-motion";
+import { nativeAllocationAvailability } from "@/lib/provider-ui/native-allocation-evidence";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 import type { BudgetProjectionInput, Figure, ProviderAllocationRow } from "@usagekit/views";
 import { allocationLimitFromAvailable, projectBudgetExhaustion } from "@usagekit/views";
 import type { ReactNode } from "react";
 import { useId } from "react";
+import { AllocationCurrentEvidence } from "./AllocationCurrentEvidence";
+import { AllocationForecast } from "./AllocationForecast";
 
 export type { ProviderAllocationLabels } from "@/components/usagekit/provider-allocation-policy";
 export { providerAllocationLabels } from "@/components/usagekit/provider-allocation-policy";
@@ -71,22 +77,23 @@ export function AllocationRow({
   renderEvidence?: (evidence: ProviderAllocationRow | null) => ReactNode;
 }) {
   const id = useId();
-  const { observed, refresh, availability } = useAllocationObservation({
-    evidence,
-    editable,
-    onRefreshBalance,
-    onRefreshNative,
-    beginRefresh,
-  });
+  const { observed, native, refresh, availability, availabilityReason, invalidateNative } =
+    useAllocationObservation({
+      evidence,
+      editable,
+      onRefreshBalance,
+      onRefreshNative,
+      beginRefresh,
+    });
   const blankUnlimited = inputPolicy?.blank === "unlimited";
   const errorId = `${id}-error`;
   const refreshVisible = canRefreshBalance?.(row) ?? true;
   const display = (value: Figure) =>
     value !== "unavailable" && value.certainty !== "unknown"
-      ? `${value.certainty === "estimated" ? `${feedback.estimated} ` : ""}${formatFigure?.(value) ?? value.text} ${formatUnit?.(value.unit) ?? (value.unit === "cents" || value.unit === "customer_cents" ? feedback.cents : value.unit)}`
+      ? `${formatFigure?.(value) ?? `${value.certainty === "estimated" ? `${feedback.estimated} ` : ""}${value.text}`} ${formatUnit?.(value.unit) ?? (value.unit === "cents" || value.unit === "customer_cents" ? feedback.cents : value.unit)}`
       : figureText(value, feedback);
   const available =
-    (observed?.row ? (suggestionEligible?.(observed.row) ?? fresh) : fresh) &&
+    (availability ? (suggestionEligible?.(availability) ?? fresh) : fresh) &&
     evidence &&
     availability?.available &&
     availability.availabilityBasis
@@ -102,6 +109,20 @@ export function AllocationRow({
       ? allocationDisplay(available.limit.text, row, inputPolicy)
       : null;
   const forecast = evidence && projection ? projectBudgetExhaustion(projection) : null;
+  const parsedDraft = !draft.unlimited ? allocationInput(draft.limit, row, inputPolicy) : null;
+  const draftAvailability =
+    native && evidence && parsedDraft && "native" in parsedDraft
+      ? nativeAllocationAvailability(
+          {
+            ...evidence,
+            unlimited: false,
+            limit: { text: parsedDraft.native, unit: evidence.unit, certainty: "measured" },
+          },
+          native,
+        )
+      : null;
+  const exceedsProviderBalance =
+    draftAvailability?.outcome === "ready" && draftAvailability.exceedsProviderBalance;
   return (
     <section
       aria-label={
@@ -117,23 +138,7 @@ export function AllocationRow({
         <p className="text-sm break-words text-fg-muted">{row.label}</p>
       </div>
       {evidence && (
-        <dl className="rounded-lg bg-bg-sunken p-4 text-sm grid min-w-0 grid-cols-3 gap-3">
-          {[
-            [labels.used, evidence.used],
-            [labels.reserved, evidence.reserved],
-            [labels.remaining, evidence.remaining],
-          ].map(([label, value]) => (
-            <div key={label as string} className="min-w-0">
-              <dt className="text-xs text-fg-muted">{label as string}</dt>
-              <dd
-                key={display(value as ProviderAllocationRow["used"])}
-                className={`mt-0.5 break-all font-medium tabular-nums ${usageMotion.enter}`}
-              >
-                {display(value as ProviderAllocationRow["used"])}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <AllocationCurrentEvidence evidence={evidence} labels={labels} display={display} />
       )}
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -199,14 +204,24 @@ export function AllocationRow({
             size="sm"
             disabled={!editable || suggestion === null}
             onClick={() => {
-              if (suggestion !== null) change({ limit: suggestion, unlimited: false });
+              if (suggestion === null) return;
+              if (row.fundingSource === "byok" && native) {
+                const current = nativeAllocationAvailability(evidence ?? row, native);
+                if (current.outcome !== "ready") {
+                  invalidateNative(current.reason);
+                  return;
+                }
+              }
+              change({ limit: suggestion, unlimited: false });
             }}
           >
             {rowLabels?.available ?? labels.available}
           </Button>
           {suggestion === null && (
             <p className="text-xs/relaxed min-w-0 flex-1 basis-48 text-fg-muted">
-              {labels.unavailable}
+              {availabilityReason
+                ? labels.availabilityReasons[availabilityReason]
+                : labels.unavailable}
             </p>
           )}
         </div>
@@ -220,48 +235,60 @@ export function AllocationRow({
             }
           : evidence,
       )}
-      {renderNativeObservation?.(observed?.native ?? null, row, {
-        pending: observed?.pending ?? false,
-        failed: observed?.failed ?? false,
-      })}
-      {refreshVisible && (onRefreshNative ? row.fundingSource === "byok" : onRefreshBalance) && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={!editable || !evidence || observed?.pending}
-          onClick={() => void refresh()}
-        >
-          {rowLabels?.refreshBalance ?? labels.refreshBalance}
-        </Button>
+      {onRefreshNative
+        ? row.fundingSource === "byok" && (
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              {renderNativeObservation?.(native, row, {
+                pending: observed?.pending ?? false,
+                failed: observed?.failed ?? false,
+              })}
+              {refreshVisible && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 min-h-7 shrink-0 gap-1.5 px-2 text-xs"
+                  aria-label={rowLabels?.refreshBalance ?? labels.refreshBalance}
+                  title={rowLabels?.refreshBalance ?? labels.refreshBalance}
+                  disabled={!editable || !evidence || observed?.pending}
+                  onClick={() => void refresh()}
+                >
+                  <ArrowClockwiseIcon
+                    aria-hidden
+                    size={14}
+                    className={
+                      observed?.pending ? "animate-spin motion-reduce:animate-none" : undefined
+                    }
+                  />
+                  {labels.reload}
+                </Button>
+              )}
+            </div>
+          )
+        : refreshVisible &&
+          onRefreshBalance && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!editable || !evidence || observed?.pending}
+              onClick={() => void refresh()}
+            >
+              {rowLabels?.refreshBalance ?? labels.refreshBalance}
+            </Button>
+          )}
+      {row.fundingSource === "byok" && native && (
+        <p className="text-xs text-fg-muted">{labels.balanceShared}</p>
       )}
-      {observed?.pending && <p role="status">{feedback.pending}</p>}
+      {exceedsProviderBalance && (
+        <p role="status" className="text-xs text-yellow-text">
+          {labels.balanceWarning}
+        </p>
+      )}
+      {observed?.pending && <p role="status">{labels.refreshing}</p>}
       {observed?.failed && <p role="alert">{labels.refreshFailed}</p>}
       {forecast && (
-        <div className="text-sm flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 border-t border-border pt-3">
-          <span className="text-fg-muted">{labels.forecast}</span>
-          <UsageStatus
-            tone={
-              forecast.kind === "exhausted"
-                ? "exceeded"
-                : forecast.kind === "estimated"
-                  ? "warning"
-                  : forecast.kind === "within_limits"
-                    ? "positive"
-                    : "neutral"
-            }
-          >
-            {forecast.kind === "estimated"
-              ? `${labels.estimated} ${formatTime?.(forecast.at) ?? forecast.at}`
-              : forecast.kind === "exhausted"
-                ? `${labels.exhausted} ${formatTime?.(forecast.at) ?? forecast.at}`
-                : forecast.kind === "within_limits"
-                  ? labels.within
-                  : forecast.kind === "no_usage"
-                    ? labels.noUsage
-                    : labels.forecastUnavailable}
-          </UsageStatus>
-        </div>
+        <AllocationForecast forecast={forecast} labels={labels} formatTime={formatTime} />
       )}
     </section>
   );

@@ -2,8 +2,8 @@
   "cloudImport": {
     "metadata": {
       "cloudDescription": "Create a one-time migration token that authorizes a self-hosted instance to push its data into this hosted project.",
-      "cloudLayoutDescription": "The hosted beta: focused setup and import tasks for your project.",
-      "cloudLayoutTitle": "Hosted beta",
+      "cloudLayoutDescription": "Cloud: focused setup and import tasks for your project.",
+      "cloudLayoutTitle": "Cloud",
       "cloudTitle": "Instance import",
       "instanceDescription": "Create a one-time migration token that authorizes another bisibility instance to push its data into this project.",
       "instanceTitle": "Import from another instance"
@@ -23,7 +23,7 @@
       "selfHost": "self-hosted instance"
     },
     "topBar": {
-      "beta": "Beta",
+      "beta": "Cloud",
       "fallbackWorkspace": "Project",
       "setupProgress": "Setup / {current, number} of {total, number}"
     },

@@ -1,14 +1,29 @@
 "use client";
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import type { AiResearchResult } from "@/lib/ai-research/types";
 import { useTranslations } from "next-intl";
 
-export function AiResearchResults({ result }: Readonly<{ result: AiResearchResult }>) {
+export function AiResearchResults({
+  result,
+  payment,
+  originalPayment,
+}: Readonly<{
+  result: AiResearchResult;
+  payment?: ActionPaymentReceipt;
+  originalPayment?: ActionPaymentReceipt;
+}>) {
   const t = useTranslations("projectAiResearch");
-  const costMessage = t(result.costStatus === "unknown" ? "unknownCost" : "actualCost", {
-    cost: result.costCents.toFixed(2),
-  });
+  const costMessage = (
+    <>
+      <PaymentChargeLine payment={payment} />
+      {originalPayment && originalPayment.actionId !== payment?.actionId ? (
+        <PaymentChargeLine original payment={originalPayment} />
+      ) : null}
+    </>
+  );
   if (!result.rows.length)
     return (
       <div className="grid min-w-0 gap-4">

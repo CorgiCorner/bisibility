@@ -237,12 +237,17 @@ it.each(["viewer", "admin"] as const)(
     mocks.extension.mockResolvedValue({ content: <p>Account budget extension</p> });
     render(await IntegrationUsagePanel({ projectRef: "prj_p", editBudget: false }));
     expect(screen.getByText("Account budget extension")).toBeInTheDocument();
-    expect(mocks.extension).toHaveBeenCalledWith({
-      locale: "en",
-      principalId: "non-owner",
-      projectId: "p",
-      projectRef: "prj_p",
-    });
+    expect(mocks.extension).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locale: "en",
+        principalId: "non-owner",
+        projectId: "p",
+        projectRef: "prj_p",
+        canEditBudget: role === "admin",
+        editBudget: false,
+        usage: expect.objectContaining({ status: "restricted" }),
+      }),
+    );
     expectRestrictedSummary();
   },
 );

@@ -34,6 +34,9 @@ export type RetryLaunch = {
 };
 
 export type LaunchRankCheckRunInput = {
+  paymentOptionId?: string;
+  acceptedPayment?: import("@/lib/action-payment/contract").AcceptedActionPayment;
+  requirePayment?: boolean;
   actorId: string | null;
   depth?: SerpDepth;
   idempotencyKey?: string;
@@ -46,6 +49,7 @@ export type LaunchRankCheckRunInput = {
 };
 
 export type LaunchRankCheckRunCreatedResult = {
+  payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
   estimatedCostCents: number;
   keywordCount: number;
   publicId: string;

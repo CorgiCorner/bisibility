@@ -37,12 +37,12 @@
         "done": "Esto es lo que ha ocurrido al añadir tus primeras palabras clave: cada una lleva su propio mercado y dispositivo, y puedes editarlos en su fila en Seguimiento de posiciones."
       },
       "connect_source": {
-        "active": "Search Console es gratis y solo requiere dos clics. Un proveedor de SERP añade comprobaciones de posiciones en tiempo real con tu propia clave.",
-        "done": "Esto es lo que ha ocurrido al conectar una fuente de datos: las comprobaciones de posiciones pasan por ella y el proveedor te factura directamente. Puedes gestionarla o cambiarla en Integraciones."
+        "active": "Search Console añade datos de tráfico gratuitos. Elige una fuente de datos de posiciones para comprobarlas en tiempo real.",
+        "done": "Tu fuente de datos de posiciones está configurada. Revisa su origen y los ajustes de uso en Integraciones."
       },
       "first_check": {
         "active": "Ejecuta la primera comprobación para recoger las posiciones de las palabras clave que sigues. Los ajustes de las comprobaciones están en los ajustes de seguimiento del proyecto.",
-        "done": "Esto es lo que ha ocurrido al completarse tu primera comprobación: todas las palabras clave que incluía ya tienen una posición y una URL posicionada, y el histórico crece a partir de aquí. Las comprobaciones siguen la programación predeterminada del proyecto, y cualquier palabra clave puede sustituirla por la suya. Ambas están en Seguimiento de posiciones."
+        "done": "La primera comprobación completada guardó posiciones y URL para sus objetivos. Las palabras clave nuevas siguen en modo manual hasta que las añadas a un horario en Ejecuciones → Horarios."
       }
     },
     "competitors": {

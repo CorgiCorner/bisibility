@@ -62,9 +62,14 @@ function props() {
   };
 }
 
+function chooseViewAction(view: string, name: string) {
+  fireEvent.click(screen.getByRole("button", { name: view }));
+  fireEvent.click(screen.getByRole("menuitem", { name }));
+}
+
 it("lets a viewer save a personal competitor scope through V2 without shared creation", async () => {
   render(<CompetitorPersonalViewControl {...props()} />);
-  fireEvent.click(screen.getByRole("button", { name: "Save as" }));
+  chooseViewAction("General", "Save as");
   const dialog = screen.getByRole("dialog");
   fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "My mobile" } });
   expect(within(dialog).getByRole("radio", { name: "Project" })).toBeDisabled();
@@ -97,7 +102,7 @@ it("preserves existing V2 presentation metadata when saving changed filters", as
       config={{ ...config, filters: { ...config.filters, position: "top3" } }}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+  chooseViewAction("Service mobile", "Save changes");
   await waitFor(() =>
     expect(actions.update).toHaveBeenCalledWith(
       expect.objectContaining({

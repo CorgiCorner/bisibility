@@ -18,6 +18,7 @@ export function nextRunLabel(
   timeZone: string | null | undefined,
   locale: string,
   t: ReturnType<typeof useTranslations<"projectRuns.schedules">>,
+  distributed: false | "day" | "interval" = false,
 ) {
   if (!value) return null;
   const date = new Date(value);
@@ -30,6 +31,13 @@ export function nextRunLabel(
     throw error;
   }
   const now = new Date();
+  if (distributed) {
+    const day = new Intl.DateTimeFormat(locale, { timeZone: zone, weekday: "short" }).format(date);
+    return t(distributed === "day" ? "nextRun.distributed" : "nextRun.distributedInterval", {
+      day,
+      timezone: zone,
+    });
+  }
   const days = Math.round(
     (calendarDay(date, locale, zone) - calendarDay(now, locale, zone)) / 86_400_000,
   );

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   actor: vi.fn(),
+  bound: vi.fn(),
   providerSpend: vi.fn(),
   revalidate: vi.fn(),
   requireProject: vi.fn(),
@@ -9,6 +10,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/provider-ui/native-allocation-refresh", () => ({
+  refreshBoundNativeAllocation: mocks.bound,
+}));
 vi.mock("@/lib/actions/_shared", () => ({
   getActionActor: mocks.actor,
   parseActionInput: (schema: { parse: (input: unknown) => unknown }, input: unknown) =>
@@ -235,4 +239,23 @@ describe("refreshProviderConnectionBudgetAction", () => {
     );
     expect(mocks.setAllocation).not.toHaveBeenCalled();
   });
+});
+
+it("uses the bound native path only when a dialog supplies the expected row identity", async () => {
+  vi.clearAllMocks();
+  mocks.actor.mockResolvedValue(actor);
+  mocks.requireProject.mockResolvedValue(project);
+  const identity = { id: "row", revision: "rev" };
+  mocks.bound.mockResolvedValue({ connectionId, nativeObservation: { identity } });
+  await expect(
+    refreshProviderConnectionBudgetAction(project.publicId, connectionId, identity),
+  ).resolves.toMatchObject({ nativeObservation: { identity } });
+  expect(mocks.bound).toHaveBeenCalledWith(
+    { actor, projectPublicId: project.publicId },
+    connectionId,
+    identity,
+    expect.any(Function),
+  );
+  expect(mocks.providerSpend).not.toHaveBeenCalled();
+  expect(mocks.setAllocation).not.toHaveBeenCalled();
 });

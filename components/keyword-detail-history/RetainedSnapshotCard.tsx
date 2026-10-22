@@ -7,7 +7,7 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { useFormatter, useTranslations } from "next-intl";
 import { HistoryPosition } from "./HistoryPosition";
 import { HistoryResultKind } from "./HistoryResultKind";
-import { HistoryScope } from "./HistoryScope";
+import { HistoryScope, sameHistoryScope } from "./HistoryScope";
 import { HistoryTime, historyExternalUrl } from "./HistoryTime";
 import type { RetainedHistorySnapshot } from "./history-contract";
 
@@ -64,10 +64,12 @@ export function RetainedSnapshotCard({
         <div className="mt-2">
           <HistoryScope key="historyscope-0" scope={observation.configuredScope} />
         </div>
-        <div className="mt-2">
-          <span className="text-[11px] text-fg-muted">{t("effectiveScope")}</span>
-          <HistoryScope key="historyscope-1" scope={observation.effectiveScope} />
-        </div>
+        {!sameHistoryScope(observation.configuredScope, observation.effectiveScope) ? (
+          <div className="mt-2">
+            <span className="text-[11px] text-fg-muted">{t("effectiveScope")}</span>
+            <HistoryScope scope={observation.effectiveScope} />
+          </div>
+        ) : null}
       </div>
       <section className="border-b border-border px-5 py-4" aria-label={t("featuresTitle")}>
         <div className="flex items-center justify-between">

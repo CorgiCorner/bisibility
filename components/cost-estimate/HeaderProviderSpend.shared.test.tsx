@@ -2,12 +2,17 @@ import {
   renderWithCostEstimateMessages as render,
   renderWithFeatureMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
+import { readProjectProviderAccessScope } from "@/lib/queries/provider-access-scope";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { BudgetRow } from "@usagekit/views";
 import { budgetsViewFromStatuses, headerStatusFromBudgets } from "@usagekit/views";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { HeaderProviderSpend } from "./HeaderProviderSpend";
+
+const permissions = vi.hoisted(() => ({ access: vi.fn(), demo: vi.fn() }));
+vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: permissions.access }));
+vi.mock("@/lib/demo/config", () => ({ readDemoConfig: permissions.demo }));
 
 const figure = (text: string) => ({ text, unit: "units", certainty: "measured" as const });
 const row: BudgetRow = {
@@ -112,6 +117,7 @@ it("offers budget editing without a fabricated spend for an unbounded project", 
         status: headerStatusFromBudgets(budgets),
         budgets,
         eligible: true,
+        canEditBudget: true,
       }}
     />,
   );
@@ -150,7 +156,7 @@ it("links configured project bounds to usage and preserves every denomination", 
   await userEvent.tab();
   const tooltip = await screen.findByRole("tooltip");
   expect(tooltip).toHaveTextContent("1 Units");
-  expect(tooltip).toHaveTextContent("$0.00");
+  expect(tooltip).toHaveTextContent("< $0.01");
 });
 it.each(["unavailable", "forbidden"] as const)(
   "keeps %s accounting separate from no configured budget",
@@ -236,7 +242,7 @@ it("never rounds a partial lower bound upward", async () => {
   expect(screen.getByRole("link")).toHaveTextContent("At least some usage");
   await userEvent.tab();
   const tooltip = await screen.findByRole("tooltip");
-  expect(tooltip).toHaveTextContent("≥ 1.01 Units");
+  expect(tooltip).toHaveTextContent("≈ 1 Units");
   expect(tooltip).not.toHaveTextContent("1.02");
   expect(container.querySelector('[data-usagekit="usage-cap-pill"]')).toHaveAttribute(
     "data-coverage",
@@ -254,6 +260,7 @@ it("gives the no-budget header link its Polish accessible name", async () => {
       summary={{
         paidWorkBlocked: null,
         eligible: true,
+        canEditBudget: true,
         budgets,
         status: headerStatusFromBudgets(budgets),
       }}
@@ -388,6 +395,69 @@ it("distinguishes app and programmatic traffic within their own provider budget 
   const agents = within(tooltip).getByRole("row", { name: /API and agents/ });
   expect(app).not.toHaveTextContent("API and agents");
   expect(agents).not.toHaveTextContent("App and schedules");
-  expect(within(app).getByRole("cell", { name: "1,000 Units" })).toBeInTheDocument();
-  expect(within(agents).getByRole("cell", { name: "1,000 Units" })).toBeInTheDocument();
+  expect(within(app).getByRole("cell", { name: "1,000 Units / month" })).toBeInTheDocument();
+  expect(within(agents).getByRole("cell", { name: "1,000 Units / month" })).toBeInTheDocument();
+});
+
+it("keeps no-limit viewer chrome informational without a budget-edit action", () => {
+  const budgets = budgetsViewFromStatuses([]);
+  render(
+    <HeaderProviderSpend
+      projectRef="prj_example"
+      summary={{
+        paidWorkBlocked: null,
+        eligible: true,
+        canEditBudget: false,
+        budgets,
+        status: headerStatusFromBudgets(budgets),
+      }}
+    />,
+  );
+  expect(screen.getByText("No limit")).toBeInTheDocument();
+  expect(screen.queryByRole("link")).toBeNull();
+});
+
+it.each(
+  ["disabled", "editable", "legacy-read-only"].flatMap((kind) =>
+    ["owner", "viewer"].map((role) => ({ kind, role })),
+  ),
+)("keeps unlimited tooltip permissions for $kind / $role", async ({ kind, role }) => {
+  permissions.demo.mockReturnValue({ kind });
+  permissions.access.mockResolvedValue({
+    actor: { id: "actor", memberships: [{ projectId: "project", role }] },
+    project: { id: "project", publicId: "prj_example", writeMode: "active" },
+  });
+  const { scope } = await readProjectProviderAccessScope("prj_example");
+  const budgets = {
+    state: "ok" as const,
+    problem: null,
+    rows: [{ ...row, limit: "unlimited" as const, remaining: "unavailable" as const }],
+  };
+  render(
+    <HeaderProviderSpend
+      projectRef="prj_example"
+      summary={{
+        eligible: true,
+        paidWorkBlocked: false,
+        canEditBudget: scope.canManageProviders,
+        budgets,
+        status: headerStatusFromBudgets(budgets),
+      }}
+    />,
+  );
+  expect(
+    screen.getByRole("link", { name: "Budget usage: No limit. View details" }),
+  ).toHaveAttribute("href", "/app/prj_example/integrations?tab=usage");
+  await userEvent.tab();
+  const tooltip = await screen.findByRole("tooltip");
+  if (kind === "disabled" && role === "owner") {
+    expect(within(tooltip).getByRole("link", { name: "Set limit" })).toHaveAttribute(
+      "href",
+      "/app/prj_example/integrations?tab=usage&budget=edit",
+    );
+  } else {
+    expect(within(tooltip).getByText("No limit")).toBeVisible();
+    expect(within(tooltip).queryByRole("link")).toBeNull();
+    expect(within(tooltip).queryByText("Set limit")).toBeNull();
+  }
 });

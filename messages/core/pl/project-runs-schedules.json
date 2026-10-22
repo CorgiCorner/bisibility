@@ -65,9 +65,9 @@
         "archived": "Zarchiwizowano harmonogram monitorowania promptów. Wcześniejsze przebiegi i wyniki zostały zachowane.",
         "archivedReadOnlyHint": "Zarchiwizowane harmonogramy monitorowania promptów są zachowane w historii i nie można ich edytować ani przywrócić.",
         "emptyNext": "Dodaj prompty, aby zacząć",
-        "kindAi": "Monitorowanie promptów",
+        "kindAi": "Śledzenie AI",
         "kindRank": "Sprawdzanie pozycji",
-        "newSchedule": "Nowy harmonogram monitorowania promptów",
+        "newSchedule": "Nowy harmonogram śledzenia AI",
         "nextPending": "Oczekuje",
         "prompts": "{count, plural, one {# prompt} few {# prompty} many {# promptów} other {# promptu}}",
         "readOnly": "Tylko do odczytu",
@@ -78,7 +78,7 @@
       },
       "archiveDialog": {
         "body": "Przyszłe przebiegi zostaną zatrzymane. Już uruchomione przebiegi mogą się zakończyć, a wcześniejsze wyniki pozostaną dostępne.",
-        "defaultNotice": "To jest domyślny harmonogram. Nowe słowa kluczowe będą sprawdzane ręcznie, dopóki nie wybierzesz innego harmonogramu domyślnego.",
+        "defaultNotice": "Nowe słowa pozostają ręczne, dopóki nie dodasz ich do harmonogramu.",
         "manualChecks": "Sprawdzenia ręczne",
         "moveKeywords": "Przenieś {count, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} do",
         "title": "Zarchiwizować harmonogram „{name}”?"
@@ -132,7 +132,8 @@
         "selected": "{count, plural, one {# zaznaczone} few {# zaznaczone} many {# zaznaczonych} other {# zaznaczonego}}",
         "selectAll": "Zaznacz wszystkie pasujące ({count, number})",
         "submitFailed": "Nie udało się dodać słów kluczowych do tego harmonogramu. Spróbuj ponownie.",
-        "toSchedule": "do harmonogramu {name}"
+        "toSchedule": "do harmonogramu {name}",
+        "schedule": "Harmonogram"
       },
       "editor": {
         "always": "Zawsze {label}",
@@ -141,16 +142,16 @@
         "cronTooLong": "Wyrażenie cron może mieć najwyżej {maximum, number} znaków.",
         "customCron": "Własny cron",
         "customPreview": "Harmonogram z własnym wyrażeniem cron.",
-        "defaultEnabled": "Włącz, aby nowe słowa kluczowe trafiały do tego harmonogramu. Istniejące słowa kluczowe zachowają swoje harmonogramy.",
-        "defaultExisting": "Domyślny dla nowych słów kluczowych",
-        "defaultExistingDescription": "Nowe słowa kluczowe trafiają do tego harmonogramu, chyba że wybierzesz inny.",
-        "defaultReplacement": "Zastępuje harmonogram {name} dla nowych słów kluczowych. Istniejące słowa kluczowe zachowują swoje harmonogramy.",
+        "defaultEnabled": "Podpowiadaj ten harmonogram przy planowaniu. Słowa są dodawane tylko po ich wybraniu.",
+        "defaultExisting": "Domyślna sugestia",
+        "defaultExistingDescription": "Podpowiadany przy wyborze harmonogramu. Słowa nie dołączają automatycznie.",
+        "defaultReplacement": "Zastępuje {name} jako sugerowany harmonogram. Obecne przypisania pozostają bez zmian.",
         "depth": "Głębokość",
         "everyWeekday": "W każdy dzień roboczy o 06:00.",
         "invalidCron": "Podaj prawidłowe pięcioczłonowe wyrażenie cron.",
         "invalidTime": "Podaj godzinę w formacie HH:mm.",
         "invalidTimeZone": "Podaj prawidłową strefę czasową.",
-        "invalidTimeStep": "Podaj godzinę w odstępach co 30 minut.",
+        "invalidTimeStep": "Podaj godzinę kończącą się na :00 lub :30.",
         "jitterExact": "Brak – start dokładnie o czasie",
         "jitterFifteen": "Do 15 minut",
         "jitterSixty": "Do 60 minut",
@@ -170,9 +171,9 @@
         "noFixedTime": "Bez stałej godziny",
         "projectDefault": "Domyślne projektu ({label})",
         "projectDefaultPlain": "Domyślne projektu",
-        "overrideHelp": "„Domyślne projektu” korzysta z ustawień projektu. „Zawsze” przypina wartość do tego harmonogramu.",
+        "overrideHelp": "Użyj ustawień projektu lub wybierz wartość dla tego harmonogramu.",
         "save": "Zapisz harmonogram",
-        "saveFailed": "Nie udało się zapisać harmonogramu.",
+        "saveFailed": "Nie udało się zapisać. Twoje zmiany pozostały w formularzu. Spróbuj ponownie.",
         "saved": "Zapisano harmonogram.",
         "saving": "Zapisywanie…",
         "schedule": "Harmonogram",
@@ -180,10 +181,21 @@
         "scheduleNameTooLong": "Nazwa harmonogramu może mieć najwyżej {maximum, number} znaków.",
         "startWindow": "Okno startu",
         "startWindowHelp": "Rozkłada start w czasie, aby harmonogramy uruchamiane o tej samej porze nie obciążały dostawcy naraz.",
-        "thirtyMinuteSteps": "Co 30 minut",
+        "thirtyMinuteSteps": "Użyj :00 lub :30, np. 09:00 lub 09:30.",
         "time24": "Godzina, format 24-godzinny",
         "topDepth": "Top {depth, number}",
-        "useAsDefault": "Ustaw jako domyślny dla nowych słów kluczowych"
+        "useAsDefault": "Użyj jako domyślnej sugestii",
+        "nameHelp": "To tylko nazwa. Częstotliwość sprawdzeń zmienisz poniżej.",
+        "saveSessionExpired": "Sesja wygasła. Zaloguj się ponownie i spróbuj zapisać.",
+        "saveForbidden": "Nie masz już uprawnień do edycji tego harmonogramu.",
+        "saveNotFound": "Ten harmonogram nie jest już dostępny. Wróć do listy harmonogramów.",
+        "saveConflict": "Harmonogram się zmienił. Odśwież go przed ponownym zapisem.",
+        "saveReadOnly": "Ten projekt jest tylko do odczytu. Zapis będzie możliwy po przywróceniu edycji.",
+        "saveInvalid": "Sprawdź ustawienia harmonogramu przed ponownym zapisem.",
+        "marketDevice": "Rynek × urządzenie",
+        "removeMember": "Usuń z harmonogramu",
+        "memberRemoved": "Usunięto z harmonogramu. Słowo jest dostępne do ręcznych sprawdzeń.",
+        "memberRemoveFailed": "Nie udało się usunąć słowa z harmonogramu. Spróbuj ponownie."
       },
       "empty": {
         "archivedDescription": "Zarchiwizowane harmonogramy pojawią się tutaj. Ich wcześniejsze przebiegi i wyniki są zachowane.",
@@ -206,7 +218,7 @@
       "list": {
         "actions": "Akcje",
         "blocked": "Następny przebieg zablokowany – miesięczny limit",
-        "defaultHint": "Nowe słowa kluczowe trafiają do tego harmonogramu, chyba że wybierzesz inny.",
+        "defaultHint": "Podpowiadany przy wyborze harmonogramu. Słowa nie dołączają automatycznie.",
         "memberMeta": "{markets, plural, one {# rynek} few {# rynki} many {# rynków} other {# rynku}} x {devices, plural, one {# urządzenie} few {# urządzenia} many {# urządzeń} other {# urządzenia}}",
         "members": "{keywords, plural, one {# słowo kluczowe} few {# słowa kluczowe} many {# słów kluczowych} other {# słowa kluczowego}} = {targets, plural, one {# sprawdzenie na przebieg} few {# sprawdzenia na przebieg} many {# sprawdzeń na przebieg} other {# sprawdzenia na przebieg}}",
         "noAssignedKeywords": "Brak przypisanych słów kluczowych",
@@ -231,7 +243,23 @@
       "nextRun": {
         "at": "{day} {time}",
         "today": "dzisiaj {time}",
-        "tomorrow": "jutro {time}"
+        "tomorrow": "jutro {time}",
+        "distributed": "{day}, rozłożone w ciągu dnia ({timezone})",
+        "distributedInterval": "Od {day}, rozłożone w przedziale ({timezone})"
+      },
+      "summary": {
+        "title": "Podsumowanie harmonogramu",
+        "nextRun": "Następne uruchomienie",
+        "perMonth": "Szacunkowo miesięcznie",
+        "nextPending": "Planowanie w toku",
+        "makeDefault": "Ustaw jako domyślny",
+        "defaultHint": "Domyślny harmonogram to sugestia przy wyborze. Nowe słowa pozostają bez harmonogramu, dopóki ich nie przypiszesz.",
+        "unscheduledCount": "{count, plural, one {# słowo nie ma harmonogramu.} few {# słowa nie mają harmonogramu.} many {# słów nie ma harmonogramu.} other {# słowa nie mają harmonogramu.}}",
+        "addToSchedule": "Dodaj do harmonogramu"
+      },
+      "planning": {
+        "delay": "Planowane uruchomienia zwykle pojawiają się w Runs w ciągu {minutes, number} min. Sprawdzenia odbywają się zgodnie z harmonogramem.",
+        "delayUnknown": "Planowane uruchomienia mogą pojawić się w Runs z krótkim opóźnieniem. Sprawdzenia odbywają się zgodnie z harmonogramem."
       }
     }
   }

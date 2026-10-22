@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { CacheModule } from "./key";
-export const ttlOptions = [3600, 21600, 43200, 86400, 259200, 604800] as const;
+export const ttlOptions = [3600, 21600, 43200, 86400, 259200, 604800, 1209600, 2592000] as const;
 export const cacheSettingsSchema = z.object({
   projectId: z.string().min(1).max(128),
   ttlSeconds: z.union([

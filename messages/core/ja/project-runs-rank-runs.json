@@ -123,7 +123,7 @@
         "marketInactive": "市場が無効",
         "marketInactiveDescription": "このキーワードの市場が一時停止中のため、費用が発生する前にチェックが停止されました。",
         "noProvider": "利用可能なプロバイダーなし",
-        "noProviderDescription": "この実行を開始するには、プロバイダーを接続または再接続してください。",
+        "noProviderDescription": "この実行を開始するには、連携で選択したデータソースを確認してください。",
         "providerUnavailable": "プロバイダー利用不可",
         "providerUnavailableDescription": "現在プロバイダーに接続できません。再接続されると実行は自動的に開始されます。",
         "targetPaused": "一時停止中のターゲットです。再開すると処理が続行されます。",
@@ -155,11 +155,92 @@
         "skippedBeforeStart": "{count, plural, other {#件を開始前にスキップ}}",
         "skippedOrBlocked": "{count} 件がスキップまたはブロック"
       },
+      "deferral": {
+        "budget_exhausted": {
+          "detail": "このチェックの価格を決める前に、予算に達しました。",
+          "label": "予算に達しました"
+        },
+        "budget_missing": {
+          "detail": "このプロジェクトには月間予算が設定されていません。",
+          "label": "予算が未設定"
+        },
+        "credentials_unavailable": {
+          "detail": "このチェックのプロバイダー認証情報を利用できません。",
+          "label": "認証情報を利用できません"
+        },
+        "credits_exhausted": {
+          "detail": "このチェックを実行する前に、支払い残高がなくなりました。",
+          "label": "クレジット不足"
+        },
+        "dispatcher_disabled": {
+          "detail": "この環境では、順位チェックのディスパッチャーがオフになっています。",
+          "label": "ディスパッチャーはオフ"
+        },
+        "keyword_archived": {
+          "detail": "このチェックを開始する前に、キーワードがアーカイブされました。",
+          "label": "キーワードはアーカイブ済み"
+        },
+        "market_inactive": {
+          "detail": "このキーワードの市場は無効になっています。",
+          "label": "市場は無効"
+        },
+        "migration_hold": {
+          "detail": "このプロジェクトが移行の保留中のため、チェックは一時停止しています。",
+          "label": "移行の保留"
+        },
+        "no_provider": {
+          "detail": "このチェックに使えるプロバイダーがありませんでした。",
+          "label": "プロバイダーなし"
+        },
+        "openIntegrations": "連携を開く",
+        "primary_provider_not_dataforseo": {
+          "detail": "定期的なキューのチェックは、DataForSEO がプライマリプロバイダーのときだけ実行されます。",
+          "label": "キューのチェックには DataForSEO が必要です"
+        },
+        "project_ineligible": {
+          "detail": "このプロジェクトは定期的な順位チェックの対象ではありません。",
+          "label": "プロジェクトはチェックできません"
+        },
+        "project_read_only": {
+          "detail": "このプロジェクトは読み取り専用のため、チェックは延期されました。",
+          "label": "プロジェクトは読み取り専用"
+        },
+        "queued_dataforseo_disabled": {
+          "detail": "この環境では、DataForSEO の定期チェックがオフになっています。",
+          "label": "定期チェックはオフ"
+        },
+        "queued_submission_disabled": {
+          "detail": "現在のスケジューラモードでは、キューに入った順位チェックの送信がオフになっています。",
+          "label": "送信はオフ"
+        },
+        "quote_unavailable": {
+          "detail": "プロバイダーの価格を取得できませんでした。このターゲットは次回の実行で再試行されます。",
+          "label": "価格を取得できません"
+        },
+        "rate_limited": {
+          "detail": "プロバイダーのレート制限により、このチェックは次回の実行まで延期されました。",
+          "label": "レート制限"
+        },
+        "reviewBudget": "予算を確認",
+        "schedule_ineligible": {
+          "detail": "このキーワードのスケジュールでは、自動チェックができなくなりました。",
+          "label": "スケジュールは自動ではありません"
+        },
+        "unknown": {
+          "detail": "このチェックは延期され、次回の実行で再試行されます。",
+          "label": "延期"
+        },
+        "usage_unconfirmed": {
+          "detail": "プロバイダーの使用量が確定していないため、このチェックは延期されました。",
+          "label": "使用量が未確定"
+        }
+      },
       "facts": {
         "actual": "実績",
         "blockedSince": "ブロック開始",
         "chosenAtLaunch": "実行開始時に決定",
         "cost": "費用",
+        "deferredBeforeProvider": "プロバイダーを選ぶ前に延期されました",
         "elapsed": "経過時間",
         "estimated": "推定費用",
         "estimate": "推定",
@@ -244,7 +325,9 @@
         "providerUnknown": "プロバイダーはこのチェックを完了できませんでした。",
         "skippedBeforeStart": "開始前にスキップ",
         "sendUnconfirmed": "結果を確認できませんでした。重複消費を避けるため再試行していません。",
-        "stoppedAfterStart": "開始後に停止"
+        "stoppedAfterStart": "開始後に停止",
+        "providerCapacityUnavailable": "このプロバイダーでのチェックは一時的に利用できません。料金は請求されていません。しばらくしてから再試行するか、ご自身のプロバイダーキーを接続してください。",
+        "scheduleChanged": "スケジュールが変更されたため、開始前にキャンセルされました。"
       },
       "operations": "操作数",
       "usageNotRecorded": "未記録",

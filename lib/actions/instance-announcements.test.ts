@@ -1,3 +1,4 @@
+import { AdminTwoFactorRequiredError } from "@/lib/auth/admin-dangerous-action";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ session: vi.fn(), create: vi.fn(), change: vi.fn() }));
@@ -60,4 +61,16 @@ describe("announcement actions", () => {
       status: "unavailable",
     });
   });
+  it("refuses the dangerous operation when the admin has no enabled 2FA", async () => {
+    dangerousActionGuard.mockRejectedValueOnce(new AdminTwoFactorRequiredError("test_action"));
+    expect(await mutateInstanceAnnouncement({ kind: "create", content: {} })).toMatchObject({
+      status: "two_factor_required",
+    });
+  });
 });
+
+const dangerousActionGuard = vi.hoisted(() => vi.fn(async () => undefined));
+vi.mock("@/lib/auth/admin-dangerous-action", async (original) => ({
+  ...(await original<typeof import("@/lib/auth/admin-dangerous-action")>()),
+  requireAdminTwoFactorForDangerousAction: dangerousActionGuard,
+}));

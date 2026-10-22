@@ -1,3 +1,5 @@
+import { paymentFailure } from "@/lib/action-payment/session";
+import { paymentResource } from "./action-payment";
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { collectTrackingDownload } from "@/lib/ai-tracking/exports/download";
@@ -128,8 +130,14 @@ export async function aiTrackingRoute(ctx: ApiContext): Promise<Response | null>
         return response(await publicCatalog(result), ctx.method === "POST" ? 201 : 200);
       }
       if (resource === "runs" || resource === "history") {
-        if (ctx.method === "POST" && member === "preview")
-          return response(await trackingLaunch(project.id, body, true));
+        if (ctx.method === "POST" && member === "preview") {
+          const preview = await trackingLaunch(
+            project.id,
+            { ...(body as object), actorId: actor.id, entrySource: ctx.origin.source },
+            true,
+          );
+          return response({ ...preview, ...paymentResource(preview) });
+        }
         if (ctx.method === "POST" && !member) {
           const key = ctx.req.headers.get("Idempotency-Key");
           if (!key)
@@ -241,6 +249,12 @@ export async function aiTrackingRoute(ctx: ApiContext): Promise<Response | null>
       return null;
     })();
   } catch (error) {
+    const payment = paymentFailure(error);
+    if (payment)
+      return errorResponse("conflict", "Review the current payment quote before starting.", 409, {
+        headers: ctx.headers,
+        details: { reason: payment.reason },
+      });
     if (error instanceof z.ZodError)
       return errorResponse("validation_failed", "Tracking input failed validation.", 422, {
         headers: ctx.headers,

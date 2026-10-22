@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { hostDefinitionAdapter } from "@/lib/measurement-definitions/host-adapters";
 import type { HostPolicySnapshot } from "@/lib/measurement-definitions/host-policy-contract";
 import type { ProviderRateContext } from "@/lib/provider-rates/resolver";
+import { resolveEffectiveSerpStopOnMatch } from "@/lib/serp/constants";
 import type { RunSelectionKeyword } from "./selection";
 
 type Source = {
@@ -44,6 +45,7 @@ export function previewSourceHash({
       locationId: row.locationId,
       location: row.locationRef ?? null,
       depth: depths[index],
+      stopOnMatch: resolveEffectiveSerpStopOnMatch(stopOnMatch, depths[index]),
     }))
     .sort((a, b) => a.id.localeCompare(b.id));
   const capability = provider
@@ -52,7 +54,7 @@ export function previewSourceHash({
   return createHash("sha256")
     .update(
       JSON.stringify({
-        definitionVersion: 2,
+        definitionVersion: 3,
         measurementPolicy: measurementPolicy
           ? {
               state: measurementPolicy.state,

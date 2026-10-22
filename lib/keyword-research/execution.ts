@@ -1,5 +1,9 @@
 import type { SerpRankLocation } from "@/lib/serp/location";
-import { keywordResearchCacheKey, readKeywordResearchCache } from "./cache";
+import {
+  keywordResearchCachedUntil,
+  keywordResearchCacheKey,
+  readKeywordResearchCache,
+} from "./cache";
 import { normalizeResearchKeyword } from "./request-key";
 import { type ResearchSelection, sourceEstimate, sourcesForMode } from "./source-call";
 import type {
@@ -73,7 +77,12 @@ export async function estimateKeywordResearch(input: {
             }),
           );
       const cached = Boolean(cachedEntry);
-      return { cached, costCents: cached ? 0 : await sourceEstimate({ ...input, source }), source };
+      return {
+        cached,
+        costCents: cached ? 0 : await sourceEstimate({ ...input, source }),
+        source,
+        freeUntil: cachedEntry ? keywordResearchCachedUntil(cachedEntry.fetchedAt) : undefined,
+      };
     }),
   );
   return {

@@ -17,19 +17,38 @@ const capabilitiesSchema = z
   .strict();
 const attentionSchema = z
   .object({
-    kind: z.enum(["blocked", "failed", "needs_reauthentication", "paused", "worker_unavailable"]),
+    kind: z.enum([
+      "blocked",
+      "failed",
+      "needs_reauthentication",
+      "paused",
+      "worker_unavailable",
+      "cost_limit_exceeded",
+    ]),
     message: z.string().nullable(),
   })
   .strict()
   .nullable();
 const rankCheckScopeSchema = z
-  .object({ description: z.null(), keywordCount: z.number().int(), kind: z.literal("rank_check") })
+  .object({ description: z.null(), keywordCount: z.number().int(), kind: z.literal("rank") })
   .strict();
-const gscImportScopeSchema = z
-  .object({ description: z.string(), kind: z.literal("gsc_import") })
-  .strict();
+const gscImportScopeSchema = z.object({ description: z.string(), kind: z.literal("gsc") }).strict();
 
+const costSchema = z
+  .object({
+    actualCents: z.number().nonnegative().nullable(),
+    estimatedCents: z.number().nonnegative().nullable(),
+    state: z.enum(["confirmed", "partial", "unknown", "not_applicable"]),
+  })
+  .strict();
+const commonTimestamps = {
+  createdAt: isoDateTime,
+  startedAt: nullableIsoDateTime,
+  finishedAt: nullableIsoDateTime,
+  plannedFor: nullableIsoDateTime,
+};
 const projectRunBase = {
+  cost: costSchema,
   attention: attentionSchema,
   capabilities: capabilitiesSchema,
   href: z.string(),
@@ -46,6 +65,9 @@ const projectRunBase = {
     "cancelled",
     "failed",
     "status_unavailable",
+    "partial",
+    "skipped",
+    "cost_limit_exceeded",
   ]),
   project: projectSchema,
 };
@@ -64,7 +86,7 @@ const rankCheckRunSchema = z
       })
       .strict(),
     id: z.string(),
-    kind: z.literal("rank_check"),
+    kind: z.literal("rank"),
     scope: rankCheckScopeSchema,
     progress: z
       .object({
@@ -75,7 +97,7 @@ const rankCheckRunSchema = z
       .strict(),
     timestamps: z
       .object({
-        createdAt: isoDateTime,
+        ...commonTimestamps,
         finishedAt: nullableIsoDateTime,
         launchedAt: nullableIsoDateTime,
         plannedFor: nullableIsoDateTime,
@@ -83,7 +105,7 @@ const rankCheckRunSchema = z
         nextCheckAt: nullableIsoDateTime.optional(),
       })
       .strict(),
-    title: z.object({ kind: z.literal("rank_check"), trigger: z.enum(RUN_TRIGGERS) }).strict(),
+    title: z.object({ kind: z.literal("rank"), trigger: z.enum(RUN_TRIGGERS) }).strict(),
   })
   .strict();
 
@@ -99,7 +121,7 @@ const gscImportSchema = z
       })
       .strict(),
     id: z.string(),
-    kind: z.literal("gsc_import"),
+    kind: z.literal("gsc"),
     scope: gscImportScopeSchema,
     progress: z
       .object({
@@ -110,26 +132,47 @@ const gscImportSchema = z
       .strict(),
     timestamps: z
       .object({
-        createdAt: isoDateTime,
+        ...commonTimestamps,
         lastProbeAt: nullableIsoDateTime,
         lastSyncFinishedAt: nullableIsoDateTime,
         lastSyncStartedAt: nullableIsoDateTime,
         syncStartedAt: nullableIsoDateTime,
       })
       .strict(),
-    title: z.object({ kind: z.literal("gsc_import") }).strict(),
+    title: z.object({ kind: z.literal("gsc") }).strict(),
+  })
+  .strict();
+
+const aiRunSchema = z
+  .object({
+    ...projectRunBase,
+    details: z.object({ state: z.string(), reason: z.string().nullable() }).strict(),
+    id: z.string(),
+    kind: z.literal("ai"),
+    scope: z.object({ description: z.null(), kind: z.literal("ai") }).strict(),
+    progress: z
+      .object({
+        completed: z.number().int().nullable(),
+        total: z.number().int().nullable(),
+        unit: z.literal("samples"),
+      })
+      .strict(),
+    timestamps: z.object(commonTimestamps).strict(),
+    title: z.object({ kind: z.literal("ai") }).strict(),
   })
   .strict();
 
 export const projectRunResponseSchema = z.discriminatedUnion("kind", [
   rankCheckRunSchema,
   gscImportSchema,
+  aiRunSchema,
 ]);
 
 export const projectRunsApiResponseSchema = z
   .object({
     counts: z
       .object({
+        aiTracking: z.number().int().nonnegative().default(0),
         rankChecks: z.number().int().nonnegative(),
         searchConsole: z.number().int().nonnegative(),
         total: z.number().int().nonnegative(),

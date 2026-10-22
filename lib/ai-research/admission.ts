@@ -29,6 +29,7 @@ export async function loadAiAdmission(
   source: Awaited<ReturnType<typeof requireAiSource>>,
   input: PromptInput | VisibilityInput,
   deadlineAt: number,
+  cacheOnly = false,
 ): Promise<AiAdmission> {
   const actual = "prompt" in input && input.cost_policy === "provider_actual_cost";
   if (actual && source.connection.credentialSource !== "own")
@@ -60,6 +61,11 @@ export async function loadAiAdmission(
     throw new AiResearchValidationError(
       "web_search_not_enabled",
       "Web search requires explicit own-BYOK actual-cost consent; it cannot use the hard-cap billing policy.",
+    );
+  if (cacheOnly)
+    throw new AiResearchValidationError(
+      "pricing_unavailable",
+      "This result is not cached. A free estimate is required to price these options; cache-only access never refreshes provider metadata.",
     );
   let capabilities: AiResearchCapabilities;
   try {

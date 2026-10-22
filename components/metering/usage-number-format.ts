@@ -11,7 +11,10 @@ export type UsagePresentationFigure = Exclude<Figure, "unavailable"> & {
 };
 
 export const isMoneyUnit = (unit: string) =>
-  unit === "cents" || unit === "customer_cents" || unit === "budget_cents";
+  unit === "cents" || unit === "customer_cents" || unit === "budget_cents" || unit === "USD";
+
+export const isZeroFigure = (value: Figure | "unlimited") =>
+  typeof value !== "string" && value.certainty !== "unknown" && /^-?0(?:\.0+)?$/.test(value.text);
 
 export const isCreditUnit = (unit: string) => unit === "customer_cents";
 
@@ -42,10 +45,17 @@ export function createUsageNumberFormat(locale: string, options: UsagePresentati
   const formatters = new Map<string, Intl.NumberFormat>();
   const figure = (value: UsagePresentationFigure): string | null => {
     if (value.certainty === "unknown" || !/^-?\d+(?:\.\d+)?$/.test(value.text)) return null;
+    const sourceText = isZeroFigure(value) ? "0" : value.text;
     const credits = isCreditUnit(value.unit);
     const money = isMoneyUnit(value.unit) && !credits;
     const currency = value.currency ?? "USD";
-    const digits = credits ? 4 : money ? moneyDigits : quantityDigits;
+    const digits = credits
+      ? 4
+      : money
+        ? moneyDigits
+        : ["units", "requests", "paid_attempts"].includes(value.unit)
+          ? 0
+          : quantityDigits;
     const roundingMode = value.certainty === "estimated" ? "floor" : "halfExpand";
     const key = `${money ? "money" : "quantity"}:${money && currencyDisplay ? currency : "decimal"}:${digits}:${roundingMode}`;
     let formatter = formatters.get(key);
@@ -59,12 +69,29 @@ export function createUsageNumberFormat(locale: string, options: UsagePresentati
       formatter = new Intl.NumberFormat(locale, formatOptions);
       formatters.set(key, formatter);
     }
+    if (
+      money &&
+      currencyDisplay &&
+      moneyDigits === 2 &&
+      (value.unit === "USD" ? /^0+\.00\d*[1-9]\d*$/ : /^0+\.\d*[1-9]\d*$/).test(sourceText)
+    ) {
+      const cent = (formatter.format as unknown as (text: string) => string)("0.01");
+      return `< ${cent}`;
+    }
     // Intl accepts decimal strings exactly; its TypeScript overload still omits them.
     const exact = formatter.format as unknown as (text: string) => string;
-    return exact(money && currencyDisplay ? majorUnits(value.text) : value.text);
+    return exact(
+      money && currencyDisplay && value.unit !== "USD" ? majorUnits(sourceText) : sourceText,
+    );
   };
   return {
     figure,
+    budgetFigure: (value: UsagePresentationFigure) => {
+      const text = figure(value);
+      return text === null
+        ? null
+        : `${value.certainty === "estimated" && !isZeroFigure(value) ? "≈ " : ""}${text}`;
+    },
     showCurrency: (unit: string) => currencyDisplay && isMoneyUnit(unit) && !isCreditUnit(unit),
   };
 }

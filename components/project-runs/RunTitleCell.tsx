@@ -4,6 +4,7 @@ import { projectRunTimelineGroup } from "@/lib/runs/project-runs-timeline";
 import { useTranslations } from "next-intl";
 import type { ProjectRunWithOperationSnapshot } from "./project-runs-presentation";
 import { scopeLabelFor, titleFor } from "./project-runs-table-copy";
+import { RunCost } from "./RunCost";
 import { RunStatusChip } from "./RunStatusChip";
 import { RunStatusSummary } from "./RunStatusSummary";
 import { RunTimelineTime } from "./RunTimelineTime";
@@ -33,6 +34,9 @@ export function RunTitleCell({
           <IdChip value={run.id} size="xs" truncate="middle" />
         )}
       </span>
+      {projectRunTimelineGroup(run) === 2 || run.timestamps.startedAt ? (
+        <RunCost cost={run.cost} />
+      ) : null}
       {compact ? (
         <>
           <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">

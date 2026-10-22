@@ -17,7 +17,7 @@ export function applyOperationSnapshotToRuns(
   }
 
   return runs.map((run) => {
-    if (run.kind !== "gsc_import") return run;
+    if (run.kind !== "gsc") return run;
     const operation = imports.get(run.id);
     if (!operation) return run;
     return {

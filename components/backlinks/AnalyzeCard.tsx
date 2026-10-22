@@ -1,24 +1,25 @@
 "use client";
 
+import { ActionPaymentOptionPicker } from "@/components/action-payment/ActionPaymentOptionPicker";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { compactInputClassName } from "@/components/ui/input-styles";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { pricingTriggerClassName } from "@/components/ui/PricingPopover";
+import { quietChipVariants } from "@/components/ui/quiet-chip-styles";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Switch } from "@/components/ui/Switch";
-import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
+import type { ActionPaymentOption } from "@/lib/action-payment/contract";
+import { formatPaymentAmount } from "@/lib/action-payment/format";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
+import { cn } from "@/lib/ui/cn";
 import { GlobeSimpleIcon as GlobeSimple } from "@phosphor-icons/react/dist/csr/GlobeSimple";
 import { LinkIcon as Link } from "@phosphor-icons/react/dist/csr/Link";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { AnalyzePricingPopover } from "./AnalyzePricingPopover";
 import type { BacklinksEstimateView, BacklinksLimit } from "./backlinks-workspace-model";
 
 const formSchema = z.object({ target: z.string().trim().min(1).max(2048) });
@@ -32,6 +33,7 @@ type AnalyzeCardProps = {
   includeSubdomains: boolean;
   onIncludeSubdomainsChange: (value: boolean) => void;
   onLimitChange: (value: BacklinksLimit) => void;
+  onPaymentOptionChange?: (option: ActionPaymentOption) => void;
   onProviderChange?: (provider: string) => void;
   onScopeChange: (value: BacklinkTargetScope) => void;
   onSubmit: () => void;
@@ -51,6 +53,7 @@ export function AnalyzeCard({
   onIncludeSubdomainsChange,
   onLimitChange,
   onProviderChange,
+  onPaymentOptionChange,
   onScopeChange,
   onSubmit,
   onTargetChange,
@@ -61,6 +64,7 @@ export function AnalyzeCard({
   submitting = false,
   target,
 }: Readonly<AnalyzeCardProps>) {
+  const locale = useLocale();
   const t = useTranslations("projectBacklinks.workspace.analyze");
   const scopeOptions = [
     { label: t("wholeSite"), value: "site" },
@@ -72,11 +76,12 @@ export function AnalyzeCard({
   }));
   function analyzeLabel(submittingLabel: boolean) {
     const action = submittingLabel ? t("analyzing") : t("analyze");
-    if (estimate.cached) return t("cached", { action });
-    if (estimate.costCents == null) return action;
-    return t("priced", { action, cost: formatEstimateCents(estimate.costCents) });
+    const quote = estimate.loading ? undefined : estimate.payment;
+    if (quote?.cache.state === "hit") return t("cached", { action });
+    return quote
+      ? t("priced", { action, cost: formatPaymentAmount(quote.charge, locale) })
+      : action;
   }
-  const [pricingAnchor, setPricingAnchor] = useState<HTMLElement | null>(null);
   const { handleSubmit, register, reset } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     values: { target },
@@ -105,15 +110,15 @@ export function AnalyzeCard({
               size={15}
             />
             {targetIsSet ? (
-              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-control bg-bg-sunken px-2 py-1 font-medium">
+              <span className={cn(quietChipVariants({ size: "sm" }), "min-w-0 font-medium")}>
                 <span className="truncate">{target}</span>
                 <button
                   aria-label={t("removeTarget", { target })}
-                  className="shrink-0 rounded-full text-fg-muted transition-colors hover:text-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid"
+                  className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full p-0 leading-none text-fg-muted outline-none transition-colors hover:bg-bg-elev hover:text-fg focus-visible:bg-bg-elev focus-visible:text-fg"
                   onClick={clearTarget}
                   type="button"
                 >
-                  <X aria-hidden size={11} weight="regular" />
+                  <X aria-hidden className="block shrink-0" size={10} weight="regular" />
                 </button>
               </span>
             ) : (
@@ -179,13 +184,17 @@ export function AnalyzeCard({
             <InfoTooltip text={t("subdomainsHelp")} />
           </span>
           <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-4">
-            <button
-              className={pricingTriggerClassName}
-              onClick={(event) => setPricingAnchor(event.currentTarget)}
-              type="button"
-            >
-              {t("pricing")}
-            </button>
+            {onPaymentOptionChange ? (
+              <ActionPaymentOptionPicker
+                options={estimate.paymentOptions ?? []}
+                value={estimate.payment?.option.id ?? ""}
+                disabled={estimate.loading || submitting}
+                onChange={(id) => {
+                  const option = estimate.paymentOptions?.find((item) => item.id === id);
+                  if (option) onPaymentOptionChange(option);
+                }}
+              />
+            ) : null}
             <Button
               disabled={analyzeDisabled}
               loading={submitting}
@@ -200,12 +209,6 @@ export function AnalyzeCard({
           </div>
         </div>
       </form>
-      <AnalyzePricingPopover
-        anchor={pricingAnchor}
-        onClose={() => setPricingAnchor(null)}
-        resultLimit={resultLimit}
-        scope={scope}
-      />
     </Card>
   );
 }

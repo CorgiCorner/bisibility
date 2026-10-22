@@ -39,6 +39,7 @@ export type CostSummaryCardProps = {
   view: UsageSummaryView | null;
   labels?: Partial<CostSummaryCardLabels>;
   measurementLabels?: Partial<MeasurementCardLabels>;
+  hideMeasured?: boolean;
   formatFigure?: MeasurementCardProps["formatFigure"];
   formatUnit?: MeasurementCardProps["formatUnit"];
   fundingSource?: FundingSource;
@@ -57,6 +58,7 @@ export function CostSummaryCard({
   view,
   labels: custom,
   measurementLabels,
+  hideMeasured,
   formatFigure,
   formatUnit,
   fundingSource,
@@ -122,7 +124,11 @@ export function CostSummaryCard({
         <CardHeader>
           <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1">
             <CardTitle className="min-w-0 break-words leading-snug">{labels.title}</CardTitle>
-            <MeasurementCertainty value={cost} labels={measurementLabels} />
+            <MeasurementCertainty
+              value={cost}
+              labels={measurementLabels}
+              hideMeasured={hideMeasured}
+            />
           </div>
           <CardDescription>
             {view.complete ? labels.description : labels.incomplete}
@@ -164,7 +170,11 @@ export function CostSummaryCard({
                           formatFigure={formatFigure}
                           formatUnit={formatUnit}
                         />
-                        <MeasurementCertainty value={row.cost} labels={measurementLabels} />
+                        <MeasurementCertainty
+                          value={row.cost}
+                          labels={measurementLabels}
+                          hideMeasured={hideMeasured}
+                        />
                       </span>
                     </li>
                   );
@@ -181,6 +191,7 @@ export function CostSummaryCard({
 export function CostSummaryCardPanel({
   labels,
   measurementLabels,
+  hideMeasured,
   formatFigure,
   formatUnit,
   fundingSource,
@@ -211,6 +222,7 @@ export function CostSummaryCardPanel({
       view={result.data}
       labels={labels}
       measurementLabels={measurementLabels}
+      hideMeasured={hideMeasured}
       formatFigure={formatFigure}
       formatUnit={formatUnit}
       fundingSource={fundingSource}

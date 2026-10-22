@@ -1,5 +1,9 @@
 "use server";
 
+import {
+  AdminTwoFactorRequiredError,
+  requireAdminTwoFactorForDangerousAction,
+} from "@/lib/auth/admin-dangerous-action";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import {
   type AnnouncementResult,
@@ -36,6 +40,12 @@ export type AnnouncementMutation = z.infer<typeof saveSchema>;
 export async function mutateInstanceAnnouncement(input: unknown): Promise<AnnouncementResult> {
   const session = await getInstanceAdminSession();
   if (!session) return { status: "forbidden" };
+  try {
+    await requireAdminTwoFactorForDangerousAction(session, "change_announcements");
+  } catch (error) {
+    if (error instanceof AdminTwoFactorRequiredError) return { status: error.code };
+    throw error;
+  }
   const parsed = saveSchema.safeParse(input);
   if (!parsed.success) return { status: "invalid" };
   const mutation = parsed.data;

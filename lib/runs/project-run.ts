@@ -9,19 +9,21 @@ export type ProjectRunProject = Readonly<{
 }>;
 
 export type ProjectRunScope =
+  | Readonly<{ description: null; kind: "ai" }>
   | Readonly<{
       description: null;
       keywordCount: number;
-      kind: "rank_check";
+      kind: "rank";
     }>
   | Readonly<{
       description: string;
-      kind: "gsc_import";
+      kind: "gsc";
     }>;
 
 export type ProjectRunTitle =
-  | Readonly<{ kind: "gsc_import" }>
-  | Readonly<{ kind: "rank_check"; trigger: RunTrigger }>;
+  | Readonly<{ kind: "ai" }>
+  | Readonly<{ kind: "gsc" }>
+  | Readonly<{ kind: "rank"; trigger: RunTrigger }>;
 
 export type ProjectRunLifecycle =
   | "planned"
@@ -35,10 +37,19 @@ export type ProjectRunLifecycle =
   | "completed"
   | "cancelled"
   | "failed"
-  | "status_unavailable";
+  | "status_unavailable"
+  | "partial"
+  | "skipped"
+  | "cost_limit_exceeded";
 
 export type ProjectRunAttention = Readonly<{
-  kind: "blocked" | "failed" | "needs_reauthentication" | "paused" | "worker_unavailable";
+  kind:
+    | "blocked"
+    | "failed"
+    | "needs_reauthentication"
+    | "paused"
+    | "worker_unavailable"
+    | "cost_limit_exceeded";
   message: string | null;
 }>;
 
@@ -92,6 +103,19 @@ export type ProjectRunGscImportDetails = Readonly<{
   state: string;
 }>;
 
+export type ProjectRunCost = Readonly<{
+  actualCents: number | null;
+  estimatedCents: number | null;
+  state: "confirmed" | "partial" | "unknown" | "not_applicable";
+}>;
+
+export type ProjectRunTimestamps = Readonly<{
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  plannedFor: string | null;
+}>;
+
 type ProjectRunBase<
   Kind extends ProjectRunKind,
   Progress extends ProjectRunProgress,
@@ -99,6 +123,7 @@ type ProjectRunBase<
   Details,
 > = Readonly<{
   attention: ProjectRunAttention | null;
+  cost: ProjectRunCost;
   capabilities: ProjectRunCapabilities;
   details: Details;
   href: string;
@@ -107,13 +132,13 @@ type ProjectRunBase<
   lifecycle: ProjectRunLifecycle;
   progress: Progress;
   project: ProjectRunProject;
-  scope: ProjectRunScope;
-  timestamps: Timestamps;
-  title: ProjectRunTitle;
+  scope: Extract<ProjectRunScope, { kind: Kind }>;
+  timestamps: Timestamps & ProjectRunTimestamps;
+  title: Extract<ProjectRunTitle, { kind: Kind }>;
 }>;
 
 export type ProjectRunRankCheck = ProjectRunBase<
-  "rank_check",
+  "rank",
   ProjectRunProgress<"targets">,
   ProjectRunRankCheckTimestamps,
   ProjectRunRankCheckDetails
@@ -121,25 +146,31 @@ export type ProjectRunRankCheck = ProjectRunBase<
   Readonly<{ id: PublicIdForPrefix<"rcr"> }>;
 
 export type ProjectRunGscImport = ProjectRunBase<
-  "gsc_import",
+  "gsc",
   ProjectRunProgress<"days">,
   ProjectRunGscImportTimestamps,
   ProjectRunGscImportDetails
 >;
 
-export type ProjectRun = ProjectRunRankCheck | ProjectRunGscImport;
+export type ProjectRunAi = ProjectRunBase<
+  "ai",
+  ProjectRunProgress<"samples">,
+  ProjectRunTimestamps,
+  Readonly<{ state: string; reason: string | null }>
+>;
+export type ProjectRun = ProjectRunRankCheck | ProjectRunAi | ProjectRunGscImport;
 
 /** Planned is rank-only and deliberately separate from attention and finished predicates. */
 export function isPlannedProjectRun(run: ProjectRun): run is ProjectRunRankCheck {
   return (
-    run.kind === "rank_check" &&
+    run.kind === "rank" &&
     run.timestamps.launchedAt === null &&
     (run.details.status === "planned" || run.details.status === "blocked")
   );
 }
 
 export function projectRunSortTuple(run: ProjectRun): ProjectRunsSortTuple {
-  if (run.kind === "gsc_import") {
+  if (run.kind === "gsc" || run.kind === "ai") {
     return { id: run.id, kind: run.kind, sortAt: run.timestamps.createdAt };
   }
 

@@ -1,4 +1,6 @@
 "use client";
+import { BudgetRemaining } from "@/components/metering/BudgetRemaining";
+import { BudgetHeading, BudgetValue } from "@/components/metering/BudgetValue";
 import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { UsageCapPill } from "@/components/usagekit/usage-cap-pill";
@@ -7,7 +9,7 @@ import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { HeaderBudgetScope } from "./HeaderBudgetScope";
-import { headerBudgetFigure, headerBudgetSummary } from "./header-budget-summary";
+import { headerBudgetSummary } from "./header-budget-summary";
 
 export type HeaderProviderSpendProps = {
   projectRef: ProjectRef;
@@ -33,30 +35,30 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
             : compact.percent > 0 && compact.percent < 1
               ? t(compact.partial ? "headerAtLeastUnderOne" : "headerUnderOne")
               : t(compact.partial ? "headerAtLeastUsed" : "headerUsed", { percent });
-  const amount = (value: import("@usagekit/views").Figure | "unlimited", lowerBound = false) => {
-    if (value === "unlimited") return p.budget.unlimited;
-    if (value === "unavailable") return p.budget.unavailable;
-    if (value.certainty === "unknown") return p.budget.unknown;
-    const formatted = lowerBound ? value : { ...value, certainty: "measured" as const };
-    const text =
-      headerBudgetFigure(formatted, locale, p.options) ??
-      `${p.figure(value)} ${p.unit(value.unit)}`;
-    return lowerBound && value.certainty === "estimated" ? `≥ ${text}` : text;
-  };
+  const editHref = summary?.canEditBudget
+    ? `${appPath(projectRef, "integrations")}?tab=usage&budget=edit`
+    : undefined;
   const details = (
-    <div className="max-h-[60vh] max-w-[456px] space-y-3 overflow-auto text-left text-[11px] leading-snug">
-      <table className="w-full table-fixed border-collapse text-[11px] [overflow-wrap:anywhere]">
+    <div className="max-h-[60vh] max-w-[640px] space-y-3 overflow-auto text-left text-[11px] leading-snug">
+      <table className="w-[38rem] table-fixed border-collapse text-[11px]">
         <caption className="caption-top pb-3 text-left opacity-75">{t("headerCapTooltip")}</caption>
         <thead>
           <tr className="text-[10px]">
-            <th scope="col" className="w-[34%] pb-2 text-left font-medium">
+            <th scope="col" className="w-40 pb-2 text-left font-medium">
               {preflight("budget")}
             </th>
             <th scope="col" className="whitespace-nowrap pb-2 pl-2 text-right font-medium">
               {p.budget.used}
             </th>
+            <th
+              scope="col"
+              aria-label={p.budget.reserved}
+              className="whitespace-nowrap pb-2 pl-2 text-right font-medium"
+            >
+              <BudgetHeading kind="reserved" />
+            </th>
             <th scope="col" className="whitespace-nowrap pb-2 pl-2 text-right font-medium">
-              {p.budget.reserved}
+              {p.budget.remaining}
             </th>
             <th scope="col" className="whitespace-nowrap pb-2 pl-2 text-right font-medium">
               {p.budget.limit}
@@ -67,7 +69,7 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
           {summary?.budgets.rows.map((row) => (
             <tr key={row.id} className="border-t border-border-soft align-top">
               {row.redacted ? (
-                <td colSpan={4} className="py-2">
+                <td colSpan={5} className="py-2">
                   {p.budget.redacted}
                 </td>
               ) : (
@@ -75,26 +77,43 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
                   <th scope="row" className="py-2 text-left font-normal">
                     <HeaderBudgetScope row={row} />
                   </th>
-                  {row.level === "unavailable" ? (
-                    <td colSpan={3} className="py-2 pl-2 text-right">
-                      {p.budget.unavailable}
-                    </td>
-                  ) : (
-                    <>
-                      <td className="py-2 pl-2 text-right tabular-nums">
-                        {amount(row.used, true)}
-                      </td>
-                      <td className="py-2 pl-2 text-right tabular-nums">{amount(row.reserved)}</td>
-                      <td className="py-2 pl-2 text-right tabular-nums">
-                        <span>{amount(row.limit)}</span>
-                        {row.boundary.onExceed === "allow" && row.boundary.hardLimit && (
-                          <span className="mt-1 block opacity-75">
-                            {p.budget.hardLimit}: {amount(row.boundary.hardLimit)}
-                          </span>
-                        )}
-                      </td>
-                    </>
-                  )}
+
+                  <td className="py-2 pl-2 text-right tabular-nums">
+                    <BudgetValue
+                      kind="used"
+                      value={row.level === "unavailable" ? "unavailable" : row.used}
+                    />
+                  </td>
+                  <td className="py-2 pl-2 text-right tabular-nums">
+                    <BudgetValue
+                      kind="reserved"
+                      value={row.level === "unavailable" ? "unavailable" : row.reserved}
+                    />
+                  </td>
+                  <td className="py-2 pl-2 text-right tabular-nums">
+                    <BudgetValue
+                      level={row.level}
+                      kind="remaining"
+                      value={row.level === "unavailable" ? "unavailable" : row.remaining}
+                    />
+                    <BudgetRemaining row={row} />
+                  </td>
+                  <td className="py-2 pl-2 text-right tabular-nums">
+                    <BudgetValue
+                      kind="limit"
+                      value={row.level === "unavailable" ? "unavailable" : row.limit}
+                      href={editHref}
+                      monthly={row.window === "calendar_month"}
+                    />
+                    {row.level !== "unavailable" &&
+                      row.boundary.onExceed === "allow" &&
+                      row.boundary.hardLimit && (
+                        <span className="mt-1 block opacity-75">
+                          {p.budget.hardLimit}:{" "}
+                          <BudgetValue kind="limit" value={row.boundary.hardLimit} />
+                        </span>
+                      )}
+                  </td>
                 </>
               )}
             </tr>
@@ -151,9 +170,9 @@ export function HeaderProviderSpend({ projectRef, summary }: HeaderProviderSpend
       ) : (
         <UsageCapPill
           state="ready"
-          href={`${href}&budget=edit`}
-          label={t("headerNoCap")}
-          ariaLabel={t("headerNoCapAria")}
+          href={summary.canEditBudget ? `${href}&budget=edit` : undefined}
+          label={summary.canEditBudget ? t("headerNoCap") : p.budget.noLimit}
+          ariaLabel={summary.canEditBudget ? t("headerNoCapAria") : p.budget.noLimit}
           labels={labels}
           renderLink={renderLink}
           size="sm"

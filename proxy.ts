@@ -22,9 +22,12 @@ import {
   shouldVaryOnAccept,
 } from "./lib/agent-ready/markdown-negotiation";
 import { RETURN_TO_REQUEST_HEADER } from "./lib/auth/return-to";
-import { SESSION_HINT_COOKIE, SESSION_HINT_COOKIE_OPTIONS } from "./lib/auth/session-hint";
+import {
+  authSessionCookieNames,
+  SESSION_HINT_COOKIE,
+  SESSION_HINT_COOKIE_OPTIONS,
+} from "./lib/auth/session-hint";
 
-const sessionCookieNames = ["better-auth.session_token", "__Secure-better-auth.session_token"];
 const CANONICAL_APP_HOST = new URL(MANAGED_AUTHORIZATION_SERVER_ORIGIN).hostname;
 const CANONICAL_MARKETING_HOST = new URL(MANAGED_MCP_RESOURCE_ORIGIN).hostname;
 const REGIONAL_MCP_PATHS = new Set(["/api/mcp", "/.well-known/oauth-protected-resource/api/mcp"]);
@@ -46,6 +49,7 @@ const APP_SURFACE_PATHS = [
   "/activity",
   "/app",
   "/cloud",
+  "/install",
   "/invite",
   "/login",
   "/locale",
@@ -56,7 +60,7 @@ const APP_SURFACE_PATHS = [
   ...additionalAppSurfacePaths,
 ] as const;
 function hasSessionCookie(request: NextRequest) {
-  return sessionCookieNames.some((name) => request.cookies.has(name));
+  return authSessionCookieNames().some((name) => request.cookies.has(name));
 }
 
 function matchesPathSegment(pathname: string, prefix: string) {

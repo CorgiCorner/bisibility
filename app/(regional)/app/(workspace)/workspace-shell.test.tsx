@@ -69,18 +69,6 @@ vi.mock("@/components/shell/AppHeader", () => ({
     </header>
   ),
 }));
-vi.mock("@/components/shell/CloudBetaBanner", () => ({
-  CloudBetaBanner: (props: {
-    isCloud: boolean;
-    lastExport: { exportedAt: string } | null;
-    projectName: string;
-  }) =>
-    props.isCloud ? (
-      <aside data-project={props.projectName} data-testid="cloud-beta-banner">
-        {props.lastExport?.exportedAt ?? "never"}
-      </aside>
-    ) : null,
-}));
 vi.mock("@/components/shell/DemoBanner", () => ({
   DemoBanner: (props: { actor: string; capturedAt: string | null; mode: string }) => {
     mocks.demo.banner(props);
@@ -103,9 +91,8 @@ vi.mock("@/lib/instance-announcements/store", () => ({
 vi.mock("@/components/shell/AccountNoticeExtension", () => ({
   renderAccountNoticeExtension: mocks.noticeExtension,
 }));
-vi.mock("@/components/shell/cloud-beta", () => ({
-  CLOUD_BETA_DISMISSAL_COOKIE: "cloud-beta",
-  isCloudBetaDismissed: () => false,
+vi.mock("@/components/shell/PlanStatusExtension", () => ({
+  renderPlanStatusExtension: vi.fn(async () => null),
 }));
 vi.mock("@/components/shell/ProjectWriteModeProvider", () => ({
   ProjectWriteModeProvider: ({ children }: { children: ReactNode }) => children,
@@ -429,7 +416,7 @@ describe("workspace layout", () => {
     expect(mocks.lastExport).not.toHaveBeenCalled();
   });
 
-  it("places the Cloud beta banner before the app header in the main column", async () => {
+  it("omits the retired Cloud banner and export lookup", async () => {
     mocks.deployment.isCloud = true;
 
     const result = await WorkspaceShell({
@@ -439,9 +426,8 @@ describe("workspace layout", () => {
     });
     const markup = renderToStaticMarkup(result);
 
-    expect(markup.indexOf('data-testid="cloud-beta-banner"')).toBeLessThan(
-      markup.indexOf("<header"),
-    );
+    expect(markup).not.toContain('data-testid="cloud-beta-banner"');
+    expect(mocks.lastExport).not.toHaveBeenCalled();
   });
 
   it("renders the resolved account notice where the beta banner sat and suppresses the beta banner", async () => {
@@ -462,7 +448,7 @@ describe("workspace layout", () => {
     expect(markup.indexOf('data-testid="account-notice"')).toBeLessThan(markup.indexOf("<header"));
   });
 
-  it("keeps the beta banner when the notice gate resolves to nothing", async () => {
+  it("keeps the retired banner absent when the notice gate resolves to nothing", async () => {
     mocks.deployment.isCloud = true;
 
     const markup = renderToStaticMarkup(
@@ -473,7 +459,7 @@ describe("workspace layout", () => {
       }),
     );
 
-    expect(markup).toContain('data-testid="cloud-beta-banner"');
+    expect(markup).not.toContain('data-testid="cloud-beta-banner"');
     expect(markup).not.toContain('data-testid="account-notice"');
   });
 
@@ -510,11 +496,9 @@ describe("workspace layout", () => {
     },
   );
 
-  it("loads and threads the latest package export only on Cloud", async () => {
+  it("keeps enforced Cloud free of the retired banner and its export query", async () => {
     mocks.deployment.isCloud = true;
-    mocks.lastExport.mockResolvedValue({
-      exportedAt: "2026-07-19T12:00:00.000Z",
-    });
+    mocks.noticeExtension.mockResolvedValue({ content: null });
 
     const result = await WorkspaceShell({
       activeProjectId: "project_1",
@@ -523,11 +507,9 @@ describe("workspace layout", () => {
     });
     const markup = renderToStaticMarkup(result);
 
-    expect(mocks.lastExport).toHaveBeenCalledWith("prj_f00000000000000000000000");
-    expect(markup).toContain('data-testid="cloud-beta-banner"');
+    expect(mocks.lastExport).not.toHaveBeenCalled();
+    expect(markup).not.toContain('data-testid="cloud-beta-banner"');
     expect(markup).toContain('data-hosted-links="true"');
-    expect(markup).toContain('data-project="Example"');
-    expect(markup).toContain("2026-07-19T12:00:00.000Z");
   });
 
   it("renders navigation content while the parallel header context suspends", async () => {

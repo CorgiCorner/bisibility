@@ -276,11 +276,6 @@ export const getObservedPositionsSchema = z.object({
   projectId: idSchema,
 });
 
-export const queueFirstChecksSchema = z.object({
-  excludeKeywordIds: z.array(idSchema).optional(),
-  projectId: idSchema,
-});
-
 export type AddKeywordInput = z.infer<typeof addKeywordSchema>;
 export type AddKeywordsInput = z.input<typeof addKeywordsSchema>;
 export type AddKeywordsMatrixInput = z.infer<typeof addKeywordsMatrixSchema>;
@@ -295,6 +290,5 @@ export type GetFirstCheckRunPlanInput = z.infer<typeof getFirstCheckRunPlanSchem
 export type ListFirstCheckCandidatesInput = z.input<typeof listFirstCheckCandidatesSchema>;
 export type RunFirstCheckPreviewInput = z.infer<typeof runFirstCheckPreviewSchema>;
 export type GetObservedPositionsInput = z.infer<typeof getObservedPositionsSchema>;
-export type QueueFirstChecksInput = z.infer<typeof queueFirstChecksSchema>;
 export type RunCheckNowInput = z.infer<typeof runCheckNowSchema>;
 export type UpdateKeywordInput = z.infer<typeof updateKeywordSchema>;

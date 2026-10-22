@@ -1,3 +1,4 @@
+import { scheduleProviderId } from "@/lib/rank-check/schedules/provider-policy";
 import "server-only";
 
 import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
@@ -25,7 +26,7 @@ function scheduleListSelect(activeLocationIds: Iterable<string>) {
     publicId: true,
     rankCheckRuns: {
       orderBy: { plannedFor: "asc" },
-      select: { plannedFor: true },
+      select: { plannedFor: true, status: true },
       take: 1,
       where: { status: { in: ["blocked", "planned"] } },
     },
@@ -80,9 +81,7 @@ function sharedTag(assignments: readonly ScheduleTagAssignment[], targetCount: n
   return shared.length === 1 ? (shared[0] ?? null) : null;
 }
 
-export function scheduleProviderId(policy: string | null) {
-  return policy && policy !== "project" ? policy : undefined;
-}
+export { scheduleProviderId } from "@/lib/rank-check/schedules/provider-policy";
 
 function scheduledRunProjectionCounts(
   schedule: { keywordCount: number; serpDepth: number | null; targetCount: number },
@@ -173,6 +172,9 @@ function scheduleListDto(
             : null
         : null,
     keywordCount: projection.keywordCount,
+    nextRunAt: plannedFor?.toISOString() ?? null,
+    blocked: rankCheckRuns[0]?.status === "blocked",
+    timezone,
     memberDeviceCount: new Set(memberGroups.map((keyword) => keyword.device)).size,
     memberMarketCount: new Set(memberGroups.map((keyword) => keyword.locationId)).size,
     perRunCents: projection.estimatedCostCents,

@@ -19,6 +19,7 @@ vi.mock("@/lib/provider-lookups/paid-call", async () => ({
     .ProviderLookupSignal,
 }));
 
+import { AI_RESEARCH_CATALOG_CACHE_TTL_SECONDS } from "./catalog-freshness";
 import { getAiResearchCatalog, loadAiResearchCapabilities } from "./catalog-service";
 
 beforeEach(() => {
@@ -81,7 +82,10 @@ describe("AI catalog source failures", () => {
       expect.any(Number),
     );
     expect(mocks.cache).toHaveBeenCalledWith(
-      expect.objectContaining({ fresh: false, ttlSeconds: 300 }),
+      expect.objectContaining({
+        fresh: false,
+        ttlSeconds: AI_RESEARCH_CATALOG_CACHE_TTL_SECONDS,
+      }),
     );
   });
   it("does not reuse free pool credentials for paid admission pricing", async () => {

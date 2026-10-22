@@ -1,14 +1,16 @@
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import type { StoredResultFreshness } from "@/components/demo-research/StoredResultFreshness";
 import type { BacklinksSnapshot } from "@/lib/backlinks/types";
-import { backlinksRates, estimatedFeatureCostCents } from "@/lib/cost-estimate/provider-rates";
-import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { BacklinksSnapshotMeta } from "./BacklinksSnapshotMeta";
 import { BacklinksTable, type BacklinksTableProps } from "./BacklinksTable";
 import { SummaryCards } from "./SummaryCards";
 
 type BacklinksResultsProps = {
   estimateCents: number | null;
+  refreshPrice?: ReactNode;
+  loadMorePrice?: ReactNode;
   onLoadMore?: BacklinksTableProps["onLoadMore"];
   onRefresh?: () => void;
   readOnly?: boolean;
@@ -31,18 +33,26 @@ type BacklinksResultsProps = {
 
 export function BacklinksResults(props: Readonly<BacklinksResultsProps>) {
   const t = useTranslations("projectBacklinks.workspace.snapshot");
-  const rowsEstimateCents = props.readOnly
-    ? undefined
-    : estimatedFeatureCostCents(
-        backlinksRates(props.snapshot.provider).rows,
-        100,
-        false,
-        LIST_PROVIDER_RATE_CONTEXT,
-      );
 
   return (
     <section aria-label={t("resultsAria")} className="grid min-w-0 gap-4">
       <BacklinksSnapshotMeta {...props} />
+      {props.readOnly ? (
+        <PaymentChargeLine
+          original
+          payment={props.snapshot.originalPayment ?? props.snapshot.payment}
+        />
+      ) : (
+        <PaymentChargeLine payment={props.snapshot.payment} />
+      )}
+      {!props.readOnly &&
+      props.snapshot.originalPayment &&
+      props.snapshot.originalPayment.actionId !== props.snapshot.payment?.actionId ? (
+        <PaymentChargeLine original payment={props.snapshot.originalPayment} />
+      ) : null}
+      {props.readOnly && props.snapshot.appendPayment ? (
+        <PaymentChargeLine payment={props.snapshot.appendPayment} />
+      ) : null}
       {props.snapshot.historyUnavailable ? (
         <p role="status" className="text-sm text-fg-muted">
           {t("historyUnavailable")}
@@ -56,7 +66,7 @@ export function BacklinksResults(props: Readonly<BacklinksResultsProps>) {
       <BacklinksTable
         fetchedRowCount={props.snapshot.fetchedRowCount}
         key={props.snapshot.fetchedAt}
-        loadMoreEstimateCents={rowsEstimateCents ?? undefined}
+        loadMorePrice={props.loadMorePrice}
         onLoadMore={props.readOnly ? undefined : props.onLoadMore}
         rows={props.snapshot.rows}
         target={props.snapshot.target}

@@ -1,3 +1,4 @@
+import { prepareResearchAiPayment } from "./research-payment";
 import "server-only";
 import { createHash } from "node:crypto";
 import { agentReportSchema } from "@/lib/agent-reports/model";
@@ -29,7 +30,14 @@ export async function runActualCost({
   loadAdmission: () => Promise<AiAdmission>;
   deadlineAt: number;
 }): Promise<AiResearchOutcome> {
-  const { fresh: _fresh, estimate_only: _estimate, ...identity } = input;
+  const {
+    fresh: _fresh,
+    estimate_only: _estimate,
+    accepted_payment: _accepted,
+    payment_option_id: _option,
+    require_payment: _required,
+    ...identity
+  } = input;
   const binding = hash(identity);
   const id = `ai-actual:${hash([context.projectId, input.idempotency_key])}`;
   const checked = await checkActualCostAttempt({
@@ -54,6 +62,14 @@ export async function runActualCost({
         "The partial forecast exceeds the advisory estimate limit.",
       ),
     );
+  const payment = await prepareResearchAiPayment(
+    context,
+    "prompt_explorer",
+    input,
+    source,
+    admission,
+  );
+  const paymentConsent = payment?.bindExecution(id);
   const pendingResult: AiResearchResult = {
     evidence: "synthetic_prompt_test",
     rows: [],
@@ -78,6 +94,7 @@ export async function runActualCost({
           executionDeadlineAt: deadlineAt,
           usageTags: [],
           acknowledgement: input.actual_cost_acknowledgement,
+          ...(paymentConsent ? { paymentConsent } : {}),
         },
       }),
     ),
@@ -103,6 +120,7 @@ export async function runActualCost({
       input,
       source,
       admitted: admission,
+      payment,
       deadlineAt,
       onPaidDispatch: () => {
         anyDispatched = true;
@@ -136,7 +154,12 @@ export async function runActualCost({
       JSON.parse(
         JSON.stringify({
           ...payload,
-          body: { input: identity, result: executed.result, requestBinding: binding },
+          body: {
+            input: identity,
+            result: executed.result,
+            requestBinding: binding,
+            ...(payment?.hasAttempted ? { originalPayment: payment.receipt() } : {}),
+          },
           provenance: {
             ...researchProvenance({
               kind: "prompt_explorer",
@@ -148,6 +171,7 @@ export async function runActualCost({
               providerId: source.provider.id,
               rows: executed.result.rows,
             }),
+            ...(paymentConsent ? { paymentConsent } : {}),
             actualCostState: state,
             connectionId: source.connection.id,
             executionDeadlineAt: deadlineAt,
@@ -170,6 +194,7 @@ export async function runActualCost({
       result: executed.result,
       costCents: executed.result.costCents,
       retryBlocked: state === "unknown",
+      ...(payment ? { payment: payment.receipt(), originalPayment: payment.receipt() } : {}),
     };
   } catch (error) {
     // Only a proven pre-dispatch refusal may release the project for a new request.
@@ -197,6 +222,14 @@ export async function runActualCost({
       });
       throw new AiPreDispatchRefusal(error);
     }
+    if (payment?.hasAttempted)
+      return {
+        ok: false,
+        reason: "usage_reconciliation_required",
+        message: "Review the saved attempt and its retained payment before another request.",
+        retryBlocked: true,
+        payment: payment.receipt(),
+      };
     throw error;
   }
 }

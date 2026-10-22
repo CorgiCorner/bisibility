@@ -18,6 +18,11 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("../providers/execution-extension", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../providers/execution-extension")>()),
+  // Capacity preflight has its own suite; these tests cover the activity flow.
+  preflightDeploymentRankExecution: async () => undefined,
+}));
 vi.mock("../db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("../rank-check/fallback", () => ({
   ProviderChainError: class ProviderChainError extends Error {},

@@ -7,9 +7,11 @@ const mocks = vi.hoisted(() => ({
   accountView: vi.fn(),
   getAccount: vi.fn(),
   getPersonalTokens: vi.fn(),
+  getConnectedApps: vi.fn(),
   getPreferences: vi.fn(),
   requireSession: vi.fn(),
   SessionsSection: vi.fn(),
+  SecurityFactors: vi.fn(),
 }));
 
 vi.mock("@/components/account/AccountShell", () => ({
@@ -19,13 +21,21 @@ vi.mock("@/components/account/PersonalTokensSection", () => ({
   PersonalTokensSection: () => <div data-testid="personal-tokens" />,
 }));
 vi.mock("@/components/account/SecurityFactors", () => ({
-  SecurityFactors: () => <div data-testid="security-factors" />,
+  SecurityFactors: (props: unknown) => {
+    mocks.SecurityFactors(props);
+    return <div data-testid="security-factors" />;
+  },
 }));
 vi.mock("@/components/account/SessionsSection", () => ({
   SessionsSection: (props: unknown) => {
     mocks.SessionsSection(props);
     return <div data-testid="sessions" />;
   },
+}));
+vi.mock("@/lib/actions/connected-apps", () => ({ revokeConnectedApp: vi.fn() }));
+vi.mock("@/lib/queries/connected-apps", () => ({ getConnectedApps: mocks.getConnectedApps }));
+vi.mock("@/components/account/ConnectedAppsSection", () => ({
+  ConnectedAppsSection: () => <div data-testid="connected-apps" />,
 }));
 vi.mock("@/lib/actions/personalToken", () => ({
   issuePersonalTokenAction: vi.fn(),
@@ -48,6 +58,7 @@ describe("SecurityPage", () => {
     mocks.accountView.mockResolvedValue("normal");
     mocks.getAccount.mockResolvedValue({ hasPasswordCredential: true, twoFactorEnabled: true });
     mocks.getPersonalTokens.mockResolvedValue([]);
+    mocks.getConnectedApps.mockResolvedValue([]);
     mocks.getPreferences.mockResolvedValue({ dateFormat: "auto" });
     mocks.requireSession.mockResolvedValue({ user: { id: "owner_1" } });
   });
@@ -62,6 +73,7 @@ describe("SecurityPage", () => {
     expect(mocks.getAccount).not.toHaveBeenCalled();
     expect(mocks.getPreferences).not.toHaveBeenCalled();
     expect(mocks.getPersonalTokens).not.toHaveBeenCalled();
+    expect(mocks.getConnectedApps).not.toHaveBeenCalled();
   });
 
   it("loads normal security data only for a revalidated Owner", async () => {
@@ -69,6 +81,8 @@ describe("SecurityPage", () => {
 
     expect(mocks.accountView).toHaveBeenCalledWith("owner_1");
     expect(mocks.getPersonalTokens).toHaveBeenCalledWith("owner_1");
+    expect(mocks.getConnectedApps).toHaveBeenCalledWith("owner_1");
+    expect(screen.getByTestId("connected-apps")).toBeVisible();
     expect(screen.getByTestId("security-factors")).toBeVisible();
   });
 
@@ -81,6 +95,17 @@ describe("SecurityPage", () => {
       expect.objectContaining({
         referenceTime: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/),
       }),
+    );
+  });
+  it.each([
+    "/app/admin/billing?section=accounts",
+    "https://evil.test/app/admin",
+    "//evil.test/app/admin",
+    "/login",
+  ])("validates returnTo %s before passing it to enrollment", async (returnTo) => {
+    await SecurityPage({ searchParams: Promise.resolve({ returnTo }) }).then(render);
+    expect(mocks.SecurityFactors).toHaveBeenCalledWith(
+      expect.objectContaining({ returnTo: returnTo.startsWith("/app/") ? returnTo : undefined }),
     );
   });
 });

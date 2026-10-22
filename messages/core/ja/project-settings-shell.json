@@ -23,7 +23,7 @@
         },
         "applicationPlan": {
           "label": "アプリケーションプラン",
-          "keywords": "請求 料金 サブスクリプション ホスト型ベータ セルフホスト"
+          "keywords": "請求 料金 サブスクリプション cloud セルフホスト"
         },
         "checkFrequency": {
           "label": "チェック頻度",

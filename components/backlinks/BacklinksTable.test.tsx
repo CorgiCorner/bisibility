@@ -149,7 +149,7 @@ describe("BacklinksTable", () => {
     }));
     renderTable({ loadMoreEstimateCents: 1, onLoadMore });
 
-    fireEvent.click(screen.getByRole("button", { name: "Load 100 more ~$0.01" }));
+    fireEvent.click(screen.getByRole("button", { name: /Load 100 more/ }));
 
     await waitFor(() => expect(onLoadMore).toHaveBeenCalledOnce());
     expect(await screen.findByText("loaded.example")).toBeInTheDocument();

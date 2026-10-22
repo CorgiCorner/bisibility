@@ -1,3 +1,4 @@
+import { paymentResponseFields } from "./openapi-action-payment";
 import { publicIdSchema } from "./openapi-public-id";
 import { sdkName, usdCents } from "./openapi-sdk-schema";
 
@@ -7,6 +8,7 @@ export const rankRunSchemas = {
   RankCheckRunRead: {
     type: "object",
     properties: {
+      payment: paymentResponseFields.payment,
       id: publicIdSchema("rcr"),
       project_id: publicIdSchema("prj"),
       status: { type: "string", description: "Execution status; readers tolerate future values." },

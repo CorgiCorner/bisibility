@@ -53,6 +53,8 @@ describe("TwoFactorChallengeForm", () => {
     await waitFor(() => expect(mocks.verifyTotp).toHaveBeenCalledWith({ code: "123456" }));
     expect(routerMock.replace).toHaveBeenCalledWith(returnTo);
     expect(routerMock.refresh).toHaveBeenCalled();
+    expect(await screen.findByRole("button", { name: "Signing in..." })).toBeDisabled();
+    expect(screen.getByLabelText("Authenticator code")).toBeDisabled();
   });
 
   it("submits the current challenge with the Enter key after hydration", async () => {
@@ -132,6 +134,33 @@ describe("TwoFactorChallengeForm", () => {
     ).toBeInTheDocument();
     expect(routerMock.replace).not.toHaveBeenCalled();
     expect(screen.getByLabelText("Backup code")).toHaveValue("");
+  });
+
+  it("explains an expired sign-in instead of blaming the authenticator code", async () => {
+    mocks.verifyTotp.mockResolvedValue({
+      data: null,
+      error: { code: "INVALID_TWO_FACTOR_COOKIE" },
+    });
+    render(<TwoFactorChallengeForm />);
+    fireEvent.change(screen.getByLabelText("Authenticator code"), {
+      target: { value: "123456" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Verify and continue" }));
+
+    expect(
+      await screen.findByText(
+        "Your sign-in has expired. Return to sign in and request a new email code.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("That code is invalid, expired, or already used."),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Verify and continue" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Cancel and return to sign in" })).toHaveAttribute(
+      "href",
+      "/login",
+    );
+    expect(routerMock.replace).not.toHaveBeenCalled();
   });
 
   it("keeps empty and too-long backup-code validation distinct", async () => {

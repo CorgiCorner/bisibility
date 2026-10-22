@@ -4,7 +4,6 @@ import { requestCostLimit } from "@/lib/provider-usage/request-cost-limit";
 import type { RankedKeywordsPage, RelevantPagesResult } from "@/lib/providers/types";
 import {
   type CachedDomainOverviewModule,
-  domainOverviewCacheKey as cacheKey,
   domainOverviewFailure,
   domainOverviewReportCacheKeys,
   durableDomainOverviewModules,
@@ -12,35 +11,36 @@ import {
   loadDomainOverviewModule,
   readDomainOverviewCache,
   domainOverviewReport as report,
+  settleDomainModules,
 } from "./cache";
 import { requireDomainOverviewSource } from "./context";
+import { reportDomainOverviewFailure } from "./failure";
+import { storedDomainOverviewFailure } from "./failure-details";
+import {
+  type DomainPayment,
+  domainPaymentEstimate,
+  domainPaymentReceipt,
+  prepareDomainPayment,
+} from "./payment";
+import { retainDomainPayment } from "./payment-history";
 import {
   assertDomainOverviewMaxCost,
   domainOverviewCostReservation,
   domainOverviewEstimate,
-  fetchDomainHistory,
   fetchDomainKeywords,
   fetchDomainPages,
   preflightDomainOverview,
 } from "./provider-call";
 import {
-  findDomainOverviewSnapshot,
   findDomainOverviewSnapshotMetadata,
-  persistDomainOverviewHistory,
   persistDomainOverviewModules,
   resolveDomainOverviewSnapshot,
 } from "./snapshot";
-import {
-  normalizeDomainOverviewAnalysis,
-  normalizeDomainOverviewResearchScope,
-  normalizeDomainOverviewTarget,
-} from "./target";
+import { normalizeDomainOverviewAnalysis } from "./target";
 import type {
   AnalyzeDomainOverviewOptions,
-  DomainHistoryOutcome,
   DomainOverviewOutcome,
   DomainOverviewServiceContext,
-  LoadDomainHistoryOptions,
 } from "./types";
 
 export { loadDomainKeywordsPage, loadDomainPagesPage } from "./page-service";
@@ -49,9 +49,13 @@ export async function analyzeDomainOverview(
   context: DomainOverviewServiceContext,
   options: AnalyzeDomainOverviewOptions,
 ): Promise<DomainOverviewOutcome> {
+  const paymentState: { current: DomainPayment } = { current: null };
   try {
     const input = normalizeDomainOverviewAnalysis(options);
-    const { project, source } = await requireDomainOverviewSource(context.projectId);
+    const { project, source } = await requireDomainOverviewSource(
+      context.projectId,
+      options.paymentOptionId,
+    );
     return await withProjectCachePolicy(
       project.lookupCacheTtlSeconds,
       async (): Promise<DomainOverviewOutcome> => {
@@ -83,9 +87,34 @@ export async function analyzeDomainOverview(
         const moduleCost =
           (keywordsCached ? 0 : estimate.keywords) + (pagesCached ? 0 : estimate.pages);
         const estimatedCostCents = stored ? 0 : estimate.overview + moduleCost;
+        const payment = await prepareDomainPayment(
+          context,
+          options,
+          project,
+          source,
+          ["analyze", input, options.fresh ?? false],
+          [
+            { key: "overview", costCents: estimate.overview, quantity: 1, cached: Boolean(stored) },
+            {
+              key: "keywords",
+              costCents: estimate.keywords,
+              quantity: input.keywordLimit,
+              cached: Boolean(stored || keywordsCached),
+            },
+            {
+              key: "pages",
+              costCents: estimate.pages,
+              quantity: input.pageLimit,
+              cached: Boolean(stored || pagesCached),
+            },
+          ],
+        );
+        paymentState.current = payment;
+        const finish = <T>(value: T) => ({ ...value, ...domainPaymentReceipt(payment) });
         if (options.estimateOnly) {
           return {
             ...input,
+            ...domainPaymentEstimate(payment, project),
             cached: estimatedCostCents === 0,
             estimate: true,
             estimatedCostCents,
@@ -115,6 +144,7 @@ export async function analyzeDomainOverview(
           ...input,
           costLimit,
           beforeLoad: () => reserveCost(estimate.overview),
+          payment: () => payment?.child("overview"),
           fresh: options.fresh,
           key: keys.overview,
           origin: context.origin,
@@ -122,27 +152,41 @@ export async function analyzeDomainOverview(
           projectId: project.id,
           source,
         });
+        const retain = async () => {
+          if (payment)
+            await retainDomainPayment({
+              ...input,
+              projectId: project.id,
+              provider: source.provider.id,
+              fetchedAt: overview.data.fetchedAt,
+              receipt: payment.receipt(),
+              slot: "_payment",
+            });
+        };
         if (overview.data.overview === null) {
-          return report({
-            keywords: emptyDomainOverviewModule({
-              consumedCount: 0,
-              costCents: 0,
-              rows: [],
-              totalCount: 0,
+          await retain();
+          return finish(
+            report({
+              keywords: emptyDomainOverviewModule({
+                consumedCount: 0,
+                costCents: 0,
+                rows: [],
+                totalCount: 0,
+              }),
+              researchScope: input,
+              overview: overview.data,
+              overviewCached: overview.cached,
+              overviewCost: overview.costCents,
+              pages: emptyDomainOverviewModule({
+                consumedCount: 0,
+                costCents: 0,
+                rows: [],
+                totalCount: 0,
+              }),
+              scope: input.scope,
+              target: input.target,
             }),
-            researchScope: input,
-            overview: overview.data,
-            overviewCached: overview.cached,
-            overviewCost: overview.costCents,
-            pages: emptyDomainOverviewModule({
-              consumedCount: 0,
-              costCents: 0,
-              rows: [],
-              totalCount: 0,
-            }),
-            scope: input.scope,
-            target: input.target,
-          });
+          );
         }
         if (overview.durable) {
           const modules = durableDomainOverviewModules({
@@ -160,130 +204,92 @@ export async function analyzeDomainOverview(
               pages: modules.pagesData,
               projectId: project.id,
               provider: source.provider.id,
-            }).catch(() => undefined);
+            }).catch((error: unknown) => reportDomainOverviewFailure("persistence", error));
           }
-          return report({
-            keywords: modules.keywords,
+          return finish(
+            report({
+              keywords: modules.keywords,
+              researchScope: input,
+              overview: overview.data,
+              overviewCached: true,
+              overviewCost: 0,
+              pages: modules.pages,
+              scope: input.scope,
+              target: input.target,
+            }),
+          );
+        }
+        const [keywords, pages] = await settleDomainModules(
+          [
+            loadDomainOverviewModule({
+              beforeLoad: () => reserveCost(estimate.keywords),
+              fresh: options.fresh,
+              key: keys.keywords,
+              load: async () => {
+                const data = await fetchDomainKeywords({
+                  ...input,
+                  costLimit,
+                  payment: payment?.child("keywords"),
+                  limit: input.keywordLimit,
+                  origin: context.origin,
+                  offset: 0,
+                  projectId: project.id,
+                  source,
+                });
+                return { costCents: data.costCents, data };
+              },
+            }),
+            loadDomainOverviewModule({
+              beforeLoad: () => reserveCost(estimate.pages),
+              fresh: options.fresh,
+              key: keys.pages,
+              load: async () => {
+                const data = await fetchDomainPages({
+                  ...input,
+                  costLimit,
+                  payment: payment?.child("pages"),
+                  limit: input.pageLimit,
+                  origin: context.origin,
+                  offset: 0,
+                  projectId: project.id,
+                  source,
+                });
+                return { costCents: data.costCents, data };
+              },
+            }),
+          ],
+          async ([keywords, pages]) =>
+            persistDomainOverviewModules({
+              ...input,
+              expectedFetchedAt: overview.data.fetchedAt,
+              keywords: keywords.ok ? keywords.data : storedDomainOverviewFailure(keywords),
+              pages: pages.ok ? pages.data : storedDomainOverviewFailure(pages),
+              projectId: project.id,
+              provider: source.provider.id,
+            }).catch((error: unknown) => reportDomainOverviewFailure("persistence", error)),
+        );
+        await retain();
+        return finish(
+          report({
+            keywords,
             researchScope: input,
             overview: overview.data,
-            overviewCached: true,
-            overviewCost: 0,
-            pages: modules.pages,
+            overviewCached: overview.cached,
+            overviewCost: overview.costCents,
+            pages,
             scope: input.scope,
             target: input.target,
-          });
-        }
-        const [keywords, pages] = await Promise.all([
-          loadDomainOverviewModule({
-            beforeLoad: () => reserveCost(estimate.keywords),
-            fresh: options.fresh,
-            key: keys.keywords,
-            load: async () => {
-              const data = await fetchDomainKeywords({
-                ...input,
-                costLimit,
-                limit: input.keywordLimit,
-                origin: context.origin,
-                offset: 0,
-                projectId: project.id,
-                source,
-              });
-              return { costCents: data.costCents, data };
-            },
           }),
-          loadDomainOverviewModule({
-            beforeLoad: () => reserveCost(estimate.pages),
-            fresh: options.fresh,
-            key: keys.pages,
-            load: async () => {
-              const data = await fetchDomainPages({
-                ...input,
-                costLimit,
-                limit: input.pageLimit,
-                origin: context.origin,
-                offset: 0,
-                projectId: project.id,
-                source,
-              });
-              return { costCents: data.costCents, data };
-            },
-          }),
-        ]);
-        await persistDomainOverviewModules({
-          ...input,
-          expectedFetchedAt: overview.data.fetchedAt,
-          keywords: keywords.ok ? keywords.data : null,
-          pages: pages.ok ? pages.data : null,
-          projectId: project.id,
-          provider: source.provider.id,
-        }).catch(() => undefined);
-        return report({
-          keywords,
-          researchScope: input,
-          overview: overview.data,
-          overviewCached: overview.cached,
-          overviewCost: overview.costCents,
-          pages,
-          scope: input.scope,
-          target: input.target,
-        });
+        );
       },
     );
   } catch (error) {
-    return domainOverviewFailure(error);
+    const payment = paymentState.current;
+    return {
+      ...domainOverviewFailure(error, payment?.hasAttempted ? payment.receipt() : undefined),
+      ...(payment?.hasAttempted ? domainPaymentReceipt(payment) : {}),
+    };
   }
 }
 
-export async function loadDomainOverviewHistory(
-  context: DomainOverviewServiceContext,
-  options: LoadDomainHistoryOptions,
-): Promise<DomainHistoryOutcome> {
-  try {
-    const input = {
-      ...normalizeDomainOverviewResearchScope(options),
-      ...normalizeDomainOverviewTarget(options.target, options.scopeOverride),
-    };
-    const { project, source } = await requireDomainOverviewSource(context.projectId);
-    return await withProjectCachePolicy(
-      project.lookupCacheTtlSeconds,
-      async (): Promise<DomainHistoryOutcome> => {
-        const estimate = domainOverviewEstimate({ keywordLimit: 1, pageLimit: 1, source });
-        const stored = await findDomainOverviewSnapshot({
-          ...input,
-          now: new Date(),
-          projectId: project.id,
-          provider: source.provider.id,
-        });
-        if (!stored) return { costCents: 0, ok: false, reason: "snapshot_expired" };
-        const key = cacheKey({
-          ...input,
-          module: "history",
-          projectId: project.id,
-          provider: source.provider.id,
-        });
-        return loadDomainOverviewModule({
-          beforeLoad: () => assertDomainOverviewMaxCost(estimate.history, options.maxCostCents),
-          fresh: options.fresh,
-          key,
-          load: async () => {
-            const result = await fetchDomainHistory({
-              ...input,
-              costLimit: requestCostLimit(options.maxCostCents),
-              origin: context.origin,
-              projectId: project.id,
-              source,
-            });
-            await persistDomainOverviewHistory({
-              ...input,
-              history: result.rows,
-              projectId: project.id,
-            });
-            return { costCents: result.costCents, data: result.rows };
-          },
-        });
-      },
-    );
-  } catch (error) {
-    return domainOverviewFailure(error);
-  }
-}
+export { loadDomainOverviewHistory } from "./history-service";

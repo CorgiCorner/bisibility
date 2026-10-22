@@ -1,3 +1,4 @@
+import type { ResearchAiPayment } from "./research-payment";
 import "server-only";
 import { paidProviderCall, preflightProviderBudget } from "@/lib/provider-lookups/paid-call";
 import { surfaceOf } from "@/lib/provider-usage/surface";
@@ -22,7 +23,9 @@ export async function executeResearch({
   onUsageTag,
   onPaidDispatch,
   onNoPaidDispatch,
+  payment,
 }: {
+  payment?: ResearchAiPayment;
   context: AiResearchContext;
   kind: AiResearchKind;
   input: PromptInput | VisibilityInput;
@@ -78,6 +81,7 @@ export async function executeResearch({
         currentUsageTag = undefined;
         assertAiDeadline(deadlineAt);
         const answer = await paidProviderCall({
+          payment: payment?.child(model),
           ...common,
           ...(context.execution
             ? {
@@ -118,6 +122,7 @@ export async function executeResearch({
     } else {
       assertAiDeadline(deadlineAt);
       const observations = await paidProviderCall({
+        payment: payment?.child("visibility"),
         ...common,
         ...(context.execution ? { correlationId: context.execution.correlationId } : {}),
         rate: admissionRate(admitted, kind, estimate),

@@ -4,6 +4,9 @@ import type { ArchivedProjectMarketsView, ProjectMarketsView } from "@/lib/queri
 export function normalRow(market: ProjectMarketsView["markets"][number]): MarketsPageRow {
   return {
     activeKeywordCount: market.activeKeywordCount ?? 0,
+    distinctKeywordCount: market.distinctKeywordCount,
+    deviceCandidates: market.deviceCandidates,
+    trackedDevices: market.trackedDevices ?? [],
     canonicalKey: market.canonicalKey,
     countryCode: market.countryCode,
     currentVisibility: market.currentVisibility ?? null,

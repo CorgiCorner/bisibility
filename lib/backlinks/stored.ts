@@ -4,6 +4,7 @@ import { demoResearchFreshUntil, demoResearchStorageState } from "@/lib/demo/res
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { instanceLookupTtl, projectCacheTtl } from "@/lib/provider-lookups/project-cache-policy";
 import type { BacklinkRowMode, BacklinkTargetScope } from "@/lib/providers/types";
+import { backlinksPaymentHistory } from "./payment-history";
 import { backlinksSnapshotReference } from "./snapshot-reference";
 import { unknownBacklinksSnapshotId } from "./source-filter";
 import { normalizeBacklinksTarget } from "./target";
@@ -114,6 +115,7 @@ export function snapshotEnvelope(
 ): BacklinksSnapshot {
   const rows = input.rows ?? snapshot.rows.map(publicRow);
   return {
+    ...backlinksPaymentHistory(snapshot.summary),
     snapshotRef: backlinksSnapshotReference(snapshot),
     cached: input.cached,
     cachedUntil: new Date(

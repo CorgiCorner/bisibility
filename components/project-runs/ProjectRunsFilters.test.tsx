@@ -67,14 +67,14 @@ describe("ProjectRunsFilters", () => {
     expect(screen.getAllByText("Rank checks").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Queued")).toHaveLength(2);
     expect(screen.queryByText("Upcoming")).toBeNull();
-    fireEvent.click(screen.getByText("Planned"));
+    fireEvent.click(screen.getAllByRole("menuitem", { name: "Planned" })[0]);
 
     expect(routerMock.push).toHaveBeenCalledWith(
       `/app/${projectRef}/runs?source=rank_checks&status=planned`,
     );
   });
 
-  it("shows a legacy group value without offering it", () => {
+  it("shows the active attention filter in the status trigger", () => {
     render(
       <ProjectRunsFilters
         projectRef={projectRef}
@@ -100,4 +100,14 @@ describe("ProjectRunsFilters", () => {
 
     expect(routerMock.push).toHaveBeenCalledWith(`/app/${projectRef}/runs?source=rank_checks`);
   });
+});
+
+it("shows attention for legacy planned URLs too", () => {
+  render(
+    <ProjectRunsFilters
+      projectRef={projectRef}
+      query={{ cursor: null, limit: 20, source: "all", status: "attention", view: "planned" }}
+    />,
+  );
+  expect(screen.getByRole("button", { name: "Run status" })).toHaveTextContent("Needs attention");
 });

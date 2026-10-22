@@ -58,7 +58,17 @@ const mocks = vi.hoisted(() => {
           locationRef: {},
           publicId: "kw_abcdefghijklmnopqrstuvwx",
           rankChecks: [],
-          checkSchedule: null as { serpDepth: number | null } | null,
+          checkSchedule: {
+            serpDepth: null,
+            enabled: true,
+            archivedAt: null,
+            frequency: "daily",
+          } as {
+            serpDepth: number | null;
+            enabled: boolean;
+            archivedAt: Date | null;
+            frequency: string;
+          } | null,
           schedule: { frequency: "daily", serpDepth: 20 },
         },
       ]),
@@ -343,54 +353,113 @@ describe("queued rank-check run-item preparation", () => {
     vi.restoreAllMocks();
   });
 
-  it.each<[string, Array<{ locationId: string }>, Date | null, string]>([
+  it.each<[string, Array<{ locationId: string }>, Date | null, string, string]>([
     [
       "a paused market",
       [{ locationId: "location_other" }],
       null,
       "The market for these keywords is no longer active.",
+      "market_inactive",
     ],
     [
       "an archived keyword",
       [{ locationId: "location_active" }],
       new Date("2026-09-01T06:00:00.000Z"),
       "The keyword was archived before the queued batch could start.",
+      "keyword_archived",
     ],
-  ])("defers the batch and buys nothing for %s", async (_case, markets, archivedAt, reason) => {
-    mocks.prisma.projectMarket.findMany.mockResolvedValueOnce(markets);
-    mocks.prisma.keyword.findMany.mockResolvedValueOnce([
-      {
-        archivedAt,
-        checkSchedule: null,
-        id: "keyword_1",
-        text: "site:example.com",
-        locationId: "location_active",
-        locationRef: {},
-        publicId: "kw_abcdefghijklmnopqrstuvwx",
-        rankChecks: [],
-        schedule: { frequency: "daily", serpDepth: 20 },
-      },
-    ]);
+  ])(
+    "defers the batch and buys nothing for %s",
+    async (_case, markets, archivedAt, reason, code) => {
+      mocks.prisma.projectMarket.findMany.mockResolvedValueOnce(markets);
+      mocks.prisma.keyword.findMany.mockResolvedValueOnce([
+        {
+          archivedAt,
+          checkSchedule: null,
+          id: "keyword_1",
+          text: "site:example.com",
+          locationId: "location_active",
+          locationRef: {},
+          publicId: "kw_abcdefghijklmnopqrstuvwx",
+          rankChecks: [],
+          schedule: { frequency: "daily", serpDepth: 20 },
+        },
+      ]);
 
+      await expect(prepareQueuedRankCheckBatch(baseInput)).resolves.toMatchObject({
+        state: "deferred",
+      });
+
+      expect(mocks.state.batches[0]).toMatchObject({ error: reason, state: "deferred" });
+      expect(mocks.state.rankChecks[0]).toMatchObject({
+        deferredReason: code,
+        estimatedCostCents: null,
+        status: "deferred",
+      });
+      expect(mocks.state.tasks[0]).toMatchObject({ error: reason, state: "deferred" });
+    },
+  );
+
+  it("allows a manual API batch without membership only with its current owned run-item claim", async () => {
+    const rows = await mocks.prisma.keyword.findMany();
+    mocks.prisma.keyword.findMany.mockResolvedValueOnce([
+      { ...rows[0], checkSchedule: null, schedule: { frequency: "manual", serpDepth: 20 } },
+    ]);
+    mocks.state.run = {
+      credentialId: "key_1",
+      credentialKind: "project_key",
+      source: "api",
+      trigger: "api",
+    };
+    await expect(
+      prepareQueuedRankCheckBatch({ ...baseInput, runId: "run_1", runItemIds: ["item_1"] }),
+    ).resolves.toMatchObject({ state: "prepared" });
+    expect(mocks.nativeCosts).toHaveBeenCalledOnce();
+  });
+  it("does not allow inherited daily intent to prepare automatic work without a claim or membership", async () => {
+    const rows = await mocks.prisma.keyword.findMany();
+    mocks.prisma.keyword.findMany.mockResolvedValueOnce([{ ...rows[0], checkSchedule: null }]);
     await expect(prepareQueuedRankCheckBatch(baseInput)).resolves.toMatchObject({
       state: "deferred",
     });
-
-    expect(mocks.state.batches[0]).toMatchObject({ error: reason, state: "deferred" });
+    expect(mocks.nativeCosts).not.toHaveBeenCalled();
+    expect(mocks.state.batches[0]).toMatchObject({
+      error: "Keyword schedule no longer permits automatic work.",
+    });
     expect(mocks.state.rankChecks[0]).toMatchObject({
-      deferredReason: reason,
-      estimatedCostCents: null,
+      deferredReason: "schedule_ineligible",
       status: "deferred",
     });
-    expect(mocks.state.tasks[0]).toMatchObject({ error: reason, state: "deferred" });
   });
-
+  it.each(["forged", "stale", "mismatched"])(
+    "rejects %s run-item claims before any quote or preparation",
+    async (kind) => {
+      const input = {
+        ...baseInput,
+        runId: "run_1",
+        runItemIds: ["item_1"],
+        runItemClaims: baseInput.runItemClaims.map((claim) => ({
+          ...claim,
+          ...(kind === "forged"
+            ? { id: "item_other" }
+            : kind === "stale"
+              ? { claimAttempts: 0 }
+              : { claimExpiresAt: "2026-09-02T08:04:00.000Z" }),
+        })),
+      };
+      await expect(prepareQueuedRankCheckBatch(input)).rejects.toThrow(
+        "Original run-item claim changed before preparation.",
+      );
+      expect(mocks.nativeCosts).not.toHaveBeenCalled();
+      expect(mocks.state.batches).toHaveLength(0);
+    },
+  );
   it("prepares the assigned schedule depth instead of a stale keyword override", async () => {
     const rows = await mocks.prisma.keyword.findMany();
     mocks.prisma.keyword.findMany.mockResolvedValueOnce([
       {
         ...rows[0],
-        checkSchedule: { serpDepth: null },
+        checkSchedule: { serpDepth: null, enabled: true, archivedAt: null, frequency: "daily" },
         schedule: { frequency: "daily", serpDepth: 100 },
       },
     ]);
@@ -411,6 +480,7 @@ describe("queued rank-check run-item preparation", () => {
       state: "deferred",
     });
     expect(mocks.state.rankChecks[0]).toMatchObject({
+      deferredReason: "quote_unavailable",
       estimatedCostCents: null,
       status: "deferred",
     });

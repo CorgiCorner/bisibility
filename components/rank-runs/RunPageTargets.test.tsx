@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { appPath } from "@/lib/routing/app-path";
 import { fireEvent, screen } from "@testing-library/react";
@@ -47,6 +48,27 @@ function renderTargets({
 }
 
 describe("RunPageTargets", () => {
+  it("shows the retained per-target payer amount instead of the legacy provider cost", () => {
+    const quote = paymentQuote();
+    renderTargets({
+      items: [
+        {
+          ...runPageFixture.items[0],
+          actualCostCents: 999,
+          payment: {
+            actionId: "item-1",
+            quoteId: quote.id,
+            option: quote.option,
+            state: "settled",
+            charge: { ...quote.charge, value: "7", certainty: "measured" },
+          },
+        },
+      ],
+    });
+    expect(screen.getByText("7 tokens")).toBeVisible();
+    expect(screen.getByText("On your Example provider key")).toBeVisible();
+    expect(screen.queryByText("$9.99")).toBeNull();
+  });
   it("uses an embedded compact DataTable with the parent Card as its only frame", () => {
     renderTargets();
 
@@ -96,6 +118,21 @@ describe("RunPageTargets", () => {
     expect(screen.getByText("0 targets")).toBeInTheDocument();
   });
 
+  it("explains an obsolete schedule cancellation without exposing its internal reason", () => {
+    renderTargets({
+      items: [
+        {
+          ...runPageFixture.items[0],
+          blockedReason: "schedule_changed",
+          rankCheck: null,
+          status: "cancelled",
+        },
+      ],
+    });
+    expect(screen.getByText("Schedule changed. Cancelled before it started.")).toBeInTheDocument();
+    expect(screen.queryByText("schedule_changed")).toBeNull();
+  });
+
   it("maps an unrunnable cancelled target reason before rendering its status note", () => {
     renderTargets({
       items: [
@@ -112,5 +149,50 @@ describe("RunPageTargets", () => {
     expect(screen.getByRole("columnheader", { name: /^Note\b/ })).toBeInTheDocument();
     expect(screen.getByText("Market not active")).toBeInTheDocument();
     expect(screen.queryByText("market_inactive")).toBeNull();
+  });
+
+  it("explains a deferred target instead of a missing payment", () => {
+    renderTargets({
+      items: [
+        {
+          ...runPageFixture.items[0],
+          deferralCode: "queued_dataforseo_disabled",
+          id: "deferred-target",
+          status: "deferred",
+        },
+      ],
+    });
+
+    expect(screen.getByText("Scheduled checks off")).toBeVisible();
+    expect(
+      screen.getByText("Scheduled DataForSEO checks are turned off on this installation."),
+    ).toBeVisible();
+    expect(screen.queryByText("Payment details unavailable")).toBeNull();
+  });
+
+  it("keeps the missing-payment text for a target that was not deferred", () => {
+    renderTargets({
+      items: [{ ...runPageFixture.items[0], id: "priced-without-payment", status: "completed" }],
+    });
+
+    expect(screen.getByText("Payment details unavailable")).toBeVisible();
+  });
+
+  it("links a credentials deferral to Integrations", () => {
+    renderTargets({
+      items: [
+        {
+          ...runPageFixture.items[0],
+          deferralCode: "credentials_unavailable",
+          id: "deferred-credentials",
+          status: "deferred",
+        },
+      ],
+    });
+
+    expect(screen.getByRole("link", { name: "Open Integrations" })).toHaveAttribute(
+      "href",
+      appPath("prj_example", "integrations"),
+    );
   });
 });

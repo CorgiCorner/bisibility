@@ -1,0 +1,563 @@
+{
+  "captures": [
+    {
+      "body": {
+        "alert_email": true,
+        "alert_in_app": true,
+        "alert_push": false,
+        "check_email": false,
+        "check_in_app": false,
+        "import_email": true,
+        "import_in_app": true,
+        "invite_email": true,
+        "invite_in_app": true,
+        "report_email": true,
+        "alert_slack": false,
+        "alert_webhook": false,
+        "project_id": "prj_a00000000000000000000000"
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateNotificationPreferences",
+      "path": "/projects/{project_id}/notification-preferences",
+      "status": 200
+    },
+    {
+      "body": {
+        "alert_email": true,
+        "alert_in_app": true,
+        "alert_push": true,
+        "check_email": false,
+        "check_in_app": false,
+        "import_email": true,
+        "import_in_app": true,
+        "invite_email": true,
+        "invite_in_app": true,
+        "report_email": true,
+        "alert_slack": false,
+        "alert_webhook": false,
+        "email": "owner@example.com",
+        "email_verification": "verified",
+        "project_id": "prj_a00000000000000000000000",
+        "slack_available": false,
+        "webhook_available": false
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getNotificationPreferences",
+      "path": "/projects/{project_id}/notification-preferences",
+      "status": 200
+    },
+    {
+      "body": {
+        "cached": false,
+        "connections": [
+          {
+            "id": "conn_a00000000000000000000000",
+            "label": "Example",
+            "provider": "dataforseo"
+          }
+        ],
+        "cost_cents": 1.25,
+        "fetched_at": "2026-10-20T00:00:00.000Z",
+        "offset": 0,
+        "rows": [
+          {
+            "already_tracked": false,
+            "estimated_traffic": null,
+            "keyword": "example",
+            "position": 2,
+            "search_volume": null
+          }
+        ],
+        "total_count": 1
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listRankedKeywordSuggestions",
+      "path": "/projects/{project_id}/ranked-keyword-suggestions",
+      "status": 200
+    },
+    {
+      "body": {
+        "cached_count": 0,
+        "connections": [],
+        "cost_cents": 0,
+        "estimate": true,
+        "estimated_cost_cents": 1.25,
+        "fetched_at": "2026-10-20T00:00:00.000Z",
+        "fetched_count": 0,
+        "fetched_count_estimate": 1,
+        "provider": "dataforseo",
+        "rows": [],
+        "total_count": 0
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "getKeywordMetrics",
+      "path": "/projects/{project_id}/keyword-metrics",
+      "status": 200
+    },
+    {
+      "body": {
+        "cached_count": 0,
+        "connections": [
+          {
+            "id": "conn_a00000000000000000000000",
+            "label": "Example",
+            "provider": "dataforseo"
+          }
+        ],
+        "cost_cents": 1.25,
+        "fetched_at": "2026-10-20T00:00:00.000Z",
+        "fetched_count": 1,
+        "provider": "dataforseo",
+        "rows": [
+          {
+            "competition": 0.2,
+            "cpc_cents": 125,
+            "difficulty": 23.5,
+            "intent": null,
+            "monthly_trend": [
+              {
+                "month": 9,
+                "search_volume": null,
+                "year": 2026
+              }
+            ],
+            "search_volume": 100,
+            "keyword": "example"
+          }
+        ],
+        "total_count": 1
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "getKeywordMetrics",
+      "path": "/projects/{project_id}/keyword-metrics",
+      "status": 200
+    },
+    {
+      "body": {
+        "connections": 1,
+        "keyword_snapshots": 1,
+        "page_snapshots": 0,
+        "project_id": "prj_a00000000000000000000000",
+        "runs": [
+          {
+            "provider": "dataforseo",
+            "status": "succeeded_with_data",
+            "rows_fetched": 1,
+            "rows_matched": 1,
+            "rows_upserted": 1,
+            "truncated": false,
+            "connection_id": "conn_a00000000000000000000000"
+          }
+        ],
+        "skipped": [
+          {
+            "provider": "example",
+            "reason": "no_capability"
+          }
+        ]
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "syncProjectTraffic",
+      "path": "/projects/{project_id}/analytics/sync",
+      "status": 200
+    },
+    {
+      "body": {
+        "created_at": "2026-10-20T00:00:00.000Z",
+        "domain": "example.com",
+        "id": "prj_a00000000000000000000000",
+        "name": "Example",
+        "updated_at": "2026-10-20T00:00:00.000Z",
+        "write_mode": "active"
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createProject",
+      "path": "/projects",
+      "status": 201
+    },
+    {
+      "body": {
+        "created_at": "2026-10-20T00:00:00.000Z",
+        "domain": "example.com",
+        "id": "prj_a00000000000000000000000",
+        "name": "Updated",
+        "updated_at": "2026-10-20T00:00:00.000Z",
+        "write_mode": "active"
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateProject",
+      "path": "/projects/{project_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "city_name": "Example City",
+            "country_code": "US",
+            "display_name": "Example City",
+            "hl": "en",
+            "kind": "city",
+            "language_code": "en",
+            "language_label": "English",
+            "location_key": "US/Example City@en",
+            "region_code": null,
+            "region_name": null
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "searchLocations",
+      "path": "/locations/search",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "connection_id": "conn_a00000000000000000000000",
+            "credential_source": "own",
+            "credits": {
+              "app": null,
+              "programmatic": {
+                "unit": "cents",
+                "amount_per_month": 100
+              }
+            },
+            "own": {
+              "app": {
+                "unit": "cents",
+                "amount_per_month": 1000
+              },
+              "programmatic": null
+            },
+            "provider": "dataforseo",
+            "source": "connection"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listProviderBudgets",
+      "path": "/projects/{project_id}/provider-budgets",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "kind": "backlinks",
+            "target": "example.com",
+            "target_scope": "site",
+            "mode": "as_is",
+            "include_subdomains": true,
+            "saved_at": "2026-10-20T00:00:00.000Z",
+            "fresh_until": "2026-11-19T00:00:00.000Z",
+            "state": "fresh"
+          },
+          {
+            "kind": "domain_overview",
+            "target": "example.com",
+            "target_scope": "root",
+            "language_code": "en",
+            "location_code": 2840,
+            "saved_at": "2026-10-20T00:00:00.000Z",
+            "fresh_until": "2026-11-19T00:00:00.000Z",
+            "state": "fresh"
+          },
+          {
+            "kind": "keyword_research",
+            "seed": "example",
+            "mode": "auto",
+            "country_code": "US",
+            "language_code": "en",
+            "include_clickstream": false,
+            "result_limit": 100,
+            "saved_at": "2026-10-20T00:00:00.000Z",
+            "fresh_until": "2026-11-19T00:00:00.000Z",
+            "state": "fresh"
+          }
+        ],
+        "meta": {
+          "freshness_days": 30
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listStoredResearchReports",
+      "path": "/projects/{project_id}/research/reports",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "cached": true,
+          "cost_cents": 0,
+          "country_code": "US",
+          "fetched_at": "2026-10-20T00:00:00.000Z",
+          "include_clickstream": false,
+          "language_code": "en",
+          "mode": "auto",
+          "partial": false,
+          "provider": "dataforseo",
+          "request_key": "request-key",
+          "result_limit": 100,
+          "rows": [
+            {
+              "competition": 0.2,
+              "cpc_cents": 125,
+              "difficulty": 23.5,
+              "intent": null,
+              "keyword": "example",
+              "monthly_trend": [
+                {
+                  "month": 9,
+                  "search_volume": null,
+                  "year": 2026
+                }
+              ],
+              "search_volume": 100,
+              "source": "related",
+              "already_saved": false,
+              "already_tracked": false
+            }
+          ],
+          "seed": "example",
+          "sources": [
+            {
+              "cached": true,
+              "cost_cents": 0,
+              "returned": 1,
+              "source": "related",
+              "status": "ok"
+            }
+          ],
+          "fresh_until": "2026-11-19T00:00:00.000Z",
+          "saved_at": "2026-10-20T00:00:00.000Z",
+          "stale": false,
+          "state": "fresh"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getStoredResearchReport",
+      "path": "/projects/{project_id}/research/reports/{kind}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "cached": true,
+          "cost_cents": 0,
+          "country_code": null,
+          "fetched_at": "2026-10-20T00:00:00.000Z",
+          "history": null,
+          "language_code": "en",
+          "location_code": 2840,
+          "overview": null,
+          "pages": null,
+          "partial": false,
+          "previous_fetched_at": null,
+          "previous_overview": null,
+          "previous_source_snapshot_at": null,
+          "provider": "dataforseo",
+          "scope": "root",
+          "source_snapshot_at": null,
+          "state": "fresh",
+          "target": "example.com",
+          "keywords": null,
+          "fresh_until": "2026-11-19T00:00:00.000Z",
+          "saved_at": "2026-10-20T00:00:00.000Z",
+          "stale": false,
+          "data_state": "no_data"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getStoredResearchReport",
+      "path": "/projects/{project_id}/research/reports/{kind}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "models": [
+            {
+              "id": "gpt-example",
+              "provider": "chat_gpt",
+              "label": "Example model",
+              "reasoning": false,
+              "web_search": true,
+              "min_output_tokens": 16,
+              "max_output_tokens": 4096,
+              "price_available": true,
+              "admission_enabled": true,
+              "actual_cost_enabled": false
+            }
+          ],
+          "visibility_markets": [
+            {
+              "platform": "chat_gpt",
+              "location_code": 2840,
+              "country_name": "United States",
+              "languages": [
+                {
+                  "code": "en",
+                  "name": "English"
+                }
+              ]
+            }
+          ],
+          "response_countries": [
+            {
+              "code": "US",
+              "name": "United States"
+            }
+          ],
+          "response_languages": [
+            {
+              "code": "en",
+              "name": "English"
+            }
+          ],
+          "limits": {
+            "max_models": 2,
+            "max_output_tokens": 4096
+          },
+          "fetched_at": "2026-10-20T00:00:00.000Z",
+          "actual_cost_available": false
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getAiResearchCatalog",
+      "path": "/projects/{project_id}/ai-catalog",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "snapshot_ref": "test-snapshot-reference",
+          "cached": true,
+          "cached_until": "2026-10-21T00:00:00.000Z",
+          "cost_cents": 0,
+          "fetched_at": "2026-10-20T00:00:00.000Z",
+          "fetched_row_count": 1,
+          "history": [
+            {
+              "lost_links": 0,
+              "lost_referring_domains": 0,
+              "month": "2026-09",
+              "new_links": 1,
+              "new_referring_domains": 0
+            }
+          ],
+          "include_subdomains": true,
+          "provider": "dataforseo",
+          "rows": [
+            {
+              "anchor": null,
+              "domain_authority": null,
+              "first_seen": null,
+              "flags": [],
+              "links_count": 1,
+              "lost_at": null,
+              "source_domain": "example.com",
+              "source_url": "https://example.com/source",
+              "spam_score": null,
+              "status": "active",
+              "target_url": "https://example.com/"
+            }
+          ],
+          "summary": {
+            "backlinks_total": 1,
+            "broken_backlinks": 0,
+            "broken_pages": 0,
+            "dofollow_pct": 0,
+            "domain_rank": 0,
+            "lost_backlinks": 0,
+            "lost_referring_domains": 0,
+            "new_backlinks": 0,
+            "new_referring_domains": 0,
+            "referring_domains_total": 1,
+            "referring_pages": 0,
+            "spam_score": 0
+          },
+          "target": "example.com",
+          "target_scope": "site",
+          "total_rows_available": 1,
+          "fresh_until": "2026-11-19T00:00:00.000Z",
+          "saved_at": "2026-10-20T00:00:00.000Z",
+          "stale": false,
+          "state": "fresh"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getStoredResearchReport",
+      "path": "/projects/{project_id}/research/reports/{kind}",
+      "status": 200
+    },
+    {
+      "body": {
+        "domain": "example.com",
+        "id": "cmp_a00000000000000000000000",
+        "label": null
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "addCompetitor",
+      "path": "/projects/{project_id}/competitors",
+      "status": 201
+    },
+    {
+      "body": {
+        "email": "owner@example.com",
+        "id": "usr_a00000000000000000000000",
+        "name": "Updated",
+        "projects": [
+          {
+            "domain": "example.com",
+            "id": "prj_a00000000000000000000000",
+            "missing_provider_keys": [],
+            "name": "Example",
+            "provider_keys_required": false,
+            "role": "owner"
+          }
+        ],
+        "provider_keys_required": false
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateMe",
+      "path": "/me",
+      "status": 200
+    },
+    {
+      "body": {
+        "removed": true
+      },
+      "contentType": "application/json",
+      "method": "DELETE",
+      "operationId": "removeProjectCompetitor",
+      "path": "/projects/{project_id}/competitors/{competitor_id}",
+      "status": 200
+    }
+  ],
+  "source": "lib/api/sdk-wave4-router.test.ts"
+}

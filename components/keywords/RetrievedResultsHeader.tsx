@@ -1,10 +1,11 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import type { RetrievedResults, StoredResultsIndexEntry } from "@/lib/checks/contract";
+import type { StoredResultsIndexEntry } from "@/lib/checks/contract";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { ClockCounterClockwiseIcon as History } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
+import { XIcon } from "@phosphor-icons/react/dist/csr/X";
 import { useTranslations } from "next-intl";
 import { KeywordCheckScope } from "./KeywordCheckScope";
 import { RetrievedResultsPicker } from "./RetrievedResultsPicker";
@@ -12,7 +13,6 @@ import { RetrievedResultsPicker } from "./RetrievedResultsPicker";
 type Props = {
   keyword?: Pick<KeywordRow, "location" | "device" | "engine">;
   compareFrom: string;
-  current: RetrievedResults | null;
   entries: readonly StoredResultsIndexEntry[];
   formatDate: (iso: string) => string;
   formatDateTime: (iso: string) => string;
@@ -24,24 +24,16 @@ type Props = {
   selected: string;
 };
 
-function Eyebrow({ children }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <span className="font-sans tabular-nums text-[10px] uppercase tracking-[0.08em] text-fg-muted">
-      {children}
-    </span>
-  );
-}
-
 export function RetrievedResultsHeader(props: Readonly<Props>) {
   const t = useTranslations("projectRankTracker.keywordDetail.results");
-  const { mode } = props;
+  const comparing = props.mode === "compare";
   return (
     <header className="border-b border-border" data-testid="retrieved-header">
       <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <h2 className="m-0 text-[17px] font-semibold leading-6 text-fg">
-              {mode === "compare" ? t("snapshots") : t("snapshot")}
+              {comparing ? t("snapshots") : t("snapshot")}
             </h2>
             <InfoTooltip text={t("titleTip")} />
           </div>
@@ -52,81 +44,53 @@ export function RetrievedResultsHeader(props: Readonly<Props>) {
           ) : null}
           <p className="m-0 mt-2 text-[12.5px] leading-5 text-fg-muted">{t("description")}</p>
         </div>
-        <SegmentedControl
-          ariaLabel={t("snapshot")}
-          className="self-start"
-          fitContent
-          onChange={props.onMode}
-          options={[
-            { label: t("oneCheck"), value: "one" },
-            {
-              disabled: !props.compareEnabled,
-              label: t("compareTwo"),
-              tooltip: !props.compareEnabled ? t("needTwo") : undefined,
-              value: "compare",
-            },
-          ]}
-          size="toolbar"
-          value={mode}
-        />
-      </div>
-      <div className="px-4 pb-4 sm:px-5">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" data-testid="retrieved-picker-slots">
-          <div className="flex min-h-[34px] min-w-0 items-center gap-2 [&>button]:min-w-0">
-            {mode === "compare" ? (
-              <>
-                <Eyebrow>{t("from")}</Eyebrow>
-                <RetrievedResultsPicker
-                  ariaLabel={t("earlierCheck")}
-                  entries={props.entries}
-                  formatDate={props.formatDate}
-                  formatDateTime={props.formatDateTime}
-                  onChange={props.onSelectFrom}
-                  pickerRole="from"
-                  selectedTo={props.selected}
-                  value={props.compareFrom}
-                />
-              </>
-            ) : (
+        <div
+          className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end"
+          data-testid="retrieved-picker-slots"
+        >
+          {comparing ? (
+            <div className="flex min-w-0 items-center gap-2 [&>button]:min-w-0">
+              <span className="text-[11px] text-fg-muted">{t("from")}</span>
               <RetrievedResultsPicker
-                ariaLabel={t("storedChecks")}
+                ariaLabel={t("earlierCheck")}
                 entries={props.entries}
                 formatDate={props.formatDate}
                 formatDateTime={props.formatDateTime}
-                leadingIcon={<History aria-hidden size={14} weight="regular" />}
-                onChange={props.onSelectTo}
-                pickerRole="one"
-                value={props.selected}
+                onChange={props.onSelectFrom}
+                pickerRole="from"
+                selectedTo={props.selected}
+                value={props.compareFrom}
               />
-            )}
-          </div>
-          <div className="flex min-h-[34px] min-w-0 items-center gap-2 [&>button]:min-w-0">
-            {mode === "compare" ? (
-              <>
-                <Eyebrow>{t("to")}</Eyebrow>
-                <RetrievedResultsPicker
-                  ariaLabel={t("laterCheck")}
-                  entries={props.entries}
-                  formatDate={props.formatDate}
-                  formatDateTime={props.formatDateTime}
-                  onChange={props.onSelectTo}
-                  pickerRole="to"
-                  selectedFrom={props.compareFrom}
-                  value={props.selected}
-                />
-              </>
-            ) : null}
-          </div>
-        </div>
-        <div className="mt-2 flex min-h-7 items-center">
-          {mode === "one" && props.current?.tier === "full" ? (
-            <span className="rounded-full border border-border px-2.5 py-1 font-sans tabular-nums text-[11px] text-fg-muted">
-              {t("retrieved", {
-                requested: props.current.requestedDepth ? String(props.current.requestedDepth) : "",
-                retrieved: props.current.retrievedPositions,
-              })}
-            </span>
+            </div>
           ) : null}
+          <div className="flex min-w-0 items-center gap-2 [&>button]:min-w-0">
+            {comparing ? <span className="text-[11px] text-fg-muted">{t("to")}</span> : null}
+            <RetrievedResultsPicker
+              ariaLabel={t(comparing ? "laterCheck" : "storedChecks")}
+              entries={props.entries}
+              formatDate={props.formatDate}
+              formatDateTime={props.formatDateTime}
+              leadingIcon={
+                comparing ? undefined : <History aria-hidden size={14} weight="regular" />
+              }
+              onChange={props.onSelectTo}
+              pickerRole={comparing ? "to" : "one"}
+              selectedFrom={comparing ? props.compareFrom : undefined}
+              value={props.selected}
+            />
+          </div>
+          <Button
+            aria-label={comparing ? t("stopComparing") : undefined}
+            aria-description={!props.compareEnabled ? t("needTwo") : undefined}
+            title={!props.compareEnabled ? t("needTwo") : undefined}
+            className="min-w-0"
+            disabled={!comparing && !props.compareEnabled}
+            onClick={() => props.onMode(comparing ? "one" : "compare")}
+            size="xs"
+            variant="ghost"
+          >
+            {comparing ? <XIcon aria-hidden size={16} /> : t("compareAction")}
+          </Button>
         </div>
       </div>
     </header>

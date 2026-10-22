@@ -1,5 +1,7 @@
 "use server";
 
+import type { ActionPaymentFailure } from "@/lib/action-payment/contract";
+import { ActionPaymentError } from "@/lib/action-payment/token";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { budgetFailureResult } from "@/lib/rank-check/budget-failure";
 import { launchRankCheckRun } from "@/lib/rank-check/runs/launch";
@@ -19,6 +21,24 @@ function failure(
   return { code, message, status: "not_started" };
 }
 
+function paymentFailureCode(reason: ActionPaymentFailure): LaunchRankCheckRunActionFailure["code"] {
+  switch (reason) {
+    case "payment_quote_expired":
+      return "preview_expired";
+    case "payment_quote_changed":
+      return "preview_mismatch";
+    case "payment_quote_required":
+    case "payment_unavailable":
+      return "payment_unavailable";
+    case "payment_already_executed":
+      return "payment_already_executed";
+    default: {
+      const unreachable: never = reason;
+      return unreachable;
+    }
+  }
+}
+
 export async function launchRankCheckRunAction(
   input: unknown,
 ): Promise<LaunchRankCheckRunActionResult> {
@@ -28,6 +48,9 @@ export async function launchRankCheckRunAction(
   try {
     return await launchRankCheckRun({
       actorId: actor.id,
+      paymentOptionId: data.paymentOptionId,
+      acceptedPayment: data.acceptedPayment,
+      requirePayment: true,
       depth: data.depth,
       idempotencyKey: data.idempotencyKey,
       origin: APP_REQUEST_ORIGIN,
@@ -40,6 +63,8 @@ export async function launchRankCheckRunAction(
   } catch (error) {
     const budgetFailure = budgetFailureResult(error);
     if (budgetFailure) return budgetFailure;
+    if (error instanceof ActionPaymentError)
+      return failure(paymentFailureCode(error.reason), error.message);
     if (error instanceof PreviewTokenError) {
       return failure(
         error.code === "expired" ? "preview_expired" : "preview_mismatch",

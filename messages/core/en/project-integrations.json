@@ -184,7 +184,9 @@
       "analyticsDescription": "{provider} connection for owned data enrichment.",
       "localDescription": "Add [seq:5,15,15,4] to choose the ranks returned for a keyword.",
       "trafficNoSource": "No analytics source completed. Check the provider credentials and worker logs.",
-      "trafficUpdated": "{keywords, number} keyword and {pages, number} page snapshots updated."
+      "trafficUpdated": "{keywords, number} keyword and {pages, number} page snapshots updated.",
+      "manageKey": "Manage key",
+      "removeKey": "Remove key"
     },
     "meta": {
       "labels": {

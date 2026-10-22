@@ -1,3 +1,4 @@
+import { ActionPaymentError } from "@/lib/action-payment/token";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import {
@@ -32,6 +33,13 @@ export function errorFromUnknown(
   admissionDetails?: AdmissionErrorDetails | null,
 ) {
   const instance = `urn:bisibility:api:v1:${url.pathname}`;
+  if (error instanceof ActionPaymentError)
+    return errorResponse(
+      "conflict",
+      "Review a current payment quote before launching this action.",
+      409,
+      { headers, instance, problemDetails: { reason: error.reason } },
+    );
   if (error instanceof ProviderAllocationExhaustedError)
     return budgetExhaustedResponse(
       { headers, instance },

@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import {
   renderWithFeatureMessages,
   researchFeatureTestMessages,
@@ -86,8 +87,8 @@ describe("RecentResearchSearches", () => {
   });
 
   it.each([
-    ["2026-07-22T20:00:00.000Z", "cached, free for 10h"],
-    ["2026-07-22T16:00:00.000Z", "cached, free for 6h"],
+    ["2026-07-22T20:00:00.000Z", "cached, free for 10 hours"],
+    ["2026-07-22T16:00:00.000Z", "cached, free for 6 hours"],
   ])("derives the remaining cache TTL from %s", (cachedUntil, expected) => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-22T10:00:00.000Z"));
@@ -141,7 +142,7 @@ describe("RecentResearchSearches", () => {
   it.each([
     {
       cachedUntil: "2026-07-24T00:00:00.000Z",
-      expectedCacheLabel: "cached, free for 8h",
+      expectedCacheLabel: "cached, free for 8 hours",
       expectedScopeLabel: "Spain / Spanish - just now",
       name: "displays a live country-language scope",
       scopeLabel: "Spain / Spanish",
@@ -180,5 +181,56 @@ describe("RecentResearchSearches", () => {
     render(<RecentResearchSearches onOpen={vi.fn()} onRemove={vi.fn()} searches={[search]} />);
 
     expect(screen.getByText("cache expired")).toBeInTheDocument();
+  });
+  it("shows the retained original charge separately from a free cached read", () => {
+    const quote = paymentQuote();
+    const originalPayment = {
+      actionId: "original",
+      quoteId: quote.id,
+      option: quote.option,
+      state: "settled" as const,
+      charge: { ...quote.charge, value: "4", certainty: "measured" as const },
+    };
+    const payment = {
+      ...originalPayment,
+      actionId: "cached",
+      state: "free" as const,
+      charge: { ...originalPayment.charge, value: "0", certainty: "free" as const },
+    };
+    render(
+      <RecentResearchSearches
+        onOpen={vi.fn()}
+        onRemove={vi.fn()}
+        searches={[{ ...search, originalPayment, payment }]}
+      />,
+    );
+    expect(screen.getByText("Original lookup:")).toBeInTheDocument();
+    expect(screen.getByText("4 tokens")).toBeInTheDocument();
+    expect(screen.queryByText("0 tokens")).not.toBeInTheDocument();
+  });
+
+  it("rounds a retained credit amount and exposes the exact value", () => {
+    const quote = paymentQuote({
+      charge: {
+        certainty: "estimate",
+        unit: { kind: "credits", key: "bisibility", plural: "Credits", singular: "Credit" },
+        value: "9.8889",
+      },
+    });
+    const originalPayment = {
+      actionId: "original",
+      charge: { ...quote.charge, certainty: "measured" as const },
+      option: quote.option,
+      quoteId: quote.id,
+      state: "settled" as const,
+    };
+    render(
+      <RecentResearchSearches
+        onOpen={vi.fn()}
+        onRemove={vi.fn()}
+        searches={[{ ...search, originalPayment }]}
+      />,
+    );
+    expect(screen.getByText("9.89 Credits")).toHaveAttribute("title", "9.8889 Credits");
   });
 });

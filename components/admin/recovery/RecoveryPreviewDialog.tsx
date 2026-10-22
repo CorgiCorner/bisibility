@@ -1,4 +1,5 @@
 "use client";
+import { DangerousActionGate } from "@/components/admin/DangerousActionGate";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import type { RecoveryPreview, RecoveryUiError } from "@/lib/metering/recovery/contract";
@@ -25,9 +26,11 @@ export function RecoveryPreviewDialog({
       title={t("preview")}
       dismissDisabled={busy}
       footer={
-        <Button disabled={busy || !preview?.eligible.length} onClick={onCommit}>
-          {t("commit")}
-        </Button>
+        <DangerousActionGate action="repairUsage">
+          <Button disabled={busy || !preview?.eligible.length} onClick={onCommit}>
+            {t("commit")}
+          </Button>
+        </DangerousActionGate>
       }
     >
       {error && (

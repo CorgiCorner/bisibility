@@ -148,3 +148,29 @@ describe("installed detail header quality sidecar", () => {
     expect(screen.queryByText(/#101|92|Improved by/)).not.toBeInTheDocument();
   });
 });
+
+it("shows the first confirmed rank and time without redundant best or unknown freshness", () => {
+  const quality = detailQualityFixture();
+  if (!quality.best || !quality.rankQuality.current) throw new Error("Missing fixture");
+  quality.best.qualifyingCount = 1;
+  quality.rankQuality.current.freshness = "unknown";
+  quality.rankQuality.event = "first";
+  quality.rankQuality.comparison = "unavailable";
+  quality.rankQuality.baseline = null;
+  render(
+    <KeywordDetailHeaderChrome
+      actions={null}
+      keyword={detailMetadataFixture()}
+      quality={quality}
+      timeZone="UTC"
+    />,
+  );
+  expect(screen.getByTestId("keyword-detail-slot-value-position")).toHaveTextContent("#6");
+  expect(screen.queryByText("Freshness unknown")).not.toBeInTheDocument();
+  expect(screen.queryByText(/Best #|Best recorded/)).not.toBeInTheDocument();
+  expect(screen.queryByText("First observation")).not.toBeInTheDocument();
+  expect(screen.getByText("Checked")).toBeVisible();
+  const scope = screen.getByTestId("keyword-detail-definition-scope");
+  expect(scope.closest("details")).not.toHaveAttribute("open");
+  expect(scope).not.toBeVisible();
+});

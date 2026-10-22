@@ -1,5 +1,6 @@
 import { AppHeaderFrame } from "@/components/shell/AppHeaderFrame";
 import { NotificationBell } from "@/components/shell/NotificationBell";
+import type { PlanStatus } from "@/components/shell/plan-status";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { appVersion } from "@/lib/app-version";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
@@ -14,6 +15,7 @@ export type AppHeaderProps = {
   canSetDefault?: boolean;
   context?: ReactNode;
   enabledExperimentalModules?: readonly ExperimentalModuleKey[];
+  planStatus?: PlanStatus | null;
   projectRef: string;
   setupCompleted?: boolean;
   setupDoneCount?: number;
@@ -33,6 +35,7 @@ export function AppHeader({
   canSetDefault,
   context,
   enabledExperimentalModules = [],
+  planStatus = null,
   projectRef,
   setupCompleted = false,
   setupDoneCount = 0,
@@ -53,6 +56,7 @@ export function AppHeader({
       context={context}
       enabledExperimentalModules={enabledExperimentalModules}
       notificationControl={<NotificationBell projectId={activeProjectId} projectRef={projectRef} />}
+      planStatus={planStatus}
       projectRef={projectRef}
       setupCompleted={setupCompleted}
       setupDoneCount={setupDoneCount}

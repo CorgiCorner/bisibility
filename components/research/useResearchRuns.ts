@@ -1,5 +1,6 @@
 "use client";
 
+import type { AcceptedActionPayment } from "@/lib/action-payment/contract";
 import type {
   ResearchKeywordsAction,
   ResearchKeywordsActionInput,
@@ -11,6 +12,7 @@ import {
   researchScopeKey,
 } from "@/lib/research/scope";
 import { useState } from "react";
+import { loadDeeperEstimate, loadResearchEstimate } from "./research-payment-estimates";
 import {
   mergeResearchTabs,
   researchTabIdentity,
@@ -18,8 +20,6 @@ import {
 } from "./research-tab-identity";
 import {
   actualResearchCostCents,
-  loadDeeperEstimate,
-  loadResearchEstimate,
   mapWithConcurrency,
   markTabsSaved,
   markTabsTracked,
@@ -84,23 +84,30 @@ export function useResearchRuns({
     nextSeeds: string[],
     overrides: Partial<ResearchKeywordsActionInput> = {},
     runScope: ResearchScope = scope,
+    approvals?: Record<
+      string,
+      ResearchKeywordsActionInput & {
+        paymentOptionId: string;
+        acceptedPayment: AcceptedActionPayment;
+      }
+    >,
   ) {
     setResearching(true);
     try {
       const withLocation = { ...overrides, locationKey: researchScopeLocationKey(runScope) };
-      const requestedLimit = (overrides.resultLimit ?? resultLimit) as 100 | 300 | 500;
-      const runConnectionId = (overrides.connectionId ?? connectionId) || undefined;
-      const runClickstream = overrides.includeClickstream ?? includeClickstream;
-      const runMode = (overrides.mode ?? mode) as KeywordResearchMode;
       const perSeed = await mapWithConcurrency(
         uniqueResearchSeeds(nextSeeds),
         RESEARCH_SEED_CONCURRENCY,
         async (seed) => {
+          const runInput = requestInput(seed, {
+            ...withLocation,
+            ...approvals?.[seed],
+            estimateOnly: false,
+          });
+          const requestedLimit = runInput.resultLimit ?? resultLimit;
           let outcome: UiResearchOutcome;
           try {
-            const result = await researchAction(
-              requestInput(seed, { ...withLocation, estimateOnly: false }),
-            );
+            const result = await researchAction(runInput);
             // A paid run never yields a dry run; guard the union for the type system.
             outcome =
               result.ok && isKeywordResearchEstimate(result)
@@ -109,18 +116,22 @@ export function useResearchRuns({
           } catch {
             outcome = { charged: null, ok: false, reason: "lookup_failed" };
           }
-          const followupInput = requestInput(seed, withLocation);
+          const followupInput = { ...runInput, acceptedPayment: undefined };
           const [deeperEstimate, retryEstimate] = await Promise.all([
             outcome.ok
               ? loadDeeperEstimate(researchAction, followupInput, requestedLimit)
               : undefined,
             outcome.ok ? undefined : loadResearchEstimate(researchAction, followupInput),
           ]);
-          return { deeperEstimate, outcome, retryEstimate, seed };
+          return { deeperEstimate, outcome, retryEstimate, seed, runInput };
         },
       );
       const nextTabs: ResearchTab[] = [];
-      for (const { deeperEstimate, outcome, retryEstimate, seed } of perSeed) {
+      for (const { deeperEstimate, outcome, retryEstimate, seed, runInput } of perSeed) {
+        const requestedLimit = runInput.resultLimit ?? resultLimit;
+        const runConnectionId = runInput.connectionId || undefined;
+        const runClickstream = runInput.includeClickstream ?? false;
+        const runMode = runInput.mode ?? mode;
         if (!outcome.ok && outcome.reason === "wallet_budget_exhausted") {
           setBudgetBlocked(true);
           setWalletBudgetBlocked(true);
@@ -135,6 +146,7 @@ export function useResearchRuns({
           addSpend(actualResearchCostCents(outcome));
           recent.add({
             cachedUntil: outcome.cachedUntil,
+            payment: outcome.payment,
             connectionId: runConnectionId,
             includeClickstream: runClickstream,
             locationKey: researchScopeLocationKey(runScope),
@@ -146,6 +158,7 @@ export function useResearchRuns({
         }
         nextTabs.push({
           connectionId: runConnectionId,
+          paymentOptionId: runInput.paymentOptionId,
           deeperEstimate,
           id: researchTabIdentity({
             connectionId: runConnectionId,

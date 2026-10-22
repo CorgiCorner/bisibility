@@ -121,7 +121,7 @@
           "budgetWithoutAmounts": "El uso requiere revisión. Revisa el presupuesto y las operaciones sin conciliar antes de reintentarlo.",
           "keywordArchived": "Esta palabra clave se ha archivado antes de que empezara la comprobación, así que se ha detenido sin llegar a costar nada.",
           "marketInactive": "El mercado de esta palabra clave está en pausa, así que la comprobación se ha detenido sin llegar a costar nada.",
-          "noProvider": "Conecta o vuelve a conectar un proveedor para iniciar esta ejecución.",
+          "noProvider": "Revisa la fuente de datos seleccionada en Integraciones para iniciar esta ejecución.",
           "providerUnavailable": "Ahora mismo no se puede contactar con el proveedor. La ejecución se iniciará sola en cuanto vuelva a conectarse.",
           "waiting": "Esta ejecución está esperando para empezar. Continuará automáticamente en cuanto sea posible.",
           "workerCloud": "Ahora mismo no se puede contactar con el proceso en segundo plano. La ejecución se iniciará sola en cuanto vuelva a conectarse.",
@@ -160,6 +160,12 @@
         "waiting": "en espera"
       },
       "viewAll": "Ver todas las ejecuciones"
+    },
+    "planStatus": {
+      "pro": "Pro",
+      "trial": "Trial",
+      "trialDaysShort": "{days, plural, one {Prueba · # día} other {Prueba · # días}}",
+      "trialDays": "{days, plural, one {Prueba · queda # día} other {Prueba · quedan # días}}"
     },
     "userMenu": {
       "accountMenu": "Menú de la cuenta",
@@ -220,7 +226,7 @@
         "keywordResearch": "Encuentra frases que merezca la pena seguir, con el coste a la vista antes de cada consulta.",
         "markets": "Gestiona las ubicaciones, los valores por defecto de las palabras clave y el ciclo de vida de los mercados.",
         "preferences": "Tema y preferencias personales.",
-        "runs": "Comprobaciones de posiciones e importaciones de Search Console de este proyecto.",
+        "runs": "Comprobaciones de posición, seguimiento de IA e importaciones de Search Console de este proyecto.",
         "searchConsole": "Lo que Google ha comunicado, lo que ha ocultado y lo que tú conservas.",
         "security": "Contraseña, sesiones y protección de la cuenta.",
         "timeline": "Señales del proyecto, cambios en las páginas y notas a lo largo del tiempo.",
@@ -326,50 +332,6 @@
       },
       "readOnlyTitle": "Demo de solo lectura.",
       "snapshot": "Instantánea: {date} UTC"
-    },
-    "betaBanner": {
-      "backupLoadError": "No se han podido cargar los recuentos de la copia de seguridad del proyecto.",
-      "coverage": "Qué cubre la beta",
-      "detail": "La recuperación de datos todavía no está garantizada. Guarda una exportación reciente.",
-      "dismiss": "Cerrar el aviso de la beta alojada",
-      "exportData": "Exportar datos",
-      "lead": "Beta alojada:",
-      "loading": "Cargando…"
-    },
-    "betaCoverage": {
-      "close": "Cerrar",
-      "covered": "Cubierto",
-      "coveredItems": {
-        "export": "Puedes exportar en cualquier momento y con toda la fidelidad.",
-        "history": "El histórico completo se conserva durante toda la beta, sin recortes.",
-        "providerOwnership": "Tus claves y tus cuotas de proveedor siguen siendo tuyas: sin recargo ni reventa.",
-        "scheduled": "Las comprobaciones de posiciones se ejecutan según lo programado, con el mismo motor que en autoalojamiento."
-      },
-      "end": {
-        "detail": "Te avisaremos con 30 días de antelación antes de empezar a cobrar. No se cobra nada sin tu confirmación. El autoalojamiento seguirá disponible.",
-        "title": "Cuándo termina la beta"
-      },
-      "exportData": "Exportar datos",
-      "notYet": "Todavía no",
-      "notYetItems": {
-        "migration": "No hay una vía de migración garantizada entre regiones alojadas.",
-        "restore": "Sin garantía de restauración. Si perdemos datos, no podremos devolverte a un estado anterior.",
-        "support": "La asistencia se presta por correo en la medida de lo posible, sin un tiempo de respuesta comprometido.",
-        "uptime": "Sin SLA de disponibilidad. El mantenimiento puede interrumpir las comprobaciones sin previo aviso."
-      },
-      "responsibilities": {
-        "ours": {
-          "detail": "Guardamos instantáneas nocturnas durante 7 días en la medida de lo posible. Esta beta abierta la lleva un equipo pequeño, así que no hay turnos de guardia ni avisos de incidencia con los que puedas contar: da por hecho que detectarás una caída antes que nosotros.",
-          "title": "Por nuestra parte"
-        },
-        "title": "Quién hace qué",
-        "yours": {
-          "detail": "Guarda una exportación reciente. Es la copia que está totalmente bajo tu control y se puede restaurar en una instalación autoalojada.",
-          "title": "Por tu parte"
-        }
-      },
-      "subtitle": "Política de la beta alojada",
-      "title": "Qué cubre la beta alojada"
     },
     "backup": {
       "cancel": "Cancelar",

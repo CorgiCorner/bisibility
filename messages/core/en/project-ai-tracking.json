@@ -8,7 +8,7 @@
     "consumerScrapersMeasureTheConsumerSurfaceModelAPI": "Consumer scrapers measure the consumer surface. Model API answers are a different source. Provider datasets are not live tracker samples. Actual model and locale may remain unknown.",
     "previewConfigurationAndCost": "Preview configuration and cost",
     "budgetAndCredentialsAreCheckedAgainBeforeLaunch": "Budget and credentials are checked again before launch. Schedules remain disabled by default.",
-    "approveAndQueueRun": "Approve and queue run",
+    "approveAndQueueRun": "Run checks",
     "configureARun": "Configure a run",
     "exactProviderModelIdentifier": "Exact provider model identifier",
     "iApproveThisRunAndTheProviderActual": "I approve this run and the provider actual cost",

@@ -67,6 +67,16 @@ describe("SERP neutral constants", () => {
     expect(constants.resolveSerpStopOnMatch(false)).toBe(false);
   });
 
+  it.each([undefined, null, true, false])(
+    "forces only exact Top20 full collection for preference %s",
+    (preference) => {
+      expect(constants.resolveEffectiveSerpStopOnMatch(preference, 20)).toBe(false);
+      for (const depth of [10, 50, 100])
+        expect(constants.resolveEffectiveSerpStopOnMatch(preference, depth)).toBe(
+          preference ?? true,
+        );
+    },
+  );
   it("does not export location catalog values", () => {
     for (const name of ["DEFAULT_SERP_MARKET", "serpMarketNames", "serpMarkets"]) {
       expect(constants).not.toHaveProperty(name);

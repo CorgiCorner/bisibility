@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { API_KEY_EXPIRY_DAYS } from "@/lib/api/api-key-policy";
-import { canCreateOAuthApiTokens, getOAuthConsentCopy } from "@/lib/auth/oauth-consent-copy";
+import {
+  getOAuthConsentCopy,
+  type OAuthAccessLevel,
+  oauthConsentRedirectIsInsecure,
+} from "@/lib/auth/oauth-consent-copy";
 import type { OAuthConsentClient } from "@/lib/auth/oauth-consent-types";
 import {
   OAUTH_ACCESS_TOKEN_TTL_SECONDS,
@@ -15,14 +18,23 @@ const ACCESS_TOKEN_TTL_HOURS = OAUTH_ACCESS_TOKEN_TTL_SECONDS / (60 * 60);
 const REFRESH_TOKEN_TTL_DAYS = OAUTH_REFRESH_TOKEN_TTL_SECONDS / (24 * 60 * 60);
 
 type OAuthConsentRequestProps = {
+  allowApiTokens: boolean;
+  ceiling: string[];
   client: OAuthConsentClient;
   disabled: boolean;
   error: string | null;
+  level: OAuthAccessLevel | null;
+  onAllowApiTokens: (value: boolean) => void;
   onChoose: (accept: boolean) => void;
+  onLevel: (level: OAuthAccessLevel) => void;
   pendingChoice: "accept" | "deny" | null;
   secondsLeft: number;
   scopes: string[];
 };
+
+function shownRedirect(client: OAuthConsentClient) {
+  return client.redirectTarget || client.redirectUri;
+}
 
 function redirectDomain(label: string | null) {
   if (!label) return null;
@@ -39,7 +51,9 @@ function TechnicalDetails({
 }: Readonly<{ client: OAuthConsentClient; scopes: string[] }>) {
   const t = useTranslations("auth.oauthConsent");
   const renewsAccess = scopes.includes("offline_access");
-  const createsApiTokens = canCreateOAuthApiTokens(scopes);
+  const createsApiTokens = scopes.includes("tokens:write");
+  const redirectValue = shownRedirect(client);
+  const insecureRedirect = oauthConsentRedirectIsInsecure(redirectValue);
   return (
     <details className="mt-5 text-[12px] text-fg-muted">
       <summary className="w-fit cursor-pointer rounded-control underline decoration-border underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-solid">
@@ -50,10 +64,13 @@ function TechnicalDetails({
           <dt>{t("technical.clientId")}</dt>
           <dd>{client.id || t("technical.unavailable")}</dd>
         </div>
-        {client.redirectUri ? (
+        {redirectValue ? (
           <div>
             <dt>{t("technical.redirectUri")}</dt>
-            <dd>{client.redirectUri}</dd>
+            <dd>{redirectValue}</dd>
+            {insecureRedirect ? (
+              <dd className="text-red-text">{t("technical.insecureRedirect")}</dd>
+            ) : null}
           </div>
         ) : null}
         <div>
@@ -74,10 +91,7 @@ function TechnicalDetails({
           <div>
             <dt>{t("technical.apiExpiry")}</dt>
             <dd>
-              {t.rich("technical.apiLifetime", {
-                days: API_KEY_EXPIRY_DAYS.join(", "),
-                strong: (chunks) => <strong>{chunks}</strong>,
-              })}
+              {client.dynamic ? t("technical.apiLifetime") : t("technical.apiLifetimeReviewed")}
             </dd>
           </div>
         ) : null}
@@ -87,10 +101,15 @@ function TechnicalDetails({
 }
 
 export function OAuthConsentRequest({
+  allowApiTokens,
+  ceiling,
   client,
   disabled,
   error,
+  level,
+  onAllowApiTokens,
   onChoose,
+  onLevel,
   pendingChoice,
   scopes,
   secondsLeft,
@@ -113,11 +132,25 @@ export function OAuthConsentRequest({
         ) : null}
         {client.dynamic ? t("originDynamic") : t("originFirstParty")}
       </p>
-      <OAuthConsentScopes scopes={scopes} />
+      <OAuthConsentScopes
+        allowApiTokens={allowApiTokens}
+        ceiling={ceiling}
+        disabled={disabled}
+        dynamic={client.dynamic}
+        level={level}
+        onAllowApiTokens={onAllowApiTokens}
+        onLevel={onLevel}
+        scopes={scopes}
+      />
       <p className="mt-5 mb-0 text-[12.5px] leading-[1.6] text-fg-muted">
         {renewsAccess
           ? t("accessRenews", { hours: ACCESS_TOKEN_TTL_HOURS })
           : t("accessLasts", { hours: ACCESS_TOKEN_TTL_HOURS })}
+      </p>
+      <p className="mt-2 mb-0 text-[12.5px] text-fg-muted">
+        <a className="text-accent-text underline" href="/app/account/security#connected-apps">
+          {t("revokeLocation")}
+        </a>
       </p>
       <TechnicalDetails client={client} scopes={scopes} />
       <p className="mt-5 mb-0 break-words text-[13px] leading-[1.6] [overflow-wrap:anywhere]">

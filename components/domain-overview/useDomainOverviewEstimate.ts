@@ -14,6 +14,7 @@ export function useDomainOverviewEstimate(
   requestInput: (
     target: string,
     scopeOverride?: DomainOverviewScope,
+    paymentOptionId?: string,
   ) => Parameters<AnalyzeDomainOverviewAction>[0],
   initial: DomainOverviewEstimateView,
 ) {
@@ -21,7 +22,11 @@ export function useDomainOverviewEstimate(
   const sequence = useRef(0);
   const [estimate, setEstimate] = useState(initial);
 
-  function scheduleEstimate(target: string, scopeOverride?: DomainOverviewScope) {
+  function scheduleEstimate(
+    target: string,
+    scopeOverride?: DomainOverviewScope,
+    paymentOptionId?: string,
+  ) {
     sequence.current += 1;
     const request = sequence.current;
     if (timer.current) clearTimeout(timer.current);
@@ -32,7 +37,10 @@ export function useDomainOverviewEstimate(
     setEstimate({ ...EMPTY_DOMAIN_OVERVIEW_ESTIMATE, loading: true });
     timer.current = setTimeout(async () => {
       try {
-        const outcome = await action(requestInput(target, scopeOverride));
+        const outcome = await action({
+          ...(requestInput(target, scopeOverride) as Record<string, unknown>),
+          ...(paymentOptionId ? { paymentOptionId } : {}),
+        });
         if (request === sequence.current) setEstimate(estimateView(outcome));
       } catch {
         if (request === sequence.current) setEstimate(EMPTY_DOMAIN_OVERVIEW_ESTIMATE);

@@ -121,7 +121,7 @@ describe("GettingStartedChecklist", () => {
       "aria-expanded",
       "true",
     );
-    expect(screen.getByText(/Search Console is free and takes two clicks/)).toBeVisible();
+    expect(screen.getByText(/Search Console adds free traffic data/)).toBeVisible();
     expect(screen.queryByText("Connect the source for rank data")).toBeNull();
     expect(
       screen.getByRole("button", { name: "Connect data source" }).querySelector("svg"),
@@ -307,7 +307,9 @@ describe("GettingStartedChecklist", () => {
     const { user } = setup({ family: "done" });
     await user.click(screen.getByRole("button", { name: "Run your first rank check" }));
     const panel = document.getElementById("setup-walkthrough-first_check");
-    expect(within(panel as HTMLElement).getByText(/^This happened when/)).toBeVisible();
+    expect(
+      within(panel as HTMLElement).getByText(/^Your first completed check saved positions/),
+    ).toBeVisible();
     expect(document.body.textContent).not.toMatch(
       /notify|notification|in progress|tonight|workspace|\u2014/i,
     );

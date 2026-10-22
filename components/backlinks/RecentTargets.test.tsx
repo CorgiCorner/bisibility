@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import {
   backlinksFeatureTestMessages,
   renderWithBacklinksMessages as render,
@@ -49,7 +50,7 @@ describe("RecentTargets", () => {
     vi.setSystemTime(new Date("2026-07-24T10:00:00.000Z"));
     render(<RecentTargets onOpen={vi.fn()} onRemove={vi.fn()} targets={targets} />);
 
-    expect(screen.getByText("cached, free for 24h")).toBeInTheDocument();
+    expect(screen.getByText("cached, free for 1 day")).toBeInTheDocument();
     expect(screen.getAllByText(/cached, free for/)).toHaveLength(1);
   });
 
@@ -79,5 +80,36 @@ describe("RecentTargets", () => {
     expect(screen.queryByText("example.com")).not.toBeInTheDocument();
     expect(screen.getByText("https://example.org/page")).toBeInTheDocument();
     expect(screen.getByText(/exact page/i)).toBeInTheDocument();
+  });
+
+  it("rounds a retained credit amount and exposes the exact value", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-24T10:00:00.000Z"));
+    const quote = paymentQuote({
+      charge: {
+        certainty: "estimate",
+        unit: { kind: "credits", key: "bisibility", plural: "Credits", singular: "Credit" },
+        value: "9.8889",
+      },
+    });
+    render(
+      <RecentTargets
+        onOpen={vi.fn()}
+        onRemove={vi.fn()}
+        targets={[
+          {
+            ...targets[0],
+            originalPayment: {
+              actionId: "original",
+              charge: { ...quote.charge, certainty: "measured" as const },
+              option: quote.option,
+              quoteId: quote.id,
+              state: "settled" as const,
+            },
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("9.89 Credits")).toHaveAttribute("title", "9.8889 Credits");
   });
 });

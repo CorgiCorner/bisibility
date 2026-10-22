@@ -57,7 +57,7 @@ it("uses stored region metadata on resume instead of interpreting a two-part key
   expect(draft.schedule.locationSelections).toEqual([selection]);
 });
 
-it("restores saved keyword text and the selected depth and schedule", () => {
+it("restores keyword text and depth without inheriting project cadence", () => {
   const draft = initialOnboardingDraft(
     {
       ...project,
@@ -73,9 +73,9 @@ it("restores saved keyword text and the selected depth and schedule", () => {
   );
   expect(draft.addKeywords.keywords).toBe("rank tracker\nseo api");
   expect(draft.schedule).toMatchObject({
-    frequency: "daily",
+    frequency: "manual",
     serpDepth: 50,
     jitterMinutes: 15,
-    cronExpression: "30 8 * * *",
+    cronExpression: null,
   });
 });

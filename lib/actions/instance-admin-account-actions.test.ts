@@ -1,3 +1,4 @@
+import { AdminTwoFactorRequiredError } from "@/lib/auth/admin-dangerous-action";
 import { auditPayloadPolicy } from "@/lib/auth/audit-field-declarations";
 import { sanitizeDeclaredAuditPayload } from "@/lib/auth/audit-payload-policy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -194,4 +195,19 @@ describe("instance admin account actions", () => {
     );
     expect(sanitized).toMatchObject({ revokedTokenCount: 3 });
   });
+  it("refuses the dangerous operation when the admin has no enabled 2FA", async () => {
+    dangerousActionGuard.mockRejectedValueOnce(new AdminTwoFactorRequiredError("test_action"));
+    expect(
+      await setInstanceAdminAccountDeactivated({
+        userId: "usr_abcdefghijklmnopqrstuvwx",
+        deactivated: true,
+      }),
+    ).toMatchObject({ status: "two_factor_required" });
+  });
 });
+
+const dangerousActionGuard = vi.hoisted(() => vi.fn(async () => undefined));
+vi.mock("@/lib/auth/admin-dangerous-action", async (original) => ({
+  ...(await original<typeof import("@/lib/auth/admin-dangerous-action")>()),
+  requireAdminTwoFactorForDangerousAction: dangerousActionGuard,
+}));

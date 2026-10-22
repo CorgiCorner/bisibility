@@ -89,7 +89,9 @@ export default function Image() {
           <PhraseRow items={["Track rankings", "Research keywords", "Inspect backlinks"]} />
         </div>
 
-        <PhraseRow items={["Self-host or free beta", "Pay only for SERP checks", "MCP-ready"]} />
+        <PhraseRow
+          items={["Free self-hosting or Cloud", "Cloud: $3/month after a free trial", "MCP-ready"]}
+        />
       </div>
     </div>,
     size,

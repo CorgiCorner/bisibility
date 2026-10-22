@@ -3,6 +3,11 @@ title: "Ranked keyword suggestions"
 description: "Discover queries a project domain already ranks for through its DataForSEO account."
 ---
 
+`max_cost_cents=0` returns the cached page for free. A missing page returns
+`cost_limit_exceeded` with `estimated_cost_cents` before provider calls, holds or
+attempts. `fresh=true` bypasses cache and is refused at zero.
+
+
 ## List ranked keyword suggestions
 
 ```http
@@ -15,7 +20,9 @@ miss is a paid DataForSEO Labs lookup. The app shows the current estimate from
 its provider rates table before the request. Results, including empty pages,
 are cached for 12 hours and shared with onboarding and MCP. Set `fresh=true` to
 skip the cache read and replace the cached page. Because a miss can spend the
-project's provider budget, the bearer token must include write scope.
+project's provider budget, the bearer token must include write scope. The MCP
+tool is `list_ranked_keyword_suggestions`. See
+[Paid MCP tools](/agents/paid-tools).
 
 | Query | Description |
 | - | - |

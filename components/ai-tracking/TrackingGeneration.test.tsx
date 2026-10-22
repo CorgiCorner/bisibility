@@ -27,11 +27,16 @@ async function reviewAndPreview(user: ReturnType<typeof userEvent.setup>) {
   const dialog = await screen.findByRole("dialog");
   await user.type(within(dialog).getByRole("textbox", { name: "Model" }), "gpt-4.1-mini");
   await user.click(within(dialog).getByRole("button", { name: "Preview draft generation cost" }));
-  await within(dialog).findByText(/Advisory estimate/);
+  await within(dialog).findByText(/Forecast:/);
+  await waitFor(() =>
+    expect(
+      within(dialog).getByRole("button", { name: "Preview draft generation cost" }),
+    ).toBeEnabled(),
+  );
   return dialog;
 }
 describe("reviewed model suggestion generation", () => {
-  it("requires consent, preserves full context, accepts an edited draft with trusted provenance and never launches a run", async () => {
+  it("uses Generate to approve the displayed cost, preserves full context and never launches a run", async () => {
     const user = userEvent.setup();
     const preview = vi.fn(generationFixtureActions.preview);
     const generate = vi.fn(generationFixtureActions.generate);
@@ -52,9 +57,8 @@ describe("reviewed model suggestion generation", () => {
     );
     const dialog = await reviewAndPreview(user);
     expect(preview.mock.calls[0][0].inputSnapshot).toEqual(generationSnapshotFixture);
-    const run = within(dialog).getByRole("button", { name: "Approve and generate drafts" });
-    expect(run).toBeDisabled();
-    await user.click(within(dialog).getByRole("checkbox", { name: /provider actual cost/ }));
+    const run = within(dialog).getByRole("button", { name: /^Approve and generate drafts/ });
+    await waitFor(() => expect(run).toBeEnabled());
     await user.click(run);
     await within(dialog).findByText("asg_abcdefghijklmnopqrstuvwx");
     expect(generate).toHaveBeenCalledTimes(1);
@@ -113,9 +117,8 @@ describe("reviewed model suggestion generation", () => {
       ),
     );
     const dialog = await reviewAndPreview(user);
-    await user.click(within(dialog).getByRole("checkbox", { name: /provider actual cost/ }));
     expect(
-      within(dialog).getByRole("button", { name: "Approve and generate drafts" }),
+      within(dialog).getByRole("button", { name: /^Approve and generate drafts/ }),
     ).toBeDisabled();
     expect(generate).not.toHaveBeenCalled();
   });
@@ -132,8 +135,7 @@ describe("reviewed model suggestion generation", () => {
       ),
     );
     const dialog = await reviewAndPreview(user);
-    await user.click(within(dialog).getByRole("checkbox", { name: /provider actual cost/ }));
-    await user.click(within(dialog).getByRole("button", { name: "Approve and generate drafts" }));
+    await user.click(within(dialog).getByRole("button", { name: /^Approve and generate drafts/ }));
     await within(dialog).findByText(/Generation requiring review: asg_abcdefghijklmnopqrstuvwx/);
     await user.type(within(dialog).getByRole("textbox", { name: "Goals" }), " Revised");
     expect(
@@ -154,8 +156,7 @@ describe("reviewed model suggestion generation", () => {
       ),
     );
     const dialog = await reviewAndPreview(user);
-    await user.click(within(dialog).getByRole("checkbox", { name: /provider actual cost/ }));
-    await user.click(within(dialog).getByRole("button", { name: "Approve and generate drafts" }));
+    await user.click(within(dialog).getByRole("button", { name: /^Approve and generate drafts/ }));
     await within(dialog).findByText(/This preview is stale/);
     // The stale notice renders before the preview action leaves its busy state.
     await waitFor(() =>
@@ -232,8 +233,7 @@ it("shows an exhausted budget returned through the real action-result consumer",
     ),
   );
   const dialog = await reviewAndPreview(user);
-  await user.click(within(dialog).getByRole("checkbox", { name: /provider actual cost/ }));
-  await user.click(within(dialog).getByRole("button", { name: "Approve and generate drafts" }));
+  await user.click(within(dialog).getByRole("button", { name: /^Approve and generate drafts/ }));
   expect(await within(dialog).findByRole("alert")).toHaveTextContent(
     "Monthly provider budget reached.",
   );

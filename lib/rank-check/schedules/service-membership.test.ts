@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => {
     $queryRaw: vi.fn(),
     checkSchedule: { findFirst: vi.fn() },
     keyword: { findMany: vi.fn(), updateMany: vi.fn() },
+    keywordSchedule: { updateMany: vi.fn() },
     project: { findUnique: vi.fn() },
   };
   return {

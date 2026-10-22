@@ -128,7 +128,7 @@ export const defaultRankTrackerQueryState: RankTrackerQueryState = {
   pageSize: 50,
   savedViewId: null,
   search: "",
-  sort: { direction: "asc", field: "position" },
+  sort: { direction: "asc", field: "keyword" },
 };
 
 function list(params: NextSearchParams, key: string) {
@@ -203,7 +203,7 @@ export function parseRankTrackerQuery(params: NextSearchParams): RankTrackerQuer
     search: safe(schemas.search, scalar(params, "q"), "", "q", issues),
     sort: {
       direction: safe(schemas.direction, scalar(params, "dir"), "asc", "dir", issues),
-      field: safe(schemas.sort, scalar(params, "sort"), "position", "sort", issues),
+      field: safe(schemas.sort, scalar(params, "sort"), "keyword", "sort", issues),
     },
   };
   return { issues: [...new Set(issues)], present, state };

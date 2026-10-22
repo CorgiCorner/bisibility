@@ -19,22 +19,22 @@ import type {
 } from "@/lib/integrations/types";
 import { rankCheckRateSelection, withRankCheckManualRate } from "@/lib/provider-rates/manual-rate";
 import { PROVIDER_CATALOG, tintFor } from "@/lib/providers/registry";
-import {
-  compareProviderChainEntries,
-  primaryProviderConnection,
-  providerChainOrderBy,
-} from "@/lib/rank-check/provider-chain-order";
-import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
-import { requireReadableProject } from "./_auth";
-import { loadGscConsumerStatuses } from "./integration-consumer-status";
+import { requireReadableProject } from "@/lib/queries/_auth";
+import { loadGscConsumerStatuses } from "@/lib/queries/integration-consumer-status";
 import {
   displayedProviderLogin,
   type ProviderConnectionRow,
   providerActivities,
   providerDescription,
   providerMeta,
-} from "./integration-provider-drawer";
-import { getRequestProjectDefaults } from "./workspace-request-data";
+} from "@/lib/queries/integration-provider-drawer";
+import { getRequestProjectDefaults } from "@/lib/queries/workspace-request-data";
+import {
+  compareProviderChainEntries,
+  primaryProviderConnection,
+  providerChainOrderBy,
+} from "@/lib/rank-check/provider-chain-order";
+import { DEFAULT_SERP_DEPTH } from "@/lib/serp/constants";
 
 type SyncFailure = NonNullable<IntegrationProvider["syncFailure"]>;
 type ConsumerStatuses = IntegrationProvider["consumerStatuses"];
@@ -92,7 +92,9 @@ function integrationProvider(
   const connected = connection?.status === "connected";
   // Only the non-secret identity fields (login, endpoint) may reach the client;
   // password and apiKey stay server-side and are kept out of drawer defaults.
-  const identity = readableProviderIdentity(connection?.credentialsEncrypted);
+  const identity = readableProviderIdentity(
+    connection?.credentialSource === "hosted" ? null : connection?.credentialsEncrypted,
+  );
   const credentials =
     identity.state === "readable" ? { endpoint: identity.endpoint, login: identity.login } : {};
   const displayedLogin = displayedProviderLogin(item.id, credentials.login);
@@ -100,7 +102,7 @@ function integrationProvider(
   return {
     connectionId: connection?.publicId,
     connectionUpdatedAt: connection?.updatedAt.toISOString(),
-    credentialSource: connection?.credentialSource ?? "own",
+    credentialSource: connection ? (connection.credentialSource ?? "own") : undefined,
     hasStoredCredentials: Boolean(connection?.credentialsEncrypted),
     credentialIssue: identity.state === "unreadable" ? "unreadable" : undefined,
     consumerStatuses,

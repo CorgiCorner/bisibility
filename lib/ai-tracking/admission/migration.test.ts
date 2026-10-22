@@ -5,7 +5,7 @@ import { samplePlan } from "@/lib/ai-tracking/execution/fixture";
 import { beforeEach, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
-  project: { id: "project", writeMode: "active", budgetCapCents: 1000 },
+  project: { id: "project", ownerId: "owner", writeMode: "active", budgetCapCents: 1000 },
   transport: vi.fn(),
   planned: vi.fn(),
   access: vi.fn(),
@@ -15,7 +15,7 @@ const state = vi.hoisted(() => ({
     user: { findUnique: vi.fn() },
     aiPrompt: { findMany: vi.fn() },
     aiPromptRevision: { findFirst: vi.fn() },
-    aiTrackingRun: { findFirst: vi.fn(), upsert: vi.fn() },
+    aiTrackingRun: { findFirst: vi.fn(), findUnique: vi.fn(async () => null), upsert: vi.fn() },
     aiTrackingSchedule: { findMany: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn() },
   },
 }));
@@ -23,6 +23,7 @@ vi.mock("@/lib/db/prisma", () => ({ prisma: state.db }));
 vi.mock("@/lib/auth/authorize", () => ({ authorize: vi.fn() }));
 vi.mock("@/lib/operations/access-extension", () => ({ assertOperationAccess: state.access }));
 vi.mock("@/lib/providers/crypto", () => ({
+  getPurposeSecretKeys: () => [Buffer.alloc(32, 7)],
   decryptProviderCredentials: () => ({ login: "fixture@example.com", password: "test-password" }),
 }));
 vi.mock("@/lib/provider-usage/credential-version", () => ({
@@ -50,9 +51,12 @@ vi.mock("@/lib/provider-usage/request-journal", () => ({
   createProviderRequestJournal: () => ({ observer: {} }),
 }));
 
+import { bindAiPaymentExecution, bindAiPaymentSchedule } from "@/lib/ai-research/payment";
 import { trackingExecutionPorts } from "@/lib/ai-tracking/execution/runtime";
+import { trackingPaymentQuote } from "@/lib/ai-tracking/payment";
 import { planDueTrackingSchedules } from "@/lib/ai-tracking/scheduling/sweep";
-import { previewTrackingRun } from "./launch";
+import { trackingAdmissionContext } from "./context";
+import { previewTrackingRun, recheckTrackingAdmission } from "./launch";
 
 const now = new Date("2026-10-08T12:00:00Z");
 let input: PlanTrackingRunInput & { consent: boolean };
@@ -64,7 +68,8 @@ beforeEach(async () => {
   state.db.project.findUnique.mockImplementation(async () => ({ ...state.project }));
   state.db.providerConnection.findFirst.mockResolvedValue({
     id: "connection",
-    publicId: "connection-public",
+    publicId: "conn_aaaaaaaaaaaaaaaaaaaaaaaa",
+    credentialSource: "own",
     provider: "dataforseo",
     credentialsEncrypted: "fixture-ciphertext",
     allocationAmountPerMonth: 1000,
@@ -111,6 +116,7 @@ beforeEach(async () => {
     origin: "scheduled",
     entrySource: "worker",
   });
+  state.db.aiTrackingRun.findUnique.mockResolvedValue(null);
   state.db.aiTrackingRun.findFirst.mockImplementation(async () => ({
     state: "planned",
     scheduleId: "schedule",
@@ -171,3 +177,33 @@ it.each(["migration_hold", "migrated"])(
     expect(state.access).not.toHaveBeenCalled();
   },
 );
+
+it("executes retained accepted authority after browser expiry and rejects sample authority substitution", async () => {
+  const quote = trackingPaymentQuote(
+    await trackingAdmissionContext("project", "connection"),
+    {
+      ...input,
+      paymentScope: "recurring",
+      paymentRecurrence: { cron: "0 12 * * *", timezone: "UTC" },
+    },
+    1,
+  );
+  const accepted = quote.accept({ quoteToken: quote.payment.quoteToken }, true);
+  input = {
+    ...input,
+    paymentScope: "recurring",
+    paymentRecurrence: { cron: "0 12 * * *", timezone: "UTC" },
+    paymentConsent: bindAiPaymentExecution(bindAiPaymentSchedule(accepted, "schedule"), plan.runId),
+    scheduleId: "schedule",
+  };
+  plan = { ...plan, paymentConsent: input.paymentConsent };
+  vi.spyOn(Date, "now").mockReturnValue(Date.now() + 700_000);
+  try {
+    await expect(recheckTrackingAdmission(plan)).resolves.toMatchObject({ estimatedCostCents: 1 });
+    await expect(recheckTrackingAdmission({ ...plan, paymentConsent: undefined })).rejects.toThrow(
+      "payment authority changed",
+    );
+  } finally {
+    vi.restoreAllMocks();
+  }
+});

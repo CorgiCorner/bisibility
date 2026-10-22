@@ -10,6 +10,7 @@ export function ResearchTextFilter({
   return (
     <div className="relative w-full sm:max-w-xs">
       <MagnifyingGlassIcon
+        weight="regular"
         aria-hidden
         size={15}
         className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fg-muted"

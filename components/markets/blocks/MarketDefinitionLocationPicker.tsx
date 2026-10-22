@@ -8,6 +8,7 @@ import {
   locationKindLabel,
   type MarketDefinitionCountry,
   type MarketDefinitionLocation,
+  marketDefinitionSelection,
 } from "./market-definition-selection";
 import type { MarketDefinitionLocationSource } from "./market-definition-source";
 
@@ -17,6 +18,9 @@ type MarketDefinitionLocationPickerProps = {
   onChange: (location: MarketDefinitionLocation) => void;
   source: MarketDefinitionLocationSource;
   value: MarketDefinitionLocation | null;
+  trackedLocationKeys?: readonly string[];
+  languageCode?: string;
+  trackedLabel?: string;
 };
 
 function option(location: MarketDefinitionLocation): MenuSelectOption {
@@ -41,6 +45,9 @@ export function MarketDefinitionLocationPicker({
   onChange,
   source,
   value,
+  trackedLocationKeys = [],
+  languageCode,
+  trackedLabel,
 }: Readonly<MarketDefinitionLocationPickerProps>) {
   const { lastCompletedTerm, loading, search, suggestions } =
     useSuggestionSearch<MarketDefinitionLocation>((term, signal) =>
@@ -70,7 +77,21 @@ export function MarketDefinitionLocationPicker({
         if (picked) onChange(picked);
       }}
       onSearchChange={search}
-      options={places.map(option)}
+      options={places.map((place) => {
+        const selected = marketDefinitionSelection({
+          countryCode: country.code,
+          languageCode: languageCode ?? null,
+          location: place,
+          customName: "",
+        });
+        const item = option(place);
+        return {
+          ...item,
+          secondary: trackedLocationKeys.includes(selected?.canonicalKey ?? "")
+            ? `${item.secondary} · ${trackedLabel}`
+            : item.secondary,
+        };
+      })}
       searchable
       searchHint={messages.locationHint}
       searchPlaceholder={messages.searchLocations}

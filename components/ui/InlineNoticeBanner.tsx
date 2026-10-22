@@ -63,7 +63,11 @@ export function InlineNoticeBanner({
         title={motionLabel}
         onClick={() => setPaused((current) => !current)}
       >
-        {paused ? <PlayIcon aria-hidden size={14} /> : <PauseIcon aria-hidden size={14} />}
+        {paused ? (
+          <PlayIcon weight="regular" aria-hidden size={14} />
+        ) : (
+          <PauseIcon weight="regular" aria-hidden size={14} />
+        )}
       </IconButton>
       {link ? (
         <a

@@ -1,11 +1,14 @@
 "use client";
 
 import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
+import { bulkDeleteButtonStyle } from "@/components/keywords/grid/bulk-action-styles";
 import { type RegisteredCommand, useRegisterCommands } from "@/components/shell/command-registry";
 import { Button } from "@/components/ui/Button";
+import { FloatingSelectionBar } from "@/components/ui/FloatingSelectionBar";
 import { IconButton } from "@/components/ui/IconButton";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import { appPath } from "@/lib/routing/app-path";
 import type { SavedKeywordRow } from "@/lib/saved-keywords/model";
@@ -18,6 +21,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef } from "react";
 import { downloadSavedKeywordsCsv } from "./saved-keywords-export";
+import { savedKeywordResearchHrefForKeyword } from "./saved-keywords-table-model";
 
 export function SavedKeywordsToolbar({
   onSearchChange,
@@ -95,6 +99,46 @@ export function SavedKeywordsToolbar({
   );
 }
 
+function SavedKeywordsResearchAction({
+  projectRef,
+  row,
+}: Readonly<{
+  projectRef: string;
+  row: SavedKeywordRow | undefined;
+}>) {
+  const t = useTranslations("projectRankTracker.keywordImport.management.saved");
+  const icon = <MagnifyingGlass weight="regular" size={15} />;
+  if (row) {
+    return (
+      <Button
+        component={Link}
+        href={savedKeywordResearchHrefForKeyword(projectRef, row)}
+        size="xs"
+        startIcon={icon}
+        variant="secondary"
+      >
+        {t("research")}
+      </Button>
+    );
+  }
+  return (
+    <Tooltip content={t("researchOneAtATime")} semantics="description">
+      <Button
+        aria-disabled="true"
+        onClick={(event) => {
+          event.preventDefault();
+        }}
+        size="xs"
+        startIcon={icon}
+        type="button"
+        variant="secondary"
+      >
+        {t("research")}
+      </Button>
+    </Tooltip>
+  );
+}
+
 export function SavedKeywordsBulkBar({
   canDelete,
   canTrack,
@@ -103,7 +147,8 @@ export function SavedKeywordsBulkBar({
   onClear,
   onRemove,
   onTrack,
-  separated = true,
+  projectRef,
+  selectedRows,
   trackDisabledReason,
 }: Readonly<{
   canDelete: boolean;
@@ -113,7 +158,8 @@ export function SavedKeywordsBulkBar({
   onClear: () => void;
   onRemove: () => void;
   onTrack: () => void;
-  separated?: boolean;
+  projectRef: string;
+  selectedRows: readonly SavedKeywordRow[];
   trackDisabledReason?: string;
 }>) {
   const usage = useNativeUsageFormat();
@@ -129,25 +175,26 @@ export function SavedKeywordsBulkBar({
       : quota
         ? t("trackingAllUsage", { count, usage: usageText })
         : t("trackingAll", { cost, count });
+  const researchRow = count === 1 && selectedRows.length === 1 ? selectedRows[0] : undefined;
   return (
-    <div
-      className={`flex flex-wrap items-center gap-3 bg-accent-soft px-4 py-[9px] ${separated ? "border-b border-[#e8d5c9]" : ""}`}
+    <FloatingSelectionBar
+      ariaLabel={t("toolbar")}
+      clearLabel={t("clear")}
+      count={count}
+      countLabel={t("selected", { count })}
+      footer={
+        summary ? (
+          <p className="m-0 font-sans tabular-nums text-[11.5px] text-fg-muted">{summary}</p>
+        ) : null
+      }
+      onClear={onClear}
     >
-      <strong className="whitespace-nowrap text-[13px] text-accent-text">
-        {t("selected", { count })}
-      </strong>
-      <span className="font-sans tabular-nums text-[11px] text-[#a85c22]">{summary}</span>
-      <span className="flex-1" />
       {canDelete ? (
         <Button
           onClick={onRemove}
-          size="sm"
-          startIcon={<Trash weight="regular" size={13} />}
-          style={{
-            "--control-border-color": "var(--red)",
-            "--control-color": "var(--red)",
-            minHeight: 30,
-          }}
+          size="xs"
+          startIcon={<Trash weight="regular" size={15} />}
+          style={bulkDeleteButtonStyle}
           variant="secondary"
         >
           {t("remove")}
@@ -164,8 +211,7 @@ export function SavedKeywordsBulkBar({
           }
           disabled={Boolean(trackDisabledReason)}
           onClick={onTrack}
-          size="sm"
-          style={{ minHeight: 30 }}
+          size="xs"
         >
           {t("track", { count })}
           {known ? (
@@ -177,10 +223,8 @@ export function SavedKeywordsBulkBar({
           ) : null}
         </Button>
       ) : null}
-      <Button variant="ghost" size="xs" onClick={onClear} type="button">
-        {t("clear")}
-      </Button>
-    </div>
+      <SavedKeywordsResearchAction projectRef={projectRef} row={researchRow} />
+    </FloatingSelectionBar>
   );
 }
 

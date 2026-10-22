@@ -5,6 +5,7 @@ export { PROVIDER_CATALOG } from "./catalog-metadata";
 import { dataForSeoRankRequest } from "@/lib/providers/serp/dataforseo-rank-request";
 import { ga4AnalyticsProvider } from "./analytics/ga4";
 import { gscAnalyticsProvider } from "./analytics/gsc";
+import { gscQueryDimensions } from "./analytics/gsc-query-pagination";
 import { plausibleAnalyticsProvider } from "./analytics/plausible";
 import { developmentSerpProvider } from "./development-serp";
 import { syntheticProviderResult } from "./fake-request-receipts";
@@ -24,6 +25,7 @@ import { serpApiRankRequest } from "@/lib/providers/serp/serpapi-request";
 import { serpApiProvider } from "./serp/serpapi";
 import type {
   AnalyticsProvider,
+  AnalyticsQueryStatsInput,
   AnalyticsTopQuery,
   PageStatRow,
   QueryStatRow,
@@ -129,17 +131,48 @@ const fakeGa4TopQueries: AnalyticsTopQuery[] = [
   { clicks: 13, query: "integrations" },
 ];
 
-const fakeQueryStats: QueryStatRow[] = [
-  { clicks: 42, ctr: 0.12, impressions: 350, position: 3.4, query: "rank tracker" },
+const fakeQueryStatSeeds = [
+  {
+    clicks: 42,
+    country: "usa",
+    ctr: 0.12,
+    device: "desktop" as const,
+    impressions: 350,
+    page: "/rank",
+    position: 3.4,
+    query: "rank tracker",
+  },
   {
     clicks: 18,
+    country: "gbr",
     ctr: 0.08,
+    device: "mobile" as const,
     impressions: 225,
     page: "/docs",
     position: 5.1,
     query: "keyword api",
   },
 ];
+
+function fakeQueryStatRows(input: AnalyticsQueryStatsInput): QueryStatRow[] {
+  const dimensions = new Set(gscQueryDimensions(input));
+  const rows = fakeQueryStatSeeds.filter((row) => {
+    if (input.country && row.country !== input.country.toLowerCase()) return false;
+    if (input.device && row.device !== input.device) return false;
+    return true;
+  });
+  const offset = input.offset ?? 0;
+  return rows.slice(offset, offset + (input.limit ?? rows.length)).map((row) => ({
+    clicks: row.clicks,
+    ctr: row.ctr,
+    impressions: row.impressions,
+    position: row.position,
+    query: row.query,
+    ...(dimensions.has("page") ? { page: row.page } : {}),
+    ...(dimensions.has("country") ? { country: row.country } : {}),
+    ...(dimensions.has("device") ? { device: row.device } : {}),
+  }));
+}
 
 const fakePageStats: PageStatRow[] = [
   {
@@ -172,7 +205,7 @@ function fakeAnalyticsProvider(id: string, label: string): AnalyticsProvider {
       return rows.slice(0, input.limit);
     },
     async fetchQueryStats(_credentials, input) {
-      return fakeQueryStats.slice(0, input.limit ?? fakeQueryStats.length);
+      return fakeQueryStatRows(input);
     },
     async fetchPageStats(_credentials, input) {
       return fakePageStats.slice(0, input.limit ?? fakePageStats.length);

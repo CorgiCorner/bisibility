@@ -1,5 +1,6 @@
 import { appPath, appRootPath } from "@/lib/routing/app-path";
 import { absoluteUrl } from "@/lib/seo/origin";
+import { brandedEmailHtml } from "./branded-template";
 import { escapeHtml } from "./escape-html";
 
 export type WelcomeEmailSender = {
@@ -65,7 +66,6 @@ export function welcomeEmail(input: WelcomeEmailInput) {
   const sigText = signatureLines(founder);
   const sigHtml = signatureHtmlLines(founder).map(paragraph).join("");
 
-  const meFirst = founder ? "me" : "the team";
   const readEverything = founder ? "I read everything" : "Every reply is read";
   const tellWhere = founder ? "reply and tell me where" : "reply and let the team know where";
 
@@ -80,6 +80,7 @@ export function welcomeEmail(input: WelcomeEmailInput) {
     const alertsUrl = sectionUrl("alerts");
     const integrationsUrl = sectionUrl("integrations");
     const apiDocsUrl = "https://bisibility.com/docs/api/quickstart";
+    const pricingUrl = "https://bisibility.com/pricing";
 
     text = [
       `Hey ${greeting},`,
@@ -92,7 +93,7 @@ export function welcomeEmail(input: WelcomeEmailInput) {
       `- Search Console and GA4 (in Integrations), to see impressions and clicks next to rankings ${integrationsUrl}`,
       `- API and webhooks, if you want the data in your own tools ${apiDocsUrl}`,
       "",
-      `The beta is free. When paid plans arrive, nothing happens automatically - you will hear from ${meFirst} first.`,
+      "Nothing is charged unless you add a card yourself. Plans and credits are explained at https://bisibility.com/pricing.",
       "",
       `If anything is confusing or broken, just reply. ${readEverything}.`,
       "",
@@ -115,7 +116,7 @@ export function welcomeEmail(input: WelcomeEmailInput) {
         `- API and webhooks, if you want the data in your own tools ${anchor(apiDocsUrl, apiDocsUrl)}`,
       ),
       paragraph(
-        `The beta is free. When paid plans arrive, nothing happens automatically - you will hear from ${escapeHtml(meFirst)} first.`,
+        `Nothing is charged unless you add a card yourself. Plans and credits are explained at ${anchor(pricingUrl, pricingUrl)}.`,
       ),
       paragraph(`If anything is confusing or broken, just reply. ${escapeHtml(readEverything)}.`),
       sigHtml,
@@ -128,9 +129,9 @@ export function welcomeEmail(input: WelcomeEmailInput) {
       "",
       "If the provider step held you up, you can connect your own provider account and pay them directly.",
       "",
-      "Prefer to skip that step? Credits are coming soon to bisibility Cloud. You will be able to top up in the app and use supported features without connecting your own provider account.",
+      "Prefer to skip that step? Use credits on bisibility Cloud instead: top up in the app and use supported features without connecting your own provider account.",
       "",
-      `If it broke or was confusing, ${tellWhere}. That is what the beta is for.`,
+      `If it broke or was confusing, ${tellWhere}.`,
       "",
       ...sigText,
     ].join("\n");
@@ -144,18 +145,16 @@ export function welcomeEmail(input: WelcomeEmailInput) {
         "If the provider step held you up, you can connect your own provider account and pay them directly.",
       ),
       paragraph(
-        "Prefer to skip that step? Credits are coming soon to bisibility Cloud. You will be able to top up in the app and use supported features without connecting your own provider account.",
+        "Prefer to skip that step? Use credits on bisibility Cloud instead: top up in the app and use supported features without connecting your own provider account.",
       ),
-      paragraph(
-        `If it broke or was confusing, ${escapeHtml(tellWhere)}. That is what the beta is for.`,
-      ),
+      paragraph(`If it broke or was confusing, ${escapeHtml(tellWhere)}.`),
       sigHtml,
     ].join("");
   }
 
   return {
     from: input.from,
-    html,
+    html: brandedEmailHtml(html, input.origin),
     replyTo: input.replyTo,
     subject: "Welcome to bisibility Cloud",
     text,

@@ -31,6 +31,7 @@ import { BulkActionBar } from "./BulkActionBar";
 import { type KeywordColumnLabels, keywordColumns } from "./grid-columns";
 import { persistKeywordGridDensity } from "./grid-density";
 import { KeywordColumnOrderControl } from "./KeywordColumnOrderControl";
+import { keywordViewHasMultipleDevices } from "./KeywordDeviceCell";
 import { KeywordGridViewport } from "./KeywordGridViewport";
 import { useKeywordLocalColumns } from "./KeywordLocalColumns";
 import { KeywordPersonalViewControl } from "./KeywordPersonalViewControl";
@@ -55,7 +56,7 @@ function leafRows(rows: KeywordDataTableProps["rows"]): KeywordRow[] {
 }
 
 // biome-ignore format: Compact parameter destructuring keeps this production module within 300 lines.
-export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkHealth, filterChips, filterCount, initialDensity, local, marketScope = null, matchedGroupCount, matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, personalPreferences, providerConnected, projectId, projectMarkets, rankTrackerPath, report, rows, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction }: KeywordDataTableProps) {
+export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulkSetTargetAction, bulkTagAction, canDeleteKeyword, canUpdateKeyword, checkHealth, filterChips, filterCount, initialDensity, local, marketScope = null, matchedGroupCount, matchedTargetCount, page, pageSize, query, onAddKeyword, onClearFilters, onImportCsv, onOpenExport, onOpenFilters, onQueryNavigation, onRemoveFilter, onRunChecks, onSearchChange, onSearchCommit, pendingCheckIds, personalPreferences, providerConnected, projectId, projectMarkets, rankTrackerPath, report, rows, viewDevices, noRowsState, savedViewControl, searchValue, scopeChip, scopeControl, updateKeywordAction }: KeywordDataTableProps) {
   const t = useTranslations("projectRankTracker.keywordImport.management.grid");
   const columnT = useTranslations("projectRankTracker.keywordImport.management.columns");
   const marketCellsT = useTranslations("projectRankTracker.keywordImport.management.marketCells");
@@ -69,6 +70,7 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
   const [editing, setEditing] = useState<{ focusTargetUrl: boolean; row: KeywordRow } | null>(null);
   const [navigationPending, startNavigation] = useTransition();
   const targetRows = useMemo(() => leafRows(rows), [rows]);
+  const showDevices = useMemo(() => viewDevices ? new Set(viewDevices).size > 1 : keywordViewHasMultipleDevices(rows), [rows, viewDevices]);
   const selectedIds = [...selection];
   const selectedRows = targetRows.filter((row) => selection.has(row.id));
   const columnLabels = useMemo<KeywordColumnLabels>(
@@ -118,8 +120,9 @@ export function KeywordDataTable({ bulkClearTargetAction, bulkDeleteAction, bulk
         pendingCheckIds,
         columnLabels,
         (row) => rankTrackerDetailHref(projectId, row.id, query),
+        showDevices,
       ),
-    [canDeleteKeyword, canUpdateKeyword, columnLabels, deletion.open, onRunChecks, pendingCheckIds, projectId, query],
+    [canDeleteKeyword, canUpdateKeyword, columnLabels, deletion.open, onRunChecks, pendingCheckIds, projectId, query, showDevices],
   );
   const localColumns = useKeywordLocalColumns(columns, local?.facts ?? []);
   const viewColumns = local ? localColumns : columns;

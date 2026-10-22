@@ -1,5 +1,6 @@
 import type { RunOutcome, RunStatus } from "@/lib/rank-check/runs/contract";
 import type { SearchSyncStatusTitle } from "@/lib/search-insights/sync/control-types";
+import { AI_RUN_STATUS_KEYS, type AiRunStatusKey, aiRunState } from "./ai-run-state";
 import type {
   ProjectRun,
   ProjectRunAttention,
@@ -39,9 +40,13 @@ export const GSC_RUN_STATUS_KEYS = [
 ] as const;
 export type GscRunStatusKey = (typeof GSC_RUN_STATUS_KEYS)[number];
 
-export type RunStatusKey = RankRunStatusKey | GscRunStatusKey;
+export type RunStatusKey = RankRunStatusKey | GscRunStatusKey | AiRunStatusKey;
 export const RUN_STATUS_KEYS: readonly RunStatusKey[] = [
-  ...new Set<RunStatusKey>([...RANK_RUN_STATUS_KEYS, ...GSC_RUN_STATUS_KEYS]),
+  ...new Set<RunStatusKey>([
+    ...RANK_RUN_STATUS_KEYS,
+    ...GSC_RUN_STATUS_KEYS,
+    ...AI_RUN_STATUS_KEYS,
+  ]),
 ];
 
 export function isRankRunStatusKey(value: string): value is RankRunStatusKey {
@@ -129,7 +134,9 @@ export function gscRunStatusKey(run: GscRunWithTitle): GscRunStatusKey {
 }
 
 export function projectRunStatusKey(run: ProjectRun | GscRunWithTitle): RunStatusKey {
-  return run.kind === "rank_check"
+  if (run.kind === "ai")
+    return aiRunState(run.details.state, run.timestamps.finishedAt, run.details.reason).key;
+  return run.kind === "rank"
     ? rankRunStatusKey(run.details.status, run.details.outcome, run.details.blockedReason)
     : gscRunStatusKey(run);
 }

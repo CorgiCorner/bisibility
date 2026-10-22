@@ -111,6 +111,30 @@ describe("getAuditLogView", () => {
     expect(JSON.stringify(result.entries[0])).not.toContain(RAW_CUID);
   });
 
+  it("allowlists historical details before sending them to the client", async () => {
+    mocks.prisma.auditLog.findMany.mockResolvedValue([
+      {
+        ...auditRow(),
+        action: "provider.credential_source_changed",
+        before: { provider: "dataforseo", source: "own", password: "old-secret" },
+        after: {
+          provider: "dataforseo",
+          source: "hosted",
+          credentials: { password: "new-secret" },
+          raw: { payload: "hidden" },
+        },
+      },
+    ]);
+    const result = await getAuditLogView(project.publicId);
+    if (!result.authorized) throw new Error("expected authorized audit view");
+    expect(result.entries[0].providerSourceChange).toEqual({
+      provider: "DataForSEO",
+      source: "hosted",
+    });
+    expect(result.entries[0].diff).toEqual([{ field: "source", before: "own", after: "hosted" }]);
+    expect(JSON.stringify(result.entries)).not.toMatch(/old-secret|new-secret|hidden/);
+  });
+
   it("preserves the raw timestamp for scoped display formatting", async () => {
     mocks.prisma.auditLog.findMany.mockResolvedValue([
       { ...auditRow(), createdAt: new Date("2026-06-19T14:42:08.987Z") },
@@ -287,14 +311,14 @@ describe("diffFor", () => {
     ]);
   });
 
-  it("pretty-prints nested object values", () => {
+  it("renders nested changes as scalar field paths", () => {
     expect(
       diffFor({ schedule: { frequency: "daily" } }, { schedule: { frequency: "weekly" } }),
     ).toEqual([
       {
-        after: '{\n  "frequency": "weekly"\n}',
-        before: '{\n  "frequency": "daily"\n}',
-        field: "schedule",
+        after: "weekly",
+        before: "daily",
+        field: "schedule.frequency",
       },
     ]);
   });

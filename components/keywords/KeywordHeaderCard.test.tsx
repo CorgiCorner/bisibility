@@ -45,7 +45,7 @@ describe("KeywordHeaderCard", () => {
       trigger: "manual",
     });
     expect(actions.runCheckNowAction).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Start run" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Start run/ }));
     await waitFor(() =>
       expect(mocks.launchRankCheckRunAction).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -88,7 +88,7 @@ describe("KeywordHeaderCard", () => {
     renderCard();
     fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" }));
     await screen.findByRole("dialog", { name: /Check rank tracker in United States/ });
-    fireEvent.click(screen.getByRole("button", { name: "Start run" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Start run/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Sample projects do not run real checks.",
     );

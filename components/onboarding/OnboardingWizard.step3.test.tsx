@@ -155,9 +155,7 @@ describe("OnboardingWizard keyword step", () => {
       finishLoading();
     });
     expect(await screen.findByText("Not in top 50")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Your 2 keywords run automatically on your Daily schedule/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Your 2 keywords are ready/)).toBeInTheDocument();
     expect(screen.queryByText(/Optional: check 1 keyword now/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(await screen.findByPlaceholderText("One keyword per line")).toHaveValue(

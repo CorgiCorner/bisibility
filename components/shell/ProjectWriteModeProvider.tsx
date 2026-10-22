@@ -14,6 +14,7 @@ export type ProjectWriteModeReasons = Readonly<{
 }>;
 
 type ProjectWriteModeContextValue = {
+  canEditProject: boolean;
   readOnly: boolean;
   readOnlyReason: string | null;
   projectRef: string | null;
@@ -21,6 +22,7 @@ type ProjectWriteModeContextValue = {
 };
 
 const defaultValue: ProjectWriteModeContextValue = {
+  canEditProject: false,
   readOnly: false,
   readOnlyReason: null,
   projectRef: null,
@@ -30,11 +32,13 @@ const defaultValue: ProjectWriteModeContextValue = {
 const ProjectWriteModeContext = createContext<ProjectWriteModeContextValue>(defaultValue);
 
 export function ProjectWriteModeProvider({
+  canEditProject = false,
   children,
   projectRef,
   reasons,
   writeMode,
 }: Readonly<{
+  canEditProject?: boolean;
   children: ReactNode;
   projectRef: string;
   reasons?: ProjectWriteModeReasons;
@@ -44,13 +48,14 @@ export function ProjectWriteModeProvider({
   const readOnly = isProjectReadOnly(normalizedWriteMode);
   const contextValue = useMemo(
     () => ({
+      canEditProject,
       readOnly,
       readOnlyReason:
         normalizedWriteMode === "active" ? null : (reasons?.[normalizedWriteMode] ?? null),
       projectRef,
       writeMode: normalizedWriteMode,
     }),
-    [normalizedWriteMode, projectRef, readOnly, reasons],
+    [canEditProject, normalizedWriteMode, projectRef, readOnly, reasons],
   );
 
   return (

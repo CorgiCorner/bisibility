@@ -1,7 +1,9 @@
 import type { TrackingConfigurationValue } from "@/components/keywords/add/TrackingConfigurationFields";
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
+import type { ActionPaymentQuote } from "@/lib/action-payment/contract";
 import type { addKeywords } from "@/lib/actions/keyword";
 import type {
+  assessResearchPaymentsAction,
   ResearchKeywordsAction,
   ResearchKeywordsActionInput,
 } from "@/lib/actions/keyword-research";
@@ -27,6 +29,7 @@ import type { ResearchState } from "./ResearchStatePanel";
 type PageContext = Awaited<ReturnType<typeof getKeywordResearchPageContext>>;
 
 export type ResearchWorkspaceProps = {
+  assessPaymentsAction?: typeof assessResearchPaymentsAction;
   addKeywordsAction: typeof addKeywords;
   canDeleteSavedKeywords: boolean;
   checkHealth: CheckHealth;
@@ -89,45 +92,14 @@ export async function mapWithConcurrency<Item, Result>(
   return results;
 }
 
-export async function loadDeeperEstimate(
-  action: ResearchKeywordsAction,
-  input: ResearchKeywordsActionInput,
-  requestedLimit: 100 | 300 | 500,
-) {
-  if (requestedLimit >= 500) return undefined;
-  try {
-    const estimated = await action({
-      ...input,
-      estimateOnly: true,
-      resultLimit: requestedLimit === 100 ? 300 : 500,
-    });
-    return estimated.ok ? { cached: estimated.cached, costCents: estimated.costCents } : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-export async function loadResearchEstimate(
-  action: ResearchKeywordsAction,
-  input: ResearchKeywordsActionInput,
-) {
-  try {
-    const estimated = await action({ ...input, estimateOnly: true });
-    return estimated.ok
-      ? { cached: estimated.cached, costCents: estimated.costCents, loading: false }
-      : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 export type UiResearchOutcome =
   | Exclude<Awaited<ReturnType<ResearchKeywordsAction>>, { estimate: true }>
   | { charged: boolean | null; ok: false; reason: "lookup_failed" };
 
 export type ResearchTab = {
   connectionId?: string;
-  deeperEstimate?: { cached: boolean; costCents: number };
+  paymentOptionId?: string;
+  deeperEstimate?: { cached: boolean; costCents: number; payment?: ActionPaymentQuote };
   id: string;
   includeClickstream: boolean;
   scope: ResearchScope;
@@ -144,6 +116,7 @@ export function researchTabRequest(
 ): Partial<ResearchKeywordsActionInput> {
   return {
     connectionId: tab.connectionId,
+    ...(tab.paymentOptionId ? { paymentOptionId: tab.paymentOptionId } : {}),
     includeClickstream: tab.includeClickstream,
     locationKey: researchScopeLocationKey(tab.scope),
     mode: tab.mode,

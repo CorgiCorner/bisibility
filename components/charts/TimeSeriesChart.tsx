@@ -2,7 +2,7 @@
 
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { formatDisplayDate, formatDisplayMonthYear } from "@/lib/dates/format";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   Area,
   CartesianGrid,
@@ -44,6 +44,8 @@ export type TimeSeriesChartProps = {
   showGrid?: boolean;
   showYAxis?: boolean;
   tooltip?: boolean;
+  /** Replaces the default tooltip body. The argument is the active point index. */
+  renderTooltip?: (index: number) => ReactNode;
   strokeWidth?: number;
   areaOpacity?: number;
   margin?: { top: number; right: number; bottom: number; left: number };
@@ -56,6 +58,55 @@ const axisStyle = {
   style: { fontVariantNumeric: "tabular-nums" },
 };
 const defaultMargin = { top: 12, right: 16, bottom: 0, left: 0 };
+const tooltipContentStyle = {
+  background: "var(--bg-elev)",
+  border: "1px solid var(--border)",
+  borderRadius: 6,
+  color: "var(--fg)",
+  fontSize: 12,
+};
+
+function seriesDot(item: TimeSeries) {
+  if (!item.dots) return false;
+  return {
+    r: 3,
+    fill: item.color,
+    fillOpacity: 1,
+    strokeOpacity: 1,
+    stroke: "var(--bg-elev)",
+    strokeWidth: 1,
+    clipDot: false,
+  };
+}
+
+function SeriesTooltipContent({
+  accessibilityLayer,
+  active,
+  activeIndex,
+  contentStyle,
+  renderTooltip,
+}: {
+  accessibilityLayer?: boolean;
+  active?: boolean;
+  activeIndex?: string | null;
+  contentStyle?: CSSProperties;
+  renderTooltip: (index: number) => ReactNode;
+}) {
+  if (!active || activeIndex == null) return null;
+  const index = Number(activeIndex);
+  if (!Number.isInteger(index) || index < 0) return null;
+  const body = renderTooltip(index);
+  if (body == null || body === false) return null;
+  return (
+    <div
+      aria-live={accessibilityLayer ? "assertive" : undefined}
+      role={accessibilityLayer ? "status" : undefined}
+      style={{ margin: 0, padding: 10, ...contentStyle }}
+    >
+      {body}
+    </div>
+  );
+}
 
 export function TimeSeriesChart({
   dateKeys,
@@ -74,6 +125,7 @@ export function TimeSeriesChart({
   showGrid = true,
   showYAxis = true,
   tooltip = true,
+  renderTooltip,
   strokeWidth = 2.8,
   areaOpacity = 0.1,
   margin = defaultMargin,
@@ -81,6 +133,8 @@ export function TimeSeriesChart({
 }: TimeSeriesChartProps) {
   const dateDisplay = useDateDisplay();
   const alignedDates = dateAxisLayout === "aligned";
+  const showTooltip = renderTooltip != null || tooltip;
+  const activeDot = showTooltip ? { r: 4, clipDot: false } : false;
   const labelAt = (index: number) => {
     const key = dateKeys?.[index];
     if (!key) return labels[index] ?? "";
@@ -149,18 +203,28 @@ export function TimeSeriesChart({
           tickFormatter={formatValue}
           allowDecimals={false}
         />
-        {tooltip ? (
+        {showTooltip && renderTooltip ? (
           <Tooltip
             isAnimationActive={false}
             cursor={{ stroke: "var(--border-control)", strokeDasharray: "3 3" }}
+            contentStyle={tooltipContentStyle}
+            content={(props) => (
+              <SeriesTooltipContent
+                accessibilityLayer={props.accessibilityLayer}
+                active={props.active}
+                activeIndex={props.activeIndex}
+                contentStyle={props.contentStyle}
+                renderTooltip={renderTooltip}
+              />
+            )}
+          />
+        ) : null}
+        {showTooltip && !renderTooltip ? (
+          <Tooltip
+            isAnimationActive={false}
+            cursor={{ stroke: "var(--border-control)", strokeDasharray: "3 3" }}
+            contentStyle={tooltipContentStyle}
             labelFormatter={(index) => labelAt(Number(index))}
-            contentStyle={{
-              background: "var(--bg-elev)",
-              border: "1px solid var(--border)",
-              borderRadius: 6,
-              color: "var(--fg)",
-              fontSize: 12,
-            }}
             formatter={(value, name, item) => {
               const selected = series[Number(String(item.dataKey).replace("value", ""))];
               return [
@@ -186,19 +250,8 @@ export function TimeSeriesChart({
               strokeLinejoin="round"
               fill={item.color}
               fillOpacity={areaOpacity}
-              dot={
-                item.dots
-                  ? {
-                      r: 3,
-                      fill: item.color,
-                      fillOpacity: 1,
-                      strokeOpacity: 1,
-                      stroke: "var(--bg-elev)",
-                      strokeWidth: 1,
-                    }
-                  : false
-              }
-              activeDot={tooltip ? { r: 4 } : false}
+              dot={seriesDot(item)}
+              activeDot={activeDot}
               connectNulls={false}
               isAnimationActive={false}
             />
@@ -212,19 +265,8 @@ export function TimeSeriesChart({
               strokeWidth={strokeWidth}
               strokeLinecap="round"
               strokeLinejoin="round"
-              dot={
-                item.dots
-                  ? {
-                      r: 3,
-                      fill: item.color,
-                      fillOpacity: 1,
-                      strokeOpacity: 1,
-                      stroke: "var(--bg-elev)",
-                      strokeWidth: 1,
-                    }
-                  : false
-              }
-              activeDot={tooltip ? { r: 4 } : false}
+              dot={seriesDot(item)}
+              activeDot={activeDot}
               connectNulls={false}
               isAnimationActive={false}
             />

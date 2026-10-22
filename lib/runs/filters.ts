@@ -4,7 +4,12 @@ import { RUN_STATUS_KEYS } from "./run-status-vocabulary";
 export const PROJECT_RUNS_VIEWS = ["timeline", "runs", "planned"] as const;
 export const PROJECT_RUNS_SECTIONS = ["all", "active", "upcoming", "history"] as const;
 export const PROJECT_RUNS_ORDERS = ["default", "asc", "desc"] as const;
-export const PROJECT_RUNS_SOURCES = ["all", "rank_checks", "search_console"] as const;
+export const PROJECT_RUNS_SOURCES = [
+  "all",
+  "rank_checks",
+  "ai_tracking",
+  "search_console",
+] as const;
 /** Group values predate per-chip statuses and stay valid for URLs and `GET /api/runs`. */
 export const PROJECT_RUNS_STATUS_GROUPS = ["all", "active", "attention", "finished"] as const;
 export const PROJECT_RUNS_STATUSES = [...PROJECT_RUNS_STATUS_GROUPS, ...RUN_STATUS_KEYS] as const;

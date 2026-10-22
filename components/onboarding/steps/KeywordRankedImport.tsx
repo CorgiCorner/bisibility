@@ -1,15 +1,15 @@
 "use client";
 
-import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
-import { WalletBudgetNotice } from "@/components/i18n/WalletBudgetNotice";
+import { ActionPaymentModal } from "@/components/action-payment/ActionPaymentModal";
+import { ActionPaymentPrice } from "@/components/action-payment/ActionPaymentPrice";
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
+import { useActionPaymentReview } from "@/components/action-payment/useActionPaymentReview";
 import { feedbackClass, keywordLines } from "@/components/onboarding/onboarding-form-utils";
 import { Button } from "@/components/ui/Button";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { rankedKeywordPageRate } from "@/lib/cost-estimate/provider-rates";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import type { RankedKeywordConnection } from "@/lib/ranked-keywords/service";
-import { appPath } from "@/lib/routing/app-path";
 import { KEYWORD_IMPORT_MAX } from "@/lib/schemas/keyword";
-import Link from "next/link";
 import { useRef, useState } from "react";
 import {
   type FetchRankedKeywordSuggestionsAction,
@@ -18,10 +18,12 @@ import {
   type RankedKeywordError,
   type RankedKeywordsPage,
 } from "./keyword-ranked-model";
+import { RankedImportError } from "./RankedImportError";
 import {
   RankedKeywordSuggestionDrawer,
   type RankedKeywordSuggestionDrawerMessages,
 } from "./RankedKeywordSuggestionDrawer";
+import { rankedPaymentAction } from "./ranked-payment-action";
 
 export type { FetchRankedKeywordSuggestionsAction } from "./keyword-ranked-model";
 
@@ -77,6 +79,10 @@ export function KeywordRankedImport({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [pages, setPages] = useState<RankedKeywordsPage[]>([]);
+  const [failedPayment, setFailedPayment] = useState<ActionPaymentReceipt>();
+  const [uncertain, setUncertain] = useState(false);
+  const review = useActionPaymentReview();
+  const paidAction = fetchAction ? rankedPaymentAction(fetchAction) : null;
   const feedbackTimer = useRef<number | null>(null);
   const current = keywordLines(currentKeywords);
   const remaining = Math.max(
@@ -86,16 +92,12 @@ export function KeywordRankedImport({
   const lastPage = pages.at(-1);
   const loadedCount = pages.reduce((sum, page) => sum + page.rows.length, 0);
   const totalCount = lastPage?.totalCount ?? null;
-  const selectedConnection =
-    connections.find((connection) => connection.id === connectionId) ?? connections[0];
-  const rate = rankedKeywordPageRate(selectedConnection?.provider ?? "");
-  const pageCostCents = rate?.costCents ?? null;
   const canLoad = Boolean(
     lastPage &&
       lastPage.offset < 900 &&
       (totalCount === null ? lastPage.rows.length === 100 : loadedCount < totalCount),
   );
-  const spent = pages.reduce((sum, page) => sum + (page.cached ? 0 : page.costCents), 0);
+  const paymentInput = { projectId, connectionId: connectionId || undefined, offset: 0 };
 
   function showFeedback(message: string) {
     if (feedbackTimer.current !== null) window.clearTimeout(feedbackTimer.current);
@@ -104,22 +106,36 @@ export function KeywordRankedImport({
   }
 
   async function load(offset: number) {
-    if (!fetchAction || pending) return;
+    if (!paidAction || pending || uncertain) return;
     setPending(true);
     setError(null);
     try {
-      const result = await fetchAction({
-        connectionId: connectionId || undefined,
-        offset,
-        projectId,
-      });
+      const result = await review.request(
+        paidAction,
+        {
+          connectionId: connectionId || undefined,
+          offset,
+          projectId,
+        },
+        messages.import,
+        (value, option) => ({
+          ...value,
+          paymentOptionId: option.id,
+          connectionId: option.connectionId,
+        }),
+      );
+      if (!result || "estimate" in result) return;
       if ("reason" in result) {
         setError(result);
+        setFailedPayment(result.payment);
+        if (result.payment?.state === "unknown" || result.payment?.state === "pending")
+          setUncertain(true);
         return;
       }
       setPages((existing) => (offset === 0 ? [result] : [...existing, result]));
       setDrawerOpen(true);
     } catch {
+      setUncertain(true);
       showFeedback(messages.lookupFailed);
     } finally {
       setPending(false);
@@ -166,20 +182,20 @@ export function KeywordRankedImport({
       ) : null}
       <div className={compact && connections.length === 1 ? "" : "mt-3"}>
         <Button
-          disabled={!fetchAction}
+          disabled={!fetchAction || uncertain}
           loading={pending}
           onClick={openDrawer}
           type="button"
           variant="secondary"
         >
           {compact ? messages.choose : messages.import}
-          {pageCostCents == null
-            ? ""
-            : ` ${messages.drawer.aboutPage({ cost: pageCostCents / 100 })}`}
+          {!pages.length && paidAction ? (
+            <ActionPaymentPrice action={paidAction} input={paymentInput} />
+          ) : null}
         </Button>
       </div>
       {error ? (
-        <ErrorMessage
+        <RankedImportError
           messages={messages}
           projectRef={projectId}
           reason={error.reason}
@@ -187,9 +203,11 @@ export function KeywordRankedImport({
         />
       ) : null}
       {feedback ? <p className={`m-0 mt-2 ${feedbackClass} text-fg-muted`}>{feedback}</p> : null}
+      {failedPayment ? <PaymentChargeLine payment={failedPayment} /> : null}
+      <ActionPaymentModal review={review} />
       {pages.length > 0 ? (
         <RankedKeywordSuggestionDrawer
-          canLoad={canLoad}
+          canLoad={canLoad && !uncertain}
           currentKeywords={current}
           groups={groupRankedKeywords(pages).map((group) =>
             allowTracked ? { ...group, alreadyTracked: false } : group,
@@ -200,64 +218,27 @@ export function KeywordRankedImport({
           onLoadMore={() => void load((lastPage?.offset ?? 0) + 100)}
           open={drawerOpen}
           pageCount={pages.length}
-          pageCostCents={pageCostCents}
+          pageCostCents={null}
+          loadMorePrice={
+            paidAction ? (
+              <ActionPaymentPrice
+                action={paidAction}
+                input={{ ...paymentInput, offset: (lastPage?.offset ?? 0) + 100 }}
+              />
+            ) : null
+          }
+          payments={pages.flatMap((page) => (page.payment ? [page.payment] : []))}
+          originalPayments={pages.flatMap((page) =>
+            page.originalPayment ? [page.originalPayment] : [],
+          )}
           pending={pending}
           remaining={remaining}
-          spentCents={spent}
+          spentCents={0}
           lastPageCached={lastPage?.cached ?? false}
+          freeUntil={lastPage?.freeUntil}
           messages={messages.drawer}
         />
       ) : null}
     </section>
-  );
-}
-
-function ErrorMessage({
-  messages,
-  projectRef,
-  reason,
-  budgetReason,
-}: Readonly<{
-  messages: KeywordRankedImportMessages;
-  projectRef: string;
-  reason: RankedKeywordError;
-  budgetReason?: "budget_missing" | "usage_reconciliation_required";
-}>) {
-  const errors = useSharedErrorMessages();
-  if (reason === "wallet_budget_exhausted") return <WalletBudgetNotice />;
-  const message =
-    budgetReason === "budget_missing"
-      ? errors.budgetMissing()
-      : budgetReason === "usage_reconciliation_required"
-        ? errors.usageReconciliationRequired()
-        : {
-            budget_exhausted: messages.budgetExhausted,
-            cost_limit_exceeded: messages.lookupFailed,
-            needs_reauth: messages.needsReauth,
-            no_domain: messages.noDomain,
-            no_source: messages.noSource,
-            rate_limited: messages.rateLimited,
-            unsupported_location: messages.unsupportedLocation,
-          }[reason];
-  return (
-    <p className={`m-0 mt-2 ${feedbackClass} text-red-text`}>
-      {message}
-      {reason === "needs_reauth" ? (
-        <Link
-          className="ml-1 font-semibold text-accent-text"
-          href={appPath(projectRef, "integrations")}
-        >
-          {messages.reconnect}
-        </Link>
-      ) : null}
-      {reason === "budget_exhausted" && !budgetReason ? (
-        <Link
-          className="ml-1 font-semibold text-accent-text"
-          href={`${appPath(projectRef, "settings")}#provider-usage`}
-        >
-          {messages.raiseBudget}
-        </Link>
-      ) : null}
-    </p>
   );
 }

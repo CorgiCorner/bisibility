@@ -7,9 +7,10 @@ import {
 } from "./provider-error-code";
 
 describe("PROVIDER_ERROR_CODES", () => {
-  it("exposes the four neutral taxonomy codes in order", () => {
+  it("exposes the neutral taxonomy codes in order", () => {
     expect(PROVIDER_ERROR_CODES).toEqual([
       "provider_billing",
+      "provider_capacity_unavailable",
       "provider_auth",
       "provider_account_restricted",
       "provider_rate_limited",

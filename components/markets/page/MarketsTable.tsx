@@ -15,6 +15,7 @@ type MarketsTableProps = {
   canRunChecks?: boolean;
   onRunChecks?: (market: MarketsPageRow) => void;
   onAddKeywords?: (market: MarketsPageRow) => void;
+  onAddDevice?: (market: MarketsPageRow) => void;
   onArchive: (market: MarketsPageRow) => void;
   onEdit: (market: MarketsPageRow) => void;
   onStatusChange: (input: { enabled: boolean; marketId: string }) => Promise<{ status: string }>;
@@ -31,6 +32,7 @@ export function MarketsTable({
   canRunChecks = false,
   onRunChecks,
   onAddKeywords,
+  onAddDevice,
   onArchive,
   onEdit,
   onStatusChange,
@@ -114,6 +116,7 @@ export function MarketsTable({
             canRunChecks,
             onRunChecks,
             onAddKeywords,
+            onAddDevice,
             onArchive,
             onEdit,
             onStatusChange: queueStatusChange,

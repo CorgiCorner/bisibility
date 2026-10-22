@@ -3,23 +3,16 @@
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
 import { trackingDefaults } from "@/components/onboarding/onboarding-form-utils";
 import { languageForLocationValue } from "@/components/onboarding/onboarding-location-field";
-import { MenuSelect } from "@/components/ui/MenuSelect";
-import type { ProjectDefaultsInput } from "@/lib/schemas/project";
-import { timezoneSelectOptions } from "@/lib/settings/timezones";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 type StepFirstCheckReviewProps = {
   devices: readonly unknown[];
-  frequency?: ProjectDefaultsInput["frequency"];
-  frequencyLabel: string;
   keywordCount: number;
   markets: readonly LocationFieldValue[];
-  onTimezoneChange: (value: string) => void;
   providerAction?: ReactNode;
   providerLabel: string;
   providerReady: boolean;
-  timezone: string;
 };
 
 function SummaryRow({
@@ -78,30 +71,15 @@ function trackingSummary(
   });
 }
 
-function scheduleSummary(
-  t: ReturnType<typeof useTranslations<"onboarding.firstCheck">>,
-  frequency: ProjectDefaultsInput["frequency"] | undefined,
-) {
-  if (frequency === "manual") return t("review.manual");
-  if (frequency === "paused") return t("review.paused");
-  return null;
-}
-
 export function StepFirstCheckReview({
   devices,
-  frequency,
-  frequencyLabel,
   keywordCount,
   markets,
-  onTimezoneChange,
   providerAction,
   providerLabel,
   providerReady,
-  timezone,
 }: Readonly<StepFirstCheckReviewProps>) {
   const t = useTranslations("onboarding.firstCheck");
-  const manualSchedule = scheduleSummary(t, frequency);
-  const scheduledValue = frequencyLabel;
 
   return (
     <div className="mt-5 rounded-card border border-border" data-analytics-mask>
@@ -110,28 +88,7 @@ export function StepFirstCheckReview({
         label={t("review.tracking")}
         value={trackingSummary(t, keywordCount, markets, devices)}
       />
-      {manualSchedule ? (
-        <SummaryRow index={1} label={t("review.schedule")} value={manualSchedule} />
-      ) : (
-        <SummaryRow
-          index={1}
-          label={t("review.schedule")}
-          value={`${scheduledValue} · ${timezone}`}
-        >
-          <span aria-hidden className="text-border-strong">
-            ·
-          </span>
-          <MenuSelect
-            ariaLabel={t("review.projectTimezone")}
-            onChange={onTimezoneChange}
-            options={timezoneSelectOptions(timezone)}
-            searchable
-            searchPlaceholder={t("review.searchTimezone")}
-            triggerClassName="min-h-0 min-w-0 border-0 bg-transparent px-0 text-xs text-fg-muted hover:border-0 focus-visible:border-0"
-            value={timezone}
-          />
-        </SummaryRow>
-      )}
+      <SummaryRow index={1} label={t("review.schedule")} value={t("review.manual")} />
       <SummaryRow
         index={2}
         label={t("dataSource")}

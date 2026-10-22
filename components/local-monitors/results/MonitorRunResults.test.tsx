@@ -15,7 +15,6 @@ vi.mock("@/lib/local-monitor-results/session-actions", () => ({
   readLocalPointListingsAction: vi.fn(),
   readLocalPointHistoryAction: vi.fn(),
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 function markup(unavailable = false, mixed = false) {
   const { binding, receipt, now } = localResultFixture(),
     row = binding.rows[0],

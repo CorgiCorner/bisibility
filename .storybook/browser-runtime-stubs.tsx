@@ -3,11 +3,14 @@ import type { ProviderCommand } from "@usagekit/views";
 import type { ReactNode } from "react";
 import React from "react";
 
-export { analyzeAiResearchAction } from "./ai-research-action-stubs";
-export { competitorDetailsFormSchema } from "./competitor-action-stubs";
-export { previewKeywordDeletion, refreshKeywordViewsAfterImport } from "./keyword-action-stubs";
-export { loadMeteringAdminPageAction } from "./metering-admin-action-stubs";
-export { createOnboardingProject } from "./onboarding-action-stubs";
+export { analyzeAiResearchAction } from "@/.storybook/ai-research-action-stubs";
+export { competitorDetailsFormSchema } from "@/.storybook/competitor-action-stubs";
+export {
+  previewKeywordDeletion,
+  refreshKeywordViewsAfterImport,
+} from "@/.storybook/keyword-action-stubs";
+export { loadMeteringAdminPageAction } from "@/.storybook/metering-admin-action-stubs";
+export { createOnboardingProject } from "@/.storybook/onboarding-action-stubs";
 
 // Keep instanceof checks in isolated UI stories compatible with the action boundary.
 export class ProjectNotFoundError extends Error {
@@ -669,6 +672,9 @@ export const bulkTagKeywords = asyncNoop;
 export const changeMemberRole = asyncNoop;
 export const connectProvider = asyncNoop;
 export const switchProviderToHosted = asyncNoop;
+export const switchProviderToRetainedOwnKey = asyncNoop;
+export const deleteSavedProviderKey = asyncNoop;
+export const setProviderSourceEnabled = asyncNoop;
 export const createAlertRule = asyncNoop;
 export const createCloudMigrationHandoffAction = asyncNoop;
 export const createCloudImportWorkspace = asyncNoop;

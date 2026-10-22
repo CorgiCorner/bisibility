@@ -155,9 +155,7 @@ describe("StepFirstCheck", () => {
     });
     expect(await screen.findByText("#4 / example.com/page")).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Sample checks finished. Every keyword follows your Daily schedule from here.",
-      ),
+      screen.getByText("Sample checks finished. Add keywords to a schedule for automatic checks."),
     ).toBeInTheDocument();
     expect(queueFirstChecksAction).not.toHaveBeenCalled();
   });
@@ -184,7 +182,7 @@ describe("StepFirstCheck", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "The sample check finished with an issue. You can retry the failed check below. Every keyword still follows your Daily schedule.",
+        "The sample check finished with an issue. You can retry the failed check below.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("1 of 1 checks failed")).not.toBeInTheDocument();

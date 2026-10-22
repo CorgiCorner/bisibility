@@ -1,4 +1,5 @@
 import "server-only";
+import type { PaidCallPayment } from "@/lib/action-payment/paid-call";
 import { domainOverviewRates, rankedKeywordPageRate } from "@/lib/cost-estimate/provider-rates";
 import {
   ProviderLookupSignal,
@@ -53,12 +54,14 @@ export function domainOverviewEstimate(input: {
 }
 
 function paidCallInput(input: {
+  payment?: PaidCallPayment;
   costLimit?: RequestCostLimit;
   origin: ProviderRequestOrigin;
   projectId: string;
   source: DomainOverviewSource;
 }) {
   return {
+    payment: input.payment,
     connection: input.source.connection,
     costLimit: input.costLimit,
     credential: input.origin.credential,
@@ -121,6 +124,7 @@ export function preflightDomainOverview(input: {
 
 export function fetchDomainOverviewMetrics(
   input: DomainOverviewResearchScope & {
+    payment?: PaidCallPayment;
     costLimit?: RequestCostLimit;
     origin: ProviderRequestOrigin;
     projectId: string;
@@ -144,6 +148,7 @@ export function fetchDomainOverviewMetrics(
 
 export function fetchDomainHistory(
   input: DomainOverviewResearchScope & {
+    payment?: PaidCallPayment;
     costLimit?: RequestCostLimit;
     origin: ProviderRequestOrigin;
     projectId: string;
@@ -173,6 +178,7 @@ export function fetchDomainKeywords(
   input: DomainOverviewResearchScope & {
     limit: number;
     offset: number;
+    payment?: PaidCallPayment;
     costLimit?: RequestCostLimit;
     origin: ProviderRequestOrigin;
     projectId: string;
@@ -203,6 +209,7 @@ export function fetchDomainPages(
   input: DomainOverviewResearchScope & {
     limit: number;
     offset: number;
+    payment?: PaidCallPayment;
     costLimit?: RequestCostLimit;
     origin: ProviderRequestOrigin;
     projectId: string;

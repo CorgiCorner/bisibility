@@ -1,9 +1,21 @@
 import { ProviderLookupSignal } from "./lookup-failure";
 
 export function assertOwnCredentialSnapshot(
-  input: { requiredCredentialSource?: "own"; connection: { credentialsEncrypted: string | null } },
+  input: {
+    requiredCredentialSource?: "own";
+    connection: { credentialsEncrypted: string | null };
+    requiredPaymentSnapshot?: { credentialSource: string; credentialsEncrypted: string | null };
+  },
   current: { credentialSource: string; credentialsEncrypted: string | null },
 ) {
+  const expected = input.requiredPaymentSnapshot;
+  if (
+    expected &&
+    (current.credentialSource !== expected.credentialSource ||
+      (expected.credentialSource === "own" &&
+        current.credentialsEncrypted !== expected.credentialsEncrypted))
+  )
+    throw new ProviderLookupSignal({ ok: false, reason: "payment_quote_changed" });
   if (input.requiredCredentialSource !== "own") return;
   if (current.credentialSource !== "own")
     throw new ProviderLookupSignal({ ok: false, reason: "own_credentials_required" });

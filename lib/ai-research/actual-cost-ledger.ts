@@ -1,3 +1,5 @@
+import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
+import { aiPaymentReceipt, readAiPaymentConsent } from "./payment";
 import "server-only";
 import { agentReportSchema } from "@/lib/agent-reports/model";
 import { prisma } from "@/lib/db/prisma";
@@ -118,14 +120,59 @@ async function reconciled(
   });
 }
 
-export function actualCostReplay(row: AgentReport): AiResearchOutcome {
-  const state = (row.provenance as Record<string, unknown>).actualCostState;
+export async function actualCostReplay(row: AgentReport): Promise<AiResearchOutcome> {
+  const provenance = row.provenance as Record<string, unknown>;
+  const state = provenance.actualCostState;
+  const parsedPayment = actionPaymentReceiptSchema.safeParse(
+    (row.body as Record<string, unknown>).originalPayment,
+  );
+  let originalPayment = parsedPayment.success ? parsedPayment.data : undefined;
+  if (provenance.paymentConsent) {
+    const consent = readAiPaymentConsent(provenance.paymentConsent);
+    if (
+      consent.projectId !== row.projectId ||
+      consent.executionId !== row.id ||
+      consent.connectionId !== provenance.connectionId
+    )
+      throw new Error("Retained AI payment authority does not match this report.");
+    const tags = provenance.usageTags;
+    const receipts =
+      Array.isArray(tags) &&
+      tags.length > 0 &&
+      tags.length <= 2 &&
+      tags.every((tag) => typeof tag === "string")
+        ? await readCanonicalUsage(
+            Prisma.sql`"projectId"=${row.projectId} AND "connectionId"=${consent.connectionId} AND provider='dataforseo' AND feature='prompt_explorer' AND "credentialSource"='own' AND tag IN (${Prisma.join(tags)})`,
+          )
+        : [];
+    const known =
+      Array.isArray(tags) &&
+      tags.length > 0 &&
+      tags.every((tag) => receipts.some((receipt) => receipt.tag === tag)) &&
+      receipts.every(
+        (receipt) =>
+          receipt.measurementStatus === "recorded" &&
+          receipt.costCents !== null &&
+          receipt.usageQuantity !== null,
+      );
+    originalPayment = aiPaymentReceipt(
+      provenance.paymentConsent,
+      known
+        ? receipts
+            .reduce((sum, receipt) => sum.plus(receipt.costCents ?? 0), new Prisma.Decimal(0))
+            .div(100)
+            .toFixed()
+        : null,
+      known ? "confirmed" : "unknown",
+    );
+  }
   if (state !== "confirmed")
     return {
       ok: false,
       reason: state === "refused" ? "request_already_refused" : "usage_reconciliation_required",
       message:
         "This request cannot dispatch again. Review its saved report and provider usage before creating another attempt.",
+      ...(originalPayment ? { originalPayment } : {}),
       retryBlocked: state !== "refused",
       safeToStartNewRequest: state === "refused",
     };
@@ -137,6 +184,16 @@ export function actualCostReplay(row: AgentReport): AiResearchOutcome {
     costCents: 0,
     result: (row.body as unknown as { result: AiResearchResult }).result,
     retryBlocked: false,
+    ...(originalPayment
+      ? {
+          originalPayment,
+          payment: {
+            ...originalPayment,
+            state: "free" as const,
+            charge: { ...originalPayment.charge, value: "0", certainty: "free" as const },
+          },
+        }
+      : {}),
   };
 }
 

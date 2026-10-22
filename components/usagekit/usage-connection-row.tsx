@@ -45,6 +45,10 @@ export type UsageConnectionRowProps = {
   status?: { label: string; tone: UsageTone };
   /** The reading summarized in the collapsed row, usually the tightest limit. */
   summary?: { value: string; percent: number | null; partial?: boolean };
+  /** Host reading columns, such as App and API, replace the generic summary. */
+  summaryContent?: ReactNode;
+  /** Rectangular hover stays within the edges of a list separated by rules. */
+  divided?: boolean;
   groups?: readonly UsageReadingGroup[];
   /** Always visible below the summary, such as delayed reconciliation. */
   notice?: ReactNode;
@@ -64,6 +68,8 @@ export function UsageConnectionRow({
   tags = [],
   status,
   summary,
+  summaryContent,
+  divided = false,
   groups = [],
   notice,
   notes,
@@ -89,16 +95,22 @@ export function UsageConnectionRow({
   };
   return (
     <li className="min-w-0" data-open={open}>
-      <div className="-mx-2">
+      <div className={divided ? undefined : "-mx-2"}>
         <button
           type="button"
           aria-expanded={open}
           aria-controls={`${id}-details`}
           onClick={toggle}
-          className={`rounded-md py-3.5 hover:bg-bg-sunken outline-none focus-visible:ring-2 focus-visible:ring-accent-solid grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 px-2 text-left ${usageMotion.respond}`}
+          className={`cursor-pointer ${divided ? "rounded-none px-3 focus-visible:ring-inset" : "rounded-md px-2"} py-3.5 hover:bg-bg-sunken outline-none focus-visible:ring-2 focus-visible:ring-accent-solid grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 text-left ${usageMotion.respond}`}
         >
           {/* Spaces between the parts keep the accessible name readable in every engine. */}
-          <span className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
+          <span
+            className={
+              summaryContent
+                ? "grid min-w-0 items-center gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+                : "flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2"
+            }
+          >
             <span className="flex min-w-0 flex-1 basis-40 flex-wrap items-center gap-2">
               <span className="text-sm min-w-0 break-words font-semibold">{name}</span>
               {tags.map((tag) => (
@@ -109,24 +121,29 @@ export function UsageConnectionRow({
                   </span>
                 </Fragment>
               ))}
-            </span>{" "}
-            <span className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
-              {status && <UsageStatus tone={status.tone}>{status.label}</UsageStatus>}{" "}
-              {summary && (
-                <span className="flex items-center gap-3">
-                  <UsageMeter
-                    size="md"
-                    percent={summary.percent}
-                    partial={summary.partial}
-                    delay={120 + index * 70}
-                    className="w-16 sm:w-24"
-                  />
-                  <span className="text-sm min-w-10 text-right font-medium tabular-nums">
-                    {summaryText}
-                  </span>
-                </span>
+              {summaryContent && status && (
+                <UsageStatus tone={status.tone}>{status.label}</UsageStatus>
               )}
-            </span>
+            </span>{" "}
+            {summaryContent ?? (
+              <span className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
+                {status && <UsageStatus tone={status.tone}>{status.label}</UsageStatus>}{" "}
+                {summary && (
+                  <span className="flex items-center gap-3">
+                    <UsageMeter
+                      size="md"
+                      percent={summary.percent}
+                      partial={summary.partial}
+                      delay={120 + index * 70}
+                      className="w-16 sm:w-24"
+                    />
+                    <span className="text-sm min-w-10 text-right font-medium tabular-nums">
+                      {summaryText}
+                    </span>
+                  </span>
+                )}
+              </span>
+            )}
           </span>
           <UsageChevron open={open} className="text-fg-muted" />
         </button>

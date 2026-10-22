@@ -8,6 +8,7 @@ import { prisma } from "../db/prisma";
 import { makePublicId } from "../db/public-id";
 import { publishOperationChanged } from "../notifications/realtime";
 import { isProviderErrorCode } from "../providers/provider-error-code";
+import { storedDeferralReason } from "../rank-check/deferral-reason";
 import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-constants";
 import { RankCheckClosedBeforePersistenceError } from "../rank-check/persistence-errors";
 import { wrapLegacyRankCheck } from "../rank-check/planner/legacy-wrap";
@@ -166,7 +167,7 @@ export async function discardRankCheckActivity(input: DiscardRankCheckActivityIn
       data: {
         attemptCount: 0,
         degradedToCountry: false,
-        deferredReason: input.reason,
+        deferredReason: storedDeferralReason(input.reason),
         finishedAt: now,
         normalizationVersion: null,
         status: "deferred",

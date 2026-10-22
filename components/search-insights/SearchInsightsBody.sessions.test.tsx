@@ -12,6 +12,7 @@ import { storyImportState } from "./search-insights-story-fixtures";
 v.describe("SearchInsightsBody", () => {
   v.beforeEach(() => {
     t.analyticsMock().track.mockReset();
+    localStorage.clear();
   });
 
   v.it("shows the connect card until sessions are connected", () => {
@@ -19,6 +20,39 @@ v.describe("SearchInsightsBody", () => {
 
     v.expect(r.screen.getByText(SESSIONS_CONNECT_TITLE)).toBeInTheDocument();
     v.expect(r.screen.getByRole("link", { name: "Connect" })).toBeInTheDocument();
+  });
+
+  v.it("drops a dismissed connect prompt without leaving a dashed placeholder", () => {
+    localStorage.setItem("bisibility:search-insights:ga4-connect:v1:prj_1", "dismissed");
+    const view = t.renderBody();
+
+    v.expect(r.screen.queryByText(SESSIONS_CONNECT_TITLE)).not.toBeInTheDocument();
+    v.expect(view.container.querySelector(".border-dashed")).toBeNull();
+    v.expect(view.container.querySelector('[class*="empty:hidden"]')).toBeEmptyDOMElement();
+    v.expect(
+      r.screen.getByRole("button", { name: /queries with page overlap/i }),
+    ).toBeInTheDocument();
+  });
+
+  v.it("renders connected sessions when the connect prompt is dismissed", () => {
+    localStorage.setItem("bisibility:search-insights:ga4-connect:v1:prj_1", "dismissed");
+    setNavigationState({ searchParams: { lens: "traffic" } });
+    t.renderBody({
+      view: t.view({
+        organicSessions: {
+          importState: null,
+          keyEventsConfigured: null,
+          property: "123456789",
+          status: "connected",
+        },
+        pages: { rows: [{ ...t.pageRows(1)[0], sessions: 84 }], total: 1 },
+        sessionsReadable: true,
+      }),
+    });
+
+    v.expect(r.within(t.pagesCard()).getByText("84")).toBeInTheDocument();
+    v.expect(r.screen.queryByText(SESSIONS_CONNECT_TITLE)).not.toBeInTheDocument();
+    v.expect(r.screen.queryByRole("link", { name: "Connect" })).not.toBeInTheDocument();
   });
 
   v.it("keeps the sessions slot visible while a connected GA4 import catches up", () => {

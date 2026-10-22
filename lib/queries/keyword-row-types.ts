@@ -20,6 +20,13 @@ export type KeywordCheckSchedule = {
 };
 /** Every keyword row loader selects this, so an assigned schedule always owns the row's depth. */
 export const keywordCheckScheduleSelect = {
+  archivedAt: true,
+  cronExpression: true,
+  enabled: true,
+  frequency: true,
+  jitterMinutes: true,
+  timeOfDay: true,
+  timezone: true,
   name: true,
   publicId: true,
   serpDepth: true,

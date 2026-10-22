@@ -1,5 +1,7 @@
 "use client";
 
+import { unresolvedPayment } from "@/components/action-payment/unresolved-payment";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import type {
   LoadDomainKeywordsPageAction,
   LoadDomainPagesPageAction,
@@ -7,12 +9,13 @@ import type {
 import type { DomainOverviewReport } from "@/lib/domain-overview/types";
 import type { ResearchScope } from "@/lib/research/scope";
 import { type Dispatch, type SetStateAction, useRef, useState } from "react";
+import { appendKeywords, appendPages, providerConsumedCount } from "./domain-overview-append";
 import {
   type DomainOverviewEstimateView,
   type DomainOverviewUiOutcome,
   domainOverviewReportIdentity,
-  reportFrom,
 } from "./domain-overview-workspace-model";
+import { domainPagePaymentInput } from "./domain-payment-inputs";
 
 type TableModule = "keywords" | "pages";
 type ModulePaging = { hasMore: boolean; nextOffset: number };
@@ -24,27 +27,6 @@ type TablePaging = {
 type ActiveRequest = { id: number; identity: string; module: TableModule };
 
 const PAGE_LIMIT = 100;
-
-function providerConsumedCount(page: { consumedCount?: number; rows: unknown[] }) {
-  const consumedCount = page.consumedCount;
-  return typeof consumedCount === "number" &&
-    Number.isSafeInteger(consumedCount) &&
-    consumedCount >= 0
-    ? consumedCount
-    : page.rows.length;
-}
-
-type TablePageInput = {
-  fresh: false;
-  languageCode: string;
-  limit: number;
-  locationCode: number;
-  maxCostCents: number;
-  offset: number;
-  projectId: string;
-  scopeOverride: DomainOverviewReport["scope"];
-  target: string;
-};
 
 function initialModulePaging(
   module: DomainOverviewReport["keywords"] | DomainOverviewReport["pages"],
@@ -80,69 +62,9 @@ function nextModulePaging(
   };
 }
 
-function appendKeywords(
-  setOutcome: Dispatch<SetStateAction<DomainOverviewUiOutcome | null>>,
-  result: Awaited<ReturnType<LoadDomainKeywordsPageAction>> & { ok: true },
-  expectedIdentity: string,
-) {
-  setOutcome((current) => {
-    const report = reportFrom(current);
-    if (!report?.keywords.ok || domainOverviewReportIdentity(report) !== expectedIdentity) {
-      return current;
-    }
-    const rows = new Map(
-      report.keywords.data.rows.map((row) => [`${row.keyword}:${row.rankingUrl ?? ""}`, row]),
-    );
-    for (const row of result.data.rows) rows.set(`${row.keyword}:${row.rankingUrl ?? ""}`, row);
-    return {
-      ...report,
-      cached: report.cached && result.cached,
-      costCents: report.costCents + result.costCents,
-      keywords: {
-        ...result,
-        data: {
-          ...result.data,
-          consumedCount:
-            providerConsumedCount(report.keywords.data) + providerConsumedCount(result.data),
-          rows: [...rows.values()],
-        },
-      },
-    };
-  });
-}
-
-function appendPages(
-  setOutcome: Dispatch<SetStateAction<DomainOverviewUiOutcome | null>>,
-  result: Awaited<ReturnType<LoadDomainPagesPageAction>> & { ok: true },
-  expectedIdentity: string,
-) {
-  setOutcome((current) => {
-    const report = reportFrom(current);
-    if (!report?.pages.ok || domainOverviewReportIdentity(report) !== expectedIdentity)
-      return current;
-    const rows = new Map(report.pages.data.rows.map((row) => [row.path, row]));
-    for (const row of result.data.rows) rows.set(row.path, row);
-    return {
-      ...report,
-      cached: report.cached && result.cached,
-      costCents: report.costCents + result.costCents,
-      pages: {
-        ...result,
-        data: {
-          ...result.data,
-          consumedCount:
-            providerConsumedCount(report.pages.data) + providerConsumedCount(result.data),
-          rows: [...rows.values()],
-        },
-      },
-    };
-  });
-}
-
 export function useDomainOverviewTablePages({
   activeResearchScope,
   addSpend,
-  estimate,
   loadKeywordsPageAction,
   loadPagesPageAction,
   projectId,
@@ -152,8 +74,12 @@ export function useDomainOverviewTablePages({
   activeResearchScope: (ResearchScope & { providerLocationCode: number }) | null;
   addSpend: (costCents: number) => void;
   estimate: DomainOverviewEstimateView;
-  loadKeywordsPageAction: LoadDomainKeywordsPageAction;
-  loadPagesPageAction: LoadDomainPagesPageAction;
+  loadKeywordsPageAction: (
+    input: unknown,
+  ) => Promise<Awaited<ReturnType<LoadDomainKeywordsPageAction>> | null>;
+  loadPagesPageAction: (
+    input: unknown,
+  ) => Promise<Awaited<ReturnType<LoadDomainPagesPageAction>> | null>;
   projectId: string;
   report: DomainOverviewReport | null;
   setOutcome: Dispatch<SetStateAction<DomainOverviewUiOutcome | null>>;
@@ -164,6 +90,11 @@ export function useDomainOverviewTablePages({
   const activeRequest = useRef<ActiveRequest | null>(null);
   const requestId = useRef(0);
   const [loading, setLoading] = useState<ActiveRequest | null>(null);
+  const [payments, setPayments] = useState<{
+    identity: string;
+    values: Partial<Record<TableModule, ActionPaymentReceipt>>;
+  }>();
+  const [blocked, setBlocked] = useState<{ identity: string; modules: TableModule[] }>();
   const [error, setError] = useState<{ identity: string; module: TableModule } | null>(null);
   const [paging, setPaging] = useState<TablePaging>(() => initialPaging(report, identity));
   const currentPaging = paging.identity === identity ? paging : initialPaging(report, identity);
@@ -172,30 +103,36 @@ export function useDomainOverviewTablePages({
     if (!activeResearchScope || !report || activeRequest.current?.identity === identity) return;
     const current = module === "keywords" ? report.keywords : report.pages;
     const modulePaging = currentPaging[module];
-    if (!current.ok || !modulePaging.hasMore) return;
-    const estimateCents =
-      module === "keywords" ? estimate.keywordPageCostCents : estimate.pagePageCostCents;
-    if (estimateCents == null) return;
+    const canLoad = current.ok ? modulePaging.hasMore : modulePaging.nextOffset === 0;
+    if (!canLoad || (blocked?.identity === identity && blocked.modules.includes(module))) return;
     const request: ActiveRequest = { id: ++requestId.current, identity, module };
-    const input: TablePageInput = {
-      fresh: false,
-      languageCode: report.languageCode,
-      limit: PAGE_LIMIT,
-      locationCode: report.locationCode,
-      maxCostCents: Math.ceil(estimateCents),
-      offset: modulePaging.nextOffset,
-      projectId,
-      scopeOverride: report.scope,
-      target: report.target,
-    };
+    const input = domainPagePaymentInput(projectId, report, modulePaging.nextOffset);
     activeRequest.current = request;
     setLoading(request);
     setError(null);
     try {
       if (module === "keywords") {
         const result = await loadKeywordsPageAction(input);
+        if (!result) return;
+        if ("estimate" in result) {
+          setError({ identity, module });
+          return;
+        }
         addSpend(result.costCents);
         if (latestIdentity.current !== identity) return;
+        if ("payment" in result)
+          setPayments((value) => ({
+            identity,
+            values: {
+              ...(value?.identity === identity ? value.values : {}),
+              [module]: result.payment,
+            },
+          }));
+        if (unresolvedPayment(result))
+          setBlocked((value) => ({
+            identity,
+            modules: [...new Set([...(value?.identity === identity ? value.modules : []), module])],
+          }));
         if (result.ok) {
           appendKeywords(setOutcome, result, identity);
           const next = nextModulePaging(
@@ -217,8 +154,26 @@ export function useDomainOverviewTablePages({
         }
       } else {
         const result = await loadPagesPageAction(input);
+        if (!result) return;
+        if ("estimate" in result) {
+          setError({ identity, module });
+          return;
+        }
         addSpend(result.costCents);
         if (latestIdentity.current !== identity) return;
+        if ("payment" in result)
+          setPayments((value) => ({
+            identity,
+            values: {
+              ...(value?.identity === identity ? value.values : {}),
+              [module]: result.payment,
+            },
+          }));
+        if (unresolvedPayment(result))
+          setBlocked((value) => ({
+            identity,
+            modules: [...new Set([...(value?.identity === identity ? value.modules : []), module])],
+          }));
         if (result.ok) {
           appendPages(setOutcome, result, identity);
           const next = nextModulePaging(
@@ -240,7 +195,13 @@ export function useDomainOverviewTablePages({
         }
       }
     } catch {
-      if (latestIdentity.current === identity) setError({ identity, module });
+      if (latestIdentity.current === identity) {
+        setBlocked((value) => ({
+          identity,
+          modules: [...new Set([...(value?.identity === identity ? value.modules : []), module])],
+        }));
+        setError({ identity, module });
+      }
     } finally {
       if (activeRequest.current?.id === request.id) activeRequest.current = null;
       setLoading((value) => (value?.id === request.id ? null : value));
@@ -248,6 +209,14 @@ export function useDomainOverviewTablePages({
   }
 
   return {
+    tableBlocked: blocked?.identity === identity ? blocked.modules : [],
+    tablePayments: payments?.identity === identity ? payments.values : undefined,
+    tableQuoteInputs: report
+      ? {
+          keywords: domainPagePaymentInput(projectId, report, currentPaging.keywords.nextOffset),
+          pages: domainPagePaymentInput(projectId, report, currentPaging.pages.nextOffset),
+        }
+      : null,
     loadMore,
     loadingTable: loading?.identity === identity ? loading.module : null,
     resetTableError: () => setError(null),

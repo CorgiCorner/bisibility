@@ -26,6 +26,7 @@ import { ProviderConsumerRows } from "./ProviderConsumerRows";
 
 export type { ProviderCardProps } from "./ProviderCard.types";
 
+import { providerCardActions } from "./provider-card-actions";
 import { outlineActionStyle, providerConsumerStatuses } from "./provider-card-config";
 import { useProviderTrafficSync } from "./useProviderTrafficSync";
 
@@ -54,11 +55,10 @@ export function ProviderCard({
   const [testResult, setTestResult] = useState<ProviderTestResult | null>(null);
   const [disconnectNotice, setDisconnectNotice] = useState<Notice | null>(null);
   const { readOnly } = useProjectWriteMode();
+  const { isHostedSerp, keyRemoval, managementActionKey } = providerCardActions(provider);
   const actionVariant = provider.status === "connected" ? "secondary" : "primary";
   const actionStyle = provider.status === "connected" ? outlineActionStyle : undefined;
-  const managementActionLabel = t(
-    provider.id === "gsc" && provider.status === "connected" ? "connectionSettings" : "manage",
-  );
+  const managementActionLabel = t(managementActionKey);
   const canSync =
     provider.kind === "analytics" && provider.status === "connected" && provider.enabled !== false;
   const consumerStatuses = providerConsumerStatuses(provider);
@@ -120,7 +120,9 @@ export function ProviderCard({
               <SectionTitle component="h3" size="sm">
                 {provider.name}
               </SectionTitle>
-              {provider.status === "optional" || provider.status === "ready" ? null : (
+              {provider.status === "optional" ||
+              provider.status === "ready" ||
+              (provider.status === "connected" && provider.enabled === false) ? null : (
                 <StatusPill size="sm" status={provider.status} />
               )}
               {provider.primary ? <StatusPill size="sm" status="primary" /> : null}
@@ -200,7 +202,8 @@ export function ProviderCard({
             syncResult={hasConsumerRows ? null : syncResult}
             testResult={testResult}
           />
-          {canManageProviders || (canSync && canUpdateProject && !hasConsumerRows) ? (
+          {!isHostedSerp &&
+          (canManageProviders || (canSync && canUpdateProject && !hasConsumerRows)) ? (
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
               {provider.secondaryAction && canManageProviders && provider.status !== "connected" ? (
                 <ProjectReadOnlyTooltip className="inline-flex">
@@ -273,6 +276,7 @@ export function ProviderCard({
                   providerName={provider.name}
                   readOnly={readOnly}
                   testPending={testPending}
+                  keyRemoval={keyRemoval}
                 />
               ) : null}
             </div>

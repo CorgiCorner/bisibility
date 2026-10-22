@@ -34,6 +34,8 @@ export interface GenerationDraft {
   accepted: false;
 }
 export interface GenerationResult {
+  payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
+  originalPayment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
   generationId: string;
   drafts: GenerationDraft[];
   costUsd: string | null;

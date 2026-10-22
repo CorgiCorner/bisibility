@@ -37,7 +37,7 @@ export function useResearchEstimate(
       setEstimate(EMPTY_RESEARCH_ESTIMATE);
       return;
     }
-    setEstimate((current) => ({ ...current, loading: true }));
+    setEstimate({ ...EMPTY_RESEARCH_ESTIMATE, loading: true });
     timer.current = setTimeout(async () => {
       try {
         const outcomes = await Promise.all(
@@ -55,6 +55,11 @@ export function useResearchEstimate(
             successful.length === outcomes.length
               ? successful.reduce((sum, item) => sum + item.costCents, 0)
               : null,
+          payments:
+            successful.length === outcomes.length
+              ? successful.flatMap((item) => (item.payment ? [item.payment] : []))
+              : [],
+          paymentOptions: successful[0]?.paymentOptions ?? [],
           loading: false,
         });
       } catch {

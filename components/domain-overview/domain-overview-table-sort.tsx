@@ -72,7 +72,9 @@ export function SortableColumnHeader({
 }>) {
   const Icon = direction === "asc" ? CaretUp : CaretDown;
   return (
-    <span className={align === "right" ? "block w-full text-right" : "block w-full"}>
+    <span
+      className={`block min-w-0 max-w-full flex-1 overflow-hidden ${align === "right" ? "text-right" : ""}`}
+    >
       <button
         aria-label={t("sort", {
           column: String(children),
@@ -87,14 +89,14 @@ export function SortableColumnHeader({
           ),
         })}
         aria-pressed={active}
-        className={`inline-flex w-full items-center gap-2 whitespace-nowrap font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] transition-colors hover:text-fg ${
+        className={`inline-flex w-full min-w-0 max-w-full items-center gap-2 overflow-hidden font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] transition-colors hover:text-fg ${
           align === "right" ? "justify-end text-right" : "text-left"
         } ${active ? "text-accent-text" : "text-fg-muted"}`}
         onClick={onClick}
         type="button"
       >
-        {children}
-        {active ? <Icon aria-hidden size={9} weight="regular" /> : null}
+        <span className="min-w-0 truncate">{children}</span>
+        {active ? <Icon aria-hidden className="shrink-0" size={9} weight="regular" /> : null}
       </button>
     </span>
   );

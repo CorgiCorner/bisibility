@@ -1,6 +1,12 @@
 import type { BudgetStatus, Operation } from "@usagekit/core";
 import type { VerifiedOwnBudgetBinding } from "./own-budget-read-types";
+import type { VerifiedPlatformBudgetBinding } from "./platform-budget-read";
 import type { ProjectBudgetDisplay, ProjectBudgetRow } from "./project-budget-display";
+import {
+  parseProjectFundingBudgetId,
+  projectBudgetId,
+  projectFundingTag,
+} from "./project-funding-budgets";
 import { sharedBudgetRow } from "./shared-budget-row";
 
 export function projectBudgetRow(
@@ -8,22 +14,31 @@ export function projectBudgetRow(
   connection: string | null,
   figuresKnown = false,
   provider: string | null = null,
-  ownBinding?: VerifiedOwnBudgetBinding,
+  binding?: VerifiedOwnBudgetBinding | VerifiedPlatformBudgetBinding,
   displayLabel?: string,
   display?: ProjectBudgetDisplay,
 ): ProjectBudgetRow | null {
-  if (ownBinding && status.budget.scope.kind !== "tag") return null;
-  const own =
+  if (binding && status.budget.scope.kind !== "tag") return null;
+  const funding = binding ? null : parseProjectFundingBudgetId(status.budget.id);
+  // A project funding limit is project-wide, like the shared group cap it replaces.
+  const projectFunding =
+    funding !== null &&
     status.budget.scope.kind === "tag" &&
-    ownBinding &&
-    status.budget.scope.namespace === ownBinding.namespace &&
-    status.budget.scope.tag === ownBinding.tag &&
-    status.budget.unit === ownBinding.unit &&
-    provider === ownBinding.provider &&
-    connection === ownBinding.publicConnection;
-  if (status.redacted || (!own && !["group", "connection"].includes(status.budget.scope.kind)))
+    status.budget.scope.tag === projectFundingTag(funding.fundingSource, funding.projectId);
+  const verifiedTag =
+    status.budget.scope.kind === "tag" &&
+    binding &&
+    status.budget.scope.namespace === binding.namespace &&
+    status.budget.scope.tag === binding.tag &&
+    status.budget.unit === binding.unit &&
+    provider === binding.provider &&
+    connection === binding.publicConnection;
+  if (
+    status.redacted ||
+    (!verifiedTag && !projectFunding && !["group", "connection"].includes(status.budget.scope.kind))
+  )
     return null;
-  const connectionScope = own || status.budget.scope.kind === "connection";
+  const connectionScope = verifiedTag || status.budget.scope.kind === "connection";
   const row = sharedBudgetRow(
     status,
     connectionScope ? connection : null,
@@ -37,6 +52,9 @@ export function projectBudgetRow(
           ? {
               display: {
                 projectName: display.projectName,
+                ...(connectionScope && display.connectionId
+                  ? { connectionId: display.connectionId }
+                  : {}),
                 ...(connectionScope && display.providerLabel
                   ? { providerLabel: display.providerLabel }
                   : {}),
@@ -68,9 +86,16 @@ export function projectBudgetFiguresKnown(
       status.budget.unit !== ownBinding.unit)
   )
     return false;
+  const funding = ownBinding ? null : parseProjectFundingBudgetId(status.budget.id);
+  // A split budget's opening usage came from this source's work on the shared group cap.
   const contributes = (operation: Operation) =>
     operation.budgetEpochs.some(
-      (epoch) => epoch.budgetId === status.budget.id && epoch.epoch === status.epoch.epoch,
+      (epoch) =>
+        epoch.epoch === status.epoch.epoch &&
+        (epoch.budgetId === status.budget.id ||
+          (funding !== null &&
+            epoch.budgetId === projectBudgetId(funding.projectId) &&
+            operation.fundingSource === funding.fundingSource)),
     );
   if (
     ownBinding &&
@@ -88,6 +113,7 @@ export function projectBudgetFiguresKnown(
     return (
       !status.redacted &&
       ((status.budget.scope.kind === "group" && status.budget.unit === "budget_cents") ||
+        funding !== null ||
         Boolean(
           ownBinding &&
             verifiedEmptyOwnEpoch &&

@@ -56,7 +56,7 @@ export async function DashboardScopeUnavailable({
             description={
               local ? localT(needsSetup ? "setupDescription" : "chooseDescription") : description
             }
-            icon={local ? <MapPin size={24} aria-hidden /> : undefined}
+            icon={local ? <MapPin weight="regular" size={24} aria-hidden /> : undefined}
             action={
               local ? (
                 needsSetup ? (

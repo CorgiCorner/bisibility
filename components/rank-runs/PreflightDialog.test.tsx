@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
@@ -16,6 +17,7 @@ const scope = {
 } as const;
 
 const preview: RankCheckRunPreview = {
+  payment: paymentQuote(),
   budget: {
     blocked: false,
     mode: "legacy",
@@ -26,7 +28,7 @@ const preview: RankCheckRunPreview = {
   estimate: { costCents: 298, perTargetCents: 0.6, unknownCostTargets: 0 },
   excluded: [],
   executable: 248,
-  expiresAt: "2026-09-03T12:00:00.000Z",
+  expiresAt: "2099-09-03T12:00:00.000Z",
   keywordCount: 248,
   matched: 248,
   overlapRunCount: 0,
@@ -80,10 +82,17 @@ describe("PreflightDialog", () => {
         targetCount: 496,
       });
     render(<PreflightDialog {...props({ launchAction })} />);
-    await user.click(screen.getByRole("button", { name: "Start run" }));
+    await user.click(screen.getByRole("button", { name: /^Start run/ }));
     expect(screen.getByRole("radio", { name: /Top 50/ })).toBeDisabled();
-    await user.click(screen.getByRole("button", { name: "Start run" }));
+    await user.click(screen.getByRole("button", { name: /^Start run/ }));
     expect(launchAction).toHaveBeenCalledTimes(2);
+    expect(launchAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        previewToken: preview.previewToken,
+        paymentOptionId: preview.payment?.option.id,
+        acceptedPayment: { quoteToken: preview.payment?.quoteToken },
+      }),
+    );
     expect(launchAction.mock.calls[1]?.[0]).toEqual(launchAction.mock.calls[0]?.[0]);
   });
 
@@ -96,7 +105,7 @@ describe("PreflightDialog", () => {
       />,
     );
     await user.click(screen.getByRole("radio", { name: /Top 50/ }));
-    expect(screen.getByRole("button", { name: "Start run" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Start run/ })).toBeDisabled();
     expect(launchAction).not.toHaveBeenCalled();
   });
 
@@ -120,7 +129,7 @@ describe("PreflightDialog", () => {
         })}
       />,
     );
-    expect(screen.getByRole("button", { name: "Start run" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Start run/ })).toBeDisabled();
   });
 
   it("plan criterion: renders one scope box", () => {
@@ -141,7 +150,7 @@ describe("PreflightDialog", () => {
   it("plan criterion: labels the start action", () => {
     render(<PreflightDialog {...props()} />);
 
-    expect(screen.getByRole("button", { name: "Start run" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Start run/ })).toBeEnabled();
   });
 
   it("plan criterion: renders the provider as a choice and refreshes the preview", async () => {
@@ -169,7 +178,7 @@ describe("PreflightDialog", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Start run" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Start run/ })).toBeDisabled();
     expect(screen.getByRole("link", { name: cta })).toBeInTheDocument();
   });
 
@@ -186,7 +195,7 @@ describe("PreflightDialog", () => {
     );
     expect(screen.getAllByText(/project spending budget is missing/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/monthly budget.*reached/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Start run" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Start run/ })).toBeDisabled();
   });
 
   it("blocks unresolved usage with reconciliation advice instead of budget advice", () => {
@@ -200,7 +209,7 @@ describe("PreflightDialog", () => {
         })}
       />,
     );
-    expect(screen.getByRole("button", { name: "Start run" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^Start run/ })).toBeDisabled();
     expect(screen.getByRole("link", { name: "Open Integrations" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Edit budget" })).not.toBeInTheDocument();
     expect(screen.getAllByText(/Review and reconcile the usage history/i).length).toBeGreaterThan(
@@ -231,7 +240,7 @@ describe("PreflightDialog", () => {
     const onClose = vi.fn();
     render(<PreflightDialog {...props({ launchAction, onClose })} />);
 
-    await user.click(screen.getByRole("button", { name: "Start run" }));
+    await user.click(screen.getByRole("button", { name: /^Start run/ }));
 
     expect(launchAction).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -264,13 +273,13 @@ describe("PreflightDialog", () => {
     const onClose = vi.fn();
     render(<PreflightDialog {...props({ launchAction, onClose, previewAction })} />);
 
-    await user.click(screen.getByRole("button", { name: "Start run" }));
+    await user.click(screen.getByRole("button", { name: /^Start run/ }));
 
     expect(previewAction).toHaveBeenCalledOnce();
     expect(await screen.findByRole("alert")).toHaveTextContent("Run details changed");
     expect(onClose).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: "Start run" }));
+    await user.click(screen.getByRole("button", { name: /^Start run/ }));
 
     expect(launchAction).toHaveBeenLastCalledWith(
       expect.objectContaining({ previewToken: "refreshed-token" }),
@@ -308,7 +317,7 @@ describe("PreflightDialog", () => {
         `/app/${projectId}/runs/rank-checks/${runId}`,
       );
       expect(within(notice).getByRole("button", { name: "Cancel run" })).toBeEnabled();
-      expect(screen.getByRole("button", { name: "Start run" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: /^Start run/ })).toBeEnabled();
     });
 
     it("cancels the other run and refreshes the estimate", async () => {
@@ -332,7 +341,76 @@ describe("PreflightDialog", () => {
       expect(screen.queryByRole("status", { name: "Already scheduled" })).not.toBeInTheDocument();
     });
 
-    it("names the planned time and offers no cancel for a run already sending checks", () => {
+    it("treats tomorrow's scheduled check as information while allowing a manual check now", async () => {
+      vi.useFakeTimers({ now: new Date("2026-09-25T09:00:00.000Z"), toFake: ["Date"] });
+      const launchAction = vi.fn().mockResolvedValue({
+        estimatedCostCents: 298,
+        keywordCount: 248,
+        publicId: "rcr_cccccccccccccccccccccccc",
+        status: "queued" as const,
+        targetCount: 496,
+      });
+      const cancelRunAction = vi.fn();
+      render(
+        <PreflightDialog
+          {...props({
+            launchAction,
+            cancelRunAction,
+            initialPreview: {
+              ...preview,
+              overlapRunCount: 1,
+              overlaps: [{ ...queued, at: "2026-09-26T07:00:00.000Z", status: "planned" }],
+            },
+          })}
+        />,
+      );
+      const notice = screen.getByRole("status", { name: "Next scheduled check" });
+      expect(notice).toHaveTextContent("tomorrow 07:00");
+      expect(notice.querySelector("[data-status-chip-tone]")).toHaveAttribute(
+        "data-status-chip-tone",
+        "neutral",
+      );
+      expect(notice).not.toHaveTextContent("pay twice");
+      expect(notice).not.toHaveTextContent("Cancel that run");
+      expect(screen.queryByRole("button", { name: "Cancel run" })).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: /^Start run/ }));
+      await vi.waitFor(() => expect(launchAction).toHaveBeenCalledOnce());
+      expect(cancelRunAction).not.toHaveBeenCalled();
+    });
+
+    it("prioritizes an active overlap when future plans are listed first", () => {
+      vi.useFakeTimers({ now: new Date("2026-09-25T09:00:00.000Z"), toFake: ["Date"] });
+      render(
+        <PreflightDialog
+          {...props({
+            initialPreview: {
+              ...preview,
+              overlapRunCount: 2,
+              overlaps: [
+                { ...queued, at: "2026-09-26T07:00:00.000Z", status: "planned" },
+                {
+                  ...queued,
+                  runId: "rcr_bbbbbbbbbbbbbbbbbbbbbbbb",
+                  status: "running",
+                  canCancel: false,
+                },
+              ],
+            },
+          })}
+        />,
+      );
+      const notice = screen.getByRole("status", { name: "Already scheduled" });
+      expect(notice).toHaveTextContent("running");
+      expect(notice).toHaveTextContent("Starting this run pays twice");
+      expect(screen.queryByRole("status", { name: "Next scheduled check" })).toBeNull();
+      expect(within(notice).getByRole("link", { name: "+1 more run" })).toBeVisible();
+      expect(within(notice).getByRole("link", { name: "Open run" })).toHaveAttribute(
+        "href",
+        `/app/${projectId}/runs/rank-checks/rcr_bbbbbbbbbbbbbbbbbbbbbbbb`,
+      );
+    });
+
+    it("names a future check neutrally and offers no cancel for a run already sending checks", () => {
       vi.useFakeTimers({ now: new Date("2026-09-25T09:00:00.000Z"), toFake: ["Date"] });
       const { unmount } = render(
         <PreflightDialog
@@ -346,8 +424,8 @@ describe("PreflightDialog", () => {
         />,
       );
 
-      expect(screen.getByRole("status", { name: "Already scheduled" })).toHaveTextContent(
-        "2 of these keywords are also in a run that is planned for today 14:00.",
+      expect(screen.getByRole("status", { name: "Next scheduled check" })).toHaveTextContent(
+        "2 of these keywords have a check planned for today 14:00. You can also check now.",
       );
       unmount();
 

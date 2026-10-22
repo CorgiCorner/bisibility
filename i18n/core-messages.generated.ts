@@ -194,6 +194,40 @@ export type CoreMessages = {
         readonly downloadAriaLabel: "Download recovery codes";
         readonly title: "Backup codes";
       };
+      readonly connectedApps: {
+        readonly alsoRevoke: "Also revoke {count, plural, one {# API token this app created} other {# API tokens this app created}}";
+        readonly cancel: "Cancel";
+        readonly confirmDescription: "This stops the app from renewing access. API tokens keep working unless you revoke them too.";
+        readonly confirmTitle: "Revoke access for {name}?";
+        readonly connected: "Connected {date}";
+        readonly createdTokens: "{count, plural, one {# linked API token} other {# linked API tokens}}";
+        readonly description: "Review and revoke apps with access to your account.";
+        readonly dynamic: "Registered automatically";
+        readonly empty: "No apps are connected to your account.";
+        readonly error: "App access could not be revoked. Try again.";
+        readonly issuedAccess: "Access already issued can keep working for up to 1 hour.";
+        readonly lastUsed: "Last used {date}";
+        readonly manageTokens: "Manage personal tokens";
+        readonly neverUsed: "Not used yet";
+        readonly noScopes: "No additional permissions";
+        readonly revoke: "Revoke";
+        readonly revokeApp: "Revoke access for {name}";
+        readonly revoking: "Revoking";
+        readonly scopes: {
+          readonly admin: "Manage projects and access";
+          readonly email: "Read your email address";
+          readonly identity: "Confirm your identity";
+          readonly other: "Additional permission: {scope}";
+          readonly profile: "Read your profile";
+          readonly read: "Read project data";
+          readonly renew: "Renew access";
+          readonly tokens: "Create API tokens";
+          readonly write: "Change project data";
+        };
+        readonly scopeSeparator: ", ";
+        readonly title: "Connected apps";
+        readonly unlinkedTokens: "Older API tokens, or tokens without retained issuance history, cannot be reliably linked to an app. Review them separately.";
+      };
       readonly personalTokens: {
         readonly cancel: "Cancel";
         readonly copyKey: "Copy {name}";
@@ -284,7 +318,6 @@ export type CoreMessages = {
         readonly backupCodes: "Backup codes";
         readonly backupCodesGenerated: "New backup codes generated. Save them now.";
         readonly cancel: "Cancel";
-        readonly continueToMail: "Continue to mail settings";
         readonly currentAuthenticatorCode: "Current authenticator code";
         readonly currentBackupCode: "Current backup code";
         readonly description: "Add a second step after the email login code.";
@@ -319,6 +352,7 @@ export type CoreMessages = {
         readonly reauthRequired: "Sign out and sign in again before enabling two-factor authentication.";
         readonly replaceAuthenticator: "Replace authenticator";
         readonly replaced: "Authenticator replaced. Save the new backup codes.";
+        readonly returnToAdmin: "Return to administration";
         readonly scanAndVerify: "Scan the QR code and verify the new authenticator.";
         readonly secret: "Secret";
         readonly signInAgain: "Sign in again";
@@ -432,11 +466,11 @@ export type CoreMessages = {
         readonly sendCode: "Send login code";
       };
       readonly legal: {
-        readonly withBetaEmails: "By continuing you agree to the <terms>Terms</terms> and <privacy>Privacy Policy</privacy>, and to beta emails (updates, incidents, pricing).";
+        readonly withBetaEmails: "By continuing you agree to the <terms>Terms</terms> and <privacy>Privacy Policy</privacy>, and to service emails (updates, incidents, pricing).";
         readonly withPrivacy: "By continuing you agree to the <privacy>Privacy Policy</privacy>.";
-        readonly withPrivacyAndBetaEmails: "By continuing you agree to the <privacy>Privacy Policy</privacy>, and to beta emails (updates, incidents, pricing).";
+        readonly withPrivacyAndBetaEmails: "By continuing you agree to the <privacy>Privacy Policy</privacy>, and to service emails (updates, incidents, pricing).";
         readonly withTerms: "By continuing you agree to the <terms>Terms</terms>.";
-        readonly withTermsAndBetaEmails: "By continuing you agree to the <terms>Terms</terms>, and to beta emails (updates, incidents, pricing).";
+        readonly withTermsAndBetaEmails: "By continuing you agree to the <terms>Terms</terms>, and to service emails (updates, incidents, pricing).";
         readonly withTermsAndPrivacy: "By continuing you agree to the <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.";
       };
       readonly metadata: {
@@ -473,10 +507,19 @@ export type CoreMessages = {
     };
     readonly oauthConsent: {
       readonly accessLasts: "Access lasts up to {hours, plural, one {# hour} other {# hours}}.";
+      readonly accessLevel: {
+        readonly full: "Full access";
+        readonly label: "Access level";
+        readonly read: "Read only";
+        readonly readWrite: "Read and write";
+      };
       readonly accessRenews: "Access renews until revoked; revocation can take up to {hours, plural, one {# hour} other {# hours}}.";
       readonly accessTokenLifetime: "{hours, plural, one {# hour} other {# hours}}";
       readonly allowGeneric: "Grant access";
       readonly allowNamed: "Allow {client}";
+      readonly apiTokens: {
+        readonly allow: "Allow this app to create API tokens";
+      };
       readonly approving: "Approving";
       readonly approvingAs: "Approving as <strong>{email}</strong>";
       readonly brandHome: "bisibility home";
@@ -495,11 +538,14 @@ export type CoreMessages = {
       readonly headingNamed: "Allow {client} to access your account?";
       readonly originDynamic: "Registered automatically, not reviewed by bisibility.";
       readonly originFirstParty: "Built by bisibility.";
+      readonly paidOperations: "Write access lets the app run paid operations such as rank checks and backlink analysis, charged to the project's payment source (credits or the project's own provider keys).";
       readonly requestExpiresIn: "Request expires in {time}";
       readonly retryClient: "Start a fresh connection from your app.";
       readonly retryCommand: "Start a fresh login with the command below.";
+      readonly revokeLocation: "Revoke access in Account > Security > Connected apps.";
       readonly scopes: {
-        readonly credentials: "<strong>Create API tokens</strong> - the app sets their expiry, including <strong>never</strong>. They keep working after disconnection; revoke them separately.";
+        readonly credentials: "<strong>Create API tokens</strong> - the app sets their expiry, at most <strong>90 days</strong>. They keep working after disconnection; revoke them separately.";
+        readonly credentialsReviewed: "<strong>Create API tokens</strong> - the app sets their expiry, including <strong>never</strong>. They keep working after disconnection; revoke them separately.";
         readonly identity: {
           readonly email: "Read your email address";
           readonly openid: "Confirm your identity";
@@ -526,8 +572,10 @@ export type CoreMessages = {
       readonly technical: {
         readonly accessExpiry: "Access token expiry";
         readonly apiExpiry: "API token expiry";
-        readonly apiLifetime: "Set by the app: {days} days or <strong>never</strong>";
+        readonly apiLifetime: "Set by the app: at most 90 days";
+        readonly apiLifetimeReviewed: "Set by the app: 30, 90, 365 days or never";
         readonly clientId: "Client ID";
+        readonly insecureRedirect: "This redirect uses HTTP on a public host.";
         readonly noScopes: "None";
         readonly redirectUri: "Redirect URI";
         readonly refreshExpiry: "Refresh token expiry";
@@ -563,10 +611,12 @@ export type CoreMessages = {
       readonly backupCode: "Backup code";
       readonly cancel: "Cancel and return to sign in";
       readonly description: "Your email code was accepted. Complete the second step to sign in.";
+      readonly expired: "Your sign-in has expired. Return to sign in and request a new email code.";
       readonly invalid: "That code is invalid, expired, or already used.";
       readonly method: "Verification method";
       readonly placeholderBackup: "xxxxx-xxxxx";
       readonly placeholderTotp: "000000";
+      readonly signingIn: "Signing in...";
       readonly title: "Verify it's you";
       readonly validation: {
         readonly backupInvalid: "Enter a valid backup code.";
@@ -580,8 +630,8 @@ export type CoreMessages = {
   readonly cloudImport: {
     readonly metadata: {
       readonly cloudDescription: "Create a one-time migration token that authorizes a self-hosted instance to push its data into this hosted project.";
-      readonly cloudLayoutDescription: "The hosted beta: focused setup and import tasks for your project.";
-      readonly cloudLayoutTitle: "Hosted beta";
+      readonly cloudLayoutDescription: "Cloud: focused setup and import tasks for your project.";
+      readonly cloudLayoutTitle: "Cloud";
       readonly cloudTitle: "Instance import";
       readonly instanceDescription: "Create a one-time migration token that authorizes another bisibility instance to push its data into this project.";
       readonly instanceTitle: "Import from another instance";
@@ -660,7 +710,7 @@ export type CoreMessages = {
       readonly valueHidden: "Copy this token now. For security, it cannot be shown again after you refresh or leave this page.";
     };
     readonly topBar: {
-      readonly beta: "Beta";
+      readonly beta: "Cloud";
       readonly fallbackWorkspace: "Project";
       readonly setupProgress: "Setup / {current, number} of {total, number}";
     };
@@ -835,7 +885,6 @@ export type CoreMessages = {
           readonly clear: "Clear saved settings";
           readonly cleared: "Saved mail settings cleared. Environment variables apply.";
           readonly clearing: "Clearing...";
-          readonly code: "Authenticator code";
           readonly credentialsSaved: "Credentials are saved.";
           readonly description: "Saved settings are used only when the matching environment variables are empty. Environment variables win when both are set.";
           readonly envOverride: "Environment variables are set, so they override these saved settings.";
@@ -861,10 +910,9 @@ export type CoreMessages = {
           readonly smtpPassword: "Password";
           readonly smtpPort: "Port";
           readonly smtpUsername: "Username";
-          readonly stepUpFailed: "That authenticator code was not accepted.";
           readonly title: "Outbound mail";
+          readonly twoFactorRequired: "Two-factor authentication must be enabled.";
           readonly unavailable: "Mail settings are temporarily unavailable.";
-          readonly validationCode: "Enter the 6-digit authenticator code.";
           readonly validationPort: "Enter a port from 1 to 65535.";
           readonly validationRequired: "Enter a value.";
           readonly validationSender: "Enter a sender as Name '<'address@example.com'>' or a plain address.";
@@ -890,6 +938,7 @@ export type CoreMessages = {
         readonly forbidden: "Only an instance administrator can manage announcements.";
         readonly invalid: "Check the announcement fields.";
         readonly not_found: "This announcement no longer exists. Refresh the page.";
+        readonly two_factor_required: "Two-factor authentication must be enabled.";
         readonly unavailable: "The announcement could not be saved. Try again.";
       };
       readonly heading: "User announcements";
@@ -943,6 +992,21 @@ export type CoreMessages = {
       readonly runOutboxSweep: "Run outbox sweep";
       readonly sending: "Sending...";
       readonly sendTestNotification: "Send test notification";
+    };
+    readonly dangerousActions: {
+      readonly actions: {
+        readonly addAccount: "add an account";
+        readonly changeAccountStatus: "change account access";
+        readonly changeAnnouncements: "change announcements";
+        readonly changeCredentials: "change credentials";
+        readonly changeMail: "change mail settings";
+        readonly changeSettings: "change settings";
+        readonly importUsage: "import usage records";
+        readonly repairUsage: "repair usage records";
+        readonly selectAccount: "select an account";
+      };
+      readonly enable: "Enable two-factor authentication";
+      readonly notice: "Enable two-factor authentication to {action}.";
     };
     readonly dashboard: {
       readonly dataSources: {
@@ -1204,6 +1268,7 @@ export type CoreMessages = {
         readonly forbidden: "Administrator access is no longer available.";
         readonly invalid: "Select a reason and a future waiting period.";
         readonly rate_limited: "Too many actions. Try again shortly.";
+        readonly two_factor_required: "Two-factor authentication must be enabled.";
         readonly unavailable: "Recovery is temporarily unavailable. Refresh the command status before retrying.";
       };
       readonly excluded: "Skipped cases: {count, number}";
@@ -1426,7 +1491,7 @@ export type CoreMessages = {
       readonly description: {
         readonly completed: "Your first results are ready.";
         readonly manual: "Everything's ready. Run your first check whenever you like - nothing runs until you start it.";
-        readonly noProvider: "Almost ready. Everything is set - connect a data provider whenever you want to run checks.";
+        readonly noProvider: "Your keywords are ready. Choose a data source whenever you are ready to run checks.";
         readonly paused: "Everything's ready. Checks are paused until you resume the schedule.";
         readonly scheduled: "Your schedule is set to {frequency}. You can also run a sample check now.";
       };
@@ -1445,7 +1510,7 @@ export type CoreMessages = {
         readonly statusUnavailable: "Could not refresh the check status. Retrying automatically. You can open the app while it finishes.";
         readonly timezone: "Timezone could not be saved. Try again.";
         readonly unavailableKeyword: "This keyword is no longer available. Go back to choose a keyword.";
-        readonly waitingForProvider: "Connect a SERP provider before running checks.";
+        readonly waitingForProvider: "Choose a data source before running checks.";
       };
       readonly footer: {
         readonly hint: "Optional: check 1 keyword now. Your schedule stays unchanged.";
@@ -1466,10 +1531,10 @@ export type CoreMessages = {
       readonly matrix: "1 keyword · {markets, plural, one {# market} other {# markets}} · {devices} · {checks, plural, one {# check} other {# checks}}";
       readonly notConnected: "Not connected";
       readonly queue: {
-        readonly completed: "Sample {checks, plural, one {check} other {checks}} finished. Every keyword follows your {frequency} schedule from here.";
-        readonly completedWithFailures: "The sample {checks, plural, one {check} other {checks}} finished with an issue. You can retry the failed {checks, plural, one {check} other {checks}} below. Every keyword still follows your {frequency} schedule.";
-        readonly initial: "{checks, plural, one {# check runs once now so you can see it working.} other {# checks run once now so you can see them working.}} Everything else follows your {frequency} schedule.";
-        readonly manual: "Manual preview can run now. Scheduled checks stay paused.";
+        readonly completed: "Sample {checks, plural, one {check} other {checks}} finished. Add keywords to a schedule for automatic checks.";
+        readonly completedWithFailures: "The sample {checks, plural, one {check} other {checks}} finished with an issue. You can retry the failed {checks, plural, one {check} other {checks}} below.";
+        readonly initial: "{checks, plural, one {# check runs once now so you can see it working.} other {# checks run once now so you can see them working.}} Nothing else runs automatically.";
+        readonly manual: "Checks run only when you start them.";
         readonly queued: "Sample checks are queued. You can open the dashboard while the worker starts them.";
         readonly running: "Sample checks are running. You can open the dashboard while they finish.";
         readonly sample: "Sample projects keep their synthetic ranking history.";
@@ -1490,7 +1555,7 @@ export type CoreMessages = {
           readonly deferred: "This check was deferred.";
           readonly failed: "We couldn't run this check. Try again in a moment.";
           readonly measurementPolicy: "Configure measurement policy before running new checks.";
-          readonly noProvider: "Connect a SERP provider before running checks.";
+          readonly noProvider: "Choose a data source before running checks.";
           readonly projectReadOnly: "This project is read-only right now.";
           readonly rateLimited: "Provider rate limit reached. Try again shortly.";
           readonly sampleProject: "Sample projects don't run real checks.";
@@ -1721,7 +1786,7 @@ export type CoreMessages = {
           readonly idle: "Not connected";
           readonly tested: "Verified";
         };
-        readonly tooltip: "Google has no official rankings API, so checks run through a SERP provider. Bisibility uses your own provider account and you pay the provider directly, per check. You can skip this and connect later in Integrations - keywords can be added now, but checks stay paused until a provider is connected.";
+        readonly tooltip: "Live rankings come from a supported data provider. Choose how to use it in Integrations. You can add keywords first and choose a source later.";
       };
       readonly credentials: {
         readonly connected: "{provider} connected";
@@ -1896,6 +1961,7 @@ export type CoreMessages = {
     readonly brandMentions: "Brand mentions";
     readonly cacheHint: "Uses your connected provider. Cached results remain available for 12 hours.";
     readonly catalogHelp: "About available AI settings";
+    readonly catalogRefreshing: "Refreshing provider catalog";
     readonly catalogUnavailable: "The provider catalog is unavailable. Check your compatible provider connection in Integrations. Saved reports remain readable.";
     readonly catalogUnavailableLegacy: "Model list unavailable. The mini/nano preset is still available.";
     readonly catalogUnavailableVisibility: "Market list unavailable. ChatGPT for the United States in English is still available.";
@@ -1944,7 +2010,7 @@ export type CoreMessages = {
     readonly noDomainCitation: "No domain citation";
     readonly noObservations: "No matching observations";
     readonly noSecondModel: "Compare one model";
-    readonly noSource: "Connect DataForSEO in Integrations to estimate costs or run an analysis.";
+    readonly noSource: "Choose a DataForSEO source in Integrations to estimate costs or run an analysis.";
     readonly observedAt: "Observed {date}";
     readonly observedDataset: "Observed provider dataset";
     readonly openIntegrations: "Open Integrations";
@@ -1974,6 +2040,7 @@ export type CoreMessages = {
     readonly searchFor: "Search for";
     readonly secondModel: "Second model (optional)";
     readonly showUnavailableModels: "Show unavailable models";
+    readonly sourceRetry: "Try again";
     readonly summary: "{answers, number} answers · {mentions, number} brand mentions · {citations, number} domain citations";
     readonly syntheticTest: "Synthetic prompt test";
     readonly tokenBounds: "Allowed range: {min, number} to {max, number} tokens.";
@@ -2005,7 +2072,7 @@ export type CoreMessages = {
     readonly allTopics: "All topics";
     readonly answer: "Answer";
     readonly answerTruncatedAtTheRetentionLimit: "Answer truncated at the retention limit.";
-    readonly approveAndQueueRun: "Approve and queue run";
+    readonly approveAndQueueRun: "Run checks";
     readonly archive: "Archive";
     readonly aRetainedObservationWithItsSourceAndMeasurement: "A retained observation, with its source and measurement limits.";
     readonly branded: "Branded";
@@ -2462,6 +2529,7 @@ export type CoreMessages = {
       readonly timestamp: "Timestamp";
     };
     readonly detail: {
+      readonly actionCode: "Action code";
       readonly actor: "Actor";
       readonly beforeAfter: "Before -> after";
       readonly close: "Close";
@@ -2522,14 +2590,47 @@ export type CoreMessages = {
     readonly presentation: {
       readonly actorSystem: "System";
       readonly event: {
+        readonly aiPromptArchive: "AI prompt archived";
+        readonly aiPromptCreate: "AI prompt created";
+        readonly aiPromptPause: "AI prompt paused";
+        readonly aiPromptResume: "AI prompt resumed";
+        readonly aiPromptUpdate: "AI prompt updated";
+        readonly aiRunCancelled: "AI run cancelled";
+        readonly aiRunConsentRecorded: "AI run consent recorded";
+        readonly aiRunLaunched: "AI run started";
+        readonly aiRunRetried: "AI run retried";
+        readonly aiScheduleArchive: "AI schedule archived";
+        readonly aiScheduleConsentRecorded: "AI schedule consent recorded";
+        readonly aiScheduleCreate: "AI schedule created";
+        readonly aiScheduleDisable: "AI schedule disabled";
+        readonly aiScheduleEnable: "AI schedule enabled";
+        readonly aiScheduleUpdate: "AI schedule updated";
+        readonly aiSuggestionsAccepted: "AI suggestions accepted";
+        readonly aiSuggestionsConsentRecorded: "AI suggestions consent recorded";
+        readonly aiSuggestionsGenerated: "AI suggestions generated";
+        readonly aiTopicArchive: "AI topic archived";
+        readonly aiTopicCreate: "AI topic created";
+        readonly aiTopicPause: "AI topic paused";
+        readonly aiTopicResume: "AI topic resumed";
+        readonly aiTopicUpdate: "AI topic updated";
         readonly alertRuleAvailabilityChanged: "Alert rule availability changed";
         readonly alertRuleCreated: "Alert rule created";
+        readonly alertRuleDeleted: "Alert rule deleted";
         readonly alertRuleUpdated: "Alert rule updated";
+        readonly alertsMarkedRead: "All alerts marked as read";
+        readonly alertSnoozed: "Alert snoozed";
         readonly apiKeyCreated: "API key created";
         readonly apiKeyRevoked: "API key revoked";
         readonly apiKeyRolled: "API key rolled";
         readonly auditLogViewed: "Audit log viewed";
         readonly budgetUpdated: "Project budget updated";
+        readonly businessAssigned: "Business assigned";
+        readonly businessLocationArchived: "Business location archived";
+        readonly businessLocationCreated: "Business location created";
+        readonly businessLocationRestored: "Business location restored";
+        readonly businessLocationRevised: "Business location updated";
+        readonly businessUnassigned: "Business unassigned";
+        readonly cachedDataDeleted: "Cached data deleted";
         readonly checkScheduleArchived: "Check schedule archived";
         readonly checkScheduleAssigned: "Check schedule assigned";
         readonly checkScheduleCreated: "Check schedule created";
@@ -2539,49 +2640,179 @@ export type CoreMessages = {
         readonly checkScheduleRestored: "Check schedule restored";
         readonly checkScheduleUpdated: "Check schedule updated";
         readonly competitorAdded: "Competitor added";
+        readonly competitorAliasesUpdated: "Competitor aliases updated";
+        readonly competitorDetailsUpdated: "Competitor details updated";
+        readonly competitorManuallyAdded: "Competitor added manually";
+        readonly competitorMarketsUpdated: "Competitor markets updated";
         readonly competitorRemoved: "Competitor removed";
+        readonly competitorRenamed: "Competitor renamed";
+        readonly competitorSetupConfirmed: "Competitor setup confirmed";
+        readonly competitorSetupSkipped: "Competitor setup skipped";
+        readonly competitorSuggestionConfirmed: "Suggested competitor confirmed";
+        readonly competitorSuggestionDismissed: "Suggested competitor dismissed";
         readonly competitorUpdated: "Competitor updated";
+        readonly creationDenied: "Creation denied";
+        readonly dataCacheSettingsUpdated: "Data cache settings updated";
+        readonly deletionDenied: "Deletion denied";
         readonly deployHookCreated: "Deploy hook created";
         readonly deployHookDeleted: "Deploy hook deleted";
         readonly deployHookDisabled: "Deploy hook disabled";
         readonly deployHookRotated: "Deploy hook rotated";
+        readonly entityMatchConfirmed: "Business match confirmed";
+        readonly entityMatchRejected: "Business match rejected";
+        readonly entityRematched: "Business matched again";
         readonly experimentalModulesUpdated: "Experimental modules updated";
+        readonly firstRankCheckQueued: "First rank check queued";
         readonly inspectionBudgetUpdated: "Inspection budget updated";
+        readonly inviteAccepted: "Invitation accepted";
+        readonly inviteResent: "Invitation resent";
         readonly inviteRevoked: "Invitation revoked";
+        readonly keywordAdded: "Keyword added";
+        readonly keywordDeleted: "Keyword deleted";
+        readonly keywordDeviceAdded: "Keyword device added";
         readonly keywordExported: "Keywords exported";
+        readonly keywordFrequencyUpdated: "Keyword check frequency updated";
         readonly keywordImported: "Keywords imported";
+        readonly keywordsAdded: "Keywords added";
+        readonly keywordSaved: "Keyword saved";
         readonly keywordScheduleUpdated: "Keyword schedule updated";
+        readonly keywordsDeleted: "Keywords deleted";
+        readonly keywordsJsonExported: "Keywords exported to JSON";
+        readonly keywordsSpreadsheetExported: "Keywords exported to spreadsheet";
+        readonly keywordTagsAdded: "Keyword tags added";
+        readonly keywordTagsRemoved: "Keyword tags removed";
+        readonly keywordTagsUpdated: "Keyword tags updated";
+        readonly keywordTargetReset: "Keyword target URL reset";
+        readonly keywordTargetsCleared: "Keyword target URLs cleared";
+        readonly keywordTargetsUpdated: "Keyword target URLs updated";
+        readonly keywordUpdated: "Keyword updated";
+        readonly keywordVariantsAdded: "Keyword variants added";
+        readonly localMeasurementCancelled: "Local measurement cancelled";
+        readonly localMeasurementClaimed: "Local measurement claimed";
+        readonly localMeasurementCollected: "Local measurement collected";
+        readonly localMeasurementLaunched: "Local measurement started";
+        readonly localMeasurementReconciled: "Local measurement reconciled";
+        readonly localMeasurementTargetCreated: "Local measurement target created";
+        readonly localMonitorArchived: "Local monitor archived";
+        readonly localMonitorCreated: "Local monitor created";
+        readonly localMonitorQueued: "Local monitor queued";
+        readonly localMonitorScheduled: "Local monitor scheduled";
+        readonly localMonitorUpdated: "Local monitor updated";
+        readonly managementDenied: "Management access denied";
+        readonly matchingScopeSet: "Matching scope set";
+        readonly measurementDefinitionCaptured: "Measurement definition captured";
+        readonly measurementDefinitionConfigured: "Measurement definition configured";
         readonly memberInvited: "Member invited";
         readonly memberRemoved: "Member removed";
+        readonly memberRoleChanged: "Member role changed";
+        readonly meteringHistoryClosed: "Usage history closed";
+        readonly migrationAdvanced: "Migration advanced";
+        readonly migrationBegan: "Migration started";
         readonly migrationCancelled: "Migration cancelled";
+        readonly migrationCompleted: "Migration completed";
+        readonly migrationCreated: "Migration created";
+        readonly migrationFailed: "Migration failed";
         readonly migrationHoldCancelled: "Migration hold cancelled";
+        readonly migrationHoldCompletedRelease: "Migration hold released after import";
         readonly migrationHoldEnabled: "Migration hold enabled";
+        readonly migrationHoldExpired: "Migration hold expired";
+        readonly migrationHoldFailedRelease: "Migration hold released after failed import";
+        readonly migrationHoldReleased: "Migration hold released";
+        readonly migrationHoldStaleRelease: "Migration hold released after stalled job";
         readonly migrationPackageExported: "Migration package exported";
+        readonly migrationSessionCreated: "Migration session created";
         readonly migrationTokenCreated: "Migration token created";
+        readonly migrationTokenRegenerated: "Migration token regenerated";
+        readonly migrationTokenRevoked: "Migration token revoked";
+        readonly migrationTokenUsed: "Migration token used";
         readonly notificationPreferencesUpdated: "Notification preferences updated";
         readonly ownershipTransferred: "Project ownership transferred";
+        readonly pricingFeedbackSubmitted: "Pricing feedback submitted";
+        readonly projectCheckRequested: "Project check requested";
+        readonly projectCreated: "Project created";
         readonly projectDefaultsUpdated: "Project defaults updated";
+        readonly projectDefaultViewUpdated: "Project default view updated";
         readonly projectDeleted: "Project deleted";
         readonly projectDetailsUpdated: "Project details updated";
         readonly projectDomainUpdated: "Project domain updated";
+        readonly projectMarketAdded: "Project market added";
+        readonly projectMarketCreated: "Project market created";
+        readonly projectMarketPaused: "Project market paused";
+        readonly projectMarketRemoved: "Project market removed";
+        readonly projectMarketRestored: "Project market restored";
+        readonly projectMarketResumed: "Project market resumed";
+        readonly projectMarketsReconciled: "Project markets reconciled";
+        readonly projectMarketUpdated: "Project market updated";
+        readonly projectPresentationUpdated: "Project display updated";
+        readonly projectTransferRolledBack: "Project transfer rolled back";
+        readonly projectTransferStarted: "Project transfer started";
+        readonly projectUpdated: "Project updated";
+        readonly projectWebsiteUpdated: "Project website updated";
+        readonly providerAllocationUpdated: "Provider allocation updated";
         readonly providerConnected: "Provider connected";
+        readonly providerCostUpdated: "Provider cost updated";
         readonly providerDisconnected: "Provider disconnected";
+        readonly providerRateUpdated: "Provider rate updated";
         readonly providerSettingsUpdated: "Provider settings updated";
+        readonly providerSourceChanged: "Provider source changed";
+        readonly providerSourceChangedDetail: "Provider source changed: {provider} → {source}";
+        readonly providerSourceHosted: "credits";
+        readonly providerSourceOwn: "own credentials";
+        readonly providerStoredKeyDeleted: "Saved provider key deleted";
         readonly providerTested: "Provider connection tested";
+        readonly providerTestFailed: "Provider connection test failed";
+        readonly providerUpdated: "Provider updated";
+        readonly rankCheckCompleted: "Rank check completed";
+        readonly rankCheckDeferred: "Rank check deferred";
+        readonly rankCheckFailed: "Rank check failed";
         readonly rankCheckFrequencyUpdated: "Rank check frequency updated";
+        readonly rankCheckItemCancelled: "Check run item cancelled";
+        readonly rankCheckItemReclaimed: "Check run item reclaimed";
+        readonly rankCheckRecovered: "Rank check recovered";
+        readonly rankCheckRequested: "Rank check requested";
+        readonly rankCheckRunCancelled: "Check run cancellation requested";
+        readonly rankCheckRunDeleted: "Check run deleted";
+        readonly rankCheckRunLaunched: "Check run started";
+        readonly rankCheckRunning: "Rank check execution started";
+        readonly rankCheckRunRetried: "Check run retried";
+        readonly rankCheckRunStartedNow: "Check run started immediately";
+        readonly rankCheckStaleFailed: "Stalled rank check marked as failed";
+        readonly rankCheckStarted: "Rank check started";
+        readonly rankSnapshotExtended: "Rank snapshot extended";
+        readonly readDenied: "Read access denied";
+        readonly sampleDataInstalled: "Sample data installed";
+        readonly savedKeywordRemoved: "Saved keyword removed";
         readonly savedViewCreated: "Saved view created";
         readonly savedViewDeleted: "Saved view deleted";
+        readonly savedViewUpdated: "Saved view updated";
         readonly scheduledRankCheckSkipped: "Scheduled rank check skipped";
         readonly scheduledRankCheckSkippedOccurrence: "Skipped the {schedule} occurrence planned for {plannedFor}";
+        readonly searchDataSyncPaused: "Search data sync paused";
+        readonly searchDataSyncResumed: "Search data sync resumed";
+        readonly searchDataSyncRetried: "Search data sync retried";
         readonly searchDataSyncUpdated: "Search data sync updated";
+        readonly searchInsightsSyncStarted: "Search insights sync requested";
+        readonly signalNoteAdded: "Signal note added";
+        readonly signalNoteRemoved: "Signal note removed";
+        readonly signalRecorded: "Signal recorded";
         readonly signedIn: "Signed in";
+        readonly sitemapMonitorDisabled: "Sitemap monitor disabled";
+        readonly sitemapMonitorEnabled: "Sitemap monitor enabled";
+        readonly slackConnectionCreated: "Slack connection created";
+        readonly slackConnectionUpdated: "Slack connection updated";
         readonly tagCreated: "Tag created";
         readonly tagDeleted: "Tag deleted";
         readonly tagRenamed: "Tag renamed";
         readonly trackingScopeUpdated: "Tracking scope updated";
-        readonly unknown: "Recorded action: {action}";
-        readonly unknownMissing: "Recorded audit action";
+        readonly trafficSynced: "Traffic data synced";
+        readonly unknown: "Other activity";
+        readonly unknownMissing: "Other activity";
+        readonly updateDenied: "Update denied";
+        readonly usageDisplayUpdated: "Usage display updated";
         readonly webhookCreated: "Webhook created";
+        readonly webhookDeleted: "Webhook deleted";
+        readonly webhookUpdated: "Webhook updated";
+        readonly weeklyDigestSent: "Weekly report sent";
       };
       readonly notRecorded: "Not recorded";
       readonly resourceUnavailable: "Resource unavailable";
@@ -2598,7 +2829,7 @@ export type CoreMessages = {
         readonly includeSubdomains: "Include subdomains";
         readonly limitAria: "Backlinks limit";
         readonly needTarget: "Enter a domain first - the price appears here";
-        readonly priced: "{action} ~{cost}";
+        readonly priced: "{action} {cost}";
         readonly pricing: "How is this priced?";
         readonly provider: "Backlink source";
         readonly removeTarget: "Remove {target}";
@@ -2661,7 +2892,7 @@ export type CoreMessages = {
         readonly bullets: {
           readonly cache: "Snapshots cached for 24 hours - reopening and re-slicing is free";
           readonly diff: "Every refresh diffs against the last snapshot: new and lost links flagged";
-          readonly price: "Runs on your own DataForSEO key, price shown before every run";
+          readonly price: "Price shown before each run.";
         };
         readonly connect: "Connect DataForSEO";
         readonly idleTitle: "Point it at any domain";
@@ -2683,11 +2914,11 @@ export type CoreMessages = {
         readonly unavailable: "Price unavailable";
       };
       readonly recent: {
-        readonly cached: "cached, free for {hours, number}h";
+        readonly cached: "cached, free for {duration}";
         readonly expired: "cache expired";
       };
       readonly snapshot: {
-        readonly cached: "cached, free for {hours, number}h";
+        readonly cached: "cached, free for {duration}";
         readonly exactPage: "Exact page";
         readonly historyUnavailable: "History is unavailable for this result. The summary and links are still available.";
         readonly loadingAria: "Backlinks loading";
@@ -3018,6 +3249,7 @@ export type CoreMessages = {
       readonly providerAccountRestrictedDetail: "{keyword}: The provider has restricted access to this account. Review the account in the provider dashboard or contact their support, then try again.";
       readonly providerAuthDetail: "{keyword}: The rank check could not run because the provider credentials were rejected. Reconnect the provider, then try again.";
       readonly providerBillingDetail: "{keyword}: The rank check could not run because the provider account has insufficient funds. Add funds or connect a different provider, then try again.";
+      readonly providerCapacityUnavailableDetail: "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys.";
       readonly providerRateLimitedDetail: "{keyword}: The rank check could not run because the provider is temporarily rate limited. Try again in a few minutes.";
       readonly providerTransientDetail: "{keyword}: The rank check could not run because the provider is temporarily unavailable. Try again in a few minutes.";
       readonly rankCheckFailedDetail: "{keyword}: The rank check could not run because of a provider error. Try again, or view check details for more information.";
@@ -3278,9 +3510,14 @@ export type CoreMessages = {
     readonly noData: {
       readonly addKeywords: "Add keywords";
       readonly checkInProgress: "check in progress";
-      readonly connect: "Connect";
+      readonly connect: "Choose a data source";
       readonly firstCheckInProgressDetail: "Rankings will appear here when the current check finishes.";
       readonly firstCheckInProgressTitle: "First rank check in progress.";
+      readonly firstCheckIntro: {
+        readonly description: "Find out where you rank. Your first check brings this dashboard to life.";
+        readonly dismiss: "Dismiss this introduction";
+        readonly title: "Run your first check";
+      };
       readonly manageProvider: "Manage provider";
       readonly migrationHoldDetail: "This project is on migration hold. Rank tracking will resume when the hold ends.";
       readonly migrationHoldTitle: "Rank checks paused.";
@@ -3288,16 +3525,16 @@ export type CoreMessages = {
       readonly noData: "no data";
       readonly noRankingsYet: "No rankings yet";
       readonly pausedMigrationHold: "paused - migration hold";
-      readonly providerMissingDetail: "Connect DataForSEO or SerpApi to start rank tracking.";
-      readonly providerMissingTitle: "SERP provider required";
+      readonly providerMissingDetail: "Choose a data source in Integrations to run checks.";
+      readonly providerMissingTitle: "Choose a data source";
       readonly providerNeedsAttention: "provider needs attention";
-      readonly providerNeedsAttentionDetail: "{count, number} {count, plural, one {keyword is} other {keywords are}} ready. Enable or reconnect a SERP provider before the first rank check.";
+      readonly providerNeedsAttentionDetail: "{count, number} {count, plural, one {keyword is} other {keywords are}} ready. Review the selected data source before the first check.";
       readonly providerNeedsAttentionTitle: "SERP provider needs attention.";
-      readonly providerNotConnected: "provider not connected";
+      readonly providerNotConnected: "source not configured";
       readonly readyDetail: "{count, plural, =0 {Add keywords to start rank tracking.} one {# keyword is ready for the first rank check.} other {# keywords are ready for the first rank check.}}";
       readonly readyToCheck: "ready to check";
       readonly viewCheckRuns: "View check runs";
-      readonly viewerAskAdmin: "Ask a project admin to connect DataForSEO or SerpApi before rank tracking can start.";
+      readonly viewerAskAdmin: "Ask a project admin to choose a data source before checks can start.";
       readonly viewKeywords: "View keywords";
     };
     readonly positionTrend: {
@@ -3316,6 +3553,10 @@ export type CoreMessages = {
       readonly takeawaySteadyFirst: "Average position held steady over the first {days, number} {days, plural, one {day} other {days}} of tracking.";
       readonly takeawaySteadyLast: "Average position held steady over the last {days, number} {days, plural, one {day} other {days}}.";
       readonly title: "Position trend";
+      readonly tooltipAverage: "Average position {position, number, ::.#}";
+      readonly tooltipKeyword: "{keyword}: #{position, number, ::.#}";
+      readonly tooltipKeywordQualified: "{keyword} ({device}{hasMarket, select, true {, {market}} other {}}): #{position, number, ::.#}";
+      readonly tooltipMore: "+{count, number} more";
     };
     readonly reportWidgets: {
       readonly contribution: "Contribution (pp)";
@@ -3388,7 +3629,7 @@ export type CoreMessages = {
         readonly enter: "Enter";
         readonly needValid: "Enter a valid domain and wait for its price";
         readonly previousResult: "Results below are still for {target}.";
-        readonly priced: "{action} ~{cost}";
+        readonly priced: "{action} {cost}";
         readonly pricing: "How is this priced?";
         readonly refresh: "Refresh now";
         readonly refreshing: "Refreshing domain";
@@ -3419,7 +3660,7 @@ export type CoreMessages = {
         readonly expiredTitle: "This cached analysis has expired";
         readonly idleBullets: {
           readonly cache: "Results cached for {duration}, repeat lookups are free";
-          readonly key: "Runs on your own DataForSEO key";
+          readonly key: "Price shown before each run";
           readonly track: "Turn findings into tracked keywords in one click";
         };
         readonly idleTitle: "Analyze any domain";
@@ -3452,7 +3693,7 @@ export type CoreMessages = {
         readonly analyzeBacklinks: "Analyze backlinks";
         readonly backlinksDescription: "Referring domains, new and lost links, and history for {target}.";
         readonly backlinksTitle: "Backlinks";
-        readonly cacheAvailable: "cached, free for {hours, number}h";
+        readonly cacheAvailable: "cached, free for {duration}";
         readonly cacheExpired: "cache expired";
         readonly columnEstimatedTraffic: "Est. traffic";
         readonly columnIntent: "Intent";
@@ -3462,8 +3703,6 @@ export type CoreMessages = {
         readonly columnPage: "Page";
         readonly columnRankingUrl: "Ranking URL";
         readonly columnSerpChange: "SERP Δ";
-        readonly columnTopKeyword: "Top keyword";
-        readonly columnTrafficChange: "Traffic Δ";
         readonly columnVolume: "Volume";
         readonly daysAgo: "{count, number}d ago";
         readonly estimated: "Estimated";
@@ -3471,8 +3710,11 @@ export type CoreMessages = {
         readonly export: "Export";
         readonly exportKeywords: "Export fetched keywords as CSV";
         readonly exportPages: "Export fetched pages as CSV";
+        readonly exportSummary: "Export CSV";
+        readonly exportSummaryAria: "Export domain overview summary as CSV";
         readonly fetched: "fetched {relative}";
         readonly fetchedRows: "{fetched, number} fetched {rows} · {total, select, unknown {total unavailable · remaining unknown · provider requests remaining unknown} other {{totalValue, number} total · {remaining, number} remaining · {requests, number} provider {requests, plural, one {request} other {requests}} remaining at up to 100 rows}}";
+        readonly freeCached: "free, cached";
         readonly historyCacheHint: "History is cached for {duration}. Switching metrics and ranges after loading is free.";
         readonly historyLoadFailed: "History could not be loaded. The overview report is still available.";
         readonly historyMetric: "History metric";
@@ -3499,15 +3741,28 @@ export type CoreMessages = {
         readonly lessThanCost: "<{amount}";
         readonly loadHistory: "Load history";
         readonly loading: "Domain Overview loading";
+        readonly loadKeywords: "Load top organic keywords";
         readonly loadMonthlyHistory: "Load monthly organic history";
         readonly loadNextKeywords: "Load next {count, number} keywords";
         readonly loadNextPages: "Load next {count, number} pages";
+        readonly loadPages: "Load top pages";
         readonly lostCount: "−{count, number} lost";
         readonly metricKeywords: "Keywords";
         readonly metricTopTen: "Top 10";
         readonly metricTraffic: "Est. traffic";
         readonly metricValue: "Traffic value";
         readonly minutesAgo: "{count, number}m ago";
+        readonly moduleFailureReasons: {
+          readonly cost_limit_exceeded: "The cost exceeds the accepted limit.";
+          readonly operation_access_denied: "This operation is unavailable for this project.";
+          readonly payment_admission: "Payment could not be authorized before collection.";
+          readonly provider_connection_changed: "The provider connection changed before collection.";
+          readonly provider_error: "The provider could not return these rows.";
+          readonly quote_changed: "The price changed. Review the price and try again.";
+          readonly rate_limited: "The request was rate limited. Try again shortly.";
+          readonly unexpected: "An unexpected error prevented collection.";
+          readonly usage_persistence: "Usage could not be confirmed. Review usage before retrying.";
+        };
         readonly monthlyIndexHistory: "Estimated · monthly index history";
         readonly monthlyPerformanceChart: "{metric} monthly organic performance chart";
         readonly movementDeclined: "Declined";
@@ -3542,6 +3797,7 @@ export type CoreMessages = {
         readonly rankingChangesNote: "Compared with DataForSEO's previous index check. Its date is not provided. Estimated indexed keywords, not your tracked rankings.";
         readonly rankingChangesTooltip: "Compared with DataForSEO's previous index check. The API does not provide that check's date. These are estimated indexed keywords, not your tracked rankings.";
         readonly recentSearches: "Recent searches";
+        readonly rowsLoadHint: "Loading these rows is cached for {duration}.";
         readonly savedCount: "{count, number} {count, plural, one {keyword} other {keywords}} added to Saved";
         readonly savedFailed: "Selected keywords were not added to Saved";
         readonly savedNone: "No new saved keywords";
@@ -3555,7 +3811,6 @@ export type CoreMessages = {
         readonly subdomain: "Subdomain";
         readonly topOrganicKeywords: "Top organic keywords";
         readonly topPages: "Top pages";
-        readonly trafficChangeTooltip: "Change in estimated traffic for this page.";
         readonly unknown: "unknown";
         readonly wholeDomain: "Whole domain";
         readonly yesterday: "yesterday";
@@ -3669,8 +3924,8 @@ export type CoreMessages = {
         readonly done: "This happened when you added your first keywords. Each keyword carries its own market and device - edit them on the keyword's row in Rank Tracker.";
       };
       readonly connect_source: {
-        readonly active: "Search Console is free and takes two clicks. A SERP provider adds live position checks with your own key.";
-        readonly done: "This happened when you connected a data source. Rank checks run through it, and the provider bills you directly. Manage or swap it in Integrations.";
+        readonly active: "Search Console adds free traffic data. Choose a ranking data source for live position checks.";
+        readonly done: "Your ranking data source is set up. Review its source and usage settings in Integrations.";
       };
       readonly create_project: {
         readonly active: "Name the project you want to track. You can update its details later in Project settings.";
@@ -3678,7 +3933,7 @@ export type CoreMessages = {
       };
       readonly first_check: {
         readonly active: "Run the first check to collect positions for the tracked keywords. Check settings live in the project's tracking settings.";
-        readonly done: "This happened when your first check completed: every keyword it covered now has a position and a ranking URL, and history builds from here. Checks follow the project's default schedule - any keyword can override it with its own. Both live in Rank Tracker.";
+        readonly done: "Your first completed check saved positions and ranking URLs for its targets. New keywords stay manual until assigned to a schedule in Runs → Schedules.";
       };
     };
   };
@@ -3713,6 +3968,12 @@ export type CoreMessages = {
         readonly note: "Settings, MCP, then paste into mcp.json.";
       };
       readonly description: "Pick your tool, copy one command, paste it in your terminal. That is the whole setup.";
+      readonly "grok-bot": {
+        readonly caveat: "Paid operations such as rank checks and backlink analysis are write tools and charge your project's payment source. Ask the bot to confirm the cost before running them.";
+        readonly hint: "Assistant";
+        readonly label: "Grok Bot";
+        readonly note: "Paste this into a Grok Bot chat, confirm adding the custom MCP server, then sign in from the connect card. The bisibility consent screen may name the client Cursor and say it was registered automatically; that is expected for Grok Bot.";
+      };
       readonly heading: "AI agents";
       readonly other: {
         readonly hint: "manual";
@@ -4027,6 +4288,7 @@ export type CoreMessages = {
       readonly localDescription: "Add [seq:5,15,15,4] to choose the ranks returned for a keyword.";
       readonly logo: "{provider} logo";
       readonly manage: "Manage";
+      readonly manageKey: "Manage key";
       readonly neverSynced: "Never synced.";
       readonly neverSyncedHelp: "Use Sync now to load traffic data.";
       readonly notSynced: "Not synced yet";
@@ -4036,6 +4298,7 @@ export type CoreMessages = {
       readonly reauthGeneric: "Authorization is no longer valid. Reconnect to resume traffic syncs.";
       readonly reauthGsc: "Google authorization is no longer valid. Reconnect to resume Search Insights and traffic enrichment.";
       readonly reconnect: "Reconnect";
+      readonly removeKey: "Remove key";
       readonly searchConsole: "Search Console";
       readonly serpDescription: "{provider} rank-data provider. You pay the provider directly.";
       readonly syncing: "Syncing...";
@@ -4126,6 +4389,7 @@ export type CoreMessages = {
     readonly addKeywords: "Add keywords";
     readonly addMarkets: "Add markets";
     readonly allLanguages: "All languages";
+    readonly alreadyTrackedShort: "Already tracked";
     readonly archive: "Archive market";
     readonly archiveBody: "{market} will be archived.{count, plural, =0 {} one { Tracking for # keyword will stop.} other { Tracking for # keywords will stop.}} Existing rank history stays readable.";
     readonly archived: "Archived";
@@ -4148,6 +4412,32 @@ export type CoreMessages = {
     readonly desktop: "Desktop";
     readonly deviceCountNote: "{count, plural, one {One check a run per keyword. You can add the other device later.} other {Each keyword is checked on both, so it bills two checks a run.}}";
     readonly devices: "Devices";
+    readonly deviceTracking: {
+      readonly added: "Added tracking for {count, number} keywords.";
+      readonly confirm: "Add {device} tracking ({count, number})";
+      readonly costNotice: "Adding is free. Checks use credits or your provider account.";
+      readonly description: "Add missing device variants to this market.";
+      readonly device: "Device to add";
+      readonly errors: {
+        readonly ambiguous_keywords: "Matching keywords use different tracking settings. Use Add keywords to add this device for them individually.";
+        readonly market_unavailable: "This market is paused, archived or no longer available. Open Markets to review it.";
+        readonly schedule_unavailable: "This schedule is paused, archived or no longer available. Choose another schedule or Manual.";
+        readonly selection_changed: "The keywords or schedule changed. Review the current scope again.";
+        readonly selection_too_large: "For larger markets, use Add keywords to add the device in smaller batches.";
+      };
+      readonly failed: "Could not confirm the change. Review again before retrying.";
+      readonly keywords: "Keywords";
+      readonly manualNotice: "Free to add. Checks won’t run yet.";
+      readonly noAvailableKeywords: "No keywords available for this device.";
+      readonly review: "Review changes";
+      readonly scheduledNotice: "Free to add. Checks follow the selected schedule.";
+      readonly scope: "{device} tracking for {checks, plural, one {# keyword} other {# keywords}}.";
+      readonly selectAll: "Select all";
+      readonly selectedCount: "{count, number} of {total, number}";
+      readonly selectionLimit: "Select up to 500 keywords.";
+      readonly skipped: "Skipped: {existing, number} tracked, {archived, number} archived.";
+      readonly title: "Add device tracking";
+    };
     readonly edit: "Edit market";
     readonly editTitle: "Edit {market}";
     readonly estimateProviderCost: "Estimate provider cost";
@@ -4184,6 +4474,7 @@ export type CoreMessages = {
     readonly noMarketsToCopy: "No other market to copy from yet.";
     readonly noMatchingLanguages: "No supported language matches that search.";
     readonly noVolume: "no volume/KD";
+    readonly openMarket: "Open market";
     readonly pasteEmpty: "Paste at least one keyword.";
     readonly pasteInvalid: "Paste keywords are invalid.";
     readonly pasteKeywords: "Paste keywords";
@@ -4195,6 +4486,7 @@ export type CoreMessages = {
     readonly pause: "Pause";
     readonly paused: "Paused";
     readonly pausedMarkets: "Paused markets";
+    readonly pauseTracking: "Pause tracking";
     readonly pickMarketToCopy: "Pick the market to copy from.";
     readonly prospectiveKeywords: "{count, plural, one {# prospective keyword} other {# prospective keywords}}";
     readonly researchUnavailable: "{language}: no search volume or difficulty data for this market - positions are tracked normally.";
@@ -4206,6 +4498,7 @@ export type CoreMessages = {
     readonly restoreTitle: "Restore {market}?";
     readonly resume: "Resume";
     readonly resumePausedHint: "Resume a paused market to start tracking again.";
+    readonly resumeTracking: "Resume tracking";
     readonly save: "Save changes";
     readonly schedule: "Schedule";
     readonly scheduleAssignment: "Schedule assignment";
@@ -4229,10 +4522,13 @@ export type CoreMessages = {
     readonly topThree: "Top 3";
     readonly tracked: "Tracked";
     readonly trackedMarkets: "Tracked markets";
+    readonly trackedTargets: "{count, plural, one {# target} other {# targets}}";
     readonly trackFirst: "Track your first market";
     readonly trackFirstDescription: "Create a market to organize keyword tracking by location and language.";
+    readonly trackingStatusFor: "{market}: {status}";
     readonly updateFailed: "Market status could not be updated.";
     readonly updateMarketFailed: "Market could not be updated.";
+    readonly viewMarkets: "View markets";
     readonly visibility: "Visibility";
   };
   readonly projectRankTracker: {
@@ -4329,7 +4625,7 @@ export type CoreMessages = {
       readonly noPosition: "No position";
       readonly noProviderAssigned: "No provider assigned";
       readonly noProviderAssignedCount: "No provider assigned · {count, number} {count, plural, one {keyword} other {keywords}}";
-      readonly noProviderDescription: "These will never run until a provider connection is assigned.";
+      readonly noProviderDescription: "These targets need an enabled data source before checks can run.";
       readonly noProviderRoutingIssues: "No provider routing issues in this window.";
       readonly noScheduledKeywords: "No scheduled keywords";
       readonly noScheduledKeywordsDescription: "Set a schedule in Keywords to see the next checks here.";
@@ -4420,20 +4716,19 @@ export type CoreMessages = {
       readonly yourResult: "Your result at #{position, number}";
     };
     readonly deletion: {
-      readonly becomesEmpty: "Becomes empty. No new checks until keywords are added.";
-      readonly kept: "Schedules and their settings are kept. You can add keywords again or archive an empty schedule.";
+      readonly becomesEmpty: "This schedule will have no keywords. Add keywords to resume checks.";
+      readonly kept: "Schedule settings are kept.";
       readonly loadFailed: "Could not load the schedule impact. Try again before deleting.";
       readonly loading: "Checking connected schedules…";
-      readonly noSchedules: "No schedules are connected to the selected targets.";
       readonly refresh: "Refresh status";
-      readonly remaining: "{count, plural, one {# target remains.} other {# targets remain.}} Its schedule settings stay unchanged.";
-      readonly removed: "{count, plural, one {# target will be removed.} other {# targets will be removed.}}";
+      readonly remaining: "{count, plural, one {# check per run remains.} other {# checks per run remain.}}";
+      readonly removed: "Removes {count, plural, one {# check} other {# checks}} per run.";
       readonly retry: "Try again";
-      readonly running: "Queued checks for these targets will be cancelled. If a provider check is already running, wait for it to finish before deleting. Usage already incurred is kept.";
+      readonly running: "Queued checks are cancelled. Recorded usage stays in your history.";
       readonly runningBlocked: "{count, plural, one {# target is still being checked.} other {# targets are still being checked.}} Wait for completion, then refresh this status to delete.";
-      readonly schedules: "Effect on connected schedules";
-      readonly selection: "{keywords, plural, one {# keyword} other {# keywords}} · {targets, plural, one {# market/device target} other {# market/device targets}}";
-      readonly targetHint: "Only these selected targets and their rank history will be deleted. Other markets and devices stay tracked.";
+      readonly schedules: "Affected schedules";
+      readonly selection: "{keywords, plural, one {# keyword} other {# keywords}} · {targets, plural, one {# market/device variant} other {# market/device variants}}";
+      readonly targetHint: "Deletes selected variants and their rank history. Other markets and devices stay.";
     };
     readonly keywordDetail: {
       readonly actions: {
@@ -4441,7 +4736,7 @@ export type CoreMessages = {
         readonly checking: "Checking...";
         readonly chooseDepth: "Choose check depth";
         readonly closeEditor: "Close editor";
-        readonly connectProvider: "Connect a provider";
+        readonly connectProvider: "Choose a data source";
         readonly cost: " · {cost, number, ::currency/USD}";
         readonly depthMenu: "Check depth";
         readonly edit: "Edit";
@@ -4609,6 +4904,7 @@ export type CoreMessages = {
         readonly openIntegrations: "Open integrations";
         readonly processing: "The check is processing now.";
         readonly providerAuth: "The rank check could not run because the provider credentials were rejected. Reconnect the provider, then try again.";
+        readonly providerCapacityUnavailable: "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys.";
         readonly ranked: "Ranked #{position, number} in the top {depth, number}.";
         readonly rateLimited: "The rank check could not run because the provider is temporarily rate limited. Try again in a few minutes.";
         readonly runningDescription: "Check running. This usually takes about a minute. You can close this window - the result will appear on this page.";
@@ -4667,6 +4963,7 @@ export type CoreMessages = {
         readonly position: "Position";
         readonly positionValue: "#{position, number}";
         readonly provider: "via {provider}";
+        readonly providerNotRecorded: "Provider not recorded";
         readonly rankingUrl: "Ranking URL";
         readonly scheduled: "Scheduled";
         readonly scheduleHint: "Sets the schedule for this market and device. Other markets keep theirs.";
@@ -4694,13 +4991,13 @@ export type CoreMessages = {
       };
       readonly pending: {
         readonly checkTop: "Check top {depth}";
-        readonly connectSerpProvider: "Connect a SERP provider";
+        readonly connectSerpProvider: "Choose a data source";
         readonly coverageUnknownBody: "The provider response does not establish whether this keyword is within the tracked depth.";
         readonly coverageUnknownTitle: "Coverage unknown";
         readonly failedBody: "The last check returned an error.";
         readonly failedTitle: "No position from the latest check";
         readonly firstBody: "First check has not run yet.";
-        readonly firstBodyNoProvider: "First check has not run yet. Connect a SERP provider to run it.";
+        readonly firstBodyNoProvider: "The first check has not run yet. Choose a data source to run it.";
         readonly firstTitle: "No ranking data yet";
         readonly history: "Position history";
         readonly noData: "No data";
@@ -4771,7 +5068,7 @@ export type CoreMessages = {
         readonly launchUncertain: "The launch was not confirmed. Check the same request before starting another.";
         readonly loading: "Loading comparison…";
         readonly mobile: "Mobile";
-        readonly needsProviders: "Connect both DataForSEO and SerpApi to compare results.";
+        readonly needsProviders: "Set up DataForSEO and SerpApi to compare results.";
         readonly noPosition: "No confirmed position";
         readonly open: "Open comparison";
         readonly outside: "Outside Top 20";
@@ -4803,16 +5100,20 @@ export type CoreMessages = {
         readonly bestCount: "{count, number} qualified observations from all retained history";
         readonly bestCurrentDefinition: "Best #{position, number} for the current definition";
         readonly bestLastKnownDefinition: "Best #{position, number} for the last known definition";
+        readonly bestSummary: "Best recorded: #{position, number}";
+        readonly checked: "Checked";
         readonly comparisonNotRequested: "Comparison not requested";
         readonly comparisonUnavailable: "No comparable baseline";
         readonly currentDefinition: "Current measurement definition";
-        readonly currentScopeUnavailable: "Current definition is unverified";
+        readonly currentScopeUnavailable: "Current tracking settings unavailable";
         readonly currentUnknown: "Current rank unknown";
         readonly dropped: "Dropped by {count, number}";
+        readonly historicalBestSummary: "Previous best #{position, number}";
         readonly improved: "Improved by {count, number}";
         readonly lastKnown: "Last known #{position, number}";
         readonly lastKnownUrl: "Last known URL";
         readonly lastRecordedAttempt: "Last recorded attempt";
+        readonly measurementDetails: "Measurement details";
         readonly observed: "Observed";
         readonly recorded: "Recorded";
         readonly reportCapacity: "This history exceeds the report limit. Return to the keyword list to view current data.";
@@ -4838,7 +5139,7 @@ export type CoreMessages = {
         readonly urlSwitched: "URL switched";
       };
       readonly recordedHistory: {
-        readonly attemptCountMeaning: "Reported provider attempt count is saved check metadata, not a complete paid-call ledger.";
+        readonly attemptCountMeaning: "Saved provider attempts for this check. This count may differ from the number of billed requests.";
         readonly attempts: "Attempts";
         readonly attemptsTable: "Recorded logical attempts";
         readonly baselineCheck: "Baseline check: {id}";
@@ -4923,8 +5224,12 @@ export type CoreMessages = {
         readonly loadMore: "Load more history";
         readonly methodology: "Methodology: {version}";
         readonly movement: "Movement {value}";
+        readonly noAttempts: "No check attempts in this period";
+        readonly noObservations: "No observations in this period";
         readonly noPair: "No comparable pair";
-        readonly noQualifiedPoints: "No qualified position points in this loaded window";
+        readonly noPositionsDescription: "No confirmed positions are available for this period.";
+        readonly noQualifiedPoints: "No positions to display";
+        readonly noRecordsDescription: "Run a check or choose another date range.";
         readonly noRetainedItems: "No normalized result items were retained; the recorded position and history are preserved.";
         readonly observations: "Observations";
         readonly observationsTable: "Recorded observations";
@@ -4962,6 +5267,11 @@ export type CoreMessages = {
           readonly retained: "Normalized retained results from this saved check.";
         };
         readonly revision: "Target revision: {value}";
+        readonly scopeDevices: {
+          readonly desktop: "Desktop";
+          readonly mobile: "Mobile";
+        };
+        readonly scopeTechnicalDetails: "Technical details";
         readonly selectObservation: "Select a saved observation to read its retained results.";
         readonly snapshotAsOf: "Snapshot as of";
         readonly snapshotTitle: "Saved check {id}";
@@ -4984,10 +5294,12 @@ export type CoreMessages = {
         readonly belowYou: "{count, number} below you";
         readonly compactComparison: "A compact record cannot be compared against a full one. Comparison stays available between checks that both hold full detail.";
         readonly compactDescription: "Compact record. One row per domain with its best position survived; titles, URLs, page features and unretrieved positions did not.";
+        readonly compareAction: "Compare";
         readonly comparedWithYou: "Compared with you";
         readonly compareRelative: "Compare with · relative to {date}";
         readonly compareTwo: "Compare two";
         readonly competitor: "Competitor";
+        readonly competitorCheck: "Competitor check";
         readonly competitorComparison: "Competitor comparison";
         readonly competitorDescription: "Positions from the same saved search results. Missing domains may be outside the retrieved portion.";
         readonly competitorPositions: "Competitor positions";
@@ -5016,13 +5328,18 @@ export type CoreMessages = {
           readonly duplicates: "Results can move between pages. Repeated URLs are skipped automatically, keeping the earlier result and its position. Different pages from the same domain remain separate; positions are never renumbered.";
           readonly emptyPage: "This page returned no new unique results.";
           readonly expired: "The 15-minute extension window has closed. Use Run check above to collect fresh results.";
-          readonly failed: "The extension could not be confirmed. Earlier results are safe. Refresh data to check its status or use Run check for fresh results.";
+          readonly failed: "The extension could not be confirmed. It will not be sent again automatically. Earlier results are kept. Refresh snapshot only reloads saved status.";
+          readonly lastCharge: "Last extension";
           readonly legacy: "This check has no saved continuation details. Use Run check above to collect a deeper snapshot.";
+          readonly notSent: "This extension was not sent. You can try again until {time}.";
+          readonly notSentExpired: "This extension was not sent. The extension window has closed. Run a fresh check for new results.";
           readonly page: "Positions {start, number} to {end, number} · fetched {time}";
           readonly pending: "Fetching results…";
           readonly range: "#{start, number} to #{end, number}";
           readonly rangeLabel: "Additional positions";
           readonly refresh: "Refresh snapshot";
+          readonly refreshHint: "Reload saved results and extension status without sending another provider request.";
+          readonly retry: "Try extension again";
           readonly running: "An extension is already being fetched. Refresh data to see its result.";
           readonly timing: "Additional results are fetched now and attached to this check with their own timestamp. Historical rank and check comparisons stay unchanged.";
           readonly title: "Extend this snapshot";
@@ -5098,7 +5415,7 @@ export type CoreMessages = {
         };
         readonly from: "From";
         readonly gapPositions: "Positions {start, number}-{end, number}";
-        readonly gapStopped: "The check stopped at your result, so these positions were never requested and never billed. They are unknown for this check, not empty.";
+        readonly gapStopped: "Stopped after finding your domain. The remaining positions have no saved results; this does not mean they were empty.";
         readonly gapUnknown: "These positions were not retrieved for this check. They are unknown, not empty.";
         readonly hostedRetention: "Full detail is kept for {days, number} days on hosted workspaces.";
         readonly jumpToDate: "Jump to date";
@@ -5117,6 +5434,7 @@ export type CoreMessages = {
         readonly notRetrieved: "{count, number} not retrieved";
         readonly oneCheck: "One check";
         readonly onPage: "On the page";
+        readonly partialCompetitors: "Partial snapshot. Missing competitors may still rank in the Top {depth, number}.";
         readonly pickerClosest: "Picks the closest comparable loaded check.";
         readonly position: "#{position, number}";
         readonly positionColumn: "Position";
@@ -5128,6 +5446,7 @@ export type CoreMessages = {
         readonly retentionTip: "Hosted workspaces keep full detail for a fixed window. Self hosted instances keep it for as long as you keep the database.";
         readonly retrieved: "{retrieved, number}{requested, select, empty {} other { of {requested}}} retrieved";
         readonly samePosition: "Same position";
+        readonly savedResults: "{count, number} results saved · requested Top {depth, number}";
         readonly selected: "selected";
         readonly selectedAsFrom: "selected as From";
         readonly selectedAsTo: "selected as To";
@@ -5135,6 +5454,7 @@ export type CoreMessages = {
         readonly site: "Site";
         readonly snapshot: "SERP snapshot";
         readonly snapshots: "SERP snapshots";
+        readonly stopComparing: "Stop comparing";
         readonly storedChecks: "Stored checks";
         readonly titleTip: "Checks may stop at the first tracked-domain match when that project setting is enabled. This card shows what this check kept and which positions it did not retrieve.";
         readonly to: "To";
@@ -5178,6 +5498,9 @@ export type CoreMessages = {
           readonly rateLimited: "The analytics provider’s request limit was reached. Try again later.";
           readonly reconnect: "An analytics source needs to be reconnected in Integrations.";
           readonly scope: "Project data · all countries and devices";
+          readonly sourceActive: "Active connection";
+          readonly sourceInactive: "No active connection";
+          readonly sources: "Analytics sources";
           readonly title: "Analytics";
           readonly unavailable: "No connected source was available to fetch analytics. Check Integrations.";
           readonly updated: "Analytics refreshed. Available results are shown below.";
@@ -5710,6 +6033,7 @@ export type CoreMessages = {
             readonly baselineWindow: "Baseline from {from} to before {to}";
             readonly bestMeasuredPosition: "Best measured #{position}";
             readonly bestRetainedPosition: "Best retained #{position} · date unavailable";
+            readonly bestRetainedShort: "Best retained #{position}";
             readonly capturedExpectedUrl: "Expected URL captured with this measurement";
             readonly comparisonNotRequested: "Comparison not requested";
             readonly comparisonUnavailable: "No comparable baseline";
@@ -5717,7 +6041,7 @@ export type CoreMessages = {
             readonly compositionUnknown: "Earlier scope membership unavailable";
             readonly coverage: "Data coverage {data}; observed coverage {observed}";
             readonly currentPosition: "#{position}";
-            readonly currentScopeUnavailable: "Current definition unavailable";
+            readonly currentScopeUnavailable: "Current tracking settings unavailable";
             readonly currentSince: "Current window since {date}";
             readonly currentUnknown: "Current position unknown";
             readonly dateUnknown: "date unavailable";
@@ -5733,30 +6057,33 @@ export type CoreMessages = {
               readonly stale: "Stale";
               readonly unknown: "Freshness unknown";
             };
+            readonly freshnessUnknownHelp: "We can’t confirm how current this result is.";
             readonly groupAttemptHealth: "{failed} failed / {expected} targets";
             readonly groupQuality: "{ranked} ranked / {expected} targets; {unknown} unknown";
             readonly groupRankingUrls: "{count} retained ranking URLs";
-            readonly historyQualificationUnknown: "Stored history qualification unavailable";
+            readonly historyQualificationUnknown: "Earlier results unverified";
             readonly historyUnavailable: "Retained rank history unavailable";
             readonly knownAbsent: "Not found in measured scope";
             readonly lastKnownObserved: "Last known #{position} · observed {date}";
             readonly lastKnownRecorded: "Last known #{position} · recorded {date}";
+            readonly lastKnownShort: "Last known #{position}";
             readonly lastKnownStored: "Last known #{position} · stored date {date}";
             readonly lastKnownUndated: "Last known #{position} · date unavailable";
             readonly measuredCount: "{measured} of {expected} measured";
             readonly metric: "Measurement";
             readonly metricDelta: "Metric change {delta}";
             readonly movementDirections: "{improved} improved; {declined} declined";
-            readonly notObserved: "Not yet observed";
+            readonly notObserved: "No result yet";
             readonly observedAt: "Observed {date}";
             readonly observedTimeUnknown: "Observation time unavailable";
-            readonly qualificationUnknown: "Qualification unavailable";
+            readonly qualificationUnknown: "Current result unavailable";
             readonly qualityCounts: "{failed} failed; {stale} stale; {unsupported} unsupported; {comparable} comparable";
             readonly recordedAt: "Recorded {date}";
             readonly recordedTimeUnknown: "Recorded time unavailable";
             readonly retainedHistory: "Retained rank history for {keyword}";
             readonly retainedHistoryHelp: "Retained comparable observations describe history, not proof of the current definition.";
-            readonly retainedRankingUrl: "Retained ranking URL; current qualification unavailable";
+            readonly retainedRankingUrl: "Last known URL. Current result unavailable.";
+            readonly retainedUrlShort: "Last known";
             readonly scopeSummary: "{title}: {value} · {expected} targets; {ranked} ranked, {absent} confirmed absent, {unknown} unknown";
             readonly storedCheckAt: "Stored check date {date}";
             readonly summaryUnavailable: "{expected} matching targets; full-scope measurement unavailable";
@@ -5851,6 +6178,7 @@ export type CoreMessages = {
           readonly providerAccountRestricted: "The provider has restricted access to this account. Review the account in the provider dashboard or contact their support, then try again.";
           readonly providerAuth: "The rank check could not run because the provider credentials were rejected. Reconnect the provider, then try again.";
           readonly providerBilling: "The rank check could not run because the provider account has insufficient funds. Add funds or connect a different provider, then try again.";
+          readonly providerCapacityUnavailable: "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys.";
           readonly providerRateLimited: "The rank check could not run because the provider is temporarily rate limited. Try again in a few minutes.";
           readonly providerUnavailable: "The rank check could not run because the provider is temporarily unavailable. Try again in a few minutes.";
           readonly providerUnknown: "The rank check could not run because of a provider error. Try again, or view check details for more information.";
@@ -5913,7 +6241,9 @@ export type CoreMessages = {
           readonly remove: "Remove";
           readonly removeFailed: "Could not remove saved keywords. Try again.";
           readonly removeFromSaved: "Remove from saved";
+          readonly research: "Research";
           readonly researchFallback: "Research";
+          readonly researchOneAtATime: "Research one keyword at a time.";
           readonly rowActions: "Actions for {keyword}";
           readonly rowsPerPage: "Rows per page";
           readonly saved: "Saved";
@@ -5923,6 +6253,7 @@ export type CoreMessages = {
           readonly source: "Source";
           readonly sourceAria: "{source} / {location}";
           readonly tableAria: "Saved keywords";
+          readonly toolbar: "Actions for selected keywords";
           readonly track: "Track {count, number}";
           readonly trackAria: "Track {count, number} {cost, number, ::currency/USD}/mo";
           readonly trackAriaUsage: "Track {count, number}, {usage}/mo";
@@ -6158,7 +6489,7 @@ export type CoreMessages = {
         readonly noQueries: "No queries observed yet - new Search Console properties can take a few days.";
         readonly noSource: "No Search Console source is connected.";
         readonly openIntegrations: "Open Integrations";
-        readonly providerMissing: "Rank checks need a connected SERP provider. You can add keywords now - they start checking once you <providerLink>connect one</providerLink>.";
+        readonly providerMissing: "You can add keywords now. Choose a data source in <providerLink>Integrations</providerLink> when you are ready to run checks.";
         readonly reconnectGoogle: "Reconnect your Google account";
         readonly searchConsoleAuthorizationExpired: "Google authorization has expired.";
         readonly startMarketDescription: "A market is the country, location and language you rank in. Add one with your first keywords.";
@@ -6181,7 +6512,7 @@ export type CoreMessages = {
         readonly title: "No keywords in {market} yet";
       };
       readonly notices: {
-        readonly connectProvider: "Connect provider";
+        readonly connectProvider: "Choose a data source";
         readonly failedDetail: "Some keyword positions could not be updated.";
         readonly failedTitle: "Rank checks failed to produce ranking data.";
         readonly firstCheckDetail: "{count, plural, =0 {Add keywords to start rank tracking.} one {# keyword is ready for the first rank check.} other {# keywords are ready for the first rank check.}}";
@@ -6418,9 +6749,9 @@ export type CoreMessages = {
       readonly unavailable: "price unavailable";
     };
     readonly recent: {
-      readonly disabledHint: "Connect DataForSEO to replay recent searches.";
+      readonly disabledHint: "Choose a data source to replay recent searches.";
       readonly expired: "cache expired";
-      readonly freeFor: "cached, free for {hours, number}h";
+      readonly freeFor: "cached, free for {duration}";
       readonly remove: "Remove {seed} from recent searches";
       readonly section: "Recent searches";
     };
@@ -6429,7 +6760,7 @@ export type CoreMessages = {
       readonly cached: "cached {age}";
       readonly checksPerRun: "+{count, number} {count, plural, one {check} other {checks}} per run";
       readonly clear: "Clear";
-      readonly deeper: "Showing all {count, number} fetched - <run>run with {limit, number} results{cached, select, true { free, cached} other {}}{cost, select, none {} other { ~{cost}}}</run> for deeper coverage";
+      readonly deeper: "Showing all {count, number} fetched - <run>run with {limit, number} results{cached, select, true { free, cached} other {}}{cost, select, none {} other { {cost}}}</run> for deeper coverage";
       readonly empty: "No keywords match these filters.";
       readonly export: "Export";
       readonly exportAria: "Export results";
@@ -6457,7 +6788,7 @@ export type CoreMessages = {
     };
     readonly search: {
       readonly additionalSeedPlaceholder: "Add another seed";
-      readonly button: "{researching, select, true {Researching} other {Research}}{cached, select, true { free, cached} other {}}{cost, select, none {} other { ~{cost}}}";
+      readonly button: "{researching, select, true {Researching} other {Research}}{cached, select, true { free, cached} other {}}{cost, select, none {} other { {cost}}}";
       readonly clickstream: "Clickstream volumes";
       readonly clickstreamHelp: "Volumes corrected with real-user browsing data instead of Google Ads estimates alone. About twice the lookup cost.";
       readonly countryAria: "Country";
@@ -6487,9 +6818,9 @@ export type CoreMessages = {
       readonly budgetTitle: "Monthly provider budget reached";
       readonly cacheCharged: "This lookup was charged once. Repeats within 12 hours are free.";
       readonly cacheFree: "Served from the 12-hour cache, this repeat was free.";
-      readonly connectAction: "Connect DataForSEO";
-      readonly connectDescription: "Keyword Research requires a provider with keyword research support. Lookups run on your own key.";
-      readonly connectTitle: "Connect DataForSEO to research keywords";
+      readonly connectAction: "Choose a data source";
+      readonly connectDescription: "Choose a supported data source in Integrations to run keyword research.";
+      readonly connectTitle: "Choose a data source";
       readonly defaultResume: "next month";
       readonly editSearch: "Edit search";
       readonly emptyAutoHint: "Switch mode to Auto to cascade across all sources";
@@ -6507,11 +6838,11 @@ export type CoreMessages = {
       readonly idleTitle: "Research starts with a seed";
       readonly loadingAria: "Research loading";
       readonly reauthAction: "Reconnect DataForSEO";
-      readonly reauthDescription: "Reconnect the project's DataForSEO credentials to resume research lookups.";
+      readonly reauthDescription: "Reconnect the selected data source in Integrations to resume keyword research.";
       readonly reauthTitle: "DataForSEO needs to be reconnected";
       readonly retry: "Retry";
       readonly retryCached: "Retry free, cached";
-      readonly retryCost: "Retry ~{cost}";
+      readonly retryCost: "Retry {cost}";
       readonly unsupportedDescription: "Research is not available for {scopeLabel}. Rank tracking is unaffected.";
       readonly unsupportedTitle: "Research is not available for this country and language";
     };
@@ -6540,13 +6871,74 @@ export type CoreMessages = {
       readonly skipOnce: "Skip once";
       readonly viewDetails: "View details";
     };
+    readonly aiResults: {
+      readonly answer: "Retained answer";
+      readonly back: "Back to Runs";
+      readonly citations: "Cited pages";
+      readonly empty: "No samples were retained for this run.";
+      readonly measurement: "Measurement";
+      readonly measurements: {
+        readonly aio_not_present: "AI Overview absent";
+        readonly answer_present: "Answer available";
+        readonly failed: "Failed";
+        readonly partial: "Partial result";
+        readonly unavailable: "Unavailable";
+        readonly unknown: "Unknown";
+      };
+      readonly model: "Model";
+      readonly next: "Next samples";
+      readonly observed: "Observed at";
+      readonly title: "AI tracking results";
+    };
+    readonly aiStatuses: {
+      readonly blocked: {
+        readonly description: "The AI measurement could not proceed.";
+        readonly label: "Blocked";
+      };
+      readonly cancelled: {
+        readonly description: "The AI measurement was cancelled.";
+        readonly label: "Cancelled";
+      };
+      readonly completed: {
+        readonly description: "The AI measurement finished.";
+        readonly label: "Completed";
+      };
+      readonly cost_limit_exceeded: {
+        readonly description: "The AI measurement was skipped because its cost limit was exceeded.";
+        readonly label: "Cost limit exceeded";
+      };
+      readonly failed: {
+        readonly description: "The AI measurement failed.";
+        readonly label: "Failed";
+      };
+      readonly partial: {
+        readonly description: "Only part of the AI measurement completed successfully.";
+        readonly label: "Partial";
+      };
+      readonly planned: {
+        readonly description: "The AI measurement is waiting to start.";
+        readonly label: "Planned";
+      };
+      readonly running: {
+        readonly description: "AI measurement samples are being processed.";
+        readonly label: "Running";
+      };
+      readonly skipped: {
+        readonly description: "The AI measurement was skipped. Review the reason.";
+        readonly label: "Skipped";
+      };
+      readonly status_unavailable: {
+        readonly description: "The AI measurement state could not be identified.";
+        readonly label: "Status unavailable";
+      };
+    };
     readonly content: {
       readonly activeDescription: "Review run history or choose another status to find completed work.";
       readonly activeTitle: "No runs in progress";
       readonly clearFilters: "Clear filters";
       readonly filteredDescription: "Change or clear the filters to see other runs.";
       readonly filteredTitle: "No matching runs";
-      readonly historyDescription: "Rank checks and Search Console history imports will appear here.";
+      readonly historyDescription: "Rank checks, AI tracking runs and Search Console imports will appear here.";
       readonly historyTitle: "No runs yet";
       readonly loadError: "Runs could not be loaded";
       readonly manageSchedules: "Manage schedules";
@@ -6569,6 +6961,7 @@ export type CoreMessages = {
     };
     readonly filters: {
       readonly active: "Active";
+      readonly aiTracking: "AI Tracking";
       readonly all: "All";
       readonly allSources: "All sources";
       readonly allStatuses: "All statuses";
@@ -6610,7 +7003,7 @@ export type CoreMessages = {
         readonly marketInactive: "Market not active";
         readonly marketInactiveDescription: "This keyword's market is paused, so the check was stopped before it cost anything.";
         readonly noProvider: "No working provider";
-        readonly noProviderDescription: "Connect or reconnect a provider to start this run.";
+        readonly noProviderDescription: "Review the selected data source in Integrations to start this run.";
         readonly providerUnavailable: "Provider unavailable";
         readonly providerUnavailableDescription: "The provider isn't reachable right now. The run starts on its own once it reconnects.";
         readonly reviewUsage: "Review budget and usage";
@@ -6648,6 +7041,86 @@ export type CoreMessages = {
         readonly skippedBeforeStart: "{count, plural, one {# skipped before start} other {# skipped before start}}";
         readonly skippedOrBlocked: "{count} skipped or blocked";
       };
+      readonly deferral: {
+        readonly budget_exhausted: {
+          readonly detail: "The budget was reached before this check was priced.";
+          readonly label: "Budget reached";
+        };
+        readonly budget_missing: {
+          readonly detail: "A monthly budget is not configured for this project.";
+          readonly label: "Budget missing";
+        };
+        readonly credentials_unavailable: {
+          readonly detail: "Provider credentials for this check are unavailable.";
+          readonly label: "Credentials unavailable";
+        };
+        readonly credits_exhausted: {
+          readonly detail: "The payment balance was exhausted before this check ran.";
+          readonly label: "Credits exhausted";
+        };
+        readonly dispatcher_disabled: {
+          readonly detail: "The rank-check dispatcher is turned off on this installation.";
+          readonly label: "Dispatcher off";
+        };
+        readonly keyword_archived: {
+          readonly detail: "The keyword was archived before this check could start.";
+          readonly label: "Keyword archived";
+        };
+        readonly market_inactive: {
+          readonly detail: "The market for this keyword is no longer active.";
+          readonly label: "Market inactive";
+        };
+        readonly migration_hold: {
+          readonly detail: "Checks are paused while this project is on a migration hold.";
+          readonly label: "Migration hold";
+        };
+        readonly no_provider: {
+          readonly detail: "No provider was available for this check.";
+          readonly label: "No provider";
+        };
+        readonly openIntegrations: "Open Integrations";
+        readonly primary_provider_not_dataforseo: {
+          readonly detail: "Scheduled queued checks run only when DataForSEO is the primary provider.";
+          readonly label: "Queued checks need DataForSEO";
+        };
+        readonly project_ineligible: {
+          readonly detail: "This project is not eligible for scheduled rank checks.";
+          readonly label: "Project cannot run checks";
+        };
+        readonly project_read_only: {
+          readonly detail: "This project is read-only, so the check was deferred.";
+          readonly label: "Project is read-only";
+        };
+        readonly queued_dataforseo_disabled: {
+          readonly detail: "Scheduled DataForSEO checks are turned off on this installation.";
+          readonly label: "Scheduled checks off";
+        };
+        readonly queued_submission_disabled: {
+          readonly detail: "Queued rank-check submission is turned off for the current scheduler mode.";
+          readonly label: "Submission turned off";
+        };
+        readonly quote_unavailable: {
+          readonly detail: "The provider price was unavailable. This target is retried on the next run.";
+          readonly label: "Price unavailable";
+        };
+        readonly rate_limited: {
+          readonly detail: "The provider rate limit deferred this check until the next run.";
+          readonly label: "Rate limited";
+        };
+        readonly reviewBudget: "Review budget";
+        readonly schedule_ineligible: {
+          readonly detail: "This keyword schedule no longer allows an automatic check.";
+          readonly label: "Schedule is not automatic";
+        };
+        readonly unknown: {
+          readonly detail: "This check was deferred and will be retried on the next run.";
+          readonly label: "Deferred";
+        };
+        readonly usage_unconfirmed: {
+          readonly detail: "Provider usage is not fully confirmed, so this check was deferred.";
+          readonly label: "Usage not confirmed";
+        };
+      };
       readonly duration: "Duration";
       readonly durationMinutes: "{count, plural, one {#m} other {#m}}";
       readonly durationSeconds: "{count, plural, one {#s} other {#s}}";
@@ -6660,6 +7133,7 @@ export type CoreMessages = {
         readonly blockedSince: "Blocked since";
         readonly chosenAtLaunch: "chosen at launch";
         readonly cost: "Cost";
+        readonly deferredBeforeProvider: "deferred before a provider was chosen";
         readonly elapsed: "Elapsed";
         readonly estimate: "estimate";
         readonly estimated: "Estimated cost";
@@ -6821,10 +7295,12 @@ export type CoreMessages = {
         readonly note: "Note";
         readonly providerAuth: "Provider credentials need to be reconnected.";
         readonly providerBilling: "The provider account needs funds before this check can run.";
+        readonly providerCapacityUnavailable: "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys.";
         readonly providerRateLimited: "The provider is temporarily rate limited.";
         readonly providerRestricted: "The provider has restricted this account.";
         readonly providerTransient: "The provider is temporarily unavailable.";
         readonly providerUnknown: "The provider could not complete this check.";
+        readonly scheduleChanged: "Schedule changed. Cancelled before it started.";
         readonly sendUnconfirmed: "Result not confirmed; not retried to avoid duplicate usage.";
         readonly skippedBeforeStart: "Skipped before start";
         readonly stoppedAfterStart: "Stopped after starting";
@@ -6847,10 +7323,10 @@ export type CoreMessages = {
         readonly archivedReadOnlyHint: "Archived prompt monitoring schedules are kept for history and cannot be edited or restored.";
         readonly archiveFailed: "Could not archive the prompt monitoring schedule.";
         readonly emptyNext: "Add prompts to start";
-        readonly kindAi: "Prompt monitoring";
+        readonly kindAi: "AI tracking";
         readonly kindRank: "Rank checks";
         readonly loadFailed: "Prompt monitoring schedules could not be loaded. Rank schedules are shown below.";
-        readonly newSchedule: "New prompt monitoring schedule";
+        readonly newSchedule: "New AI tracking schedule";
         readonly nextPending: "Pending";
         readonly prompts: "{count, plural, one {# prompt} other {# prompts}}";
         readonly readOnly: "Read-only";
@@ -6880,7 +7356,7 @@ export type CoreMessages = {
       };
       readonly archiveDialog: {
         readonly body: "Future runs will stop. Runs already launched can finish, and past results remain available.";
-        readonly defaultNotice: "This is the default schedule. New keywords will use manual checks until you choose another default.";
+        readonly defaultNotice: "New keywords stay manual until assigned to a schedule.";
         readonly manualChecks: "Manual checks";
         readonly moveKeywords: "Move {count, plural, one {# keyword} other {# keywords}} to";
         readonly title: "Archive “{name}”?";
@@ -6922,6 +7398,7 @@ export type CoreMessages = {
         readonly matches: "Matches {count, number} now. New keywords will not join automatically.";
         readonly noMatches: "No keywords match.";
         readonly onSchedule: "on {name}";
+        readonly schedule: "Schedule";
         readonly selectAll: "Select all {count, number} matching";
         readonly selected: "{count, plural, one {# selected} other {# selected}}";
         readonly submitFailed: "Could not add keywords to this schedule. Try again.";
@@ -6934,22 +7411,25 @@ export type CoreMessages = {
         readonly cronTooLong: "Cron expressions are {maximum, number} characters or fewer.";
         readonly customCron: "Custom cron";
         readonly customPreview: "Custom cron schedule.";
-        readonly defaultEnabled: "Enable to use this schedule for new keywords. Existing keywords keep their schedules.";
-        readonly defaultExisting: "Default for new keywords";
-        readonly defaultExistingDescription: "New keywords use this schedule unless you choose another.";
-        readonly defaultReplacement: "Replaces {name} for new keywords. Existing keywords keep their schedules.";
+        readonly defaultEnabled: "Suggest this schedule when scheduling keywords. Keywords are added only when you choose them.";
+        readonly defaultExisting: "Default suggestion";
+        readonly defaultExistingDescription: "Suggested when you choose a schedule. No keywords join automatically.";
+        readonly defaultReplacement: "Replaces {name} as the suggested schedule. Existing assignments stay unchanged.";
         readonly depth: "Depth";
         readonly everyWeekday: "Every weekday at 06:00.";
         readonly invalidCron: "Enter a valid five-field cron expression.";
         readonly invalidTime: "Enter a time in HH:mm format.";
-        readonly invalidTimeStep: "Enter a time in 30-minute steps.";
+        readonly invalidTimeStep: "Enter a time ending in :00 or :30.";
         readonly invalidTimeZone: "Enter a valid time zone.";
         readonly jitterExact: "None - start exactly on time";
         readonly jitterFifteen: "Up to 15 minutes";
         readonly jitterSixty: "Up to 60 minutes";
+        readonly marketDevice: "Market × device";
         readonly memberCount: "{count, plural, one {# keyword} other {# keywords}}";
         readonly memberEmpty: "No keywords assigned. This schedule keeps its settings but will not plan new checks until you add keywords. You can also archive it from the schedules list.";
         readonly memberRange: "1-{shown, number} of {total, number} {total, plural, one {keyword} other {keywords}}";
+        readonly memberRemoved: "Removed from schedule. The keyword is available for manual checks.";
+        readonly memberRemoveFailed: "Could not remove the keyword from this schedule. Try again.";
         readonly members: "Members";
         readonly membersTable: "Schedule members";
         readonly moveCombined: "{scheduled} and {manual}";
@@ -6957,26 +7437,34 @@ export type CoreMessages = {
         readonly moveScheduled: "{count, plural, one {# keyword from other schedules} other {# keywords from other schedules}}";
         readonly movesFrom: "Moves from {name}";
         readonly moveSummary: "Saving moves {summary} into {name}.";
+        readonly nameHelp: "Name only. Change Frequency below to change when checks run.";
         readonly nextThree: "Next three: {runs} {timeZone}.";
         readonly noFixedDaily: "No fixed time - checks are spread across the day.";
         readonly noFixedInterval: "No fixed time - checks are spread across the interval.";
         readonly noFixedTime: "No fixed time";
-        readonly overrideHelp: "Project default follows the project settings. Always pins this schedule.";
+        readonly overrideHelp: "Follow project settings, or choose a value for this schedule.";
         readonly projectDefault: "Project default ({label})";
         readonly projectDefaultPlain: "Project default";
+        readonly removeMember: "Remove from schedule";
         readonly save: "Save schedule";
+        readonly saveConflict: "The schedule changed. Reload it before saving again.";
         readonly saved: "Schedule saved.";
-        readonly saveFailed: "Could not save the schedule.";
+        readonly saveFailed: "Could not save. Your changes are still here. Try again.";
+        readonly saveForbidden: "You no longer have permission to edit this schedule.";
+        readonly saveInvalid: "Check the schedule settings before saving again.";
+        readonly saveNotFound: "This schedule is no longer available. Return to the schedule list.";
+        readonly saveReadOnly: "This project is read-only. You can save after editing is restored.";
+        readonly saveSessionExpired: "Your session expired. Sign in again, then retry saving.";
         readonly saving: "Saving...";
         readonly schedule: "Schedule";
         readonly scheduleName: "Enter a schedule name.";
         readonly scheduleNameTooLong: "Schedule names are {maximum, number} characters or fewer.";
         readonly startWindow: "Start window";
         readonly startWindowHelp: "Spreads the start so schedules firing at the same time do not hit the provider at once.";
-        readonly thirtyMinuteSteps: "30-minute steps";
+        readonly thirtyMinuteSteps: "Use :00 or :30, e.g. 09:00 or 09:30.";
         readonly time24: "Time, 24-hour";
         readonly topDepth: "Top {depth, number}";
-        readonly useAsDefault: "Use as default for new keywords";
+        readonly useAsDefault: "Use as default suggestion";
       };
       readonly empty: {
         readonly archivedDescription: "Archived schedules will appear here. Their past runs and results are preserved.";
@@ -7007,7 +7495,7 @@ export type CoreMessages = {
       readonly list: {
         readonly actions: "Actions";
         readonly blocked: "Next run blocked - monthly limit";
-        readonly defaultHint: "New keywords join this schedule unless you pick another one.";
+        readonly defaultHint: "Suggested when choosing a schedule. Keywords never join automatically.";
         readonly empty: "Empty · settings saved";
         readonly emptyNext: "Add keywords to start";
         readonly memberMeta: "{markets, plural, one {# market} other {# markets}} x {devices, plural, one {# device} other {# devices}}";
@@ -7037,12 +7525,18 @@ export type CoreMessages = {
       readonly next: "Next";
       readonly nextRun: {
         readonly at: "{day} {time}";
+        readonly distributed: "{day}, spread over the day ({timezone})";
+        readonly distributedInterval: "From {day}, spread across the interval ({timezone})";
         readonly today: "today {time}";
         readonly tomorrow: "tomorrow {time}";
       };
       readonly noFixedTime: "No fixed time";
       readonly pending: "Pending";
       readonly perRun: "Per run";
+      readonly planning: {
+        readonly delay: "Planned runs usually appear in Runs within {minutes, number} minutes. Checks run at their scheduled times.";
+        readonly delayUnknown: "Planned runs may take a short time to appear in Runs. Checks run at their scheduled times.";
+      };
       readonly projectDefault: "Project default";
       readonly provider: "Provider";
       readonly schedule: "Schedule";
@@ -7052,6 +7546,16 @@ export type CoreMessages = {
       readonly scheduleStatus: "Schedule status";
       readonly searchKeywords: "Search keywords";
       readonly status: "Status:";
+      readonly summary: {
+        readonly addToSchedule: "Add to schedule";
+        readonly defaultHint: "The default is a suggestion when you choose a schedule. New keywords stay unscheduled until you assign them.";
+        readonly makeDefault: "Make default";
+        readonly nextPending: "Being planned";
+        readonly nextRun: "Next run";
+        readonly perMonth: "Estimated per month";
+        readonly title: "Schedule summary";
+        readonly unscheduledCount: "{count, plural, one {# keyword has no schedule.} other {# keywords have no schedule.}}";
+      };
       readonly tag: "Tag";
       readonly thisSchedule: "this schedule";
       readonly time: "Time";
@@ -7074,11 +7578,15 @@ export type CoreMessages = {
     readonly table: {
       readonly actions: "Actions";
       readonly actual: "actual";
+      readonly actualCost: "Cost {cost}";
+      readonly aiTrackingRun: "AI tracking measurement";
       readonly connectProvider: "Connect a supporting provider";
       readonly cost: "Cost";
+      readonly costUnknown: "Cost not confirmed";
       readonly dayProgress: "{completed, number} / {total, number} {total, plural, one {finalized day} other {finalized days}}";
       readonly finalizedDays: "Finalized days";
       readonly keywordCount: "{count, plural, one {# keyword} other {# keywords}}";
+      readonly knownCost: "Known cost {cost} + unconfirmed";
       readonly marketPaused: "Market is paused";
       readonly noActiveKeywords: "No active keywords";
       readonly notAvailable: "Not available";
@@ -7097,6 +7605,8 @@ export type CoreMessages = {
       readonly reviewBlocker: "Review what is blocking this run";
       readonly reviewIssue: "Review issue";
       readonly reviewUsage: "Review budget and usage";
+      readonly sampleCount: "Samples: {count, number}";
+      readonly sampleProgress: "{completed, number} / {total, number} samples";
       readonly scope: "Scope";
       readonly searchConsole: "Search Console";
       readonly searchConsoleImport: "Search Console import";
@@ -7362,6 +7872,7 @@ export type CoreMessages = {
       readonly searchQueries: "Search queries";
       readonly selectFailed: "The property could not be selected. Try again.";
       readonly sessionsConnectBody: "See which queries and landing pages bring engaged visitors, and which convert.";
+      readonly sessionsConnectDismiss: "Dismiss organic sessions prompt";
       readonly sessionsConnectTitle: "Organic sessions (GA4)";
       readonly sessionsJoinTip: "Joined from GA4 by landing page. Search Console counts clicks and GA4 counts sessions, so the two never match exactly and a gap is normal.";
       readonly showAllCount: "Show all {count, number}";
@@ -7532,14 +8043,47 @@ export type CoreMessages = {
       readonly description: "The five most recent entries. Filtering, inspection and export are available on the full audit screen.";
       readonly empty: "No audit entries yet.";
       readonly event: {
+        readonly aiPromptArchive: "AI prompt archived";
+        readonly aiPromptCreate: "AI prompt created";
+        readonly aiPromptPause: "AI prompt paused";
+        readonly aiPromptResume: "AI prompt resumed";
+        readonly aiPromptUpdate: "AI prompt updated";
+        readonly aiRunCancelled: "AI run cancelled";
+        readonly aiRunConsentRecorded: "AI run consent recorded";
+        readonly aiRunLaunched: "AI run started";
+        readonly aiRunRetried: "AI run retried";
+        readonly aiScheduleArchive: "AI schedule archived";
+        readonly aiScheduleConsentRecorded: "AI schedule consent recorded";
+        readonly aiScheduleCreate: "AI schedule created";
+        readonly aiScheduleDisable: "AI schedule disabled";
+        readonly aiScheduleEnable: "AI schedule enabled";
+        readonly aiScheduleUpdate: "AI schedule updated";
+        readonly aiSuggestionsAccepted: "AI suggestions accepted";
+        readonly aiSuggestionsConsentRecorded: "AI suggestions consent recorded";
+        readonly aiSuggestionsGenerated: "AI suggestions generated";
+        readonly aiTopicArchive: "AI topic archived";
+        readonly aiTopicCreate: "AI topic created";
+        readonly aiTopicPause: "AI topic paused";
+        readonly aiTopicResume: "AI topic resumed";
+        readonly aiTopicUpdate: "AI topic updated";
         readonly alertRuleAvailabilityChanged: "Alert rule availability changed";
         readonly alertRuleCreated: "Alert rule created";
+        readonly alertRuleDeleted: "Alert rule deleted";
         readonly alertRuleUpdated: "Alert rule updated";
+        readonly alertsMarkedRead: "All alerts marked as read";
+        readonly alertSnoozed: "Alert snoozed";
         readonly apiKeyCreated: "API key created";
         readonly apiKeyRevoked: "API key revoked";
         readonly apiKeyRolled: "API key rolled";
         readonly auditLogViewed: "Audit log viewed";
         readonly budgetUpdated: "Project budget updated";
+        readonly businessAssigned: "Business assigned";
+        readonly businessLocationArchived: "Business location archived";
+        readonly businessLocationCreated: "Business location created";
+        readonly businessLocationRestored: "Business location restored";
+        readonly businessLocationRevised: "Business location updated";
+        readonly businessUnassigned: "Business unassigned";
+        readonly cachedDataDeleted: "Cached data deleted";
         readonly checkScheduleArchived: "Check schedule archived";
         readonly checkScheduleAssigned: "Check schedule assigned";
         readonly checkScheduleCreated: "Check schedule created";
@@ -7549,49 +8093,179 @@ export type CoreMessages = {
         readonly checkScheduleRestored: "Check schedule restored";
         readonly checkScheduleUpdated: "Check schedule updated";
         readonly competitorAdded: "Competitor added";
+        readonly competitorAliasesUpdated: "Competitor aliases updated";
+        readonly competitorDetailsUpdated: "Competitor details updated";
+        readonly competitorManuallyAdded: "Competitor added manually";
+        readonly competitorMarketsUpdated: "Competitor markets updated";
         readonly competitorRemoved: "Competitor removed";
+        readonly competitorRenamed: "Competitor renamed";
+        readonly competitorSetupConfirmed: "Competitor setup confirmed";
+        readonly competitorSetupSkipped: "Competitor setup skipped";
+        readonly competitorSuggestionConfirmed: "Suggested competitor confirmed";
+        readonly competitorSuggestionDismissed: "Suggested competitor dismissed";
         readonly competitorUpdated: "Competitor updated";
+        readonly creationDenied: "Creation denied";
+        readonly dataCacheSettingsUpdated: "Data cache settings updated";
+        readonly deletionDenied: "Deletion denied";
         readonly deployHookCreated: "Deploy hook created";
         readonly deployHookDeleted: "Deploy hook deleted";
         readonly deployHookDisabled: "Deploy hook disabled";
         readonly deployHookRotated: "Deploy hook rotated";
+        readonly entityMatchConfirmed: "Business match confirmed";
+        readonly entityMatchRejected: "Business match rejected";
+        readonly entityRematched: "Business matched again";
         readonly experimentalModulesUpdated: "Experimental modules updated";
+        readonly firstRankCheckQueued: "First rank check queued";
         readonly inspectionBudgetUpdated: "Inspection budget updated";
+        readonly inviteAccepted: "Invitation accepted";
+        readonly inviteResent: "Invitation resent";
         readonly inviteRevoked: "Invitation revoked";
+        readonly keywordAdded: "Keyword added";
+        readonly keywordDeleted: "Keyword deleted";
+        readonly keywordDeviceAdded: "Keyword device added";
         readonly keywordExported: "Keywords exported";
+        readonly keywordFrequencyUpdated: "Keyword check frequency updated";
         readonly keywordImported: "Keywords imported";
+        readonly keywordsAdded: "Keywords added";
+        readonly keywordSaved: "Keyword saved";
         readonly keywordScheduleUpdated: "Keyword schedule updated";
+        readonly keywordsDeleted: "Keywords deleted";
+        readonly keywordsJsonExported: "Keywords exported to JSON";
+        readonly keywordsSpreadsheetExported: "Keywords exported to spreadsheet";
+        readonly keywordTagsAdded: "Keyword tags added";
+        readonly keywordTagsRemoved: "Keyword tags removed";
+        readonly keywordTagsUpdated: "Keyword tags updated";
+        readonly keywordTargetReset: "Keyword target URL reset";
+        readonly keywordTargetsCleared: "Keyword target URLs cleared";
+        readonly keywordTargetsUpdated: "Keyword target URLs updated";
+        readonly keywordUpdated: "Keyword updated";
+        readonly keywordVariantsAdded: "Keyword variants added";
+        readonly localMeasurementCancelled: "Local measurement cancelled";
+        readonly localMeasurementClaimed: "Local measurement claimed";
+        readonly localMeasurementCollected: "Local measurement collected";
+        readonly localMeasurementLaunched: "Local measurement started";
+        readonly localMeasurementReconciled: "Local measurement reconciled";
+        readonly localMeasurementTargetCreated: "Local measurement target created";
+        readonly localMonitorArchived: "Local monitor archived";
+        readonly localMonitorCreated: "Local monitor created";
+        readonly localMonitorQueued: "Local monitor queued";
+        readonly localMonitorScheduled: "Local monitor scheduled";
+        readonly localMonitorUpdated: "Local monitor updated";
+        readonly managementDenied: "Management access denied";
+        readonly matchingScopeSet: "Matching scope set";
+        readonly measurementDefinitionCaptured: "Measurement definition captured";
+        readonly measurementDefinitionConfigured: "Measurement definition configured";
         readonly memberInvited: "Member invited";
         readonly memberRemoved: "Member removed";
+        readonly memberRoleChanged: "Member role changed";
+        readonly meteringHistoryClosed: "Usage history closed";
+        readonly migrationAdvanced: "Migration advanced";
+        readonly migrationBegan: "Migration started";
         readonly migrationCancelled: "Migration cancelled";
+        readonly migrationCompleted: "Migration completed";
+        readonly migrationCreated: "Migration created";
+        readonly migrationFailed: "Migration failed";
         readonly migrationHoldCancelled: "Migration hold cancelled";
+        readonly migrationHoldCompletedRelease: "Migration hold released after import";
         readonly migrationHoldEnabled: "Migration hold enabled";
+        readonly migrationHoldExpired: "Migration hold expired";
+        readonly migrationHoldFailedRelease: "Migration hold released after failed import";
+        readonly migrationHoldReleased: "Migration hold released";
+        readonly migrationHoldStaleRelease: "Migration hold released after stalled job";
         readonly migrationPackageExported: "Migration package exported";
+        readonly migrationSessionCreated: "Migration session created";
         readonly migrationTokenCreated: "Migration token created";
+        readonly migrationTokenRegenerated: "Migration token regenerated";
+        readonly migrationTokenRevoked: "Migration token revoked";
+        readonly migrationTokenUsed: "Migration token used";
         readonly notificationPreferencesUpdated: "Notification preferences updated";
         readonly ownershipTransferred: "Project ownership transferred";
+        readonly pricingFeedbackSubmitted: "Pricing feedback submitted";
+        readonly projectCheckRequested: "Project check requested";
+        readonly projectCreated: "Project created";
         readonly projectDefaultsUpdated: "Project defaults updated";
+        readonly projectDefaultViewUpdated: "Project default view updated";
         readonly projectDeleted: "Project deleted";
         readonly projectDetailsUpdated: "Project details updated";
         readonly projectDomainUpdated: "Project domain updated";
+        readonly projectMarketAdded: "Project market added";
+        readonly projectMarketCreated: "Project market created";
+        readonly projectMarketPaused: "Project market paused";
+        readonly projectMarketRemoved: "Project market removed";
+        readonly projectMarketRestored: "Project market restored";
+        readonly projectMarketResumed: "Project market resumed";
+        readonly projectMarketsReconciled: "Project markets reconciled";
+        readonly projectMarketUpdated: "Project market updated";
+        readonly projectPresentationUpdated: "Project display updated";
+        readonly projectTransferRolledBack: "Project transfer rolled back";
+        readonly projectTransferStarted: "Project transfer started";
+        readonly projectUpdated: "Project updated";
+        readonly projectWebsiteUpdated: "Project website updated";
+        readonly providerAllocationUpdated: "Provider allocation updated";
         readonly providerConnected: "Provider connected";
+        readonly providerCostUpdated: "Provider cost updated";
         readonly providerDisconnected: "Provider disconnected";
+        readonly providerRateUpdated: "Provider rate updated";
         readonly providerSettingsUpdated: "Provider settings updated";
+        readonly providerSourceChanged: "Provider source changed";
+        readonly providerSourceChangedDetail: "Provider source changed: {provider} → {source}";
+        readonly providerSourceHosted: "credits";
+        readonly providerSourceOwn: "own credentials";
+        readonly providerStoredKeyDeleted: "Saved provider key deleted";
         readonly providerTested: "Provider connection tested";
+        readonly providerTestFailed: "Provider connection test failed";
+        readonly providerUpdated: "Provider updated";
+        readonly rankCheckCompleted: "Rank check completed";
+        readonly rankCheckDeferred: "Rank check deferred";
+        readonly rankCheckFailed: "Rank check failed";
         readonly rankCheckFrequencyUpdated: "Rank check frequency updated";
+        readonly rankCheckItemCancelled: "Check run item cancelled";
+        readonly rankCheckItemReclaimed: "Check run item reclaimed";
+        readonly rankCheckRecovered: "Rank check recovered";
+        readonly rankCheckRequested: "Rank check requested";
+        readonly rankCheckRunCancelled: "Check run cancellation requested";
+        readonly rankCheckRunDeleted: "Check run deleted";
+        readonly rankCheckRunLaunched: "Check run started";
+        readonly rankCheckRunning: "Rank check execution started";
+        readonly rankCheckRunRetried: "Check run retried";
+        readonly rankCheckRunStartedNow: "Check run started immediately";
+        readonly rankCheckStaleFailed: "Stalled rank check marked as failed";
+        readonly rankCheckStarted: "Rank check started";
+        readonly rankSnapshotExtended: "Rank snapshot extended";
+        readonly readDenied: "Read access denied";
+        readonly sampleDataInstalled: "Sample data installed";
+        readonly savedKeywordRemoved: "Saved keyword removed";
         readonly savedViewCreated: "Saved view created";
         readonly savedViewDeleted: "Saved view deleted";
+        readonly savedViewUpdated: "Saved view updated";
         readonly scheduledRankCheckSkipped: "Scheduled rank check skipped";
         readonly scheduledRankCheckSkippedOccurrence: "Skipped the {schedule} occurrence planned for {plannedFor}";
+        readonly searchDataSyncPaused: "Search data sync paused";
+        readonly searchDataSyncResumed: "Search data sync resumed";
+        readonly searchDataSyncRetried: "Search data sync retried";
         readonly searchDataSyncUpdated: "Search data sync updated";
+        readonly searchInsightsSyncStarted: "Search insights sync requested";
+        readonly signalNoteAdded: "Signal note added";
+        readonly signalNoteRemoved: "Signal note removed";
+        readonly signalRecorded: "Signal recorded";
         readonly signedIn: "Signed in";
+        readonly sitemapMonitorDisabled: "Sitemap monitor disabled";
+        readonly sitemapMonitorEnabled: "Sitemap monitor enabled";
+        readonly slackConnectionCreated: "Slack connection created";
+        readonly slackConnectionUpdated: "Slack connection updated";
         readonly tagCreated: "Tag created";
         readonly tagDeleted: "Tag deleted";
         readonly tagRenamed: "Tag renamed";
         readonly trackingScopeUpdated: "Tracking scope updated";
-        readonly unknown: "Recorded action: {action}";
-        readonly unknownMissing: "Recorded audit action";
+        readonly trafficSynced: "Traffic data synced";
+        readonly unknown: "Other activity";
+        readonly unknownMissing: "Other activity";
+        readonly updateDenied: "Update denied";
+        readonly usageDisplayUpdated: "Usage display updated";
         readonly webhookCreated: "Webhook created";
+        readonly webhookDeleted: "Webhook deleted";
+        readonly webhookUpdated: "Webhook updated";
+        readonly weeklyDigestSent: "Weekly report sent";
       };
       readonly open: "Open audit log";
       readonly operation: {
@@ -7856,6 +8530,7 @@ export type CoreMessages = {
       readonly title: "Data cache";
       readonly unavailable: "Cached results are unavailable. Retry loading the list.";
       readonly unknownKeyword: "Keyword metrics";
+      readonly weeks: "{count, plural, one {# week} other {# weeks}}";
     };
     readonly domainChange: {
       readonly afterConfirmation: "After you confirm";
@@ -8223,7 +8898,7 @@ export type CoreMessages = {
           readonly label: "API keys";
         };
         readonly applicationPlan: {
-          readonly keywords: "billing price subscription hosted beta self hosted";
+          readonly keywords: "billing price subscription cloud self hosted";
           readonly label: "Application plan";
         };
         readonly businessLocations: {
@@ -8458,6 +9133,9 @@ export type CoreMessages = {
       readonly frequencyMonthly: "Monthly";
       readonly frequencyPaused: "Paused";
       readonly frequencyWeekly: "Weekly";
+      readonly fullResults: "Full search results";
+      readonly fullResultsDescription: "Collects results up to Top {depth, number} for competitor comparisons. May use more credits or provider requests.";
+      readonly fullTop20Description: "Collects the requested Top 20 even when your site is found early. May use more credits or provider requests.";
       readonly location: "Location";
       readonly locationCity: "City";
       readonly locationClearSearch: "Clear location search";
@@ -8467,6 +9145,8 @@ export type CoreMessages = {
       readonly locationRegion: "Region";
       readonly locationRegionsAndCities: "Regions and cities";
       readonly locationSearching: "Searching locations...";
+      readonly positionOnly: "My position";
+      readonly positionOnlyDescription: "Stops once {domain} is found. Competitor results may be incomplete.";
       readonly previewAnchorsTooClose: "Schedules must run at least one hour apart.";
       readonly previewInvalid: "Cron expression could not be parsed.";
       readonly previewPending: "Calculating the next cron anchors...";
@@ -8474,18 +9154,18 @@ export type CoreMessages = {
       readonly previewTitle: "Next three cron anchors";
       readonly projectDomain: "the project domain";
       readonly readOnly: "Read-only";
+      readonly resultsCollection: "Results to collect";
       readonly saveError: "Check defaults could not be saved.";
       readonly saveValidation: "Check the highlighted settings before saving.";
       readonly searchTimezones: "Search time zones...";
       readonly serpDepth: "Default SERP depth";
       readonly serpDepthHelp: "How far down each result page a check reads.";
       readonly serpDepthWarning: "From the next check, keywords ranking past {depth, number} record as not found instead of their position. That gap stays in history.";
-      readonly stopOnMatch: "Stop checks at first domain match";
-      readonly stopOnMatchDescription: "On stops reading when {domain} first appears, recording the best position. Off reads the full configured depth.";
       readonly timezone: "Timezone";
       readonly timezoneHelp: "Anchors all check schedules to the selected local clock.";
       readonly timezoneInvalid: "Select a valid time zone.";
       readonly title: "Check defaults";
+      readonly visibilityDepthWarning: "Checks below Top 20 do not update Visibility.";
     };
     readonly inspection: {
       readonly dailyLimit: "Daily inspection limit";
@@ -8535,6 +9215,10 @@ export type CoreMessages = {
       };
       readonly title: "Measurement policy";
       readonly unknown: "Unknown";
+    };
+    readonly schedules: {
+      readonly description: "New keywords start without a schedule. Add them to a schedule for automatic checks.";
+      readonly manage: "Manage schedules";
     };
     readonly searchSync: {
       readonly actionError: "Search data sync action failed. Refresh the page and try again.";
@@ -8628,15 +9312,15 @@ export type CoreMessages = {
       readonly walletAuthority: "Your provider account or account credit wallet remains the balance authority. These limits do not represent an available balance.";
     };
     readonly plan: {
-      readonly answered: "Thanks, your answer helps us set the price.";
-      readonly benefitFour: "Provider accounts, quotas and billing stay directly with each provider.";
-      readonly benefitOne: "Free while the beta lasts, with usage limits and no payment method.";
+      readonly answered: "Thanks for your pricing feedback.";
+      readonly benefitFour: "Use your own provider accounts or optional Cloud credits.";
+      readonly benefitOne: "Cloud starts with a free trial without a payment card.";
       readonly benefitThree: "Nothing is charged without your confirmation.";
-      readonly benefitTwo: "Pricing will be announced before the beta ends.";
-      readonly cloudDescription: "Your hosted beta status and optional pricing feedback.";
+      readonly benefitTwo: "Cloud access and provider usage are billed separately.";
+      readonly cloudDescription: "Your Cloud plan and optional pricing feedback.";
       readonly feedbackRateLimited: "Too many requests. Please try again later.";
       readonly feedbackVerification: "Verification failed. Please try again.";
-      readonly freeBeta: "Free beta";
+      readonly freeBeta: "Cloud";
       readonly hostedTitle: "Hosted plan";
       readonly ownerOnly: "Only the project owner can send pricing feedback.";
       readonly priceInvalid: "Enter a whole-dollar amount from 1 to 9999.";
@@ -8653,13 +9337,25 @@ export type CoreMessages = {
     readonly provider: {
       readonly attentionBlocked: "Requests are blocked by a budget: {bound}. Affected budgets: {count, number}.";
       readonly attentionWarning: "Budget warning: {bound}. Affected budgets: {count, number}.";
+      readonly budgetDetails: "Details";
       readonly budgetDialog: {
         readonly activeSource: "Active: {source, select, credits {Credits} other {Your keys}}";
         readonly appBudget: "App & schedules";
         readonly appBudgetField: "{provider} app and schedules budget";
         readonly appColumnHelp: "Checks you start in the app and automatic scheduled checks.";
+        readonly availabilityReasons: {
+          readonly balance_mismatch: "The balance does not match this key or unit. Refresh to try again.";
+          readonly balance_stale: "Provider balance is out of date. Refresh the provider balance.";
+          readonly balance_unavailable: "Provider balance is unavailable. Refresh the provider balance.";
+          readonly budget_precision: "The suggested amount is not a valid whole budget unit.";
+          readonly owner_only: "Only the project owner can see usage for this key.";
+          readonly usage_unavailable: "Current usage is unavailable. Refresh to try again.";
+        };
+        readonly balanceAsOf: "As of";
         readonly balanceIncompatible: "This provider does not report a compatible balance. Enter a budget manually.";
+        readonly balanceShared: "This balance is shared across app checks and API & agents. Suggested limit = used this month + provider balance.";
         readonly balanceUnavailable: "A positive provider balance is unavailable. Enter a budget manually.";
+        readonly balanceWarning: "The remaining budget exceeds this provider account’s balance.";
         readonly cancel: "Cancel";
         readonly cents: "cents";
         readonly connect: "Connect a provider";
@@ -8669,7 +9365,7 @@ export type CoreMessages = {
         readonly creditsProgrammaticBudgetField: "{provider} credits API, MCP and SDK budget";
         readonly description: "Set a monthly budget for each provider. Using the provider balance includes this month's usage so the remaining budget matches the available balance.";
         readonly descriptionWithCredits: "Set monthly budgets for each provider. Your keys and credits have separate budgets. Using a balance includes this month's usage so the remaining budget matches the available balance.";
-        readonly empty: "No provider connected yet.";
+        readonly empty: "No data source configured yet.";
         readonly emptyAfterLink: "to set a monthly budget for it.";
         readonly invalidBudget: "Enter a valid monthly budget.";
         readonly invalidDecimal: "Enter a positive amount with up to two decimals.";
@@ -8685,11 +9381,13 @@ export type CoreMessages = {
         readonly programmaticBudget: "API & agents";
         readonly programmaticBudgetField: "{provider} API, MCP and SDK budget";
         readonly programmaticColumnHelp: "Requests from the API, MCP, SDK and CLI. Set it to protect against runaway agents.";
+        readonly providerAccount: "{provider} account";
         readonly providerColumn: "Provider";
         readonly refreshError: "Provider balance could not be refreshed. Enter a budget manually.";
         readonly refreshing: "Refreshing...";
+        readonly refreshingProviderBalance: "Refreshing provider balance…";
         readonly refreshProviderBalance: "Refresh provider balance";
-        readonly reloadAllocations: "Reload allocations";
+        readonly reloadAllocations: "Refresh";
         readonly remaining: "Remaining";
         readonly save: "Save";
         readonly saved: "Saved";
@@ -8711,10 +9409,14 @@ export type CoreMessages = {
         readonly useProviderBalance: "Use provider balance";
         readonly wholeUnits: "Enter a whole number of searches.";
       };
-      readonly budgetUsed: "Budget used";
       readonly connectionSettings: "Connection settings";
       readonly description: "Set how much each provider can spend in this project each month.";
       readonly editBudget: "Edit budgets";
+      readonly noProviders: "No providers using this source.";
+      readonly ownKeysDescription: "Usage and estimated spend on the connected provider account. Bisibility Credits are not charged.";
+      readonly ownKeysTitle: "Your own keys (BYOK)";
+      readonly projectBudget: "Project budget";
+      readonly providerUnavailable: "No budget data for this provider.";
       readonly title: "Budgets";
     };
   };
@@ -8977,6 +9679,37 @@ export type CoreMessages = {
     };
   };
   readonly shared: {
+    readonly actionPayment: {
+      readonly addCredits: "Add credits";
+      readonly blocked: "This option isn’t available. Choose another or check your account.";
+      readonly byok: "Your provider account";
+      readonly byokRoute: "On your {provider} key";
+      readonly cacheWindow: "Result stays free to reopen for {duration}";
+      readonly cancel: "Cancel";
+      readonly changeCache: "Change";
+      readonly confirm: "Start";
+      readonly description: "Check the price before you start.";
+      readonly expired: "This price expired. Refresh to check the current cost.";
+      readonly forecast: "Forecast";
+      readonly forecastRisk: "Actual provider costs may exceed this forecast.";
+      readonly freeUntil: "Free from cache until {date}";
+      readonly insufficientCredits: "Not enough credits.";
+      readonly loading: "Checking price…";
+      readonly maximum: "Maximum: {amount}";
+      readonly originalCharge: "Original lookup:";
+      readonly payer: "Pay with";
+      readonly pending: "Charge pending";
+      readonly platform: "Credits";
+      readonly refreshEstimate: "Refresh estimate";
+      readonly refreshPrice: "Refresh price";
+      readonly requestUnconfirmed: "Check the previous request before starting again.";
+      readonly reviewPrice: "Review price";
+      readonly title: "Review cost";
+      readonly total: "Total";
+      readonly unavailable: "Payment details unavailable";
+      readonly unknown: "Charge not confirmed";
+      readonly wallet: "Available: {amount}";
+    };
     readonly analyticsConsent: {
       readonly actions: {
         readonly acceptAll: "Accept all";
@@ -9302,10 +10035,14 @@ export type CoreMessages = {
         readonly reactivateAccountDangerLabel: "Reactivate account";
         readonly reactivateAccountTitle: "Reactivate account";
         readonly reactivateAccountToastMessage: "Account action requested";
-        readonly removeIntegrationBody: "Rank checks will stop until another SERP provider is connected. Stored credentials are removed from this instance.";
+        readonly removeIntegrationBody: "This removes this provider connection and its stored credentials. Checks can continue only through another enabled source.";
         readonly removeIntegrationDangerLabel: "Disconnect provider";
         readonly removeIntegrationTitle: "Disconnect provider";
         readonly removeIntegrationToastMessage: "Provider disconnected";
+        readonly removeProviderKeyBody: "This removes the saved key and disconnects this provider. Choose another source to keep using it.";
+        readonly removeProviderKeyDangerLabel: "Remove key";
+        readonly removeProviderKeyTitle: "Remove saved key?";
+        readonly removeProviderKeyToastMessage: "Key removed";
         readonly removeSampleDataBody: "This deletes the sample project and its generated demo data. Your other projects are not affected.";
         readonly removeSampleDataDangerLabel: "Remove sample data";
         readonly removeSampleDataTitle: "Remove sample data";
@@ -9505,7 +10242,7 @@ export type CoreMessages = {
       readonly mobile: "Mobile";
       readonly percentagePoints: "{value} pp";
       readonly providerConnected: "A ranking provider is connected. This read does not launch checks.";
-      readonly providerMissing: "No ranking provider is connected. Stored observations remain readable.";
+      readonly providerMissing: "No ranking data source is configured. Stored observations remain readable.";
       readonly reloadRevision: "Review current preference revision";
       readonly reloadUnavailable: "A newer compatible preference is unavailable. Reload the page to review its scope.";
       readonly remember: "Remember this comparison";
@@ -9650,6 +10387,12 @@ export type CoreMessages = {
       };
       readonly widgetUnavailable: "This section's stored report is unavailable.";
     };
+    readonly durationUnits: {
+      readonly days: "{count, plural, one {# day} other {# days}}";
+      readonly hours: "{count, plural, one {# hour} other {# hours}}";
+      readonly minutes: "{count, plural, one {# minute} other {# minutes}}";
+      readonly weeks: "{count, plural, one {# week} other {# weeks}}";
+    };
     readonly emergencyRecovery: {
       readonly error: {
         readonly backToApp: "Back to app";
@@ -9706,7 +10449,7 @@ export type CoreMessages = {
       readonly notices: {
         readonly budgetExhausted: "Monthly rank-check budget reached.";
         readonly noneReady: "No keywords are ready for a first check.";
-        readonly providerMissing: "Connect a SERP provider before running checks.";
+        readonly providerMissing: "Choose a data source before running checks.";
         readonly raiseBudget: "Raise the budget";
         readonly reviewUsage: "Review usage";
         readonly sampleProject: "Sample projects don't run real checks.";
@@ -10372,6 +11115,8 @@ export type CoreMessages = {
         readonly needs_reauth: "The configured connection needs authorization.";
         readonly no_provider: "No connected provider is available.";
         readonly nothing_eligible: "No targets are eligible for this manual run.";
+        readonly payment_already_executed: "This payment was already used for a run.";
+        readonly payment_unavailable: "Payment details for this provider are unavailable. Check the payment source in Usage.";
         readonly preview_expired: "The quote expired. Preview again.";
         readonly preview_failed: "Could not read the quote. Your draft is retained.";
         readonly preview_mismatch: "Scope or price changed. Preview again.";
@@ -10701,16 +11446,17 @@ export type CoreMessages = {
     };
     readonly providerAccess: {
       readonly action: "Open Integrations";
-      readonly connect: "Connect a supporting provider to unlock these fields.";
-      readonly connectAction: "Connect provider";
-      readonly emptyDescription: "This feature needs a supporting provider. Connect one in Integrations to run a search.";
-      readonly emptyTitle: "Connect a provider to get started";
-      readonly reconnect: "Reconnect your provider to unlock these fields.";
+      readonly askAdmin: "Ask a project admin to choose a data source before checks can start.";
+      readonly connect: "Choose a data source to use these fields.";
+      readonly connectAction: "Choose a data source";
+      readonly emptyDescription: "Choose a supported data source in Integrations to run a search.";
+      readonly emptyTitle: "Choose a data source";
+      readonly reconnect: "Reconnect the selected data source to use these fields.";
       readonly reconnectAction: "Reconnect provider";
-      readonly reconnectDescription: "Reconnect your provider in Integrations before running another search.";
-      readonly reconnectTitle: "Reconnect to load new results";
+      readonly reconnectDescription: "Reconnect the selected data source in Integrations before running another search.";
+      readonly reconnectTitle: "Reconnect the selected data source";
       readonly supported: "Supported providers: {providers}.";
-      readonly unavailable: "No supporting provider is available for this feature.";
+      readonly unavailable: "No supported data source is available for this feature.";
     };
     readonly rankPreflight: {
       readonly alreadyScheduled: "Already scheduled";
@@ -10730,6 +11476,7 @@ export type CoreMessages = {
       readonly devices: "{count, plural, one {# device} other {# devices}}";
       readonly duplicate: "Every selected keyword is being checked by another run right now, so there is nothing to start.";
       readonly editBudget: "Edit budget";
+      readonly futureScheduledCheck: "{count, plural, one {# of these keywords has} other {# of these keywords have}} a check planned for {time}. You can also check now.";
       readonly keywordsArchived: "These keywords have been archived. Refresh the page to choose another scope.";
       readonly marketDescription: "Includes every tracked keyword and device in this market, regardless of table filters or page. Your tracking schedule stays the same.";
       readonly marketInactive: "This market is no longer active. Resume it before starting a check.";
@@ -10737,8 +11484,9 @@ export type CoreMessages = {
       readonly measurementPolicy: "Measurement policy";
       readonly measurementPolicyUnconfigured: "Configure measurement policy before running new checks.";
       readonly measurementPolicyUnsupported: "Measurement policy no longer matches the current adapters. Review and configure it again.";
+      readonly nextScheduledCheck: "Next scheduled check";
       readonly noProvider: "No provider";
-      readonly noProviderBlocked: "No provider connected, so there is nowhere to send these targets. Your own key, billed to you directly.";
+      readonly noProviderBlocked: "Choose a data source in Integrations before running these checks.";
       readonly nothingToCheck: "No keywords are available to check in this scope.";
       readonly openIntegrations: "Open Integrations";
       readonly openRun: "Open run";
@@ -10746,6 +11494,7 @@ export type CoreMessages = {
       readonly overlapKeepHint: "Starting this run pays twice for these positions.";
       readonly overlapMessage: "{count, plural, one {# of these keywords is} other {# of these keywords are}} also in a run that is {status, select, planned {planned for {time}} running {running} cancelling {cancelling} blocked {blocked} other {queued}}.";
       readonly overlapMore: "+{count, plural, one {# more run} other {# more runs}}";
+      readonly paymentUnavailable: "Payment details for this provider are unavailable. Check the payment source in Usage.";
       readonly previewChanged: "Run details changed. Refresh to review the current estimate.";
       readonly pricePerTarget: "price per target";
       readonly primaryProvider: "Primary provider";
@@ -10906,12 +11655,18 @@ export type CoreMessages = {
         readonly hardLimit: "Hard limit";
         readonly limit: "Limit";
         readonly loading: "Loading budgets.";
+        readonly noLimit: "No limit";
         readonly noReset: "No reset";
         readonly ok: "Within budget";
+        readonly overBy: "Over by {amount}";
+        readonly perMonth: "/ month";
         readonly redacted: "This shared budget applies, but its figures are hidden from you.";
         readonly remaining: "Remaining";
         readonly reserved: "Reserved";
+        readonly reservedHint: "Held for running or queued checks. Updated automatically; not editable.";
+        readonly reservedInfo: "About reserved usage";
         readonly resets: "Resets";
+        readonly setLimit: "Set limit";
         readonly unavailable: "Unavailable";
         readonly unknown: "Unknown";
         readonly unlimited: "Unlimited";
@@ -11094,50 +11849,6 @@ export type CoreMessages = {
       readonly success: "Package exported and downloaded.";
       readonly title: "Export project data";
     };
-    readonly betaBanner: {
-      readonly backupLoadError: "Project backup counts could not be loaded.";
-      readonly coverage: "What beta covers";
-      readonly detail: "Data recovery isn't guaranteed yet. Keep a recent export.";
-      readonly dismiss: "Dismiss hosted beta banner";
-      readonly exportData: "Export data";
-      readonly lead: "Hosted beta:";
-      readonly loading: "Loading...";
-    };
-    readonly betaCoverage: {
-      readonly close: "Close";
-      readonly covered: "Covered";
-      readonly coveredItems: {
-        readonly export: "Export is available at any time, in full fidelity.";
-        readonly history: "Full history is retained for the whole beta, never trimmed.";
-        readonly providerOwnership: "Your provider keys and quotas stay yours - no markup, no resale.";
-        readonly scheduled: "Rank checks run on schedule, on the same engine as self-host.";
-      };
-      readonly end: {
-        readonly detail: "30 days notice before pricing. Nothing charged without your confirmation. Self-host stays available.";
-        readonly title: "When the beta ends";
-      };
-      readonly exportData: "Export data";
-      readonly notYet: "Not yet";
-      readonly notYetItems: {
-        readonly migration: "No guaranteed migration path between hosted regions.";
-        readonly restore: "No restore guarantee. If we lose data, we cannot roll you back.";
-        readonly support: "Support is best-effort over email, with no response target.";
-        readonly uptime: "No uptime SLA. Maintenance can interrupt checks without notice.";
-      };
-      readonly responsibilities: {
-        readonly ours: {
-          readonly detail: "Nightly snapshots are kept for 7 days on a best-effort basis. A small team runs this open beta, so there is no on-call rota and no incident notice you can rely on: assume you will notice an outage before we do.";
-          readonly title: "On our side";
-        };
-        readonly title: "Who does what";
-        readonly yours: {
-          readonly detail: "Keep a recent export. It is the copy fully under your control and can be restored into self-host.";
-          readonly title: "On your side";
-        };
-      };
-      readonly subtitle: "Hosted beta policy";
-      readonly title: "What the hosted beta covers";
-    };
     readonly commandPalette: {
       readonly actionItems: {
         readonly addKeyword: "Rank Tracker: Add keyword";
@@ -11230,7 +11941,7 @@ export type CoreMessages = {
         readonly preferences: "Theme and personal defaults.";
         readonly projectContext: "Business, audience, products and goals for your agents.";
         readonly promptExplorer: "Compare synthetic prompt tests across supported models.";
-        readonly runs: "Rank checks and Search Console imports for this project.";
+        readonly runs: "Rank checks, AI tracking and Search Console imports for this project.";
         readonly searchConsole: "What Google reported, what it withheld, and what you keep.";
         readonly security: "Password, sessions and account protection.";
         readonly siteAudit: "Crawl your project site and inspect issues by URL.";
@@ -11370,7 +12081,7 @@ export type CoreMessages = {
           readonly budgetWithoutAmounts: "Usage needs review. Check budget and unresolved accounting before trying again.";
           readonly keywordArchived: "This keyword was archived before the check started, so it was stopped before it cost anything.";
           readonly marketInactive: "This keyword's market is paused, so the check was stopped before it cost anything.";
-          readonly noProvider: "Connect or reconnect a provider to start this run.";
+          readonly noProvider: "Review the selected data source in Integrations to start this run.";
           readonly providerUnavailable: "The provider isn't reachable right now. The run starts on its own once it reconnects.";
           readonly waiting: "This run is waiting to start. It will continue automatically when it can.";
           readonly workerCloud: "The background worker isn't reachable right now. The run starts on its own once it reconnects.";
@@ -11405,6 +12116,12 @@ export type CoreMessages = {
         readonly waiting: "waiting";
       };
       readonly viewAll: "View all runs";
+    };
+    readonly planStatus: {
+      readonly pro: "Pro";
+      readonly trial: "Trial";
+      readonly trialDays: "{days, plural, one {Trial · # day left} other {Trial · # days left}}";
+      readonly trialDaysShort: "{days, plural, one {Trial · # day} other {Trial · # days}}";
     };
     readonly userMenu: {
       readonly accountMenu: "Account menu";

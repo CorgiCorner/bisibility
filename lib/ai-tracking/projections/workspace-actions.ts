@@ -33,7 +33,15 @@ export interface TrackingWorkspaceActions {
     input: unknown,
     member?: string,
   ) => Promise<TrackingWorkspaceData>;
-  preview: (promptIds: string[], configurations: SourceConfiguration[]) => Promise<TrackingPreview>;
+  preview: (
+    promptIds: string[],
+    configurations: SourceConfiguration[],
+    payment?: {
+      paymentScope: "manual" | "recurring";
+      paymentRecurrence?: { cron: string; timezone: string };
+      paymentScheduleId?: string;
+    },
+  ) => Promise<TrackingPreview>;
   launch: (promptIds: string[], preview: TrackingPreview) => Promise<TrackingWorkspaceData>;
   runs: (cursor?: string) => Promise<{ items: TrackingRunRow[]; nextCursor: string | null }>;
   samples: (

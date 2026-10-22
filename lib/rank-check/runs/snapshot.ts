@@ -1,4 +1,5 @@
 import { projectRunBudgetAmounts } from "@/lib/rank-check/runs/budget-presentation";
+import { rankRunPaymentReceipt } from "./payment-receipt";
 import "server-only";
 
 import { nativeEstimateFromSelection } from "@/lib/cost-estimate/native-usage";
@@ -111,7 +112,9 @@ async function operationForRun(
     skipped: run.skippedCount,
     total: run.totalCount,
   };
+  const payment = await rankRunPaymentReceipt(run);
   const operation = {
+    ...(payment ? { payment } : {}),
     blockedReason: run.blockedReason,
     budget: run.blockedReason === "budget_exhausted" ? budget : null,
     costCents: ledgerActualCostCents(ledger, run.costCents),

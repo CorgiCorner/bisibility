@@ -1,8 +1,10 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import sharedMessages from "@/messages/core/en/shared.json";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
+  useFormatter: () => ({ dateTime: (value: unknown) => String(value) }),
   useLocale: () => "en",
   useTranslations: (namespace: string) => (key: string, values?: { providers: string }) =>
     namespace === "shared.providerAccess"
@@ -32,25 +34,24 @@ describe("workspace without usable provider credentials", () => {
         />,
       );
       expect(
-        screen.getByText("Connect a supporting provider to unlock these fields."),
+        screen.getByText("Choose a supported data source in Integrations to run a search."),
       ).toBeVisible();
-      expect(screen.getAllByText("Supported providers: Fixture AI provider.")).toHaveLength(2);
-      const emptyPanel = screen.getByRole("region", { name: "Connect a provider to get started" });
+      expect(screen.getAllByText("Supported providers: Fixture AI provider.")).toHaveLength(1);
+      const emptyPanel = screen.getByRole("region", { name: "Choose a data source" });
       expect(within(emptyPanel).getAllByRole("link")).toHaveLength(1);
-      expect(within(emptyPanel).getByRole("link", { name: "Connect provider" })).toHaveAttribute(
-        "href",
-        "/app/prj_example/integrations",
-      );
+      expect(
+        within(emptyPanel).getByRole("link", { name: "Choose a data source" }),
+      ).toHaveAttribute("href", "/app/prj_example/integrations");
       expect(screen.queryByText("noSource")).not.toBeInTheDocument();
       expect(screen.queryByText("estimateRequired")).not.toBeInTheDocument();
       expect(screen.getByRole("textbox", { name: "brand" })).toBeDisabled();
       expect(screen.getByRole("textbox", { name: "domain" })).toBeDisabled();
-      expect(screen.getByRole("link", { name: "Open Integrations" })).toHaveAttribute(
+      expect(screen.getByRole("link", { name: "Choose a data source" })).toHaveAttribute(
         "href",
         "/app/prj_example/integrations",
       );
       expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
-      expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+      expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
       expect(screen.getByRole("link", { name: /Saved report/ })).toBeVisible();
       fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
       expect(analyze).not.toHaveBeenCalled();

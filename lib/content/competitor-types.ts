@@ -232,12 +232,12 @@ export function compareRows(opts: {
     },
     {
       ...COMPARE_CRITERIA.infrastructure,
-      bisibility: cell("paid", "You, or bisibility on the hosted beta"),
+      bisibility: cell("paid", "You, or bisibility on Cloud"),
       competitor: opts.infrastructure ?? cell("paid", "Managed"),
     },
     {
       ...COMPARE_CRITERIA.hostedPlan,
-      bisibility: featureCell("hostedCloud", "Open beta"),
+      bisibility: featureCell("hostedCloud", "$3/month after a free trial"),
       competitor: cell("paid", opts.hostedPlan),
     },
     {

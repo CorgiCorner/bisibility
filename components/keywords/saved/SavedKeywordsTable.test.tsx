@@ -115,7 +115,11 @@ describe("SavedKeywordsTable", () => {
     expect(screen.getByRole("table", { name: "Saved keywords" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("checkbox", { name: "Select visible rows" }));
 
-    expect(screen.getByText("3 selected")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("toolbar", { name: "Actions for selected keywords" })).getByText(
+        "3 selected",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "Select visible rows" })).toBeChecked();
   });
 
@@ -139,8 +143,16 @@ describe("SavedKeywordsTable", () => {
       fireEvent.click(screen.getByRole("checkbox", { name: `Select ${row.text}` }));
     }
 
-    expect(screen.getByText("3 selected")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("toolbar", { name: "Actions for selected keywords" })).getByText(
+        "3 selected",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText("tracking all 3 adds $0.90/mo at daily checks")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Research" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Track 3 $0.90/mo" }));
 
     expect(screen.getByRole("textbox", { name: "Keywords" })).toHaveValue(
@@ -184,7 +196,9 @@ describe("SavedKeywordsTable", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Track 3, 900 operations/mo" })).toBeInTheDocument();
     expect(screen.getByText("~900 operations/mo")).toBeInTheDocument();
-    expect(screen.getByText("3 selected").closest("div")?.textContent).not.toMatch(/\$/);
+    expect(
+      screen.getByRole("toolbar", { name: "Actions for selected keywords" }).textContent,
+    ).not.toMatch(/\$/);
   });
 
   it("promotes mixed saved pairs through the registry selector and consumes only selected pairs", async () => {
@@ -327,6 +341,14 @@ describe("SavedKeywordsTable", () => {
     expect(screen.queryByText("1 selected")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("row", { name: /standing desk mat/i }));
-    expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("toolbar", { name: "Actions for selected keywords" })).getByText(
+        "1 selected",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Research" })).toHaveAttribute(
+      "href",
+      `${appPath("prj_1", "keyword-research")}?seed=standing+desk+mat&location=US`,
+    );
   });
 });

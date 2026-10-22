@@ -114,6 +114,7 @@ describe("runCheck", () => {
       completedCheckCount: 3,
       connection: { credentials: { login: "user", password: "pass" }, provider: "dataforseo" },
       depth: 20,
+      stopOnMatch: false,
       keyword: {
         device: "desktop",
         domain: "example.com",
@@ -135,7 +136,7 @@ describe("runCheck", () => {
       domain: "example.com",
       keyword: "rank tracker",
       location: US_LOCATION,
-      stopOnMatch: true,
+      stopOnMatch: false,
     });
     expect(result.rankCheck).toMatchObject({
       billingUnits: 4,

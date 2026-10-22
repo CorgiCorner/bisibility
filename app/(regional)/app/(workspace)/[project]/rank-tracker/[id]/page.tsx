@@ -6,7 +6,6 @@ import { KeywordPendingDetail } from "@/components/keywords/KeywordPendingDetail
 import { KeywordTrafficCard } from "@/components/keywords/KeywordTrafficCard";
 import { RetrievedResultsCard } from "@/components/keywords/RetrievedResultsCard";
 import { loadRankTrackerCostContext } from "@/components/keywords/rank-tracker-cost-context";
-import { ProviderComparisonCard } from "@/components/provider-comparison/ProviderComparisonCard";
 import { PageContent } from "@/components/shell/PageContent";
 import { BackLink } from "@/components/ui/BackLink";
 import { Card } from "@/components/ui/Card";
@@ -14,7 +13,7 @@ import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
 import { createKeywordAlertRule } from "@/lib/actions/alerts";
-import { extendSerpSnapshot } from "@/lib/actions/extend-snapshot";
+import { extendSerpSnapshot, previewSerpSnapshotExtension } from "@/lib/actions/extend-snapshot";
 import { updateKeyword } from "@/lib/actions/keyword";
 import { runCheckNow } from "@/lib/actions/rankCheck";
 import { loadRetrievedResults } from "@/lib/actions/retrieved-results";
@@ -151,6 +150,7 @@ export default async function KeywordDetailPage({
       key={`${newestResults?.checkId}:${newestResults?.tier === "full" ? `${newestResults.extension?.reason}:${newestResults.extension?.nextStart}:${newestResults.extension?.pages.at(-1)?.fetchedAt}` : newestResults?.tier}`}
       projectRef={publicId}
       extendSnapshotAction={canUpdateKeyword ? extendSerpSnapshot : undefined}
+      previewSnapshotExtensionAction={canUpdateKeyword ? previewSerpSnapshotExtension : undefined}
       competitors={competitors}
       ownDomain={readable.project.domain ?? ""}
       entries={storedChecks}
@@ -162,16 +162,6 @@ export default async function KeywordDetailPage({
       }}
       retentionDays={getRankCheckRawRetentionDays()}
       timeZone={costContext?.timezone ?? "UTC"}
-    />
-  );
-
-  const providerComparison = (
-    <ProviderComparisonCard
-      key={id}
-      projectRef={publicId}
-      keywordRef={id}
-      canLaunch={canUpdateKeyword}
-      timeZone={historyTimeZone}
     />
   );
 
@@ -221,7 +211,6 @@ export default async function KeywordDetailPage({
             updateKeywordAction={updateKeyword}
           />
           {retrievedResultsCard}
-          {providerComparison}
           <KeywordTrafficCard
             canSync={canSyncTraffic}
             syncTrafficAction={syncProjectTraffic}
@@ -255,7 +244,6 @@ export default async function KeywordDetailPage({
         />
         {positionHistory}
         {retrievedResultsCard}
-        {providerComparison}
         <KeywordTrafficCard
           canSync={canSyncTraffic}
           syncTrafficAction={syncProjectTraffic}

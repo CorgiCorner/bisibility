@@ -289,4 +289,43 @@ describe("backlinks REST handlers", () => {
       expect.anything(),
     );
   });
+  it("pins the selected payment option and consent for an appended page", async () => {
+    const response = await postBacklinkRows(
+      context("POST", "", {
+        target: "example.com",
+        target_scope: "site",
+        include_subdomains: true,
+        snapshot_ref: "revision-a",
+        limit: 100,
+        estimate_only: true,
+        payment_option_id: "option-a",
+        accepted_payment: { quote_token: "signed-consent" },
+        require_payment: true,
+      }),
+      "prj_1",
+    );
+    expect(response.status).toBe(200);
+    expect(mocks.loadMore).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        estimateOnly: true,
+        paymentOptionId: "option-a",
+        acceptedPayment: { quoteToken: "signed-consent" },
+        requirePayment: true,
+      }),
+    );
+  });
+  it("projects the shared payment discriminator for executed receipts", async () => {
+    const payment = {
+      actionId: "actual",
+      quoteId: "quote",
+      state: "settled",
+      charge: { value: "0.02", unit: { kind: "currency", code: "USD" }, certainty: "measured" },
+    };
+    mocks.analyze.mockResolvedValue({ ...snapshot, payment });
+    const response = await getBacklinks(context("GET", "?target=example.com"), "prj_1");
+    expect(await response.json()).toMatchObject({
+      data: { payment: { kind: "receipt", action_id: "actual" } },
+    });
+  });
 });

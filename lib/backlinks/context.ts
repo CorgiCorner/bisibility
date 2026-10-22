@@ -1,5 +1,5 @@
 import "server-only";
-
+import { selectActionPaymentCandidate } from "@/lib/action-payment/options";
 import { prisma } from "@/lib/db/prisma";
 import { getSerpProvider } from "@/lib/providers/registry";
 import type { SerpProvider } from "@/lib/providers/types";
@@ -9,10 +9,18 @@ export async function backlinksProject(projectId: string) {
   return prisma.project.findFirst({
     select: {
       id: true,
+      ownerId: true,
       lookupCacheTtlSeconds: true,
       providerConnections: {
         orderBy: providerChainOrderBy(),
-        select: { credentialsEncrypted: true, id: true, provider: true },
+        select: {
+          credentialsEncrypted: true,
+          id: true,
+          publicId: true,
+          provider: true,
+          credentialSource: true,
+          updatedAt: true,
+        },
         where: providerChainWhere("serp"),
       },
       publicId: true,
@@ -37,8 +45,8 @@ function supportsBacklinks(provider: SerpProvider): provider is BacklinksProvide
   );
 }
 
-export function backlinksSource(project: BacklinksProject, preferredProvider?: string) {
-  const eligible = project.providerConnections.flatMap((connection) => {
+export function backlinksSources(project: BacklinksProject) {
+  return project.providerConnections.flatMap((connection) => {
     try {
       const provider = getSerpProvider(connection.provider);
       return supportsBacklinks(provider) ? [{ connection, provider }] : [];
@@ -46,10 +54,17 @@ export function backlinksSource(project: BacklinksProject, preferredProvider?: s
       return [];
     }
   });
-  return (
-    eligible.find(({ provider }) => provider.id === preferredProvider) ??
-    (preferredProvider ? undefined : eligible[0])
+}
+
+export function backlinksSource(
+  project: BacklinksProject,
+  preferredProvider?: string,
+  paymentOptionId?: string,
+) {
+  const eligible = backlinksSources(project).filter(
+    ({ provider }) => !preferredProvider || provider.id === preferredProvider,
   );
+  return selectActionPaymentCandidate(eligible, undefined, paymentOptionId, "backlinks");
 }
 
 export type BacklinksSource = NonNullable<ReturnType<typeof backlinksSource>>;

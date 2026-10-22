@@ -184,7 +184,9 @@
       "analyticsDescription": "Conexión con {provider} para enriquecer con datos propios.",
       "localDescription": "Añade [seq:5,15,15,4] para elegir las posiciones que se devuelven para una palabra clave.",
       "trafficNoSource": "Ninguna fuente de analítica ha terminado correctamente. Revisa las credenciales del proveedor y los registros del worker.",
-      "trafficUpdated": "Se han actualizado {keywords, number} instantáneas de palabras clave y {pages, number} de páginas."
+      "trafficUpdated": "Se han actualizado {keywords, number} instantáneas de palabras clave y {pages, number} de páginas.",
+      "manageKey": "Gestionar clave",
+      "removeKey": "Eliminar clave"
     },
     "meta": {
       "labels": {

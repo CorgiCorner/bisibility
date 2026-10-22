@@ -15,7 +15,7 @@ function renderTimeline() {
       canMutate={false}
       operations={[]}
       page={{
-        counts: { rankChecks: 8, searchConsole: 0, total: 8 },
+        counts: { aiTracking: 0, rankChecks: 8, searchConsole: 0, total: 8 },
         nextCursor: "next-page",
         runs: timelineFixtureRuns,
       }}
@@ -50,8 +50,8 @@ describe("run timeline", () => {
     renderTimeline();
     fireEvent.click(screen.getByRole("button", { name: /When/ }));
     expect(routerMock.push).toHaveBeenCalledWith(`/app/${timelineProjectRef}/runs?order=desc`);
-    expect(screen.getByRole("link", { name: "Waiting to start" })).toHaveAttribute(
-      "href",
+    fireEvent.click(screen.getByRole("radio", { name: "Waiting to start" }));
+    expect(routerMock.push).toHaveBeenLastCalledWith(
       `/app/${timelineProjectRef}/runs?section=upcoming`,
     );
     expect(screen.getByRole("link", { name: "Next page" })).toHaveAttribute(

@@ -19,6 +19,7 @@ export function OverviewHealthBanners({
     if (!latest) return null;
     const values = { keyword: latest.keyword };
     const code = providerFailurePresentation(latest.errorCode, latest.error).code;
+    if (code === "provider_capacity_unavailable") return t("providerCapacityUnavailableDetail");
     if (code === "provider_billing") return t("providerBillingDetail", values);
     if (code === "provider_account_restricted") return t("providerAccountRestrictedDetail", values);
     if (code === "provider_auth") return t("providerAuthDetail", values);

@@ -8,7 +8,7 @@
     "consumerScrapersMeasureTheConsumerSurfaceModelAPI": "コンシューマー版スクレイパーは、コンシューマー向けのサービスを測定します。モデルAPIの回答は別のソースです。プロバイダーのデータセットは、ライブ追跡のサンプルではありません。実際のモデルやロケールが不明のままになる場合があります。",
     "previewConfigurationAndCost": "設定と費用を確認",
     "budgetAndCredentialsAreCheckedAgainBeforeLaunch": "実行前に予算と認証情報を再確認します。スケジュールは初期状態で無効です。",
-    "approveAndQueueRun": "承認して実行をキューに追加",
+    "approveAndQueueRun": "チェックを実行",
     "configureARun": "実行を設定",
     "exactProviderModelIdentifier": "プロバイダーの正確なモデル識別子",
     "iApproveThisRunAndTheProviderActual": "この実行とプロバイダーの実際の費用を承認します",

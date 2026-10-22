@@ -43,7 +43,7 @@ function RunsNavigation({ active }: Readonly<{ active: "runs" | "upcoming" | "sc
             canMutate
             operations={[]}
             page={{
-              counts: { rankChecks: 0, searchConsole: 0, total: 0 },
+              counts: { aiTracking: 0, rankChecks: 0, searchConsole: 0, total: 0 },
               nextCursor: null,
               runs: [],
             }}

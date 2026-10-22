@@ -50,6 +50,7 @@ export function RunChecksSplitButton({
         actionLabel={
           checksRunning ? t("starting") : t("actionWithDepth", { action, depth: selectionLabel })
         }
+        compactActionLabel={checksRunning ? t("starting") : action}
         copy={{
           changeDefault: t("changeDefault"),
           depthMenu: t("depthMenu"),
@@ -65,6 +66,7 @@ export function RunChecksSplitButton({
         }
         onDepthChange={onDepthChange}
         size="xs"
+        variant="primary"
         spinning={checksRunning}
       />
     </ProjectReadOnlyTooltip>

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
 import { centsToDollars } from "@/lib/format/currency";
 import { createUserDateTimeFormatter } from "@/lib/format/user-datetime";
-import { projectBudgetCapCents } from "@/lib/metering/project-budget-read";
+import { rankCheckBudgetCapCents } from "@/lib/metering/rank-check-budget-read";
 import { monthlySpendCents } from "@/lib/metering/usage-read";
 import { monthUtcRange } from "@/lib/metering/utc-window";
 import { DEFAULT_INSPECTION_DAILY_LIMIT } from "@/lib/presence/constants";
@@ -177,7 +177,7 @@ export async function getSettings(projectId: string, options: { dateFormat?: Dat
         : LIST_PROVIDER_RATE_CONTEXT,
     ) ?? 0;
   const completedMonthChecks = monthChecks.filter((check) => check.status === "completed");
-  const capCents = await projectBudgetCapCents(project.id);
+  const capCents = await rankCheckBudgetCapCents(project.id);
   const segmentCounts = segmentCountByTag(savedViews);
   return {
     apiKeys: fullProject.apiKeys.map((apiKey) => ({

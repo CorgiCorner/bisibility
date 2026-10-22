@@ -164,6 +164,8 @@ const simpleKeys = [
   "blocks.duplicate",
   "blocks.budget_blocked",
   "blocks.nothing_eligible",
+  "blocks.payment_already_executed",
+  "blocks.payment_unavailable",
   "blocks.cost_limit_exceeded",
   "blocks.sample_project",
   "blocks.preview_failed",

@@ -2,7 +2,8 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { ProjectMarketStatus } from "@/lib/generated/prisma/client";
-import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
+import { keywordMembershipSelect } from "@/lib/keywords/membership-select";
+import { createKeywordMembershipProjector } from "@/lib/keywords/schedule-membership";
 import { decryptProviderCredentials } from "@/lib/providers/crypto";
 import { requireReadableProject } from "./_auth";
 import { activeApiKeyWhere } from "./api-key-settings";
@@ -63,37 +64,20 @@ export async function getOnboardingTrackingStartedAt(projectId: string) {
 
 export async function getOnboardingNextCheckAt(projectId: string) {
   const { project } = await requireReadableProject(projectId);
-  const now = new Date();
-  const [defaults, keywords] = await Promise.all([
-    prisma.projectDefaults.findUnique({
-      select: { cronExpression: true, frequency: true, jitterMinutes: true, timezone: true },
-      where: { projectId: project.id },
-    }),
-    prisma.keyword.findMany({
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-      select: {
-        dispatchState: { select: { nextCheckAt: true } },
-        id: true,
-        schedule: {
-          select: { cronExpression: true, frequency: true, jitterMinutes: true, timezone: true },
-        },
-      },
-      where: { projectId: project.id },
-    }),
-  ]);
-  const future = keywords.flatMap((keyword) => {
-    const nextCheckAt = keyword.dispatchState?.nextCheckAt ?? null;
-    if (!nextCheckAt || nextCheckAt <= now) return [];
-    const source = keyword.schedule ?? defaults;
-    const effective = resolveEffectiveSchedule(
-      source ? { ...source, nextCheckAt } : null,
-      null,
-      undefined,
-      now,
-    );
-    return effective.runnable && effective.nextCheckAt ? [effective.nextCheckAt] : [];
+  const keywords = await prisma.keyword.findMany({
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: { id: true, checkSchedule: { select: keywordMembershipSelect } },
+    where: { projectId: project.id, archivedAt: null },
   });
-  return future.sort((left, right) => left.getTime() - right.getTime())[0] ?? null;
+  const membership = createKeywordMembershipProjector(new Date());
+  return (
+    keywords
+      .flatMap((keyword) => {
+        const next = membership(keyword.checkSchedule, keyword.id).nextCheckAt;
+        return next ? [next] : [];
+      })
+      .sort((left, right) => left.getTime() - right.getTime())[0] ?? null
+  );
 }
 
 export async function getOnboardingGscPropertyLabel(projectId: string | null) {

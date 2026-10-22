@@ -120,6 +120,7 @@
       "organicSessions": "Sesiones orgánicas",
       "sessionsConnectTitle": "Sesiones orgánicas (GA4)",
       "sessionsConnectBody": "Descubre qué consultas y páginas de destino atraen visitantes interesados y cuáles convierten.",
+      "sessionsConnectDismiss": "Ocultar el aviso de sesiones orgánicas",
       "connect": "Conectar",
       "sessionsJoinTip": "Datos combinados con GA4 por página de destino. Search Console cuenta clics y GA4 cuenta sesiones, así que nunca coinciden con exactitud y es normal que haya diferencias.",
       "noSessionsMatch": "Ninguna página de destino de GA4 coincide con esta URL",

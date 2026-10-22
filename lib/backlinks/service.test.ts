@@ -288,7 +288,7 @@ describe("backlinks analyze service", () => {
 
   it("returns an unexpired sufficiently large snapshot for free", async () => {
     mocks.prisma.backlinkSnapshot.findFirst.mockResolvedValue(snapshot());
-    await expect(run()).resolves.toMatchObject({
+    await expect(run({ maxCostCents: 0 })).resolves.toMatchObject({
       cached: true,
       costCents: 0,
       fetchedRowCount: 100,

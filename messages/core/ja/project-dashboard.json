@@ -25,7 +25,11 @@
       "takeawaySlippedLast": "直近{days, plural, other {#日間}}で、平均順位が{value, number}下がりました。最大の下落は{leader}です。",
       "takeawaySteadyFirst": "追跡開始から最初の{days, plural, other {#日間}}、平均順位は横ばいでした。",
       "takeawaySteadyLast": "直近{days, plural, other {#日間}}、平均順位は横ばいでした。",
-      "title": "順位推移"
+      "title": "順位推移",
+      "tooltipAverage": "平均順位 {position, number, ::.#}",
+      "tooltipKeyword": "{keyword}: {position, number, ::.#}位",
+      "tooltipKeywordQualified": "{keyword}（{device}{hasMarket, select, true {、{market}} other {}}）: {position, number, ::.#}位",
+      "tooltipMore": "他{count, number}件"
     },
     "distribution": {
       "bucketAriaLabel": "{start, number}位から{end, number}位: {count, plural, other {#件のキーワード}}",
@@ -50,7 +54,8 @@
       "rankCheckFailedDetail": "{keyword}: プロバイダーのエラーにより順位チェックを実行できませんでした。再試行するか、チェックの詳細を確認してください。",
       "kpisAriaLabel": "概要の主要指標",
       "viewAllKeywords": "すべてのキーワードを表示",
-      "viewCheckRuns": "チェック実行を表示"
+      "viewCheckRuns": "チェック実行を表示",
+      "providerCapacityUnavailableDetail": "このプロバイダーでのチェックは一時的に利用できません。料金は請求されていません。しばらくしてから再試行するか、ご自身のプロバイダーキーを接続してください。"
     },
     "kpis": {
       "averageComparison": "{direction, select, up {前回の順位チェックより{value, number, ::.0}上昇} down {前回の順位チェックより{value, number, ::.0}下降} other {前回の順位チェックから変化なし}}",
@@ -74,7 +79,7 @@
     "noData": {
       "addKeywords": "キーワードを追加",
       "checkInProgress": "チェック実行中",
-      "connect": "接続",
+      "connect": "データソースを選択",
       "firstCheckInProgressDetail": "現在のチェックが完了すると、ここに順位が表示されます。",
       "firstCheckInProgressTitle": "最初の順位チェックを実行中です。",
       "migrationHoldDetail": "このプロジェクトは移行保留中です。保留が解除されると順位追跡を再開します。",
@@ -84,17 +89,22 @@
       "noData": "データなし",
       "noRankingsYet": "まだ順位がありません",
       "pausedMigrationHold": "一時停止（移行保留）",
-      "providerMissingDetail": "DataForSEO または SerpApi を接続して、順位追跡を始めてください。",
-      "providerMissingTitle": "SERP プロバイダーが必要です",
+      "providerMissingDetail": "チェックを実行するには、連携でデータソースを選択してください。",
+      "providerMissingTitle": "データソースを選択",
       "providerNeedsAttention": "プロバイダー要対応",
-      "providerNeedsAttentionDetail": "{count, plural, other {#件のキーワードの準備が完了しています。}}最初の順位チェックの前に SERP プロバイダーを有効化または再接続してください。",
+      "providerNeedsAttentionDetail": "{count, plural, other {#件のキーワードの準備ができています。}}最初のチェック前に、選択したデータソースを確認してください。",
       "providerNeedsAttentionTitle": "SERP プロバイダーの対応が必要です。",
-      "providerNotConnected": "プロバイダー未接続",
+      "providerNotConnected": "ソース未設定",
       "readyToCheck": "チェック可能",
       "readyDetail": "{count, plural, =0 {順位追跡を始めるにはキーワードを追加してください。} other {#件のキーワードが最初の順位チェックの準備を完了しています。}}",
-      "viewerAskAdmin": "順位追跡を開始するには、プロジェクト管理者に DataForSEO または SerpApi の接続を依頼してください。",
+      "viewerAskAdmin": "チェックを開始するには、プロジェクト管理者にデータソースの選択を依頼してください。",
       "viewCheckRuns": "チェック実行を表示",
-      "viewKeywords": "キーワードを表示"
+      "viewKeywords": "キーワードを表示",
+      "firstCheckIntro": {
+        "title": "最初の順位チェックを実行",
+        "description": "検索順位を確認しましょう。最初のチェックでダッシュボードに結果が表示されます。",
+        "dismiss": "この案内を非表示にする"
+      }
     },
     "sampleProject": {
       "createProject": "実際のプロジェクトを作成",

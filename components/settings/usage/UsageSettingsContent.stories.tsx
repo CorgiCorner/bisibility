@@ -66,3 +66,30 @@ export const PartialMeasurements: Story = {
 export const UsageUnknown: Story = { args: { data: emptyProjectUsage() } };
 export const Loading: Story = UsageUnknown;
 export const RouteLoading: Story = UsageUnknown;
+
+export const TwentyProviders: Story = {
+  args: {
+    data: {
+      ...projectUsageFixture(),
+      connections: Array.from({ length: 20 }, (_, index) => ({
+        connectionId: `conn_${index}`,
+        provider: `Provider ${index + 1}`,
+        credentialSource: "own" as const,
+      })),
+      budgets: [
+        ...projectUsageFixture().budgets,
+        ...Array.from({ length: 20 }, (_, index) => ({
+          ...projectUsageFixture().budgets[0],
+          id: `conn_${index}:app`,
+          kind: "connection" as const,
+          traffic: { kind: "surface" as const, surface: "app" as const },
+          display: {
+            connectionId: `conn_${index}`,
+            projectName: "Example",
+            providerLabel: `Provider ${index + 1}`,
+          },
+        })),
+      ],
+    },
+  },
+};

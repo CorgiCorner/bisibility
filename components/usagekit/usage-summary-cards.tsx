@@ -30,6 +30,7 @@ export type UsageSummaryCardsProps = {
   view: UsageSummaryView | null;
   labels?: Partial<UsageSummaryCardsLabels>;
   measurementLabels?: Partial<MeasurementCardLabels>;
+  hideMeasured?: boolean;
   unitLabels?: Partial<Record<string, string>>;
   formatFigure?: MeasurementCardProps["formatFigure"];
   formatUnit?: MeasurementCardProps["formatUnit"];
@@ -61,6 +62,7 @@ export function UsageSummaryCards({
   view,
   labels: custom,
   measurementLabels,
+  hideMeasured,
   unitLabels = {},
   formatFigure,
   formatUnit,
@@ -152,6 +154,7 @@ export function UsageSummaryCards({
                 }
                 value={value}
                 labels={measurementLabels}
+                hideMeasured={hideMeasured}
                 formatFigure={formatFigure}
                 formatUnit={formatUnit}
               />
@@ -171,6 +174,7 @@ export function UsageSummaryCards({
 export function UsageSummaryCardsPanel({
   labels,
   measurementLabels,
+  hideMeasured,
   unitLabels,
   formatFigure,
   formatUnit,
@@ -199,6 +203,7 @@ export function UsageSummaryCardsPanel({
       view={result.data}
       labels={labels}
       measurementLabels={measurementLabels}
+      hideMeasured={hideMeasured}
       unitLabels={unitLabels}
       formatFigure={formatFigure}
       formatUnit={formatUnit}

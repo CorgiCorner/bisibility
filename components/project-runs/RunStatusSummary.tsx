@@ -7,7 +7,7 @@ export function RunStatusSummary({
 }: Readonly<{ run: ProjectRun; progress?: boolean }>) {
   const t = useTranslations("projectRuns.table");
   let reason: string | null = null;
-  if (run.kind === "rank_check" && run.details.status === "blocked") {
+  if (run.kind === "rank" && run.details.status === "blocked") {
     const reasons = {
       budget_exhausted: "reviewUsage",
       budget_missing: "reviewUsage",
@@ -21,7 +21,7 @@ export function RunStatusSummary({
     } as const;
     const key = reasons[run.details.blockedReason as keyof typeof reasons];
     reason = t(key ?? "reviewBlocker");
-  } else if (run.kind === "rank_check" && run.details.blockedReason === "no_active_keywords") {
+  } else if (run.kind === "rank" && run.details.blockedReason === "no_active_keywords") {
     reason = t("noActiveKeywords");
   }
   const { completed, total, unit } = run.progress;
@@ -32,7 +32,14 @@ export function RunStatusSummary({
         <span className="tabular-nums">
           {completed === null || total === null
             ? t("notAvailable")
-            : t(unit === "targets" ? "targetProgress" : "dayProgress", { completed, total })}
+            : t(
+                unit === "targets"
+                  ? "targetProgress"
+                  : unit === "samples"
+                    ? "sampleProgress"
+                    : "dayProgress",
+                { completed, total },
+              )}
         </span>
       ) : null}
     </span>

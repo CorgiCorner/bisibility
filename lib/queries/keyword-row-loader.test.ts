@@ -56,7 +56,16 @@ describe("keyword row loader", () => {
     expect(mocks.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         select: expect.objectContaining({
-          checkSchedule: { select: { name: true, publicId: true, serpDepth: true } },
+          checkSchedule: {
+            select: expect.objectContaining({
+              name: true,
+              publicId: true,
+              serpDepth: true,
+              enabled: true,
+              archivedAt: true,
+              frequency: true,
+            }),
+          },
         }),
       }),
     );

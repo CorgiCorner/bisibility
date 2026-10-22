@@ -45,6 +45,11 @@ export async function prepareDefaultsDraft(
   });
   const draft = projectDefaultsSchema.parse({
     ...values,
+    // Recurrence is configured only through named schedules; legacy cadence input is inert.
+    frequency: source.defaults?.frequency ?? "manual",
+    cronExpression: source.defaults?.cronExpression ?? null,
+    timezone: source.defaults?.timezone ?? "UTC",
+    jitterMinutes: source.defaults?.jitterMinutes ?? 0,
     projectId: source.project.publicId,
     ...described.market,
     serpDepth: values.serpDepth ?? source.defaults?.serpDepth ?? 100,
@@ -78,11 +83,7 @@ export async function prepareDefaultsDraft(
       scopeChanged:
         changesMarket &&
         (draft.locationKey !== before?.locationKey || draft.device !== before?.device),
-      cadenceChanged:
-        !before ||
-        (["frequency", "cronExpression", "timezone", "jitterMinutes"] as const).some(
-          (key) => draft[key] !== before[key],
-        ),
+      cadenceChanged: false,
     },
   };
 }

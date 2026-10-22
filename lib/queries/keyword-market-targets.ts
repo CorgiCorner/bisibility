@@ -1,3 +1,4 @@
+import { createKeywordMembershipProjector } from "@/lib/keywords/schedule-membership";
 import "server-only";
 
 import { whereExecutedChecks } from "@/lib/checks/status";
@@ -83,9 +84,10 @@ export async function getKeywordMarketTargets(
     records.map((record) => fetchKeywordMetrics(record.id, DETAIL_CHECK_HISTORY)),
   );
   const context = { defaults, domain: trackedProjectDomain(project.domain) ?? "" };
+  const projectSchedule = createKeywordMembershipProjector();
   return records.map((record, index) => {
     const metric = metrics[index];
     if (!metric) throw new Error("Keyword market metrics are missing.");
-    return mapKeyword(record, context, metric);
+    return mapKeyword(record, context, metric, undefined, projectSchedule);
   });
 }

@@ -9,18 +9,22 @@ import { appPath } from "@/lib/routing/app-path";
 import { useProviderAction } from "@usagekit/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useState } from "react";
-import { ProviderBudgetRow } from "./ProviderBudgetRow";
+import { useState } from "react";
+import {
+  type HostedBudgetLabels,
+  ProviderBudgetLists,
+  visibleBudgetRows,
+} from "./ProviderBudgetLists";
 
 export function ProviderUsageCard({
-  budgetExplanation,
+  hostedBudgetLabels,
   canEditBudget,
   initialBudgetEditOpen = false,
   projectId,
   projectRef,
   data,
 }: {
-  budgetExplanation?: ReactNode;
+  hostedBudgetLabels?: HostedBudgetLabels;
   canEditBudget: boolean;
   initialBudgetEditOpen?: boolean;
   projectId: string;
@@ -33,7 +37,7 @@ export function ProviderUsageCard({
   const budgetScope = p.bound;
   const action = useProviderAction();
   const [open, setOpen] = useState(initialBudgetEditOpen && canEditBudget);
-  const attentionRows = data.budgets.filter(
+  const attentionRows = visibleBudgetRows(data).filter(
     (row) => row.level === "warning" || row.level === "exceeded",
   );
   const blocked = attentionRows.find(
@@ -89,16 +93,11 @@ export function ProviderUsageCard({
               {p.budget.empty}
             </p>
           ) : (
-            <ul className="m-0 min-w-0 list-none divide-y divide-border p-0">
-              {data.budgets.map((row) => (
-                <ProviderBudgetRow key={row.id} row={row} />
-              ))}
-            </ul>
-          )}
-          {budgetExplanation && (
-            <div className="border-t border-border pt-3 text-xs text-fg-muted">
-              {budgetExplanation}
-            </div>
+            <ProviderBudgetLists
+              data={data}
+              hostedBudgetLabels={hostedBudgetLabels}
+              onEdit={canEditBudget && action.canReconcile ? () => setOpen(true) : undefined}
+            />
           )}
         </Card>
       )}

@@ -1,14 +1,14 @@
 import "server-only";
-
-import { type SnapshotDefinitionSession } from "@/lib/measurement-definitions/snapshot-dispatch";
+import type { PaidCallPayment } from "@/lib/action-payment/paid-call";
+import type { SnapshotDefinitionSession } from "@/lib/measurement-definitions/snapshot-dispatch";
 import type { DefinitionExecutionPermit } from "@/lib/measurement-definitions/worker-claim";
 import type { PaidFenceHook } from "@/lib/metering/paid-attempt-types";
-import { type ResolveProviderRateInput } from "@/lib/provider-rates/resolver";
+import type { ResolveProviderRateInput } from "@/lib/provider-rates/resolver";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import type { ProviderCredentials, SerpDevice, SerpProvider } from "@/lib/providers/types";
-import { type SerpDepth } from "@/lib/serp/constants";
+import type { SerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
-import { type RankCheckScheduleInput } from "./schedule";
+import type { RankCheckScheduleInput } from "./schedule";
 
 export type RankCheckKeywordInput = {
   id: string;
@@ -19,6 +19,7 @@ export type RankCheckKeywordInput = {
 };
 
 export type RankCheckConnectionInput = {
+  publicId?: string;
   id?: string;
   provider: string;
   costPerCheckCents?: unknown;
@@ -30,6 +31,7 @@ export type RankCheckConnectionInput = {
 };
 
 export type RunCheckInput = {
+  payment?: PaidCallPayment;
   definitionContinuation?: SnapshotDefinitionSession;
   definitionBeforeReserve?: SnapshotDefinitionSession["beforeReserve"];
   definitionPermit?: DefinitionExecutionPermit;

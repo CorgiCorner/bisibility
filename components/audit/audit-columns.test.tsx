@@ -44,6 +44,16 @@ function renderCell(columnId: string, row = entry, onOpenEntry = vi.fn()) {
 }
 
 describe("audit-columns", () => {
+  it("shows a system icon instead of user initials", () => {
+    renderCell("eventName", {
+      ...entry,
+      actor: { ...entry.actor, id: "system", initials: "U", name: "System", email: "" },
+    });
+    expect(screen.getByRole("img", { name: "System" })).toBeVisible();
+    expect(screen.queryByText("U")).not.toBeInTheDocument();
+    expect(screen.getByText("System / UI")).toBeVisible();
+  });
+
   it("uses the 4px sizing contract", () => {
     const columns = auditColumns({ onOpenEntry: vi.fn(), t });
 

@@ -80,10 +80,10 @@ export function initialOnboardingDraft(
     },
     schedule: {
       country: defaultCountry,
-      cronExpression: project?.cronExpression ?? "0 6 * * *",
+      cronExpression: null,
       device: devices[0] ?? DEFAULT_SERP_DEVICE,
       devices,
-      frequency: project?.frequency ?? DEFAULT_ONBOARDING_FREQUENCY,
+      frequency: DEFAULT_ONBOARDING_FREQUENCY,
       jitterMinutes: project?.jitterMinutes ?? 60,
       serpDepth: project?.serpDepth ?? flowState.serpDepth,
       locationSelections,

@@ -15,14 +15,17 @@ import type { TrackedCompetitor } from "@/lib/competitors/serp-comparison";
 import { formatDisplayDate, formatDisplayDateTime } from "@/lib/dates/format";
 import { calendarDayKey } from "@/lib/keywords/position-history";
 import type { KeywordRow } from "@/lib/queries/keywords";
-import type { ExtendSnapshotAction } from "@/lib/serp/snapshot-extension";
+import type {
+  ExtendSnapshotAction,
+  PreviewSnapshotExtensionAction,
+} from "@/lib/serp/snapshot-extension";
 import { classifyActionError, presentActionError } from "@/lib/ui/action-error";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { CompetitorSnapshotCard } from "./CompetitorSnapshotCard";
 import { RetrievedResultsCompare } from "./RetrievedResultsCompare";
 import { RetrievedResultsHeader } from "./RetrievedResultsHeader";
 import { RetrievedResultsOneCheck } from "./RetrievedResultsOneCheck";
-import { SerpCompetitorComparison } from "./SerpCompetitorComparison";
 import { SnapshotExtensionControl } from "./SnapshotExtensionControl";
 import { SnapshotExtensionResults } from "./SnapshotExtensionResults";
 
@@ -30,6 +33,7 @@ type LoadResults = (checkIds: string[]) => Promise<RetrievedResults[]>;
 type CardProps = {
   projectRef?: string;
   extendSnapshotAction?: ExtendSnapshotAction;
+  previewSnapshotExtensionAction?: PreviewSnapshotExtensionAction;
   keyword?: Pick<KeywordRow, "location" | "device" | "engine">;
   competitors?: readonly TrackedCompetitor[];
   ownDomain?: string;
@@ -45,6 +49,7 @@ type CardProps = {
 function LegacyRetrievedResultsCard({
   projectRef,
   extendSnapshotAction,
+  previewSnapshotExtensionAction,
   keyword,
   competitors = [],
   ownDomain = "",
@@ -96,118 +101,128 @@ function LegacyRetrievedResultsCard({
   const earlier = loaded[compareFrom] ?? null;
   const fullEntries = entries.filter((entry) => entry.tier === "full");
   const degraded = entries.find((entry) => entry.checkId === selected)?.degradedToCountry ?? false;
+  function selectCheck(id: string) {
+    setSelected(id);
+    void show(mode === "compare" ? [id, compareFrom] : [id]);
+  }
   return (
-    <Card className="overflow-visible p-0" data-testid="retrieved-results-card" size="lg">
-      <RetrievedResultsHeader
-        keyword={keyword}
-        compareEnabled={compareEnabled}
-        compareFrom={compareFrom}
-        current={current}
+    <div className="grid min-w-0 gap-4">
+      <CompetitorSnapshotCard
+        competitors={competitors}
+        ownDomain={ownDomain}
+        results={current}
         entries={entries}
+        selected={selected}
+        selectedFrom={mode === "compare" ? compareFrom : undefined}
+        onSelect={selectCheck}
         formatDate={format.date}
         formatDateTime={format.dateTime}
-        mode={mode}
-        onMode={(next) => {
-          if (next === "compare" && !compareEnabled) return;
-          setMode(next);
-          void show(next === "one" ? [selected] : [selected, compareFrom]);
-        }}
-        onSelectFrom={(id) => {
-          setCompareFrom(id);
-          void show([id, selected]);
-        }}
-        onSelectTo={(id) => {
-          setSelected(id);
-          void show(mode === "compare" ? [id, compareFrom] : [id]);
-        }}
-        selected={selected}
+        error={error}
       />
-      <section
-        aria-label={t("snapshot")}
-        className="h-[480px] overflow-y-auto overscroll-contain focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-solid sm:h-[520px]"
-        data-testid="retrieved-results-body"
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: The scroll viewport must be keyboard reachable.
-        tabIndex={0}
-      >
-        {degraded ? (
-          <div className="border-b border-border px-5 py-2">
-            <CountryLevelBadge
-              ariaLabel={t("countryLevelAria", { tooltip: t("countryLevelTooltip") })}
-              label={t("countryLevel")}
-              tooltip={t("countryLevelTooltip")}
+      <Card className="overflow-visible p-0" data-testid="retrieved-results-card" size="lg">
+        <RetrievedResultsHeader
+          keyword={keyword}
+          compareEnabled={compareEnabled}
+          compareFrom={compareFrom}
+          entries={entries}
+          formatDate={format.date}
+          formatDateTime={format.dateTime}
+          mode={mode}
+          onMode={(next) => {
+            if (next === "compare" && !compareEnabled) return;
+            setMode(next);
+            void show(next === "one" ? [selected] : [selected, compareFrom]);
+          }}
+          onSelectFrom={(id) => {
+            setCompareFrom(id);
+            void show([id, selected]);
+          }}
+          onSelectTo={selectCheck}
+          selected={selected}
+        />
+        <section
+          aria-label={t("snapshot")}
+          className="h-[480px] overflow-y-auto overscroll-contain focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-solid sm:h-[520px]"
+          data-testid="retrieved-results-body"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: The scroll viewport must be keyboard reachable.
+          tabIndex={0}
+        >
+          {degraded ? (
+            <div className="border-b border-border px-5 py-2">
+              <CountryLevelBadge
+                ariaLabel={t("countryLevelAria", { tooltip: t("countryLevelTooltip") })}
+                label={t("countryLevel")}
+                tooltip={t("countryLevelTooltip")}
+              />
+            </div>
+          ) : null}
+          {mode === "one" && current?.tier === "full" && current.extension && projectRef ? (
+            <SnapshotExtensionControl
+              key={current.checkId}
+              checkId={current.checkId}
+              projectRef={projectRef}
+              action={extendSnapshotAction}
+              previewAction={previewSnapshotExtensionAction}
+              extension={current.extension}
+              formatDateTime={format.dateTime}
+              onReload={async () => {
+                const fetched = await loadResults([current.checkId]);
+                setLoaded((cache) => ({
+                  ...cache,
+                  ...Object.fromEntries(fetched.map((entry) => [entry.checkId, entry])),
+                }));
+                const refreshed = fetched.find((entry) => entry.checkId === current.checkId);
+                return refreshed?.tier === "full" ? refreshed.extension : undefined;
+              }}
             />
-          </div>
-        ) : null}
-        {mode === "one" && current?.tier === "full" && current.extension && projectRef ? (
-          <SnapshotExtensionControl
-            key={current.checkId}
-            checkId={current.checkId}
-            projectRef={projectRef}
-            action={extendSnapshotAction}
-            extension={current.extension}
-            formatDateTime={format.dateTime}
-            onReload={async () => {
-              const fetched = await loadResults([current.checkId]);
-              setLoaded((cache) => ({
-                ...cache,
-                ...Object.fromEntries(fetched.map((entry) => [entry.checkId, entry])),
-              }));
-            }}
-          />
-        ) : null}
-        {mode === "compare" && earlier && current ? (
-          <RetrievedResultsCompare
-            competitors={competitors}
-            from={earlier}
-            formatDate={format.date}
-            fullCheckDates={fullEntries.map((entry) => entry.checkedAt)}
-            fullPair={
-              fullEntries.length >= 2
-                ? { from: fullEntries[1].checkId, to: fullEntries[0].checkId }
-                : null
-            }
-            onPickFullPair={(from, to) => {
-              setCompareFrom(from);
-              setSelected(to);
-              void show([from, to]);
-            }}
-            timeZone={timeZone}
-            to={current}
-          />
-        ) : null}
-        {mode === "one" && current ? (
-          <SerpCompetitorComparison
-            competitors={competitors}
-            ownDomain={ownDomain}
-            results={current}
-          />
-        ) : null}
-        {mode === "one" && current ? (
-          <RetrievedResultsOneCheck
-            competitors={competitors}
-            formatDate={format.date}
-            rankingUrl={current.rankingUrl ?? null}
-            results={current}
-            retentionDays={retentionDays}
-          />
-        ) : null}
-        {mode === "one" && current?.tier === "full" ? (
-          <SnapshotExtensionResults
-            results={current}
-            competitors={competitors}
-            formatDateTime={format.dateTime}
-          />
-        ) : null}
-        {error ? (
-          <p className="m-0 p-5 text-[12.5px] text-red-text" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {(!current || (mode === "compare" && !earlier)) && !error ? (
-          <p className="m-0 p-5 text-[12.5px] text-fg-muted">{t("loading")}</p>
-        ) : null}
-      </section>
-    </Card>
+          ) : null}
+          {mode === "compare" && earlier && current ? (
+            <RetrievedResultsCompare
+              competitors={competitors}
+              from={earlier}
+              formatDate={format.date}
+              fullCheckDates={fullEntries.map((entry) => entry.checkedAt)}
+              fullPair={
+                fullEntries.length >= 2
+                  ? { from: fullEntries[1].checkId, to: fullEntries[0].checkId }
+                  : null
+              }
+              onPickFullPair={(from, to) => {
+                setCompareFrom(from);
+                setSelected(to);
+                void show([from, to]);
+              }}
+              timeZone={timeZone}
+              to={current}
+            />
+          ) : null}
+          {mode === "one" && current ? (
+            <RetrievedResultsOneCheck
+              competitors={competitors}
+              formatDate={format.date}
+              rankingUrl={current.rankingUrl ?? null}
+              results={current}
+              retentionDays={retentionDays}
+            />
+          ) : null}
+          {mode === "one" && current?.tier === "full" ? (
+            <SnapshotExtensionResults
+              results={current}
+              competitors={competitors}
+              formatDateTime={format.dateTime}
+            />
+          ) : null}
+          {error ? (
+            <p className="m-0 p-5 text-[12.5px] text-red-text" role="alert">
+              {error}
+            </p>
+          ) : null}
+          {(!current || (mode === "compare" && !earlier)) && !error ? (
+            <p className="m-0 p-5 text-[12.5px] text-fg-muted">{t("loading")}</p>
+          ) : null}
+        </section>
+      </Card>
+    </div>
   );
 }
 

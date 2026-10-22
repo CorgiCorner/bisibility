@@ -7,6 +7,17 @@ import type { useTranslations } from "next-intl";
 type Translate = ReturnType<typeof useTranslations<"projectSettingsAdvanced.audit">>;
 
 function eventNameFor(entry: AuditEntry, dateDisplay: DateDisplayContext, t: Translate) {
+  if (entry.action === "provider.credential_source_changed" && entry.providerSourceChange) {
+    return t("event.providerSourceChangedDetail", {
+      provider: entry.providerSourceChange.provider,
+      source: t(
+        entry.providerSourceChange.source === "own"
+          ? "event.providerSourceOwn"
+          : "event.providerSourceHosted",
+      ),
+    });
+  }
+
   if (entry.action === "rank_check_run.skip" && entry.rankCheckRunSkip) {
     const plannedFor = new Date(entry.rankCheckRunSkip.plannedFor);
     if (!Number.isNaN(plannedFor.getTime())) {
@@ -21,7 +32,7 @@ function eventNameFor(entry: AuditEntry, dateDisplay: DateDisplayContext, t: Tra
   return eventKey
     ? t(`event.${eventKey}`)
     : entry.action
-      ? t("event.unknown", { action: entry.action })
+      ? t("event.unknown")
       : t("event.unknownMissing");
 }
 

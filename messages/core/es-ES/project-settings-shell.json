@@ -23,7 +23,7 @@
         },
         "applicationPlan": {
           "label": "Plan de la aplicación",
-          "keywords": "facturación precio suscripción beta alojada autoalojado"
+          "keywords": "facturación precio suscripción cloud alojamiento propio"
         },
         "checkFrequency": {
           "label": "Frecuencia de comprobación",

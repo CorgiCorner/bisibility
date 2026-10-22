@@ -139,11 +139,11 @@ declare(["api_key.regenerate", "api_key.revoke", "pat.revoke", "migration_token.
   after: token,
   before: token,
 });
-declare(["pat.issue", "pat.exchange_login"], { after: token });
+declare(["pat.issue", "pat.exchange_login"], { after: { ...token, ...strings("viaClientId") } });
 declare(["migration_token.mint", "migration_token.regenerate"], { after: token });
 declare(["migration_token.consume"], { after: token });
 declare(["settings.budget_updated"], {
-  after: f.numbers("capCents"),
+  after: { ...f.numbers("capCents"), ...strings("funding") },
   before: f.numbers("capCents"),
 });
 declare(["settings.experimental_modules.update"], {
@@ -155,6 +155,9 @@ declare(["settings.project_market.add"], {
 });
 declare(["project_market.create"], {
   after: { ...f.numbers("keywordCount"), ...strings("method", "scheduleId") },
+});
+declare(["keyword.market_device_add"], {
+  after: { ...strings("device", "scheduleId"), keywordIds: list("string") },
 });
 declare(["onboarding.project_markets.reconcile"], {
   after: {
@@ -205,7 +208,7 @@ declare(["keyword.target_url_reset"], {
   before: f.urls("targetUrl"),
 });
 declare(["keyword.bulk_set_frequency"], {
-  after: { keywordIds: list("string"), schedule },
+  after: { keywordIds: list("string"), schedule, ...strings("checkScheduleId") },
 });
 declare(["keyword.bulk_tag"], {
   after: { keywordIds: list("string"), tags: list("string") },

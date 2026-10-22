@@ -1,8 +1,12 @@
 "use client";
 
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/data-table/DataTable";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
+import { useLocale, useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import {
   normalizeRankedKeyword,
@@ -42,6 +46,10 @@ export type RankedKeywordSuggestionDrawerMessages = {
 };
 
 type RankedKeywordSuggestionDrawerProps = {
+  payments?: ActionPaymentReceipt[];
+  originalPayments?: ActionPaymentReceipt[];
+  loadMorePrice?: ReactNode;
+  freeUntil?: string | null;
   selectionOnly?: boolean;
   canLoad: boolean;
   currentKeywords: readonly string[];
@@ -84,7 +92,13 @@ export function RankedKeywordSuggestionDrawer({
   spentCents,
   lastPageCached,
   messages,
+  payments,
+  originalPayments,
+  loadMorePrice,
+  freeUntil,
 }: Readonly<RankedKeywordSuggestionDrawerProps>) {
+  const locale = useLocale();
+  const paymentT = useTranslations("shared.actionPayment");
   const current = useMemo(
     () => new Set(currentKeywords.map(normalizeRankedKeyword)),
     [currentKeywords],
@@ -126,13 +140,32 @@ export function RankedKeywordSuggestionDrawer({
       description={messages.drawerDescription}
       footer={
         <div className="flex flex-col gap-2">
-          <span className="text-[11.5px] text-fg-muted tabular-nums">
-            {messages.spent({
-              cached: lastPageCached ? "yes" : "no",
-              cost: spentCents / 100,
-              page: pageCount,
-            })}
-          </span>
+          {payments ? (
+            payments.map((payment) => (
+              <PaymentChargeLine key={payment.actionId} payment={payment} />
+            ))
+          ) : (
+            <span className="text-[11.5px] text-fg-muted tabular-nums">
+              {messages.spent({
+                cached: lastPageCached ? "yes" : "no",
+                cost: spentCents / 100,
+                page: pageCount,
+              })}
+            </span>
+          )}
+          {originalPayments?.map((payment) => (
+            <PaymentChargeLine key={payment.actionId} payment={payment} original />
+          ))}
+          {freeUntil ? (
+            <span className="text-xs text-fg-muted">
+              {paymentT("freeUntil", {
+                date: new Intl.DateTimeFormat(locale, {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                }).format(new Date(freeUntil)),
+              })}
+            </span>
+          ) : null}
           <div className="flex items-center justify-end gap-2.5">
             <Button onClick={onClose} type="button" variant="secondary">
               {messages.cancel}
@@ -217,6 +250,7 @@ export function RankedKeywordSuggestionDrawer({
           variant="secondary"
         >
           {messages.load}
+          {loadMorePrice}
           {pageCostCents == null ? "" : ` ${messages.aboutPage({ cost: pageCostCents / 100 })}`}
         </Button>
       ) : null}

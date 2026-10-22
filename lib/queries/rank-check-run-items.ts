@@ -8,7 +8,9 @@ import {
   splitPage,
 } from "@/lib/api/pagination";
 import { prisma } from "@/lib/db/prisma";
+import { deferralReasonCode } from "@/lib/rank-check/deferral-reason";
 import { ITEM_STATUSES, type ItemStatus } from "@/lib/rank-check/runs/contract";
+import { rankItemPaymentReceipt } from "@/lib/rank-check/runs/payment-receipt";
 import { normalizedObservationCompleteness } from "@/lib/serp/rank-depth";
 import {
   ledgerActualCostCents,
@@ -19,7 +21,7 @@ import { iso, statusCsv } from "./rank-check-run-query-helpers";
 
 export async function listRankCheckRunItems(projectId: string, publicId: string, url: URL) {
   const run = await prisma.rankCheckRun.findFirst({
-    select: { id: true },
+    select: { id: true, publicId: true, projectId: true, selectionSpec: true, status: true },
     where: { projectId, publicId, deletedAt: null },
   });
   if (!run) throw new ApiNotFoundError("Rank-check run not found.");
@@ -52,6 +54,7 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
         select: {
           billingUnits: true,
           costCents: true,
+          deferredReason: true,
           errorCode: true,
           id: true,
           observationRun: { select: { completeness: true } },
@@ -85,42 +88,54 @@ export async function listRankCheckRunItems(projectId: string, publicId: string,
   );
   const ledgerActuals = await rankCheckRunTargetLedgerActuals(projectId, run.id);
   return {
-    data: page.map(({ createdAt, id, keyword: { locationRef, ...keyword }, ...row }) => {
-      const storedRankCheck = row.rankCheck;
-      const ledger = storedRankCheck ? ledgerActuals.get(storedRankCheck.id) : undefined;
-      return {
-        ...row,
-        actualCostCents: ledgerActualCostCents(ledger, row.actualCostCents),
-        finishedAt: iso(row.finishedAt),
-        id: encodeUnprefixedCursor({ publicId: id, timestamp: createdAt }),
-        keyword: { ...keyword, languageLabel: locationRef?.languageLabel ?? null },
-        rankCheck: storedRankCheck
-          ? {
-              billingUnits: ledgerActualUnits(
-                ledger,
-                storedRankCheck.billingUnits,
-                storedRankCheck.provider,
-              ),
-              costCents: ledgerActualCostCents(
-                ledger,
-                storedRankCheck.costCents === null ? null : Number(storedRankCheck.costCents),
-              ),
-              errorCode: storedRankCheck.errorCode,
-              observationCompleteness: normalizedObservationCompleteness(
-                storedRankCheck.observationRun?.completeness,
-              ),
-              position: storedRankCheck.position,
-              provider: storedRankCheck.provider,
-              publicId: storedRankCheck.publicId,
-              rankingUrl: storedRankCheck.rankingUrl,
-              requestedDepth: storedRankCheck.requestedDepth,
-            }
-          : null,
-        notBefore: iso(row.notBefore),
-        startedAt: iso(row.startedAt),
-        status: row.status as ItemStatus,
-      };
-    }),
+    data: await Promise.all(
+      page.map(async ({ createdAt, id, keyword: { locationRef, ...keyword }, ...row }) => {
+        const storedRankCheck = row.rankCheck;
+        const ledger = storedRankCheck ? ledgerActuals.get(storedRankCheck.id) : undefined;
+        const payment = await rankItemPaymentReceipt(run, {
+          checkId: storedRankCheck?.id ?? null,
+          publicId: storedRankCheck?.publicId ?? id,
+          status: row.status,
+        });
+        const deferralCode =
+          row.status === "deferred" ? deferralReasonCode(storedRankCheck?.deferredReason) : null;
+        return {
+          ...row,
+          deferralCode,
+          ...(payment ? { payment } : {}),
+          actualCostCents: ledgerActualCostCents(ledger, row.actualCostCents),
+          finishedAt: iso(row.finishedAt),
+          id: encodeUnprefixedCursor({ publicId: id, timestamp: createdAt }),
+          keyword: { ...keyword, languageLabel: locationRef?.languageLabel ?? null },
+          rankCheck: storedRankCheck
+            ? {
+                ...(payment ? { payment } : {}),
+                billingUnits: ledgerActualUnits(
+                  ledger,
+                  storedRankCheck.billingUnits,
+                  storedRankCheck.provider,
+                ),
+                costCents: ledgerActualCostCents(
+                  ledger,
+                  storedRankCheck.costCents === null ? null : Number(storedRankCheck.costCents),
+                ),
+                errorCode: storedRankCheck.errorCode,
+                observationCompleteness: normalizedObservationCompleteness(
+                  storedRankCheck.observationRun?.completeness,
+                ),
+                position: storedRankCheck.position,
+                provider: storedRankCheck.provider,
+                publicId: storedRankCheck.publicId,
+                rankingUrl: storedRankCheck.rankingUrl,
+                requestedDepth: storedRankCheck.requestedDepth,
+              }
+            : null,
+          notBefore: iso(row.notBefore),
+          startedAt: iso(row.startedAt),
+          status: row.status as ItemStatus,
+        };
+      }),
+    ),
     nextCursor,
   };
 }

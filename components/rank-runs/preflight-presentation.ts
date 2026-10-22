@@ -52,3 +52,35 @@ export function isNotStarted(
 ): result is Extract<LaunchRankCheckRunActionResult, { status: "not_started" }> {
   return "status" in result && result.status === "not_started";
 }
+
+export type LaunchFailureNotice =
+  | { kind: "resign"; mismatch: boolean }
+  | { kind: "payment" }
+  | { kind: "block"; code: PreflightBlockCode }
+  | { kind: "sample" }
+  | { kind: "message" };
+
+function isPolicyBlock(code: string): code is PreflightBlockCode {
+  return (
+    code === "measurement_policy_unconfigured" ||
+    code === "measurement_policy_unsupported" ||
+    code === "no_provider" ||
+    code === "budget_exhausted" ||
+    code === "budget_missing" ||
+    code === "usage_reconciliation_required"
+  );
+}
+
+export function launchFailureNotice(
+  code: Extract<LaunchRankCheckRunActionResult, { status: "not_started" }>["code"],
+  resignedMismatch: boolean,
+): LaunchFailureNotice {
+  if (code === "preview_mismatch" && resignedMismatch) return { kind: "message" };
+  if (code === "preview_expired" || code === "preview_mismatch") {
+    return { kind: "resign", mismatch: code === "preview_mismatch" };
+  }
+  if (code === "payment_unavailable") return { kind: "payment" };
+  if (code === "sample_project") return { kind: "sample" };
+  if (isPolicyBlock(code)) return { kind: "block", code };
+  return { kind: "message" };
+}

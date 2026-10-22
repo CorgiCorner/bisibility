@@ -53,8 +53,8 @@ describe("explicit saved-location measurement center", () => {
       await user.click(screen.getByRole("button", { name: "Choose a saved location" }));
       await user.type(screen.getByPlaceholderText("Search name or address"), "avenue");
       await user.click(screen.getByRole("menuitem", { name: /Other branch/ }));
-      expect(screen.getByLabelText("Center latitude")).toHaveValue("0.0000000");
-      expect(screen.getByLabelText("Center longitude")).toHaveValue("0.0000000");
+      expect(screen.getByRole("textbox", { name: "Center latitude" })).toHaveValue("0.0000000");
+      expect(screen.getByRole("textbox", { name: "Center longitude" })).toHaveValue("0.0000000");
       expect(screen.getByText("9 planned points")).toBeInTheDocument();
       expect(save).not.toHaveBeenCalled();
       expect(search).not.toHaveBeenCalled();
@@ -75,7 +75,7 @@ describe("explicit saved-location measurement center", () => {
   });
   it("retains the saved center until explicit choice and disables locations without coordinates", async () => {
     const { user, save } = setup();
-    expect(screen.getByLabelText("Center latitude")).toHaveValue(
+    expect(screen.getByRole("textbox", { name: "Center latitude" })).toHaveValue(
       monitorUiFixture.grid.center.latitude,
     );
     await user.click(screen.getByRole("button", { name: "Choose a saved location" }));
@@ -95,7 +95,7 @@ describe("explicit saved-location measurement center", () => {
   });
   it("keeps manual fields open and focused through a complete coordinate, and reveals invalid values on submit", async () => {
     const { user, save } = setup();
-    const input = screen.getByLabelText("Center latitude");
+    const input = screen.getByRole("textbox", { name: "Center latitude" });
     const panel = input.closest("details");
     await user.click(screen.getByText("Advanced: enter coordinates"));
     await user.clear(input);
@@ -124,11 +124,11 @@ describe("explicit saved-location measurement center", () => {
   it("updates the exact preview when manual coordinates change and exposes point coordinates", async () => {
     const { user } = setup();
     await user.click(screen.getByText("Advanced: enter coordinates"));
-    await user.clear(screen.getByLabelText("Center latitude"));
+    await user.clear(screen.getByRole("textbox", { name: "Center latitude" }));
     expect(
       screen.getByText("Choose a center to preview the measurement points."),
     ).toBeInTheDocument();
-    await user.type(screen.getByLabelText("Center latitude"), "0");
+    await user.type(screen.getByRole("textbox", { name: "Center latitude" }), "0");
     await user.click(screen.getByText("View point coordinates"));
     expect(screen.getByRole("table", { name: "View point coordinates" })).toBeInTheDocument();
     expect(screen.getAllByRole("row")).toHaveLength(10);

@@ -1,13 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { extendSerpSnapshot } from "./extend-snapshot";
+import { extendSerpSnapshot, previewSerpSnapshotExtension } from "./extend-snapshot";
 
 const mocks = vi.hoisted(() => ({
   actor: vi.fn(),
   scope: vi.fn(),
   extend: vi.fn(),
   revalidate: vi.fn(),
+  preview: vi.fn(),
 }));
 vi.mock("@/lib/serp/extend-snapshot", () => ({ extendSnapshot: mocks.extend }));
+vi.mock("@/lib/serp/snapshot-payment", () => ({ prepareSnapshotExtensionPayment: mocks.preview }));
 vi.mock("./_shared", () => ({
   getActionActor: mocks.actor,
   requireProjectScope: mocks.scope,
@@ -25,6 +27,7 @@ beforeEach(() => {
   mocks.actor.mockResolvedValue({ id: "actor" });
   mocks.scope.mockResolvedValue({ id: "internal_project" });
   mocks.extend.mockResolvedValue({ ok: true });
+  mocks.preview.mockResolvedValue({ ok: true, payment: { quote: { id: "quote" }, options: [] } });
 });
 describe("snapshot extension authorization", () => {
   it("requires keyword update access and resolves project scope before provider work", async () => {
@@ -38,6 +41,22 @@ describe("snapshot extension authorization", () => {
       actorId: "actor",
     });
     expect(mocks.revalidate).toHaveBeenCalledOnce();
+  });
+  it("authorizes the read-only quote without claiming or executing a page", async () => {
+    expect(await previewSerpSnapshotExtension(input)).toEqual({
+      ok: true,
+      payment: { id: "quote" },
+      paymentOptions: [],
+    });
+    expect(mocks.scope).toHaveBeenCalledWith({ id: "actor" }, "update", input.projectId, {
+      type: "keyword",
+    });
+    expect(mocks.preview).toHaveBeenCalledWith(
+      { ...input, actorId: "actor", projectId: "internal_project" },
+      false,
+    );
+    expect(mocks.extend).not.toHaveBeenCalled();
+    expect(mocks.revalidate).not.toHaveBeenCalled();
   });
   it("does not dispatch for a viewer or another project's member", async () => {
     mocks.scope.mockRejectedValue(new Error("forbidden"));

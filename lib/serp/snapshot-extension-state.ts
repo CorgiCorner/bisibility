@@ -1,3 +1,4 @@
+import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
 import { domainMatches } from "@/lib/domains/normalize";
 import { z } from "zod";
 import {
@@ -56,8 +57,9 @@ export function readSnapshotPageEvidence(raw: unknown) {
   return parsed.success ? parsed.data : null;
 }
 const extensionSchema = z.object({
+  payment: actionPaymentReceiptSchema.optional(),
   version: z.literal(1),
-  state: z.enum(["idle", "running", "failed"]),
+  state: z.enum(["idle", "running", "failed", "retryable"]),
   nextStart: z.number().int().min(10).max(100).multipleOf(10),
   ended: z.boolean(),
   requestId: z.string().optional(),
@@ -65,6 +67,7 @@ const extensionSchema = z.object({
   pages: z
     .array(
       z.object({
+        payment: actionPaymentReceiptSchema.optional(),
         evidence: snapshotPageEvidenceSchema.nullable().optional(),
         start: z.number().int().min(10).max(90).multipleOf(10),
         fetchedAt: z.iso.datetime(),
@@ -121,7 +124,7 @@ export function snapshotExtensionView(
       ? extension.leaseUntil && Date.parse(extension.leaseUntil) > now.getTime()
         ? "running"
         : "failed"
-      : extension.state === "failed"
+      : extension.state === "failed" || extension.state === "retryable"
         ? "failed"
         : extension.ended || extension.nextStart >= 100
           ? "complete"
@@ -130,6 +133,7 @@ export function snapshotExtensionView(
             : "available";
   return {
     reason,
+    ...(extension.payment ? { payment: extension.payment } : {}),
     expiresAt: new Date(expiry).toISOString(),
     nextStart: extension.nextStart,
     pages: extension.pages.map((page) => ({

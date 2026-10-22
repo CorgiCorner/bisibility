@@ -180,6 +180,7 @@ describe("recent domain overview targets", () => {
         fetchedAt: true,
         languageCode: true,
         locationCode: true,
+        overview: true,
         scope: true,
         target: true,
       },
@@ -201,5 +202,37 @@ describe("recent domain overview targets", () => {
         },
       }),
     );
+  });
+  it("projects validated original payment from saved overview metadata and leaves legacy unknown", async () => {
+    const payment = {
+      actionId: "original",
+      quoteId: null,
+      state: "settled",
+      option: {
+        id: "option",
+        connectionId: "conn_a00000000000000000000000",
+        providerId: "historic-provider",
+        providerLabel: "Historical provider",
+        fundingSource: "byok",
+        payableUnit: { kind: "currency", code: "USD" },
+      },
+      charge: { value: "0.03", unit: { kind: "currency", code: "USD" }, certainty: "measured" },
+    };
+    const row = {
+      cachedUntil: new Date(Date.now() + 60000),
+      fetchedAt: new Date(),
+      languageCode: "en",
+      locationCode: 2840,
+      scope: "root",
+      target: "example.com",
+    };
+    mocks.findMany.mockResolvedValue([
+      { ...row, overview: { count: 1, _payment: payment } },
+      { ...row, target: "legacy.example", overview: { count: 1 } },
+    ]);
+    const result = await recentDomainOverviewTargets("project_1");
+    expect(result[0]).toMatchObject({ originalPayment: payment });
+    expect(result[1]).not.toHaveProperty("originalPayment");
+    expect(result[0]).not.toHaveProperty("payment");
   });
 });

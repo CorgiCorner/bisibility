@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.39.0] - 2026-10-23
+
+### Added
+
+- Add connected-app controls, AI runs, schedule tools, device setup, first-check tips, provider balance evidence and search-performance query filters.
+
+### Changed
+
+- Review payment sources and current prices before paid research and rank checks; show clearer budgets, balances and retained charges across Usage.
+
+- Simplify keyword details, Markets, snapshots, saved views and provider setup; align activity indicators and expand API contracts and MCP setup guidance.
+
+### Fixed
+
+- Fix stale schedules, cancelled runs, Top 20 collection and snapshot recovery; preserve provider card order and settings after saves.
+
+- Strengthen admin and sign-in checks, enforce email timeouts, isolate local auth cookies and update dependencies with security fixes.
+
 ## [0.38.0] - 2026-10-20
 
 ### Added

@@ -26,13 +26,7 @@ import {
   TWO_FACTOR_STEP_UP_WINDOW_SECONDS,
 } from "./two-factor-policy";
 
-export type TwoFactorOperation =
-  | "disable"
-  | "enroll"
-  | "mail"
-  | "regenerate"
-  | "replace"
-  | "provider";
+export type TwoFactorOperation = "disable" | "enroll" | "regenerate" | "replace";
 
 export type TwoFactorSecurityContext = {
   actorId: string;
@@ -231,19 +225,6 @@ async function verifyCurrentFactorAndGrant(
   if (result.status === "locked") throw stepUpFailure("step_up_locked", result.retryAt);
   if (result.status === "invalid") throw stepUpFailure("step_up_failed");
   throw stepUpFailure("unavailable");
-}
-
-export async function confirmEnabledTwoFactorCode(
-  context: TwoFactorSecurityContext,
-  code: string,
-  operation: TwoFactorOperation = "mail",
-) {
-  if (!context.twoFactorEnabled) {
-    await auditRejectedBestEffort(context, operation, "Two-factor authentication is not enabled.");
-    throw stepUpFailure("step_up_failed");
-  }
-  await limitAttempt(context, operation);
-  return verifyCurrentFactorAndGrant(context, operation, "totp", code);
 }
 
 export async function authorizeTwoFactorOperation(

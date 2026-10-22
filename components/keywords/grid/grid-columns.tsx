@@ -3,11 +3,9 @@ import { marketGridParent } from "@/lib/keywords/market-grid-model";
 import { keywordScheduleTarget } from "@/lib/keywords/schedule-targets";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { scheduleRowSortValue } from "@/lib/schedules/mixed-state";
-import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
-import { MonitorIcon as Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
-import { useTranslations } from "next-intl";
 import { type TrafficColumnLabels, trafficColumns } from "./grid-columns-traffic";
 import { KeywordChangeCell } from "./KeywordChangeCell";
+import { KeywordDeviceCell } from "./KeywordDeviceCell";
 import { KeywordRankTrendCell } from "./KeywordRankTrendCell";
 import { KeywordRecordedCheckCell } from "./KeywordRecordedCheckCell";
 import type { KeywordColumnActions } from "./keyword-column-actions";
@@ -51,20 +49,6 @@ export function scheduleTargetsForRow(row: KeywordRow): ScheduleCellTarget[] {
   return (parent?.aggregate.children ?? [row]).map(keywordScheduleTarget);
 }
 
-export function DeviceCell({ row }: Readonly<{ row: KeywordRow }>) {
-  const t = useTranslations("projectRankTracker.keywordImport.management.grid");
-  const parent = marketGridParent(row);
-  const Icon = row.device.toLowerCase() === "mobile" ? DeviceMobile : Monitor;
-  return (
-    <span className="inline-flex max-w-full items-center gap-1 whitespace-nowrap font-sans tabular-nums text-[11px] leading-none text-fg-muted">
-      {!parent ? <Icon aria-hidden className="shrink-0" size={13} weight="regular" /> : null}
-      <span className="truncate">
-        {parent ? t("targetCount", { count: parent.aggregate.activeTargetCount }) : row.device}
-      </span>
-    </span>
-  );
-}
-
 export function TagsCell({ row }: Readonly<{ row: KeywordRow }>) {
   return (
     <span className="flex h-full min-w-0 items-center gap-[5px] overflow-hidden py-1">
@@ -97,15 +81,17 @@ export function keywordColumns(
   pendingCheckIds: ReadonlySet<string> = new Set(),
   labels: KeywordColumnLabels,
   detailHref?: (row: KeywordRow) => string,
+  showDevices = false,
 ): DataTableColumn<KeywordRow>[] {
   return [
     {
       accessorFn: (row) => row.keyword,
       cell: ({ row }) => (
-        <MarketKeywordCell
+        <KeywordDeviceCell
           projectRef={projectRef}
           row={row.original}
           href={detailHref?.(row.original)}
+          showDevice={showDevices}
         />
       ),
       header: labels.keyword,
@@ -153,16 +139,6 @@ export function keywordColumns(
       size: 220,
     },
     {
-      accessorFn: (row) => row.device,
-      cell: ({ row }) => <DeviceCell row={row.original} />,
-      header: labels.device,
-      id: "device",
-      meta: { lockResize: true, sortable: ({ grouped }) => !grouped, title: labels.device },
-      maxSize: 84,
-      minSize: 84,
-      size: 84,
-    },
-    {
       accessorFn: (row) => row.volume,
       cell: ({ row }) => <MarketVolumeCell row={row.original} />,
       header: labels.volume,
@@ -200,6 +176,7 @@ export function keywordColumns(
         <KeywordRecordedCheckCell
           row={row.original}
           pending={pendingCheckIds.has(row.original.id)}
+          compact
         />
       ),
       header: labels.lastChecked,
@@ -210,7 +187,7 @@ export function keywordColumns(
     },
     {
       accessorFn: (row) => [row.targetUrl, row.rankingUrl].filter(Boolean).join(" "),
-      cell: ({ row }) => <TargetRankingCell row={row.original} />,
+      cell: ({ row }) => <TargetRankingCell row={row.original} compact />,
       header: labels.targetAndRanking,
       id: "targetRanking",
       meta: { flex: 1.35, title: labels.targetAndRanking },

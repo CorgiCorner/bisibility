@@ -2,7 +2,10 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 import { allowedOAuthTokenScopes } from "@/lib/auth/oauth-consent-guard";
-import { isFirstPartyApiOAuthClient } from "@/lib/auth/oauth-policy";
+import {
+  isDynamicallyRegisteredOAuthClient,
+  isFirstPartyApiOAuthClient,
+} from "@/lib/auth/oauth-policy";
 import { prisma } from "@/lib/db/prisma";
 import { ZodError, z } from "zod";
 import { notFound, type PersonalApiContext } from "./context";
@@ -60,6 +63,22 @@ function hashOauthToken(raw: string) {
 }
 
 const EXCHANGE_SCOPE = "tokens:write";
+const THIRD_PARTY_OAUTH_PAT_MAX_DAYS = 90;
+
+// Reject, do not clamp. Only dynamically registered clients are capped at 90 days.
+// Static reviewed clients keep 30, 90, 365, or never. An omitted expiry becomes
+// null via the shared schema default. First-party API clients are refused before
+// this schema runs (ADR-021).
+const thirdPartyOauthPatSchema = personalTokenCreateSchema.superRefine((value, context) => {
+  if (value.expiresInDays !== null && value.expiresInDays <= THIRD_PARTY_OAUTH_PAT_MAX_DAYS) {
+    return;
+  }
+  context.addIssue({
+    code: "custom",
+    message: "Choose an API token expiry of at most 90 days.",
+    path: ["expiresInDays"],
+  });
+});
 
 export async function exchangeOauthToken(
   req: Request,
@@ -94,7 +113,10 @@ export async function exchangeOauthToken(
   try {
     const bodyText = await req.text();
     const body = bodyText ? JSON.parse(bodyText) : {};
-    data = parseApiInput(personalTokenCreateSchema, objectBody(body));
+    const schema = isDynamicallyRegisteredOAuthClient(accessToken.clientId)
+      ? thirdPartyOauthPatSchema
+      : personalTokenCreateSchema;
+    data = parseApiInput(schema, objectBody(body));
   } catch (error) {
     if (error instanceof ZodError) {
       return errorResponse("validation_failed", "Request input failed validation.", 400, {

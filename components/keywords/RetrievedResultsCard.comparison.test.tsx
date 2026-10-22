@@ -19,7 +19,7 @@ describe("RetrievedResultsCard comparison", () => {
     );
     expect(loadResults).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("radio", { name: "Compare two" }));
+    fireEvent.click(screen.getByRole("button", { name: "Compare" }));
 
     await waitFor(() => expect(loadResults).toHaveBeenCalledWith([OLDER_ID]));
   });
@@ -45,11 +45,11 @@ describe("RetrievedResultsCard comparison", () => {
         "What Google returned around your result, kept from the moment each check ran.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "One check" })).toBeChecked();
+    expect(screen.queryByRole("button", { name: "Stop comparing" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Stored checks" })).toHaveTextContent(
       "Mar 12, 2026, 06:00 · top 8 kept",
     );
-    expect(screen.getByText("8 of 100 retrieved")).toBeInTheDocument();
+    expect(screen.getByText("7 results saved · requested Top 100")).toBeInTheDocument();
 
     const features = screen.getByTestId("retrieved-features");
     expect(features).toHaveClass("flex", "flex-wrap");
@@ -61,7 +61,9 @@ describe("RetrievedResultsCard comparison", () => {
       );
     }
     const summary = screen.getByTestId("retrieved-summary");
-    expect(summary).toHaveTextContent("Your result#4/compare");
+    expect(summary).toHaveTextContent("Your result#4");
+    expect(summary).toHaveTextContent("7 results saved · requested Top 100");
+    expect(summary).toHaveTextContent("/compare");
     expect(summary).not.toHaveClass("bg-bg-sunken");
     expect(screen.getByText("Headless CMS for product teams - Acme")).toBeInTheDocument();
     expect(screen.getByText("Your site")).toBeInTheDocument();
@@ -115,21 +117,19 @@ describe("RetrievedResultsCard comparison", () => {
         timeZone="UTC"
       />,
     );
-    fireEvent.click(screen.getByRole("radio", { name: "Compare two" }));
+    fireEvent.click(screen.getByRole("button", { name: "Compare" }));
     await screen.findByRole("heading", { name: "SERP snapshots" });
 
     const header = screen.getByTestId("retrieved-header");
-    expect(within(header).getByText("From")).toHaveClass("uppercase");
-    expect(within(header).getByText("To")).toHaveClass("uppercase");
+    expect(within(header).getByText("From")).toBeVisible();
+    expect(within(header).getByText("To")).toBeVisible();
     expect(within(header).getByRole("button", { name: "Earlier check" })).toHaveTextContent(
       "Mar 5, 2026, 06:00 · top 8 kept",
     );
     expect(within(header).getByRole("button", { name: "Later check" })).toHaveTextContent(
       "Mar 12, 2026, 06:00 · top 8 kept",
     );
-    const selected = screen.getByRole("radio", { name: "Compare two" });
-    expect(selected).toBeChecked();
-    expect(selected).not.toHaveClass("bg-accent-soft");
+    expect(screen.getByRole("button", { name: "Stop comparing" })).toBeVisible();
     expect(within(header).getByRole("button", { name: "Earlier check" })).toHaveClass(
       "min-h-[34px]",
     );
@@ -148,7 +148,7 @@ describe("RetrievedResultsCard comparison", () => {
 
   it("disables comparison when fewer than two retained checks exist", () => {
     const single = renderCard([entry()], fullResults());
-    const compare = screen.getByRole("radio", { name: "Compare two" });
+    const compare = screen.getByRole("button", { name: "Compare" });
     expect(compare).toBeDisabled();
     fireEvent.click(compare);
     expect(single.loadResults).not.toHaveBeenCalled();
@@ -160,7 +160,7 @@ describe("RetrievedResultsCard comparison", () => {
       [entry(), entry({ checkId: OLDER_ID, tier: "none", retrievedPositions: null })],
       fullResults(),
     );
-    const compare = screen.getByRole("radio", { name: "Compare two" });
+    const compare = screen.getByRole("button", { name: "Compare" });
     expect(compare).toBeDisabled();
     fireEvent.click(compare);
     expect(loadResults).not.toHaveBeenCalled();
@@ -197,8 +197,8 @@ describe("RetrievedResultsCard comparison", () => {
     const body = screen.getByTestId("retrieved-results-body");
     const pickers = screen.getByTestId("retrieved-picker-slots");
     expect(body).toHaveClass("h-[480px]", "sm:h-[520px]", "overflow-y-auto");
-    expect(pickers).toHaveClass("grid", "grid-cols-1", "sm:grid-cols-2");
-    const compare = screen.getByRole("radio", { name: "Compare two" });
+    expect(pickers).toHaveClass("flex", "flex-wrap", "sm:justify-end");
+    const compare = screen.getByRole("button", { name: "Compare" });
     expect(compare).toBeEnabled();
     fireEvent.click(compare);
     expect(await screen.findByText("These two checks cannot be compared")).toBeInTheDocument();
@@ -209,7 +209,7 @@ describe("RetrievedResultsCard comparison", () => {
         "The earlier check kept only its top 3, so its titles, URLs and page features below that are gone.",
       ),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: "One check" }));
+    fireEvent.click(screen.getByRole("button", { name: "Stop comparing" }));
     expect(screen.getByTestId("retrieved-results-body")).toBe(body);
     expect(body).toHaveClass("h-[480px]", "sm:h-[520px]");
   });

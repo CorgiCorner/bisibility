@@ -49,3 +49,12 @@ export const Group: Story = {
     </>
   ),
 };
+
+export const InlineBudgetDetails: Story = {
+  args: {
+    variant: "inline",
+    headingLevel: "h5",
+    title: "Details · Within budget",
+    children: "Reserved: 0 · Remaining: 75",
+  },
+};

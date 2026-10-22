@@ -11,7 +11,11 @@ it("separates the Runs toolbar from the table header without adding a table fram
     <ProjectRunsContent
       canMutate={false}
       operations={[]}
-      page={{ counts: { rankChecks: 0, searchConsole: 0, total: 0 }, nextCursor: null, runs: [] }}
+      page={{
+        counts: { aiTracking: 0, rankChecks: 0, searchConsole: 0, total: 0 },
+        nextCursor: null,
+        runs: [],
+      }}
       projectRef="prj_example"
       query={PROJECT_RUNS_DEFAULT_QUERY}
       runNowAction={async () => {}}

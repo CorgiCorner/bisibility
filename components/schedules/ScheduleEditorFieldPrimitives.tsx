@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import type { UseFormReturn } from "react-hook-form";
 import { type ScheduleEditorValues, scheduleEditorValidationCode } from "./ScheduleEditorModel";
 
-export function ScheduleEditorErrorText({ text }: Readonly<{ text?: string }>) {
+export function ScheduleEditorErrorText({ text, id }: Readonly<{ text?: string; id?: string }>) {
   const t = useTranslations("projectRuns.schedules");
   const message =
     text === scheduleEditorValidationCode.invalidCron
@@ -22,7 +22,7 @@ export function ScheduleEditorErrorText({ text }: Readonly<{ text?: string }>) {
                 : null;
   if (!message) return null;
   return (
-    <span className="block text-[11px] leading-5 text-red-text" role="alert">
+    <span className="block text-[11px] leading-5 text-red-text" id={id} role="alert">
       {message}
     </span>
   );

@@ -4,6 +4,7 @@ import { withProviderLookupCache } from "@/lib/provider-lookups/cache";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { resolveConnectionCredentials } from "@/lib/providers/connection-credentials";
 import { fetchAiResearchCapabilities } from "./catalog";
+import { AI_RESEARCH_CATALOG_CACHE_TTL_SECONDS } from "./catalog-freshness";
 import type { AiCatalogOutcome } from "./catalog-types";
 import { requireAiSource } from "./context";
 
@@ -38,7 +39,7 @@ export async function getAiResearchCatalog(projectId: string): Promise<AiCatalog
     const loaded = await withProviderLookupCache({
       fresh: false,
       key: `ai-catalog:v1:${projectId}:${source.connection.id}:${credentialIdentity}`,
-      ttlSeconds: 300,
+      ttlSeconds: AI_RESEARCH_CATALOG_CACHE_TTL_SECONDS,
       lockTtlSeconds: 30,
       load: async () =>
         (await fetchAiResearchCapabilities(credentials, Date.now() + 10_000)).catalog,

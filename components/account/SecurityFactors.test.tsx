@@ -190,14 +190,12 @@ describe("SecurityFactors", () => {
     expect(routerMock.refresh).toHaveBeenCalled();
   });
 
-  it("keeps backup codes on screen until mail setup continues", async () => {
-    const onEnrolled = vi.fn();
+  it("keeps backup codes visible beside the validated administration return link", async () => {
     render(
       <SecurityFactors
         hasPasswordCredential={false}
         initiallyEnabled={false}
-        onEnrolled={onEnrolled}
-        returnTo="/setup"
+        returnTo="/app/admin/billing"
       />,
     );
 
@@ -209,12 +207,10 @@ describe("SecurityFactors", () => {
     fireEvent.click(screen.getByRole("button", { name: "Verify" }));
 
     expect(await screen.findByText("abcde-12345")).toBeInTheDocument();
-    expect(onEnrolled).not.toHaveBeenCalled();
-    expect(routerMock.refresh).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByRole("button", { name: "Continue to mail settings" }));
-
-    expect(onEnrolled).toHaveBeenCalledOnce();
+    expect(screen.getByRole("link", { name: "Return to administration" })).toHaveAttribute(
+      "href",
+      "/app/admin/billing",
+    );
     expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
 });

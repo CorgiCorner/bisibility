@@ -745,7 +745,7 @@
   {
     "name": "list_ranked_keyword_suggestions",
     "title": "List ranked keyword suggestions",
-    "description": "Paid provider lookup on the project's own DataForSEO account, about $0.02 per 100-keyword page on a cache miss. Results are cached for 12 hours and shared with the UI and API. already_tracked marks keywords the project tracks. Set max_cost_cents to have the server refuse a cache miss whose estimate is higher.",
+    "description": "Paid provider lookup on the project's own DataForSEO account, about $0.02 per 100-keyword page on a cache miss. Results are cached for 12 hours and shared with the UI and API. already_tracked marks keywords the project tracks. Set max_cost_cents to have the server refuse a cache miss whose estimate is higher. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -764,9 +764,9 @@
           "maximum": 100
         },
         "max_cost_cents": {
-          "description": "Server-enforced maximum provider cost for a cache miss, in cents.",
+          "description": "Server-enforced maximum provider cost for a cache miss, in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
           "type": "integer",
-          "exclusiveMinimum": 0,
+          "minimum": 0,
           "maximum": 9007199254740991
         },
         "offset": {
@@ -795,7 +795,7 @@
   {
     "name": "research_keywords",
     "title": "Research keywords",
-    "description": "Requires API write scope. Paid keyword research uses the project's own DataForSEO account. When cost matters, call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Approximate per-source pricing comes from the current rate card exposed by get_provider_rates. Send one seed per call. Results are cached for 12 hours and shared with the API and UI. Clickstream-refined volumes double provider cost. already_tracked marks keywords the project tracks.",
+    "description": "Requires API write scope. Paid keyword research uses the project's own DataForSEO account. When cost matters, call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Approximate per-source pricing comes from the current rate card exposed by get_provider_rates. Send one seed per call. Results are cached for 12 hours and shared with the API and UI. Clickstream-refined volumes double provider cost. already_tracked marks keywords the project tracks. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -816,9 +816,9 @@
           "type": "boolean"
         },
         "max_cost_cents": {
-          "description": "Best-effort maximum provider cost for this request, in cents.",
+          "description": "Best-effort maximum provider cost for this request, in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
           "type": "integer",
-          "exclusiveMinimum": 0,
+          "minimum": 0,
           "maximum": 9007199254740991
         },
         "mode": {
@@ -877,9 +877,9 @@
           "type": "boolean"
         },
         "max_cost_cents": {
-          "description": "Best-effort maximum provider cost for the paid request, in cents.",
+          "description": "Best-effort maximum provider cost for the paid request, in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
           "type": "integer",
-          "exclusiveMinimum": 0,
+          "minimum": 0,
           "maximum": 9007199254740991
         },
         "mode": {
@@ -930,7 +930,7 @@
   {
     "name": "analyze_backlinks",
     "title": "Analyze backlinks",
-    "description": "Requires API write scope because cache misses spend the project's own DataForSEO budget. Successful snapshots contain summary metrics and per-link rows with new or lost status. Optional 12-month history may be unavailable: history_unavailable marks a history failure with confirmed cost while summary and links remain available. With unknown accounting, the response remains failed (isError) and may retain a completed summary as current-response evidence, with cost_cents null and rows_status not_requested. This evidence is not a cached snapshot or a settled total and does not survive reload. Successful snapshots are cached for 24 hours. Call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Compute aggregate views from rows and treat them as \"within fetched rows\" only.",
+    "description": "Requires API write scope because cache misses spend the project's own DataForSEO budget. Successful snapshots contain summary metrics and per-link rows with new or lost status. Optional 12-month history may be unavailable: history_unavailable marks a history failure with confirmed cost while summary and links remain available. With unknown accounting, the response remains failed (isError) and may retain a completed summary as current-response evidence, with cost_cents null and rows_status not_requested. This evidence is not a cached snapshot or a settled total and does not survive reload. Successful snapshots are cached for 24 hours. Call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Compute aggregate views from rows and treat them as \"within fetched rows\" only. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -948,9 +948,9 @@
           "type": "boolean"
         },
         "max_cost_cents": {
-          "description": "Best-effort maximum provider cost for this request, in cents.",
+          "description": "Best-effort maximum provider cost for this request, in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
           "type": "integer",
-          "exclusiveMinimum": 0,
+          "minimum": 0,
           "maximum": 9007199254740991
         },
         "mode": {
@@ -1020,9 +1020,9 @@
           "type": "boolean"
         },
         "max_cost_cents": {
-          "description": "Best-effort maximum provider cost for the paid request, in cents.",
+          "description": "Best-effort maximum provider cost for the paid request, in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
           "type": "integer",
-          "exclusiveMinimum": 0,
+          "minimum": 0,
           "maximum": 9007199254740991
         },
         "mode": {
@@ -1082,11 +1082,21 @@
   {
     "name": "load_more_backlink_rows",
     "title": "Load more backlink rows",
-    "description": "Requires API write scope. Extends the current unexpired backlinks snapshot at the per-100-row provider rate. Requires the exact snapshot_ref from the latest successful analysis or append response; use the replacement reference returned by each append. Returns 409 snapshot_expired when no current snapshot exists. Stale, mismatched or expired references return 409 before provider work; read or analyze the current snapshot before retrying. This tool cannot extend failed current-response summary evidence.",
+    "description": "Requires API write scope. Extends the current unexpired backlinks snapshot at the per-100-row provider rate. Requires the exact snapshot_ref from the latest successful analysis or append response; use the replacement reference returned by each append. Returns 409 snapshot_expired when no current snapshot exists. Stale, mismatched or expired references return 409 before provider work; read or analyze the current snapshot before retrying. This tool cannot extend failed current-response summary evidence. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
+        "max_cost_cents": {
+          "description": "0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "estimate_only": {
+          "description": "Free cache-aware next-page estimate without provider calls.",
+          "type": "boolean"
+        },
         "include_subdomains": {
           "description": "Include backlinks to subdomains for site targets. Ignored for page targets.",
           "type": "boolean"
@@ -1335,7 +1345,7 @@
   {
     "name": "load_domain_overview_keywords",
     "title": "Load domain overview keywords",
-    "description": "Requires API write scope and an explicit max_cost_cents because a cache miss can spend provider budget. Use zero for cache-only. Loads one ranked-keyword page for the current Domain Overview target; snapshot_expired means analysis must run again first.",
+    "description": "Requires API write scope and an explicit max_cost_cents because a cache miss can spend provider budget. Use zero for cache-only. Loads one ranked-keyword page for the current Domain Overview target; snapshot_expired means analysis must run again first. Failure details preserve reason and phase (before_dispatch, provider or persistence), with provider_code for provider errors. Reasons include operation_access_denied, payment_admission, cost_limit_exceeded, payment_quote_changed, provider_connection_changed, usage_persistence, rate_limited, provider_error and unexpected. Legacy saved modules without a cause use lookup_failed.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -1414,7 +1424,7 @@
   {
     "name": "load_domain_overview_pages",
     "title": "Load domain overview pages",
-    "description": "Requires API write scope and an explicit max_cost_cents because a cache miss can spend provider budget. Use zero for cache-only. Loads one relevant-page result page for the current Domain Overview target; snapshot_expired means analysis must run again first.",
+    "description": "Requires API write scope and an explicit max_cost_cents because a cache miss can spend provider budget. Use zero for cache-only. Loads one relevant-page result page for the current Domain Overview target; snapshot_expired means analysis must run again first. Failure details preserve reason and phase (before_dispatch, provider or persistence), with provider_code for provider errors. Reasons include operation_access_denied, payment_admission, cost_limit_exceeded, payment_quote_changed, provider_connection_changed, usage_persistence, rate_limited, provider_error and unexpected. Legacy saved modules without a cause use lookup_failed.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -1493,7 +1503,7 @@
   {
     "name": "get_keyword_metrics",
     "title": "Get keyword metrics",
-    "description": "Requires API write scope. Paid metrics lookup uses the project's own DataForSEO account. When cost matters, call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Approximate pricing per 100 fetched keywords comes from the current rate card exposed by get_provider_rates. Batches contain up to 700 keywords and cache each keyword for 12 hours, shared with the API and UI. Clickstream-refined volumes double provider cost.",
+    "description": "Requires API write scope. Paid metrics lookup uses the project's own DataForSEO account. When cost matters, call with estimate_only first for a free dry run, then use max_cost_cents as a best-effort request guard. Approximate pricing per 100 fetched keywords comes from the current rate card exposed by get_provider_rates. Batches contain up to 700 keywords and cache each keyword for 12 hours, shared with the API and UI. Clickstream-refined volumes double provider cost. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -1525,9 +1535,9 @@
           "description": "Keywords to request metrics for, supplied as search phrases."
         },
         "max_cost_cents": {
-          "description": "Best-effort maximum provider cost for this request, in cents.",
+          "description": "Best-effort maximum provider cost for this request, in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts.",
           "type": "integer",
-          "exclusiveMinimum": 0,
+          "minimum": 0,
           "maximum": 9007199254740991
         },
         "project_id": {
@@ -2212,7 +2222,7 @@
   {
     "name": "run_rank_check",
     "title": "Run rank check",
-    "description": "Run a provider-backed rank check for one keyword. Requires write access and may incur provider cost. Ask for explicit user approval immediately before calling; this server cannot enforce the client's confirmation UI. The deployment selects inline or queued execution. A queued response contains an rcr_ run ID, not a check_ ID. Follow get_rank_history for that run_id until terminal, then use its check_ ID with get_rank_check_result. The async option only requests an early response. Set max_cost_cents to have the server refuse the check when its preflight estimate is higher.",
+    "description": "Run a provider-backed rank check for one keyword. Requires write access and may incur provider cost. Ask for explicit user approval immediately before calling; this server cannot enforce the client's confirmation UI. The deployment selects inline or queued execution. A queued response contains an rcr_ run ID, not a check_ ID. Follow get_rank_history for that run_id until terminal, then use its check_ ID with get_rank_check_result. The async option only requests an early response. Set max_cost_cents to have the server refuse the check when its preflight estimate is higher. 0 = cached result only; fresh checks have no cache and always refuse zero before creating work.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -2236,9 +2246,9 @@
           "pattern": "^kw_[a-z][a-z0-9]{23}$"
         },
         "max_cost_cents": {
-          "description": "Server-enforced maximum for the preflight cost estimate of this check, in cents.",
+          "description": "Server-enforced maximum for the preflight cost estimate of this check, in cents. 0 = cached result only; fresh rank checks have no cache and always refuse zero before creating work.",
           "type": "integer",
-          "exclusiveMinimum": 0,
+          "minimum": 0,
           "maximum": 9007199254740991
         },
         "provider_id": {
@@ -3052,15 +3062,40 @@
   {
     "name": "list_search_performance_query_stats",
     "title": "List search-performance query stats",
-    "description": "Fetch live query statistics from one of the project's own connected search-performance accounts. Provider rate limits and reauthorization rules apply. query is an exact match unless query_match is contains; rows aggregate all countries and devices.",
+    "description": "Fetch live query statistics from one of the project's own connected search-performance accounts. Optional country and device filters limit the rows, and dimensions group by query plus any of page, country, and device. Page further results with offset; result.next_offset is set when the result is truncated. Rows aggregate every country and device only when no country or device filter or dimension is requested. Provider rate limits and reauthorization rules apply.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
       "properties": {
+        "clicks_min": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
         "connection_id": {
           "description": "Identifier of the provider connection to operate on.",
           "type": "string",
           "pattern": "^conn_[a-z][a-z0-9]{23}$"
+        },
+        "country": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3,
+          "pattern": "^[a-zA-Z]{3}$"
+        },
+        "device": {
+          "type": "string",
+          "enum": ["desktop", "mobile", "tablet"]
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["query", "page", "country", "device"]
+          },
+          "contains": {
+            "const": "query"
+          }
         },
         "end_date": {
           "type": "string",
@@ -3068,10 +3103,33 @@
           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
           "description": "Calendar date delimiting the requested reporting period."
         },
+        "impressions_min": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
         "limit": {
           "type": "integer",
           "minimum": 1,
           "maximum": 1000
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "page_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "page_path_match": {
+          "type": "string",
+          "enum": ["contains", "prefix"]
+        },
+        "position_max": {
+          "type": "number",
+          "minimum": 0
         },
         "project_id": {
           "description": "Identifier of the bisibility project to operate on; list_projects returns valid project ids.",
@@ -3082,6 +3140,10 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 1000
+        },
+        "query_match": {
+          "type": "string",
+          "enum": ["equals", "contains"]
         },
         "start_date": {
           "type": "string",
@@ -5856,7 +5918,7 @@
   {
     "name": "analyze_ai_visibility",
     "title": "Analyze AI visibility",
-    "description": "Inspect provider-observed ChatGPT or Google AI Overview mentions and citations. This is a limited provider dataset, not all user conversations. Requires BYOK or deployment credits, an explicit cost cap, and project write scope.",
+    "description": "Inspect provider-observed ChatGPT or Google AI Overview mentions and citations. This is a limited provider dataset, not all user conversations. Requires BYOK or deployment credits, an explicit cost cap, and project write scope. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts. Extended-option misses return pricing_unavailable when pricing requires provider metadata.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -5883,7 +5945,7 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 1000,
-          "description": "Maximum accepted provider cost in cents. Estimates and cache reads do not spend credits."
+          "description": "Maximum accepted provider cost in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts. Extended-option misses return pricing_unavailable when pricing requires provider metadata."
         },
         "estimate_only": {
           "default": false,
@@ -5999,7 +6061,7 @@
   {
     "name": "compare_ai_prompts",
     "title": "Compare AI prompts",
-    "description": "Run the same synthetic prompt against supported models and compare answers, brand mentions and returned citations. These tests are not observed ChatGPT/AIO visibility. Requires a guaranteed hard cap or explicit actual-cost consent with an advisory estimate limit, and project write scope.",
+    "description": "Run the same synthetic prompt against supported models and compare answers, brand mentions and returned citations. These tests are not observed ChatGPT/AIO visibility. Requires a guaranteed hard cap or explicit actual-cost consent with an advisory estimate limit, and project write scope. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts. Extended-option misses return pricing_unavailable when pricing requires provider metadata.",
     "inputSchema": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "type": "object",
@@ -6026,7 +6088,7 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 1000,
-          "description": "Maximum accepted provider cost in cents. Estimates and cache reads do not spend credits."
+          "description": "Maximum accepted provider cost in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before provider calls, holds or attempts. Extended-option misses return pricing_unavailable when pricing requires provider metadata."
         },
         "estimate_only": {
           "default": false,

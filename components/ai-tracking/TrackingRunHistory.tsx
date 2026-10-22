@@ -1,4 +1,5 @@
 "use client";
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import { Button } from "@/components/ui/Button";
 import { PillBadge } from "@/components/ui/Pill";
 import { trackingSourceLabel } from "@/lib/ai-tracking/projections/trends";
@@ -76,7 +77,7 @@ export function TrackingRunHistory({
                 {sample.prompt}
                 <span className="mt-1 block text-xs text-fg-muted">
                   {trackingSourceLabel[sample.source]} · {sample.engine} ·{" "}
-                  {sample.costUsd === null ? t("costUnknown") : `$${sample.costUsd}`}
+                  <PaymentChargeLine original payment={sample.originalPayment} />
                 </span>
               </span>
               <PillBadge>{sample.measurement.replaceAll("_", " ")}</PillBadge>

@@ -44,7 +44,7 @@ export function sesClientFor(
     ...(credentials ? { credentials } : {}),
     maxAttempts: SES_MAX_ATTEMPTS,
     region,
-    requestHandler: { requestTimeout: SES_TIMEOUT_MS },
+    requestHandler: { requestTimeout: SES_TIMEOUT_MS, throwOnRequestTimeout: true },
   });
   clientsByRegion.set(cacheKey, client);
   return client;

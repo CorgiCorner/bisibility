@@ -273,6 +273,7 @@ describe("public API remaining app surface routes", () => {
       inviteEmail: true,
       inviteInApp: true,
       projectId: ids.project,
+      reportEmail: true,
       slackAvailable: false,
       webhookAvailable: false,
     });

@@ -134,23 +134,21 @@ describe("KeywordsEmptyState", () => {
     expect(screen.queryByText("Add keywords")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Add keywords" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Import CSV" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /connect one/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^Integrations$/i })).not.toBeInTheDocument();
   });
 
   it("hides the checks-consequence note when a provider is connected", () => {
     renderEmpty(true);
 
-    expect(
-      screen.queryByText(/rank checks need a connected serp provider/i),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /connect one/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Choose a data source in/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^Integrations$/i })).not.toBeInTheDocument();
   });
 
   it("states the truthful checks consequence when no provider is connected", () => {
     renderEmpty(false);
 
-    expect(screen.getByText(/rank checks need a connected serp provider/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /connect one/i })).toHaveAttribute(
+    expect(screen.getByText(/Choose a data source in/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Integrations$/i })).toHaveAttribute(
       "href",
       "/app/prj_1/integrations",
     );
@@ -181,6 +179,7 @@ describe("KeywordsEmptyState", () => {
     fireEvent.click(screen.getByRole("button", { name: "From Search Console" }));
 
     const confirm = await screen.findByRole("button", { name: /Add 2 keywords/i });
+    expect(screen.getByText(/\+2 keywords = \+0 checks\/mo/)).toBeVisible();
     fireEvent.click(confirm);
 
     expect(onImportQueries).toHaveBeenCalledWith(["rank tracker", "seo api"]);

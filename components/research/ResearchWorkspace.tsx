@@ -2,7 +2,6 @@
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
 import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
 import { ProviderAccessGate } from "@/components/ui/ProviderAccessGate";
-import { Tooltip } from "@/components/ui/Tooltip";
 import type { ResearchKeywordsActionInput } from "@/lib/actions/keyword-research";
 import type { KeywordResearchMode } from "@/lib/keyword-research/types";
 import {
@@ -12,29 +11,32 @@ import {
 import { appPath } from "@/lib/routing/app-path";
 import { useState } from "react";
 import { RecentResearchSearches } from "./RecentResearchSearches";
+import { ResearchPaymentReview } from "./ResearchPaymentReview";
 import { ResearchResults } from "./ResearchResults";
 import { ResearchSearchCard } from "./ResearchSearchCard";
 import { ResearchSeedTabs } from "./ResearchSeedTabs";
-import { ResearchStatePanel } from "./ResearchStatePanel";
 import { ResearchTrackingDrawer } from "./ResearchTrackingDrawer";
+import { ResearchWorkspaceOutcome } from "./ResearchWorkspaceOutcome";
+import { reviewDeeperResearch } from "./research-payment-estimates";
 import { researchScopeMetricsAvailable } from "./research-scope-capability";
 import {
-  focusResearchSeedInput,
   type ResearchAddDraft,
   type ResearchWorkspaceProps,
   recentSearchReplay,
-  researchFailureState,
   researchScopeLocationKey,
   researchScopeTrackingLocation,
   researchTabRequest,
 } from "./research-workspace-model";
 import { useRecentSearches } from "./useRecentSearches";
 import { useResearchEstimate } from "./useResearchEstimate";
+import { useResearchPaymentReview } from "./useResearchPaymentReview";
+import { useResearchRequestInput } from "./useResearchRequestInput";
 import { useResearchRuns } from "./useResearchRuns";
 import { useResearchSavedKeywords } from "./useResearchSavedKeywords";
 import { useResearchWorkspaceCopy } from "./useResearchWorkspaceCopy";
 export function ResearchWorkspace({
   addKeywordsAction,
+  assessPaymentsAction,
   canDeleteSavedKeywords,
   checkHealth,
   context,
@@ -62,18 +64,13 @@ export function ResearchWorkspace({
   const [resultLimit, setResultLimit] = useState<100 | 300 | 500>(100);
   const [seeds, setSeeds] = useState<string[]>(prefill?.seed.trim() ? [prefill.seed.trim()] : []);
   const [addDraft, setAddDraft] = useState<ResearchAddDraft | null>(null);
-  const requestInput = (
-    seed: string,
-    overrides: Partial<ResearchKeywordsActionInput> = {},
-  ): ResearchKeywordsActionInput => ({
+  const { requestInput, selectPaymentOption } = useResearchRequestInput({
     connectionId,
     includeClickstream,
     locationKey: researchScopeLocationKey(scope),
     mode,
     projectId: context.project.id,
     resultLimit,
-    seed,
-    ...overrides,
   });
   const { estimate, scheduleEstimate } = useResearchEstimate(researchAction, requestInput);
   const researchRuns = useResearchRuns({
@@ -88,8 +85,28 @@ export function ResearchWorkspace({
     researchAction,
     resultLimit,
   });
-  // biome-ignore format: grouped hook state keeps this page component below the line limit.
-  const { activeTab, budgetBlocked, budgetState, closeTab, markAdded, markSaved, researching, runResearch, setActiveTabId, tabs } = researchRuns;
+  const {
+    activeTab,
+    budgetState,
+    closeTab,
+    markAdded,
+    markSaved,
+    researching,
+    runResearch,
+    setActiveTabId,
+    tabs,
+  } = researchRuns;
+  const paymentReview = useResearchPaymentReview(
+    researchAction,
+    requestInput,
+    runResearch,
+    assessPaymentsAction,
+  );
+  const reviewRun = (
+    next: string[],
+    overrides: Partial<ResearchKeywordsActionInput> = {},
+    runScope = scope,
+  ) => paymentReview.review(next, overrides, runScope);
   const researchAvailable = researchScopeMetricsAvailable(scope);
   const savedKeywords = useResearchSavedKeywords({
     canRemove: canDeleteSavedKeywords,
@@ -102,10 +119,8 @@ export function ResearchWorkspace({
     setSeeds(next);
     scheduleEstimate(researchAvailable ? next : []);
   }
-
   const hasProvider = context.connections.length > 0;
   const hasResults = Boolean(activeTab?.outcome.ok && activeTab.outcome.rows.length);
-  const hasEmptyResults = activeTab?.outcome.ok && activeTab.outcome.rows.length === 0;
   const connectionOptions = context.connections.map(({ label, id: value }) => ({ label, value }));
   function openRecentSearch(search: Parameters<typeof recentSearchReplay>[0]) {
     const replay = recentSearchReplay(
@@ -128,7 +143,7 @@ export function ResearchWorkspace({
       return;
     }
     if (replay.cached) {
-      void runResearch([search.seed], replay.overrides, searchScope);
+      void reviewRun([search.seed], replay.overrides, searchScope);
       return;
     }
     setSeeds([search.seed]);
@@ -138,68 +153,71 @@ export function ResearchWorkspace({
     });
   }
 
-  function runDeeper() {
-    if (!activeTab || !hasProvider) return;
-    const limit = activeTab.requestedLimit === 100 ? 300 : 500;
-    setResultLimit(limit);
-    const request = researchTabRequest(activeTab, limit);
-    void runResearch([activeTab.seed], request, activeTab.scope);
-  }
-
+  const runDeeper = () =>
+    activeTab && hasProvider && void reviewDeeperResearch(activeTab, reviewRun, setResultLimit);
   return (
     <section className="grid min-w-0 gap-4">
       <ProviderAccessGate
         blocked={!hasProvider}
+        showNotice={hasResults}
         href={appPath(context.project.id, "integrations")}
         providers={context.supportingProviders}
       >
-        <Tooltip
-          disabled={!hasProvider || !budgetState}
-          content={hasProvider ? copy.budgetTooltip(budgetState) : ""}
-          wrapperClassName="w-full"
-        >
-          <div className="w-full">
-            <ResearchSearchCard
-              connectionId={connectionId}
-              connectionOptions={connectionOptions}
-              disabled={budgetBlocked || !hasProvider}
-              estimate={estimate}
-              includeClickstream={includeClickstream}
-              scope={scope}
-              scopes={[scope, ...scopeOptions]}
-              mode={mode}
-              onConnectionChange={(value) => {
-                setConnectionId(value);
-                scheduleEstimate(researchAvailable ? seeds : [], { connectionId: value });
-              }}
-              onIncludeClickstreamChange={(value) => {
-                setIncludeClickstream(value);
-                scheduleEstimate(researchAvailable ? seeds : [], { includeClickstream: value });
-              }}
-              onLimitChange={(value) => {
-                setResultLimit(value);
-                scheduleEstimate(researchAvailable ? seeds : [], { resultLimit: value });
-              }}
-              onScopeChange={(value) => {
-                setScope(value);
-                scheduleEstimate(researchScopeMetricsAvailable(value) ? seeds : [], {
-                  locationKey: researchScopeLocationKey(value),
-                });
-              }}
-              lookupDisabled={!hasProvider || !researchAvailable}
-              onModeChange={(value) => {
-                setMode(value);
-                scheduleEstimate(researchAvailable ? seeds : [], { mode: value });
-              }}
-              onSeedsChange={updateSeeds}
-              onSubmit={(next) => void runResearch(next)}
-              researching={researching}
-              resultLimit={resultLimit}
-              seeds={seeds}
-            />
-          </div>
-        </Tooltip>
+        <div className="w-full">
+          <ResearchSearchCard
+            connectionId={connectionId}
+            connectionOptions={connectionOptions}
+            disabled={!hasProvider}
+            estimate={estimate}
+            includeClickstream={includeClickstream}
+            scope={scope}
+            scopes={[scope, ...scopeOptions]}
+            mode={mode}
+            onConnectionChange={(value) => {
+              setConnectionId(value);
+              selectPaymentOption(undefined);
+              scheduleEstimate(researchAvailable ? seeds : [], { connectionId: value });
+            }}
+            onIncludeClickstreamChange={(value) => {
+              setIncludeClickstream(value);
+              scheduleEstimate(researchAvailable ? seeds : [], { includeClickstream: value });
+            }}
+            onLimitChange={(value) => {
+              setResultLimit(value);
+              scheduleEstimate(researchAvailable ? seeds : [], { resultLimit: value });
+            }}
+            onScopeChange={(value) => {
+              setScope(value);
+              scheduleEstimate(researchScopeMetricsAvailable(value) ? seeds : [], {
+                locationKey: researchScopeLocationKey(value),
+              });
+            }}
+            lookupDisabled={!hasProvider || !researchAvailable}
+            onModeChange={(value) => {
+              setMode(value);
+              scheduleEstimate(researchAvailable ? seeds : [], { mode: value });
+            }}
+            onSeedsChange={updateSeeds}
+            onPaymentOptionChange={(option) => {
+              selectPaymentOption(option);
+              scheduleEstimate(seeds, {
+                connectionId: option.connectionId,
+                paymentOptionId: option.id,
+              });
+            }}
+            onSubmit={(next, option) =>
+              void reviewRun(
+                next,
+                option ? { connectionId: option.connectionId, paymentOptionId: option.id } : {},
+              )
+            }
+            researching={researching}
+            resultLimit={resultLimit}
+            seeds={seeds}
+          />
+        </div>
       </ProviderAccessGate>
+      <ResearchPaymentReview review={paymentReview} />
       <RecentResearchSearches
         disabled={!hasProvider}
         disabledHint={copy.recentDisabledHint}
@@ -213,40 +231,19 @@ export function ResearchWorkspace({
           providers={context.supportingProviders}
         />
       ) : null}
-      {hasProvider && researching ? (
-        <ResearchStatePanel projectRef={context.project.id} state="loading" />
-      ) : null}
-      {hasProvider && !researching && !activeTab ? (
-        <ResearchStatePanel
-          projectRef={context.project.id}
-          resumeLabel={copy.budgetResetLabel()}
-          scopeLabel={`${scope.countryName} / ${scope.languageLabel}`}
-          state={budgetState ?? (researchAvailable ? "idle" : "unsupported_location")}
-        />
-      ) : null}
-      {hasProvider && !researching && hasEmptyResults ? (
-        <ResearchStatePanel
-          cached={activeTab.outcome.ok && activeTab.outcome.cached}
-          scopeLabel={`${activeTab.scope.countryName} / ${activeTab.scope.languageLabel}`}
-          mode={activeTab.mode}
-          onEditSearch={focusResearchSeedInput}
-          projectRef={context.project.id}
-          state="empty"
-        />
-      ) : null}
-      {hasProvider && !researching && activeTab && !activeTab.outcome.ok ? (
-        <ResearchStatePanel
-          charged={"charged" in activeTab.outcome ? activeTab.outcome.charged : false}
+      {hasProvider ? (
+        <ResearchWorkspaceOutcome
+          activeTab={activeTab}
+          researching={researching}
+          projectId={context.project.id}
+          scope={scope}
+          researchAvailable={researchAvailable}
+          budgetState={budgetState}
+          copy={copy}
           onRetry={() =>
-            void runResearch([activeTab.seed], researchTabRequest(activeTab), activeTab.scope)
+            activeTab &&
+            void reviewRun([activeTab.seed], researchTabRequest(activeTab), activeTab.scope)
           }
-          projectRef={context.project.id}
-          retryLabel={copy.retryLabel(
-            activeTab.retryEstimate ?? { cached: false, costCents: null, loading: false },
-          )}
-          resumeLabel={copy.budgetResetLabel()}
-          scopeLabel={`${activeTab.scope.countryName} / ${activeTab.scope.languageLabel}`}
-          state={researchFailureState(activeTab.outcome)}
         />
       ) : null}
       <ResearchSeedTabs

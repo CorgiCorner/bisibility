@@ -38,6 +38,7 @@
         "positionValue": "#{position, number}",
         "noRankingUrl": "Todavía no hay URL posicionada",
         "provider": "vía {provider}",
+        "providerNotRecorded": "Proveedor no registrado",
         "notCheckedYet": "Sin comprobar todavía",
         "minutesAgo": "{count, plural, one {Hace # min} other {Hace # min}}",
         "hoursAgo": "Hace {count, number} h",
@@ -91,7 +92,7 @@
         "chooseDepth": "Elegir la profundidad de la comprobación",
         "depthMenu": "Profundidad de la comprobación",
         "changeDefault": "Cambiar el valor predeterminado",
-        "connectProvider": "Conectar un proveedor",
+        "connectProvider": "Elige una fuente de datos",
         "shallowVisibility": "Una comprobación poco profunda puede pasar por alto posiciones más allá de la profundidad seleccionada.",
         "refreshData": "Actualizar datos",
         "refreshingData": "Actualizando...",
@@ -129,14 +130,14 @@
         "notRankedBody": "En la última comprobación ha quedado fuera de la profundidad en seguimiento.",
         "firstTitle": "Todavía no hay datos de posiciones",
         "firstBody": "La primera comprobación aún no se ha ejecutado.",
-        "firstBodyNoProvider": "La primera comprobación aún no se ha ejecutado. Conecta un proveedor de SERP para ejecutarla.",
+        "firstBodyNoProvider": "La primera comprobación aún no se ha ejecutado. Elige una fuente de datos para iniciarla.",
         "noData": "Sin datos",
         "outsideTop": "fuera del top {depth}",
         "refresh": "Actualizar",
         "retryCheck": "Reintentar la comprobación",
         "checkTop": "Comprobar el top {depth}",
         "runFirstCheck": "Ejecutar la primera comprobación",
-        "connectSerpProvider": "Conectar un proveedor de SERP",
+        "connectSerpProvider": "Elige una fuente de datos",
         "history": "Historial de posiciones",
         "coverageUnknownTitle": "Cobertura desconocida",
         "coverageUnknownBody": "La respuesta del proveedor no permite determinar si esta palabra clave está dentro de la profundidad rastreada."
@@ -174,7 +175,8 @@
         "completeTitle": "Comprobación completada",
         "failedTitle": "La comprobación ha fallado",
         "couldNotStart": "No se ha podido iniciar la comprobación de posiciones.",
-        "viewRuns": "Ver ejecuciones"
+        "viewRuns": "Ver ejecuciones",
+        "providerCapacityUnavailable": "Las comprobaciones no están disponibles temporalmente para este proveedor. No se te ha cobrado. Inténtalo más tarde o conecta tus propias claves del proveedor."
       },
       "traffic": {
         "noData": "Sin datos",
@@ -216,7 +218,10 @@
           "reconnect": "Una fuente de analítica debe volver a conectarse en Integraciones.",
           "rateLimited": "Se alcanzó el límite de solicitudes del proveedor de analítica. Inténtalo más tarde.",
           "unavailable": "No hay ninguna fuente conectada disponible para obtener analítica. Revisa Integraciones.",
-          "integrations": "Gestionar integraciones"
+          "integrations": "Gestionar integraciones",
+          "sources": "Fuentes de analítica",
+          "sourceActive": "Conexión activa",
+          "sourceInactive": "Sin conexión activa"
         }
       },
       "position": {
@@ -334,7 +339,7 @@
         "competitor": "Competidor",
         "gapPositions": "Posiciones {start, number}-{end, number}",
         "notRetrieved": "{count, number} sin obtener",
-        "gapStopped": "La comprobación se ha detenido en tu resultado, así que estas posiciones nunca se han pedido ni facturado. En esta comprobación son desconocidas, no están vacías.",
+        "gapStopped": "Se detuvo tras encontrar tu dominio. No hay resultados guardados para las posiciones restantes; no significa que estuvieran vacías.",
         "gapUnknown": "Estas posiciones no se han obtenido en esta comprobación. Son desconocidas, no están vacías.",
         "site": "Sitio",
         "notInSaved": "No está en los resultados guardados",
@@ -433,15 +438,25 @@
           "expired": "El plazo de 15 minutos ha terminado. Inicia otra comprobación arriba para obtener resultados actuales.",
           "complete": "No hay más páginas o la captura ha llegado a las primeras 100 posiciones.",
           "running": "Ya se está obteniendo una ampliación. Actualiza los datos para ver el resultado.",
-          "failed": "No se pudo confirmar la ampliación. Los resultados anteriores están a salvo. Actualiza los datos para comprobar el estado o inicia otra comprobación.",
+          "failed": "No se pudo confirmar la ampliación. No se enviará otra vez automáticamente. Se conservan los resultados anteriores. Actualizar solo consulta el estado guardado.",
           "disconnected": "Vuelve a conectar la integración SerpApi de esta captura para ampliarla.",
           "unavailable": "Esta captura ha cambiado. Actualiza los datos antes de continuar.",
           "addedTitle": "Resultados añadidos después de la comprobación",
           "page": "Posiciones {start, number} a {end, number} · obtenidas el {time}",
           "added": "{count, number} añadidos · {duplicates, number} duplicados omitidos",
           "emptyPage": "Esta página no devolvió nuevos resultados únicos.",
-          "refresh": "Actualizar captura"
-        }
+          "refresh": "Actualizar captura",
+          "refreshHint": "Recarga los resultados y el estado guardados sin enviar otra solicitud al proveedor.",
+          "retry": "Reintentar ampliación",
+          "notSent": "Esta ampliación no se envió. Puedes reintentar hasta {time}.",
+          "notSentExpired": "Esta ampliación no se envió. El plazo de ampliación ha terminado. Inicia una nueva comprobación para obtener resultados.",
+          "lastCharge": "Última ampliación"
+        },
+        "competitorCheck": "Comprobación de competidores",
+        "compareAction": "Comparar",
+        "stopComparing": "Dejar de comparar",
+        "savedResults": "{count, number} resultados guardados · Top {depth, number} solicitado",
+        "partialCompetitors": "Captura parcial. Los competidores que faltan pueden estar en el Top {depth, number}."
       },
       "comparison": {
         "entered": "Ha entrado",
@@ -552,7 +567,11 @@
         "unknownScope": "Alcance guardado no disponible",
         "revision": "Revisión del objetivo: {value}",
         "chartAria": "Cronología de posiciones guardadas",
-        "noQualifiedPoints": "No hay posiciones calificadas en la ventana cargada",
+        "noQualifiedPoints": "No hay posiciones para mostrar",
+        "noPositionsDescription": "No hay posiciones confirmadas para este período.",
+        "noObservations": "No hay observaciones en este período",
+        "noAttempts": "No hay intentos de comprobación en este período",
+        "noRecordsDescription": "Ejecuta una comprobación o elige otro intervalo de fechas.",
         "openObservation": "Abrir observación guardada {id}",
         "point": "Posición {position}, {date}",
         "chartLoaded": "{loaded} de {total} observaciones cargadas; {gaps} huecos; {boundaries} límites de metodología",
@@ -572,7 +591,7 @@
         "expectedUrl": "URL esperada guardada: {value}",
         "rankingUrl": "URL de resultado guardada: {value}",
         "openSnapshot": "Abrir comprobación guardada",
-        "attemptCountMeaning": "El número informado de intentos del proveedor es un dato guardado, no un registro completo de llamadas de pago.",
+        "attemptCountMeaning": "Intentos del proveedor guardados para esta comprobación. Este número puede diferir de las solicitudes facturadas.",
         "urlHistoryTitle": "URL de resultados guardadas",
         "urlHistoryMeaning": "Cada URL esperada y de resultado pertenece a su comprobación guardada, sin sustituirla por el objetivo editado actual.",
         "loadedCount": "{loaded} de {total} registros cargados",
@@ -683,11 +702,16 @@
           "map_listing": "Resultado de Maps",
           "listing": "Ficha de negocio"
         },
-        "otherResultKind": "Otro tipo de resultado (código: {value})"
+        "otherResultKind": "Otro tipo de resultado (código: {value})",
+        "scopeTechnicalDetails": "Detalles técnicos",
+        "scopeDevices": {
+          "desktop": "Ordenador",
+          "mobile": "Móvil"
+        }
       },
       "quality": {
         "currentUnknown": "Posición actual desconocida",
-        "currentScopeUnavailable": "La definición actual no está verificada",
+        "currentScopeUnavailable": "La configuración de seguimiento actual no está disponible",
         "currentDefinition": "Definición actual de medición",
         "lastKnown": "Última posición conocida #{position, number}",
         "bestCurrentDefinition": "Mejor posición #{position, number} para la definición actual",
@@ -706,7 +730,11 @@
         "lastKnownUrl": "Última URL conocida",
         "reportUnavailable": "Informe no disponible",
         "reportCapacity": "Este historial supera el límite del informe. Vuelve a la lista de palabras clave para ver los datos actuales.",
-        "reportChanged": "Los datos cambiaron mientras se cargaba el informe. Actualiza los datos guardados para abrir una nueva instantánea."
+        "reportChanged": "Los datos cambiaron mientras se cargaba el informe. Actualiza los datos guardados para abrir una nueva instantánea.",
+        "measurementDetails": "Detalles de la medición",
+        "bestSummary": "Mejor registrada: #{position, number}",
+        "historicalBestSummary": "Mejor anterior #{position, number}",
+        "checked": "Comprobado"
       },
       "providerComparison": {
         "title": "Comparar proveedores",
@@ -717,7 +745,7 @@
         "retry": "Reintentar",
         "loading": "Cargando comparación…",
         "depth": "Top 20",
-        "needsProviders": "Conecta DataForSEO y SerpApi para comparar resultados.",
+        "needsProviders": "Configura DataForSEO y SerpApi para comparar resultados.",
         "connections": "Conexiones de proveedores",
         "refresh": "Actualizar resultado",
         "preview": "Revisar coste",

@@ -308,7 +308,6 @@
           "smtpPort": "Port",
           "smtpUsername": "Username",
           "smtpPassword": "Password",
-          "code": "Authenticator code",
           "save": "Save mail settings",
           "saving": "Saving...",
           "clear": "Clear saved settings",
@@ -317,14 +316,13 @@
           "cleared": "Saved mail settings cleared. Environment variables apply.",
           "forbidden": "This action is not available.",
           "invalid": "Check the form and try again.",
-          "stepUpFailed": "That authenticator code was not accepted.",
           "rateLimited": "Too many attempts. Try again later.",
           "unavailable": "Mail settings are temporarily unavailable.",
           "validationSender": "Enter a sender as Name '<'address@example.com'>' or a plain address.",
           "validationRequired": "Enter a value.",
-          "validationCode": "Enter the 6-digit authenticator code.",
           "validationPort": "Enter a port from 1 to 65535.",
-          "validationSesPair": "Enter both the access key ID and the secret access key, or leave both empty."
+          "validationSesPair": "Enter both the access key ID and the secret access key, or leave both empty.",
+          "twoFactorRequired": "Two-factor authentication must be enabled."
         }
       }
     },
@@ -445,7 +443,8 @@
         "invalid": "Check the announcement fields.",
         "not_found": "This announcement no longer exists. Refresh the page.",
         "conflict": "Another administrator changed this announcement. Refresh the page before saving again.",
-        "unavailable": "The announcement could not be saved. Try again."
+        "unavailable": "The announcement could not be saved. Try again.",
+        "two_factor_required": "Two-factor authentication must be enabled."
       }
     },
     "recovery": {
@@ -558,7 +557,8 @@
         "rate_limited": "Too many actions. Try again shortly.",
         "unavailable": "Recovery is temporarily unavailable. Refresh the command status before retrying.",
         "case_changed": "This case changed or is no longer eligible. Refresh and review it again.",
-        "invalid": "Select a reason and a future waiting period."
+        "invalid": "Select a reason and a future waiting period.",
+        "two_factor_required": "Two-factor authentication must be enabled."
       },
       "commandStates": {
         "queued": "Recovery queued",
@@ -611,6 +611,21 @@
       "connectionBlocked": "Connection spending is blocked by unresolved accounting.",
       "lastResultActivityAt": "Result recovery worker last made progress",
       "noSpendShort": "Recovery checks existing evidence before taking action."
+    },
+    "dangerousActions": {
+      "notice": "Enable two-factor authentication to {action}.",
+      "enable": "Enable two-factor authentication",
+      "actions": {
+        "addAccount": "add an account",
+        "changeMail": "change mail settings",
+        "changeCredentials": "change credentials",
+        "selectAccount": "select an account",
+        "changeSettings": "change settings",
+        "changeAccountStatus": "change account access",
+        "changeAnnouncements": "change announcements",
+        "repairUsage": "repair usage records",
+        "importUsage": "import usage records"
+      }
     }
   }
 }

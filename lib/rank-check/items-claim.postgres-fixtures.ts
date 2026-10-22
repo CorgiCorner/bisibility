@@ -146,5 +146,5 @@ export async function createClaimFixture() {
       }
     },
   };
-  return { audits, database, db, query };
+  return { audits, database, db, query, tx };
 }

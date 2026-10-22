@@ -1,9 +1,9 @@
-import { parsePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { normalizeResearchKeyword } from "@/lib/keyword-research/context";
 import { locationLanguage, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { makePublicId, revalidateKeywordViews } from "./_shared";
 
+export { keywordIdsWhere } from "@/lib/keywords/ids-where";
 export {
   createKeywordBatch,
   createKeywordBatchSet,
@@ -86,12 +86,4 @@ export async function addTags(
     data: keywordIds.flatMap((keywordId) => tagRows.map((tag) => ({ keywordId, tagId: tag.id }))),
     skipDuplicates: true,
   });
-}
-
-export function keywordIdsWhere(projectId: string, keywordIds: string[]) {
-  if (keywordIds.some((keywordId) => parsePublicId(keywordId)?.prefix !== "kw")) {
-    throw new Error("Keyword not found.");
-  }
-
-  return { projectId, publicId: { in: keywordIds } };
 }

@@ -117,6 +117,39 @@
     "trackedMarkets": "Śledzone rynki",
     "updateFailed": "Nie udało się zaktualizować statusu rynku.",
     "updateMarketFailed": "Nie udało się zaktualizować rynku.",
-    "visibility": "Widoczność"
+    "visibility": "Widoczność",
+    "openMarket": "Otwórz rynek",
+    "viewMarkets": "Zobacz rynki",
+    "alreadyTrackedShort": "Już śledzony",
+    "deviceTracking": {
+      "title": "Dodaj śledzenie urządzenia",
+      "description": "Dodaj brakujące warianty urządzeń do tego rynku.",
+      "device": "Urządzenie do dodania",
+      "manualNotice": "Dodanie jest bezpłatne. Sprawdzenia jeszcze nie ruszą.",
+      "scheduledNotice": "Dodanie jest bezpłatne. Sprawdzenia ruszą według harmonogramu.",
+      "costNotice": "Dodanie jest bezpłatne. Sprawdzenia zużywają kredyty lub środki u dostawcy.",
+      "scope": "Śledzenie {device}: {checks, plural, one {# słowo} few {# słowa} many {# słów} other {# słowa}}.",
+      "skipped": "Pominięte: {existing, number} śledzonych, {archived, number} zarchiwizowanych.",
+      "review": "Sprawdź zmiany",
+      "confirm": "Dodaj śledzenie {device} ({count, number})",
+      "added": "Dodano śledzenie dla {count, number} słów.",
+      "failed": "Nie udało się potwierdzić zmiany. Sprawdź zakres przed ponowieniem.",
+      "errors": {
+        "market_unavailable": "Ten rynek jest wstrzymany, zarchiwizowany lub niedostępny. Sprawdź go w Rynkach.",
+        "selection_too_large": "Dla większego rynku użyj Dodaj słowa i dodaj urządzenie w mniejszych partiach.",
+        "selection_changed": "Słowa lub harmonogram się zmieniły. Sprawdź aktualny zakres ponownie.",
+        "schedule_unavailable": "Ten harmonogram jest wstrzymany, zarchiwizowany lub niedostępny. Wybierz inny lub Ręcznie.",
+        "ambiguous_keywords": "Pasujące słowa mają różne ustawienia śledzenia. Użyj dodawania słów, aby dodać im urządzenie osobno."
+      },
+      "keywords": "Słowa kluczowe",
+      "selectedCount": "{count, number} z {total, number}",
+      "selectAll": "Zaznacz wszystkie",
+      "noAvailableKeywords": "Brak dostępnych słów dla tego urządzenia.",
+      "selectionLimit": "Wybierz maksymalnie 500 słów."
+    },
+    "trackedTargets": "{count, plural, one {# cel} few {# cele} many {# celów} other {# celu}}",
+    "pauseTracking": "Wstrzymaj śledzenie",
+    "resumeTracking": "Wznów śledzenie",
+    "trackingStatusFor": "{market}: {status}"
   }
 }

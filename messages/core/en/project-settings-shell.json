@@ -23,7 +23,7 @@
         },
         "applicationPlan": {
           "label": "Application plan",
-          "keywords": "billing price subscription hosted beta self hosted"
+          "keywords": "billing price subscription cloud self hosted"
         },
         "checkFrequency": {
           "label": "Check frequency",

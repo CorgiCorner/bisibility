@@ -55,6 +55,12 @@ describe("InstallPageContent", () => {
     expect(container).toHaveTextContent(
       "Claude exposes every tool. It asks before each write tool the first time; use Allow always only for tools you trust to run unsupervised. Research runs tools without asking, so disable write tools there.",
     );
+    expect(container).toHaveTextContent(
+      "Paid operations such as rank checks and backlink analysis are write tools and charge your project's payment source. Ask the bot to confirm the cost before running them.",
+    );
+    expect(container).toHaveTextContent(
+      "Paste this into a Grok Bot chat, confirm adding the custom MCP server, then sign in from the connect card. The bisibility consent screen may name the client Cursor and say it was registered automatically; that is expected for Grok Bot.",
+    );
   });
 
   it("uses neutral input styling for the MCP endpoint and stored API key", () => {
@@ -96,7 +102,9 @@ describe("InstallPageContent", () => {
     expect(within(keySection as HTMLElement).getByText(/Read and write/)).not.toHaveClass(
       "font-mono",
     );
-    expect(screen.getByText("18 available")).not.toHaveClass("font-mono");
+    expect(
+      screen.getByText("9 available · 9 in the Claude Code plugin · 4 planned"),
+    ).not.toHaveClass("font-mono");
     expect(container.querySelector("pre")).toHaveClass("font-mono");
   });
 
@@ -148,7 +156,10 @@ describe("InstallPageContent", () => {
       expect(within(label.parentElement as HTMLElement).getByText("planned")).toBeVisible();
     }
     expect(screen.queryByText("project-onboarding")).not.toBeInTheDocument();
-    expect(screen.getByText("18 available")).toHaveClass("bg-nav-active", "text-yellow-text");
+    expect(screen.getByText("9 available · 9 in the Claude Code plugin · 4 planned")).toHaveClass(
+      "bg-nav-active",
+      "text-yellow-text",
+    );
   });
 
   it("highlights curl syntax and environment variables while keeping the URL neutral", () => {

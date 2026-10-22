@@ -26,7 +26,7 @@ const problems = {
   account_link_required: [
     409,
     "conflict",
-    "An account with this email already exists. Sign in on the web to link Apple to it.",
+    "An account with this email already exists. Sign in with an email code or Google instead.",
   ],
   apple_sign_in_unavailable: [503, "provider_unavailable", "Sign in with Apple is not available."],
   apple_unavailable: [503, "provider_unavailable", "Apple is unavailable. Try again shortly."],

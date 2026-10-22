@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { connectionFunding } from "@/lib/metering/project-funding-budgets";
 import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
 import {
   PROVIDER_CREDENTIAL_KINDS,
@@ -96,6 +97,8 @@ export function queuedBatchAttribution(batch: {
 export async function queuedBatchBudgetDeferral(
   batch: {
     connectionId: string | undefined;
+    /** Known to the caller for the batch's connection; looked up only when omitted. */
+    credentialSource?: string | null;
     estimatedCostCents: number;
     source: string;
     tasks: readonly { depth: SerpDepth; estimatedCostCents?: number }[];
@@ -104,9 +107,19 @@ export async function queuedBatchBudgetDeferral(
   tx: Prisma.TransactionClient,
 ): Promise<string | null> {
   try {
+    const connection =
+      batch.credentialSource !== undefined
+        ? { credentialSource: batch.credentialSource }
+        : batch.connectionId
+          ? await tx.providerConnection.findFirst({
+              where: { id: batch.connectionId, projectId: call.projectId },
+              select: { credentialSource: true },
+            })
+          : null;
     await assertBudgetAvailable(call.projectId, call.now, {
       client: tx,
       estimatedCostCents: batch.estimatedCostCents,
+      funding: connectionFunding(connection?.credentialSource),
     });
   } catch (error) {
     if (!isBudgetExhaustedError(error)) throw error;

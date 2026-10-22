@@ -20,18 +20,36 @@ type ProjectRunsFiltersProps = {
 };
 
 export function ProjectRunsFilters({ projectRef, query }: Readonly<ProjectRunsFiltersProps>) {
+  const router = useRouter();
+  return (
+    <ProjectRunsFilterControls
+      query={query}
+      onQueryChange={(next) => router.push(projectRunsPath(projectRef, next))}
+    />
+  );
+}
+
+export function ProjectRunsFilterControls({
+  query,
+  onQueryChange,
+}: Readonly<{
+  query: ProjectRunsQuery;
+  onQueryChange: (query: ProjectRunsQuery) => void;
+}>) {
   const t = useTranslations("projectRuns.filters");
   const statusCopy = useRunStatusCopy();
-  const router = useRouter();
   const navigate = (updates: Partial<ProjectRunsQuery>) =>
-    router.push(projectRunsPath(projectRef, updateProjectRunsQuery(query, updates)));
+    onQueryChange(updateProjectRunsQuery(query, updates));
+  const planned = query.view === "planned" && query.status !== "attention";
   const sourceOptions = [
     { label: t("allSources"), value: "all" },
     { label: t("rankChecks"), value: "rank_checks" },
+    { label: t("aiTracking"), value: "ai_tracking" },
     { label: t("searchConsole"), value: "search_console" },
   ] as const;
   const groupLabels: Record<RunStatusSource, string> = {
     rank_checks: t("rankChecks"),
+    ai_tracking: t("aiTracking"),
     search_console: t("searchConsole"),
   };
   const statusGroups = [
@@ -83,12 +101,12 @@ export function ProjectRunsFilters({ projectRef, query }: Readonly<ProjectRunsFi
         leadingLabel={t("status")}
         onChange={(value) => navigate({ ...statusMenuSelection(value), view: "timeline" })}
         selectedContent={(option) => {
-          if (query.view === "planned") return statusCopy.rank("planned").label;
+          if (planned) return statusCopy.rank("planned").label;
           if (!option || option.value === "all") return legacyGroupLabels[query.status] ?? t("all");
           return option.label;
         }}
         size="toolbar"
-        value={query.view === "planned" ? "all" : statusMenuValueFor(query)}
+        value={planned ? "all" : statusMenuValueFor(query)}
       />
     </div>
   );

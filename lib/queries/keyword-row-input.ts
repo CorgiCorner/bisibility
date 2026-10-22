@@ -11,7 +11,12 @@ export type ScheduleSource = {
   serpDepth?: number | null;
   timezone: string;
 };
-type CheckScheduleSource = { name: string; publicId: string; serpDepth?: number | null };
+type CheckScheduleSource =
+  import("@/lib/keywords/schedule-membership").KeywordScheduleMembership & {
+    name: string;
+    publicId: string;
+    serpDepth?: number | null;
+  };
 
 export type KeywordProject = { defaults: ScheduleSource | null; domain: string };
 type UrlPresenceSource = {

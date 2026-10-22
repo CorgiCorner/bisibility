@@ -135,20 +135,36 @@ describe("getOnboardingNextCheckAt", () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([keyword("keyword_1", "2026-08-27T06:00:00Z")]);
     await expect(getOnboardingNextCheckAt("prj_1")).resolves.toBeNull();
   });
-  it("uses an inherited scheduled dispatch", async () => {
-    const next = new Date("2026-08-29T06:00:00Z");
-    mocks.prisma.keyword.findMany.mockResolvedValue([keyword("keyword_1", next.toISOString())]);
-    await expect(getOnboardingNextCheckAt("prj_1")).resolves.toEqual(next);
-  });
-  it("chooses the earliest runnable row from mixed schedules", async () => {
-    const next = new Date("2026-08-29T05:00:00Z");
+  it("ignores inherited daily intent and its future dispatch without membership", async () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([
-      keyword("manual", "2026-08-29T01:00:00Z", defaults("manual")),
-      keyword("daily_late", "2026-08-30T06:00:00Z"),
-      keyword("daily_next", next.toISOString()),
-      keyword("paused", "2026-08-29T02:00:00Z", defaults("paused")),
+      keyword("manual", "2026-08-29T06:00:00Z", defaults("daily")),
     ]);
-    await expect(getOnboardingNextCheckAt("prj_1")).resolves.toEqual(next);
+    await expect(getOnboardingNextCheckAt("prj_1")).resolves.toBeNull();
+  });
+  it("derives the earliest named occurrence without relying on dispatch state", async () => {
+    const named = (id: string, timeOfDay: string, enabled = true) => ({
+      id,
+      checkSchedule: {
+        publicId: `sch_${id}`,
+        frequency: "daily",
+        cronExpression: null,
+        timezone: "UTC",
+        jitterMinutes: 0,
+        timeOfDay,
+        enabled,
+        archivedAt: null,
+      },
+      dispatchState: null,
+    });
+    mocks.prisma.keyword.findMany.mockResolvedValue([
+      named("late", "06:00"),
+      named("next", "05:00"),
+      named("paused", "01:00", false),
+      keyword("manual", "2026-08-28T13:00:00Z"),
+    ]);
+    await expect(getOnboardingNextCheckAt("prj_1")).resolves.toEqual(
+      new Date("2026-08-29T05:00:00Z"),
+    );
   });
 });
 

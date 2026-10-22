@@ -117,9 +117,11 @@ export async function prepareLiveRankExecution(
             ? String(pagesPerCheck(depth))
             : "1.000000",
           keywordId: input.keyword.id,
-          operationKey: `rank-check:${input.rankCheckId}`,
+          operationKey: input.payment?.operationKey ?? `rank-check:${input.rankCheckId}`,
+          costLimit: input.payment?.costLimit,
           provider,
           rankCheckId: input.rankCheckId,
+          snapshotRequestId: input.definitionContinuation?.binding.id,
           beforeFence: input.definitionFence,
           beforeReserve: input.definitionBeforeReserve,
         })

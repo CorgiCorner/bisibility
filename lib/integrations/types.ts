@@ -4,6 +4,7 @@ import type { ProviderFailureClass } from "@/lib/providers/failure-class";
 import type {
   ConnectProviderInput,
   ProviderConnectionRefInput,
+  DisconnectProviderInput as ProviderDisconnectInput,
   TestProviderConnectionInput,
   UpdateProviderCostInput,
   UpdateProviderRateInput,
@@ -202,7 +203,7 @@ export type ProviderConnectionSettingsInput = ProviderConnectionRefInput & {
   priority?: number;
 };
 
-export type DisconnectProviderInput = ProviderConnectionRefInput;
+export type DisconnectProviderInput = ProviderDisconnectInput;
 
 export type ProviderActionHandlers = {
   completeGooglePropertySelection?(input: {

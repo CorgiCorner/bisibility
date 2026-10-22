@@ -79,9 +79,7 @@ describe("ScheduleEditorFields", () => {
     render(<ScheduleEditorFieldsHarness />);
 
     expect(
-      screen.getAllByText(
-        "Project default follows the project settings. Always pins this schedule.",
-      ),
+      screen.getAllByText("Follow project settings, or choose a value for this schedule."),
     ).toHaveLength(2);
 
     await user.click(screen.getByRole("button", { name: "Provider" }));
@@ -106,7 +104,9 @@ it("keeps cadence controls and time guidance accessible across every frequency",
       expect(screen.getByLabelText("Cron expression")).toBeVisible();
       expect(screen.queryByLabelText("Time, 24-hour")).not.toBeInTheDocument();
     } else {
-      expect(screen.getByLabelText("Time, 24-hour")).toHaveAccessibleDescription("30-minute steps");
+      expect(screen.getByLabelText("Time, 24-hour")).toHaveAccessibleDescription(
+        "Use :00 or :30, e.g. 09:00 or 09:30.",
+      );
     }
   }
 });

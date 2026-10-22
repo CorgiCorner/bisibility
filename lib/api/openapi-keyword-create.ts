@@ -12,6 +12,12 @@ const keyword = {
     ...properties,
     country: { ...properties.country, ...closedEnum("KeywordCreateCountry") },
     device: { ...properties.device, ...closedEnum("KeywordCreateDevice") },
+    frequency: {
+      ...properties.frequency,
+      ...closedEnum("KeywordCreateFrequency"),
+      description:
+        "Explicitly join a matching project schedule. Omit frequency and schedule for Manual; schedule takes precedence.",
+    },
     location: { ...properties.location, ...closedEnum("KeywordCreateLocation") },
     schedule: {
       ...keywordBulkRequest.properties.schedule,

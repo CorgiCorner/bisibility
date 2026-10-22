@@ -38,7 +38,6 @@ const actionArgs = {
   importTopQueriesAction: async () => ({
     queries: ["open source rank tracker", "rank tracking for agencies"],
   }),
-  queueFirstChecksAction: async () => ({ queued: 11 }),
   runCheckNowAction: async () => ({
     status: "queued" as const,
     runId: "rcr_abcdefghijklmnopqrstuvwx",

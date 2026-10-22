@@ -3,6 +3,11 @@ import "server-only";
 import { READINESS_REASON } from "@/lib/projects/readiness";
 import { fetchRankedKeywords } from "@/lib/ranked-keywords/service";
 import { z } from "zod";
+import {
+  paymentAdmissionResponse,
+  paymentFailureResponse,
+  paymentResource,
+} from "./action-payment";
 import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
 import { requireApiPublicId } from "./public-id";
@@ -15,15 +20,23 @@ const booleanParam = z
   .transform((value) => value === "true")
   .default(false);
 export const querySchema = z.object({
+  estimateOnly: booleanParam.optional(),
+  requirePayment: booleanParam.optional(),
+  paymentOptionId: z.string().min(1).max(120).optional(),
+  paymentQuoteToken: z.string().min(1).max(12000).optional(),
   connectionId: z.string().trim().min(1).max(120).optional(),
   fresh: booleanParam,
   limit: z.coerce.number().int().min(1).max(100).default(100),
-  maxCostCents: z.coerce.number().int().min(1).optional(),
+  maxCostCents: z.coerce.number().int().nonnegative().optional(),
   offset: z.coerce.number().int().min(0).max(900).multipleOf(100).default(0),
 });
 
 function query(ctx: ApiContext) {
   const input = querySchema.parse({
+    estimateOnly: ctx.url.searchParams.get("estimate_only") ?? undefined,
+    requirePayment: ctx.url.searchParams.get("require_payment") ?? undefined,
+    paymentOptionId: ctx.url.searchParams.get("payment_option_id") ?? undefined,
+    paymentQuoteToken: ctx.url.searchParams.get("payment_quote_token") ?? undefined,
     connectionId: ctx.url.searchParams.get("connection_id") ?? undefined,
     fresh: ctx.url.searchParams.get("fresh") ?? undefined,
     limit: ctx.url.searchParams.get("limit") ?? undefined,
@@ -32,6 +45,7 @@ function query(ctx: ApiContext) {
   });
   return {
     ...input,
+    acceptedPayment: input.paymentQuoteToken ? { quoteToken: input.paymentQuoteToken } : undefined,
     connectionId: input.connectionId ? requireApiPublicId(input.connectionId, "conn") : undefined,
   };
 }
@@ -51,7 +65,26 @@ type RankedKeywordsFailure = Exclude<
 >;
 
 function error(ctx: ApiContext, outcome: RankedKeywordsFailure) {
+  return paymentFailureResponse(
+    paymentAdmissionResponse(ctx, outcome) ?? errorBase(ctx, outcome),
+    outcome,
+  );
+}
+function errorBase(ctx: ApiContext, outcome: RankedKeywordsFailure) {
   const reason = outcome.reason;
+  if (reason.startsWith("payment_"))
+    return errorResponse("conflict", "Review the current price before starting this lookup.", 409, {
+      headers: ctx.headers,
+      instance: ctx.instance,
+      problemDetails: { reason },
+    });
+  if (reason === "provider_error")
+    return errorResponse(
+      "provider_unavailable",
+      "The provider request failed. Review its payment status before retrying.",
+      502,
+      { headers: ctx.headers, instance: ctx.instance },
+    );
   if (reason === "no_source") {
     return errorResponse(
       "not_found",
@@ -130,9 +163,12 @@ export async function listRankedKeywordSuggestions(ctx: ApiContext, projectId: s
   return resourceResponse(
     {
       cached: result.cached,
+      ...paymentResource(result),
+      ...("estimate" in result ? { estimate: true } : {}),
       connections: connectionsResource(result.connections),
       cost_cents: result.costCents,
       fetched_at: result.fetchedAt,
+      ...(result.freeUntil ? { free_until: result.freeUntil } : {}),
       offset: result.offset,
       rows: result.rows.map((row) => ({
         already_tracked: row.alreadyTracked,

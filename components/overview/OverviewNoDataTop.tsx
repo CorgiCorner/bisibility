@@ -4,10 +4,10 @@ import { FirstCheckBanner, FirstCheckBannerLink } from "@/components/rank-check/
 import {
   FirstCheckBannerAction,
   type GetFirstCheckRunPlanAction,
-  type QueueFirstChecksAction,
   type RunFirstCheckAction,
 } from "@/components/rank-check/FirstCheckBannerAction";
 import { Card } from "@/components/ui/Card";
+import { ProviderAccessActions } from "@/components/ui/ProviderAccessActions";
 import { useSharedErrorMessages } from "@/i18n/useSharedErrorMessages";
 import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
 import type { ProjectRef } from "@/lib/routing/app-path";
@@ -20,6 +20,7 @@ import {
 } from "@/lib/visibility/definition";
 import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { FirstCheckIntro } from "./FirstCheckIntro";
 import { RecentlyAddedCard } from "./OverviewNoDataBottom";
 import { PositionDistributionCard } from "./PositionDistributionCard";
 import { PositionTrendCard } from "./PositionTrendCard";
@@ -69,7 +70,6 @@ function bannerText(
 }
 
 export function NoDataBanner({
-  canCreateKeyword = true,
   canManageProviders = true,
   canRunChecks = true,
   getFirstCheckRunPlanAction,
@@ -77,7 +77,6 @@ export function NoDataBanner({
   keywordId,
   projectId,
   projectRef,
-  queueFirstChecksAction,
   runCheckNowAction,
   state,
 }: Readonly<{
@@ -89,41 +88,25 @@ export function NoDataBanner({
   keywordId: string | null;
   projectId: string;
   projectRef: ProjectRef;
-  queueFirstChecksAction: QueueFirstChecksAction;
   runCheckNowAction: RunFirstCheckAction;
   state: NoDataBannerState;
 }>) {
   const t = useTranslations("projectDashboard.noData");
   if (state === "ready") {
-    const needsKeywords = !keywordId && keywordCount === 0;
-    const action =
-      keywordId && canRunChecks ? (
-        <FirstCheckBannerAction
-          getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
-          keywordId={keywordId}
-          projectId={projectId}
-          projectRef={projectRef}
-          queueFirstChecksAction={queueFirstChecksAction}
-          runCheckNowAction={runCheckNowAction}
-        />
-      ) : needsKeywords && canCreateKeyword ? (
-        <FirstCheckBannerLink
-          href={appPath(projectRef, needsKeywords ? "rank-tracker?add=1" : "rank-tracker")}
-          label={needsKeywords ? t("addKeywords") : t("viewKeywords")}
-        />
-      ) : !needsKeywords ? (
-        <FirstCheckBannerLink
-          href={appPath(projectRef, "rank-tracker")}
-          label={t("viewKeywords")}
-        />
-      ) : null;
+    if (!keywordId || !canRunChecks || keywordCount === 0) return null;
     return (
-      <FirstCheckBanner
-        action={action}
-        detail={t("readyDetail", { count: keywordCount })}
-        icon={needsKeywords ? "ranking" : "puzzle"}
-        keywordCount={keywordCount}
-        title={t("noRankingsYet")}
+      <FirstCheckIntro
+        key={projectId}
+        projectId={projectId}
+        action={
+          <FirstCheckBannerAction
+            getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
+            keywordId={keywordId}
+            projectId={projectId}
+            projectRef={projectRef}
+            runCheckNowAction={runCheckNowAction}
+          />
+        }
       />
     );
   }
@@ -131,10 +114,12 @@ export function NoDataBanner({
   const copy = bannerText(state, keywordCount, t);
   const viewerBlocked = !canManageProviders && (state === "missing" || state === "needs_attention");
   let action: ReactNode = (
-    <FirstCheckBannerLink
-      href={appPath(projectRef, "integrations#all-providers")}
-      label={t("connect")}
-    />
+    <ProviderAccessActions href={appPath(projectRef, "integrations#all-providers")}>
+      <FirstCheckBannerLink
+        href={appPath(projectRef, "integrations#all-providers")}
+        label={t("connect")}
+      />
+    </ProviderAccessActions>
   );
   if (viewerBlocked) {
     action = undefined;

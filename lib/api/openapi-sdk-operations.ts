@@ -10,6 +10,7 @@
 
 import { sdkWave2Operations, sdkWave2ReadyOperationIds } from "./openapi-sdk-wave2";
 import { sdkWave3Operations, sdkWave3ReadyOperationIds } from "./openapi-sdk-wave3";
+import { sdkWave4Operations, sdkWave4ReadyOperationIds } from "./openapi-sdk-wave4";
 
 type Legacy = { go: string[]; python: string[]; ts: string[] };
 type Pagination =
@@ -72,6 +73,7 @@ export const openApiSdkOperations: Partial<Record<string, SdkOperationExtensions
   },
   ...sdkWave2Operations,
   ...sdkWave3Operations,
+  ...sdkWave4Operations,
   analyzeBacklinks: read(
     "backlinks",
     "analyze",
@@ -176,6 +178,7 @@ export const sdkFirstWaveOperationIds = [
 
   ...sdkWave2ReadyOperationIds,
   ...sdkWave3ReadyOperationIds,
+  ...sdkWave4ReadyOperationIds,
   "analyzeBacklinks",
   "analyzeDomainOverview",
   "getAiTrackingHistory",

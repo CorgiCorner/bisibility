@@ -1,3 +1,5 @@
+vi.mock("@/lib/ai-research/history-payment", () => ({ aiHistoryPayments: async () => new Map() }));
+
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

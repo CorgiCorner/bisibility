@@ -9,6 +9,13 @@ const mocks = vi.hoisted(() => ({
   run: vi.fn(),
   chain: vi.fn(),
   attribution: vi.fn(),
+  payment: vi.fn(),
+  receipt: vi.fn(),
+  child: vi.fn(),
+}));
+vi.mock("./snapshot-payment", () => ({
+  prepareSnapshotExtensionPayment: mocks.payment,
+  assertSnapshotPaymentScope: vi.fn(),
 }));
 vi.mock("./snapshot-extension-store", () => ({
   claimSnapshotExtension: mocks.claim,
@@ -85,6 +92,28 @@ beforeEach(async () => {
     state: claim.state,
   });
   capturedDefinition = definition;
+  mocks.payment.mockResolvedValue({
+    ok: true,
+    scopeHash: "scope",
+    payment: {
+      quote: {
+        id: "extension-quote",
+        option: {
+          payableUnit: {
+            kind: "provider_native",
+            providerId: "serpapi",
+            key: "searches",
+            singular: "search",
+            plural: "searches",
+          },
+        },
+      },
+      child: mocks.child,
+      receipt: mocks.receipt,
+    },
+  });
+  mocks.child.mockReturnValue({ operationKey: "extension-payment" });
+  mocks.receipt.mockReturnValue(undefined);
   mocks.claim.mockResolvedValue({ ...claim, definition });
   mocks.finish.mockResolvedValue(undefined);
   mocks.chain.mockResolvedValue([
@@ -122,7 +151,7 @@ beforeEach(async () => {
 describe("extend snapshot service", () => {
   it("refuses a copied definition binding before entering the provider pipeline", async () => {
     mocks.claim.mockResolvedValue({ ...claim, definition: structuredClone(capturedDefinition) });
-    expect(await extendSnapshot(input)).toEqual({ ok: false, reason: "failed" });
+    expect(await extendSnapshot(input)).toMatchObject({ ok: false, reason: "failed" });
     expect(mocks.run).not.toHaveBeenCalled();
     expect(mocks.attribution).not.toHaveBeenCalled();
   });
@@ -135,15 +164,16 @@ describe("extend snapshot service", () => {
         credentialsEncrypted: null,
       },
     ]);
-    expect(await extendSnapshot(input)).toEqual({ ok: false, reason: "failed" });
+    expect(await extendSnapshot(input)).toMatchObject({ ok: false, reason: "failed" });
     expect(mocks.run).not.toHaveBeenCalled();
     expect(mocks.attribution).not.toHaveBeenCalled();
   });
 
   it("uses the shared budget, allocation, rate-limit and usage pipeline for one page", async () => {
-    expect(await extendSnapshot(input)).toEqual({ ok: true });
+    expect(await extendSnapshot(input)).toMatchObject({ ok: true });
     expect(mocks.run).toHaveBeenCalledWith(
       expect.objectContaining({
+        payment: { operationKey: "extension-payment" },
         depth: 10,
         stopOnMatch: false,
         connections: [
@@ -179,6 +209,26 @@ describe("extend snapshot service", () => {
       }),
     );
   });
+  it("does not claim or dispatch when a fresh payment quote is required", async () => {
+    const { ActionPaymentError } = await import("@/lib/action-payment/token");
+    mocks.child.mockImplementation(() => {
+      throw new ActionPaymentError("payment_quote_required");
+    });
+    expect(await extendSnapshot(input)).toEqual({ ok: false, reason: "payment_quote_required" });
+    expect(mocks.claim).not.toHaveBeenCalled();
+    expect(mocks.run).not.toHaveBeenCalled();
+  });
+  it("retains an attempted payment even when saving the extended page fails", async () => {
+    const receipt = { state: "unknown", charge: { value: null } };
+    mocks.receipt.mockReturnValue(receipt);
+    mocks.finish.mockRejectedValueOnce(new Error("write failed"));
+    expect(await extendSnapshot(input)).toMatchObject({
+      ok: false,
+      reason: "failed",
+      payment: receipt,
+    });
+    expect(mocks.finish.mock.calls.at(-1)?.[0].state.payment).toEqual(receipt);
+  });
   it("does not execute anything when claim is rejected", async () => {
     mocks.claim.mockResolvedValue({ ok: false, reason: "expired" });
     expect(await extendSnapshot(input)).toEqual({ ok: false, reason: "expired" });
@@ -186,7 +236,7 @@ describe("extend snapshot service", () => {
   });
   it("keeps earlier results after provider failure and prohibits blind replay", async () => {
     mocks.run.mockRejectedValue(new Error("provider failed"));
-    expect(await extendSnapshot(input)).toEqual({ ok: false, reason: "failed" });
+    expect(await extendSnapshot(input)).toMatchObject({ ok: false, reason: "failed" });
     expect(mocks.finish).toHaveBeenCalledWith(
       expect.objectContaining({ state: { ...claim.state, state: "failed" } }),
     );
@@ -194,7 +244,7 @@ describe("extend snapshot service", () => {
   });
   it("does not report success if the paid result cannot be saved", async () => {
     mocks.finish.mockRejectedValueOnce(new Error("database unavailable"));
-    expect(await extendSnapshot(input)).toEqual({ ok: false, reason: "failed" });
+    expect(await extendSnapshot(input)).toMatchObject({ ok: false, reason: "failed" });
     expect(mocks.run).toHaveBeenCalledTimes(1);
     expect(mocks.finish.mock.calls.at(-1)?.[0].state.state).toBe("failed");
   });
@@ -202,6 +252,6 @@ describe("extend snapshot service", () => {
     mocks.run.mockResolvedValue({
       result: { usageRecorded: false, rankCheck: { raw: {}, checkedAt: new Date() } },
     });
-    expect(await extendSnapshot(input)).toEqual({ ok: false, reason: "failed" });
+    expect(await extendSnapshot(input)).toMatchObject({ ok: false, reason: "failed" });
   });
 });

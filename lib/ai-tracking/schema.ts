@@ -1,3 +1,4 @@
+import { aiAcceptedPaymentSchema } from "@/lib/ai-research/payment-input";
 import { isPublicIdOfType } from "@/lib/db/public-id-resources";
 import { z } from "zod";
 import { PROMPT_CATEGORIES, TRACKING_ENGINES, TRACKING_SOURCES } from "./contract";
@@ -18,14 +19,21 @@ export const topicInputSchema = z.object({
 export const promptInputSchema = z.object({
   generationReference: z
     .object({
-      generationId: z.string().refine((id) => isPublicIdOfType(id, "asg")),
+      // Describe the existing refinement to JSON Schema without changing validation.
+      generationId: z
+        .string()
+        .refine((id) => isPublicIdOfType(id, "asg"))
+        .meta({ pattern: "^asg_[a-z][a-z0-9]{23}$" }),
       draftId: z.uuid(),
     })
     .strict()
     .optional(),
   providerDatasetReference: z
     .object({
-      reportId: z.string().refine((id) => isPublicIdOfType(id, "agr")),
+      reportId: z
+        .string()
+        .refine((id) => isPublicIdOfType(id, "agr"))
+        .meta({ pattern: "^agr_[a-z][a-z0-9]{23}$" }),
       rowIndex: z.number().int().min(0).max(9999),
     })
     .strict()
@@ -42,6 +50,18 @@ export const promptInputSchema = z.object({
 });
 export const planTrackingRunSchema = z
   .object({
+    paymentConsent: z
+      .object({ version: z.literal(1), encoded: z.string(), signature: z.string() })
+      .strict()
+      .optional(),
+    acceptedPayment: aiAcceptedPaymentSchema.optional(),
+    requirePayment: z.boolean().optional(),
+    paymentScope: z.enum(["manual", "recurring"]).optional(),
+    paymentScheduleId: z
+      .string()
+      .regex(/^ais_[a-z][a-z0-9]{23}$/)
+      .optional(),
+    paymentRecurrence: z.object({ cron: z.string(), timezone: z.string() }).optional(),
     actorId: z.string().min(1),
     actorCredential: z
       .object({

@@ -1,6 +1,8 @@
 "use client";
 
+import { DeferralReasonLabel } from "@/components/rank-runs/deferral-reason-copy";
 import { ReadOnlyDataTable } from "@/components/ui/data-table/ReadOnlyDataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslations } from "next-intl";
 import { Fragment } from "react";
 import { HistoryTime } from "./HistoryTime";
@@ -16,6 +18,9 @@ export function AttemptHistoryTable({
       <ReadOnlyDataTable
         id="history-attempts"
         label={t("attemptsTable")}
+        emptyState={
+          <EmptyState compact title={t("noAttempts")} description={t("noRecordsDescription")} />
+        }
         headers={[
           t("columns.check"),
           t("columns.recorded"),
@@ -49,7 +54,7 @@ export function AttemptHistoryTable({
                   <span className="block text-fg-muted">{attempt.errorCode}</span>
                 ) : null}
                 {attempt.deferredReason ? (
-                  <span className="block text-fg-muted">{attempt.deferredReason}</span>
+                  <DeferralReasonLabel reason={attempt.deferredReason} />
                 ) : null}
               </Fragment>,
               attempt.provider ?? t("unknown"),

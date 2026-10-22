@@ -1,3 +1,4 @@
+import { aiPaymentReceipt } from "@/lib/ai-research/payment";
 import "server-only";
 import type { AiResearchContext } from "@/lib/ai-research/service";
 import {
@@ -17,6 +18,7 @@ export async function failSuggestionGeneration(
   state: GenerationExecutionState,
   evidence: GenerationEvidence,
   error: unknown,
+  paymentConsent?: unknown,
 ): Promise<never> {
   try {
     if (!state.dispatched) {
@@ -77,6 +79,7 @@ export async function failSuggestionGeneration(
         ? "The provider charge is confirmed but usable drafts could not be saved. This paid attempt will never be resubmitted."
         : "Provider submission or cost is unknown. Reconcile this durable generation; it will never be resubmitted.",
       row.publicId,
+      aiPaymentReceipt(paymentConsent, state.receipt.amountUsd, state.receipt.state),
     );
   } catch (failure) {
     if (failure instanceof SuggestionGenerationError) throw failure;
@@ -85,6 +88,7 @@ export async function failSuggestionGeneration(
       "usage_reconciliation_required",
       "Generation persistence could not be confirmed. Reconcile this durable attempt before another submission.",
       row.publicId,
+      state.dispatched ? aiPaymentReceipt(paymentConsent, null, "unknown") : undefined,
     );
   }
 }

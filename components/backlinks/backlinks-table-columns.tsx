@@ -32,6 +32,16 @@ function flagLabel(flag: BacklinksTableDataRow["flags"][number], t: BacklinksTab
   return t(labels[flag]);
 }
 
+function externalSourceUrl(value: string | undefined) {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 function SourceCell({
   onRunExpand,
   row,
@@ -64,6 +74,22 @@ function SourceCell({
   }
 
   const source = <span className={row.status === "lost" ? "line-through" : ""}>{row.source}</span>;
+  const href = row.variant === "link" ? externalSourceUrl(row.sourceUrl) : null;
+  if (href) {
+    return (
+      <a
+        aria-label={href}
+        className="min-w-0 truncate font-sans tabular-nums text-[12.5px] text-fg hover:text-accent-text hover:underline"
+        href={href}
+        onClick={(event) => event.stopPropagation()}
+        rel="noopener noreferrer nofollow"
+        target="_blank"
+        title={href}
+      >
+        {source}
+      </a>
+    );
+  }
   if (row.variant !== "domain") return source;
 
   return (

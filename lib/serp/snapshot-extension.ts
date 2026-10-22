@@ -1,3 +1,10 @@
+import type {
+  AcceptedActionPayment,
+  ActionPaymentFailure,
+  ActionPaymentOption,
+  ActionPaymentQuote,
+  ActionPaymentReceipt,
+} from "@/lib/action-payment/contract";
 import type { RetrievedRow } from "@/lib/checks/contract";
 import type { SerpOrganicResult } from "@/lib/providers/types";
 import type { SerpRankLocation } from "./location";
@@ -33,6 +40,7 @@ export type SnapshotPageEvidence = {
   completeness: "unknown";
 };
 export type SnapshotExtensionPage = {
+  payment?: ActionPaymentReceipt;
   evidence?: SnapshotPageEvidence | null;
   start: number;
   fetchedAt: string;
@@ -41,8 +49,9 @@ export type SnapshotExtensionPage = {
 };
 
 export type SnapshotExtensionState = {
+  payment?: ActionPaymentReceipt;
   version: 1;
-  state: "idle" | "running" | "failed";
+  state: "idle" | "running" | "failed" | "retryable";
   nextStart: number;
   ended: boolean;
   pages: SnapshotExtensionPage[];
@@ -58,19 +67,36 @@ export type SnapshotExtensionReason =
   | "complete"
   | "running"
   | "failed"
+  | "not_sent"
   | "disconnected";
 export type SnapshotExtensionView = {
+  payment?: ActionPaymentReceipt;
   reason: SnapshotExtensionReason;
   expiresAt: string | null;
   nextStart: number | null;
   pages: Array<Omit<SnapshotExtensionPage, "rows"> & { rows: RetrievedRow[] }>;
 };
 
-export type ExtendSnapshotAction = (input: {
+export type SnapshotExtensionInput = {
   checkId: string;
   nextStart: number;
   projectId: string;
-}) => Promise<{ ok: true } | { ok: false; reason: SnapshotExtensionReason | "unavailable" }>;
+  paymentOptionId?: string;
+};
+export type SnapshotExtensionFailure = {
+  ok: false;
+  reason: SnapshotExtensionReason | "unavailable" | ActionPaymentFailure;
+  payment?: ActionPaymentReceipt;
+};
+export type PreviewSnapshotExtensionAction = (
+  input: SnapshotExtensionInput,
+) => Promise<
+  | { ok: true; payment: ActionPaymentQuote; paymentOptions: ActionPaymentOption[] }
+  | SnapshotExtensionFailure
+>;
+export type ExtendSnapshotAction = (
+  input: SnapshotExtensionInput & { acceptedPayment?: AcceptedActionPayment },
+) => Promise<{ ok: true; payment?: ActionPaymentReceipt } | SnapshotExtensionFailure>;
 
 /** Preserve the first recorded URL and rank; never renumber gaps after deduplication. */
 export function mergeSnapshotPage(

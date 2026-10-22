@@ -1,14 +1,11 @@
 import type { NativeUsageEstimate } from "@/lib/cost-estimate/native-usage";
 import type { HostPolicySnapshot } from "@/lib/measurement-definitions/host-policy-contract";
-import {
-  type ProviderRequestOrigin,
-  type ProviderRequestSurface,
-} from "@/lib/provider-usage/surface";
+import type { ProviderRequestOrigin, ProviderRequestSurface } from "@/lib/provider-usage/surface";
 import type { UnrunnableReason } from "@/lib/rank-check/runnable-reasons";
-import { type SerpDepth } from "@/lib/serp/constants";
-import { type RankCheckRunProject } from "./launch-types";
-import { type RankCheckRunOverlap } from "./preview-overlaps";
-import { type RunLaunchTrigger, type RunSelectionSpec } from "./selection";
+import type { SerpDepth } from "@/lib/serp/constants";
+import type { RankCheckRunProject } from "./launch-types";
+import type { RankCheckRunOverlap } from "./preview-overlaps";
+import type { RunLaunchTrigger, RunSelectionSpec } from "./selection";
 export type RankCheckRunExclusionReason =
   | "paused"
   | "manual"
@@ -18,6 +15,8 @@ export type RankCheckRunExclusionReason =
   | UnrunnableReason;
 
 export type RankCheckRunPreview = {
+  payment?: import("@/lib/action-payment/contract").ActionPaymentQuote;
+  paymentOptions?: import("@/lib/action-payment/contract").ActionPaymentOption[];
   budget: {
     blocked: boolean;
     capCents: number | null;
@@ -60,6 +59,8 @@ export type RankCheckRunPreview = {
 };
 
 export type RankCheckRunPreviewInput = {
+  actorId?: string | null;
+  paymentOptionId?: string;
   depth?: SerpDepth;
   origin: ProviderRequestOrigin;
   project: RankCheckRunProject;

@@ -30,7 +30,7 @@
       "description": {
         "completed": "Tus primeros resultados están listos.",
         "manual": "Todo está listo. Ejecuta tu primera comprobación cuando quieras: no se ejecuta nada hasta que tú lo inicies.",
-        "noProvider": "Casi listo. Está todo configurado: conecta un proveedor de datos cuando quieras ejecutar comprobaciones.",
+        "noProvider": "Tus palabras clave están listas. Elige una fuente de datos cuando quieras ejecutar comprobaciones.",
         "paused": "Todo está listo. Las comprobaciones están en pausa hasta que reanudes la programación.",
         "scheduled": "Tu programación está configurada como {frequency}. También puedes ejecutar ahora una comprobación de prueba."
       },
@@ -45,7 +45,7 @@
         "statusUnavailable": "No se ha podido actualizar el estado de la comprobación. Se está reintentando automáticamente. Puedes abrir la aplicación mientras termina.",
         "timezone": "No se ha podido guardar la zona horaria. Inténtalo de nuevo.",
         "unavailableKeyword": "Esta palabra clave ya no está disponible. Vuelve atrás para elegir otra.",
-        "waitingForProvider": "Conecta un proveedor de SERP antes de ejecutar comprobaciones."
+        "waitingForProvider": "Elige una fuente de datos antes de ejecutar comprobaciones."
       },
       "footer": {
         "hint": "Opcional: comprueba 1 palabra clave ahora. Tu programación no cambia.",
@@ -66,10 +66,10 @@
       "matrix": "1 palabra clave · {markets, plural, one {# mercado} other {# mercados}} · {devices} · {checks, plural, one {# comprobación} other {# comprobaciones}}",
       "notConnected": "Sin conectar",
       "queue": {
-        "completed": "{checks, plural, one {La comprobación de prueba ha terminado} other {Las comprobaciones de prueba han terminado}}. A partir de ahora, todas las palabras clave siguen tu programación ({frequency}).",
-        "completedWithFailures": "{checks, plural, one {La comprobación de prueba ha terminado con un problema} other {Las comprobaciones de prueba han terminado con un problema}}. Puedes reintentar más abajo {checks, plural, one {la comprobación fallida} other {las comprobaciones fallidas}}. Todas las palabras clave siguen tu programación ({frequency}).",
-        "initial": "{checks, plural, one {Se ejecuta # comprobación ahora para que veas cómo funciona.} other {Se ejecutan # comprobaciones ahora para que veas cómo funcionan.}} Todo lo demás sigue tu programación ({frequency}).",
-        "manual": "La vista previa manual puede ejecutarse ahora. Las comprobaciones programadas siguen en pausa.",
+        "completed": "{checks, plural, one {La comprobación de muestra ha terminado.} other {Las comprobaciones de muestra han terminado.}} Añade palabras clave a un horario para comprobarlas automáticamente.",
+        "completedWithFailures": "{checks, plural, one {La comprobación de muestra terminó con un error.} other {Las comprobaciones de muestra terminaron con errores.}} Puedes reintentar {checks, plural, one {la comprobación fallida} other {las comprobaciones fallidas}} abajo.",
+        "initial": "{checks, plural, one {# comprobación se ejecutará una vez ahora.} other {# comprobaciones se ejecutarán una vez ahora.}} No se ejecutará nada más automáticamente.",
+        "manual": "Las comprobaciones solo se ejecutan cuando las inicias.",
         "queued": "Las comprobaciones de prueba están en cola. Puedes abrir el panel mientras el servicio de ejecución las inicia.",
         "running": "Las comprobaciones de prueba se están ejecutando. Puedes abrir el panel mientras terminan.",
         "sample": "Los proyectos de ejemplo conservan su histórico de posiciones sintético."
@@ -88,7 +88,7 @@
           "client": "No se ha podido iniciar la comprobación de prueba. Inténtalo de nuevo.",
           "deferred": "Esta comprobación se ha aplazado.",
           "failed": "No se ha podido ejecutar esta comprobación. Inténtalo de nuevo en un momento.",
-          "noProvider": "Conecta un proveedor de SERP antes de ejecutar comprobaciones.",
+          "noProvider": "Elige una fuente de datos antes de ejecutar comprobaciones.",
           "projectReadOnly": "Ahora mismo este proyecto es de solo lectura.",
           "rateLimited": "Se ha alcanzado el límite de peticiones del proveedor. Inténtalo de nuevo en breve.",
           "sampleProject": "Los proyectos de ejemplo no ejecutan comprobaciones reales.",
@@ -321,7 +321,7 @@
           "idle": "Sin conectar",
           "tested": "Verificado"
         },
-        "tooltip": "Google no tiene una API oficial de posiciones, así que las comprobaciones se hacen a través de un proveedor de SERP. bisibility usa tu propia cuenta de proveedor, al que pagas directamente por cada comprobación. Puedes omitir este paso y conectarlo más tarde en Integraciones: ya puedes añadir palabras clave, pero las comprobaciones seguirán en pausa hasta que haya un proveedor conectado."
+        "tooltip": "Las posiciones actuales proceden de un proveedor de datos compatible. Elige cómo usarlo en Integraciones. Puedes añadir palabras clave primero y elegir una fuente más tarde."
       },
       "credentials": {
         "connected": "Se ha conectado {provider}",

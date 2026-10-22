@@ -1,5 +1,6 @@
 "use server";
 import { withAchievementUse } from "@/lib/achievements/record-use";
+import { acceptedActionPaymentSchema } from "@/lib/action-payment/schema";
 import {
   analyzeDomainOverview,
   loadDomainKeywordsPage,
@@ -33,6 +34,9 @@ const market = {
 };
 const maxCostCents = z.number().int().nonnegative();
 const lookup = {
+  paymentOptionId: z.string().min(1).max(120).optional(),
+  acceptedPayment: acceptedActionPaymentSchema.optional(),
+  requirePayment: z.boolean().optional(),
   fresh: z.boolean().default(false),
   projectId,
   scopeOverride,
@@ -43,7 +47,7 @@ const lookup = {
 const analyzeSchema = z
   .object({ estimateOnly: z.boolean(), maxCostCents: maxCostCents.optional(), ...lookup })
   .superRefine((data, context) => {
-    if (!data.estimateOnly && data.maxCostCents === undefined) {
+    if (!data.estimateOnly && data.maxCostCents === undefined && !data.acceptedPayment) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         message: "A maximum cost is required for a paid domain overview lookup.",
@@ -51,15 +55,35 @@ const analyzeSchema = z
       });
     }
   });
-const historySchema = z.object({ ...lookup, maxCostCents });
-const tablePageSchema = z.object({
-  ...lookup,
-  filters: z.record(z.string(), z.unknown()).default({}),
-  limit: z.number().int().min(1).max(1_000),
-  maxCostCents,
-  offset: z.number().int().nonnegative(),
-  sort: z.string().trim().max(120).optional(),
-});
+function requireCostConsent(
+  data: { estimateOnly?: boolean; maxCostCents?: number; acceptedPayment?: unknown },
+  context: z.RefinementCtx,
+) {
+  if (!data.estimateOnly && data.maxCostCents === undefined && !data.acceptedPayment)
+    context.addIssue({
+      code: "custom",
+      path: ["maxCostCents"],
+      message: "A provider cost cap or accepted payment quote is required.",
+    });
+}
+const historySchema = z
+  .object({
+    ...lookup,
+    maxCostCents: maxCostCents.optional(),
+    estimateOnly: z.boolean().optional(),
+  })
+  .superRefine(requireCostConsent);
+const tablePageSchema = z
+  .object({
+    estimateOnly: z.boolean().optional(),
+    ...lookup,
+    filters: z.record(z.string(), z.unknown()).default({}),
+    limit: z.number().int().min(1).max(1_000),
+    maxCostCents: maxCostCents.optional(),
+    offset: z.number().int().nonnegative(),
+    sort: z.string().trim().max(120).optional(),
+  })
+  .superRefine(requireCostConsent);
 const saveSelectedSchema = saveKeywordsSchema.extend({
   languageCode: market.languageCode,
   locationCode: market.locationCode,
@@ -92,6 +116,9 @@ export async function analyzeDomainOverviewAction(input: unknown) {
       analyzeDomainOverview(
         { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
         {
+          paymentOptionId: data.paymentOptionId,
+          acceptedPayment: data.acceptedPayment,
+          requirePayment: data.requirePayment,
           estimateOnly: data.estimateOnly,
           fresh: data.fresh,
           ...(data.countryCode ? { countryCode: data.countryCode } : {}),
@@ -138,6 +165,10 @@ export async function loadDomainHistoryAction(input: unknown) {
     loadDomainOverviewHistory(
       { actorId: actor.id, origin: APP_REQUEST_ORIGIN, projectId: project.id },
       {
+        paymentOptionId: data.paymentOptionId,
+        acceptedPayment: data.acceptedPayment,
+        requirePayment: data.requirePayment,
+        estimateOnly: data.estimateOnly,
         fresh: data.fresh,
         ...(data.countryCode ? { countryCode: data.countryCode } : {}),
         languageCode: data.languageCode,
@@ -162,6 +193,10 @@ async function loadTablePage(input: unknown, module: "keywords" | "pages") {
   const data = parseActionInput(tablePageSchema, input);
   const { actor, project } = await mutationScope(data);
   const options = {
+    paymentOptionId: data.paymentOptionId,
+    acceptedPayment: data.acceptedPayment,
+    requirePayment: data.requirePayment,
+    estimateOnly: data.estimateOnly,
     fresh: data.fresh,
     ...(data.countryCode ? { countryCode: data.countryCode } : {}),
     languageCode: data.languageCode,

@@ -73,6 +73,7 @@ function providerMessage(
     typeof useTranslations<"projectRankTracker.keywordImport.management.runConfirmation">
   >,
 ) {
+  if (code === "provider_capacity_unavailable") return t("providerCapacityUnavailable");
   if (code === "provider_billing") return t("providerBilling");
   if (code === "provider_account_restricted") return t("providerAccountRestricted");
   if (code === "provider_auth") return t("providerAuth");

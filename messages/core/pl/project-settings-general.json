@@ -55,6 +55,7 @@
       "default": "Domyślnie dla instancji",
       "hours": "{count, plural, one {# godzina} few {# godziny} many {# godzin} other {# godziny}}",
       "days": "{count, plural, one {# dzień} few {# dni} many {# dni} other {# dnia}}",
+      "weeks": "{count, plural, one {# tydzień} few {# tygodnie} many {# tygodni} other {# tygodnia}}",
       "save": "Zapisz",
       "saved": "Zapisano",
       "list": "Zapisane wyniki",

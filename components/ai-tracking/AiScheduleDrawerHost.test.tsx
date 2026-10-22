@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import type { TrackingScheduleListItem } from "@/lib/ai-tracking/projections/schedule-list";
 import tracking from "@/messages/core/en/project-ai-tracking.json";
@@ -30,6 +31,7 @@ const preview = {
   budgetRevision: "budget_1",
   consentRevision: "consent_1",
   estimatedCostCents: 1.2,
+  payment: paymentQuote(),
 };
 
 function host(props: Partial<ComponentProps<typeof AiScheduleDrawerHost>> = {}) {
@@ -67,14 +69,14 @@ describe("AiScheduleDrawerHost", () => {
     await user.click(
       within(dialog).getByRole("checkbox", { name: "Enable this schedule after approval" }),
     );
-    expect(within(dialog).queryByRole("button", { name: "Save schedule" })).toBeNull();
+    expect(within(dialog).queryByRole("button", { name: /^Save schedule/ })).toBeNull();
     expect(
       within(dialog).getByRole("button", { name: "Preview configuration and cost" }),
     ).toBeVisible();
     expect(mocks.mutate).not.toHaveBeenCalled();
   });
 
-  it("requires preview and explicit consent, then saves every frozen configuration key", async () => {
+  it("binds the Run/Save click to the preview price and every frozen configuration key", async () => {
     const user = userEvent.setup();
     const { onSaved } = host();
     const dialog = screen.getByRole("dialog");
@@ -84,18 +86,19 @@ describe("AiScheduleDrawerHost", () => {
     await user.click(
       within(dialog).getByRole("button", { name: "Preview configuration and cost" }),
     );
-    const save = await within(dialog).findByRole("button", { name: "Save schedule" });
+    const save = await within(dialog).findByRole("button", { name: /^Save schedule/ });
     expect(mocks.preview).toHaveBeenCalledWith("prj_story", {
       promptIds: ["aip_neutral"],
       configurations: expect.any(Array),
-    });
-    expect(save).toBeDisabled();
-    expect(mocks.mutate).not.toHaveBeenCalled();
-    await user.click(
-      within(dialog).getByRole("checkbox", {
-        name: "I approve this run and the provider actual cost",
+      paymentScope: "recurring",
+      paymentScheduleId: "ais_weekly",
+      paymentRecurrence: expect.objectContaining({
+        cron: expect.any(String),
+        timezone: expect.any(String),
       }),
-    );
+    });
+    await waitFor(() => expect(save).toBeEnabled());
+    expect(mocks.mutate).not.toHaveBeenCalled();
     await user.click(save);
     await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
     expect(mocks.mutate).toHaveBeenCalledWith(
@@ -110,6 +113,11 @@ describe("AiScheduleDrawerHost", () => {
         consent: true,
         configuration: {
           ...preview,
+          acceptedPayment: { quoteToken: preview.payment.quoteToken },
+          requirePayment: true,
+          paymentScope: "recurring",
+          paymentScheduleId: "ais_weekly",
+          paymentRecurrence: { cron: saved.cron, timezone: saved.timezone },
           promptIds: ["aip_neutral"],
           idempotencyKey: expect.any(String),
           origin: "manual",
@@ -128,11 +136,16 @@ describe("AiScheduleDrawerHost", () => {
     await user.click(
       within(dialog).getByRole("button", { name: "Preview configuration and cost" }),
     );
-    await user.click(await within(dialog).findByRole("button", { name: "Save schedule" }));
+    await user.click(await within(dialog).findByRole("button", { name: /^Save schedule/ }));
     await waitFor(() => expect(mocks.mutate).toHaveBeenCalledOnce());
     expect(mocks.preview).toHaveBeenCalledWith("prj_story", {
       promptIds: ["aip_neutral", "aip_branded"],
       configurations: expect.any(Array),
+      paymentScope: "recurring",
+      paymentRecurrence: expect.objectContaining({
+        cron: expect.any(String),
+        timezone: expect.any(String),
+      }),
     });
     expect(mocks.mutate).toHaveBeenCalledWith(
       "prj_story",
@@ -154,7 +167,7 @@ describe("AiScheduleDrawerHost", () => {
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText(/1 saved prompts/)).toBeVisible();
     expect(within(dialog).getByText(/consumer_scrape.*Poland/)).toBeVisible();
-    await user.click(within(dialog).getByRole("button", { name: "Save schedule" }));
+    await user.click(within(dialog).getByRole("button", { name: /^Save schedule/ }));
     expect(mocks.preview).not.toHaveBeenCalled();
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(
       "Explicit budget consent is required.",
@@ -169,7 +182,7 @@ describe("AiScheduleDrawerHost", () => {
     expect(onSaved).not.toHaveBeenCalled();
   });
 
-  it("resets consent when a reviewed configuration changes", async () => {
+  it("invalidates the priced preview when a reviewed configuration changes", async () => {
     const user = userEvent.setup();
     host();
     const dialog = screen.getByRole("dialog");
@@ -179,12 +192,9 @@ describe("AiScheduleDrawerHost", () => {
     await user.click(
       within(dialog).getByRole("button", { name: "Preview configuration and cost" }),
     );
-    await user.click(
-      await within(dialog).findByRole("checkbox", {
-        name: "I approve this run and the provider actual cost",
-      }),
+    await waitFor(() =>
+      expect(within(dialog).getByRole("button", { name: /^Save schedule/ })).toBeEnabled(),
     );
-    expect(within(dialog).getByRole("button", { name: "Save schedule" })).toBeEnabled();
     await user.type(within(dialog).getByLabelText("Schedule name"), " revised");
     expect(
       within(dialog).queryByRole("checkbox", {
@@ -194,12 +204,9 @@ describe("AiScheduleDrawerHost", () => {
     await user.click(
       within(dialog).getByRole("button", { name: "Preview configuration and cost" }),
     );
-    expect(
-      await within(dialog).findByRole("checkbox", {
-        name: "I approve this run and the provider actual cost",
-      }),
-    ).not.toBeChecked();
-    expect(within(dialog).getByRole("button", { name: "Save schedule" })).toBeDisabled();
+    await waitFor(() =>
+      expect(within(dialog).getByRole("button", { name: /^Save schedule/ })).toBeEnabled(),
+    );
     expect(mocks.mutate).not.toHaveBeenCalled();
   });
   it("does not preview an empty active prompt scope", () => {

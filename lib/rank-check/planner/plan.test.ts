@@ -5,6 +5,7 @@ import { planRankCheckRuns, scheduleAdmission } from "./plan";
 const mocks = vi.hoisted(() => ({
   assertAllocation: vi.fn(),
   assertBudget: vi.fn(),
+  customerCents: vi.fn(async (): Promise<number | undefined> => undefined),
   assertOperationAccess: vi.fn(),
   existingKeys: new Set<string>(),
   findMany: vi.fn(),
@@ -17,6 +18,10 @@ const mocks = vi.hoisted(() => ({
   queuedRoute: vi.fn(),
   upsert: vi.fn(),
   skipEmpty: vi.fn(),
+}));
+
+vi.mock("./reconcile-scheduled-items", () => ({
+  cancelObsoleteScheduleItems: vi.fn(async () => ({ cancelled: 0 })),
 }));
 
 vi.mock("./empty-schedule", () => ({ skipEmptyScheduleOccurrences: mocks.skipEmpty }));
@@ -59,7 +64,10 @@ vi.mock("@/lib/db/prisma", () => ({
     },
   },
 }));
-vi.mock("@/lib/db/public-id", () => ({ makePublicId: mocks.makePublicId }));
+vi.mock("@/lib/db/public-id", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/db/public-id")>()),
+  makePublicId: mocks.makePublicId,
+}));
 vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.loadChain,
 }));
@@ -70,6 +78,9 @@ vi.mock("@/lib/rank-check/queued-routing", () => ({ queuedRankCheckRoute: mocks.
 vi.mock("@/lib/rank-check/budget", () => ({
   assertBudgetAvailable: mocks.assertBudget,
   isBudgetExhaustedError: mocks.isBudgetExhausted,
+}));
+vi.mock("@/lib/rank-check/runs/customer-charge", () => ({
+  hostedReservationCustomerCents: mocks.customerCents,
 }));
 vi.mock("@/lib/provider-usage/enforcement", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/provider-usage/enforcement")>()),
@@ -82,6 +93,7 @@ function schedule(
   overrides: Record<string, unknown> = {},
 ) {
   return {
+    createdAt: new Date("2026-01-01T00:00:00Z"),
     cronExpression: frequency === "custom_cron" ? "0 12 * * *" : null,
     enabled: true,
     frequency,
@@ -149,6 +161,7 @@ describe("rank-check run planner", () => {
         rateContext: { entries: [], manualAmountCents: null },
       },
     ]);
+    mocks.customerCents.mockResolvedValue(undefined);
     mocks.assertBudget.mockResolvedValue({ capCents: 1_000, spentCents: 0 });
     mocks.isBudgetExhausted.mockReturnValue(false);
     mocks.upsert.mockImplementation(({ create }) => {
@@ -156,6 +169,93 @@ describe("rank-check run planner", () => {
       return Promise.resolve({ ...create, id: `run_${mocks.existingKeys.size}` });
     });
   });
+
+  it("starts a newly created fixed-time schedule after its creation, not earlier today", async () => {
+    mocks.findMany.mockResolvedValue([
+      schedule("new-daily", "daily", {
+        createdAt: new Date("2026-10-21T16:09:04.228Z"),
+        timeOfDay: "07:00",
+        jitterMinutes: 15,
+      }),
+    ]);
+    const result = await planRankCheckRuns({ now: new Date("2026-10-21T16:15:01.778Z") });
+    expect(result.planned).toBe(7);
+    expect(mocks.upsert.mock.calls.map(([{ create }]) => create.plannedFor.toISOString())).toEqual([
+      "2026-10-22T07:00:00.000Z",
+      "2026-10-23T07:00:00.000Z",
+      "2026-10-24T07:00:00.000Z",
+      "2026-10-25T07:00:00.000Z",
+      "2026-10-26T07:00:00.000Z",
+      "2026-10-27T07:00:00.000Z",
+      "2026-10-28T07:00:00.000Z",
+    ]);
+    expect(mocks.findMany.mock.calls[0][0].select.createdAt).toBe(true);
+  });
+
+  it.each(["2026-10-21T06:59:00Z", "2026-10-21T07:00:00Z"])(
+    "keeps today's eligible fixed-time run when created at %s and the planner is late",
+    async (createdAt) => {
+      mocks.findMany.mockResolvedValue([
+        schedule("before-seven", "daily", { createdAt: new Date(createdAt), timeOfDay: "07:00" }),
+      ]);
+      await planRankCheckRuns({ now: new Date("2026-10-21T07:00:05Z") });
+      expect(mocks.upsert.mock.calls[0][0].create.plannedFor).toEqual(
+        new Date("2026-10-21T07:00:00Z"),
+      );
+    },
+  );
+
+  it("preserves an old schedule's late occurrence despite a later metadata update", async () => {
+    mocks.findMany.mockResolvedValue([
+      schedule("existing-daily", "daily", {
+        createdAt: new Date("2026-10-20T16:09:00Z"),
+        updatedAt: new Date("2026-10-21T16:10:00Z"),
+        timeOfDay: "07:00",
+      }),
+    ]);
+    await planRankCheckRuns({ now: new Date("2026-10-21T16:15:00Z") });
+    expect(mocks.upsert.mock.calls[0][0].create.plannedFor).toEqual(
+      new Date("2026-10-21T07:00:00Z"),
+    );
+  });
+
+  it("keeps the current interval for a new schedule with no fixed time", async () => {
+    mocks.findMany.mockResolvedValue([
+      schedule("phased", "daily", {
+        createdAt: new Date("2026-10-21T16:09:00Z"),
+        timeOfDay: null,
+        keywords: [
+          {
+            id: "keyword_3",
+            publicId: "kw_a00000000000000000000000",
+            locationId: "location_active",
+          },
+        ],
+      }),
+    ]);
+    await planRankCheckRuns({ now: new Date("2026-10-21T16:15:00Z") });
+    expect(mocks.upsert.mock.calls[0][0].create.plannedFor).toEqual(
+      new Date("2026-10-21T00:00:00Z"),
+    );
+  });
+
+  it.each([
+    ["daily", "19:00", null, "2026-10-21T19:00:00Z"],
+    ["custom_cron", null, "0 18 * * *", "2026-10-21T18:00:00Z"],
+  ] as const)(
+    "keeps future %s occurrences unchanged",
+    async (frequency, timeOfDay, cronExpression, expected) => {
+      mocks.findMany.mockResolvedValue([
+        schedule("future", frequency, {
+          createdAt: new Date("2026-10-21T16:09:00Z"),
+          timeOfDay,
+          cronExpression,
+        }),
+      ]);
+      await planRankCheckRuns({ now: new Date("2026-10-21T16:15:00Z") });
+      expect(mocks.upsert.mock.calls[0][0].create.plannedFor).toEqual(new Date(expected));
+    },
+  );
 
   it("does not recreate occurrences from a scan taken before archiving", async () => {
     mocks.findMany.mockResolvedValue([schedule("daily", "daily")]);
@@ -168,6 +268,11 @@ describe("rank-check run planner", () => {
           id: "daily",
           archivedAt: null,
           enabled: true,
+          frequency: "daily",
+          cronExpression: null,
+          timeOfDay: null,
+          timezone: "UTC",
+          jitterMinutes: 0,
           keywords: { some: { archivedAt: null, locationId: { in: ["location_active"] } } },
         },
       }),
@@ -291,6 +396,11 @@ describe("rank-check run planner", () => {
     const result = await scheduleAdmission(input, new Date());
     expect(result.itemCosts).toEqual([0.2, 1]);
     expect(result.estimatedCostCents).toBe(2);
+    expect(mocks.assertBudget.mock.calls[0]?.[2]).toMatchObject({
+      estimatedCostCents: 2,
+      funding: "byok",
+    });
+    expect(mocks.assertBudget.mock.calls[0]?.[2]).not.toHaveProperty("estimatedCustomerCents");
     expect(mocks.nativeCosts).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ id: "connection_1" }),
@@ -299,6 +409,41 @@ describe("rank-check run planner", () => {
         { keyword: "site:example.com", depth: 10 },
       ],
       expect.any(Date),
+    );
+  });
+
+  it("compares a hosted schedule with the reservation customer charge", async () => {
+    mocks.loadChain.mockResolvedValue([
+      {
+        id: "connection_1",
+        provider: "serpapi",
+        credentialSource: "hosted",
+        credentialsEncrypted: "encrypted",
+      },
+    ]);
+    mocks.nativeCosts.mockResolvedValue([1, 1]);
+    mocks.customerCents.mockResolvedValue(9);
+    await scheduleAdmission(
+      {
+        keywords: [
+          { id: "a", text: "plain" },
+          { id: "b", text: "site:example.com" },
+        ],
+        project: { defaults: { serpDepth: 10 } },
+        projectId: "project_1",
+        providerPolicy: "project",
+        serpDepth: null,
+      },
+      new Date(),
+    );
+    expect(mocks.assertBudget).toHaveBeenCalledWith(
+      "project_1",
+      expect.any(Date),
+      expect.objectContaining({
+        estimatedCostCents: 2,
+        estimatedCustomerCents: 9,
+        funding: "platform",
+      }),
     );
   });
 

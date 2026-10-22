@@ -1,3 +1,4 @@
+import { aiPaymentGuard } from "@/lib/ai-research/payment";
 import { receiptOperationId } from "@/lib/metering/operation-reference";
 import "server-only";
 import { trackingAdmissionContext } from "@/lib/ai-tracking/admission/context";
@@ -38,6 +39,7 @@ async function trackingJournal(plan: SamplePlan, estimatedCostCents = 0) {
   );
   const journal = createProviderRequestJournal(prisma, {
     attribution,
+    beforeReserve: aiPaymentGuard(plan.paymentConsent),
     connectionId: plan.credentialConnectionId,
     projectId: plan.projectId,
     provider: plan.provider,

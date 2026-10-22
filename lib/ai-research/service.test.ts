@@ -24,7 +24,11 @@ vi.mock("./provider", () => ({
   PROMPT_PATH: "chat_gpt/llm_responses/live",
 }));
 vi.mock("@/lib/agent-reports/service", () => ({ createAgentReport: mocks.report }));
-vi.mock("@/lib/provider-lookups/cache", () => ({ withProviderLookupCache: mocks.cache }));
+vi.mock("@/lib/provider-lookups/cache", () => ({
+  providerLookupCacheConfigured: () => false,
+  readProviderLookupCache: async () => null,
+  withProviderLookupCache: mocks.cache,
+}));
 vi.mock("@/lib/provider-lookups/paid-call", async () => {
   const { ProviderLookupSignal } = await import("@/lib/provider-lookups/lookup-failure");
   return {
@@ -318,6 +322,54 @@ describe("AI research vertical contracts", () => {
       ok: true,
       result: { rows: [], costCents: 10.3, costStatus: "confirmed" },
     });
+  });
+  it.each(["visibility", "prompt"] as const)(
+    "zero cap refuses a missing %s result with its price before paid work",
+    async (kind) => {
+      const result =
+        kind === "visibility"
+          ? await analyzeAiVisibility(context, { ...visibilityInput, max_cost_cents: 0 })
+          : await compareAiPrompts(context, { ...input, prompt: "q", max_cost_cents: 0 });
+      expect(result).toMatchObject({
+        ok: false,
+        reason: "cost_limit_exceeded",
+        estimatedCostCents: expect.any(Number),
+      });
+      expect(mocks.capabilities).not.toHaveBeenCalled();
+      expect(mocks.preflight).not.toHaveBeenCalled();
+      expect(mocks.paid).not.toHaveBeenCalled();
+      expect(mocks.report).not.toHaveBeenCalled();
+    },
+  );
+  it("zero cap never refreshes provider metadata to price an extended cache miss", async () => {
+    expect(
+      await compareAiPrompts(context, {
+        ...input,
+        prompt: "q",
+        max_output_tokens: 1024,
+        max_cost_cents: 0,
+      }),
+    ).toMatchObject({ ok: false, reason: "pricing_unavailable" });
+    expect(mocks.capabilities).not.toHaveBeenCalled();
+    expect(mocks.paid).not.toHaveBeenCalled();
+    expect(mocks.preflight).not.toHaveBeenCalled();
+  });
+  it("serves cached prompt comparisons at zero without paid work or metadata", async () => {
+    mocks.cache.mockResolvedValue({
+      status: "success",
+      cached: true,
+      value: {
+        reportId: "agr_cached",
+        result: { evidence: "synthetic_prompt_test", costCents: 3, rows: [row] },
+      },
+    });
+    expect(
+      await compareAiPrompts(context, { ...input, prompt: "q", max_cost_cents: 0 }),
+    ).toMatchObject({ ok: true, cached: true, costCents: 0 });
+    expect(mocks.paid).not.toHaveBeenCalled();
+    expect(mocks.capabilities).not.toHaveBeenCalled();
+    expect(mocks.preflight).not.toHaveBeenCalled();
+    expect(mocks.report).not.toHaveBeenCalled();
   });
   it("serves cached results without another paid call", async () => {
     mocks.cache.mockResolvedValue({

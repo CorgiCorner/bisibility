@@ -7,6 +7,7 @@ import {
 import { admittedDefinitionSourceFixture } from "@/lib/rank-check/definition-policy.test-fixture";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
+import { projectFundingTag } from "../metering/project-funding-budgets";
 import { meteringNamespace } from "../metering/runtime";
 import {
   PROJECT_DOMAIN_REQUIRED_MESSAGE,
@@ -39,6 +40,7 @@ import {
 } from "./rank-check-activities";
 
 const mocks = vi.hoisted(() => ({
+  preflight: vi.fn(),
   currentBudgets: vi.fn(),
   loadProviderRateContext: vi.fn(),
   nativeCosts: vi.fn(),
@@ -74,6 +76,9 @@ const mocks = vi.hoisted(() => ({
   runKeywordCheckWithFallback: vi.fn(),
 }));
 
+vi.mock("../providers/execution-extension", () => ({
+  preflightDeploymentRankExecution: mocks.preflight,
+}));
 vi.mock("../db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("../metering/store/budgets", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../metering/store/budgets")>()),
@@ -465,6 +470,7 @@ describe("rank-check activities", () => {
         { kind: "principal", namespace, principal: "owner_1" },
         { kind: "connection", namespace, connection: "connection_1" },
         { kind: "tag", namespace, tag: ownAllocationTag("serpapi", "connection_1") },
+        { kind: "tag", namespace, tag: projectFundingTag("byok", "project_1") },
       ],
       "app",
     );
@@ -744,7 +750,7 @@ describe("rank-check activities", () => {
     expect(tx.rankCheck.updateMany).toHaveBeenCalledWith({
       data: {
         attemptCount: 0,
-        deferredReason: "rate limited",
+        deferredReason: "rate_limited",
         degradedToCountry: false,
         finishedAt: new Date("2026-01-01T06:01:00.000Z"),
         normalizationVersion: null,
@@ -1602,5 +1608,27 @@ describe("rank-check activities", () => {
       where: { rankCheckId: "rank_1", status: "running" },
     });
     expect(mocks.runKeywordCheckWithFallback).not.toHaveBeenCalled();
+  });
+});
+
+it("refuses hosted capacity before the one-shot paid claim and makes it non-retryable", async () => {
+  const { ProviderCallError } = await import("../providers/call-error");
+  mocks.preflight.mockRejectedValueOnce(
+    new ProviderCallError("You were not charged.", 0, "provider_capacity_unavailable"),
+  );
+  mocks.prisma.$queryRaw.mockClear();
+  await expect(
+    runRankCheckActivity({
+      keywordId: "keyword-1",
+      rankCheckId: "check-1",
+      source: "manual",
+      inline: true,
+    }),
+  ).rejects.toMatchObject({ type: "provider_capacity_unavailable", nonRetryable: true });
+  expect(mocks.prisma.$queryRaw).not.toHaveBeenCalled();
+  expect(mocks.runKeywordCheckWithFallback).not.toHaveBeenCalled();
+  expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({
+    where: { id: "check-1", status: "running" },
+    data: { errorCode: "provider_capacity_unavailable" },
   });
 });

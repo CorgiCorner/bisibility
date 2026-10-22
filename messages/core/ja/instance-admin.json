@@ -308,7 +308,6 @@
           "smtpPort": "ポート",
           "smtpUsername": "ユーザー名",
           "smtpPassword": "パスワード",
-          "code": "認証アプリのコード",
           "save": "メール設定を保存",
           "saving": "保存しています...",
           "clear": "保存した設定を消去",
@@ -317,14 +316,13 @@
           "cleared": "保存したメール設定を消去しました。環境変数が適用されます。",
           "forbidden": "この操作は利用できません。",
           "invalid": "フォームを確認して、もう一度お試しください。",
-          "stepUpFailed": "その認証コードは受け付けられませんでした。",
           "rateLimited": "試行回数が多すぎます。しばらくしてからもう一度お試しください。",
           "unavailable": "メール設定は一時的に利用できません。",
           "validationSender": "送信者は 名前 '<'address@example.com'>' またはアドレスのみで入力してください。",
           "validationRequired": "値を入力してください。",
-          "validationCode": "認証アプリの 6 桁のコードを入力してください。",
           "validationPort": "1 から 65535 のポートを入力してください。",
-          "validationSesPair": "アクセスキー ID とシークレットアクセスキーの両方を入力するか、両方を空にしてください。"
+          "validationSesPair": "アクセスキー ID とシークレットアクセスキーの両方を入力するか、両方を空にしてください。",
+          "twoFactorRequired": "二要素認証を有効にする必要があります。"
         }
       }
     },
@@ -445,7 +443,8 @@
         "invalid": "お知らせの入力内容を確認してください。",
         "not_found": "このお知らせは削除されています。ページを再読み込みしてください。",
         "conflict": "別の管理者がこのお知らせを変更しました。再度保存する前にページを再読み込みしてください。",
-        "unavailable": "お知らせを保存できませんでした。もう一度お試しください。"
+        "unavailable": "お知らせを保存できませんでした。もう一度お試しください。",
+        "two_factor_required": "二要素認証を有効にする必要があります。"
       }
     },
     "recovery": {
@@ -558,7 +557,8 @@
         "rate_limited": "操作が多すぎます。しばらくして再試行してください。",
         "unavailable": "復旧を一時的に利用できません。再試行する前に操作状況を更新してください。",
         "case_changed": "案件が変更されたか修復対象でなくなりました。更新して再確認してください。",
-        "invalid": "理由と将来の待機期限を選択してください。"
+        "invalid": "理由と将来の待機期限を選択してください。",
+        "two_factor_required": "二要素認証を有効にする必要があります。"
       },
       "commandStates": {
         "queued": "復旧を待機中",
@@ -611,6 +611,21 @@
       "connectionBlocked": "未確定の会計により接続の支出が制限されています。",
       "lastResultActivityAt": "結果復旧ワーカーの最終実行",
       "noSpendShort": "復旧では、操作の前に保存済みの証拠を確認します。"
+    },
+    "dangerousActions": {
+      "notice": "{action}には、二要素認証を有効にしてください。",
+      "enable": "二要素認証を有効にする",
+      "actions": {
+        "addAccount": "アカウントを追加する",
+        "changeMail": "メール設定を変更する",
+        "changeCredentials": "認証情報を変更する",
+        "selectAccount": "アカウントを選択する",
+        "changeSettings": "設定を変更する",
+        "changeAccountStatus": "アカウントへのアクセスを変更する",
+        "changeAnnouncements": "お知らせを変更する",
+        "repairUsage": "使用記録を修復する",
+        "importUsage": "使用記録をインポートする"
+      }
     }
   }
 }

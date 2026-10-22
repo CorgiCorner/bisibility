@@ -1,5 +1,5 @@
 import type { StatusChipPresentation } from "@/components/ui/status-chip-mapping";
-import { nativeUsageUnit } from "@/lib/cost-estimate/native-usage";
+import { deferredBeforeProviderChoice } from "@/lib/rank-check/deferral-reason";
 import type {
   ItemStatus,
   OperationSnapshot,
@@ -13,11 +13,13 @@ import { isSkippedOccurrence } from "./runs-format";
 export type RunItemFilter = "all" | ItemStatus;
 
 type CounterKind = "cancelled" | "completed" | "deferred" | "failed" | "remaining";
-type Counter = { count: number; label: string; note: string };
+type CounterCopy = { label: string; note: string };
+type Counter = CounterCopy & { count: number; kind: CounterKind };
+type ProviderState = "chosen_at_launch" | "deferred_before_provider" | "not_chosen";
 type RunFact =
   | { kind: "usage"; actual: number | null; estimated: number | null; beforeStart: boolean }
   | { kind: "selection"; keywordCount: number; targetCount: number }
-  | { kind: "provider"; providerLabel: string | null; state: "chosen_at_launch" | "not_chosen" }
+  | { kind: "provider"; providerLabel: string | null; state: ProviderState }
   | {
       costCents: number | null;
       kind: "cost";
@@ -46,7 +48,7 @@ type RunFact =
     };
 
 export type RunPageSummaryLabels = {
-  counter: (kind: CounterKind) => Omit<Counter, "count">;
+  counter: (kind: CounterKind) => CounterCopy;
   elapsed: (startedAt: string | null, finishedAt: string | null, now: string) => string;
   fact: (fact: RunFact) => { label: string; note: string; value: string };
   matched: (started: number, total: number) => string;
@@ -102,24 +104,17 @@ export function liveRun(run: RunPageData, operations: OperationSnapshot[]): RunP
 
 export function runCounters(run: RunPageData, labels: RunPageSummaryLabels): Counter[] {
   const pending = Math.max(run.counts.total - terminalCount(run), 0);
+  const counted = (kind: CounterKind, count: number): Counter => ({
+    count,
+    kind,
+    ...labels.counter(kind),
+  });
   return [
-    { count: pending, ...labels.counter("remaining") },
-    {
-      count: run.counts.completed,
-      ...labels.counter("completed"),
-    },
-    {
-      count: run.counts.failed,
-      ...labels.counter("failed"),
-    },
-    {
-      count: run.counts.deferred,
-      ...labels.counter("deferred"),
-    },
-    {
-      count: run.counts.cancelled,
-      ...labels.counter("cancelled"),
-    },
+    counted("remaining", pending),
+    counted("completed", run.counts.completed),
+    counted("failed", run.counts.failed),
+    counted("deferred", run.counts.deferred),
+    counted("cancelled", run.counts.cancelled),
   ].filter((counter) => counter.count > 0);
 }
 
@@ -178,36 +173,38 @@ export function runSummary(
     keywordCount: run.keywordCount,
     targetCount: run.counts.total,
   });
+  const providerLabel = skipped ? null : (run.providerLabel ?? null);
+  const beforeProvider =
+    !skipped &&
+    !providerLabel &&
+    run.sharedDeferralCode != null &&
+    deferredBeforeProviderChoice(run.sharedDeferralCode);
   const provider = labels.fact({
     kind: "provider",
-    providerLabel: skipped ? null : (run.providerLabel ?? null),
-    state: skipped || !run.providerLabel ? "not_chosen" : "chosen_at_launch",
+    providerLabel,
+    state: providerLabel
+      ? "chosen_at_launch"
+      : beforeProvider
+        ? "deferred_before_provider"
+        : "not_chosen",
   });
-  const cost =
-    nativeUsageUnit(run.provider) === "units" || run.usage
-      ? labels.fact({
-          kind: "usage",
-          actual: run.usage?.actual ?? null,
-          estimated: run.nativeEstimate?.quantity ?? run.usage?.estimated ?? null,
-          beforeStart,
-        })
-      : labels.fact({
-          costCents:
-            skipped || (beforeStart && run.estimatedCostCents === 0)
-              ? null
-              : beforeStart
-                ? run.estimatedCostCents
-                : run.costCents,
-          kind: "cost",
-          note: skipped
-            ? "nothing_billed"
-            : beforeStart
-              ? run.estimatedCostCents === 0
-                ? "no_rate_yet"
-                : "set_when_planned"
-              : "estimate",
-          phase: beforeStart ? "estimated" : active ? "spent" : "cost",
-        });
+  const cost = labels.fact({
+    costCents:
+      skipped || (beforeStart && run.estimatedCostCents === 0)
+        ? null
+        : beforeStart
+          ? run.estimatedCostCents
+          : run.costCents,
+    kind: "cost",
+    note: skipped
+      ? "nothing_billed"
+      : beforeStart
+        ? run.estimatedCostCents === 0
+          ? "no_rate_yet"
+          : "set_when_planned"
+        : "estimate",
+    phase: beforeStart ? "estimated" : active ? "spent" : "cost",
+  });
   const timing = waiting
     ? labels.fact({
         kind: "first_check",

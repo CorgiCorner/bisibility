@@ -1,3 +1,4 @@
+import { paymentReceiptWireSchema } from "./openapi-action-payment";
 import { openEnum, sdkName, usdDecimal } from "./openapi-sdk-schema";
 
 const text = { type: "string" };
@@ -95,3 +96,5 @@ export const trackingSampleSchema = object({
   cost_usd: usd,
   cost_state: costState,
 });
+
+Object.assign(trackingSampleSchema.properties, { original_payment: paymentReceiptWireSchema });

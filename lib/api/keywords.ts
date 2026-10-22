@@ -10,7 +10,7 @@ import {
   assertKeywordIdentityUnchanged,
   KeywordIdentityImmutableError,
 } from "@/lib/keywords/identity";
-import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
+import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
 import { LocationInputError, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
@@ -211,12 +211,7 @@ export async function patchKeyword(ctx: ApiContext, keywordId: string) {
   }
   if (schedule) {
     await prisma.$transaction(async (tx) => {
-      await tx.keywordSchedule.upsert({
-        create: { ...schedule, keywordId: keyword.id },
-        update: schedule,
-        where: { keywordId: keyword.id },
-      });
-      await refreshKeywordDispatchStates({ keywordIds: [keyword.id] }, tx);
+      await setKeywordCadence(tx, ctx.auth.project.id, [keyword.id], schedule, ctx.actorId ?? null);
     });
   }
 

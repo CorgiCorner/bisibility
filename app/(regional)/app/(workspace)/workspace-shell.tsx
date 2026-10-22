@@ -10,12 +10,11 @@ import { AppFooter } from "@/components/shell/AppFooter";
 import { AppHeader } from "@/components/shell/AppHeader";
 import { AppRealtimeProvider } from "@/components/shell/AppRealtimeProvider";
 import { AppThemeRoot } from "@/components/shell/AppThemeRoot";
-import { CloudBetaBanner } from "@/components/shell/CloudBetaBanner";
 import { CommandPaletteProvider } from "@/components/shell/CommandPalette";
-import { CLOUD_BETA_DISMISSAL_COOKIE, isCloudBetaDismissed } from "@/components/shell/cloud-beta";
 import { DemoBanner } from "@/components/shell/DemoBanner";
 import { HeaderContextLoading } from "@/components/shell/HeaderContextLoading";
 import { InstanceAnnouncementBanner } from "@/components/shell/InstanceAnnouncementBanner";
+import { renderPlanStatusExtension } from "@/components/shell/PlanStatusExtension";
 import { ProjectWriteModeBanner } from "@/components/shell/ProjectWriteModeNotices";
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
 import { Sidebar } from "@/components/shell/Sidebar";
@@ -23,6 +22,7 @@ import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
 import { appVersion } from "@/lib/app-version";
+import { canProjectAction } from "@/lib/auth/capabilities";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { gravatarUrl } from "@/lib/avatar/gravatar";
 import { readDemoConfig } from "@/lib/demo/config";
@@ -39,7 +39,6 @@ import { listEnabledInstanceAnnouncements } from "@/lib/instance-announcements/s
 import { getWorkerLivenessDetails } from "@/lib/ops/liveness";
 import { compareWorkerTemporalIdentity } from "@/lib/ops/worker-temporal-identity";
 import { getQuerySession } from "@/lib/queries/_auth";
-import { getLatestCloudPackageExport } from "@/lib/queries/cloud-beta-export";
 import { getExperimentalModules } from "@/lib/queries/experimental-modules";
 import { listProjectMarketOptions } from "@/lib/queries/project-markets";
 import { loadSetupContext } from "@/lib/queries/setup-context";
@@ -75,15 +74,13 @@ export async function WorkspaceShell({
   if (isDemo && !demoActor) notFound();
   const demoCapturedAt = demo.kind === "legacy-read-only" ? await demoSnapshotCapturedAt() : null;
 
-  const now = new Date();
   const shellI18n = resolveRegionalDocumentLocale().then(async (runtime) => ({
     messages: await loadCoreMessages(runtime.locale, ["shared", "shell", "projectCostEstimate"]),
     runtime,
   }));
-  // Workspace chrome reads are independent. Self-host skips the Cloud-only audit query.
+  // Workspace chrome reads are independent.
   const [
     workspaces,
-    lastCloudExport,
     instanceAdminSession,
     setupContext,
     setupAcknowledgedAt,
@@ -93,7 +90,6 @@ export async function WorkspaceShell({
     announcements,
   ] = await Promise.all([
     listWorkspaces(),
-    isCloud && !isDemo ? getLatestCloudPackageExport(projectRef) : Promise.resolve(null),
     getInstanceAdminSession(),
     loadSetupContext(projectRef),
     loadSetupAcknowledgedAt(session.user.id, projectRef),
@@ -117,13 +113,11 @@ export async function WorkspaceShell({
   const accountNotice = isDemo
     ? null
     : await renderAccountNoticeExtension({ locale: runtime.locale });
+  const planStatus = isDemo ? null : await renderPlanStatusExtension({ userId: session.user.id });
 
   const cookieStore = await cookies();
   const theme = normalizeThemePreference(cookieStore.get("theme")?.value);
   const collapsed = isSidebarCollapsed(cookieStore.get("sidebar-collapsed")?.value);
-  const cloudBetaDismissed = isCloudBetaDismissed(
-    cookieStore.get(CLOUD_BETA_DISMISSAL_COOKIE)?.value,
-  );
   const setupProgress = resolveSetupProgress(setupContext);
   const setupCompleted = setupProgress.completed;
   const showGettingStarted =
@@ -162,6 +156,9 @@ export async function WorkspaceShell({
         className="min-h-dvh bg-bg text-fg lg:grid lg:grid-cols-[270px_minmax(0,1fr)] lg:[--app-sidebar-width:270px] data-[collapsed=true]:lg:grid-cols-[80px_minmax(0,1fr)] data-[collapsed=true]:lg:[--app-sidebar-width:80px]"
       >
         <ProjectWriteModeProvider
+          canEditProject={
+            active.writeMode === "active" && canProjectAction(active.role, "update", "project")
+          }
           projectRef={projectRef}
           reasons={{
             migrated: t("shell.writeMode.reasons.migrated"),
@@ -182,6 +179,7 @@ export async function WorkspaceShell({
                   canCreateWorkspace={canCreateWorkspace}
                   canSetDefault={canSetDefault}
                   enabledExperimentalModules={enabledExperimentalModules}
+                  planStatus={planStatus}
                   projectRef={projectRef}
                   setupCompleted={setupCompleted}
                   setupDoneCount={setupProgress.doneCount}
@@ -207,19 +205,7 @@ export async function WorkspaceShell({
                       capturedAt={demoCapturedAt}
                       mode={demo.kind}
                     />
-                  ) : accountNotice ? null : (
-                    <CloudBetaBanner
-                      dismissed={cloudBetaDismissed}
-                      hasExportableData={active.keywordCount > 0}
-                      isCloud={isCloud}
-                      key={active.publicId}
-                      lastExport={lastCloudExport}
-                      now={now.toISOString()}
-                      projectId={active.publicId}
-                      projectRef={projectRef}
-                      projectName={active.name}
-                    />
-                  )}
+                  ) : null}
                   {accountNotice?.content}
                   <AppHeader
                     accountActions={
@@ -241,6 +227,7 @@ export async function WorkspaceShell({
                     canSetDefault={canSetDefault}
                     context={<Suspense fallback={<HeaderContextLoading />}>{context}</Suspense>}
                     enabledExperimentalModules={enabledExperimentalModules}
+                    planStatus={planStatus}
                     projectRef={projectRef}
                     setupCompleted={setupCompleted}
                     setupDoneCount={setupProgress.doneCount}

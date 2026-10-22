@@ -1,24 +1,24 @@
 ---
 title: "Deployment options"
-description: "Compare the hosted beta, the local seeded demo, and production self-hosting: who runs what, current hosted limits, scheduling, and the safe path from demo to production."
+description: "Compare the hosted Cloud, the local seeded demo, and production self-hosting: who runs what, current hosted limits, scheduling, and the safe path from demo to production."
 ---
 
 bisibility runs three ways. This page is the single comparison source for the
-hosted beta, the local seeded demo, and production self-hosting. It covers who
-runs each component, the current hosted beta limits, provider billing,
+hosted Cloud, the local seeded demo, and production self-hosting. It covers who
+runs each component, the current hosted limits, provider billing,
 scheduling, and the safe path from a demo to a production deployment.
 
 ## Choose a path
 
 | Path | Use it when | Start here |
 | - | - | - |
-| Hosted beta | You want the service operated for you and will connect your own data providers | [Hosted quickstart](/hosted-quickstart) |
+| Hosted Cloud | You want the service operated for you and will connect your own data providers | [Hosted quickstart](/hosted-quickstart) |
 | Local seeded demo | You want a throwaway evaluation with synthetic data and no provider account | [Local demo quickstart](/quickstart) |
 | Production self-host | You will operate the full stack yourself on your own infrastructure | [Self-hosting](/self-hosting) |
 
 ## Responsibility at a glance
 
-| | Hosted beta | Local seeded demo | Production self-host |
+| | Hosted Cloud | Local seeded demo | Production self-host |
 | - | - | - | - |
 | PostgreSQL | Operated for you | Bundled, throwaway | You run and back it up |
 | Valkey | Operated for you | Bundled, throwaway | You run it |
@@ -34,19 +34,22 @@ migrations, PostgreSQL, and Valkey. Manual checks run without Temporal on every
 path. Scheduled checks require the worker plus Temporal; see
 [manual and scheduled checks](#manual-and-scheduled-checks).
 
-## Hosted beta
+## Hosted Cloud
 
-The hosted beta operates the application infrastructure, PostgreSQL, Valkey,
+The hosted Cloud operates the application infrastructure, PostgreSQL, Valkey,
 Temporal scheduling, and platform backups. You sign in to a managed instance
-and connect your own data providers.
+and use your own data providers or optional Cloud credits.
+Cloud access costs USD 3/month after a 7-day free trial without a card.
+Self-hosted software stays free.
 
-Provider usage is not included by bisibility. You connect your own SERP
-provider credentials, and provider billing stays directly between you and the
-provider.
+Provider usage is billed separately. With your own SERP provider credentials,
+billing stays directly between you and the provider. On Cloud, optional
+one-off credit packages can fund supported operations without your own keys.
+See [Cloud pricing](https://bisibility.com/pricing) for packages and policy.
 See [Integrations](/integrations) for the supported providers, credentials, and
 the per-project budget cap.
 
-See [current hosted beta limits](#current-hosted-beta-limits) below.
+See [current hosted limits](#current-hosted-limits) below.
 
 ## Local seeded demo
 
@@ -72,15 +75,15 @@ the required components, the canonical Compose family, the production topology,
 and the production checklist. For the full environment variable reference, see
 [self-hosting configuration](/self-hosting/configuration).
 
-## Current hosted beta limits
+## Current hosted limits
 
-This page is the canonical public source for current hosted beta resource
+This page is the canonical public source for current hosted resource
 limits.
 
 - 1,000 keywords per project
 - 3 owned projects per user
 
-These are commercial limits that may change as the beta progresses. When a
+These are commercial limits that may change over time. When a
 limit changes, this page is updated first.
 
 ## Self-hosted resource limits
@@ -91,16 +94,17 @@ environment variables:
 - `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` - per-project keyword cap
 - `BISIBILITY_MAX_PROJECTS_PER_USER` - cap on projects one user may own
 
-Unset or `0` means unlimited for both. The hosted beta values above do not
+Unset or `0` means unlimited for both. The hosted Cloud values above do not
 apply to self-hosted installations. See
 [self-hosting configuration](/self-hosting/configuration#limits-and-networking)
 for the full variable reference.
 
 ## Provider usage and billing
 
-bisibility ships without a data source. Any real provider-backed check uses
-SERP provider credentials you connect, and provider billing is directly between
-you and the provider. bisibility does not resell or include provider usage.
+Self-hosted bisibility ships without a data source. Provider-backed checks use
+credentials you connect, with billing directly between you and the provider.
+On Cloud, you can use your own keys, optional credits, or both; provider usage
+is separate from the Cloud subscription.
 
 You set a per-project monthly budget cap in **Settings > Provider
 usage** so spend has a ceiling. See [Budget cap](/integrations#budget-cap). A
@@ -123,7 +127,7 @@ docker compose -f compose.yaml -f compose.worker.yaml -f compose.temporal.yaml u
 
 For the worker connection settings, scheduler modes, and maintenance
 schedules, see [Temporal and scheduled checks](/self-hosting/temporal). The
-hosted beta runs scheduling for you.
+hosted Cloud runs scheduling for you.
 
 ## From demo to production
 

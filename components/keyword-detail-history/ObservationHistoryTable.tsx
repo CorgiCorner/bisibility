@@ -2,10 +2,11 @@
 
 import { Button } from "@/components/ui/Button";
 import { ReadOnlyDataTable } from "@/components/ui/data-table/ReadOnlyDataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useFormatter, useTranslations } from "next-intl";
 import { Fragment } from "react";
 import { HistoryPosition } from "./HistoryPosition";
-import { HistoryScope } from "./HistoryScope";
+import { HistoryScope, sameHistoryScope } from "./HistoryScope";
 import { HistoryTime, historyExternalUrl } from "./HistoryTime";
 import { observationKernelMovement } from "./history-chart-model";
 import type { ObservationHistoryPage } from "./history-contract";
@@ -26,6 +27,9 @@ export function ObservationHistoryTable({
       <ReadOnlyDataTable
         id="history-observations"
         label={t("observationsTable")}
+        emptyState={
+          <EmptyState compact title={t("noObservations")} description={t("noRecordsDescription")} />
+        }
         headers={[
           t("columns.observed"),
           t("columns.recorded"),
@@ -66,8 +70,12 @@ export function ObservationHistoryTable({
               </Fragment>,
               <Fragment key="details-1">
                 <HistoryScope key="historyscope-0" scope={observation.configuredScope} />
-                <span className="mt-1 block text-fg-muted">{t("effectiveScope")}</span>
-                <HistoryScope key="historyscope-1" scope={observation.effectiveScope} />
+                {!sameHistoryScope(observation.configuredScope, observation.effectiveScope) ? (
+                  <>
+                    <span className="mt-1 block text-fg-muted">{t("effectiveScope")}</span>
+                    <HistoryScope scope={observation.effectiveScope} />
+                  </>
+                ) : null}
               </Fragment>,
               <Fragment key="details-2">
                 {pair?.movement !== null && pair?.movement !== undefined

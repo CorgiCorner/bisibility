@@ -49,6 +49,7 @@ export type KeywordDataTableProps = Omit<KeywordWorkspaceActions, "addKeywordsAc
     local?: RankTrackerLocalPresentation;
     report?: ReportSummaryPresentation;
     rows: MarketGridViewRow[];
+    viewDevices?: readonly import("@/lib/keywords/view-devices").KeywordViewDevice[];
     noRowsState?: KeywordNoRowsState;
     searchValue: string;
     savedViewControl?: ReactNode;

@@ -35,8 +35,6 @@
       "serpDepth": "Domyślna głębokość SERP",
       "serpDepthHelp": "Jak głęboko w wyniki wyszukiwania sięga jedno sprawdzenie.",
       "serpDepthWarning": "Od następnego sprawdzenia słowa kluczowe z pozycją dalszą niż {depth, number} będą zapisywane jako brak pozycji zamiast rzeczywistej pozycji. Ta luka zostanie w historii.",
-      "stopOnMatch": "Zatrzymuj sprawdzenia przy pierwszym dopasowaniu domeny",
-      "stopOnMatchDescription": "Włączone: sprawdzenie kończy odczyt, gdy po raz pierwszy pojawi się {domain}, i zapisuje najlepszą pozycję. Wyłączone: odczytywana jest pełna ustawiona głębokość.",
       "projectDomain": "domena projektu",
       "frequencyDaily": "Codziennie",
       "frequencyWeekly": "Co tydzień",
@@ -46,7 +44,14 @@
       "frequencyCustomCron": "Własny cron",
       "deviceDesktop": "Komputer",
       "deviceMobile": "Telefon",
-      "depthOption": "Top {depth, number}"
+      "depthOption": "Top {depth, number}",
+      "resultsCollection": "Zakres wyników",
+      "positionOnly": "Moja pozycja",
+      "fullResults": "Pełne wyniki wyszukiwania",
+      "positionOnlyDescription": "Kończy pobieranie po znalezieniu {domain}. Wyniki konkurentów mogą być niepełne.",
+      "fullResultsDescription": "Pobiera wyniki do Top {depth, number} do porównania konkurentów. Może zużyć więcej kredytów lub zapytań u dostawcy.",
+      "visibilityDepthWarning": "Sprawdzenia płytsze niż Top 20 nie aktualizują Visibility.",
+      "fullTop20Description": "Pobiera żądane Top 20 także po znalezieniu Twojej domeny. Może zużyć więcej kredytów lub zapytań u dostawcy."
     },
     "matchScope": {
       "title": "Zakres dopasowania",
@@ -154,6 +159,10 @@
         "invalid": "Podaj nieujemny czas z najwyżej trzema miejscami po przecinku albo pozostaw puste pole.",
         "error": "Nie udało się zapisać polityki. Odśwież i spróbuj ponownie."
       }
+    },
+    "schedules": {
+      "description": "Nowe słowa nie mają harmonogramu. Dodaj je do harmonogramu, aby sprawdzać je automatycznie.",
+      "manage": "Zarządzaj harmonogramami"
     }
   }
 }

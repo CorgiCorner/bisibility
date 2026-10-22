@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
+import { KeywordAnalyticsSources } from "./KeywordAnalyticsSources";
 
 function resultState(result: ProviderTrafficSyncResult) {
   const succeeded = result.runs.filter((run) =>
@@ -28,11 +29,13 @@ function resultState(result: ProviderTrafficSyncResult) {
 export function KeywordTrafficSync({
   canSync = false,
   connected,
+  connectedProviders = [],
   projectRef,
   syncAction,
 }: Readonly<{
   canSync?: boolean;
   connected: boolean;
+  connectedProviders?: readonly string[];
   projectRef: string;
   syncAction?: ProviderActionHandlers["syncProjectTraffic"];
 }>) {
@@ -91,6 +94,7 @@ export function KeywordTrafficSync({
           </Button>
         ) : null}
       </div>
+      <KeywordAnalyticsSources connectedProviders={connectedProviders} />
       {connected ? (
         <p className="mb-0 mt-2 text-[12px] leading-5 text-fg-muted">{t("hint")}</p>
       ) : null}

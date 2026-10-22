@@ -1,4 +1,5 @@
 import { isPublicIdOfType } from "@/lib/db/public-id";
+import { isPublicIdOfType as isResourcePublicId } from "@/lib/db/public-id-resources";
 import {
   PROJECT_RUNS_DEFAULT_QUERY,
   type ProjectRunsQuery,
@@ -42,4 +43,10 @@ export function projectRunRankCheckPath(projectRef: ProjectRef, publicId: string
     throw new Error("projectRunRankCheckPath requires a strict rcr_ public ID.");
   }
   return appPath(projectRef, "runs", "rank-checks", publicId);
+}
+
+export function projectRunAiPath(projectRef: ProjectRef, publicId: string): string {
+  if (!isResourcePublicId(publicId, "air"))
+    throw new Error("AI run link requires a public run ID.");
+  return appPath(projectRef, "runs", "ai", publicId);
 }

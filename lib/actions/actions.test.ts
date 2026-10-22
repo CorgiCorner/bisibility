@@ -97,6 +97,7 @@ const mocks = vi.hoisted(() => {
     requireSession: vi.fn(),
     resolveKeywordLocation: vi.fn(),
     revalidatePath: vi.fn(),
+    setKeywordCadence: vi.fn(),
     writeAudit: vi.fn(),
   };
 });
@@ -127,6 +128,10 @@ vi.mock("@/lib/auth/session", () => ({
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: mocks.prisma,
+}));
+
+vi.mock("@/lib/rank-check/schedules/keyword-cadence", () => ({
+  setKeywordCadence: mocks.setKeywordCadence,
 }));
 
 vi.mock("@/lib/providers/registry", () => ({
@@ -176,6 +181,7 @@ describe("server actions", () => {
       publicId: "prj_a00000000000000000000000",
     });
     mocks.writeAudit.mockResolvedValue({});
+    mocks.setKeywordCadence.mockResolvedValue(new Map());
     mocks.resolveKeywordLocation.mockImplementation(async (input: ResolveKeywordLocationInput) => {
       let country: string;
       let city: string | null | undefined;
@@ -682,7 +688,13 @@ describe("server actions", () => {
       schedule: scheduleInput({ frequency: "paused" }),
     });
 
-    expect(mocks.prisma.keywordSchedule.upsert).toHaveBeenCalledTimes(2);
+    expect(mocks.setKeywordCadence).toHaveBeenCalledExactlyOnceWith(
+      mocks.prisma,
+      "project_1",
+      ["keyword_1", "keyword_2"],
+      expect.objectContaining({ frequency: "paused", timezone: "UTC" }),
+      "user_1",
+    );
   });
 
   it("does not include targetUrl when keyword update input omits it", async () => {
@@ -769,7 +781,7 @@ describe("server actions", () => {
     expect(mocks.prisma.keyword.createMany).toHaveBeenCalled();
   });
 
-  it("leaves schedule reconciliation to the worker", async () => {
+  it("delegates bulk frequency intent to the canonical cadence service", async () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([
       { id: "keyword_1", publicId: "kw_a00000000000000000000000", text: "rank tracker" },
     ]);
@@ -785,7 +797,13 @@ describe("server actions", () => {
     });
 
     expect(mocks.prisma.keyword.deleteMany).toHaveBeenCalled();
-    expect(mocks.prisma.keywordSchedule.upsert).toHaveBeenCalled();
+    expect(mocks.setKeywordCadence).toHaveBeenCalledExactlyOnceWith(
+      mocks.prisma,
+      "project_1",
+      ["keyword_1"],
+      expect.objectContaining({ frequency: "paused" }),
+      "user_1",
+    );
   });
 
   it("tests providers through the mocked adapter and audits the attempt", async () => {

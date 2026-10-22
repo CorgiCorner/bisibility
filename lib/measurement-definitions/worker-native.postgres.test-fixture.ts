@@ -93,11 +93,25 @@ export async function workerNativeFixture(
       originalKeyId?: string,
     ) => {
       const manual = requestedById !== null || originalKeyId !== undefined;
+      const schedule = manual
+        ? null
+        : await f.db.checkSchedule.create({
+            data: {
+              projectId: f.project.project.id,
+              publicId: makePublicId("sch"),
+              name: "Synthetic owned schedule",
+              frequency: "daily",
+              timezone: "UTC",
+              serpDepth: 20,
+              enabled: true,
+            },
+          });
       const keyword = await f.db.keyword.create({
         data: {
           projectId: f.project.project.id,
           publicId: makePublicId("kw"),
           text: `synthetic original ${++sequence}`,
+          ...(schedule ? { checkScheduleId: schedule.id } : {}),
           location: "Synthetic",
           locationId: f.observation.location.id,
         },
@@ -110,8 +124,13 @@ export async function workerNativeFixture(
           ...(originalKeyId ? { credentialId: originalKeyId, credentialKind: "project_key" } : {}),
           trigger: manual ? "manual" : "scheduled",
           status: "running",
-          selectionKind: manual ? "single" : "legacy_schedule",
-          selectionSpec: { v: 1, kind: manual ? "single" : "legacy_schedule" },
+          ...(schedule ? { checkScheduleId: schedule.id } : {}),
+          selectionKind: manual ? "single" : "scheduled_due",
+          selectionSpec: {
+            v: 1,
+            kind: manual ? "single" : "scheduled_due",
+            ...(schedule ? { checkScheduleId: schedule.publicId } : {}),
+          },
           selectionHash: randomUUID(),
           requestedCount: 1,
         },

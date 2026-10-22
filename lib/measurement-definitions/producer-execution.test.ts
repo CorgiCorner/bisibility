@@ -72,7 +72,7 @@ function setup(
   };
   return { binding, source, tx, key, execute, host, verify, audit, input };
 }
-function scheduler(): VerifiedDefinitionExecution {
+function scheduler(): Extract<VerifiedDefinitionExecution, { kind: "scheduler" }> {
   return {
     kind: "scheduler",
     actorId: null,
@@ -84,6 +84,37 @@ function scheduler(): VerifiedDefinitionExecution {
 }
 beforeEach(() => vi.resetAllMocks());
 describe("trusted definition execution union", () => {
+  it("refuses a tampered v2 Top20 early-stop request instead of silently changing its policy", async () => {
+    const source = definitionSourceFixture();
+    source.policy.defaults!.serpDepth = 20;
+    const f = setup({ kind: "user", actorId: "actual-user" }, source);
+    const retained = { ...f.binding, request: { ...f.binding.request, stopOnMatch: true } };
+    mocks.binding.mockResolvedValue(retained);
+    await expect(captureDefinitionBeforeIo(f.tx, f.input, f.host)).rejects.toMatchObject({
+      code: "measurement_definition_conflict",
+    });
+    expect(retained.request.stopOnMatch).toBe(true);
+    expect(f.execute).not.toHaveBeenCalled();
+    expect(f.audit).not.toHaveBeenCalled();
+  });
+  it("resumes an exact DB-retained legacy Top20 binding with its original bytes at capture and dispatch", async () => {
+    const source = definitionSourceFixture();
+    if (!source.policy.defaults) throw new Error("Missing fixture defaults");
+    source.policy.defaults.serpDepth = 20;
+    const f = setup({ kind: "user", actorId: "actual-user" }, source);
+    const { compilerVersion: _version, ...request } = f.binding
+      .request as typeof f.binding.request & { compilerVersion?: 2 };
+    const retained = { ...f.binding, request: { ...request, stopOnMatch: true } };
+    mocks.binding.mockResolvedValue(retained);
+    await expect(captureDefinitionBeforeIo(f.tx, f.input, f.host)).resolves.toBe(retained);
+    await expect(assertDefinitionAtDispatch(f.tx, retained, f.host)).resolves.toEqual(
+      retained.request,
+    );
+    expect(retained.request).not.toHaveProperty("compilerVersion");
+    expect(retained.request.stopOnMatch).toBe(true);
+    expect(f.execute).not.toHaveBeenCalled();
+    expect(f.audit).not.toHaveBeenCalled();
+  });
   it("renews user authority at both capture and dispatch", async () => {
     const f = setup();
     await captureDefinitionBeforeIo(f.tx, f.input, f.host);
@@ -171,6 +202,17 @@ describe("trusted definition execution union", () => {
       expect(f.execute).not.toHaveBeenCalled();
       expect(mocks.actor).not.toHaveBeenCalled();
     }
+  });
+  it("rejects legacy scheduler authority without named membership despite daily defaults", async () => {
+    const source = definitionSourceFixture();
+    source.policy.defaults!.frequency = "daily";
+    source.policy.keywordSchedule = { ...source.policy.defaults!, id: "legacy" };
+    const f = setup({ ...scheduler(), scheduleId: null, scheduleEpoch: null }, source);
+    mocks.binding.mockResolvedValueOnce(null);
+    await expect(captureDefinitionBeforeIo(f.tx, f.input, f.host)).rejects.toMatchObject({
+      code: "measurement_definition_conflict",
+    });
+    expect(f.execute).not.toHaveBeenCalled();
   });
   it("does not use system scope when current intent is manual, disabled or from a different epoch", async () => {
     for (const state of ["manual", "disabled", "epoch"] as const) {

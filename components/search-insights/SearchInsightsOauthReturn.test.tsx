@@ -330,6 +330,42 @@ describe("SearchInsightsOauthReturn", () => {
     expect(cancelAction).not.toHaveBeenCalled();
     expect(disconnectAction).not.toHaveBeenCalled();
   });
+
+  it("preselects the property that matches the project domain", () => {
+    render(
+      <ToastProvider>
+        <SearchInsightsOauthReturn
+          cancelAction={vi.fn()}
+          completeAction={vi.fn()}
+          disconnectAction={vi.fn()}
+          projectId="prj_1"
+          setup={{
+            projectDomain: "example.com",
+            properties: [
+              {
+                kind: "domain",
+                label: "aaa.example.org",
+                permissionLevel: "siteOwner",
+                value: "sc-domain:aaa.example.org",
+              },
+              {
+                kind: "domain",
+                label: "example.com",
+                permissionLevel: "siteOwner",
+                value: "sc-domain:example.com",
+              },
+            ],
+            provider: "gsc",
+          }}
+          syncPlan={{ daysTotal: 488, pace: "normal", retentionMonths: 16 }}
+        />
+      </ToastProvider>,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Search Console property" });
+    expect(trigger).toHaveTextContent("example.com");
+    expect(trigger).not.toHaveTextContent("aaa.example.org");
+  });
 });
 
 it.each(["gsc", "ga4"] as const)(

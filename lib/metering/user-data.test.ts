@@ -7,20 +7,29 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   access: vi.fn(),
   connections: vi.fn(),
+  primary: vi.fn(),
   runtime: vi.fn(),
   authority: vi.fn(),
   ownBudgets: vi.fn(),
+  demo: vi.fn(),
 }));
+vi.mock("@/lib/demo/config", () => ({ readDemoConfig: mocks.demo }));
 vi.mock("@/lib/queries/_auth", () => ({ requireReadableProject: mocks.access }));
 vi.mock("@/lib/db/prisma", () => ({
-  prisma: { providerConnection: { findMany: mocks.connections } },
+  prisma: {
+    providerConnection: { findFirst: mocks.primary, findMany: mocks.connections },
+  },
 }));
 vi.mock("./runtime", () => ({ meteringNamespace: () => "test", meteringRuntime: mocks.runtime }));
+vi.mock("./project-budget-read", () => ({ projectFundingStatuses: vi.fn(async () => []) }));
+// Credits connection rows have their own suite (user-credits-budgets.test.ts).
+vi.mock("./platform-budget-read", () => ({ readPlatformConnectionBudgets: vi.fn(async () => []) }));
 vi.mock("@/lib/providers/execution-extension", () => ({
   readDeploymentMeteringAuthority: mocks.authority,
 }));
 vi.mock("./own-budget-read", () => ({ readOwnConnectionBudgets: mocks.ownBudgets }));
 
+import { projectBudgetId, projectFundingBudget } from "./project-funding-budgets";
 import { getProjectMeteringBudgets, getProjectMeteringUsage } from "./user-data";
 
 const now = "2026-10-06T12:00:00.000Z";
@@ -158,6 +167,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(now);
   vi.clearAllMocks();
+  mocks.demo.mockReturnValue({ kind: "disabled" });
   mocks.access.mockResolvedValue({
     actor: { id: "owner", memberships: [{ projectId: "project", role: "owner" }] },
     project: { id: "project", ownerId: "owner", name: "webscraping" },
@@ -165,6 +175,7 @@ beforeEach(() => {
   mocks.connections.mockResolvedValue([
     { id: "connection", publicId: "prc_public", provider: "dataforseo" },
   ]);
+  mocks.primary.mockResolvedValue(null);
   mocks.authority.mockResolvedValue({ mode: "legacy", coverage: "none", windows: [] });
   mocks.ownBudgets.mockResolvedValue(null);
 });
@@ -200,6 +211,124 @@ describe("verified project Meter queries", () => {
       eligible: true,
       paidWorkBlocked: false,
       status: { hidden: 0, bounds: [{ remaining: { text: "5000" }, level: "ok" }] },
+    });
+  });
+  it("shows split project funding limits unredacted and hides the limitless group marker", async () => {
+    const { projectFundingStatuses } = await import("./project-budget-read");
+    const epoch = {
+      epoch: "2026-10",
+      startsAt: "2026-10-01T00:00:00.000Z",
+      endsAt: "2026-11-01T00:00:00.000Z",
+    };
+    const zero = (unit: string) => ({ unit, scale: 4, value: 0n });
+    const own: Budget = {
+      ...projectFundingBudget("test", "project", "byok", "5000", 1),
+      surface: "any",
+    };
+    const credits = projectFundingBudget("test", "project", "platform", null, 1);
+    vi.mocked(projectFundingStatuses).mockResolvedValueOnce([
+      {
+        budget: own,
+        epoch,
+        used: zero("budget_cents"),
+        reserved: zero("budget_cents"),
+        remaining: { unit: "budget_cents", scale: 4, value: 50000000n },
+      },
+      {
+        budget: credits,
+        epoch,
+        used: zero("customer_cents"),
+        reserved: zero("customer_cents"),
+        remaining: null,
+      },
+    ]);
+    fixture(
+      [],
+      [{ ...budgets[0], id: projectBudgetId("project"), unit: "budget_cents", limit: null }],
+    );
+    const data = await getProjectMeteringUsage("prj_public");
+    expect(data.status).toBe("available");
+    const projectRows =
+      data.status === "available" ? data.budgets.filter((row) => row.kind === "group") : [];
+    expect(projectRows.map((row) => row.id).sort()).toEqual([
+      "project:any:budget_cents",
+      "project:any:customer_cents",
+    ]);
+    expect(projectRows.find((row) => row.unit === "budget_cents")).toMatchObject({
+      remaining: { text: "5000" },
+    });
+    expect(projectRows.find((row) => row.unit === "customer_cents")).toMatchObject({
+      limit: "unlimited",
+    });
+  });
+  function exhaustedHostedConnection() {
+    const openGroup: Budget = {
+      ...budgets[0],
+      id: projectBudgetId("project"),
+      unit: "budget_cents",
+      limit: { unit: "budget_cents", scale: 0, value: 5000n },
+    };
+    const hostedZero: Budget = {
+      id: "hosted-zero",
+      version: 1,
+      scope: { kind: "connection", namespace: "test", connection: "hosted-connection" },
+      surface: "any",
+      unit: "budget_cents",
+      limit: { unit: "budget_cents", scale: 0, value: 0n },
+      window,
+      onExceed: "block",
+    };
+    mocks.connections.mockResolvedValue([
+      {
+        id: "hosted-connection",
+        publicId: "prc_hosted",
+        provider: "serpapi",
+        credentialSource: "hosted",
+      },
+      {
+        id: "own-connection",
+        publicId: "prc_own",
+        provider: "dataforseo",
+        credentialSource: "own",
+      },
+    ]);
+    fixture([], [openGroup, hostedZero]);
+  }
+  it("blocks paid work from any connection while the project is unsplit", async () => {
+    exhaustedHostedConnection();
+    expect(await getProjectMeteringBudgets("prj_public")).toMatchObject({
+      status: "available",
+      paidWorkBlocked: true,
+    });
+    expect(mocks.primary).not.toHaveBeenCalled();
+  });
+  it("blocks paid work from the primary SERP connection once the project is split", async () => {
+    const { projectFundingStatuses } = await import("./project-budget-read");
+    const epoch = {
+      epoch: "2026-10",
+      startsAt: "2026-10-01T00:00:00.000Z",
+      endsAt: "2026-11-01T00:00:00.000Z",
+    };
+    const zero = { unit: "budget_cents", scale: 4, value: 0n };
+    vi.mocked(projectFundingStatuses).mockResolvedValueOnce([
+      {
+        budget: { ...projectFundingBudget("test", "project", "byok", "5000", 1), surface: "any" },
+        epoch,
+        used: zero,
+        reserved: zero,
+        remaining: { unit: "budget_cents", scale: 4, value: 50000000n },
+      },
+    ]);
+    mocks.primary.mockResolvedValue({
+      id: "own-connection",
+      credentialSource: "own",
+      provider: "dataforseo",
+      rates: [],
+    });
+    exhaustedHostedConnection();
+    expect(await getProjectMeteringBudgets("prj_public")).toMatchObject({
+      status: "available",
+      paidWorkBlocked: false,
     });
   });
   it("runs real scoped Meter reads, omits same-owner other-project usage, and includes source-specific limits once", async () => {
@@ -590,3 +719,37 @@ it("uses serial header reads without changing the full budget projection", async
   expect(header).toEqual(standard);
   expect(reads.mock.calls).toEqual(requests);
 });
+
+it.each(["active", "migration_hold", "migrated"])(
+  "derives owner budget controls from the current project write mode: %s",
+  async (writeMode) => {
+    mocks.access.mockResolvedValue({
+      actor: { id: "owner", memberships: [{ projectId: "project", role: "owner" }] },
+      project: { id: "project", ownerId: "owner", name: "webscraping", writeMode },
+    });
+    const data = await getProjectMeteringBudgets("prj_public");
+    expect(data.canEditBudget).toBe(writeMode === "active");
+  },
+);
+
+it.each(
+  ["disabled", "editable", "legacy-read-only"].flatMap((kind) =>
+    ["owner", "viewer"].flatMap((role) =>
+      ["active", "migration_hold", "migrated"].map((writeMode) => ({ kind, role, writeMode })),
+    ),
+  ),
+)(
+  "keeps budget editing scoped to $kind / $role / $writeMode",
+  async ({ kind, role, writeMode }) => {
+    mocks.demo.mockReturnValue({ kind });
+    mocks.access.mockResolvedValue({
+      actor: { id: "owner", memberships: [{ projectId: "project", role }] },
+      project: { id: "project", ownerId: "owner", name: "webscraping", writeMode },
+    });
+    const data = await getProjectMeteringBudgets("prj_public", "header");
+    expect(data.canEditBudget).toBe(
+      kind === "disabled" && role === "owner" && writeMode === "active",
+    );
+    if (role === "viewer") expect(data.status).toBe("restricted");
+  },
+);

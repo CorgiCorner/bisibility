@@ -48,3 +48,17 @@ it.each(["missing", "readonly"])(
     expect(action.run).not.toHaveBeenCalled();
   },
 );
+
+it("keeps the standalone editor's inline action without a host footer", () => {
+  render(
+    <ProviderAllocationEditor
+      rows={[providerUiRow("a", "app")]}
+      revision="one"
+      action={action as ProviderAction}
+    />,
+  );
+  const save = screen.getByRole("button", { name: "Save allocations" });
+  expect(save.closest("footer")).toBeNull();
+  expect(save.parentElement).toHaveClass("border-t");
+  expect(save).not.toHaveAttribute("form");
+});

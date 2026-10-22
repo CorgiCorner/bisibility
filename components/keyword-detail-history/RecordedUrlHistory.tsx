@@ -3,6 +3,7 @@
 import { LocalizedMeasurementHelp } from "@/components/measurement-help/LocalizedMeasurementHelp";
 import { Card } from "@/components/ui/Card";
 import { ReadOnlyDataTable } from "@/components/ui/data-table/ReadOnlyDataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { useFormatter, useTranslations } from "next-intl";
 import { HistoryTime, historyExternalUrl } from "./HistoryTime";
@@ -27,6 +28,13 @@ export function RecordedUrlHistory({
         <ReadOnlyDataTable
           id="history-urls"
           label={t("urlsTable")}
+          emptyState={
+            <EmptyState
+              compact
+              title={t("noObservations")}
+              description={t("noRecordsDescription")}
+            />
+          }
           headers={[
             t("columns.check"),
             t("columns.observed"),

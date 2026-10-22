@@ -2,6 +2,7 @@ import {
   itemStatusChipPresentation,
   runStatusChipPresentation,
 } from "@/components/ui/status-chip-mapping";
+import { formatPaymentAmount } from "@/lib/action-payment/format";
 import { type DateDisplayContext, formatDisplayDateTimeCurrentYear } from "@/lib/dates/format";
 import type { useTranslations } from "next-intl";
 import type { RunPageSummaryLabels } from "./RunPageModel";
@@ -39,6 +40,7 @@ export function createRunPageSummaryLabels({
   currentRun,
   dateDisplay,
   locale,
+  paymentT,
   now,
   statusT,
   t,
@@ -46,12 +48,11 @@ export function createRunPageSummaryLabels({
   currentRun: RunPageData;
   dateDisplay: DateDisplayContext;
   locale: string;
+  paymentT: ReturnType<typeof useTranslations<"shared.actionPayment">>;
   now: string;
   statusT: StatusTranslator;
   t: RankRunsTranslator;
 }>): RunPageSummaryLabels {
-  const formatCurrency = (cents: number) =>
-    new Intl.NumberFormat(locale, { currency: "USD", style: "currency" }).format(cents / 100);
   return {
     counter: (kind) => {
       if (kind === "remaining") return { label: t("remaining"), note: t("counters.notTerminal") };
@@ -82,7 +83,12 @@ export function createRunPageSummaryLabels({
       if (fact.kind === "provider") {
         return {
           label: t("provider"),
-          note: fact.state === "not_chosen" ? t("facts.notChosen") : t("facts.chosenAtLaunch"),
+          note:
+            fact.state === "deferred_before_provider"
+              ? t("facts.deferredBeforeProvider")
+              : fact.state === "not_chosen"
+                ? t("facts.notChosen")
+                : t("facts.chosenAtLaunch"),
           value: fact.providerLabel ?? t("unavailable"),
         };
       }
@@ -101,26 +107,26 @@ export function createRunPageSummaryLabels({
         };
       }
       if (fact.kind === "cost") {
-        const label =
-          fact.phase === "estimated"
-            ? t("facts.estimated")
-            : fact.phase === "spent"
-              ? t("facts.spent")
-              : t("facts.cost");
-        const note =
-          fact.note === "nothing_billed"
-            ? t("facts.nothingBilled")
-            : fact.note === "no_rate_yet"
-              ? t("facts.noRateYet")
-              : fact.note === "set_when_planned"
-                ? t("facts.setWhenPlanned")
-                : t("facts.estimateWithCost", {
-                    cost: formatCurrency(currentRun.estimatedCostCents),
-                  });
+        const payment = currentRun.payment;
         return {
-          label,
-          note,
-          value: fact.costCents === null ? t("unavailable") : formatCurrency(fact.costCents),
+          label: t("facts.cost"),
+          value: payment
+            ? formatPaymentAmount(payment.charge, locale)
+            : fact.note === "nothing_billed"
+              ? t("facts.nothingBilled")
+              : t("unavailable"),
+          note: payment
+            ? [
+                payment.option.fundingSource === "byok"
+                  ? paymentT("byokRoute", { provider: payment.option.providerLabel })
+                  : paymentT("platform"),
+                payment.state === "pending" || payment.state === "unknown"
+                  ? paymentT(payment.state)
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            : "",
         };
       }
       if (fact.kind === "first_check") {

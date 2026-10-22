@@ -1,6 +1,6 @@
 "use client";
-
 import { presentAdminActionError } from "@/components/admin/admin-action-error";
+import { DangerousActionGate } from "@/components/admin/DangerousActionGate";
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -102,22 +102,24 @@ export function AdminAccountActions({
   return (
     <>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button
-          disabled={pending}
-          onClick={() => setModal("state")}
-          size="sm"
-          startIcon={
-            deactivated ? (
-              <UserPlus aria-hidden size={14} weight="regular" />
-            ) : (
-              <UserMinus aria-hidden size={14} weight="regular" />
-            )
-          }
-          type="button"
-          variant={deactivated ? "secondary" : "destructive"}
-        >
-          {deactivated ? controls("reactivateAccount") : controls("deactivateAccount")}
-        </Button>
+        <DangerousActionGate action="changeAccountStatus">
+          <Button
+            disabled={pending}
+            onClick={() => setModal("state")}
+            size="sm"
+            startIcon={
+              deactivated ? (
+                <UserPlus aria-hidden size={14} weight="regular" />
+              ) : (
+                <UserMinus aria-hidden size={14} weight="regular" />
+              )
+            }
+            type="button"
+            variant={deactivated ? "secondary" : "destructive"}
+          >
+            {deactivated ? controls("reactivateAccount") : controls("deactivateAccount")}
+          </Button>
+        </DangerousActionGate>
         <Button
           disabled={pending}
           onClick={() => setModal("limits")}

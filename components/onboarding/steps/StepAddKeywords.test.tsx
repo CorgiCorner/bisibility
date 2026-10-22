@@ -10,7 +10,6 @@ import {
 } from "@/i18n/test-support/render-with-feature-messages";
 import type { NewMarketCreateInput } from "@/lib/markets/create-input";
 import { KEYWORD_IMPORT_LIMIT_MESSAGE } from "@/lib/schemas/keyword";
-import { MARKETING_URL } from "@/lib/site/site";
 import onboardingMessages from "@/messages/core/en/onboarding.json";
 import sharedMessages from "@/messages/core/en/shared.json";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
@@ -412,7 +411,7 @@ describe("StepAddKeywords", () => {
     expect(screen.queryByRole("link", { name: "Estimate provider cost" })).toBeNull();
   });
 
-  it("offers the hosted estimate for an explicit scheduled frequency", () => {
+  it("keeps new targets manual despite a legacy daily project default", () => {
     renderStep({
       flowState: { projectId: "prj_1", providerId: "serpapi" },
       trackingDefaults: { frequency: "daily" } as ComponentProps<
@@ -420,15 +419,9 @@ describe("StepAddKeywords", () => {
       >["trackingDefaults"],
     });
     fireEvent.change(keywordBox(), { target: { value: "rank tracker\nseo api" } });
-
-    const link = screen.getByRole("link", { name: "Estimate provider cost" });
-    expect(link).toHaveAttribute(
-      "href",
-      `${MARKETING_URL}/rank-tracking-cost-calculator?keywords=2&locations=1&devices=mobile&frequency=daily&depth=20`,
-    );
-    expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noreferrer noopener");
-    expect(link.querySelector("svg")).toBeInTheDocument();
+    expect(screen.getByText("Manual checks at Top 20")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Frequency" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Estimate provider cost" })).not.toBeInTheDocument();
   });
 
   it("shows the selected depth without presenting a provider cost", () => {

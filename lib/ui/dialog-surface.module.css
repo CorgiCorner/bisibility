@@ -6,6 +6,13 @@
     z-index: 1300;
     background: rgba(20, 16, 8, 0.44);
   }
+  .decoration {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    overflow: hidden;
+    pointer-events: none;
+  }
   .panel {
     position: fixed;
     z-index: 1300;

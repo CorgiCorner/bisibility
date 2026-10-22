@@ -10,7 +10,6 @@ import { useReviewedDefaults } from "@/components/settings/tracking/use-reviewed
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { KEYWORD_IMPORT_MAX, KEYWORD_TEXT_MAX } from "@/lib/schemas/keyword";
 import { DEFAULT_SERP_DEPTH, DEFAULT_SERP_DEVICE, type SerpDevice } from "@/lib/serp/constants";
-import type { RankCheckFrequency } from "@/lib/settings/options";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
@@ -27,7 +26,7 @@ import {
 } from "./keyword-setup-model";
 import { keywordSetupActionError, type StepAddKeywordsProps } from "./step-add-keywords-contract";
 import { focusFirstKeywordSetupError, keywordSetupDefaults } from "./step-add-keywords-defaults";
-import { keywordDraftPreview, pausedKeywordSchedule } from "./step-add-keywords-model";
+import { keywordDraftPreview } from "./step-add-keywords-model";
 import {
   completedTrackingDefaults,
   draftLocationSelections,
@@ -147,7 +146,7 @@ export function StepAddKeywords({
           keywords: submitted.uniqueKeywords,
           locations: values.locations.map(locationSelectionInputForKey),
           projectId: values.projectId,
-          schedule: flowState?.providerId ? undefined : pausedKeywordSchedule,
+          schedule: undefined,
           tags: [],
           targetUrl: null,
         });
@@ -236,16 +235,11 @@ export function StepAddKeywords({
           devices={devices}
           errors={{
             devices: errors.devices?.message,
-            frequency: errors.frequency?.message,
             locations: errors.locations?.message,
           }}
-          frequency={frequency}
           locations={selectedLocations}
           onDepthChange={(depth) => setValue("serpDepth", depth, { shouldDirty: true })}
           onDevicesChange={setDevices}
-          onFrequencyChange={(value: RankCheckFrequency) =>
-            setValue("frequency", value, { shouldDirty: true })
-          }
           onLocationsChange={(next) => {
             const locationKeys = next.map((item) => item.canonicalKey);
             setSelectedLocations(next);

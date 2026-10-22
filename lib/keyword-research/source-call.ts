@@ -1,5 +1,5 @@
 import "server-only";
-
+import type { PaidCallPayment } from "@/lib/action-payment/paid-call";
 import {
   keywordResearchRate,
   type KeywordResearchSource as RateSource,
@@ -56,6 +56,7 @@ export async function sourceEstimate(input: {
 }
 
 export async function callResearchSource(input: {
+  payment?: PaidCallPayment;
   /** Cap from the already-loaded research project row; skips the budget-gate cap query. */
   includeClickstream: boolean;
   limit: number;
@@ -82,6 +83,7 @@ export async function callResearchSource(input: {
     | undefined;
   if (!method) throw new ProviderLookupSignal({ ok: false, reason: "no_source" });
   return paidProviderCall({
+    payment: input.payment,
     call: (credentials, usage) =>
       method.call(input.selected.provider, credentials, {
         includeClickstream: input.includeClickstream,

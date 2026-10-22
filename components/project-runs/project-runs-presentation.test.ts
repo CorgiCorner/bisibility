@@ -5,6 +5,7 @@ import { applyOperationSnapshotToRuns } from "./project-runs-presentation";
 
 const rankRun: ProjectRun = {
   attention: null,
+  cost: { actualCents: null, estimatedCents: null, state: "unknown" as const },
   capabilities: { cancel: false, pause: false, resume: false, retry: false, viewDetails: true },
   details: {
     costCents: null,
@@ -15,11 +16,11 @@ const rankRun: ProjectRun = {
   },
   href: "/app/prj_example/runs/rank-checks/rcr_example",
   id: "rcr_example",
-  kind: "rank_check",
+  kind: "rank",
   lifecycle: "running",
   progress: { completed: 2, total: 10, unit: "targets" },
   project: { name: "Example", publicId: "prj_example" },
-  scope: { description: null, keywordCount: 10, kind: "rank_check" },
+  scope: { description: null, keywordCount: 10, kind: "rank" },
   timestamps: {
     createdAt: "2026-09-06T10:00:00.000Z",
     finishedAt: null,
@@ -27,11 +28,12 @@ const rankRun: ProjectRun = {
     plannedFor: null,
     startedAt: "2026-09-06T10:00:00.000Z",
   },
-  title: { kind: "rank_check", trigger: "manual" },
+  title: { kind: "rank", trigger: "manual" },
 };
 
 const importRun: ProjectRun = {
   attention: null,
+  cost: { actualCents: null, estimatedCents: null, state: "unknown" as const },
   capabilities: { cancel: false, pause: false, resume: false, retry: false, viewDetails: true },
   details: {
     pausedReason: null,
@@ -41,19 +43,22 @@ const importRun: ProjectRun = {
   },
   href: "/app/prj_example/search-console?property=sc-domain%3Aexample.com",
   id: "import_1",
-  kind: "gsc_import",
+  kind: "gsc",
   lifecycle: "running",
   progress: { completed: null, total: null, unit: "days" },
   project: { name: "Example", publicId: "prj_example" },
-  scope: { description: "sc-domain:example.com", kind: "gsc_import" },
+  scope: { description: "sc-domain:example.com", kind: "gsc" },
   timestamps: {
+    startedAt: "2026-09-06T09:10:00.000Z",
+    finishedAt: null,
+    plannedFor: null,
     createdAt: "2026-09-06T09:00:00.000Z",
     lastProbeAt: null,
     lastSyncFinishedAt: null,
     lastSyncStartedAt: "2026-09-06T09:10:00.000Z",
     syncStartedAt: "2026-09-06T09:10:00.000Z",
   },
-  title: { kind: "gsc_import" },
+  title: { kind: "gsc" },
 };
 
 const activeImport: OperationSnapshot = {

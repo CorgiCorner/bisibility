@@ -155,4 +155,94 @@ describe("AddKeywordsDrawer", () => {
     expect(screen.getByText("Choose keywords to add to this schedule.")).toBeVisible();
     expect(screen.getByRole("button", { name: "Add keywords" })).toBeDisabled();
   });
+  it("switches destinations without losing selected keywords and submits the latest schedule", async () => {
+    const { assignKeywordsAction } = renderDrawer({
+      initialFilters: { tag: "commercial" },
+      schedules: [
+        { publicId: "sch_abcdefghijklmnopqrstuvwx", name: "Daily 06:00", isDefault: true },
+        { publicId: "sch_weekly", name: "Weekly review", isDefault: false },
+      ],
+    });
+    expect(screen.getByRole("button", { name: "Schedule" })).toHaveTextContent("Daily 06:00");
+    expect(screen.getByRole("button", { name: "Schedule" })).toHaveTextContent("Default");
+    fireEvent.click(screen.getByRole("button", { name: "Select all 2 matching" }));
+    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
+    expect(screen.getByRole("menuitem", { name: /Daily 06:00.*Default/ })).toBeVisible();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Weekly review" }));
+    expect(screen.getByRole("button", { name: "Add 2 keywords" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Add 2 keywords" }));
+    await waitFor(() =>
+      expect(assignKeywordsAction).toHaveBeenCalledWith({
+        keywordIds: ["kw_content", "kw_headless"],
+        projectId: "prj_abcdefghijklmnopqrstuvwx",
+        scheduleId: "sch_weekly",
+      }),
+    );
+  });
+  it("uses changed fixed destination props rather than stale form defaults", async () => {
+    const assignKeywordsAction = vi.fn().mockResolvedValue({});
+    const props = {
+      assignKeywordsAction,
+      candidates,
+      onClose: vi.fn(),
+      open: true,
+      projectId: "prj_current",
+      scheduleId: "sch_old",
+      scheduleName: "Old",
+    };
+    const { rerender } = render(<AddKeywordsDrawer {...props} />);
+    fireEvent.click(screen.getByRole("checkbox", { name: /contentful alternative/ }));
+    rerender(
+      <AddKeywordsDrawer {...props} projectId="prj_new" scheduleId="sch_new" scheduleName="New" />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Add 1 keyword" }));
+    await waitFor(() =>
+      expect(assignKeywordsAction).toHaveBeenCalledWith({
+        keywordIds: ["kw_content"],
+        projectId: "prj_new",
+        scheduleId: "sch_new",
+      }),
+    );
+  });
+  it("does not silently assign to the default if the chosen destination disappears", () => {
+    const props = {
+      candidates,
+      initialSelectedKeywordIds: ["kw_content"],
+      onClose: vi.fn(),
+      open: true,
+      projectId: "prj_current",
+      scheduleId: "sch_selected",
+      scheduleName: "Selected",
+    };
+    const { rerender } = render(
+      <AddKeywordsDrawer {...props} schedules={[{ publicId: "sch_selected", name: "Selected" }]} />,
+    );
+    rerender(
+      <AddKeywordsDrawer
+        {...props}
+        schedules={[{ publicId: "sch_default", name: "Daily", isDefault: true }]}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Add 1 keyword" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Daily, Default" }));
+    expect(screen.getByRole("button", { name: "Add 1 keyword" })).toBeEnabled();
+  });
+  it("keeps selection and destination after a failed assignment", async () => {
+    const assignKeywordsAction = vi.fn().mockRejectedValue(new Error("failed"));
+    renderDrawer({
+      assignKeywordsAction,
+      initialSelectedKeywordIds: ["kw_content"],
+      schedules: [
+        { publicId: "sch_abcdefghijklmnopqrstuvwx", name: "Daily" },
+        { publicId: "sch_weekly", name: "Weekly" },
+      ],
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Schedule" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Weekly" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add 1 keyword" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Could not add keywords");
+    expect(screen.getByRole("button", { name: "Schedule" })).toHaveTextContent("Weekly");
+    expect(screen.getByRole("button", { name: "Add 1 keyword" })).toBeEnabled();
+  });
 });

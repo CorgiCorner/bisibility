@@ -105,28 +105,29 @@ describe("AuditLogView", () => {
       "aria-sort",
       "descending",
     );
-    expect(body.getAllByRole("row")[0]).toHaveTextContent("Recorded action: test.11");
-    expect(screen.queryByText("Recorded action: test.01")).not.toBeInTheDocument();
+    expect(body.getAllByRole("row")[0]).toHaveTextContent("auditor-11@example.com");
+    expect(screen.queryByText("auditor-01@example.com / UI")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
-    expect(screen.getByText("Recorded action: test.01")).toBeVisible();
+    expect(screen.getByText("auditor-01@example.com / UI")).toBeVisible();
 
     fireEvent.change(screen.getByRole("searchbox", { name: "Search audit events" }), {
       target: { value: "test.11" },
     });
-    expect(screen.getByText("Recorded action: test.11")).toBeVisible();
-    expect(screen.queryByText("Recorded action: test.01")).not.toBeInTheDocument();
+    expect(screen.getByText("auditor-11@example.com / UI")).toBeVisible();
+    expect(screen.queryByText("auditor-01@example.com / UI")).not.toBeInTheDocument();
   }, 10_000);
 
   it("opens detail from the title-cell keyboard control", async () => {
     renderAudit([auditEntry(1)]);
 
-    const open = screen.getByRole("button", { name: "Open audit event Recorded action: test.01" });
+    const open = screen.getByRole("button", { name: "Open audit event Other activity" });
     open.focus();
     await userEvent.keyboard("{Enter}");
 
     expect(screen.getByRole("button", { name: "Close" })).toBeVisible();
-    expect(screen.getByRole("dialog")).toHaveTextContent("Recorded action: test.01");
+    expect(screen.getByRole("dialog")).toHaveTextContent("Other activity");
+    expect(screen.getByRole("dialog")).toHaveTextContent("test.01");
   });
 
   it("exports the selected raw records instead of their localized presentation", () => {

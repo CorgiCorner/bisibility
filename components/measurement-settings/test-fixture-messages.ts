@@ -191,6 +191,9 @@ export const fixtureMessages: Record<string, string> = {
   "blocks.duplicate": "An active run already covers this selection.",
   "blocks.budget_blocked": "The budget blocks this launch.",
   "blocks.nothing_eligible": "No targets are eligible for this manual run.",
+  "blocks.payment_already_executed": "This payment was already used for a run.",
+  "blocks.payment_unavailable":
+    "Payment details for this provider are unavailable. Check the payment source in Usage.",
   "blocks.cost_limit_exceeded": "The estimated operation exceeds its cost limit.",
   "blocks.sample_project": "Sample projects cannot launch paid measurements.",
   "blocks.preview_failed": "Could not read the quote. Your draft is retained.",

@@ -135,7 +135,7 @@ describe("reviewed API keeps the legacy market/depth resource contract", () => {
         inherited_depth_targets: 0,
         recurring_estimate: "unchanged",
         scope_changed: true,
-        cadence_changed: true,
+        cadence_changed: false,
       },
       policy_ready: false,
     });
@@ -170,12 +170,54 @@ describe("reviewed API keeps the legacy market/depth resource contract", () => {
       );
     },
   );
+  it("accepts deprecated cadence without changing stored cadence or enabling recurrence", async () => {
+    f.state.defaults = defaultsRowForTest({
+      frequency: "weekly",
+      cronExpression: "0 6 * * 1",
+      jitterMinutes: 31,
+      timezone: "Europe/Warsaw",
+    });
+    const result = await patch({
+      frequency: "daily",
+      cron_expression: null,
+      timezone: "UTC",
+      jitter_minutes: 0,
+      serp_depth: 20,
+    });
+    expect(result.status).toBe(200);
+    expect(result.stored).toMatchObject({
+      frequency: "weekly",
+      cronExpression: "0 6 * * 1",
+      jitterMinutes: 31,
+      timezone: "Europe/Warsaw",
+      serpDepth: 20,
+    });
+    expect(result.body).toMatchObject({
+      frequency: "manual",
+      next_check_at: null,
+      cron_expression: null,
+      jitter_minutes: 0,
+    });
+  });
+  it("ignores an incomplete deprecated custom cron input instead of treating it as active scheduling", async () => {
+    const result = await patch({ frequency: "custom_cron", serp_depth: 20 });
+    expect(result.status).toBe(200);
+    expect(result.body).toMatchObject({ frequency: "manual", next_check_at: null, serp_depth: 20 });
+    expect(result.stored).toMatchObject({ frequency: "manual", cronExpression: null });
+  });
   it("keeps stored depth when PATCH omits it", async () => {
     f.state.defaults = defaultsRowForTest({ serpDepth: 20, serpStopOnMatch: false });
     const result = await patch(schedule);
     expect(result.status).toBe(200);
     expect(result.stored?.serpDepth).toBe(20);
     expect(result.body).toMatchObject({ serp_depth: 20 });
+  });
+  it("returns the effective Top20 no-stop policy without rewriting the stored preference", async () => {
+    f.state.defaults = defaultsRowForTest({ serpDepth: 20, serpStopOnMatch: true });
+    const result = await patch({ serp_stop_on_match: true });
+    expect(result.status).toBe(200);
+    expect(result.body).toMatchObject({ serp_depth: 20, serp_stop_on_match: false });
+    expect(result.stored?.serpStopOnMatch).toBe(true);
   });
   it("uses the schema default depth for no stored defaults", async () => {
     const result = await patch(schedule);

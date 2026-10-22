@@ -4220,7 +4220,15 @@
         "previous_position": null,
         "project_id": "prj_a00000000000000000000000",
         "ranking_url": null,
-        "schedule": null,
+        "schedule": {
+          "cron_expression": null,
+          "frequency": "manual",
+          "jitter_minutes": 0,
+          "last_checked_at": null,
+          "next_check_at": null,
+          "source": "keyword",
+          "timezone": "UTC"
+        },
         "tags": ["Product"],
         "target_url": "https://example.com/page",
         "text": "rank tracker",
@@ -4250,7 +4258,15 @@
         "previous_position": null,
         "project_id": "prj_a00000000000000000000000",
         "ranking_url": null,
-        "schedule": null,
+        "schedule": {
+          "cron_expression": null,
+          "frequency": "manual",
+          "jitter_minutes": 0,
+          "last_checked_at": null,
+          "next_check_at": null,
+          "source": "keyword",
+          "timezone": "UTC"
+        },
         "tags": ["Product"],
         "target_url": "https://example.com/page",
         "text": "rank tracker",
@@ -4280,7 +4296,15 @@
         "previous_position": null,
         "project_id": "prj_a00000000000000000000000",
         "ranking_url": null,
-        "schedule": null,
+        "schedule": {
+          "cron_expression": null,
+          "frequency": "manual",
+          "jitter_minutes": 0,
+          "last_checked_at": null,
+          "next_check_at": null,
+          "source": "keyword",
+          "timezone": "UTC"
+        },
         "tags": [],
         "target_url": null,
         "text": "rank tracker",
@@ -4314,7 +4338,15 @@
               "previous_position": null,
               "project_id": "prj_a00000000000000000000000",
               "ranking_url": null,
-              "schedule": null,
+              "schedule": {
+                "cron_expression": null,
+                "frequency": "manual",
+                "jitter_minutes": 0,
+                "last_checked_at": null,
+                "next_check_at": null,
+                "source": "keyword",
+                "timezone": "UTC"
+              },
               "tags": [],
               "target_url": null,
               "text": "rank tracker",
@@ -4353,7 +4385,15 @@
               "previous_position": null,
               "project_id": "prj_a00000000000000000000000",
               "ranking_url": null,
-              "schedule": null,
+              "schedule": {
+                "cron_expression": null,
+                "frequency": "manual",
+                "jitter_minutes": 0,
+                "last_checked_at": null,
+                "next_check_at": null,
+                "source": "keyword",
+                "timezone": "UTC"
+              },
               "tags": ["Product"],
               "target_url": "https://example.com/page",
               "text": "existing keyword",
@@ -4379,7 +4419,15 @@
               "previous_position": null,
               "project_id": "prj_a00000000000000000000000",
               "ranking_url": null,
-              "schedule": null,
+              "schedule": {
+                "cron_expression": null,
+                "frequency": "manual",
+                "jitter_minutes": 0,
+                "last_checked_at": null,
+                "next_check_at": null,
+                "source": "keyword",
+                "timezone": "UTC"
+              },
               "tags": [],
               "target_url": null,
               "text": "new keyword",
@@ -4418,7 +4466,15 @@
               "previous_position": null,
               "project_id": "prj_a00000000000000000000000",
               "ranking_url": null,
-              "schedule": null,
+              "schedule": {
+                "cron_expression": null,
+                "frequency": "manual",
+                "jitter_minutes": 0,
+                "last_checked_at": null,
+                "next_check_at": null,
+                "source": "keyword",
+                "timezone": "UTC"
+              },
               "tags": [],
               "target_url": null,
               "text": "rank tracker",
@@ -4444,7 +4500,15 @@
               "previous_position": null,
               "project_id": "prj_a00000000000000000000000",
               "ranking_url": null,
-              "schedule": null,
+              "schedule": {
+                "cron_expression": null,
+                "frequency": "manual",
+                "jitter_minutes": 0,
+                "last_checked_at": null,
+                "next_check_at": null,
+                "source": "keyword",
+                "timezone": "UTC"
+              },
               "tags": ["Product"],
               "target_url": "https://example.com/page",
               "text": "existing keyword",
@@ -4483,19 +4547,25 @@
               "previous_position": null,
               "project_id": "prj_a00000000000000000000000",
               "ranking_url": null,
-              "schedule": null,
+              "schedule": {
+                "cron_expression": "15 6 * * 1",
+                "frequency": "custom_cron",
+                "jitter_minutes": 0,
+                "last_checked_at": null,
+                "next_check_at": "2026-07-15T07:13:04.000Z",
+                "source": "keyword",
+                "timezone": "Europe/Warsaw"
+              },
               "tags": [],
               "target_url": null,
               "text": "rank tracker",
               "topic": null,
               "updated_at": "2026-01-04T00:00:00.000Z"
             },
-            "status": "created",
-            "warning": "Could not resolve \"Austin\" in United States; tracking at country level."
+            "status": "created"
           }
         ],
-        "skipped": 0,
-        "warnings": ["Could not resolve \"Austin\" in United States; tracking at country level."]
+        "skipped": 0
       },
       "contentType": "application/json",
       "method": "POST",
@@ -4525,13 +4595,13 @@
               "project_id": "prj_a00000000000000000000000",
               "ranking_url": null,
               "schedule": {
-                "cron_expression": "15 6 * * 1",
-                "frequency": "custom_cron",
+                "cron_expression": null,
+                "frequency": "manual",
                 "jitter_minutes": 0,
                 "last_checked_at": null,
-                "next_check_at": "2026-07-13T04:15:00.000Z",
+                "next_check_at": null,
                 "source": "keyword",
-                "timezone": "Europe/Warsaw"
+                "timezone": "UTC"
               },
               "tags": [],
               "target_url": null,
@@ -4539,10 +4609,12 @@
               "topic": null,
               "updated_at": "2026-01-04T00:00:00.000Z"
             },
-            "status": "created"
+            "status": "created",
+            "warning": "Could not resolve \"Austin\" in United States; tracking at country level."
           }
         ],
-        "skipped": 0
+        "skipped": 0,
+        "warnings": ["Could not resolve \"Austin\" in United States; tracking at country level."]
       },
       "contentType": "application/json",
       "method": "POST",
@@ -4816,87 +4888,13 @@
             "previous_position": null,
             "project_id": "prj_a00000000000000000000000",
             "ranking_url": null,
-            "schedule": null,
-            "tags": ["Product"],
-            "target_url": "https://example.com/page",
-            "text": "rank tracker",
-            "topic": "Product",
-            "updated_at": "2026-01-04T00:00:00.000Z"
-          }
-        ],
-        "meta": {
-          "next_cursor": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        }
-      },
-      "contentType": "application/json",
-      "method": "GET",
-      "operationId": "listKeywords",
-      "path": "/projects/{project_id}/keywords",
-      "status": 200
-    },
-    {
-      "body": {
-        "data": [
-          {
-            "country": "United States",
-            "created_at": "2026-01-03T00:00:00.000Z",
-            "device": "desktop",
-            "id": "kw_a00000000000000000000000",
-            "intent": "commercial",
-            "latest_check": null,
-            "latest_position": null,
-            "latest_successful_check": null,
-            "location": "United States",
-            "location_key": "US",
-            "language_code": "en",
-            "language_label": "English",
-            "previous_position": null,
-            "project_id": "prj_a00000000000000000000000",
-            "ranking_url": null,
-            "schedule": null,
-            "tags": ["Product"],
-            "target_url": "https://example.com/page",
-            "text": "rank tracker",
-            "topic": "Product",
-            "updated_at": "2026-01-04T00:00:00.000Z"
-          }
-        ],
-        "meta": {
-          "next_cursor": null
-        }
-      },
-      "contentType": "application/json",
-      "method": "GET",
-      "operationId": "listKeywords",
-      "path": "/projects/{project_id}/keywords",
-      "status": 200
-    },
-    {
-      "body": {
-        "data": [
-          {
-            "country": "United States",
-            "created_at": "2026-01-03T00:00:00.000Z",
-            "device": "desktop",
-            "id": "kw_a00000000000000000000000",
-            "intent": "commercial",
-            "latest_check": null,
-            "latest_position": null,
-            "latest_successful_check": null,
-            "location": "United States",
-            "location_key": "US",
-            "language_code": "en",
-            "language_label": "English",
-            "previous_position": null,
-            "project_id": "prj_a00000000000000000000000",
-            "ranking_url": null,
             "schedule": {
               "cron_expression": null,
-              "frequency": "daily",
-              "jitter_minutes": 60,
+              "frequency": "manual",
+              "jitter_minutes": 0,
               "last_checked_at": null,
-              "next_check_at": "2026-07-29T02:58:04.000Z",
-              "source": "project_default",
+              "next_check_at": null,
+              "source": "keyword",
               "timezone": "UTC"
             },
             "tags": ["Product"],
@@ -4923,11 +4921,11 @@
             "ranking_url": null,
             "schedule": {
               "cron_expression": null,
-              "frequency": "daily",
-              "jitter_minutes": 60,
+              "frequency": "manual",
+              "jitter_minutes": 0,
               "last_checked_at": null,
-              "next_check_at": "2026-07-28T22:54:30.000Z",
-              "source": "project_default",
+              "next_check_at": null,
+              "source": "keyword",
               "timezone": "UTC"
             },
             "tags": ["Product"],
@@ -4939,6 +4937,51 @@
         ],
         "meta": {
           "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listKeywords",
+      "path": "/projects/{project_id}/keywords",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "country": "United States",
+            "created_at": "2026-01-03T00:00:00.000Z",
+            "device": "desktop",
+            "id": "kw_a00000000000000000000000",
+            "intent": "commercial",
+            "latest_check": null,
+            "latest_position": null,
+            "latest_successful_check": null,
+            "location": "United States",
+            "location_key": "US",
+            "language_code": "en",
+            "language_label": "English",
+            "previous_position": null,
+            "project_id": "prj_a00000000000000000000000",
+            "ranking_url": null,
+            "schedule": {
+              "cron_expression": null,
+              "frequency": "manual",
+              "jitter_minutes": 0,
+              "last_checked_at": null,
+              "next_check_at": null,
+              "source": "keyword",
+              "timezone": "UTC"
+            },
+            "tags": ["Product"],
+            "target_url": "https://example.com/page",
+            "text": "rank tracker",
+            "topic": "Product",
+            "updated_at": "2026-01-04T00:00:00.000Z"
+          }
+        ],
+        "meta": {
+          "next_cursor": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         }
       },
       "contentType": "application/json",

@@ -4,10 +4,8 @@ import { renderAccountUsageBudgetExtension } from "@/components/settings/Account
 import { ProviderUsageCard } from "@/components/settings/usage/ProviderUsageCard";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
-import { getProjectRole } from "@/lib/auth/authorize";
-import { canProjectAction } from "@/lib/auth/capabilities";
 import { getProjectMeteringUsage } from "@/lib/metering/user-data";
-import { requireReadableProject } from "@/lib/queries/_auth";
+import { readProjectProviderAccessScope } from "@/lib/queries/provider-access-scope";
 import { UsageSummary } from "./UsageSummary";
 
 export async function IntegrationUsagePanel({
@@ -18,7 +16,7 @@ export async function IntegrationUsagePanel({
   editBudget: boolean;
 }>) {
   const [access, runtime, metering] = await Promise.all([
-    requireReadableProject(projectRef),
+    readProjectProviderAccessScope(projectRef),
     resolveRegionalDocumentLocale(),
     getProjectMeteringUsage(projectRef),
   ]);
@@ -30,16 +28,17 @@ export async function IntegrationUsagePanel({
     "projectSettingsUsage",
     "projectIntegrations",
   ]);
+  const canEditBudget = access.project.writeMode === "active" && access.scope.canManageProviders;
   const budgetExtension = await renderAccountUsageBudgetExtension({
     locale: runtime.locale,
     principalId: access.actor.id,
     projectId: access.project.id,
     projectRef,
+    projectName: access.project.name,
+    usage: metering,
+    canEditBudget,
+    editBudget,
   });
-  const role = getProjectRole(access.actor, access.project.id);
-  const canEditBudget =
-    access.project.writeMode === "active" &&
-    canProjectAction(role, "manage", "provider_connection");
   return (
     <FeatureMessagesProvider
       locale={runtime.locale}
@@ -48,15 +47,19 @@ export async function IntegrationUsagePanel({
     >
       <ProviderUiProvider projectId={projectRef}>
         <div className="flex max-w-[760px] flex-col gap-4">
-          <ProviderUsageCard
-            budgetExplanation={budgetExtension?.description}
-            canEditBudget={canEditBudget}
-            initialBudgetEditOpen={editBudget}
-            projectId={projectRef}
-            projectRef={projectRef}
-            data={metering}
-          />
-          <UsageSummary data={metering} />
+          {budgetExtension?.overview ?? (
+            <>
+              <ProviderUsageCard
+                hostedBudgetLabels={budgetExtension?.hostedBudgetLabels}
+                canEditBudget={canEditBudget}
+                initialBudgetEditOpen={editBudget}
+                projectId={projectRef}
+                projectRef={projectRef}
+                data={metering}
+              />
+              <UsageSummary data={metering} />
+            </>
+          )}
           {budgetExtension?.content}
         </div>
       </ProviderUiProvider>

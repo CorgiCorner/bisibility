@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { renderWithResearchMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import { downloadTextFile } from "@/lib/ui/download";
@@ -54,7 +55,14 @@ function renderTable(overrides: Partial<Parameters<typeof ResearchResultsTable>[
       activeKeyword={null}
       cached
       canRemoveSaved
-      deeper={{ cached: false, costCents: 6, nextLimit: 500 }}
+      deeper={{
+        cached: false,
+        costCents: 6,
+        nextLimit: 500,
+        payment: paymentQuote({
+          charge: { value: "0.06", unit: { kind: "currency", code: "USD" }, certainty: "estimate" },
+        }),
+      }}
       fetchedAt="2026-07-22T10:00:00.000Z"
       fetchedCount={2}
       filterCount={0}
@@ -131,7 +139,7 @@ describe("ResearchResultsTable", () => {
     const { onDeeper } = renderTable();
 
     const deeperButton = screen.getByRole("button", { name: /run with 500 results/ });
-    expect(deeperButton).toHaveTextContent("~$0.06");
+    expect(deeperButton).toHaveTextContent("≈ $0.06");
     expect(screen.getByText(/Showing all 2 fetched/)).toBeInTheDocument();
     fireEvent.click(deeperButton);
     expect(onDeeper).toHaveBeenCalledOnce();

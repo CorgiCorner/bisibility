@@ -121,6 +121,40 @@ export function analyticsPaths(input: {
                 type: "string",
               },
             },
+            {
+              description:
+                "ISO 3166-1 alpha-3 country code. Case-insensitive; applied as lowercase.",
+              in: "query",
+              name: "country",
+              schema: { pattern: "^[a-zA-Z]{3}$", type: "string" },
+            },
+            {
+              description: "Device filter. Omit to include every device.",
+              in: "query",
+              name: "device",
+              schema: {
+                ...closedEnum("SearchPerformanceDeviceInput"),
+                enum: ["desktop", "mobile", "tablet"],
+                type: "string",
+              },
+            },
+            {
+              description:
+                "Comma-separated grouping dimensions: query, page, country, device. Must include query, for example query,device. Whitespace around values is trimmed and duplicates are ignored. Sent in the order query, page, country, device. page is included whenever page_path is set.",
+              in: "query",
+              name: "dimensions",
+              schema: {
+                pattern:
+                  "^\\s*(query|page|country|device)\\s*(,\\s*(query|page|country|device)\\s*)*$",
+                type: "string",
+              },
+            },
+            {
+              description: "Number of source rows to skip before this page.",
+              in: "query",
+              name: "offset",
+              schema: { default: 0, minimum: 0, type: "integer" },
+            },
           ],
         ),
       ),
@@ -130,6 +164,8 @@ export function analyticsPaths(input: {
         "Synchronize project analytics traffic now",
         "syncProjectTraffic",
         input.ref("TrafficSyncSummary"),
+        undefined,
+        [{ $ref: "#/components/parameters/IdempotencyKey" }],
       ),
     },
     "/projects/{project_id}/analytics/traffic-snapshots": {

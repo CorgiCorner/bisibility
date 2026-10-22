@@ -188,7 +188,7 @@ export function dataForSeoRelevantPages(data: unknown): RelevantPagesResult {
           return [
             {
               etv: metrics.etv,
-              // The endpoint does not return top-keyword or page-delta fields.
+              // Only aggregate page metrics are available; legacy keyword/delta fields stay null.
               etvDeltaPct: null,
               keywordCount: metrics.count,
               path,

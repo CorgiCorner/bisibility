@@ -52,7 +52,7 @@ export const getRequestKeywordDimensions = perRequestCache(async (projectId: str
   const rows = await prisma.keyword.groupBy({
     _count: { _all: true },
     by: ["locationId", "device"],
-    where: { projectId },
+    where: { projectId, archivedAt: null },
   });
 
   return {
@@ -62,3 +62,10 @@ export const getRequestKeywordDimensions = perRequestCache(async (projectId: str
     locationCount: new Set(rows.map((row) => row.locationId)).size,
   };
 });
+
+export const getRequestKeywordCadences = perRequestCache((projectId: string) =>
+  prisma.keyword.findMany({
+    where: { projectId, archivedAt: null },
+    select: { checkSchedule: { select: { frequency: true, enabled: true, archivedAt: true } } },
+  }),
+);

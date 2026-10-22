@@ -1,5 +1,10 @@
 import { DateDisplayProvider, DateFormatProvider } from "@/components/dates/DateFormatProvider";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { KeywordDetailHeaderChrome } from "@/components/keywords/KeywordDetailHeaderChrome";
+import {
+  detailMetadataFixture,
+  detailQualityFixture,
+} from "@/components/keywords/keyword-detail-quality.test-fixture";
 import { projectRankTrackerFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import type { Meta, StoryObj } from "@storybook/react";
 import {
@@ -37,6 +42,25 @@ type Story = StoryObj<typeof meta>;
 
 export const SavedWindow: Story = {
   args: { history: fixtureHistoryPort(), keyword: "Stored target", timeZone: "UTC" },
+};
+
+export const EmptyWindow: Story = {
+  args: { history: fixtureHistoryPort(historyPages(0)), keyword: "Stored target", timeZone: "UTC" },
+};
+
+export const AlignedDetailCards: Story = {
+  args: { history: fixtureHistoryPort(historyPages(0)), keyword: "Stored target", timeZone: "UTC" },
+  render: (args) => (
+    <div className="flex min-w-0 flex-col gap-4">
+      <KeywordDetailHeaderChrome
+        actions={null}
+        keyword={detailMetadataFixture()}
+        quality={detailQualityFixture()}
+        timeZone={args.timeZone}
+      />
+      <KeywordDetailHistory {...args} />
+    </div>
+  ),
 };
 
 const boundaries = historyPages();

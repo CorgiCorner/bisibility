@@ -168,6 +168,7 @@ export function DataTable<TRow extends DataTableRowBase>({
       <div className="min-w-full shrink-0" style={{ width: `var(${DATA_TABLE_WIDTH_VARIABLE})` }}>
         <DataTableHeader
           bordered={bordered}
+          hasBody={layout === "fill" || renderedRows.length > 0 || emptyState !== undefined}
           onSelectionChange={onSelectionChange}
           onSortingChange={onSortingChange}
           rows={selectionRows}

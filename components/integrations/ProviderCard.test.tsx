@@ -12,7 +12,16 @@ function ProviderCard({
   ...props
 }: Omit<ProviderCardProps, "timeZone"> & { timeZone?: string }) {
   return (
-    <ProductionProviderCard {...props} searchSyncPlan={props.searchSyncPlan} timeZone={timeZone} />
+    <ProductionProviderCard
+      {...props}
+      provider={{
+        connectionId: "conn_a00000000000000000000000",
+        connectionUpdatedAt: "2026-10-21T10:00:00.000Z",
+        ...props.provider,
+      }}
+      searchSyncPlan={props.searchSyncPlan}
+      timeZone={timeZone}
+    />
   );
 }
 
@@ -252,14 +261,19 @@ describe("ProviderCard", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Actions for DataForSEO" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Disconnect" }));
-    const dialog = screen.getByRole("dialog", { name: "Disconnect provider" });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Disconnect provider" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Remove key" }));
+    const dialog = screen.getByRole("dialog", { name: "Remove saved key?" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Remove key" }));
 
     await waitFor(() =>
       expect(actions.disconnectProvider).toHaveBeenCalledWith({
         projectId: "prj_1",
         providerId: "dataforseo",
+        expectedConnection: {
+          id: "conn_a00000000000000000000000",
+          updatedAt: "2026-10-21T10:00:00.000Z",
+          credentialSource: "own",
+        },
       }),
     );
   });
@@ -468,7 +482,7 @@ describe("ProviderCard", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("2 consecutive failures · config invalid");
   });
 
-  it("retains Manage remediation for other connected providers", () => {
+  it("uses key-specific remediation for a connected key provider", () => {
     const provider = {
       ...integrationCategories[0].providers[0],
       syncFailure: {
@@ -489,9 +503,9 @@ describe("ProviderCard", () => {
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "The saved property looks misconfigured - open Manage and re-select it.",
+      "The saved property looks misconfigured - open Manage key and re-select it.",
     );
-    expect(screen.getByRole("button", { name: "Manage" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Manage key" })).toBeInTheDocument();
   });
 
   it("renders unreadable stored credentials without changing the connected state", () => {
@@ -508,7 +522,7 @@ describe("ProviderCard", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Stored credentials can't be read. Reconnect the provider.",
     );
-    expect(screen.getByRole("button", { name: "Manage" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Manage key" })).toBeInTheDocument();
   });
 
   it("keeps connection maintenance disabled while the project is read-only", () => {
@@ -523,7 +537,7 @@ describe("ProviderCard", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Actions for DataForSEO" }));
     expect(screen.getByRole("menuitem", { name: "Test" })).toHaveAttribute("aria-disabled", "true");
-    expect(screen.getByRole("menuitem", { name: "Disconnect" })).toHaveAttribute(
+    expect(screen.getByRole("menuitem", { name: "Remove key" })).toHaveAttribute(
       "aria-disabled",
       "true",
     );
@@ -580,13 +594,13 @@ describe("ProviderCard", () => {
         />,
       );
       fireEvent.click(screen.getByRole("button", { name: "Actions for DataForSEO" }));
-      fireEvent.click(screen.getByRole("menuitem", { name: "Disconnect" }));
+      fireEvent.click(screen.getByRole("menuitem", { name: "Remove key" }));
       fireEvent.click(
-        within(screen.getByRole("dialog", { name: "Disconnect provider" })).getByRole("button", {
-          name: "Disconnect provider",
+        within(screen.getByRole("dialog", { name: "Remove saved key?" })).getByRole("button", {
+          name: "Remove key",
         }),
       );
-      const dialog = screen.getByRole("dialog", { name: "Disconnect provider" });
+      const dialog = screen.getByRole("dialog", { name: "Remove saved key?" });
       await waitFor(() => expect(within(dialog).getByRole("alert")).toHaveTextContent(expected));
       expect(dialog).toBeInTheDocument();
       expect(

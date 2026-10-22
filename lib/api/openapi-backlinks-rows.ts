@@ -1,3 +1,4 @@
+import { paymentRequestFields } from "./openapi-action-payment";
 import { backlinksEstimateSchema } from "./openapi-backlinks-parts";
 import { closedEnum, sdkName, taggedUnion, usdCents } from "./openapi-sdk-schema";
 
@@ -23,6 +24,7 @@ export const backlinksRowsSchemas = {
   },
   BacklinksRowsRequest: {
     properties: {
+      ...paymentRequestFields,
       estimate_only: {
         type: "boolean",
         description: "Return the next-page estimate without provider I/O or changing the snapshot.",
@@ -31,7 +33,8 @@ export const backlinksRowsSchemas = {
         type: "integer",
         minimum: 0,
         ...usdCents,
-        description: "Optional upper bound on the admitted next-page cost estimate.",
+        description:
+          "Optional upper bound on the admitted next-page cost estimate. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before paid work.",
       },
       snapshot_ref: {
         minLength: 1,

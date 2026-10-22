@@ -1,6 +1,5 @@
 import type {
   GetFirstCheckRunPlanAction,
-  QueueFirstChecksAction,
   RunFirstCheckAction,
 } from "@/components/rank-check/FirstCheckBannerAction";
 import type { BudgetDenialReason } from "@/lib/metering/budget-denial";
@@ -19,7 +18,6 @@ export type OverviewNoDataProps = {
   getFirstCheckRunPlanAction: GetFirstCheckRunPlanAction;
   projectId: string;
   projectRef: ProjectRef;
-  queueFirstChecksAction: QueueFirstChecksAction;
   runningCheckCount: number;
   runCheckNowAction: RunFirstCheckAction;
   overview: OverviewView;
@@ -35,7 +33,6 @@ export function OverviewNoData({
   overview,
   projectId,
   projectRef,
-  queueFirstChecksAction,
   runningCheckCount,
   runCheckNowAction,
 }: Readonly<OverviewNoDataProps>) {
@@ -48,21 +45,30 @@ export function OverviewNoData({
   const recentlyAddedRows =
     overview.highlights.find((list) => list.kind === "recentlyAdded")?.rows ?? [];
 
+  const showFirstCheckIntro =
+    bannerState === "ready" &&
+    overview.firstCheckSourceReady === true &&
+    canRunChecks &&
+    overview.firstPendingKeywordId &&
+    !budgetExhausted &&
+    !overview.hasEverChecked;
+
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <NoDataBanner
-        canCreateKeyword={canCreateKeyword}
-        canManageProviders={canManageProviders}
-        canRunChecks={canRunChecks}
-        getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
-        keywordCount={keywordCount}
-        keywordId={overview.firstPendingKeywordId}
-        projectId={projectId}
-        projectRef={projectRef}
-        queueFirstChecksAction={queueFirstChecksAction}
-        runCheckNowAction={runCheckNowAction}
-        state={bannerState}
-      />
+      {bannerState !== "ready" || showFirstCheckIntro ? (
+        <NoDataBanner
+          canCreateKeyword={canCreateKeyword}
+          canManageProviders={canManageProviders}
+          canRunChecks={canRunChecks}
+          getFirstCheckRunPlanAction={getFirstCheckRunPlanAction}
+          keywordCount={keywordCount}
+          keywordId={overview.firstPendingKeywordId}
+          projectId={projectId}
+          projectRef={projectRef}
+          runCheckNowAction={runCheckNowAction}
+          state={bannerState}
+        />
+      ) : null}
       <NoDataKpiRow
         budgetExhausted={budgetExhausted}
         budgetReason={budgetReason}

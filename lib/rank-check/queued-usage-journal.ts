@@ -11,6 +11,7 @@ import type { ProviderUsageObserver } from "@/lib/providers/usage";
 import type { PricedRequest, ProviderRequest } from "@usagekit/providers";
 
 export type QueuedTaskUsageInput = {
+  maxCostCents?: string;
   attribution: ProviderRequestAttribution;
   correlationId: string;
   keywordId: string;

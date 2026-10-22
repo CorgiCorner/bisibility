@@ -25,7 +25,11 @@
       "takeawaySlippedLast": "La posición media ha empeorado en {value, number} durante los últimos {days, number} {days, plural, one {día} other {días}}. Mayor caída: {leader}.",
       "takeawaySteadyFirst": "La posición media se ha mantenido estable durante los primeros {days, number} {days, plural, one {día} other {días}} de seguimiento.",
       "takeawaySteadyLast": "La posición media se ha mantenido estable durante los últimos {days, number} {days, plural, one {día} other {días}}.",
-      "title": "Tendencia de posiciones"
+      "title": "Tendencia de posiciones",
+      "tooltipAverage": "Posición media {position, number, ::.#}",
+      "tooltipKeyword": "{keyword}: n.º {position, number, ::.#}",
+      "tooltipKeywordQualified": "{keyword} ({device}{hasMarket, select, true {, {market}} other {}}): n.º {position, number, ::.#}",
+      "tooltipMore": "+{count, number} más"
     },
     "distribution": {
       "bucketAriaLabel": "Posiciones de la {start, number} a la {end, number}: {count, number} {count, plural, one {palabra clave} other {palabras clave}}",
@@ -50,7 +54,8 @@
       "rankCheckFailedDetail": "{keyword}: no se ha podido ejecutar la comprobación de posiciones por un error del proveedor. Inténtalo de nuevo o consulta los detalles de la comprobación para saber más.",
       "kpisAriaLabel": "KPI de la vista general",
       "viewAllKeywords": "Ver todas las palabras clave",
-      "viewCheckRuns": "Ver las ejecuciones de comprobación"
+      "viewCheckRuns": "Ver las ejecuciones de comprobación",
+      "providerCapacityUnavailableDetail": "Las comprobaciones no están disponibles temporalmente para este proveedor. No se te ha cobrado. Inténtalo más tarde o conecta tus propias claves del proveedor."
     },
     "kpis": {
       "averageComparison": "{direction, select, up {sube {value, number, ::.0} frente a la comprobación anterior con posición} down {baja {value, number, ::.0} frente a la comprobación anterior con posición} other {0 frente a la comprobación anterior con posición}}",
@@ -74,7 +79,7 @@
     "noData": {
       "addKeywords": "Añadir palabras clave",
       "checkInProgress": "comprobación en curso",
-      "connect": "Conectar",
+      "connect": "Elige una fuente de datos",
       "firstCheckInProgressDetail": "Las posiciones aparecerán aquí cuando termine la comprobación en curso.",
       "firstCheckInProgressTitle": "Primera comprobación de posiciones en curso.",
       "migrationHoldDetail": "Este proyecto está retenido por una migración. El seguimiento de posiciones se reanudará cuando termine la retención.",
@@ -84,17 +89,22 @@
       "noData": "sin datos",
       "noRankingsYet": "Todavía no hay posiciones",
       "pausedMigrationHold": "en pausa: retención por migración",
-      "providerMissingDetail": "Conecta DataForSEO o SerpApi para empezar a seguir tus posiciones.",
-      "providerMissingTitle": "Se necesita un proveedor de SERP",
+      "providerMissingDetail": "Elige una fuente de datos en Integraciones para ejecutar comprobaciones.",
+      "providerMissingTitle": "Elige una fuente de datos",
       "providerNeedsAttention": "el proveedor requiere atención",
-      "providerNeedsAttentionDetail": "{count, number} {count, plural, one {palabra clave está lista} other {palabras clave están listas}}. Activa o vuelve a conectar un proveedor de SERP antes de la primera comprobación de posiciones.",
+      "providerNeedsAttentionDetail": "{count, number} {count, plural, one {palabra clave está lista} other {palabras clave están listas}}. Revisa la fuente de datos seleccionada antes de la primera comprobación.",
       "providerNeedsAttentionTitle": "El proveedor de SERP requiere atención.",
-      "providerNotConnected": "proveedor sin conectar",
+      "providerNotConnected": "fuente sin configurar",
       "readyToCheck": "listas para comprobar",
       "readyDetail": "{count, plural, =0 {Añade palabras clave para empezar a seguir tus posiciones.} one {# palabra clave está lista para la primera comprobación de posiciones.} other {# palabras clave están listas para la primera comprobación de posiciones.}}",
-      "viewerAskAdmin": "Pide a un administrador del proyecto que conecte DataForSEO o SerpApi para poder empezar el seguimiento de posiciones.",
+      "viewerAskAdmin": "Pide a un administrador del proyecto que elija una fuente de datos antes de iniciar las comprobaciones.",
       "viewCheckRuns": "Ver las ejecuciones de comprobación",
-      "viewKeywords": "Ver las palabras clave"
+      "viewKeywords": "Ver las palabras clave",
+      "firstCheckIntro": {
+        "title": "Ejecuta tu primera comprobación",
+        "description": "Descubre tu posición. Tu primera comprobación dará vida a este panel.",
+        "dismiss": "Ocultar esta introducción"
+      }
     },
     "sampleProject": {
       "createProject": "Crear tu proyecto real",

@@ -132,7 +132,7 @@ export const definitionSourceSchema = z
         message: "Definition source belongs to another project or location.",
       });
   });
-export const requestSchema = z
+const legacyRequestSchema = z
   .object({
     engine: z.literal("google"),
     surface: z.literal("web_serp"),
@@ -153,6 +153,11 @@ export const requestSchema = z
     forcedAiOverview: z.literal(false),
   })
   .strict();
+/** Missing version remains the exact v1 shape; no default mutates historical JSON. */
+export const requestSchema = z.union([
+  legacyRequestSchema,
+  legacyRequestSchema.extend({ compilerVersion: z.literal(2) }).strict(),
+]);
 export const configurePolicySchema = z
   .object({ projectId: ref, expectedPolicyEpoch: epoch, config: persistedPolicySchema })
   .strict();

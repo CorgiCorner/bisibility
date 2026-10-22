@@ -6,6 +6,7 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { publishOperationChanged } from "@/lib/notifications/realtime";
 import { resolveSerpDepth } from "@/lib/serp/constants";
 import { positiveCostCents } from "./cost";
+import { storedDeferralReason } from "./deferral-reason";
 import { RankCheckClosedBeforePersistenceError } from "./persistence-errors";
 import {
   assertQueuedPersistenceLease,
@@ -137,7 +138,7 @@ async function reconcileTaskAtDeadline(
   }
   const closed = await tx.rankCheck.updateMany({
     data: {
-      deferredReason: reason,
+      deferredReason: storedDeferralReason(reason),
       error: reason,
       estimatedCostCents: null,
       finishedAt: now,

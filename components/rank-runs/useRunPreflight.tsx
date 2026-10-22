@@ -19,6 +19,7 @@ type PreviewEnvelope = { data: RankCheckRunPreview };
 
 type PreflightRequest = {
   depth: SerpDepth;
+  title?: string;
   rows?: readonly KeywordRow[];
   market?: string;
   spec: RunSelectionSpec;
@@ -122,16 +123,18 @@ export function useRunPreflight({
       equation: t("runCounts", { keywords: preview.keywordCount, targets: preview.targetCount }),
       startLabel: t("startRun"),
       subtitle: t("scopeSubtitle"),
-      title: request.market
-        ? t("scopeMarket", { market })
-        : rows.length === 1
-          ? t("scopeOne", { keyword: rows[0]?.keyword ?? "-", market })
-          : t("scopeMany", { count: preview.keywordCount, market }),
+      title:
+        request.title ??
+        (request.market
+          ? t("scopeMarket", { market })
+          : rows.length === 1
+            ? t("scopeOne", { keyword: rows[0]?.keyword ?? "-", market })
+            : t("scopeMany", { count: preview.keywordCount, market })),
     };
   }
 
   async function request(request: PreflightRequest) {
-    if (requesting.current || (!request.market && !request.rows?.length)) return;
+    if (requesting.current) return;
     requesting.current = true;
     setError(null);
     setOpening(true);

@@ -5,6 +5,7 @@ import { previewDefaultsHost, saveDefaultsHost } from "@/lib/measurement-setting
 import { SettingsHostError } from "@/lib/measurement-settings/host/errors";
 import { PreviewTokenError } from "@/lib/rank-check/runs/preview-token";
 import { projectDefaultsPatchSchema } from "@/lib/schemas/project";
+import { resolveEffectiveSerpStopOnMatch } from "@/lib/serp/constants";
 import {
   keywordMarketSelect,
   type ProjectDefaultMarket,
@@ -30,9 +31,9 @@ type DefaultsResourceRow = {
 };
 
 const unwrittenDefaults: DefaultsResourceRow = {
-  // Keep these fallback values aligned with ProjectDefaults in prisma/schema/core.prisma.
+  // Defaults never authorize recurrence; named schedule memberships own it.
   cronExpression: null,
-  frequency: "daily",
+  frequency: "manual",
   jitterMinutes: 60,
   lastCheckedAt: null,
   nextCheckAt: null,
@@ -53,16 +54,19 @@ function defaultsResource(
   return {
     city: market.city,
     country: market.country,
-    cron_expression: defaults.cronExpression,
+    cron_expression: null,
     device: market.device,
-    frequency: defaults.frequency,
-    jitter_minutes: defaults.jitterMinutes,
+    frequency: "manual",
+    jitter_minutes: 0,
     last_checked_at: iso(defaults.lastCheckedAt),
     location_key: market.locationKey,
-    next_check_at: iso(defaults.nextCheckAt),
+    next_check_at: null,
     project_id: projectPublicId,
     serp_depth: defaults.serpDepth,
-    serp_stop_on_match: defaults.serpStopOnMatch,
+    serp_stop_on_match: resolveEffectiveSerpStopOnMatch(
+      defaults.serpStopOnMatch,
+      defaults.serpDepth,
+    ),
     source: market.source,
     timezone: defaults.timezone,
     updated_at: iso(defaults.updatedAt),
@@ -94,7 +98,14 @@ export async function updateProjectDefaults(ctx: ApiContext, projectId: string) 
   if (!projectMatches(ctx.auth, projectId))
     return forbidden(ctx, "API key is not scoped to this project.");
   const body = objectBody(camelizeKeys(await readJsonBody(ctx)));
-  const data = parseApiInput(projectDefaultsPatchSchema, { ...body, project_id: projectId });
+  const data = parseApiInput(projectDefaultsPatchSchema, {
+    ...body,
+    frequency: "manual",
+    cronExpression: null,
+    jitterMinutes: 0,
+    timezone: "UTC",
+    project_id: projectId,
+  });
   const context = defaultsApiContext(ctx);
   const request = { kind: "patch" as const, values: data };
   try {

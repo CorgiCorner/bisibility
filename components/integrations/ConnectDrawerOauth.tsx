@@ -3,6 +3,7 @@
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
+import { defaultGoogleProperty } from "@/lib/integrations/google-property-grouping";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { normalizeGa4PropertyId } from "@/lib/providers/analytics/property-id";
@@ -47,7 +48,11 @@ export function ConnectDrawerOauth({
   );
   const propertyOptions = setup?.properties ?? [];
   const [property, setProperty] = useState(
-    setup?.preferredProperty ?? propertyOptions[0]?.value ?? provider.drawer.defaults.login,
+    defaultGoogleProperty({
+      options: propertyOptions,
+      preferred: setup?.preferredProperty,
+      projectDomain: setup?.projectDomain ?? "",
+    }) || provider.drawer.defaults.login,
   );
   const [error, setError] = useState<string | null>(null);
   const [propertyError, setPropertyError] = useState<string | null>(null);
@@ -93,9 +98,11 @@ export function ConnectDrawerOauth({
       setSetup(loaded);
       setSelectionSource("stored");
       setProperty(
-        loaded.properties.some((option) => option.value === loaded.preferredProperty)
-          ? (loaded.preferredProperty ?? "")
-          : (loaded.properties[0]?.value ?? ""),
+        defaultGoogleProperty({
+          options: loaded.properties,
+          preferred: loaded.preferredProperty,
+          projectDomain: loaded.projectDomain ?? "",
+        }),
       );
       setManualEntry(false);
       setSavedProperty(null);

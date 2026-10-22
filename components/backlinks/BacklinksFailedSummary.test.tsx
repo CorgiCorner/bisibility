@@ -111,18 +111,7 @@ describe("failed backlinks summary consumer", () => {
       );
       const region = screen.getByRole("region", { name: copy.title });
       expect(within(region).getByText(copy.costUnknown)).toBeInTheDocument();
-      const cost = new Intl.NumberFormat(locale, {
-        currency: "USD",
-        maximumFractionDigits: 4,
-        minimumFractionDigits: 2,
-        style: "currency",
-      }).format(0.005);
-      const expected = copy.knownSummaryCost.replace("{cost}", cost);
-      expect(
-        within(region).getByText(
-          (content) => content.replace(/\s/g, " ") === expected.replace(/\s/g, " "),
-        ),
-      ).toBeInTheDocument();
+      expect(within(region).queryByText(/Known summary cost/)).not.toBeInTheDocument();
       expect(within(region).queryByRole("table")).not.toBeInTheDocument();
       expect(within(region).queryByRole("img")).not.toBeInTheDocument();
       expect(within(region).queryByRole("button")).not.toBeInTheDocument();
@@ -132,7 +121,7 @@ describe("failed backlinks summary consumer", () => {
   it("shows failed summary facts with unknown total cost without success surfaces or spend", async () => {
     const action = vi.fn(async () => failure);
     workspace(action as unknown as AnalyzeBacklinksAction);
-    fireEvent.click(screen.getByRole("button", { name: "Analyze ~$0.05" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Analyze/ }));
     const region = await screen.findByRole("region", { name: "Failed backlinks analysis" });
     expect(
       within(region).getByText(
@@ -140,7 +129,7 @@ describe("failed backlinks summary consumer", () => {
       ),
     ).toBeInTheDocument();
     expect(within(region).getByText("Total cost is unknown.")).toBeInTheDocument();
-    expect(within(region).getByText("Known summary cost: $0.05")).toBeInTheDocument();
+    expect(within(region).queryByText("Known summary cost: $0.05")).not.toBeInTheDocument();
     expect(within(region).getByText("123")).toBeInTheDocument();
     expect(within(region).queryByRole("button")).not.toBeInTheDocument();
     expect(within(region).queryByRole("table")).not.toBeInTheDocument();
@@ -160,7 +149,7 @@ describe("failed backlinks summary consumer", () => {
       .mockResolvedValueOnce(failure);
     const loadMoreAction = vi.fn();
     workspace(action as AnalyzeBacklinksAction, loadMoreAction);
-    fireEvent.click(screen.getByRole("button", { name: "Analyze ~$0.05" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Analyze/ }));
     const results = await screen.findByRole("region", { name: "Backlinks results" });
     expect(within(results).getByRole("button", { name: /Load 100 more/ })).toBeEnabled();
     expect(within(results).getByText("previous.example.com")).toBeInTheDocument();
@@ -182,24 +171,14 @@ describe("failed backlinks summary consumer", () => {
     expect(loadMoreAction).not.toHaveBeenCalled();
     expect(action).toHaveBeenCalledTimes(2);
 
-    fireEvent.click(screen.getByRole("button", { name: "Analyze ~$0.05" }));
-    await screen.findByRole("region", { name: "Failed backlinks analysis" });
-    expect(screen.getByRole("region", { name: "Backlinks results" })).toHaveTextContent(
-      "previous.example.com",
-    );
-    expect(
-      screen.queryByRole("button", { name: /Refresh now|Load 100 more/ }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Recent targets" }).textContent).toBe(recentText);
-    expect(screen.getByLabelText("session spend cents")).toHaveTextContent("7");
+    expect(screen.getByRole("button", { name: /^Analyze/ })).toBeDisabled();
     expect(loadMoreAction).not.toHaveBeenCalled();
-    expect(action).toHaveBeenCalledTimes(3);
   });
 
   it("passes known-cost history unavailability through the real successful result", async () => {
     const action = vi.fn(async () => ({ ...previousSnapshot(), historyUnavailable: true }));
     workspace(action as AnalyzeBacklinksAction);
-    fireEvent.click(screen.getByRole("button", { name: "Analyze ~$0.05" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Analyze/ }));
     const results = await screen.findByRole("region", { name: "Backlinks results" });
     expect(within(results).getByRole("status")).toHaveTextContent(
       "History is unavailable for this result. The summary and links are still available.",
@@ -214,3 +193,24 @@ describe("failed backlinks summary consumer", () => {
     expect(action).toHaveBeenCalledOnce();
   });
 });
+
+// Consent lifecycle is covered by the real useActionPaymentReview and workspace payment tests.
+// These fixtures isolate existing report/cache/scope behavior after accepted consent.
+vi.mock("@/components/action-payment/useActionPaymentReview", () => ({
+  useActionPaymentReview: () => ({
+    draft: null,
+    close: vi.fn(),
+    confirm: vi.fn(),
+    selectOption: vi.fn(),
+    request: (action: (input: unknown) => Promise<unknown>, input: Record<string, unknown>) =>
+      action({
+        ...input,
+        estimateOnly: false,
+        requirePayment: true,
+        acceptedPayment: { quoteToken: "fixture-consent" },
+      }),
+  }),
+}));
+vi.mock("@/components/action-payment/ActionPaymentPrice", () => ({
+  ActionPaymentPrice: () => <span>Review price</span>,
+}));

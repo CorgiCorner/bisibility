@@ -5,6 +5,10 @@ import {
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
 import { platformAllocationTag } from "@/lib/metering/paid-quote";
+import {
+  parseProjectFundingBudgetId,
+  projectFundingTag,
+} from "@/lib/metering/project-funding-budgets";
 import { meteringNamespace } from "@/lib/metering/runtime";
 import { currentBudgets, status } from "@/lib/metering/store/budgets";
 import { createSql } from "@/lib/metering/store/host-sql";
@@ -21,6 +25,8 @@ type Input = {
   catalog: readonly ProviderCatalogEntry[];
   connectionId: string;
   estimatedCostCents: number;
+  /** Customer charge for a project Credits budget. Provider cost is the fallback. */
+  estimatedCustomerCents?: number;
   estimatedUsageQuantity?: number;
   now?: Date;
   projectId: string;
@@ -62,6 +68,14 @@ export async function assertProviderAllocationAvailable(
       { kind: "principal", namespace, principal: project.ownerId },
       { kind: "connection", namespace, connection: input.connectionId },
       { kind: "tag", namespace, tag },
+      {
+        kind: "tag",
+        namespace,
+        tag: projectFundingTag(
+          connection.credentialSource === "hosted" ? "platform" : "byok",
+          input.projectId,
+        ),
+      },
     ],
     input.surface,
   );
@@ -74,16 +88,20 @@ export async function assertProviderAllocationAvailable(
         ? 1
         : budget.unit === "units"
           ? input.estimatedUsageQuantity
-          : input.estimatedCostCents;
+          : budget.unit === "customer_cents" && input.estimatedCustomerCents !== undefined
+            ? input.estimatedCustomerCents
+            : input.estimatedCostCents;
     if (value === undefined || !Number.isFinite(value) || value < 0)
       throw new Error("Provider usage estimate is invalid.");
     const current = await status(sql, budget, input.now ?? new Date());
     const available = amount(current.remaining);
     if (available !== null && value > available) {
       const resetAt = current.epoch?.endsAt ? new Date(current.epoch.endsAt) : null;
-      if (budget.scope.kind === "group")
+      const funding = parseProjectFundingBudgetId(budget.id);
+      if (budget.scope.kind === "group" || funding)
         throw new BudgetExhaustedError({
           projectId: input.projectId,
+          ...(funding ? { fundingSource: funding.fundingSource } : {}),
           capCents: amount(budget.limit) ?? 0,
           spentCents: amount(current.used) ?? 0,
           reservedCents: amount(current.reserved) ?? 0,
@@ -91,7 +109,11 @@ export async function assertProviderAllocationAvailable(
         });
       throw new ProviderAllocationExhaustedError(input.connectionId, input.surface, resetAt);
     }
-    if (budget.scope.kind !== "group" && budget.unit !== "paid_attempts") {
+    if (
+      budget.scope.kind !== "group" &&
+      !parseProjectFundingBudgetId(budget.id) &&
+      budget.unit !== "paid_attempts"
+    ) {
       remaining = remaining === null ? available : Math.min(remaining, available ?? Infinity);
       unit = budget.unit === "units" ? "units" : "cents";
     }

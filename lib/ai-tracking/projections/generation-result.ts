@@ -3,7 +3,11 @@ export type TrackingGenerationActionResult<T> =
   | ActionResult<T>
   | {
       ok: false;
-      error: ActionFailure & { reason: string; generationId?: string };
+      error: ActionFailure & {
+        reason: string;
+        generationId?: string;
+        payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
+      };
     };
 export function unwrapTrackingGenerationActionResult<T>(
   result: TrackingGenerationActionResult<T>,

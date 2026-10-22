@@ -1,21 +1,19 @@
+import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
+import { researchCacheIdentity } from "./cache-identity";
+import { AiResearchPaidFailure, outcome } from "./outcome";
+import { prepareResearchAiPayment } from "./research-payment";
 import "server-only";
-import { createHash } from "node:crypto";
 import { createAgentReport } from "@/lib/agent-reports/service";
-import { isBudgetExhaustedError } from "@/lib/metering/admission-errors";
 import {
-  budgetDenialReason,
-  MISSING_PROJECT_BUDGET_MESSAGE,
-  UNRESOLVED_USAGE_MESSAGE,
-} from "@/lib/metering/budget-denial";
-import { withProviderLookupCache } from "@/lib/provider-lookups/cache";
+  providerLookupCacheConfigured,
+  readProviderLookupCache,
+  withProviderLookupCache,
+} from "@/lib/provider-lookups/cache";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import {
   projectCacheTtl,
   withProjectCachePolicy,
 } from "@/lib/provider-lookups/project-cache-policy";
-import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
-import type { ProviderRequestTrigger } from "@/lib/provider-usage/tag";
-import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import {
   ACTUAL_COST_ASSUMPTIONS,
   ACTUAL_COST_EXCLUSIONS,
@@ -26,7 +24,6 @@ import { admissionRate, loadAiAdmission } from "./admission";
 import { requireAiSource } from "./context";
 import { AI_REQUEST_BUDGET_MS } from "./deadline";
 import { executeResearch } from "./execution";
-import { isLegacyPrompt, isLegacyVisibility } from "./legacy";
 import { researchProvenance } from "./report-provenance";
 import {
   type AiResearchKind,
@@ -35,49 +32,11 @@ import {
   type VisibilityInput,
   visibilitySchema,
 } from "./schema";
-import type { AiResearchResult } from "./types";
-import { AiPreDispatchRefusal, AiResearchValidationError } from "./validation";
+import { AiPreDispatchRefusal } from "./validation";
 
-export type AiResearchContext = {
-  projectId: string;
-  actorId?: string | null;
-  origin: ProviderRequestOrigin;
-  execution?: { trigger: ProviderRequestTrigger; correlationId: string };
-};
-export type AiResearchOutcome =
-  | {
-      ok: true;
-      estimate: true;
-      estimatedCostCents: number;
-      evidence: AiResearchResult["evidence"];
-      estimateKind?: "forecast" | "admission_bound";
-      isGuaranteedMaximum?: boolean;
-      credentialSource?: "own" | "hosted";
-      estimateCredentialsRef?: string;
-      forecastAssumptions?: string[];
-      forecastScope?: "tokens_and_base_only";
-      pricingPolicy?: string;
-      pricingCheckedAt?: string;
-      isPartialEstimate?: boolean;
-      forecastExclusions?: string[];
-    }
-  | {
-      ok: true;
-      estimate: false;
-      cached: boolean;
-      reportId: string;
-      costCents: number;
-      result: AiResearchResult;
-      retryBlocked?: boolean;
-      safeToStartNewRequest?: boolean;
-    }
-  | {
-      ok: false;
-      reason: string;
-      message: string;
-      retryBlocked?: boolean;
-      safeToStartNewRequest?: boolean;
-    };
+export type { AiResearchContext, AiResearchOutcome } from "./outcome-types";
+
+import type { AiResearchContext, AiResearchOutcome } from "./outcome-types";
 
 async function run(
   context: AiResearchContext,
@@ -96,12 +55,40 @@ async function run(
   return withProjectCachePolicy(
     source.project.lookupCacheTtlSeconds,
     async (): Promise<AiResearchOutcome> => {
-      const admission = () => loadAiAdmission(source, input, deadlineAt);
+      const admission = () =>
+        loadAiAdmission(
+          source,
+          input,
+          deadlineAt,
+          !input.estimate_only && input.max_cost_cents === 0,
+        );
+      const { key, identity, fresh } = researchCacheIdentity(
+        context.projectId,
+        source.connection.id,
+        kind,
+        input,
+      );
       const evidence = kind === "ai_visibility" ? "observed_dataset" : "synthetic_prompt_test";
       if (input.estimate_only) {
         const admitted = await admission();
         const actual = admitted.policy === "provider_actual_cost";
         return {
+          ...(await (async () => {
+            const cached =
+              admitted.policy !== "provider_actual_cost" &&
+              !fresh &&
+              providerLookupCacheConfigured() &&
+              Boolean(await readProviderLookupCache(key));
+            const payment = await prepareResearchAiPayment(
+              context,
+              kind,
+              input,
+              source,
+              admitted,
+              Boolean(cached),
+            );
+            return payment ? { payment: payment.quote, paymentOptions: payment.options } : {};
+          })()),
           ok: true,
           estimate: true,
           estimatedCostCents: admitted.estimate,
@@ -125,22 +112,6 @@ async function run(
       if ("prompt" in input && input.cost_policy === "provider_actual_cost") {
         return runActualCost({ context, input, source, loadAdmission: admission, deadlineAt });
       }
-      const legacy = "prompt" in input ? isLegacyPrompt(input) : isLegacyVisibility(input);
-      const { fresh, estimate_only: _estimateOnly, max_cost_cents: _cap, ...rawIdentity } = input;
-      if (legacy && "prompt" in rawIdentity) {
-        delete (rawIdentity as Partial<PromptInput>).cost_policy;
-        delete (rawIdentity as Partial<PromptInput>).max_output_tokens;
-        delete (rawIdentity as Partial<PromptInput>).web_search;
-        delete (rawIdentity as Partial<PromptInput>).response_language;
-        delete (rawIdentity as Partial<PromptInput>).country_iso_code;
-      }
-      const identity = Object.fromEntries(
-        Object.entries(rawIdentity).filter(([, value]) => value !== undefined),
-      );
-      const version = legacy ? "v1" : "v2";
-      // Retrieval normalization changed; never reuse earlier visibility rows with a different filter.
-      const cacheVersion = kind === "ai_visibility" ? `${version}-provider-domain-v1` : version;
-      const key = `ai:${cacheVersion}:${context.projectId}:${source.connection.id}:${kind}:${createHash("sha256").update(JSON.stringify(identity)).digest("hex")}`;
       const loaded = await withProviderLookupCache({
         fresh,
         key,
@@ -149,38 +120,59 @@ async function run(
         load: async () => {
           const admitted = await admission();
           const { estimate } = admitted;
+          if (input.max_cost_cents === 0)
+            throw new ProviderLookupSignal({
+              ok: false,
+              reason: "cost_limit_exceeded",
+              estimatedCostCents: estimate,
+            });
+          const payment = await prepareResearchAiPayment(context, kind, input, source, admitted);
           if (input.max_cost_cents !== undefined && estimate > input.max_cost_cents)
             throw new ProviderLookupSignal({
               ok: false,
               reason: "cost_limit_exceeded",
               estimatedCostCents: estimate,
             });
-          const { result, providerRequestIds } = await executeResearch({
-            context,
-            kind,
-            input,
-            source,
-            admitted,
-            deadlineAt,
-          });
-          const report = await createAgentReport({
-            projectId: context.projectId,
-            actorId: context.actorId,
-            kind,
-            title: `${kind === "ai_visibility" ? "AI visibility" : "Prompt comparison"}: ${input.brand}`,
-            body: { input: identity, result },
-            provenance: researchProvenance({
+          try {
+            const { result, providerRequestIds } = await executeResearch({
+              context,
               kind,
               input,
-              admission: admitted,
-              estimate,
+              source,
+              admitted,
+              payment,
               deadlineAt,
-              providerRequestIds,
-              providerId: source.provider.id,
-              rows: result.rows,
-            }),
-          });
-          return { reportId: report.id, result };
+            });
+            const report = await createAgentReport({
+              projectId: context.projectId,
+              actorId: context.actorId,
+              kind,
+              title: `${kind === "ai_visibility" ? "AI visibility" : "Prompt comparison"}: ${input.brand}`,
+              body: {
+                input: identity,
+                result,
+                ...(payment?.hasAttempted ? { originalPayment: payment.receipt() } : {}),
+              },
+              provenance: researchProvenance({
+                kind,
+                input,
+                admission: admitted,
+                estimate,
+                deadlineAt,
+                providerRequestIds,
+                providerId: source.provider.id,
+                rows: result.rows,
+              }),
+            });
+            return {
+              reportId: report.id,
+              result,
+              ...(payment ? { originalPayment: payment.receipt() } : {}),
+            };
+          } catch (error) {
+            if (payment?.hasAttempted) throw new AiResearchPaidFailure(error, payment.receipt());
+            throw error;
+          }
         },
       });
       if (loaded.status === "contended")
@@ -189,79 +181,36 @@ async function run(
           reason: "in_progress",
           message: "An identical analysis is already running.",
         };
+      const { originalPayment: rawPayment, ...value } = loaded.value;
+      const validated = actionPaymentReceiptSchema.safeParse(rawPayment);
+      const originalPayment = validated.success ? validated.data : undefined;
       return {
         ok: true,
         estimate: false,
         cached: loaded.cached,
-        ...loaded.value,
+        ...value,
+        ...(originalPayment ? { originalPayment } : {}),
         costCents: loaded.cached ? 0 : loaded.value.result.costCents,
+        ...(originalPayment
+          ? {
+              payment: loaded.cached
+                ? {
+                    ...originalPayment,
+                    state: "free" as const,
+                    charge: {
+                      ...originalPayment.charge,
+                      value: "0",
+                      certainty: "free" as const,
+                    },
+                  }
+                : originalPayment,
+            }
+          : {}),
       };
     },
   );
 }
-async function outcome(load: () => Promise<AiResearchOutcome>): Promise<AiResearchOutcome> {
-  try {
-    return await load();
-  } catch (caught) {
-    const safe = caught instanceof AiPreDispatchRefusal;
-    const error = safe ? caught.original : caught;
-    const refusal = safe ? { safeToStartNewRequest: true, retryBlocked: false } : {};
-    if (error instanceof AiResearchValidationError)
-      return {
-        ok: false,
-        reason: error.reason,
-        message: error.message,
-        ...refusal,
-        ...(["usage_reconciliation_required", "idempotency_conflict"].includes(error.reason)
-          ? { retryBlocked: true }
-          : {}),
-      };
-    if (error instanceof ProviderLookupSignal)
-      return {
-        ok: false,
-        ...refusal,
-        reason: budgetDenialReason(error.outcome) ?? error.outcome.reason,
-        ...(budgetDenialReason(error.outcome) === "usage_reconciliation_required"
-          ? { retryBlocked: true }
-          : {}),
-        message:
-          budgetDenialReason(error.outcome) === "budget_missing"
-            ? MISSING_PROJECT_BUDGET_MESSAGE
-            : budgetDenialReason(error.outcome) === "usage_reconciliation_required"
-              ? UNRESOLVED_USAGE_MESSAGE
-              : error.outcome.reason === "no_source"
-                ? "Connect a compatible data provider in Integrations."
-                : `Analysis unavailable: ${error.outcome.reason}.`,
-      };
-    if (
-      safe &&
-      budgetDenialReason(error) &&
-      (isBudgetExhaustedError(error) ||
-        (error instanceof DeploymentAdmissionExhaustedError && error.reason === "budget"))
-    )
-      return {
-        ok: false,
-        reason: budgetDenialReason(error) ?? "budget_missing",
-        message:
-          budgetDenialReason(error) === "usage_reconciliation_required"
-            ? UNRESOLVED_USAGE_MESSAGE
-            : MISSING_PROJECT_BUDGET_MESSAGE,
-        ...refusal,
-        ...(budgetDenialReason(error) === "usage_reconciliation_required"
-          ? { retryBlocked: true }
-          : {}),
-      };
-    if (safe)
-      return {
-        ok: false,
-        reason: "analysis_refused",
-        message:
-          "Analysis was refused before any paid provider request. Review provider availability and limits before creating a new request.",
-        ...refusal,
-      };
-    throw error;
-  }
-}
+
 export function analyzeAiVisibility(context: AiResearchContext, input: unknown) {
   return outcome(() => run(context, "ai_visibility", visibilitySchema.parse(input)));
 }

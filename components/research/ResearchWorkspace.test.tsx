@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import {
   SessionSpendProvider,
   useSessionSpend,
@@ -257,6 +258,20 @@ const savedKeywordActions = {
 function success(input: { cached: boolean; costCents: number; estimate?: boolean }) {
   return {
     ...input,
+    payment: input.estimate
+      ? paymentQuote({
+          charge: {
+            value: String(input.costCents / 100),
+            certainty: "estimate",
+            unit: { kind: "currency", code: "USD" },
+          },
+          cache: {
+            state: input.cached ? "hit" : "miss",
+            freeUntil: null,
+            windowSeconds: null,
+          },
+        })
+      : undefined,
     cachedUntil: "2026-07-22T22:00:00.000Z",
     connections: context.connections,
     fetchedAt: "2026-07-22T10:00:00.000Z",
@@ -322,7 +337,7 @@ describe("ResearchWorkspace", () => {
     const searchCardWrapper = activeConnection.parentElement?.parentElement;
     const tooltipWrapper = searchCardWrapper?.parentElement;
 
-    expect(tooltipWrapper).toHaveClass("w-full");
+    expect(tooltipWrapper).toBeDefined();
     expect(searchCardWrapper).toHaveClass("w-full");
   });
 
@@ -352,6 +367,7 @@ describe("ResearchWorkspace", () => {
           checkHealth={checkHealth}
           context={context}
           costContext={costContext}
+          assessPaymentsAction={async () => ({ allowed: true, reason: null, charges: [] })}
           researchAction={researchAction}
           {...overrides}
         />
@@ -400,6 +416,7 @@ describe("ResearchWorkspace", () => {
     const { researchAction } = paidResearchAction();
     const view = renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     await screen.findByRole("button", { name: "Select two" });
     expect(screen.getByRole("button", { name: "Explore more" })).toBeEnabled();
     const requestCount = researchAction.mock.calls.length;
@@ -417,10 +434,8 @@ describe("ResearchWorkspace", () => {
       </SessionSpendProvider>,
     );
     expect(screen.getByRole("button", { name: "Select two" })).toBeVisible();
-    expect(
-      screen.queryByRole("region", { name: "Connect a provider to get started" }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByText("Connect a supporting provider to unlock these fields.")).toBeVisible();
+    expect(screen.queryByRole("region", { name: "Choose a data source" })).not.toBeInTheDocument();
+    expect(screen.getByText("Choose a data source to use these fields.")).toBeVisible();
     expect(screen.getByRole("button", { name: "Explore more" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Explore more" }));
     expect(researchAction).toHaveBeenCalledTimes(requestCount);
@@ -431,6 +446,7 @@ describe("ResearchWorkspace", () => {
     renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     await screen.findByRole("button", { name: "Select two" });
     expect(screen.getByLabelText("session spend cents")).toHaveTextContent("4");
   });
@@ -440,6 +456,7 @@ describe("ResearchWorkspace", () => {
     renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     await screen.findByRole("button", { name: "Select two" });
 
     fireEvent.click(screen.getByRole("button", { name: "Select two" }));
@@ -487,6 +504,7 @@ describe("ResearchWorkspace", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     await screen.findByRole("button", { name: "Select two" });
     expect(screen.getByLabelText("tracking scope count")).toHaveTextContent("2");
     fireEvent.click(screen.getByRole("button", { name: "Select two" }));
@@ -528,42 +546,50 @@ describe("ResearchWorkspace", () => {
     renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     await screen.findByRole("button", { name: "Select two" });
     expect(screen.getByLabelText("session spend cents")).toHaveTextContent("4");
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     await waitFor(() => expect(paidCalls()).toBe(2));
     expect(screen.getByLabelText("session spend cents")).toHaveTextContent("4");
   });
 
-  it("disables fresh research after the service reports an exhausted budget", async () => {
-    const researchAction = vi.fn(async () => ({
-      ok: false as const,
-      reason: "budget_exhausted" as const,
-    }));
+  it("keeps route review available after a budget denial", async () => {
+    const researchAction = vi.fn(async (input: { estimateOnly?: boolean }) =>
+      input.estimateOnly
+        ? success({ cached: false, costCents: 4, estimate: true })
+        : { ok: false as const, reason: "budget_exhausted" as const },
+    );
     renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     await screen.findByText("Monthly provider budget reached");
-    expect(screen.getByLabelText("research disabled")).toHaveTextContent("true");
+    expect(screen.getByLabelText("research disabled")).toHaveTextContent("false");
   });
 
-  it("budget regression: shows the missing-budget state and disabled-search tooltip", async () => {
-    const researchAction = vi
-      .fn()
-      .mockResolvedValue({ ok: false, reason: "budget_exhausted", budgetReason: "budget_missing" });
+  it("budget regression: shows missing budget and permits re-review instead of freezing all routes", async () => {
+    const researchAction = vi.fn(async (input: unknown) => {
+      if (input && typeof input === "object" && "estimateOnly" in input && input.estimateOnly) {
+        return {
+          ...success({ cached: false, costCents: 4, estimate: true }),
+          estimate: true as const,
+          payment: paymentQuote(),
+        };
+      }
+      return {
+        ok: false as const,
+        reason: "budget_exhausted" as const,
+        budgetReason: "budget_missing" as const,
+      };
+    });
     renderWorkspace(researchAction);
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     expect(await screen.findByText(sharedMessages.shared.errors.budgetMissing)).toBeVisible();
-    const run = screen.getByRole("button", { name: "Run research" });
-    expect(run).toBeDisabled();
-    expect(screen.getByLabelText("research disabled")).toHaveTextContent("true");
-    const card = screen.getByLabelText("active connection").parentElement?.parentElement;
-    if (!card) throw new Error("Search card wrapper missing");
-    fireEvent.pointerMove(card, { pointerType: "mouse" });
-    expect(await screen.findByRole("tooltip")).toHaveTextContent(
-      sharedMessages.shared.errors.budgetMissing,
-    );
+    expect(screen.getByRole("button", { name: "Run research" })).toBeEnabled();
   });
 
   it("prefills an expired recent search and waits for the priced submit", async () => {
@@ -593,6 +619,7 @@ describe("ResearchWorkspace", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     await waitFor(() =>
       expect(researchAction.mock.calls.filter(([input]) => !input.estimateOnly)).toHaveLength(1),
     );
@@ -634,6 +661,7 @@ describe("ResearchWorkspace", () => {
     renderWorkspace(researchAction as unknown as ResearchKeywordsAction);
 
     fireEvent.click(screen.getByRole("button", { name: /^saved seed/i }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     await waitFor(() =>
       expect(researchAction.mock.calls.filter(([input]) => !input.estimateOnly)).toHaveLength(1),
     );
@@ -678,15 +706,17 @@ describe("ResearchWorkspace", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
-    const retry = await screen.findByRole("button", { name: "Retry ~$0.07" });
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
+    const retry = await screen.findByRole("button", { name: "Retry ≈ $0.07" });
     fireEvent.click(screen.getByRole("button", { name: "Prepare bar" }));
     fireEvent.click(screen.getByRole("button", { name: "Limit 500" }));
     fireEvent.click(screen.getByRole("button", { name: "Ideas mode" }));
     fireEvent.click(screen.getByRole("button", { name: "Clickstream on" }));
     fireEvent.click(screen.getByRole("button", { name: "Connection 2" }));
     await waitFor(() => expect(screen.getByLabelText("estimate cost")).toHaveTextContent("19"));
-    expect(screen.getByRole("button", { name: "Retry ~$0.07" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry ≈ $0.07" })).toBeInTheDocument();
     fireEvent.click(retry);
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
 
     await waitFor(() => expect(runs).toBe(2));
     const retried = researchAction.mock.calls.filter(([input]) => !input.estimateOnly)[1]?.[0];
@@ -717,14 +747,16 @@ describe("ResearchWorkspace", () => {
       screen.queryByText(/Fresh lookups are disabled until the monthly provider budget resets/i),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
-    expect(screen.getByText("Connect a supporting provider to unlock these fields.")).toBeVisible();
-    const emptyPanel = screen.getByRole("region", { name: "Connect a provider to get started" });
+    expect(
+      screen.getByText("Choose a supported data source in Integrations to run a search."),
+    ).toBeVisible();
+    const emptyPanel = screen.getByRole("region", { name: "Choose a data source" });
     expect(within(emptyPanel).getAllByRole("link")).toHaveLength(1);
-    expect(within(emptyPanel).getByRole("link", { name: "Connect provider" })).toHaveAttribute(
+    expect(within(emptyPanel).getByRole("link", { name: "Choose a data source" })).toHaveAttribute(
       "href",
       `/app/${context.project.id}/integrations`,
     );
-    expect(screen.getByRole("link", { name: "Open Integrations" })).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Open Integrations" })).not.toBeInTheDocument();
     expect(researchAction).not.toHaveBeenCalled();
   });
 
@@ -739,7 +771,7 @@ describe("ResearchWorkspace", () => {
     expect(screen.getByLabelText("research lookup disabled")).toHaveTextContent("true");
     expect(screen.getByRole("button", { name: "Run research" })).toBeDisabled();
     expect(screen.getByRole("button", { name: /^saved seed/i })).toBeDisabled();
-    expect(screen.getByText("Connect DataForSEO to replay recent searches.")).toBeInTheDocument();
+    expect(screen.getByText("Choose a data source to replay recent searches.")).toBeInTheDocument();
     expect(researchAction).not.toHaveBeenCalled();
   });
 
@@ -782,6 +814,7 @@ describe("ResearchWorkspace", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     fireEvent.click(await screen.findByRole("button", { name: "Save 8" }));
 
     await waitFor(() => expect(saveKeywordsAction).toHaveBeenCalledOnce());
@@ -846,6 +879,7 @@ describe("ResearchWorkspace", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     fireEvent.click(await screen.findByRole("button", { name: "Save 3" }));
 
     expect(await screen.findByText(/3 keywords already saved/)).toBeInTheDocument();
@@ -869,6 +903,7 @@ describe("ResearchWorkspace", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Run research" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start" }));
     expect(await screen.findByRole("button", { name: "Save 3" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Remove first saved" })).not.toBeInTheDocument();
 

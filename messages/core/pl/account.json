@@ -103,7 +103,6 @@
         "backupCodes": "Kody zapasowe",
         "backupCodesGenerated": "Wygenerowano nowe kody zapasowe. Zapisz je teraz.",
         "cancel": "Anuluj",
-        "continueToMail": "Przejdź do ustawień poczty",
         "currentAuthenticatorCode": "Bieżący kod z aplikacji uwierzytelniającej",
         "currentBackupCode": "Bieżący kod zapasowy",
         "description": "Dodaj drugi krok po kodzie logowania z e-maila.",
@@ -150,7 +149,8 @@
             "description": "Ze względów bezpieczeństwa pierwsza konfiguracja wymaga logowania z ostatnich pięciu minut.",
             "label": "Dalej"
           }
-        }
+        },
+        "returnToAdmin": "Wróć do administracji"
       },
       "personalTokens": {
         "cancel": "Anuluj",
@@ -234,6 +234,40 @@
         "signingOut": "Wylogowywanie",
         "thisDevice": "To urządzenie",
         "title": "Aktywne sesje"
+      },
+      "connectedApps": {
+        "title": "Połączone aplikacje",
+        "description": "Sprawdzaj aplikacje z dostępem do konta i cofaj ich dostęp.",
+        "dynamic": "Zarejestrowana automatycznie",
+        "empty": "Żadna aplikacja nie jest połączona z Twoim kontem.",
+        "connected": "Połączono {date}",
+        "lastUsed": "Ostatnie użycie: {date}",
+        "neverUsed": "Jeszcze nie użyto",
+        "noScopes": "Brak dodatkowych uprawnień",
+        "scopeSeparator": ", ",
+        "createdTokens": "{count, plural, one {# powiązany token API} few {# powiązane tokeny API} many {# powiązanych tokenów API} other {# powiązanego tokenu API}}",
+        "revoke": "Cofnij dostęp",
+        "revokeApp": "Cofnij dostęp aplikacji {name}",
+        "confirmTitle": "Cofnąć dostęp aplikacji {name}?",
+        "confirmDescription": "Aplikacja nie będzie mogła odnawiać dostępu. Tokeny API będą nadal działać, jeśli ich również nie cofniesz.",
+        "issuedAccess": "Już wydany dostęp może działać jeszcze przez maksymalnie 1 godzinę.",
+        "alsoRevoke": "Cofnij również {count, plural, one {# token API utworzony przez tę aplikację} few {# tokeny API utworzone przez tę aplikację} many {# tokenów API utworzonych przez tę aplikację} other {# tokenu API utworzonego przez tę aplikację}}",
+        "unlinkedTokens": "Starszych tokenów API i tokenów bez zachowanej historii wydania nie można wiarygodnie powiązać z aplikacją. Sprawdź je osobno.",
+        "manageTokens": "Zarządzaj tokenami osobistymi",
+        "cancel": "Anuluj",
+        "revoking": "Cofanie dostępu",
+        "error": "Nie udało się cofnąć dostępu aplikacji. Spróbuj ponownie.",
+        "scopes": {
+          "identity": "Potwierdzanie tożsamości",
+          "profile": "Odczyt profilu",
+          "email": "Odczyt adresu e-mail",
+          "renew": "Odnawianie dostępu",
+          "read": "Odczyt danych projektów",
+          "write": "Zmiana danych projektów",
+          "admin": "Zarządzanie projektami i dostępem",
+          "tokens": "Tworzenie tokenów API",
+          "other": "Dodatkowe uprawnienie: {scope}"
+        }
       }
     },
     "preferences": {

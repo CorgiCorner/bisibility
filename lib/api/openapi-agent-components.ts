@@ -1,5 +1,7 @@
+import { paymentReceiptWireSchema, paymentResponseFields } from "./openapi-action-payment";
 import { analyticsSchemas } from "./openapi-analytics-schemas";
 import { publicIdSchema } from "./openapi-public-id";
+import { openEnum, sdkName, usdCents } from "./openapi-sdk-schema";
 
 const nullableNumber = { type: ["number", "null"] };
 const trafficMetrics = {
@@ -70,6 +72,7 @@ export const agentSchemas = {
       error_class: { type: "string" },
       provider: { type: "string" },
       status: {
+        ...openEnum("TrafficSyncStatus"),
         enum: [
           "succeeded_with_data",
           "succeeded_empty",
@@ -103,8 +106,13 @@ export const agentSchemas = {
         items: {
           properties: {
             provider: { type: "string" },
-            reason: { enum: ["no_capability", "rate_limited"], type: "string" },
+            reason: {
+              enum: ["no_capability", "rate_limited"],
+              type: "string",
+              ...openEnum("TrafficSyncSkipReason"),
+            },
           },
+          ...sdkName("TrafficSyncSkipped"),
           required: ["provider", "reason"],
           type: "object",
         },
@@ -127,7 +135,11 @@ export const agentSchemas = {
       country_code: { minLength: 2, type: "string" },
       display_name: { type: "string" },
       hl: { type: "string" },
-      kind: { enum: ["country", "region", "city"], type: "string" },
+      kind: {
+        enum: ["country", "region", "city"],
+        type: "string",
+        ...openEnum("LocationSuggestionKind"),
+      },
       language_code: { type: "string" },
       language_label: { type: "string" },
       location_key: { example: "ES/Andalusia/Malaga@en", type: "string" },
@@ -152,6 +164,7 @@ export const agentSchemas = {
     properties: {
       data: { items: { $ref: "#/components/schemas/LocationSuggestion" }, type: "array" },
       meta: {
+        ...sdkName("LocationSuggestionsMeta"),
         properties: { next_cursor: { type: ["string", "null"] } },
         required: ["next_cursor"],
         type: "object",
@@ -164,7 +177,7 @@ export const agentSchemas = {
     properties: {
       id: { pattern: "^conn_[a-z][a-z0-9]{23}$", type: "string" },
       label: { type: "string" },
-      provider: { enum: ["dataforseo"], type: "string" },
+      provider: { enum: ["dataforseo"], type: "string", ...openEnum("RankedKeywordProvider") },
     },
     required: ["id", "label", "provider"],
     type: "object",
@@ -182,12 +195,16 @@ export const agentSchemas = {
   },
   RankedKeywordSuggestionsResponse: {
     properties: {
+      ...paymentResponseFields,
+      original_payment: paymentReceiptWireSchema,
+      estimate: { type: "boolean" },
+      free_until: { type: "string", format: "date-time" },
       cached: { type: "boolean" },
       connections: {
         items: { $ref: "#/components/schemas/RankedKeywordConnection" },
         type: "array",
       },
-      cost_cents: { minimum: 0, type: "number" },
+      cost_cents: { minimum: 0, type: "number", ...usdCents },
       fetched_at: { format: "date-time", type: "string" },
       offset: { minimum: 0, type: "integer" },
       rows: { items: { $ref: "#/components/schemas/RankedKeywordSuggestion" }, type: "array" },

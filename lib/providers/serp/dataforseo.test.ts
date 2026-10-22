@@ -1199,6 +1199,34 @@ describe("DataForSEO observation capture", () => {
     expect(result.observation?.executedAt).toBe(result.checkedAt);
   });
 
+  it("captures the effective Top20 policy without claiming complete-prefix evidence", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          serpEnvelope([
+            {
+              type: "organic",
+              domain: "example.com",
+              rank_group: 1,
+              url: "https://example.com/",
+            },
+          ]),
+        ),
+      ),
+    );
+    const result = await dataForSeoProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: false }));
+    expect(result.position).toBe(1);
+    expect(result.observation).toMatchObject({
+      completeness: "complete",
+      requestPolicy: {
+        depth: 20,
+        stopOnMatch: false,
+        findTargetsIn: null,
+        evidence: { completeThrough: { organic_result: null } },
+      },
+    });
+  });
   it("marks provider-side organic matching as a potentially truncated observation", async () => {
     vi.stubGlobal(
       "fetch",

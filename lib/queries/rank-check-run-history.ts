@@ -59,9 +59,9 @@ export async function findHistoryRunRows(
     : Prisma.sql`COALESCE("launchedAt", "finishedAt")`;
   const launchedFilter = includeUnlaunched
     ? Prisma.empty
-    : Prisma.sql`AND ("launchedAt" IS NOT NULL OR ("status" = 'cancelled' AND "finishedAt" IS NOT NULL))`;
+    : Prisma.sql`AND ("launchedAt" IS NOT NULL OR (("status" = 'cancelled' OR ("status" = 'completed' AND "outcome" = 'cancelled')) AND "finishedAt" IS NOT NULL))`;
   const statusFilter = statuses?.length
-    ? Prisma.sql`AND "status" IN (${Prisma.join(statuses)})`
+    ? Prisma.sql`AND (CASE WHEN "status" = 'completed' AND "outcome" = 'cancelled' THEN 'cancelled' ELSE "status" END) IN (${Prisma.join(statuses)})`
     : Prisma.empty;
   const cursorFilter = cursor
     ? Prisma.sql`AND (${instant} < ${cursor.timestamp} OR (${instant} = ${cursor.timestamp} AND "publicId" < ${cursor.id}))`

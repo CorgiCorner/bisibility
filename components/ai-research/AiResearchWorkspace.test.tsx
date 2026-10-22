@@ -1,8 +1,10 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import sharedMessages from "@/messages/core/en/shared.json";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next-intl", () => ({
+  useFormatter: () => ({ dateTime: (value: unknown) => String(value) }),
   useLocale: () => "en",
   useTranslations: (namespace: string) => (key: string) =>
     namespace === "shared.errors" && key === "budgetMissing"
@@ -16,6 +18,121 @@ import { AiResearchWorkspace } from "./AiResearchWorkspace";
 import { aiResearchCatalogFixture } from "./ai-research-fixtures";
 
 describe("AI workspace product states", () => {
+  it("uses the same source setup state when the source disappears after the page loaded", async () => {
+    const analyze = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, reason: "no_source" })
+      .mockResolvedValue({
+        ok: true,
+        estimate: true,
+        payment: paymentQuote({
+          charge: { value: "0.12", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+        }),
+        estimatedCostCents: 1,
+        evidence: "synthetic_prompt_test",
+      });
+    const { rerender } = render(
+      <AiResearchWorkspace
+        projectId="prj_example"
+        domain="example.com"
+        mode="prompt"
+        history={[]}
+        catalog={aiResearchCatalogFixture}
+        supportingProviders={["DataForSEO"]}
+        analyzeAction={analyze}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("brand"), { target: { value: "Example" } });
+    fireEvent.change(screen.getByLabelText("prompt"), {
+      target: { value: "Which tools help small businesses?" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
+    await waitFor(() => expect(screen.getByRole("heading", { name: "emptyTitle" })).toBeVisible());
+    expect(screen.getByRole("link", { name: "connectAction" })).toHaveAttribute(
+      "href",
+      "/app/prj_example/integrations",
+    );
+    expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
+    expect(screen.queryByText("noSource")).not.toBeInTheDocument();
+    rerender(
+      <AiResearchWorkspace
+        projectId="prj_example"
+        domain="example.com"
+        mode="prompt"
+        history={[]}
+        catalog={{ ...aiResearchCatalogFixture, fetchedAt: new Date().toISOString() }}
+        supportingProviders={["DataForSEO"]}
+        analyzeAction={analyze}
+      />,
+    );
+    expect(analyze).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "sourceRetry" }));
+    expect(analyze).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "estimateCost" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
+    await waitFor(() => expect(analyze).toHaveBeenCalledTimes(2));
+  });
+  it("keeps retained results readable and explains missing sources beside the disabled form", () => {
+    render(
+      <AiResearchWorkspace
+        projectId="prj_example"
+        domain="example.com"
+        mode="visibility"
+        history={[]}
+        catalogFailure="no_source"
+        supportingProviders={["DataForSEO"]}
+        initialOutcome={{
+          ok: true,
+          estimate: false,
+          cached: false,
+          reportId: "agr_example",
+          costCents: 1,
+          result: {
+            evidence: "observed_dataset",
+            rows: [],
+            totalAvailable: 0,
+            truncated: false,
+            failure: null,
+            costStatus: "confirmed",
+            costCents: 1,
+            fetchedAt: "2026-10-21",
+          },
+        }}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "action" })).toHaveAttribute(
+      "href",
+      "/app/prj_example/integrations",
+    );
+    expect(screen.getByRole("link", { name: "openReport" })).toHaveAttribute(
+      "href",
+      "/app/prj_example/agent-reports/agr_example",
+    );
+  });
+  it("never clears an uncertain-cost review just because a source is available again", () => {
+    const analyze = vi.fn();
+    render(
+      <AiResearchWorkspace
+        projectId="prj_example"
+        domain="example.com"
+        mode="prompt"
+        history={[]}
+        catalog={aiResearchCatalogFixture}
+        supportingProviders={["DataForSEO"]}
+        analyzeAction={analyze}
+        initialOutcome={{
+          ok: false,
+          reason: "no_source",
+          message: "Review retained usage",
+          retryBlocked: true,
+        }}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "sourceRetry" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
+    expect(analyze).not.toHaveBeenCalled();
+  });
   it("keeps saved reports readable and disables paid actions for read-only users", () => {
     render(
       <AiResearchWorkspace
@@ -27,7 +144,7 @@ describe("AI workspace product states", () => {
       />,
     );
     expect(screen.getByRole("button", { name: "estimateCost" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
     expect(screen.getByRole("link", { name: /Saved report/ })).toHaveAttribute(
       "href",
       "/app/prj_example/agent-reports/agr_example",
@@ -91,13 +208,16 @@ describe("AI catalog and cost preflight", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         estimate: true,
+        payment: paymentQuote({
+          charge: { value: "0.12", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+        }),
         estimatedCostCents: 12,
         evidence: "synthetic_prompt_test",
       }),
     );
-    expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "runAnalysis" })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeEnabled());
     expect(analyze).toHaveBeenCalledWith(
       "prj_example",
       "prompt",
@@ -109,20 +229,50 @@ describe("AI catalog and cost preflight", () => {
       }),
     );
     fireEvent.change(screen.getByLabelText("outputTokens"), { target: { value: "2048" } });
-    expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
+  });
+  it("runs with the exact displayed quote and opaque payer selection", async () => {
+    const payment = paymentQuote();
+    const analyze = workspace(
+      vi.fn().mockResolvedValue({
+        ok: true,
+        estimate: true,
+        payment,
+        estimatedCostCents: 1,
+        evidence: "synthetic_prompt_test",
+      }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeEnabled());
+    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toHaveTextContent("≈ 4 tokens");
+    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
+    await waitFor(() => expect(analyze).toHaveBeenCalledTimes(2));
+    expect(analyze).toHaveBeenLastCalledWith(
+      "prj_example",
+      "prompt",
+      expect.objectContaining({
+        estimate_only: false,
+        payment_option_id: payment.option.id,
+        accepted_payment: { quote_token: payment.quoteToken },
+        require_payment: true,
+      }),
+    );
   });
   it("blocks a run when the estimate exceeds the cap", async () => {
     workspace(
       vi.fn().mockResolvedValue({
         ok: true,
         estimate: true,
+        payment: paymentQuote({
+          charge: { value: "0.12", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+        }),
         estimatedCostCents: 61,
         evidence: "synthetic_prompt_test",
       }),
     );
     fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("estimateAboveCap"));
-    expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
   });
   it("preserves saved reports when the provider catalog is unavailable", () => {
     render(
@@ -163,7 +313,7 @@ it("keeps the approved legacy preset available when fresh model prices are missi
   );
   expect(screen.getByRole("alert")).toHaveTextContent("pricingUnavailableLegacy");
   expect(screen.getByRole("button", { name: "estimateCost" })).toBeEnabled();
-  expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
 });
 
 it("searches current model names and keeps unknown-price models unselectable", async () => {
@@ -193,12 +343,14 @@ it("does not authorize changed settings from an estimate that finishes later", a
   let finish: (value: {
     ok: true;
     estimate: true;
+    payment: ReturnType<typeof paymentQuote>;
     estimatedCostCents: number;
     evidence: "synthetic_prompt_test";
   }) => void = () => {};
   const pending = new Promise<{
     ok: true;
     estimate: true;
+    payment: ReturnType<typeof paymentQuote>;
     estimatedCostCents: number;
     evidence: "synthetic_prompt_test";
   }>((resolve) => {
@@ -223,9 +375,17 @@ it("does not authorize changed settings from an estimate that finishes later", a
   await waitFor(() => expect(analyze).toHaveBeenCalledOnce());
   fireEvent.change(screen.getByLabelText("brand"), { target: { value: "Another brand" } });
   await act(async () =>
-    finish({ ok: true, estimate: true, estimatedCostCents: 12, evidence: "synthetic_prompt_test" }),
+    finish({
+      ok: true,
+      estimate: true,
+      payment: paymentQuote({
+        charge: { value: "0.12", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+      }),
+      estimatedCostCents: 12,
+      evidence: "synthetic_prompt_test",
+    }),
   );
-  expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
   expect(screen.getByText("estimateRequired")).toBeVisible();
 });
 
@@ -251,7 +411,7 @@ it("explains missing verified pricing without enabling a paid run", async () => 
   });
   fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
   await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("pricingUnavailable"));
-  expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
 });
 
 it.each([
@@ -269,6 +429,9 @@ it.each([
       .mockResolvedValueOnce({
         ok: true,
         estimate: true,
+        payment: paymentQuote({
+          charge: { value: "0.12", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+        }),
         estimatedCostCents: 52.6013,
         evidence: "synthetic_prompt_test",
         estimateKind: "admission_bound",
@@ -303,9 +466,9 @@ it.each([
       target: { value: "Jakie narzędzia pomagają małym firmom?" },
     });
     fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "runAnalysis" })).toBeEnabled());
-    expect(screen.getByText("legacyAdmissionEstimate")).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "runAnalysis" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeEnabled());
+    expect(screen.getAllByText(/≈ \$0\.12/).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /^runAnalysis/ }));
     await waitFor(() => expect(analyze).toHaveBeenCalledTimes(2));
     expect(analyze).toHaveBeenLastCalledWith(
       "prj_example",
@@ -326,6 +489,9 @@ it("keeps the original observed market selectable and estimable during catalog o
   const analyze = vi.fn().mockResolvedValue({
     ok: true,
     estimate: true,
+    payment: paymentQuote({
+      charge: { value: "0.12", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+    }),
     estimatedCostCents: 11,
     evidence: "observed_dataset",
   });
@@ -342,7 +508,7 @@ it("keeps the original observed market selectable and estimable during catalog o
   expect(screen.getByRole("button", { name: "language" })).toHaveTextContent("English");
   fireEvent.change(screen.getByLabelText("brand"), { target: { value: "Acme" } });
   fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
-  await waitFor(() => expect(screen.getByRole("button", { name: "runAnalysis" })).toBeEnabled());
+  await waitFor(() => expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeEnabled());
   expect(analyze).toHaveBeenCalledWith(
     "prj_example",
     "visibility",
@@ -359,6 +525,9 @@ it("requires fresh bounded metadata for extended output and invalidates legacy e
   const analyze = vi.fn().mockResolvedValue({
     ok: true,
     estimate: true,
+    payment: paymentQuote({
+      charge: { value: "0.12", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+    }),
     estimatedCostCents: 52.6013,
     evidence: "synthetic_prompt_test",
   });
@@ -376,9 +545,9 @@ it("requires fresh bounded metadata for extended output and invalidates legacy e
   fireEvent.change(screen.getByLabelText("brand"), { target: { value: "Acme" } });
   fireEvent.change(screen.getByLabelText("prompt"), { target: { value: "Which tools?" } });
   fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
-  await waitFor(() => expect(screen.getByRole("button", { name: "runAnalysis" })).toBeEnabled());
+  await waitFor(() => expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeEnabled());
   fireEvent.change(screen.getByLabelText("outputTokens"), { target: { value: "4096" } });
-  expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "estimateCost" }));
   await waitFor(() => expect(analyze).toHaveBeenCalledTimes(2));
   expect(analyze).toHaveBeenLastCalledWith(
@@ -438,5 +607,5 @@ it("budget regression: shows shared guidance for a returned missing budget", asy
     "role",
     "alert",
   );
-  expect(screen.getByRole("button", { name: "runAnalysis" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /^runAnalysis/ })).toBeDisabled();
 });

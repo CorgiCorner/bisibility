@@ -11,7 +11,7 @@ import { PositionTrendCard } from "@/components/overview/PositionTrendCard";
 import type { OverviewView } from "@/components/overview/types";
 import { SampleProjectBanner } from "@/components/sample-data/SampleProjectBanner";
 import { getFirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
-import { queueFirstChecks, runCheckNow } from "@/lib/actions/rankCheck";
+import { runCheckNow } from "@/lib/actions/rankCheck";
 import type { OverviewCompetitorComparison } from "@/lib/competitors/overview-comparison";
 import type { CheckHealth } from "@/lib/queries/check-health";
 import type { ReactNode } from "react";
@@ -151,7 +151,6 @@ export function OverviewDashboardView({
             overview={overview}
             projectId={overview.publicId}
             projectRef={overview.publicId}
-            queueFirstChecksAction={queueFirstChecks}
             runningCheckCount={checkHealth.runningCount}
             runCheckNowAction={runCheckNow}
           />

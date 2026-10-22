@@ -34,7 +34,7 @@ describe("RetrievedResultsCard loading", () => {
         timeZone="UTC"
       />,
     );
-    fireEvent.click(screen.getByRole("radio", { name: "Compare two" }));
+    fireEvent.click(screen.getByRole("button", { name: "Compare" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Stored results could not be loaded. Try again.",
     );
@@ -73,7 +73,7 @@ describe("RetrievedResultsCard loading", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("radio", { name: "Compare two" }));
+    fireEvent.click(screen.getByRole("button", { name: "Compare" }));
     expect((await screen.findByRole("alert")).textContent).toMatch(
       /updated while this page was open/i,
     );
@@ -95,7 +95,7 @@ describe("RetrievedResultsCard loading", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("radio", { name: "Compare two" }));
+    fireEvent.click(screen.getByRole("button", { name: "Compare" }));
     expect((await screen.findByRole("alert")).textContent).toMatch(/ref d1/i);
   });
 
@@ -113,7 +113,7 @@ describe("RetrievedResultsCard loading", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("radio", { name: "Compare two" }));
+    fireEvent.click(screen.getByRole("button", { name: "Compare" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Stored results could not be loaded. Try again.",
     );
@@ -121,15 +121,14 @@ describe("RetrievedResultsCard loading", () => {
   });
 });
 
-it("uses shared radio keyboard navigation and describes unavailable comparison", () => {
-  renderCard([entry()], fullResults());
-  const one = screen.getByRole("radio", { name: "One check" });
-  const compare = screen.getByRole("radio", { name: "Compare two" });
-  expect(one).toBeChecked();
+it("keeps the date picker available and explains why comparison is disabled", () => {
+  const { loadResults } = renderCard([entry()], fullResults());
+  const date = screen.getByRole("button", { name: "Stored checks" });
+  const compare = screen.getByRole("button", { name: "Compare" });
   expect(compare).toBeDisabled();
   expect(compare).toHaveAccessibleDescription("At least two stored checks are needed to compare.");
-  one.focus();
-  fireEvent.keyDown(one, { key: "ArrowRight" });
-  expect(one).toHaveFocus();
-  expect(one).toBeChecked();
+  date.focus();
+  expect(date).toHaveFocus();
+  fireEvent.click(compare);
+  expect(loadResults).not.toHaveBeenCalled();
 });

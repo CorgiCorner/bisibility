@@ -16,6 +16,10 @@ import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
 import { useTranslations } from "next-intl";
 import { SearchInsightsRefresh } from "./SearchInsightsRefresh";
 import { progressWidthClass } from "./search-insights-import-progress";
+import {
+  searchInsightsRefreshIntervalMs,
+  searchInsightsSelfResolving,
+} from "./search-insights-refresh-policy";
 import { formatSearchSyncCalendarDay, presentSearchSync } from "./search-sync-presentation";
 
 const LABEL = "font-sans tabular-nums text-ui-micro uppercase tracking-wide text-fg-muted";
@@ -71,11 +75,7 @@ export function SearchInsightsWaitingStrip(props: Readonly<WaitingStripProps>) {
     coverage.completed !== null && coverage.total !== null && coverage.total > 0
       ? Math.round((coverage.completed / coverage.total) * 100)
       : 0;
-  const canRefresh =
-    model.kind === "queued" ||
-    model.kind === "running" ||
-    model.kind === "status_unavailable" ||
-    model.kind === "waiting_worker";
+  const canRefresh = searchInsightsSelfResolving(model.kind);
   const showProgress =
     model.kind === "running" && hasCoverage && coverage.completed !== coverage.total;
 
@@ -104,7 +104,9 @@ export function SearchInsightsWaitingStrip(props: Readonly<WaitingStripProps>) {
           </span>
         </Tooltip>
       ) : null}
-      {canRefresh ? <SearchInsightsRefresh active={model.kind === "running"} /> : null}
+      {canRefresh ? (
+        <SearchInsightsRefresh active intervalMs={searchInsightsRefreshIntervalMs(model.kind)} />
+      ) : null}
     </section>
   );
 }

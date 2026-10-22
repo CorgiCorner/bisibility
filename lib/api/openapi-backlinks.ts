@@ -1,3 +1,4 @@
+import { paymentReceiptWireSchema, paymentResponseFields } from "./openapi-action-payment";
 import { backlinksRowsSchemas } from "./openapi-backlinks-rows";
 import { problemResponse } from "./openapi-problem";
 
@@ -61,7 +62,7 @@ function withRequiredBody(operation: object) {
     : operation;
 }
 
-const backlinkHistory = {
+export const backlinkHistory = {
   items: {
     properties: {
       lost_links: { minimum: 0, type: "integer" },
@@ -76,7 +77,7 @@ const backlinkHistory = {
   type: "array",
 } as const;
 
-const backlinkRows = {
+export const backlinkRows = {
   items: {
     properties: {
       anchor: { type: "string" },
@@ -176,6 +177,9 @@ export const backlinksSchemas = {
     ],
     ...constraintUnion,
     properties: {
+      ...paymentResponseFields,
+      original_payment: paymentReceiptWireSchema,
+      append_payment: paymentReceiptWireSchema,
       snapshot_ref: {
         minLength: 1,
         maxLength: 32768,

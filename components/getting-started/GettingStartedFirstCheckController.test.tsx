@@ -9,6 +9,12 @@ import type { ComponentProps, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GettingStartedFirstCheckController } from "./GettingStartedFirstCheckController";
 
+const firstCheckPreflight = vi.hoisted(() => ({ request: vi.fn() }));
+vi.mock("@/components/rank-runs/useRunPreflight", () => ({
+  manualPreflightDepth: () => 20,
+  useRunPreflight: () => ({ request: firstCheckPreflight.request, dialog: null, opening: false }),
+}));
+
 const CHECK_ID = "check_abcdefghijklmnopqrstuvwx" as const;
 const PROJECT_REF = "prj_abcdefghijklmnopqrstuvwx" as const;
 const KEYWORD_IDS = ["kw_abcdefghijklmnopqrstuvwx", "kw_bcdefghijklmnopqrstuvwxy"] as const;
@@ -105,22 +111,15 @@ describe("GettingStartedFirstCheckController", () => {
     async (label) => {
       const { runCheckNowAction, user } = setup();
       await user.click(screen.getByRole("button", { name: label }));
-      expect(screen.getByRole("dialog", { name: "Run rank checks" })).toBeVisible();
-      expect(screen.getByText("2 keywords")).toBeVisible();
-      expect(screen.getByText("$0.02")).toBeVisible();
+      expect(firstCheckPreflight.request).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          depth: 20,
+          spec: { kind: "selected", keywordIds: [...KEYWORD_IDS], v: 1 },
+        }),
+      );
       expect(runCheckNowAction).not.toHaveBeenCalled();
-      await user.click(screen.getByRole("button", { name: "Cancel" }));
-      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     },
   );
-
-  it("runs only after modal confirmation", async () => {
-    const { runCheckNowAction, user } = setup();
-    await user.click(screen.getByRole("button", { name: "Run first check" }));
-    await user.click(screen.getByRole("button", { name: "Confirm and run" }));
-    await waitFor(() => expect(runCheckNowAction).toHaveBeenCalledTimes(2));
-    expect(routerMock.refresh).toHaveBeenCalled();
-  });
 
   it("updates persisted running progress through the shared rank-check batch poll hook", async () => {
     statusMocks.getRankCheckStatuses.mockResolvedValue([

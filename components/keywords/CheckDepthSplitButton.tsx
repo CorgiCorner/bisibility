@@ -1,9 +1,8 @@
 "use client";
 
-import { bulkBarButtonStyle } from "@/components/keywords/grid/bulk-action-styles";
 import { settingsSectionHref } from "@/components/settings/shell/settings-sections";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonXsStyle } from "@/components/ui/Button";
 import { ButtonGroup } from "@/components/ui/ButtonGroup";
 import { Menu } from "@/components/ui/Menu";
 import { MenuActionFooter } from "@/components/ui/MenuActionFooter";
@@ -21,6 +20,7 @@ export type CheckDepthSplitButtonSize = "md" | "xs";
 
 type CheckDepthSplitButtonProps = {
   actionLabel: string;
+  compactActionLabel?: string;
   caretAriaLabel?: string;
   copy?: CheckDepthSplitButtonCopy;
   currentDepth: SerpDepth | null;
@@ -32,6 +32,7 @@ type CheckDepthSplitButtonProps = {
   optionLabel?: (depth: SerpDepth) => string;
   size?: CheckDepthSplitButtonSize;
   spinning?: boolean;
+  variant?: "primary" | "secondary";
 };
 
 export type CheckDepthSplitButtonCopy = {
@@ -43,13 +44,22 @@ export type CheckDepthSplitButtonCopy = {
 
 const caretStyle = { minWidth: 34, paddingLeft: 6, paddingRight: 6 } as const;
 
-function splitButtonStyle(size: CheckDepthSplitButtonSize) {
-  if (size === "xs") return bulkBarButtonStyle;
-  return { minHeight: 36 };
+function splitButtonStyle(size: CheckDepthSplitButtonSize, variant: "primary" | "secondary") {
+  return {
+    ...(size === "xs" ? buttonXsStyle : { minHeight: 36 }),
+    ...(variant === "secondary"
+      ? {
+          "--control-background-color": "var(--button-secondary-hover-bg)",
+          "--control-hover-background-color":
+            "color-mix(in srgb, var(--fg) 6%, var(--button-secondary-hover-bg))",
+        }
+      : {}),
+  };
 }
 
 export function CheckDepthSplitButton({
   actionLabel,
+  compactActionLabel,
   caretAriaLabel,
   copy,
   currentDepth,
@@ -60,12 +70,13 @@ export function CheckDepthSplitButton({
   optionLabel: optionLabelOverride,
   size = "md",
   spinning = false,
+  variant = "secondary",
 }: Readonly<CheckDepthSplitButtonProps>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.runChecks");
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const { projectRef } = useProjectWriteMode();
   const compact = size === "xs";
-  const buttonStyle = splitButtonStyle(size);
+  const buttonStyle = splitButtonStyle(size, variant);
   const heightClass = compact ? "min-h-[30px]" : "min-h-[36px]";
   // Feature callers can own presentation without requiring the shared control to load a
   // feature catalog. Existing callers retain their narrow, message-free default.
@@ -81,9 +92,10 @@ export function CheckDepthSplitButton({
         }
         semantics="description"
       >
-        <ButtonGroup variant="secondary" style={compact ? { height: 30 } : undefined}>
+        <ButtonGroup variant={variant} style={compact ? { height: 30 } : undefined}>
           <Button
-            variant="secondary"
+            aria-label={compactActionLabel ? actionLabel : undefined}
+            variant={variant}
             size={size}
             className={heightClass}
             disabled={disabled}
@@ -97,11 +109,22 @@ export function CheckDepthSplitButton({
             }
             style={buttonStyle}
           >
-            {actionLabel}
+            {compactActionLabel ? (
+              <>
+                <span className="sm:hidden" aria-hidden>
+                  {compactActionLabel}
+                </span>
+                <span className="hidden sm:inline" aria-hidden>
+                  {actionLabel}
+                </span>
+              </>
+            ) : (
+              actionLabel
+            )}
           </Button>
           <Button
             aria-label={caretAriaLabel ?? t("chooseDepth")}
-            variant="secondary"
+            variant={variant}
             size={size}
             className={heightClass}
             disabled={disabled}
@@ -137,7 +160,7 @@ export function CheckDepthSplitButton({
               className="w-full"
               href={settingsSectionHref(projectRef, "tracking")}
               size="xs"
-              variant="secondary"
+              variant={variant}
             >
               {copy?.changeDefault ?? t("changeDefault")}
             </Button>

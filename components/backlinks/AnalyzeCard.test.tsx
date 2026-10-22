@@ -1,5 +1,6 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { renderWithBacklinksMessages as render } from "@/i18n/test-support/render-with-feature-messages";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -24,7 +25,13 @@ function ScopeHarness() {
   return (
     <AnalyzeCard
       {...baseProps}
-      estimate={{ cached: false, costCents: 5, loading: false, valid: true }}
+      estimate={{
+        cached: false,
+        costCents: 5,
+        loading: false,
+        valid: true,
+        payment: paymentQuote(),
+      }}
       onScopeChange={setScope}
       scope={scope}
       target="example.com"
@@ -109,59 +116,38 @@ describe("AnalyzeCard", () => {
     rerender(
       <AnalyzeCard
         {...baseProps}
-        estimate={{ cached: false, costCents: 5, loading: false, valid: true }}
+        estimate={{
+          cached: false,
+          costCents: 5,
+          loading: false,
+          valid: true,
+          payment: paymentQuote(),
+        }}
         target="example.com"
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Analyze ~$0.05" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Analyze ≈ 4 tokens" })).toBeEnabled();
   });
 
-  it("keeps pricing before the primary action in the shared action wrapper", () => {
-    render(<AnalyzeCard {...baseProps} />);
-
-    const pricing = screen.getByRole("button", { name: "How is this priced?" });
-    const actions = pricing.parentElement;
-    const submit = screen.getByRole("button", { name: "Analyze" });
-
-    expect(actions).toHaveClass("ml-auto", "flex", "items-center", "gap-4");
-    expect(actions).not.toHaveClass(
-      "w-full",
-      "flex-col",
-      "flex-wrap",
-      "flex-row",
-      "justify-between",
-    );
-    expect(pricing.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(pricing).not.toHaveClass("min-w-0", "shrink", "text-left", "order-2", "self-end");
-    expect(submit).not.toHaveClass("shrink-0", "order-1", "self-end");
+  it("sizes a chosen domain as a quiet chip inside the 34px field", () => {
+    render(<ScopeHarness />);
+    const remove = screen.getByRole("button", { name: "Remove example.com" });
+    expect(remove).toHaveClass("h-4", "w-4");
+    expect(remove.parentElement).toHaveClass("h-[22px]", "gap-1", "px-[9px]", "text-xs");
+    expect(remove.parentElement).not.toHaveClass("py-1");
+    expect(remove.parentElement).not.toHaveClass("rounded-control");
+    expect(remove.parentElement?.parentElement).toHaveClass("h-[34px]");
   });
 
-  it("opens pricing and dismisses it with Escape and click-outside", async () => {
-    render(<AnalyzeCard {...baseProps} />);
-    const trigger = screen.getByRole("button", { name: "How is this priced?" });
-
-    await userEvent.click(trigger);
-    expect(screen.getByText("Provider cost")).toBeInTheDocument();
-    const popoverRoot = document.querySelector("[data-ui-overlay]");
-    expect(popoverRoot).not.toBeNull();
-    fireEvent.keyDown(popoverRoot as Element, { key: "Escape" });
-    await waitFor(() => expect(screen.queryByText("Provider cost")).not.toBeInTheDocument());
-
-    await userEvent.click(trigger);
-    fireEvent.pointerDown(document.body);
-    fireEvent.click(document.body);
-    await waitFor(() => expect(screen.queryByText("Provider cost")).not.toBeInTheDocument());
-  });
-
-  it("switches scope without changing the displayed estimate", () => {
+  it("keeps the supplied quote unit while delegating scope changes", () => {
     render(<ScopeHarness />);
 
-    const price = screen.getByRole("button", { name: "Analyze ~$0.05" });
+    const price = screen.getByRole("button", { name: "Analyze ≈ 4 tokens" });
     const exactPage = screen.getByRole("radio", { name: "Exact page" });
     fireEvent.click(exactPage);
     expect(exactPage).toBeChecked();
-    expect(price).toHaveAccessibleName("Analyze ~$0.05");
+    expect(price).toHaveAccessibleName("Analyze ≈ 4 tokens");
   });
 
   it("flips the Include subdomains switch", () => {
@@ -172,40 +158,16 @@ describe("AnalyzeCard", () => {
     expect(onIncludeSubdomainsChange).toHaveBeenCalledWith(false);
   });
 
-  it("omits the history row for page scope", () => {
-    const { unmount } = render(<AnalyzeCard {...baseProps} scope="page" />);
-    fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
-    expect(screen.queryByText("12-month history")).not.toBeInTheDocument();
-    unmount();
-
-    render(<AnalyzeCard {...baseProps} scope="site" />);
-    fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
-    expect(screen.getByText("12-month history")).toBeInTheDocument();
-  });
-
-  it("prices every billed row from the rate card so the rows reconcile with the button", () => {
-    // Server side, backlinksEstimate bills summary + history (site only) +
-    // rows(resultLimit). At site scope and 100 rows that is 2.4 + 2.4 + 2.76 = 7.56 cents.
-    render(<AnalyzeCard {...baseProps} resultLimit={100} scope="site" />);
-    fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
-
-    expect(screen.getByText("Profile summary, new and lost").nextElementSibling).toHaveTextContent(
-      "$0.02",
+  it("never turns a legacy scalar estimate into an action price", () => {
+    render(
+      <AnalyzeCard
+        {...baseProps}
+        target="example.com"
+        estimate={{ cached: false, costCents: 999, loading: false, valid: true }}
+      />,
     );
-    expect(screen.getByText("12-month history").nextElementSibling).toHaveTextContent("$0.02");
-    expect(screen.getByText("Link rows (100)").nextElementSibling).toHaveTextContent("$0.03");
-  });
-
-  it("scales the link rows price with resultLimit", () => {
-    const { unmount } = render(<AnalyzeCard {...baseProps} resultLimit={100} scope="site" />);
-    fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
-    expect(screen.getByText("Link rows (100)")).toBeInTheDocument();
-    expect(screen.getByText("$0.03")).toBeInTheDocument();
-    unmount();
-
-    render(<AnalyzeCard {...baseProps} resultLimit={500} scope="site" />);
-    fireEvent.click(screen.getByRole("button", { name: "How is this priced?" }));
-    expect(screen.getByText("Link rows (500)")).toBeInTheDocument();
-    expect(screen.getByText("$0.04")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Analyze" })).toBeEnabled();
+    expect(screen.queryByText(/9.99/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "How is this priced?" })).not.toBeInTheDocument();
   });
 });

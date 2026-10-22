@@ -4,6 +4,7 @@ import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { readHostPolicySnapshot } from "@/lib/measurement-definitions/host-policy-snapshot";
 import { budgetDenialReason } from "@/lib/metering/budget-denial";
+import { connectionFunding } from "@/lib/metering/project-funding-budgets";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { LIST_PROVIDER_RATE_CONTEXT } from "@/lib/provider-rates/resolver";
 import {
@@ -23,10 +24,12 @@ import { ownProviderKeysRequired } from "@/lib/providers/own-key-policy-extensio
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
-import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
+import type { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { resolveEffectiveSerpDepth, type SerpDepth } from "@/lib/serp/constants";
 import { LaunchRankCheckRunError, type LaunchRankCheckRunInput } from "./launch-types";
+import { loadRankPaymentSources } from "./payment-sources";
 import { verifyPreviewToken } from "./preview-token";
+import { sumQuotedCents } from "./quoted-cents";
 import type { RunSelectionKeyword } from "./selection";
 
 type ProviderConnection = Awaited<ReturnType<typeof loadSerpProviderChain>>[number];
@@ -58,6 +61,7 @@ export async function lockLaunchSourceSnapshot(
   tx: Prisma.TransactionClient,
   projectId: string,
   providerId?: string,
+  paymentOptionId?: string,
 ) {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`rank-check-budget:${projectId}`}))`;
   await lockProjectForProviderMutation(tx, projectId);
@@ -68,7 +72,7 @@ export async function lockLaunchSourceSnapshot(
     },
     where: { id: projectId },
   });
-  const connection = (await loadSerpProviderChain(projectId, providerId, tx))[0];
+  const connection = (await loadRankPaymentSources(projectId, providerId, paymentOptionId, tx))[0];
   if (!project || !connection) throw new LaunchRankCheckRunError("no_provider");
   const measurementPolicy = await readHostPolicySnapshot(tx, projectId);
   return { connection, project, measurementPolicy };
@@ -248,11 +252,36 @@ export async function assertLaunchBudget(
   now: Date,
   client?: Prisma.TransactionClient,
 ) {
+  const funding = connectionFunding(connection.credentialSource);
   try {
+    let estimatedCustomerCents: number | undefined;
+    // Credits limits count the customer charge. Without a positive-cost reservation quote,
+    // hosted launches keep the previous skip instead of comparing provider cost.
+    if (funding === "platform") {
+      if (
+        !client ||
+        estimate.targets.length === 0 ||
+        estimate.targets.some((target) => target.cost == null || target.cost <= 0)
+      )
+        return;
+      const quote = await quoteRankRunReservation(client, {
+        connection,
+        projectId: input.project.id,
+        source: input.origin.source,
+        targets: estimate.targets,
+      });
+      estimatedCustomerCents = sumQuotedCents(
+        "rankReservationPrices" in quote ? quote.rankReservationPrices : undefined,
+      );
+      if (estimatedCustomerCents === undefined) return;
+    }
     await assertBudgetAvailable(input.project.id, now, {
       client,
       estimatedCostCents: estimate.costCents,
+      ...(estimatedCustomerCents !== undefined ? { estimatedCustomerCents } : {}),
+      funding,
     });
+    if (funding === "platform") return;
     if (!client) throw new Error("Provider allocation checks require a transaction.");
     await reserveProviderAllocation(client, {
       connection,

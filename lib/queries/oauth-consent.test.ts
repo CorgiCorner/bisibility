@@ -31,6 +31,7 @@ describe("getOAuthConsentClient", () => {
       dynamic: true,
       id: "client_1",
       name: "Codex",
+      redirectTarget: "http://127.0.0.1:51008/callback/request",
       redirectUri: "127.0.0.1:51008/callback/request",
     });
   });
@@ -46,6 +47,7 @@ describe("getOAuthConsentClient", () => {
       getOAuthConsentClient("bisibility-cli", "http://127.0.0.1:51999/callback"),
     ).resolves.toMatchObject({
       dynamic: false,
+      redirectTarget: "http://127.0.0.1:51999/callback",
       redirectUri: "127.0.0.1:51999/callback",
     });
   });
@@ -53,7 +55,7 @@ describe("getOAuthConsentClient", () => {
   it("does not display an unregistered redirect target", async () => {
     await expect(
       getOAuthConsentClient("client_1", "https://attacker.example.com/callback"),
-    ).resolves.toMatchObject({ redirectUri: null });
+    ).resolves.toMatchObject({ redirectTarget: null, redirectUri: null });
   });
 
   it("returns a safe fallback for an unknown client", async () => {
@@ -63,7 +65,50 @@ describe("getOAuthConsentClient", () => {
       dynamic: true,
       id: "missing",
       name: "Unknown client",
+      redirectTarget: null,
       redirectUri: null,
+    });
+  });
+
+  it("keeps the exact registered redirect, including its scheme", async () => {
+    const target = "https://www.example.com/agents/mcp/oauth/callback";
+    mocks.prisma.oauthClient.findUnique.mockResolvedValue({
+      clientId: "client_1",
+      name: "Example agent",
+      redirectUris: [target],
+    });
+    await expect(getOAuthConsentClient("client_1", target)).resolves.toEqual({
+      dynamic: true,
+      id: "client_1",
+      name: "Example agent",
+      redirectTarget: target,
+      redirectUri: "www.example.com/agents/mcp/oauth/callback",
+    });
+  });
+
+  it("carries a schemeless registered value instead of inventing https", async () => {
+    const raw = "www.example.com/agents/mcp/oauth/callback";
+    mocks.prisma.oauthClient.findUnique.mockResolvedValue({
+      clientId: "client_1",
+      name: "Example agent",
+      redirectUris: [raw],
+    });
+    await expect(getOAuthConsentClient("client_1", undefined)).resolves.toMatchObject({
+      redirectTarget: raw,
+      redirectUri: null,
+    });
+  });
+
+  it("keeps http on a public host so the consent screen can warn", async () => {
+    const target = "http://public.example.com/callback";
+    mocks.prisma.oauthClient.findUnique.mockResolvedValue({
+      clientId: "client_1",
+      name: "Example agent",
+      redirectUris: [target],
+    });
+    await expect(getOAuthConsentClient("client_1", target)).resolves.toMatchObject({
+      redirectTarget: target,
+      redirectUri: "public.example.com/callback",
     });
   });
 });

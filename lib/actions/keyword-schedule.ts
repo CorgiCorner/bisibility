@@ -4,7 +4,8 @@ import { getKeywordDepthDecreaseWarning } from "@/lib/alerts/depth-conflict.serv
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import type { RankCheckFrequency } from "@/lib/generated/prisma/client";
-import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
+import { keywordMembershipSchedule } from "@/lib/keywords/schedule-membership";
+import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
 import { keywordScheduleUpdateSchema } from "@/lib/schemas/keyword";
 import { normalizeSchedule } from "./_schedule";
 import { getActionActor, parseActionInput, requireKeywordScope } from "./_shared";
@@ -44,8 +45,14 @@ export async function updateKeywordSchedule(input: unknown) {
   const schedule = normalizeSchedule(data, new Date(), keyword.id);
   const warning = await getKeywordDepthDecreaseWarning(keyword.id, data.serpDepth);
   const stored = await prisma.$transaction(async (tx) => {
-    const updated = await tx.keywordSchedule.upsert({
-      create: { ...schedule, keywordId: keyword.id },
+    const memberships = await setKeywordCadence(
+      tx,
+      keyword.projectId,
+      [keyword.id],
+      schedule,
+      actor.id,
+    );
+    const updated = await tx.keywordSchedule.findUniqueOrThrow({
       select: {
         cronExpression: true,
         frequency: true,
@@ -55,11 +62,12 @@ export async function updateKeywordSchedule(input: unknown) {
         serpDepth: true,
         timezone: true,
       },
-      update: schedule,
       where: { keywordId: keyword.id },
     });
-    await refreshKeywordDispatchStates({ keywordIds: [keyword.id] }, tx);
-    return updated;
+    return {
+      ...updated,
+      ...keywordMembershipSchedule(memberships.get(keyword.id), keyword.id, updated.timezone),
+    };
   });
 
   await writeAudit({

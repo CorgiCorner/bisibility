@@ -1,6 +1,8 @@
+import { keywordMembershipPricingSelect } from "@/lib/keywords/membership-select";
 import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
+import { marketDeviceCandidates } from "@/lib/markets/device-targets-plan";
 import { MAX_PROJECT_MARKETS } from "@/lib/markets/limits";
 import type { MarketsPageRow } from "@/lib/markets/page-model";
 import { listArchivedProjectMarkets } from "@/lib/markets/registry";
@@ -79,6 +81,7 @@ export async function getProjectMarkets(
                 archivedAt: true,
                 device: true,
                 locationId: true,
+                checkSchedule: { select: keywordMembershipPricingSelect },
                 schedule: {
                   select: { cronExpression: true, frequency: true, serpDepth: true },
                 },
@@ -118,12 +121,16 @@ export async function getProjectMarkets(
           (keyword) => keyword.locationId === market.locationId,
         );
         const activeKeywords = marketKeywords.filter((keyword) => keyword.archivedAt === null);
+        const deviceCandidates = marketDeviceCandidates(marketKeywords);
         const rollup = legacyMarketTopThree(
           activeKeywords.map((keyword) => keyword.publicId),
           quality.resolutions,
         );
         return {
           activeKeywordCount: activeKeywords.length,
+          distinctKeywordCount: deviceCandidates.length,
+          deviceCandidates,
+          trackedDevices: [...new Set(activeKeywords.map((keyword) => keyword.device))],
           canonicalKey: market.location.canonicalKey,
           countryCode: market.location.countryCode,
           currentVisibility: rollup.currentVisibility,
@@ -251,6 +258,7 @@ export async function getArchivedProjectMarkets(
   const keywords = await prisma.keyword.findMany({
     select: {
       locationId: true,
+      checkSchedule: { select: keywordMembershipPricingSelect },
       schedule: { select: { cronExpression: true, frequency: true, serpDepth: true } },
     },
     where: {

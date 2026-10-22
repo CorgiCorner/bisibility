@@ -77,7 +77,8 @@ function resultMessage(
   if (status === "cleared") return { text: t("cleared"), tone: "text-green-text" };
   if (status === "forbidden") return { text: t("forbidden"), tone: "text-red-text" };
   if (status === "rate_limited") return { text: t("rateLimited"), tone: "text-red-text" };
-  if (status === "step_up_failed") return { text: t("stepUpFailed"), tone: "text-red-text" };
+  if (status === "two_factor_required")
+    return { text: t("twoFactorRequired"), tone: "text-red-text" };
   if (status === "unavailable") return { text: t("unavailable"), tone: "text-red-text" };
   return { text: t("invalid"), tone: "text-red-text" };
 }
@@ -95,7 +96,6 @@ export function InstanceMailSettings({
   const schema = instanceMailFormSchema({
     credentialsRequired,
     messages: {
-      code: t("validationCode"),
       port: t("validationPort"),
       required: t("validationRequired"),
       sender: t("validationSender"),
@@ -106,14 +106,11 @@ export function InstanceMailSettings({
   const {
     control,
     formState: { errors },
-    getValues,
     handleSubmit,
     register,
     reset,
-    setError,
   } = useForm<InstanceMailFormValues>({
     defaultValues: {
-      code: "",
       provider: settings.provider ?? "resend",
       sender: settings.sender,
       ...emptySecrets,
@@ -133,7 +130,6 @@ export function InstanceMailSettings({
       reset({
         ...values,
         ...emptySecrets,
-        code: "",
         provider: values.provider,
         sender: values.sender || settings.sender,
       });
@@ -143,17 +139,12 @@ export function InstanceMailSettings({
   }
 
   function onClear() {
-    const code = getValues("code");
-    if (!/^\d{6}$/.test(code)) {
-      setError("code", { message: t("validationCode") });
-      return;
-    }
     setResult(null);
     startClear(async () => {
-      const next = await clearInstanceMailSettings({ code });
+      const next = await clearInstanceMailSettings();
       setResult(next);
       if (next.status !== "cleared") return;
-      reset({ ...emptySecrets, code: "", provider: "resend", sender: "" });
+      reset({ ...emptySecrets, provider: "resend", sender: "" });
       setReplacing(false);
       router.refresh();
     });
@@ -267,12 +258,6 @@ export function InstanceMailSettings({
             />
           </>
         ) : null}
-        <Field
-          error={errors.code?.message}
-          id="instance-mail-code"
-          label={t("code")}
-          registration={register("code")}
-        />
         <div className="flex flex-wrap items-center gap-2">
           <Button loading={saving} size="sm" type="submit" variant="primary">
             {saving ? t("saving") : t("save")}

@@ -1,9 +1,27 @@
-import type { AnalyzeBacklinksAction, LoadMoreBacklinkRowsAction } from "@/lib/actions/backlinks";
+import type {
+  ActionPaymentOption,
+  ActionPaymentQuote,
+  ActionPaymentReceipt,
+} from "@/lib/action-payment/contract";
+import type {
+  AnalyzeBacklinksAction,
+  AnalyzeBacklinksActionInput,
+  LoadMoreBacklinkRowsAction,
+} from "@/lib/actions/backlinks";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
 
 export type BacklinksLimit = 100 | 300 | 500 | 1000;
 
+export type BacklinksAnalyzeRequest = {
+  fallbackOnCostLimit?: boolean;
+  fresh?: boolean;
+  overrides?: Omit<Partial<AnalyzeBacklinksActionInput>, "target">;
+  target?: string;
+};
+
 export type BacklinksEstimateView = {
+  payment?: ActionPaymentQuote;
+  paymentOptions?: ActionPaymentOption[];
   cached: boolean;
   costCents: number | null;
   loading: boolean;
@@ -11,6 +29,8 @@ export type BacklinksEstimateView = {
 };
 
 export type RecentBacklinksTarget = {
+  payment?: ActionPaymentReceipt;
+  originalPayment?: ActionPaymentReceipt;
   cachedUntil: string;
   fetchedAt: string;
   includeSubdomains: boolean;

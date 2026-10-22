@@ -4,6 +4,7 @@ import {
   type ProviderChainEntry,
   primaryProviderConnection,
 } from "@/lib/rank-check/provider-chain-order";
+import { scheduleProviderId } from "@/lib/rank-check/schedules/provider-policy";
 import { resolveEffectiveSerpDepth } from "@/lib/serp/constants";
 import type { RankCheckFrequency } from "@/lib/settings/options";
 
@@ -18,21 +19,44 @@ type MarketCostInput = {
   providerConnections: (ProviderChainEntry & Parameters<typeof withRankCheckManualRate>[0])[];
 };
 
-export type MarketCostKeyword = { schedule: MarketCostSchedule | null };
+export type MarketCostKeyword = {
+  archivedAt?: Date | null;
+  checkSchedule?:
+    | (MarketCostSchedule & {
+        enabled: boolean;
+        archivedAt: Date | null;
+        providerPolicy?: string | null;
+      })
+    | null;
+  schedule: MarketCostSchedule | null;
+};
 
 export function marketMonthlyCostCents(
   keywords: readonly MarketCostKeyword[],
   project: MarketCostInput,
 ) {
-  const selected = primaryProviderConnection(project.providerConnections, "serp");
-  const primary = selected ? withRankCheckManualRate(selected) : null;
   let total = 0;
   for (const keyword of keywords) {
-    const schedule = keyword.schedule ?? project.defaults;
+    if (keyword.archivedAt) continue;
+    const schedule =
+      keyword.checkSchedule?.enabled && !keyword.checkSchedule.archivedAt
+        ? keyword.checkSchedule
+        : null;
+    if (!schedule || schedule.frequency === "manual" || schedule.frequency === "paused") continue;
+    const pinnedProvider = scheduleProviderId(schedule.providerPolicy);
+    const selected = primaryProviderConnection(
+      pinnedProvider
+        ? project.providerConnections.filter((row) => row.provider === pinnedProvider)
+        : project.providerConnections,
+      "serp",
+    );
+    if (!selected) return null;
+    const primary = withRankCheckManualRate(selected);
     const estimate = monthlyTrackingCostCents(1, {
       cronExpression: schedule?.cronExpression ?? null,
       depth: resolveEffectiveSerpDepth({
         projectDepth: project.defaults?.serpDepth,
+        checkScheduleDepth: schedule?.serpDepth,
         scheduleDepth: keyword.schedule?.serpDepth,
       }),
       overrideCents: primary?.costPerCheckCents == null ? null : Number(primary.costPerCheckCents),

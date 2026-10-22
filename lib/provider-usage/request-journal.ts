@@ -1,6 +1,6 @@
 import "server-only";
-
 import { createHash, randomUUID } from "node:crypto";
+import { ActionPaymentError } from "@/lib/action-payment/token";
 import { Prisma, type PrismaClient } from "@/lib/generated/prisma/client";
 import {
   BudgetExhaustedError,
@@ -22,6 +22,7 @@ import { type RequestCostLimit, requestCostLimit } from "./request-cost-limit";
 import type { ProviderRequestAttribution } from "./tag";
 
 type JournalInput = {
+  logicalOperationKey?: string;
   beforeReserve?: NativeRequestGuard;
   beforeFence?: PaidFenceHook;
   attribution: ProviderRequestAttribution;
@@ -45,6 +46,7 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
   const measurements = new Map<string, ProviderUsageReceipt>();
   const inFlight = new Set<string>();
   const grants = new Map<string, OwnAttemptGrant>();
+  let ordinal = 0;
   const observer: ProviderUsageObserver = {
     async prepare(attempt) {
       const next = consent.admit(() => begin(attempt.attemptKey, attempt.request));
@@ -92,18 +94,22 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
   };
 
   async function begin(attemptKey?: string, providerRequest?: ProviderRequest) {
-    const id = attemptKey
+    const id = input.logicalOperationKey
       ? createHash("sha256")
-          .update(
-            JSON.stringify([
-              "byok",
-              input.connectionId,
-              input.attribution.context.correlationId,
-              attemptKey,
-            ]),
-          )
+          .update(JSON.stringify([input.logicalOperationKey, ordinal++]))
           .digest("hex")
-      : randomUUID();
+      : attemptKey
+        ? createHash("sha256")
+            .update(
+              JSON.stringify([
+                "byok",
+                input.connectionId,
+                input.attribution.context.correlationId,
+                attemptKey,
+              ]),
+            )
+            .digest("hex")
+        : randomUUID();
     try {
       const query = {
         select: { id: true },
@@ -159,6 +165,14 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
       inFlight.add(id);
       return id;
     } catch (cause) {
+      if (
+        input.logicalOperationKey &&
+        cause &&
+        typeof cause === "object" &&
+        "code" in cause &&
+        cause.code === "P2002"
+      )
+        throw new ActionPaymentError("payment_already_executed");
       if (
         cause instanceof ProviderCostLimitError ||
         cause instanceof DeploymentAdmissionExhaustedError ||
@@ -243,6 +257,9 @@ export function createProviderRequestJournal(db: PrismaClient, input: JournalInp
 
   return {
     observer,
+    get attemptIds() {
+      return [...grants.keys()];
+    },
     get started() {
       return started > 0;
     },

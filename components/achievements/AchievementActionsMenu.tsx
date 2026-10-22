@@ -32,7 +32,7 @@ export function AchievementActionsMenu({
           aria-expanded={!!anchor}
           onClick={(e) => setAnchor(e.currentTarget)}
         >
-          <DotsThreeIcon size={20} />
+          <DotsThreeIcon weight="regular" size={20} />
         </Button>
       </Tooltip>
       <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)} align="end">
@@ -43,7 +43,7 @@ export function AchievementActionsMenu({
           download={`bisibility-${kind}.png`}
           onSelect={() => setAnchor(null)}
         >
-          <DownloadSimpleIcon size={16} className="shrink-0" aria-hidden />
+          <DownloadSimpleIcon weight="regular" size={16} className="shrink-0" aria-hidden />
           {t("download")}
         </MenuItem>
         <MenuItem
@@ -53,7 +53,7 @@ export function AchievementActionsMenu({
             onReplay();
           }}
         >
-          <ArrowClockwiseIcon size={16} className="shrink-0" aria-hidden />
+          <ArrowClockwiseIcon weight="regular" size={16} className="shrink-0" aria-hidden />
           {t("replay")}
         </MenuItem>
       </Menu>

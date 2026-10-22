@@ -118,6 +118,20 @@ async function fetchGoogleOrganicResults(input: SerpRankInput, apiKey: string) {
 }
 
 export const serpApiProvider: SerpProvider = {
+  payment: {
+    unit: {
+      kind: "provider_native",
+      providerId: "serpapi",
+      key: "searches",
+      singular: "search",
+      plural: "searches",
+    },
+    basis: "provider_quantity",
+    estimateQuantity: (feature, itemCount) =>
+      feature === "rank_check" && Number.isSafeInteger(itemCount) && itemCount >= 0
+        ? String(itemCount)
+        : null,
+  },
   id: "serpapi",
   label: "SerpApi",
 

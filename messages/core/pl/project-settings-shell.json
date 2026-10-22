@@ -23,7 +23,7 @@
         },
         "applicationPlan": {
           "label": "Plan aplikacji",
-          "keywords": "rozliczenia cena subskrypcja hostowana beta self-hosting własna instancja"
+          "keywords": "rozliczenia cena subskrypcja cloud samodzielny hosting"
         },
         "checkFrequency": {
           "label": "Częstotliwość sprawdzeń",

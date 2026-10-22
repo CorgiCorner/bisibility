@@ -1,4 +1,5 @@
-import { renderWithInstanceAdminMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { DangerousActionAccessProvider } from "@/components/admin/DangerousActionGate";
+import { renderWithInstanceAdminMessages as renderMessages } from "@/i18n/test-support/render-with-feature-messages";
 import { recoveryViewFixture } from "@/lib/metering/recovery/view-fixture";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
@@ -143,3 +144,9 @@ it("does not poll a command rejected before acceptance", async () => {
   await screen.findByRole("alert");
   expect(actions.status).not.toHaveBeenCalled();
 });
+
+function render(ui: Parameters<typeof renderMessages>[0]) {
+  return renderMessages(
+    <DangerousActionAccessProvider allowed>{ui}</DangerousActionAccessProvider>,
+  );
+}

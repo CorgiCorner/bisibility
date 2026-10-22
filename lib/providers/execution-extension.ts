@@ -72,3 +72,16 @@ export async function readDeploymentMeteringEvidence(
 export async function deploymentRankUsesNativeUnits(_provider: string): Promise<boolean> {
   return false;
 }
+
+export async function preflightDeploymentRankExecution(_input: {
+  keywordId: string;
+  rankCheckId: string;
+  providerId?: string;
+  depth?: number;
+}): Promise<void> {}
+
+export function deploymentLookupFailure(
+  _error: unknown,
+): import("@/lib/providers/execution-extension-errors").DeploymentLookupFailure | null {
+  return null;
+}

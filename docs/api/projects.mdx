@@ -57,34 +57,31 @@ missing, failed or incomplete observations do not establish absence.
 
 ## Project defaults
 
-`getProjectDefaults` returns the effective market and schedule. Projects without
-a stored defaults row return schema-defined schedule defaults and a market
-inferred from existing keywords, without creating a row. The `source` field is
-`explicit`, `derived`, or `fallback`.
+`getProjectDefaults` returns the effective market, device and inherited SERP depth.
+Projects without a stored defaults row return a market inferred from existing
+keywords, without creating a row. The `source` field is `explicit`, `derived`,
+or `fallback`.
 
-`updateProjectDefaults` stores scheduling intent. `country` and `device` in this
-endpoint represent the project's current default keyword market, derived from
-existing keywords. `location_key` is the primary location reference and can
-point at a country, region, or city; send it with `device` to move eligible
-keywords from the current default market to the new market.
+`updateProjectDefaults` changes these defaults without enrolling keywords in
+recurring checks. `location_key` is the primary location reference and can point
+at a country, region, or city; send it with `device` to move eligible keywords
+from the current default market to the new market.
 
 The legacy `country` and `city` selectors still resolve to the same location,
-but they are deprecated: send `location_key` instead. They are accepted until
-bisibility 0.24.0, then removed. Omitting market fields updates only the
-schedule and does not move keywords.
+but they are deprecated: send `location_key` instead. `country` and `device`
+must be supplied together unless `location_key` is provided. Omitting market
+fields does not move keywords. Omitting `serp_depth` (`10`, `20`, `50`, or `100`)
+or `serp_stop_on_match` keeps its stored preference. At effective depth `20`,
+checks always collect the full requested depth and the effective
+`serp_stop_on_match` is `false`. The preference still applies at other depths.
+This does not guarantee twenty returned organic results: provider gaps remain
+unknown and do not establish absence.
 
-`country` and `device` must be supplied together unless `location_key` is
-provided. `jitter_minutes` must be a whole number from `0` to `120`. Omitting
-it uses `60`; `0` disables jitter.
-
-The schedule fields (`frequency`, `cron_expression`, `jitter_minutes`,
-`timezone`) are replaced as a whole. `serp_depth` (`10`, `20`, `50`, or `100`)
-and `serp_stop_on_match` are independent of the schedule: omitting either keeps
-its stored value.
-
-Daily and weekly defaults give each keyword a stable interval phase, and
-`timezone` does not move that phase. Monthly and custom cron schedules use
-`timezone` as their wall-clock anchor.
+The compatibility fields `frequency`, `cron_expression`, `jitter_minutes` and
+`timezone` are deprecated and ignored on writes. Reads return `manual`, `null`
+and `0` for the first three, with `next_check_at: null`; `timezone` retains its
+stored value. Use named schedules to configure cadence and assign keywords.
+New keywords without a schedule remain manual.
 
 ## Related operations
 

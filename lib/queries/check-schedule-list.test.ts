@@ -77,10 +77,10 @@ describe("check schedule list query", () => {
         name: "Commercial weekly",
         providerPolicy: null,
         publicId: "sch_commercial",
-        rankCheckRuns: [{ plannedFor: new Date("2026-09-07T04:00:00.000Z") }],
+        rankCheckRuns: [{ plannedFor: new Date("2026-09-07T04:00:00.000Z"), status: "blocked" }],
         serpDepth: null,
         timeOfDay: "06:00",
-        timezone: "Europe/Madrid",
+        timezone: null,
       },
     ]);
     mocks.keyword.groupBy.mockResolvedValue([
@@ -95,6 +95,9 @@ describe("check schedule list query", () => {
     await expect(listCheckScheduleRows("project_1")).resolves.toEqual([
       expect.objectContaining({
         keywordCount: 1,
+        nextRunAt: "2026-09-07T04:00:00.000Z",
+        blocked: true,
+        timezone: "Europe/Madrid",
         memberDeviceCount: 1,
         memberMarketCount: 2,
         perRunCents: 24,
@@ -144,6 +147,8 @@ describe("check schedule list query", () => {
     await expect(listCheckScheduleRows("project_1")).resolves.toEqual([
       expect.objectContaining({
         dayOfMonth: null,
+        nextRunAt: null,
+        blocked: false,
         perRunCents: 12,
         weekday: null,
       }),

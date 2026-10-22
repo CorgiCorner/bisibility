@@ -16,8 +16,7 @@ export function RunTimelineTime({
   const dateDisplay = useDateDisplay();
   const group = projectRunTimelineGroup(run);
   const pastDays = pastScheduledDays(run, readAt);
-  const finished =
-    run.kind === "rank_check" ? run.timestamps.finishedAt : run.timestamps.lastSyncFinishedAt;
+  const finished = run.timestamps.finishedAt;
   const label =
     pastDays !== null
       ? timelineT("pastScheduled")
@@ -29,9 +28,9 @@ export function RunTimelineTime({
           ? startedAt(run)
             ? t("started")
             : t("submitted")
-          : run.kind === "rank_check" && ["planned", "blocked"].includes(run.details.status)
+          : run.kind === "rank" && ["planned", "blocked"].includes(run.details.status)
             ? timelineT("plannedFor")
-            : run.kind === "rank_check" && run.details.trigger === "retry"
+            : run.kind === "rank" && run.details.trigger === "retry"
               ? timelineT("retryFrom")
               : timelineT("readyFrom");
   const formatted = formatDisplayDateTime(new Date(projectRunTimelineAt(run)), dateDisplay);

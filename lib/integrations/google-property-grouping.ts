@@ -24,6 +24,25 @@ export function googlePropertyMatchesDomain(value: string, domain: string) {
   );
 }
 
+export function defaultGoogleProperty(input: {
+  preferred?: string | null;
+  options: readonly GooglePropertyOption[];
+  projectDomain: string;
+}): string {
+  if (input.preferred && input.options.some((option) => option.value === input.preferred)) {
+    return input.preferred;
+  }
+  const matching = input.options.filter((option) =>
+    googlePropertyMatchesDomain(option.value, input.projectDomain),
+  );
+  return (
+    matching.find((option) => option.kind === "domain")?.value ??
+    matching[0]?.value ??
+    input.options[0]?.value ??
+    ""
+  );
+}
+
 export function groupGoogleProperties(input: {
   activeValue?: string;
   archived: readonly ArchivedGoogleProperty[];

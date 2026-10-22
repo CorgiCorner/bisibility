@@ -131,6 +131,12 @@ export function RetrievedResultsOneCheck({
       </div>
     );
   const url = rankingUrl;
+  const coverageDepth = Math.min(20, results.requestedDepth ?? 0);
+  const savedPositions = new Set(
+    results.rows
+      .filter((row) => row.position >= 1 && row.position <= coverageDepth)
+      .map((row) => row.position),
+  );
   return (
     <div>
       <FeatureRow features={results.features} />
@@ -144,6 +150,14 @@ export function RetrievedResultsOneCheck({
             ? t("notFound")
             : t("position", { position: results.trackedPosition })}
         </strong>
+        {results.requestedDepth ? (
+          <span className="font-sans tabular-nums text-[11px] text-fg-muted">
+            {t("savedResults", {
+              depth: results.requestedDepth,
+              count: results.rows.length,
+            })}
+          </span>
+        ) : null}
         {url ? (
           <span className="min-w-0 flex-1 truncate font-sans tabular-nums text-[11.5px] text-fg-muted">
             {url}
@@ -164,6 +178,14 @@ export function RetrievedResultsOneCheck({
           </Button>
         ) : null}
       </div>
+      {coverageDepth > 0 && savedPositions.size < coverageDepth ? (
+        <p
+          className="m-0 border-b border-border px-4 py-2 text-[12px] text-yellow-text sm:px-5"
+          role="status"
+        >
+          {t("partialCompetitors", { depth: coverageDepth })}
+        </p>
+      ) : null}
       {results.aiOverview === null ? (
         <p className="m-0 border-b border-border px-5 py-2 text-[12px] text-fg-muted">
           {t("aiUnknown")}

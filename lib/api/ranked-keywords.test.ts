@@ -84,12 +84,47 @@ describe("ranked-keyword REST endpoint", () => {
     ["rate_limited", 429],
     ["unsupported_location", 422],
     ["needs_reauth", 422],
+    ["payment_quote_changed", 409],
+    ["payment_quote_expired", 409],
+    ["payment_quote_required", 409],
+    ["provider_error", 502],
+    ["insufficient_credits", 402],
+    ["own_credentials_required", 403],
   ] as const)("maps %s to %i", async (reason, status) => {
     mocks.fetch.mockResolvedValue({ ok: false, reason, resetAt: Date.now() + 5_000 });
     const response = await listRankedKeywordSuggestions(context(), projectId);
     expect(response.status).toBe(status);
     expect(response.headers.get("content-type")).toContain("application/problem+json");
     if (reason === "rate_limited") expect(response.headers.get("retry-after")).toBeTruthy();
+  });
+
+  it("forwards the chosen price and supports an estimate without fetching rows", async () => {
+    mocks.fetch.mockResolvedValue({
+      ok: true,
+      estimate: true,
+      cached: false,
+      connections: [],
+      costCents: 0,
+      fetchedAt: new Date().toISOString(),
+      offset: 0,
+      rows: [],
+      totalCount: null,
+    });
+    const response = await listRankedKeywordSuggestions(
+      context(
+        "?estimate_only=true&require_payment=true&payment_option_id=route&payment_quote_token=accepted",
+      ),
+      projectId,
+    );
+    expect(await response.json()).toMatchObject({ estimate: true, rows: [] });
+    expect(mocks.fetch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        estimateOnly: true,
+        requirePayment: true,
+        paymentOptionId: "route",
+        acceptedPayment: { quoteToken: "accepted" },
+      }),
+    );
   });
 
   it("reports the exhausted budget with surface, reset, and retry headers", async () => {

@@ -1,4 +1,5 @@
 import type { BacklinksFailedSummary } from "@/lib/backlinks/types";
+import { paymentResource } from "./action-payment";
 import type { ApiContext } from "./context";
 import { errorResponse } from "./responses";
 
@@ -6,6 +7,7 @@ export function backlinksFailureResponse(ctx: ApiContext, outcome: BacklinksFail
   const summary = outcome.summary;
   // Project each field so internal error causes and provider payloads cannot cross this boundary.
   const details = {
+    ...paymentResource(outcome),
     cost_cents: null,
     known_summary_cost_cents: outcome.knownSummaryCostCents,
     history_failure: { code: outcome.historyFailure.code, phase: outcome.historyFailure.phase },

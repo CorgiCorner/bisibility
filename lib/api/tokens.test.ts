@@ -20,11 +20,23 @@ vi.mock("./pat-service", () => ({
   revokePersonalToken: mocks.revokePersonalToken,
 }));
 
-function request(token: string) {
+function request(
+  token: string,
+  body: Record<string, unknown> = { expires_in_days: 90, name: "CLI", scope: "admin" },
+) {
   return new Request("https://example.com/api/v1/me/tokens", {
-    body: JSON.stringify({ expires_in_days: 90, name: "CLI", scope: "admin" }),
+    body: JSON.stringify(body),
     headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
     method: "POST",
+  });
+}
+
+function oauthAccessToken(clientId: string, scopes: string[]) {
+  mocks.prisma.oauthAccessToken.findUnique.mockResolvedValue({
+    clientId,
+    expiresAt: new Date("2099-01-01T00:00:00.000Z"),
+    scopes,
+    userId: "user_1",
   });
 }
 
@@ -121,6 +133,73 @@ describe("OAuth personal-token exchange", () => {
       expect(mocks.issuePersonalToken).not.toHaveBeenCalled();
     },
   );
+
+  it.each([30, 90])("accepts a dynamic client API token expiry of %s days", async (days) => {
+    oauthAccessToken("registered-client", ["openid", "tokens:write"]);
+    const response = await exchangeOauthToken(
+      request("opaque-oauth-token", { expires_in_days: days, name: "CLI", scope: "read" }),
+      new URL("https://example.com"),
+      { headers: new Headers(), instance: "urn:test" },
+    );
+    expect(response.status).toBe(201);
+    expect(mocks.issuePersonalToken).toHaveBeenCalledWith(
+      "user_1",
+      { expiresInDays: days, name: "CLI", scope: "read" },
+      { action: "pat.exchange_login", viaClientId: "registered-client" },
+    );
+  });
+
+  it.each([
+    ["365 days", 365, { expires_in_days: 365, name: "CLI", scope: "admin" }],
+    ["never", null, { expires_in_days: null, name: "CLI", scope: "admin" }],
+  ])("keeps a static CLI API token expiry of %s", async (_label, days, body) => {
+    oauthAccessToken("bisibility-cli", ["openid", "tokens:write"]);
+    const response = await exchangeOauthToken(
+      request("opaque-oauth-token", body),
+      new URL("https://example.com"),
+      { headers: new Headers(), instance: "urn:test" },
+    );
+    expect(response.status).toBe(201);
+    expect(mocks.issuePersonalToken).toHaveBeenCalledWith(
+      "user_1",
+      { expiresInDays: days, name: "CLI", scope: "admin" },
+      { action: "pat.exchange_login", viaClientId: "bisibility-cli" },
+    );
+  });
+
+  it.each([
+    ["91 days", { expires_in_days: 91, name: "CLI", scope: "read" }],
+    ["365 days", { expires_in_days: 365, name: "CLI", scope: "read" }],
+    ["never", { expires_in_days: null, name: "CLI", scope: "read" }],
+    ["omitted", { name: "CLI", scope: "read" }],
+  ])(
+    "rejects a third-party API token expiry of %s instead of clamping it",
+    async (_label, body) => {
+      oauthAccessToken("third-party-client", ["openid", "tokens:write"]);
+      const response = await exchangeOauthToken(
+        request("opaque-oauth-token", body),
+        new URL("https://example.com"),
+        { headers: new Headers(), instance: "urn:test" },
+      );
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toMatchObject({
+        errors: { fieldErrors: { expiresInDays: expect.any(Array) } },
+        title: "Validation failed",
+      });
+      expect(mocks.issuePersonalToken).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects a first-party app exchange before the third-party expiry cap applies", async () => {
+    oauthAccessToken("bisibility-ios", ["openid", "offline_access", "tokens:write"]);
+    const response = await exchangeOauthToken(
+      request("opaque-oauth-token", { expires_in_days: null, name: "App", scope: "read" }),
+      new URL("https://example.com"),
+      { headers: new Headers(), instance: "urn:test" },
+    );
+    expect(response.status).toBe(403);
+    expect(mocks.issuePersonalToken).not.toHaveBeenCalled();
+  });
 
   it("revokes the authenticated token by its public ID for DELETE current", async () => {
     const revoked = {

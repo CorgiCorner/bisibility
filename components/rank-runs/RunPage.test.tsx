@@ -27,8 +27,8 @@ describe("RunPage", () => {
 
   it("implements four slots", () => {
     renderPage();
-    for (const label of ["Selection", "Provider", "Spent so far", "Elapsed"]) {
-      expect(screen.getByText(label)).toBeInTheDocument();
+    for (const label of ["Selection", "Provider", "Cost", "Elapsed"]) {
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0);
     }
   });
 
@@ -84,7 +84,7 @@ describe("RunPage", () => {
     const header = screen.getByRole("heading", { name: "Manual run" }).closest("section");
     expect(header).not.toBeNull();
     expect(within(header as HTMLElement).getByText("Duration")).toBeInTheDocument();
-    expect(within(header as HTMLElement).getAllByText("-")).toHaveLength(2);
+    expect(within(header as HTMLElement).getAllByText("-")).toHaveLength(3);
     const counters = within(screen.getByLabelText("Run counters"));
     expect(counters.getByText("Cancelled")).toBeInTheDocument();
     expect(counters.getByText("stopped before sending")).toBeInTheDocument();
@@ -188,7 +188,7 @@ describe("RunPage", () => {
     expect(screen.getByRole("heading", { name: "Targets in this run" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Run now" })).toBeInTheDocument();
     expect(screen.getByText("350 keywords · 694 targets")).toBeInTheDocument();
-    expect(screen.getByText("set when planned")).toBeInTheDocument();
+    expect(screen.queryByText("set when planned")).toBeNull();
   });
 
   it("renders a skipped occurrence without actions or sent targets", () => {

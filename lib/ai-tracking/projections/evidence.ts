@@ -1,3 +1,4 @@
+import { aiPaymentReceipt } from "@/lib/ai-research/payment";
 import type { CostReceipt, Evidence, SamplePlan } from "@/lib/ai-tracking/contract";
 import type { TrackingExportRow } from "@/lib/ai-tracking/exports/csv";
 import type { AiTrackingSample } from "@/lib/generated/prisma/client";
@@ -16,6 +17,15 @@ export function trackingSampleProjection(sample: Sample): TrackingSampleRow {
     throw new Error("Public prompt revision evidence is required.");
   const receipt = sample.receipt as unknown as CostReceipt | null;
   return {
+    ...(plan.paymentConsent
+      ? {
+          originalPayment: aiPaymentReceipt(
+            plan.paymentConsent,
+            receipt?.amountUsd ?? null,
+            receipt?.state ?? "unknown",
+          ),
+        }
+      : {}),
     id: sample.publicId,
     measurement: sample.measurement,
     source: sample.source,

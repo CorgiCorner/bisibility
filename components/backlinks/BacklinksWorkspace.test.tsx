@@ -220,7 +220,7 @@ describe("BacklinksWorkspace", () => {
     expect(loadMoreAction).not.toHaveBeenCalled();
   });
   it.each(["no_provider", "needs_reauth"] as const)(
-    "shows a provider action above and below the form for %s",
+    "shows one source explanation and action for %s",
     (providerStatus) => {
       renderWorkspace({
         context: { ...context, providerStatus, supportingProviders: ["Fixture provider"] },
@@ -229,24 +229,24 @@ describe("BacklinksWorkspace", () => {
       expect(
         screen.getByText(
           reconnect
-            ? "Reconnect your provider to unlock these fields."
-            : "Connect a supporting provider to unlock these fields.",
+            ? "Reconnect the selected data source in Integrations before running another search."
+            : "Choose a supported data source in Integrations to run a search.",
         ),
       ).toBeVisible();
-      expect(screen.getAllByText("Supported providers: Fixture provider.")).toHaveLength(2);
-      expect(screen.getAllByRole("link")).toHaveLength(2);
+      expect(screen.getAllByText("Supported providers: Fixture provider.")).toHaveLength(1);
+      expect(screen.getAllByRole("link")).toHaveLength(1);
       const emptyPanel = screen.getByRole("region", {
-        name: reconnect ? "Reconnect to load new results" : "Connect a provider to get started",
+        name: reconnect ? "Reconnect the selected data source" : "Choose a data source",
       });
       expect(within(emptyPanel).getAllByRole("link")).toHaveLength(1);
       expect(
         within(emptyPanel).getByRole("link", {
-          name: reconnect ? "Reconnect provider" : "Connect provider",
+          name: reconnect ? "Reconnect provider" : "Choose a data source",
         }),
       ).toHaveAttribute("href", "/app/prj_1/integrations");
       expect(
         screen.getAllByRole("link", {
-          name: reconnect ? "Reconnect provider" : "Open Integrations",
+          name: reconnect ? "Reconnect provider" : "Choose a data source",
         })[0],
       ).toHaveAttribute("href", "/app/prj_1/integrations");
       expect(screen.getByRole("button", { name: /^Analyze/ })).toBeDisabled();
@@ -269,7 +269,7 @@ describe("BacklinksWorkspace", () => {
     );
 
     expect(screen.getByText("linked.example")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Analyze ~$0.05" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Analyze/ })).toBeEnabled();
   });
 
   it("uses the server estimate path to validate a target and reveal its price", async () => {
@@ -294,7 +294,7 @@ describe("BacklinksWorkspace", () => {
 
     fireEvent.change(input, { target: { value: "example.com" } });
     await act(async () => vi.advanceTimersByTimeAsync(320));
-    expect(screen.getByRole("button", { name: "Analyze ~$0.05" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Analyze/ })).toBeEnabled();
     expect(analyzeAction).toHaveBeenLastCalledWith(
       expect.objectContaining({
         estimateOnly: true,
@@ -337,9 +337,7 @@ describe("BacklinksWorkspace", () => {
     const heading = screen.getByRole("heading", { level: 3, name: "Point it at any domain" });
     expect(heading.parentElement).toHaveClass("rounded-card", "border", "bg-bg-elev");
     expect(heading.parentElement?.querySelector('[data-module-mark="soft"]')).not.toBeNull();
-    expect(
-      screen.getByText("Runs on your own DataForSEO key, price shown before every run"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Price shown before each run.")).toBeInTheDocument();
     expect(screen.queryByText("Start with sites you already watch")).not.toBeInTheDocument();
     expect(screen.queryByText("this project")).not.toBeInTheDocument();
     expect(screen.queryByText("~$0.05 each, cached for a day once run")).not.toBeInTheDocument();
@@ -395,7 +393,7 @@ describe("BacklinksWorkspace", () => {
       }),
     );
     expect(screen.getByRole("region", { name: "Backlinks results" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Analyze free, cached" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /^Analyze/ })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Backlinks limit" })).toHaveTextContent(
       "Top 100 links",
     );
@@ -407,7 +405,7 @@ describe("BacklinksWorkspace", () => {
       expect.objectContaining({
         estimateOnly: false,
         fresh: true,
-        maxCostCents: 5,
+        acceptedPayment: { quoteToken: "fixture-consent" },
         resultLimit: 100,
         target: "example.org",
       }),
@@ -520,50 +518,53 @@ describe("BacklinksWorkspace", () => {
     expect(screen.queryByRole("region", { name: "Backlinks results" })).not.toBeInTheDocument();
   });
 
-  it("falls back to form fill when a cached replay loses its zero-cost race", async () => {
-    vi.useFakeTimers();
-    const analyzeAction = vi.fn(async (input: unknown) => {
-      const request = input as { estimateOnly?: boolean; target: string };
-      if (!request.estimateOnly) {
-        return { ok: false as const, reason: "cost_limit_exceeded" as const };
-      }
-      return estimate(request.target);
-    });
-    renderWorkspace({
-      analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
-      context: {
-        ...context,
-        recentTargets: [
-          {
-            cachedUntil: new Date(Date.now() + 3_600_000).toISOString(),
-            fetchedAt: new Date(Date.now() - 3_600_000).toISOString(),
-            includeSubdomains: true,
-            resultLimit: 100,
-            target: "racy.example.org",
-            targetScope: "site",
-          },
-        ],
-      },
-    });
+  it.each(["cost_limit_exceeded", "payment_quote_required"] as const)(
+    "falls back to form fill when a cached replay loses its zero-cost race: %s",
+    async (reason) => {
+      vi.useFakeTimers();
+      const analyzeAction = vi.fn(async (input: unknown) => {
+        const request = input as { estimateOnly?: boolean; target: string };
+        if (!request.estimateOnly) {
+          return { ok: false as const, reason };
+        }
+        return estimate(request.target);
+      });
+      renderWorkspace({
+        analyzeAction: analyzeAction as unknown as AnalyzeBacklinksAction,
+        context: {
+          ...context,
+          recentTargets: [
+            {
+              cachedUntil: new Date(Date.now() + 3_600_000).toISOString(),
+              fetchedAt: new Date(Date.now() - 3_600_000).toISOString(),
+              includeSubdomains: true,
+              resultLimit: 100,
+              target: "racy.example.org",
+              targetScope: "site",
+            },
+          ],
+        },
+      });
 
-    fireEvent.click(screen.getByRole("button", { name: /racy\.example\.org.*whole site/i }));
-    await act(async () => vi.advanceTimersByTimeAsync(320));
+      fireEvent.click(screen.getByRole("button", { name: /racy\.example\.org.*whole site/i }));
+      await act(async () => vi.advanceTimersByTimeAsync(320));
 
-    expect(analyzeAction).toHaveBeenCalledWith(
-      expect.objectContaining({
-        estimateOnly: false,
-        maxCostCents: 0,
-        resultLimit: 100,
-        target: "racy.example.org",
-      }),
-    );
-    expect(
-      screen.queryByText(
-        "Backlinks could not be loaded. Check the target, provider connection, and budget.",
-      ),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByRole("region", { name: "Backlinks results" })).not.toBeInTheDocument();
-  });
+      expect(analyzeAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estimateOnly: false,
+          maxCostCents: 0,
+          resultLimit: 100,
+          target: "racy.example.org",
+        }),
+      );
+      expect(
+        screen.queryByText(
+          "Backlinks could not be loaded. Check the target, provider connection, and budget.",
+        ),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: "Backlinks results" })).not.toBeInTheDocument();
+    },
+  );
 
   it("requests the server estimate in page scope when Exact page is selected first", async () => {
     vi.useFakeTimers();
@@ -601,7 +602,7 @@ it.each([
       initialTarget: "example.com",
       initialEstimate: { cached: false, costCents: 5, loading: false, valid: true },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Analyze ~$0.05" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Analyze/ }));
     expect(await screen.findByText(message)).toBeVisible();
     expect(analyzeAction).toHaveBeenCalledWith(expect.objectContaining({ estimateOnly: false }));
   },
@@ -616,7 +617,28 @@ it("shows a wallet budget denial without a project settings link", async () => {
     initialTarget: "example.com",
     initialEstimate: { cached: false, costCents: 5, loading: false, valid: true },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Analyze ~$0.05" }));
+  fireEvent.click(screen.getByRole("button", { name: /^Analyze/ }));
   expect(await screen.findByText("Deployment spending budget is exhausted.")).toBeVisible();
   expect(screen.queryByRole("link", { name: /raise.*budget/i })).not.toBeInTheDocument();
 });
+
+// Consent lifecycle is covered by the real useActionPaymentReview and workspace payment tests.
+// These fixtures isolate existing report/cache/scope behavior after accepted consent.
+vi.mock("@/components/action-payment/useActionPaymentReview", () => ({
+  useActionPaymentReview: () => ({
+    draft: null,
+    close: vi.fn(),
+    confirm: vi.fn(),
+    selectOption: vi.fn(),
+    request: (action: (input: unknown) => Promise<unknown>, input: Record<string, unknown>) =>
+      action({
+        ...input,
+        estimateOnly: false,
+        requirePayment: true,
+        acceptedPayment: { quoteToken: "fixture-consent" },
+      }),
+  }),
+}));
+vi.mock("@/components/action-payment/ActionPaymentPrice", () => ({
+  ActionPaymentPrice: () => <span>Review price</span>,
+}));

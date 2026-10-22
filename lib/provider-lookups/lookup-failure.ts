@@ -5,6 +5,7 @@ import type { ProviderRequestSurface } from "@/lib/provider-usage/surface";
 
 export type ProviderLookupFailure =
   | {
+      payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
       costCents?: number;
       ok: false;
       provider?: string;
@@ -14,11 +15,14 @@ export type ProviderLookupFailure =
       surface?: ProviderRequestSurface;
     }
   | {
+      payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
       costCents?: number;
       estimatedCostCents?: number;
       ok: false;
       reason:
+        | import("@/lib/action-payment/contract").ActionPaymentFailure
         | "wallet_budget_exhausted"
+        | "insufficient_credits"
         | "cost_limit_exceeded"
         | "in_progress"
         | "needs_reauth"
@@ -26,6 +30,7 @@ export type ProviderLookupFailure =
         | "own_credentials_required"
         | "credentials_changed"
         | "rate_limited"
+        | "provider_error"
         | "unsupported_location";
       resetAt?: number;
     };

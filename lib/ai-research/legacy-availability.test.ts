@@ -22,7 +22,11 @@ vi.mock("./catalog-service", () => ({
   getAiResearchCatalog: vi.fn(),
 }));
 vi.mock("@/lib/agent-reports/service", () => ({ createAgentReport: mocks.report }));
-vi.mock("@/lib/provider-lookups/cache", () => ({ withProviderLookupCache: mocks.cache }));
+vi.mock("@/lib/provider-lookups/cache", () => ({
+  providerLookupCacheConfigured: () => false,
+  readProviderLookupCache: async () => null,
+  withProviderLookupCache: mocks.cache,
+}));
 vi.mock("@/lib/provider-lookups/paid-call", async () => ({
   ProviderLookupSignal: (await import("@/lib/provider-lookups/lookup-failure"))
     .ProviderLookupSignal,

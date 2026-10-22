@@ -180,7 +180,7 @@ export async function updateScheduleInTransaction(
       schedule,
       members.map((keyword) => keyword.id),
     );
-    await reconcilePlannedRunsForSchedule(schedule.id, tx);
+    await reconcilePlannedRunsForSchedule(schedule.id, tx, { invalidateMaterialized: true });
   }
   await writeAudit(
     {

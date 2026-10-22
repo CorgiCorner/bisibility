@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { keywordMembershipSelect } from "@/lib/keywords/membership-select";
 import { resolveSerpDepth } from "@/lib/serp/constants";
 import { findCurrentComparablePredecessor } from "./comparable-history";
 
@@ -12,7 +13,13 @@ export async function loadQueuedTask(
   return client.queuedRankCheckTask.findUniqueOrThrow({
     include: {
       batch: { include: { connection: true } },
-      keyword: { include: { project: { include: { defaults: true } }, schedule: true } },
+      keyword: {
+        include: {
+          checkSchedule: { select: keywordMembershipSelect },
+          project: { include: { defaults: true } },
+          schedule: true,
+        },
+      },
       rankCheck: true,
     },
     where: { id },

@@ -73,3 +73,12 @@ export class OwnProviderKeyRequiredError extends DeploymentAdmissionExhaustedErr
     this.capability = input.capability;
   }
 }
+
+export type DeploymentLookupFailure = {
+  reason:
+    | "operation_access_denied"
+    | "provider_connection_changed"
+    | "payment_admission"
+    | "usage_persistence";
+  phase: "before_dispatch" | "persistence";
+};

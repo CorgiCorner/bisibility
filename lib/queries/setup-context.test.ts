@@ -55,7 +55,7 @@ describe("loadSetupContext", () => {
 
     expect(mocks.requireReadableProject).toHaveBeenCalledWith(PROJECT_REF);
     expect(mocks.prisma.keyword.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { projectId: "project_1" } }),
+      expect.objectContaining({ where: { projectId: "project_1", archivedAt: null } }),
     );
     expect(mocks.prisma.providerConnection.count).toHaveBeenCalledWith({
       where: {
@@ -101,7 +101,7 @@ describe("loadSetupContext", () => {
         publicRef: PROJECT_REF,
       },
       providerExists: true,
-      schedule: { mode: "scheduled", nextRunAt: scheduledNextRunAt, timezone: "UTC" },
+      schedule: { mode: "manual" },
     });
   });
 
@@ -162,34 +162,50 @@ describe("loadSetupContext", () => {
     expect(mocks.getCompetitorSuggestions).not.toHaveBeenCalled();
   });
 
-  it("uses keyword overrides and dispatch state to resolve the earliest scheduled run", async () => {
-    const earlier = new Date("2026-08-31T06:00:00.000Z");
+  it("uses named membership instead of stale keyword mirrors and dispatch rows", async () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([
       {
-        dispatchState: { nextCheckAt: scheduledNextRunAt },
-        id: "keyword_daily",
+        id: "daily",
         publicId: "kw_abcdefghijklmnopqrstuvwx",
-        schedule: { frequency: "daily", timezone: "Europe/Warsaw" },
+        checkSchedule: {
+          publicId: "sch_daily",
+          frequency: "daily",
+          enabled: true,
+          archivedAt: null,
+          timezone: "UTC",
+          timeOfDay: "08:00",
+          jitterMinutes: 0,
+          cronExpression: null,
+        },
+        schedule: { frequency: "weekly" },
+        dispatchState: { nextCheckAt: scheduledNextRunAt },
       },
       {
-        dispatchState: { nextCheckAt: earlier },
-        id: "keyword_weekly",
+        id: "weekly",
         publicId: "kw_bcdefghijklmnopqrstuvwxy",
-        schedule: { frequency: "weekly", timezone: "America/New_York" },
+        checkSchedule: {
+          publicId: "sch_weekly",
+          frequency: "weekly",
+          enabled: true,
+          archivedAt: null,
+          timezone: "UTC",
+          timeOfDay: "06:00",
+          jitterMinutes: 0,
+          cronExpression: "0 6 * * 1",
+        },
       },
       {
-        dispatchState: { nextCheckAt: new Date("2026-08-30T01:00:00.000Z") },
-        id: "keyword_manual",
+        id: "manual",
         publicId: "kw_cdefghijklmnopqrstuvwxyz",
-        schedule: { frequency: "manual", timezone: "UTC" },
+        checkSchedule: null,
+        schedule: { frequency: "daily" },
+        dispatchState: { nextCheckAt: new Date("2026-08-30T13:00:00Z") },
       },
     ]);
-
-    const result = await loadSetupContext(PROJECT_REF, now);
-    expect(result.schedule).toEqual({
+    expect((await loadSetupContext(PROJECT_REF, now)).schedule).toEqual({
       mode: "scheduled",
-      nextRunAt: earlier,
-      timezone: "America/New_York",
+      nextRunAt: new Date("2026-08-31T06:00:00Z"),
+      timezone: "UTC",
     });
   });
 
@@ -236,23 +252,35 @@ describe("loadSetupContext", () => {
     );
   });
 
-  it.each(["daily", "weekly", "monthly", "custom_cron"] as const)(
-    "exposes future %s dispatch as scheduled",
-    async (frequency) => {
+  it.each([
+    ["daily", null, "2026-08-31T04:00:00Z"],
+    ["weekly", "0 6 * * 1", "2026-08-31T04:00:00Z"],
+    ["monthly", "0 6 1 * *", "2026-09-01T04:00:00Z"],
+    ["custom_cron", "0 6 * * *", "2026-08-31T04:00:00Z"],
+  ] as const)(
+    "exposes the named %s calendar before any dispatch row exists",
+    async (frequency, cronExpression, next) => {
       mocks.prisma.keyword.findMany.mockResolvedValue([
         {
-          dispatchState: { nextCheckAt: scheduledNextRunAt },
-          id: `keyword_${frequency}`,
+          id: "keyword",
           publicId: "kw_abcdefghijklmnopqrstuvwx",
-          schedule: { frequency, timezone: "Europe/Warsaw" },
+          checkSchedule: {
+            publicId: "sch_named",
+            frequency,
+            cronExpression,
+            enabled: true,
+            archivedAt: null,
+            timezone: "Europe/Warsaw",
+            timeOfDay: "06:00",
+            jitterMinutes: 0,
+          },
+          dispatchState: null,
         },
       ]);
-      await expect(loadSetupContext(PROJECT_REF, now)).resolves.toMatchObject({
-        schedule: {
-          mode: "scheduled",
-          nextRunAt: scheduledNextRunAt,
-          timezone: "Europe/Warsaw",
-        },
+      expect((await loadSetupContext(PROJECT_REF, now)).schedule).toEqual({
+        mode: "scheduled",
+        nextRunAt: new Date(next),
+        timezone: "Europe/Warsaw",
       });
     },
   );

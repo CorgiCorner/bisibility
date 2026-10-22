@@ -2,6 +2,10 @@
 
 import { createHash } from "node:crypto";
 import { consume, resetBucketsFor } from "@/lib/api/ratelimit";
+import {
+  AdminTwoFactorRequiredError,
+  requireAdminTwoFactorForDangerousAction,
+} from "@/lib/auth/admin-dangerous-action";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { prisma } from "@/lib/db/prisma";
@@ -21,7 +25,7 @@ const accountStateSchema = z
   .strict();
 const resetLimitsSchema = z.object({ userId: publicUserIdSchema }).strict();
 
-type FailedResult = { message: string; status: "failed" | "forbidden" };
+type FailedResult = { message: string; status: "failed" | "forbidden" | "two_factor_required" };
 type LimitedResult = { message: string; retryAt: string; status: "rate_limited" };
 
 export type SetAccountStateResult =
@@ -79,6 +83,14 @@ export async function setInstanceAdminAccountDeactivated(
 ): Promise<SetAccountStateResult> {
   const session = await getInstanceAdminSession();
   if (!session) return forbidden();
+
+  try {
+    await requireAdminTwoFactorForDangerousAction(session, "change_account_status");
+  } catch (error) {
+    if (error instanceof AdminTwoFactorRequiredError)
+      return { message: error.message, status: error.code };
+    throw error;
+  }
 
   const parsed = accountStateSchema.safeParse(input);
   if (!parsed.success) {

@@ -1,20 +1,6 @@
 [
   {
     "operation": "acceptAiTrackingSuggestions",
-    "path": "drafts[].generation_reference.generation_id",
-    "detail": "pattern spec=^asg_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "acceptAiTrackingSuggestions",
-    "path": "drafts[].provider_dataset_reference.report_id",
-    "detail": "pattern spec=^agr_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "acceptAiTrackingSuggestions",
     "path": "drafts[].provider_dataset_reference.row_index",
     "detail": "maximum spec=none validator=9999",
     "kind": "bound-mismatch",
@@ -37,20 +23,6 @@
     "operation": "acceptAiTrackingSuggestions",
     "kind": "spec-missing-field",
     "path": "drafts[].generation_id",
-    "location": "body"
-  },
-  {
-    "operation": "addCompetitor",
-    "path": "domain",
-    "detail": "minLength spec=none validator=1",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "addCompetitor",
-    "path": "label",
-    "detail": "maxLength spec=none validator=80",
-    "kind": "bound-mismatch",
     "location": "body"
   },
   {
@@ -100,12 +72,6 @@
     "path": "domain",
     "detail": "minLength spec=1 validator=none",
     "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "cancelAiTrackingRun",
-    "detail": "reads nothing",
-    "kind": "raw-body",
     "location": "body"
   },
   {
@@ -190,112 +156,10 @@
     "location": "body"
   },
   {
-    "operation": "createAiTrackingPrompt",
-    "path": "generation_reference.generation_id",
-    "detail": "pattern spec=^asg_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createAiTrackingPrompt",
-    "path": "provider_dataset_reference.report_id",
-    "detail": "pattern spec=^agr_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createAiTrackingPrompt",
-    "path": "provider_dataset_reference.row_index",
-    "detail": "maximum spec=none validator=9999",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createAiTrackingPrompt",
-    "path": "topic_id",
-    "detail": "pattern spec=^ait_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createAiTrackingSchedule",
-    "path": "configuration.credential_connection_id",
-    "detail": "minLength spec=none validator=1; pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createAiTrackingSchedule",
-    "path": "configuration.prompt_ids",
-    "detail": "minItems spec=1 validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createAiTrackingSchedule",
-    "path": "configuration.prompt_ids[]",
-    "detail": "minLength spec=none validator=1; pattern spec=^aip_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createAiTrackingSchedule",
-    "path": "configuration.schedule_id",
-    "detail": "pattern spec=^ais_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createAiTrackingSchedule",
-    "kind": "spec-missing-field",
-    "path": "configuration.retry_of_run_id",
-    "location": "body"
-  },
-  {
-    "operation": "createAiTrackingSchedule",
-    "kind": "validator-missing-field",
-    "path": "configuration.consent",
-    "location": "body"
-  },
-  {
     "operation": "createCloudImportSession",
     "path": "source_project_id",
     "detail": "pattern spec=^prj_[a-z][a-z0-9]{23}$ validator=none",
     "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createProject",
-    "path": "defaults.cron_expression",
-    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createProject",
-    "path": "defaults.timezone",
-    "detail": "maxLength spec=none validator=80; minLength spec=none validator=1",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createProject",
-    "path": "domain",
-    "detail": "maxLength spec=none validator=253; minLength spec=none validator=1",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createProject",
-    "path": "name",
-    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "createProject",
-    "kind": "spec-missing-field",
-    "path": "defaults.serp_depth",
     "location": "body"
   },
   {
@@ -361,66 +225,10 @@
     "location": "query"
   },
   {
-    "operation": "getKeywordMetrics",
-    "path": "connection_id",
-    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1; pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
     "operation": "getLocalMonitorRunResults",
     "path": "as_of",
     "detail": "maxLength spec=24 validator=none; minLength spec=24 validator=none",
     "kind": "bound-mismatch",
-    "location": "query"
-  },
-  {
-    "operation": "getStoredResearchReport",
-    "path": "connection_id",
-    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1",
-    "kind": "bound-mismatch",
-    "location": "query"
-  },
-  {
-    "operation": "getStoredResearchReport",
-    "path": "language_code",
-    "detail": "maxLength spec=none validator=12; minLength spec=none validator=2",
-    "kind": "bound-mismatch",
-    "location": "query"
-  },
-  {
-    "operation": "getStoredResearchReport",
-    "path": "location_code",
-    "detail": "minimum spec=none validator=1",
-    "kind": "bound-mismatch",
-    "location": "query"
-  },
-  {
-    "operation": "getStoredResearchReport",
-    "path": "seed",
-    "detail": "maxLength spec=none validator=80; minLength spec=none validator=1",
-    "kind": "bound-mismatch",
-    "location": "query"
-  },
-  {
-    "operation": "getStoredResearchReport",
-    "path": "target",
-    "detail": "minLength spec=none validator=1",
-    "kind": "bound-mismatch",
-    "location": "query"
-  },
-  {
-    "operation": "getStoredResearchReport",
-    "path": "mode",
-    "detail": "spec=any validator=[\"as_is\",\"auto\",\"ideas\",\"one_per_domain\",\"related\",\"suggestions\"]",
-    "kind": "enum-mismatch",
-    "location": "query"
-  },
-  {
-    "operation": "getStoredResearchReport",
-    "path": "target_scope",
-    "detail": "spec=any validator=[\"page\",\"root\",\"site\",\"subdomain\"]",
-    "kind": "enum-mismatch",
     "location": "query"
   },
   {
@@ -715,13 +523,6 @@
     "location": "query"
   },
   {
-    "operation": "listRankedKeywordSuggestions",
-    "path": "connection_id",
-    "detail": "maxLength spec=none validator=120; minLength spec=none validator=1; pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "query"
-  },
-  {
     "operation": "listSavedViews",
     "detail": "reads cursor, limit, surface",
     "kind": "raw-query",
@@ -809,56 +610,9 @@
     "location": "body"
   },
   {
-    "operation": "retryAiTrackingRun",
-    "path": "credential_connection_id",
-    "detail": "minLength spec=none validator=1; pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "retryAiTrackingRun",
-    "path": "prompt_ids",
-    "detail": "minItems spec=1 validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "retryAiTrackingRun",
-    "path": "prompt_ids[]",
-    "detail": "minLength spec=none validator=1; pattern spec=^aip_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "retryAiTrackingRun",
-    "path": "schedule_id",
-    "detail": "pattern spec=^ais_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "retryAiTrackingRun",
-    "kind": "spec-missing-field",
-    "path": "retry_of_run_id",
-    "location": "body"
-  },
-  {
-    "operation": "searchLocations",
-    "path": "country",
-    "detail": "minLength spec=none validator=1",
-    "kind": "bound-mismatch",
-    "location": "query"
-  },
-  {
     "operation": "setKeywordTargetUrl",
     "detail": "validator reads city, country, device, frequency, intent, keyword, location, location_key, schedule, tags, target_url, topic",
     "kind": "spec-missing-body",
-    "location": "body"
-  },
-  {
-    "operation": "suggestAiTrackingPrompts",
-    "detail": "reads nothing",
-    "kind": "raw-body",
     "location": "body"
   },
   {
@@ -877,157 +631,6 @@
     "operation": "testProviderConnection",
     "kind": "validator-missing-field",
     "path": "primary",
-    "location": "body"
-  },
-  {
-    "operation": "updateAiTrackingPrompt",
-    "path": "generation_reference.generation_id",
-    "detail": "pattern spec=^asg_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "updateAiTrackingPrompt",
-    "path": "provider_dataset_reference.report_id",
-    "detail": "pattern spec=^agr_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "updateAiTrackingPrompt",
-    "path": "provider_dataset_reference.row_index",
-    "detail": "maximum spec=none validator=9999",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "updateAiTrackingPrompt",
-    "path": "topic_id",
-    "detail": "pattern spec=^ait_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "updateAiTrackingSchedule",
-    "path": "configuration.credential_connection_id",
-    "detail": "minLength spec=none validator=1; pattern spec=^conn_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "updateAiTrackingSchedule",
-    "path": "configuration.prompt_ids",
-    "detail": "minItems spec=1 validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "updateAiTrackingSchedule",
-    "path": "configuration.prompt_ids[]",
-    "detail": "minLength spec=none validator=1; pattern spec=^aip_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "updateAiTrackingSchedule",
-    "path": "configuration.schedule_id",
-    "detail": "pattern spec=^ais_[a-z][a-z0-9]{23}$ validator=none",
-    "kind": "bound-mismatch",
-    "location": "body"
-  },
-  {
-    "operation": "updateAiTrackingSchedule",
-    "kind": "spec-missing-field",
-    "path": "configuration.retry_of_run_id",
-    "location": "body"
-  },
-  {
-    "operation": "updateAiTrackingSchedule",
-    "kind": "validator-missing-field",
-    "path": "configuration.consent",
-    "location": "body"
-  },
-  {
-    "operation": "updateNotificationPreferences",
-    "detail": "spec=required validator=optional",
-    "kind": "required-mismatch",
-    "path": "alert_email",
-    "location": "body"
-  },
-  {
-    "operation": "updateNotificationPreferences",
-    "detail": "spec=required validator=optional",
-    "kind": "required-mismatch",
-    "path": "alert_in_app",
-    "location": "body"
-  },
-  {
-    "operation": "updateNotificationPreferences",
-    "detail": "spec=required validator=optional",
-    "kind": "required-mismatch",
-    "path": "alert_push",
-    "location": "body"
-  },
-  {
-    "operation": "updateNotificationPreferences",
-    "detail": "spec=required validator=optional",
-    "kind": "required-mismatch",
-    "path": "alert_slack",
-    "location": "body"
-  },
-  {
-    "operation": "updateNotificationPreferences",
-    "detail": "spec=required validator=optional",
-    "kind": "required-mismatch",
-    "path": "alert_webhook",
-    "location": "body"
-  },
-  {
-    "operation": "updateNotificationPreferences",
-    "detail": "spec=required validator=optional",
-    "kind": "required-mismatch",
-    "path": "check_email",
-    "location": "body"
-  },
-  {
-    "operation": "updateNotificationPreferences",
-    "detail": "spec=required validator=optional",
-    "kind": "required-mismatch",
-    "path": "check_in_app",
-    "location": "body"
-  },
-  {
-    "operation": "updateNotificationPreferences",
-    "detail": "spec=required validator=optional",
-    "kind": "required-mismatch",
-    "path": "import_email",
-    "location": "body"
-  },
-  {
-    "operation": "updateNotificationPreferences",
-    "detail": "spec=required validator=optional",
-    "kind": "required-mismatch",
-    "path": "import_in_app",
-    "location": "body"
-  },
-  {
-    "operation": "updateNotificationPreferences",
-    "detail": "spec=required validator=optional",
-    "kind": "required-mismatch",
-    "path": "invite_email",
-    "location": "body"
-  },
-  {
-    "operation": "updateNotificationPreferences",
-    "detail": "spec=required validator=optional",
-    "kind": "required-mismatch",
-    "path": "invite_in_app",
-    "location": "body"
-  },
-  {
-    "operation": "updateProject",
-    "detail": "validator reads domain, name",
-    "kind": "spec-missing-body",
     "location": "body"
   },
   {

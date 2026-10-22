@@ -7,8 +7,10 @@ import {
   ALERT_RULE_TEXT_MAX_LENGTH,
 } from "@/lib/alerts/schema";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { agentMcpSchemas } from "./agent-schemas";
 import { MCP_TOOL_NAMES } from "./canonical-tools";
 import { getMcpToolDefinitions } from "./definitions";
+import { descriptions } from "./descriptions";
 import { dispatchMcpTool } from "./tools";
 import type { JsonObject } from "./types";
 
@@ -577,6 +579,27 @@ describe("MCP tool dispatch", () => {
     }
   });
 
+  it("forwards explicit keyword cadence but adds no schedule for omitted defaults", async () => {
+    const projectId = "prj_a00000000000000000000000";
+    const plain = await dispatchMcpTool(
+      "add_keywords",
+      { project_id: projectId, keywords: ["manual keyword"] },
+      "bsb_key_live_test",
+    );
+    expect(plain.payload).toMatchObject({ body: { keywords: [{ keyword: "manual keyword" }] } });
+    expect((plain.payload as { body: { keywords: object[] } }).body.keywords[0]).not.toHaveProperty(
+      "schedule",
+    );
+    const scheduled = await dispatchMcpTool(
+      "add_keywords",
+      { project_id: projectId, keywords: ["daily keyword"], schedule: { frequency: "daily" } },
+      "bsb_key_live_test",
+    );
+    expect(scheduled.payload).toMatchObject({
+      body: { keywords: [{ keyword: "daily keyword", schedule: { frequency: "daily" } }] },
+    });
+  });
+
   it("forwards result depth and custom cadence to the shared estimate endpoint", async () => {
     const result = await dispatchMcpTool(
       "get_cost_estimate",
@@ -954,6 +977,79 @@ describe("MCP tool dispatch", () => {
     ).toContain("Confirm the user's intent");
   });
 
+  it("keeps advertised query-stats enums and ranges aligned with the agent schema", () => {
+    const tool = getMcpToolDefinitions().find(
+      (definition) => definition.name === "list_search_performance_query_stats",
+    );
+    const properties = tool?.inputSchema.properties as Record<string, JsonObject>;
+    const agent = agentMcpSchemas.listSearchPerformanceQueryStats;
+
+    expect(Object.keys(properties).sort()).toEqual(Object.keys(agent.properties).sort());
+    expect(tool?.inputSchema.required).toEqual([...agent.required].sort());
+    for (const [name, property] of Object.entries(properties)) {
+      const constraints = Object.fromEntries(
+        Object.entries(property).filter(([key]) =>
+          [
+            "type",
+            "enum",
+            "minimum",
+            "maximum",
+            "minLength",
+            "maxLength",
+            "items",
+            "contains",
+          ].includes(key),
+        ),
+      );
+      expect(agent.properties[name], name).toMatchObject(constraints);
+    }
+  });
+
+  it("forwards every advertised query-stats property to REST", async () => {
+    const input: JsonObject = {
+      clicks_min: 0,
+      connection_id: "conn_a00000000000000000000000",
+      country: "usa",
+      device: "mobile",
+      dimensions: ["query", "page", "country", "device"],
+      end_date: "2026-06-30",
+      impressions_min: 100,
+      limit: 25,
+      offset: 0,
+      page_path: "/docs/?source=mcp&topic=rank tracker",
+      page_path_match: "prefix",
+      position_max: 20.5,
+      project_id: "prj_a00000000000000000000000",
+      query: "rank tracker & SEO",
+      query_match: "contains",
+      start_date: "2026-06-01",
+    };
+    const tool = getMcpToolDefinitions().find(
+      (definition) => definition.name === "list_search_performance_query_stats",
+    );
+    const properties = Object.keys(tool?.inputSchema.properties ?? {});
+    expect(properties.sort()).toEqual(Object.keys(input).sort());
+
+    const result = await dispatchMcpTool(
+      "list_search_performance_query_stats",
+      input,
+      "bsb_key_live_test",
+    );
+    expect(result.payload).toMatchObject({
+      method: "GET",
+      path: ["projects", input.project_id, "analytics", "query-stats"],
+    });
+    const params = new URLSearchParams(result.payload.search as string);
+    expect([...params.keys()].sort()).toEqual(properties.filter((name) => name !== "project_id"));
+    for (const name of properties) {
+      if (name === "project_id") continue;
+      const value = input[name];
+      expect(params.getAll(name), name).toEqual([
+        Array.isArray(value) ? value.join(",") : String(value),
+      ]);
+    }
+  });
+
   it("maps analytics reads and sync to project REST routes", async () => {
     const snapshots = await dispatchMcpTool(
       "list_traffic_snapshots",
@@ -1011,6 +1107,35 @@ describe("MCP tool dispatch", () => {
         "?start_date=2026-06-01&end_date=2026-06-30&query_match=contains&page_path=%2Fdocs%2F&page_path_match=prefix&clicks_min=5&impressions_min=100&position_max=20",
     });
 
+    const pagedQueries = await dispatchMcpTool(
+      "list_search_performance_query_stats",
+      {
+        clicks_min: 5,
+        connection_id: "conn_a00000000000000000000000",
+        country: "usa",
+        device: "mobile",
+        dimensions: ["query", "device", "country"],
+        end_date: "2026-06-30",
+        impressions_min: 100,
+        limit: 25,
+        offset: 50,
+        page_path: "/docs/",
+        page_path_match: "prefix",
+        position_max: 20,
+        project_id: "prj_a00000000000000000000000",
+        query: "rank tracker",
+        query_match: "contains",
+        start_date: "2026-06-01",
+      },
+      "bsb_key_live_test",
+    );
+    expect(pagedQueries.payload).toMatchObject({
+      method: "GET",
+      path: ["projects", "prj_a00000000000000000000000", "analytics", "query-stats"],
+      search:
+        "?start_date=2026-06-01&end_date=2026-06-30&connection_id=conn_a00000000000000000000000&query=rank+tracker&limit=25&query_match=contains&page_path=%2Fdocs%2F&page_path_match=prefix&clicks_min=5&impressions_min=100&position_max=20&country=usa&device=mobile&offset=50&dimensions=query%2Cdevice%2Ccountry",
+    });
+
     const sync = await dispatchMcpTool(
       "sync_project_traffic",
       { idempotency_key: "sync_1", project_id: "prj_a00000000000000000000000" },
@@ -1024,6 +1149,51 @@ describe("MCP tool dispatch", () => {
     expect(
       getMcpToolDefinitions().find((tool) => tool.name === "list_traffic_snapshots")?.description,
     ).toContain("project's own connected analytics accounts");
+  });
+
+  it("exposes every search-performance query parameter the route forwards", () => {
+    const schema = agentMcpSchemas.listSearchPerformanceQueryStats;
+    expect(Object.keys(schema.properties as object).sort()).toEqual([
+      "clicks_min",
+      "connection_id",
+      "country",
+      "device",
+      "dimensions",
+      "end_date",
+      "impressions_min",
+      "limit",
+      "offset",
+      "page_path",
+      "page_path_match",
+      "position_max",
+      "project_id",
+      "query",
+      "query_match",
+      "start_date",
+    ]);
+    expect(schema.properties).toMatchObject({
+      clicks_min: { minimum: 0, type: "integer" },
+      country: { maxLength: 3, minLength: 3, pattern: "^[a-zA-Z]{3}$", type: "string" },
+      device: { enum: ["desktop", "mobile", "tablet"], type: "string" },
+      dimensions: {
+        contains: { const: "query" },
+        items: { enum: ["query", "page", "country", "device"], type: "string" },
+        type: "array",
+      },
+      impressions_min: { minimum: 0, type: "integer" },
+      limit: { default: 100, maximum: 1_000, minimum: 1, type: "integer" },
+      offset: { default: 0, minimum: 0, type: "integer" },
+      page_path: { maxLength: 2_048, minLength: 1, type: "string" },
+      page_path_match: { default: "contains", enum: ["contains", "prefix"], type: "string" },
+      position_max: { minimum: 0, type: "number" },
+      query: { maxLength: 1_000, minLength: 1, type: "string" },
+      query_match: { default: "equals", enum: ["equals", "contains"], type: "string" },
+    });
+    expect(descriptions.listSearchPerformanceQueryStats).toContain("country");
+    expect(descriptions.listSearchPerformanceQueryStats).toContain("device");
+    expect(descriptions.listSearchPerformanceQueryStats).toContain("dimensions");
+    expect(descriptions.listSearchPerformanceQueryStats).toContain("offset");
+    expect(descriptions.listSearchPerformanceQueryStats).toContain("next_offset");
   });
 
   it("maps alert, rank export, and sitemap tools through REST", async () => {

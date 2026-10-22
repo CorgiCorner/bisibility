@@ -3,7 +3,6 @@ import { routerMock } from "@/tests/next-navigation";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { project, renderWizard } from "./OnboardingWizard.test-utils";
-import { confirmDefaultsFixture, previewDefaultsFixture } from "./reviewed-defaults-test-fixture";
 
 describe("OnboardingWizard final step", () => {
   it("connects a provider in the final-step modal and focuses the enabled test action", async () => {
@@ -134,30 +133,10 @@ describe("OnboardingWizard final step", () => {
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
-  it("uses the authoritative next dispatch returned after a timezone save", async () => {
-    const updateProjectDefaultsAction = vi.fn(async () => ({
-      kind: "saved" as const,
-      nextCheckAt: "2026-08-30T06:00:00.000Z",
-    }));
+  it("does not expose a hidden project cadence editor when a legacy daily default exists", () => {
+    const updateProjectDefaultsAction = vi.fn();
     renderWizard({
-      actions: {
-        listFirstCheckCandidatesAction: vi.fn(async () => ({
-          candidates: [
-            {
-              device: "desktop" as const,
-              id: "keyword_1",
-              market: { languageLabel: "English", locationLabel: "United States" },
-              publicId: "kw_keyword_1",
-              text: "rank tracker",
-            },
-          ],
-          hasAnalyticsSource: false,
-          isSampleProject: false,
-          providerReady: true,
-        })),
-        previewProjectDefaultsAction: vi.fn(previewDefaultsFixture),
-        updateProjectDefaultsAction,
-      },
+      actions: { updateProjectDefaultsAction },
       initialFlowState: { projectId: "prj_1", providerId: "dataforseo" },
       initialKeywordCount: 1,
       initialKeywordText: "rank tracker",
@@ -166,19 +145,12 @@ describe("OnboardingWizard final step", () => {
       nextCheckAt: "2026-08-29T06:00:00.000Z",
       providerConnected: true,
     });
-    fireEvent.click(screen.getByRole("button", { name: "Project timezone" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /Europe\/Warsaw/ }));
+    expect(screen.queryByRole("button", { name: "Project timezone" })).not.toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Schedule: Manual - checks run when you start them"),
+    ).toBeVisible();
     expect(updateProjectDefaultsAction).not.toHaveBeenCalled();
-    await confirmDefaultsFixture("Confirm reviewed save");
-    await waitFor(() => expect(updateProjectDefaultsAction).toHaveBeenCalledTimes(1));
-    expect(updateProjectDefaultsAction).toHaveBeenCalledWith(
-      expect.objectContaining({ timezone: "Europe/Warsaw" }),
-      expect.objectContaining({ confirmed: true, previewToken: "synthetic-reviewed-defaults" }),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
-    expect(await screen.findByText(/next run Aug 30, 2026, 08:00/)).toBeInTheDocument();
-    expect(screen.queryByText(/Aug 29, 2026/)).not.toBeInTheDocument();
-  }, 20_000);
+  });
 
   it("completes onboarding only when the final dashboard action is submitted", async () => {
     const completeOnboardingAction = vi.fn(async () => ({ completed: true }));

@@ -18,6 +18,7 @@ export type DisclosureProps = {
   headingLevel?: DisclosureHeadingLevel;
   summaryClassName?: string;
   title: ReactNode;
+  variant?: "panel" | "inline";
 };
 
 /**
@@ -33,19 +34,34 @@ export function Disclosure({
   headingLevel: Heading = "h3",
   summaryClassName,
   title,
+  variant = "panel",
 }: Readonly<DisclosureProps>) {
   return (
     <details
-      className={cn("group min-w-0 rounded-card border border-border bg-bg-elev", className)}
+      className={cn(
+        "group min-w-0",
+        variant === "panel" && "rounded-card border border-border bg-bg-elev",
+        className,
+      )}
       open={defaultOpen}
     >
       <summary
         className={cn(
-          "flex cursor-pointer list-none items-start gap-3 rounded-card px-5.5 py-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid sm:px-7 [&::-webkit-details-marker]:hidden",
+          "flex cursor-pointer list-none items-start gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-solid [&::-webkit-details-marker]:hidden",
+          variant === "panel"
+            ? "rounded-card px-5.5 py-5 sm:px-7"
+            : "min-h-10 items-center sm:min-h-6",
           summaryClassName,
         )}
       >
-        <Heading className="m-0 min-w-0 flex-1 wrap-break-word text-[17px] font-semibold leading-[1.3]">
+        <Heading
+          className={cn(
+            "m-0 min-w-0 flex-1 wrap-break-word",
+            variant === "panel"
+              ? "text-[17px] font-semibold leading-[1.3]"
+              : "text-xs font-normal leading-snug",
+          )}
+        >
           {title}
         </Heading>
         <CaretDown
@@ -55,7 +71,14 @@ export function Disclosure({
           weight="regular"
         />
       </summary>
-      <div className={cn("scroll-mt-32 px-5.5 pb-5 sm:px-7", contentClassName)} id={anchorId}>
+      <div
+        className={cn(
+          "scroll-mt-32",
+          variant === "panel" ? "px-5.5 pb-5 sm:px-7" : "pb-1",
+          contentClassName,
+        )}
+        id={anchorId}
+      >
         {children}
       </div>
     </details>

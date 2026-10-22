@@ -13,6 +13,12 @@ import {
 } from "./openapi-schedule-schema";
 import { openEnum, sdkName } from "./openapi-sdk-schema";
 
+const defaultsTimezoneSchema = {
+  ...scheduleTimezoneContractSchema,
+  deprecated: true,
+  description:
+    "Ignored on writes; reads retain the stored time zone. Configure named schedules instead.",
+};
 const serpDeviceSchema = { enum: serpDeviceValues, type: "string", ...openEnum("Device") };
 const writeModeSchema = {
   enum: ["active", "migration_hold", "migrated"],
@@ -20,9 +26,7 @@ const writeModeSchema = {
   ...openEnum("ProjectWriteMode"),
 };
 const locationKeySchema = { example: "ES/Andalusia/Malaga@en", type: "string" };
-
-// Mirrors READINESS_REASONS in lib/projects/readiness; pinned by
-// openapi-project-components.test.ts.
+// Mirrors READINESS_REASONS in lib/projects/readiness; pinned by openapi-project-components.test.ts.
 const readinessReasonValues = [
   "provider_not_connected",
   "provider_disabled",
@@ -114,26 +118,42 @@ export const projectSchemas = {
         example: "United States",
         type: "string",
       },
-      cron_expression: { type: ["string", "null"] },
+      cron_expression: {
+        type: ["string", "null"],
+        deprecated: true,
+        description: "Ignored. Configure recurrence with a named schedule.",
+      },
       device: {
         ...serpDeviceSchema,
         description: "Persisted default device for new keywords and moved default-market keywords.",
       },
       frequency: {
+        deprecated: true,
+        description:
+          "Ignored on writes and always manual on reads. Add keywords to a named schedule to enable recurring checks.",
         enum: ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
         type: "string",
       },
-      jitter_minutes: jitterMinutesContractSchema,
+      jitter_minutes: {
+        ...jitterMinutesContractSchema,
+        deprecated: true,
+        description: "Ignored. Configure jitter on a named schedule.",
+      },
       last_checked_at: { format: "date-time", type: ["string", "null"] },
       location_key: {
         ...locationKeySchema,
         description: "Persisted canonical location key for the default market.",
       },
-      next_check_at: { format: "date-time", type: ["string", "null"] },
+      next_check_at: {
+        format: "date-time",
+        type: ["string", "null"],
+        deprecated: true,
+        description: "Always null. Read upcoming checks from named schedules or runs.",
+      },
       project_id: publicIdSchema("prj"),
       serp_depth: { enum: [10, 20, 50, 100], type: "integer" },
       serp_stop_on_match: {
-        description: "Stops a SERP crawl after the tracked domain is found.",
+        description: "Effective early-stop policy; always false at Top20.",
         type: "boolean",
       },
       source: {
@@ -141,7 +161,7 @@ export const projectSchemas = {
         enum: ["derived", "explicit", "fallback"],
         type: "string",
       },
-      timezone: scheduleTimezoneContractSchema,
+      timezone: defaultsTimezoneSchema,
       updated_at: { format: "date-time", type: ["string", "null"] },
     },
     required: [
@@ -172,17 +192,28 @@ export const projectSchemas = {
       country: legacyMarketNameOpenApiSchema(
         "Optional country selector when location_key is omitted. Provide together with device.",
       ),
-      cron_expression: { type: ["string", "null"] },
+      cron_expression: {
+        type: ["string", "null"],
+        deprecated: true,
+        description: "Ignored. Configure recurrence with a named schedule.",
+      },
       device: {
         ...serpDeviceSchema,
         description:
           "Optional device selector. Provide with country when location_key is omitted; with location_key it overrides the current default device.",
       },
       frequency: {
+        deprecated: true,
+        description:
+          "Ignored on writes and always manual on reads. Add keywords to a named schedule to enable recurring checks.",
         enum: ["paused", "manual", "daily", "weekly", "monthly", "custom_cron"],
         type: "string",
       },
-      jitter_minutes: jitterMinutesContractSchema,
+      jitter_minutes: {
+        ...jitterMinutesContractSchema,
+        deprecated: true,
+        description: "Ignored. Configure jitter on a named schedule.",
+      },
       location_key: {
         ...locationKeySchema,
         description: primaryLocationKeyDescription(
@@ -196,10 +227,11 @@ export const projectSchemas = {
         type: "integer",
       },
       serp_stop_on_match: {
-        description: "Set false to fetch the full configured depth for competitor snapshots.",
+        description:
+          "Early-stop preference. Top20 always requests its full depth regardless of this value; false also disables early stopping at other depths.",
         type: "boolean",
       },
-      timezone: scheduleTimezoneContractSchema,
+      timezone: defaultsTimezoneSchema,
     },
     required: [],
     type: "object",

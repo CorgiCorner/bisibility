@@ -89,7 +89,7 @@ export function MarketKeywordCell({
 }
 
 export function MarketPositionCell({ row }: Readonly<{ row: KeywordRow | RankTrackerQualityRow }>) {
-  return <KeywordRankValue row={row} />;
+  return <KeywordRankValue row={row} compact />;
 }
 
 export function MarketLocationCell({ row }: Readonly<{ row: KeywordRow }>) {

@@ -6,7 +6,7 @@
     { "pattern": "revolutionary", "message": "avoid marketing filler in docs" }
   ],
   "prefer": [
-    { "term": "hosted beta", "insteadOf": ["Bisibility Cloud", "the Cloud"] },
+    { "term": "hosted Cloud", "insteadOf": ["hosted beta"] },
     { "term": "project API key", "insteadOf": ["API token"] },
     { "term": "personal access token", "insteadOf": ["user API key"] }
   ]

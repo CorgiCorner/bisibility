@@ -26,10 +26,34 @@ describe("rank tracker URL query contract", () => {
       pageSize: 50,
       savedViewId: null,
       search: "",
-      sort: { direction: "asc", field: "position" },
+      sort: { direction: "asc", field: "keyword" },
     });
     expect(parsed.present.size).toBe(0);
     expect(serializeRankTrackerQuery(parsed.state).toString()).toBe("");
+  });
+
+  test("falls back to keyword A–Z for an invalid URL sort", () => {
+    const parsed = parseRankTrackerQuery({ sort: "unregistered", dir: "clockwise" });
+    expect(parsed.state.sort).toEqual({ direction: "asc", field: "keyword" });
+    expect(parsed.issues).toEqual(["dir", "sort"]);
+  });
+
+  test("retains explicit position sorting through state serialization and a saved view", () => {
+    const parsed = parseRankTrackerQuery({ sort: "position", dir: "desc", view: "saved-id" });
+    const serialized = serializeRankTrackerQuery(parsed.state);
+    expect(serialized.get("sort")).toBe("position");
+    expect(serialized.get("dir")).toBe("desc");
+    const resolved = resolveRankTrackerQuery(
+      parseRankTrackerQuery(Object.fromEntries(serialized)),
+      { ...emptySavedViewConfig, search: "saved search" },
+    );
+    expect(resolved.sort).toEqual({ direction: "desc", field: "position" });
+    expect(resolved.search).toBe("saved search");
+  });
+
+  test("retains an explicit keyword A–Z choice across serialization", () => {
+    const parsed = parseRankTrackerQuery({ sort: "keyword", dir: "asc" });
+    expect(serializeRankTrackerQuery(parsed).toString()).toBe("sort=keyword&dir=asc");
   });
 
   test("trims, deduplicates, and accepts repeated and comma-delimited lists", () => {

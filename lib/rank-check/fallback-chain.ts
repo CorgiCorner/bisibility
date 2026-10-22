@@ -1,14 +1,13 @@
+import { ActionPaymentError } from "@/lib/action-payment/token";
 import type { SnapshotDefinitionSession } from "@/lib/measurement-definitions/snapshot-dispatch";
+import { assertSnapshotContinuationPreflight } from "@/lib/measurement-definitions/snapshot-preflight";
 import type { DefinitionExecutionPermit } from "@/lib/measurement-definitions/worker-claim";
-import {
-  type ProviderRequestAttribution,
-  type ProviderRequestSource,
-} from "@/lib/provider-usage/tag";
+import type { ProviderRequestAttribution, ProviderRequestSource } from "@/lib/provider-usage/tag";
 import { ProviderRateLimitedError } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
 import type { SerpProvider } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
-import { type SerpDepth } from "@/lib/serp/constants";
+import type { SerpDepth } from "@/lib/serp/constants";
 import { fallbackAttempt } from "./fallback-attempt";
 import { locationForProvider } from "./fallback-location";
 import { assertLegacyLiveBudget } from "./legacy-live-preflight";
@@ -24,8 +23,10 @@ import {
   runCheck,
 } from "./runner";
 import { RankCheckRunnerError } from "./runner-error";
+import { rankPaymentExecution } from "./runs/payment-runtime";
 import type { RankCheckScheduleInput } from "./schedule";
 export type RunCheckChainInput = {
+  payment?: import("@/lib/action-payment/paid-call").PaidCallPayment;
   definitionContinuation?: SnapshotDefinitionSession;
   definitionPermit?: DefinitionExecutionPermit;
   comparisonAllowed?: boolean;
@@ -58,6 +59,15 @@ export async function runCheckWithFallback(
     throw new RankCheckRunnerError("no_provider_connected", PROVIDER_NOT_CONNECTED_MESSAGE);
   }
 
+  const retained =
+    input.rankCheckId && !input.definitionContinuation && !input.payment
+      ? await rankPaymentExecution(input.rankCheckId, input.connections, input.projectId)
+      : { connections: input.connections, payment: input.payment };
+  input = {
+    ...input,
+    connections: retained.payment ? retained.connections.slice(0, 1) : retained.connections,
+    payment: retained.payment,
+  };
   const resolveProvider = input.resolveProvider ?? getSerpProvider;
   const attempts: FallbackAttempt[] = [];
   let admissionExhaustion:
@@ -74,6 +84,14 @@ export async function runCheckWithFallback(
     if (!liveConnection) {
       throw new ProviderUsagePersistenceError({ cause: new Error("Provider connection changed.") });
     }
+    if (
+      input.payment &&
+      ((input.payment.connectionId && liveConnection.id !== input.payment.connectionId) ||
+        liveConnection.credentialSource !== input.payment.snapshot.credentialSource ||
+        (liveConnection.credentialSource === "own" &&
+          liveConnection.credentialsEncrypted !== input.payment.snapshot.credentialsEncrypted))
+    )
+      throw new ActionPaymentError("payment_quote_changed");
     let provider: SerpProvider;
 
     try {
@@ -90,7 +108,14 @@ export async function runCheckWithFallback(
     }
 
     try {
-      if (input.projectId && liveConnection.credentialSource !== "hosted") {
+      if (input.definitionContinuation) {
+        await assertSnapshotContinuationPreflight(input.definitionContinuation, {
+          projectId: input.projectId,
+          keywordId: input.keyword.id,
+          rankCheckId: input.rankCheckId,
+          connection: liveConnection,
+        });
+      } else if (input.projectId && liveConnection.credentialSource !== "hosted") {
         await assertLegacyLiveBudget({
           connection: liveConnection,
           depth: input.depth ?? 100,
@@ -103,6 +128,7 @@ export async function runCheckWithFallback(
         });
       }
       const result = await runCheck({
+        payment: input.payment,
         definitionPermit: input.definitionPermit,
         definitionContinuation: input.definitionContinuation,
         comparisonAllowed: input.comparisonAllowed,

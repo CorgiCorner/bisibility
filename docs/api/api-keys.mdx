@@ -20,7 +20,11 @@ never the raw secret.
 
 `scope` accepts `read`, `write`, or `admin`; omitting it defaults to `admin`
 for backward compatibility. `expires_in_days` accepts `30`, `90`, `365`, or
-`null` for no expiry.
+`null` for no expiry. A key with no expiry, or with `admin` scope, can do
+everything that scope allows until revoked. An agent can create one if you
+allowed that app to create API tokens and the credential it uses can manage
+API keys. The key's expiry is separate from the token that created it. See
+[Agent permissions](/agents/permissions).
 
 `revokeApiKey` requires the complete typed `key_` public ID. The response is the
 revoked API-key resource with `revoked_at` set.

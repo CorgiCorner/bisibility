@@ -1,3 +1,4 @@
+import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { providerIdSchema } from "@/lib/schemas/provider";
 import { SEARCH_SYNC_STATUS_VOCABULARY } from "@/lib/search-insights/sync/control-model";
@@ -101,6 +102,7 @@ export const rankCheckProviderSchema = providerIdSchema.extract([
 export type RankCheckProvider = z.infer<typeof rankCheckProviderSchema>;
 
 export const rankCheckOperationSchema = z.object({
+  payment: actionPaymentReceiptSchema.optional(),
   budget: z
     .object({
       capCents: z.number().int().nonnegative(),

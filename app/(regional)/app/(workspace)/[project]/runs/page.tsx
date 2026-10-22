@@ -13,11 +13,13 @@ import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { isProjectReadOnly } from "@/lib/deployment/project-write-mode";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
+import { hasEnabledKeywordSchedule } from "@/lib/queries/check-schedule-planning";
 import { readOperationSnapshot } from "@/lib/rank-check/runs/snapshot";
 import { projectRunsPath } from "@/lib/routing/project-runs-path";
 import { ProjectRunsCursorError } from "@/lib/runs/cursor";
 import { type ProjectRunsQuery, parseProjectRunsQuery } from "@/lib/runs/filters";
 import { listProjectRuns } from "@/lib/runs/project-runs-query";
+import { schedulePlanningMinutes } from "@/lib/schedules/planning-visibility";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 
@@ -63,12 +65,13 @@ export default async function RunsPage({ params, searchParams }: Readonly<RunsPa
     canProjectAction(getProjectRole(readable.actor, readable.project.id), "update", "keyword") &&
     !isProjectReadOnly(readable.project.writeMode);
   try {
-    const [page, operations] = await Promise.all([
+    const [page, operations, hasSchedule] = await Promise.all([
       listProjectRuns(
         { id: access.projectId, name: readable.project.name, publicId: access.publicId },
         query,
       ),
       readOperationSnapshot(access.projectId),
+      hasEnabledKeywordSchedule(access.projectId),
     ]);
     return (
       <ProjectRunsFeatureBoundary>
@@ -85,6 +88,8 @@ export default async function RunsPage({ params, searchParams }: Readonly<RunsPa
             }
             deleteAction={deleteProjectRun}
             operations={operations}
+            hasEnabledKeywordSchedule={hasSchedule}
+            schedulePlanningMinutes={schedulePlanningMinutes()}
             page={page}
             projectRef={access.publicId}
             query={query}

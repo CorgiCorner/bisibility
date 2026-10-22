@@ -1,7 +1,7 @@
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { MeasurementPolicySettingsSection } from "@/components/measurement-settings/MeasurementPolicySettingsSection";
-import { MeasurementSettingsHostSection } from "@/components/measurement-settings/MeasurementSettingsHostSection";
 import { SettingsShell } from "@/components/settings/shell/SettingsShell";
+import { TrackingSchedulesLink } from "@/components/settings/tracking/TrackingSchedulesLink";
 import { TrackingSettingsSection } from "@/components/settings/tracking/TrackingSettingsSection";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
@@ -44,10 +44,7 @@ export default async function TrackingSettingsPage({
             canEdit={canEdit}
             projectId={access.project.publicId}
           />
-          <MeasurementSettingsHostSection
-            actor={access.actor}
-            projectId={access.project.publicId}
-          />
+          <TrackingSchedulesLink projectId={access.project.publicId} />
           <TrackingSettingsSection
             canEdit={canEdit}
             defaults={settings.defaults}

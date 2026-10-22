@@ -30,7 +30,7 @@ describe("rank quality UI", () => {
     render(<KeywordRankValue row={currentScopeUnavailableRow()} />);
     expect(screen.getByText("Current position unknown")).toBeInTheDocument();
     expect(screen.getByText(/Last known #6/)).toBeInTheDocument();
-    expect(screen.getByText("Current definition unavailable")).toBeInTheDocument();
+    expect(screen.getByText("Current tracking settings unavailable")).toBeInTheDocument();
     expect(screen.queryByText("#101")).not.toBeInTheDocument();
   });
 

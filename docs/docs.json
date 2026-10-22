@@ -178,7 +178,7 @@
           },
           {
             "group": "MCP and agents",
-            "pages": ["sdks/mcp", "agents"]
+            "pages": ["sdks/mcp", "agents", "agents/permissions", "agents/paid-tools"]
           }
         ]
       },

@@ -50,7 +50,7 @@ describe("ScheduleEditorMembers", () => {
       within(table)
         .getAllByRole("columnheader")
         .map((header) => header.textContent),
-    ).toEqual(["Keyword", "Checks", "Pending"]);
+    ).toEqual(["Keyword", "Market × device", "Checks", "Pending"]);
     expect(within(table).getByText("api first cms")).toBeVisible();
     expect(within(table).getByText("Moves from Daily 06:00")).toBeVisible();
     expect(
@@ -98,4 +98,20 @@ describe("ScheduleEditorMembers", () => {
     ).toBeVisible();
     expect(screen.queryByText(/ and /)).not.toBeInTheDocument();
   });
+});
+
+it("shows each market/device and hides an empty Pending column", () => {
+  render(
+    <ScheduleEditorMembers
+      memberCount={1}
+      onOpenDrawer={vi.fn()}
+      pendingMembers={[]}
+      scheduleName="Daily"
+      storedMembers={[
+        { name: "test", publicId: "kw_saved", targetCount: 1, market: "Poland", device: "Desktop" },
+      ]}
+    />,
+  );
+  expect(screen.getByText("Poland × Desktop")).toBeVisible();
+  expect(screen.queryByRole("columnheader", { name: /^Pending/ })).toBeNull();
 });

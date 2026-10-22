@@ -4,6 +4,7 @@ import RunsPage from "./page";
 
 const mocks = vi.hoisted(() => ({
   content: vi.fn(() => null),
+  hasEnabledKeywordSchedule: vi.fn(),
   listProjectRuns: vi.fn(),
   readOperationSnapshot: vi.fn(),
   requireReadableProject: vi.fn(),
@@ -17,6 +18,10 @@ vi.mock("@/lib/queries/_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
   resolveProjectAccess: mocks.resolveProjectAccess,
 }));
+vi.mock("@/lib/queries/check-schedule-planning", () => ({
+  hasEnabledKeywordSchedule: mocks.hasEnabledKeywordSchedule,
+}));
+vi.mock("@/lib/schedules/planning-visibility", () => ({ schedulePlanningMinutes: () => 15 }));
 vi.mock("@/lib/rank-check/runs/snapshot", () => ({
   readOperationSnapshot: mocks.readOperationSnapshot,
 }));
@@ -36,6 +41,7 @@ describe("RunsPage", () => {
       },
       project: { id: "project_1", name: "Example", publicId: projectRef, writeMode: "active" },
     });
+    mocks.hasEnabledKeywordSchedule.mockResolvedValue(true);
     mocks.listProjectRuns.mockResolvedValue({
       counts: { rankChecks: 0, searchConsole: 1, total: 1 },
       nextCursor: null,
@@ -69,9 +75,12 @@ describe("RunsPage", () => {
     );
     expect(mocks.readOperationSnapshot).toHaveBeenCalledTimes(1);
     expect(mocks.readOperationSnapshot).toHaveBeenCalledWith("project_1");
+    expect(mocks.hasEnabledKeywordSchedule).toHaveBeenCalledWith("project_1");
     expect(content).toMatchObject({
+      hasEnabledKeywordSchedule: true,
       operations: [expect.objectContaining({ id: "import_1", progress: { done: 28, total: 488 } })],
       projectRef,
+      schedulePlanningMinutes: 15,
     });
   });
 

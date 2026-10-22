@@ -157,7 +157,7 @@ export function RankTrackerReportScopeControl({
             aria-label={`${t("asOfUtc")}: ${snapshotLabel}`}
             aria-haspopup="dialog"
             aria-expanded={Boolean(timeAnchor)}
-            startIcon={<CalendarBlankIcon aria-hidden size={15} />}
+            startIcon={<CalendarBlankIcon weight="regular" aria-hidden size={15} />}
             onClick={(event) => {
               form.reset({ date: scope.asOf?.slice(0, 16) ?? "" });
               setTimeAnchor(event.currentTarget);

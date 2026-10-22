@@ -18,6 +18,7 @@ const project = { name: "Example project", publicId: "prj_a000000000000000000000
 
 const rankRun = {
   attention: null,
+  cost: { actualCents: null, estimatedCents: null, state: "unknown" as const },
   capabilities,
   details: {
     costCents: 10,
@@ -28,11 +29,11 @@ const rankRun = {
   },
   href: "/app/prj_a00000000000000000000000/runs/rank-checks/rcr_a00000000000000000000000",
   id: "rcr_a00000000000000000000000",
-  kind: "rank_check",
+  kind: "rank",
   lifecycle: "completed",
   progress: { completed: 2, total: 2, unit: "targets" },
   project,
-  scope: { description: null, keywordCount: 2, kind: "rank_check" },
+  scope: { description: null, keywordCount: 2, kind: "rank" },
   timestamps: {
     createdAt: "2026-09-06T11:58:00.000Z",
     finishedAt: "2026-09-06T12:01:00.000Z",
@@ -40,14 +41,14 @@ const rankRun = {
     plannedFor: null,
     startedAt: "2026-09-06T12:00:05.000Z",
   },
-  title: { kind: "rank_check", trigger: "manual" },
+  title: { kind: "rank", trigger: "manual" },
 } satisfies ProjectRun;
 
 describe("project run presentation contract", () => {
   it("uses a rank run launch time before its finished time", () => {
     expect(projectRunSortTuple(rankRun)).toEqual({
       id: rankRun.id,
-      kind: "rank_check",
+      kind: "rank",
       sortAt: "2026-09-06T12:00:00.000Z",
     });
   });
@@ -55,6 +56,7 @@ describe("project run presentation contract", () => {
   it("uses an import creation time and never fabricates rank-check costs or targets", () => {
     const importRun = {
       attention: null,
+      cost: { actualCents: null, estimatedCents: null, state: "unknown" as const },
       capabilities,
       details: {
         pausedReason: null,
@@ -64,24 +66,27 @@ describe("project run presentation contract", () => {
       },
       href: "/app/prj_a00000000000000000000000/search-console",
       id: "import_internal_id",
-      kind: "gsc_import",
+      kind: "gsc",
       lifecycle: "completed",
       progress: { completed: 28, total: 28, unit: "days" },
       project,
-      scope: { description: "sc-domain:example.com", kind: "gsc_import" },
+      scope: { description: "sc-domain:example.com", kind: "gsc" },
       timestamps: {
+        startedAt: null,
+        finishedAt: null,
+        plannedFor: null,
         createdAt: "2026-09-06T11:00:00.000Z",
         lastProbeAt: null,
         lastSyncFinishedAt: null,
         lastSyncStartedAt: null,
         syncStartedAt: null,
       },
-      title: { kind: "gsc_import" },
+      title: { kind: "gsc" },
     } satisfies ProjectRun;
 
     expect(projectRunSortTuple(importRun)).toEqual({
       id: importRun.id,
-      kind: "gsc_import",
+      kind: "gsc",
       sortAt: "2026-09-06T11:00:00.000Z",
     });
   });
@@ -122,12 +127,12 @@ describe("project run presentation contract", () => {
 
     expect(projectRunSortTuple(plannedRun)).toEqual({
       id: plannedRun.id,
-      kind: "rank_check",
+      kind: "rank",
       sortAt: plannedRun.timestamps.createdAt,
     });
     expect(projectRunPlannedSortTuple(plannedRun)).toEqual({
       id: plannedRun.id,
-      kind: "rank_check",
+      kind: "rank",
       plannedFor: "2026-09-07T08:00:00.000Z",
     });
     expect(() =>
@@ -141,6 +146,7 @@ describe("project run presentation contract", () => {
   it("preserves an unrecognized import state for a status-unavailable lifecycle", () => {
     const importRun = {
       attention: null,
+      cost: { actualCents: null, estimatedCents: null, state: "unknown" as const },
       capabilities,
       details: {
         pausedReason: null,
@@ -150,19 +156,22 @@ describe("project run presentation contract", () => {
       },
       href: "/app/prj_a00000000000000000000000/search-console",
       id: "legacy_import_id",
-      kind: "gsc_import",
+      kind: "gsc",
       lifecycle: "status_unavailable",
       progress: { completed: null, total: null, unit: "days" },
       project,
-      scope: { description: "sc-domain:example.com", kind: "gsc_import" },
+      scope: { description: "sc-domain:example.com", kind: "gsc" },
       timestamps: {
+        startedAt: null,
+        finishedAt: null,
+        plannedFor: null,
         createdAt: "2026-09-06T11:00:00.000Z",
         lastProbeAt: null,
         lastSyncFinishedAt: null,
         lastSyncStartedAt: null,
         syncStartedAt: null,
       },
-      title: { kind: "gsc_import" },
+      title: { kind: "gsc" },
     } satisfies ProjectRun;
 
     expect(importRun.details.state).toBe("legacy_in_progress");

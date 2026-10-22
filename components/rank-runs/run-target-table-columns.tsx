@@ -1,14 +1,15 @@
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProvider";
 import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { itemStatusChipPresentation } from "@/components/ui/status-chip-mapping";
-import { nativeUsageUnit } from "@/lib/cost-estimate/native-usage";
 import { deviceLabel } from "@/lib/queries/keyword-row-format";
 import { isUnrunnableReason } from "@/lib/rank-check/runnable-reasons";
 import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import Link from "next/link";
 import type { useTranslations } from "next-intl";
+import { DeferralReasonText } from "./deferral-reason-copy";
 import type { RunPageData, RunPageItem } from "./RunPageTypes";
 import { localizedBlockedRunCopy } from "./rank-run-copy";
 
@@ -37,6 +38,7 @@ export function runTargetNote(
     return localizedBlockedRunCopy({ deploymentMode, reason: item.blockedReason }, t, locale)
       .compact;
   }
+  if (item.blockedReason === "schedule_changed") return t("targetPresentation.scheduleChanged");
   if (isUnrunnableReason(item.blockedReason)) {
     return localizedBlockedRunCopy({ deploymentMode, reason: item.blockedReason }, t, locale)
       .compact;
@@ -57,6 +59,8 @@ export function runTargetNote(
       locale,
     ).compact;
   }
+  if (item.rankCheck?.errorCode === "provider_capacity_unavailable")
+    return t("targetPresentation.providerCapacityUnavailable");
   if (item.rankCheck?.errorCode === "provider_billing")
     return t("targetPresentation.providerBilling");
   if (item.rankCheck?.errorCode === "provider_account_restricted")
@@ -78,18 +82,6 @@ export function runTargetTableColumns({
   statusT,
   t,
 }: RunTargetTableColumnsOptions): readonly DataTableColumn<RunPageItem>[] {
-  const money = (value: number | null) =>
-    value === null
-      ? t("unavailable")
-      : new Intl.NumberFormat(locale, { currency: "USD", style: "currency" }).format(value / 100);
-  const operations = nativeUsageUnit(run.provider) === "units" || Boolean(run.usage);
-  const usageLabel = operations ? t("operations") : t("cost");
-  const actualUsage = (item: RunPageItem) =>
-    operations
-      ? nativeUsageUnit(item.rankCheck?.provider) === "units"
-        ? (item.rankCheck?.billingUnits ?? null)
-        : null
-      : item.actualCostCents;
   const columns: DataTableColumn<RunPageItem>[] = [
     {
       accessorFn: (item) => item.keyword.text,
@@ -163,21 +155,22 @@ export function runTargetTableColumns({
       size: 112,
     },
     {
-      accessorFn: actualUsage,
-      cell: ({ row }) => {
-        const value = actualUsage(row.original);
-        return operations
-          ? value === null
-            ? t("usageNotRecorded")
-            : new Intl.NumberFormat(locale).format(value)
-          : money(value);
-      },
+      accessorFn: (item) => item.payment?.charge.value ?? "",
+      cell: ({ row }) =>
+        row.original.status === "deferred" && !row.original.payment ? (
+          <DeferralReasonText
+            code={row.original.deferralCode ?? "unknown"}
+            projectRef={projectRef}
+          />
+        ) : (
+          <PaymentChargeLine payment={row.original.payment} />
+        ),
       enableSorting: false,
-      header: usageLabel,
+      header: t("cost"),
       id: "cost",
-      meta: { align: "end", lockResize: true, title: usageLabel },
-      minSize: operations ? 120 : 88,
-      size: operations ? 128 : 96,
+      meta: { align: "end", lockResize: true, title: t("cost") },
+      minSize: 160,
+      size: 180,
     },
   ];
   if (showNotes) {

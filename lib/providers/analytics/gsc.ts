@@ -15,7 +15,11 @@ import {
   type GscUrlInspectionResult,
   type GscUrlInspectionSession,
 } from "./gsc-inspection";
-import { fetchGscQueryStats, filterGscQueryStats } from "./gsc-query-pagination";
+import {
+  fetchGscQueryStats,
+  filterGscQueryStats,
+  gscQueryDimensions,
+} from "./gsc-query-pagination";
 import {
   fetchSearchAnalyticsEnvelope,
   fetchSearchAnalyticsRows,
@@ -101,10 +105,19 @@ function topQueryFromRow(row: GscRow): AnalyticsTopQuery | null {
   };
 }
 
-function queryStatFromRow(row: GscRow, includePage = false): QueryStatRow | null {
-  const query = row.keys[0]?.trim();
+function dimensionKey(row: GscRow, dimensions: readonly string[], name: string) {
+  const index = dimensions.indexOf(name);
+  if (index < 0) return undefined;
+  const value = row.keys[index]?.trim();
+  return value || undefined;
+}
+
+function queryStatFromRow(row: GscRow, dimensions: readonly string[]): QueryStatRow | null {
+  const query = dimensionKey(row, dimensions, "query");
   if (!query) return null;
-  const page = includePage ? row.keys[1]?.trim() : undefined;
+  const page = dimensionKey(row, dimensions, "page");
+  const country = dimensionKey(row, dimensions, "country")?.toLowerCase();
+  const device = dimensionKey(row, dimensions, "device")?.toLowerCase();
   return {
     clicks: numberValue(row.clicks),
     ctr: numberValue(row.ctr),
@@ -112,6 +125,8 @@ function queryStatFromRow(row: GscRow, includePage = false): QueryStatRow | null
     position: numberValue(row.position),
     query,
     ...(page ? { page } : {}),
+    ...(country ? { country } : {}),
+    ...(device ? { device } : {}),
   };
 }
 
@@ -195,9 +210,10 @@ export const gscAnalyticsProvider: GscAnalyticsProvider = {
     credentials: ProviderCredentials,
     input: AnalyticsQueryStatsInput,
   ): Promise<QueryStatRow[]> {
+    const dimensions = gscQueryDimensions(input);
     const rows = await fetchGscQueryStats(credentials, input, fetchSearchAnalyticsRows);
     const stats = rows.flatMap((row) => {
-      const stat = queryStatFromRow(row, Boolean(input.pagePath));
+      const stat = queryStatFromRow(row, dimensions);
       return stat ? [stat] : [];
     });
     return filterGscQueryStats(stats, input);

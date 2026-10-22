@@ -10,7 +10,12 @@ import { usageSummaryFromPages } from "@usagekit/views";
 import type { ProjectBudgetRow } from "./project-budget-display";
 
 export const usageUnits = ["cents", "units", "customer_cents", "requests"] as const;
-export type UsageConnection = { connectionId: string; provider: string; primary?: boolean };
+export type UsageConnection = {
+  connectionId: string;
+  provider: string;
+  credentialSource?: "own" | "hosted";
+  primary?: boolean;
+};
 export type ProjectUsageViews = {
   status: "available" | "unavailable" | "restricted";
   from: string;
@@ -20,6 +25,7 @@ export type ProjectUsageViews = {
   budgets: ProjectBudgetRow[];
   connections: UsageConnection[];
   paidWorkBlocked: boolean | null;
+  canEditBudget?: boolean;
   unresolved: number;
   oldestUnresolvedAt: string | null;
   truncated: boolean;

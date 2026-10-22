@@ -1,3 +1,4 @@
+import { paymentRequestFields, paymentResponseFields } from "./openapi-action-payment";
 import { closedEnum, openEnum, sdkName, usdCents } from "./openapi-sdk-schema";
 
 /** Site or page scope; shared by the request filter and every backlinks response. */
@@ -64,6 +65,7 @@ export const backlinksEstimateSchema = {
   description:
     "Free dry run returned for estimate_only=true. It carries cost facts only and never report fields, so it cannot be mistaken for an empty backlink profile.",
   properties: {
+    ...paymentResponseFields,
     cached: {
       description: "An unexpired snapshot exists, so the paid call would cost nothing.",
       type: "boolean",
@@ -101,6 +103,13 @@ export const backlinksEstimateSchema = {
 } as const;
 
 export const backlinksQueryParameters = [
+  { in: "query", name: "payment_option_id", schema: paymentRequestFields.payment_option_id },
+  {
+    in: "query",
+    name: "payment_quote_token",
+    schema: { type: "string", minLength: 1, maxLength: 12000 },
+  },
+  { in: "query", name: "require_payment", schema: paymentRequestFields.require_payment },
   {
     description: "Domain for site scope or full URL for page scope.",
     in: "query",
@@ -149,9 +158,9 @@ export const backlinksQueryParameters = [
   { in: "query", name: "fresh", schema: { default: false, type: "boolean" } },
   {
     description:
-      "Limit admitted cost estimates across summary, history, rows and retries, in cents. Confirmed provider charges can differ from estimates.",
+      "Limit admitted cost estimates across summary, history, rows and retries, in cents. Confirmed provider charges can differ from estimates. 0 = cached result only; a miss returns cost_limit_exceeded with estimated_cost_cents before paid work.",
     in: "query",
     name: "max_cost_cents",
-    schema: { minimum: 1, type: "integer", ...usdCents },
+    schema: { minimum: 0, type: "integer", ...usdCents },
   },
 ];

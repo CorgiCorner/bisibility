@@ -1,9 +1,14 @@
-import { MailTwoFactorGate } from "@/components/admin/MailTwoFactorGate";
+import {
+  DangerousActionAccessProvider,
+  DangerousActionGate,
+} from "@/components/admin/DangerousActionGate";
+import { InstanceMailSettings } from "@/components/admin/InstanceMailSettings";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { Card } from "@/components/ui/Card";
 import { loadCoreMessages } from "@/i18n/catalog-loader.server";
 import { resolveRegionalDocumentLocale } from "@/i18n/document-locale.server";
 import { createIntlTranslator } from "@/i18n/translator.server";
+import { adminDangerousActionAllowed } from "@/lib/auth/admin-dangerous-action";
 import { isFirstRun, isFirstRunAdministratorPending } from "@/lib/auth/first-run";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { requireSession } from "@/lib/auth/session";
@@ -72,10 +77,12 @@ export default async function SetupPage() {
   }
 
   await requireSession();
-  if (await getInstanceAdminSession()) {
+  const adminSession = await getInstanceAdminSession();
+  if (adminSession) {
     const mailerConfigured = isEmailConfigured();
     const mailSettings =
       isSelfHost && !mailerConfigured ? await loadInstanceMailSettingsView() : null;
+    const allowed = mailSettings ? await adminDangerousActionAllowed(adminSession) : false;
     return (
       <SetupFrame versionLabel={versionLabel}>
         <Card className="p-7" size="lg">
@@ -87,7 +94,13 @@ export default async function SetupPage() {
             />
           </div>
         </Card>
-        {mailSettings ? <MailTwoFactorGate returnTo="/setup" settings={mailSettings} /> : null}
+        {mailSettings ? (
+          <DangerousActionAccessProvider allowed={allowed}>
+            <DangerousActionGate action="changeMail" returnTo="/app/admin/administration">
+              <InstanceMailSettings settings={mailSettings} />
+            </DangerousActionGate>
+          </DangerousActionAccessProvider>
+        ) : null}
       </SetupFrame>
     );
   }

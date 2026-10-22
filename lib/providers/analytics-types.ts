@@ -7,6 +7,8 @@ export type AnalyticsTopQuery = {
 export type QueryStatRow = {
   query: string;
   page?: string;
+  country?: string;
+  device?: string;
   clicks: number;
   impressions: number;
   ctr: number;
@@ -20,9 +22,13 @@ export type AnalyticsMetricRange = {
 
 export type AnalyticsQueryStatsInput = {
   clicks?: AnalyticsMetricRange;
+  country?: string;
+  device?: "desktop" | "mobile" | "tablet";
+  dimensions?: Array<"query" | "page" | "country" | "device">;
   endDate: string;
   impressions?: AnalyticsMetricRange;
   limit?: number;
+  offset?: number;
   pagePath?: { match: "contains" | "prefix"; value: string };
   position?: AnalyticsMetricRange;
   query?: string;

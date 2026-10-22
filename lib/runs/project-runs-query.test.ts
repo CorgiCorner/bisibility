@@ -18,15 +18,16 @@ function rank(
 ): ProjectRun {
   return {
     attention: null,
+    cost: { actualCents: null, estimatedCents: null, state: "unknown" as const },
     capabilities,
     details: { costCents: 0, estimatedCostCents: 0, outcome: null, status, trigger: "manual" },
     href: `/app/${project.publicId}/runs/rank-checks/${id}`,
     id: id as `rcr_${string}`,
-    kind: "rank_check",
+    kind: "rank",
     lifecycle: status,
     progress: { completed: 1, total: 1, unit: "targets" },
     project,
-    scope: { description: null, keywordCount: 1, kind: "rank_check" },
+    scope: { description: null, keywordCount: 1, kind: "rank" },
     timestamps: {
       createdAt: launchedAt,
       finishedAt: launchedAt,
@@ -34,7 +35,7 @@ function rank(
       plannedFor: null,
       startedAt: launchedAt,
     },
-    title: { kind: "rank_check", trigger: "manual" },
+    title: { kind: "rank", trigger: "manual" },
   };
 }
 
@@ -52,6 +53,7 @@ function gsc(
 ): ProjectRun {
   return {
     attention: overrides.attention,
+    cost: { actualCents: null, estimatedCents: null, state: "not_applicable" },
     capabilities,
     details: {
       pausedReason: overrides.pausedReason,
@@ -61,7 +63,7 @@ function gsc(
     },
     href: `/app/${project.publicId}/search-console`,
     id,
-    kind: "gsc_import",
+    kind: "gsc",
     lifecycle: overrides.lifecycle,
     progress: {
       completed: state === "running" ? null : 1,
@@ -69,21 +71,25 @@ function gsc(
       unit: "days",
     },
     project,
-    scope: { description: "sc-domain:example.com", kind: "gsc_import" },
+    scope: { description: "sc-domain:example.com", kind: "gsc" },
     timestamps: {
+      startedAt: null,
+      finishedAt: null,
+      plannedFor: null,
       createdAt,
       lastProbeAt: null,
       lastSyncFinishedAt: null,
       lastSyncStartedAt: null,
       syncStartedAt: null,
     },
-    title: { kind: "gsc_import" },
+    title: { kind: "gsc" },
   };
 }
 
 function plannedRank(id: string, plannedFor: string): ProjectRun {
   return {
     attention: null,
+    cost: { actualCents: null, estimatedCents: null, state: "unknown" as const },
     capabilities,
     details: {
       costCents: 0,
@@ -94,11 +100,11 @@ function plannedRank(id: string, plannedFor: string): ProjectRun {
     },
     href: `/app/${project.publicId}/runs/rank-checks/${id}`,
     id: id as `rcr_${string}`,
-    kind: "rank_check",
+    kind: "rank",
     lifecycle: "planned",
     progress: { completed: 0, total: 1, unit: "targets" },
     project,
-    scope: { description: null, keywordCount: 1, kind: "rank_check" },
+    scope: { description: null, keywordCount: 1, kind: "rank" },
     timestamps: {
       createdAt: plannedFor,
       finishedAt: null,
@@ -106,7 +112,7 @@ function plannedRank(id: string, plannedFor: string): ProjectRun {
       plannedFor,
       startedAt: null,
     },
-    title: { kind: "rank_check", trigger: "scheduled" },
+    title: { kind: "rank", trigger: "scheduled" },
   };
 }
 

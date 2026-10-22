@@ -24,6 +24,7 @@ vi.mock("@/lib/metering/usage-read", () => ({
     Number((await mocks.prisma.providerCostEntry.aggregate())._sum.costCents ?? 0),
 }));
 vi.mock("@/lib/metering/project-budget-read", () => ({
+  projectBudgetCapCents: vi.fn(),
   projectBudgetStatus: mocks.budgetStatus,
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
@@ -169,6 +170,30 @@ describe("check health query", () => {
     await expect(getCheckHealth("prj_1", { now })).resolves.toMatchObject({
       budget: { capCents: 0, exhausted: false, spentCents: 0 },
     });
+  });
+
+  it("uses the funding budget spend for a split project", async () => {
+    mocks.prisma.providerConnection.findFirst.mockResolvedValue({
+      credentialSource: "hosted",
+      id: "hosted_1",
+      provider: "serpapi",
+      rates: [],
+    });
+    mocks.prisma.providerCostEntry.aggregate.mockResolvedValue({ _sum: { costCents: 500 } });
+    mocks.budgetStatus.mockResolvedValue({
+      budget: {
+        id: "credits-project:project_1:monthly",
+        limit: { value: 80n, scale: 0, unit: "customer_cents" },
+      },
+      used: { value: 10n, scale: 0, unit: "customer_cents" },
+      reserved: { value: 0n, scale: 0, unit: "customer_cents" },
+      uncertain: false,
+    });
+
+    await expect(getCheckHealth("prj_1", { now })).resolves.toMatchObject({
+      budget: { capCents: 80, exhausted: false, spentCents: 10 },
+    });
+    expect(mocks.prisma.providerCostEntry.aggregate).not.toHaveBeenCalled();
   });
 
   it("keeps budget available when monthly spend is below the cap", async () => {

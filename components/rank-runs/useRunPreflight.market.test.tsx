@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import { routerMock } from "@/tests/next-navigation";
@@ -10,6 +11,7 @@ const mocks = vi.hoisted(() => ({ launch: vi.fn() }));
 vi.mock("@/lib/actions/rank-check-run-launch", () => ({ launchRankCheckRunAction: mocks.launch }));
 
 const preview: RankCheckRunPreview = {
+  payment: paymentQuote(),
   budget: {
     blocked: false,
     capCents: null,
@@ -94,10 +96,23 @@ describe("whole-market manual preflight", () => {
     await user.click(screen.getByRole("radio", { name: "Top 50" }));
     expect(screen.getByLabelText("Run scope")).toHaveTextContent("1,199 keywords · 2,398 checks");
     const updated = JSON.parse(fetch.mock.calls[1]?.[1].body);
-    expect(updated).toEqual({ ...initial, depth: 50 });
-    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Start run" }));
+    expect(updated).toEqual({
+      ...initial,
+      depth: 50,
+      paymentOptionId: preview.payment?.option.id,
+      providerId: preview.payment?.option.providerId,
+    });
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: /^Start run/ }),
+    );
     expect(mocks.launch).toHaveBeenCalledWith(
-      expect.objectContaining({ depth: 50, previewToken: "top50", spec: initial.spec }),
+      expect.objectContaining({
+        acceptedPayment: { quoteToken: preview.payment?.quoteToken },
+        depth: 50,
+        paymentOptionId: preview.payment?.option.id,
+        previewToken: "top50",
+        spec: initial.spec,
+      }),
     );
     expect(routerMock.refresh).toHaveBeenCalledOnce();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

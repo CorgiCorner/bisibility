@@ -9,6 +9,17 @@ import { appPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
+export function AiSourceRetry({ onRetry }: Readonly<{ onRetry: () => void }>) {
+  const t = useTranslations("projectAiResearch");
+  return (
+    <div className="flex justify-center">
+      <Button variant="secondary" size="sm" onClick={onRetry}>
+        {t("sourceRetry")}
+      </Button>
+    </div>
+  );
+}
+
 export function AiCatalogNotice({
   mode,
   projectId,

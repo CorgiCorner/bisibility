@@ -1,4 +1,5 @@
 import "server-only";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import {
   acquireProviderLookupLock,
   type ProviderLookupLock,
@@ -15,6 +16,7 @@ import type { RankedKeywordRow } from "@/lib/providers/types";
 const DEFAULT_TTL_SECONDS = 43_200;
 
 export type RankedKeywordsCacheEntry = {
+  payment?: ActionPaymentReceipt;
   costCents: number;
   fetchedAt: string;
   rows: RankedKeywordRow[];

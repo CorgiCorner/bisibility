@@ -3,6 +3,7 @@ import {
   stableIntervalPhaseMs,
   WEEKLY_INTERVAL_MS,
 } from "@/lib/rank-check/interval-phase";
+import { createCheckScheduleSchema } from "@/lib/schemas/check-schedule";
 import { describe, expect, it } from "vitest";
 import { itemNotBefore, plannedOccurrenceForKey, plannedOccurrences } from "./occurrence";
 
@@ -83,6 +84,47 @@ describe("planned occurrences", () => {
       "2026-09-03T12:00:00.000Z",
     ]);
   });
+
+  it.each(["weekly", "monthly"] as const)(
+    "keeps an untimed %s schedule on its own interval",
+    (frequency) => {
+      const parsed = createCheckScheduleSchema.parse({
+        cronExpression: null,
+        jitterMinutes: 0,
+        timeOfDay: null,
+        timezone: "UTC",
+        name: "Interval",
+        projectId: `prj_${"a".repeat(24)}`,
+        frequency,
+      });
+      const schedule = {
+        ...base,
+        ...parsed,
+        frequency,
+        timezone: parsed.timezone ?? base.timezone,
+      };
+      const now = new Date("2026-09-01T00:00:00.000Z");
+      const horizon = new Date("2026-10-09T00:00:00.000Z");
+      const occurrences = plannedOccurrences(schedule, now, horizon);
+      expect(occurrences.length).toBeGreaterThan(0);
+      const first = occurrences[0];
+      const second =
+        frequency === "weekly"
+          ? occurrences[1]
+          : plannedOccurrences(
+              schedule,
+              new Date("2026-10-01T00:00:00.000Z"),
+              new Date("2026-11-08T00:00:00.000Z"),
+            )[0];
+      expect(second.plannedFor.getTime() - first.plannedFor.getTime()).toBe(first.intervalMs);
+      expect(first.intervalMs).toBe(
+        frequency === "weekly" ? WEEKLY_INTERVAL_MS : 30 * DAILY_INTERVAL_MS,
+      );
+      const slot = itemNotBefore(first, schedule, "keyword_1", first.plannedFor);
+      expect(slot.getTime()).toBeGreaterThanOrEqual(first.plannedFor.getTime());
+      expect(slot.getTime()).toBeLessThan(first.plannedFor.getTime() + first.intervalMs);
+    },
+  );
 
   it("uses a persisted weekly cron for the selected Friday", () => {
     const occurrences = plannedOccurrences(

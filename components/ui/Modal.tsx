@@ -14,12 +14,15 @@ import { type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useId } from 
 export type ModalSize = "sm" | "md" | "lg" | "full";
 
 export type ModalProps = {
+  id?: string;
   ariaLabelledBy?: string;
   open: boolean;
   onClose: () => void;
   title?: ReactNode;
   description?: ReactNode;
   children: ReactNode;
+  /** Optional noninteractive visuals outside the dialog panel. */
+  decoration?: ReactNode;
   footer?: ReactNode;
   size?: ModalSize;
   showClose?: boolean;
@@ -50,11 +53,13 @@ export function Modal({
   children,
   contentClassName,
   description,
+  decoration,
   dismissDisabled = false,
   footer,
   footerClassName,
   headerDivider = false,
   initialFocus,
+  id,
   onClose,
   onExited,
   onPrimaryAction,
@@ -106,8 +111,10 @@ export function Modal({
       aria-describedby={description ? descriptionId : undefined}
       onClose={handleDialogClose}
       open={open}
+      decoration={decoration}
       backdropProps={{ style: { backgroundColor: "rgba(20,16,8,.44)" } }}
       contentProps={{
+        ...(id === undefined ? {} : { id }),
         className: "rounded-card",
         onKeyDown: handleKeyDown,
         style: {

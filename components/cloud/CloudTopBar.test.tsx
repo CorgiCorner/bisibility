@@ -7,7 +7,7 @@ describe("CloudTopBar", () => {
     render(
       <CloudTopBar
         copy={{
-          beta: "Beta",
+          beta: "Cloud",
           fallbackWorkspace: "Project",
           setupProgress: ({ current, total }) => `Setup / ${current} of ${total}`,
         }}
@@ -15,7 +15,7 @@ describe("CloudTopBar", () => {
       />,
     );
 
-    expect(screen.getByText("Beta")).toBeInTheDocument();
+    expect(screen.getByText("Cloud")).toBeInTheDocument();
     expect(screen.queryByRole("switch", { name: /theme/i })).not.toBeInTheDocument();
   });
 });

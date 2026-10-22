@@ -1,5 +1,6 @@
 "use client";
 
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import type { BacklinksFailedSummary as FailedSummary } from "@/lib/backlinks/types";
 import { useFormatter, useTranslations } from "next-intl";
 
@@ -20,12 +21,6 @@ export function BacklinksFailedSummary({ evidence }: Readonly<{ evidence: Failed
     ],
     [summary("targetSpam"), format.number(evidence.summary.spamScore)],
   ];
-  const cost = format.number(evidence.knownSummaryCostCents / 100, {
-    currency: "USD",
-    maximumFractionDigits: 4,
-    minimumFractionDigits: 2,
-    style: "currency",
-  });
 
   return (
     <section
@@ -38,7 +33,7 @@ export function BacklinksFailedSummary({ evidence }: Readonly<{ evidence: Failed
           {t("description", { target: evidence.target })}
         </p>
         <p className="m-0 text-[13px] font-semibold">{t("costUnknown")}</p>
-        <p className="m-0 text-[13px] text-fg-muted">{t("knownSummaryCost", { cost })}</p>
+        <PaymentChargeLine payment={evidence.payment} />
       </div>
       <dl className="m-0 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {metrics.map(([label, value]) => (

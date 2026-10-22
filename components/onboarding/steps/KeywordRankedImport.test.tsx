@@ -1,17 +1,25 @@
-import { mergeMessageCatalogs } from "@/i18n/catalog-contract";
-import {
-  renderWithOnboardingMessages as render,
-  renderWithFeatureMessages,
-} from "@/i18n/test-support/render-with-feature-messages";
+import { renderWithOnboardingMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { RankedKeywordsSuccess } from "@/lib/ranked-keywords/service";
-import onboardingMessages from "@/messages/core/en/onboarding.json";
-import sharedMessages from "@/messages/core/en/shared.json";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { KeywordRankedImport } from "./KeywordRankedImport";
 import { rankedImportMessages } from "./keyword-import-messages";
+
+// These tests isolate row selection and failure retention from the shared payment dialog.
+vi.mock("@/components/action-payment/ActionPaymentPrice", () => ({
+  ActionPaymentPrice: () => null,
+}));
+vi.mock("@/components/action-payment/ActionPaymentModal", () => ({
+  ActionPaymentModal: () => null,
+}));
+vi.mock("@/components/action-payment/useActionPaymentReview", () => ({
+  useActionPaymentReview: () => ({
+    draft: null,
+    request: (action: (input: unknown) => Promise<unknown>, input: unknown) => action(input),
+  }),
+}));
 
 const connection = {
   id: "conn_a00000000000000000000000",
@@ -112,9 +120,7 @@ describe("KeywordRankedImport", () => {
         projectId="prj_1"
       />,
     );
-    expect(
-      screen.getByRole("button", { name: "Import from DataForSEO (about $0.02/page)" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Import from DataForSEO" })).toBeInTheDocument();
     expect(fetchAction).not.toHaveBeenCalled();
   });
 
@@ -131,42 +137,6 @@ describe("KeywordRankedImport", () => {
 
     expect(screen.queryByText(/about \$/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Import from DataForSEO" })).toBeInTheDocument();
-  });
-
-  it("uses numeric Polish USD clauses for page cost, session spend, and cache state", async () => {
-    const messages = mergeMessageCatalogs(sharedMessages, {
-      onboarding: {
-        ...onboardingMessages.onboarding,
-        keywords: {
-          ...onboardingMessages.onboarding.keywords,
-          ranked: {
-            ...onboardingMessages.onboarding.keywords.ranked,
-            aboutPage: "(ok. {cost, number, ::currency/USD}/strona)",
-            spent:
-              "Wydano w sesji: {cost, number, ::currency/USD}{cached, select, yes {. Strona {page, number} z cache.} other {}}",
-          },
-        },
-      },
-    });
-    renderWithFeatureMessages(
-      <LocalizedRankedImport
-        connections={[connection]}
-        currentKeywords=""
-        domain="example.com"
-        fetchAction={vi.fn(async () => page([row("alpha", 10)], { cached: true, costCents: 2 }))}
-        onAppendQueries={vi.fn()}
-        projectId="prj_1"
-      />,
-      { locale: "pl", messages },
-    );
-
-    const action = screen.getByRole("button", {
-      name: /Import from DataForSEO \(ok\. 0,02\sUSD\/strona\)/,
-    });
-    fireEvent.click(action);
-
-    expect(await screen.findByText(/Wydano w sesji: 0,00\sUSD\. Strona 1 z cache\./)).toBeVisible();
-    expect(screen.getByRole("button", { name: "Add 1 keyword" })).toBeEnabled();
   });
 
   it("groups variants, disables tracked rows, and preselects within remaining capacity", async () => {
@@ -206,7 +176,6 @@ describe("KeywordRankedImport", () => {
     fireEvent.click(screen.getByRole("button", { name: /Load next 100/ }));
     await screen.findByText("second");
     expect(screen.getByText("1 of 2 selected")).toBeInTheDocument();
-    expect(screen.getByText(/Spent this session: \$0.02. Page 2 cached./)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Add 1 keyword" }));
     expect(onAppendQueries).toHaveBeenCalledWith(["first"]);
   });

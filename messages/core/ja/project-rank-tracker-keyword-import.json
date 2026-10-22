@@ -346,7 +346,7 @@
             "bestMeasuredPosition": "計測済み最良順位 #{position}",
             "knownAbsent": "計測範囲内に見つかりません",
             "unsupported": "未対応の結果",
-            "notObserved": "未観測",
+            "notObserved": "結果はまだありません",
             "currentUnknown": "現在の順位は不明",
             "dateUnknown": "日時不明",
             "lastKnownObserved": "最後の既知順位 #{position} · 観測 {date}",
@@ -354,7 +354,7 @@
             "lastKnownUndated": "最後の既知順位 #{position} · 日時不明",
             "bestRetainedPosition": "保存済み最良順位 #{position} · 日時不明",
             "groupQuality": "順位あり {ranked} / 対象 {expected}、不明 {unknown}",
-            "currentScopeUnavailable": "現在の定義を確認できません",
+            "currentScopeUnavailable": "現在のトラッキング設定を取得できません",
             "freshness": {
               "fresh": "新しいデータ",
               "stale": "古いデータ",
@@ -390,15 +390,19 @@
             "retainedHistoryHelp": "保存された比較可能な観測値は履歴を示すもので、現在の定義を証明するものではありません。",
             "retainedHistory": "{keyword} の保存済み順位履歴",
             "groupRankingUrls": "保存済み結果 URL {count} 件",
-            "retainedRankingUrl": "保存済み結果 URL、現在の適格性は不明",
+            "retainedRankingUrl": "最後に確認された URL。現在の結果は利用できません。",
             "lastKnownStored": "最後の既知順位 #{position} · 保存日時 {date}",
-            "qualificationUnknown": "適格性は不明",
-            "historyQualificationUnknown": "保存済み履歴の適格性は不明",
+            "qualificationUnknown": "現在の結果は利用できません",
+            "historyQualificationUnknown": "以前の結果は未検証です",
             "currentSince": "現在の期間の開始 {date}",
             "baselineWindow": "基準期間 {from} から {to} より前まで",
             "capturedExpectedUrl": "この計測とともに記録された期待URL",
             "expectedUrlProvenanceUnknown": "期待URLの出所は不明です",
-            "measuredCount": "{expected} 件中 {measured} 件を測定"
+            "measuredCount": "{expected} 件中 {measured} 件を測定",
+            "lastKnownShort": "最終確認 #{position}",
+            "bestRetainedShort": "保存済み最良 #{position}",
+            "retainedUrlShort": "最終確認",
+            "freshnessUnknownHelp": "この結果の新しさを確認できません。"
           }
         },
         "runChecks": {
@@ -455,7 +459,8 @@
           "runningBody": "{count, plural, other {#件のチェックを実行中です。}}このウィンドウは閉じてかまいません。結果はこのページに表示されます。",
           "successBody": "{count, plural, other {#件の順位チェックが完了しました。}}",
           "checksNeedAttention": "{count, plural, other {#件のチェックが要対応です。}}",
-          "viewRuns": "実行を表示"
+          "viewRuns": "実行を表示",
+          "providerCapacityUnavailable": "このプロバイダーでのチェックは一時的に利用できません。料金は請求されていません。しばらくしてから再試行するか、ご自身のプロバイダーキーを接続してください。"
         },
         "schedule": {
           "title": "{count, plural, other {キーワード#件 / ターゲット#件}}のスケジュールを設定",
@@ -818,7 +823,10 @@
           "source": "ソース",
           "saved": "保存日時",
           "volumeTrend": "{keyword} の月間ボリューム推移",
+          "research": "リサーチ",
           "researchFallback": "キーワードリサーチ",
+          "researchOneAtATime": "一度にリサーチできるキーワードは1件です。",
+          "toolbar": "選択したキーワードの操作",
           "relative": {
             "daysAgo": "{count, number}日前",
             "hoursAgo": "{count, number}時間前",

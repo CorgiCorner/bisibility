@@ -19,11 +19,6 @@ export const legacyModelOptions = LEGACY_MODELS.map((id) => ({
   value: id,
   label: id === "gpt-4.1-mini" ? "GPT-4.1 mini" : "GPT-4.1 nano",
 }));
-export function freshResearchCatalog(catalog?: AiResearchCatalog, error?: string) {
-  if (!catalog || error) return undefined;
-  const age = Date.now() - Date.parse(catalog.fetchedAt);
-  return Number.isFinite(age) && age >= 0 && age <= 300_000 ? catalog : undefined;
-}
 export function legacyResearchInput(mode: "prompt" | "visibility", values: FormValues) {
   if (mode === "visibility")
     return (
@@ -49,7 +44,12 @@ export function researchInputFingerprint(
   values: FormValues,
   catalog?: AiResearchCatalog,
 ) {
-  const { estimate_only: _estimate, ...request } = values;
+  const {
+    estimate_only: _estimate,
+    accepted_payment: _accepted,
+    require_payment: _required,
+    ...request
+  } = values;
   const identity = { ...request };
   if ("idempotency_key" in identity) delete identity.idempotency_key;
   if ("estimate_credentials_ref" in identity) delete identity.estimate_credentials_ref;

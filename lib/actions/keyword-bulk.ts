@@ -3,7 +3,7 @@
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { deleteKeywordTargets } from "@/lib/keywords/delete";
-import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
+import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
 import {
   bulkKeywordFrequencySchema,
   bulkKeywordIdsSchema,
@@ -135,18 +135,13 @@ export async function bulkSetFrequency(input: unknown) {
   });
 
   await prisma.$transaction(async (tx) => {
-    const now = new Date();
-    await Promise.all(
-      keywords.map((keyword) => {
-        const keywordSchedule = normalizeSchedule(data.schedule, now, keyword.id);
-        return tx.keywordSchedule.upsert({
-          create: { ...keywordSchedule, keywordId: keyword.id },
-          update: keywordSchedule,
-          where: { keywordId: keyword.id },
-        });
-      }),
+    await setKeywordCadence(
+      tx,
+      project.id,
+      keywords.map((keyword) => keyword.id),
+      schedule,
+      actor.id,
     );
-    await refreshKeywordDispatchStates({ keywordIds: keywords.map((keyword) => keyword.id) }, tx);
   });
   await writeAudit({
     action: "keyword.bulk_set_frequency",

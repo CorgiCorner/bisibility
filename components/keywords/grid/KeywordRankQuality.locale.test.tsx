@@ -21,28 +21,28 @@ const locales = [
     directions: "1 improved; 1 declined",
     messages: mergeMessageCatalogs(enImport, enShared),
     unknown: "Current position unknown",
-    scope: "Current definition unavailable",
+    scope: "Current tracking settings unavailable",
   },
   {
     locale: "es-ES" as const,
     directions: "1 mejoraron; 1 empeoraron",
     messages: mergeMessageCatalogs(esImport, esShared),
     unknown: "Posición actual desconocida",
-    scope: "Definición actual no disponible",
+    scope: "La configuración de seguimiento actual no está disponible",
   },
   {
     locale: "ja" as const,
     directions: "順位上昇 1 件; 順位低下 1 件",
     messages: mergeMessageCatalogs(jaImport, jaShared),
     unknown: "現在の順位は不明",
-    scope: "現在の定義を確認できません",
+    scope: "現在のトラッキング設定を取得できません",
   },
   {
     locale: "pl" as const,
     directions: "1 poprawiło pozycję; 1 pogorszyło pozycję",
     messages: mergeMessageCatalogs(plImport, plShared),
     unknown: "Bieżąca pozycja nieznana",
-    scope: "Bieżąca definicja niedostępna",
+    scope: "Bieżące ustawienia monitorowania są niedostępne",
   },
 ];
 

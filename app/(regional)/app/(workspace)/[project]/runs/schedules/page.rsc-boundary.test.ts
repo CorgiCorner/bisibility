@@ -27,8 +27,11 @@ const stubs = {
   "@/lib/auth/capabilities": "exports.canProjectAction = () => true;",
   "@/lib/queries/_auth":
     "exports.resolveProjectAccess = async () => ({ publicId: 'prj_1' }); exports.requireReadableProject = async () => ({ actor: {}, project: { id: 'project_1' } });",
+  "@/lib/queries/check-schedule-members":
+    "exports.listScheduleMemberCandidates = async () => [{ device: 'Mobile', market: 'Poland', name: 'candidate keyword', publicId: 'kw_candidate', scheduleId: null, sourceName: null, tags: [], targetCount: 1 }];",
   "@/lib/queries/rank-check-runs":
     "exports.listRankCheckRuns = async () => ({ data: [], nextCursor: null });",
+  "@/lib/schedules/planning-visibility": "exports.schedulePlanningMinutes = () => 15;",
   "@/lib/routing/app-path":
     "exports.appPath = (projectRef, ...segments) => '/app/' + projectRef + '/' + segments.join('/'); exports.asProjectRef = (projectRef) => projectRef;",
   "@/lib/routing/project-schedules-path":
@@ -114,6 +117,8 @@ describe("SchedulesPage RSC boundary", () => {
     expect(payload).toContain("ais_weekly");
     expect(payload).toContain("aip_one");
     expect(payload).toContain('"aiUnavailable":false');
+    expect(payload).toContain("kw_candidate");
+    expect(payload).toContain('"planningMinutes":15');
   });
 
   it("names a missing boundary fixture instead of silently supplying an empty module", () => {

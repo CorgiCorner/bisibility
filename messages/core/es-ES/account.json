@@ -103,7 +103,6 @@
         "backupCodes": "Códigos de recuperación",
         "backupCodesGenerated": "Se han generado códigos de recuperación nuevos. Guárdalos ahora.",
         "cancel": "Cancelar",
-        "continueToMail": "Continuar a la configuración de correo",
         "currentAuthenticatorCode": "Código de autenticación actual",
         "currentBackupCode": "Código de recuperación actual",
         "description": "Añade un segundo paso después del código de acceso por correo.",
@@ -150,7 +149,8 @@
             "description": "Por seguridad, el registro inicial requiere que hayas iniciado sesión en los últimos cinco minutos.",
             "label": "Continuar"
           }
-        }
+        },
+        "returnToAdmin": "Volver a administración"
       },
       "personalTokens": {
         "cancel": "Cancelar",
@@ -234,6 +234,40 @@
         "signingOut": "Cerrando sesión",
         "thisDevice": "Este dispositivo",
         "title": "Sesiones activas"
+      },
+      "connectedApps": {
+        "title": "Aplicaciones conectadas",
+        "description": "Revisa y revoca las aplicaciones con acceso a tu cuenta.",
+        "dynamic": "Registrada automáticamente",
+        "empty": "No hay aplicaciones conectadas a tu cuenta.",
+        "connected": "Conectada el {date}",
+        "lastUsed": "Último uso: {date}",
+        "neverUsed": "Sin uso todavía",
+        "noScopes": "Sin permisos adicionales",
+        "scopeSeparator": ", ",
+        "createdTokens": "{count, plural, one {# token de API vinculado} other {# tokens de API vinculados}}",
+        "revoke": "Revocar",
+        "revokeApp": "Revocar el acceso de {name}",
+        "confirmTitle": "¿Revocar el acceso de {name}?",
+        "confirmDescription": "La aplicación dejará de renovar el acceso. Los tokens de API seguirán funcionando si no los revocas también.",
+        "issuedAccess": "El acceso ya emitido puede seguir funcionando hasta 1 hora.",
+        "alsoRevoke": "Revocar también {count, plural, one {# token de API creado por esta aplicación} other {# tokens de API creados por esta aplicación}}",
+        "unlinkedTokens": "Los tokens de API antiguos o sin historial de emisión conservado no se pueden vincular de forma fiable a una aplicación. Revísalos por separado.",
+        "manageTokens": "Gestionar tokens personales",
+        "cancel": "Cancelar",
+        "revoking": "Revocando",
+        "error": "No se pudo revocar el acceso. Inténtalo de nuevo.",
+        "scopes": {
+          "identity": "Confirmar tu identidad",
+          "profile": "Leer tu perfil",
+          "email": "Leer tu correo electrónico",
+          "renew": "Renovar el acceso",
+          "read": "Leer datos de proyectos",
+          "write": "Modificar datos de proyectos",
+          "admin": "Gestionar proyectos y accesos",
+          "tokens": "Crear tokens de API",
+          "other": "Permiso adicional: {scope}"
+        }
       }
     },
     "preferences": {

@@ -117,6 +117,39 @@
     "trackedMarkets": "Mercados en seguimiento",
     "updateFailed": "No se ha podido actualizar el estado del mercado.",
     "updateMarketFailed": "No se ha podido actualizar el mercado.",
-    "visibility": "Visibilidad"
+    "visibility": "Visibilidad",
+    "openMarket": "Abrir mercado",
+    "viewMarkets": "Ver mercados",
+    "alreadyTrackedShort": "Ya seguido",
+    "deviceTracking": {
+      "title": "Añadir seguimiento de dispositivo",
+      "description": "Añade los dispositivos que faltan en este mercado.",
+      "device": "Dispositivo que añadir",
+      "manualNotice": "Añadir es gratis. Aún no se ejecutarán comprobaciones.",
+      "scheduledNotice": "Añadir es gratis. Las comprobaciones siguen el horario elegido.",
+      "costNotice": "Añadir es gratis. Las comprobaciones usan créditos o tu cuenta del proveedor.",
+      "scope": "Seguimiento en {device} para {checks, plural, one {# palabra clave} other {# palabras clave}}.",
+      "skipped": "Omitidas: {existing, number} en seguimiento, {archived, number} archivadas.",
+      "review": "Revisar cambios",
+      "confirm": "Añadir seguimiento {device} ({count, number})",
+      "added": "Seguimiento añadido para {count, number} palabras clave.",
+      "failed": "No se pudo confirmar el cambio. Revísalo antes de reintentar.",
+      "errors": {
+        "market_unavailable": "Este mercado está pausado, archivado o no disponible. Revísalo en Mercados.",
+        "selection_too_large": "Para mercados grandes, usa Añadir palabras clave para añadir el dispositivo en lotes pequeños.",
+        "selection_changed": "Las palabras clave o la programación cambiaron. Revisa el alcance actual.",
+        "schedule_unavailable": "Esta programación está pausada, archivada o no disponible. Elige otra o Manual.",
+        "ambiguous_keywords": "Las palabras clave coincidentes usan ajustes de seguimiento distintos. Usa Añadir palabras clave para añadirles el dispositivo individualmente."
+      },
+      "keywords": "Palabras clave",
+      "selectedCount": "{count, number} de {total, number}",
+      "selectAll": "Seleccionar todas",
+      "noAvailableKeywords": "No hay palabras clave disponibles para este dispositivo.",
+      "selectionLimit": "Selecciona hasta 500 palabras clave."
+    },
+    "trackedTargets": "{count, plural, one {# objetivo} other {# objetivos}}",
+    "pauseTracking": "Pausar seguimiento",
+    "resumeTracking": "Reanudar seguimiento",
+    "trackingStatusFor": "{market}: {status}"
   }
 }

@@ -10,7 +10,7 @@
         "analyzing": "Analizando",
         "analyze": "Analizar",
         "cached": "{action} gratis, en caché",
-        "priced": "{action} ~{cost}",
+        "priced": "{action} {cost}",
         "removeTarget": "Quitar {target}",
         "targetLabel": "Objetivo de backlinks",
         "targetPlaceholder": "Escribe un dominio o una URL",
@@ -30,7 +30,7 @@
       "idle": {
         "aria": "Introducción a los backlinks",
         "bullets": {
-          "price": "Funciona con tu propia clave de DataForSEO y el precio se muestra antes de cada ejecución",
+          "price": "Precio antes de cada búsqueda.",
           "cache": "Las instantáneas se guardan en caché 24 horas: volver a abrirlas y segmentarlas es gratis",
           "diff": "Cada actualización se compara con la última instantánea: se marcan los enlaces nuevos y los perdidos"
         },
@@ -133,7 +133,7 @@
         "exactPage": "Página exacta",
         "wholeSite": "Todo el sitio, subdominios {included, select, true {incluidos} other {excluidos}}",
         "snapshot": "· instantánea",
-        "cached": "en caché, gratis durante {hours, number} h",
+        "cached": "en caché, gratis durante {duration}",
         "refresh": "Actualizar ahora",
         "refreshEstimate": "~{amount}",
         "refreshEstimateUnderCent": "~{sign}< {amount}",
@@ -185,7 +185,7 @@
         "csv": "Exportar CSV"
       },
       "recent": {
-        "cached": "en caché, gratis durante {hours, number} h",
+        "cached": "en caché, gratis durante {duration}",
         "expired": "caché caducada"
       },
       "pricing": {

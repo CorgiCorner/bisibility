@@ -18,7 +18,6 @@ type Props = Pick<
   | "keywordDefaults"
   | "projectId"
   | "projectMarkets"
-  | "queueFirstChecksAction"
   | "tagSuggestions"
 > & {
   addDraft: AddKeywordDraft;

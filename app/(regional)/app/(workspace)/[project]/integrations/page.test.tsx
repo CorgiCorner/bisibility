@@ -1,4 +1,4 @@
-import type { ProviderActionHandlers } from "@/lib/integrations/types";
+import type { IntegrationCategoryData, ProviderActionHandlers } from "@/lib/integrations/types";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -84,7 +84,15 @@ describe("IntegrationsPage", () => {
       retentionMonths: 3,
     });
     mocks.getIntegrationsView.mockResolvedValue({
-      categories: [{ id: "analytics", items: [], title: "Analytics" }],
+      categories: [
+        {
+          description: "Connected analytics sources",
+          eyebrow: "Analytics",
+          id: "analytics",
+          providers: [],
+          title: "Analytics",
+        } satisfies IntegrationCategoryData,
+      ],
       connectionCount: 0,
       timeZone: "Europe/Madrid",
     });

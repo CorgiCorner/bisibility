@@ -1,11 +1,11 @@
 import "server-only";
 
 import { normalizeSchedule } from "@/lib/actions/_schedule";
-import { keywordIdsWhere } from "@/lib/actions/keyword-helpers";
 import { ApiNotFoundError } from "@/lib/api/errors";
 import { requiredPublicAuditId, writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { Prisma, type RankCheckFrequency } from "@/lib/generated/prisma/client";
+import { keywordIdsWhere } from "@/lib/keywords/ids-where";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { refreshKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
 import { reconcilePlannedRunsForSchedule } from "@/lib/rank-check/planner/reconcile-schedule";
@@ -133,6 +133,7 @@ export async function mirrorManualToKeywords(
   tx: Prisma.TransactionClient,
   projectId: string,
   keywordIds: string[],
+  retainedDepth?: number | null,
 ) {
   const timezone = await getProjectTimezone(tx, projectId);
   const now = new Date();
@@ -147,6 +148,11 @@ export async function mirrorManualToKeywords(
       ),
     now,
   );
+  if (retainedDepth !== undefined)
+    await tx.keywordSchedule.updateMany({
+      data: { serpDepth: retainedDepth },
+      where: { keywordId: { in: keywordIds } },
+    });
   await refreshKeywordDispatchStates({ keywordIds }, tx);
   return { cronExpression: null, frequency: "manual" as const, jitterMinutes: 60, timezone };
 }
@@ -238,7 +244,7 @@ export async function removeKeywordsFromSchedule(
           where: { id: { in: keywordIds } },
         });
       }
-      const manual = await mirrorManualToKeywords(tx, projectId, keywordIds);
+      const manual = await mirrorManualToKeywords(tx, projectId, keywordIds, schedule.serpDepth);
       await reconcilePlannedRunsForSchedule(schedule.id, tx);
       await writeAudit(
         {

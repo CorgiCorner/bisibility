@@ -1,3 +1,4 @@
+import { AI_RUN_STATUS_KEYS } from "@/lib/runs/ai-run-state";
 import {
   isProjectRunsStatusGroup,
   type ProjectRunsQuery,
@@ -17,6 +18,12 @@ export function statusMenuValue(source: RunStatusSource, status: string) {
 /** Group values are no longer menu options, so they resolve to no option. */
 export function statusMenuValueFor(query: Pick<ProjectRunsQuery, "source" | "status">) {
   if (isProjectRunsStatusGroup(query.status)) return query.status;
+  if (
+    !isRankRunStatusKey(query.status) &&
+    !isGscRunStatusKey(query.status) &&
+    (AI_RUN_STATUS_KEYS as readonly string[]).includes(query.status)
+  )
+    return statusMenuValue("ai_tracking", query.status);
   if (query.source !== "all") return statusMenuValue(query.source, query.status);
   return statusMenuValue(
     isRankRunStatusKey(query.status) ? "rank_checks" : "search_console",
@@ -37,5 +44,6 @@ export function statusMenuSelection(
 
 export function statusSurvivesSource(status: ProjectRunsStatus, source: ProjectRunsSource) {
   if (isProjectRunsStatusGroup(status) || source === "all") return true;
+  if (source === "ai_tracking") return (AI_RUN_STATUS_KEYS as readonly string[]).includes(status);
   return source === "rank_checks" ? isRankRunStatusKey(status) : isGscRunStatusKey(status);
 }

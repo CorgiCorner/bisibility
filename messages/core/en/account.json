@@ -103,7 +103,6 @@
         "backupCodes": "Backup codes",
         "backupCodesGenerated": "New backup codes generated. Save them now.",
         "cancel": "Cancel",
-        "continueToMail": "Continue to mail settings",
         "currentAuthenticatorCode": "Current authenticator code",
         "currentBackupCode": "Current backup code",
         "description": "Add a second step after the email login code.",
@@ -150,7 +149,8 @@
             "description": "For security, initial enrollment requires a sign-in from the last five minutes.",
             "label": "Continue"
           }
-        }
+        },
+        "returnToAdmin": "Return to administration"
       },
       "personalTokens": {
         "cancel": "Cancel",
@@ -234,6 +234,40 @@
         "signingOut": "Signing out",
         "thisDevice": "This device",
         "title": "Active sessions"
+      },
+      "connectedApps": {
+        "title": "Connected apps",
+        "description": "Review and revoke apps with access to your account.",
+        "dynamic": "Registered automatically",
+        "empty": "No apps are connected to your account.",
+        "connected": "Connected {date}",
+        "lastUsed": "Last used {date}",
+        "neverUsed": "Not used yet",
+        "noScopes": "No additional permissions",
+        "scopeSeparator": ", ",
+        "createdTokens": "{count, plural, one {# linked API token} other {# linked API tokens}}",
+        "revoke": "Revoke",
+        "revokeApp": "Revoke access for {name}",
+        "confirmTitle": "Revoke access for {name}?",
+        "confirmDescription": "This stops the app from renewing access. API tokens keep working unless you revoke them too.",
+        "issuedAccess": "Access already issued can keep working for up to 1 hour.",
+        "alsoRevoke": "Also revoke {count, plural, one {# API token this app created} other {# API tokens this app created}}",
+        "unlinkedTokens": "Older API tokens, or tokens without retained issuance history, cannot be reliably linked to an app. Review them separately.",
+        "manageTokens": "Manage personal tokens",
+        "cancel": "Cancel",
+        "revoking": "Revoking",
+        "error": "App access could not be revoked. Try again.",
+        "scopes": {
+          "identity": "Confirm your identity",
+          "profile": "Read your profile",
+          "email": "Read your email address",
+          "renew": "Renew access",
+          "read": "Read project data",
+          "write": "Change project data",
+          "admin": "Manage projects and access",
+          "tokens": "Create API tokens",
+          "other": "Additional permission: {scope}"
+        }
       }
     },
     "preferences": {

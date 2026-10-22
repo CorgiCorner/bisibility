@@ -346,7 +346,7 @@
             "bestMeasuredPosition": "Best measured #{position}",
             "knownAbsent": "Not found in measured scope",
             "unsupported": "Unsupported result",
-            "notObserved": "Not yet observed",
+            "notObserved": "No result yet",
             "currentUnknown": "Current position unknown",
             "dateUnknown": "date unavailable",
             "lastKnownObserved": "Last known #{position} · observed {date}",
@@ -354,7 +354,7 @@
             "lastKnownUndated": "Last known #{position} · date unavailable",
             "bestRetainedPosition": "Best retained #{position} · date unavailable",
             "groupQuality": "{ranked} ranked / {expected} targets; {unknown} unknown",
-            "currentScopeUnavailable": "Current definition unavailable",
+            "currentScopeUnavailable": "Current tracking settings unavailable",
             "freshness": {
               "fresh": "Fresh",
               "stale": "Stale",
@@ -390,15 +390,19 @@
             "retainedHistoryHelp": "Retained comparable observations describe history, not proof of the current definition.",
             "retainedHistory": "Retained rank history for {keyword}",
             "groupRankingUrls": "{count} retained ranking URLs",
-            "retainedRankingUrl": "Retained ranking URL; current qualification unavailable",
+            "retainedRankingUrl": "Last known URL. Current result unavailable.",
             "lastKnownStored": "Last known #{position} · stored date {date}",
-            "qualificationUnknown": "Qualification unavailable",
-            "historyQualificationUnknown": "Stored history qualification unavailable",
+            "qualificationUnknown": "Current result unavailable",
+            "historyQualificationUnknown": "Earlier results unverified",
             "currentSince": "Current window since {date}",
             "baselineWindow": "Baseline from {from} to before {to}",
             "capturedExpectedUrl": "Expected URL captured with this measurement",
             "expectedUrlProvenanceUnknown": "Expected URL provenance unavailable",
-            "measuredCount": "{measured} of {expected} measured"
+            "measuredCount": "{measured} of {expected} measured",
+            "lastKnownShort": "Last known #{position}",
+            "bestRetainedShort": "Best retained #{position}",
+            "retainedUrlShort": "Last known",
+            "freshnessUnknownHelp": "We can’t confirm how current this result is."
           }
         },
         "runChecks": {
@@ -455,7 +459,8 @@
           "runningBody": "{count, plural, one {Check is running.} other {# checks are running.}} You can close this window - results will appear on this page.",
           "successBody": "{count, plural, one {# rank check has completed.} other {# rank checks have completed.}}",
           "checksNeedAttention": "{count, plural, one {# check needs attention.} other {# checks need attention.}}",
-          "viewRuns": "View runs"
+          "viewRuns": "View runs",
+          "providerCapacityUnavailable": "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys."
         },
         "schedule": {
           "title": "Set schedule for {count, plural, one {# keyword / # target} other {# keywords / # targets}}",
@@ -818,7 +823,10 @@
           "source": "Source",
           "saved": "Saved",
           "volumeTrend": "Monthly volume trend for {keyword}",
+          "research": "Research",
           "researchFallback": "Research",
+          "researchOneAtATime": "Research one keyword at a time.",
+          "toolbar": "Actions for selected keywords",
           "relative": {
             "daysAgo": "{count, number}d ago",
             "hoursAgo": "{count, number}h ago",

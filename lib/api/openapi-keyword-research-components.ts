@@ -1,3 +1,4 @@
+import { paymentRequestFields, paymentResponseFields } from "./openapi-action-payment";
 import { openEnum, sdkName, taggedUnion, usdCents } from "./openapi-sdk-schema";
 
 const sourceSchema = {
@@ -47,7 +48,13 @@ const connection = {
 export const keywordResearchSchemas = {
   KeywordMetricsRequest: {
     properties: {
-      connection_id: { pattern: "^conn_[a-z][a-z0-9]{23}$", type: "string" },
+      ...paymentRequestFields,
+      connection_id: {
+        minLength: 1,
+        maxLength: 120,
+        pattern: "^conn_[a-z][a-z0-9]{23}$",
+        type: "string",
+      },
       estimate_only: { default: false, type: "boolean" },
       fresh: { default: false, type: "boolean" },
       include_clickstream: { default: false, type: "boolean" },
@@ -57,24 +64,32 @@ export const keywordResearchSchemas = {
         minItems: 1,
         type: "array",
       },
-      max_cost_cents: { minimum: 1, type: "integer" },
+      max_cost_cents: {
+        minimum: 0,
+        type: "integer",
+        ...usdCents,
+        description:
+          "0 = cached result only; missing metrics return cost_limit_exceeded with estimated_cost_cents before paid work.",
+      },
     },
     required: ["keywords"],
     type: "object",
   },
   KeywordMetricsResponse: {
     properties: {
+      ...paymentResponseFields,
       cached_count: { minimum: 0, type: "integer" },
       connections: { items: connection, type: "array" },
-      cost_cents: { minimum: 0, type: "number" },
+      cost_cents: { minimum: 0, type: "number", ...usdCents },
       estimate: { type: "boolean" },
-      estimated_cost_cents: { minimum: 0, type: "number" },
+      estimated_cost_cents: { minimum: 0, type: "number", ...usdCents },
       fetched_at: { format: "date-time", type: "string" },
       fetched_count: { minimum: 0, type: "integer" },
       fetched_count_estimate: { minimum: 0, type: "integer" },
       provider: { type: "string" },
       rows: {
         items: {
+          ...sdkName("KeywordMetricsRow"),
           properties: { keyword: { type: "string" }, ...metrics },
           required: ["keyword", ...Object.keys(metrics)],
           type: "object",
@@ -99,6 +114,7 @@ export const keywordResearchSchemas = {
     description:
       "Free dry run returned for estimate_only=true. It carries per-source cost facts only and never rows, fetch times, or source statuses, so it cannot be mistaken for an empty result.",
     properties: {
+      ...paymentResponseFields,
       cached: { description: "Every planned source is cached.", type: "boolean" },
       connections: { items: connection, type: "array" },
       cost_cents: { minimum: 0, type: "number", ...usdCents },
@@ -130,6 +146,7 @@ export const keywordResearchSchemas = {
   },
   KeywordResearchResult: {
     properties: {
+      ...paymentResponseFields,
       cached: { type: "boolean" },
       connections: { items: connection, type: "array" },
       cost_cents: { minimum: 0, type: "number", ...usdCents },

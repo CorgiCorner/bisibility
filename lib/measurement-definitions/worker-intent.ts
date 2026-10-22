@@ -2,7 +2,7 @@ import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { serpDepthValues } from "@/lib/serp/constants";
-import { frozenRequest, sameDefinitionBytes } from "./canonical";
+import { retainedRequestMatchesSource, sameDefinitionBytes } from "./canonical";
 import { DefinitionConflictError, DefinitionUnavailableError } from "./errors";
 import type { DefinitionBinding, DefinitionTransaction } from "./model";
 import { definitionSourceSchema } from "./schema";
@@ -58,9 +58,11 @@ export async function assertDefinitionItemIntent(
     throw new DefinitionUnavailableError();
   if (
     !sameDefinitionBytes(source.data, binding.source) ||
-    !sameDefinitionBytes(
-      frozenRequest(source.data, binding.request.providerId, intent.depth as SerpDepth),
+    !retainedRequestMatchesSource(
+      source.data,
       binding.request,
+      binding.request.providerId,
+      intent.depth as SerpDepth,
     )
   )
     throw new DefinitionConflictError();

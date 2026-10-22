@@ -3,14 +3,12 @@ import type {
   DefinitionSource,
 } from "@/lib/measurement-definitions/model";
 import { nextCronRun } from "@/lib/rank-check/cron";
-import { computeDispatcherNextCheckAt } from "@/lib/rank-check/dispatcher-recurrence";
 import {
   itemNotBefore,
   type PlannerScheduleCadence,
   plannedOccurrenceForKey,
   plannedOccurrences,
 } from "@/lib/rank-check/planner/occurrence";
-import { computeNextCheckAt, type RankCheckScheduleInput } from "@/lib/rank-check/schedule";
 
 /** Root derivative source additions must be persisted semantic intent, not observed history. */
 type CalendarSchedule = NonNullable<DefinitionSource["policy"]["keywordSchedule"]> & {
@@ -33,7 +31,7 @@ export type CalendarHostConfiguration = Readonly<{
   /** No default: Root's versioned freshness registry must deliberately adopt these semantics. */
   basis: "successor-own-slots-v1";
   configurationRevision: string;
-  /** Must reflect the actual unassigned execution route; assigned schedules always use the planner. */
+  /** Compatibility input; unassigned rank targets now always use manual freshness. */
   legacyExecutionEngine: "legacy_compute" | "dispatcher";
 }>;
 // Search budget only, not freshness/TTL. Calendar planner scans38 dates; custom cron searches at most366 days.
@@ -91,29 +89,6 @@ function assignedInterval(source: CalendarSource, asOf: Date) {
     itemNotBefore(second, cadence, source.keywordId, second.plannedFor),
   );
 }
-function legacyInterval(
-  source: CalendarSource,
-  asOf: Date,
-  engine: CalendarHostConfiguration["legacyExecutionEngine"],
-) {
-  const saved = source.policy.keywordSchedule ?? source.policy.defaults;
-  if (!saved || saved.frequency === "manual" || saved.frequency === "paused") return null;
-  // computeNextCheckAt otherwise invents a monthly anchor from `from`; dispatcher also requires an anchor.
-  if (saved.frequency === "monthly" && !saved.calendarAnchor) return null;
-  const schedule: RankCheckScheduleInput = {
-    frequency: saved.frequency,
-    cronExpression: saved.cronExpression,
-    timezone: saved.timezone ?? "UTC",
-    jitterMinutes: saved.jitterMinutes,
-    nextCheckAt: saved.calendarAnchor ?? undefined,
-  };
-  const next =
-    engine === "dispatcher"
-      ? (from: Date) => computeDispatcherNextCheckAt(schedule, source.keywordId, from)
-      : (from: Date) => computeNextCheckAt(schedule, from, source.keywordId);
-  const first = next(asOf);
-  return validInterval(first, first ? next(first) : null);
-}
 /** Only current persisted source supplied by the authorized head reader. No SQL/network/schedule writes here. */
 export function hostCalendarFreshnessPorts(
   config: CalendarHostConfiguration,
@@ -129,9 +104,7 @@ export function hostCalendarFreshnessPorts(
       )
         return null;
       try {
-        return source.policy.checkSchedule
-          ? assignedInterval(source, asOf)
-          : legacyInterval(source, asOf, config.legacyExecutionEngine);
+        return source.policy.checkSchedule ? assignedInterval(source, asOf) : null;
       } catch {
         return null;
       } // Calendar parse/range failure only; no database/provider call exists inside this catch.

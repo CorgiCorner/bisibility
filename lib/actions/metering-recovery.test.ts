@@ -1,3 +1,4 @@
+import { AdminTwoFactorRequiredError } from "@/lib/auth/admin-dangerous-action";
 import { beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ session: vi.fn(), limit: vi.fn(), commit: vi.fn() }));
@@ -35,4 +36,15 @@ it("bounds writes and returns a closed error instead of provider or database exc
   expect(mocks.limit).toHaveBeenCalledWith(
     expect.objectContaining({ limit: 6, windowSeconds: 60 }),
   );
+});
+
+const dangerousActionGuard = vi.hoisted(() => vi.fn(async () => undefined));
+vi.mock("@/lib/auth/admin-dangerous-action", async (original) => ({
+  ...(await original<typeof import("@/lib/auth/admin-dangerous-action")>()),
+  requireAdminTwoFactorForDangerousAction: dangerousActionGuard,
+}));
+
+it("refuses the dangerous operation when the admin has no enabled 2FA", async () => {
+  dangerousActionGuard.mockRejectedValueOnce(new AdminTwoFactorRequiredError("test_action"));
+  expect(await commitRecoveryAction({})).toMatchObject({ ok: false, code: "two_factor_required" });
 });

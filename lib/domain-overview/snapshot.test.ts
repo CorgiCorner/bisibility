@@ -2,6 +2,7 @@ import { Prisma } from "@/lib/generated/prisma/client";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  domainOverviewSnapshotModules,
   findDomainOverviewSnapshotMetadata,
   persistDomainOverviewModules,
   persistDomainOverviewSnapshot,
@@ -297,5 +298,30 @@ describe("domain overview snapshots", () => {
       }),
     ).rejects.toBe(blocked);
     expect(mocks.fetchMetrics).not.toHaveBeenCalled();
+  });
+  it("persists and reads failed JSON modules without losing their cause or persisting raw metadata", async () => {
+    const failure = {
+      reason: "provider_error",
+      phase: "provider",
+      providerCode: "provider_auth",
+    } as const;
+    await persistDomainOverviewModules({
+      ...key,
+      provider: "dataforseo",
+      expectedFetchedAt: "2026-10-22T12:00:00Z",
+      keywords: failure,
+      pages: null,
+    });
+    expect(mocks.prisma.domainOverviewSnapshot.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { rankedKeywords: failure, relevantPages: Prisma.DbNull },
+      }),
+    );
+    expect(
+      domainOverviewSnapshotModules({
+        rankedKeywords: { ...failure, secret: "hidden" },
+        relevantPages: null,
+      } as never),
+    ).toEqual({ keywords: failure, pages: null });
   });
 });

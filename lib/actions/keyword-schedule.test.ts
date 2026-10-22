@@ -14,12 +14,13 @@ const mocks = vi.hoisted(() => {
   const prisma = {
     $transaction: vi.fn(),
     keyword: { findFirst: vi.fn() },
-    keywordSchedule: { findUnique: vi.fn(), upsert: vi.fn() },
+    keywordSchedule: { findUnique: vi.fn(), findUniqueOrThrow: vi.fn(), upsert: vi.fn() },
     user: { findUnique: vi.fn() },
   };
 
   return {
     AuthorizationError,
+    setKeywordCadence: vi.fn(),
     authorize: vi.fn((actor, _action, resource) => {
       if (!actor) throw new AuthorizationError("unauthenticated");
       const role = actor.memberships?.find(
@@ -37,6 +38,10 @@ const mocks = vi.hoisted(() => {
     writeAudit: vi.fn(),
   };
 });
+
+vi.mock("@/lib/rank-check/schedules/keyword-cadence", () => ({
+  setKeywordCadence: mocks.setKeywordCadence,
+}));
 
 vi.mock("@/lib/auth/authorize", () => ({
   AuthorizationError: mocks.AuthorizationError,
@@ -85,6 +90,25 @@ describe("updateKeywordSchedule", () => {
     mockActor();
     mockKeyword();
     mocks.writeAudit.mockResolvedValue({});
+    mocks.setKeywordCadence.mockImplementation(async (_tx, _projectId, _ids, cadence) => {
+      mocks.prisma.keywordSchedule.findUniqueOrThrow.mockResolvedValue({
+        ...cadence,
+        lastCheckedAt: null,
+      });
+      return new Map([
+        [
+          "keyword_1",
+          cadence.frequency === "manual"
+            ? null
+            : {
+                ...cadence,
+                publicId: "sch_a00000000000000000000000",
+                enabled: cadence.frequency !== "paused",
+                timeOfDay: null,
+              },
+        ],
+      ]);
+    });
     mocks.getKeywordDepthDecreaseWarning.mockResolvedValue(null);
     mocks.prisma.$transaction.mockImplementation(
       async (callback: (tx: typeof mocks.prisma) => Promise<unknown>) => callback(mocks.prisma),
@@ -118,7 +142,7 @@ describe("updateKeywordSchedule", () => {
     );
 
     expect(mocks.prisma.keywordSchedule.findUnique).not.toHaveBeenCalled();
-    expect(mocks.prisma.keywordSchedule.upsert).not.toHaveBeenCalled();
+    expect(mocks.setKeywordCadence).not.toHaveBeenCalled();
     expect(mocks.writeAudit).not.toHaveBeenCalled();
   });
 
@@ -131,22 +155,18 @@ describe("updateKeywordSchedule", () => {
     );
 
     const result = await updateKeywordSchedule(scheduleInput({ serpDepth: 20 }));
-    const upsert = mocks.prisma.keywordSchedule.upsert.mock.calls[0][0];
     const expectedNextCheck = computeNextCheckAt(
       { frequency: "daily", jitterMinutes: 0 },
       new Date("2026-01-01T06:00:00.000Z"),
       "keyword_1",
     );
-
-    expect(upsert.where).toEqual({ keywordId: "keyword_1" });
-    expect(upsert.create).toMatchObject({
-      frequency: "daily",
-      keywordId: "keyword_1",
-      serpDepth: 20,
-    });
-    expect(upsert.update).toMatchObject({ frequency: "daily", serpDepth: 20 });
-    expect(upsert.create.nextCheckAt).toEqual(expectedNextCheck);
-    expect(upsert.update.nextCheckAt).toEqual(expectedNextCheck);
+    expect(mocks.setKeywordCadence).toHaveBeenCalledWith(
+      mocks.prisma,
+      "project_1",
+      ["keyword_1"],
+      expect.objectContaining({ frequency: "daily", serpDepth: 20 }),
+      "user_1",
+    );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "keyword_schedule.update",
@@ -186,12 +206,13 @@ describe("updateKeywordSchedule", () => {
     );
 
     const result = await updateKeywordSchedule(scheduleInput({ frequency: "paused" }));
-    const upsert = mocks.prisma.keywordSchedule.upsert.mock.calls[0][0];
-
-    expect(upsert.update).toMatchObject({
-      frequency: "paused",
-      nextCheckAt: null,
-    });
+    expect(mocks.setKeywordCadence).toHaveBeenCalledWith(
+      mocks.prisma,
+      "project_1",
+      ["keyword_1"],
+      expect.objectContaining({ frequency: "paused", nextCheckAt: null }),
+      "user_1",
+    );
     expect(mocks.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         after: expect.objectContaining({ frequency: "paused" }),
@@ -201,6 +222,46 @@ describe("updateKeywordSchedule", () => {
     expect(result).toMatchObject({
       frequency: "paused",
       next_check_at: null,
+    });
+  });
+  it("returns the real current membership slot instead of the stored legacy phase", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-21T06:00:00Z"));
+    mocks.prisma.keyword.findFirst.mockResolvedValue({
+      id: "keyword_3",
+      projectId: "project_1",
+      publicId: "kw_a00000000000000000000000",
+      project: { id: "project_1", publicId: "prj_a00000000000000000000000", writeMode: "active" },
+    });
+    mocks.prisma.keywordSchedule.findUnique.mockResolvedValue(null);
+    mocks.setKeywordCadence.mockImplementationOnce(async () => {
+      mocks.prisma.keywordSchedule.findUniqueOrThrow.mockResolvedValue({
+        frequency: "weekly",
+        cronExpression: null,
+        jitterMinutes: 0,
+        lastCheckedAt: null,
+        nextCheckAt: new Date("2099-01-01"),
+        timezone: "UTC",
+        serpDepth: 50,
+      });
+      return new Map([
+        [
+          "keyword_3",
+          {
+            frequency: "weekly",
+            cronExpression: null,
+            enabled: true,
+            jitterMinutes: 0,
+            publicId: "sch_a00000000000000000000003",
+            timeOfDay: null,
+            timezone: "UTC",
+          },
+        ],
+      ]);
+    });
+    expect(await updateKeywordSchedule(scheduleInput({ frequency: "weekly" }))).toMatchObject({
+      frequency: "weekly",
+      next_check_at: "2026-10-23T23:05:55.000Z",
     });
   });
 });

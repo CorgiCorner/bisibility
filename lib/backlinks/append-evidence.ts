@@ -1,4 +1,6 @@
 import "server-only";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
+import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { z } from "zod";
@@ -9,6 +11,7 @@ import type { BacklinksRow } from "./types";
 type Snapshot = Prisma.BacklinkSnapshotGetPayload<object>;
 const finite = z.number().finite();
 const pageSchema = z.object({
+  payment: actionPaymentReceiptSchema.optional(),
   costCents: finite.nonnegative(),
   totalCount: finite.int().nonnegative(),
   rows: z.array(
@@ -27,7 +30,12 @@ const pageSchema = z.object({
     }),
   ),
 });
-export type AppendPage = { costCents: number; totalCount: number; rows: BacklinksRow[] };
+export type AppendPage = {
+  payment?: ActionPaymentReceipt;
+  costCents: number;
+  totalCount: number;
+  rows: BacklinksRow[];
+};
 export type AppendClaim = { token: string; summary: Prisma.InputJsonObject };
 
 export function retainedBacklinksPage(snapshot: Snapshot) {

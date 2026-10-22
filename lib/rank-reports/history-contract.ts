@@ -32,6 +32,7 @@ export type SavedFeatureFact = {
   identityRevision: string | null;
 };
 export type RetainedHistorySnapshot = {
+  payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
   asOf: string;
   projectId: string;
   observation: RankReportObservation;

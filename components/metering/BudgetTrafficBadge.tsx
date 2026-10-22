@@ -32,9 +32,7 @@ export function BudgetTrafficBadge({
       </span>
     );
   return (
-    <PillBadge
-      className={`max-w-full shrink text-[11px] font-normal normal-case tracking-normal gap-1 ${app ? "border-accent/25 bg-accent-soft text-accent-text" : "text-fg-muted"}`}
-    >
+    <PillBadge className="max-w-full shrink text-[11px] font-normal normal-case tracking-normal gap-1 text-fg-muted">
       <Icon aria-hidden size={12} weight="regular" className="shrink-0" />
       <span className="min-w-0 whitespace-normal leading-snug">{label}</span>
     </PillBadge>

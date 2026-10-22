@@ -40,7 +40,7 @@ import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { explicitDeploymentDataRegionLabel } from "@/lib/deployment/deployment";
 import { googleOAuthErrorKey } from "@/lib/integrations/google-oauth-copy";
 import { DEFAULT_MONTHLY_COST_CAP_CENTS } from "@/lib/metering/project-budget-bootstrap";
-import { projectBudgetCapCents } from "@/lib/metering/project-budget-read";
+import { rankCheckBudgetCapCents } from "@/lib/metering/rank-check-budget-read";
 import { MAX_ONBOARDING_WEBSITE_LENGTH } from "@/lib/onboarding/website";
 import { isGoogleOAuthConfigured } from "@/lib/providers/analytics/google-client";
 import { getPendingGoogleOAuthSetup } from "@/lib/providers/analytics/google-oauth-pending";
@@ -163,7 +163,7 @@ export default async function OnboardingPage({ searchParams }: Readonly<Onboardi
         getRequestProjectDefaults(project.id),
         getOnboardingNextCheckAt(project.publicId),
         getOnboardingTrackingStartedAt(project.publicId),
-        projectBudgetCapCents(project.id),
+        rankCheckBudgetCapCents(project.id),
       ])
     : [
         0,

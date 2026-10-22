@@ -52,4 +52,12 @@ export type InstanceAnnouncement = AnnouncementContent &
 export type AnnouncementResult =
   | { status: "saved"; announcement: InstanceAnnouncement }
   | { status: "deleted"; id: string }
-  | { status: "forbidden" | "invalid" | "not_found" | "conflict" | "unavailable" };
+  | {
+      status:
+        | "two_factor_required"
+        | "forbidden"
+        | "invalid"
+        | "not_found"
+        | "conflict"
+        | "unavailable";
+    };

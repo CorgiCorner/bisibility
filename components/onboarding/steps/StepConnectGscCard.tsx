@@ -6,6 +6,7 @@ import { InlineCallout, InlineCode } from "@/components/ui/InlineCallout";
 import { MenuSelect } from "@/components/ui/MenuSelect";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { googlePropertyFailureMessage } from "@/lib/integrations/google-property-failure";
+import { defaultGoogleProperty } from "@/lib/integrations/google-property-grouping";
 import type {
   GoogleOAuthSetup,
   GooglePropertySaveResult,
@@ -82,7 +83,13 @@ export function StepConnectGscCard({
   const [selectionSource, setSelectionSource] = useState<"pending" | "stored" | null>(
     googleOAuth ? "pending" : null,
   );
-  const [property, setProperty] = useState(setup?.properties[0]?.value ?? "");
+  const [property, setProperty] = useState(
+    defaultGoogleProperty({
+      options: setup?.properties ?? [],
+      preferred: setup?.preferredProperty,
+      projectDomain: setup?.projectDomain ?? "",
+    }),
+  );
   const [propertyDrawerDismissed, setPropertyDrawerDismissed] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,9 +108,11 @@ export function StepConnectGscCard({
       setSetup(loaded);
       setSelectionSource("stored");
       setProperty(
-        loaded.properties.some((option) => option.value === loaded.preferredProperty)
-          ? (loaded.preferredProperty ?? "")
-          : (loaded.properties[0]?.value ?? ""),
+        defaultGoogleProperty({
+          options: loaded.properties,
+          preferred: loaded.preferredProperty,
+          projectDomain: loaded.projectDomain ?? "",
+        }),
       );
       setPropertyDrawerDismissed(false);
     } catch {

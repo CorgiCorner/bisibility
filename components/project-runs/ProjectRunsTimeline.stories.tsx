@@ -2,6 +2,7 @@ import { DateDisplayProvider, DateFormatProvider } from "@/components/dates/Date
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { PageContent } from "@/components/shell/PageContent";
 import { PROJECT_RUNS_DEFAULT_QUERY } from "@/lib/runs/filters";
+import { runTimelineSection } from "@/lib/runs/project-run-time-presentation";
 import runMessages from "@/messages/core/pl/project-runs.json";
 import sharedMessages from "@/messages/core/pl/shared.json";
 import type { Meta, StoryObj } from "@storybook/react";
@@ -16,10 +17,16 @@ function TimelinePreview({
   canMutate,
   attention = false,
   filtered = false,
-}: Readonly<{ canMutate: boolean; attention?: boolean; filtered?: boolean }>) {
-  const runs = attention
-    ? attentionFixtureRuns.filter((run) => !filtered || run.attention)
-    : timelineFixtureRuns;
+  section,
+}: Readonly<{
+  canMutate: boolean;
+  attention?: boolean;
+  filtered?: boolean;
+  section?: "history";
+}>) {
+  const runs = (attention ? attentionFixtureRuns : timelineFixtureRuns).filter(
+    (run) => (!filtered || run.attention) && (!section || runTimelineSection(run) === section),
+  );
   return (
     <FeatureMessagesProvider
       locale="pl"
@@ -36,6 +43,7 @@ function TimelinePreview({
                 operations={[]}
                 page={{
                   counts: {
+                    aiTracking: 0,
                     rankChecks: runs.length,
                     searchConsole: 0,
                     total: runs.length,
@@ -44,7 +52,11 @@ function TimelinePreview({
                   runs,
                 }}
                 projectRef={timelineProjectRef}
-                query={{ ...PROJECT_RUNS_DEFAULT_QUERY, status: filtered ? "attention" : "all" }}
+                query={{
+                  ...PROJECT_RUNS_DEFAULT_QUERY,
+                  section,
+                  status: filtered ? "attention" : "all",
+                }}
                 readAt={attention ? "2026-10-18T12:00:00.000Z" : "2026-10-08T00:00:00.000Z"}
                 runNowAction={async () => {}}
                 skipAction={async () => {}}
@@ -70,4 +82,8 @@ export const Viewer: Story = { args: { canMutate: false } };
 export const PastDueAndFuture: Story = { args: { canMutate: false, attention: true } };
 export const NeedsAttention: Story = {
   args: { canMutate: false, attention: true, filtered: true },
+};
+
+export const HistoryNeedsAttention: Story = {
+  args: { canMutate: false, attention: true, filtered: true, section: "history" },
 };

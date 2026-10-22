@@ -1,11 +1,13 @@
 "use client";
 
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
+import { unresolvedPayment } from "@/components/action-payment/unresolved-payment";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import type { LoadMoreBacklinkRowsAction } from "@/lib/actions/backlinks";
 import type { BacklinksRow } from "@/lib/backlinks/types";
-import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
 import { CheckIcon as Check } from "@phosphor-icons/react/dist/csr/Check";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { BacklinksAggregateTable } from "./BacklinksAggregateTable";
 import { BacklinksExportMenu } from "./BacklinksExportMenu";
 import { BacklinksFiltersDrawer } from "./BacklinksFiltersDrawer";
@@ -36,8 +38,9 @@ export type BacklinksTableProps = {
   initialSlice?: BacklinksSlice;
   initialView?: BacklinksView;
   loadMoreEstimateCents?: number;
+  loadMorePrice?: ReactNode;
   now?: Date;
-  onLoadMore?: () => ReturnType<LoadMoreBacklinkRowsAction>;
+  onLoadMore?: () => Promise<Awaited<ReturnType<LoadMoreBacklinkRowsAction>> | null>;
   rows: BacklinksRow[];
   target: string;
   totalDomains: number;
@@ -67,7 +70,7 @@ export function BacklinksTable({
   initialExpandedDomains = [],
   initialSlice = "one_per_domain",
   initialView = "backlinks",
-  loadMoreEstimateCents = 0,
+  loadMorePrice,
   now,
   onLoadMore,
   rows,
@@ -89,6 +92,8 @@ export function BacklinksTable({
   const [expandedRuns, setExpandedRuns] = useState<Record<string, string[]>>({});
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState(false);
+  const [moreUnresolved, setMoreUnresolved] = useState(false);
+  const [morePayment, setMorePayment] = useState<ActionPaymentReceipt>();
   const referenceNow = now ?? new Date();
   const groups = groupBacklinksByDomain(currentRows, referenceNow);
   const filteredGroups = filterBacklinksDomainGroups(groups, appliedFilters, filter, referenceNow);
@@ -131,12 +136,16 @@ export function BacklinksTable({
   }
 
   async function loadMore() {
-    if (!onLoadMore || loadingMore) return;
+    if (!onLoadMore || loadingMore || moreUnresolved) return;
     setLoadingMore(true);
     setLoadMoreError(false);
     try {
       const outcome = await onLoadMore();
-      if (!outcome.ok) {
+      if (!outcome) return;
+      if ("payment" in outcome && outcome.payment && !("estimate" in outcome))
+        setMorePayment(outcome.payment);
+      if (unresolvedPayment(outcome)) setMoreUnresolved(true);
+      if (!outcome.ok || "estimate" in outcome) {
         setLoadMoreError(true);
         return;
       }
@@ -144,6 +153,7 @@ export function BacklinksTable({
       setCurrentFetchedCount(outcome.fetchedRowCount);
       setCurrentTotalAvailable(outcome.totalRowsAvailable);
     } catch {
+      setMoreUnresolved(true);
       setLoadMoreError(true);
     } finally {
       setLoadingMore(false);
@@ -219,16 +229,14 @@ export function BacklinksTable({
           {hasLoadMore ? (
             <button
               className="cursor-pointer border-0 bg-transparent p-0 text-[12.5px] font-medium text-accent-text hover:text-accent-text focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-solid disabled:cursor-wait disabled:bg-bg-sunken disabled:text-fg-muted"
-              disabled={loadingMore}
+              disabled={loadingMore || moreUnresolved}
               onClick={() => void loadMore()}
               type="button"
             >
-              {loadingMore ? t("loadingMore") : t("loadMore")}{" "}
-              <span className="font-sans tabular-nums">
-                ~{formatEstimateCents(loadMoreEstimateCents)}
-              </span>
+              {loadingMore ? t("loadingMore") : t("loadMore")} {loadMorePrice}
             </button>
           ) : null}
+          {morePayment ? <PaymentChargeLine payment={morePayment} /> : null}
           {loadMoreError ? (
             <span className="text-[12px] text-red-text" role="status">
               {t("loadFailed")}

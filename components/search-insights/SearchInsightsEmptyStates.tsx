@@ -10,13 +10,16 @@ import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
 import {
   resolveSearchBackfillPresentation,
   type SearchBackfillFacts,
-  type SearchBackfillKind,
 } from "@/lib/search-insights/sync/control-model";
 import { VIEWER_ASK_ADMIN_GSC } from "@/lib/ui/viewer-affordances";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/csr/ArrowUpRight";
 import { GoogleLogoIcon as GoogleLogo } from "@phosphor-icons/react/dist/csr/GoogleLogo";
 import { useTranslations } from "next-intl";
 import { SearchInsightsRefresh } from "./SearchInsightsRefresh";
+import {
+  searchInsightsRefreshIntervalMs,
+  searchInsightsSelfResolving,
+} from "./search-insights-refresh-policy";
 import { formatSearchSyncCalendarDay, presentSearchSync } from "./search-sync-presentation";
 
 export type SearchInsightsNoPropertyStateProps = {
@@ -83,13 +86,6 @@ export function SearchInsightsNoPropertyState({
  * strip to carry the refresh, so without one here the customer can only reload by hand. A state
  * that waits on the customer instead - reauth, paused by you - gets no control: nothing to watch.
  */
-const SELF_RESOLVING: ReadonlySet<SearchBackfillKind> = new Set([
-  "queued",
-  "running",
-  "status_unavailable",
-  "waiting_worker",
-]);
-
 export type SearchInsightsNoDataStateProps = {
   canManageProviders?: boolean;
   facts: SearchBackfillFacts;
@@ -123,13 +119,14 @@ export function SearchInsightsNoDataState({
         {t("reauthCta")}
       </Button>
     ) : null;
-  const watching = SELF_RESOLVING.has(model.kind);
-  const importRunning = model.kind === "running";
+  const watching = searchInsightsSelfResolving(model.kind);
   const action =
     primary || watching || reconnectBlocked ? (
       <div className="flex flex-wrap items-center justify-center gap-2.5">
         {primary}
-        {watching ? <SearchInsightsRefresh active={importRunning} /> : null}
+        {watching ? (
+          <SearchInsightsRefresh active intervalMs={searchInsightsRefreshIntervalMs(model.kind)} />
+        ) : null}
         {reconnectBlocked ? (
           <p className="m-0 self-center text-[13px] text-fg-muted">{VIEWER_ASK_ADMIN_GSC}</p>
         ) : null}

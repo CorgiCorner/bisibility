@@ -1,5 +1,7 @@
 "use server";
 
+import { acceptedActionPaymentSchema } from "@/lib/action-payment/schema";
+import type { ActionPaymentInput } from "@/lib/action-payment/session";
 import { isPublicIdOfType } from "@/lib/db/public-id";
 import { APP_REQUEST_ORIGIN } from "@/lib/provider-usage/surface";
 import { fetchRankedKeywords } from "@/lib/ranked-keywords/service";
@@ -8,6 +10,9 @@ import { getActionActor, parseActionInput, requireProjectScope } from "./_shared
 import { withLookupBudgetResult } from "./lookup-budget-result";
 
 const rankedKeywordsSchema = z.object({
+  estimateOnly: z.boolean().optional(),
+  paymentOptionId: z.string().min(1).max(120).optional(),
+  acceptedPayment: acceptedActionPaymentSchema.optional(),
   connectionId: z
     .string()
     .trim()
@@ -19,7 +24,8 @@ const rankedKeywordsSchema = z.object({
   projectId: z.string().trim().min(1).max(120),
 });
 
-export type FetchRankedKeywordSuggestionsInput = {
+export type FetchRankedKeywordSuggestionsInput = ActionPaymentInput & {
+  estimateOnly?: boolean;
   connectionId?: string;
   offset?: number;
   projectId: string;
@@ -33,6 +39,10 @@ export async function fetchRankedKeywordSuggestions(input: unknown) {
     fetchRankedKeywords({
       actorId: actor.id,
       connectionId: data.connectionId,
+      estimateOnly: data.estimateOnly,
+      paymentOptionId: data.paymentOptionId,
+      acceptedPayment: data.acceptedPayment,
+      requirePayment: !data.estimateOnly,
       limit: 100,
       offset: data.offset,
       origin: APP_REQUEST_ORIGIN,
@@ -42,6 +52,7 @@ export async function fetchRankedKeywordSuggestions(input: unknown) {
   if (!result.ok)
     return {
       reason: result.reason,
+      ...("payment" in result && result.payment ? { payment: result.payment } : {}),
       ...("budgetReason" in result && result.budgetReason
         ? { budgetReason: result.budgetReason }
         : {}),

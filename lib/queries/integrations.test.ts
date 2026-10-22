@@ -127,6 +127,32 @@ describe("integration queries", () => {
     mocks.queue.mockResolvedValue({});
   });
 
+  it("reports a hosted connection with a retained key without exposing its inactive identity", async () => {
+    vi.stubEnv("BISIBILITY_SECRETS_KEY", secretsKey(5));
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([
+      connection({
+        provider: "dataforseo",
+        credentialSource: "hosted",
+        credentialsEncrypted: encryptSecret(
+          JSON.stringify({ login: "inactive@example.com", password: "inactive" }),
+        ),
+      }),
+    ]);
+    const categories = await getIntegrationCategories("project_1", { now });
+    const provider = categories
+      .flatMap((category) => category.providers)
+      .find((item) => item.id === "dataforseo");
+    expect(provider).toMatchObject({
+      credentialSource: "hosted",
+      hasStoredCredentials: true,
+      status: "connected",
+      credentialIssue: undefined,
+      secondaryAction: undefined,
+    });
+    expect(provider?.drawer.defaults.login).toBe("");
+    expect(JSON.stringify(provider)).not.toContain("inactive");
+  });
+
   it("loads connected providers from ProviderConnection rows in priority order", async () => {
     mocks.prisma.providerConnection.findMany.mockResolvedValue([
       connection({ priority: 0, provider: "serpapi" }),
@@ -164,6 +190,16 @@ describe("integration queries", () => {
 
     expect(categories.map((category) => category.id)).toEqual(["serp", "analytics"]);
     expect(JSON.stringify(categories)).not.toContain("SEO enrichment");
+  });
+
+  it("does not assign an own-key source to an unconfigured provider catalog entry", async () => {
+    mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
+    const categories = await getIntegrationCategories("prj_1", { now });
+    const provider = categories
+      .flatMap((category) => category.providers)
+      .find((item) => item.id === "dataforseo");
+    expect(provider?.connectionId).toBeUndefined();
+    expect(provider?.credentialSource).toBeUndefined();
   });
 
   it("prefills the stored SERP login while keeping the password out of the view", async () => {

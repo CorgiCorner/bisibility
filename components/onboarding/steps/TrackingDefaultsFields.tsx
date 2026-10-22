@@ -1,10 +1,9 @@
 "use client";
 
 import type { LocationFieldValue } from "@/components/keywords/LocationField";
-import { MenuMultiSelect, MenuSelect } from "@/components/ui/MenuSelect";
+import { MenuMultiSelect } from "@/components/ui/MenuSelect";
 import { type SerpDepth, type SerpDevice, serpDeviceValues } from "@/lib/serp/constants";
 import { FIELD_HELP } from "@/lib/settings/field-help";
-import { frequencyOptions, type RankCheckFrequency } from "@/lib/settings/options";
 import { useTranslations } from "next-intl";
 import { OnboardingMarketDefinition } from "./OnboardingMarketDefinition";
 import type { CreateOnboardingMarketAction } from "./onboarding-market-actions";
@@ -12,19 +11,13 @@ import { deviceSummary, MenuField, SerpDepthField } from "./StepScheduleFields";
 
 const selectTriggerClass =
   "min-h-0 min-w-0 justify-end border-0 bg-transparent px-0 text-right text-sm hover:border-transparent focus-visible:border-transparent";
-const refreshOptions = frequencyOptions
-  .filter((option) => option.value !== "custom_cron")
-  .map((option) => ({ label: option.label, value: option.value }));
-
 type TrackingDefaultsFieldsProps = {
   createMarketAction?: CreateOnboardingMarketAction;
   devices: SerpDevice[];
-  errors?: { devices?: string; frequency?: string; locations?: string };
-  frequency: RankCheckFrequency;
+  errors?: { devices?: string; locations?: string };
   locations: LocationFieldValue[];
   onDepthChange: (depth: SerpDepth) => void;
   onDevicesChange: (devices: SerpDevice[]) => void;
-  onFrequencyChange: (frequency: RankCheckFrequency) => void;
   onLocationsChange: (locations: LocationFieldValue[]) => void;
   projectId: string;
   serpDepth: SerpDepth;
@@ -34,11 +27,9 @@ export function TrackingDefaultsFields({
   createMarketAction,
   devices,
   errors,
-  frequency,
   locations,
   onDepthChange,
   onDevicesChange,
-  onFrequencyChange,
   onLocationsChange,
   projectId,
   serpDepth,
@@ -80,24 +71,11 @@ export function TrackingDefaultsFields({
             onChange={onDepthChange}
             triggerClassName={selectTriggerClass}
           />
-          <MenuField help={FIELD_HELP.frequency} label={t("frequency")}>
-            <MenuSelect
-              analytics={{ control: "onboarding.tracking_frequency" }}
-              ariaLabel={t("frequency")}
-              onChange={(value) => onFrequencyChange(value as RankCheckFrequency)}
-              options={refreshOptions}
-              triggerClassName={selectTriggerClass}
-              value={frequency}
-            />
-          </MenuField>
         </div>
       </div>
       <p className="m-0 mt-3 text-[11.5px] text-fg-muted">{t("moreChecks")}</p>
       {errors?.devices ? (
         <p className="m-0 mt-2 text-[12px] text-red-text">{errors.devices}</p>
-      ) : null}
-      {errors?.frequency ? (
-        <p className="m-0 mt-2 text-[12px] text-red-text">{errors.frequency}</p>
       ) : null}
     </section>
   );

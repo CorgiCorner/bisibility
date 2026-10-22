@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { renderWithFeatureMessages } from "@/i18n/test-support/render-with-feature-messages";
 import type { TrackingWorkspaceActions } from "@/lib/ai-tracking/projections/workspace-actions";
 import en from "@/messages/core/en/shared.json";
@@ -75,7 +76,7 @@ it.each(locales.flatMap(([locale, messages]) => paths.map((path) => ({ locale, m
     const { actions } = mocks.workspace.mock.calls[0][0] as { actions: TrackingWorkspaceActions };
     const calls = {
       preview: () => actions.preview([], []),
-      launch: () => actions.launch([], {} as never),
+      launch: () => actions.launch([], { payment: paymentQuote() } as never),
       "suggestion preview": () => actions.generation?.preview({} as never),
       "suggestion generate": () => actions.generation?.generate({} as never, "request_1"),
       "suggestion review": () => actions.generation?.review(),

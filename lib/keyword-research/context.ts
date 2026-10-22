@@ -11,13 +11,14 @@ import { keywordResearchDefault } from "./default-scope";
 
 export { normalizeResearchKeyword } from "./request-key";
 
-import type { KeywordResearchConnection } from "./types";
+import type { KeywordResearchConnection, KeywordResearchMode } from "./types";
 
 export async function keywordResearchProject(projectId: string) {
   return prisma.project.findFirst({
     select: {
       defaults: { include: { locationRef: true } },
       id: true,
+      ownerId: true,
       lookupCacheTtlSeconds: true,
       keywords: { select: { device: true, location: true, locationRef: true, text: true } },
       savedKeywords: {
@@ -25,7 +26,14 @@ export async function keywordResearchProject(projectId: string) {
       },
       providerConnections: {
         orderBy: providerChainOrderBy(),
-        select: { credentialsEncrypted: true, id: true, provider: true, publicId: true },
+        select: {
+          credentialsEncrypted: true,
+          credentialSource: true,
+          updatedAt: true,
+          id: true,
+          provider: true,
+          publicId: true,
+        },
         where: providerChainWhere("serp"),
       },
       publicId: true,
@@ -41,7 +49,14 @@ export async function keywordResearchPageProject(projectId: string) {
       id: true,
       providerConnections: {
         orderBy: providerChainOrderBy(),
-        select: { credentialsEncrypted: true, id: true, provider: true, publicId: true },
+        select: {
+          credentialsEncrypted: true,
+          credentialSource: true,
+          updatedAt: true,
+          id: true,
+          provider: true,
+          publicId: true,
+        },
         where: providerChainWhere("serp"),
       },
       publicId: true,
@@ -57,24 +72,30 @@ export type KeywordResearchPageProject = NonNullable<
   Awaited<ReturnType<typeof keywordResearchPageProject>>
 >;
 
-export function hasResearchCapabilities(provider: SerpProvider) {
-  return (
-    typeof provider.fetchRelatedKeywords === "function" &&
-    typeof provider.fetchKeywordSuggestions === "function" &&
-    typeof provider.fetchKeywordIdeas === "function"
-  );
+export function hasResearchCapabilities(provider: SerpProvider, mode?: KeywordResearchMode) {
+  const methods = {
+    related: provider.fetchRelatedKeywords,
+    suggestions: provider.fetchKeywordSuggestions,
+    ideas: provider.fetchKeywordIdeas,
+  };
+  return mode === "auto"
+    ? Object.values(methods).every((method) => typeof method === "function")
+    : mode
+      ? typeof methods[mode] === "function"
+      : Object.values(methods).some((method) => typeof method === "function");
 }
 
 export function eligibleResearchConnections(
   project: Pick<KeywordResearchProject, "providerConnections">,
   capability: "metrics" | "research",
+  mode?: KeywordResearchMode,
 ) {
   return project.providerConnections.flatMap((connection) => {
     const provider = getSerpProvider(connection.provider);
     const eligible =
       capability === "metrics"
         ? typeof provider.fetchKeywordMetrics === "function"
-        : hasResearchCapabilities(provider);
+        : hasResearchCapabilities(provider, mode);
     return eligible ? [{ connection, provider }] : [];
   });
 }

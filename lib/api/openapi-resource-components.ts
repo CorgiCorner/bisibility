@@ -4,8 +4,39 @@ import { costEstimateSchema } from "./openapi-cost-estimate-components";
 import { publicIdSchema } from "./openapi-public-id";
 import { rankRunSchemas } from "./openapi-rank-run-components";
 import { savedViewInputSchema, savedViewSchema } from "./openapi-saved-views";
+import { openEnum } from "./openapi-sdk-schema";
 
 const dateTime = { format: "date-time", type: "string" } as const;
+
+const notificationPreferenceProperties = {
+  alert_email: { type: "boolean" },
+  alert_in_app: { type: "boolean" },
+  alert_push: {
+    description: "Mobile push for fired alerts on this member's registered devices.",
+    type: "boolean",
+  },
+  alert_slack: { type: "boolean" },
+  alert_webhook: { type: "boolean" },
+  check_email: { type: "boolean" },
+  check_in_app: { type: "boolean" },
+  import_email: { type: "boolean" },
+  import_in_app: { type: "boolean" },
+  invite_email: { type: "boolean" },
+  invite_in_app: { type: "boolean" },
+};
+const notificationPreferenceRequired = [
+  "alert_email",
+  "alert_in_app",
+  "alert_push",
+  "alert_slack",
+  "alert_webhook",
+  "check_email",
+  "check_in_app",
+  "import_email",
+  "import_in_app",
+  "invite_email",
+  "invite_in_app",
+];
 
 export const resourceSchemas = {
   ...rankRunSchemas,
@@ -41,35 +72,42 @@ export const resourceSchemas = {
     required: ["id", "expires_at"],
     type: "object",
   },
+  NotificationPreferencesPatch: {
+    properties: notificationPreferenceProperties,
+    additionalProperties: false,
+    type: "object",
+  },
+  NotificationPreferencesUpdated: {
+    properties: {
+      ...notificationPreferenceProperties,
+      project_id: publicIdSchema("prj"),
+      report_email: { type: "boolean" },
+    },
+    required: [...notificationPreferenceRequired, "project_id", "report_email"],
+    type: "object",
+  },
   NotificationPreferences: {
     properties: {
-      alert_email: { type: "boolean" },
-      alert_in_app: { type: "boolean" },
-      alert_push: {
-        description: "Mobile push for fired alerts on this member's registered devices.",
-        type: "boolean",
+      ...notificationPreferenceProperties,
+      report_email: { type: "boolean" },
+      project_id: publicIdSchema("prj"),
+      email: { type: "string", format: "email" },
+      email_verification: {
+        enum: ["unverified", "verified"],
+        type: "string",
+        ...openEnum("NotificationEmailVerification"),
       },
-      alert_slack: { type: "boolean" },
-      alert_webhook: { type: "boolean" },
-      check_email: { type: "boolean" },
-      check_in_app: { type: "boolean" },
-      import_email: { type: "boolean" },
-      import_in_app: { type: "boolean" },
-      invite_email: { type: "boolean" },
-      invite_in_app: { type: "boolean" },
+      slack_available: { type: "boolean" },
+      webhook_available: { type: "boolean" },
     },
     required: [
-      "alert_email",
-      "alert_in_app",
-      "alert_push",
-      "alert_slack",
-      "alert_webhook",
-      "check_email",
-      "check_in_app",
-      "import_email",
-      "import_in_app",
-      "invite_email",
-      "invite_in_app",
+      ...notificationPreferenceRequired,
+      "report_email",
+      "project_id",
+      "email",
+      "email_verification",
+      "slack_available",
+      "webhook_available",
     ],
     type: "object",
   },

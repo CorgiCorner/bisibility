@@ -1,3 +1,4 @@
+import { paymentRequestFields, paymentResponseFields } from "./openapi-action-payment";
 import { problemResponse } from "./openapi-problem";
 import { sdkName, usdCents } from "./openapi-sdk-schema";
 
@@ -19,12 +20,17 @@ export function runRankCheckOperation(input: {
       content: json({
         ...sdkName("RunRankCheckRequest"),
         properties: {
+          ...paymentRequestFields,
+          estimate_only: {
+            type: "boolean",
+            description: "Free rank-payment preview; no run, reservation or provider dispatch.",
+          },
           provider_id: { minLength: 1, maxLength: 80, type: "string" },
           max_cost_cents: {
             ...usdCents,
             description:
-              "Best-effort pre-estimate provider cost gate, in cents. The launch is refused with cost_limit_exceeded when its preflight estimate exceeds it.",
-            minimum: 1,
+              "Best-effort pre-estimate provider cost gate, in cents. 0 = cached result only; fresh rank checks have no cache and always refuse zero with cost_limit_exceeded before creating work. Other limits refuse when the preflight estimate exceeds them.",
+            minimum: 0,
             type: "integer",
           },
         },
@@ -33,6 +39,19 @@ export function runRankCheckOperation(input: {
       required: false,
     },
     responses: {
+      "200": response(
+        {
+          type: "object",
+          ...sdkName("RankCheckPaymentEstimate"),
+          properties: {
+            estimate: { type: "boolean", const: true },
+            estimated_cost_cents: { type: ["number", "null"], ...usdCents },
+            ...paymentResponseFields,
+          },
+          required: ["estimate", "estimated_cost_cents"],
+        },
+        "Free exact-route payment quote",
+      ),
       "201": response(input.rankCheckRef, "Rank check completed when inline execution is enabled"),
       "202": response(input.rankCheckRunRef, "Rank check queued"),
       ...input.problemResponses,

@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import {
   renderWithFeatureMessages,
   researchFeatureTestMessages,
@@ -12,7 +13,7 @@ const polishMessages = structuredClone(researchFeatureTestMessages);
 polishMessages.projectResearch.detail.frequencyDaily = "codziennie";
 polishMessages.projectResearch.detail.trackingCostEstimated =
   "Koszt śledzenia: <value>~{cost}</value>/miesiąc przy sprawdzaniu {frequency}.";
-polishMessages.projectResearch.state.retryCost = "Ponów ~{cost}";
+polishMessages.projectResearch.state.retryCost = "Ponów {cost}";
 
 function RetryLabel({ estimate }: Readonly<{ estimate: ResearchEstimateView }>) {
   const copy = useResearchWorkspaceCopy("Europe/Warsaw");
@@ -42,13 +43,28 @@ describe("research money presentation", () => {
 
   it("uses the viewer locale for a sub-cent retry estimate", () => {
     renderWithFeatureMessages(
-      <RetryLabel estimate={{ cached: false, costCents: 0.5, loading: false }} />,
+      <RetryLabel
+        estimate={{
+          cached: false,
+          costCents: 0.5,
+          loading: false,
+          payments: [
+            paymentQuote({
+              charge: {
+                value: "0.005",
+                unit: { kind: "currency", code: "USD" },
+                certainty: "estimate",
+              },
+            }),
+          ],
+        }}
+      />,
       {
         locale: "pl",
         messages: polishMessages,
       },
     );
 
-    expect(screen.getByText("Ponów ~< 0,01 USD")).toBeInTheDocument();
+    expect(screen.getByText(/Ponów ≈ < 0,01\sUSD/)).toBeInTheDocument();
   });
 });

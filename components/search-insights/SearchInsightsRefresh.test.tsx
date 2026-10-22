@@ -38,6 +38,14 @@ describe("SearchInsightsRefresh", () => {
     transition.pending = false;
     visibility("visible");
   });
+  it("waits a supplied interval before polling", () => {
+    const view = render(<SearchInsightsRefresh active intervalMs={90_000} />);
+    act(() => vi.advanceTimersByTime(45_000));
+    expect(routerMock.refresh).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(45_000));
+    expect(routerMock.refresh).toHaveBeenCalledTimes(1);
+    view.unmount();
+  });
   it("polls around 45 seconds without duplicate timers and stops when inactive or unmounted", () => {
     const view = render(<SearchInsightsRefresh active />);
     act(() => vi.advanceTimersByTime(44_999));
