@@ -55,6 +55,7 @@
       "default": "インスタンスの既定値",
       "hours": "{count, plural, other {#時間}}",
       "days": "{count, plural, other {#日}}",
+      "weeks": "{count, plural, other {#週間}}",
       "save": "保存",
       "saved": "保存しました",
       "list": "保存された結果",

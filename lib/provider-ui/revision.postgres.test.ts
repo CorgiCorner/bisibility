@@ -78,6 +78,23 @@ describe("provider management revision migration", () => {
     await db.exec(`UPDATE provider_connections SET "lastUsedAt"=CURRENT_TIMESTAMP WHERE id='c'`);
     expect(await revision()).toBe(stable);
   });
+  it("credential replacement and own/hosted ABA each revoke the prior UI revision", async () => {
+    const current = readFileSync(
+      new URL(
+        "../../prisma/migrations/20261011040000_retire_accounting/migration.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    const start = current.indexOf("CREATE OR REPLACE FUNCTION provider_ui_connection_revision()");
+    const end = current.indexOf("CREATE OR REPLACE FUNCTION provider_ui_project_revision()", start);
+    await db.exec(current.slice(start, end));
+    const before = await revision();
+    await db.exec(
+      `UPDATE provider_connections SET "credentialsEncrypted"='fixture-key-a' WHERE id='c'; UPDATE provider_connections SET "credentialsEncrypted"='fixture-key-b' WHERE id='c'; UPDATE provider_connections SET "credentialSource"='hosted' WHERE id='c'; UPDATE provider_connections SET "credentialSource"='own' WHERE id='c'`,
+    );
+    expect(BigInt(await revision()) - BigInt(before)).toBe(4n);
+  });
   it("rate child insert/update/delete advances parent, including identical-price edits", async () => {
     const before = await revision();
     await db.exec(

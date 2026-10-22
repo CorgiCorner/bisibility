@@ -15,9 +15,7 @@ it("shows capability-specific providers and a link while locking all descendant 
       <button type="button">Research</button>
     </ProviderAccessGate>,
   );
-  expect(screen.getAllByText("Connect a supporting provider to unlock these fields.")).toHaveLength(
-    1,
-  );
+  expect(screen.getAllByText("Choose a data source to use these fields.")).toHaveLength(1);
   expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   expect(screen.getByRole("textbox", { name: "Seeds" })).toBeDisabled();
   expect(screen.getByRole("button", { name: "Research" })).toBeDisabled();
@@ -48,7 +46,7 @@ it("offers one reconnect action with capability-specific providers", () => {
       <input aria-label="Target" />
     </ProviderAccessGate>,
   );
-  expect(screen.getByText("Reconnect your provider to unlock these fields.")).toBeVisible();
+  expect(screen.getByText("Reconnect the selected data source to use these fields.")).toBeVisible();
   expect(screen.getAllByRole("link")).toHaveLength(1);
   expect(screen.getByRole("link", { name: "Reconnect provider" })).toHaveAttribute(
     "href",
@@ -61,7 +59,9 @@ it("offers one reconnect action with capability-specific providers", () => {
 it("opens Integrations without promising a compatible provider when none is available", () => {
   render(<ProviderAccessEmptyState href="/app/prj_1/integrations" providers={[]} />);
   expect(
-    screen.getByRole("heading", { name: "No supporting provider is available for this feature." }),
+    screen.getByRole("heading", {
+      name: "No supported data source is available for this feature.",
+    }),
   ).toBeVisible();
   expect(screen.getByRole("link", { name: "Open Integrations" })).toHaveAttribute(
     "href",

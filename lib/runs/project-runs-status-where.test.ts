@@ -83,9 +83,18 @@ function gscRow(state: string, pausedReason: string | null): GscImportRow {
   };
 }
 
-const rankRows = RUN_STATUSES.flatMap((status) =>
-  [null, ...RUN_OUTCOMES].map((outcome) => rankRow(status, outcome)),
-);
+const rankRows = [
+  ...RUN_STATUSES.flatMap((status) =>
+    [null, ...RUN_OUTCOMES].map((outcome) => rankRow(status, outcome)),
+  ),
+  ...["completed", "cancelled"].flatMap((status) =>
+    [null, "no_active_keywords"].map((blockedReason) => ({
+      ...rankRow(status, "cancelled"),
+      blockedReason,
+      startedAt: null,
+    })),
+  ),
+];
 const gscRows = [...PROJECT_RUN_GSC_IMPORT_KNOWN_STATES, "archived"].flatMap((state) =>
   [null, "error", "needs_reauth", "rate_limited", "user", "other"].map((reason) =>
     gscRow(state, reason),

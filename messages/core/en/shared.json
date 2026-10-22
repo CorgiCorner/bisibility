@@ -99,12 +99,13 @@
       "duplicate": "Every selected keyword is being checked by another run right now, so there is nothing to start.",
       "editBudget": "Edit budget",
       "noProvider": "No provider",
-      "noProviderBlocked": "No provider connected, so there is nowhere to send these targets. Your own key, billed to you directly.",
+      "noProviderBlocked": "Choose a data source in Integrations before running these checks.",
       "openIntegrations": "Open Integrations",
       "openRun": "Open run",
       "pricePerTarget": "price per target",
       "primaryProvider": "Primary provider",
       "primaryProviderAria": "Primary provider",
+      "paymentUnavailable": "Payment details for this provider are unavailable. Check the payment source in Usage.",
       "previewChanged": "Run details changed. Refresh to review the current estimate.",
       "runInProgress": "Run in progress",
       "runOptions": "Run options",
@@ -139,7 +140,9 @@
       "measurementPolicy": "Measurement policy",
       "configureMeasurementPolicy": "Configure policy",
       "measurementPolicyUnconfigured": "Configure measurement policy before running new checks.",
-      "measurementPolicyUnsupported": "Measurement policy no longer matches the current adapters. Review and configure it again."
+      "measurementPolicyUnsupported": "Measurement policy no longer matches the current adapters. Review and configure it again.",
+      "nextScheduledCheck": "Next scheduled check",
+      "futureScheduledCheck": "{count, plural, one {# of these keywords has} other {# of these keywords have}} a check planned for {time}. You can also check now."
     },
     "globalError": {
       "description": "The app could not render this page. Reload to try again.",
@@ -305,7 +308,7 @@
       "notices": {
         "budgetExhausted": "Monthly rank-check budget reached.",
         "noneReady": "No keywords are ready for a first check.",
-        "providerMissing": "Connect a SERP provider before running checks.",
+        "providerMissing": "Choose a data source before running checks.",
         "raiseBudget": "Raise the budget",
         "sampleProject": "Sample projects don't run real checks.",
         "reviewUsage": "Review usage"
@@ -388,7 +391,7 @@
         "reactivateAccountDangerLabel": "Reactivate account",
         "reactivateAccountTitle": "Reactivate account",
         "reactivateAccountToastMessage": "Account action requested",
-        "removeIntegrationBody": "Rank checks will stop until another SERP provider is connected. Stored credentials are removed from this instance.",
+        "removeIntegrationBody": "This removes this provider connection and its stored credentials. Checks can continue only through another enabled source.",
         "removeIntegrationDangerLabel": "Disconnect provider",
         "removeIntegrationTitle": "Disconnect provider",
         "removeIntegrationToastMessage": "Provider disconnected",
@@ -427,7 +430,11 @@
         "deleteTimelineNoteBody": "Delete this timeline note? This cannot be undone.",
         "deleteTimelineNoteDangerLabel": "Delete note",
         "deleteTimelineNoteTitle": "Delete timeline note?",
-        "deleteTimelineNoteToastMessage": "Timeline note deleted."
+        "deleteTimelineNoteToastMessage": "Timeline note deleted.",
+        "removeProviderKeyTitle": "Remove saved key?",
+        "removeProviderKeyBody": "This removes the saved key and disconnects this provider. Choose another source to keep using it.",
+        "removeProviderKeyDangerLabel": "Remove key",
+        "removeProviderKeyToastMessage": "Key removed"
       },
       "copy": {
         "action": "Copy",
@@ -781,7 +788,13 @@
         "loading": "Loading budgets.",
         "empty": "No budgets apply.",
         "forbidden": "You cannot view these budgets.",
-        "failed": "Budgets are unavailable right now."
+        "failed": "Budgets are unavailable right now.",
+        "noLimit": "No limit",
+        "setLimit": "Set limit",
+        "perMonth": "/ month",
+        "overBy": "Over by {amount}",
+        "reservedHint": "Held for running or queued checks. Updated automatically; not editable.",
+        "reservedInfo": "About reserved usage"
       },
       "overview": {
         "unknown": "Usage unknown",
@@ -1420,6 +1433,8 @@
         "duplicate": "An active run already covers this selection.",
         "budget_blocked": "The budget blocks this launch.",
         "nothing_eligible": "No targets are eligible for this manual run.",
+        "payment_already_executed": "This payment was already used for a run.",
+        "payment_unavailable": "Payment details for this provider are unavailable. Check the payment source in Usage.",
         "cost_limit_exceeded": "The estimated operation exceeds its cost limit.",
         "sample_project": "Sample projects cannot launch paid measurements.",
         "preview_failed": "Could not read the quote. Your draft is retained.",
@@ -2014,7 +2029,7 @@
       "asOf": "Report as of:",
       "baselineAsOf": "Requested baseline watermark:",
       "providerConnected": "A ranking provider is connected. This read does not launch checks.",
-      "providerMissing": "No ranking provider is connected. Stored observations remain readable.",
+      "providerMissing": "No ranking data source is configured. Stored observations remain readable.",
       "state": {
         "missing": "Choose a saved comparison to see its results.",
         "invalid": "This comparison link is invalid. Choose a saved comparison.",
@@ -2046,17 +2061,55 @@
       "scanFullDepth": "Continue through the full reviewed depth."
     },
     "providerAccess": {
-      "connect": "Connect a supporting provider to unlock these fields.",
+      "connect": "Choose a data source to use these fields.",
       "supported": "Supported providers: {providers}.",
-      "unavailable": "No supporting provider is available for this feature.",
+      "unavailable": "No supported data source is available for this feature.",
       "action": "Open Integrations",
-      "reconnect": "Reconnect your provider to unlock these fields.",
+      "reconnect": "Reconnect the selected data source to use these fields.",
       "reconnectAction": "Reconnect provider",
-      "emptyTitle": "Connect a provider to get started",
-      "reconnectTitle": "Reconnect to load new results",
-      "emptyDescription": "This feature needs a supporting provider. Connect one in Integrations to run a search.",
-      "reconnectDescription": "Reconnect your provider in Integrations before running another search.",
-      "connectAction": "Connect provider"
+      "emptyTitle": "Choose a data source",
+      "reconnectTitle": "Reconnect the selected data source",
+      "emptyDescription": "Choose a supported data source in Integrations to run a search.",
+      "reconnectDescription": "Reconnect the selected data source in Integrations before running another search.",
+      "connectAction": "Choose a data source",
+      "askAdmin": "Ask a project admin to choose a data source before checks can start."
+    },
+    "durationUnits": {
+      "minutes": "{count, plural, one {# minute} other {# minutes}}",
+      "hours": "{count, plural, one {# hour} other {# hours}}",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "weeks": "{count, plural, one {# week} other {# weeks}}"
+    },
+    "actionPayment": {
+      "title": "Review cost",
+      "description": "Check the price before you start.",
+      "confirm": "Start",
+      "cancel": "Cancel",
+      "payer": "Pay with",
+      "byok": "Your provider account",
+      "platform": "Credits",
+      "wallet": "Available: {amount}",
+      "freeUntil": "Free from cache until {date}",
+      "cacheWindow": "Result stays free to reopen for {duration}",
+      "changeCache": "Change",
+      "refreshEstimate": "Refresh estimate",
+      "addCredits": "Add credits",
+      "loading": "Checking price…",
+      "unavailable": "Payment details unavailable",
+      "expired": "This price expired. Refresh to check the current cost.",
+      "blocked": "This option isn’t available. Choose another or check your account.",
+      "pending": "Charge pending",
+      "unknown": "Charge not confirmed",
+      "byokRoute": "On your {provider} key",
+      "maximum": "Maximum: {amount}",
+      "total": "Total",
+      "originalCharge": "Original lookup:",
+      "reviewPrice": "Review price",
+      "insufficientCredits": "Not enough credits.",
+      "refreshPrice": "Refresh price",
+      "forecast": "Forecast",
+      "forecastRisk": "Actual provider costs may exceed this forecast.",
+      "requestUnconfirmed": "Check the previous request before starting again."
     }
   }
 }

@@ -128,3 +128,20 @@ export function PreflightOptionGroups({
     </section>
   );
 }
+
+export function PreflightScopeSummary({
+  scope,
+}: {
+  scope: import("./preflight-presentation").PreflightScope;
+}) {
+  const t = useTranslations("shared.rankPreflight");
+  return (
+    <section
+      className="rounded-card border border-border px-4 py-[13px]"
+      aria-label={t("runScope")}
+    >
+      <p className="m-0 text-[13.5px] font-semibold tabular-nums text-fg">{scope.equation}</p>
+      <p className="m-0 mt-1 text-[11.5px] leading-[1.55] text-fg-muted">{scope.description}</p>
+    </section>
+  );
+}

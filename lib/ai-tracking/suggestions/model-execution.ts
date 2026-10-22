@@ -1,4 +1,7 @@
+import { aiPaymentGuard, assertAiPaymentDefinition } from "@/lib/ai-research/payment";
+import { prisma } from "@/lib/db/prisma";
 import { meterOperationReference } from "@/lib/metering/operation-reference";
+import { suggestionPaymentDefinition } from "./payment";
 import "server-only";
 import { aiProviderRequest, PROMPT_PATH } from "@/lib/ai-research/provider";
 import type { AiResearchContext } from "@/lib/ai-research/service";
@@ -29,7 +32,31 @@ export async function executeSuggestionModel(
   state: GenerationExecutionState,
 ): Promise<SuggestionModelResponse> {
   const { source, preview, forecast, capabilities } = prepared;
+  if (!context.actorId) throw new Error("Generation requires its original actor.");
+  const actorId = context.actorId;
+  assertAiPaymentDefinition(preview.paymentConsent, {
+    projectId: context.projectId,
+    actorId,
+    feature: "ai_tracking",
+    definition: suggestionPaymentDefinition(preview),
+    scope: "manual",
+    executionId: row.id,
+  });
+  const paymentGuard = aiPaymentGuard(preview.paymentConsent);
   return paidProviderCall<SuggestionModelResponse>({
+    ...(paymentGuard
+      ? {
+          payment: {
+            operationKey: row.attemptId,
+            snapshot: {
+              credentialSource: "own" as const,
+              credentialsEncrypted: source.connection.credentialsEncrypted,
+            },
+            guard: paymentGuard,
+            record: async () => undefined,
+          },
+        }
+      : {}),
     connection: source.connection,
     credential: context.origin.credential,
     correlationId: row.attemptId,
@@ -54,6 +81,14 @@ export async function executeSuggestionModel(
       state.observer = observer;
       const guarded: ProviderUsageObserver = {
         async begin(attempt) {
+          assertAiPaymentDefinition(preview.paymentConsent, {
+            projectId: context.projectId,
+            actorId,
+            feature: "ai_tracking",
+            definition: suggestionPaymentDefinition(preview),
+            scope: "manual",
+            executionId: row.id,
+          });
           const nativeId = await observer.begin(attempt);
           state.nativeId = nativeId;
           state.receipt = {
@@ -99,6 +134,11 @@ export async function executeSuggestionModel(
               "stale_preview",
               "Credential or budget changed after the reviewed preview.",
             );
+          if (paymentGuard)
+            await prisma.$transaction(async (tx) => {
+              await paymentGuard.lockBusiness(tx, id);
+              await paymentGuard.assertRequest(tx, id);
+            });
           await observer.beforeDispatch?.(id);
         },
         settle: (id, receipt) => observer.settle(id, receipt),

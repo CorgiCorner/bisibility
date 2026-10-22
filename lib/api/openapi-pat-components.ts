@@ -1,7 +1,7 @@
 import { OWN_KEY_CAPABILITIES } from "@/lib/providers/own-key-capabilities";
 import { publicIdSchema } from "./openapi-public-id";
 import { scheduleInputContractSchema } from "./openapi-schedule-schema";
-import { closedEnum, openEnum, sdkName } from "./openapi-sdk-schema";
+import { closedEnum, constraintUnion, openEnum, sdkName } from "./openapi-sdk-schema";
 
 export const personalAccessSchemas = {
   Me: {
@@ -172,12 +172,42 @@ export const personalAccessSchemas = {
       },
     ],
   },
+  ProjectPatch: {
+    properties: {
+      domain: { minLength: 1, maxLength: 253, type: "string" },
+      name: { minLength: 1, maxLength: 120, type: "string" },
+    },
+    type: "object",
+    anyOf: [{ required: ["domain"] }, { required: ["name"] }],
+    ...constraintUnion,
+  },
   ProjectCreate: {
     properties: {
-      defaults: scheduleInputContractSchema,
-      domain: { type: "string" },
-      name: { type: "string" },
-      tracking_scope: { enum: ["city", "country"], type: "string" },
+      defaults: {
+        ...scheduleInputContractSchema,
+        ...sdkName("ProjectCreateDefaults"),
+        properties: {
+          ...scheduleInputContractSchema.properties,
+          frequency: {
+            ...scheduleInputContractSchema.properties.frequency,
+            ...closedEnum("ProjectCreateFrequency"),
+          },
+          cron_expression: { minLength: 1, maxLength: 120, type: ["string", "null"] },
+          timezone: { minLength: 1, maxLength: 80, type: "string", default: "UTC" },
+          serp_depth: {
+            enum: [10, 20, 50, 100],
+            type: "integer",
+            ...closedEnum("ProjectCreateSerpDepth"),
+          },
+        },
+      },
+      domain: { minLength: 1, maxLength: 253, type: "string" },
+      name: { minLength: 1, maxLength: 120, type: "string" },
+      tracking_scope: {
+        enum: ["city", "country"],
+        type: "string",
+        ...closedEnum("ProjectCreateTrackingScope"),
+      },
     },
     required: ["name", "domain"],
     type: "object",

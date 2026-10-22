@@ -4,7 +4,9 @@ import type { KeywordMetrics } from "@/lib/providers/types";
 export type KeywordResearchMode = "auto" | "ideas" | "related" | "suggestions";
 export type KeywordResearchSource = "idea" | "related" | "suggestion";
 export type KeywordResearchSourceReason =
+  | import("@/lib/action-payment/contract").ActionPaymentFailure
   | "wallet_budget_exhausted"
+  | "insufficient_credits"
   | "budget_exhausted"
   | "cost_limit"
   | "in_progress"
@@ -35,6 +37,7 @@ export type KeywordResearchSourceDiagnostic = {
 export type { ProviderLookupFailure };
 
 export type KeywordResearchSuccess = {
+  payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
   cached: boolean;
   cachedUntil: string;
   connections: KeywordResearchConnection[];
@@ -47,6 +50,7 @@ export type KeywordResearchSuccess = {
 };
 
 export type KeywordResearchSourceEstimate = {
+  freeUntil?: string;
   cached: boolean;
   costCents: number;
   source: KeywordResearchSource;
@@ -57,6 +61,8 @@ export type KeywordResearchSourceEstimate = {
  * source statuses, so a caller cannot mistake it for an empty research result.
  */
 export type KeywordResearchEstimate = {
+  payment?: import("@/lib/action-payment/contract").ActionPaymentQuote;
+  paymentOptions?: import("@/lib/action-payment/contract").ActionPaymentOption[];
   cached: boolean;
   connections: KeywordResearchConnection[];
   costCents: number;
@@ -78,6 +84,10 @@ export function isKeywordResearchEstimate(
 }
 
 export type KeywordMetricsSuccess = {
+  payment?:
+    | import("@/lib/action-payment/contract").ActionPaymentQuote
+    | import("@/lib/action-payment/contract").ActionPaymentReceipt;
+  paymentOptions?: import("@/lib/action-payment/contract").ActionPaymentOption[];
   cachedCount: number;
   connections: KeywordResearchConnection[];
   costCents: number;

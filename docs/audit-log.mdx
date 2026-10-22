@@ -111,6 +111,7 @@ actor and are shown as System in the audit UI.
 | `account.deleted` | User | The signed-in user confirms account deletion. |
 | `account.profile_updated` | User | The signed-in user changes their display name. |
 | `account.session_revoked` | User | The signed-in user revokes one of their other sessions. |
+| `account.connected_app_revoked` | User | The signed-in user revokes an OAuth app and optionally its linked personal tokens. |
 | `account.sessions_revoked` | User | The signed-in user revokes all other sessions. |
 | `auth.sign_in` | User | Email one-time-code sign-in succeeds. |
 | `audit_log.purge` | System | Retention maintenance deletes audit rows older than the configured cutoff. |

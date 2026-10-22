@@ -7,6 +7,7 @@ import { queuedBatchAttribution } from "./queued-attribution";
 import { queuedBillingUnits } from "./queued-pricing";
 import { queuedRequestCosts } from "./queued-request-costs";
 import type { claimQueuedSubmission } from "./queued-submit-claim";
+import { queuedRankPaymentLimit } from "./runs/payment-queued";
 
 /** One provider task per queued rank-check task, priced for the usage journal. */
 export async function submissionTasks(
@@ -38,6 +39,7 @@ export async function submissionTasks(
         batch.connection?.credentialSource === "hosted" ? "hosted" : undefined,
       );
       return {
+        maxCostCents: await queuedRankPaymentLimit(task.rankCheckId),
         estimate: {
           cents: costs[index].toFixed(4),
           units: String(queuedBillingUnits(request.depth)),

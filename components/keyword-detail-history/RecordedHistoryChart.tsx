@@ -1,10 +1,28 @@
 "use client";
 
 import { ChartRegion } from "@/components/ui/ChartRegion";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { chartColors } from "@/lib/theme/chart-colors";
 import { useFormatter, useTranslations } from "next-intl";
+import { useCallback, useState } from "react";
 import { historyTimestampFraction, recordedHistorySegments } from "./history-chart-model";
 import type { ObservationHistoryPage } from "./history-contract";
+
+function useRecordedChartWidth() {
+  const [width, setWidth] = useState(680);
+  const ref = useCallback((node: SVGSVGElement | null) => {
+    if (!node) return;
+    const measure = () => {
+      if (node.clientWidth > 56) setWidth(Math.round(node.clientWidth));
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  return { ref, width };
+}
 
 /** Numeric timestamp geometry; no ordinal day spacing, interpolation across gaps or rank substitution. */
 export function RecordedHistoryChart({
@@ -18,13 +36,14 @@ export function RecordedHistoryChart({
 }>) {
   const t = useTranslations("projectRankTracker.keywordDetail.recordedHistory");
   const format = useFormatter();
+  const { ref, width } = useRecordedChartWidth();
   const { segments, gaps, boundaries } = recordedHistorySegments(page);
   const from = Date.parse(page.window.from);
   const to = Date.parse(page.window.to);
   const positions = segments.flatMap((segment) => segment.points.map(({ position }) => position));
   const max = positions.reduce((max, position) => Math.max(max, position), 20);
   const left = 40,
-    right = 664,
+    right = width - 16,
     top = 12,
     bottom = 240;
   const x = (at: number) => {
@@ -35,19 +54,26 @@ export function RecordedHistoryChart({
   const ticks = [from, from + (to - from) / 2, to];
   const validWindow = Number.isFinite(from) && Number.isFinite(to) && from <= to;
   const completeWindow = page.records.length === page.totalCount && page.nextCursor === null;
+  const empty = !validWindow || positions.length === 0;
   return (
     <>
-      <ChartRegion className="relative mt-2 h-[280px]" label={t("chartAria")}>
-        {!validWindow || positions.length === 0 ? (
-          <div className="grid h-full place-items-center text-sm text-fg-muted">
-            {t("noQualifiedPoints")}
-          </div>
+      <ChartRegion
+        className={empty ? "relative" : "relative mt-2 h-[280px]"}
+        label={t("chartAria")}
+      >
+        {empty ? (
+          <EmptyState
+            compact
+            title={t("noQualifiedPoints")}
+            description={t("noPositionsDescription")}
+          />
         ) : (
           <svg
             aria-label={t("chartAria")}
-            viewBox="0 0 680 280"
+            ref={ref}
+            viewBox={`0 0 ${width} 280`}
             className="h-full w-full"
-            preserveAspectRatio="none"
+            preserveAspectRatio="xMidYMid meet"
           >
             {[1, 10, max].map((position) => (
               <g key={position}>
@@ -127,17 +153,21 @@ export function RecordedHistoryChart({
           </svg>
         )}
       </ChartRegion>
-      <p className="m-0 mt-3 text-[11px] text-fg-muted">
-        {t("chartLoaded", {
-          loaded: format.number(page.records.length),
-          total: format.number(page.totalCount),
-          gaps: format.number(gaps),
-          boundaries: format.number(boundaries),
-        })}
-      </p>
-      <p className="m-0 mt-1 text-[11px] text-fg-muted">{t("chartMeaning")}</p>
-      {!completeWindow ? (
-        <p className="m-0 mt-1 text-[11px] text-fg-muted">{t("chartPartial")}</p>
+      {!empty ? (
+        <>
+          <p className="m-0 mt-3 text-[11px] text-fg-muted">
+            {t("chartLoaded", {
+              loaded: format.number(page.records.length),
+              total: format.number(page.totalCount),
+              gaps: format.number(gaps),
+              boundaries: format.number(boundaries),
+            })}
+          </p>
+          <p className="m-0 mt-1 text-[11px] text-fg-muted">{t("chartMeaning")}</p>
+          {!completeWindow ? (
+            <p className="m-0 mt-1 text-[11px] text-fg-muted">{t("chartPartial")}</p>
+          ) : null}
+        </>
       ) : null}
     </>
   );

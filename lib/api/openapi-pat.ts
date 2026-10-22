@@ -51,7 +51,10 @@ export function personalAccessPaths(input: {
   return {
     "/me": {
       get: personalBearer("Get the authenticated user", "getMe", ref("Me")),
-      patch: personalBearer("Update the authenticated user", "updateMe", ref("Me"), ref("MePatch")),
+      patch: {
+        ...personalBearer("Update the authenticated user", "updateMe", ref("Me"), ref("MePatch")),
+        parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }],
+      },
       delete: deleteAccountOperation(personalBearer, ref),
     },
     "/me/tokens": {

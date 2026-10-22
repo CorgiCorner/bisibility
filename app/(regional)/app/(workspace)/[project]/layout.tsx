@@ -2,6 +2,7 @@ import { WorkspaceShell } from "@/app/(regional)/app/(workspace)/workspace-shell
 import { RankTrackerSearchDraftProvider } from "@/components/keywords/RankTrackerSearchDraft";
 import { MarketContextProvider } from "@/components/markets/MarketContextProvider";
 import { UsageDisplaySettingsProvider } from "@/components/metering/UsageDisplaySettingsProvider";
+import { renderProjectDataSourceExtension } from "@/components/settings/AccountDataSourceExtension";
 import { readProjectUsageDisplaySettings } from "@/lib/project-usage-display/store";
 import { getQueryActor, resolveProjectAccess } from "@/lib/queries/_auth";
 import type { ReactNode } from "react";
@@ -29,6 +30,16 @@ export default async function ProjectLayout({
     access.publicId,
     await getQueryActor(),
   );
+  const content = await renderProjectDataSourceExtension(
+    <WorkspaceShell
+      activeProjectId={access.projectId}
+      context={context}
+      projectRef={access.publicId}
+    >
+      {children}
+    </WorkspaceShell>,
+    access.publicId,
+  );
 
   return (
     // The project level, wrapping the SHELL and not just the page. The chrome - header, rail,
@@ -37,15 +48,7 @@ export default async function ProjectLayout({
     // around the page body it renders.
     <MarketContextProvider market={null} projectRef={access.publicId}>
       <UsageDisplaySettingsProvider initial={usageDisplay} key={access.publicId}>
-        <RankTrackerSearchDraftProvider>
-          <WorkspaceShell
-            activeProjectId={access.projectId}
-            context={context}
-            projectRef={access.publicId}
-          >
-            {children}
-          </WorkspaceShell>
-        </RankTrackerSearchDraftProvider>
+        <RankTrackerSearchDraftProvider>{content}</RankTrackerSearchDraftProvider>
       </UsageDisplaySettingsProvider>
     </MarketContextProvider>
   );

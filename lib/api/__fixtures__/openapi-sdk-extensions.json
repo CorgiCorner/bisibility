@@ -19,14 +19,6 @@
   },
   {
     "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk"
-    ],
-    "subject": "operation addCompetitor"
-  },
-  {
-    "problems": [
       "enum-without-kind /responses/200 application/json/properties/data/properties/cost_state",
       "enum-without-kind /responses/200 application/json/properties/data/properties/drafts/items/properties/category",
       "missing x-bisibility-idempotency",
@@ -64,10 +56,7 @@
       "unnamed /requestBody/application/json/properties/input_snapshot/properties/context",
       "unnamed /responses/200 application/json",
       "unnamed /responses/200 application/json/properties/data",
-      "unnamed /responses/200 application/json/properties/data/properties/configuration",
-      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot",
-      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot/properties/competitors/items",
-      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot/properties/context"
+      "unnamed /responses/200 application/json/properties/data/properties/configuration"
     ],
     "subject": "operation aiTrackingSuggestionsPreview"
   },
@@ -110,45 +99,6 @@
       "unnamed /responses/200 application/json/properties/data/oneOf/1/properties/result/properties/rows/items/properties/citations/items"
     ],
     "subject": "operation analyzeAiVisibility"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /responses/200 application/json"
-    ],
-    "subject": "operation archiveAiTrackingPrompt"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /responses/200 application/json",
-      "unnamed /responses/200 application/json/properties/data",
-      "unnamed /responses/200 application/json/properties/data/properties/configuration"
-    ],
-    "subject": "operation archiveAiTrackingSchedule"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /responses/200 application/json",
-      "unnamed /responses/200 application/json/properties/data"
-    ],
-    "subject": "operation archiveAiTrackingTopic"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /responses/200 application/json"
-    ],
-    "subject": "operation cancelAiTrackingRun"
   },
   {
     "problems": [
@@ -218,50 +168,6 @@
   },
   {
     "problems": [
-      "enum-without-kind /requestBody/application/json/properties/category",
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /requestBody/application/json",
-      "unnamed /requestBody/application/json/properties/category",
-      "unnamed /requestBody/application/json/properties/generation_reference",
-      "unnamed /requestBody/application/json/properties/provider_dataset_reference",
-      "unnamed /responses/201 application/json"
-    ],
-    "subject": "operation createAiTrackingPrompt"
-  },
-  {
-    "problems": [
-      "enum-without-kind /requestBody/application/json/properties/configuration/properties/configurations/items/properties/engine",
-      "enum-without-kind /requestBody/application/json/properties/configuration/properties/configurations/items/properties/source",
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "schema createAiTrackingSchedule___schema0",
-      "unnamed /requestBody/application/json",
-      "unnamed /requestBody/application/json/properties/configuration",
-      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items",
-      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items/properties/engine",
-      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items/properties/source",
-      "unnamed /responses/201 application/json",
-      "unnamed /responses/201 application/json/properties/data",
-      "unnamed /responses/201 application/json/properties/data/properties/configuration"
-    ],
-    "subject": "operation createAiTrackingSchedule"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /requestBody/application/json",
-      "unnamed /responses/201 application/json",
-      "unnamed /responses/201 application/json/properties/data"
-    ],
-    "subject": "operation createAiTrackingTopic"
-  },
-  {
-    "problems": [
       "missing x-bisibility-idempotency",
       "missing x-bisibility-pagination",
       "missing x-bisibility-sdk",
@@ -289,15 +195,6 @@
       "schema PersonalAccessTokenCreate"
     ],
     "subject": "operation createPersonalAccessToken"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "schema ProjectCreate"
-    ],
-    "subject": "operation createProject"
   },
   {
     "problems": [
@@ -604,40 +501,12 @@
   },
   {
     "problems": [
-      "enum-without-kind /responses/200 application/json/properties/data/properties/visibility_markets/items/properties/platform",
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /responses/200 application/json",
-      "unnamed /responses/200 application/json/properties/data",
-      "unnamed /responses/200 application/json/properties/data/properties/limits",
-      "unnamed /responses/200 application/json/properties/data/properties/models/items",
-      "unnamed /responses/200 application/json/properties/data/properties/response_countries/items",
-      "unnamed /responses/200 application/json/properties/data/properties/response_languages/items",
-      "unnamed /responses/200 application/json/properties/data/properties/visibility_markets/items",
-      "unnamed /responses/200 application/json/properties/data/properties/visibility_markets/items/properties/languages/items",
-      "unnamed /responses/200 application/json/properties/data/properties/visibility_markets/items/properties/platform"
-    ],
-    "subject": "operation getAiResearchCatalog"
-  },
-  {
-    "problems": [
       "missing x-bisibility-idempotency",
       "missing x-bisibility-pagination",
       "missing x-bisibility-sdk",
       "schema CloudImportCompatibility"
     ],
     "subject": "operation getCloudImportCompatibility"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "schema KeywordMetricsRequest",
-      "schema KeywordMetricsResponse"
-    ],
-    "subject": "operation getKeywordMetrics"
   },
   {
     "problems": [
@@ -689,14 +558,6 @@
       "missing x-bisibility-pagination",
       "missing x-bisibility-sdk"
     ],
-    "subject": "operation getNotificationPreferences"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk"
-    ],
     "subject": "operation getOpenApi"
   },
   {
@@ -736,17 +597,9 @@
   },
   {
     "problems": [
-      "enum-without-kind /parameters/path/kind/schema",
-      "enum-without-kind /parameters/query/result_limit/schema",
       "missing x-bisibility-idempotency",
       "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "schema StoredBacklinksReport",
-      "schema StoredDomainOverviewReport",
-      "schema StoredKeywordResearchReport",
-      "schema StoredResearchReportResponse",
-      "unnamed /parameters/path/kind/schema",
-      "unnamed /parameters/query/result_limit/schema"
+      "missing x-bisibility-sdk"
     ],
     "subject": "operation getStoredResearchReport"
   },
@@ -775,35 +628,6 @@
       "unnamed /responses/200 application/json/properties/meta"
     ],
     "subject": "operation listAgentReports"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk"
-    ],
-    "subject": "operation listAiTrackingRuns"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /responses/200 application/json",
-      "unnamed /responses/200 application/json/properties/data/items",
-      "unnamed /responses/200 application/json/properties/data/items/properties/configuration"
-    ],
-    "subject": "operation listAiTrackingSchedules"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /responses/200 application/json",
-      "unnamed /responses/200 application/json/properties/data/items"
-    ],
-    "subject": "operation listAiTrackingTopics"
   },
   {
     "problems": [
@@ -879,29 +703,9 @@
       "missing x-bisibility-idempotency",
       "missing x-bisibility-pagination",
       "missing x-bisibility-sdk",
-      "schema ProviderBudgets"
-    ],
-    "subject": "operation listProviderBudgets"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
       "schema Provider"
     ],
     "subject": "operation listProviders"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "money-without-kind /parameters/query/max_cost_cents/schema",
-      "schema RankedKeywordConnection",
-      "schema RankedKeywordSuggestionsResponse"
-    ],
-    "subject": "operation listRankedKeywordSuggestions"
   },
   {
     "problems": [
@@ -1057,16 +861,6 @@
       "missing x-bisibility-idempotency",
       "missing x-bisibility-pagination",
       "missing x-bisibility-sdk",
-      "schema StoredResearchReportSummary",
-      "schema StoredResearchReportsResponse"
-    ],
-    "subject": "operation listStoredResearchReports"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
       "schema TeamInvite"
     ],
     "subject": "operation listTeamInvites"
@@ -1128,14 +922,6 @@
       "missing x-bisibility-pagination",
       "missing x-bisibility-sdk"
     ],
-    "subject": "operation removeProjectCompetitor"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk"
-    ],
     "subject": "operation removeTeamMember"
   },
   {
@@ -1145,22 +931,6 @@
       "missing x-bisibility-sdk"
     ],
     "subject": "operation resendTeamInvite"
-  },
-  {
-    "problems": [
-      "enum-without-kind /requestBody/application/json/properties/configurations/items/properties/engine",
-      "enum-without-kind /requestBody/application/json/properties/configurations/items/properties/source",
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "schema retryAiTrackingRun___schema0",
-      "unnamed /requestBody/application/json",
-      "unnamed /requestBody/application/json/properties/configurations/items",
-      "unnamed /requestBody/application/json/properties/configurations/items/properties/engine",
-      "unnamed /requestBody/application/json/properties/configurations/items/properties/source",
-      "unnamed /responses/200 application/json"
-    ],
-    "subject": "operation retryAiTrackingRun"
   },
   {
     "problems": [
@@ -1218,50 +988,9 @@
     "problems": [
       "missing x-bisibility-idempotency",
       "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "schema LocationSuggestion",
-      "schema LocationSuggestionsResponse"
-    ],
-    "subject": "operation searchLocations"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
       "missing x-bisibility-sdk"
     ],
     "subject": "operation setKeywordTargetUrl"
-  },
-  {
-    "problems": [
-      "enum-without-kind /responses/200 application/json/properties/data/properties/drafts/items/properties/category",
-      "enum-without-kind /responses/200 application/json/properties/data/properties/drafts/items/properties/provenance",
-      "enum-without-kind /responses/200 application/json/properties/data/properties/method",
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "money-without-kind /responses/200 application/json/properties/data/properties/cost_usd",
-      "unnamed /responses/200 application/json",
-      "unnamed /responses/200 application/json/properties/data",
-      "unnamed /responses/200 application/json/properties/data/properties/drafts/items",
-      "unnamed /responses/200 application/json/properties/data/properties/drafts/items/properties/category",
-      "unnamed /responses/200 application/json/properties/data/properties/drafts/items/properties/provenance",
-      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot",
-      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot/properties/competitors/items",
-      "unnamed /responses/200 application/json/properties/data/properties/input_snapshot/properties/context",
-      "unnamed /responses/200 application/json/properties/data/properties/method"
-    ],
-    "subject": "operation suggestAiTrackingPrompts"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "schema TrafficSyncRun",
-      "schema TrafficSyncSummary"
-    ],
-    "subject": "operation syncProjectTraffic"
   },
   {
     "problems": [
@@ -1270,74 +999,6 @@
       "missing x-bisibility-sdk"
     ],
     "subject": "operation testProviderConnection"
-  },
-  {
-    "problems": [
-      "enum-without-kind /requestBody/application/json/properties/category",
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /requestBody/application/json",
-      "unnamed /requestBody/application/json/properties/category",
-      "unnamed /requestBody/application/json/properties/generation_reference",
-      "unnamed /requestBody/application/json/properties/provider_dataset_reference",
-      "unnamed /responses/200 application/json"
-    ],
-    "subject": "operation updateAiTrackingPrompt"
-  },
-  {
-    "problems": [
-      "enum-without-kind /requestBody/application/json/properties/configuration/properties/configurations/items/properties/engine",
-      "enum-without-kind /requestBody/application/json/properties/configuration/properties/configurations/items/properties/source",
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "schema updateAiTrackingSchedule___schema0",
-      "unnamed /requestBody/application/json",
-      "unnamed /requestBody/application/json/properties/configuration",
-      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items",
-      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items/properties/engine",
-      "unnamed /requestBody/application/json/properties/configuration/properties/configurations/items/properties/source",
-      "unnamed /responses/200 application/json",
-      "unnamed /responses/200 application/json/properties/data",
-      "unnamed /responses/200 application/json/properties/data/properties/configuration"
-    ],
-    "subject": "operation updateAiTrackingSchedule"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "unnamed /requestBody/application/json",
-      "unnamed /responses/200 application/json",
-      "unnamed /responses/200 application/json/properties/data"
-    ],
-    "subject": "operation updateAiTrackingTopic"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk"
-    ],
-    "subject": "operation updateMe"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk"
-    ],
-    "subject": "operation updateNotificationPreferences"
-  },
-  {
-    "problems": [
-      "missing x-bisibility-idempotency",
-      "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk"
-    ],
-    "subject": "operation updateProject"
   },
   {
     "problems": [
@@ -1367,9 +1028,7 @@
     "problems": [
       "missing x-bisibility-idempotency",
       "missing x-bisibility-pagination",
-      "missing x-bisibility-sdk",
-      "schema ProviderBudgets",
-      "schema ProviderBudgetsUpdate"
+      "missing x-bisibility-sdk"
     ],
     "subject": "operation updateProviderBudgets"
   },
@@ -1523,36 +1182,12 @@
     "subject": "schema CloudImportUploadChunk"
   },
   {
-    "problems": ["union-without-cases /"],
-    "subject": "schema createAiTrackingSchedule___schema0"
-  },
-  {
     "problems": ["enum-without-kind /properties/device", "unnamed /properties/device"],
     "subject": "schema KeywordMatchMarket"
   },
   {
     "problems": ["unnamed /properties/meta"],
     "subject": "schema KeywordMatchResponse"
-  },
-  {
-    "problems": ["money-without-kind /properties/max_cost_cents"],
-    "subject": "schema KeywordMetricsRequest"
-  },
-  {
-    "problems": [
-      "money-without-kind /properties/cost_cents",
-      "money-without-kind /properties/estimated_cost_cents",
-      "unnamed /properties/rows/items"
-    ],
-    "subject": "schema KeywordMetricsResponse"
-  },
-  {
-    "problems": ["enum-without-kind /properties/kind", "unnamed /properties/kind"],
-    "subject": "schema LocationSuggestion"
-  },
-  {
-    "problems": ["unnamed /properties/meta"],
-    "subject": "schema LocationSuggestionsResponse"
   },
   {
     "problems": ["enum-without-kind /properties/scope", "unnamed /properties/scope"],
@@ -1566,16 +1201,6 @@
       "unnamed /properties/scope"
     ],
     "subject": "schema PersonalAccessTokenCreate"
-  },
-  {
-    "problems": [
-      "enum-without-kind /properties/defaults/properties/frequency",
-      "enum-without-kind /properties/tracking_scope",
-      "unnamed /properties/defaults",
-      "unnamed /properties/defaults/properties/frequency",
-      "unnamed /properties/tracking_scope"
-    ],
-    "subject": "schema ProjectCreate"
   },
   {
     "problems": [
@@ -1624,56 +1249,6 @@
       "unnamed /properties/kind"
     ],
     "subject": "schema Provider"
-  },
-  {
-    "problems": [
-      "enum-without-kind /properties/credential_source",
-      "enum-without-kind /properties/credits/properties/app/oneOf/0/properties/unit",
-      "enum-without-kind /properties/credits/properties/programmatic/oneOf/0/properties/unit",
-      "enum-without-kind /properties/own/properties/app/oneOf/0/properties/unit",
-      "enum-without-kind /properties/own/properties/programmatic/oneOf/0/properties/unit",
-      "enum-without-kind /properties/source",
-      "unnamed /properties/credential_source",
-      "unnamed /properties/credits",
-      "unnamed /properties/credits/properties/app/oneOf/0",
-      "unnamed /properties/credits/properties/app/oneOf/0/properties/unit",
-      "unnamed /properties/credits/properties/programmatic/oneOf/0",
-      "unnamed /properties/credits/properties/programmatic/oneOf/0/properties/unit",
-      "unnamed /properties/own",
-      "unnamed /properties/own/properties/app/oneOf/0",
-      "unnamed /properties/own/properties/app/oneOf/0/properties/unit",
-      "unnamed /properties/own/properties/programmatic/oneOf/0",
-      "unnamed /properties/own/properties/programmatic/oneOf/0/properties/unit",
-      "unnamed /properties/source"
-    ],
-    "subject": "schema ProviderBudgets"
-  },
-  {
-    "problems": [
-      "enum-without-kind /properties/credits/properties/app/oneOf/0/properties/unit",
-      "enum-without-kind /properties/credits/properties/programmatic/oneOf/0/properties/unit",
-      "enum-without-kind /properties/own/properties/app/oneOf/0/properties/unit",
-      "enum-without-kind /properties/own/properties/programmatic/oneOf/0/properties/unit",
-      "unnamed /properties/credits",
-      "unnamed /properties/credits/properties/app/oneOf/0",
-      "unnamed /properties/credits/properties/app/oneOf/0/properties/unit",
-      "unnamed /properties/credits/properties/programmatic/oneOf/0",
-      "unnamed /properties/credits/properties/programmatic/oneOf/0/properties/unit",
-      "unnamed /properties/own",
-      "unnamed /properties/own/properties/app/oneOf/0",
-      "unnamed /properties/own/properties/app/oneOf/0/properties/unit",
-      "unnamed /properties/own/properties/programmatic/oneOf/0",
-      "unnamed /properties/own/properties/programmatic/oneOf/0/properties/unit"
-    ],
-    "subject": "schema ProviderBudgetsUpdate"
-  },
-  {
-    "problems": ["enum-without-kind /properties/provider", "unnamed /properties/provider"],
-    "subject": "schema RankedKeywordConnection"
-  },
-  {
-    "problems": ["money-without-kind /properties/cost_cents"],
-    "subject": "schema RankedKeywordSuggestionsResponse"
   },
   {
     "problems": ["unnamed /properties/meta"],
@@ -1733,10 +1308,6 @@
   {
     "problems": ["unnamed /properties/meta"],
     "subject": "schema RankHistoryReportResponse"
-  },
-  {
-    "problems": ["union-without-cases /"],
-    "subject": "schema retryAiTrackingRun___schema0"
   },
   {
     "problems": [
@@ -1890,65 +1461,6 @@
     "subject": "schema SitemapMonitorList"
   },
   {
-    "problems": [
-      "enum-without-kind /allOf/1/properties/state",
-      "unnamed /allOf/1/properties/state"
-    ],
-    "subject": "schema StoredBacklinksReport"
-  },
-  {
-    "problems": [
-      "enum-without-kind /properties/data_state",
-      "enum-without-kind /properties/scope",
-      "enum-without-kind /properties/state",
-      "money-without-kind /properties/cost_cents",
-      "unnamed /properties/data_state",
-      "unnamed /properties/scope",
-      "unnamed /properties/state"
-    ],
-    "subject": "schema StoredDomainOverviewReport"
-  },
-  {
-    "problems": [
-      "enum-without-kind /properties/rows/items/properties/intent",
-      "enum-without-kind /properties/rows/items/properties/source",
-      "enum-without-kind /properties/sources/items/properties/reason",
-      "enum-without-kind /properties/sources/items/properties/source",
-      "enum-without-kind /properties/sources/items/properties/status",
-      "enum-without-kind /properties/state",
-      "money-without-kind /properties/cost_cents",
-      "money-without-kind /properties/rows/items/properties/cpc_cents",
-      "money-without-kind /properties/sources/items/properties/cost_cents",
-      "unnamed /properties/rows/items",
-      "unnamed /properties/rows/items/properties/intent",
-      "unnamed /properties/rows/items/properties/monthly_trend/items",
-      "unnamed /properties/rows/items/properties/source",
-      "unnamed /properties/sources/items",
-      "unnamed /properties/sources/items/properties/reason",
-      "unnamed /properties/sources/items/properties/source",
-      "unnamed /properties/sources/items/properties/status",
-      "unnamed /properties/state"
-    ],
-    "subject": "schema StoredKeywordResearchReport"
-  },
-  {
-    "problems": ["union-without-cases /properties/data", "unnamed /properties/data"],
-    "subject": "schema StoredResearchReportResponse"
-  },
-  {
-    "problems": ["unnamed /properties/meta"],
-    "subject": "schema StoredResearchReportsResponse"
-  },
-  {
-    "problems": [
-      "enum-without-kind /properties/kind",
-      "enum-without-kind /properties/state",
-      "unnamed /properties/kind",
-      "unnamed /properties/state"
-    ],
-    "subject": "schema StoredResearchReportSummary"
-  },
-  {
     "problems": ["enum-without-kind /properties/role", "unnamed /properties/role"],
     "subject": "schema TeamInvite"
   },
@@ -1967,21 +1479,5 @@
   {
     "problems": ["enum-without-kind /properties/role", "unnamed /properties/role"],
     "subject": "schema TeamMemberRoleResult"
-  },
-  {
-    "problems": ["enum-without-kind /properties/status", "unnamed /properties/status"],
-    "subject": "schema TrafficSyncRun"
-  },
-  {
-    "problems": [
-      "enum-without-kind /properties/skipped/items/properties/reason",
-      "unnamed /properties/skipped/items",
-      "unnamed /properties/skipped/items/properties/reason"
-    ],
-    "subject": "schema TrafficSyncSummary"
-  },
-  {
-    "problems": ["union-without-cases /"],
-    "subject": "schema updateAiTrackingSchedule___schema0"
   }
 ]

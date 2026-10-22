@@ -38,7 +38,7 @@ describe("DomainOverviewResults", () => {
     expect(rankingUrl).toHaveAttribute("rel", "noreferrer noopener");
     expect(screen.getByText("Top pages")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /add to saved keywords/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /load history/i })).toHaveTextContent("$0.12");
+    expect(screen.getByRole("button", { name: /load history/i })).toHaveTextContent("Review price");
     expect(screen.getByText(/cached, free for/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /analyze backlinks/i })).toHaveAttribute(
       "href",
@@ -109,6 +109,7 @@ describe("DomainOverviewResults", () => {
     expect(screen.queryByRole("button", { name: /load history/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /load next/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /analyze backlinks/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /refresh now/i })).not.toBeInTheDocument();
   });
 
   it("renders and sorts every fetched keyword row before offering the next paid page", () => {
@@ -131,7 +132,9 @@ describe("DomainOverviewResults", () => {
 
     expect(screen.getAllByTestId("domain-keyword-row")).toHaveLength(100);
     expect(screen.getByText("keyword 050")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sort Volume descending" })).toHaveClass("gap-2");
+    const volume = screen.getByRole("button", { name: "Sort Volume descending" });
+    expect(volume).toHaveClass("gap-2", "min-w-0", "max-w-full", "overflow-hidden");
+    expect(volume.parentElement).toHaveClass("min-w-0", "max-w-full", "overflow-hidden");
     expect(screen.getByRole("button", { name: "Sort SERP Δ descending" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sort Est. traffic ascending" }));
     const sortedRows = screen.getAllByTestId("domain-keyword-row");
@@ -146,7 +149,9 @@ describe("DomainOverviewResults", () => {
     if (!finalDeltaRow) throw new Error("Expected a final keyword row after delta sorting");
     expect(within(deltaRows[0]).getByText("keyword 000")).toBeInTheDocument();
     expect(within(finalDeltaRow).getByText("keyword 098")).toBeInTheDocument();
-    const loadButton = screen.getByRole("button", { name: /load next 100 keywords.*\$0\.02/i });
+    const loadButton = screen.getByRole("button", {
+      name: /load next 100 keywords.*review price/i,
+    });
     expect(loadButton).toHaveAttribute("data-variant", "secondary");
     fireEvent.click(loadButton);
     expect(onLoadMore).toHaveBeenCalledOnce();
@@ -207,7 +212,7 @@ describe("DomainOverviewResults", () => {
     expect(screen.getByText("142.1")).toHaveAttribute("title", "142.065");
   });
 
-  it("fails closed while the next-page estimate is unavailable", () => {
+  it("offers cost review without inventing a price from a missing scalar", () => {
     const base = domainOverviewReportFixture.keywords;
     if (!base.ok) throw new Error("Keyword fixture must be available");
     render(
@@ -218,7 +223,7 @@ describe("DomainOverviewResults", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: /load next 100 keywords/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /load next 100 keywords/i })).toBeEnabled();
   });
 
   it("sorts all fetched pages and keeps missing values last", () => {
@@ -227,7 +232,6 @@ describe("DomainOverviewResults", () => {
     const rows = base.data.rows.map((row, index) => ({
       ...row,
       etv: index === 99 ? null : index,
-      etvDeltaPct: index === 98 ? null : 100 - index,
       path: `/page-${index.toString().padStart(3, "0")}`,
     }));
     render(
@@ -242,7 +246,6 @@ describe("DomainOverviewResults", () => {
     expect(screen.getAllByTestId("domain-page-row")).toHaveLength(100);
     expect(screen.getByRole("button", { name: "Sort Page ascending" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sort Keywords descending" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sort Traffic Δ descending" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sort Est. traffic ascending" }));
     const sortedRows = screen.getAllByTestId("domain-page-row");
     const lastRow = sortedRows.at(-1);
@@ -250,16 +253,9 @@ describe("DomainOverviewResults", () => {
     expect(within(sortedRows[0]).getByText("/page-000")).toBeInTheDocument();
     expect(within(lastRow).getByText("/page-099")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Sort Traffic Δ descending" }));
-    const deltaRows = screen.getAllByTestId("domain-page-row");
-    const finalDeltaRow = deltaRows.at(-1);
-    if (!finalDeltaRow) throw new Error("Expected a final page row after delta sorting");
-    expect(within(deltaRows[0]).getByText("/page-000")).toBeInTheDocument();
-    expect(within(finalDeltaRow).getByText("/page-098")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /load next 100 pages.*\$0\.03/i })).toHaveAttribute(
-      "data-variant",
-      "secondary",
-    );
+    expect(
+      screen.getByRole("button", { name: /load next 100 pages.*review price/i }),
+    ).toHaveAttribute("data-variant", "secondary");
     expect(
       screen.getByText(
         "200 fetched pages · 1,204 total · 1,004 remaining · 11 provider requests remaining at up to 100 rows",

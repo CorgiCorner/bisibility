@@ -1,17 +1,27 @@
 "use client";
 
+import { ActionPaymentModal } from "@/components/action-payment/ActionPaymentModal";
+import { ActionPaymentPrice } from "@/components/action-payment/ActionPaymentPrice";
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
+import { useActionPaymentReview } from "@/components/action-payment/useActionPaymentReview";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
-import { Modal } from "@/components/ui/Modal";
-import type { ExtendSnapshotAction, SnapshotExtensionView } from "@/lib/serp/snapshot-extension";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
+import type {
+  ExtendSnapshotAction,
+  PreviewSnapshotExtensionAction,
+  SnapshotExtensionView,
+} from "@/lib/serp/snapshot-extension";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { snapshotExtensionPaymentAction } from "./snapshot-extension-payment";
 
 export function SnapshotExtensionControl({
   checkId,
   projectRef,
   extension,
   action,
+  previewAction,
   onReload,
   formatDateTime,
 }: Readonly<{
@@ -19,17 +29,26 @@ export function SnapshotExtensionControl({
   projectRef: string;
   extension: SnapshotExtensionView;
   action?: ExtendSnapshotAction;
-  onReload: () => Promise<void>;
+  previewAction?: PreviewSnapshotExtensionAction;
+  onReload: () => Promise<SnapshotExtensionView | void>;
   formatDateTime: (value: string) => string;
 }>) {
   const t = useTranslations("projectRankTracker.keywordDetail.results.extension");
   const { readOnly, readOnlyReason } = useProjectWriteMode();
-  const [open, setOpen] = useState(false);
+  const paymentT = useTranslations("shared.actionPayment");
+  const review = useActionPaymentReview();
   const [pending, setPending] = useState(false);
-  const [uncertain, setUncertain] = useState(false);
+  const [lastPayment, setLastPayment] = useState<ActionPaymentReceipt>();
+  const [uncertainStart, setUncertainStart] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inFlight = useRef(false);
-  const expired = extension.expiresAt !== null && Date.now() >= Date.parse(extension.expiresAt);
+  const uncertain =
+    uncertainStart !== null &&
+    (extension.reason === "available" || extension.reason === "not_sent") &&
+    (extension.nextStart === null || extension.nextStart <= uncertainStart);
+  const deadline = extension.expiresAt ? Date.parse(extension.expiresAt) : Number.NaN;
+  const windowOpen = Number.isFinite(deadline) && Date.now() < deadline;
+  const expired = extension.expiresAt !== null && !windowOpen;
   const reason = uncertain
     ? "failed"
     : extension.reason === "available" && expired
@@ -45,12 +64,33 @@ export function SnapshotExtensionControl({
     disconnected: t("disconnected"),
     unavailable: t("unavailable"),
     available: t("unavailable"),
+    not_sent: windowOpen
+      ? t("notSent", { time: formatDateTime(extension.expiresAt!) })
+      : t("notSentExpired"),
   };
-  const available = reason === "available" && Boolean(action) && !readOnly && !uncertain;
+  const available =
+    (reason === "available" || (reason === "not_sent" && windowOpen)) &&
+    Boolean(action && previewAction) &&
+    !readOnly &&
+    !uncertain;
   const start = extension.nextStart ?? 0;
+  const input = { projectId: projectRef, checkId, nextStart: start };
+  const reviewedAction =
+    action && previewAction ? snapshotExtensionPaymentAction(previewAction, action, input) : null;
+
+  function acceptReadProof(fresh: SnapshotExtensionView | void) {
+    const verified = Boolean(
+      fresh &&
+        fresh.reason === "not_sent" &&
+        fresh.nextStart === start &&
+        fresh.expiresAt === extension.expiresAt,
+    );
+    if (verified) setUncertainStart(null);
+    return verified;
+  }
 
   async function confirm() {
-    if (!available || !action || inFlight.current) return;
+    if (!available || !reviewedAction || inFlight.current) return;
     if (!extension.expiresAt || Date.now() >= Date.parse(extension.expiresAt)) {
       setError(t("expired"));
       return;
@@ -59,14 +99,30 @@ export function SnapshotExtensionControl({
     setPending(true);
     setError(null);
     try {
-      const result = await action({ projectId: projectRef, checkId, nextStart: start });
-      await onReload();
-      if (result.ok) setOpen(false);
-      else setError(messages[result.reason]);
+      const result = await review.request(
+        reviewedAction,
+        input,
+        t("range", { start: start + 1, end: start + 10 }),
+      );
+      if (!result || "estimate" in result) return;
+      if (result.payment) setLastPayment(result.payment);
+      const fresh = await onReload();
+      const verifiedNotSent = acceptReadProof(fresh);
+      if (!result.ok) {
+        if (result.reason === "failed" && !verifiedNotSent) setUncertainStart(start);
+        setError(
+          verifiedNotSent
+            ? messages.not_sent
+            : result.reason in messages
+              ? messages[result.reason as keyof typeof messages]
+              : paymentT(result.reason === "payment_quote_expired" ? "expired" : "unavailable"),
+        );
+      }
     } catch {
-      setUncertain(true);
+      setUncertainStart(start);
       setError(t("failed"));
-      await onReload().catch(() => undefined);
+      const fresh = await onReload().catch(() => undefined);
+      if (acceptReadProof(fresh)) setError(messages.not_sent);
     } finally {
       inFlight.current = false;
       setPending(false);
@@ -78,8 +134,7 @@ export function SnapshotExtensionControl({
     inFlight.current = true;
     setPending(true);
     try {
-      await onReload();
-      setUncertain(false);
+      acceptReadProof(await onReload());
       setError(null);
     } catch {
       setError(t("unavailable"));
@@ -90,81 +145,65 @@ export function SnapshotExtensionControl({
   }
 
   return (
-    <div className="border-b border-border bg-bg-sunken px-4 py-3 sm:px-5">
+    <div className="my-4 w-full rounded-card border border-border-control bg-bg-sunken p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1 basis-60">
           <p className="m-0 text-[13px] font-semibold text-fg">{t("title")}</p>
-          <p className="m-0 mt-1 text-[12px] leading-5 text-fg-muted">
+          <p
+            className="m-0 mt-1 text-[12px] leading-5 text-fg-muted"
+            role={["failed", "running", "not_sent"].includes(reason) ? "status" : undefined}
+          >
             {reason === "available" && extension.expiresAt
               ? t("window", { time: formatDateTime(extension.expiresAt) })
               : messages[reason]}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button disabled={pending} onClick={reload} size="sm" variant="secondary">
+          <Button
+            disabled={pending}
+            onClick={reload}
+            size="sm"
+            title={t("refreshHint")}
+            variant="outline"
+          >
             {t("refresh")}
           </Button>
-          {reason === "available" && action ? (
+          {["available", "running", "failed", "not_sent"].includes(reason) && action ? (
             <Button
-              disabled={readOnly || pending}
+              disabled={!available || pending}
               onClick={() => {
                 setError(null);
-                setOpen(true);
+                void confirm();
               }}
               size="sm"
-              title={readOnlyReason ?? undefined}
-              variant="secondary"
+              title={readOnlyReason ?? (!available ? messages[reason] : undefined)}
+              variant="primary"
             >
-              {t("action")}
+              {t(reason === "not_sent" ? "retry" : "action")}
+              {available && reviewedAction ? (
+                <ActionPaymentPrice action={reviewedAction} input={input} />
+              ) : null}
             </Button>
           ) : null}
         </div>
       </div>
-      {error && !open ? (
+      {(lastPayment ?? extension.payment) ? (
+        <div className="mt-2 grid gap-1">
+          <span className="text-xs text-fg-muted">{t("lastCharge")}</span>
+          <PaymentChargeLine payment={lastPayment ?? extension.payment} />
+        </div>
+      ) : null}
+      {error && !review.draft ? (
         <p className="mb-0 mt-2 text-[12px] text-red-text" role="alert">
           {error}
         </p>
       ) : null}
-      <Modal
-        open={open}
-        onClose={() => {
-          if (!inFlight.current) setOpen(false);
-        }}
-        title={t("confirmTitle")}
-        size="sm"
-        headerDivider
-        footer={
-          <>
-            <Button disabled={pending} onClick={() => setOpen(false)} variant="secondary">
-              {t("cancel")}
-            </Button>
-            <Button
-              disabled={!available}
-              loading={pending}
-              loadingLabel={t("pending")}
-              onClick={confirm}
-            >
-              {t("confirm")}
-            </Button>
-          </>
-        }
-      >
-        <dl className="m-0 grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 text-[13px]">
-          <dt className="text-fg-muted">{t("rangeLabel")}</dt>
-          <dd className="m-0 font-semibold">{t("range", { start: start + 1, end: start + 10 })}</dd>
-          <dt className="text-fg-muted">{t("costLabel")}</dt>
-          <dd className="m-0 font-semibold">{t("cost")}</dd>
-        </dl>
-        <p className="mb-0 mt-4 text-[13px] leading-5 text-fg-muted">{t("timing")}</p>
-        <p className="mb-0 mt-3 rounded-control border border-border bg-bg-sunken p-3 text-[13px] leading-5 text-fg">
+      <ActionPaymentModal review={review}>
+        <p className="m-0 text-xs leading-5 text-fg-muted">{t("timing")}</p>
+        <p className="m-0 rounded-control border border-border bg-bg-sunken p-3 text-xs leading-5">
           {t("duplicates")}
         </p>
-        {error ? (
-          <p className="mb-0 mt-3 text-[13px] text-red-text" role="alert">
-            {error}
-          </p>
-        ) : null}
-      </Modal>
+      </ActionPaymentModal>
     </div>
   );
 }

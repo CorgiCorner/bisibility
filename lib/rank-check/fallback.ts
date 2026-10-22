@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
 import { resolveExpectedUrlForKeyword } from "@/lib/expected-url/keyword";
+import { keywordMembershipSelect } from "@/lib/keywords/membership-select";
+import { keywordMembershipSchedule } from "@/lib/keywords/schedule-membership";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
 import type { ProviderCredential } from "@/lib/provider-usage/surface";
 import {
@@ -12,7 +14,7 @@ import {
 import type { SerpProvider } from "@/lib/providers/types";
 import {
   resolveEffectiveSerpDepth,
-  resolveSerpStopOnMatch,
+  resolveEffectiveSerpStopOnMatch,
   type SerpDepth,
 } from "@/lib/serp/constants";
 import { findComparablePredecessor } from "./comparable-history";
@@ -20,7 +22,7 @@ import { runCheckWithFallback } from "./fallback-chain";
 import { keywordRankLocation } from "./fallback-location";
 import { CURRENT_RANK_NORMALIZATION_VERSION } from "./normalization-version";
 import { rankRecoveryContext } from "./recovery-context";
-import { fallbackSchedule, persistRankCheck } from "./runner";
+import { persistRankCheck } from "./runner";
 import { RankCheckRunnerError } from "./runner-error";
 
 export type { KeywordRankLocation } from "./fallback-location";
@@ -50,7 +52,7 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
       locationRef: true,
       project: { include: { defaults: true } },
       _count: { select: { rankChecks: { where: { status: "completed" } } } },
-      checkSchedule: { select: { serpDepth: true } },
+      checkSchedule: { select: { ...keywordMembershipSelect, serpDepth: true } },
       schedule: true,
     },
     where: { id: input.keywordId },
@@ -66,7 +68,10 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
     checkScheduleDepth: keyword.checkSchedule?.serpDepth,
     scheduleDepth: keyword.schedule?.serpDepth,
   });
-  const stopOnMatch = resolveSerpStopOnMatch(keyword.project.defaults?.serpStopOnMatch);
+  const stopOnMatch = resolveEffectiveSerpStopOnMatch(
+    keyword.project.defaults?.serpStopOnMatch,
+    depth,
+  );
   const connections = await loadSerpProviderChain(keyword.projectId, input.providerId);
   let previous = await findComparablePredecessor(keyword.id, {
     normalizationVersion: CURRENT_RANK_NORMALIZATION_VERSION,
@@ -113,7 +118,12 @@ export async function runKeywordCheckWithFallback(input: RunKeywordCheckWithFall
     providerUsage,
     rankCheckId: input.rankCheckId,
     resolveProvider: input.resolveProvider,
-    schedule: keyword.schedule ?? keyword.project.defaults ?? fallbackSchedule(),
+    schedule: keywordMembershipSchedule(
+      keyword.checkSchedule,
+      keyword.id,
+      keyword.project.defaults?.timezone ?? "UTC",
+      input.now,
+    ),
     source: input.source,
   });
 

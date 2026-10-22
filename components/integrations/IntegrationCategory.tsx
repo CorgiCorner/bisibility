@@ -11,11 +11,13 @@ import type { IntegrationCategoryData, ProviderActionHandlers } from "@/lib/inte
 import type { ProjectRef } from "@/lib/routing/app-path";
 import type { SearchSyncPreflightPlan } from "@/lib/search-insights/sync/plan";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { ProviderConsumerPanel } from "./ProviderConsumerPanel";
 import { providerConsumerStatuses } from "./provider-card-config";
 
 export type IntegrationCategoryProps = {
   actions?: ProviderActionHandlers;
+  cardOrder?: readonly string[];
   canManageProviders: boolean;
   canUpdateProject: boolean;
   category: IntegrationCategoryData;
@@ -30,6 +32,7 @@ export type IntegrationCategoryProps = {
 
 export function IntegrationCategory({
   actions,
+  cardOrder,
   canManageProviders,
   canUpdateProject,
   category,
@@ -42,6 +45,15 @@ export function IntegrationCategory({
   timeZone,
 }: Readonly<IntegrationCategoryProps>) {
   const t = useTranslations("projectIntegrations.categories");
+  const [savedOrder] = useState(() => category.providers.map((provider) => provider.id));
+  const initialOrder = cardOrder ?? savedOrder;
+  const providers = [...category.providers].sort((a, b) => {
+    const rank = (id: string) => {
+      const index = initialOrder.indexOf(id);
+      return index < 0 ? initialOrder.length : index;
+    };
+    return rank(a.id) - rank(b.id);
+  });
   const title = category.id === "serp" ? t("serpTitle") : t("analyticsTitle");
   const description = category.id === "serp" ? t("serpDescription") : t("analyticsDescription");
   return (
@@ -55,7 +67,7 @@ export function IntegrationCategory({
         <p className="m-0 max-w-3xl text-[12.5px] leading-5 text-fg-muted">{description}</p>
       </div>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,19rem),1fr))] items-stretch gap-3">
-        {category.providers.map((provider, index) => {
+        {providers.map((provider, index) => {
           const isFirstSerpProvider = category.id === "serp" && index === 0;
 
           return (

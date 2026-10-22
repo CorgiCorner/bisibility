@@ -12,6 +12,18 @@ function rendered(
 }
 
 describe("rank tracker list SQL", () => {
+  it("sorts frequency by named membership, with unassigned manual and disabled paused", () => {
+    const { sql } = rendered({
+      ...defaultRankTrackerQueryState,
+      sort: { field: "frequency", direction: "asc" },
+    });
+    expect(sql).toContain('LEFT JOIN "check_schedules" cs ON cs.id = k."checkScheduleId"');
+    expect(sql).toContain(
+      `CASE WHEN cs.id IS NULL OR cs."archivedAt" IS NOT NULL THEN 'manual' WHEN NOT cs.enabled THEN 'paused' ELSE cs.frequency::text END`,
+    );
+    expect(sql).not.toContain("pd.frequency");
+    expect(sql).not.toContain("ks.frequency");
+  });
   it("keeps every target predicate before ordering and LIMIT", () => {
     const { sql } = rendered({
       ...defaultRankTrackerQueryState,

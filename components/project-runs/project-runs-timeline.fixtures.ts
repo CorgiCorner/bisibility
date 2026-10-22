@@ -6,7 +6,7 @@ import {
 } from "@/lib/runs/project-runs-timeline";
 
 type RankRun = ProjectRunRankCheck &
-  Extract<ProjectRunsApiResponse["runs"][number], { kind: "rank_check" }>;
+  Extract<ProjectRunsApiResponse["runs"][number], { kind: "rank" }>;
 export const timelineProjectRef = "prj_abcdefghijklmnopqrstuvwx";
 
 function rank(
@@ -21,7 +21,8 @@ function rank(
   const skipped = overrides.blockedReason === "no_active_keywords";
   return {
     id,
-    kind: "rank_check",
+    cost: { actualCents: 0, estimatedCents: 0, state: "confirmed" },
+    kind: "rank",
     lifecycle: status,
     href: `/app/${timelineProjectRef}/runs/rank-checks/${id}`,
     attention:
@@ -36,7 +37,7 @@ function rank(
       viewDetails: true,
     },
     project: { name: "Example project", publicId: timelineProjectRef },
-    title: { kind: "rank_check", trigger: overrides.trigger ?? "scheduled" },
+    title: { kind: "rank", trigger: overrides.trigger ?? "scheduled" },
     details: {
       status,
       outcome: finished ? "succeeded" : null,
@@ -45,7 +46,7 @@ function rank(
       estimatedCostCents: 0,
       ...overrides,
     },
-    scope: { kind: "rank_check", description: null, keywordCount: skipped ? 0 : 12 },
+    scope: { kind: "rank", description: null, keywordCount: skipped ? 0 : 12 },
     progress: {
       completed: finished && !skipped ? 12 : 0,
       total: skipped ? 0 : 12,

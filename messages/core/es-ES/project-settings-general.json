@@ -55,6 +55,7 @@
       "default": "Valor de la instancia",
       "hours": "{count, plural, one {# hora} other {# horas}}",
       "days": "{count, plural, one {# día} other {# días}}",
+      "weeks": "{count, plural, one {# semana} other {# semanas}}",
       "save": "Guardar",
       "saved": "Guardado",
       "list": "Resultados guardados",

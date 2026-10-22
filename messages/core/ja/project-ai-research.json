@@ -48,7 +48,7 @@
     "partialFailure": "分析を完了できませんでした。確認済み結果は保持されています。再試行前にプロバイダーの使用量を確認してください。",
     "contentTruncated": "保存レポートの上限に収まるよう回答の抜粋を短縮しています。",
     "readOnly": "このプロジェクトは読み取り専用か、有料分析を実行する権限がありません。保存済みレポートは開けます。",
-    "noSource": "費用の見積もりや分析を実行するには、連携設定でDataForSEOを接続してください。",
+    "noSource": "費用の見積もりや分析を行うには、連携で DataForSEO ソースを選択してください。",
     "country": "国",
     "language": "言語",
     "firstModel": "最初のモデル",
@@ -110,6 +110,8 @@
     "modelUnavailable": "このモデルはまだプロンプト分析に対応していません。",
     "catalogUnavailableVisibility": "市場一覧を取得できません。米国・英語のChatGPTは引き続き利用できます。",
     "catalogHelp": "利用できるAI設定について",
-    "openIntegrations": "連携設定を開く"
+    "catalogRefreshing": "プロバイダーカタログを更新しています",
+    "openIntegrations": "連携設定を開く",
+    "sourceRetry": "再試行"
   }
 }

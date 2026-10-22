@@ -1,3 +1,4 @@
+import { ActionPaymentError } from "@/lib/action-payment/token";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { BudgetExhaustedError } from "@/lib/rank-check/budget";
 import { LaunchRankCheckRunError as BudgetLaunchError } from "@/lib/rank-check/runs/launch-types";
@@ -76,6 +77,9 @@ describe("launchRankCheckRunAction", () => {
     });
     expect(mocks.launch).toHaveBeenCalledWith({
       actorId: "user_1",
+      paymentOptionId: undefined,
+      acceptedPayment: undefined,
+      requirePayment: true,
       depth: undefined,
       idempotencyKey: "request-0001",
       origin: { source: "app" },
@@ -96,6 +100,20 @@ describe("launchRankCheckRunAction", () => {
   ])("returns typed launch failures", async (error, code) => {
     mocks.launch.mockRejectedValueOnce(error);
 
+    await expect(launchRankCheckRunAction(input)).resolves.toMatchObject({
+      code,
+      status: "not_started",
+    });
+  });
+
+  it.each([
+    ["payment_quote_expired", "preview_expired"],
+    ["payment_quote_changed", "preview_mismatch"],
+    ["payment_unavailable", "payment_unavailable"],
+    ["payment_quote_required", "payment_unavailable"],
+    ["payment_already_executed", "payment_already_executed"],
+  ] as const)("maps payment failure %s to %s", async (reason, code) => {
+    mocks.launch.mockRejectedValueOnce(new ActionPaymentError(reason));
     await expect(launchRankCheckRunAction(input)).resolves.toMatchObject({
       code,
       status: "not_started",

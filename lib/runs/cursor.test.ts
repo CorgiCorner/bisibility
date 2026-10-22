@@ -11,12 +11,25 @@ const PROJECT_RUNS_DEFAULT_FILTERS = { ...DEFAULT_FILTERS, view: "runs" as const
 
 const sort = {
   id: "rcr_a00000000000000000000000",
-  kind: "rank_check" as const,
+  kind: "rank" as const,
   sortAt: "2026-09-06T12:00:00.000Z",
 };
 const plannedFilters = { ...PROJECT_RUNS_DEFAULT_FILTERS, view: "planned" as const };
 
 describe("project runs cursors", () => {
+  it.each([
+    ["rank_check", "rank"],
+    ["gsc_import", "gsc"],
+  ])("reads old %s cursors after row kind normalization", (legacyKind, kind) => {
+    const value = Buffer.from(
+      JSON.stringify({
+        v: 1,
+        filters: PROJECT_RUNS_DEFAULT_FILTERS,
+        sort: { ...sort, kind: legacyKind },
+      }),
+    ).toString("base64url");
+    expect(decodeProjectRunsCursor(value, PROJECT_RUNS_DEFAULT_FILTERS)).toEqual({ ...sort, kind });
+  });
   it("binds timeline pagination to section and direction", () => {
     const filters = {
       ...DEFAULT_FILTERS,
@@ -42,10 +55,10 @@ describe("project runs cursors", () => {
 
   it("pages planned rank checks by plannedFor and stable kind/id tie-breakers", () => {
     const planned = [
-      { id: "rcr_c", kind: "rank_check" as const, plannedFor: "2026-09-07T08:00:00.000Z" },
-      { id: "rcr_b", kind: "rank_check" as const, plannedFor: "2026-09-07T08:00:00.000Z" },
-      { id: "rcr_a", kind: "rank_check" as const, plannedFor: "2026-09-07T08:00:00.000Z" },
-      { id: "rcr_next", kind: "rank_check" as const, plannedFor: "2026-09-08T08:00:00.000Z" },
+      { id: "rcr_c", kind: "rank" as const, plannedFor: "2026-09-07T08:00:00.000Z" },
+      { id: "rcr_b", kind: "rank" as const, plannedFor: "2026-09-07T08:00:00.000Z" },
+      { id: "rcr_a", kind: "rank" as const, plannedFor: "2026-09-07T08:00:00.000Z" },
+      { id: "rcr_next", kind: "rank" as const, plannedFor: "2026-09-08T08:00:00.000Z" },
     ].sort(compareProjectRunsPlannedSortTuples);
     const cursor = encodeProjectRunsCursor({ filters: plannedFilters, sort: planned[1] });
 
@@ -73,7 +86,7 @@ describe("project runs cursors", () => {
       filters: plannedFilters,
       sort: {
         id: "rcr_a00000000000000000000000",
-        kind: "rank_check",
+        kind: "rank",
         plannedFor: "2026-09-07T08:00:00.000Z",
       },
     });
@@ -108,16 +121,16 @@ describe("project runs cursors", () => {
   it("sorts by newest instant, then fixed kind and id tie-breakers", () => {
     expect(
       [
-        { id: "z", kind: "rank_check" as const, sortAt: "2026-09-06T12:00:00.000Z" },
-        { id: "b", kind: "gsc_import" as const, sortAt: "2026-09-06T12:00:00.000Z" },
-        { id: "a", kind: "gsc_import" as const, sortAt: "2026-09-06T12:00:00.000Z" },
-        { id: "newest", kind: "rank_check" as const, sortAt: "2026-09-06T12:01:00.000Z" },
+        { id: "z", kind: "rank" as const, sortAt: "2026-09-06T12:00:00.000Z" },
+        { id: "b", kind: "gsc" as const, sortAt: "2026-09-06T12:00:00.000Z" },
+        { id: "a", kind: "gsc" as const, sortAt: "2026-09-06T12:00:00.000Z" },
+        { id: "newest", kind: "rank" as const, sortAt: "2026-09-06T12:01:00.000Z" },
       ].sort(compareProjectRunsSortTuples),
     ).toEqual([
-      { id: "newest", kind: "rank_check", sortAt: "2026-09-06T12:01:00.000Z" },
-      { id: "a", kind: "gsc_import", sortAt: "2026-09-06T12:00:00.000Z" },
-      { id: "b", kind: "gsc_import", sortAt: "2026-09-06T12:00:00.000Z" },
-      { id: "z", kind: "rank_check", sortAt: "2026-09-06T12:00:00.000Z" },
+      { id: "newest", kind: "rank", sortAt: "2026-09-06T12:01:00.000Z" },
+      { id: "a", kind: "gsc", sortAt: "2026-09-06T12:00:00.000Z" },
+      { id: "b", kind: "gsc", sortAt: "2026-09-06T12:00:00.000Z" },
+      { id: "z", kind: "rank", sortAt: "2026-09-06T12:00:00.000Z" },
     ]);
   });
 });

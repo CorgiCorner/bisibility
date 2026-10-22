@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/Button";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { useToast } from "@/components/ui/toast-context";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import { calendarCronExpression } from "@/lib/rank-check/schedule-calendar";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { suggestedScheduleName } from "@/lib/schedules/suggested-name";
 import { VIEWER_PREVIEW_ONLY_LABEL } from "@/lib/ui/viewer-affordances";
@@ -22,35 +21,10 @@ import {
   scheduleEditorDefaults,
   scheduleEditorSchema,
 } from "./ScheduleEditorModel";
+import { ScheduleSaveConfirmation } from "./SchedulePlanningNotice";
+import { payload, request, saveErrorKey } from "./schedule-editor-request";
+import { useScheduleMemberRemoval } from "./useScheduleMemberRemoval";
 import { useScheduleNameLabels } from "./useScheduleNameLabels";
-
-type ApiResponse<T> = { data: T };
-
-async function request<T>(url: string, method: "PATCH" | "POST", body: object) {
-  const response = await fetch(url, {
-    body: JSON.stringify(body),
-    headers: { "Content-Type": "application/json" },
-    method,
-  });
-  const payload = (await response.json()) as ApiResponse<T> & { detail?: string };
-  if (!response.ok) throw new Error(payload.detail ?? "Could not save the schedule.");
-  return payload.data;
-}
-
-function payload(values: ScheduleEditorValues, projectId: string) {
-  return {
-    cronExpression:
-      values.frequency === "custom_cron" ? values.cronExpression : calendarCronExpression(values),
-    frequency: values.frequency,
-    jitterMinutes: Number(values.jitterMinutes),
-    name: values.name,
-    projectId,
-    providerPolicy: values.providerPolicy === "project" ? null : values.providerPolicy,
-    serpDepth: values.serpDepth === "project" ? null : Number(values.serpDepth),
-    timeOfDay: values.frequency === "custom_cron" ? null : values.timeOfDay || null,
-    timezone: values.timezone || null,
-  };
-}
 
 export function ScheduleEditor({
   canEdit = true,
@@ -59,6 +33,8 @@ export function ScheduleEditor({
   defaultScheduleName,
   embedded = false,
   isNew = false,
+  initialSaveConfirmed = false,
+  planningMinutes = null,
   members = [],
   memberSummary,
   onCancel,
@@ -69,6 +45,7 @@ export function ScheduleEditor({
   projectTimezone,
   referenceIso,
   schedule,
+  showDefaultControl = true,
 }: Readonly<ScheduleEditorProps>) {
   const t = useTranslations("projectRuns.schedules");
   const scheduleNames = useScheduleNameLabels();
@@ -85,9 +62,17 @@ export function ScheduleEditor({
     },
     resolver: zodResolver(scheduleEditorSchema),
   });
+  const [saveConfirmed, setSaveConfirmed] = useState(initialSaveConfirmed);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pendingMembers, setPendingMembers] =
     useState<readonly ScheduleEditorMember[]>(initialPendingMembers);
+  const memberRemoval = useScheduleMemberRemoval({
+    canEdit,
+    projectId,
+    scheduleId: schedule.publicId,
+    pendingMembers,
+    setPendingMembers,
+  });
   const [message, setMessage] = useState<string | null>(null);
   const { formState } = form;
   const storedMembers = members.length
@@ -120,6 +105,7 @@ export function ScheduleEditor({
 
   async function save(values: ScheduleEditorValues) {
     setMessage(null);
+    setSaveConfirmed(false);
     try {
       const saved = isNew
         ? await request<{ publicId: string }>(
@@ -142,6 +128,9 @@ export function ScheduleEditor({
           projectId,
         });
       }
+      form.reset(values);
+      setPendingMembers([]);
+      setSaveConfirmed(true);
       showToast(t("editor.saved"), { severity: "success" });
       if (onSaved)
         onSaved({
@@ -150,16 +139,16 @@ export function ScheduleEditor({
           frequency: values.frequency,
           isDefault: values.isDefault,
         });
-      else if (isNew) router.replace(projectSchedulesPath(projectId, scheduleId));
+      else if (isNew) router.replace(`${projectSchedulesPath(projectId, scheduleId)}?saved=1`);
       else router.refresh();
-    } catch {
-      setMessage(t("editor.saveFailed"));
+    } catch (error) {
+      setMessage(t(`editor.${saveErrorKey(error)}`));
     }
   }
 
   return (
     <form
-      className="grid gap-[18px]"
+      className="grid min-w-0 gap-[18px]"
       noValidate
       onSubmit={
         canEdit
@@ -167,6 +156,14 @@ export function ScheduleEditor({
           : (event) => event.preventDefault()
       }
     >
+      {saveConfirmed && !formState.isDirty && pendingMembers.length === 0 ? (
+        <ScheduleSaveConfirmation
+          minutes={planningMinutes}
+          showPlanningHint={
+            schedule.enabled && (storedMembers.length > 0 || schedule.keywordCount > 0)
+          }
+        />
+      ) : null}
       <div
         className={
           embedded
@@ -174,7 +171,7 @@ export function ScheduleEditor({
             : "grid min-w-0 gap-3.5 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]"
         }
       >
-        <section className="min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev">
+        <section className="order-2 min-w-0 overflow-hidden rounded-card border border-border bg-bg-elev lg:order-1">
           <header className="border-b border-border px-4 py-3.5">
             <h2 className="m-0 text-[15px] font-semibold text-fg">{t("schedule")}</h2>
           </header>
@@ -186,25 +183,35 @@ export function ScheduleEditor({
               projectDefaults={projectDefaults}
               projectTimezone={projectTimezone}
               referenceIso={referenceIso}
+              showDefaultControl={showDefaultControl}
             />
           </fieldset>
         </section>
         {embedded ? (
           <p className="m-0 text-[12px] text-fg-muted">{memberSummary}</p>
         ) : (
-          <ScheduleEditorMembers
-            canEdit={canEdit}
-            memberCount={storedMembers.length + pendingMembers.length}
-            memberSummary={memberSummary}
-            onOpenDrawer={() => setPickerOpen(true)}
-            pendingMembers={pendingMembers}
-            scheduleName={form.watch("name") || t("thisSchedule")}
-            storedMembers={storedMembers}
-          />
+          <div className="order-1 min-w-0 self-start lg:order-2">
+            <ScheduleEditorMembers
+              canEdit={canEdit}
+              memberCount={storedMembers.length + pendingMembers.length}
+              memberSummary={memberSummary}
+              onOpenDrawer={() => setPickerOpen(true)}
+              onRemove={memberRemoval.remove}
+              removalError={memberRemoval.error}
+              removingId={memberRemoval.pendingId}
+              pendingMembers={pendingMembers}
+              scheduleName={form.watch("name") || t("thisSchedule")}
+              storedMembers={storedMembers}
+            />
+          </div>
         )}
       </div>
       <div className="flex flex-wrap items-center justify-end gap-2.5">
-        {message ? <span className="mr-auto text-[12px] text-fg-muted">{message}</span> : null}
+        {message ? (
+          <span className="mr-auto text-[12px] text-fg-muted" role="alert">
+            {message}
+          </span>
+        ) : null}
         {canEdit ? null : <StatusChip label={VIEWER_PREVIEW_ONLY_LABEL} tone="neutral" />}
         {!embedded ? (
           <Button
@@ -218,7 +225,12 @@ export function ScheduleEditor({
           </Button>
         ) : null}
         {canEdit ? (
-          <Button loading={formState.isSubmitting} loadingLabel={t("editor.saving")} type="submit">
+          <Button
+            disabled={!isNew && !formState.isDirty && pendingMembers.length === 0}
+            loading={formState.isSubmitting}
+            loadingLabel={t("editor.saving")}
+            type="submit"
+          >
             {t("editor.save")}
           </Button>
         ) : null}

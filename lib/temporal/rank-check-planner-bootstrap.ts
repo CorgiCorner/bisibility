@@ -1,5 +1,6 @@
 import "server-only";
 
+import { DEFAULT_RANK_CHECK_PLANNER_INTERVAL } from "../rank-check/planner-interval";
 import { plannerOwnsAutomaticChecks } from "../rank-check/scheduler-mode";
 import {
   type BootstrapScheduleClient,
@@ -10,14 +11,13 @@ import {
 
 export const RANK_CHECK_PLANNER_SCHEDULE_ID = "planner-rank-check-runs";
 export const RANK_CHECK_PLANNER_WORKFLOW_TYPE = "planRankCheckRunsWorkflow";
-const DEFAULT_PLANNER_INTERVAL = "15 minutes";
 
 export function isRankCheckPlannerEnabled() {
   return plannerOwnsAutomaticChecks();
 }
 
 function plannerInterval() {
-  return envValue(process.env.RANK_CHECK_PLANNER_INTERVAL) ?? DEFAULT_PLANNER_INTERVAL;
+  return envValue(process.env.RANK_CHECK_PLANNER_INTERVAL) ?? DEFAULT_RANK_CHECK_PLANNER_INTERVAL;
 }
 
 export function ensureRankCheckPlannerSchedule(

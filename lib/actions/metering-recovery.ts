@@ -1,5 +1,9 @@
 "use server";
 import { consume } from "@/lib/api/ratelimit";
+import {
+  AdminTwoFactorRequiredError,
+  requireAdminTwoFactorForDangerousAction,
+} from "@/lib/auth/admin-dangerous-action";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
 import { RecoveryAuthorizationError } from "@/lib/metering/recovery/authorization";
 import { commitRecovery, getRecoveryCommand } from "@/lib/metering/recovery/commands";
@@ -11,7 +15,10 @@ import { ZodError } from "zod";
 
 export type RecoveryActionResult<T> =
   | { ok: true; value: T }
-  | { ok: false; code: "forbidden" | "rate_limited" | "unavailable" | "case_changed" };
+  | {
+      ok: false;
+      code: "two_factor_required" | "forbidden" | "rate_limited" | "unavailable" | "case_changed";
+    };
 async function run<T>(
   kind: string,
   write: boolean,
@@ -21,19 +28,23 @@ async function run<T>(
   if (!session) return { ok: false, code: "forbidden" };
   let allowed: Awaited<ReturnType<typeof consume>>;
   try {
+    if (kind === "commit")
+      await requireAdminTwoFactorForDangerousAction(session, "commit_metering_recovery");
     allowed = await consume({
       prefix: "bisibility:admin-recovery",
       bucketKey: `${session.user.id}:${kind}`,
       limit: write ? 6 : 60,
       windowSeconds: 60,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof AdminTwoFactorRequiredError) return { ok: false, code: error.code };
     return { ok: false, code: "unavailable" };
   }
   if (!allowed.success) return { ok: false, code: "rate_limited" };
   try {
     return { ok: true, value: await work() };
   } catch (error) {
+    if (error instanceof AdminTwoFactorRequiredError) return { ok: false, code: error.code };
     if (error instanceof RecoveryAuthorizationError) return { ok: false, code: "forbidden" };
     if (error instanceof RecoveryCaseChangedError || error instanceof ZodError)
       return { ok: false, code: "case_changed" };

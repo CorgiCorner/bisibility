@@ -1,6 +1,6 @@
 import { Prisma } from "@/lib/generated/prisma/client";
 import { PGlite } from "@electric-sql/pglite";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { PROJECT_RUNS_DEFAULT_QUERY, type ProjectRunsQuery } from "./filters";
 import {
   type TimelineRow,
@@ -34,12 +34,20 @@ async function page(cursor: TimelineRow | null = null, overrides: Partial<Projec
   );
 }
 
-beforeEach(async () => {
+beforeAll(async () => {
   // Prisma interprets timestamp-without-timezone values as UTC, independent of host TZ.
   db = new PGlite({ parsers: { 1114: (value) => new Date(`${value.replace(" ", "T")}Z`) } });
+  await db.waitReady;
+}, 30000);
+beforeEach(async () => {
+  await db.exec(
+    `DROP TABLE IF EXISTS rank_check_runs, rank_check_run_items, search_analytics_imports, ai_tracking_runs, ai_tracking_samples`,
+  );
   await db.exec(`CREATE TABLE rank_check_runs (id text PRIMARY KEY, "publicId" text, "projectId" text, status text, outcome text, "blockedReason" text, "createdAt" timestamp, "startedAt" timestamp, "finishedAt" timestamp, "launchedAt" timestamp, "plannedFor" timestamp, "deletedAt" timestamp);
     CREATE TABLE rank_check_run_items ("runId" text, status text, "notBefore" timestamp);
     CREATE TABLE search_analytics_imports (id text PRIMARY KEY, "projectId" text, state text, "pausedReason" text, source text, "searchType" text, "createdAt" timestamp, "syncStartedAt" timestamp, "lastSyncStartedAt" timestamp, "lastSyncFinishedAt" timestamp);
+    CREATE TABLE ai_tracking_runs (id text PRIMARY KEY, "publicId" text, "projectId" text, state text, "createdAt" timestamp, "plannedAt" timestamp, "finishedAt" timestamp, "launchPayload" jsonb);
+    CREATE TABLE ai_tracking_samples ("runId" text, "projectId" text, "claimedAt" timestamp, evidence jsonb);
     INSERT INTO rank_check_runs VALUES
       ('running','rcr_running','project_1','running',NULL,NULL,'2026-10-01','2026-10-05',NULL,'2026-10-05',NULL,NULL),
       ('planned_late','rcr_late','project_1','planned',NULL,NULL,'2026-10-01',NULL,NULL,NULL,'2026-10-08',NULL),
@@ -58,7 +66,7 @@ beforeEach(async () => {
       ('ga4_excluded','project_1','running',NULL,'ga4','web','2026-10-01','2026-10-01',NULL,NULL);
   `);
 });
-afterEach(async () => {
+afterAll(async () => {
   await db.close();
 });
 
@@ -119,4 +127,84 @@ describe("timeline database ordering", () => {
       { total: 1 },
     ]);
   });
+});
+
+describe("AI timeline union", () => {
+  beforeEach(async () => {
+    await db.exec(`INSERT INTO ai_tracking_runs VALUES
+       ('ai_running','air_running','project_1','running','2026-10-05',null,null,'{}'),
+       ('ai_waiting','air_waiting','project_1','planned','2026-10-01','2026-10-09',null,'{}'),
+       ('ai_partial','air_partial','project_1','partial','2026-10-01',null,'2026-10-08','{}'),
+       ('ai_cost','air_cost','project_1','skipped','2026-10-01',null,'2026-10-09','{"skipReason":"cost_limit_exceeded"}'),
+       ('ai_cancel','air_cancel','project_1','cancelled','2026-10-01',null,'2026-10-07','{}'),
+       ('ai_other','air_other','other_project','failed','2026-10-01',null,'2026-10-10','{}');
+       INSERT INTO ai_tracking_samples VALUES ('ai_running','project_1','2026-10-06',null),('ai_cost','project_1',null,'{"providerStatus":"cost_limit_exceeded"}');`);
+  });
+  it("pages all three sources in a single stable server-side ordering", async () => {
+    await db.exec(`INSERT INTO ai_tracking_runs VALUES ('tie_ai','air_tie','project_1','completed','2026-10-01',null,'2026-10-22','{}');
+      INSERT INTO rank_check_runs VALUES ('tie_rank','rcr_tie','project_1','completed','succeeded',null,'2026-10-01',null,'2026-10-22','2026-10-01',null,null);
+      INSERT INTO search_analytics_imports VALUES ('tie_gsc','project_1','completed',null,'gsc','web','2026-10-01',null,null,'2026-10-22');`);
+    const seen: string[] = [];
+    let cursor: TimelineRow | null = null;
+    for (;;) {
+      const rows = await page(cursor);
+      if (!rows.length) break;
+      seen.push(...rows.map((row) => row.publicId));
+      cursor = rows.at(-1) ?? null;
+    }
+    expect(seen).toContain("air_running");
+    expect(seen).toContain("air_partial");
+    expect(seen).not.toContain("air_other");
+    expect(new Set(seen).size).toBe(seen.length);
+    expect(seen.filter((id) => ["air_tie", "tie_gsc", "rcr_tie"].includes(id))).toEqual([
+      "air_tie",
+      "tie_gsc",
+      "rcr_tie",
+    ]);
+    expect(seen.indexOf("air_running")).toBeLessThan(seen.indexOf("air_waiting"));
+    expect(seen.indexOf("air_waiting")).toBeLessThan(seen.indexOf("air_partial"));
+  });
+  it("keeps AI source, attention, history and counts on the same predicates", async () => {
+    const rows = await page(null, {
+      source: "ai_tracking",
+      status: "attention",
+      section: "history",
+      limit: 50,
+    });
+    expect(rows.map((row) => row.publicId)).toEqual(["air_cost", "air_partial"]);
+    const sql = timelineCandidatesSql(
+      "project_1",
+      { ...query, source: "ai_tracking", status: "attention", section: "history" },
+      null,
+    );
+    expect(
+      (
+        await execute<{ total: number }>(
+          Prisma.sql`${sql} SELECT COUNT(*)::int AS total FROM filtered`,
+        )
+      )[0].total,
+    ).toBe(rows.length);
+  });
+});
+
+it("classifies completed/cancelled legacy outcomes as cancelled history", async () => {
+  await db.exec(
+    `INSERT INTO rank_check_runs VALUES ('legacy','rcr_legacy','project_1','completed','cancelled',NULL,'2026-10-01',NULL,'2026-10-07','2026-10-01',NULL,NULL);`,
+  );
+  for (const source of ["all", "rank_checks"] as const) {
+    const rows = await page(null, { source, status: "cancelled", section: "history", limit: 20 });
+    expect(rows.map((row) => row.publicId).sort()).toEqual(["rcr_cancelled", "rcr_legacy"]);
+  }
+});
+
+it("gives cancellation precedence over an old no-active-keywords reason", async () => {
+  await db.exec(
+    `INSERT INTO rank_check_runs VALUES ('legacy_reason','rcr_legacy_reason','project_1','completed','cancelled','no_active_keywords','2026-10-01',NULL,'2026-10-07','2026-10-01',NULL,NULL);`,
+  );
+  expect(
+    (await page(null, { status: "cancelled", limit: 20 })).map((row) => row.publicId),
+  ).toContain("rcr_legacy_reason");
+  expect((await page(null, { status: "skipped", limit: 20 })).map((row) => row.publicId)).toEqual([
+    "rcr_skipped",
+  ]);
 });

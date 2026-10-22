@@ -46,6 +46,13 @@ export class ProviderUsagePersistenceError extends Error {
   }
 }
 
+/** A connection snapshot no longer owns the paid request, before any provider dispatch. */
+export class ProviderConnectionChangedError extends ProviderUsagePersistenceError {
+  constructor(options?: ErrorOptions) {
+    super({ ...options, phase: "admission" });
+  }
+}
+
 async function settleUsage(
   observer: ProviderUsageObserver | undefined,
   attemptId: string | undefined,

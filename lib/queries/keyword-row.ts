@@ -6,7 +6,7 @@ import { alertPositionThreshold } from "@/lib/alerts/depth-conflict";
 import { positionObservations } from "@/lib/checks/position-observations";
 import { comparableCompletedWindow } from "@/lib/checks/status";
 import { deriveRankingUrlPeriods } from "@/lib/keyword-detail/ranking-url-history";
-import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
+import { keywordMembershipSchedule } from "@/lib/keywords/schedule-membership";
 import { locationView } from "@/lib/queries/keyword-location";
 import type { Metrics } from "@/lib/queries/keyword-metrics";
 import { deviceLabel, pathFromUrl } from "@/lib/queries/keyword-row-format";
@@ -89,6 +89,7 @@ export function mapKeyword(
   project: KeywordProject,
   metrics: Metrics,
   traffic?: KeywordTrafficSummary,
+  projectSchedule = keywordMembershipSchedule,
 ) {
   const visibleChecks = row.rankChecks.filter((check) => check.status !== "deferred");
   const quality = resolveRecordedChecks(visibleChecks, row.id);
@@ -116,17 +117,14 @@ export function mapKeyword(
     .sort((left, right) => right.rule.updatedAt.getTime() - left.rule.updatedAt.getTime())
     .map(({ rule }) => alertPositionThreshold(rule))
     .find((target): target is number => target !== null && target > 0);
-  let scheduleSource: NonNullable<KeywordRow["scheduleSource"]> = "fallback";
-  let schedule = fallbackSchedule();
-  if (row.schedule) {
-    scheduleSource = "keyword";
-    const effective = resolveEffectiveSchedule(row.schedule, null, row.id);
-    schedule = scheduleView(row.schedule, effective.nextCheckAt);
-  } else if (project.defaults) {
-    scheduleSource = "project";
-    const effective = resolveEffectiveSchedule(null, project.defaults, row.id);
-    schedule = scheduleView(project.defaults, effective.nextCheckAt);
-  }
+  const membership = projectSchedule(row.checkSchedule, row.id, project.defaults?.timezone);
+  const scheduleSource =
+    row.checkSchedule && !row.checkSchedule.archivedAt ? "keyword" : "fallback";
+  const schedule = scheduleView({
+    ...membership,
+    lastCheckedAt: row.schedule?.lastCheckedAt ?? null,
+    serpDepth: row.schedule?.serpDepth ?? null,
+  });
 
   if (row.checkSchedule?.serpDepth !== undefined) {
     schedule.serp_depth =
@@ -154,13 +152,14 @@ export function mapKeyword(
     observationCompleteness: normalizedObservationCompleteness(
       latest?.observationRun?.completeness,
     ),
-    checkSchedule: row.checkSchedule
-      ? {
-          name: row.checkSchedule.name,
-          nextCheckAt: null,
-          publicId: row.checkSchedule.publicId,
-        }
-      : null,
+    checkSchedule:
+      row.checkSchedule && !row.checkSchedule.archivedAt
+        ? {
+            name: row.checkSchedule.name,
+            nextCheckAt: iso(membership.nextCheckAt),
+            publicId: row.checkSchedule.publicId,
+          }
+        : null,
     completedComparableChecks: checks.slice(-2).map((check) => ({
       ...(check.observationRun
         ? {

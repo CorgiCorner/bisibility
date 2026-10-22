@@ -126,7 +126,7 @@ export function SearchInsightsSignalChips({
         title={t("signalOverlapTitle")}
         which="overlap"
       />
-      {ga4Card ? <div className="md:col-span-2">{ga4Card}</div> : null}
+      {ga4Card ? <div className="empty:hidden md:col-span-2">{ga4Card}</div> : null}
     </div>
   );
 }

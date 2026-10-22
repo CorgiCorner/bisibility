@@ -109,7 +109,8 @@ describe("OpenAPI document", () => {
       minimum: 0,
     });
     expect(doc.components.schemas.ProjectDefaultsPatch.properties.timezone).toMatchObject({
-      description: expect.stringContaining("anchors monthly and custom cron wall-clock schedules"),
+      deprecated: true,
+      description: expect.stringContaining("Configure named schedules instead"),
     });
     expect(doc.components.schemas.KeywordCreateItem.properties.language).toMatchObject({
       example: "en",
@@ -119,9 +120,7 @@ describe("OpenAPI document", () => {
       properties: {
         jitter_minutes: { default: 60, maximum: 120, minimum: 0 },
         timezone: {
-          description: expect.stringContaining(
-            "Daily and weekly use a stable keyword-specific interval phase",
-          ),
+          description: expect.stringContaining("use stable keyword slots"),
         },
       },
     });

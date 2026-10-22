@@ -2,6 +2,7 @@ import { AppHeaderTitle } from "@/components/shell/AppHeaderTitle";
 import { CommandPaletteTrigger } from "@/components/shell/CommandPalette";
 import { MobileNav } from "@/components/shell/MobileNav";
 import { OperationsTray } from "@/components/shell/OperationsTray";
+import type { PlanStatus } from "@/components/shell/plan-status";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarUserButton } from "@/components/shell/SidebarUserButton";
 import type { WorkspaceSummary } from "@/lib/queries/workspaces";
@@ -23,6 +24,7 @@ export type AppHeaderFrameProps = {
   enabledExperimentalModules?: readonly ExperimentalModuleKey[];
   notificationControl: ReactNode;
   operationsTrayDefaultOpen?: boolean;
+  planStatus?: PlanStatus | null;
   projectRef: string;
   setupCompleted?: boolean;
   setupDoneCount?: number;
@@ -45,6 +47,7 @@ export function AppHeaderFrame({
   enabledExperimentalModules = [],
   notificationControl,
   operationsTrayDefaultOpen = false,
+  planStatus = null,
   projectRef,
   setupCompleted = false,
   setupDoneCount = 0,
@@ -64,6 +67,7 @@ export function AppHeaderFrame({
           canCreateWorkspace={canCreateWorkspace}
           canSetDefault={canSetDefault}
           enabledExperimentalModules={enabledExperimentalModules}
+          planStatus={planStatus}
           projectRef={projectRef}
           setupCompleted={setupCompleted}
           setupDoneCount={setupDoneCount}

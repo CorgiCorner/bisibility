@@ -6,6 +6,7 @@ import { z } from "zod";
 
 export const previewRankCheckRunActionSchema = z
   .object({
+    paymentOptionId: z.string().min(1).max(120).optional(),
     depth: z.union(serpDepthValues.map((depth) => z.literal(depth))).optional(),
     projectId: z.string().refine((value) => isPublicIdOfType(value, "prj"), "Project not found."),
     providerId: z.string().trim().min(1).max(120).optional(),

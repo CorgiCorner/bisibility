@@ -15,7 +15,11 @@ import { type ByokEvidenceInput, captureByokEvidence } from "./byok-evidence";
 /** The whole native POST taskset owns one database commit and one possible-send fence. */
 export async function beginProviderTaskset(
   db: PrismaClient,
-  inputs: readonly (ByokEvidenceInput & { keywordId: string; providerRequest?: ProviderRequest })[],
+  inputs: readonly (ByokEvidenceInput & {
+    keywordId: string;
+    providerRequest?: ProviderRequest;
+    maxCostCents?: string;
+  })[],
   beforeReserve?: ReadonlyMap<string, NativeRequestGuard>,
 ) {
   const identities = structuredClone(inputs).map((input) => ({
@@ -71,6 +75,7 @@ export async function beginProviderTaskset(
           id,
           queued: true,
           credentialVersion: input.credentialVersion ?? null,
+          maxCostCents: input.maxCostCents,
           ...(input.providerRequest ? { providerRequest: input.providerRequest } : {}),
           attribution: {
             tag: input.attribution.tag,

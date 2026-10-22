@@ -117,9 +117,7 @@ describe("TargetRankingCell", () => {
       "href",
       "https://acme.dev/docs",
     );
-    expect(
-      screen.getByText("Retained ranking URL; current qualification unavailable"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Last known URL. Current result unavailable.")).toBeInTheDocument();
   });
   it("keeps current-target fallback visible without presenting it as captured expectation", () => {
     render(
@@ -143,7 +141,7 @@ describe("TargetRankingCell", () => {
         row={{ ...keywordRows[0], expectedUrl: "/docs", rankingUrl: "https://acme.dev/docs" }}
       />,
     );
-    const marker = screen.getByText("Retained ranking URL; current qualification unavailable");
+    const marker = screen.getByText("Last known URL. Current result unavailable.");
     expect(marker).not.toHaveClass("sr-only");
     expect(marker.closest(".sr-only")).toBeNull();
     expect(screen.queryByText("Matches")).not.toBeInTheDocument();

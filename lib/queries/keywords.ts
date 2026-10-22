@@ -1,3 +1,4 @@
+import { createKeywordMembershipProjector } from "@/lib/keywords/schedule-membership";
 import { keywordCheckSelect as rankCheckSelect } from "./keyword-check-select";
 import "server-only";
 
@@ -176,12 +177,14 @@ export async function getKeywordRows(projectId: string): Promise<KeywordRow[]> {
     fetchProjectKeywordTraffic(project.id),
   ]);
   const meta = { defaults, domain: trackedProjectDomain(project.domain) ?? "" };
+  const projectSchedule = createKeywordMembershipProjector();
   return keywords.map((keyword) =>
     mapKeyword(
       keyword,
       meta,
       metricsMap.get(keyword.id) ?? EMPTY_METRICS,
       trafficMap.get(keyword.id),
+      projectSchedule,
     ),
   );
 }

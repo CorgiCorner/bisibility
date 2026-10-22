@@ -17,6 +17,13 @@ describe("auditEventMessageKeyFor", () => {
     expect(advancedEvents[key ?? ""]).toBeTypeOf("string");
   });
 
+  it.each(["constructor", "toString", "__proto__"])(
+    "treats inherited object keys as unknown: %s",
+    (action) => {
+      expect(auditEventMessageKeyFor(action)).toBeNull();
+    },
+  );
+
   it("keeps the fallback for an action the catalog does not name", () => {
     expect(auditEventMessageKeyFor("totally.unmapped")).toBeNull();
   });

@@ -9,7 +9,6 @@ const m = vi.hoisted(() => ({
   preview: vi.fn(),
   approve: vi.fn(),
   pause: vi.fn(),
-  refresh: vi.fn(),
 }));
 vi.mock("@/lib/local-monitor-recurring/session-actions", () => ({
   readRecurringMonitorAction: m.read,
@@ -17,7 +16,6 @@ vi.mock("@/lib/local-monitor-recurring/session-actions", () => ({
   approveRecurringMonitorAction: m.approve,
   pauseRecurringMonitorAction: m.pause,
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: m.refresh }) }));
 beforeEach(() => {
   vi.resetAllMocks();
   m.read.mockResolvedValue(recurringUiState);

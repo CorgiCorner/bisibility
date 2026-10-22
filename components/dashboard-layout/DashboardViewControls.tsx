@@ -61,12 +61,12 @@ function DashboardCustomizationMenu({
         ref={trigger}
         size="sm"
         variant="outline"
-        className="min-w-0 px-2 sm:px-3 [--control-background-color:transparent]"
+        className="min-w-0 px-2 font-normal sm:px-3 [--control-background-color:transparent]"
         disabled={pending}
         aria-label={t("title")}
         aria-haspopup="menu"
         aria-expanded={open}
-        startIcon={<SlidersHorizontal aria-hidden size={15} />}
+        startIcon={<SlidersHorizontal weight="regular" aria-hidden size={15} />}
         onClick={(event) => openMenu(event.currentTarget)}
       >
         <span className="hidden sm:inline">{t("title")}</span>
@@ -113,6 +113,7 @@ export function DashboardLayoutControl({
         ref={props.trigger}
         size="sm"
         variant="outline"
+        className="font-normal"
         disabled={props.pending}
         aria-expanded={props.editing}
         onClick={props.onToggleEditing}

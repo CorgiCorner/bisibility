@@ -1,5 +1,10 @@
 import "server-only";
 
+import { auditConnection, auditProviderMutation } from "@/lib/api/provider-audit";
+import { renumberProviderChain } from "@/lib/api/provider-chain-writer";
+import { withProviderCredentialDefaults } from "@/lib/api/provider-credential-defaults";
+import { verifyProviderConnectionBeforeSave } from "@/lib/api/provider-verification";
+import { requireApiPublicId } from "@/lib/api/public-id";
 import { prisma } from "@/lib/db/prisma";
 import { makePublicId } from "@/lib/db/public-id";
 import { dollarsToCents } from "@/lib/format/currency";
@@ -18,11 +23,6 @@ import { connectProviderSchema, providerConnectionRefSchema } from "@/lib/schema
 import { firstSyncIntentOnConnect } from "@/lib/traffic/first-sync-intent-state";
 import { publishWorkerIntent } from "@/lib/worker-intents/realtime";
 import { z } from "zod";
-import { auditConnection, auditProviderMutation } from "./provider-audit";
-import { renumberProviderChain } from "./provider-chain-writer";
-import { withProviderCredentialDefaults } from "./provider-credential-defaults";
-import { verifyProviderConnectionBeforeSave } from "./provider-verification";
-import { requireApiPublicId } from "./public-id";
 
 const prioritySchema = z.coerce.number().int().min(0).max(1000);
 
@@ -69,11 +69,21 @@ function findConnection(
 export async function connectProviderConnection(
   input: ConnectProviderInput,
   context: ProviderMutationContext,
+  options: { restoreStoredCredentials?: boolean; activateStoredCredentials?: boolean } = {},
 ) {
   const item = providerCatalogItem(input.providerId);
   const stored = await findConnection(context.projectId, item.id);
+  // Only the explicit reactivation action may probe an inactive retained key.
+  if (
+    options.restoreStoredCredentials &&
+    (stored?.credentialSource !== "hosted" ||
+      !stored.credentialsEncrypted ||
+      stored.publicId !== input.expectedConnectionId ||
+      stored.updatedAt.toISOString() !== input.expectedConnectionUpdatedAt)
+  )
+    throw new Error("Provider connection changed. Refresh and try again.");
   const credentials = await withProviderCredentialDefaults(item, context.projectId, {
-    ...(stored?.credentialSource === "hosted"
+    ...(stored?.credentialSource === "hosted" && !options.restoreStoredCredentials
       ? {}
       : decryptProviderCredentials(stored?.credentialsEncrypted)),
     ...credentialsFromInput(input),
@@ -85,9 +95,10 @@ export async function connectProviderConnection(
     projectId: context.projectId,
     provider: item,
   });
-  const secret = Object.keys(credentials).length
-    ? encryptSecret(JSON.stringify(credentials))
-    : undefined;
+  const secret =
+    !options.restoreStoredCredentials && Object.keys(credentials).length
+      ? encryptSecret(JSON.stringify(credentials))
+      : undefined;
   const cost = input.costPerCheck === undefined ? null : dollarsToCents(input.costPerCheck);
 
   const writeConnection = async (client: ProviderMutationClient) => {
@@ -98,6 +109,8 @@ export async function connectProviderConnection(
       before?.id !== stored?.id ||
       before?.credentialsEncrypted !== stored?.credentialsEncrypted ||
       before?.credentialSource !== stored?.credentialSource ||
+      (options.restoreStoredCredentials &&
+        before?.updatedAt.getTime() !== stored?.updatedAt.getTime()) ||
       (input.expectedCredentialSource !== undefined &&
         (before?.credentialSource ?? "own") !== input.expectedCredentialSource) ||
       (input.expectedConnectionId !== undefined &&
@@ -125,7 +138,10 @@ export async function connectProviderConnection(
       (connections.length === 0
         ? 0
         : Math.max(...connections.map((connection) => connection.priority)) + 1);
-    const enabled = priority === 0 || input.enabled;
+    const enabled =
+      options.restoreStoredCredentials && stored
+        ? options.activateStoredCredentials === true || stored.enabled
+        : priority === 0 || input.enabled;
     const firstSyncIntent = firstSyncIntentOnConnect(
       before,
       { enabled, kind: item.kind, status: "connected" },
@@ -278,4 +294,4 @@ export async function setProviderSettings(
   return result.connection;
 }
 
-export { disconnectProviderConnection } from "./provider-disconnect";
+export { disconnectProviderConnection } from "@/lib/api/provider-disconnect";

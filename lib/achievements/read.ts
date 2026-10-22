@@ -56,6 +56,7 @@ export async function readAchievements(userId: string): Promise<AchievementView 
   };
 }
 
+/** The header flame counts consecutive days with a visit (presence), like the day indicator. */
 export async function readAchievementHeader(userId: string) {
   if (!achievementsEnabled()) return null;
   const state = await prisma.achievementState.findUnique({
@@ -64,8 +65,8 @@ export async function readAchievementHeader(userId: string) {
       enabled: true,
       showHeader: true,
       timeZone: true,
-      practiceCurrent: true,
-      practiceLastDay: true,
+      presenceCurrent: true,
+      presenceLastDay: true,
     },
   });
   const timeZone = state?.timeZone ?? "UTC",
@@ -75,8 +76,8 @@ export async function readAchievementHeader(userId: string) {
     showHeader: state?.showHeader ?? true,
     timeZone,
     current:
-      state?.practiceLastDay && state.practiceLastDay >= shiftDay(today, -1)
-        ? state.practiceCurrent
+      state?.presenceLastDay && state.presenceLastDay >= shiftDay(today, -1)
+        ? state.presenceCurrent
         : 0,
   };
 }

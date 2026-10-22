@@ -169,14 +169,26 @@ describe("ProviderCard", () => {
       enabled: false,
     };
 
-    render(
-      <ProviderCard canManageProviders canUpdateProject projectId="prj_1" provider={provider} />,
+    const { unmount } = render(
+      <ProviderCard
+        canManageProviders
+        canUpdateProject
+        projectId="prj_1"
+        provider={{ ...provider, enabled: true }}
+      />,
     );
 
     const statusPill = screen.getByText("Connected");
     expect(statusPill).toHaveClass("bg-bg-sunken");
     expect(statusPill).toHaveClass("border-border");
     expect(statusPill.querySelector("[aria-hidden]")).toBeInTheDocument();
+    unmount();
+
+    render(
+      <ProviderCard canManageProviders canUpdateProject projectId="prj_1" provider={provider} />,
+    );
+    // A disabled connection shows only Disabled, never a contradictory Connected pill.
+    expect(screen.queryByText("Connected")).not.toBeInTheDocument();
 
     const primaryPill = screen.getByText("Primary");
     expect(primaryPill).toHaveClass("bg-bg-sunken");

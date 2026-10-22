@@ -23,6 +23,7 @@ export function ProviderWalletEvidence({ row }: { row: ProviderAllocationRow | u
 
   return (
     <MeasurementCard
+      hideMeasured
       title={t("availableBalance")}
       description={t("creditWallet")}
       value={available}

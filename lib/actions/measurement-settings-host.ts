@@ -1,4 +1,6 @@
 "use server";
+import type { ActionPaymentFailure } from "@/lib/action-payment/contract";
+import { ActionPaymentError } from "@/lib/action-payment/token";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { SettingsHostError } from "@/lib/measurement-settings/host/errors";
@@ -22,6 +24,25 @@ import { PreviewTokenError } from "@/lib/rank-check/runs/preview-token";
 import { ZodError } from "zod";
 import { getActionActor } from "./_shared";
 import type { LaunchRankCheckRunActionResult } from "./rank-check-run-launch-result";
+
+function paymentLaunchCode(
+  reason: ActionPaymentFailure,
+): "payment_already_executed" | "payment_unavailable" | null {
+  switch (reason) {
+    case "payment_already_executed":
+      return "payment_already_executed";
+    case "payment_quote_required":
+    case "payment_unavailable":
+      return "payment_unavailable";
+    case "payment_quote_changed":
+    case "payment_quote_expired":
+      return null;
+    default: {
+      const unreachable: never = reason;
+      return unreachable;
+    }
+  }
+}
 
 export async function readMeasurementSettingsAction(
   projectId: string,
@@ -56,6 +77,10 @@ export async function launchMeasurementSettingsAction(
   } catch (error) {
     const budget = budgetFailureResult(error);
     if (budget) return budget;
+    if (error instanceof ActionPaymentError) {
+      const code = paymentLaunchCode(error.reason);
+      if (code) return { status: "not_started", code, message: error.message };
+    }
     if (error instanceof PreviewTokenError)
       return {
         status: "not_started",

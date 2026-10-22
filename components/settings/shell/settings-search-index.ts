@@ -51,15 +51,6 @@ export const settingsSearchEntries = [
     "tracking",
     "settings/tracking",
     (t) => ({
-      label: t("search.entries.checkFrequency.label"),
-      keywords: t("search.entries.checkFrequency.keywords"),
-    }),
-    { anchor: "tracking-frequency" },
-  ),
-  searchEntry(
-    "tracking",
-    "settings/tracking",
-    (t) => ({
       label: t("search.entries.stopOnMatch.label"),
       keywords: t("search.entries.stopOnMatch.keywords"),
     }),

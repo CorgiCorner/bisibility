@@ -82,10 +82,10 @@ the first-page rate. bisibility stores the actual cost reported by DataForSEO
 for each completed check; if the provider does not report a positive cost, the
 app falls back to the connection's configured per-check estimate.
 
-When **Stop checks at first domain match** is on, bisibility sends
-`stop_crawl_on_match` with the tracked domain. DataForSEO may then crawl fewer
-pages than the configured depth, and the actual provider-reported cost is still
-what bisibility records.
+For Top 20 checks, bisibility requests the full configured depth without
+`stop_crawl_on_match`. At other depths, **My position** mode can send the tracked
+domain as a stopping target, so DataForSEO may crawl fewer pages. The actual
+provider-reported cost is still what bisibility records.
 
 Optional environment fallback credentials:
 
@@ -118,13 +118,23 @@ Optional environment fallback credential:
 SERPAPI_API_KEY=
 ```
 
-### Stop checks at first domain match
+### Results to collect
 
-This project setting is on by default. bisibility stops as soon as the tracked
-domain is found, so actual SerpApi searches per check are often fewer than
-`ceil(depth / 10)`. The configured per-check estimate remains the worst-case
-value for the selected depth. Turn the setting off when complete full-depth
-competitor snapshots matter more than provider cost.
+Top 20 checks always request the full depth, even when your domain appears first.
+This can use more credits or provider requests than stopping after the first page.
+Provider omissions and gaps remain visible as incomplete snapshots; requesting
+Top 20 cannot guarantee that the provider returns twenty usable organic results.
+
+At Top 10, Top 50 and Top 100, **My position** permits early stopping after a
+tracked-domain match. Choose **Full search results** to collect the configured
+depth for competitor comparisons. The per-check estimate remains the worst-case
+amount for the selected depth; actual usage follows provider receipts.
+
+A confirmed own-domain rank can still update Visibility even when competitor
+results are incomplete, provided the check requested at least Top 20 and meets
+the other measurement requirements. Missing competitors are unknown, not absent.
+Checks below Top 20 do not update Visibility. Saved historical results are not
+refetched or relabeled when these settings change.
 
 ### Extend a recent SERP snapshot
 

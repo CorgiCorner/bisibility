@@ -30,7 +30,7 @@
       "description": {
         "completed": "Your first results are ready.",
         "manual": "Everything's ready. Run your first check whenever you like - nothing runs until you start it.",
-        "noProvider": "Almost ready. Everything is set - connect a data provider whenever you want to run checks.",
+        "noProvider": "Your keywords are ready. Choose a data source whenever you are ready to run checks.",
         "paused": "Everything's ready. Checks are paused until you resume the schedule.",
         "scheduled": "Your schedule is set to {frequency}. You can also run a sample check now."
       },
@@ -45,7 +45,7 @@
         "statusUnavailable": "Could not refresh the check status. Retrying automatically. You can open the app while it finishes.",
         "timezone": "Timezone could not be saved. Try again.",
         "unavailableKeyword": "This keyword is no longer available. Go back to choose a keyword.",
-        "waitingForProvider": "Connect a SERP provider before running checks."
+        "waitingForProvider": "Choose a data source before running checks."
       },
       "footer": {
         "hint": "Optional: check 1 keyword now. Your schedule stays unchanged.",
@@ -66,10 +66,10 @@
       "matrix": "1 keyword · {markets, plural, one {# market} other {# markets}} · {devices} · {checks, plural, one {# check} other {# checks}}",
       "notConnected": "Not connected",
       "queue": {
-        "completed": "Sample {checks, plural, one {check} other {checks}} finished. Every keyword follows your {frequency} schedule from here.",
-        "completedWithFailures": "The sample {checks, plural, one {check} other {checks}} finished with an issue. You can retry the failed {checks, plural, one {check} other {checks}} below. Every keyword still follows your {frequency} schedule.",
-        "initial": "{checks, plural, one {# check runs once now so you can see it working.} other {# checks run once now so you can see them working.}} Everything else follows your {frequency} schedule.",
-        "manual": "Manual preview can run now. Scheduled checks stay paused.",
+        "completed": "Sample {checks, plural, one {check} other {checks}} finished. Add keywords to a schedule for automatic checks.",
+        "completedWithFailures": "The sample {checks, plural, one {check} other {checks}} finished with an issue. You can retry the failed {checks, plural, one {check} other {checks}} below.",
+        "initial": "{checks, plural, one {# check runs once now so you can see it working.} other {# checks run once now so you can see them working.}} Nothing else runs automatically.",
+        "manual": "Checks run only when you start them.",
         "queued": "Sample checks are queued. You can open the dashboard while the worker starts them.",
         "running": "Sample checks are running. You can open the dashboard while they finish.",
         "sample": "Sample projects keep their synthetic ranking history."
@@ -88,7 +88,7 @@
           "client": "The sample check could not be started. Try again.",
           "deferred": "This check was deferred.",
           "failed": "We couldn't run this check. Try again in a moment.",
-          "noProvider": "Connect a SERP provider before running checks.",
+          "noProvider": "Choose a data source before running checks.",
           "projectReadOnly": "This project is read-only right now.",
           "rateLimited": "Provider rate limit reached. Try again shortly.",
           "sampleProject": "Sample projects don't run real checks.",
@@ -321,7 +321,7 @@
           "idle": "Not connected",
           "tested": "Verified"
         },
-        "tooltip": "Google has no official rankings API, so checks run through a SERP provider. Bisibility uses your own provider account and you pay the provider directly, per check. You can skip this and connect later in Integrations - keywords can be added now, but checks stay paused until a provider is connected."
+        "tooltip": "Live rankings come from a supported data provider. Choose how to use it in Integrations. You can add keywords first and choose a source later."
       },
       "credentials": {
         "connected": "{provider} connected",

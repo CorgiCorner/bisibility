@@ -1,14 +1,14 @@
-import { normalizeDomain } from "@/lib/domains/normalize";
 import type { ProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import type { ProviderCredentials, SerpDevice } from "@/lib/providers/types";
 import type { DataForSeoQueuePriority } from "@/lib/rank-check/queued-config";
 import { QUEUED_RESULT_GET_TIMEOUT_MS } from "@/lib/rank-check/queued-timeouts";
-import { resolveSerpDepth, resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
+import type { SerpDepth } from "@/lib/serp/constants";
 import type { SerpRankLocation } from "@/lib/serp/location";
 import type { PricedRequest, ProviderRequest } from "@usagekit/providers";
 import { DataForSeoError, redactedMessage } from "./dataforseo-errors";
 import { dataForSeoResponseCostCents } from "./dataforseo-payload";
 import { pricedTasksetBody } from "./dataforseo-priced-taskset";
+import { queuedRankTaskPayload } from "./dataforseo-queued-payload";
 
 const TASK_POST_URL = "https://api.dataforseo.com/v3/serp/google/organic/task_post";
 const TASKS_READY_URL = "https://api.dataforseo.com/v3/serp/google/organic/tasks_ready";
@@ -62,28 +62,6 @@ export function dataForSeoAuthorization(credentials: ProviderCredentials) {
     throw new DataForSeoError("DataForSEO queued tasks require login and password.");
   }
   return `Basic ${Buffer.from(`${credentials.login}:${credentials.password}`).toString("base64")}`;
-}
-
-function taskPayload(input: DataForSeoQueuedTaskInput, priority: DataForSeoQueuePriority) {
-  const target = normalizeDomain(input.domain) ?? input.domain;
-  return {
-    depth: resolveSerpDepth(input.depth),
-    device: input.device,
-    keyword: input.keyword,
-    search_param: "&nfpr=1",
-    language_code: input.location.hl,
-    ...(input.location.primaryGeoCode === null
-      ? { location_name: input.location.primaryGeoName }
-      : { location_code: input.location.primaryGeoCode }),
-    priority: priority === "high" ? 2 : 1,
-    tag: input.attribution.tag,
-    ...(resolveSerpStopOnMatch(input.stopOnMatch)
-      ? {
-          find_targets_in: ["organic"],
-          stop_crawl_on_match: [{ match_type: "with_subdomains", match_value: target }],
-        }
-      : {}),
-  };
 }
 
 /** An explicit nonnegative provider cost in cents, or null when the cost is unknown. */
@@ -173,7 +151,7 @@ export function prepareDataForSeoQueuedTasks(input: QueuedSubmissionInput) {
   };
   assertQueuedTaskBatchSize(snapshot.tasks.length);
   dataForSeoAuthorization(snapshot.credentials);
-  const payloads = snapshot.tasks.map((task) => taskPayload(task, snapshot.priority));
+  const payloads = snapshot.tasks.map((task) => queuedRankTaskPayload(task, snapshot.priority));
   const requests: ProviderRequest[] = payloads.map((payload) => ({
     method: "POST",
     url: TASK_POST_URL,

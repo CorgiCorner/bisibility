@@ -1,5 +1,6 @@
 "use client";
 
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import type { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { RunStatusChip } from "@/components/project-runs/RunStatusChip";
 import type { RunStatusCopyApi } from "@/components/project-runs/run-status-copy";
@@ -7,7 +8,6 @@ import type { ClientDeploymentMode } from "@/components/shell/DeploymentModeProv
 import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { IdChip } from "@/components/ui/IdChip";
-import { nativeUsageUnit } from "@/lib/cost-estimate/native-usage";
 import type { DateFormat } from "@/lib/dates/format";
 import { formatDateTimeCurrentYear } from "@/lib/dates/format";
 import { isPublicIdOfType } from "@/lib/db/public-id";
@@ -50,7 +50,6 @@ function triggerLabel(
 }
 
 export function runsTableColumns({
-  usage,
   dateFormat,
   deploymentMode,
   locale,
@@ -59,10 +58,6 @@ export function runsTableColumns({
   statusT,
   t,
 }: RunsTableColumnsOptions): readonly DataTableColumn<RunsTableRow>[] {
-  const money = (cents: number | null) =>
-    cents === null
-      ? t("unavailable")
-      : new Intl.NumberFormat(locale, { currency: "USD", style: "currency" }).format(cents / 100);
   const statusPresentation = (run: RankRunRecord) =>
     isSkippedOccurrence(run)
       ? { label: statusT("skipped"), tone: "neutral" as const }
@@ -205,40 +200,19 @@ export function runsTableColumns({
       size: 216,
     },
     {
-      accessorFn: (row) => row.run.costCents,
-      cell: ({ row }) => {
-        const run = row.original.run;
-        const skipped = isSkippedOccurrence(run);
-        const planned =
-          run.status === "planned" ||
-          run.status === "queued" ||
-          (run.status === "blocked" && run.startedAt === null);
-        return (
-          <div>
-            <span className="block">
-              {run.usage || nativeUsageUnit(run.provider) === "units"
-                ? usage.format({
-                    unit: "units",
-                    quantity: planned
-                      ? (run.nativeEstimate?.quantity ?? run.usage?.estimated ?? null)
-                      : (run.usage?.actual ?? null),
-                  })
-                : planned && run.nativeEstimate
-                  ? usage.format(run.nativeEstimate)
-                  : money(skipped ? 0 : planned ? run.estimatedCostCents : run.costCents)}
-            </span>
-            <span className="mt-0.5 block text-[10.5px] text-fg-muted">
-              {skipped ? t("nothingBilled") : planned ? t("facts.estimate") : t("facts.actual")}
-            </span>
-          </div>
-        );
-      },
+      accessorFn: (row) => row.run.payment?.charge.value ?? "",
+      cell: ({ row }) =>
+        isSkippedOccurrence(row.original.run) ? (
+          <span className="text-xs text-fg-muted">{t("facts.nothingBilled")}</span>
+        ) : (
+          <PaymentChargeLine payment={row.original.run.payment} />
+        ),
       enableSorting: false,
-      header: usage.label,
+      header: t("facts.cost"),
       id: "cost",
-      meta: { align: "end", lockResize: true, title: usage.label },
-      minSize: 96,
-      size: 104,
+      meta: { align: "end", lockResize: true, title: t("facts.cost") },
+      minSize: 160,
+      size: 180,
     },
     {
       accessorFn: (row) => row.run.startedAt ?? "",

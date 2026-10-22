@@ -13,6 +13,7 @@ import { captureWorkerDefinition } from "@/lib/measurement-definitions/worker-se
 import { publishOperationChanged } from "@/lib/notifications/realtime";
 import { ProviderQuoteUnavailableError } from "@/lib/provider-rates/native-quote";
 import type { QueuedRankCheckWorkflowInput } from "@/lib/temporal/queued-rank-check-contract";
+import { storedDeferralReason } from "./deferral-reason";
 import { queuedBatchBudgetDeferral, queuedBatchOrigin } from "./queued-attribution";
 import { queuedRankCheckConfig } from "./queued-config";
 import { queuedDefinitionLegacyRun } from "./queued-definition-run";
@@ -53,7 +54,7 @@ export async function prepareQueuedRankCheckBatch(
     const context = await loadContext(tx, input);
     let runItems = await resolveRunItems(tx, input);
     let prepared = context.keywords.map((keyword) =>
-      preparedKeyword(keyword, context.project.defaults),
+      preparedKeyword(keyword, context.project.defaults, runItems.byKeyword.has(keyword.id)),
     );
     const allScheduled = prepared.every((keyword) => keyword !== null);
     let deferredReason: string | null = !config.enabled
@@ -108,6 +109,7 @@ export async function prepareQueuedRankCheckBatch(
       deferredReason = await queuedBatchBudgetDeferral(
         {
           connectionId: context.connection?.id,
+          credentialSource: context.connection?.credentialSource ?? null,
           estimatedCostCents: estimated,
           source: origin.source,
           tasks: prepared.flatMap((item, index) =>
@@ -144,7 +146,7 @@ export async function prepareQueuedRankCheckBatch(
       const rankCheck = await tx.rankCheck.create({
         data: {
           checkedAt: now,
-          deferredReason,
+          deferredReason: deferredReason ? storedDeferralReason(deferredReason) : null,
           error: deferredReason,
           estimatedCostCents: deferredReason ? null : estimate,
           finishedAt: deferredReason ? now : null,

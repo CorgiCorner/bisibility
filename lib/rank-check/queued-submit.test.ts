@@ -28,6 +28,7 @@ function deferred() {
 const mocks = vi.hoisted(() => {
   const state = {
     batch: "prepared",
+    credentialSource: "own",
     origin: {
       credentialId: null as string | null,
       credentialKind: null as string | null,
@@ -40,7 +41,7 @@ const mocks = vi.hoisted(() => {
   const batch = () => ({
     connection: {
       credentialsEncrypted: "encrypted",
-      credentialSource: "own",
+      credentialSource: state.credentialSource,
       provider: "dataforseo",
       id: "connection_1",
     },
@@ -152,6 +153,7 @@ const mocks = vi.hoisted(() => {
     assertOwnKeyStored: vi.fn(),
     beginJournal: vi.fn(),
     nativeCosts: vi.fn(),
+    startHosted: vi.fn(),
     consumeProviderLimit: vi.fn(),
     deferQueuedRankCheckBatch: vi.fn(),
     journal: { discard: vi.fn(), settle: vi.fn(), transportStarted: vi.fn() },
@@ -173,6 +175,9 @@ vi.mock("@/lib/operations/access-extension", () => ({
 }));
 vi.mock("./allocation-enforcement", () => ({
   assertQueuedRankCheckBatchAllocation: mocks.assertQueuedRankCheckBatchAllocation,
+}));
+vi.mock("@/lib/providers/execution-extension", () => ({
+  startQueuedDeploymentExecution: mocks.startHosted,
 }));
 vi.mock("@/lib/providers/credentials", () => ({
   resolveProviderCredentials: mocks.resolveProviderCredentials,
@@ -213,6 +218,8 @@ describe("queued paid-call fence", () => {
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
     vi.stubEnv("DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED", "1");
     mocks.state.batch = "prepared";
+    mocks.state.credentialSource = "own";
+    mocks.startHosted.mockResolvedValue(null);
     mocks.state.origin = {
       credentialId: null,
       credentialKind: null,
@@ -251,6 +258,41 @@ describe("queued paid-call fence", () => {
       unknown: [],
     });
     mocks.prisma.rankCheckRunItem.updateMany.mockResolvedValue({ count: 0 });
+  });
+
+  it("uses hosted credentials and a credit journal with a retained key", async () => {
+    mocks.state.credentialSource = "hosted";
+    const execution = {
+      credentials: { login: "hosted-login", password: "hosted-only" },
+      abort: vi.fn(),
+      begin: vi.fn(),
+      transportStarted: vi.fn(),
+      record: vi.fn(),
+      finish: vi.fn(),
+    };
+    mocks.startHosted.mockResolvedValue(execution);
+    await submitQueuedRankCheckBatch("batch_1");
+    expect(mocks.submit).toHaveBeenCalledOnce();
+    expect(mocks.submit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        credentials: execution.credentials,
+        tasks: [expect.objectContaining({ tag: expect.stringContaining(";cs=hosted;") })],
+      }),
+    );
+    expect(execution.record).toHaveBeenCalledWith([
+      expect.objectContaining({ providerRequestId: "provider_1", costCents: 1.2 }),
+    ]);
+    expect(execution.finish).toHaveBeenCalledOnce();
+    expect(mocks.resolveProviderCredentials).not.toHaveBeenCalled();
+    expect(mocks.beginJournal).not.toHaveBeenCalled();
+  });
+  it("refuses a hosted submission without credit execution instead of using its retained key", async () => {
+    mocks.state.credentialSource = "hosted";
+    await expect(submitQueuedRankCheckBatch("batch_1")).rejects.toThrow(
+      "Queued hosted execution is unavailable.",
+    );
+    expect(mocks.resolveProviderCredentials).not.toHaveBeenCalled();
+    expect(mocks.submit).not.toHaveBeenCalled();
   });
 
   it("retains a known not-sent failure when shared admission is unavailable", async () => {

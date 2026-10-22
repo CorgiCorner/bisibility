@@ -5,6 +5,29 @@ import { savedViewSchema } from "./openapi-saved-views";
 import type { Parameter } from "./openapi-test-helpers";
 
 describe("OpenAPI document", () => {
+  it.each([
+    ["query,device", true],
+    [" query , page ", true],
+    ["device,page,query,country,query", true],
+    ["query,,page", false],
+    ["query,foo", false],
+    ["", false],
+    [",query", false],
+    ["query,", false],
+  ])("documents comma-separated dimension syntax %s", (value, valid) => {
+    const operation =
+      getOpenApiDocument().paths["/projects/{project_id}/analytics/query-stats"].get;
+    const parameter = operation.parameters.find(
+      (item) => "name" in item && item.name === "dimensions",
+    );
+    expect(parameter).toHaveProperty("schema.type", "string");
+    expect(parameter).not.toHaveProperty("explode");
+    expect(parameter).not.toHaveProperty("style");
+    expect(parameter).toHaveProperty("schema.pattern");
+    const pattern = (parameter as { schema: { pattern: string } }).schema.pattern;
+    expect(new RegExp(pattern).test(value)).toBe(valid);
+  });
+
   it("documents actual keyword resource fields", () => {
     const keyword = getOpenApiDocument().components.schemas.Keyword;
 
@@ -94,6 +117,29 @@ describe("OpenAPI document", () => {
         expect.objectContaining({ name: "clicks_min" }),
         expect.objectContaining({ name: "impressions_min" }),
         expect.objectContaining({ name: "position_max" }),
+        expect.objectContaining({
+          name: "country",
+          schema: expect.objectContaining({ pattern: "^[a-zA-Z]{3}$", type: "string" }),
+        }),
+        expect.objectContaining({
+          name: "device",
+          schema: expect.objectContaining({
+            enum: ["desktop", "mobile", "tablet"],
+            type: "string",
+          }),
+        }),
+        expect.objectContaining({
+          name: "dimensions",
+          description: expect.stringContaining("query,device"),
+          schema: {
+            pattern: "^\\s*(query|page|country|device)\\s*(,\\s*(query|page|country|device)\\s*)*$",
+            type: "string",
+          },
+        }),
+        expect.objectContaining({
+          name: "offset",
+          schema: expect.objectContaining({ default: 0, minimum: 0, type: "integer" }),
+        }),
       ]),
     );
     expect(paths["/projects/{project_id}/analytics/sync"].post).toMatchObject({
@@ -128,21 +174,43 @@ describe("OpenAPI document", () => {
     const schema = getOpenApiDocument().components.schemas.SearchPerformanceQueryStatsResponse;
 
     expect(schema.required).toEqual(["connection", "rows", "scope", "result"]);
+    expect(schema.description).toEqual(
+      expect.stringContaining("only when no country or device filter or dimension is requested"),
+    );
     expect(schema.properties.scope.properties.country).toMatchObject({
-      description: expect.stringContaining("aggregate over all countries"),
-      type: "null",
+      description: expect.stringContaining(
+        "only when no country or device filter or dimension is requested",
+      ),
+      type: ["string", "null"],
     });
     expect(schema.properties.scope.properties.device).toMatchObject({
-      description: expect.stringContaining("aggregate over all countries"),
-      type: "null",
+      description: expect.stringContaining(
+        "only when no country or device filter or dimension is requested",
+      ),
+      type: ["string", "null"],
     });
     expect(schema.properties.scope.properties.query_match).toMatchObject({
       description: expect.stringContaining("exact match unless query_match=contains"),
       enum: ["equals", "contains"],
     });
     expect(schema.properties.scope.properties.dimensions).toMatchObject({
-      items: { enum: ["query", "page"], type: "string" },
+      items: { enum: ["query", "page", "country", "device"], type: "string" },
     });
+    expect(schema.properties.scope.properties.offset).toMatchObject({
+      minimum: 0,
+      type: "integer",
+    });
+    expect(schema.properties.scope.required).toEqual(expect.arrayContaining(["offset"]));
+    expect(schema.properties.result.properties.next_offset).toMatchObject({
+      type: ["integer", "null"],
+    });
+    expect(schema.properties.result.required).toEqual(expect.arrayContaining(["next_offset"]));
+    const stat = getOpenApiDocument().components.schemas.SearchPerformanceQueryStat;
+    expect(stat.properties).toMatchObject({
+      country: { type: "string" },
+      device: { type: "string" },
+    });
+    expect(stat.required).not.toEqual(expect.arrayContaining(["country", "device"]));
     expect(schema.properties.result.properties).toMatchObject({
       row_cap: { type: "integer" },
       rows_returned: { type: "integer" },

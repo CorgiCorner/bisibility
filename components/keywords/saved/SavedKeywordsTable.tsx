@@ -3,6 +3,7 @@
 import type { KeywordAction } from "@/components/keywords/action-utils";
 import { AddKeywordDrawer } from "@/components/keywords/add/AddKeywordDrawer";
 import { Card } from "@/components/ui/Card";
+import { FloatingSelectionBarSpacer } from "@/components/ui/FloatingSelectionBar";
 import { monthlyNativeUsage } from "@/lib/cost-estimate/project-estimate";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
 import type { ProjectMarketsView } from "@/lib/queries/project-markets";
@@ -154,18 +155,6 @@ export function SavedKeywordsTable({
           search={search}
           separated={selectedRows.length > 0 || Boolean(actionError) || filtered.length === 0}
         />
-        {selectedRows.length > 0 ? (
-          <SavedKeywordsBulkBar
-            canDelete={canDeleteKeyword}
-            canTrack={canCreateKeyword}
-            count={selectedRows.length}
-            nativeUsage={trackingUsage}
-            onClear={() => setSelectedIds([])}
-            onRemove={() => void removeRows(selectedRows)}
-            onTrack={() => setTrackDraft(selectedRows)}
-            separated={Boolean(actionError) || filtered.length === 0}
-          />
-        ) : null}
         {actionError ? (
           <p
             className={`m-0 bg-red/10 px-4 py-2 text-[12px] text-red-text ${filtered.length === 0 ? "border-b border-red/30" : ""}`}
@@ -204,6 +193,18 @@ export function SavedKeywordsTable({
           total={filtered.length}
         />
       </Card>
+      <SavedKeywordsBulkBar
+        canDelete={canDeleteKeyword}
+        canTrack={canCreateKeyword}
+        count={selectedRows.length}
+        nativeUsage={trackingUsage}
+        onClear={() => setSelectedIds([])}
+        onRemove={() => void removeRows(selectedRows)}
+        onTrack={() => setTrackDraft(selectedRows)}
+        projectRef={projectId}
+        selectedRows={selectedRows}
+      />
+      {selectedRows.length > 0 ? <FloatingSelectionBarSpacer /> : null}
       <AddKeywordDrawer
         addKeywordsAction={addKeywordsAction}
         consumeSavedIds={trackDraft?.map((row) => row.publicId)}

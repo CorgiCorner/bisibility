@@ -60,7 +60,21 @@ export const researchOperationInputs = {
   getCloudImportCompatibility: noInput,
   getCostEstimate: { query: zodInput(costEstimateQuerySchema, { keys: "wire" }) },
   getHealth: noInput,
-  getKeywordMetrics: { body: zodInput(metricsBodySchema, { keys: "wire" }) },
+  // Include the subsequent requireApiPublicId check; the handler does not stop at zod.
+  getKeywordMetrics: {
+    body: zodInput(
+      metricsBodySchema.extend({
+        connection_id: z
+          .string()
+          .trim()
+          .min(1)
+          .max(120)
+          .regex(/^conn_[a-z][a-z0-9]{23}$/)
+          .optional(),
+      }),
+      { keys: "wire" },
+    ),
+  },
   getLiveness: noInput,
   getLlmsTxt: noInput,
   getLocalMonitorRunResults: {
@@ -75,7 +89,19 @@ export const researchOperationInputs = {
   // One of the three schemas is selected by the `{kind}` path parameter.
   getStoredResearchReport: {
     query: zodInput(
-      z.union([backlinksQuerySchema, domainOverviewQuerySchema, keywordResearchQuerySchema]),
+      z.union([
+        backlinksQuerySchema,
+        domainOverviewQuerySchema,
+        keywordResearchQuerySchema.extend({
+          connection_id: z
+            .string()
+            .trim()
+            .min(1)
+            .max(120)
+            .regex(/^conn_[a-z][a-z0-9]{23}$/)
+            .optional(),
+        }),
+      ]),
       { keys: "wire" },
     ),
   },
@@ -89,7 +115,20 @@ export const researchOperationInputs = {
     query: zodInput(localRunHistorySchema, { serverKeys: localMonitorServerKeys }),
   },
   listRankCheckRuns: { query: zodInput(rankRunListQuerySchema, { keys: "wire" }) },
-  listRankedKeywordSuggestions: { query: zodInput(rankedKeywordQuerySchema) },
+  // The handler validates a selected connection ID after parsing the query.
+  listRankedKeywordSuggestions: {
+    query: zodInput(
+      rankedKeywordQuerySchema.extend({
+        connectionId: z
+          .string()
+          .trim()
+          .min(1)
+          .max(120)
+          .regex(/^conn_[a-z][a-z0-9]{23}$/)
+          .optional(),
+      }),
+    ),
+  },
   listSearchPerformanceQueryStats: { query: zodInput(queryStatsQuery) },
   listSiteAudits: noInput,
   listSitemapMonitors: noInput,

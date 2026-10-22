@@ -11,6 +11,9 @@ type ScheduleEditorMembersProps = {
   memberCount: number;
   memberSummary?: string;
   onOpenDrawer: () => void;
+  onRemove?: (member: ScheduleEditorMember) => void;
+  removalError?: string | null;
+  removingId?: string | null;
   pendingMembers: readonly ScheduleEditorMember[];
   scheduleName: string;
   storedMembers: readonly ScheduleEditorMember[];
@@ -21,6 +24,9 @@ export function ScheduleEditorMembers({
   memberCount,
   memberSummary,
   onOpenDrawer,
+  onRemove,
+  removalError,
+  removingId,
   pendingMembers,
   scheduleName,
   storedMembers,
@@ -58,7 +64,12 @@ export function ScheduleEditorMembers({
           <DataTable
             bordered={false}
             ariaLabel={t("editor.membersTable")}
-            columns={scheduleMemberTableColumns(t)}
+            columns={scheduleMemberTableColumns(
+              t,
+              pendingMembers.length > 0,
+              canEdit ? onRemove : undefined,
+              removingId,
+            )}
             id="schedule-editor-members"
             layout="auto"
             onSortingChange={() => undefined}
@@ -71,6 +82,11 @@ export function ScheduleEditorMembers({
           {t("editor.memberEmpty")}
         </p>
       )}
+      {removalError ? (
+        <p role="alert" className="m-0 border-t border-border px-4 py-3 text-[12px] text-fg-muted">
+          {removalError}
+        </p>
+      ) : null}
       {consequence ? (
         <p className="m-0 border-t border-border px-4 py-3 text-[11.5px] leading-5 text-fg-muted">
           {consequence}

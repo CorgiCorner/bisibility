@@ -1,6 +1,7 @@
 import { moduleSupport } from "@/lib/providers/module-support";
 import "server-only";
 
+import { backlinksPaymentHistory } from "@/lib/backlinks/payment-history";
 import { snapshotProvider } from "@/lib/backlinks/stored";
 import { prisma } from "@/lib/db/prisma";
 import { getSerpProvider, serpProviderCapabilities } from "@/lib/providers/registry";
@@ -60,6 +61,7 @@ export async function getBacklinksPageContext(projectId: string) {
   const recentTargets = recentSnapshots
     .flatMap((snapshot) => {
       const provider = snapshotProvider(snapshot.summary);
+      const { originalPayment } = backlinksPaymentHistory(snapshot.summary);
       const key = JSON.stringify([
         snapshot.target,
         snapshot.targetScope,
@@ -70,6 +72,7 @@ export async function getBacklinksPageContext(projectId: string) {
       seen.add(key);
       return [
         {
+          ...(originalPayment ? { originalPayment } : {}),
           cachedUntil: snapshot.expiresAt.toISOString(),
           fetchedAt: snapshot.fetchedAt.toISOString(),
           includeSubdomains: snapshot.includeSubdomains,

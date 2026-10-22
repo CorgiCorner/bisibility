@@ -199,7 +199,7 @@ describe("LoginEmailStep", () => {
     {
       betaEnabled: true,
       expected:
-        "By continuing you agree to the Terms and Privacy Policy, and to beta emails (updates, incidents, pricing).",
+        "By continuing you agree to the Terms and Privacy Policy, and to service emails (updates, incidents, pricing).",
       name: "both links",
       links: cloudLegalConsentLinks,
       privacy: { href: "/privacy", external: false },
@@ -216,7 +216,7 @@ describe("LoginEmailStep", () => {
     {
       betaEnabled: true,
       expected:
-        "By continuing you agree to the Terms, and to beta emails (updates, incidents, pricing).",
+        "By continuing you agree to the Terms, and to service emails (updates, incidents, pricing).",
       name: "terms only",
       links: { privacyHref: null, termsHref: "HTTPS://operator.example.com/terms" },
       privacy: null,
@@ -233,7 +233,7 @@ describe("LoginEmailStep", () => {
     {
       betaEnabled: true,
       expected:
-        "By continuing you agree to the Privacy Policy, and to beta emails (updates, incidents, pricing).",
+        "By continuing you agree to the Privacy Policy, and to service emails (updates, incidents, pricing).",
       name: "privacy only",
       links: { privacyHref: "/operator-privacy", termsHref: null },
       privacy: { href: "/operator-privacy", external: false },

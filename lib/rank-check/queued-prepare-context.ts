@@ -1,3 +1,4 @@
+import { keywordMembershipSelect } from "@/lib/keywords/membership-select";
 import "server-only";
 
 import type { Prisma } from "@/lib/generated/prisma/client";
@@ -41,7 +42,7 @@ export async function loadContext(
         take: 1,
         where: { status: "completed" },
       },
-      checkSchedule: { select: { serpDepth: true } },
+      checkSchedule: { select: { ...keywordMembershipSelect, serpDepth: true } },
       schedule: true,
     },
     orderBy: { id: "asc" },
@@ -82,9 +83,20 @@ export async function loadContext(
   return { connection, eligibilityReason, keywords, project };
 }
 
-export function preparedKeyword(keyword: PreparedKeyword, defaults: EffectiveSchedule | null) {
-  const schedule = keyword.schedule ?? defaults;
-  if (!schedule || !AUTOMATIC_FREQUENCIES.has(schedule.frequency)) return null;
+export function preparedKeyword(
+  keyword: PreparedKeyword,
+  defaults: EffectiveSchedule | null,
+  verifiedRunItem = false,
+) {
+  const schedule = keyword.checkSchedule;
+  if (
+    !verifiedRunItem &&
+    (!schedule ||
+      !schedule.enabled ||
+      schedule.archivedAt ||
+      !AUTOMATIC_FREQUENCIES.has(schedule.frequency))
+  )
+    return null;
   const depth = resolveEffectiveSerpDepth({
     projectDepth: defaults?.serpDepth,
     checkScheduleDepth: keyword.checkSchedule?.serpDepth,

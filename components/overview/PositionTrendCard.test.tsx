@@ -36,14 +36,27 @@ describe("PositionTrendCard", () => {
 
   it("plots a single recorded day instead of asking for another check", () => {
     renderTrend({
-      data: [{ comparisonKey: "synthetic-series", dateKey: "2026-06-18", label: null, value: 1 }],
+      data: [
+        {
+          comparisonKey: "synthetic-series",
+          dateKey: "2026-06-18",
+          label: null,
+          rankedKeywordCount: 0,
+          rankedKeywords: [],
+          value: 1,
+        },
+      ],
     });
 
     expect(screen.queryByText("Trend appears after the next check")).not.toBeInTheDocument();
     expect(screen.getByTestId("line-chart")).toBeInTheDocument();
     expect(lineChart).toHaveBeenLastCalledWith(
-      expect.objectContaining({ series: [expect.objectContaining({ values: [1], dots: true })] }),
+      expect.objectContaining({
+        renderTooltip: expect.any(Function),
+        series: [expect.objectContaining({ values: [1], dots: true })],
+      }),
     );
+    expect(lineChart.mock.lastCall?.[0]).not.toHaveProperty("tooltip");
   });
 
   it("shows the definition and a separate takeaway below the title", () => {
@@ -55,8 +68,22 @@ describe("PositionTrendCard", () => {
     };
     renderTrend({
       data: [
-        { comparisonKey: "synthetic-series", dateKey: "2026-07-16", label: "2026-07-16", value: 3 },
-        { comparisonKey: "synthetic-series", dateKey: "2026-07-17", label: null, value: 2 },
+        {
+          comparisonKey: "synthetic-series",
+          dateKey: "2026-07-16",
+          label: "2026-07-16",
+          rankedKeywordCount: 0,
+          rankedKeywords: [],
+          value: 3,
+        },
+        {
+          comparisonKey: "synthetic-series",
+          dateKey: "2026-07-17",
+          label: null,
+          rankedKeywordCount: 0,
+          rankedKeywords: [],
+          value: 2,
+        },
       ],
       takeaway,
     });
@@ -66,9 +93,11 @@ describe("PositionTrendCard", () => {
         dateKeys: ["2026-07-16", ""],
         labels: ["2026-07-16", "now"],
         margin: { top: 12, right: 16, bottom: 0, left: 16 },
+        renderTooltip: expect.any(Function),
         yWidth: 20,
       }),
     );
+    expect(lineChart.mock.lastCall?.[0]).not.toHaveProperty("tooltip");
     expect(
       screen.getByRole("region", {
         name: "Position trend chart. Average position slipped 0.8 in the first 21 days of tracking.",
@@ -106,8 +135,22 @@ describe("PositionTrendCard", () => {
   it("renders no takeaway line without a takeaway or enough history", () => {
     const { container, rerender } = renderTrend({
       data: [
-        { comparisonKey: "synthetic-series", dateKey: "2026-07-16", label: "2026-07-16", value: 3 },
-        { comparisonKey: "synthetic-series", dateKey: "2026-07-17", label: null, value: 2 },
+        {
+          comparisonKey: "synthetic-series",
+          dateKey: "2026-07-16",
+          label: "2026-07-16",
+          rankedKeywordCount: 0,
+          rankedKeywords: [],
+          value: 3,
+        },
+        {
+          comparisonKey: "synthetic-series",
+          dateKey: "2026-07-17",
+          label: null,
+          rankedKeywordCount: 0,
+          rankedKeywords: [],
+          value: 2,
+        },
       ],
     });
 
@@ -122,7 +165,14 @@ describe("PositionTrendCard", () => {
       withMessages(
         <PositionTrendCard
           data={[
-            { comparisonKey: "synthetic-series", dateKey: "2026-07-17", label: null, value: 2 },
+            {
+              comparisonKey: "synthetic-series",
+              dateKey: "2026-07-17",
+              label: null,
+              rankedKeywordCount: 0,
+              rankedKeywords: [],
+              value: 2,
+            },
           ]}
           takeaway={{ days: 21, kind: "slipped", value: 0.8, window: "firstTrackedDays" }}
         />,
@@ -136,8 +186,22 @@ describe("PositionTrendCard", () => {
   it("renders the takeaway loading treatment below the title", () => {
     const { container } = renderTrend({
       data: [
-        { comparisonKey: "synthetic-series", dateKey: "2026-07-16", label: "2026-07-16", value: 3 },
-        { comparisonKey: "synthetic-series", dateKey: "2026-07-17", label: "now", value: 2 },
+        {
+          comparisonKey: "synthetic-series",
+          dateKey: "2026-07-16",
+          label: "2026-07-16",
+          rankedKeywordCount: 0,
+          rankedKeywords: [],
+          value: 3,
+        },
+        {
+          comparisonKey: "synthetic-series",
+          dateKey: "2026-07-17",
+          label: "now",
+          rankedKeywordCount: 0,
+          rankedKeywords: [],
+          value: 2,
+        },
       ],
       takeawayLoading: true,
     });

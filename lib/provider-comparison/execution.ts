@@ -2,6 +2,14 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { assertComparisonAccess } from "@/lib/provider-comparison/access";
+import { comparisonAccounting } from "@/lib/provider-comparison/accounting";
+import { comparisonFences } from "@/lib/provider-comparison/fence";
+import { comparisonHash, parseComparisonSnapshot } from "@/lib/provider-comparison/model";
+import { quoteComparison } from "@/lib/provider-comparison/quote";
+import { comparisonRankInput } from "@/lib/provider-comparison/request";
+import { comparisonResult } from "@/lib/provider-comparison/result";
+import type { ComparisonProvider } from "@/lib/provider-comparison/types";
 import { createProviderRequestJournal } from "@/lib/provider-usage/request-journal";
 import { createProviderRequestAttribution } from "@/lib/provider-usage/tag";
 import { providerErrorCodeFromError } from "@/lib/providers/call-error";
@@ -13,14 +21,6 @@ import { assertOwnKeyStored } from "@/lib/providers/own-key-guard";
 import { consumeProviderLimit } from "@/lib/providers/rate-limit";
 import { getSerpProvider } from "@/lib/providers/registry";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
-import { assertComparisonAccess } from "./access";
-import { comparisonAccounting } from "./accounting";
-import { comparisonFences } from "./fence";
-import { comparisonHash, parseComparisonSnapshot } from "./model";
-import { quoteComparison } from "./quote";
-import { comparisonRankInput } from "./request";
-import { comparisonResult } from "./result";
-import type { ComparisonProvider } from "./types";
 
 async function claimSide(projectId: string, runId: string, provider: ComparisonProvider) {
   return prisma.$transaction(async (tx) => {
@@ -135,6 +135,7 @@ export async function executeComparisonSide(input: {
     const live = await prisma.providerConnection.findFirst({
       where: { id: connection.id, projectId: input.projectId },
     });
+    if (!execution && live?.credentialSource !== "own") throw new ProviderUsagePersistenceError();
     if (!execution)
       await assertOwnKeyStored({
         capability: "rank_check",
@@ -187,7 +188,10 @@ export async function executeComparisonSide(input: {
         finishedAt: new Date(),
       },
     });
-  } catch (error) {
+  } catch (caughtError) {
+    const error = execution?.classifyFailure
+      ? await execution.classifyFailure(caughtError)
+      : caughtError;
     let finishFailed = false;
     try {
       await execution?.finish();

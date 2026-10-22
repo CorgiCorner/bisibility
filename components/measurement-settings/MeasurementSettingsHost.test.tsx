@@ -7,7 +7,6 @@ const calls = vi.hoisted(() => ({
   launch: vi.fn(),
   schedule: vi.fn(),
   intent: vi.fn(),
-  refresh: vi.fn(),
 }));
 vi.mock("@/lib/actions/measurement-settings-host", () => ({
   readMeasurementSettingsAction: calls.read,
@@ -16,7 +15,6 @@ vi.mock("@/lib/actions/measurement-settings-host", () => ({
   saveMeasurementScheduleAction: calls.schedule,
   saveMeasurementIntentAction: calls.intent,
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: calls.refresh }) }));
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
   useFormatter: () => ({ number: String, dateTime: (date: Date) => date.toISOString() }),

@@ -2,13 +2,13 @@
 
 import { AdminAccountLookup } from "@/components/admin/AdminAccountLookup";
 import { AdminAdministrationConsumptionTable } from "@/components/admin/admin-administration-tables";
-import { MailTwoFactorGate } from "@/components/admin/MailTwoFactorGate";
+import { DangerousActionGate } from "@/components/admin/DangerousActionGate";
+import { InstanceMailSettings } from "@/components/admin/InstanceMailSettings";
 import { Card } from "@/components/ui/Card";
 import { ExternalLink } from "@/components/ui/ExternalLink";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import type { InstanceMailSettingsView } from "@/lib/email/instance-mail-runtime";
 import type { InstanceAdminAdministration } from "@/lib/queries/instance-admin-administration";
-import { appRootPath } from "@/lib/routing/app-path";
 import { DOCS_URL } from "@/lib/site/site";
 import { useFormatter, useTranslations } from "next-intl";
 
@@ -172,10 +172,9 @@ export function AdminAdministration({
         </Card>
       ) : null}
       {mailSettings ? (
-        <MailTwoFactorGate
-          returnTo={appRootPath("admin", "administration")}
-          settings={mailSettings}
-        />
+        <DangerousActionGate action="changeMail">
+          <InstanceMailSettings settings={mailSettings} />
+        </DangerousActionGate>
       ) : null}
       <Growth data={data} />
       <TopConsumption rows={data.topConsumption} />

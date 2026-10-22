@@ -1,13 +1,12 @@
 import { dataLinkClassName } from "@/components/ui/data-link-styles";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
-import { StatusChip } from "@/components/ui/StatusChip";
-import { Switch } from "@/components/ui/Switch";
 import type { MarketsPageRow, MarketsSortKey } from "@/lib/markets/page-model";
 import { asMarketRef, asProjectRef, marketPath } from "@/lib/routing/app-path";
 import Link from "next/link";
 import type { useFormatter, useTranslations } from "next-intl";
 import type { ReactElement } from "react";
 import { MarketsRowMenu } from "./MarketsRowMenu";
+import { MarketTrackingStatus } from "./MarketTrackingStatus";
 
 type MarketTableColumnsOptions = {
   canAddKeywords: boolean;
@@ -16,6 +15,7 @@ type MarketTableColumnsOptions = {
   canRunChecks?: boolean;
   onRunChecks?: (market: MarketsPageRow) => void;
   onAddKeywords?: (market: MarketsPageRow) => void;
+  onAddDevice?: (market: MarketsPageRow) => void;
   onArchive: (market: MarketsPageRow) => void;
   onEdit: (market: MarketsPageRow) => void;
   onStatusChange: (market: MarketsPageRow, enabled: boolean) => void;
@@ -33,6 +33,7 @@ export function marketTableColumns({
   canRunChecks = false,
   onRunChecks,
   onAddKeywords,
+  onAddDevice,
   onArchive,
   onEdit,
   onStatusChange,
@@ -56,6 +57,11 @@ export function marketTableColumns({
           <p className="m-0 mt-0.5 text-[11.5px] text-fg-muted">
             {row.original.displayName} / {row.original.languageLabel}
           </p>
+          {row.original.trackedDevices?.length ? (
+            <p className="m-0 mt-0.5 text-[11.5px] text-fg-muted">
+              {row.original.trackedDevices.map((device) => t(device)).join(" · ")}
+            </p>
+          ) : null}
         </div>
       ),
       enableSorting: false,
@@ -67,13 +73,22 @@ export function marketTableColumns({
     },
     {
       accessorKey: "keywordCount",
-      cell: ({ row }) => format.number(row.original.keywordCount),
+      cell: ({ row }) => (
+        <div className="tabular-nums">
+          <span>
+            {format.number(row.original.distinctKeywordCount ?? row.original.keywordCount)}
+          </span>
+          <p className="m-0 mt-0.5 text-[11.5px] text-fg-muted">
+            {t("trackedTargets", { count: row.original.activeKeywordCount })}
+          </p>
+        </div>
+      ),
       enableSorting: false,
       header: () => sortableHeader(t("keywordCount"), "keywordCount"),
       id: "keywordCount",
       meta: { align: "end", lockResize: true, sortable: false, title: t("keywordCount") },
-      minSize: 92,
-      size: 100,
+      minSize: 110,
+      size: 120,
     },
     {
       accessorKey: "currentVisibility",
@@ -104,27 +119,20 @@ export function marketTableColumns({
         const status = statuses.get(row.original.id) ?? row.original.status;
         const active = status === "active";
         return (
-          <div className="flex items-center gap-2">
-            <Switch
-              aria-label={`${active ? t("pause") : t("resume")} ${row.original.name}`}
-              checked={active}
-              className="border-0 bg-transparent p-0"
-              disabled={!canEdit}
-              onChange={(event) => onStatusChange(row.original, event.currentTarget.checked)}
-            />
-            <StatusChip
-              label={active ? t("active") : t("paused")}
-              tone={active ? "positive" : "neutral"}
-            />
-          </div>
+          <MarketTrackingStatus
+            active={active}
+            canEdit={canEdit}
+            name={row.original.name}
+            onChange={(enabled) => onStatusChange(row.original, enabled)}
+          />
         );
       },
       enableSorting: false,
       header: t("status"),
       id: "status",
       meta: { lockResize: true, sortable: false, title: t("status") },
-      minSize: 152,
-      size: 160,
+      minSize: 112,
+      size: 120,
     },
     {
       cell: ({ row }) => (
@@ -138,6 +146,11 @@ export function marketTableColumns({
           onRunChecks={onRunChecks}
           market={row.original}
           onAddKeywords={onAddKeywords}
+          onAddDevice={
+            (statuses.get(row.original.id) ?? row.original.status) === "active"
+              ? onAddDevice
+              : undefined
+          }
           onArchive={onArchive}
           onEdit={onEdit}
         />

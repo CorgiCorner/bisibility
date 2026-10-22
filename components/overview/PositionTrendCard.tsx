@@ -8,6 +8,7 @@ import { cn } from "@/lib/ui/cn";
 import { useTranslations } from "next-intl";
 import { ChartNoDataOverlay } from "./ChartNoDataOverlay";
 import { OverviewChartHeader } from "./OverviewChartHeader";
+import { PositionTrendTooltip } from "./PositionTrendTooltip";
 import type { TrendPoint, TrendTakeaway } from "./types";
 
 export type PositionTrendCardProps = {
@@ -127,7 +128,10 @@ export function PositionTrendCard({
             max={maxPosition}
             reversed
             yWidth={yAxisWidth}
-            tooltip={false}
+            renderTooltip={(index) => {
+              const point = data[index];
+              return point ? <PositionTrendTooltip point={point} /> : null;
+            }}
             areaOpacity={0.09}
             xTickIndexes={[0, 3, 7, data.length - 1].filter((index) => index < data.length)}
             margin={{ top: 12, right: 16, bottom: 0, left: 16 }}

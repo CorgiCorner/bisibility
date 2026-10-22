@@ -6,13 +6,15 @@ import { ArchiveMarketDialog } from "@/components/markets/page/ArchiveMarketDial
 import { MarketEditSheet } from "@/components/markets/page/MarketEditSheet";
 import { MarketsTable } from "@/components/markets/page/MarketsTable";
 import { RestoreMarketDialog } from "@/components/markets/page/RestoreMarketDialog";
-import { NewMarketSheet } from "@/components/markets/sheet/NewMarketSheet";
+import { MarketDeviceSheet } from "@/components/markets/sheet/MarketDeviceSheet";
+import { ProjectNewMarketSheet } from "@/components/markets/sheet/ProjectNewMarketSheet";
 import { useRunPreflight } from "@/components/rank-runs/useRunPreflight";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ModuleMark } from "@/components/ui/ModuleMark";
 import { Tabs } from "@/components/ui/Tabs";
 import type { NewMarketCreateResult } from "@/lib/markets/create-input";
+import type { MarketDeviceActions } from "@/lib/markets/device-targets-input";
 import type { MarketsPageRow } from "@/lib/markets/page-model";
 import type { ProjectMarketEditInput } from "@/lib/markets/project-market-edit";
 import type { ArchivedProjectMarketsView, ProjectMarketsView } from "@/lib/queries/project-markets";
@@ -31,6 +33,7 @@ type MarketsPageContentProps = Pick<KeywordWorkspaceActions, "addKeywordsAction"
   canRestore: boolean;
   canRunChecks?: boolean;
   createMarketAction?: (input: unknown) => Promise<NewMarketCreateResult>;
+  marketDeviceActions?: MarketDeviceActions;
   markets: ProjectMarketsView;
   onArchive: (input: { marketId: string; projectId: string }) => Promise<unknown>;
   onRestore: (input: { marketId: string; projectId: string }) => Promise<unknown>;
@@ -87,6 +90,7 @@ export function MarketsPageContent({
   canRestore,
   canRunChecks = false,
   createMarketAction,
+  marketDeviceActions,
   markets,
   onArchive,
   onRestore,
@@ -99,6 +103,7 @@ export function MarketsPageContent({
   const router = useRouter();
   const [archiveTarget, setArchiveTarget] = useState<MarketsPageRow | null>(null);
   const [editTarget, setEditTarget] = useState<MarketsPageRow | null>(null);
+  const [deviceTarget, setDeviceTarget] = useState<MarketsPageRow | null>(null);
   const [keywordTarget, setKeywordTarget] = useState<MarketsPageRow | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<MarketsPageRow | null>(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -206,6 +211,7 @@ export function MarketsPageContent({
               key={`active:${visibleRows.map((market) => `${market.id}:${market.status}`).join(":")}`}
               onArchive={setArchiveTarget}
               onAddKeywords={setKeywordTarget}
+              onAddDevice={canAddKeywords && marketDeviceActions ? setDeviceTarget : undefined}
               onEdit={setEditTarget}
               onStatusChange={(input) => onStatusChange({ ...input, projectId: markets.projectId })}
               onStatusConfirmed={router.refresh}
@@ -221,6 +227,7 @@ export function MarketsPageContent({
                 key={`paused:${visibleRows.map((market) => `${market.id}:${market.status}`).join(":")}`}
                 onArchive={setArchiveTarget}
                 onAddKeywords={setKeywordTarget}
+                onAddDevice={canAddKeywords && marketDeviceActions ? setDeviceTarget : undefined}
                 onEdit={setEditTarget}
                 onStatusChange={(input) =>
                   onStatusChange({ ...input, projectId: markets.projectId })
@@ -264,16 +271,26 @@ export function MarketsPageContent({
         projectId={markets.projectId}
         projectMarkets={markets}
       />
+      {marketDeviceActions && canAddKeywords && deviceTarget ? (
+        <MarketDeviceSheet
+          key={deviceTarget.id}
+          market={deviceTarget}
+          projectId={markets.projectId}
+          actions={marketDeviceActions}
+          schedules={marketCreation.schedules}
+          onClose={() => setDeviceTarget(null)}
+          onAdded={router.refresh}
+        />
+      ) : null}
       {createMarketAction ? (
-        <NewMarketSheet
+        <ProjectNewMarketSheet
           onClose={closeMarketSheet}
           onCreate={createMarketAction}
           open={openNewMarket}
-          projectId={markets.projectId}
-          registry={marketCreation.registry}
-          schedules={marketCreation.schedules}
-          scheduleContext={marketCreation.scheduleContext}
-          sources={marketCreation.sources}
+          markets={markets}
+          canAddKeywords={canAddKeywords}
+          actions={marketDeviceActions}
+          onAdded={router.refresh}
         />
       ) : null}
     </div>

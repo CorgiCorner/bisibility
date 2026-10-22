@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { READINESS_REASON } from "@/lib/projects/readiness";
+import { gscQueryDimensions } from "@/lib/providers/analytics/gsc-query-pagination";
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { markProviderNeedsReauth } from "@/lib/providers/auth-state";
 import { getAnalyticsProvider } from "@/lib/providers/registry";
@@ -14,6 +15,8 @@ import { requireApiPublicId } from "./public-id";
 import { errorResponse, resourceResponse } from "./responses";
 import { scopedProject, snakeizeKeys } from "./surface";
 
+const searchPerformanceDimension = z.enum(["query", "page", "country", "device"]);
+
 export const queryStatsQuery = z
   .object({
     clicksMin: z.coerce.number().int().min(0).optional(),
@@ -24,9 +27,23 @@ export const queryStatsQuery = z
       .max(120)
       .regex(/^conn_[a-z][a-z0-9]{23}$/)
       .optional(),
+    country: z
+      .string()
+      .trim()
+      .regex(/^[a-zA-Z]{3}$/)
+      .transform((value) => value.toLowerCase())
+      .optional(),
+    device: z.enum(["desktop", "mobile", "tablet"]).optional(),
+    dimensions: z
+      .string()
+      .regex(/^\s*(query|page|country|device)\s*(,\s*(query|page|country|device)\s*)*$/)
+      .transform((value) => value.split(",").map((part) => part.trim()))
+      .pipe(z.array(searchPerformanceDimension))
+      .optional(),
     endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     impressionsMin: z.coerce.number().int().min(0).optional(),
     limit: z.coerce.number().int().min(1).max(1_000).default(100),
+    offset: z.coerce.number().int().min(0).default(0),
     pagePath: z.string().trim().min(1).max(2_048).optional(),
     pagePathMatch: z.enum(["contains", "prefix"]).default("contains"),
     positionMax: z.coerce.number().min(0).optional(),
@@ -36,15 +53,23 @@ export const queryStatsQuery = z
   })
   .refine((value) => value.startDate <= value.endDate, {
     message: "start_date must not be after end_date.",
+  })
+  .refine((value) => value.dimensions === undefined || value.dimensions.includes("query"), {
+    message: "dimensions must include query.",
+    path: ["dimensions"],
   });
 
 function queryStatsSearchInput(ctx: ApiContext) {
   return {
     clicksMin: ctx.url.searchParams.get("clicks_min") ?? undefined,
     connectionId: ctx.url.searchParams.get("connection_id") ?? undefined,
+    country: ctx.url.searchParams.get("country") ?? undefined,
+    device: ctx.url.searchParams.get("device") ?? undefined,
+    dimensions: ctx.url.searchParams.get("dimensions") ?? undefined,
     endDate: ctx.url.searchParams.get("end_date") ?? "",
     impressionsMin: ctx.url.searchParams.get("impressions_min") ?? undefined,
     limit: ctx.url.searchParams.get("limit") ?? undefined,
+    offset: ctx.url.searchParams.get("offset") ?? undefined,
     pagePath: ctx.url.searchParams.get("page_path") ?? undefined,
     pagePathMatch: ctx.url.searchParams.get("page_path_match") ?? undefined,
     positionMax: ctx.url.searchParams.get("position_max") ?? undefined,
@@ -55,11 +80,14 @@ function queryStatsSearchInput(ctx: ApiContext) {
 }
 
 function providerInput(input: z.infer<typeof queryStatsQuery>): AnalyticsQueryStatsInput {
-  return {
+  const stats: AnalyticsQueryStatsInput = {
     ...(input.clicksMin === undefined ? {} : { clicks: { min: input.clicksMin } }),
+    ...(input.country ? { country: input.country } : {}),
+    ...(input.device ? { device: input.device } : {}),
     endDate: input.endDate,
     ...(input.impressionsMin === undefined ? {} : { impressions: { min: input.impressionsMin } }),
     limit: input.limit,
+    offset: input.offset,
     ...(input.pagePath
       ? {
           pagePath: {
@@ -72,6 +100,13 @@ function providerInput(input: z.infer<typeof queryStatsQuery>): AnalyticsQuerySt
     ...(input.query ? { query: input.query } : {}),
     queryMatch: input.queryMatch,
     startDate: input.startDate,
+  };
+  return {
+    ...stats,
+    dimensions: gscQueryDimensions({
+      ...stats,
+      ...(input.dimensions ? { dimensions: input.dimensions } : {}),
+    }),
   };
 }
 
@@ -99,6 +134,7 @@ export async function listSearchPerformanceQueryStats(ctx: ApiContext, projectId
   const scoped = scopedProject(ctx, projectId);
   if (scoped) return scoped;
   const input = queryStatsQuery.parse(queryStatsSearchInput(ctx));
+  const requested = providerInput(input);
   const eligible = await queryConnections(ctx.auth.project.id);
   const requestedConnectionId = input.connectionId
     ? requireApiPublicId(input.connectionId, "conn")
@@ -119,8 +155,9 @@ export async function listSearchPerformanceQueryStats(ctx: ApiContext, projectId
   try {
     const rows = await selected.provider.fetchQueryStats(
       trafficRuntimeCredentials(selected.connection),
-      providerInput(input),
+      requested,
     );
+    const truncated = rows.length === input.limit;
     return resourceResponse(
       {
         connection: {
@@ -129,17 +166,19 @@ export async function listSearchPerformanceQueryStats(ctx: ApiContext, projectId
           provider: selected.provider.id,
         },
         result: {
+          next_offset: truncated ? input.offset + input.limit : null,
           row_cap: input.limit,
           rows_returned: rows.length,
           sort: "clicks_desc",
-          truncated: rows.length === input.limit,
+          truncated,
         },
         rows: rows.map(snakeizeKeys),
         scope: {
-          country: null,
-          device: null,
-          dimensions: input.pagePath ? ["query", "page"] : ["query"],
+          country: input.country ?? null,
+          device: input.device ?? null,
+          dimensions: requested.dimensions,
           end_date: input.endDate,
+          offset: input.offset,
           page_path: input.pagePath ?? null,
           query_match: input.queryMatch,
           start_date: input.startDate,

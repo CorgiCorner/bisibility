@@ -1,5 +1,5 @@
 import "server-only";
-
+import { selectActionPaymentCandidate } from "@/lib/action-payment/options";
 import { prisma } from "@/lib/db/prisma";
 import { ProviderLookupSignal } from "@/lib/provider-lookups/paid-call";
 import { getSerpProvider } from "@/lib/providers/registry";
@@ -10,10 +10,18 @@ export async function domainOverviewProject(projectId: string) {
   return prisma.project.findFirst({
     select: {
       id: true,
+      ownerId: true,
       lookupCacheTtlSeconds: true,
       providerConnections: {
         orderBy: providerChainOrderBy(),
-        select: { credentialsEncrypted: true, id: true, provider: true },
+        select: {
+          credentialsEncrypted: true,
+          id: true,
+          publicId: true,
+          provider: true,
+          credentialSource: true,
+          updatedAt: true,
+        },
         where: providerChainWhere("serp"),
       },
       publicId: true,
@@ -47,7 +55,7 @@ function isUnknownSerpProviderError(error: unknown) {
   return error instanceof Error && error.message.startsWith("Unknown SERP provider:");
 }
 
-export function domainOverviewSource(project: DomainOverviewProject) {
+export function domainOverviewSources(project: DomainOverviewProject) {
   return project.providerConnections.flatMap((connection) => {
     try {
       const provider = getSerpProvider(connection.provider);
@@ -56,15 +64,24 @@ export function domainOverviewSource(project: DomainOverviewProject) {
       if (!isUnknownSerpProviderError(error)) throw error;
       return [];
     }
-  })[0];
+  });
+}
+
+export function domainOverviewSource(project: DomainOverviewProject, paymentOptionId?: string) {
+  return selectActionPaymentCandidate(
+    domainOverviewSources(project),
+    undefined,
+    paymentOptionId,
+    "domain_overview",
+  );
 }
 
 export type DomainOverviewSource = NonNullable<ReturnType<typeof domainOverviewSource>>;
 
-export async function requireDomainOverviewSource(projectId: string) {
+export async function requireDomainOverviewSource(projectId: string, paymentOptionId?: string) {
   const project = await domainOverviewProject(projectId);
   if (!project) throw new ProviderLookupSignal({ ok: false, reason: "no_source" });
-  const source = domainOverviewSource(project);
+  const source = domainOverviewSource(project, paymentOptionId);
   if (!source) throw new ProviderLookupSignal({ ok: false, reason: "no_source" });
   return { project, source };
 }

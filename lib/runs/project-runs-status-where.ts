@@ -30,9 +30,13 @@ const RANK_KEY_WHERE: Record<RankRunStatusKey, Prisma.RankCheckRunWhereInput> = 
     status: "completed",
     OR: [{ blockedReason: null }, { blockedReason: { not: "no_active_keywords" } }],
   },
-  skipped: { status: "completed", blockedReason: "no_active_keywords" },
+  skipped: {
+    status: "completed",
+    blockedReason: "no_active_keywords",
+    OR: [{ outcome: null }, { outcome: { not: "cancelled" } }],
+  },
   failed: { outcome: "failed", status: "completed" },
-  cancelled: { status: "cancelled" },
+  cancelled: { OR: [{ status: "cancelled" }, { status: "completed", outcome: "cancelled" }] },
   not_confirmed: { outcome: null, status: "completed" },
 };
 

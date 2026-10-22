@@ -17,7 +17,7 @@ export async function trackingAdmissionContext(
   if (!purchased) await assertOperationAccess(projectId);
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { id: true, writeMode: true },
+    select: { id: true, ownerId: true, writeMode: true },
   });
   if (!purchased) assertProjectWritable(project);
   const connection = await prisma.providerConnection.findFirst({

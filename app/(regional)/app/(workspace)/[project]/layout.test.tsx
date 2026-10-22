@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   resolveProjectAccess: vi.fn(),
   getQueryActor: vi.fn(),
   readUsageDisplay: vi.fn(),
+  decorateSource: vi.fn(async (children: ReactNode) => children),
 }));
 
 vi.mock("@/lib/queries/_auth", () => ({
@@ -19,11 +20,12 @@ vi.mock("@/lib/project-usage-display/store", () => ({
   readProjectUsageDisplaySettings: mocks.readUsageDisplay,
 }));
 vi.mock("@/lib/actions/project-usage-display", () => ({ updateProjectUsageDisplay: vi.fn() }));
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
-  usePathname: () => "/app",
-  useSearchParams: () => new URLSearchParams(),
+vi.mock("@/components/settings/AccountDataSourceExtension", () => ({
+  renderProjectDataSourceExtension: mocks.decorateSource,
 }));
+beforeEach(() => {
+  setNavigationState({ pathname: "/app" });
+});
 // Stubbed only so this can watch for a caller. The layout must not have one.
 vi.mock("@/lib/queries/header-markets", () => ({ listHeaderMarkets: mocks.listHeaderMarkets }));
 
@@ -42,6 +44,7 @@ vi.mock("@/app/(regional)/app/(workspace)/workspace-shell", () => ({
   ),
 }));
 
+import { setNavigationState } from "@/tests/next-navigation";
 import ProjectLayout from "./layout";
 
 const PROJECT_REF = `prj_${"a".repeat(24)}`;
@@ -91,6 +94,12 @@ describe("project layout", () => {
     // empty default context - so the one place a market switcher belongs could not see the
     // market at all.
     expect(screen.getByTestId("chrome")).toHaveTextContent(`${PROJECT_REF}:none`);
+  });
+
+  it("decorates the whole shell once with the authorized public project reference", async () => {
+    await renderLayout();
+    expect(mocks.decorateSource).toHaveBeenCalledTimes(1);
+    expect(mocks.decorateSource).toHaveBeenCalledWith(expect.anything(), PROJECT_REF);
   });
 
   it("still provides the project level to the page body", async () => {

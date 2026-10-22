@@ -42,7 +42,11 @@ export function ActivityDays({ today, days }: { today: string; days: string[] })
                   {date.getUTCDate()}
                 </time>
                 <span className={styles.dayMark} aria-hidden>
-                  {done ? <CheckIcon size={13} weight="bold" /> : <span className={styles.rest} />}
+                  {done ? (
+                    <CheckIcon size={13} weight="regular" />
+                  ) : (
+                    <span className={styles.rest} />
+                  )}
                 </span>
               </div>
             </Tooltip>

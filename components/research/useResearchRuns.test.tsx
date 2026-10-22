@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import type { ResearchKeywordsAction } from "@/lib/actions/keyword-research";
 import { researchScopeForLocationKey } from "@/lib/research/scope";
 import { act, renderHook } from "@testing-library/react";
@@ -110,4 +111,85 @@ it("does not submit duplicate normalized seeds or create duplicate tabs in one r
   expect(result.current.activeTab).toBe(result.current.tabs[0]);
   expect(researchAction.mock.calls[0]?.[0].seed).toBe("rank");
   expect(researchAction.mock.calls.filter(([input]) => !input.estimateOnly)).toHaveLength(1);
+});
+
+it("retains the approved route in dispatch, follow-up quotes, tabs and recent receipt", async () => {
+  const quote = paymentQuote();
+  const payment = {
+    actionId: "executed",
+    quoteId: quote.id,
+    option: quote.option,
+    state: "settled" as const,
+    charge: { ...quote.charge, certainty: "measured" as const },
+  };
+  const success = {
+    ok: true as const,
+    cached: false,
+    cachedUntil: "2099-01-01T00:00:00Z",
+    connections: [],
+    costCents: 9,
+    fetchedAt: "2026-10-21T00:00:00Z",
+    provider: "Example provider",
+    rows: [],
+    sources: [],
+    payment,
+  };
+  const researchAction = vi.fn(async (input: { estimateOnly?: boolean }) =>
+    input.estimateOnly ? { ...success, estimate: true, payment: quote } : success,
+  );
+  const recent = { add: vi.fn() };
+  const { result } = renderHook(() =>
+    useResearchRuns({
+      addSpend: vi.fn(),
+      connectionId: "conn_old",
+      includeClickstream: true,
+      initialBudgetBlocked: false,
+      scope: researchScopeForLocationKey("US"),
+      mode: "auto",
+      projectId: "prj_fixture",
+      recent,
+      researchAction: researchAction as unknown as ResearchKeywordsAction,
+      resultLimit: 500,
+    }),
+  );
+  await act(async () =>
+    result.current.runResearch(["seed"], {}, researchScopeForLocationKey("US"), {
+      seed: {
+        seed: "seed",
+        projectId: "prj_fixture",
+        mode: "related",
+        resultLimit: 100,
+        includeClickstream: false,
+        connectionId: "conn_selected",
+        paymentOptionId: "route-selected",
+        acceptedPayment: { quoteToken: "exact-token" },
+      },
+    }),
+  );
+  expect(researchAction.mock.calls[0][0]).toMatchObject({
+    estimateOnly: false,
+    connectionId: "conn_selected",
+    paymentOptionId: "route-selected",
+    resultLimit: 100,
+    mode: "related",
+    includeClickstream: false,
+    acceptedPayment: { quoteToken: "exact-token" },
+  });
+  expect(researchAction.mock.calls[1][0]).toMatchObject({
+    estimateOnly: true,
+    connectionId: "conn_selected",
+    paymentOptionId: "route-selected",
+    resultLimit: 300,
+    acceptedPayment: undefined,
+  });
+  expect(result.current.activeTab).toMatchObject({
+    connectionId: "conn_selected",
+    paymentOptionId: "route-selected",
+    requestedLimit: 100,
+    mode: "related",
+    includeClickstream: false,
+  });
+  expect(recent.add).toHaveBeenCalledWith(
+    expect.objectContaining({ connectionId: "conn_selected", payment }),
+  );
 });

@@ -1,18 +1,16 @@
 "use client";
+import { ActionPaymentModal } from "@/components/action-payment/ActionPaymentModal";
+import { ActionPaymentPrice } from "@/components/action-payment/ActionPaymentPrice";
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
+import { useActionPaymentReview } from "@/components/action-payment/useActionPaymentReview";
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
 import { MissingBudgetNotice } from "@/components/i18n/MissingBudgetNotice";
 import { UsageReconciliationNotice } from "@/components/i18n/UsageReconciliationNotice";
 import { WalletBudgetNotice } from "@/components/i18n/WalletBudgetNotice";
 import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
 import { ProviderAccessGate } from "@/components/ui/ProviderAccessGate";
+import type { ActionPaymentOption } from "@/lib/action-payment/contract";
 import type { AnalyzeBacklinksActionInput } from "@/lib/actions/backlinks";
-import {
-  type BacklinksSnapshot,
-  type BacklinksFailedSummary as FailedSummary,
-  isBacklinksEstimate,
-  isBacklinksFailedSummary,
-} from "@/lib/backlinks/types";
-import { budgetDenialReason } from "@/lib/metering/budget-denial";
 import type { BacklinkTargetScope } from "@/lib/providers/types";
 import { appPath } from "@/lib/routing/app-path";
 import { useTranslations } from "next-intl";
@@ -22,7 +20,12 @@ import { BacklinksFailedSummary } from "./BacklinksFailedSummary";
 import { BacklinksIdleState } from "./BacklinksIdleState";
 import { BacklinksResultsLoading } from "./BacklinksLoadingSkeletons";
 import { BacklinksResults } from "./BacklinksResults";
-import { loadMoreWorkspaceRows } from "./backlinks-append-state";
+import {
+  backlinksAppendInput,
+  backlinksRefreshInput,
+  loadMoreWorkspaceRows,
+  reviewedBacklinksAppendAction,
+} from "./backlinks-append-state";
 import {
   type BacklinksLimit,
   type BacklinksWorkspaceProps,
@@ -31,13 +34,7 @@ import {
 } from "./backlinks-workspace-model";
 import { RecentTargets } from "./RecentTargets";
 import { useBacklinksEstimate } from "./useBacklinksEstimate";
-
-type AnalyzeRequest = {
-  fallbackOnCostLimit?: boolean;
-  fresh?: boolean;
-  overrides?: Omit<Partial<AnalyzeBacklinksActionInput>, "target">;
-  target?: string;
-};
+import { useBacklinksRun } from "./useBacklinksRun";
 
 export function BacklinksWorkspace({
   analyzeAction,
@@ -55,14 +52,9 @@ export function BacklinksWorkspace({
   const [includeSubdomains, setIncludeSubdomains] = useState(true);
   const [provider, setProvider] = useState(context.providers?.[0]?.value);
   const [recentTargets, setRecentTargets] = useState(context.recentTargets);
-  const [submitting, setSubmitting] = useState(false);
-  const [snapshot, setSnapshot] = useState<BacklinksSnapshot | null>(null);
-  const [failure, setFailure] = useState(false);
-  const [walletBudgetBlocked, setWalletBudgetBlocked] = useState(false);
-  const [budgetReason, setBudgetReason] = useState<ReturnType<typeof budgetDenialReason>>();
-  const [failedSummary, setFailedSummary] = useState<FailedSummary | null>(null);
+  const [paymentOption, setPaymentOption] = useState<ActionPaymentOption>();
+  const paymentReview = useActionPaymentReview();
   const providerReady = context.providerStatus === "connected";
-  const readOnly = !providerReady || Boolean(failedSummary) || snapshot?.provider === "unknown";
 
   const requestInput = (
     nextTarget: string,
@@ -72,6 +64,9 @@ export function BacklinksWorkspace({
     mode: "as_is",
     projectId,
     ...(provider ? { provider } : {}),
+    ...(paymentOption
+      ? { paymentOptionId: paymentOption.id, provider: paymentOption.providerId }
+      : {}),
     resultLimit,
     target: nextTarget,
     targetScope: scope,
@@ -83,13 +78,29 @@ export function BacklinksWorkspace({
     initialEstimate,
   );
 
-  function clearResult() {
-    setSnapshot(null);
-    setFailure(false);
-    setBudgetReason(undefined);
-    setWalletBudgetBlocked(false);
-    setFailedSummary(null);
-  }
+  const {
+    analyze,
+    unresolved,
+    submitting,
+    snapshot,
+    setSnapshot,
+    failure,
+    failurePayment,
+    walletBudgetBlocked,
+    budgetReason,
+    failedSummary,
+    clearResult,
+  } = useBacklinksRun({
+    analyzeAction,
+    requestInput,
+    target,
+    resultLimit,
+    paymentReview,
+    addSpend,
+    rememberTarget,
+  });
+  const readOnly =
+    !providerReady || unresolved || Boolean(failedSummary) || snapshot?.provider === "unknown";
 
   function updateTarget(nextTarget: string) {
     setTarget(nextTarget);
@@ -125,62 +136,6 @@ export function BacklinksWorkspace({
     );
   }
 
-  async function analyze(request: AnalyzeRequest = {}) {
-    setSubmitting(true);
-    setFailure(false);
-    setBudgetReason(undefined);
-    setWalletBudgetBlocked(false);
-    setFailedSummary(null);
-    try {
-      const overrides = request.overrides ?? {};
-      const nextTarget = request.target ?? target;
-      const nextResultLimit = overrides.resultLimit ?? resultLimit;
-      const estimatedMaxCostCents =
-        estimate.costCents != null && estimate.costCents > 0
-          ? Math.ceil(estimate.costCents)
-          : undefined;
-      const maxCostCents = overrides.maxCostCents ?? estimatedMaxCostCents;
-      const outcome = await analyzeAction(
-        requestInput(nextTarget, {
-          ...overrides,
-          estimateOnly: false,
-          fresh: request.fresh ?? false,
-          maxCostCents,
-        }),
-      );
-      if (isBacklinksFailedSummary(outcome)) {
-        setFailedSummary(outcome);
-        return;
-      }
-      if (!outcome.ok) {
-        setBudgetReason(budgetDenialReason(outcome));
-        setWalletBudgetBlocked(outcome.reason === "wallet_budget_exhausted");
-        if (request.fallbackOnCostLimit && outcome.reason === "cost_limit_exceeded") return;
-        setFailure(true);
-        return;
-      }
-      if (isBacklinksEstimate(outcome)) {
-        setFailure(true);
-        return;
-      }
-      addSpend(outcome.costCents);
-      rememberTarget({
-        cachedUntil: outcome.cachedUntil,
-        fetchedAt: outcome.fetchedAt,
-        includeSubdomains: outcome.includeSubdomains,
-        provider: outcome.provider,
-        resultLimit: nextResultLimit,
-        target: outcome.target,
-        targetScope: outcome.targetScope,
-      });
-      setSnapshot(outcome);
-    } catch {
-      setFailure(true);
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   function openRecentTarget(recent: RecentBacklinksTarget) {
     selectTarget(
       recent.target,
@@ -206,6 +161,8 @@ export function BacklinksWorkspace({
   return (
     <section aria-label={t("aria")} className="grid min-w-0 gap-4">
       <ProviderAccessGate
+        showNotice={Boolean(snapshot || failedSummary)}
+        surface="backlinks"
         blocked={
           context.providerStatus === "no_provider" || context.providerStatus === "needs_reauth"
         }
@@ -214,16 +171,25 @@ export function BacklinksWorkspace({
         href={appPath(projectId, "integrations")}
       >
         <AnalyzeCard
+          disabled={unresolved}
           estimate={estimate}
+          onPaymentOptionChange={(option) => {
+            setPaymentOption(option);
+            scheduleEstimate(target, { paymentOptionId: option.id, provider: option.providerId });
+          }}
           provider={provider}
           providers={context.providers}
           onProviderChange={(next) => {
             setProvider(next);
+            setPaymentOption(undefined);
             clearResult();
             scheduleEstimate(target, { provider: next });
           }}
           includeSubdomains={includeSubdomains}
-          onIncludeSubdomainsChange={setIncludeSubdomains}
+          onIncludeSubdomainsChange={(value) => {
+            setIncludeSubdomains(value);
+            scheduleEstimate(target, { includeSubdomains: value });
+          }}
           onLimitChange={(limit) => {
             setResultLimit(limit);
             scheduleEstimate(target, { resultLimit: limit });
@@ -245,6 +211,8 @@ export function BacklinksWorkspace({
           target={target}
         />
       </ProviderAccessGate>
+      <ActionPaymentModal review={paymentReview} />
+      {failurePayment && !failedSummary ? <PaymentChargeLine payment={failurePayment} /> : null}
       <RecentTargets
         onOpen={openRecentTarget}
         onRemove={(recent) =>
@@ -276,20 +244,41 @@ export function BacklinksWorkspace({
             </p>
           ) : null}
           <BacklinksResults
-            estimateCents={estimate.costCents}
+            estimateCents={null}
+            refreshPrice={
+              <ActionPaymentPrice
+                action={analyzeAction}
+                input={backlinksRefreshInput(projectId, snapshot, resultLimit)}
+              />
+            }
+            loadMorePrice={
+              <ActionPaymentPrice
+                action={loadMoreAction}
+                input={backlinksAppendInput(projectId, snapshot)}
+              />
+            }
             onLoadMore={
               readOnly
                 ? undefined
                 : () =>
                     loadMoreWorkspaceRows(
-                      loadMoreAction,
+                      reviewedBacklinksAppendAction(paymentReview, loadMoreAction, snapshot.target),
                       projectId,
                       snapshot,
                       addSpend,
                       setSnapshot,
                     )
             }
-            onRefresh={readOnly ? undefined : () => void analyze({ fresh: true })}
+            onRefresh={
+              readOnly
+                ? undefined
+                : () =>
+                    void analyze({
+                      target: snapshot.target,
+                      fresh: true,
+                      overrides: backlinksRefreshInput(projectId, snapshot, resultLimit),
+                    })
+            }
             readOnly={readOnly}
             refreshing={submitting}
             snapshot={snapshot}

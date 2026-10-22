@@ -384,7 +384,7 @@ describe("loadRetrievedResultsForChecks", () => {
     }
   });
 
-  it("sets stoppedAtResult when normalization matched and retrieved is less than requestedDepth", async () => {
+  it("sets stoppedAtResult only for captured stop-on-match completeness", async () => {
     mocks.prisma.rankCheck.findMany.mockResolvedValue([
       {
         checkedAt: CHECKED_AT,
@@ -402,6 +402,7 @@ describe("loadRetrievedResultsForChecks", () => {
           serp_features: [],
         },
         requestedDepth: 10,
+        observationRun: { projectId: PROJECT_ID, completeness: "truncated_by_stop_on_match" },
       },
     ]);
 

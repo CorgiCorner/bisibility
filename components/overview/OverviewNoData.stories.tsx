@@ -78,13 +78,11 @@ const getFirstCheckRunPlanAction = async (): Promise<FirstCheckRunPlan> => ({
     location: "United States",
   },
 });
-const queueFirstChecksAction = async () => ({ queued: 19 });
 
 const actionArgs = {
   getFirstCheckRunPlanAction,
   projectId: "prj_7Kd2Qf9m",
   projectRef: "prj_7Kd2Qf9m",
-  queueFirstChecksAction,
   runCheckNowAction,
 };
 

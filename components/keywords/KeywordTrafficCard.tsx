@@ -9,6 +9,7 @@ import { appPath } from "@/lib/routing/app-path";
 import { QUERY_STATS_LAG_DAYS } from "@/lib/traffic/constants";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
+import { AnalyticsProviderBadge } from "./AnalyticsProviderBadge";
 import { KeywordTrafficSync } from "./KeywordTrafficSync";
 
 type QueryTraffic = NonNullable<KeywordTrafficDetail["query"]>;
@@ -21,16 +22,6 @@ type KeywordTrafficCardProps = {
   traffic: KeywordTrafficDetail;
   trafficState?: KeywordDetailTrafficState;
 };
-
-const providerLabels: Record<string, string> = {
-  ga4: "Google Analytics 4",
-  gsc: "Search Console",
-  plausible: "Plausible",
-};
-
-function providerLabel(provider: string) {
-  return providerLabels[provider] ?? provider.replace(/[-_]/g, " ");
-}
 
 function formatCount(value: number, format: ReturnType<typeof useFormatter>) {
   return format.number(value, { maximumFractionDigits: 0 });
@@ -50,14 +41,6 @@ function formatDuration(
   return minutes
     ? t("minutesSeconds", { minutes, seconds: remainder })
     : t("seconds", { seconds: remainder });
-}
-
-function SourceChip({ provider }: Readonly<{ provider: string }>) {
-  return (
-    <span className="inline-flex h-6 items-center rounded-full border border-border bg-bg-sunken px-2.5 font-sans tabular-nums text-[10.5px] text-fg-muted">
-      {providerLabel(provider)}
-    </span>
-  );
 }
 
 function StatGrid({
@@ -86,7 +69,10 @@ function StatGrid({
   );
 }
 
-function SearchPerformanceCard({ query }: Readonly<{ query: QueryTraffic }>) {
+function SearchPerformanceCard({
+  query,
+  connected,
+}: Readonly<{ query: QueryTraffic; connected: boolean }>) {
   const t = useTranslations("projectRankTracker.keywordDetail.traffic");
   const format = useFormatter();
   const stats: Stat[] = [
@@ -103,7 +89,7 @@ function SearchPerformanceCard({ query }: Readonly<{ query: QueryTraffic }>) {
     <Card className="rounded-card" size="lg">
       <div className="flex flex-wrap items-center gap-2">
         <SectionTitle>{t("searchPerformance")}</SectionTitle>
-        <SourceChip provider={query.provider} />
+        <AnalyticsProviderBadge provider={query.provider} connected={connected} />
       </div>
       <p className="m-0 mt-1 text-[12px] text-fg-muted">
         {t("trailingDays", { days: query.windowDays })}
@@ -127,7 +113,7 @@ function SearchPerformanceEmpty({
     <Card className="rounded-card" size="lg">
       <div className="flex flex-wrap items-center gap-2">
         <SectionTitle>{t("searchPerformance")}</SectionTitle>
-        <SourceChip provider="gsc" />
+        <AnalyticsProviderBadge provider="gsc" connected={connected} />
       </div>
       <p className="m-0 mt-1 text-[12px] text-fg-muted">{t("trailingDays", { days: 28 })}</p>
       <div className="mt-3 rounded-control border border-dashed border-border bg-transparent px-4 py-5">
@@ -180,7 +166,10 @@ function optionalPageStats(
   return stats.filter((stat): stat is Stat => stat !== null);
 }
 
-function LandingPagePerformanceCard({ pages }: Readonly<{ pages: PageTrafficSnapshotLike[] }>) {
+function LandingPagePerformanceCard({
+  pages,
+  connectedProviders,
+}: Readonly<{ pages: PageTrafficSnapshotLike[]; connectedProviders: readonly string[] }>) {
   const t = useTranslations("projectRankTracker.keywordDetail.traffic");
   const format = useFormatter();
   const firstPath = pages[0]?.path ?? "/";
@@ -196,7 +185,10 @@ function LandingPagePerformanceCard({ pages }: Readonly<{ pages: PageTrafficSnap
             key={`${page.provider}:${page.path}`}
           >
             <div className="flex flex-wrap items-center gap-2">
-              <SourceChip provider={page.provider} />
+              <AnalyticsProviderBadge
+                provider={page.provider}
+                connected={connectedProviders.includes(page.provider)}
+              />
               <span className="font-sans tabular-nums text-[11.5px] text-fg">{page.path}</span>
               <span className="font-sans tabular-nums text-[10.5px] text-fg-muted">
                 {t("lastDays", { days: page.windowDays })}
@@ -229,11 +221,16 @@ export function KeywordTrafficCard({
 }: Readonly<KeywordTrafficCardProps>) {
   const t = useTranslations("projectRankTracker.keywordDetail.traffic");
   const state = trafficState ?? inferredTrafficState(traffic);
+  const connectedProviders =
+    traffic.connectedProviders ?? (traffic.hasSearchConsoleConnection ? ["gsc"] : []);
   const search =
     state === "awaiting_sync" || state === "not_connected" ? (
       <SearchPerformanceEmpty connected={state === "awaiting_sync"} projectRef={projectRef} />
     ) : traffic.query ? (
-      <SearchPerformanceCard query={traffic.query} />
+      <SearchPerformanceCard
+        query={traffic.query}
+        connected={connectedProviders.includes(traffic.query.provider)}
+      />
     ) : null;
 
   const hasPageAnalytics =
@@ -247,12 +244,13 @@ export function KeywordTrafficCard({
       <KeywordTrafficSync
         canSync={canSync}
         connected={traffic.hasAnalyticsConnection}
+        connectedProviders={connectedProviders}
         projectRef={projectRef}
         syncAction={syncTrafficAction}
       />
       {searchFirst ? search : null}
       {traffic.pages.length ? (
-        <LandingPagePerformanceCard pages={traffic.pages} />
+        <LandingPagePerformanceCard pages={traffic.pages} connectedProviders={connectedProviders} />
       ) : traffic.connectedProviders?.some((provider) =>
           ["ga4", "plausible"].includes(provider),
         ) ? (
@@ -262,7 +260,11 @@ export function KeywordTrafficCard({
             {traffic.connectedProviders
               .filter((provider) => provider !== "gsc")
               .map((provider) => (
-                <SourceChip key={provider} provider={provider} />
+                <AnalyticsProviderBadge
+                  key={provider}
+                  provider={provider}
+                  connected={connectedProviders.includes(provider)}
+                />
               ))}
           </div>
           <p className="mb-0 mt-3 text-[13px] leading-5 text-fg-muted">

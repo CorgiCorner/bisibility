@@ -229,10 +229,8 @@ export const featureStatus = {
   },
   hostedRankCredits: {
     label: "prepaid credits for hosted rank checks",
-    status: "exploring",
-    activity: "researching",
-    docs: "/roadmap",
-    maturity: "concept",
+    status: "shipped",
+    docs: "/pricing",
   },
   marketWorkspaces: {
     label: "markets with their own keyword sets",
@@ -275,7 +273,7 @@ export const featureStatus = {
   },
   hostedCloud: {
     label: "the hosted service",
-    status: "open-beta",
+    status: "shipped",
     docs: "/docs/hosted-quickstart",
   },
 } as const satisfies Record<string, FeatureStatusEntry>;

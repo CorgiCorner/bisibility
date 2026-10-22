@@ -1,9 +1,8 @@
 "use client";
 
 import { GettingStartedChecklist } from "@/components/getting-started/GettingStartedChecklist";
-import { RunChecksConfirmationModal } from "@/components/keywords/grid/RunChecksConfirmationModal";
-import { useRunChecksModal } from "@/components/keywords/grid/useRunChecksModal";
 import { useRankCheckBatchProgress } from "@/components/keywords/use-rank-check-batch-progress";
+import { manualPreflightDepth, useRunPreflight } from "@/components/rank-runs/useRunPreflight";
 import {
   addManualCompetitor,
   confirmSuggestedCompetitor,
@@ -12,10 +11,12 @@ import {
 } from "@/lib/actions/competitor-set";
 import type { RunCheckNowResult } from "@/lib/actions/rankCheck";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
+import { isPublicIdOfType, type PublicIdForPrefix } from "@/lib/db/public-id";
 import type { SetupContext, SetupCta } from "@/lib/getting-started/setup-steps";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { appPath } from "@/lib/routing/app-path";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type Props = {
@@ -26,24 +27,16 @@ type Props = {
   runCheckNowAction: (input: unknown) => Promise<RunCheckNowResult>;
 };
 
-function FirstCheckController({
-  context,
-  now,
-  providerRate,
-  rows,
-  runCheckNowAction,
-}: Readonly<Props>) {
+function FirstCheckController({ context, now, providerRate, rows }: Readonly<Props>) {
   const router = useRouter();
   const initialBatch = context.inFlightBatch;
   const [activeIds, setActiveIds] = useState<
     NonNullable<SetupContext["inFlightBatch"]>["rankCheckIds"]
   >(initialBatch?.rankCheckIds ?? []);
-  const modal = useRunChecksModal({
-    onSettled: () => router.refresh(),
+  const t = useTranslations("shared.firstCheck");
+  const preflight = useRunPreflight({
     projectId: context.project.publicRef ?? "",
-    providerRate,
-    rows,
-    runCheckNowAction,
+    providerId: providerRate?.providerId,
   });
 
   const progress = useRankCheckBatchProgress({
@@ -70,7 +63,18 @@ function FirstCheckController({
 
   function handleCta(cta: SetupCta) {
     if (cta.id === "run_first_check") {
-      modal.request(context.keywordIds);
+      const keywordIds = context.keywordIds.filter((id): id is PublicIdForPrefix<"kw"> =>
+        isPublicIdOfType(id, "kw"),
+      );
+      if (keywordIds.length !== context.keywordIds.length || !keywordIds.length) return;
+      const selectedIds = new Set<string>(keywordIds);
+      const selected = rows.filter((row) => selectedIds.has(row.id));
+      void preflight.request({
+        depth: manualPreflightDepth(selected, undefined, undefined),
+        rows: selected,
+        title: t("action"),
+        spec: { kind: "selected", keywordIds, v: 1 },
+      });
       return;
     }
     if (cta.id === "add_keywords") {
@@ -97,15 +101,7 @@ function FirstCheckController({
         now={now}
         onCta={handleCta}
       />
-      <RunChecksConfirmationModal
-        flow={modal.flow}
-        onClose={modal.close}
-        onConfirm={() => void modal.confirm()}
-        onRetry={modal.retry}
-        projectId={context.project.publicRef ?? ""}
-        providerRate={providerRate}
-        rows={rows}
-      />
+      {preflight.dialog}
     </>
   );
 }

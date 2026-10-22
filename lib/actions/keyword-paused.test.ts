@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => {
   }
   const prisma = {
     $executeRaw: vi.fn(),
+    $queryRaw: vi.fn().mockResolvedValue([]),
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
     keyword: { createMany: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
@@ -37,6 +38,8 @@ const mocks = vi.hoisted(() => {
     writeAudit: vi.fn(),
   };
 });
+
+vi.mock("@/lib/rank-check/schedules/keyword-cadence", () => ({ setKeywordCadence: vi.fn() }));
 
 vi.mock("@/lib/rank-check/schedules/service-membership", () => ({
   mirrorScheduleToKeywords: mocks.mirrorScheduleToKeywords,

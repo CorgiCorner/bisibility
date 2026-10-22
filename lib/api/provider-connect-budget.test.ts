@@ -20,7 +20,10 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
-vi.mock("@/lib/metering/spending-limit-store", () => ({ putSpendingBudget: mocks.saveBudget }));
+vi.mock("@/lib/metering/spending-limit-store", () => ({
+  putSpendingBudget: mocks.saveBudget,
+  readSpendingBudgets: async () => [],
+}));
 vi.mock("@/lib/providers/crypto", () => ({
   decryptProviderCredentials: () => ({}),
   encryptSecret: () => "encrypted",

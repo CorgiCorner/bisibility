@@ -114,12 +114,31 @@ tracking with a warning.
 `tags` accepts up to 12 tags, each 1 to 48 characters. Within `schedule`,
 `jitter_minutes` must be a whole number from `0` to `120`. Omitting it uses
 `60`; `0` disables jitter. Use `cron_expression` with `frequency: "custom_cron"`.
-Daily and weekly schedules use a stable, keyword-specific interval phase, so
-`timezone` does not move their phase. `timezone` anchors monthly and custom
-cron schedules to wall-clock time.
+Custom cron uses five numeric fields, with lists, ranges, and steps on `*` or
+explicit ranges. Named days, suffixes such as `L` or `#`, and `value/step` are
+not supported. The expression must have a future occurrence.
+Omitting both `frequency` and `schedule` creates a Manual keyword: project
+defaults are suggestions and do not enroll it. An explicit scheduled frequency
+joins an enabled project schedule with the same cadence, timezone, jitter and
+depth, or creates one if none matches. Existing timed or provider-specific
+schedules are not changed or silently selected. Cadence-only changes preserve
+the current depth and assigned provider policy; an explicit depth choice can
+change the depth. Removing membership keeps its effective depth for manual
+checks. Manual has no scheduled provider policy. An explicit `manual` removes
+membership; `paused` pauses only the selected keywords.
+
+Every response reports the actual membership. Without membership, or when its
+schedule is archived, `schedule.frequency` is `manual` and `next_check_at` is
+`null`. Disabled membership reports `paused` with no next check. `source` keeps
+the compatibility value `keyword`; project defaults are never reported as an
+active schedule. MCP `add_keywords` accepts the same explicit cadence through
+`schedule: { "frequency": "daily" }`. `next_check_at` is the next cadence slot, not a promise that
+provider, credit or budget admission will succeed.
 
 The response status is `201` when at least one keyword is created. Duplicate
-keyword, location, and device combinations are skipped. If location resolution
+keyword, location, and device combinations are skipped. Re-adding an archived
+keyword starts it in Manual unless this request explicitly chooses a schedule;
+it does not resume its old recurring assignment. If location resolution
 degrades, the response includes per-result `warning` values and a top-level
 `warnings` array with unique warning messages.
 
@@ -132,7 +151,7 @@ the stored term, market, and device. A differing identity value returns `409`.
 To track a different term, market, or device, add it as its own keyword and
 archive the old keyword.
 
-`tags` replaces the full tag set. `frequency` sets a default schedule with
+`tags` replaces the full tag set. `frequency` explicitly selects a cadence with
 timezone `UTC`, jitter `60`, and no cron expression. `schedule` overrides
 `frequency` when both are sent.
 

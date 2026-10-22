@@ -1,9 +1,9 @@
 "use client";
 
 import { HistoryTime } from "@/components/keyword-detail-history/HistoryTime";
-import { providerLabel } from "@/lib/checks/attempts";
 import type { KeywordDetailQuality } from "@/lib/keyword-detail/quality-model";
 import { useTranslations } from "next-intl";
+import { KeywordCheckProvider } from "./KeywordCheckProvider";
 import { KeywordDetailHeaderSlot } from "./KeywordDetailHeaderSlot";
 
 export function KeywordDetailAttemptSlot({
@@ -32,11 +32,7 @@ export function KeywordDetailAttemptSlot({
             </span>
           ) : null}
           <span>
-            {detail("header.provider", {
-              provider: quality.latestAttemptProvider
-                ? providerLabel(quality.latestAttemptProvider)
-                : detail("common.unknown"),
-            })}
+            <KeywordCheckProvider provider={quality.latestAttemptProvider} />
           </span>
         </div>
       }

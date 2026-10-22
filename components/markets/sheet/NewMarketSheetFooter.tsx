@@ -8,6 +8,7 @@ type NewMarketSheetFooterProps = {
   onClose: () => void;
   pending: boolean;
   prospectiveCount?: number;
+  showCreate?: boolean;
 };
 
 export function NewMarketSheetFooter({
@@ -17,6 +18,7 @@ export function NewMarketSheetFooter({
   onClose,
   pending,
   prospectiveCount,
+  showCreate = true,
 }: Readonly<NewMarketSheetFooterProps>) {
   const t = useTranslations("projectMarkets");
   return (
@@ -33,16 +35,18 @@ export function NewMarketSheetFooter({
         <Button disabled={pending} onClick={onClose} size="sm" type="button" variant="ghost">
           {cancelLabel}
         </Button>
-        <Button
-          disabled={createDisabled}
-          form="new-market-form"
-          loading={pending}
-          size="sm"
-          type="submit"
-          variant="secondary"
-        >
-          {createLabel}
-        </Button>
+        {showCreate ? (
+          <Button
+            disabled={createDisabled}
+            form="new-market-form"
+            loading={pending}
+            size="sm"
+            type="submit"
+            variant="secondary"
+          >
+            {createLabel}
+          </Button>
+        ) : null}
       </div>
     </div>
   );

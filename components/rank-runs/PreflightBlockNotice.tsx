@@ -1,5 +1,6 @@
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button } from "@/components/ui/Button";
+import { ProviderAccessActions } from "@/components/ui/ProviderAccessActions";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { useTranslations } from "next-intl";
 import type { PreflightBlockCode } from "./preflight-presentation";
@@ -68,6 +69,11 @@ export function PreflightBlockNotice(props: Readonly<Props>) {
       tone: "critical" as const,
     },
   }[props.code];
+  const action = (
+    <Button className="shrink-0" href={block.href} size="sm" variant="secondary">
+      {block.cta}
+    </Button>
+  );
   return (
     <div
       className="flex items-center gap-3 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
@@ -77,9 +83,11 @@ export function PreflightBlockNotice(props: Readonly<Props>) {
         <StatusChip dot label={block.label} tone={block.tone} />
         <p className="m-0 text-[12.5px] leading-5 text-fg">{block.message}</p>
       </div>
-      <Button className="shrink-0" href={block.href} size="sm" variant="secondary">
-        {block.cta}
-      </Button>
+      {props.code === "no_provider" ? (
+        <ProviderAccessActions href={block.href}>{action}</ProviderAccessActions>
+      ) : (
+        action
+      )}
     </div>
   );
 }

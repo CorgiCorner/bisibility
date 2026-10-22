@@ -1,5 +1,6 @@
 import { ProviderAuthError } from "@/lib/providers/auth-error";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ZodError } from "zod";
 import {
   listSearchPerformanceQueryStats,
   listTrafficSnapshots,
@@ -159,13 +160,20 @@ describe("analytics REST endpoints", () => {
     );
     await expect(response.json()).resolves.toMatchObject({
       connection: { id: connectionPublicId, provider: "gsc" },
-      result: { row_cap: 50, rows_returned: 1, sort: "clicks_desc", truncated: false },
+      result: {
+        next_offset: null,
+        row_cap: 50,
+        rows_returned: 1,
+        sort: "clicks_desc",
+        truncated: false,
+      },
       rows: [{ clicks: 10, query: "rank tracker" }],
       scope: {
         country: null,
         device: null,
         dimensions: ["query"],
         end_date: "2026-06-30",
+        offset: 0,
         page_path: null,
         query_match: "equals",
         start_date: "2026-06-01",
@@ -173,7 +181,13 @@ describe("analytics REST endpoints", () => {
     });
     expect(mocks.fetchQueryStats).toHaveBeenCalledWith(
       { apiKey: "secret" },
-      expect.objectContaining({ endDate: "2026-06-30", limit: 50, query: "rank" }),
+      expect.objectContaining({
+        dimensions: ["query"],
+        endDate: "2026-06-30",
+        limit: 50,
+        offset: 0,
+        query: "rank",
+      }),
     );
   });
 
@@ -253,7 +267,14 @@ describe("analytics REST endpoints", () => {
       projectPublicId,
     );
     await expect(capped.json()).resolves.toMatchObject({
-      result: { row_cap: 100, rows_returned: 100, sort: "clicks_desc", truncated: true },
+      result: {
+        next_offset: 100,
+        row_cap: 100,
+        rows_returned: 100,
+        sort: "clicks_desc",
+        truncated: true,
+      },
+      scope: { offset: 0 },
     });
 
     mocks.fetchQueryStats.mockResolvedValue([
@@ -264,8 +285,156 @@ describe("analytics REST endpoints", () => {
       projectPublicId,
     );
     await expect(short.json()).resolves.toMatchObject({
-      result: { row_cap: 5, rows_returned: 1, sort: "clicks_desc", truncated: false },
+      result: {
+        next_offset: null,
+        row_cap: 5,
+        rows_returned: 1,
+        sort: "clicks_desc",
+        truncated: false,
+      },
     });
+  });
+
+  it.each(["us", "usaa", "u1a"])("rejects country code %s", async (country) => {
+    await expect(
+      listSearchPerformanceQueryStats(
+        context("GET", `?start_date=2026-06-01&end_date=2026-06-30&country=${country}`),
+        projectPublicId,
+      ),
+    ).rejects.toThrow(ZodError);
+    expect(mocks.fetchQueryStats).not.toHaveBeenCalled();
+  });
+
+  it("rejects a device outside desktop, mobile, and tablet", async () => {
+    await expect(
+      listSearchPerformanceQueryStats(
+        context("GET", "?start_date=2026-06-01&end_date=2026-06-30&device=phone"),
+        projectPublicId,
+      ),
+    ).rejects.toThrow(ZodError);
+    expect(mocks.fetchQueryStats).not.toHaveBeenCalled();
+  });
+
+  it.each(["", "query,,page", "query,foo", "page,device", ",query", "query,", "query, ,page"])(
+    "rejects invalid dimensions %s",
+    async (dimensions) => {
+      await expect(
+        listSearchPerformanceQueryStats(
+          context(
+            "GET",
+            `?start_date=2026-06-01&end_date=2026-06-30&dimensions=${encodeURIComponent(dimensions)}`,
+          ),
+          projectPublicId,
+        ),
+      ).rejects.toThrow(ZodError);
+      expect(mocks.fetchQueryStats).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ["query,device", ["query", "device"]],
+    [" query , page ", ["query", "page"]],
+    ["device,page,query,country,query", ["query", "page", "country", "device"]],
+  ])("accepts comma-separated dimensions %s", async (dimensions, expected) => {
+    const response = await listSearchPerformanceQueryStats(
+      context(
+        "GET",
+        `?start_date=2026-06-01&end_date=2026-06-30&dimensions=${encodeURIComponent(dimensions)}`,
+      ),
+      projectPublicId,
+    );
+
+    expect(mocks.fetchQueryStats).toHaveBeenCalledWith(
+      { apiKey: "secret" },
+      expect.objectContaining({ dimensions: expected }),
+    );
+    await expect(response.json()).resolves.toMatchObject({ scope: { dimensions: expected } });
+  });
+
+  it("reads only the first dimensions parameter", async () => {
+    await listSearchPerformanceQueryStats(
+      context("GET", "?start_date=2026-06-01&end_date=2026-06-30&dimensions=query&dimensions=foo"),
+      projectPublicId,
+    );
+
+    expect(mocks.fetchQueryStats).toHaveBeenCalledWith(
+      { apiKey: "secret" },
+      expect.objectContaining({ dimensions: ["query"] }),
+    );
+  });
+
+  it("rejects a negative offset", async () => {
+    await expect(
+      listSearchPerformanceQueryStats(
+        context("GET", "?start_date=2026-06-01&end_date=2026-06-30&offset=-1"),
+        projectPublicId,
+      ),
+    ).rejects.toThrow(ZodError);
+    expect(mocks.fetchQueryStats).not.toHaveBeenCalled();
+  });
+
+  it("echoes normalized filters, sent dimensions, and the next offset", async () => {
+    mocks.fetchQueryStats.mockResolvedValue(
+      Array.from({ length: 20 }, (_, index) => ({
+        clicks: index,
+        country: "usa",
+        ctr: 0.1,
+        device: "mobile",
+        impressions: 10,
+        position: 1,
+        query: `q${index}`,
+      })),
+    );
+    const response = await listSearchPerformanceQueryStats(
+      context(
+        "GET",
+        "?start_date=2026-06-01&end_date=2026-06-30&country=USA&device=mobile&dimensions=device,query,query,country&offset=40&limit=20",
+      ),
+      projectPublicId,
+    );
+    const body = await response.json();
+
+    expect(mocks.fetchQueryStats).toHaveBeenCalledWith(
+      { apiKey: "secret" },
+      expect.objectContaining({
+        country: "usa",
+        device: "mobile",
+        dimensions: ["query", "country", "device"],
+        limit: 20,
+        offset: 40,
+      }),
+    );
+    expect(body.scope).toMatchObject({
+      country: "usa",
+      device: "mobile",
+      dimensions: ["query", "country", "device"],
+      offset: 40,
+    });
+    expect(body.result).toMatchObject({
+      next_offset: 60,
+      row_cap: 20,
+      rows_returned: 20,
+      truncated: true,
+    });
+    expect(body.rows[0]).toMatchObject({ country: "usa", device: "mobile", query: "q0" });
+  });
+
+  it("includes page in the sent dimensions when page_path is set", async () => {
+    await listSearchPerformanceQueryStats(
+      context(
+        "GET",
+        "?start_date=2026-06-01&end_date=2026-06-30&page_path=%2Fdocs&dimensions=query,country",
+      ),
+      projectPublicId,
+    );
+
+    expect(mocks.fetchQueryStats).toHaveBeenCalledWith(
+      { apiKey: "secret" },
+      expect.objectContaining({
+        dimensions: ["query", "page", "country"],
+        pagePath: { match: "contains", value: "/docs" },
+      }),
+    );
   });
 
   it("returns not found when no query-capable source is eligible", async () => {

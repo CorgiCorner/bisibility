@@ -193,6 +193,38 @@ describe("StepConnectGscCard", () => {
       }),
     );
   });
+
+  it("preselects the property that matches the project domain", () => {
+    render(
+      <StepConnectGscCard
+        configured
+        googleOAuth={{
+          projectDomain: "example.com",
+          properties: [
+            {
+              kind: "domain",
+              label: "aaa.example.org",
+              permissionLevel: "siteOwner",
+              value: "sc-domain:aaa.example.org",
+            },
+            {
+              kind: "domain",
+              label: "example.com",
+              permissionLevel: "siteOwner",
+              value: "sc-domain:example.com",
+            },
+          ],
+        }}
+        projectId="prj_1"
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Search Console property" })).toHaveTextContent(
+      "example.com",
+    );
+    expect(screen.getByText("sc-domain:example.com")).toBeInTheDocument();
+    expect(screen.queryByText("sc-domain:aaa.example.org")).not.toBeInTheDocument();
+  });
 });
 
 it("keeps onboarding property selection open on a typed pending failure", async () => {

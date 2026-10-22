@@ -78,6 +78,7 @@ vi.mock("@/lib/auth/audit", () => ({ writeAudit: mocks.writeAudit }));
 vi.mock("@/lib/db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/metering/spending-limit-store", () => ({
   putSpendingBudget: mocks.saveBudget,
+  readSpendingBudgets: async () => [],
 }));
 
 vi.mock("@/lib/analytics/server", () => ({

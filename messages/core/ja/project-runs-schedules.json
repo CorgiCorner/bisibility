@@ -65,9 +65,9 @@
         "archived": "プロンプト監視スケジュールをアーカイブしました。過去の実行と結果は保持されます。",
         "archivedReadOnlyHint": "アーカイブしたプロンプト監視スケジュールは履歴として保持され、編集や復元はできません。",
         "emptyNext": "プロンプトを追加して開始",
-        "kindAi": "プロンプト監視",
+        "kindAi": "AIトラッキング",
         "kindRank": "順位チェック",
-        "newSchedule": "新しいプロンプト監視スケジュール",
+        "newSchedule": "新しいAIトラッキングスケジュール",
         "nextPending": "保留中",
         "prompts": "{count, plural, other {#件のプロンプト}}",
         "readOnly": "読み取り専用",
@@ -78,7 +78,7 @@
       },
       "archiveDialog": {
         "body": "今後の実行は停止します。開始済みの実行は完了し、過去の結果は引き続き参照できます。",
-        "defaultNotice": "これはデフォルトのスケジュールです。別のデフォルトを選ぶまで、新しいキーワードは手動チェックになります。",
+        "defaultNotice": "新しいキーワードはスケジュールに追加するまで手動のままです。",
         "manualChecks": "手動チェック",
         "moveKeywords": "{count, plural, other {#件のキーワード}}の移動先",
         "title": "「{name}」をアーカイブしますか？"
@@ -132,7 +132,8 @@
         "selected": "{count, plural, other {#件を選択中}}",
         "selectAll": "一致する{count, number}件をすべて選択",
         "submitFailed": "このスケジュールにキーワードを追加できませんでした。再試行してください。",
-        "toSchedule": "{name} に追加"
+        "toSchedule": "{name} に追加",
+        "schedule": "スケジュール"
       },
       "editor": {
         "always": "常に {label}",
@@ -141,16 +142,16 @@
         "cronTooLong": "cron 式は{maximum, number}文字以内で入力してください。",
         "customCron": "カスタム cron",
         "customPreview": "カスタム cron のスケジュールです。",
-        "defaultEnabled": "有効にすると、新しいキーワードにこのスケジュールが適用されます。既存のキーワードのスケジュールは変わりません。",
-        "defaultExisting": "新しいキーワードのデフォルト",
-        "defaultExistingDescription": "別のスケジュールを選ばない限り、新しいキーワードにはこのスケジュールが適用されます。",
-        "defaultReplacement": "新しいキーワードのデフォルトが {name} から切り替わります。既存のキーワードのスケジュールは変わりません。",
+        "defaultEnabled": "スケジュール選択時に候補として表示します。キーワードは選択した場合のみ追加されます。",
+        "defaultExisting": "デフォルトの候補",
+        "defaultExistingDescription": "スケジュール選択時の候補です。キーワードが自動で追加されることはありません。",
+        "defaultReplacement": "候補のスケジュールを{name}から変更します。既存の割り当ては変わりません。",
         "depth": "深度",
         "everyWeekday": "平日の 06:00 に実行します。",
         "invalidCron": "5フィールドの有効な cron 式を入力してください。",
         "invalidTime": "HH:mm 形式で時刻を入力してください。",
         "invalidTimeZone": "有効なタイムゾーンを入力してください。",
-        "invalidTimeStep": "30分単位で時刻を入力してください。",
+        "invalidTimeStep": "分が :00 または :30 の時刻を入力してください。",
         "jitterExact": "なし · 指定時刻ちょうどに開始",
         "jitterFifteen": "最大15分",
         "jitterSixty": "最大60分",
@@ -170,9 +171,9 @@
         "noFixedTime": "時刻の指定なし",
         "projectDefault": "プロジェクトのデフォルト（{label}）",
         "projectDefaultPlain": "プロジェクトのデフォルト",
-        "overrideHelp": "「プロジェクトのデフォルト」はプロジェクト設定に従います。「常に」はこのスケジュールに固定します。",
+        "overrideHelp": "プロジェクト設定に従うか、このスケジュールの値を選択します。",
         "save": "スケジュールを保存",
-        "saveFailed": "スケジュールを保存できませんでした。",
+        "saveFailed": "保存できませんでした。変更内容は保持されています。もう一度お試しください。",
         "saved": "スケジュールを保存しました。",
         "saving": "保存中...",
         "schedule": "スケジュール",
@@ -180,10 +181,21 @@
         "scheduleNameTooLong": "スケジュール名は{maximum, number}文字以内で入力してください。",
         "startWindow": "開始ウィンドウ",
         "startWindowHelp": "開始時刻を分散させ、同じ時刻に動くスケジュールがプロバイダーに集中しないようにします。",
-        "thirtyMinuteSteps": "30分単位",
+        "thirtyMinuteSteps": "分は :00 または :30 にしてください（例：09:00、09:30）。",
         "time24": "時刻（24時間表記）",
         "topDepth": "上位{depth, number}位",
-        "useAsDefault": "新しいキーワードのデフォルトにする"
+        "useAsDefault": "デフォルトの候補にする",
+        "nameHelp": "名前のみです。実行間隔を変えるには、下の頻度を変更してください。",
+        "saveSessionExpired": "セッションの有効期限が切れました。再度ログインして保存してください。",
+        "saveForbidden": "このスケジュールを編集する権限がありません。",
+        "saveNotFound": "このスケジュールは利用できなくなりました。一覧に戻ってください。",
+        "saveConflict": "スケジュールが変更されました。再読み込みしてから保存してください。",
+        "saveReadOnly": "このプロジェクトは読み取り専用です。編集が再開されると保存できます。",
+        "saveInvalid": "スケジュールの設定を確認してから保存してください。",
+        "marketDevice": "市場 × デバイス",
+        "removeMember": "スケジュールから外す",
+        "memberRemoved": "スケジュールから外しました。キーワードは手動チェックに利用できます。",
+        "memberRemoveFailed": "キーワードをスケジュールから外せませんでした。もう一度お試しください。"
       },
       "empty": {
         "archivedDescription": "アーカイブしたスケジュールがここに表示されます。過去の実行と結果は保持されます。",
@@ -206,7 +218,7 @@
       "list": {
         "actions": "操作",
         "blocked": "次回の実行はブロック済み · 月間上限",
-        "defaultHint": "別のスケジュールを選ばない限り、新しいキーワードはこのスケジュールに追加されます。",
+        "defaultHint": "スケジュール選択時の候補です。キーワードが自動で追加されることはありません。",
         "memberMeta": "{markets, plural, other {市場#件}} x {devices, plural, other {デバイス#件}}",
         "members": "{keywords, plural, other {キーワード#件}} = {targets, plural, other {1回あたり#件のチェック}}",
         "noAssignedKeywords": "割り当て済みのキーワードなし",
@@ -231,7 +243,23 @@
       "nextRun": {
         "at": "{day} {time}",
         "today": "今日 {time}",
-        "tomorrow": "明日 {time}"
+        "tomorrow": "明日 {time}",
+        "distributed": "{day}、一日の中で分散（{timezone}）",
+        "distributedInterval": "{day}から期間内に分散（{timezone}）"
+      },
+      "summary": {
+        "title": "スケジュールの概要",
+        "nextRun": "次回の実行",
+        "perMonth": "月間の推定使用量",
+        "nextPending": "計画中",
+        "makeDefault": "デフォルトに設定",
+        "defaultHint": "デフォルトはスケジュール選択時の候補です。新しいキーワードは明示的に割り当てるまで未設定のままです。",
+        "unscheduledCount": "{count, plural, other {#件のキーワードにスケジュールがありません。}}",
+        "addToSchedule": "スケジュールに追加"
+      },
+      "planning": {
+        "delay": "予定された実行は通常 {minutes, number} 分以内に Runs に表示されます。チェックはスケジュールどおりに実行されます。",
+        "delayUnknown": "予定された実行が Runs に表示されるまで少し時間がかかることがあります。チェックはスケジュールどおりに実行されます。"
       }
     }
   }

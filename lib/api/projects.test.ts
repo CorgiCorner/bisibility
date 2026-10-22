@@ -491,7 +491,7 @@ describe("project write API routes", () => {
     expect(mocks.prisma.project.create).not.toHaveBeenCalled();
   });
 
-  it("updates schedule-only defaults without moving keyword markets", async () => {
+  it("ignores legacy cadence writes without moving keyword markets", async () => {
     mocks.prisma.keyword.findMany.mockResolvedValue([
       {
         device: "mobile",
@@ -534,8 +534,11 @@ describe("project write API routes", () => {
     await expect(defaults.json()).resolves.toMatchObject({
       country: "Germany",
       device: "mobile",
-      frequency: "weekly",
-      timezone: "Europe/Berlin",
+      frequency: "manual",
+      timezone: "UTC",
+      cron_expression: null,
+      jitter_minutes: 0,
+      next_check_at: null,
     });
     expect(mocks.prisma.keyword.updateMany).not.toHaveBeenCalled();
     expect(mocks.writeAudit).toHaveBeenCalledWith(
@@ -767,8 +770,8 @@ describe("project write API routes", () => {
       country: "Germany",
       cron_expression: null,
       device: "mobile",
-      frequency: "daily",
-      jitter_minutes: 60,
+      frequency: "manual",
+      jitter_minutes: 0,
       last_checked_at: null,
       next_check_at: null,
       serp_depth: 100,

@@ -43,7 +43,7 @@ export function RowActionsMenu({ ariaLabel, items }: Readonly<RowActionsMenuProp
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={ariaLabel}
-        className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control border border-border bg-bg-elev text-fg-muted hover:bg-surface-hover hover:text-fg"
+        className="grid h-[30px] w-[30px] flex-none place-items-center rounded-control border border-border bg-bg-elev text-fg-muted hover:bg-surface-hover hover:text-fg focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-accent-solid focus-visible:outline-offset-[-2px]"
         onClick={(event) => {
           event.stopPropagation();
           setAnchor(event.currentTarget);

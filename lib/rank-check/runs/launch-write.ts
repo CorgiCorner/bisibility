@@ -9,8 +9,10 @@ import type { resolveRunSelection } from "./selection";
 import "server-only";
 
 import { writeAudit } from "@/lib/auth/audit";
+import { readHostPolicySnapshot } from "@/lib/measurement-definitions/host-policy-snapshot";
 import { captureDefinitionItemIntents } from "@/lib/measurement-definitions/worker-intent";
 import { retainRunRecoveryGrant } from "@/lib/rank-check/recovery-run-grant";
+import { resolveSerpStopOnMatch } from "@/lib/serp/constants";
 import {
   estimatedRunUsageQuantity,
   providerAllocationReservation,
@@ -18,6 +20,8 @@ import {
   runUsageEstimate,
 } from "./launch-preflight";
 import type { LaunchRankCheckRunInput, RetryLaunch } from "./launch-types";
+import { prepareRankPayment } from "./payment";
+import { previewSourceHash } from "./preview-source-hash";
 
 export async function materializeRankRun(
   tx: Prisma.TransactionClient,
@@ -53,6 +57,36 @@ export async function materializeRankRun(
     source: input.origin.source,
     targets: estimate.targets,
   });
+  const payment =
+    input.acceptedPayment || input.requirePayment
+      ? await prepareRankPayment(
+          {
+            ...input,
+            projectId: input.project.id,
+            source: input.origin.source,
+            sourceHash: previewSourceHash({
+              domain: input.project.domain,
+              stopOnMatch: resolveSerpStopOnMatch(
+                (
+                  await tx.project.findUnique({
+                    where: { id: input.project.id },
+                    select: { defaults: { select: { serpStopOnMatch: true } } },
+                  })
+                )?.defaults?.serpStopOnMatch,
+              ),
+              rows: executable,
+              depths: estimate.targets.map((target) => target.depth),
+              provider: currentConnection,
+              measurementPolicy: await readHostPolicySnapshot(tx, input.project.id),
+            }),
+            selectionHash: resolved.selectionHash,
+            connection: currentConnection,
+            targets: estimate.targets,
+          },
+          tx,
+        )
+      : null;
+  const paymentConsent = payment?.retain(publicId);
   const estimatedCostCents = estimate.costCents ?? 0;
   const allocationReservation = currentConnection.id
     ? providerAllocationReservation(currentConnection.id, estimatedRunUsageQuantity(estimate))
@@ -88,6 +122,9 @@ export async function materializeRankRun(
             kind: input.retry.relation,
             parentRunId: input.retry.parentRunPublicId,
             v: 1,
+            ...(paymentConsent
+              ? { rankPaymentConsent: paymentConsent, rankPaymentQuoteId: payment?.quote.id }
+              : {}),
             ...usageEstimate,
             ...allocationReservation,
             ...rankReservation,
@@ -97,6 +134,9 @@ export async function materializeRankRun(
             ...(host.attribution ? { measurementSettingsIntent: host.attribution } : {}),
             depth: input.depth ?? null,
             providerId: input.providerId ?? null,
+            ...(paymentConsent
+              ? { rankPaymentConsent: paymentConsent, rankPaymentQuoteId: payment?.quote.id }
+              : {}),
             ...usageEstimate,
             ...allocationReservation,
             ...rankReservation,
@@ -155,5 +195,25 @@ export async function materializeRankRun(
     },
     tx,
   );
-  return { estimatedCostCents, id: run.id, keywordCount, targetCount: executable.length };
+  return {
+    estimatedCostCents,
+    id: run.id,
+    keywordCount,
+    targetCount: executable.length,
+    ...(payment
+      ? {
+          payment: {
+            actionId: publicId,
+            quoteId: payment.quote.id,
+            option: payment.quote.option,
+            state: "pending" as const,
+            charge: {
+              unit: payment.quote.option.payableUnit,
+              value: null,
+              certainty: "unknown" as const,
+            },
+          },
+        }
+      : {}),
+  };
 }

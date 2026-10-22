@@ -15,6 +15,8 @@ export async function previewRankCheckRunAction(
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "update", data.projectId, { type: "keyword" });
   return previewRankCheckRun({
+    actorId: actor.id,
+    paymentOptionId: data.paymentOptionId,
     depth: data.depth,
     origin: APP_REQUEST_ORIGIN,
     project,

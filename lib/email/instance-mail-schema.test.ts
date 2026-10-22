@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { instanceMailFormSchema, isEmailSender } from "./instance-mail-schema";
 
 const base = {
-  code: "123456",
   provider: "resend" as const,
   replaceCredentials: true,
   resendApiKey: "re_test_key",

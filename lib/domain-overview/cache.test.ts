@@ -161,16 +161,20 @@ describe("domain overview cache", () => {
       costCents: 0,
       ok: false,
       reason: "budget_exhausted",
+      phase: "before_dispatch",
     });
     expect(domainOverviewFailure(new Error("offline"))).toEqual({
       costCents: 0,
       ok: false,
-      reason: "lookup_failed",
+      reason: "unexpected",
+      phase: "provider",
     });
     expect(domainOverviewFailure(new ProviderCallError("charged", 7))).toEqual({
       costCents: 7,
       ok: false,
-      reason: "lookup_failed",
+      reason: "provider_error",
+      phase: "provider",
+      providerCode: "provider_transient",
     });
   });
 

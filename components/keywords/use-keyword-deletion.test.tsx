@@ -46,8 +46,8 @@ describe("keyword deletion confirmation", () => {
     fireEvent.click(screen.getByText("Open one"));
     expect(screen.getByRole("button", { name: "Delete keyword" })).toBeDisabled();
     await act(async () => resolve(impact));
-    expect(screen.getByText(/Becomes empty/)).toBeVisible();
-    expect(screen.getByText(/Schedules and their settings are kept/)).toBeVisible();
+    expect(screen.getByText(/This schedule will have no keywords/)).toBeVisible();
+    expect(screen.getByText(/Schedule settings are kept/)).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Delete keyword" }));
     await waitFor(() => expect(mocks.done).toHaveBeenCalledOnce());
     expect(mocks.action).toHaveBeenCalledWith({ keywordIds: ["kw_one"], projectId: "prj_1" });
@@ -109,7 +109,8 @@ describe("keyword deletion confirmation", () => {
     });
     render(<Harness />);
     fireEvent.click(screen.getByText("Open one"));
-    await screen.findByText("No schedules are connected to the selected targets.");
+    await screen.findByText("0 keywords · 0 market/device variants");
+    expect(screen.queryByText(/No schedules are connected/)).toBeNull();
     expect(screen.getByRole("button", { name: "Delete keyword" })).toBeDisabled();
   });
 });

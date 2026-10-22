@@ -38,52 +38,6 @@
       "body": {
         "data": {
           "cached": true,
-          "cached_until": "2026-08-14T10:00:00.000Z",
-          "cost_cents": 0,
-          "fetched_at": "2026-08-13T10:00:00.000Z",
-          "fetched_row_count": 2,
-          "history": [
-            {
-              "lost_links": 1,
-              "month": "2026-07",
-              "new_links": 2
-            }
-          ],
-          "include_subdomains": true,
-          "provider": "stored-source",
-          "rows": [
-            {
-              "anchor": "example",
-              "source_domain": "referrer.example",
-              "source_url": "https://referrer.example/page",
-              "status": "active",
-              "target_url": "https://example.com/"
-            }
-          ],
-          "summary": {
-            "backlinks_total": 10,
-            "domain_rank": 70,
-            "referring_domains_total": 5
-          },
-          "target": "example.com",
-          "target_scope": "site",
-          "total_rows_available": 10,
-          "fresh_until": "2026-09-12T10:00:00.000Z",
-          "saved_at": "2026-08-13T10:00:00.000Z",
-          "stale": false,
-          "state": "fresh"
-        }
-      },
-      "contentType": "application/json",
-      "method": "GET",
-      "operationId": "getStoredResearchReport",
-      "path": "/projects/{project_id}/research/reports/{kind}",
-      "status": 200
-    },
-    {
-      "body": {
-        "data": {
-          "cached": true,
           "cost_cents": 0,
           "country_code": "US",
           "fetched_at": "2026-08-13T10:00:00.000Z",
@@ -91,6 +45,7 @@
           "include_clickstream": false,
           "language_code": "en",
           "mode": "auto",
+          "partial": false,
           "provider": "stored-source",
           "request_key": "abc123",
           "result_limit": 100,
@@ -115,6 +70,12 @@
           "cost_cents": 0,
           "fetched_at": "2026-01-01T10:00:00.000Z",
           "fresh_until": "2026-01-31T10:00:00.000Z",
+          "country_code": null,
+          "partial": false,
+          "keywords": null,
+          "previous_overview": null,
+          "previous_source_snapshot_at": null,
+          "source_snapshot_at": null,
           "history": [],
           "language_code": "en",
           "location_code": 2840,
@@ -128,6 +89,70 @@
           "state": "stale",
           "target": "example.com",
           "data_state": "no_data"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "getStoredResearchReport",
+      "path": "/projects/{project_id}/research/reports/{kind}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "snapshot_ref": "test-snapshot-reference",
+          "cached": true,
+          "cached_until": "2026-08-14T10:00:00.000Z",
+          "cost_cents": 0,
+          "fetched_at": "2026-08-13T10:00:00.000Z",
+          "fetched_row_count": 2,
+          "history": [
+            {
+              "lost_links": 1,
+              "lost_referring_domains": 0,
+              "month": "2026-07",
+              "new_links": 2,
+              "new_referring_domains": 1
+            }
+          ],
+          "include_subdomains": true,
+          "provider": "stored-source",
+          "rows": [
+            {
+              "anchor": "example",
+              "domain_authority": null,
+              "first_seen": null,
+              "flags": [],
+              "links_count": 1,
+              "lost_at": null,
+              "spam_score": null,
+              "source_domain": "example.com",
+              "source_url": "https://example.com/page",
+              "status": "active",
+              "target_url": "https://example.com/"
+            }
+          ],
+          "summary": {
+            "backlinks_total": 10,
+            "domain_rank": 70,
+            "referring_domains_total": 5,
+            "broken_backlinks": 0,
+            "broken_pages": 0,
+            "dofollow_pct": 100,
+            "lost_backlinks": 0,
+            "lost_referring_domains": 0,
+            "new_backlinks": 1,
+            "new_referring_domains": 1,
+            "referring_pages": 1,
+            "spam_score": 0
+          },
+          "target": "example.com",
+          "target_scope": "site",
+          "total_rows_available": 10,
+          "fresh_until": "2026-09-12T10:00:00.000Z",
+          "saved_at": "2026-08-13T10:00:00.000Z",
+          "stale": false,
+          "state": "fresh"
         }
       },
       "contentType": "application/json",

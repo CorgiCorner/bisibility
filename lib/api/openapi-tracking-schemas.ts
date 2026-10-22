@@ -1,4 +1,5 @@
-import { openEnum, sdkName, usdCents } from "./openapi-sdk-schema";
+import { paymentResponseFields } from "./openapi-action-payment";
+import { openEnum, sdkName, usdCents, usdDecimal } from "./openapi-sdk-schema";
 import {
   trackingEngineSchema as engine,
   trackingSampleSchema as sample,
@@ -88,10 +89,13 @@ const schedule = object({
   enabled: flag,
   archived_at: nullableDate,
   next_run_at: nullableDate,
-  configuration: object({
-    configurations: array(named("AiTrackingConfiguration", configuration)),
-    prompt_ids: array(id("aip")),
-  }),
+  configuration: named(
+    "AiTrackingScheduleConfiguration",
+    object({
+      configurations: array(named("AiTrackingConfiguration", configuration)),
+      prompt_ids: array(id("aip")),
+    }),
+  ),
   created_at: date,
   updated_at: date,
 });
@@ -125,6 +129,7 @@ const preview = object({
   consent_revision: text,
   estimated_cost_cents: { ...usdCents, type: "number", minimum: 0 },
 });
+Object.assign(preview.properties, paymentResponseFields);
 const denominator = named("AiTrackingTrendCounts", {
   ...object({
     expected: count,
@@ -174,19 +179,31 @@ const trends = object(
 );
 const draft = object({
   text,
-  category: { type: "string", enum: ["neutral", "comparative", "branded"] },
-  provenance: { type: "string", enum: ["generated_hypothesis", "provider_dataset"] },
+  category: {
+    type: "string",
+    enum: ["neutral", "comparative", "branded"],
+    ...openEnum("AiTrackingPromptCategory"),
+  },
+  provenance: {
+    type: "string",
+    enum: ["generated_hypothesis", "provider_dataset"],
+    ...openEnum("AiTrackingSuggestionProvenance"),
+  },
   evidence_ids: array(text),
   popularity: { type: ["number", "null"] },
   accepted: { const: false },
 });
 const suggestions = object({
   input_snapshot: aiTrackingSuggestionSnapshotSchema,
-  drafts: array(draft),
-  method: { type: "string", enum: ["context_template_heuristic", "manual_fallback"] },
+  drafts: array(named("AiTrackingSuggestionDraft", draft)),
+  method: {
+    type: "string",
+    enum: ["context_template_heuristic", "manual_fallback"],
+    ...openEnum("AiTrackingSuggestionMethod"),
+  },
   context_updated_at: nullableDate,
   requires_acceptance: { const: true },
-  cost_usd: { const: "0" },
+  cost_usd: { type: "string", const: "0", ...usdDecimal },
   limitations: array(text),
 });
 const page = (resource: object) =>
@@ -198,6 +215,14 @@ const data = (resource: object) => object({ data: resource });
 
 /** App-owned AI tracking components; the MCP contract has no say in these shapes. */
 export const aiTrackingComponentSchemas = {
+  AiTrackingTopic: topic,
+  AiTrackingTopicResponse: data(component("AiTrackingTopic")),
+  AiTrackingTopicPage: page(component("AiTrackingTopic")),
+  AiTrackingPromptResponse: data(component("AiTrackingPrompt")),
+  AiTrackingSchedule: schedule,
+  AiTrackingScheduleResponse: data(component("AiTrackingSchedule")),
+  AiTrackingSchedulePage: page(component("AiTrackingSchedule")),
+  AiTrackingSuggestionsResponse: data(named("AiTrackingSuggestions", suggestions)),
   AiTrackingRawEvidence: trackingRawEvidenceSchema,
   AiTrackingPrompt: prompt,
   AiTrackingPromptPage: page({ $ref: "#/components/schemas/AiTrackingPrompt" }),
@@ -212,25 +237,25 @@ export const aiTrackingComponentSchemas = {
 
 export const aiTrackingResponseSchemas = {
   ...aiTrackingSuggestionResponseSchemas,
-  listAiTrackingTopics: page(topic),
-  createAiTrackingTopic: data(topic),
-  updateAiTrackingTopic: data(topic),
-  archiveAiTrackingTopic: data(topic),
+  listAiTrackingTopics: component("AiTrackingTopicPage"),
+  createAiTrackingTopic: component("AiTrackingTopicResponse"),
+  updateAiTrackingTopic: component("AiTrackingTopicResponse"),
+  archiveAiTrackingTopic: component("AiTrackingTopicResponse"),
   listAiTrackingPrompts: component("AiTrackingPromptPage"),
-  createAiTrackingPrompt: data(component("AiTrackingPrompt")),
-  updateAiTrackingPrompt: data(component("AiTrackingPrompt")),
-  archiveAiTrackingPrompt: data(component("AiTrackingPrompt")),
-  listAiTrackingSchedules: page(schedule),
-  createAiTrackingSchedule: data(schedule),
-  updateAiTrackingSchedule: data(schedule),
-  archiveAiTrackingSchedule: data(schedule),
+  createAiTrackingPrompt: component("AiTrackingPromptResponse"),
+  updateAiTrackingPrompt: component("AiTrackingPromptResponse"),
+  archiveAiTrackingPrompt: component("AiTrackingPromptResponse"),
+  listAiTrackingSchedules: component("AiTrackingSchedulePage"),
+  createAiTrackingSchedule: component("AiTrackingScheduleResponse"),
+  updateAiTrackingSchedule: component("AiTrackingScheduleResponse"),
+  archiveAiTrackingSchedule: component("AiTrackingScheduleResponse"),
   previewAiTrackingRun: component("AiTrackingRunPreviewResponse"),
   createAiTrackingRun: component("AiTrackingRunResponse"),
   listAiTrackingRuns: component("AiTrackingRunPage"),
   getAiTrackingRun: component("AiTrackingRunResponse"),
   listAiTrackingSamples: component("AiTrackingSamplePage"),
-  cancelAiTrackingRun: data(component("AiTrackingRun")),
-  retryAiTrackingRun: data(component("AiTrackingRun")),
+  cancelAiTrackingRun: component("AiTrackingRunResponse"),
+  retryAiTrackingRun: component("AiTrackingRunResponse"),
   getAiTrackingHistory: component("AiTrackingRunPage"),
   getAiTrackingTrends: component("AiTrackingTrendsResponse"),
   exportAiTrackingEvidence: data(
@@ -249,7 +274,7 @@ export const aiTrackingResponseSchemas = {
       ["items", "run_id", "next_cursor"],
     ),
   ),
-  suggestAiTrackingPrompts: data(suggestions),
+  suggestAiTrackingPrompts: component("AiTrackingSuggestionsResponse"),
   acceptAiTrackingSuggestions: data(object({ prompts: array(component("AiTrackingPrompt")) })),
 } as const;
 

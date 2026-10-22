@@ -2,8 +2,8 @@ import "server-only";
 
 import { pagesPerCheck } from "@/lib/cost-estimate/estimate";
 import { prisma } from "@/lib/db/prisma";
-import { makePublicId } from "@/lib/db/public-id";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { connectionFunding } from "@/lib/metering/project-funding-budgets";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
 import { assertOperationAccess } from "@/lib/operations/access-extension";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
@@ -14,15 +14,17 @@ import { estimatedRankCheckCostCents } from "@/lib/rank-check/default-cost";
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { queuedRankCheckConfig } from "@/lib/rank-check/queued-config";
 import { queuedRankCheckRoute } from "@/lib/rank-check/queued-routing";
-import { activeMarketLocationIds, runnableKeywordWhere } from "@/lib/rank-check/runnable";
+import { hostedReservationCustomerCents } from "@/lib/rank-check/runs/customer-charge";
 import { resolveEffectiveSerpDepth } from "@/lib/serp/constants";
 import { skipEmptyScheduleOccurrences } from "./empty-schedule";
 import { plannedOccurrences } from "./occurrence";
-import { scheduledRunMembers } from "./schedule-members";
+import { persistOccurrence } from "./persist-occurrence";
+import { cancelObsoleteScheduleItems } from "./reconcile-scheduled-items";
 
 const MAX_SCHEDULE_PAGE = 200;
 
 const plannerScheduleSelect = {
+  createdAt: true,
   cronExpression: true,
   enabled: true,
   frequency: true,
@@ -45,7 +47,7 @@ const plannerScheduleSelect = {
   timezone: true,
 } as const;
 
-type PlannerSchedule = Awaited<
+export type PlannerSchedule = Awaited<
   ReturnType<typeof prisma.checkSchedule.findMany<{ select: typeof plannerScheduleSelect }>>
 >[number];
 
@@ -154,9 +156,28 @@ export async function scheduleAdmission(
       usageQuantity: schedule.keywords.length * pagesPerCheck(depth),
       depth,
     };
+  const funding = connectionFunding(connection.credentialSource);
+  const estimatedCustomerCents =
+    funding === "platform"
+      ? await hostedReservationCustomerCents(
+          {
+            connection,
+            projectId: schedule.projectId,
+            source: "app",
+            targets: schedule.keywords.map((keyword, index) => ({
+              keywordId: keyword.id,
+              cost: itemCosts[index] ?? null,
+              depth,
+            })),
+          },
+          client,
+        )
+      : undefined;
   try {
     await assertBudgetAvailable(schedule.projectId, now, {
       estimatedCostCents,
+      ...(estimatedCustomerCents !== undefined ? { estimatedCustomerCents } : {}),
+      funding,
       ...(client ? { client } : {}),
     });
     return {
@@ -180,63 +201,11 @@ export async function scheduleAdmission(
   }
 }
 
-async function persistOccurrence(
-  schedule: PlannerSchedule,
-  occurrence: ReturnType<typeof plannedOccurrences>[number],
-) {
-  const idempotencyKey = `plan:${schedule.publicId}:${occurrence.occurrenceKey}`;
-  return prisma.$transaction(async (tx) => {
-    await lockProjectForProviderMutation(tx, schedule.projectId);
-    const locations = await activeMarketLocationIds(schedule.projectId, tx);
-    const current = await tx.checkSchedule.findFirst({
-      where: {
-        id: schedule.id,
-        archivedAt: null,
-        enabled: true,
-        keywords: { some: runnableKeywordWhere(locations) },
-      },
-      select: { id: true },
-    });
-    if (!current) return null;
-    const existing = await tx.rankCheckRun.findUnique({
-      select: { id: true },
-      where: { projectId_idempotencyKey: { idempotencyKey, projectId: schedule.projectId } },
-    });
-    if (existing) return null;
-    const publicId = makePublicId("rcr");
-    const members = scheduledRunMembers(schedule.keywords);
-    const run = await tx.rankCheckRun.upsert({
-      create: {
-        checkScheduleId: schedule.id,
-        estimatedCostCents: 0,
-        idempotencyKey,
-        keywordCount: 0,
-        orchestrationWorkflowId: `rank-check-run-${publicId}`,
-        plannedFor: occurrence.plannedFor,
-        projectId: schedule.projectId,
-        publicId,
-        requestedCount: 0,
-        selectionHash: members.selectionHash,
-        selectionKind: "scheduled_due",
-        selectionSpec: {
-          checkScheduleId: schedule.publicId,
-          kind: "scheduled_due",
-          occurrenceKey: occurrence.occurrenceKey,
-          v: 1,
-        },
-        status: "planned",
-        targetCount: 0,
-        totalCount: 0,
-        trigger: "scheduled",
-      },
-      update: {},
-      where: { projectId_idempotencyKey: { idempotencyKey, projectId: schedule.projectId } },
-    });
-    return run.id;
-  });
-}
-
 async function planSchedule(schedule: PlannerSchedule, now: Date) {
+  await prisma.$transaction(async (tx) => {
+    await lockProjectForProviderMutation(tx, schedule.projectId);
+    await cancelObsoleteScheduleItems(tx, schedule.id);
+  });
   const activeLocations = new Set(schedule.project.markets.map((market) => market.locationId));
   schedule = {
     ...schedule,
@@ -250,11 +219,14 @@ async function planSchedule(schedule: PlannerSchedule, now: Date) {
     ...schedule,
     timezone: schedule.timezone ?? schedule.project.defaults?.timezone ?? "UTC",
   };
-  const occurrences = plannedOccurrences(effective, now);
+  // Fixed-time schedules cannot predate creation; phased intervals keep their anchor.
+  const occurrences = plannedOccurrences(effective, now).filter(
+    (occurrence) => schedule.timeOfDay === null || occurrence.plannedFor >= schedule.createdAt,
+  );
   if (occurrences.length === 0) return { blocked: 0, planned: 0 };
   let planned = 0;
   for (const occurrence of occurrences) {
-    const runId = await persistOccurrence(schedule, occurrence);
+    const runId = await persistOccurrence(schedule, occurrence, now);
     if (runId) planned += 1;
   }
   return { blocked: 0, planned };

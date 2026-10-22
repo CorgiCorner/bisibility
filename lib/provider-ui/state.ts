@@ -12,6 +12,7 @@ import { lockProjectForProviderMutation } from "@/lib/provider-allocations/proje
 import { ownAllocationTag } from "@/lib/provider-usage/credential-version";
 import type { ProviderBinding, ProviderRate } from "@usagekit/views";
 import { platformAllocationEvidence, platformAllocationProviders } from "./allocation-extension";
+import type { NativeAllocationRow } from "./native-allocation-evidence";
 
 export const fingerprint = (input: unknown) =>
   createHash("sha256").update(JSON.stringify(input)).digest("hex");
@@ -30,13 +31,15 @@ export type StoredUiConnection = {
 };
 export type ProviderUiState = Awaited<ReturnType<typeof loadProviderUiState>>;
 
-/** Reads use a consistent snapshot; mutations additionally fence concurrent project writers. */
+/** Binding reads omit financial projections; mutations fence concurrent project writers. */
 export async function loadProviderUiState(
   tx: Prisma.TransactionClient,
   actor: Actor,
   publicId: string,
-  mode: "read" | "mutation" = "mutation",
+  mode: "read" | "mutation" | "binding" = "mutation",
+  options: { financialEvidence?: boolean } = {},
 ) {
+  const financialEvidence = mode !== "binding" && options.financialEvidence !== false;
   const reference = await tx.project.findUnique({
     where: { publicId },
     select: { id: true, name: true },
@@ -78,24 +81,28 @@ export async function loadProviderUiState(
         FROM provider_connection_rates r WHERE r."connectionId"=c.id),'[]'::jsonb) AS rates
     FROM provider_connections c WHERE c."projectId"=${project.id} ORDER BY c.id`;
   const namespace = meteringNamespace();
-  const budgets = await readSpendingBudgets(
-    tx,
-    namespace,
-    [
-      { kind: "group", namespace, group: project.id },
-      ...candidates.flatMap((row) => [
-        { kind: "tag" as const, namespace, tag: ownAllocationTag(row.provider, row.id) },
-        { kind: "tag" as const, namespace, tag: platformAllocationTag(row.provider, row.id) },
-      ]),
-    ],
-    mode,
-  );
+  const budgets =
+    mode === "binding"
+      ? []
+      : await readSpendingBudgets(
+          tx,
+          namespace,
+          [
+            { kind: "group", namespace, group: project.id },
+            ...candidates.flatMap((row) => [
+              { kind: "tag" as const, namespace, tag: ownAllocationTag(row.provider, row.id) },
+              { kind: "tag" as const, namespace, tag: platformAllocationTag(row.provider, row.id) },
+            ]),
+          ],
+          mode,
+        );
   const displayEvidence: { projectLabel?: string; ownEvidence?: OwnBudgetRead[] } = {
     projectLabel: reference.name,
     ownEvidence: [],
   };
   if (
     mode === "read" &&
+    financialEvidence &&
     actor.id === project.ownerId &&
     canProjectAction(grant.role, "read", "billing")
   ) {
@@ -115,10 +122,12 @@ export async function loadProviderUiState(
   const connections = candidates.filter((connection) => connection.publicId);
   const platformRates: Record<string, ProviderRate[]> = {};
   const nativeRates: Record<string, ProviderRate[]> = {};
-  const platformEvidence = await platformAllocationEvidence(tx, {
-    actor: currentActor,
-    projectId: project.id,
-  });
+  const platformEvidence = financialEvidence
+    ? await platformAllocationEvidence(tx, {
+        actor: currentActor,
+        projectId: project.id,
+      })
+    : [];
   const authorities = await tx.$queryRaw<
     { instanceId: string }[]
   >`SELECT "instanceId" FROM provider_ui_authority WHERE id='provider-ui'`;
@@ -150,6 +159,8 @@ export async function loadProviderUiState(
   };
   return {
     ...displayEvidence,
+    usageReadable: actor.id === project.ownerId && canProjectAction(grant.role, "read", "billing"),
+    nativeAllocationRows: [] as NativeAllocationRow[],
     project,
     budgets,
     actor: currentActor,

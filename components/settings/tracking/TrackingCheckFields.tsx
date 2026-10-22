@@ -7,12 +7,11 @@ import { SettingsField } from "@/components/settings/shell/settings-field-widths
 import type { TrackingDefaultsForm } from "@/components/settings/tracking/tracking-form";
 import { FieldLabel } from "@/components/ui/FieldLabel";
 import { MenuSelect } from "@/components/ui/MenuSelect";
-import { Switch } from "@/components/ui/Switch";
 import { type SerpDepth, serpDepthValues, serpDeviceOptions } from "@/lib/serp/constants";
 import type { DefaultsData } from "@/lib/settings/options";
 import { VISIBILITY_HORIZON, VISIBILITY_SHALLOW_CHECK_COPY } from "@/lib/visibility/definition";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
 
@@ -35,6 +34,7 @@ export function TrackingCheckFields({
   markDirty,
 }: Readonly<TrackingCheckFieldsProps>) {
   const t = useTranslations("projectSettingsTracking.checkDefaults");
+  const collectionHelpId = useId();
   const device = form.watch("device");
   const depth = form.watch("serpDepth") ?? defaults.serpDepth;
   const [location, setLocation] = useState<LocationFieldValue>(() =>
@@ -88,11 +88,14 @@ export function TrackingCheckFields({
       shouldDirty: true,
       shouldValidate: true,
     });
+    if (Number(value) === VISIBILITY_HORIZON) {
+      form.setValue("serpStopOnMatch", false, { shouldDirty: true, shouldValidate: true });
+    }
     markDirty();
   }
 
   return (
-    <div className="space-y-4 border-t border-border pt-4">
+    <div className="space-y-4">
       <input type="hidden" {...form.register("projectId")} />
       <input type="hidden" {...form.register("city")} />
       <input type="hidden" {...form.register("country")} />
@@ -144,6 +147,11 @@ export function TrackingCheckFields({
           value={String(depth)}
         />
         <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted">{t("serpDepthHelp")}</p>
+        {depth < VISIBILITY_HORIZON ? (
+          <p className="m-0 mt-2 text-[11.5px] leading-5 text-yellow-text" role="status">
+            {t("visibilityDepthWarning")}
+          </p>
+        ) : null}
         {depth < defaults.serpDepth ? (
           <p className="m-0 mt-2 text-[11.5px] leading-5 text-yellow-text">
             {t("serpDepthWarning", { depth })}
@@ -151,23 +159,42 @@ export function TrackingCheckFields({
         ) : null}
       </SettingsField>
 
-      <SettingsField className="scroll-mt-6" id="tracking-stop-on-match" tabIndex={-1} width="full">
+      <SettingsField
+        className="scroll-mt-6"
+        id="tracking-stop-on-match"
+        tabIndex={-1}
+        width="field"
+      >
+        <FieldLabel className={labelClass} label={t("resultsCollection")} />
         <Controller
           control={form.control}
           name="serpStopOnMatch"
           render={({ field }) => (
-            <Switch
-              aria-label={t("stopOnMatch")}
-              checked={field.value}
-              className="w-full"
-              description={t("stopOnMatchDescription", { domain: domain ?? t("projectDomain") })}
-              disabled={!canEdit}
-              label={t("stopOnMatch")}
-              name={field.name}
-              onBlur={field.onBlur}
-              onChange={(event) => field.onChange(event.target.checked)}
-              ref={field.ref}
-            />
+            <>
+              <MenuSelect
+                ariaDescribedBy={collectionHelpId}
+                ariaLabel={t("resultsCollection")}
+                disabled={!canEdit || depth === VISIBILITY_HORIZON}
+                onChange={(value) => {
+                  field.onChange(value === "position");
+                  markDirty();
+                }}
+                options={[
+                  { label: t("positionOnly"), value: "position" },
+                  { label: t("fullResults"), value: "full" },
+                ]}
+                triggerClassName={`${triggerClass} mt-1.5`}
+                triggerWrapperClassName="w-full"
+                value={depth !== VISIBILITY_HORIZON && field.value ? "position" : "full"}
+              />
+              <p className="m-0 mt-1.5 text-[11.5px] leading-5 text-fg-muted" id={collectionHelpId}>
+                {depth === VISIBILITY_HORIZON
+                  ? t("fullTop20Description")
+                  : field.value
+                    ? t("positionOnlyDescription", { domain: domain ?? t("projectDomain") })
+                    : t("fullResultsDescription", { depth })}
+              </p>
+            </>
           )}
         />
       </SettingsField>

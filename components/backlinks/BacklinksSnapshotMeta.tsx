@@ -5,25 +5,21 @@ import {
 import type { BacklinksSnapshot } from "@/lib/backlinks/types";
 import { relativePastFact } from "@/lib/format/relative-time";
 import { PROVIDER_CATALOG } from "@/lib/providers/catalog-metadata";
+import { wholeSecondsRemaining } from "@/lib/ui/format-duration";
+import { useFormatDuration } from "@/lib/ui/use-format-duration";
 import { ClockIcon as Clock } from "@phosphor-icons/react/dist/csr/Clock";
 import { GlobeSimpleIcon as GlobeSimple } from "@phosphor-icons/react/dist/csr/GlobeSimple";
-import { useFormatter, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
 type BacklinksSnapshotMetaProps = {
   estimateCents: number | null;
+  refreshPrice?: ReactNode;
   onRefresh?: () => void;
   refreshing?: boolean;
   snapshot: Omit<BacklinksSnapshot, "cachedUntil"> & { cachedUntil?: string };
   storedFreshness?: StoredResultFreshnessData;
 };
-
-function cacheHours(cachedUntil: string, now: Date) {
-  const hours = Math.max(
-    0,
-    Math.ceil((new Date(cachedUntil).getTime() - now.getTime()) / 3_600_000),
-  );
-  return hours;
-}
 
 function relativePastLabel(
   date: Date,
@@ -38,37 +34,15 @@ function relativePastLabel(
   return t("relative.daysAgo", { count: fact.count });
 }
 
-function refreshEstimateLabel(
-  estimateCents: number,
-  format: ReturnType<typeof useFormatter>,
-  t: ReturnType<typeof useTranslations<"projectBacklinks.workspace.snapshot">>,
-) {
-  const currency = (value: number) =>
-    format.number(value, {
-      currency: "USD",
-      maximumFractionDigits: 2,
-      minimumFractionDigits: 2,
-      style: "currency",
-    });
-  const absoluteCents = Math.abs(estimateCents);
-  if (absoluteCents > 0 && absoluteCents < 1) {
-    return t("refreshEstimateUnderCent", {
-      amount: currency(0.01),
-      sign: estimateCents < 0 ? "-" : "",
-    });
-  }
-  return t("refreshEstimate", { amount: currency(estimateCents / 100) });
-}
-
 export function BacklinksSnapshotMeta({
-  estimateCents,
+  refreshPrice,
   onRefresh,
   refreshing,
   snapshot,
   storedFreshness,
 }: Readonly<BacklinksSnapshotMetaProps>) {
-  const format = useFormatter();
   const t = useTranslations("projectBacklinks.workspace.snapshot");
+  const formatDuration = useFormatDuration();
   const now = new Date();
   const scope =
     snapshot.targetScope === "page"
@@ -97,7 +71,9 @@ export function BacklinksSnapshotMeta({
       ) : snapshot.cachedUntil ? (
         <span className="inline-flex items-center gap-1 rounded-full bg-green/10 px-2 py-0.5 text-[11px] font-medium text-green-text">
           <Clock weight="regular" aria-hidden size={11} />
-          {t("cached", { hours: cacheHours(snapshot.cachedUntil, now) })}
+          {t("cached", {
+            duration: formatDuration(Math.max(0, wholeSecondsRemaining(snapshot.cachedUntil, now))),
+          })}
         </span>
       ) : null}
       {onRefresh ? (
@@ -107,12 +83,7 @@ export function BacklinksSnapshotMeta({
           onClick={onRefresh}
           type="button"
         >
-          {refreshing ? t("refreshing") : t("refresh")}{" "}
-          {estimateCents == null ? null : (
-            <span className="font-sans tabular-nums">
-              {refreshEstimateLabel(estimateCents, format, t)}
-            </span>
-          )}
+          {refreshing ? t("refreshing") : t("refresh")} {refreshPrice}
         </button>
       ) : null}
     </div>

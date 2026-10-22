@@ -4,6 +4,7 @@ import {
   type DashboardSurfacePreference,
   dashboardLayoutFor,
 } from "@/lib/project-surface-preferences/dashboard-model";
+import { setNavigationState } from "@/tests/next-navigation";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PersonalDashboardSurface } from "./PersonalDashboardSurface";
@@ -12,14 +13,10 @@ const mocks = vi.hoisted(() => ({
   read: vi.fn(),
   save: vi.fn(),
   setDefault: vi.fn(),
-  refresh: vi.fn(),
-  replace: vi.fn(),
 }));
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mocks.refresh, replace: mocks.replace }),
-  usePathname: () => "/app/project/dashboard",
-  useSearchParams: () => new URLSearchParams(),
-}));
+beforeEach(() => {
+  setNavigationState({ pathname: "/app/project/dashboard" });
+});
 vi.mock("@/lib/project-surface-preferences/dashboard-actions", () => ({
   readDashboardPreference: mocks.read,
   saveDashboardLayout: mocks.save,

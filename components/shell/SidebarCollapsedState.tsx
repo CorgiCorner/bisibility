@@ -31,8 +31,12 @@ export function SidebarCollapsedProvider({
   );
 }
 
+export function useOptionalSidebarCollapsed() {
+  return useContext(SidebarCollapsedContext);
+}
+
 export function useSidebarCollapsed() {
-  const value = useContext(SidebarCollapsedContext);
+  const value = useOptionalSidebarCollapsed();
   if (!value) {
     throw new Error("useSidebarCollapsed must be used within SidebarCollapsedProvider");
   }

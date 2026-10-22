@@ -8,11 +8,14 @@ export async function definitionFreshness(
 ) {
   const config = source.policy.config?.freshness;
   if (!config) return { freshForMs: null, freshnessReason: "policy_unavailable" as const };
-  const frequency =
-    source.policy.checkSchedule?.frequency ??
-    source.policy.keywordSchedule?.frequency ??
-    source.policy.defaults?.frequency;
-  if (!frequency || frequency === "manual" || frequency === "paused")
+  const schedule = source.policy.checkSchedule;
+  if (
+    !schedule ||
+    !schedule.enabled ||
+    schedule.archivedAt ||
+    schedule.frequency === "manual" ||
+    schedule.frequency === "paused"
+  )
     return {
       freshForMs: config.manualTtlMs,
       freshnessReason: config.manualTtlMs === null ? ("policy_unavailable" as const) : null,

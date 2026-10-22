@@ -1,6 +1,8 @@
-import { definitionSourceFixture } from "@/lib/measurement-definitions/fixtures";
+import {
+  assignedDefinitionSourceFixture,
+  definitionSourceFixture,
+} from "@/lib/measurement-definitions/fixtures";
 import type { DefinitionTransaction } from "@/lib/measurement-definitions/model";
-import { computeNextCheckAt } from "@/lib/rank-check/schedule";
 import { describe, expect, it, vi } from "vitest";
 import { hostCalendarFreshnessPorts } from "./host-calendar";
 
@@ -19,14 +21,10 @@ function setup() {
   return { source, ports };
 }
 describe("actual host calendar freshness policy", () => {
-  it("delegates successive slots including DST to the existing calendar, without a fixed day TTL", async () => {
+  it("ignores both legacy cadences without an assigned schedule", async () => {
     const { source, ports } = setup();
-    const schedule = source.policy.defaults!;
-    const first = computeNextCheckAt(schedule, asOf, source.keywordId)!;
-    const second = computeNextCheckAt(schedule, first, source.keywordId)!;
-    expect(await ports.cadenceIntervalMs(tx, source, asOf)).toBe(
-      second.getTime() - first.getTime(),
-    );
+    source.policy.keywordSchedule = { ...source.policy.defaults!, id: "legacy" };
+    expect(await ports.cadenceIntervalMs(tx, source, asOf)).toBeNull();
   });
   it("uses assigned intent before the legacy mirror and never substitutes disabled schedules", async () => {
     const { source, ports } = setup();
@@ -76,6 +74,7 @@ describe("actual host calendar freshness policy", () => {
   });
   it("does no provider request or database/schedule mutation", async () => {
     const { source, ports } = setup();
+    source.policy.checkSchedule = assignedDefinitionSourceFixture().policy.checkSchedule;
     const fetch = vi.fn(() => {
       throw new Error("No provider I/O");
     });

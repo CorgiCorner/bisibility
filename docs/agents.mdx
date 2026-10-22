@@ -29,6 +29,7 @@ new project; use a personal access token with the required scope.
 Workflows use saved evidence where possible. Missing or incomplete observations
 remain gaps rather than ranking losses. Paid research presents its specific
 scope and estimate before asking for approval; some provider caps are best effort.
+The tools that spend provider money are listed in [Paid MCP tools](/agents/paid-tools).
 
 ## Connect through MCP
 
@@ -39,12 +40,17 @@ https://your-host.example/api/mcp
 ```
 
 Use `https://bisibility.com/api/mcp` for the hosted production endpoint. A
-self-hosted client should use its own origin.
+self-hosted client should use its own origin. Sign-in can happen on a regional
+host such as `https://eu.bisibility.com` while the MCP endpoint stays at
+`https://bisibility.com/api/mcp`, and the hosted MCP server reports the
+application version `0.39.0` rather than the npm SDK version `@bisibility/sdk`
+`0.14.1`.
 
 Hosted MCP clients that implement the MCP OAuth flow discover bisibility's
 authorization server automatically. The flow uses Authorization Code with PKCE,
 dynamic client registration, and access tokens bound to the `/api/mcp`
-resource. The user reviews `read`, `write`, and `admin` scopes before approval.
+resource. Automatically registered clients choose an access level before
+approval. See [Agent permissions](/agents/permissions).
 
 Clients that manage bearer credentials outside the MCP OAuth flow can still use
 a personal access token or project API key. For example, connect Codex to a
@@ -78,6 +84,8 @@ is approved.
 | Claude Code | The `claude mcp add` command | Every tool is exposed | Follows the client's own tool-permission settings |
 | Codex | The `codex mcp add` command | Every tool is exposed | Follows the client's own tool-permission settings |
 | Cursor | Settings, MCP, then paste into `mcp.json` | Every tool is exposed | Follows the client's own tool-permission settings |
+| Grok | Plugins, Connectors, New Connector, Custom, then approve the sign-in | Tools without `readOnlyHint` can stay hidden until write mode is on | Follows the client's own tool-permission settings. See [Agent permissions](/agents/permissions). |
+| Grok Bot | Paste `Add the bisibility MCP server: https://bisibility.com/api/mcp` into a Grok Bot chat, confirm, then sign in from the connect card | Paid operations are write tools | Confirm the server, then approve sign-in. The consent screen may name the client Cursor. See [Agent permissions](/agents/permissions). |
 | Other MCP clients | Any Streamable HTTP configuration with OAuth sign-in | Every tool is exposed | Follows the client's own tool-permission settings |
 
 Each tool declares a `readOnlyHint` marker. Tools that never spend budget or
@@ -88,6 +96,49 @@ write tools; stored reports and cost estimates are read-only.
 To update ChatGPT's tool definitions, refresh the plugin from its details page. Workspace
 policies can restrict custom MCP servers. See OpenAI's [current connection guide](https://developers.openai.com/api/docs/guides/custom-mcp-server).
 The bisibility consent flow narrows ChatGPT connections to read-only access.
+See [Agent permissions](/agents/permissions).
+
+### Connect Grok
+
+1. On grok.com, open Plugins, then Connectors.
+2. Choose New Connector, then Custom.
+3. Name the connector `bisibility` and enter `https://bisibility.com/api/mcp`.
+4. Sign in and approve the request on the bisibility consent screen.
+
+Grok registers itself through dynamic client registration, then opens the
+bisibility consent screen. The request can include every scope, including
+`admin` and `tokens:write`. Approval grants the access level you choose.
+Read and write is the default when it is offered, and API token creation stays
+off unless you check it. See [Agent permissions](/agents/permissions). Paid
+checks are listed in [Paid MCP tools](/agents/paid-tools).
+
+Grok can hide tools that lack a `readOnlyHint` marker unless write mode is on.
+The `get_session_profile` tool reports how many tools such a client shows; with
+the current tool set that is 63 of 140. Turn on write mode in Grok to use the
+write tools.
+
+### Connect Grok Bot
+
+Grok Bot is a separate client from the grok.com connector above.
+
+1. Paste this instruction into a Grok Bot chat. Replace the URL when the MCP
+   server is not the hosted production endpoint.
+
+```text
+Add the bisibility MCP server: https://bisibility.com/api/mcp
+```
+
+2. Confirm adding the custom MCP server.
+3. Sign in from the connect card and approve access on the bisibility consent
+   screen.
+
+The consent screen may name the client Cursor and say the app was registered
+automatically. That is expected for Grok Bot. Scopes, the access level, and
+the API token checkbox are described in
+[Agent permissions](/agents/permissions). Paid operations such as rank checks
+and backlink analysis are write tools and charge the project's payment source.
+Ask the bot to confirm the cost before it runs them. See
+[Paid MCP tools](/agents/paid-tools).
 
 ## Authenticate
 

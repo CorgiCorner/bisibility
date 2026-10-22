@@ -1,7 +1,12 @@
 "use client";
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
+import { PaymentQuoteSummary } from "@/components/action-payment/PaymentQuoteSummary";
+import { usePaymentQuoteExpiry } from "@/components/action-payment/usePaymentQuoteExpiry";
 import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
-import { Checkbox } from "@/components/ui/Checkbox";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
+import { formatPaymentAmount } from "@/lib/action-payment/format";
+import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
 import type { TrackingPromptDraft } from "@/lib/ai-tracking/projections/workspace";
 import type { TrackingWorkspaceActions } from "@/lib/ai-tracking/projections/workspace-actions";
 import { generationCanonicalJson } from "@/lib/ai-tracking/suggestions/generation-json";
@@ -13,7 +18,7 @@ import {
   type SuggestionGenerationResult,
 } from "@/lib/ai-tracking/suggestions/generation-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -34,10 +39,16 @@ export function TrackingGenerationDrawer({
   onReviewDraft: (draft: TrackingPromptDraft) => void;
   canWrite: boolean;
 }>) {
+  const locale = useLocale();
+  const paymentT = useTranslations("shared.actionPayment");
   const t = useTranslations("projectAiTracking");
   const [preview, setPreview] = useState<SuggestionGenerationPreview | null>(null);
   const [result, setResult] = useState<SuggestionGenerationResult | null>(null);
-  const [consent, setConsent] = useState(false);
+  const [failurePayment, setFailurePayment] = useState<ActionPaymentReceipt>();
+  const expired = usePaymentQuoteExpiry(
+    preview?.payment ? Date.parse(preview.payment.expiresAt) : Infinity,
+  );
+  const previewInput = useRef<SuggestionGenerationPreviewInput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [failureGenerationId, setFailureGenerationId] = useState<string | null>(null);
   const [blocked, setBlocked] = useState(false);
@@ -74,10 +85,10 @@ export function TrackingGenerationDrawer({
   function invalidate() {
     version.current++;
     setPreview(null);
-    setConsent(false);
     setResult(null);
   }
   function submit(input: SuggestionGenerationPreviewInput) {
+    previewInput.current = structuredClone(input);
     const request = ++version.current;
     startTransition(async () => {
       try {
@@ -85,11 +96,14 @@ export function TrackingGenerationDrawer({
         const next = await actions.preview(input);
         if (version.current !== request) return;
         setPreview(next);
-        setConsent(false);
         attempt.current = crypto.randomUUID();
       } catch (cause) {
         if (version.current === request) {
           setError(cause instanceof Error ? cause.message : t("generationUnavailable"));
+          if (cause && typeof cause === "object" && "payment" in cause) {
+            const retained = actionPaymentReceiptSchema.safeParse(cause.payment);
+            if (retained.success) setFailurePayment(retained.data);
+          }
           if (
             cause instanceof Error &&
             "reason" in cause &&
@@ -97,7 +111,6 @@ export function TrackingGenerationDrawer({
           ) {
             setBlocked(false);
             setPreview(null);
-            setConsent(false);
             attempt.current = null;
           }
           if (
@@ -111,7 +124,12 @@ export function TrackingGenerationDrawer({
     });
   }
   function generate() {
-    if (!canWrite || !preview || !consent || !attempt.current || pending || blocked) return;
+    if (!canWrite || !preview?.payment || !attempt.current || pending || blocked) return;
+    if (expired) {
+      if (previewInput.current) submit(previewInput.current);
+      return;
+    }
+    if (!preview.payment.availability.allowed) return;
     const request = ++version.current;
     const key = attempt.current;
     setBlocked(true);
@@ -123,6 +141,10 @@ export function TrackingGenerationDrawer({
       } catch (cause) {
         if (version.current === request) {
           setError(cause instanceof Error ? cause.message : t("generationUnavailable"));
+          if (cause && typeof cause === "object" && "payment" in cause) {
+            const retained = actionPaymentReceiptSchema.safeParse(cause.payment);
+            if (retained.success) setFailurePayment(retained.data);
+          }
           if (
             cause instanceof Error &&
             "reason" in cause &&
@@ -130,7 +152,6 @@ export function TrackingGenerationDrawer({
           ) {
             setBlocked(false);
             setPreview(null);
-            setConsent(false);
             attempt.current = null;
           }
           if (
@@ -151,17 +172,7 @@ export function TrackingGenerationDrawer({
       onClose={onClose}
       sheetOnMobile
     >
-      <form
-        className="space-y-5"
-        onSubmit={handleSubmit(submit)}
-        onChange={(event) => {
-          if (
-            !(event.target instanceof HTMLInputElement) ||
-            event.target.name !== "generation-consent"
-          )
-            invalidate();
-        }}
-      >
+      <form className="space-y-5" onSubmit={handleSubmit(submit)} onChange={invalidate}>
         <p className="text-xs text-fg-muted">
           {t("generationContextUpdated", { date: review.contextUpdatedAt ?? t("unknown") })}
         </p>
@@ -196,6 +207,7 @@ export function TrackingGenerationDrawer({
             {error}
           </p>
         )}
+        {failurePayment ? <PaymentChargeLine payment={failurePayment} /> : null}
         {failureGenerationId && (
           <p className="break-all font-mono text-xs text-fg-muted">
             {t("generationFailureId", { id: failureGenerationId })}
@@ -206,23 +218,29 @@ export function TrackingGenerationDrawer({
         )}
         {preview && (
           <section className="space-y-3 rounded-card border border-border p-4">
-            <h2 className="text-sm font-semibold">
-              {t("advisoryEstimate", { cost: (preview.estimatedCostCents / 100).toFixed(4) })}
-            </h2>
-            <p className="text-xs text-fg-muted">{t("generationCostMethod")}</p>
+            <PaymentQuoteSummary quote={preview.payment} label={paymentT("forecast")} />
+            <p className="text-xs text-fg-muted">{paymentT("forecastRisk")}</p>
             <p className="text-xs text-fg-muted">{preview.limitations.join(" ")}</p>
-            <Checkbox
-              name="generation-consent"
-              checked={consent}
-              onChange={(event) => setConsent(event.target.checked)}
-              label={t("generationConsent")}
-            />
+            {expired ? (
+              <p role="alert" className="text-xs text-warning">
+                {paymentT("expired")}
+              </p>
+            ) : null}
             <Button
-              disabled={!canWrite || !consent || blocked || pending}
+              disabled={
+                !canWrite ||
+                !preview.payment ||
+                (!expired && !preview.payment.availability.allowed) ||
+                blocked ||
+                pending
+              }
               loading={pending}
               onClick={generate}
             >
-              {t("generationGenerate")}
+              {expired ? paymentT("refreshPrice") : t("generationGenerate")}
+              {!expired && preview.payment
+                ? ` · ${formatPaymentAmount(preview.payment.charge, locale)}`
+                : ""}
             </Button>
           </section>
         )}
@@ -230,12 +248,11 @@ export function TrackingGenerationDrawer({
           <section className="space-y-3 rounded-card border border-border p-4">
             <h2 className="text-sm font-semibold">{t("generationDrafts")}</h2>
             <p className="font-mono text-xs text-fg-muted">{result.generationId}</p>
-            <p className="text-xs text-fg-muted">
-              {t("generationCostReceipt", {
-                cost: result.costUsd ?? t("unknown"),
-                state: result.costState,
-              })}
-            </p>
+            <PaymentChargeLine payment={result.payment} />
+            {result.originalPayment &&
+            result.originalPayment.actionId !== result.payment?.actionId ? (
+              <PaymentChargeLine original payment={result.originalPayment} />
+            ) : null}
             <p className="text-xs text-fg-muted">{result.limitations.join(" ")}</p>
             {result.drafts.map((draft) => (
               <div key={draft.draftId} className="space-y-2 border-t border-border pt-3">

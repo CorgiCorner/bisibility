@@ -145,4 +145,13 @@ describe("dashboard preference regressions", () => {
     );
     expect(actions.save).not.toHaveBeenCalled();
   });
+  it("keeps the dashboard fieldset out of the tab order and cancels editing from Escape", () => {
+    surface();
+    const fieldset = screen.getByRole("group", { name: "Customize dashboard" });
+    expect(fieldset).not.toHaveAttribute("tabindex");
+    fireEvent.click(screen.getByRole("button", { name: "Customize dashboard" }));
+    fireEvent.keyDown(screen.getByRole("button", { name: /^Save$/ }), { key: "Escape" });
+    expect(screen.queryByRole("button", { name: /^Save$/ })).not.toBeInTheDocument();
+    expect(fieldset).not.toHaveAttribute("tabindex");
+  });
 });

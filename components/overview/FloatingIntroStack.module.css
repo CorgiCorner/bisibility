@@ -1,0 +1,67 @@
+@layer theme, base, components, utilities;
+@layer components {
+  .stack {
+    position: fixed;
+    left: 24px;
+    bottom: 80px;
+    z-index: 30;
+    width: min(300px, calc(100vw - 32px));
+    isolation: isolate;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transform-origin: bottom left;
+    transition:
+      opacity var(--motion-modal-enter) var(--ease-out),
+      transform var(--motion-modal-enter) var(--ease-out);
+  }
+  .active {
+    position: relative;
+    max-height: calc(100dvh - 112px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: var(--radius-card);
+  }
+  .back {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--bg-elev);
+    transform: translate(-6px, -6px) rotate(-1deg);
+  }
+  .back[data-depth="2"] {
+    z-index: -2;
+    transform: translate(-12px, -12px) rotate(-2deg);
+  }
+  @starting-style {
+    .stack {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+  }
+  @media (min-width: 1024px) {
+    .stack[data-sidebar="expanded"] {
+      left: calc(270px + 24px);
+    }
+    .stack[data-sidebar="collapsed"] {
+      left: calc(80px + 24px);
+    }
+  }
+  @media (max-width: 639px) {
+    .stack {
+      left: 16px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stack,
+    .back,
+    .back[data-depth="2"] {
+      transform: none;
+    }
+    .stack {
+      transition: opacity var(--motion-modal-enter) var(--ease-out);
+    }
+  }
+}

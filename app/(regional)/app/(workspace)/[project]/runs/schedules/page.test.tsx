@@ -44,6 +44,9 @@ vi.mock("@/components/ai-tracking/AiScheduleDrawerHost", () => ({
 }));
 vi.mock("@/lib/auth/authorize", () => ({ getProjectRole: mocks.getProjectRole }));
 vi.mock("@/lib/auth/capabilities", () => ({ canProjectAction: mocks.canProjectAction }));
+vi.mock("@/lib/queries/check-schedule-members", () => ({
+  listScheduleMemberCandidates: async () => [],
+}));
 vi.mock("@/lib/queries/check-schedule-list", () => ({
   listCheckScheduleRows: mocks.listCheckScheduleRows,
 }));

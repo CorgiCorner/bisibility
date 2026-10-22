@@ -180,8 +180,29 @@ describe("DomainOverviewWorkspace research scope state", () => {
       initialOutcome: domainOverviewReportFixture,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /refresh now.*\$0\.06/i }));
+    fireEvent.click(screen.getByRole("button", { name: /refresh now.*review price/i }));
     expect(await screen.findByRole("button", { name: /refresh now/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /analyze domain/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /analyze domain/i })).toBeInTheDocument();
   });
 });
+
+// Consent lifecycle is covered by the real useActionPaymentReview and workspace payment tests.
+// These fixtures isolate existing report/cache/scope behavior after accepted consent.
+vi.mock("@/components/action-payment/useActionPaymentReview", () => ({
+  useActionPaymentReview: () => ({
+    draft: null,
+    close: vi.fn(),
+    confirm: vi.fn(),
+    selectOption: vi.fn(),
+    request: (action: (input: unknown) => Promise<unknown>, input: Record<string, unknown>) =>
+      action({
+        ...input,
+        estimateOnly: false,
+        requirePayment: true,
+        acceptedPayment: { quoteToken: "fixture-consent" },
+      }),
+  }),
+}));
+vi.mock("@/components/action-payment/ActionPaymentPrice", () => ({
+  ActionPaymentPrice: () => <span>Review price</span>,
+}));

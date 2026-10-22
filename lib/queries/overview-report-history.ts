@@ -5,12 +5,22 @@ import type { OverviewRange } from "./overview-filters";
 import type { Keyword } from "./overview-trend";
 import { summarizeVisibility, visibilitySnapshotFor } from "./visibility";
 
+const rankedKeywordPreviewLimit = 5;
+
+export type OverviewRankedKeyword = {
+  device: string;
+  keyword: string;
+  market: string;
+  position: number;
+};
 export type OverviewHistoryDay = {
   id: string;
   from: string;
   to: string;
   comparisonKey: string | null;
   averageRankedPosition: number | null;
+  rankedKeywordCount: number;
+  rankedKeywords: OverviewRankedKeyword[];
   report: MeasurementReport;
 };
 export type OverviewReportHistory = {
@@ -112,6 +122,27 @@ export function buildOverviewReportHistory(
     const ranked = snapshots.flatMap(({ current }) =>
       current?.evidence === "positive" && current.position !== null ? [current.position] : [],
     );
+    const rankedKeywords = snapshots
+      .flatMap(({ current }, index) => {
+        const source = retained[index]?.keyword;
+        if (!source || current?.evidence !== "positive" || current.position === null) return [];
+        return [
+          {
+            device: source.device,
+            keyword: source.text,
+            market: source.locationRef.displayName,
+            position: current.position,
+          },
+        ];
+      })
+      .sort((left, right) => {
+        const byPosition = left.position - right.position;
+        if (byPosition !== 0) return byPosition;
+        const byKeyword = left.keyword.localeCompare(right.keyword);
+        if (byKeyword !== 0) return byKeyword;
+        const byDevice = left.device.localeCompare(right.device);
+        return byDevice === 0 ? left.market.localeCompare(right.market) : byDevice;
+      });
     const keys = snapshots
       .filter(
         ({ current }) => current?.evidence === "positive" || current?.evidence === "known_absent",
@@ -126,6 +157,8 @@ export function buildOverviewReportHistory(
       averageRankedPosition: ranked.length
         ? ranked.reduce((sum, rank) => sum + rank, 0) / ranked.length
         : null,
+      rankedKeywordCount: rankedKeywords.length,
+      rankedKeywords: rankedKeywords.slice(0, rankedKeywordPreviewLimit),
       comparisonKey:
         keys.length && keys.every(([, value]) => value != null) ? JSON.stringify(keys) : null,
     });

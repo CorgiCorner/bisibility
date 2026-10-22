@@ -212,9 +212,11 @@ export function registerAdditionalAuditDeclarations(
   );
   declare(["provider.disconnect"], { after: provider, before: provider });
   declare(["provider.credential_source_changed"], {
-    after: strings("provider", "source"),
+    after: { ...strings("provider", "source"), ...f.booleans("keyRetained") },
     before: strings("provider", "source"),
   });
+  const storedKey = { ...strings("provider", "source"), ...f.booleans("hasCredentials") };
+  declare(["provider.stored_credentials_deleted"], { after: storedKey, before: storedKey });
   declare(["provider.update_rate"], {
     after: { ...f.scalars("amountCents"), ...strings("feature", "provider") },
     before: { ...f.scalars("amountCents"), ...strings("feature", "provider") },

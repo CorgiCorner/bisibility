@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { keywordMembershipSelect } from "@/lib/keywords/membership-select";
 import { capturedObservationSelect } from "@/lib/observation/select";
 import {
   RankReportCapacityError,
@@ -56,6 +57,7 @@ export async function readOverviewMeasurements(
       },
       where: { createdAt: { lte: asOf } },
     },
+    checkSchedule: { select: keywordMembershipSelect },
     schedule: {
       select: {
         cronExpression: true,

@@ -131,6 +131,30 @@ function observedPage(page: typeof cacheEntry) {
 }
 
 describe("ranked-keyword service", () => {
+  it("zero cap returns a cached page for free without admission", async () => {
+    mocks.withCache.mockResolvedValue({ cached: true, status: "success", value: cacheEntry });
+    await expect(run({ maxCostCents: 0 })).resolves.toMatchObject({
+      ok: true,
+      cached: true,
+      costCents: 0,
+      rows: [{ keyword: "rank tracker" }],
+    });
+    expect(mocks.fetchPage).not.toHaveBeenCalled();
+    expect(testOwnAdmission.reserve).not.toHaveBeenCalled();
+    expect(mocks.evidenceRows).toHaveLength(0);
+  });
+
+  it("zero cap refuses a missing page with a price before admission", async () => {
+    await expect(run({ maxCostCents: 0 })).resolves.toMatchObject({
+      ok: false,
+      reason: "cost_limit_exceeded",
+      estimatedCostCents: expect.any(Number),
+    });
+    expect(mocks.fetchPage).not.toHaveBeenCalled();
+    expect(testOwnAdmission.reserve).not.toHaveBeenCalled();
+    expect(mocks.evidenceRows).toHaveLength(0);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
@@ -382,7 +406,7 @@ describe("ranked-keyword service", () => {
     expect(mocks.prisma.providerConnectionRate.findMany).not.toHaveBeenCalled();
   });
 
-  it("uses a canonical manual zero for the maximum cost guard", async () => {
+  it("zero cap refuses a cache miss even when its manual price is zero", async () => {
     mocks.prisma.providerConnection.findUnique.mockResolvedValue({
       credentialSource: "own",
       credentialsEncrypted: "encrypted",
@@ -393,11 +417,14 @@ describe("ranked-keyword service", () => {
       status: "connected",
       rates: [{ amountCents: "0" }],
     });
-    await expect(run({ maxCostCents: 0 })).resolves.toMatchObject({ ok: true });
-    expect(mocks.fetchPage).toHaveBeenCalledOnce();
-    expect(mocks.evidenceRows).toEqual([
-      expect.objectContaining({ estimate: expect.objectContaining({ cents: "0.0000" }) }),
-    ]);
+    await expect(run({ maxCostCents: 0 })).resolves.toMatchObject({
+      ok: false,
+      reason: "cost_limit_exceeded",
+      estimatedCostCents: 0,
+    });
+    expect(mocks.fetchPage).not.toHaveBeenCalled();
+    expect(testOwnAdmission.reserve).not.toHaveBeenCalled();
+    expect(mocks.evidenceRows).toEqual([]);
   });
 
   it("surfaces failed Meter evidence persistence instead of reporting unrecorded usage as success", async () => {

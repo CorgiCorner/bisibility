@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { domainOverviewSnapshotCachedUntil, domainOverviewSnapshotFreshness } from "./cache-policy";
+import { domainPaymentHistory } from "./payment-history";
 import type { DomainOverviewScope, DomainRecentTarget } from "./types";
 
 export async function recentDomainOverviewTargets(projectId: string, limit = 8, now = new Date()) {
@@ -9,6 +10,7 @@ export async function recentDomainOverviewTargets(projectId: string, limit = 8, 
     orderBy: { fetchedAt: "desc" },
     select: {
       cachedUntil: true,
+      overview: true,
       fetchedAt: true,
       languageCode: true,
       locationCode: true,
@@ -24,7 +26,9 @@ export async function recentDomainOverviewTargets(projectId: string, limit = 8, 
     if (seen.has(row.target)) continue;
     seen.add(row.target);
     const scope: DomainOverviewScope = row.scope === "subdomain" ? "subdomain" : "root";
+    const { originalPayment } = domainPaymentHistory(row.overview);
     recent.push({
+      ...(originalPayment ? { originalPayment } : {}),
       cachedUntil: domainOverviewSnapshotCachedUntil(row),
       fetchedAt: row.fetchedAt.toISOString(),
       languageCode: row.languageCode,

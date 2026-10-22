@@ -7,6 +7,7 @@ import { SparkleIcon } from "@phosphor-icons/react/dist/csr/Sparkle";
 import { useTranslations } from "next-intl";
 import { AccentCtaLink } from "./AccentCtaLink";
 import { EmptyState } from "./EmptyState";
+import { ProviderAccessActions } from "./ProviderAccessActions";
 
 const moduleIcons = {
   keywords: BinocularsIcon,
@@ -46,9 +47,16 @@ export function ProviderAccessEmptyState({
           ) : undefined
         }
         action={
-          <AccentCtaLink href={href}>
-            {t(available ? (reconnect ? "reconnectAction" : "connectAction") : "action")}
-          </AccentCtaLink>
+          <ProviderAccessActions
+            href={href}
+            providers={providers}
+            reconnect={reconnect}
+            surface={surface}
+          >
+            <AccentCtaLink href={href}>
+              {t(available ? (reconnect ? "reconnectAction" : "connectAction") : "action")}
+            </AccentCtaLink>
+          </ProviderAccessActions>
         }
       />
     </section>

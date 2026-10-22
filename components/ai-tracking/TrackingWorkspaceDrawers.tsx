@@ -62,10 +62,11 @@ export function TrackingWorkspaceDrawers({
         count={activePrompts.length}
         onClose={() => setDrawer(null)}
         pending={pending}
-        onPreview={(configurations) =>
+        onPreview={(configurations, payment) =>
           actions.preview(
             activePrompts.map((prompt) => prompt.id),
             configurations,
+            payment,
           )
         }
         onLaunch={async (preview) => {

@@ -2,16 +2,16 @@
 
 import { useDateDisplay } from "@/components/dates/DateFormatProvider";
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { formatPaymentAmount } from "@/lib/action-payment/format";
 import { formatDisplayDateTime } from "@/lib/dates/format";
-import { useFormatter, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { ResearchEstimateView } from "./ResearchSearchCard";
-import { formatResearchEstimateCents } from "./research-money";
-import { nextBudgetResetAt, researchRetryPresentation } from "./research-workspace-model";
+import { nextBudgetResetAt } from "./research-workspace-model";
 
 export function useResearchWorkspaceCopy(timeZone: string) {
   const errors = useSharedErrorMessages();
   const dateDisplay = useDateDisplay();
-  const format = useFormatter();
+  const locale = useLocale();
   const stateT = useTranslations("projectResearch.state");
   const sharedT = useTranslations("shared.errors");
   const recentT = useTranslations("projectResearch.recent");
@@ -38,12 +38,10 @@ export function useResearchWorkspaceCopy(timeZone: string) {
       formatDisplayDateTime(nextBudgetResetAt(timeZone), { ...dateDisplay, timeZone }),
     recentDisabledHint: recentT("disabledHint"),
     retryLabel: (estimate: ResearchEstimateView) => {
-      const presentation = researchRetryPresentation(estimate);
-      if (presentation.kind === "cached") return stateT("retryCached");
-      if (presentation.kind === "plain") return stateT("retry");
-      return stateT("retryCost", {
-        cost: formatResearchEstimateCents(presentation.costCents, format.number),
-      });
+      const payment = estimate.payments?.[0];
+      if (!payment) return stateT("retry");
+      if (payment.cache.state === "hit") return stateT("retryCached");
+      return stateT("retryCost", { cost: formatPaymentAmount(payment.charge, locale) });
     },
   };
 }

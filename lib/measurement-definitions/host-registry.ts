@@ -1,5 +1,5 @@
 import { RANK_REPORT_CALENDAR_CONFIGURATION } from "@/lib/rank-reports/host-policy";
-import { frozenRequest, sameDefinitionBytes } from "./canonical";
+import { frozenRequest, retainedRequestMatchesSource, sameDefinitionBytes } from "./canonical";
 import { DefinitionUnavailableError } from "./errors";
 import { hostDefinitionAdapter } from "./host-adapters";
 import type {
@@ -62,7 +62,7 @@ export async function assertHostDefinitionAdapter(
     !source.policy.config ||
     providerId !== request.providerId ||
     !hostDefinitionConfigImplemented(source.policy.config) ||
-    !sameDefinitionBytes(request, frozenRequest(source, providerId, request.depth))
+    !retainedRequestMatchesSource(source, request, providerId, request.depth)
   )
     throw new DefinitionUnavailableError();
   assertHostDefinitionRequest(source.policy.config, request);

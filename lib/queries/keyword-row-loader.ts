@@ -1,3 +1,4 @@
+import { createKeywordMembershipProjector } from "@/lib/keywords/schedule-membership";
 import "server-only";
 
 import { whereExecutedChecks } from "@/lib/checks/status";
@@ -76,10 +77,19 @@ async function loadKeywordRowsChunk(
   ]);
   const byId = new Map(keywords.map((keyword) => [keyword.id, keyword]));
   const meta = { defaults, domain: trackedProjectDomain(project.domain) ?? "" };
+  const projectSchedule = createKeywordMembershipProjector();
   return keywordIds.flatMap((id) => {
     const keyword = byId.get(id);
     return keyword
-      ? [mapKeyword(keyword, meta, metricsMap.get(id) ?? EMPTY_METRICS, trafficMap.get(id))]
+      ? [
+          mapKeyword(
+            keyword,
+            meta,
+            metricsMap.get(id) ?? EMPTY_METRICS,
+            trafficMap.get(id),
+            projectSchedule,
+          ),
+        ]
       : [];
   });
 }

@@ -8,11 +8,12 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 function isRunnable(run: ProjectRun) {
-  return run.kind === "rank_check" && run.details.status === "planned";
+  return run.kind === "rank" && run.details.status === "planned";
 }
 
 function titleFor(run: ProjectRun, t: ReturnType<typeof useTranslations<"projectRuns">>) {
-  if (run.title.kind === "gsc_import") return t("table.searchConsoleImport");
+  if (run.title.kind === "ai") return t("table.aiTrackingRun");
+  if (run.title.kind === "gsc") return t("table.searchConsoleImport");
   if (run.title.trigger === "api") return t("table.rankCheckApi");
   if (run.title.trigger === "manual") return t("table.rankCheckManual");
   if (run.title.trigger === "retry") return t("table.rankCheckRetry");
@@ -40,7 +41,7 @@ export function RunActions({
   const pending = pendingRunId === run.id;
   const items = [
     ...(onDelete &&
-    run.kind === "rank_check" &&
+    run.kind === "rank" &&
     TERMINAL_RUN_STATUSES.some((status) => status === run.details.status)
       ? [
           {

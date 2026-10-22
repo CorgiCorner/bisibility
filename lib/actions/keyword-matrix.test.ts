@@ -31,6 +31,7 @@ const mocks = vi.hoisted(() => {
 
   return {
     AuthorizationError,
+    setKeywordCadence: vi.fn(),
     authorize: vi.fn(() => ({ actorId: "user_1", projectId: "project_1", role: "admin" })),
     prisma,
     refreshKeywordDispatchStates: vi.fn(async () => 0),
@@ -44,6 +45,10 @@ const mocks = vi.hoisted(() => {
     writeAudit: vi.fn(),
   };
 });
+
+vi.mock("@/lib/rank-check/schedules/keyword-cadence", () => ({
+  setKeywordCadence: mocks.setKeywordCadence,
+}));
 
 vi.mock("@/lib/analytics/server", () => ({
   readAnalyticsSurfaceFromHeaders: mocks.readAnalyticsSurfaceFromHeaders,

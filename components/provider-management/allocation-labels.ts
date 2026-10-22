@@ -3,15 +3,13 @@
 import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
 import type { AllocationProps } from "@/components/usagekit/provider-allocation-editor";
 import type { UsageConnection } from "@/lib/metering/user-views";
-import { dollarsFromNativeCents } from "@/lib/provider-ui/form-schema";
 import type { ProviderAllocationRow } from "@usagekit/views";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
 export function useAllocationLabels(
   connections: readonly UsageConnection[],
   rows: readonly ProviderAllocationRow[],
 ) {
-  const locale = useLocale();
   const presentation = useUsagePresentation();
   const t = useTranslations("projectSettingsUsage.provider.budgetDialog");
   const common = useTranslations("projectIntegrations.providerManagement");
@@ -38,6 +36,17 @@ export function useAllocationLabels(
     empty: t("empty"),
     reload: t("reloadAllocations"),
     refreshBalance: t("refreshProviderBalance"),
+    refreshing: t("refreshingProviderBalance"),
+    balanceShared: t("balanceShared"),
+    balanceWarning: t("balanceWarning"),
+    availabilityReasons: {
+      owner_only: t("availabilityReasons.owner_only"),
+      usage_unavailable: t("availabilityReasons.usage_unavailable"),
+      balance_unavailable: t("availabilityReasons.balance_unavailable"),
+      balance_stale: t("availabilityReasons.balance_stale"),
+      balance_mismatch: t("availabilityReasons.balance_mismatch"),
+      budget_precision: t("availabilityReasons.budget_precision"),
+    },
     refreshFailed: t("refreshError"),
   };
   const feedbackLabels: AllocationProps["feedbackLabels"] = {
@@ -96,24 +105,8 @@ export function useAllocationLabels(
       refreshBalance: t("refreshProviderBalance"),
     };
   };
-  const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 20 });
-  const dollars = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "USD",
-    currencyDisplay: "narrowSymbol",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  const formatFigure: NonNullable<AllocationProps["formatFigure"]> = (figure) => {
-    const monetary = figure.unit === "cents";
-    const text = monetary ? dollarsFromNativeCents(figure.text) : figure.text;
-    if (text === null) return meter("unknown");
-    // Intl preserves decimal string precision; TypeScript's Intl types omit string input.
-    const format = (monetary ? dollars : number).format as (
-      value: string | number | bigint,
-    ) => string;
-    return format(text);
-  };
+  const formatFigure: NonNullable<AllocationProps["formatFigure"]> = (figure) =>
+    presentation.budgetFigure(figure) ?? meter("unknown");
   const formatUnit = (unit: string) =>
     unit === "units"
       ? t("searchesAdornment")

@@ -135,7 +135,7 @@ describe("keywordResource check state", () => {
 });
 
 describe("keywordResource schedule source", () => {
-  it("reports project_default when the keyword has no schedule row", () => {
+  it("does not schedule an unassigned keyword from project defaults", () => {
     const resource = keywordResource(
       keywordRecord({
         project: {
@@ -152,10 +152,14 @@ describe("keywordResource schedule source", () => {
       projectPublicId,
     );
 
-    expect(resource.schedule).toMatchObject({ frequency: "daily", source: "project_default" });
+    expect(resource.schedule).toMatchObject({
+      frequency: "manual",
+      source: "keyword",
+      next_check_at: null,
+    });
   });
 
-  it("reports keyword when the keyword has its own schedule row", () => {
+  it("does not schedule an unassigned keyword from a stale legacy cadence", () => {
     const resource = keywordResource(
       keywordRecord({
         schedule: {
@@ -170,8 +174,64 @@ describe("keywordResource schedule source", () => {
       projectPublicId,
     );
 
-    expect(resource.schedule).toMatchObject({ frequency: "weekly", source: "keyword" });
+    expect(resource.schedule).toMatchObject({
+      frequency: "manual",
+      source: "keyword",
+      next_check_at: null,
+    });
   });
+  it.each([
+    [true, null, "daily"],
+    [false, null, "paused"],
+    [true, new Date(), "manual"],
+  ] as const)(
+    "uses the actual membership (enabled=%s, archived=%s)",
+    (enabled, archivedAt, frequency) => {
+      const resource = keywordResource(
+        keywordRecord({
+          checkSchedule: {
+            archivedAt,
+            enabled,
+            frequency: "daily",
+            cronExpression: null,
+            jitterMinutes: 0,
+            timeOfDay: "09:00",
+            timezone: "UTC",
+            publicId: "sch_a00000000000000000000000",
+          },
+          schedule: { frequency: "weekly", lastCheckedAt: null },
+        }),
+        projectPublicId,
+      );
+      expect(resource.schedule).toMatchObject({ frequency, source: "keyword" });
+      if (frequency === "daily")
+        expect(resource.schedule?.next_check_at).toEqual(expect.any(String));
+      else expect(resource.schedule?.next_check_at).toBeNull();
+    },
+  );
+  it.each(["0 0 31 2 1", "0 0 1 2,5,11 1"])(
+    "keeps accepted sparse or impossible cadence %s readable",
+    (cronExpression) => {
+      const record = keywordRecord({
+        checkSchedule: {
+          frequency: "custom_cron",
+          enabled: true,
+          archivedAt: null,
+          publicId: "sch_a00000000000000000000000",
+          timezone: "UTC",
+          timeOfDay: null,
+          cronExpression,
+          jitterMinutes: 0,
+        },
+      });
+      expect(() => keywordResource(record, projectPublicId)).not.toThrow();
+      if (cronExpression === "0 0 31 2 1")
+        expect(keywordResource(record, projectPublicId).schedule).toMatchObject({
+          frequency: "custom_cron",
+          next_check_at: null,
+        });
+    },
+  );
 });
 
 function checkRecord(run: Record<string, unknown> | null) {
@@ -288,4 +348,14 @@ it("retains persisted completeness in a rank-check API response", () => {
     keyword: { projectId: "project_1", publicId: "kw_a00000000000000000000000" },
   } as unknown as RankCheckRecord);
   expect(result).toMatchObject({ observation_completeness: "unknown", position: null });
+});
+
+it("returns safe capacity copy for API and MCP consumers while retaining own-key errors", () => {
+  expect(
+    rankCheckResource({ ...checkRecord(null), errorCode: "provider_capacity_unavailable" }),
+  ).toMatchObject({
+    error_code: "provider_capacity_unavailable",
+    error: expect.stringContaining("You were not charged"),
+  });
+  expect(rankCheckResource(checkRecord(null)).error).toBe("Provider balance exhausted.");
 });

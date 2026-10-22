@@ -121,7 +121,7 @@
           "budgetWithoutAmounts": "Usage needs review. Check budget and unresolved accounting before trying again.",
           "keywordArchived": "This keyword was archived before the check started, so it was stopped before it cost anything.",
           "marketInactive": "This keyword's market is paused, so the check was stopped before it cost anything.",
-          "noProvider": "Connect or reconnect a provider to start this run.",
+          "noProvider": "Review the selected data source in Integrations to start this run.",
           "providerUnavailable": "The provider isn't reachable right now. The run starts on its own once it reconnects.",
           "waiting": "This run is waiting to start. It will continue automatically when it can.",
           "workerCloud": "The background worker isn't reachable right now. The run starts on its own once it reconnects.",
@@ -160,6 +160,12 @@
         "waiting": "waiting"
       },
       "viewAll": "View all runs"
+    },
+    "planStatus": {
+      "pro": "Pro",
+      "trial": "Trial",
+      "trialDaysShort": "{days, plural, one {Trial · # day} other {Trial · # days}}",
+      "trialDays": "{days, plural, one {Trial · # day left} other {Trial · # days left}}"
     },
     "userMenu": {
       "accountMenu": "Account menu",
@@ -220,7 +226,7 @@
         "keywordResearch": "Find phrases worth tracking, with the cost visible before every lookup.",
         "markets": "Manage locations, keyword defaults, and market lifecycle.",
         "preferences": "Theme and personal defaults.",
-        "runs": "Rank checks and Search Console imports for this project.",
+        "runs": "Rank checks, AI tracking and Search Console imports for this project.",
         "searchConsole": "What Google reported, what it withheld, and what you keep.",
         "security": "Password, sessions and account protection.",
         "timeline": "Project signals, page changes and notes over time.",
@@ -326,50 +332,6 @@
       },
       "readOnlyTitle": "Read-only demo.",
       "snapshot": "Snapshot: {date} UTC"
-    },
-    "betaBanner": {
-      "backupLoadError": "Project backup counts could not be loaded.",
-      "coverage": "What beta covers",
-      "detail": "Data recovery isn't guaranteed yet. Keep a recent export.",
-      "dismiss": "Dismiss hosted beta banner",
-      "exportData": "Export data",
-      "lead": "Hosted beta:",
-      "loading": "Loading..."
-    },
-    "betaCoverage": {
-      "close": "Close",
-      "covered": "Covered",
-      "coveredItems": {
-        "export": "Export is available at any time, in full fidelity.",
-        "history": "Full history is retained for the whole beta, never trimmed.",
-        "providerOwnership": "Your provider keys and quotas stay yours - no markup, no resale.",
-        "scheduled": "Rank checks run on schedule, on the same engine as self-host."
-      },
-      "end": {
-        "detail": "30 days notice before pricing. Nothing charged without your confirmation. Self-host stays available.",
-        "title": "When the beta ends"
-      },
-      "exportData": "Export data",
-      "notYet": "Not yet",
-      "notYetItems": {
-        "migration": "No guaranteed migration path between hosted regions.",
-        "restore": "No restore guarantee. If we lose data, we cannot roll you back.",
-        "support": "Support is best-effort over email, with no response target.",
-        "uptime": "No uptime SLA. Maintenance can interrupt checks without notice."
-      },
-      "responsibilities": {
-        "ours": {
-          "detail": "Nightly snapshots are kept for 7 days on a best-effort basis. A small team runs this open beta, so there is no on-call rota and no incident notice you can rely on: assume you will notice an outage before we do.",
-          "title": "On our side"
-        },
-        "title": "Who does what",
-        "yours": {
-          "detail": "Keep a recent export. It is the copy fully under your control and can be restored into self-host.",
-          "title": "On your side"
-        }
-      },
-      "subtitle": "Hosted beta policy",
-      "title": "What the hosted beta covers"
     },
     "backup": {
       "cancel": "Cancel",

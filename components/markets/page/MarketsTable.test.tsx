@@ -65,9 +65,26 @@ describe("MarketsTable status queue", () => {
     expect(screen.getByRole("table")).not.toHaveClass("border");
   });
 
-  it("renders a bare status toggle without a second control border", () => {
+  it("uses one status control and an explicit tracking action", () => {
     renderTable(vi.fn());
-    expect(screen.getByRole("switch").closest("label")).toHaveClass("border-0", "p-0");
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Malaga core: Active" }));
+    expect(screen.getByRole("menuitem", { name: "Pause tracking" })).toBeVisible();
+  });
+
+  it("distinguishes unique keywords from device targets", () => {
+    renderTable(vi.fn(), vi.fn(), [
+      {
+        ...market,
+        distinctKeywordCount: 4,
+        keywordCount: 8,
+        activeKeywordCount: 8,
+        trackedDevices: ["desktop", "mobile"],
+      },
+    ]);
+    expect(screen.getByText("4")).toBeVisible();
+    expect(screen.getByText("8 targets")).toBeVisible();
+    expect(screen.getByText("Desktop · Mobile")).toBeVisible();
   });
 
   it("renders markets through the shared data table", () => {
@@ -86,9 +103,11 @@ describe("MarketsTable status queue", () => {
     const onStatusConfirmed = vi.fn();
     renderTable(onStatusChange, onStatusConfirmed);
 
-    fireEvent.click(screen.getByRole("switch", { name: "Pause Malaga core" }));
+    fireEvent.click(screen.getByRole("button", { name: "Malaga core: Active" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Pause tracking" }));
     await waitFor(() => expect(onStatusChange).toHaveBeenCalledTimes(1));
-    fireEvent.click(screen.getByRole("switch", { name: "Resume Malaga core" }));
+    fireEvent.click(screen.getByRole("button", { name: "Malaga core: Paused" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Resume tracking" }));
     expect(onStatusChange).toHaveBeenCalledTimes(1);
 
     first.resolve({ status: "paused" });
@@ -96,7 +115,7 @@ describe("MarketsTable status queue", () => {
     second.resolve({ status: "active" });
 
     await waitFor(() =>
-      expect(screen.getByRole("switch", { name: "Pause Malaga core" })).toBeChecked(),
+      expect(screen.getByRole("button", { name: "Malaga core: Active" })).toBeVisible(),
     );
     expect(onStatusConfirmed).toHaveBeenCalledOnce();
   });
@@ -106,14 +125,16 @@ describe("MarketsTable status queue", () => {
     const onStatusChange = vi.fn().mockReturnValue(first.promise);
     renderTable(onStatusChange);
 
-    fireEvent.click(screen.getByRole("switch", { name: "Pause Malaga core" }));
+    fireEvent.click(screen.getByRole("button", { name: "Malaga core: Active" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Pause tracking" }));
     await waitFor(() => expect(onStatusChange).toHaveBeenCalledTimes(1));
-    fireEvent.click(screen.getByRole("switch", { name: "Resume Malaga core" }));
+    fireEvent.click(screen.getByRole("button", { name: "Malaga core: Paused" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Resume tracking" }));
     first.reject(new Error("network"));
 
     await waitFor(() => expect(screen.getByText("network")).toBeInTheDocument());
     expect(onStatusChange).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("switch", { name: "Pause Malaga core" })).toBeChecked();
+    expect(screen.getByRole("button", { name: "Malaga core: Active" })).toBeVisible();
   });
 
   it("sorts tied names by public ID and renders unavailable rollups as dashes", () => {

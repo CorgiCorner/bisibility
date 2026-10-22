@@ -21,6 +21,11 @@ const mocks = vi.hoisted(() => ({
   runKeywordCheckWithFallback: vi.fn(),
 }));
 
+vi.mock("../providers/execution-extension", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../providers/execution-extension")>()),
+  // Capacity preflight has its own suite; these tests cover the activity flow.
+  preflightDeploymentRankExecution: async () => undefined,
+}));
 vi.mock("../db/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("../rank-check/fallback", async () => {
   const actual =

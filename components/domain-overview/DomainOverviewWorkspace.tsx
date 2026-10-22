@@ -1,11 +1,13 @@
 "use client";
+import { ActionPaymentModal } from "@/components/action-payment/ActionPaymentModal";
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
+import { useActionPaymentReview } from "@/components/action-payment/useActionPaymentReview";
 import { useSessionSpend } from "@/components/cost-estimate/SessionSpendProvider";
 import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
 import { ProviderAccessGate } from "@/components/ui/ProviderAccessGate";
-import type { DomainOverviewScope, DomainRecentTarget } from "@/lib/domain-overview/types";
-import { researchScopeKey } from "@/lib/research/scope";
+import type { ActionPaymentOption } from "@/lib/action-payment/contract";
+import type { DomainOverviewScope } from "@/lib/domain-overview/types";
 import { appPath } from "@/lib/routing/app-path";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { DomainOverviewAnalyzeCard } from "./DomainOverviewAnalyzeCard";
@@ -14,7 +16,6 @@ import { DomainOverviewRecentTargets } from "./DomainOverviewRecentTargets";
 import { DomainOverviewResults } from "./DomainOverviewResults";
 import { DomainOverviewStatePanel } from "./DomainOverviewStatePanel";
 import {
-  type DomainOverviewUiOutcome,
   type DomainOverviewWorkspaceProps,
   detectedDomainScope,
   estimateInput,
@@ -22,11 +23,12 @@ import {
   failureResetAt,
   failureState,
   reportFrom,
-  reportUrl,
   supportedResearchScope,
 } from "./domain-overview-workspace-model";
 import { useDomainOverviewEstimate } from "./useDomainOverviewEstimate";
 import { useDomainOverviewHistory } from "./useDomainOverviewHistory";
+import { useDomainOverviewNavigation } from "./useDomainOverviewNavigation";
+import { useDomainOverviewRun } from "./useDomainOverviewRun";
 import { useDomainOverviewTablePages } from "./useDomainOverviewTablePages";
 
 export function DomainOverviewWorkspace({
@@ -46,7 +48,6 @@ export function DomainOverviewWorkspace({
 }: Readonly<DomainOverviewWorkspaceProps>) {
   const t = useTranslations("projectDomainOverview.workspace");
   const uiT = useTranslations("projectDomainOverview.workspace.ui");
-  const router = useRouter();
   const { addSpend } = useSessionSpend();
   const activeResearchScope = supportedResearchScope(researchScope);
   const providerReady = context.providerStatus === "connected";
@@ -54,43 +55,97 @@ export function DomainOverviewWorkspace({
   const [domainScopeOverride, setDomainScopeOverride] = useState<DomainOverviewScope | undefined>(
     detectedDomainScope(initialTarget) === "root" ? undefined : initialScope,
   );
-  const [outcome, setOutcome] = useState<DomainOverviewUiOutcome | null>(initialOutcome);
-  const [submitting, setSubmitting] = useState(false);
-  const report = reportFrom(outcome);
+  const [paymentOption, setPaymentOption] = useState<ActionPaymentOption>();
+  const paymentReview = useActionPaymentReview();
   const requestInput = (nextTarget: string, nextScope = domainScopeOverride) =>
     activeResearchScope
-      ? estimateInput({
-          domainScope: nextScope,
-          projectId,
-          researchScope: activeResearchScope,
-          target: nextTarget,
-        })
+      ? {
+          ...estimateInput({
+            domainScope: nextScope,
+            projectId,
+            researchScope: activeResearchScope,
+            target: nextTarget,
+          }),
+          ...(paymentOption ? { paymentOptionId: paymentOption.id } : {}),
+        }
       : { estimateOnly: true, projectId, target: nextTarget };
   const { estimate, scheduleEstimate } = useDomainOverviewEstimate(
     analyzeAction,
     requestInput,
     initialEstimate,
   );
-  const { loadMore, loadingTable, tableError, tableFetchedCount, tableHasMore } =
-    useDomainOverviewTablePages({
-      activeResearchScope,
-      addSpend,
-      estimate,
-      loadKeywordsPageAction,
-      loadPagesPageAction,
-      projectId,
-      report,
-      setOutcome,
-    });
-  const { history, historyError, historyLoading, loadHistory, resetHistory } =
-    useDomainOverviewHistory({
-      activeResearchScope,
-      addSpend,
-      estimate,
-      loadHistoryAction,
-      projectId,
-      report,
-    });
+  const navigation = useDomainOverviewNavigation({
+    projectRef,
+    target,
+    domainScope: domainScopeOverride,
+    researchScope,
+    activeResearchScope,
+    setTarget,
+    setScope: setDomainScopeOverride,
+  });
+  const run = useDomainOverviewRun({
+    analyzeAction,
+    initialOutcome,
+    paymentReview,
+    requestInput,
+    target,
+    scope: domainScopeOverride,
+    ready: Boolean(activeResearchScope),
+    addSpend,
+    onSuccess: navigation.acceptReport,
+  });
+  const { outcome, setOutcome, submitting, analyze } = run;
+  const report = reportFrom(outcome);
+  const {
+    loadMore,
+    loadingTable,
+    tableError,
+    tableFetchedCount,
+    tableHasMore,
+    tableBlocked,
+    tablePayments,
+    tableQuoteInputs,
+  } = useDomainOverviewTablePages({
+    activeResearchScope,
+    addSpend,
+    estimate,
+    loadKeywordsPageAction: (input) =>
+      paymentReview.request(
+        loadKeywordsPageAction,
+        input as Record<string, unknown> & { projectId: string },
+        report?.target ?? target,
+      ),
+    loadPagesPageAction: (input) =>
+      paymentReview.request(
+        loadPagesPageAction,
+        input as Record<string, unknown> & { projectId: string },
+        report?.target ?? target,
+      ),
+    projectId,
+    report,
+    setOutcome,
+  });
+  const {
+    history,
+    historyError,
+    historyLoading,
+    loadHistory,
+    historyBlocked,
+    historyPayment,
+    historyQuoteInput,
+  } = useDomainOverviewHistory({
+    activeResearchScope,
+    addSpend,
+    estimate,
+    loadHistoryAction: (input) =>
+      paymentReview.request(
+        loadHistoryAction,
+        input as Record<string, unknown> & { projectId: string },
+        report?.target ?? target,
+      ),
+    projectId,
+    report,
+  });
   const recentTargets = context.recentTargets.filter(
     (recent) =>
       activeResearchScope &&
@@ -101,78 +156,9 @@ export function DomainOverviewWorkspace({
   function updateTarget(nextTarget: string) {
     const nextScope = detectedDomainScope(nextTarget) === "root" ? undefined : domainScopeOverride;
     setTarget(nextTarget);
+    run.clearUnresolved();
     if (nextScope !== domainScopeOverride) setDomainScopeOverride(nextScope);
     if (activeResearchScope) scheduleEstimate(nextTarget, nextScope);
-  }
-
-  function changeResearchScope(next: NonNullable<typeof researchScope>) {
-    if (researchScope && researchScopeKey(next) === researchScopeKey(researchScope)) return;
-    const params = new URLSearchParams({ researchScope: researchScopeKey(next) });
-    if (target.trim()) params.set("domain", target.trim());
-    if (domainScopeOverride) params.set("scope", domainScopeOverride);
-    router.push(`${appPath(projectRef, "domain-overview")}?${params.toString()}`);
-  }
-
-  async function analyze(
-    nextTarget = target,
-    fresh = false,
-    maxCostCents = Math.ceil(estimate.costCents ?? 0),
-    nextScope = domainScopeOverride,
-  ) {
-    if (!activeResearchScope) return;
-    setSubmitting(true);
-    resetHistory();
-    try {
-      const result = await analyzeAction({
-        countryCode: activeResearchScope.countryCode,
-        estimateOnly: false,
-        fresh,
-        languageCode: activeResearchScope.languageCode,
-        locationCode: activeResearchScope.providerLocationCode,
-        maxCostCents,
-        projectId,
-        scopeOverride: nextScope,
-        target: nextTarget,
-      });
-      addSpend("costCents" in result ? result.costCents : 0);
-      setOutcome((current) => (result.ok || !reportFrom(current) ? result : current));
-      if (!result.ok && result.reason === "cost_limit_exceeded") {
-        scheduleEstimate(nextTarget, nextScope);
-      }
-      if (result.ok && !("estimate" in result)) {
-        setTarget(result.target);
-        setDomainScopeOverride(result.scope === "root" ? undefined : result.scope);
-        window.history.replaceState(
-          null,
-          "",
-          reportUrl({
-            domainScope: result.scope,
-            projectRef,
-            researchScope: activeResearchScope,
-            target: result.target,
-          }),
-        );
-      }
-    } catch {
-      setOutcome((current) =>
-        reportFrom(current) ? current : { charged: null, ok: false, reason: "lookup_failed" },
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  function openRecent(recent: DomainRecentTarget) {
-    if (!activeResearchScope) return;
-    setSubmitting(true);
-    router.push(
-      reportUrl({
-        domainScope: recent.scope,
-        projectRef,
-        researchScope: activeResearchScope,
-        target: recent.target,
-      }),
-    );
   }
 
   const blockedState =
@@ -187,6 +173,8 @@ export function DomainOverviewWorkspace({
   return (
     <section aria-label={t("aria")} className="grid min-w-0 gap-4">
       <ProviderAccessGate
+        showNotice={Boolean(report)}
+        surface="domain"
         blocked={
           context.providerStatus === "no_provider" || context.providerStatus === "needs_reauth"
         }
@@ -197,18 +185,17 @@ export function DomainOverviewWorkspace({
         <DomainOverviewAnalyzeCard
           catalogScopes={context.catalogScopes}
           estimate={estimate}
-          onResearchScopeChange={changeResearchScope}
+          onResearchScopeChange={navigation.changeResearchScope}
           onScopeChange={(next) => {
             setDomainScopeOverride(next);
             if (activeResearchScope) scheduleEstimate(target, next);
           }}
-          onSubmit={(next, fresh) =>
-            void analyze(
-              next,
-              fresh,
-              Math.ceil((fresh ? estimate.freshCostCents : estimate.costCents) ?? 0),
-            )
-          }
+          onSubmit={(next, fresh) => void analyze(next, fresh)}
+          disabled={run.unresolved}
+          onPaymentOptionChange={(option) => {
+            setPaymentOption(option);
+            scheduleEstimate(target, domainScopeOverride, option.id);
+          }}
           onTargetChange={updateTarget}
           report={report}
           researchScope={researchScope}
@@ -218,9 +205,21 @@ export function DomainOverviewWorkspace({
           trackedScopes={context.trackedScopes}
         />
       </ProviderAccessGate>
+      <ActionPaymentModal review={paymentReview} />
+      {report && run.failure ? (
+        <DomainOverviewStatePanel
+          charged={failureCharge(run.failure)}
+          projectRef={projectRef}
+          researchScope={researchScope}
+          state={failureState(run.failure) ?? "lookup_failed"}
+        />
+      ) : null}
+      {run.failure && "payment" in run.failure ? (
+        <PaymentChargeLine payment={run.failure.payment} />
+      ) : null}
       <DomainOverviewRecentTargets
         currentTarget={report?.target}
-        onOpen={openRecent}
+        onOpen={navigation.openRecent}
         targets={recentTargets}
       />
       {submitting && !report ? (
@@ -228,20 +227,46 @@ export function DomainOverviewWorkspace({
       ) : report && activeResearchScope ? (
         <DomainOverviewResults
           history={history?.data ?? null}
+          historyBlocked={historyBlocked}
+          historyPayment={historyPayment}
+          tableBlocked={tableBlocked}
+          tablePayments={tablePayments}
+          onRefresh={
+            providerReady && !run.unresolved
+              ? () => void analyze(report.target, true, report.scope)
+              : undefined
+          }
+          paymentActions={{
+            analyze: analyzeAction,
+            history: loadHistoryAction,
+            keywords: loadKeywordsPageAction,
+            pages: loadPagesPageAction,
+          }}
+          refreshing={submitting}
+          refreshInput={
+            activeResearchScope
+              ? { ...requestInput(report.target, report.scope), fresh: true }
+              : null
+          }
+          paymentInputs={{
+            history: historyQuoteInput,
+            keywords: tableQuoteInputs?.keywords ?? null,
+            pages: tableQuoteInputs?.pages ?? null,
+          }}
           historyError={historyError}
           historyEstimateCents={estimate.historyCostCents}
           historyLoading={historyLoading}
-          onLoadHistory={providerReady ? () => void loadHistory() : undefined}
-          onLoadMoreKeywords={providerReady ? () => void loadMore("keywords") : undefined}
-          onLoadMorePages={providerReady ? () => void loadMore("pages") : undefined}
+          onLoadHistory={providerReady && !run.unresolved ? () => void loadHistory() : undefined}
+          onLoadMoreKeywords={
+            providerReady && !run.unresolved ? () => void loadMore("keywords") : undefined
+          }
+          onLoadMorePages={
+            providerReady && !run.unresolved ? () => void loadMore("pages") : undefined
+          }
           projectRef={projectRef}
           report={report}
           researchScope={activeResearchScope}
           saveSelectedKeywordsAction={saveSelectedKeywordsAction}
-          tableEstimateCents={{
-            keywords: estimate.keywordPageCostCents,
-            pages: estimate.pagePageCostCents,
-          }}
           tableError={tableError}
           tableFetchedCount={tableFetchedCount}
           tableHasMore={tableHasMore}
@@ -258,7 +283,7 @@ export function DomainOverviewWorkspace({
         <DomainOverviewStatePanel
           charged={failureCharge(outcome)}
           onRetry={
-            activeResearchScope && blockedState === "lookup_failed"
+            activeResearchScope && blockedState === "lookup_failed" && !run.unresolved
               ? () => void analyze()
               : undefined
           }

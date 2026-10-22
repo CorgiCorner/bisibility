@@ -23,6 +23,16 @@ import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 
 type Data = z.infer<typeof cacheSettingsSchema>;
+type DataCacheMessages = ReturnType<typeof useTranslations<"projectSettingsGeneral.dataCache">>;
+
+function reuseWindowLabel(seconds: number, t: DataCacheMessages) {
+  if (seconds >= 14 * 86_400 && seconds % (7 * 86_400) === 0) {
+    return t("weeks", { count: seconds / (7 * 86_400) });
+  }
+  return seconds < 86_400
+    ? t("hours", { count: seconds / 3_600 })
+    : t("days", { count: seconds / 86_400 });
+}
 type Props = {
   projectId: string;
   canEdit: boolean;
@@ -96,7 +106,11 @@ export function DataCacheSettings({ projectId, canEdit, initial }: Props) {
     });
   }
   return (
-    <Card className={`${settingsCardNaturalFrameClassName} grid gap-4`}>
+    <Card
+      className={`${settingsCardNaturalFrameClassName} scroll-mt-6 grid gap-4`}
+      id="data-cache"
+      tabIndex={-1}
+    >
       <div className="flex items-center gap-1">
         <SectionTitle>{t("title")}</SectionTitle>
         <InfoTooltip text={t("help")} />
@@ -117,10 +131,7 @@ export function DataCacheSettings({ projectId, canEdit, initial }: Props) {
                 { value: "default", label: t("default") },
                 ...ttlOptions.map((seconds) => ({
                   value: String(seconds),
-                  label:
-                    seconds < 86400
-                      ? t("hours", { count: seconds / 3600 })
-                      : t("days", { count: seconds / 86400 }),
+                  label: reuseWindowLabel(seconds, t),
                 })),
               ]}
             />
@@ -128,7 +139,7 @@ export function DataCacheSettings({ projectId, canEdit, initial }: Props) {
         />
         <Button
           type="submit"
-          size="xs"
+          size="sm"
           variant="outline"
           disabled={!canEdit || !loaded || pending || !form.formState.isDirty}
         >

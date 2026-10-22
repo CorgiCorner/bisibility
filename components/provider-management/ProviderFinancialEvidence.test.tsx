@@ -534,10 +534,15 @@ describe("current financial evidence and retained drafts", () => {
   });
 
   it("clears an earlier native provider balance before a repeated synthetic refresh fails", async () => {
-    host.native.mockResolvedValueOnce({
+    host.native.mockImplementationOnce(async (_project, _connection, identity) => ({
       ...connections[1],
-      availableAtProvider: { status: "available", amount: 12.34, unit: "usd" },
-    });
+      nativeObservation: {
+        identity,
+        value: { text: "12.34", unit: "USD", certainty: "measured" },
+        observedAt: new Date(Date.now() - 60_000).toISOString(),
+        expiresAt: new Date(Date.now() + 14 * 60_000).toISOString(),
+      },
+    }));
     render(<AllocationHarness />);
     const input = await screen.findByLabelText<HTMLInputElement>(appLabel);
     await screen.findByText("9,876");
@@ -554,10 +559,15 @@ describe("current financial evidence and retained drafts", () => {
   });
 
   it("hides native balance evidence when a later allocation snapshot identifies a changed row revision", async () => {
-    host.native.mockResolvedValueOnce({
+    host.native.mockImplementationOnce(async (_project, _connection, identity) => ({
       ...connections[1],
-      availableAtProvider: { status: "available", amount: 12.34, unit: "usd" },
-    });
+      nativeObservation: {
+        identity,
+        value: { text: "12.34", unit: "USD", certainty: "measured" },
+        observedAt: new Date(Date.now() - 60_000).toISOString(),
+        expiresAt: new Date(Date.now() + 14 * 60_000).toISOString(),
+      },
+    }));
     render(<AllocationHarness />);
     await screen.findByLabelText(appLabel);
     await screen.findByText("9,876");

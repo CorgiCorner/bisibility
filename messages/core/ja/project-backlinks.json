@@ -10,7 +10,7 @@
         "analyzing": "分析中",
         "analyze": "分析",
         "cached": "{action}（キャッシュ済み・無料）",
-        "priced": "{action} ~{cost}",
+        "priced": "{action} {cost}",
         "removeTarget": "{target} を削除",
         "targetLabel": "バックリンクの分析対象",
         "targetPlaceholder": "ドメインまたは URL を入力",
@@ -30,7 +30,7 @@
       "idle": {
         "aria": "バックリンクの紹介",
         "bullets": {
-          "price": "ご自身の DataForSEO キーで実行され、毎回の実行前に価格を表示",
+          "price": "実行前に料金を表示します。",
           "cache": "スナップショットは24時間キャッシュされ、再表示や絞り込みは無料",
           "diff": "更新のたびに前回のスナップショットと差分を取り、新規と消失のリンクを表示"
         },
@@ -133,7 +133,7 @@
         "exactPage": "特定のページ",
         "wholeSite": "サイト全体、サブドメイン{included, select, true {あり} other {なし}}",
         "snapshot": "· スナップショット",
-        "cached": "キャッシュ済み、{hours, number}時間は無料",
+        "cached": "キャッシュ済み、{duration}は無料",
         "refresh": "今すぐ更新",
         "refreshEstimate": "~{amount}",
         "refreshEstimateUnderCent": "~{sign}< {amount}",
@@ -185,7 +185,7 @@
         "csv": "CSV をエクスポート"
       },
       "recent": {
-        "cached": "キャッシュ済み、{hours, number}時間は無料",
+        "cached": "キャッシュ済み、{duration}は無料",
         "expired": "キャッシュ期限切れ"
       },
       "pricing": {

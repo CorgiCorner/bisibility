@@ -124,6 +124,38 @@ describe("live rank deployment boundary", () => {
     expect(mocks.fetchRank).toHaveBeenCalledOnce();
   });
 
+  it("uses hosted credentials and credit attribution with an inactive saved key", async () => {
+    mocks.connection.mockResolvedValue({
+      credentialSource: "hosted",
+      projectId: "project_1",
+      provider: "dataforseo",
+    });
+    const credentials = { login: "hosted", password: "hosted-secret" };
+    const finish = vi.fn();
+    mocks.startExecution.mockResolvedValue({
+      credentials,
+      started: true,
+      costCents: 0.3,
+      quantity: 1,
+      finish,
+    });
+    const request = {
+      ...input(provider),
+      connection: {
+        ...input(provider).connection,
+        credentialSource: "hosted",
+        credentialsEncrypted: "retained-key",
+      },
+    };
+    await expect(runCheck(request)).resolves.toMatchObject({
+      rankCheck: { costCents: 0.3 },
+      usageRecorded: true,
+    });
+    expect(mocks.fetchRank).toHaveBeenCalledWith(expect.objectContaining({ credentials }));
+    expect(mocks.attribution).toHaveBeenCalledWith(attribution.context, undefined, "hosted");
+    expect(finish).toHaveBeenCalledOnce();
+  });
+
   it("refuses an unavailable hosted deployment before provider I/O or own decryption", async () => {
     mocks.connection.mockResolvedValue({
       credentialSource: "hosted",

@@ -60,6 +60,17 @@ export function registerAccountAuditDeclarations(
     after: { ...f.numbers("attempted", "revoked"), ...strings("skipped") },
   });
   declare(["account.session_revoked"], { before: strings("id", "ipAddress", "userAgent") });
+  declare(["account.connected_app_revoked"], {
+    after: {
+      ...strings("clientId"),
+      ...f.numbers(
+        "deletedConsentCount",
+        "revokedRefreshTokenCount",
+        "deletedAccessTokenCount",
+        "revokedCreatedTokenCount",
+      ),
+    },
+  });
   declare(["account.sessions_revoked"], { after: f.numbers("revokedCount") });
   declare(["user.default_project.update"], {
     after: strings("defaultProjectId"),

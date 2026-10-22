@@ -111,7 +111,7 @@ describe("rankTrackerNavigationHref", () => {
     { field: "__check__", sort: "asc" },
     { field: "unsupported", sort: "desc" },
   ])("maps empty or invalid grid sort %j to the default", (sort) => {
-    expect(rankTrackerSortFromGrid(sort)).toEqual({ direction: "asc", field: "position" });
+    expect(rankTrackerSortFromGrid(sort)).toEqual({ direction: "asc", field: "keyword" });
   });
 
   it.each([

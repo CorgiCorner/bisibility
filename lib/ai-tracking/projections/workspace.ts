@@ -1,4 +1,9 @@
 import type {
+  ActionPaymentOption,
+  ActionPaymentQuote,
+  ActionPaymentReceipt,
+} from "@/lib/action-payment/contract";
+import type {
   Evidence,
   MeasurementState,
   RunState,
@@ -42,6 +47,7 @@ export interface TrackingRunRow {
   sampleCount: number;
 }
 export interface TrackingSampleRow {
+  originalPayment?: ActionPaymentReceipt;
   id: string;
   measurement: MeasurementState;
   source: TrackingSource;
@@ -86,6 +92,8 @@ export type TrackingTrendView = {
 };
 
 export interface TrackingPreview {
+  payment?: ActionPaymentQuote;
+  paymentOptions?: ActionPaymentOption[];
   configurations: SourceConfiguration[];
   credentialConnectionId: string;
   credentialVersion: string;

@@ -196,18 +196,27 @@ export function getOpenApiDocument() {
                     undefined,
                     pageParameters,
                   ),
-                  post: createdBearerOperation(
-                    "Create a project with a personal access token",
-                    "createProject",
-                    ref("Project"),
-                    ref("ProjectCreate"),
-                    personalAccess.personalAccessTokenSecurity,
-                  ),
+                  post: {
+                    parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }],
+                    ...createdBearerOperation(
+                      "Create a project with a personal access token",
+                      "createProject",
+                      ref("Project"),
+                      ref("ProjectCreate"),
+                      personalAccess.personalAccessTokenSecurity,
+                    ),
+                  },
                 },
                 "/projects/{project_id}": {
                   delete: bearerOperation("Delete a project", "deleteProject", ref("Project")),
                   get: bearerOperation("Get one project", "getProject", ref("Project")),
-                  patch: bearerOperation("Update a project", "updateProject", ref("Project")),
+                  patch: bearerOperation(
+                    "Update a project",
+                    "updateProject",
+                    ref("Project"),
+                    ref("ProjectPatch"),
+                    [{ $ref: "#/components/parameters/IdempotencyKey" }],
+                  ),
                 },
                 ...reviewedDefaultsPaths({
                   bearer: bearerOperation,

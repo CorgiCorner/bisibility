@@ -52,9 +52,7 @@ export function KeywordDeleteImpact({
           </ul>
           <p className="m-0 text-[12px] leading-5 text-fg-muted">{t("kept")}</p>
         </>
-      ) : (
-        <p className="m-0 text-[12px] leading-5 text-fg-muted">{t("noSchedules")}</p>
-      )}
+      ) : null}
       <p className="m-0 text-[12px] leading-5 text-fg-muted">{t("running")}</p>
     </div>
   );

@@ -8,6 +8,7 @@
           "provider": "gsc"
         },
         "result": {
+          "next_offset": null,
           "row_cap": 10,
           "rows_returned": 1,
           "sort": "clicks_desc",
@@ -27,6 +28,7 @@
           "device": null,
           "dimensions": ["query"],
           "end_date": "2026-10-18",
+          "offset": 0,
           "page_path": null,
           "query_match": "contains",
           "start_date": "2026-10-01"
@@ -46,6 +48,7 @@
           "provider": "gsc"
         },
         "result": {
+          "next_offset": null,
           "row_cap": 10,
           "rows_returned": 1,
           "sort": "clicks_desc",
@@ -66,6 +69,7 @@
           "device": null,
           "dimensions": ["query", "page"],
           "end_date": "2026-10-18",
+          "offset": 0,
           "page_path": "/about",
           "query_match": "contains",
           "start_date": "2026-10-01"

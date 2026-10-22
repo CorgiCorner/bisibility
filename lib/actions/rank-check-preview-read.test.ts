@@ -241,7 +241,7 @@ describe("rank check preview read actions", () => {
     expect(mocks.prisma.keyword.findMany).not.toHaveBeenCalled();
   });
 
-  it("returns the ready count and provider fallback order", async () => {
+  it("returns provider fallback order without enabling legacy recurrence", async () => {
     mocks.loadSerpProviderChain.mockResolvedValue([
       { costPerCheckCents: 0.25, credentialsEncrypted: "secret-a", provider: "dataforseo" },
       { credentialsEncrypted: "secret-b", provider: "secondary" },
@@ -252,7 +252,7 @@ describe("rank check preview read actions", () => {
     const result = await getFirstCheckRunPlan({ projectId: PROJECT_PUBLIC_ID });
 
     // biome-ignore format: compact assertion keeps this test under the project line cap.
-    expect(result).toMatchObject({ budget: { capCents: 100, spentCents: 0 }, estimatedCostPerCheckCents: 0.25, providerReady: true, providers: ["dataforseo", "secondary"], readyCount: 2, scope: { depth: 50, device: "mobile", engine: "google", frequency: "weekly", location: "Poland" } });
+    expect(result).toMatchObject({ budget: { capCents: 100, spentCents: 0 }, estimatedCostPerCheckCents: 0.25, providerReady: true, providers: ["dataforseo", "secondary"], readyCount: 2, scope: { depth: 50, device: "mobile", engine: "google", frequency: "manual", location: "Poland" } });
     expect(mocks.prisma.keyword.count).toHaveBeenCalledWith({
       where: {
         projectId: "project_1",

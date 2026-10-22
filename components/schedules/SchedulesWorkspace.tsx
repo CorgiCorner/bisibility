@@ -9,7 +9,10 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { type AiSchedulesController, toAiScheduleListRow } from "./ai-schedule-rows";
+import type { ScheduleEditorCandidate } from "./ScheduleEditorModel";
+import { SchedulePlanningNotice } from "./SchedulePlanningNotice";
 import { type ScheduleListRow, SchedulesList } from "./SchedulesList";
+import { UnscheduledKeywordsNotice } from "./UnscheduledKeywordsNotice";
 
 type SchedulesWorkspaceProps = {
   /** Null when AI tracking is unavailable to this actor; the rank list still renders. */
@@ -23,6 +26,8 @@ type SchedulesWorkspaceProps = {
   projectRef: string;
   schedules: readonly ScheduleListRow[];
   status: "current" | "archived";
+  candidates?: readonly ScheduleEditorCandidate[];
+  planningMinutes?: number | null;
 };
 
 /** Common Schedules controller: rank rows keep rank endpoints, AI rows use AI tracking actions. */
@@ -36,6 +41,8 @@ export function SchedulesWorkspace({
   projectRef,
   schedules,
   status,
+  candidates = [],
+  planningMinutes = null,
 }: Readonly<SchedulesWorkspaceProps>) {
   const router = useRouter();
   const t = useTranslations("projectRuns.schedules");
@@ -73,6 +80,20 @@ export function SchedulesWorkspace({
           title={t("ai.loadFailed")}
           action={{ label: t("ai.retry"), icon: "retry", onClick: () => router.refresh() }}
         />
+      ) : null}
+      {status === "current" ? (
+        <UnscheduledKeywordsNotice
+          canEdit={canUpdate}
+          candidates={candidates}
+          schedules={schedules}
+          projectId={projectRef}
+        />
+      ) : null}
+      {status === "current" &&
+      schedules.some(
+        (schedule) => schedule.enabled && schedule.keywordCount > 0 && !schedule.archivedAt,
+      ) ? (
+        <SchedulePlanningNotice minutes={planningMinutes} />
       ) : null}
       <SchedulesList
         ai={controller}

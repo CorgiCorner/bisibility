@@ -73,3 +73,13 @@ it("does not hide real Prisma programming errors", async () => {
   read.mockRejectedValueOnce(error);
   await expect(loadWorkspaceBudgetSummary("prj_public")).rejects.toBe(error);
 });
+
+it.each([true, false, undefined])(
+  "passes only explicit authorized budget-edit capability: %s",
+  async (canEditBudget) => {
+    read.mockResolvedValue({ ...emptyProjectUsage(), canEditBudget });
+    expect((await loadWorkspaceBudgetSummary("prj_public")).canEditBudget).toBe(
+      canEditBudget === true,
+    );
+  },
+);

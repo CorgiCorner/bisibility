@@ -1,5 +1,6 @@
 import type { getRankCheckRun, listRankCheckRuns } from "@/lib/queries/rank-check-runs";
 import { isTerminalRunStatus } from "@/lib/rank-check/runs/status";
+import { paymentResource } from "./action-payment";
 import { requireApiPublicId } from "./public-id";
 
 type ReadRun =
@@ -19,6 +20,7 @@ export function publicRankCheckRun(run: ReadRun, projectId: string) {
           : "unknown";
   return {
     id: requireApiPublicId(run.id, "rcr"),
+    ...paymentResource(run),
     project_id: requireApiPublicId(projectId, "prj"),
     status: run.status,
     outcome: run.outcome,

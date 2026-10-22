@@ -1,10 +1,6 @@
 import { TrackingSettingsContent } from "@/components/settings/tracking/TrackingSettingsContent";
 import { previewDefaultSettings } from "@/lib/actions/defaults-reviewed";
 import { updateDefaultRankCheckSettings } from "@/lib/actions/settings";
-import {
-  type CronPreviewResult,
-  previewProjectCronRuns,
-} from "@/lib/actions/settings-cron-preview";
 import type { DefaultsData } from "@/lib/settings/options";
 
 type TrackingSettingsSectionProps = {
@@ -14,31 +10,17 @@ type TrackingSettingsSectionProps = {
   projectId: string;
 };
 
-const idlePreview: CronPreviewResult = { message: null, runs: [], status: "idle", timezone: null };
-
 export async function TrackingSettingsSection({
   canEdit,
   defaults,
   domain,
   projectId,
 }: Readonly<TrackingSettingsSectionProps>) {
-  const cronExpression = defaults.schedule.cron_expression;
-  const initialCronPreview =
-    defaults.schedule.frequency === "custom_cron" && cronExpression
-      ? await previewProjectCronRuns({
-          cronExpression,
-          projectId,
-          timezone: defaults.schedule.timezone,
-        })
-      : idlePreview;
-
   return (
     <TrackingSettingsContent
       canEdit={canEdit}
       defaults={defaults}
       domain={domain}
-      initialCronPreview={initialCronPreview}
-      previewCron={previewProjectCronRuns}
       previewDefaults={previewDefaultSettings}
       projectId={projectId}
       updateDefaults={updateDefaultRankCheckSettings}

@@ -80,9 +80,9 @@ export function withTrackingDefaults(
       : [...(flowState?.devices ?? [values?.device ?? DEFAULT_ONBOARDING_DEVICE])];
 
   return {
-    cronExpression: values?.cronExpression ?? "0 6 * * *",
+    cronExpression: null,
     devices,
-    frequency: values?.frequency ?? DEFAULT_ONBOARDING_FREQUENCY,
+    frequency: DEFAULT_ONBOARDING_FREQUENCY,
     jitterMinutes: values?.jitterMinutes ?? 60,
     locations,
     projectId: values?.projectId ?? flowState?.projectId ?? "",

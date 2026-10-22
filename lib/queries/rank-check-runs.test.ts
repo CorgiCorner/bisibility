@@ -147,6 +147,34 @@ describe("rank-check run queries", () => {
     mocks.monthlySpend.mockResolvedValue(0);
   });
 
+  it("returns a schema-valid cancelled detail for legacy completed/cancelled outcome", async () => {
+    const row = {
+      ...run(runIds[0] as string, new Date("2026-10-21T16:00:00Z")),
+      outcome: "cancelled",
+      trigger: "scheduled",
+      cancelledCount: 1,
+      completedCount: 0,
+      costCents: 0.125,
+    };
+    mocks.runFindFirst.mockResolvedValueOnce(row);
+    const result = await getRankCheckRun("project_1", row.publicId);
+    expect(result).toMatchObject({
+      id: row.publicId,
+      status: "cancelled",
+      outcome: null,
+      costCents: null,
+      counts: { cancelled: 1, completed: 0 },
+    });
+    const { rankCheckRunDto } = await import("./rank-check-run-dto");
+    expect(rankCheckRunDto(row as never)).toMatchObject({
+      costCents: 0.125,
+      status: "cancelled",
+      outcome: null,
+    });
+    const { rankCheckOperationSchema } = await import("@/lib/rank-check/runs/contract");
+    expect(() => rankCheckOperationSchema.parse(result)).not.toThrow();
+  });
+
   it("returns operation usage from all checks in the scoped run, independently of target pagination", async () => {
     const row = {
       ...run(runIds[0] as string, new Date()),
@@ -597,7 +625,7 @@ describe("rank-check run queries", () => {
       position: null,
     });
     expect(mocks.runFindFirst).toHaveBeenCalledWith({
-      select: { id: true },
+      select: { id: true, projectId: true, publicId: true, selectionSpec: true, status: true },
       where: { projectId: "project_1", publicId: runIds[0], deletedAt: null },
     });
     expect(mocks.itemFindMany).toHaveBeenCalledWith(
@@ -607,6 +635,7 @@ describe("rank-check run queries", () => {
             select: {
               billingUnits: true,
               costCents: true,
+              deferredReason: true,
               errorCode: true,
               id: true,
               observationRun: { select: { completeness: true } },

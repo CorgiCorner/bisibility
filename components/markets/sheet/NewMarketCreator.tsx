@@ -12,8 +12,6 @@ import {
   marketDefinitionSelection,
 } from "@/components/markets/blocks/market-definition-selection";
 import { catalogMarketDefinitionSource } from "@/components/markets/blocks/market-definition-source";
-import { FieldLabel } from "@/components/ui/FieldLabel";
-import { MenuSelect } from "@/components/ui/MenuSelect";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import {
   type NewMarketCreateInput,
@@ -25,8 +23,10 @@ import { DEFAULT_SERP_DEPTH, type SerpDevice } from "@/lib/serp/constants";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { NewMarketKeywordMethod, type NewMarketSource } from "./NewMarketKeywordMethod";
-import { NewMarketSchedule, type NewMarketScheduleOption } from "./NewMarketSchedule";
+import { NewMarketCreationFields } from "./NewMarketCreationFields";
+import { type ExistingMarketDeviceTracking, NewMarketExisting } from "./NewMarketExisting";
+import type { NewMarketSource } from "./NewMarketKeywordMethod";
+import type { NewMarketScheduleOption } from "./NewMarketSchedule";
 import { NewMarketScheduleEditor } from "./NewMarketScheduleEditor";
 import { NewMarketSheetFooter } from "./NewMarketSheetFooter";
 import {
@@ -34,12 +34,7 @@ import {
   type NewMarketCreatorMessages,
   pasteErrorMessage,
 } from "./new-market-creator-copy";
-import {
-  defaults,
-  expectedKeywordCount,
-  pasteState,
-  selectedDevice,
-} from "./new-market-creator-model";
+import { defaults, expectedKeywordCount, pasteState } from "./new-market-creator-model";
 
 export type NewMarketCreatorFrame = {
   backLabel: string;
@@ -52,10 +47,10 @@ export type NewMarketCreatorFrame = {
 };
 
 export type { NewMarketCreatorMessages } from "./new-market-creator-copy";
-
 export type NewMarketCreatorProps = {
   /** Create an empty market when the host owns keywords and their tracking defaults. */
   definitionOnly?: { devices: readonly SerpDevice[] };
+  deviceTracking?: ExistingMarketDeviceTracking;
   messages?: NewMarketCreatorMessages;
   children: (frame: NewMarketCreatorFrame) => ReactNode;
   onClose: () => void;
@@ -75,6 +70,7 @@ export type NewMarketCreatorProps = {
 export function NewMarketCreator({
   children,
   definitionOnly,
+  deviceTracking,
   messages,
   onClose,
   onCreate,
@@ -100,6 +96,7 @@ export function NewMarketCreator({
       newMarket: t("newMarket"),
       newSchedule: t("newSchedule"),
     } satisfies NewMarketCreatorMessages);
+  const [devicePending, setDevicePending] = useState(false);
   const [creatingSchedule, setCreatingSchedule] = useState(false);
   const [createdSchedules, setCreatedSchedules] = useState<NewMarketScheduleOption[]>([]);
   const [createdDefaultName, setCreatedDefaultName] = useState<string | null>(null);
@@ -142,8 +139,9 @@ export function NewMarketCreator({
     method?.kind === "empty" ||
     (method?.kind === "copy" && Boolean(method.sourceMarketId) && Boolean(schedule)) ||
     (method?.kind === "paste" && pasteError === null && paste.count > 0 && Boolean(schedule));
-  const duplicate = registry.some((entry) => entry.canonicalKey === canonicalKey);
-  const createDisabled = form.formState.isSubmitting || !baseValid || !methodValid || duplicate;
+  const duplicate = registry.find((entry) => entry.canonicalKey === canonicalKey);
+  const createDisabled =
+    form.formState.isSubmitting || !baseValid || !methodValid || Boolean(duplicate);
 
   /** The block owns the place; the form only ever holds the selection it resolves to. */
   function updateDefinition(next: MarketDefinitionValue) {
@@ -175,6 +173,7 @@ export function NewMarketCreator({
   }
 
   function close() {
+    if (devicePending) return;
     form.reset(defaultValues as never);
     setDefinition(emptyMarketDefinition);
     setActionError(null);
@@ -206,8 +205,9 @@ export function NewMarketCreator({
       <NewMarketSheetFooter
         createDisabled={createDisabled}
         onClose={close}
-        pending={form.formState.isSubmitting}
-        prospectiveCount={definitionOnly ? undefined : prospectiveCount}
+        pending={form.formState.isSubmitting || devicePending}
+        prospectiveCount={definitionOnly || duplicate ? undefined : prospectiveCount}
+        showCreate={!duplicate || Boolean(definitionOnly)}
         cancelLabel={resolvedMessages.cancel}
         createLabel={resolvedMessages.createMarket}
       />
@@ -251,7 +251,7 @@ export function NewMarketCreator({
         }}
       >
         <p className="m-0 text-[13px] text-fg-muted">{resolvedMessages.description}</p>
-        <fieldset className="contents" disabled={form.formState.isSubmitting}>
+        <fieldset className="contents" disabled={form.formState.isSubmitting || devicePending}>
           <MarketDefinition
             duplicate={null}
             messages={resolvedMessages.marketDefinition}
@@ -260,41 +260,33 @@ export function NewMarketCreator({
             source={locationSource}
             value={definition}
           />
-          {!definitionOnly ? (
-            <div className="grid gap-1.5">
-              <FieldLabel label={t("devices")} />
-              <MenuSelect
-                ariaLabel={t("devices")}
-                onChange={updateDevices}
-                options={[
-                  { label: t("desktop"), value: "desktop" },
-                  { label: t("mobile"), value: "mobile" },
-                  { label: t("both"), value: "both" },
-                ]}
-                size="input"
-                value={selectedDevice(devices)}
-              />
-              <p className="m-0 text-[12px] text-fg-muted">
-                {t("deviceCountNote", { count: devices?.length ?? 0 })}
-              </p>
-            </div>
-          ) : null}
-          {!definitionOnly ? (
-            <NewMarketKeywordMethod
-              onChange={updateMethod}
-              pasteError={pasteError}
-              sources={sources}
-              value={method}
+          {/* Onboarding drafts have no saved market to open; the definition explains the duplicate. */}
+          {duplicate && !definitionOnly ? (
+            <NewMarketExisting
+              market={duplicate}
+              projectId={projectId}
+              schedules={availableSchedules}
+              tracking={!definitionOnly ? deviceTracking : undefined}
+              onAdded={() => {
+                deviceTracking?.onAdded?.();
+                onClose();
+              }}
+              onPendingChange={setDevicePending}
             />
-          ) : null}
-          {!definitionOnly && method && method.kind !== "empty" ? (
-            <NewMarketSchedule
-              onChange={(next) =>
+          ) : !definitionOnly ? (
+            <NewMarketCreationFields
+              devices={devices}
+              method={method}
+              pasteError={pasteError}
+              schedule={schedule}
+              schedules={availableSchedules}
+              sources={sources}
+              onDevices={updateDevices}
+              onMethod={updateMethod}
+              onSchedule={(next) =>
                 form.setValue("schedule", next, { shouldDirty: true, shouldValidate: true })
               }
               onNewSchedule={() => setCreatingSchedule(true)}
-              schedules={availableSchedules}
-              value={schedule}
             />
           ) : null}
         </fieldset>

@@ -560,7 +560,7 @@ describe("reconcileRankCheckRuns", () => {
     await reconcileRankCheckRuns({ limit: 10, now }, prisma as never);
     expect(run).toMatchObject({ finishedAt: now, status: "cancelled" });
     expect(updateMany).toHaveBeenNthCalledWith(1, {
-      data: expect.objectContaining({ status: "completed" }),
+      data: expect.objectContaining({ status: "cancelled", outcome: null }),
       where: { id: "run_1", status: "running" },
     });
     expect(updateMany).toHaveBeenNthCalledWith(2, {

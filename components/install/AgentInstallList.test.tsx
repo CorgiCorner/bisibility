@@ -18,6 +18,7 @@ const agentLabels = {
   "claude-code": "Claude Code",
   "claude-desktop": "Claude (web and desktop)",
   chatgpt: "ChatGPT",
+  "grok-bot": "Grok Bot",
   codex: "Codex",
   cursor: "Cursor",
   other: "Any MCP client",
@@ -33,6 +34,7 @@ const EXPECTED_COMMANDS: Record<(typeof AGENTS)[number]["id"], string> = {
   cursor:
     '{\n  "mcpServers": {\n    "bisibility": {\n      "url": "https://app.example.com/api/mcp"\n    }\n  }\n}',
   chatgpt: "https://app.example.com/api/mcp",
+  "grok-bot": "Add the bisibility MCP server: https://app.example.com/api/mcp",
   "claude-desktop": "https://app.example.com/api/mcp",
   other: "https://app.example.com/api/mcp",
 };
@@ -75,6 +77,7 @@ describe("AgentInstallList", () => {
 
     expect(agentButton("Claude Code")).toHaveAttribute("aria-expanded", "true");
     expect(agentButton("ChatGPT")).toHaveAttribute("aria-expanded", "false");
+    expect(agentButton("Grok Bot")).toHaveAttribute("aria-expanded", "false");
     expect(agentButton("Codex")).toHaveAttribute("aria-expanded", "false");
     expect(agentButton("Cursor")).toHaveAttribute("aria-expanded", "false");
     expect(agentButton("Claude (web and desktop)")).toHaveAttribute("aria-expanded", "false");
@@ -283,5 +286,19 @@ describe("AgentInstallList", () => {
     expect(document.getElementById("install-agent-cursor")).not.toBeNull();
     expect(screen.getByRole("button", { name: "Copy Cursor command" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy command" })).not.toBeInTheDocument();
+  });
+
+  it("renders the Grok Bot instruction with this page MCP URL", () => {
+    render(<AgentInstallList mcpUrl={mcpUrl} />);
+    fireEvent.click(agentButton("Grok Bot"));
+    expect(EXPECTED_COMMANDS["grok-bot"]).toContain(mcpUrl);
+    expect(EXPECTED_COMMANDS["grok-bot"]).not.toContain("bisibility.com");
+    expect(commandBlock(EXPECTED_COMMANDS["grok-bot"])).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy Grok Bot command" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Paste this into a Grok Bot chat, confirm adding the custom MCP server, then sign in from the connect card. The bisibility consent screen may name the client Cursor and say it was registered automatically; that is expected for Grok Bot.",
+      ),
+    ).toBeInTheDocument();
   });
 });

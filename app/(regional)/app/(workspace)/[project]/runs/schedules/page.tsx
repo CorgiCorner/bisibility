@@ -10,8 +10,10 @@ import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
 import { listCheckScheduleRows } from "@/lib/queries/check-schedule-list";
+import { listScheduleMemberCandidates } from "@/lib/queries/check-schedule-members";
 import { listRankCheckRuns } from "@/lib/queries/rank-check-runs";
 import { asProjectRef } from "@/lib/routing/app-path";
+import { schedulePlanningMinutes } from "@/lib/schedules/planning-visibility";
 import { unstable_rethrow } from "next/navigation";
 
 type SchedulesPageProps = {
@@ -42,7 +44,7 @@ export default async function SchedulesPage({
   const { publicId } = await resolveProjectAccess(project);
   const readable = await requireReadableProject(publicId);
   const projectRef = asProjectRef(publicId);
-  const [schedules, planned, aiResult] = await Promise.all([
+  const [schedules, planned, aiResult, candidates] = await Promise.all([
     listCheckScheduleRows(readable.project.id, status),
     listRankCheckRuns(
       readable.project.id,
@@ -58,6 +60,7 @@ export default async function SchedulesPage({
         return { value: null, unavailable: true };
       },
     ),
+    status === "current" ? listScheduleMemberCandidates(publicId) : Promise.resolve([]),
   ]);
   const ai = aiResult.value;
   const runtime = await loadSchedulesMessages();
@@ -86,6 +89,7 @@ export default async function SchedulesPage({
       name: schedule.name,
       nextRunAt: nextRun?.plannedFor ?? null,
       perRunCents: schedule.perRunCents,
+      nativeEstimate: schedule.nativeEstimate,
       publicId: schedule.publicId,
       sharedTag: schedule.sharedTag,
       targetCount: schedule.targetCount,
@@ -114,6 +118,8 @@ export default async function SchedulesPage({
           projectId={publicId}
           projectRef={projectRef}
           schedules={rows}
+          candidates={candidates}
+          planningMinutes={schedulePlanningMinutes()}
         />
       </PageContent>
     </FeatureMessagesProvider>

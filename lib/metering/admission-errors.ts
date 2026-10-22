@@ -6,6 +6,7 @@ import {
   UNRESOLVED_USAGE_MESSAGE,
 } from "./budget-denial";
 import type { PaidAttemptAdmissionError } from "./paid-attempt-types";
+import { type ProjectFunding, parseProjectFundingBudgetId } from "./project-funding-budgets";
 
 export class BudgetExhaustedError extends Error {
   readonly code = BUDGET_EXHAUSTED_CODE;
@@ -20,6 +21,8 @@ export class BudgetExhaustedError extends Error {
       valuationIncomplete?: boolean;
       reason?: BudgetDenialReason;
       resetAt?: Date | null;
+      /** Set when a split project denies one funding source; absent for the shared cap. */
+      fundingSource?: ProjectFunding;
     },
   ) {
     super(
@@ -27,7 +30,9 @@ export class BudgetExhaustedError extends Error {
         ? MISSING_PROJECT_BUDGET_MESSAGE
         : budget.valuationIncomplete || budget.reason === "usage_reconciliation_required"
           ? UNRESOLVED_USAGE_MESSAGE
-          : "Rank check monthly budget reached.",
+          : budget.fundingSource === "platform"
+            ? "Project Credits limit reached."
+            : "Rank check monthly budget reached.",
     );
     if (budget.valuationIncomplete) budget.reason = "usage_reconciliation_required";
     this.name = "BudgetExhaustedError";
@@ -72,15 +77,19 @@ export function translatePaidAdmission(
   const { budget, used, reserved, resetsAt } = result.exceeded;
   const uncertain = budget.unit === "paid_attempts";
   const resetAt = uncertain ? null : resetsAt ? new Date(resetsAt) : null;
+  const funding = parseProjectFundingBudgetId(budget.id);
   const projectId =
     budget.scope.kind === "group"
       ? budget.scope.group
       : budget.scope.kind === "principal"
         ? context?.projectId
-        : undefined;
+        : budget.scope.kind === "tag"
+          ? funding?.projectId
+          : undefined;
   if (projectId)
     return new BudgetExhaustedError({
       projectId,
+      ...(funding ? { fundingSource: funding.fundingSource } : {}),
       capCents: amount(budget.limit),
       spentCents: amount(used),
       reservedCents: amount(reserved),

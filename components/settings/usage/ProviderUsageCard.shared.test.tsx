@@ -1,7 +1,7 @@
 import { renderWithUsageSettingsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { budgetFixture, projectUsageFixture } from "@/lib/metering/shared-view-fixtures";
 import { emptyProjectUsage } from "@/lib/metering/user-views";
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { ProviderUsageCard } from "./ProviderUsageCard";
 
@@ -68,9 +68,12 @@ it("shows each budget with explicit used, reserved and limit labels", () => {
   const { container } = render(
     <ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />,
   );
-  const row = container.querySelector<HTMLElement>('[data-budget-row="tight"]')!;
+  const row = container.querySelector<HTMLElement>('[data-budget-row="tight"]');
+  if (!row) throw new Error("Missing tight budget");
   expect(within(row).getByText("Used").nextElementSibling).toHaveTextContent("80");
-  expect(within(row).getByText("Reserved").nextElementSibling).toHaveTextContent("10");
+  expect(within(row).getByText("Reserved").closest("dt")?.nextElementSibling).toHaveTextContent(
+    "10",
+  );
   expect(within(row).getByText("Limit").nextElementSibling).toHaveTextContent("100");
   expect(container.querySelector(".text-2xl")).toBeNull();
 });
@@ -86,17 +89,18 @@ it.each(["unknown", "unavailable", "redacted", "zero"])(
     const { container } = render(
       <ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />,
     );
-    const renderedRow = container.querySelector<HTMLElement>("[data-budget-row]")!;
+    const renderedRow = container.querySelector<HTMLElement>("[data-budget-row]");
+    if (!renderedRow) throw new Error("Missing rendered budget");
     const value =
       state === "redacted" ? renderedRow : within(renderedRow).getByText("Used").nextElementSibling;
     expect(value).toHaveTextContent(
       state === "zero"
         ? "0"
         : state === "unknown"
-          ? "Unknown"
+          ? "—"
           : state === "redacted"
             ? "figures are hidden"
-            : "Unavailable",
+            : "—",
     );
   },
 );
@@ -166,7 +170,8 @@ it.each([true, false])("preserves the 99% bound with unlimited first=%s", (first
   const { container } = render(
     <ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />,
   );
-  const row = container.querySelector<HTMLElement>('[data-budget-row="tight"]')!;
+  const row = container.querySelector<HTMLElement>('[data-budget-row="tight"]');
+  if (!row) throw new Error("Missing tight budget");
   expect(within(row).getByText("Used").nextElementSibling).toHaveTextContent("99");
   expect(within(row).getByText("Limit").nextElementSibling).toHaveTextContent("100");
 });
@@ -177,15 +182,19 @@ it("separates provider, project and traffic from figures without parsing project
     ...budgetFixture("0", "budget_cents"),
     kind: "connection",
     target: "DataForSEO · Synthetic · local preview",
-    display: { providerLabel: "DataForSEO", projectName: "Synthetic · local preview" },
+    display: {
+      connectionId: "conn_example",
+      providerLabel: "DataForSEO",
+      projectName: "Synthetic · local preview",
+    },
   };
   const { container } = render(
     <ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />,
   );
   expect(screen.getByRole("heading", { name: "DataForSEO" })).toBeInTheDocument();
-  expect(screen.getByText("Synthetic · local preview")).toBeInTheDocument();
+  expect(screen.queryByText("Synthetic · local preview")).toBeNull();
   expect(screen.getByText("Any traffic")).toBeInTheDocument();
-  expect(screen.getByText("Used").nextElementSibling).toHaveTextContent("$0.00");
+  expect(container.querySelector("[data-provider-budget]")).toHaveTextContent("$0.00");
   expect(screen.queryByText("DataForSEO · Synthetic · local preview")).toBeNull();
   expect(container.querySelectorAll("dl")).toHaveLength(1);
 });
@@ -196,7 +205,7 @@ it("keeps a confirmed blocked policy visible when one amount is unknown", () => 
   data.budgets[0].reserved = { text: "", unit: "units", certainty: "unknown" };
   render(<ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />);
   expect(screen.getByText("Over limit")).toBeInTheDocument();
-  expect(screen.getByText("Reserved").nextElementSibling).toHaveTextContent("Unknown");
+  expect(screen.getByLabelText("Unknown")).toHaveTextContent("—");
 });
 
 it("announces generic estimates without asserting a proven lower bound", () => {
@@ -207,3 +216,69 @@ it("announces generic estimates without asserting a proven lower bound", () => {
   expect(screen.getByText("Estimated")).toBeInTheDocument();
   expect(screen.getByText("Used").nextElementSibling).not.toHaveTextContent("≥");
 });
+
+it("shows the credits budget of a hosted connection in the credits list", () => {
+  const data = projectUsageFixture();
+  data.connections[0].credentialSource = "hosted";
+  data.budgets = [
+    { ...budgetFixture("1", "cents"), kind: "connection", target: "conn_example" },
+    {
+      ...budgetFixture("12.5", "customer_cents"),
+      id: "credits",
+      kind: "connection",
+      target: "conn_example",
+    },
+  ];
+  const { container } = render(
+    <ProviderUsageCard
+      projectId="p"
+      projectRef="prj_p"
+      canEditBudget={false}
+      data={data}
+      hostedBudgetLabels={{ title: "Credits", description: "Credits spent" }}
+    />,
+  );
+  expect(screen.getByRole("region", { name: "Credits" })).toBeInTheDocument();
+  expect(container.querySelector('[data-budget-row="credits"]')).not.toBeNull();
+  expect(container.querySelector('[data-budget-row="public-budget"]')).toBeNull();
+});
+
+it("ignores inactive-source warnings in the visible budget notice", () => {
+  const data = projectUsageFixture();
+  data.connections[0].credentialSource = "own";
+  data.budgets = [
+    { ...budgetFixture("1", "cents"), kind: "connection", target: "conn_example" },
+    {
+      ...budgetFixture("100", "customer_cents"),
+      id: "inactive",
+      kind: "connection",
+      target: "conn_example",
+      level: "exceeded",
+    },
+  ];
+  render(<ProviderUsageCard projectId="p" projectRef="prj_p" canEditBudget={false} data={data} />);
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
+it.each([false, true])(
+  "gates unlimited set-limit actions by the existing edit capability: %s",
+  (canEditBudget) => {
+    const data = projectUsageFixture();
+    data.budgets[0] = { ...data.budgets[0], limit: "unlimited", remaining: "unlimited" };
+    render(
+      <ProviderUsageCard
+        projectId="prj_p"
+        projectRef="prj_p"
+        canEditBudget={canEditBudget}
+        data={data}
+      />,
+    );
+    if (canEditBudget) {
+      fireEvent.click(screen.getByRole("button", { name: "Set limit" }));
+      expect(screen.getByText("Open budget editor")).toBeVisible();
+    } else {
+      expect(screen.getByText("No limit")).toBeVisible();
+      expect(screen.queryByRole("button", { name: "Set limit" })).toBeNull();
+    }
+  },
+);

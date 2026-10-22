@@ -1,38 +1,32 @@
 "use client";
-import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
+import { quoteAddCreditsHref } from "@/components/action-payment/PaymentQuoteSummary";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
-import { ProviderAccessEmptyState } from "@/components/ui/ProviderAccessEmptyState";
 import { ProviderAccessGate } from "@/components/ui/ProviderAccessGate";
+import { formatPaymentAmount } from "@/lib/action-payment/format";
 import { analyzeAiResearchAction } from "@/lib/actions/ai-research";
 import type { AiCatalogFailureReason, AiResearchCatalog } from "@/lib/ai-research/catalog-types";
-import { LEGACY_PRICING_CHECKED_AT } from "@/lib/ai-research/legacy";
 import { promptSchema, visibilitySchema } from "@/lib/ai-research/schema";
 import type { AiResearchOutcome } from "@/lib/ai-research/service";
 import { appPath } from "@/lib/routing/app-path";
-import { presentBudgetDenial } from "@/lib/ui/action-error";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { AiCatalogNotice } from "./AiCatalogNotice";
 import { AiCostPolicyFields } from "./AiCostPolicyFields";
 import { AiPromptFields } from "./AiPromptFields";
-import { AiResearchResults } from "./AiResearchResults";
+import type { AiResearchHistoryEntry } from "./AiResearchHistory";
+import { AiResearchWorkspaceOutcome } from "./AiResearchWorkspaceOutcome";
 import { AiVisibilityFields } from "./AiVisibilityFields";
-import { failureCopyKey } from "./ai-research-failure-copy";
 import {
   aiResearchDefaults,
   extendedPromptAvailable,
-  freshResearchCatalog,
   legacyResearchInput,
 } from "./ai-research-presets";
+import { useAiResearchCatalogRefresh } from "./useAiResearchCatalogRefresh";
 import { useAiResearchSubmission } from "./useAiResearchSubmission";
-
-type History = { id: string; title: string; createdAt: string }[];
 export function AiResearchWorkspace({
   projectId,
   domain,
@@ -49,7 +43,7 @@ export function AiResearchWorkspace({
   projectId: string;
   domain: string;
   mode: "visibility" | "prompt";
-  history: History;
+  history: AiResearchHistoryEntry[];
   initialOutcome?: AiResearchOutcome;
   canRun?: boolean;
   analyzeAction?: typeof analyzeAiResearchAction;
@@ -58,7 +52,8 @@ export function AiResearchWorkspace({
   catalogFailure?: AiCatalogFailureReason;
   supportingProviders?: readonly string[];
 }>) {
-  const errors = useSharedErrorMessages();
+  const paymentT = useTranslations("shared.actionPayment");
+  const locale = useLocale();
   const t = useTranslations("projectAiResearch");
   const schema = mode === "visibility" ? visibilitySchema : promptSchema;
   const form = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
@@ -66,39 +61,43 @@ export function AiResearchWorkspace({
     defaultValues: aiResearchDefaults(mode, domain),
   });
   const values = form.watch();
-  const freshCatalog = freshResearchCatalog(catalog, catalogError);
+  const { displayCatalog, freshCatalog, noticeReason, onCatalogInteract, status } =
+    useAiResearchCatalogRefresh({ catalog, catalogError, catalogFailure, projectId });
   const legacy = legacyResearchInput(mode, values);
   const actual = "cost_policy" in values && values.cost_policy === "provider_actual_cost";
-  const unavailable = !freshCatalog;
-  const noSource = catalogFailure === "no_source";
+  const catalogSourceMissing = catalogFailure === "no_source";
   const pricingUnavailable =
     mode === "prompt" &&
     !actual &&
     Boolean(freshCatalog) &&
     !freshCatalog?.models.some((model) => model.priceAvailable);
   const extendedUnavailable =
-    !legacy && (mode === "prompt" ? !extendedPromptAvailable(freshCatalog, values) : unavailable);
-  const {
-    outcome,
-    error,
-    pending,
-    estimateCurrent,
-    estimateAffordable,
-    credentialsRejected,
-    retryBlocked,
-    completed,
-    submit,
-    newRequest,
-  } = useAiResearchSubmission({
+    !legacy && (mode === "prompt" ? !extendedPromptAvailable(freshCatalog, values) : !freshCatalog);
+  const submission = useAiResearchSubmission({
     form,
     mode,
     catalog: freshCatalog,
     projectId,
-    canRun: canRun && !noSource,
+    canRun: canRun && !catalogSourceMissing,
     unavailable: extendedUnavailable,
     analyzeAction,
     initialOutcome,
   });
+  const {
+    completed,
+    credentialsRejected,
+    estimateAffordable,
+    estimateCurrent,
+    expired,
+    newRequest,
+    outcome,
+    pending,
+    quote,
+    retryBlocked,
+    submit,
+  } = submission;
+  const noSource =
+    catalogSourceMissing || Boolean(outcome && !outcome.ok && outcome.reason === "no_source");
   const disabled = !canRun || noSource || pending || retryBlocked || completed;
   return (
     <div className="grid min-w-0 gap-5">
@@ -106,8 +105,12 @@ export function AiResearchWorkspace({
         {mode === "visibility" ? t("visibilityDescription") : t("promptDescription")}
       </p>
       {!canRun ? <Card className="text-ui-body text-fg-muted">{t("readOnly")}</Card> : null}
-      {unavailable && !noSource ? (
-        <AiCatalogNotice mode={mode} projectId={projectId} reason={catalogFailure} />
+      {status === "refreshing" ? (
+        <p className="m-0 text-ui-xs text-fg-muted" role="status">
+          {t("catalogRefreshing")}
+        </p>
+      ) : status === "unavailable" ? (
+        <AiCatalogNotice mode={mode} projectId={projectId} reason={noticeReason} />
       ) : null}
       {pricingUnavailable ? (
         <Card role="alert" className="text-ui-body text-fg-muted">
@@ -115,6 +118,8 @@ export function AiResearchWorkspace({
         </Card>
       ) : null}
       <ProviderAccessGate
+        showNotice={Boolean(outcome?.ok && !outcome.estimate)}
+        surface="ai"
         blocked={noSource}
         providers={supportingProviders}
         href={appPath(projectId, "integrations")}
@@ -122,6 +127,8 @@ export function AiResearchWorkspace({
         <Card>
           <form
             className="grid gap-4"
+            onChange={onCatalogInteract}
+            onFocus={onCatalogInteract}
             onSubmit={(event) => {
               event.preventDefault();
               submit(true);
@@ -137,12 +144,12 @@ export function AiResearchWorkspace({
                 <Input id={"ai-domain"} {...form.register("domain")} placeholder="acme.com" />
               </label>
               {mode === "visibility" ? (
-                <AiVisibilityFields form={form} catalog={freshCatalog} disabled={disabled} />
+                <AiVisibilityFields form={form} catalog={displayCatalog} disabled={disabled} />
               ) : (
-                <AiPromptFields form={form} catalog={freshCatalog} disabled={disabled} />
+                <AiPromptFields form={form} catalog={displayCatalog} disabled={disabled} />
               )}
               {mode === "prompt" ? (
-                <AiCostPolicyFields form={form} catalog={freshCatalog} disabled={disabled} />
+                <AiCostPolicyFields form={form} catalog={displayCatalog} disabled={disabled} />
               ) : (
                 <label htmlFor="ai-cost-limit" className="grid gap-2 text-ui-body">
                   {t("costCap")}
@@ -172,11 +179,21 @@ export function AiResearchWorkspace({
               </Button>
               <Button
                 type="button"
-                onClick={() => submit(false)}
+                href={!expired ? quoteAddCreditsHref(quote) : undefined}
+                onClick={() => submit(expired)}
                 loading={pending}
-                disabled={disabled || extendedUnavailable || !estimateAffordable}
+                disabled={
+                  disabled ||
+                  extendedUnavailable ||
+                  (!expired && !quoteAddCreditsHref(quote) && !estimateAffordable)
+                }
               >
-                {t("runAnalysis")}
+                {expired
+                  ? paymentT("refreshPrice")
+                  : quoteAddCreditsHref(quote)
+                    ? paymentT("addCredits")
+                    : t("runAnalysis")}
+                {quote && !expired ? ` · ${formatPaymentAmount(quote.charge, locale)}` : ""}
               </Button>
               <span className="text-ui-xs text-fg-muted">
                 {t(actual ? "actualReplayHint" : "cacheHint")}
@@ -206,83 +223,17 @@ export function AiResearchWorkspace({
           </form>
         </Card>
       </ProviderAccessGate>
-      {error || (outcome && !outcome.ok) ? (
-        <Card role="alert" className="text-ui-body text-red-text">
-          {error
-            ? t("requestFailure")
-            : outcome && !outcome.ok
-              ? presentBudgetDenial(outcome.reason, errors, t(failureCopyKey(outcome.reason)))
-              : ""}
-        </Card>
-      ) : null}
-      {estimateCurrent && outcome?.ok && outcome.estimate ? (
-        <Card className="text-ui-body">
-          {t(
-            actual
-              ? "actualCostForecast"
-              : mode === "prompt"
-                ? legacy
-                  ? "legacyAdmissionEstimate"
-                  : "conservativeBound"
-                : "visibilityEstimate",
-            {
-              cost: outcome.estimatedCostCents.toFixed(2),
-              date: LEGACY_PRICING_CHECKED_AT,
-            },
-          )}
-          {actual ? <p className="mt-2 text-ui-xs text-fg-muted">{t("actualCostRisk")}</p> : null}
-          {actual && outcome.forecastAssumptions?.length ? (
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-ui-xs text-fg-muted">
-              {outcome.forecastAssumptions.map((assumption) => (
-                <li key={assumption}>{assumption}</li>
-              ))}
-            </ul>
-          ) : null}
-        </Card>
-      ) : null}
-      {outcome?.ok && !outcome.estimate ? (
-        <>
-          <AiResearchResults result={outcome.result} />
-          <Link
-            className="text-ui-body text-accent-text underline"
-            href={`/app/${projectId}/agent-reports/${outcome.reportId}`}
-          >
-            {t("openReport")}
-          </Link>
-        </>
-      ) : noSource ? (
-        <ProviderAccessEmptyState
-          surface="ai"
-          href={appPath(projectId, "integrations")}
-          providers={supportingProviders}
-        />
-      ) : !outcome ? (
-        <EmptyState
-          title={mode === "visibility" ? t("visibilityEmpty") : t("promptEmpty")}
-          description={t("emptyDescription")}
-        />
-      ) : null}
-      <Card>
-        <h2 className="text-ui-body font-semibold">{t("recentReports")}</h2>
-        {history.length ? (
-          <div className="mt-3 grid gap-3">
-            {history.map((report) => (
-              <Link
-                key={report.id}
-                href={`/app/${projectId}/agent-reports/${report.id}`}
-                className="flex flex-wrap justify-between gap-2 text-ui-body text-accent-text"
-              >
-                <span>{report.title}</span>
-                <span className="font-mono text-ui-xs text-fg-muted">
-                  {report.createdAt.slice(0, 10)}
-                </span>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-2 text-ui-body text-fg-muted">{t("historyEmpty")}</p>
-        )}
-      </Card>
+      <AiResearchWorkspaceOutcome
+        actual={actual}
+        catalogSourceMissing={catalogSourceMissing}
+        freshCatalog={freshCatalog}
+        history={history}
+        mode={mode}
+        noSource={noSource}
+        projectId={projectId}
+        submission={submission}
+        supportingProviders={supportingProviders}
+      />
     </div>
   );
 }

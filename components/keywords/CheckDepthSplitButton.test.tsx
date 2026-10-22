@@ -14,7 +14,7 @@ function withProjectWriteMode({ children }: Readonly<{ children: ReactNode }>) {
 }
 
 describe("CheckDepthSplitButton", () => {
-  it("uses the compact bulk-bar height and outlined chrome at xs", () => {
+  it("uses the compact height and the same secondary chrome as the detail control", () => {
     render(
       <CheckDepthSplitButton
         actionLabel="Run check (Top 20)"
@@ -30,6 +30,31 @@ describe("CheckDepthSplitButton", () => {
     expect(action).toHaveClass("min-h-[30px]");
     expect(action).toHaveAttribute("data-variant", "secondary");
     expect(action).not.toHaveAttribute("data-variant", "primary");
+    expect(action.style.getPropertyValue("--control-border")).toBe("");
+    expect(action.style.getPropertyValue("--control-background-color")).toBe(
+      "var(--button-secondary-hover-bg)",
+    );
+  });
+
+  it("keeps both halves primary when placed on the bulk action bar", () => {
+    render(
+      <CheckDepthSplitButton
+        actionLabel="Run check"
+        currentDepth={20}
+        onAction={vi.fn()}
+        onDepthChange={vi.fn()}
+        size="xs"
+        variant="primary"
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Run check" })).toHaveAttribute(
+      "data-variant",
+      "primary",
+    );
+    expect(screen.getByRole("button", { name: "Choose check depth" })).toHaveAttribute(
+      "data-variant",
+      "primary",
+    );
   });
 
   it("uses the header CTA height at md", () => {
@@ -153,4 +178,19 @@ describe("CheckDepthSplitButton", () => {
       "Top 10 checks do not update Visibility",
     );
   });
+});
+
+it("keeps full action context accessible while offering a shorter mobile label", () => {
+  render(
+    <CheckDepthSplitButton
+      actionLabel="Run checks (Top 20)"
+      compactActionLabel="Run checks"
+      currentDepth={20}
+      onAction={() => {}}
+      onDepthChange={() => {}}
+    />,
+  );
+  const button = screen.getByRole("button", { name: "Run checks (Top 20)" });
+  expect(button.querySelector(".sm\\:hidden")).toHaveTextContent("Run checks");
+  expect(button.querySelector(".hidden")).toHaveTextContent("Run checks (Top 20)");
 });

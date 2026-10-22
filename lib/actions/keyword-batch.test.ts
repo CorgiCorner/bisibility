@@ -3,12 +3,16 @@ import { createKeywordBatchSet } from "./keyword-batch";
 
 const mocks = vi.hoisted(() => ({
   assertKeywordCapacity: vi.fn(),
+  setKeywordCadence: vi.fn(),
   lockKeywordCapacity: vi.fn(),
   makePublicId: vi.fn(),
   seedKeywordDispatchStates: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/rank-check/schedules/keyword-cadence", () => ({
+  setKeywordCadence: mocks.setKeywordCadence,
+}));
 vi.mock("@/lib/api/resource-limits", () => ({
   assertKeywordCapacity: mocks.assertKeywordCapacity,
   lockKeywordCapacity: mocks.lockKeywordCapacity,
@@ -166,6 +170,10 @@ describe("set-based keyword batch creation", () => {
 
     expect(client.projectMarket.upsert).not.toHaveBeenCalled();
     expect(client.keyword.createMany).toHaveBeenCalledOnce();
+    expect(client.keywordSchedule.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ frequency: "manual", nextCheckAt: null })],
+      skipDuplicates: true,
+    });
   });
 
   it("restores an archived tuple without creating a second row", async () => {
@@ -199,6 +207,13 @@ describe("set-based keyword batch creation", () => {
 
     expect([before, after]).toEqual([1, 1]);
     expect(result.accepted).toMatchObject([{ created: false, restored: true }]);
+    expect(mocks.setKeywordCadence).toHaveBeenCalledWith(
+      client,
+      "project_1",
+      [stored(1).id],
+      expect.objectContaining({ frequency: "manual" }),
+      null,
+    );
     expect(result.created).toEqual([]);
     expect(result.restored).toEqual([{ ...stored(1), archivedAt: null }]);
     expect(rows[0]?.archivedAt).toBeNull();

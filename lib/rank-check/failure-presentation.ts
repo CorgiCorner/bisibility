@@ -9,6 +9,12 @@ export type ProviderFailurePresentation = {
 };
 
 const PRESENTATIONS: Record<ProviderErrorCode, Omit<ProviderFailurePresentation, "code">> = {
+  provider_capacity_unavailable: {
+    message:
+      "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys.",
+    showOpenIntegrations: true,
+    showRetry: true,
+  },
   provider_billing: {
     message:
       "The rank check could not run because the provider account has insufficient funds. Add funds or connect a different provider, then try again.",

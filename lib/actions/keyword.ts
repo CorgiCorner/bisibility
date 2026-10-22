@@ -3,7 +3,8 @@
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { assertKeywordIdentityUnchanged } from "@/lib/keywords/identity";
-import { addKeywordSchema, addKeywordsSchema, updateKeywordSchema } from "@/lib/schemas/keyword";
+import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
+import { addKeywordsSchema, updateKeywordSchema } from "@/lib/schemas/keyword";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { normalizeSchedule } from "./_schedule";
@@ -17,7 +18,6 @@ import { addKeywordsMatrixWithAnalytics } from "./keyword-analytics";
 import {
   addTags,
   consumeSavedKeywords,
-  createKeywordBatch,
   createKeywordBatchSet,
   promotedSavedKeywordPairs,
   publicKeywordView,
@@ -29,85 +29,14 @@ import {
   uniqueLocationWarnings,
 } from "./keyword-location";
 import { linkCheckSchedule, resolveCheckSchedule } from "./keyword-schedule-assignment";
+import { addSingleKeyword } from "./keyword-single";
 
 export async function addKeywordsMatrix(input: unknown) {
   return addKeywordsMatrixWithAnalytics(input);
 }
 
 export async function addKeyword(input: unknown) {
-  const data = parseActionInput(addKeywordSchema, input);
-  const actor = await getActionActor();
-  const project = await requireProjectScope(actor, "create", data.projectId, { type: "keyword" });
-  const schedule = data.schedule ? normalizeSchedule(data.schedule) : null;
-  // Keep the legacy location string in sync so the composite unique still dedups.
-  const resolved = await resolveKeywordLocation(
-    keywordLocationResolverInput({
-      city: data.city,
-      location: data.location,
-      locationKey: data.locationKey,
-      projectId: project.id,
-    }),
-  );
-  const locationName = denormalizedLocationLabel(resolved.location);
-  const keyword = await prisma.$transaction(async (tx) => {
-    const [created] = await createKeywordBatch(tx, {
-      device: data.device,
-      keywords: [data.keyword],
-      location: locationName,
-      locationId: resolved.location.id,
-      projectId: project.id,
-      schedule,
-      tags: [],
-      targetUrl: data.targetUrl,
-      topic: data.topic,
-      intent: data.intent,
-    });
-    const stored =
-      created ??
-      (await tx.keyword.findUnique({
-        select: {
-          id: true,
-          intent: true,
-          publicId: true,
-          targetUrl: true,
-          text: true,
-          topic: true,
-        },
-        where: {
-          projectId_text_locationId_device: {
-            device: data.device,
-            locationId: resolved.location.id,
-            projectId: project.id,
-            text: data.keyword,
-          },
-        },
-      }));
-    if (!stored) throw new Error("Keyword could not be created.");
-
-    await addTags(tx, project.id, [stored.id], data.tags);
-    await writeAudit(
-      {
-        action: "keyword.add",
-        actorId: actor.id,
-        after: {
-          intent: stored.intent,
-          keywordId: stored.publicId,
-          tags: data.tags,
-          targetUrl: stored.targetUrl,
-          text: stored.text,
-          topic: stored.topic,
-        },
-        projectId: project.id,
-        targetId: stored.publicId,
-        targetType: "keyword",
-      },
-      tx,
-    );
-    return stored;
-  });
-  revalidateKeywords(keyword.publicId);
-
-  return { ...publicKeywordView(keyword), warning: resolved.warning };
+  return addSingleKeyword(input);
 }
 
 export async function addKeywords(input: unknown) {
@@ -140,7 +69,16 @@ export async function addKeywords(input: unknown) {
         return resolved ? promotedSavedKeywordPairs([keyword], resolved.location.canonicalKey) : [];
       });
       const created = persisted.created;
-      if (assigned) await linkCheckSchedule(tx, project.id, assigned, created);
+      const assignmentRows = [...created, ...persisted.restored];
+      if (assigned) await linkCheckSchedule(tx, project.id, assigned, assignmentRows);
+      else if (schedule)
+        await setKeywordCadence(
+          tx,
+          project.id,
+          assignmentRows.map(({ id }) => id),
+          schedule,
+          actor.id,
+        );
       const targetKeyword = created.length === 1 ? created[0] : null;
       await writeAudit(
         {
@@ -205,7 +143,16 @@ export async function addKeywords(input: unknown) {
       })),
     );
     const created = persisted.created;
-    if (assigned) await linkCheckSchedule(tx, project.id, assigned, created);
+    const assignmentRows = [...created, ...persisted.restored];
+    if (assigned) await linkCheckSchedule(tx, project.id, assigned, assignmentRows);
+    else if (schedule)
+      await setKeywordCadence(
+        tx,
+        project.id,
+        assignmentRows.map(({ id }) => id),
+        schedule,
+        actor.id,
+      );
     const targetKeyword = created.length === 1 ? created[0] : null;
     await writeAudit(
       {

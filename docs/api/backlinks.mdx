@@ -11,7 +11,8 @@ Authorization: Bearer <api_key>
 ```
 
 This paid BYO-key lookup uses one eligible DataForSEO connection owned by the
-project. `target_scope=site` expects a bare domain and honors
+project. The MCP tool is `analyze_backlinks`. See
+[Paid MCP tools](/agents/paid-tools). `target_scope=site` expects a bare domain and honors
 `include_subdomains`; `target_scope=page` expects a full URL and ignores it. The
 target is validated locally first, so an unsupported input returns the
 `unsupported_target` problem before any provider call is made.
@@ -29,6 +30,10 @@ true`, `estimated_cost_cents`, `cost_cents`, `cached`, `cached_until`, `provider
 and the normalized target) without calling the provider, consuming budget, or
 writing the cost ledger. A dry run never carries `summary`, `history`, `rows`,
 or `fetched_at`, so it cannot be mistaken for an empty backlink profile.
+`max_cost_cents=0` means cached result only. A cache miss returns
+`cost_limit_exceeded` with `estimated_cost_cents` before provider calls, holds or attempts.
+This also applies to retained next pages. `fresh=true` bypasses cache and is refused at zero.
+
 `max_cost_cents` limits admitted cost estimates across summary, history, rows
 and retries. The provider budget also applies. An unconfirmed charge stops
 further calls in the same analysis.

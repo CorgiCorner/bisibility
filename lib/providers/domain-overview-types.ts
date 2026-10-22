@@ -34,10 +34,13 @@ export type HistoricalOverviewResult = { costCents: number; rows: HistoricalOver
 
 export type RelevantPageRow = {
   etv: number | null;
+  /** Legacy contract field; no per-page comparison source, so current results return null. */
   etvDeltaPct: number | null;
   keywordCount: number | null;
   path: string;
+  /** Legacy contract field; relevant_pages has no keyword identity, so current results return null. */
   topKeyword: string | null;
+  /** Legacy contract field; position buckets do not identify a keyword, so current results return null. */
   topKeywordPosition: number | null;
 };
 

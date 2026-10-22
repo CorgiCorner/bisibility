@@ -52,7 +52,7 @@ beforeEach(() => {
 });
 
 describe("KeywordDataTable server contract", () => {
-  it("keeps Device compact with previously saved widths and places tracking context after rank changes", () => {
+  it("ignores a previously saved Device width and keeps tracking context after the keyword", () => {
     renderPendingGrid();
     const key = "bv:data-table:rank-tracker-keywords:v1";
     fireEvent(
@@ -67,14 +67,16 @@ describe("KeywordDataTable server contract", () => {
     );
     const table = screen.getByTestId("rank-tracker-keywords");
     try {
-      expect(table.style.getPropertyValue("--dt-col-device")).toBe("84px");
+      expect(
+        screen.getAllByRole("columnheader").some((header) => header.dataset.columnId === "device"),
+      ).toBe(false);
       expect(table.style.getPropertyValue("--dt-col-keyword")).toBe("320px");
       expect(
         screen
           .getAllByRole("columnheader")
-          .slice(1, 7)
+          .slice(1, 6)
           .map((header) => header.dataset.columnId),
-      ).toEqual(["keyword", "frequency", "position", "change", "location", "device"]);
+      ).toEqual(["keyword", "frequency", "position", "change", "location"]);
     } finally {
       fireEvent(window, new StorageEvent("storage", { key, newValue: null }));
     }
@@ -91,7 +93,7 @@ describe("KeywordDataTable server contract", () => {
     expect(renderedKeywordOrder(loadedKeywordOrder)).toEqual(loadedKeywordOrder);
   });
 
-  it("returns cleared server sorting to the position ascending default", () => {
+  it("returns cleared server sorting to the keyword A–Z default", () => {
     renderPendingGrid({
       query: {
         filters: emptyKeywordFilters,
@@ -109,7 +111,7 @@ describe("KeywordDataTable server contract", () => {
 
     const href = String(routerMock.push.mock.calls.at(-1)?.[0]);
     const params = new URL(href, "https://example.com").searchParams;
-    expect(params.get("sort")).toBe("position");
+    expect(params.get("sort")).toBe("keyword");
     expect(params.get("dir")).toBe("asc");
     expect(params.get("page")).toBe("1");
   });
@@ -133,10 +135,10 @@ describe("KeywordDataTable server contract", () => {
     expect(screen.queryByRole("button", { name: "Sort Device ascending" })).not.toBeInTheDocument();
   });
 
-  it("keeps Device sorting enabled for flat server results", () => {
+  it("does not expose a separate Device column for flat server results", () => {
     renderPendingGrid();
 
-    expect(screen.getByRole("button", { name: "Sort Device ascending" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Sort Device ascending" })).not.toBeInTheDocument();
   });
 
   it("keeps sorting on the scoped market route", () => {

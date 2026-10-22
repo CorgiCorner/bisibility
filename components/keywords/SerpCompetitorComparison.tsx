@@ -72,11 +72,7 @@ export function SerpCompetitorComparison({
   const t = useTranslations("projectRankTracker.keywordDetail.results");
   if (competitors.length === 0 || results.tier === "none") return null;
   return (
-    <section aria-label={t("competitorComparison")} className="border-b border-border">
-      <div className="px-4 py-3 sm:px-5">
-        <h3 className="m-0 text-[13px] font-semibold">{t("competitorsInCheck")}</h3>
-        <p className="m-0 mt-1 text-[12px] text-fg-muted">{t("competitorDescription")}</p>
-      </div>
+    <section aria-label={t("competitorComparison")}>
       <DataTable
         ariaLabel={t("competitorPositions")}
         bordered={false}

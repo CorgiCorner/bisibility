@@ -114,7 +114,6 @@ export function renderPendingGrid(
         location: "United States",
       },
     }),
-    queueFirstChecksAction: vi.fn().mockResolvedValue({ queued: 1 }),
     updateKeywordAction: vi.fn().mockResolvedValue({ updated: 1 }),
   };
 

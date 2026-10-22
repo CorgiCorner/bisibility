@@ -1,0 +1,105 @@
+---
+title: "Paid MCP tools"
+description: "MCP tools that spend provider money, who pays, and how estimates and confirmation work."
+---
+
+For every tool that accepts `max_cost_cents`, 0 = cached result only. Cache hits
+are free; misses return `cost_limit_exceeded` and `estimated_cost_cents` before
+provider calls, holds or attempts. Fresh rank checks have no cache and always
+refuse zero, including zero or unknown monetary estimates. AI options needing
+live pricing return `pricing_unavailable` without refreshing provider metadata.
+`estimate_only=true` remains a free estimate rather than a cache-only read.
+Tools without a per-request cap continue to require their documented consent.
+
+
+One registry lists REST operations that spend provider money. MCP exposes those
+operations as tools. Estimates and ordinary reads are absent from that registry.
+`run_site_audit` is not in it. A bounded crawl records a provider cost of 0.
+
+Write scope is required for an operation that can spend. The consent screen
+says write access can run paid operations such as rank checks and backlink
+analysis, charged to the project's payment source: credits, or the project's
+own provider keys.
+
+## Who pays
+
+Each provider connection has a provider source:
+
+| Source | Who is charged |
+| - | - |
+| Credits | The hosted credit balance. The usage page calls this balance out separately from a connection that uses your own keys. |
+| Your own keys | The provider account on that connection. Credits are not charged for that usage. |
+
+Rank checks use the source selected on the connection. A hosted source is
+billed as credits. Your own keys are billed in the provider's own unit.
+Provider cost, the amount a customer is charged, and application credits are
+separate measures. See [Rank measurements](/guides/rank-measurements).
+
+Keyword research, keyword metrics, backlinks, domain overview, and ranked
+keyword suggestions spend the project's own DataForSEO connection. They are
+bring-your-own-key lookups. See the API pages linked from each row.
+
+AI visibility can use either a bring-your-own-key connection or deployment
+credits, and it requires an explicit cost cap. Prompt comparison needs a
+guaranteed hard cap or explicit actual-cost consent. Other models, reasoning,
+and search cannot run on credits. They need explicit own-key actual-cost
+consent. AI tracking generation uses the same own-key actual-cost consent.
+See [Research workspace](/api/research-workspace) and
+[AI tracking](/guides/ai-tracking).
+
+API, MCP, and SDK calls share the programmatic budget (API & agents). App
+schedules use the app budget. A monthly cap is separate from
+`credits_exhausted` and from `byok_required`. See [Errors](/api/errors).
+
+## Tools that spend on the call
+
+These tools are inline in the spend registry. `run_rank_check` still lets the
+deployment run the check immediately or queue it.
+
+| Tool | What it spends | Estimate and confirmation |
+| - | - | - |
+| `run_rank_check` | Rank check on the connection's provider source. | No `estimate_only` flag. Ask for approval immediately before the call. The server cannot enforce the client's confirmation UI. `max_cost_cents` makes the server refuse the check when the preflight estimate is higher (`cost_limit_exceeded`). See [Checks](/api/checks). |
+| `analyze_backlinks` | Backlinks on the project's own DataForSEO account. | `estimate_only` is a free dry run: no provider call, no budget use, no ledger write. Then set `max_cost_cents` as a best-effort guard. See [Backlinks](/api/backlinks). |
+| `load_more_backlink_rows` | More rows for that backlink snapshot. | Same `estimate_only` dry run, then the paid load. |
+| `analyze_domain_overview` | Domain overview on the project's own DataForSEO account. | Start with `estimate_only`. A paid repeat needs `max_cost_cents`. A cap of 0 allows cache hits only. See [Domain Overview](/api/domain-overview). |
+| `load_domain_overview_history` | Historical index series for an unexpired snapshot. | No `estimate_only` flag. Requires `max_cost_cents`. Use 0 for cache only. |
+| `load_domain_overview_keywords` | One ranked-keyword page for the current domain overview target. | No `estimate_only` flag. Requires `max_cost_cents` because a cache miss can spend. Use 0 for cache only. |
+| `load_domain_overview_pages` | One relevant-page result page for that target. | No `estimate_only` flag. Requires `max_cost_cents` because a cache miss can spend. Use 0 for cache only. |
+| `research_keywords` | Keyword research on the project's own DataForSEO account. | `estimate_only` first, then `max_cost_cents` as a best-effort guard. Clickstream-refined volumes double the provider price. See [Keyword research](/api/keyword-research). |
+| `get_keyword_metrics` | Keyword metrics on that same DataForSEO account. | Same estimate, then best-effort cap. Clickstream doubles the provider price. See [Keyword metrics](/api/keyword-metrics). |
+| `list_ranked_keyword_suggestions` | Ranked keywords on the project's own DataForSEO account. | No `estimate_only` flag in the spend registry. `max_cost_cents` is a best-effort gate and returns `cost_limit_exceeded` when the page estimate is higher. See [Ranked keyword suggestions](/api/ranked-keyword-suggestions). |
+| `analyze_ai_visibility` | Provider-observed AI mentions and citations. | `estimate_only` is available. Requires bring-your-own-key or deployment credits, an explicit cost cap, and write scope. |
+| `compare_ai_prompts` | Synthetic prompt comparison. | `estimate_only` is available. Requires a hard cap or explicit actual-cost consent, plus write scope. |
+| `ai_tracking_suggestions_generate` | AI tracking model work. | Inline spend. Generate only from the unchanged, unexpired preview, with explicit paid consent. The preview tool does not buy model work. |
+
+The tool description carries the current per-source estimate from the
+maintained provider rates table. Actual provider cost can differ slightly from
+that table. An estimate is a forecast, not a guaranteed maximum, except where
+the API documents a hard cap.
+
+Free estimate tools that are not in the spend registry include
+`estimate_backlinks_cost`, `estimate_keyword_research_cost`,
+`estimate_domain_overview_cost`, and `get_cost_estimate`.
+`preview_ai_tracking_run` and `ai_tracking_suggestions_preview` are previews,
+not purchases.
+
+## Tools that queue spend
+
+These tools do not have to call the provider during the request. The registry
+marks them as deferred spend because a schedule, frequency, or queued run can
+spend later.
+
+| Tool | Later spend |
+| - | - |
+| `add_keywords` | A schedule on the new keywords can queue rank checks. |
+| `bulk_update_keywords` | Deferred rank-check spend. The tool can add or remove tags, set frequency, set a target URL, or delete. |
+| `set_keyword_target_url` | A schedule or frequency in the same change can enable recurring checks. |
+| `update_project_defaults` | The project default schedule applies to keywords that do not have their own. |
+| `create_ai_tracking_run` | Deferred AI tracking. Creating a run does not start an automatic paid baseline. Generation still needs the preview and explicit own-key actual-cost consent. |
+| `create_ai_tracking_schedule` | Deferred AI tracking when the schedule runs. |
+| `update_ai_tracking_schedule` | Deferred AI tracking when the updated schedule runs. |
+| `retry_ai_tracking_run` | Deferred AI tracking for the retry. |
+
+Confirm the scope and the estimate before you approve queued work. Some
+provider caps are best effort. `run_rank_check` is the case where
+`max_cost_cents` is enforced against the preflight estimate.

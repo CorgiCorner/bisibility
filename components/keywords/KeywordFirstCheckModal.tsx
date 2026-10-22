@@ -33,6 +33,7 @@ type FailureCopy = {
   messageKey:
     | "accountRestricted"
     | "billing"
+    | "providerCapacityUnavailable"
     | "failed"
     | "providerAuth"
     | "rateLimited"
@@ -44,6 +45,14 @@ type FailureCopy = {
 };
 
 function failureCopy(errorCode: string | null): FailureCopy {
+  if (errorCode === "provider_capacity_unavailable") {
+    return {
+      messageKey: "providerCapacityUnavailable",
+      showOpenIntegrations: true,
+      showTryAgain: true,
+      showViewCheckDetails: true,
+    };
+  }
   if (errorCode === "provider_billing") {
     return {
       messageKey: "billing",

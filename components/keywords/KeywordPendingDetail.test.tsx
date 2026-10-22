@@ -7,6 +7,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KeywordPendingDetail } from "./KeywordPendingDetail";
 
 const fetchMock = vi.hoisted(() => vi.fn());
+const request = vi.hoisted(() => vi.fn());
+vi.mock("@/components/rank-runs/useRunPreflight", () => ({
+  useRunPreflight: () => ({ request, opening: false, dialog: null }),
+}));
 
 vi.mock("./KeywordMarketsDrawer", () => ({
   KeywordMarketsDrawer: () => null,
@@ -15,12 +19,16 @@ vi.mock("./KeywordHeaderActions", () => ({
   KeywordHeaderActions: ({
     effectiveDepth,
     onToggleEdit,
+    onRunCheck,
   }: {
     effectiveDepth: number;
     onToggleEdit: () => void;
+    onRunCheck: (depth: number) => void;
   }) => (
     <div>
-      <button type="button">Run check</button>
+      <button type="button" onClick={() => onRunCheck(effectiveDepth)}>
+        Run check
+      </button>
       <button type="button" onClick={onToggleEdit}>
         Edit
       </button>
@@ -69,8 +77,19 @@ describe("KeywordPendingDetail", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", fetchMock);
     fetchMock.mockReset();
+    request.mockReset();
   });
 
+  it("uses the same quoted preflight for a pending keyword instead of the legacy launch action", () => {
+    const keyword = pendingKeyword();
+    renderDetail(keyword);
+    fireEvent.click(screen.getByRole("button", { name: "Run check" }));
+    expect(request).toHaveBeenCalledWith({
+      depth: 100,
+      rows: [keyword],
+      spec: { kind: "single", keywordId: keyword.id, v: 1 },
+    });
+  });
   it("keeps pending content below the shared header without duplicate details", () => {
     renderDetail();
 

@@ -1,4 +1,5 @@
-import { renderWithInstanceAdminMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { DangerousActionAccessProvider } from "@/components/admin/DangerousActionGate";
+import { renderWithInstanceAdminMessages as renderMessages } from "@/i18n/test-support/render-with-feature-messages";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -89,3 +90,9 @@ describe("AdminAccountActions", () => {
     );
   });
 });
+
+function render(ui: Parameters<typeof renderMessages>[0]) {
+  return renderMessages(
+    <DangerousActionAccessProvider allowed>{ui}</DangerousActionAccessProvider>,
+  );
+}

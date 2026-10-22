@@ -21,7 +21,9 @@ type ActiveRunItem = {
   status: string;
 };
 
-function cancelledItemData(now: Date, reason?: UnrunnableReason) {
+type ItemCancellationReason = UnrunnableReason | "schedule_changed";
+
+function cancelledItemData(now: Date, reason?: ItemCancellationReason) {
   return {
     claimExpiresAt: null,
     finishedAt: now,
@@ -38,11 +40,20 @@ function cancelledItemData(now: Date, reason?: UnrunnableReason) {
  */
 export async function cancelUnrunnableRunItem(
   tx: Prisma.TransactionClient,
-  input: { itemId: string; now: Date; reason: UnrunnableReason; run: FinalizableRankCheckRun },
+  input: {
+    itemId: string;
+    now: Date;
+    reason: ItemCancellationReason;
+    run: FinalizableRankCheckRun;
+    queuedOnly?: boolean;
+  },
 ) {
   const cancelled = await tx.rankCheckRunItem.updateMany({
     data: cancelledItemData(input.now, input.reason),
-    where: { id: input.itemId, ...CANCELLABLE_RUN_ITEM_WHERE },
+    where: {
+      id: input.itemId,
+      ...(input.queuedOnly ? { status: "queued", rankCheckId: null } : CANCELLABLE_RUN_ITEM_WHERE),
+    },
   });
   if (cancelled.count === 0) return false;
   await tx.rankCheckRun.update({

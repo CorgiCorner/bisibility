@@ -26,3 +26,11 @@ it("corrects legacy billing labels for recorded account restrictions", () => {
     ),
   ).toMatchObject({ code: "provider_account_restricted", showRetry: false });
 });
+
+it("keeps own-account funding advice separate from instance capacity failures", () => {
+  expect(providerFailurePresentation("provider_billing").message).toContain("Add funds");
+  const capacity = providerFailurePresentation("provider_capacity_unavailable");
+  expect(capacity.message).toContain("You were not charged");
+  expect(capacity.message).not.toContain("Add funds");
+  expect(capacity.showOpenIntegrations).toBe(true);
+});

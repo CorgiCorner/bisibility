@@ -30,10 +30,11 @@ The report shows:
 - filters for keyword tag and position range plus explicit keyword exclusions;
 - CSV export for the selected market and filters.
 
-Suggestions use compact organic snapshots from all tracked keywords. With the
-default **Stop checks at first domain match** setting, each snapshot ends when
-the tracked domain is found; turn the setting off in project defaults when a
-complete snapshot through the configured depth matters more than provider cost.
+Suggestions use compact organic snapshots from tracked keywords. Top 20 checks
+request the full configured depth even if your domain is found early. For other
+depths, choose **Full search results** in project defaults when competitor
+coverage matters more than early-stop savings. Providers can still return fewer
+results; missing competitors remain unknown rather than being treated as absent.
 The selected market is queried without a silent keyword cap. Providers that
 omit organic result details cannot contribute competitor-domain observations.
 CSV generation happens only when requested and always includes every managed

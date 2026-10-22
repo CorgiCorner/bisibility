@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { finalizeRankCheckRun } from "./finalize";
+import { finalizeRankCheckRun, finalRunData } from "./finalize";
 
 const now = new Date("2026-09-04T00:13:16.000Z");
 
@@ -80,7 +80,7 @@ describe("finalizeRankCheckRun", () => {
     expect(updateMany).not.toHaveBeenCalled();
   });
 
-  it("records a cancelled outcome when cancellation finishes every item", async () => {
+  it("records canonical cancelled state when cancellation finishes every item", async () => {
     const updateMany = vi.fn(async () => ({ count: 1 }));
     const tx = {
       rankCheckRun: { updateMany },
@@ -99,7 +99,7 @@ describe("finalizeRankCheckRun", () => {
     await finalizeRankCheckRun(tx as never, { now, run: run("cancelling") });
 
     expect(updateMany).toHaveBeenCalledWith({
-      data: expect.objectContaining({ outcome: "cancelled", status: "cancelled" }),
+      data: expect.objectContaining({ outcome: null, status: "cancelled" }),
       where: { id: "run_1", status: "cancelling" },
     });
   });
@@ -119,5 +119,29 @@ describe("finalizeRankCheckRun", () => {
     expect(updateMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "run_1", status: "running" } }),
     );
+  });
+});
+
+it("canonicalizes all-cancelled items even when the run was not cancelling", () => {
+  expect(
+    finalRunData({
+      now,
+      run: run("running"),
+      groups: [
+        {
+          keywordId: "keyword_1",
+          status: "cancelled",
+          _count: { _all: 1 },
+          _sum: { actualCostCents: 0.125 },
+        },
+      ],
+    }),
+  ).toMatchObject({
+    status: "cancelled",
+    outcome: null,
+    cancelledCount: 1,
+    completedCount: 0,
+    costCents: 0.125,
+    finishedAt: now,
   });
 });

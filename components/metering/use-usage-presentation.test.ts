@@ -29,7 +29,7 @@ describe("usage display precision", () => {
     const p = useUsagePresentation();
     expect(p.figure(amount("7.4071", unit))).toBe("$0.07");
     expect(p.figure(amount("5000", unit))).toBe("$50.00");
-    expect(p.figure(amount("0.0001", unit))).toBe("$0.00");
+    expect(p.figure(amount("0.0001", unit))).toBe("< $0.01");
     expect(p.unit(unit)).toBe("");
   });
 

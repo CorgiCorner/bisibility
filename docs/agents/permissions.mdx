@@ -1,0 +1,111 @@
+---
+title: "Agent permissions"
+description: "OAuth scopes, the consent screen, API tokens created by apps, and how to revoke them."
+---
+
+An MCP or OAuth client receives only the scopes you approve. Project API keys
+and personal access tokens use the same `read`, `write`, and `admin` levels.
+See [Paid MCP tools](/agents/paid-tools) for operations that spend provider money.
+
+## Scopes
+
+`read`, `write`, and `admin` are cumulative: `write` includes `read`, and
+`admin` includes `write`. Inside a project, a personal access token is also
+capped by your membership. A viewer membership stays at `read` even when the
+token says `admin`. Only a project owner can delete that project.
+
+| Scope | What it allows | Example |
+| - | - | - |
+| `openid` | Confirm your identity. | OAuth userinfo, not an MCP tool. |
+| `profile` | Read your profile. | OAuth userinfo, not an MCP tool. |
+| `email` | Read your email address. | OAuth userinfo, not an MCP tool. |
+| `offline_access` | Renew access until the grant is revoked. Each refresh token lasts 30 days from that renewal. | Protocol scope, not an MCP tool. |
+| `read` | Read your project and rank data, within your existing permissions. | `list_projects`, `get_rank_history`, `get_cost_estimate`, `estimate_backlinks_cost` |
+| `write` | Read and change your project and rank data. Includes `read`. Write access can run paid operations. | `add_keywords`, `run_rank_check`, `analyze_backlinks`, `research_keywords` |
+| `admin` | Read, change, or delete projects and manage members and API keys. Includes `write`. It does not add `tokens:write`. | `create_api_key`, `create_personal_token` (the tool requires an admin personal access token) |
+| `tokens:write` | Create personal API tokens at `POST /api/v1/me/tokens`. It does not add `admin`. | The token-exchange endpoint, not an MCP tool name. |
+
+`get_session_profile` reports which tools the current credential can see.
+Clients that hide tools without `readOnlyHint` show only the read-only subset.
+
+## Consent screen
+
+Hosted clients that use MCP OAuth open the bisibility consent screen before
+any scopes are granted. The request expires after 5 minutes. If it expires,
+nothing is approved.
+
+1. Clients other than the official CLI (`bisibility-cli`) and the first-party
+   app client (`bisibility-ios`) are registered automatically. The screen then
+   says the app was registered automatically and is not reviewed by bisibility.
+   A reviewed client says the app was built by bisibility.
+2. Approve only if you started the connection yourself. The heading names the
+   client when the client sent a name.
+3. An automatically registered client that asked for more than one project
+   level shows an access level. The choices are Read only (`read`), Read and
+   write (`read` and `write`), and Full access (`read`, `write`, and `admin`).
+   Read and write is the default when the client asked for it. Otherwise the
+   default is Read only, or the only level the request allows.
+4. If the request includes `tokens:write` or `admin`, a separate checkbox says
+   "Allow this app to create API tokens". It starts unchecked. Checking it adds
+   `tokens:write` only. Choosing Full access does not check it, and checking it
+   does not add `admin`.
+5. Identity scopes and `offline_access` from the original request stay in the
+   grant. The screen cannot add a scope the client did not request. If an
+   automatically registered approval omits the choice, the server uses the
+   default level: Read and write when the request included it, otherwise Read
+   only when that was requested, otherwise the only offered level. API tokens
+   stay off.
+6. A reviewed client such as `bisibility-cli` does not use the access-level
+   control. It keeps the scopes from the signed request that the approval still
+   lists. A posted list can remove scopes. It cannot add any.
+7. ChatGPT is narrowed before you approve. A client named ChatGPT, or a
+   redirect host of `chatgpt.com` or `chat.openai.com`, can receive only
+   `openid`, `profile`, `email`, `offline_access`, and `read`.
+
+Without `offline_access`, the screen says access lasts up to 1 hour. With
+`offline_access`, it says access renews until revoked and that revocation can
+take up to 1 hour. That hour is the access-token lifetime. The hosted MCP
+endpoint checks the token's signature, audience, issuer, and scopes. It does
+not look up a stored consent row on each call, so an access token that was
+already issued can keep working until it expires.
+
+Technical details on the same screen show the client id, redirect URI, granted
+scopes, access-token expiry, refresh-token expiry, and API token expiry.
+
+## API tokens an app creates
+
+`POST /api/v1/me/tokens` with an OAuth access token requires `tokens:write`.
+The result is an ordinary personal access token. It is not the OAuth access
+token.
+
+An app registered automatically must set `expires_in_days` to 30 or 90. The
+shared token schema only accepts 30, 90, 365, or null, and the automatic-client
+check rejects null and any value above 90 days. The official CLI client
+`bisibility-cli` is not under that cap. It can still use 30, 90, 365, or no
+expiry.
+
+Those personal tokens keep working after you disconnect the OAuth app. Revoke
+them separately. See [Personal access tokens](/api/personal-access-tokens).
+
+## Revoke access
+
+Account settings do not list connected OAuth apps. There is no in-product
+control that deletes an OAuth grant for a client such as Grok Bot, ChatGPT, or
+Cursor.
+
+To revoke personal tokens the app already created, open Account, then Security
+(`/app/account/security`) and revoke the token, or call
+`DELETE /api/v1/me/tokens/{token_id}`. Revocation is recorded immediately. The
+next API call with that token is rejected. Any token may revoke itself with
+`DELETE /api/v1/me/tokens/current`.
+
+Project API keys are separate. Revoke them in project settings or with
+`DELETE /api-keys/{key_id}`, documented in [API keys](/api/api-keys). Revoking
+a personal token does not revoke a project API key.
+
+An OAuth access token lasts up to 1 hour. With `offline_access`, the consent
+screen says access renews until revoked and that revocation can take up to 1
+hour. An access token that was already issued stays valid until that expiry,
+because each MCP call verifies the token and does not read a stored consent
+row. The same Security page can revoke a browser session. That deletes the
+browser session only. It does not revoke personal tokens.

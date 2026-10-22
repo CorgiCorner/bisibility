@@ -184,7 +184,9 @@
       "analyticsDescription": "Połączenie z dostawcą {provider} na potrzeby wzbogacania o dane własne.",
       "localDescription": "Dodaj [seq:5,15,15,4], aby wybrać pozycje zwracane dla słowa kluczowego.",
       "trafficNoSource": "Żadne źródło analityczne nie ukończyło synchronizacji. Sprawdź dane uwierzytelniające dostawcy i logi workera.",
-      "trafficUpdated": "Zaktualizowano zrzuty dla {keywords, number} słów kluczowych i {pages, number} stron."
+      "trafficUpdated": "Zaktualizowano zrzuty dla {keywords, number} słów kluczowych i {pages, number} stron.",
+      "manageKey": "Zarządzaj kluczem",
+      "removeKey": "Usuń klucz"
     },
     "meta": {
       "labels": {

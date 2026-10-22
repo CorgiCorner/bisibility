@@ -53,9 +53,18 @@ describe("OAuth consent POST scope enforcement", () => {
     vi.clearAllMocks();
   });
 
-  it.each(["ChatGPT", "Custom"])(
-    "stores only permitted scopes when %s submits a forged broader POST",
-    async (name) => {
+  it.each([
+    ["ChatGPT", {}, ["openid", "read"]],
+    ["Custom", {}, ["openid", "read", "write"]],
+    [
+      "Custom",
+      { access_level: "full", allow_api_tokens: true },
+      ["openid", "read", "write", "admin", "tokens:write"],
+    ],
+    ["ChatGPT", { access_level: "full", allow_api_tokens: true }, ["openid", "read"]],
+  ] as const)(
+    "stores only the chosen scopes when %s posts a forged broader consent",
+    async (name, choice, expected) => {
       const auth = testAuth();
       const registered = await post(auth, "/oauth2/register", {
         client_name: name,
@@ -105,6 +114,7 @@ describe("OAuth consent POST scope enforcement", () => {
           accept: true,
           scope: "openid read write admin tokens:write",
           oauth_query: consentUrl.search.slice(1),
+          ...choice,
         },
         cookie,
       );
@@ -114,11 +124,7 @@ describe("OAuth consent POST scope enforcement", () => {
         model: "oauthConsent",
         where: [{ field: "clientId", value: client.client_id }],
       });
-      expect(saved?.scopes).toEqual(
-        name === "ChatGPT"
-          ? ["openid", "read"]
-          : ["openid", "read", "write", "admin", "tokens:write"],
-      );
+      expect(saved?.scopes).toEqual([...expected]);
     },
   );
 

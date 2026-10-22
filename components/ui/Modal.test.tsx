@@ -265,3 +265,23 @@ describe("Modal sizes", () => {
     expect(content.parentElement).toHaveClass("flex-1");
   });
 });
+
+it("keeps optional inert decoration outside the dialog content and focus order", () => {
+  render(
+    <Modal
+      open
+      onClose={vi.fn()}
+      title="Decorated modal"
+      decoration={<span>Decorative accent</span>}
+    >
+      <button type="button">Primary content</button>
+    </Modal>,
+  );
+  const decoration = screen.getByText("Decorative accent").parentElement;
+  expect(decoration).toHaveAttribute("aria-hidden", "true");
+  expect(decoration).toHaveAttribute("inert");
+  expect(screen.getByRole("dialog")).not.toContainElement(decoration);
+  expect(
+    within(screen.getByRole("dialog")).getByRole("button", { name: "Primary content" }),
+  ).toBeVisible();
+});

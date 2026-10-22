@@ -14,7 +14,6 @@ export function isEmailSender(value: string) {
 }
 
 type InstanceMailSchemaMessages = {
-  code: string;
   port: string;
   required: string;
   sender: string;
@@ -22,7 +21,6 @@ type InstanceMailSchemaMessages = {
 };
 
 const defaultMessages: InstanceMailSchemaMessages = {
-  code: "Enter the 6-digit authenticator code.",
   port: "Enter a port from 1 to 65535.",
   required: "Enter a value.",
   sender: "Enter a sender as Name <address@example.com> or a plain address.",
@@ -47,7 +45,6 @@ export function instanceMailFormSchema({
   const copy = { ...defaultMessages, ...messages };
   return z
     .object({
-      code: z.string().trim().max(16),
       provider: z.enum(["resend", "ses", "smtp"]),
       replaceCredentials: z.boolean(),
       resendApiKey: z.string().max(200),
@@ -61,7 +58,6 @@ export function instanceMailFormSchema({
       smtpUsername: z.string().max(320),
     })
     .superRefine((value, context) => {
-      if (!/^\d{6}$/.test(value.code)) issue(context, "code", copy.code);
       if (senderRequired || value.sender) {
         if (!isEmailSender(value.sender)) issue(context, "sender", copy.sender);
       }

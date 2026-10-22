@@ -37,7 +37,7 @@ function plannedTime(at: string, context: ReturnType<typeof useDateDisplay>) {
   return `${formatDisplayRelativeDay(date, new Date(), context)} ${clock}`;
 }
 
-/** Non-blocking: the run still starts, the operator only learns what it would pay for twice. */
+/** Active overlaps warn; a future planned check remains informational. */
 export function PreflightOverlapNotice({
   cancelAction,
   disabled,
@@ -50,10 +50,14 @@ export function PreflightOverlapNotice({
   const dateDisplay = useDateDisplay();
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const soonest = overlaps[0];
+  const now = Date.now();
+  const isFuturePlanned = (run: RankCheckRunOverlap) =>
+    run.status === "planned" && new Date(run.at).getTime() > now;
+  const soonest = overlaps.find((run) => !isFuturePlanned(run)) ?? overlaps[0];
   if (!soonest) return null;
+  const future = isFuturePlanned(soonest);
   const project = asProjectRef(projectId);
-  const canCancel = soonest.canCancel && Boolean(cancelAction);
+  const canCancel = !future && soonest.canCancel && Boolean(cancelAction);
   const more = Math.max(overlapRunCount, overlaps.length) - 1;
   const runHref =
     soonest.status === "planned"
@@ -61,7 +65,7 @@ export function PreflightOverlapNotice({
       : projectRunRankCheckPath(project, soonest.runId);
 
   async function cancel() {
-    if (!cancelAction || !soonest) return;
+    if (!cancelAction || !soonest || future) return;
     setCancelling(true);
     setError(null);
     try {
@@ -76,19 +80,32 @@ export function PreflightOverlapNotice({
 
   return (
     <div
-      aria-label={t("alreadyScheduled")}
+      aria-label={t(future ? "nextScheduledCheck" : "alreadyScheduled")}
       className="flex items-center gap-3 rounded-control border border-border bg-bg-sunken px-3.5 py-3"
       role="status"
     >
       <div className="grid min-w-0 flex-1 justify-items-start gap-1.5">
-        <StatusChip dot label={t("alreadyScheduled")} tone="info" />
+        <StatusChip
+          dot
+          label={t(future ? "nextScheduledCheck" : "alreadyScheduled")}
+          tone={future ? "neutral" : "info"}
+        />
         <p className="m-0 text-[12.5px] leading-5 text-fg">
-          {t("overlapMessage", {
-            count: soonest.keywordCount,
-            status: soonest.status,
-            time: soonest.status === "planned" ? plannedTime(soonest.at, dateDisplay) : "",
-          })}{" "}
-          {canCancel ? t("overlapCancelHint") : t("overlapKeepHint")}
+          {future ? (
+            t("futureScheduledCheck", {
+              count: soonest.keywordCount,
+              time: plannedTime(soonest.at, dateDisplay),
+            })
+          ) : (
+            <>
+              {t("overlapMessage", {
+                count: soonest.keywordCount,
+                status: soonest.status,
+                time: soonest.status === "planned" ? plannedTime(soonest.at, dateDisplay) : "",
+              })}{" "}
+              {canCancel ? t("overlapCancelHint") : t("overlapKeepHint")}
+            </>
+          )}
         </p>
         {more > 0 ? (
           <Link

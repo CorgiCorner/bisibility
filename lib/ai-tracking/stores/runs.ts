@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { ActionPaymentError } from "@/lib/action-payment/token";
+import { bindAiPaymentExecution, readAiPaymentConsent } from "@/lib/ai-research/payment";
 import type { PlanTrackingRunInput, SamplePlan } from "@/lib/ai-tracking/contract";
 import { payloadHash, sourceConfigurationHash } from "@/lib/ai-tracking/identity";
 import { planTrackingRunSchema } from "@/lib/ai-tracking/schema";
@@ -123,8 +125,31 @@ export function planTrackingRun(projectId: string, input: PlanTrackingRunInput) 
       },
       ...competitors.map((competitor) => ({ ...competitor, kind: "competitor" })),
     ];
+    const authority = data.paymentConsent ? readAiPaymentConsent(data.paymentConsent) : null;
+    if (
+      authority &&
+      (authority.projectId !== projectId ||
+        authority.actorId !== data.actorId ||
+        authority.scope !== (data.origin === "scheduled" ? "recurring" : "manual"))
+    )
+      throw new ActionPaymentError("payment_quote_changed");
+    const runId = data.origin === "manual" && authority ? authority.id : randomUUID();
+    if (
+      data.origin === "scheduled" &&
+      authority &&
+      authority.recurringScheduleId !== data.scheduleId
+    )
+      throw new ActionPaymentError("payment_quote_changed");
+    if (
+      data.origin === "manual" &&
+      authority &&
+      (await tx.aiTrackingRun.findUnique({ where: { id: runId } }))
+    )
+      throw new ActionPaymentError("payment_already_executed");
+    const paymentConsent = bindAiPaymentExecution(data.paymentConsent, runId);
     const run = await tx.aiTrackingRun.create({
       data: {
+        id: runId,
         projectId,
         actorId: data.actorId,
         state: prompts.length ? "planned" : "skipped",
@@ -134,7 +159,7 @@ export function planTrackingRun(projectId: string, input: PlanTrackingRunInput) 
         plannedAt: data.plannedAt ? new Date(data.plannedAt) : null,
         idempotencyKey: data.idempotencyKey,
         payloadHash: hash,
-        launchPayload: jsonInput(data),
+        launchPayload: jsonInput({ ...data, ...(paymentConsent ? { paymentConsent } : {}) }),
         competitorSnapshot: jsonInput(snapshot),
         retryOfRunId: data.retryOfRunId,
       },
@@ -147,6 +172,7 @@ export function planTrackingRun(projectId: string, input: PlanTrackingRunInput) 
         const attemptId = randomUUID();
         const plan: SamplePlan = {
           version: 1,
+          ...(paymentConsent ? { paymentConsent } : {}),
           projectId,
           actorId: data.actorId,
           actorCredential: data.actorCredential,

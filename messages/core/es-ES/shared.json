@@ -99,12 +99,13 @@
       "duplicate": "Otra ejecución ya está comprobando todas las palabras clave seleccionadas, así que no hay nada que iniciar.",
       "editBudget": "Editar el presupuesto",
       "noProvider": "Sin proveedor",
-      "noProviderBlocked": "No hay ningún proveedor conectado, así que no hay adónde enviar estos objetivos. Usa tu propia clave de API: se te factura directamente.",
+      "noProviderBlocked": "Elige una fuente de datos en Integraciones antes de ejecutar estas comprobaciones.",
       "openIntegrations": "Abrir Integraciones",
       "openRun": "Abrir la ejecución",
       "pricePerTarget": "precio por objetivo",
       "primaryProvider": "Proveedor principal",
       "primaryProviderAria": "Proveedor principal",
+      "paymentUnavailable": "Los datos de pago de este proveedor no están disponibles. Revisa la fuente de pago en Uso.",
       "previewChanged": "Los detalles de la ejecución han cambiado. Actualiza para revisar la estimación actual.",
       "runInProgress": "Ejecución en curso",
       "runOptions": "Opciones de la ejecución",
@@ -139,7 +140,9 @@
       "measurementPolicy": "Política de medición",
       "configureMeasurementPolicy": "Configurar política",
       "measurementPolicyUnconfigured": "Configura la política de medición antes de nuevas comprobaciones.",
-      "measurementPolicyUnsupported": "La política ya no coincide con los adaptadores actuales. Revísala y configúrala de nuevo."
+      "measurementPolicyUnsupported": "La política ya no coincide con los adaptadores actuales. Revísala y configúrala de nuevo.",
+      "nextScheduledCheck": "Próxima comprobación",
+      "futureScheduledCheck": "{count, plural, one {# de estas palabras clave tiene} other {# de estas palabras clave tienen}} una comprobación programada para {time}. También puedes comprobar ahora."
     },
     "globalError": {
       "description": "La aplicación no ha podido renderizar esta página. Recarga para volver a intentarlo.",
@@ -305,7 +308,7 @@
       "notices": {
         "budgetExhausted": "Se ha agotado el presupuesto mensual de comprobaciones de posiciones.",
         "noneReady": "No hay ninguna palabra clave lista para una primera comprobación.",
-        "providerMissing": "Conecta un proveedor de SERP antes de ejecutar comprobaciones.",
+        "providerMissing": "Elige una fuente de datos antes de ejecutar comprobaciones.",
         "raiseBudget": "Subir el presupuesto",
         "sampleProject": "Los proyectos de ejemplo no ejecutan comprobaciones reales.",
         "reviewUsage": "Revisar uso"
@@ -388,7 +391,7 @@
         "reactivateAccountDangerLabel": "Reactivar la cuenta",
         "reactivateAccountTitle": "Reactivar la cuenta",
         "reactivateAccountToastMessage": "Acción de cuenta solicitada",
-        "removeIntegrationBody": "Las comprobaciones de posiciones se detendrán hasta que conectes otro proveedor de SERP. Las credenciales guardadas se eliminan de esta instancia.",
+        "removeIntegrationBody": "Esto elimina esta conexión con el proveedor y sus credenciales guardadas. Las comprobaciones solo podrán continuar mediante otra fuente habilitada.",
         "removeIntegrationDangerLabel": "Desconectar el proveedor",
         "removeIntegrationTitle": "Desconectar el proveedor",
         "removeIntegrationToastMessage": "Se ha desconectado el proveedor",
@@ -427,7 +430,11 @@
         "deleteTimelineNoteBody": "¿Eliminar esta nota de la cronología? Esta acción no se puede deshacer.",
         "deleteTimelineNoteDangerLabel": "Eliminar nota",
         "deleteTimelineNoteTitle": "¿Eliminar nota de la cronología?",
-        "deleteTimelineNoteToastMessage": "Nota de la cronología eliminada."
+        "deleteTimelineNoteToastMessage": "Nota de la cronología eliminada.",
+        "removeProviderKeyTitle": "¿Eliminar la clave guardada?",
+        "removeProviderKeyBody": "Se eliminará la clave guardada y se desconectará este proveedor. Elige otra fuente para seguir usándolo.",
+        "removeProviderKeyDangerLabel": "Eliminar clave",
+        "removeProviderKeyToastMessage": "Clave eliminada"
       },
       "copy": {
         "action": "Copiar",
@@ -781,7 +788,13 @@
         "loading": "Cargando presupuestos.",
         "empty": "No se aplican presupuestos.",
         "forbidden": "No puedes ver estos presupuestos.",
-        "failed": "Los presupuestos no están disponibles."
+        "failed": "Los presupuestos no están disponibles.",
+        "noLimit": "Sin límite",
+        "setLimit": "Fijar límite",
+        "perMonth": "/ mes",
+        "overBy": "Exceso de {amount}",
+        "reservedHint": "Reservado para comprobaciones en curso o en cola. Se actualiza automáticamente; no se puede editar.",
+        "reservedInfo": "Acerca del uso reservado"
       },
       "overview": {
         "unknown": "Uso desconocido",
@@ -1414,6 +1427,8 @@
         "duplicate": "Una ejecución activa ya cubre este alcance.",
         "budget_blocked": "El presupuesto bloquea este inicio.",
         "nothing_eligible": "No hay objetivos aptos para esta ejecución manual.",
+        "payment_already_executed": "Este pago ya se usó para una ejecución.",
+        "payment_unavailable": "Los datos de pago de este proveedor no están disponibles. Revisa la fuente de pago en Uso.",
         "cost_limit_exceeded": "La estimación de la operación supera su límite de coste.",
         "sample_project": "Los proyectos de ejemplo no pueden iniciar mediciones de pago.",
         "preview_failed": "No se pudo leer la estimación. Se conserva el borrador.",
@@ -2014,7 +2029,7 @@
       "asOf": "Fecha del informe:",
       "baselineAsOf": "Momento de referencia solicitado:",
       "providerConnected": "Hay un proveedor de posiciones conectado. Esta lectura no inicia comprobaciones.",
-      "providerMissing": "No hay un proveedor de posiciones conectado. Las observaciones guardadas siguen disponibles.",
+      "providerMissing": "No hay ninguna fuente de datos de posiciones configurada. Las observaciones guardadas siguen disponibles para lectura.",
       "state": {
         "missing": "Elige una comparación guardada para ver sus resultados.",
         "invalid": "Este enlace de comparación no es válido. Elige una comparación guardada.",
@@ -2046,17 +2061,55 @@
       "scanFullDepth": "Continuar hasta toda la profundidad revisada."
     },
     "providerAccess": {
-      "connect": "Conecta un proveedor compatible para desbloquear estos campos.",
+      "connect": "Elige una fuente de datos para usar estos campos.",
       "supported": "Proveedores compatibles: {providers}.",
-      "unavailable": "No hay un proveedor compatible disponible para esta función.",
+      "unavailable": "No hay ninguna fuente de datos compatible disponible para esta función.",
       "action": "Abrir integraciones",
-      "reconnect": "Vuelve a conectar tu proveedor para desbloquear estos campos.",
+      "reconnect": "Vuelve a conectar la fuente de datos seleccionada para usar estos campos.",
       "reconnectAction": "Reconectar proveedor",
-      "emptyTitle": "Conecta un proveedor para empezar",
-      "reconnectTitle": "Reconecta para obtener nuevos resultados",
-      "emptyDescription": "Esta función necesita un proveedor compatible. Conéctalo en Integraciones para buscar.",
-      "reconnectDescription": "Vuelve a conectar tu proveedor en Integraciones antes de realizar otra búsqueda.",
-      "connectAction": "Conectar proveedor"
+      "emptyTitle": "Elige una fuente de datos",
+      "reconnectTitle": "Vuelve a conectar la fuente de datos seleccionada",
+      "emptyDescription": "Elige una fuente de datos compatible en Integraciones para realizar una búsqueda.",
+      "reconnectDescription": "Vuelve a conectar la fuente de datos seleccionada en Integraciones antes de realizar otra búsqueda.",
+      "connectAction": "Elige una fuente de datos",
+      "askAdmin": "Pide a un administrador del proyecto que elija una fuente de datos antes de iniciar las comprobaciones."
+    },
+    "durationUnits": {
+      "minutes": "{count, plural, one {# minuto} other {# minutos}}",
+      "hours": "{count, plural, one {# hora} other {# horas}}",
+      "days": "{count, plural, one {# día} other {# días}}",
+      "weeks": "{count, plural, one {# semana} other {# semanas}}"
+    },
+    "actionPayment": {
+      "title": "Revisar coste",
+      "description": "Comprueba el precio antes de empezar.",
+      "confirm": "Iniciar",
+      "cancel": "Cancelar",
+      "payer": "Pagar con",
+      "byok": "Tu cuenta del proveedor",
+      "platform": "Créditos",
+      "wallet": "Disponible: {amount}",
+      "freeUntil": "Gratis desde la caché hasta {date}",
+      "cacheWindow": "El resultado se puede volver a abrir gratis durante {duration}",
+      "changeCache": "Cambiar",
+      "refreshEstimate": "Actualizar estimación",
+      "addCredits": "Añadir créditos",
+      "loading": "Comprobando precio…",
+      "unavailable": "Detalles de pago no disponibles",
+      "expired": "Este precio ha caducado. Actualiza para consultar el coste actual.",
+      "blocked": "Esta opción no está disponible. Elige otra o revisa tu cuenta.",
+      "pending": "Cargo pendiente",
+      "unknown": "Cargo sin confirmar",
+      "byokRoute": "Con tu clave de {provider}",
+      "maximum": "Máximo: {amount}",
+      "total": "Total",
+      "originalCharge": "Consulta original:",
+      "reviewPrice": "Revisar precio",
+      "insufficientCredits": "No hay suficientes créditos.",
+      "refreshPrice": "Actualizar precio",
+      "forecast": "Previsión",
+      "forecastRisk": "El coste real del proveedor puede superar esta previsión.",
+      "requestUnconfirmed": "Comprueba la solicitud anterior antes de empezar de nuevo."
     }
   }
 }

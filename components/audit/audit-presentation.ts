@@ -18,6 +18,17 @@ export type PresentedAuditEntry = AuditEntry & {
 };
 
 function eventNameFor(entry: AuditEntry, dateDisplay: DateDisplayContext, t: Translate) {
+  if (entry.action === "provider.credential_source_changed" && entry.providerSourceChange) {
+    return t("event.providerSourceChangedDetail", {
+      provider: entry.providerSourceChange.provider,
+      source: t(
+        entry.providerSourceChange.source === "own"
+          ? "event.providerSourceOwn"
+          : "event.providerSourceHosted",
+      ),
+    });
+  }
+
   if (entry.action === "rank_check_run.skip" && entry.rankCheckRunSkip) {
     const plannedFor = new Date(entry.rankCheckRunSkip.plannedFor);
     if (!Number.isNaN(plannedFor.getTime())) {
@@ -29,11 +40,7 @@ function eventNameFor(entry: AuditEntry, dateDisplay: DateDisplayContext, t: Tra
   }
 
   const key = entry.action ? auditEventMessageKeyFor(entry.action) : null;
-  return key
-    ? t(`event.${key}`)
-    : entry.action
-      ? t("event.unknown", { action: entry.action })
-      : t("event.unknownMissing");
+  return key ? t(`event.${key}`) : entry.action ? t("event.unknown") : t("event.unknownMissing");
 }
 
 function recorded(value: string | null, t: Translate) {
@@ -48,7 +55,10 @@ export function presentAuditEntry(
   const timestamp = new Date(entry.timestamp);
   return {
     ...entry,
-    actor: { ...entry.actor, name: entry.actor.name ?? t("actorSystem") },
+    actor: {
+      ...entry.actor,
+      name: entry.actor.id === "system" ? t("actorSystem") : (entry.actor.name ?? t("actorSystem")),
+    },
     eventName: eventNameFor(entry, dateDisplay, t),
     hasRecordedIp: entry.source.ip !== null,
     hasRecordedUserAgent: entry.metadata.user_agent !== null,

@@ -17,6 +17,7 @@ export async function advisoryProviderBudget(
     projectId: string;
     provider: string;
     estimatedCostCents: number;
+    estimatedCustomerCents?: number;
     estimatedUsageQuantity?: number;
     surface: ProviderRequestSurface;
   },
@@ -61,13 +62,20 @@ export async function advisoryProviderBudget(
     const estimate =
       budget.unit === "paid_attempts"
         ? 1
-        : budget.unit === "units"
-          ? input.estimatedUsageQuantity
-          : budget.unit === "cents" || (!hosted && budget.unit === "budget_cents")
-            ? input.estimatedCostCents
-            : undefined;
+        : hosted && ["budget_cents", "customer_cents"].includes(budget.unit)
+          ? input.estimatedCustomerCents
+          : budget.unit === "units"
+            ? input.estimatedUsageQuantity
+            : budget.unit === "cents" || (!hosted && budget.unit === "budget_cents")
+              ? input.estimatedCostCents
+              : undefined;
     // Customer money needs the frozen hosted quote; the admission path checks it.
-    if (hosted && ["budget_cents", "customer_cents"].includes(budget.unit)) continue;
+    if (
+      hosted &&
+      ["budget_cents", "customer_cents"].includes(budget.unit) &&
+      input.estimatedCustomerCents === undefined
+    )
+      continue;
     if (estimate === undefined || !Number.isFinite(estimate) || estimate < 0)
       throw new ProviderUsagePersistenceError();
     if (estimate > remaining) return true;

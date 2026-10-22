@@ -112,6 +112,8 @@ vi.mock("@/lib/db/prisma", () => {
 });
 vi.mock("@/lib/agent-reports/service", () => ({ createAgentReport: vi.fn() }));
 vi.mock("@/lib/provider-lookups/cache", () => ({
+  providerLookupCacheConfigured: () => false,
+  readProviderLookupCache: async () => null,
   withProviderLookupCache: vi.fn(() => {
     throw new Error("Actual-cost requests must not rely on fail-open Redis.");
   }),

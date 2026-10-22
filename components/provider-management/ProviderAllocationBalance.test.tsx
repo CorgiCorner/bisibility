@@ -138,7 +138,8 @@ describe("verified wallet allocation suggestion", () => {
       surfaceLabel(dialogCopy.creditsAppBudgetField, "DataForSEO"),
     );
     fireEvent.click(screen.getByRole("button", { name: "Use credit balance" }));
-    await screen.findAllByText(/Scoped usage and reservations/);
+    await screen.findAllByText(dialogCopy.availabilityReasons.balance_unavailable);
+    expect(screen.getByRole("button", { name: "Use credit balance" })).toBeDisabled();
     expect(field).toHaveValue("");
     expect(host.native).not.toHaveBeenCalled();
     expect(host.execute).not.toHaveBeenCalled();

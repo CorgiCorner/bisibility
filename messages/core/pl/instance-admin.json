@@ -308,7 +308,6 @@
           "smtpPort": "Port",
           "smtpUsername": "Nazwa użytkownika",
           "smtpPassword": "Hasło",
-          "code": "Kod z aplikacji uwierzytelniającej",
           "save": "Zapisz ustawienia poczty",
           "saving": "Zapisywanie...",
           "clear": "Wyczyść zapisane ustawienia",
@@ -317,14 +316,13 @@
           "cleared": "Zapisane ustawienia poczty zostały wyczyszczone. Obowiązują zmienne środowiskowe.",
           "forbidden": "Ta akcja jest niedostępna.",
           "invalid": "Sprawdź formularz i spróbuj ponownie.",
-          "stepUpFailed": "Ten kod uwierzytelniający nie został przyjęty.",
           "rateLimited": "Zbyt wiele prób. Spróbuj ponownie później.",
           "unavailable": "Ustawienia poczty są chwilowo niedostępne.",
           "validationSender": "Podaj nadawcę jako Nazwa '<'adres@example.com'>' albo sam adres.",
           "validationRequired": "Podaj wartość.",
-          "validationCode": "Podaj 6-cyfrowy kod z aplikacji uwierzytelniającej.",
           "validationPort": "Podaj port od 1 do 65535.",
-          "validationSesPair": "Podaj identyfikator klucza dostępu i tajny klucz albo zostaw oba pola puste."
+          "validationSesPair": "Podaj identyfikator klucza dostępu i tajny klucz albo zostaw oba pola puste.",
+          "twoFactorRequired": "Uwierzytelnianie dwuskładnikowe musi być włączone."
         }
       }
     },
@@ -445,7 +443,8 @@
         "invalid": "Sprawdź pola komunikatu.",
         "not_found": "Ten komunikat już nie istnieje. Odśwież stronę.",
         "conflict": "Inny administrator zmienił ten komunikat. Odśwież stronę przed ponownym zapisem.",
-        "unavailable": "Nie udało się zapisać komunikatu. Spróbuj ponownie."
+        "unavailable": "Nie udało się zapisać komunikatu. Spróbuj ponownie.",
+        "two_factor_required": "Uwierzytelnianie dwuskładnikowe musi być włączone."
       }
     },
     "recovery": {
@@ -558,7 +557,8 @@
         "rate_limited": "Zbyt wiele akcji. Spróbuj za chwilę.",
         "unavailable": "Odzyskiwanie jest chwilowo niedostępne. Przed ponowieniem odśwież status akcji.",
         "case_changed": "Sprawa się zmieniła lub nie nadaje się już do tej naprawy. Odśwież i sprawdź ponownie.",
-        "invalid": "Wybierz powód i przyszły termin oczekiwania."
+        "invalid": "Wybierz powód i przyszły termin oczekiwania.",
+        "two_factor_required": "Uwierzytelnianie dwuskładnikowe musi być włączone."
       },
       "commandStates": {
         "queued": "Odzyskiwanie w kolejce",
@@ -611,6 +611,21 @@
       "connectionBlocked": "Nierozstrzygnięte rozliczenia blokują wydatki połączenia.",
       "lastResultActivityAt": "Ostatni postęp odzyskiwania wyników",
       "noSpendShort": "Odzyskiwanie sprawdza zapisane dowody przed wykonaniem operacji."
+    },
+    "dangerousActions": {
+      "notice": "Włącz uwierzytelnianie dwuskładnikowe, aby {action}.",
+      "enable": "Włącz uwierzytelnianie dwuskładnikowe",
+      "actions": {
+        "addAccount": "dodać konto",
+        "changeMail": "zmienić ustawienia poczty",
+        "changeCredentials": "zmienić dane uwierzytelniające",
+        "selectAccount": "wybrać konto",
+        "changeSettings": "zmienić ustawienia",
+        "changeAccountStatus": "zmienić dostęp do konta",
+        "changeAnnouncements": "zmienić ogłoszenia",
+        "repairUsage": "naprawić dane użycia",
+        "importUsage": "zaimportować dane użycia"
+      }
     }
   }
 }

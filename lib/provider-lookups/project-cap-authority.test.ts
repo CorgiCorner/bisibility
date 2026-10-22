@@ -28,6 +28,7 @@ vi.mock("@/lib/queries/_auth", () => ({
 vi.mock("@/lib/queries/workspace-request-data", () => ({
   getRequestProjectDefaults: async () => null,
   getRequestSerpProviderChain: async () => [{ provider: "dataforseo" }],
+  getRequestPrimarySerpProvider: async () => ({ provider: "dataforseo", credentialSource: "own" }),
   getRequestMonthlySpendCents: async () => 0,
 }));
 

@@ -256,6 +256,24 @@ describe("audit redaction canaries", () => {
     expect(JSON.stringify(data)).not.toContain("nested-secret");
   });
 
+  it.each([null, "sch_abcdefghijklmnopqrstuvwx"])(
+    "retains reviewed market-device audit details with schedule %s and drops extra fields",
+    async (scheduleId) => {
+      const details = {
+        device: "mobile",
+        scheduleId,
+        keywordIds: ["kw_abcdefghijklmnopqrstuvwx"],
+      };
+      const data = await writeCanary(
+        { ...details, credentialsEncrypted: "market-device-canary-secret" },
+        undefined,
+        "keyword.market_device_add",
+      );
+      expect(data.after).toEqual(details);
+      expect(JSON.stringify(data)).not.toContain("market-device-canary-secret");
+    },
+  );
+
   it("drops undeclared sensitive keys at any depth", async () => {
     const secret = "audit-canary-secret-redaction-0001";
     const data = await writeCanary({

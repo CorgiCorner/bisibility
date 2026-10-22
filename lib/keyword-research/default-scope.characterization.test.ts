@@ -218,7 +218,7 @@ describe("pre-R3 default behavior characterization", () => {
   });
 
   it.each([
-    ["live", "2026-07-22T20:00:00.000Z", "cached, free for 10h"],
+    ["live", "2026-07-22T20:00:00.000Z", "cached, free for 10 hours"],
     ["expired", "2026-07-22T09:00:00.000Z", "cache expired"],
   ] as const)("keeps the %s legacy replay location key", (_state, cachedUntil, cacheLabel) => {
     vi.useFakeTimers();

@@ -7,12 +7,10 @@ export const MARKETING_URL =
 export const GITHUB_URL = "https://github.com/CorgiCorner/bisibility";
 export const YOUTUBE_URL = "https://www.youtube.com/@bisibility";
 export const LINKEDIN_URL = "https://www.linkedin.com/company/bisibility";
-export const MEDIUM_URL = "https://medium.com/@bisibility_com";
+export const MEDIUM_URL = "https://medium.com/bisibility";
 export const INSTAGRAM_URL = "https://www.instagram.com/bisibility_com";
 export const X_URL = "https://x.com/bisibility_com";
 export const CLOUD_BETA_SIGNUP_HREF = "/login";
-export const CLOUD_BETA_EMAIL_NOTICE =
-  "By joining the hosted beta, you agree to receive emails about beta updates, incidents, pricing, and general availability.";
 export const GITHUB_ISSUES_URL = `${GITHUB_URL}/issues/new`;
 export const DISCORD_URL = "https://discord.gg/HcYpvfn79w";
 export const FEEDBACK_URL = "mailto:feedback@bisibility.com?subject=bisibility%20feedback";

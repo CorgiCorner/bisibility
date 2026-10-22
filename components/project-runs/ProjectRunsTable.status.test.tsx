@@ -13,6 +13,7 @@ beforeEach(() => {
 
 const importRun: ProjectRun = {
   attention: { kind: "needs_reauthentication", message: null },
+  cost: { actualCents: null, estimatedCents: null, state: "not_applicable" },
   capabilities: { cancel: false, pause: false, resume: false, retry: false, viewDetails: true },
   details: {
     pausedReason: "needs_reauth",
@@ -22,23 +23,27 @@ const importRun: ProjectRun = {
   },
   href: `/app/${projectRef}/search-console?property=sc-domain%3Aexample.com`,
   id: "import_1",
-  kind: "gsc_import",
+  kind: "gsc",
   lifecycle: "paused",
   progress: { completed: null, total: null, unit: "days" },
   project: { name: "Example", publicId: projectRef as ProjectRun["project"]["publicId"] },
-  scope: { description: "sc-domain:example.com", kind: "gsc_import" },
+  scope: { description: "sc-domain:example.com", kind: "gsc" },
   timestamps: {
+    startedAt: null,
+    finishedAt: null,
+    plannedFor: null,
     createdAt: "2026-09-06T09:00:00.000Z",
     lastProbeAt: null,
     lastSyncFinishedAt: null,
     lastSyncStartedAt: null,
     syncStartedAt: null,
   },
-  title: { kind: "gsc_import" },
+  title: { kind: "gsc" },
 };
 
 const deferredRun: ProjectRun = {
   attention: null,
+  cost: { actualCents: null, estimatedCents: null, state: "unknown" as const },
   capabilities: { cancel: false, pause: false, resume: false, retry: false, viewDetails: true },
   details: {
     costCents: 0,
@@ -49,11 +54,11 @@ const deferredRun: ProjectRun = {
   },
   href: `/app/${projectRef}/runs/rank-checks/rcr_abcdefghijklmnopqrstuvwx`,
   id: "rcr_abcdefghijklmnopqrstuvwx",
-  kind: "rank_check",
+  kind: "rank",
   lifecycle: "completed",
   progress: { completed: 0, total: 3, unit: "targets" },
   project: { name: "Example", publicId: projectRef as ProjectRun["project"]["publicId"] },
-  scope: { description: null, keywordCount: 3, kind: "rank_check" },
+  scope: { description: null, keywordCount: 3, kind: "rank" },
   timestamps: {
     createdAt: "2026-09-06T09:00:00.000Z",
     finishedAt: "2026-09-06T09:05:00.000Z",
@@ -61,7 +66,7 @@ const deferredRun: ProjectRun = {
     plannedFor: null,
     startedAt: "2026-09-06T09:01:00.000Z",
   },
-  title: { kind: "rank_check", trigger: "manual" },
+  title: { kind: "rank", trigger: "manual" },
 };
 
 function renderTable(rows: readonly ProjectRun[] = [importRun, deferredRun]) {

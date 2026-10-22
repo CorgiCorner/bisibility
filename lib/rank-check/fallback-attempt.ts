@@ -1,7 +1,7 @@
 import { ProviderAllocationExhaustedError } from "@/lib/provider-usage/enforcement";
 import { surfaceOf } from "@/lib/provider-usage/surface";
 import type { ProviderRequestSource } from "@/lib/provider-usage/tag";
-import { providerErrorCodeFromError } from "@/lib/providers/call-error";
+import { ProviderCallError, providerErrorCodeFromError } from "@/lib/providers/call-error";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import type { FallbackAttempt } from "./provider-chain-error";
 import { RankCheckRunnerError, type RankCheckRunnerErrorCode } from "./runner-error";
@@ -44,6 +44,9 @@ export function fallbackAttempt(
       },
       rateLimited: false,
     };
+  }
+  if (error instanceof ProviderCallError && error.code === "provider_capacity_unavailable") {
+    return { attempt: { provider, message: error.message, code: error.code }, rateLimited: false };
   }
   if (error instanceof RankCheckRunnerError && FALLBACK_CODES.has(error.code)) {
     return {

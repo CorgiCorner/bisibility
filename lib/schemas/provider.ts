@@ -98,9 +98,20 @@ export const providerConnectionRefSchema = z.object({
   providerId: providerIdSchema,
 });
 
+export const disconnectProviderSchema = providerConnectionRefSchema.extend({
+  expectedConnection: z
+    .object({
+      id: idSchema,
+      updatedAt: z.iso.datetime(),
+      credentialSource: z.literal("own"),
+    })
+    .optional(),
+});
+
 export type ConnectProviderInput = z.infer<typeof connectProviderSchema>;
 export type ProviderCredentialsInput = z.infer<typeof providerCredentialsSchema>;
 export type ProviderConnectionRefInput = z.infer<typeof providerConnectionRefSchema>;
+export type DisconnectProviderInput = z.infer<typeof disconnectProviderSchema>;
 export type TestProviderConnectionInput = z.infer<typeof testProviderConnectionSchema>;
 export type UpdateProviderCostInput = z.infer<typeof updateProviderCostSchema>;
 export type UpdateProviderRateInput = z.infer<typeof updateProviderRateSchema>;

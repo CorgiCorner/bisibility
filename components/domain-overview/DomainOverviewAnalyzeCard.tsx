@@ -1,23 +1,22 @@
 "use client";
 
+import { ActionPaymentOptionPicker } from "@/components/action-payment/ActionPaymentOptionPicker";
+import { usePaymentAmountFormatter } from "@/components/action-payment/use-payment-amount-formatter";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { compactInputClassName } from "@/components/ui/input-styles";
 import { Kbd } from "@/components/ui/Kbd";
-import { pricingTriggerClassName } from "@/components/ui/PricingPopover";
+import type { ActionPaymentOption } from "@/lib/action-payment/contract";
 import type { DomainOverviewReport, DomainOverviewScope } from "@/lib/domain-overview/types";
 import { normalizeDomain } from "@/lib/domains/normalize";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import type { ResearchScope } from "@/lib/research/scope";
 import { GlobeIcon as Globe } from "@phosphor-icons/react/dist/csr/Globe";
 import { InfoIcon as Info } from "@phosphor-icons/react/dist/csr/Info";
-import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { DomainOverviewPricingPopover } from "./DomainOverviewPricingPopover";
 import { domainOverviewControlHeight } from "./domain-overview-control-styles";
-import { formatDomainCost } from "./domain-overview-metrics";
 import {
   type DomainOverviewEstimateView,
   detectedDomainScope,
@@ -28,6 +27,8 @@ const formSchema = z.object({ target: z.string().trim().min(1).max(253) });
 type FormValues = z.infer<typeof formSchema>;
 
 type DomainOverviewAnalyzeCardProps = {
+  disabled?: boolean;
+  onPaymentOptionChange?: (option: ActionPaymentOption) => void;
   catalogScopes: readonly ResearchScope[];
   estimate: DomainOverviewEstimateView;
   onResearchScopeChange: (scope: ResearchScope) => void;
@@ -43,6 +44,8 @@ type DomainOverviewAnalyzeCardProps = {
 };
 
 export function DomainOverviewAnalyzeCard({
+  disabled = false,
+  onPaymentOptionChange,
   catalogScopes,
   estimate,
   onResearchScopeChange,
@@ -56,21 +59,15 @@ export function DomainOverviewAnalyzeCard({
   trackedScopes,
   report,
 }: Readonly<DomainOverviewAnalyzeCardProps>) {
-  const locale = useLocale();
+  const presentAmount = usePaymentAmountFormatter();
   const t = useTranslations("projectDomainOverview.workspace.analyze");
-  function submitLabel(fresh: boolean, submittingLabel: boolean) {
-    const action = fresh
-      ? submittingLabel
-        ? t("refreshing")
-        : t("refresh")
-      : submittingLabel
-        ? t("analyzing")
-        : t("submit");
-    const cost = fresh ? estimate.freshCostCents : estimate.costCents;
-    if (!fresh && estimate.cached) return t("cached", { action });
-    return cost == null ? action : t("priced", { action, cost: formatDomainCost(cost, locale) });
+  const quote = estimate.loading ? undefined : estimate.payment;
+  const presented = quote && quote.cache.state !== "hit" ? presentAmount(quote.charge) : undefined;
+  function submitLabel(submittingLabel: boolean) {
+    const action = submittingLabel ? t("analyzing") : t("submit");
+    if (quote?.cache.state === "hit") return t("cached", { action });
+    return presented ? t("priced", { action, cost: presented.text }) : action;
   }
-  const [pricingAnchor, setPricingAnchor] = useState<HTMLElement | null>(null);
   const { handleSubmit, register } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     values: { target },
@@ -81,11 +78,9 @@ export function DomainOverviewAnalyzeCard({
   const matchesReport = Boolean(
     report && normalizeDomain(target) === report.target && resolvedScope === report.scope,
   );
-  const actionCost = matchesReport ? estimate.freshCostCents : estimate.costCents;
   const valid = Boolean(
     detected &&
       estimate.valid &&
-      actionCost != null &&
       researchScope?.researchAvailable &&
       researchScope?.providerLocationCode != null,
   );
@@ -97,7 +92,7 @@ export function DomainOverviewAnalyzeCard({
       <form
         className="grid gap-3.5"
         onSubmit={handleSubmit(({ target: next }) => {
-          if (valid) onSubmit(next, matchesReport);
+          if (valid) onSubmit(next, false);
         })}
       >
         <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
@@ -150,27 +145,31 @@ export function DomainOverviewAnalyzeCard({
           </div>
         </div>
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-4">
-          <button
-            className={pricingTriggerClassName}
-            onClick={(event) => setPricingAnchor(event.currentTarget)}
-            type="button"
-          >
-            {t("pricing")}
-          </button>
+          {onPaymentOptionChange ? (
+            <ActionPaymentOptionPicker
+              options={estimate.paymentOptions ?? []}
+              value={estimate.payment?.option.id ?? ""}
+              disabled={estimate.loading || submitting}
+              onChange={(id) => {
+                const option = estimate.paymentOptions?.find((item) => item.id === id);
+                if (option) onPaymentOptionChange(option);
+              }}
+            />
+          ) : null}
           <Button
             aria-describedby={
               report && !matchesReport ? "domain-overview-report-target-note" : undefined
             }
-            disabled={!valid || submitting}
+            disabled={disabled || !valid || submitting}
             loading={submitting}
-            loadingLabel={submitLabel(matchesReport, true)}
+            loadingLabel={submitLabel(true)}
             size="sm"
             startIcon={<Globe aria-hidden size={14} weight="regular" />}
             style={{ height: 37, minHeight: 37, minWidth: 200 }}
-            title={!valid ? t("needValid") : undefined}
+            title={!valid ? t("needValid") : presented?.title}
             type="submit"
           >
-            {submitLabel(matchesReport, false)}
+            {submitLabel(false)}
           </Button>
         </div>
         <div className="-mx-4.5 -mb-4.5 border-t border-border px-4.5 py-3.5 sm:-mx-5 sm:-mb-5 sm:px-5">
@@ -212,11 +211,6 @@ export function DomainOverviewAnalyzeCard({
           </p>
         ) : null}
       </form>
-      <DomainOverviewPricingPopover
-        anchor={pricingAnchor}
-        estimate={estimate}
-        onClose={() => setPricingAnchor(null)}
-      />
     </Card>
   );
 }

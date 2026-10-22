@@ -2,6 +2,7 @@
 import { recordQualifiedUse } from "@/lib/achievements/record-use";
 import { listAgentReports } from "@/lib/agent-reports/service";
 import { getAiResearchCatalog } from "@/lib/ai-research/catalog-service";
+import { aiHistoryPayments } from "@/lib/ai-research/history-payment";
 import { promptSchema, visibilitySchema } from "@/lib/ai-research/schema";
 import { analyzeAiVisibility, compareAiPrompts } from "@/lib/ai-research/service";
 import { getProjectRole } from "@/lib/auth/authorize";
@@ -24,7 +25,7 @@ export async function analyzeAiResearchAction(
   try {
     const result = await (mode === "visibility" ? analyzeAiVisibility : compareAiPrompts)(
       { projectId: project.id, actorId: actor.id, origin: APP_REQUEST_ORIGIN },
-      data,
+      { ...data, require_payment: !data.estimate_only },
     );
     recordQualifiedUse({
       actorId: actor.id,
@@ -47,6 +48,10 @@ export async function getAiResearchPage(projectId: string, mode: "visibility" | 
     kind: mode === "visibility" ? "ai_visibility" : "prompt_explorer",
     limit: 10,
   });
+  const payments = await aiHistoryPayments(
+    project.id,
+    history.map((row) => row.id),
+  );
   const catalogOutcome = await getAiResearchCatalog(project.id);
   return {
     ...moduleSupport("aiResearch"),
@@ -54,7 +59,10 @@ export async function getAiResearchPage(projectId: string, mode: "visibility" | 
     catalogError: catalogOutcome.ok ? undefined : catalogOutcome.message,
     catalogFailure: catalogOutcome.ok ? undefined : catalogOutcome.reason,
     domain: trackedProjectDomain(project.domain) ?? "",
-    history,
+    history: history.map((row) => ({
+      ...row,
+      ...(payments.has(row.id) ? { originalPayment: payments.get(row.id) } : {}),
+    })),
     canRun:
       canProjectAction(getProjectRole(actor, project.id), "create", "project") &&
       !isProjectReadOnly(project.writeMode),

@@ -37,9 +37,7 @@ describe("TrackingSettingsLoading", () => {
           canEdit
           defaults={defaults}
           domain="example.com"
-          initialCronPreview={{ message: null, runs: [], status: "idle", timezone: null }}
           previewDefaults={reviewedDefaultsPreview}
-          previewCron={vi.fn()}
           projectId="prj_1"
           updateDefaults={vi.fn()}
         />
@@ -63,9 +61,7 @@ describe("TrackingSettingsLoading", () => {
         canEdit
         defaults={defaults}
         domain="example.com"
-        initialCronPreview={{ message: null, runs: [], status: "idle", timezone: null }}
         previewDefaults={reviewedDefaultsPreview}
-        previewCron={vi.fn()}
         projectId="prj_1"
         updateDefaults={vi.fn()}
       />,
@@ -81,9 +77,7 @@ describe("TrackingSettingsLoading", () => {
           canEdit
           defaults={defaults}
           domain="example.com"
-          initialCronPreview={{ message: null, runs: [], status: "idle", timezone: null }}
           previewDefaults={reviewedDefaultsPreview}
-          previewCron={vi.fn()}
           projectId="prj_1"
           updateDefaults={vi.fn()}
         />

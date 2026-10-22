@@ -103,7 +103,6 @@
         "backupCodes": "バックアップコード",
         "backupCodesGenerated": "新しいバックアップコードを生成しました。今すぐ保存してください。",
         "cancel": "キャンセル",
-        "continueToMail": "メール設定に進む",
         "currentAuthenticatorCode": "現在の認証アプリのコード",
         "currentBackupCode": "現在のバックアップコード",
         "description": "メールのサインインコードの後に、もう一段階の認証を追加します。",
@@ -150,7 +149,8 @@
             "description": "セキュリティのため、初回登録には過去5分以内のサインインが必要です。",
             "label": "続行"
           }
-        }
+        },
+        "returnToAdmin": "管理画面に戻る"
       },
       "personalTokens": {
         "cancel": "キャンセル",
@@ -234,6 +234,40 @@
         "signingOut": "サインアウト中",
         "thisDevice": "このデバイス",
         "title": "有効なセッション"
+      },
+      "connectedApps": {
+        "title": "連携アプリ",
+        "description": "アカウントにアクセスできるアプリを確認し、アクセスを取り消します。",
+        "dynamic": "自動登録",
+        "empty": "連携しているアプリはありません。",
+        "connected": "連携日: {date}",
+        "lastUsed": "最終利用日: {date}",
+        "neverUsed": "未使用",
+        "noScopes": "追加の権限なし",
+        "scopeSeparator": "、",
+        "createdTokens": "{count, plural, other {関連付けられたAPIトークン: #件}}",
+        "revoke": "取り消す",
+        "revokeApp": "{name}のアクセスを取り消す",
+        "confirmTitle": "{name}のアクセスを取り消しますか？",
+        "confirmDescription": "アプリによるアクセスの更新を停止します。APIトークンは、別途取り消さない限り引き続き有効です。",
+        "issuedAccess": "発行済みのアクセスは最大1時間有効な場合があります。",
+        "alsoRevoke": "{count, plural, other {このアプリが作成したAPIトークン#件も取り消す}}",
+        "unlinkedTokens": "古いAPIトークンや発行履歴が残っていないトークンは、アプリとの関連を確実に特定できません。個別に確認してください。",
+        "manageTokens": "個人トークンを管理",
+        "cancel": "キャンセル",
+        "revoking": "取り消し中",
+        "error": "アプリのアクセスを取り消せませんでした。もう一度お試しください。",
+        "scopes": {
+          "identity": "本人確認",
+          "profile": "プロフィールの読み取り",
+          "email": "メールアドレスの読み取り",
+          "renew": "アクセスの更新",
+          "read": "プロジェクトデータの読み取り",
+          "write": "プロジェクトデータの変更",
+          "admin": "プロジェクトとアクセスの管理",
+          "tokens": "APIトークンの作成",
+          "other": "追加の権限: {scope}"
+        }
       }
     },
     "preferences": {

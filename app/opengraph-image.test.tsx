@@ -30,8 +30,8 @@ describe("main Open Graph image", () => {
     expect(markup).toContain("Inspect backlinks");
     expect(markup).not.toContain("research keywords");
     expect(markup).not.toContain("inspect backlinks");
-    expect(markup).toContain("Self-host or free beta");
-    expect(markup).toContain("Pay only for SERP checks");
+    expect(markup).toContain("Free self-hosting or Cloud");
+    expect(markup).toContain("Cloud: $3/month after a free trial");
     expect(markup).not.toContain("#f1511c");
     expect(
       markup.split(

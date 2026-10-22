@@ -8,7 +8,7 @@
     "consumerScrapersMeasureTheConsumerSurfaceModelAPI": "Los scrapers de la versión de consumo miden esa versión del servicio. Las respuestas de las API de modelos son una fuente diferente. Los conjuntos de datos del proveedor no son muestras de seguimiento en directo. El modelo real y la configuración regional pueden seguir siendo desconocidos.",
     "previewConfigurationAndCost": "Ver configuración y coste",
     "budgetAndCredentialsAreCheckedAgainBeforeLaunch": "El presupuesto y las credenciales se vuelven a comprobar antes del inicio. Las programaciones están desactivadas de forma predeterminada.",
-    "approveAndQueueRun": "Aprobar y poner en cola la ejecución",
+    "approveAndQueueRun": "Ejecutar comprobaciones",
     "configureARun": "Configurar una ejecución",
     "exactProviderModelIdentifier": "Identificador exacto del modelo del proveedor",
     "iApproveThisRunAndTheProviderActual": "Apruebo esta ejecución y el coste real del proveedor",

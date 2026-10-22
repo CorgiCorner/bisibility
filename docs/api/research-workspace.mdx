@@ -3,6 +3,13 @@ title: "Research workspace"
 description: "Compare synthetic model responses, inspect observed AI datasets, audit project pages, and preserve context and analyses."
 ---
 
+`max_cost_cents=0` returns an existing cached analysis for free. A cache miss
+returns `cost_limit_exceeded` with `estimated_cost_cents` before provider calls,
+holds or attempts. Extended options that require live pricing metadata return
+`pricing_unavailable` without fetching that metadata; use a free estimate to
+check their price. `fresh=true` bypasses cache and is refused at zero.
+
+
 All operations use `/api/v1/projects/{project_id}` and the standard authenticated
 API envelope. Project access and write permissions apply to REST, the application
 and MCP. Read discovery capabilities before choosing a provider connection.
@@ -72,6 +79,7 @@ existing BYOK or hosted-credit admission. A zero cap permits cache hits only.
 Expanded mini/nano text limits require fresh verified prices and conservative
 bounds. Other models, reasoning and search require explicit own-key actual-cost
 consent; they cannot run on credits or silently fall back to hosted credentials.
+MCP tool names and confirmation rules are in [Paid MCP tools](/agents/paid-tools).
 A model's `price_available` reports current unit-price facts; `admission_enabled`
 and `actual_cost_enabled` distinguish the supported billing policies.
 

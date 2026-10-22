@@ -36,6 +36,7 @@ type ScheduleEditorFieldsProps = {
   projectDefaults: ScheduleEditorProjectDefaults;
   projectTimezone: string;
   referenceIso?: string;
+  showDefaultControl?: boolean;
 };
 
 const labelClass = "text-[12px] font-semibold text-fg";
@@ -49,6 +50,7 @@ export function ScheduleEditorFields({
   projectDefaults,
   projectTimezone,
   referenceIso,
+  showDefaultControl = true,
 }: Readonly<ScheduleEditorFieldsProps>) {
   const locale = useLocale();
   const t = useTranslations("projectRuns.schedules");
@@ -61,6 +63,7 @@ export function ScheduleEditorFields({
   } = form;
   const frequency = watch("frequency");
   const timezone = watch("timezone");
+  const timeOfDay = watch("timeOfDay");
   const cronExpression = watch("cronExpression");
   const isDefault = watch("isDefault");
   const savedDefault = form.formState.defaultValues?.isDefault === true;
@@ -99,7 +102,15 @@ export function ScheduleEditorFields({
     <div className="flex flex-col gap-3.5 p-4">
       <div className="flex flex-col gap-1.5">
         <FieldLabel className={labelClass} htmlFor="schedule-name" label={t("name")} />
-        <Input className={fieldClass} id="schedule-name" {...register("name")} />
+        <Input
+          aria-describedby="schedule-name-help"
+          className={fieldClass}
+          id="schedule-name"
+          {...register("name")}
+        />
+        <span className="text-[11px] leading-5 text-fg-muted" id="schedule-name-help">
+          {t("editor.nameHelp")}
+        </span>
         <ScheduleEditorErrorText text={errors.name?.message} />
       </div>
 
@@ -149,7 +160,7 @@ export function ScheduleEditorFields({
         ) : null}
 
         <div className="grid grid-cols-2 items-start gap-3.5">
-          {frequency === "weekly" ? (
+          {frequency === "weekly" && timeOfDay ? (
             <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
               <FieldLabel className={labelClass} label={t("weekday")} />
               <input type="hidden" {...register("weekday")} />
@@ -165,7 +176,7 @@ export function ScheduleEditorFields({
               />
             </div>
           ) : null}
-          {frequency === "monthly" ? (
+          {frequency === "monthly" && timeOfDay ? (
             <div className="flex min-w-0 flex-1 basis-[200px] flex-col gap-1.5">
               <FieldLabel className={labelClass} label={t("dayOfMonth")} />
               <input type="hidden" {...register("dayOfMonth")} />
@@ -187,6 +198,8 @@ export function ScheduleEditorFields({
               <Input
                 aria-label={t("editor.time24")}
                 aria-describedby="schedule-time-help"
+                aria-invalid={Boolean(errors.timeOfDay)}
+                aria-errormessage={errors.timeOfDay ? "schedule-time-error" : undefined}
                 className={fieldClass}
                 id="schedule-time"
                 inputMode="numeric"
@@ -201,7 +214,7 @@ export function ScheduleEditorFields({
                     ? t("editor.noFixedDaily")
                     : t("editor.noFixedInterval")}
               </span>
-              <ScheduleEditorErrorText text={errors.timeOfDay?.message} />
+              <ScheduleEditorErrorText id="schedule-time-error" text={errors.timeOfDay?.message} />
             </div>
           ) : null}
         </div>
@@ -260,7 +273,7 @@ export function ScheduleEditorFields({
         />
       </div>
 
-      {savedDefault ? (
+      {!showDefaultControl ? null : savedDefault ? (
         <div className="flex flex-col gap-1 text-[12px]">
           <span className="font-semibold text-fg">{t("editor.defaultExisting")}</span>
           <span className="text-fg-muted">{t("editor.defaultExistingDescription")}</span>

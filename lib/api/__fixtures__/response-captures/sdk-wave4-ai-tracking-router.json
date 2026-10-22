@@ -1,0 +1,510 @@
+{
+  "captures": [
+    {
+      "body": {
+        "data": [
+          {
+            "id": "air_a00000000000000000000000",
+            "state": "planned",
+            "created_at": "2026-10-20T00:00:00.000Z",
+            "updated_at": "2026-10-20T00:00:00.000Z",
+            "finished_at": null,
+            "planned_at": null,
+            "sample_count": 0
+          }
+        ],
+        "meta": {
+          "next_cursor": "next-page"
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAiTrackingRuns",
+      "path": "/projects/{project_id}/ai-tracking/runs",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "ais_a00000000000000000000000",
+            "name": "Example schedule",
+            "cron": "0 0 * * *",
+            "timezone": "UTC",
+            "enabled": false,
+            "archived_at": null,
+            "next_run_at": null,
+            "configuration": {
+              "configurations": [
+                {
+                  "provider": "dataforseo",
+                  "endpoint": "ai_optimization/llm_responses/live",
+                  "engine": "chat_gpt",
+                  "source": "model_api",
+                  "model": null,
+                  "parameters": {
+                    "language_code": "en"
+                  }
+                }
+              ],
+              "prompt_ids": ["aip_a00000000000000000000000"]
+            },
+            "created_at": "2026-10-20T00:00:00.000Z",
+            "updated_at": "2026-10-20T00:00:00.000Z"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAiTrackingSchedules",
+      "path": "/projects/{project_id}/ai-tracking/schedules",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": [
+          {
+            "id": "ait_a00000000000000000000000",
+            "name": "Example topic",
+            "description": null,
+            "archived_at": null,
+            "paused_at": null,
+            "created_at": "2026-10-20T00:00:00.000Z",
+            "updated_at": "2026-10-20T00:00:00.000Z"
+          }
+        ],
+        "meta": {
+          "next_cursor": null
+        }
+      },
+      "contentType": "application/json",
+      "method": "GET",
+      "operationId": "listAiTrackingTopics",
+      "path": "/projects/{project_id}/ai-tracking/topics",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "drafts": [],
+          "method": "manual_fallback",
+          "input_snapshot": {
+            "context": {
+              "business": "",
+              "audience": "",
+              "products": "",
+              "goals": "",
+              "agent_rules": ""
+            },
+            "competitors": [
+              {
+                "id": "cmp_a00000000000000000000000",
+                "label": "Example competitor",
+                "domain": "example.com"
+              }
+            ]
+          },
+          "context_updated_at": null,
+          "requires_acceptance": true,
+          "cost_usd": "0",
+          "limitations": [
+            "Add project context or enter prompts manually. Saving prompts does not start an analysis."
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "suggestAiTrackingPrompts",
+      "path": "/projects/{project_id}/ai-tracking/suggestions",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "drafts": [
+            {
+              "text": "What should I look for when choosing Example tools?",
+              "category": "neutral",
+              "provenance": "generated_hypothesis",
+              "evidence_ids": [],
+              "popularity": null,
+              "accepted": false
+            },
+            {
+              "text": "What are the strengths and limitations of example.com for Example tools?",
+              "category": "branded",
+              "provenance": "generated_hypothesis",
+              "evidence_ids": [],
+              "popularity": null,
+              "accepted": false
+            },
+            {
+              "text": "How does example.com compare with Example competitor for Example tools?",
+              "category": "comparative",
+              "provenance": "generated_hypothesis",
+              "evidence_ids": [],
+              "popularity": null,
+              "accepted": false
+            }
+          ],
+          "method": "context_template_heuristic",
+          "input_snapshot": {
+            "context": {
+              "business": "Example services",
+              "audience": "Teams",
+              "products": "Example tools",
+              "goals": "Find customers",
+              "agent_rules": ""
+            },
+            "competitors": [
+              {
+                "id": "cmp_a00000000000000000000000",
+                "label": "Example competitor",
+                "domain": "example.com"
+              }
+            ]
+          },
+          "context_updated_at": "2026-10-20T00:00:00.000Z",
+          "requires_acceptance": true,
+          "cost_usd": "0",
+          "limitations": [
+            "Templates are hypotheses, not measured demand or provider datasets",
+            "Review and edit these drafts before saving. Saving prompts does not start an analysis."
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "suggestAiTrackingPrompts",
+      "path": "/projects/{project_id}/ai-tracking/suggestions",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "aip_a00000000000000000000000",
+          "topic_id": "ait_a00000000000000000000000",
+          "label": null,
+          "archived_at": "2026-10-20T00:00:00.000Z",
+          "paused_at": null,
+          "created_at": "2026-10-20T00:00:00.000Z",
+          "updated_at": "2026-10-20T00:00:00.000Z",
+          "revisions": [
+            {
+              "id": "apr_a00000000000000000000000",
+              "ordinal": 1,
+              "category": "neutral",
+              "provider_dataset_reference": {
+                "report_id": "agr_a00000000000000000000000",
+                "row_index": 0
+              },
+              "text": "What does example.com offer?",
+              "text_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "created_at": "2026-10-20T00:00:00.000Z"
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "DELETE",
+      "operationId": "archiveAiTrackingPrompt",
+      "path": "/projects/{project_id}/ai-tracking/prompts/{prompt_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "aip_a00000000000000000000000",
+          "topic_id": "ait_a00000000000000000000000",
+          "label": null,
+          "archived_at": null,
+          "paused_at": null,
+          "created_at": "2026-10-20T00:00:00.000Z",
+          "updated_at": "2026-10-20T00:00:00.000Z",
+          "revisions": [
+            {
+              "id": "apr_a00000000000000000000000",
+              "ordinal": 1,
+              "category": "neutral",
+              "generation_reference": {
+                "generation_id": "asg_a00000000000000000000000",
+                "draft_id": "00000000-0000-4000-8000-000000000000"
+              },
+              "text": "What does example.com offer?",
+              "text_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "created_at": "2026-10-20T00:00:00.000Z"
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateAiTrackingPrompt",
+      "path": "/projects/{project_id}/ai-tracking/prompts/{prompt_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "aip_a00000000000000000000000",
+          "topic_id": "ait_a00000000000000000000000",
+          "label": null,
+          "archived_at": null,
+          "paused_at": null,
+          "created_at": "2026-10-20T00:00:00.000Z",
+          "updated_at": "2026-10-20T00:00:00.000Z",
+          "revisions": [
+            {
+              "id": "apr_a00000000000000000000000",
+              "ordinal": 1,
+              "category": "neutral",
+              "text": "What does example.com offer?",
+              "text_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "created_at": "2026-10-20T00:00:00.000Z"
+            }
+          ]
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createAiTrackingPrompt",
+      "path": "/projects/{project_id}/ai-tracking/prompts",
+      "status": 201
+    },
+    {
+      "body": {
+        "data": {
+          "id": "air_a00000000000000000000000",
+          "state": "cancelled",
+          "created_at": "2026-10-20T00:00:00.000Z",
+          "updated_at": "2026-10-20T00:00:00.000Z",
+          "finished_at": "2026-10-20T00:00:00.000Z",
+          "planned_at": null,
+          "sample_count": 0
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "cancelAiTrackingRun",
+      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/cancel",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "air_a00000000000000000000000",
+          "state": "planned",
+          "created_at": "2026-10-20T00:00:00.000Z",
+          "updated_at": "2026-10-20T00:00:00.000Z",
+          "finished_at": null,
+          "planned_at": null,
+          "sample_count": 0
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "retryAiTrackingRun",
+      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/retry",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "ais_a00000000000000000000000",
+          "name": "Example schedule",
+          "cron": "0 0 * * *",
+          "timezone": "UTC",
+          "enabled": false,
+          "archived_at": "2026-10-20T00:00:00.000Z",
+          "next_run_at": null,
+          "configuration": {
+            "configurations": [
+              {
+                "provider": "dataforseo",
+                "endpoint": "ai_optimization/llm_responses/live",
+                "engine": "chat_gpt",
+                "source": "model_api",
+                "model": null,
+                "parameters": {
+                  "language_code": "en"
+                }
+              }
+            ],
+            "prompt_ids": ["aip_a00000000000000000000000"]
+          },
+          "created_at": "2026-10-20T00:00:00.000Z",
+          "updated_at": "2026-10-20T00:00:00.000Z"
+        }
+      },
+      "contentType": "application/json",
+      "method": "DELETE",
+      "operationId": "archiveAiTrackingSchedule",
+      "path": "/projects/{project_id}/ai-tracking/schedules/{schedule_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "ais_a00000000000000000000000",
+          "name": "Example schedule",
+          "cron": "0 0 * * *",
+          "timezone": "UTC",
+          "enabled": false,
+          "archived_at": null,
+          "next_run_at": null,
+          "configuration": {
+            "configurations": [
+              {
+                "provider": "dataforseo",
+                "endpoint": "ai_optimization/llm_responses/live",
+                "engine": "chat_gpt",
+                "source": "model_api",
+                "model": null,
+                "parameters": {
+                  "language_code": "en"
+                }
+              }
+            ],
+            "prompt_ids": ["aip_a00000000000000000000000"]
+          },
+          "created_at": "2026-10-20T00:00:00.000Z",
+          "updated_at": "2026-10-20T00:00:00.000Z"
+        }
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateAiTrackingSchedule",
+      "path": "/projects/{project_id}/ai-tracking/schedules/{schedule_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "ais_a00000000000000000000000",
+          "name": "Example schedule",
+          "cron": "0 0 * * *",
+          "timezone": "UTC",
+          "enabled": false,
+          "archived_at": null,
+          "next_run_at": null,
+          "configuration": {
+            "configurations": [
+              {
+                "provider": "dataforseo",
+                "endpoint": "ai_optimization/llm_responses/live",
+                "engine": "chat_gpt",
+                "source": "model_api",
+                "model": null,
+                "parameters": {
+                  "language_code": "en"
+                }
+              }
+            ],
+            "prompt_ids": ["aip_a00000000000000000000000"]
+          },
+          "created_at": "2026-10-20T00:00:00.000Z",
+          "updated_at": "2026-10-20T00:00:00.000Z"
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createAiTrackingSchedule",
+      "path": "/projects/{project_id}/ai-tracking/schedules",
+      "status": 201
+    },
+    {
+      "body": {
+        "data": {
+          "id": "ait_a00000000000000000000000",
+          "name": "Example topic",
+          "description": null,
+          "archived_at": "2026-10-20T00:00:00.000Z",
+          "paused_at": null,
+          "created_at": "2026-10-20T00:00:00.000Z",
+          "updated_at": "2026-10-20T00:00:00.000Z"
+        }
+      },
+      "contentType": "application/json",
+      "method": "DELETE",
+      "operationId": "archiveAiTrackingTopic",
+      "path": "/projects/{project_id}/ai-tracking/topics/{topic_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "ait_a00000000000000000000000",
+          "name": "Example topic",
+          "description": null,
+          "archived_at": null,
+          "paused_at": null,
+          "created_at": "2026-10-20T00:00:00.000Z",
+          "updated_at": "2026-10-20T00:00:00.000Z"
+        }
+      },
+      "contentType": "application/json",
+      "method": "PATCH",
+      "operationId": "updateAiTrackingTopic",
+      "path": "/projects/{project_id}/ai-tracking/topics/{topic_id}",
+      "status": 200
+    },
+    {
+      "body": {
+        "data": {
+          "id": "ait_a00000000000000000000000",
+          "name": "Example topic",
+          "description": null,
+          "archived_at": null,
+          "paused_at": null,
+          "created_at": "2026-10-20T00:00:00.000Z",
+          "updated_at": "2026-10-20T00:00:00.000Z"
+        }
+      },
+      "contentType": "application/json",
+      "method": "POST",
+      "operationId": "createAiTrackingTopic",
+      "path": "/projects/{project_id}/ai-tracking/topics",
+      "status": 201
+    },
+    {
+      "body": {
+        "detail": "Explicit budget consent is required.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:error",
+        "status": 422,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed"
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "retryAiTrackingRun",
+      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/retry",
+      "status": 422
+    },
+    {
+      "body": {
+        "detail": "Tracking input failed validation.",
+        "docs_url": "https://bisibility.com/docs/api/errors#validation_failed",
+        "instance": "urn:bisibility:api:v1:error",
+        "status": 422,
+        "title": "Validation failed",
+        "type": "https://bisibility.com/problems/validation_failed",
+        "errors": {
+          "formErrors": [],
+          "fieldErrors": {
+            "idempotencyKey": ["Invalid input: expected string, received null"]
+          }
+        }
+      },
+      "contentType": "application/problem+json",
+      "method": "POST",
+      "operationId": "retryAiTrackingRun",
+      "path": "/projects/{project_id}/ai-tracking/runs/{run_id}/retry",
+      "status": 422
+    }
+  ],
+  "source": "lib/api/sdk-wave4-ai-tracking-router.test.ts"
+}

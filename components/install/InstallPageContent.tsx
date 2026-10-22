@@ -27,6 +27,18 @@ const codeCopyClassName =
   "!h-7 !min-h-7 !min-w-7 !w-7 !rounded-control !bg-transparent !p-0 text-code-faint";
 const codeCopyStyle = { "--control-color": "var(--code-faint)" };
 
+function skillAvailabilityCounts() {
+  let downloadable = 0;
+  let pluginOnly = 0;
+  let planned = 0;
+  for (const skill of SKILLS) {
+    if (skill.archivePath) downloadable += 1;
+    else if (skill.plugin) pluginOnly += 1;
+    else if (skill.status === "coming-soon") planned += 1;
+  }
+  return { downloadable, pluginOnly, planned };
+}
+
 function scopeMessageKey(scope: NonNullable<InstallApiKeySummary>["scope"]) {
   if (scope === "read") return "apiKey.scopeRead";
   if (scope === "write") return "apiKey.scopeWrite";
@@ -63,6 +75,7 @@ export function InstallPageContent({
 }: Readonly<InstallPageContentProps>) {
   const format = useFormatter();
   const t = useTranslations("projectInstall");
+  const skillCounts = skillAvailabilityCounts();
   const curl = curlExample(origin);
   const apiKeyCreated = apiKey
     ? t("apiKey.created", {
@@ -147,9 +160,11 @@ export function InstallPageContent({
           {/* nav-active is #EDEAE1, the exact value the design calls surface-hover; bg-sunken is
               a 30% alpha that composites to near-invisible on the card. */}
           <span className="ml-auto inline-flex items-center rounded-full bg-nav-active px-[9px] py-[3px] font-sans text-[10px] font-semibold text-yellow-text">
-            {t("skills.availableCount", {
-              count: SKILLS.filter((skill) => skill.status !== "coming-soon").length,
-            })}
+            {t("skills.availableCount", { count: skillCounts.downloadable })}
+            {" · "}
+            {skillCounts.pluginOnly} {t("skills.inPlugin")}
+            {" · "}
+            {skillCounts.planned} {t("skills.planned")}
           </span>
         </div>
         <p className="m-0 mb-3 text-[12.5px] text-fg-muted">{t("skills.description")}</p>

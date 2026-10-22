@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db/prisma";
 import { inlineRankCheckExecutionEnabled } from "@/lib/rank-check/inline-execution";
 import { launchSingleRankCheckRun } from "@/lib/rank-check/runs/launch-single";
 import { isLaunchRankCheckRunNothingToRun } from "@/lib/rank-check/runs/launch-types";
+import { previewRankCheckRun } from "@/lib/rank-check/runs/preview";
+import { actionPaymentInputFromWire, paymentResource } from "./action-payment";
 import type { ApiContext } from "./context";
 import { rankCheckResources } from "./rank-check-accounting";
 import { providerOrigin } from "./request-origin";
@@ -18,15 +20,48 @@ type ScopedKeyword = {
   publicId: string;
 };
 
-type RequestInput = { max_cost_cents?: number; provider_id?: string };
+type RequestInput = {
+  max_cost_cents?: number;
+  provider_id?: string;
+  estimate_only?: boolean;
+  payment_option_id?: string;
+  accepted_payment?: { quote_token: string };
+  require_payment?: boolean;
+};
 
 export async function requestRankCheck(
   ctx: ApiContext,
   data: RequestInput,
   keyword: ScopedKeyword,
 ) {
+  const project = {
+    domain: keyword.project.domain,
+    id: keyword.projectId,
+    isSample: keyword.project.isSample,
+  };
+  if (data.estimate_only) {
+    const preview = await previewRankCheckRun({
+      actorId: ctx.actorId,
+      project,
+      origin: providerOrigin(ctx.origin),
+      providerId: data.provider_id,
+      paymentOptionId: data.payment_option_id,
+      trigger: "api",
+      spec: { kind: "single", keywordId: keyword.publicId as `kw_${string}`, v: 1 },
+    });
+    return resourceResponse(
+      {
+        estimate: true,
+        ...paymentResource(preview),
+        estimated_cost_cents: preview.estimate.costCents,
+      },
+      { headers: ctx.headers },
+    );
+  }
   const inlineExecution = inlineRankCheckExecutionEnabled();
   const launched = await launchSingleRankCheckRun({
+    ...actionPaymentInputFromWire(data),
+    idempotencyKey: ctx.req.headers.get("Idempotency-Key") ?? undefined,
     actorId: ctx.actorId ?? null,
     keywordId: keyword.publicId as `kw_${string}`,
     maxCostCents: data.max_cost_cents,

@@ -41,7 +41,7 @@ export function rankTrackerSortFromGrid(
   sort: { field?: string; sort?: string | null } | undefined,
 ): QueryState["sort"] {
   const valid = RANK_TRACKER_SORT_FIELDS.includes(sort?.field as QueryState["sort"]["field"]);
-  const field = valid ? (sort?.field as QueryState["sort"]["field"]) : "position";
+  const field = valid ? (sort?.field as QueryState["sort"]["field"]) : "keyword";
   return { direction: valid && sort?.sort === "desc" ? "desc" : "asc", field };
 }
 

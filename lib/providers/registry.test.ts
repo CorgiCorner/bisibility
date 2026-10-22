@@ -151,6 +151,49 @@ describe("fake analytics provider", () => {
       { clicks: 42, ctr: 0.12, impressions: 350, position: 3.4, query: "rank tracker" },
     ]);
     await expect(
+      provider.fetchQueryStats(
+        {},
+        {
+          country: "gbr",
+          device: "mobile",
+          dimensions: ["device", "query", "country"],
+          endDate: "2026-07-03",
+          startDate: "2026-06-03",
+        },
+      ),
+    ).resolves.toEqual([
+      {
+        clicks: 18,
+        country: "gbr",
+        ctr: 0.08,
+        device: "mobile",
+        impressions: 225,
+        position: 5.1,
+        query: "keyword api",
+      },
+    ]);
+    await expect(
+      provider.fetchQueryStats(
+        {},
+        {
+          dimensions: ["query", "country"],
+          endDate: "2026-07-03",
+          limit: 1,
+          offset: 1,
+          startDate: "2026-06-03",
+        },
+      ),
+    ).resolves.toEqual([
+      {
+        clicks: 18,
+        country: "gbr",
+        ctr: 0.08,
+        impressions: 225,
+        position: 5.1,
+        query: "keyword api",
+      },
+    ]);
+    await expect(
       provider.fetchPageStats({}, { endDate: "2026-07-03", limit: 1, startDate: "2026-06-03" }),
     ).resolves.toEqual([
       {

@@ -12,11 +12,13 @@ export function ReadOnlyDataTable({
   label,
   headers,
   rows,
+  emptyState,
 }: Readonly<{
   id: string;
   label: string;
   headers: readonly string[];
   rows: readonly EvidenceRow[];
+  emptyState?: ReactNode;
 }>) {
   const columns = useMemo<readonly DataTableColumn<EvidenceRow>[]>(
     () =>
@@ -39,6 +41,7 @@ export function ReadOnlyDataTable({
       id={id}
       ariaLabel={label}
       bordered={false}
+      emptyState={emptyState}
       columns={columns}
       rows={rows}
       sorting={null}

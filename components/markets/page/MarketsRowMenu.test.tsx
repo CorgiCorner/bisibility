@@ -111,3 +111,31 @@ describe("MarketsRowMenu", () => {
     expect(onAddKeywords).toHaveBeenCalledWith(market);
   });
 });
+
+it.each(["active", "paused", "removed", "reader"] as const)(
+  "offers direct device tracking only to a writable active market: %s",
+  async (mode) => {
+    const user = userEvent.setup();
+    const add = vi.fn();
+    const row = { ...market, status: mode === "reader" ? ("active" as const) : mode };
+    render(
+      <MarketsRowMenu
+        canAddKeywords={mode !== "reader"}
+        canArchive={false}
+        canEdit={false}
+        market={row}
+        onAddDevice={add}
+        onArchive={vi.fn()}
+        onEdit={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Actions for Malaga core" }));
+    if (mode === "active") {
+      await user.click(screen.getByRole("menuitem", { name: "Add device tracking" }));
+      expect(add).toHaveBeenCalledWith(row);
+    } else {
+      expect(screen.queryByRole("menuitem", { name: "Add device tracking" })).toBeNull();
+      expect(add).not.toHaveBeenCalled();
+    }
+  },
+);

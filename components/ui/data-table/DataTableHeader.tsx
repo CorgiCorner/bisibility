@@ -9,7 +9,7 @@ import { CaretDownIcon as CaretDown } from "@phosphor-icons/react/dist/csr/Caret
 import { CaretUpIcon as CaretUp } from "@phosphor-icons/react/dist/csr/CaretUp";
 import { flexRender, type Header, type Table } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
-import type { CSSProperties, ReactNode } from "react";
+import { type CSSProperties, type ReactNode, useId } from "react";
 import { DataTableResizeHandle } from "./DataTableResizeHandle";
 import { DataTableSelectionCheckbox } from "./DataTableSelectionCheckbox";
 import { dataTablePinnedEdge, dataTablePinnedStyle } from "./data-table-pinning";
@@ -25,6 +25,7 @@ import { DATA_TABLE_SELECTION_COLUMN_ID } from "./use-data-table";
 
 type DataTableHeaderProps<TRow extends DataTableRowBase> = {
   bordered: boolean;
+  hasBody: boolean;
   onSelectionChange?: (next: ReadonlySet<string>) => void;
   onSortingChange: (sort: DataTableSort | null) => void;
   rows: readonly TRow[];
@@ -57,12 +58,14 @@ function SortableHeader<TRow extends DataTableRowBase>({
   content,
   header,
   label,
+  labelId,
   onSortingChange,
   sorting,
 }: Readonly<{
   content: ReactNode;
   header: Header<TRow, unknown>;
   label: string;
+  labelId: string;
   onSortingChange: (sort: DataTableSort | null) => void;
   sorting: DataTableSort | null;
 }>) {
@@ -88,7 +91,9 @@ function SortableHeader<TRow extends DataTableRowBase>({
       onClick={() => onSortingChange(next)}
       type="button"
     >
-      <span className="truncate">{content}</span>
+      <span className="truncate" id={labelId}>
+        {content}
+      </span>
       <SortGlyph direction={active} />
     </button>
   );
@@ -96,6 +101,7 @@ function SortableHeader<TRow extends DataTableRowBase>({
 
 export function DataTableHeader<TRow extends DataTableRowBase>({
   bordered,
+  hasBody,
   onSelectionChange,
   onSortingChange,
   rows,
@@ -106,6 +112,7 @@ export function DataTableHeader<TRow extends DataTableRowBase>({
   table,
 }: Readonly<DataTableHeaderProps<TRow>>) {
   const t = useTranslations("shared.controls.dataTable");
+  const labelPrefix = useId();
   const headerGroup = table.getHeaderGroups().at(-1);
   const headerSelection = dataTableHeaderSelectionState(rows, selection ?? new Set(), selectable);
   if (!headerGroup) return null;
@@ -119,13 +126,16 @@ export function DataTableHeader<TRow extends DataTableRowBase>({
           tableHeaderClassName,
           "flex h-[42px] font-semibold",
           bordered && tableHeaderFrameBorderClassName,
+          // With no body, the table frame or adjacent footer owns the lower boundary.
+          !hasBody && "border-b-0",
         )}
         role="row"
         tabIndex={-1}
       >
-        {headerGroup.headers.map((header) => {
+        {headerGroup.headers.map((header, index) => {
           const definition = header.column.columnDef as DataTableColumn<TRow>;
           const label = headerLabel(header);
+          const labelId = `${labelPrefix}-${index}`;
           const edge = dataTablePinnedEdge(header.column, leftColumnCount);
           const width = `var(${dataTableColumnWidthVariable(header.column.id)})`;
           const style: CSSProperties = {
@@ -145,6 +155,14 @@ export function DataTableHeader<TRow extends DataTableRowBase>({
           return (
             // biome-ignore lint/a11y/useSemanticElements: Virtualized rows require div-based ARIA column headers.
             <div
+              aria-label={
+                header.column.id === DATA_TABLE_SELECTION_COLUMN_ID
+                  ? t("selectVisibleRows")
+                  : undefined
+              }
+              aria-labelledby={
+                header.column.id === DATA_TABLE_SELECTION_COLUMN_ID ? undefined : labelId
+              }
               aria-sort={
                 sortable
                   ? sorting?.field === (definition.meta?.sortField ?? header.column.id)
@@ -190,11 +208,14 @@ export function DataTableHeader<TRow extends DataTableRowBase>({
                   content={content}
                   header={header}
                   label={label}
+                  labelId={labelId}
                   onSortingChange={onSortingChange}
                   sorting={sorting}
                 />
               ) : (
-                <span className="truncate">{content}</span>
+                <span className="truncate" id={labelId}>
+                  {content}
+                </span>
               )}
               {header.column.getCanResize() ? (
                 <DataTableResizeHandle

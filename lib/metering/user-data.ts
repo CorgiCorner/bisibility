@@ -3,14 +3,19 @@ import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { prisma } from "@/lib/db/prisma";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
-import { requireReadableProject } from "@/lib/queries/_auth";
+import { readProjectProviderAccessScope } from "@/lib/queries/provider-access-scope";
+import { getRequestPrimarySerpProvider } from "@/lib/queries/workspace-request-data";
 import type { AccessContext } from "@usagekit/core";
 import { cache } from "react";
 import { mapAdminQueries } from "./admin-batch";
 import { readOwnConnectionBudgets } from "./own-budget-read";
 import { readOwnerUsage } from "./owner-reads";
+import { selectPaidWorkBlocked } from "./paid-work-block";
+import { readPlatformConnectionBudgets } from "./platform-budget-read";
 import type { ProjectBudgetRow } from "./project-budget-display";
+import { projectFundingStatuses } from "./project-budget-read";
 import { readProjectBudgetStatuses } from "./project-budget-statuses";
+import { parseProjectFundingBudgetId, projectBudgetId } from "./project-funding-budgets";
 import { meteringNamespace, meteringRuntime } from "./runtime";
 import { projectBudgetFiguresKnown, projectBudgetRow } from "./user-model";
 import { emptyProjectUsage, type ProjectUsageViews } from "./user-views";
@@ -20,7 +25,7 @@ const perRequestCache: typeof cache = typeof cache === "function" ? cache : (fn)
 
 /** Auth and scope come exclusively from the verified project session, never a caller scope. */
 const projectContext = perRequestCache(async (projectRef: string) => {
-  const { actor, project } = await requireReadableProject(projectRef);
+  const { actor, project, scope } = await readProjectProviderAccessScope(projectRef);
   const now = new Date();
   const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   const to = now.toISOString();
@@ -28,13 +33,15 @@ const projectContext = perRequestCache(async (projectRef: string) => {
     where: { projectId: project.id },
     orderBy: { id: "asc" },
     take: 50,
-    select: { id: true, publicId: true, provider: true },
+    select: { id: true, publicId: true, provider: true, credentialSource: true },
   });
   const empty = {
     ...emptyProjectUsage(now),
+    canEditBudget: project.writeMode === "active" && scope.canManageProviders,
     connections: connections.map((connection) => ({
       connectionId: connection.publicId,
       provider: connection.provider,
+      credentialSource: connection.credentialSource,
     })),
   };
   // Billing is an owner-only resource in this host. Ordinary project membership must
@@ -63,14 +70,21 @@ async function readProjectBudgetState(projectRef: string, header = false) {
     const selected = connections.slice(0, connectionLimit);
     const refs = new Map(connections.map((connection) => [connection.id, connection.publicId]));
     const statuses = await readProjectBudgetStatuses(meter, access, project, selected, concurrency);
+    const funding = await projectFundingStatuses(project.id, new Date(to));
+    const split = funding.some(
+      (status) => parseProjectFundingBudgetId(status.budget.id)?.fundingSource === "byok",
+    );
+    const primary = split ? await getRequestPrimarySerpProvider(project.id) : null;
     const budgetData = {
       ...empty,
       truncated: connections.length > connectionLimit,
-      paidWorkBlocked: statuses.some((result) => result.blocked === true)
-        ? true
-        : connections.length > connectionLimit || statuses.some((result) => result.blocked === null)
-          ? null
-          : false,
+      paidWorkBlocked: selectPaidWorkBlocked({
+        split,
+        primaryConnectionId: primary?.id ?? null,
+        connectionCount: connections.length,
+        connectionLimit,
+        statuses,
+      }),
     };
     if (restricted)
       return { data: { ...budgetData, status: "restricted" as const }, usageContext: null };
@@ -106,8 +120,11 @@ async function readProjectBudgetState(projectRef: string, header = false) {
     const operations = provenance?.outcome === "ok" ? provenance.value.operations : [];
     const budgets: ProjectBudgetRow[] = [];
     const seen = new Set<string>();
+    // Once split, the shared group budget is only an admission marker without a limit.
     for (const result of statuses)
       for (const status of result.statuses) {
+        if (split && status.budget.id === projectBudgetId(project.id)) continue;
+        if (parseProjectFundingBudgetId(status.budget.id)) continue;
         if (
           status.budget.scope.kind === "connection" &&
           own.some(
@@ -144,6 +161,7 @@ async function readProjectBudgetState(projectRef: string, header = false) {
             : project.name,
           {
             projectName: project.name,
+            connectionId: result.connection?.publicId,
             providerLabel: result.connection
               ? (PROVIDER_CATALOG.find((p) => p.id === result.connection?.provider)?.label ??
                 result.connection.provider)
@@ -152,7 +170,25 @@ async function readProjectBudgetState(projectRef: string, header = false) {
         );
         if (row) budgets.push(row);
       }
-    for (const result of own) {
+    for (const status of funding) {
+      const row = projectBudgetRow(
+        status,
+        null,
+        projectBudgetFiguresKnown(status, operations, project.ownerId, completeProvenance),
+        null,
+        undefined,
+        project.name,
+        { projectName: project.name },
+      );
+      if (row) budgets.push(row);
+    }
+    const platform = await readPlatformConnectionBudgets({
+      namespace,
+      actor,
+      projectId: project.id,
+      connections: selected,
+    });
+    for (const result of [...own, ...platform]) {
       if (
         !result ||
         result.binding.namespace !== namespace ||
@@ -179,6 +215,7 @@ async function readProjectBudgetState(projectRef: string, header = false) {
             .join(" · "),
           {
             projectName: project.name,
+            connectionId: result.binding.publicConnection,
             providerLabel:
               PROVIDER_CATALOG.find((p) => p.id === result.binding.provider)?.label ??
               result.binding.provider,

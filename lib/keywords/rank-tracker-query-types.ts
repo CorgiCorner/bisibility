@@ -76,6 +76,8 @@ export type RankTrackerListFacets = {
 };
 export type RankTrackerListQueryInput = { projectRef: string; query: RankTrackerQueryState };
 export type RankTrackerListResult = {
+  /** Internal display metadata over all filtered rows before pagination. */
+  viewDevices?: readonly import("./view-devices").KeywordViewDevice[];
   evaluation?: "shared_kernel";
   facets: RankTrackerListFacets;
   locations: LensLocationOption[];

@@ -14,7 +14,8 @@ export function titleFor(
   run: ProjectRun,
   t: ReturnType<typeof useTranslations<"projectRuns.table">>,
 ) {
-  if (run.title.kind === "gsc_import") return t("searchConsoleImport");
+  if (run.title.kind === "ai") return t("aiTrackingRun");
+  if (run.title.kind === "gsc") return t("searchConsoleImport");
   if (run.title.trigger === "api") return t("rankCheckApi");
   if (run.title.trigger === "manual") return t("rankCheckManual");
   if (run.title.trigger === "retry") return t("rankCheckRetry");
@@ -25,11 +26,12 @@ export function scopeLabelFor(
   run: ProjectRun,
   t: ReturnType<typeof useTranslations<"projectRuns.table">>,
 ) {
-  return run.scope.kind === "rank_check"
+  if (run.kind === "ai") return t("sampleCount", { count: run.progress.total ?? 0 });
+  return run.scope.kind === "rank"
     ? t("keywordCount", { count: run.scope.keywordCount })
     : t("searchConsole");
 }
 
 export function startedAt(run: ProjectRun) {
-  return run.kind === "rank_check" ? run.timestamps.startedAt : run.timestamps.syncStartedAt;
+  return run.timestamps.startedAt;
 }

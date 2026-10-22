@@ -1,4 +1,6 @@
-import { persistProviderFailure } from "./queued-results-failure";
+import { keywordMembershipSchedule } from "@/lib/keywords/schedule-membership";
+import { persistProviderFailure } from "@/lib/rank-check/queued-results-failure";
+import { persistQueuedBatchTasks } from "./queued-result-batch";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
@@ -20,43 +22,44 @@ import {
   fetchDataForSeoQueuedResult,
 } from "@/lib/providers/serp/dataforseo-queued";
 import { requireDeterminateOrganicResult } from "@/lib/providers/serp/payload-contract-error";
-import { rankCheckCostCents } from "./cost";
-import { CURRENT_RANK_NORMALIZATION_VERSION } from "./normalization-version";
-import { organicDomainRanksFromV2Results } from "./organic-ranks";
-import { RankCheckClosedBeforePersistenceError } from "./persistence-errors";
-import { queuedBatchAttribution } from "./queued-attribution";
+import { rankCheckCostCents } from "@/lib/rank-check/cost";
+import { CURRENT_RANK_NORMALIZATION_VERSION } from "@/lib/rank-check/normalization-version";
+import { organicDomainRanksFromV2Results } from "@/lib/rank-check/organic-ranks";
+import { RankCheckClosedBeforePersistenceError } from "@/lib/rank-check/persistence-errors";
+import { queuedBatchAttribution } from "@/lib/rank-check/queued-attribution";
 import {
   explicitQueuedGetCostCents,
-  finishQueuedHostedExecutionIfPresent,
   queuedHostedRecovery,
-} from "./queued-hosted-results";
-import { deferQueuedRankCheckBatch, finalizeQueuedBatchState } from "./queued-lifecycle";
-import { authorizeQueuedRankCheckBatch } from "./queued-mode";
-import { recoverOwnQueuedResult } from "./queued-own-usage";
+} from "@/lib/rank-check/queued-hosted-results";
+import { recoverOwnQueuedResult } from "@/lib/rank-check/queued-own-usage";
 import {
   assertQueuedPersistenceLease,
   type QueuedPersistenceLease,
-} from "./queued-persistence-lease";
-import { dataForSeoQueuedResponseTask, pollDataForSeoQueue } from "./queued-provider-poll";
+} from "@/lib/rank-check/queued-persistence-lease";
+import {
+  dataForSeoQueuedResponseTask,
+  pollDataForSeoQueue,
+} from "@/lib/rank-check/queued-provider-poll";
 import {
   type QueuedResultAttemptOptions,
   QueuedResultDeadlineReachedError,
   queuedResultAttemptSignal,
   queuedResultTransactionOptions,
-  runQueuedResultTasksWithinDeadline,
   throwIfQueuedResultAborted,
   throwIfQueuedResultDeadlineReached,
-} from "./queued-result-attempt";
-import { claimQueuedResultTask, terminalizeLease } from "./queued-result-finalization";
+} from "@/lib/rank-check/queued-result-attempt";
+import {
+  claimQueuedResultTask,
+  terminalizeLease,
+} from "@/lib/rank-check/queued-result-finalization";
 import {
   reconcileTaskWithRankCheck,
   releaseAbortedLease,
   transitionLease,
-} from "./queued-results-lease";
-import { type QueuedTask } from "./queued-results-load";
-import { QUEUED_DEADLINE_REASON } from "./queued-timeouts";
-import { fallbackSchedule, persistRankCheck } from "./runner";
-import { computeNextCheckAt } from "./schedule";
+} from "@/lib/rank-check/queued-results-lease";
+import type { QueuedTask } from "@/lib/rank-check/queued-results-load";
+import { persistRankCheck } from "@/lib/rank-check/runner";
+import { computeNextCheckAt } from "@/lib/rank-check/schedule";
 
 async function persistProviderResult(
   task: QueuedTask,
@@ -65,19 +68,21 @@ async function persistProviderResult(
   deadlineAt?: Date,
 ) {
   if (!task.providerTaskId) throw new Error("Queued DataForSEO task is missing its provider id.");
-  if (!task.batch.connection) throw new Error("DataForSEO connection is unavailable.");
+  const connection = task.batch.connection;
+  if (!connection) throw new Error("DataForSEO connection is unavailable.");
   const recovery = await queuedHostedRecovery(task);
-  const own =
-    !recovery && (await ownAdmission.assertRetrieval(prisma, task.batch.connection.id, [task.id]));
+  if (connection.credentialSource === "hosted" && !recovery)
+    throw new Error("Queued hosted execution is unavailable.");
+  const own = !recovery && (await ownAdmission.assertRetrieval(prisma, connection.id, [task.id]));
   const credentials =
     recovery?.credentials ??
-    resolveProviderCredentials("dataforseo", task.batch.connection.credentialsEncrypted);
+    resolveProviderCredentials("dataforseo", connection.credentialsEncrypted);
   const polled = await pollDataForSeoQueue(
     credentials,
     task.keyword.projectId,
     async () => {
       if (recovery) await recovery.assertRetrieval();
-      else await ownAdmission.assertRetrieval(prisma, task.batch.connection!.id, [task.id]);
+      else await ownAdmission.assertRetrieval(prisma, connection.id, [task.id]);
       throwIfQueuedResultDeadlineReached(deadlineAt);
       return fetchDataForSeoQueuedResult(credentials, task.providerTaskId as string, { signal });
     },
@@ -153,12 +158,17 @@ async function persistProviderResult(
   );
   const expectedUrl = { url: definition.request.targetUrl };
   const origin = queuedBatchAttribution(task.batch);
-  const schedule = task.keyword.schedule ?? task.keyword.project.defaults ?? fallbackSchedule();
+  const schedule = keywordMembershipSchedule(
+    task.keyword.checkSchedule,
+    task.keyword.id,
+    task.keyword.project.defaults?.timezone ?? "UTC",
+    checkedAt,
+  );
   const rawPayload = dataForSeoRawPayload(items, decision);
   const raw = rawPayload as unknown as Prisma.InputJsonObject;
   await persistRankCheck(
     // biome-ignore format: keep the queue persistence module under its enforced line cap.
-    { queuedTaskId: task.id, attempts: [], connectionId: task.batch.connection.id, existingRankCheckId: task.rankCheckId, expectedUrlAtCheck: expectedUrl.url, hasDefaults: Boolean(task.keyword.project.defaults), hasSchedule: Boolean(task.keyword.schedule), keywordId: task.keyword.id, keywordPublicId: task.keyword.publicId, keywordTargetUrl: definition.request.targetUrl, previousRankingUrl: previous?.rankingUrl ?? null, previousRaw: previous?.raw ?? null, persistenceFinalize: terminalizeLease(lease, "completed"), persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease), projectId: task.keyword.projectId, providerRequestId: task.providerTaskId, providerUsage: { context: { correlationId: task.id, feature: "rank_check", projectId: task.keyword.projectId, source: origin.source, trigger: origin.trigger }, ...(origin.credential ? { credential: origin.credential } : {}), tag: task.providerTag ?? dataForSeoQueuedTaskTag(task.id) }, transactionOptions: queuedResultTransactionOptions },
+    { queuedTaskId: task.id, attempts: [], connectionId: connection.id, existingRankCheckId: task.rankCheckId, expectedUrlAtCheck: expectedUrl.url, hasDefaults: Boolean(task.keyword.project.defaults), hasSchedule: Boolean(task.keyword.schedule), keywordId: task.keyword.id, keywordPublicId: task.keyword.publicId, keywordTargetUrl: definition.request.targetUrl, previousRankingUrl: previous?.rankingUrl ?? null, previousRaw: previous?.raw ?? null, persistenceFinalize: terminalizeLease(lease, "completed"), persistenceGuard: (tx) => assertQueuedPersistenceLease(tx, lease), projectId: task.keyword.projectId, providerRequestId: task.providerTaskId, providerUsage: { context: { correlationId: task.id, feature: "rank_check", projectId: task.keyword.projectId, source: origin.source, trigger: origin.trigger }, ...(origin.credential ? { credential: origin.credential } : {}), tag: task.providerTag ?? dataForSeoQueuedTaskTag(task.id) }, transactionOptions: queuedResultTransactionOptions },
     {
       definitionBindingId: definition.id,
       recoveryContextHash: task.recoveryContextHash ?? undefined,
@@ -266,33 +276,9 @@ async function persistTask(taskId: string, options: QueuedResultAttemptOptions) 
   }
 }
 
-async function persistReadyTasks(batchId: string, options: QueuedResultAttemptOptions = {}) {
-  const authorization = await authorizeQueuedRankCheckBatch(batchId);
-  if (!authorization.allowPaidRetrieval) {
-    return deferQueuedRankCheckBatch(
-      batchId,
-      `Queued result retrieval is disabled in ${authorization.mode} scheduler mode.`,
-    );
-  }
-  const tasks = await prisma.queuedRankCheckTask.findMany({
-    orderBy: { id: "asc" },
-    select: { id: true, providerTag: true },
-    where: { batchId, state: { in: ["persisting", "provider_failed", "ready"] } },
-  });
-  const completed = await runQueuedResultTasksWithinDeadline(
-    tasks.map((task) => task.id),
-    options,
-    persistTask,
-  );
-  if (!completed) return deferQueuedRankCheckBatch(batchId, QUEUED_DEADLINE_REASON);
-  const result = await finalizeQueuedBatchState(batchId);
-  await finishQueuedHostedExecutionIfPresent(batchId);
-  return result;
-}
-
-export function persistReadyQueuedRankCheckTasks(
+export async function persistReadyQueuedRankCheckTasks(
   batchId: string,
   options: QueuedResultAttemptOptions = {},
 ) {
-  return persistReadyTasks(batchId, options);
+  return persistQueuedBatchTasks(batchId, options, persistTask);
 }

@@ -245,6 +245,46 @@ describe("ConnectDrawerOauth", () => {
     expect(document.body).not.toHaveTextContent("Connected to sc-domain:");
   });
 
+  it("preselects the property that matches the project domain", () => {
+    const provider = {
+      ...readyGsc(),
+      drawer: {
+        ...readyGsc().drawer,
+        googleOAuth: {
+          projectDomain: "example.com",
+          properties: [
+            {
+              kind: "domain" as const,
+              label: "aaa.example.org",
+              permissionLevel: "siteOwner",
+              value: "sc-domain:aaa.example.org",
+            },
+            {
+              kind: "domain" as const,
+              label: "example.com",
+              permissionLevel: "siteOwner",
+              value: "sc-domain:example.com",
+            },
+          ],
+          provider: "gsc" as const,
+        },
+      },
+    };
+
+    render(
+      <ConnectDrawerOauth
+        projectId="prj_1"
+        provider={provider}
+        scopes={["webmasters"]}
+        syncPlan={{ daysTotal: 93, pace: "gentle", retentionMonths: 3 }}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Search Console property" });
+    expect(trigger).toHaveTextContent("example.com");
+    expect(trigger).not.toHaveTextContent("aaa.example.org");
+  });
+
   it("reuses the Google OAuth install flow when authorization needs reconnection", () => {
     const provider = {
       ...readyGsc(),

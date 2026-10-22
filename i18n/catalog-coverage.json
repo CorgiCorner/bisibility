@@ -53,6 +53,7 @@
     "app/(regional)/app/(workspace)/[project]/rank-tracker/runs/[id]/page.tsx",
     "app/(regional)/app/(workspace)/[project]/rank-tracker/schedules/[publicId]/page.tsx",
     "app/(regional)/app/(workspace)/[project]/rank-tracker/schedules/page.tsx",
+    "app/(regional)/app/(workspace)/[project]/runs/ai/[runId]/page.tsx",
     "app/(regional)/app/(workspace)/[project]/runs/loading.tsx",
     "app/(regional)/app/(workspace)/[project]/runs/page.tsx",
     "app/(regional)/app/(workspace)/[project]/runs/rank-checks/[id]/loading.tsx",
@@ -138,6 +139,7 @@
     "app/(regional)/cloud/layout.tsx",
     "app/(regional)/email/unsubscribe/page.tsx",
     "app/(regional)/email/unsubscribe/UnsubscribeButton.tsx",
+    "app/(regional)/install/page.tsx",
     "app/(regional)/invite/[token]/loading.tsx",
     "app/(regional)/invite/[token]/page.tsx",
     "app/(regional)/layout.tsx",
@@ -178,6 +180,8 @@
     "components/account/BackupCodes.tsx",
     "components/account/ConnectAccountButton.tsx",
     "components/account/ConnectedAccounts.tsx",
+    "components/account/ConnectedAppRevokeDialog.tsx",
+    "components/account/ConnectedAppsSection.tsx",
     "components/account/DeleteAccount.tsx",
     "components/account/DemoAccountNotice.tsx",
     "components/account/personal-token-model.ts",
@@ -194,6 +198,16 @@
     "components/account/totp-qr.ts",
     "components/account/TwoFactorManagementForm.tsx",
     "components/account/useAccountActionError.ts",
+    "components/action-payment/ActionPaymentModal.tsx",
+    "components/action-payment/ActionPaymentOptionPicker.tsx",
+    "components/action-payment/ActionPaymentPrice.tsx",
+    "components/action-payment/ActionPaymentReview.tsx",
+    "components/action-payment/PaymentChargeLine.tsx",
+    "components/action-payment/PaymentQuoteSummary.tsx",
+    "components/action-payment/unresolved-payment.ts",
+    "components/action-payment/use-payment-amount-formatter.ts",
+    "components/action-payment/useActionPaymentReview.ts",
+    "components/action-payment/usePaymentQuoteExpiry.ts",
     "components/admin/admin-action-error.ts",
     "components/admin/admin-administration-tables.tsx",
     "components/admin/admin-audit-table-columns.tsx",
@@ -224,12 +238,17 @@
     "components/admin/AdminTemporalSchedules.tsx",
     "components/admin/AdminWorkerHealth.tsx",
     "components/admin/AnnouncementEditor.tsx",
+    "components/admin/DangerousActionGate.tsx",
     "components/agent-reports/AgentReportDetailLayout.tsx",
     "components/agent-reports/AgentReportDetailLoading.tsx",
     "components/agent-reports/SavedAuditPages.tsx",
     "components/ai-research/ai-research-failure-copy.ts",
     "components/ai-research/AiCatalogNotice.tsx",
+    "components/ai-research/AiResearchHistory.tsx",
     "components/ai-research/AiResearchPageLoading.tsx",
+    "components/ai-research/AiResearchWorkspaceOutcome.tsx",
+    "components/ai-research/useAiResearchCatalogRefresh.ts",
+    "components/ai-tracking/TrackingSavedConfiguration.tsx",
     "components/alerts/alert-feed-facet-labels.ts",
     "components/alerts/alert-feed-presentation.ts",
     "components/alerts/alert-rule-enabled-queue.ts",
@@ -270,6 +289,7 @@
     "components/audit/audit-filtering.ts",
     "components/audit/audit-presentation.ts",
     "components/audit/audit-table-state.ts",
+    "components/audit/AuditActorAvatar.tsx",
     "components/audit/AuditDetailSheet.tsx",
     "components/audit/AuditFilters.tsx",
     "components/audit/AuditLogView.tsx",
@@ -320,6 +340,7 @@
     "components/backlinks/summary-cards-model.ts",
     "components/backlinks/SummaryCards.tsx",
     "components/backlinks/useBacklinksEstimate.ts",
+    "components/backlinks/useBacklinksRun.ts",
     "components/business-location-settings/BusinessAssignmentWorkspace.tsx",
     "components/business-location-settings/BusinessIdentityHistory.tsx",
     "components/business-location-settings/BusinessLocationsWorkspace.tsx",
@@ -440,13 +461,17 @@
     "components/demo-research/StoredResearchEmpty.tsx",
     "components/demo-research/StoredResultFreshness.tsx",
     "components/demo-research/StoredResultSelector.tsx",
+    "components/domain-overview/domain-overview-append.ts",
     "components/domain-overview/domain-overview-control-styles.ts",
     "components/domain-overview/domain-overview-keyword-table-model.ts",
+    "components/domain-overview/domain-overview-keyword-table-styles.ts",
     "components/domain-overview/domain-overview-keyword-tracking.ts",
     "components/domain-overview/domain-overview-metrics.ts",
+    "components/domain-overview/domain-overview-refresh-price.tsx",
     "components/domain-overview/domain-overview-table-export.ts",
     "components/domain-overview/domain-overview-table-sort.tsx",
     "components/domain-overview/domain-overview-workspace-model.ts",
+    "components/domain-overview/domain-payment-inputs.ts",
     "components/domain-overview/DomainOverviewAnalyzeCard.tsx",
     "components/domain-overview/DomainOverviewBacklinksTeaser.tsx",
     "components/domain-overview/DomainOverviewCacheProvider.tsx",
@@ -456,9 +481,11 @@
     "components/domain-overview/DomainOverviewKpiRow.tsx",
     "components/domain-overview/DomainOverviewLoadingSkeletons.tsx",
     "components/domain-overview/DomainOverviewMessagesBoundary.tsx",
+    "components/domain-overview/DomainOverviewMissingModule.tsx",
     "components/domain-overview/DomainOverviewPagesTable.tsx",
     "components/domain-overview/DomainOverviewPerformanceChart.tsx",
     "components/domain-overview/DomainOverviewPricingPopover.tsx",
+    "components/domain-overview/DomainOverviewRankingLink.tsx",
     "components/domain-overview/DomainOverviewRecentTargets.tsx",
     "components/domain-overview/DomainOverviewResults.tsx",
     "components/domain-overview/DomainOverviewStatePanel.tsx",
@@ -468,6 +495,8 @@
     "components/domain-overview/useDomainKeywordSelection.ts",
     "components/domain-overview/useDomainOverviewEstimate.ts",
     "components/domain-overview/useDomainOverviewHistory.ts",
+    "components/domain-overview/useDomainOverviewNavigation.ts",
+    "components/domain-overview/useDomainOverviewRun.ts",
     "components/domain-overview/useDomainOverviewTablePages.ts",
     "components/feeds/AddFilterMenu.tsx",
     "components/feeds/FacetBar.tsx",
@@ -603,6 +632,7 @@
     "components/keywords/add/useAddKeywordDrawerSave.ts",
     "components/keywords/add/useKeywordSuggestionSources.ts",
     "components/keywords/AddKeywordCsvReviewModel.ts",
+    "components/keywords/AnalyticsProviderBadge.tsx",
     "components/keywords/blocks/keyword-paste-parser.ts",
     "components/keywords/blocks/KeywordsPasteInput.tsx",
     "components/keywords/CheckDepthSplitButton.tsx",
@@ -620,7 +650,6 @@
     "components/keywords/filters/keyword-filter-facets.ts",
     "components/keywords/filters/keyword-filter-presentation.ts",
     "components/keywords/filters/UrlFilterToggle.tsx",
-    "components/keywords/grid/bounded-dispatch.ts",
     "components/keywords/grid/bulk-action-error.ts",
     "components/keywords/grid/bulk-action-styles.ts",
     "components/keywords/grid/bulk-form-chrome.ts",
@@ -641,9 +670,11 @@
     "components/keywords/grid/keyword-link-styles.ts",
     "components/keywords/grid/keyword-rank-quality-view.ts",
     "components/keywords/grid/keyword-scope-summary.ts",
+    "components/keywords/grid/KeywordCellHelp.tsx",
     "components/keywords/grid/KeywordChangeCell.tsx",
     "components/keywords/grid/KeywordColumnOrderControl.tsx",
     "components/keywords/grid/KeywordDataTable.tsx",
+    "components/keywords/grid/KeywordDeviceCell.tsx",
     "components/keywords/grid/KeywordGridViewport.tsx",
     "components/keywords/grid/KeywordInlineEdit.tsx",
     "components/keywords/grid/KeywordInlineEditLocationField.tsx",
@@ -695,7 +726,6 @@
     "components/keywords/grid/use-keywords-grid-view-state.ts",
     "components/keywords/grid/use-personal-keyword-layout.ts",
     "components/keywords/grid/useRankTrackerCommands.tsx",
-    "components/keywords/grid/useRunChecksModal.ts",
     "components/keywords/import/import-csv-wizard-model.ts",
     "components/keywords/import/import-csv-wizard-schema.ts",
     "components/keywords/import/import-preview-table-columns.tsx",
@@ -717,7 +747,7 @@
     "components/keywords/keyword-header-model.ts",
     "components/keywords/keyword-history-export.ts",
     "components/keywords/keyword-history-fixtures.ts",
-    "components/keywords/keyword-run-check-result.ts",
+    "components/keywords/KeywordCheckProvider.tsx",
     "components/keywords/KeywordConnectedSchedules.tsx",
     "components/keywords/KeywordDeleteImpact.tsx",
     "components/keywords/KeywordDetailAttemptSlot.tsx",
@@ -787,7 +817,6 @@
     "components/keywords/SnapshotExtensionResults.tsx",
     "components/keywords/TargetSwitcher.tsx",
     "components/keywords/TargetUrlField.tsx",
-    "components/keywords/use-first-check-flow.ts",
     "components/keywords/use-keyword-deletion.tsx",
     "components/keywords/use-keyword-schedule-modal.tsx",
     "components/keywords/use-rank-check-batch-poll.ts",
@@ -835,8 +864,10 @@
     "components/markets/page/MarketsPageLoading.tsx",
     "components/markets/page/MarketsRowMenu.tsx",
     "components/markets/page/MarketsTable.tsx",
+    "components/markets/page/MarketTrackingStatus.tsx",
     "components/markets/page/ProjectMarketsMessagesBoundary.tsx",
     "components/markets/page/RestoreMarketDialog.tsx",
+    "components/markets/sheet/MarketDeviceKeywordPicker.tsx",
     "components/markets/sheet/new-market-creator-copy.ts",
     "components/markets/sheet/new-market-creator-model.ts",
     "components/markets/sheet/NewMarketCreator.tsx",
@@ -919,6 +950,7 @@
     "components/onboarding/steps/ProviderCredentialForm.tsx",
     "components/onboarding/steps/ProviderSetupVideo.tsx",
     "components/onboarding/steps/ranked-suggestion-table-columns.tsx",
+    "components/onboarding/steps/RankedImportError.tsx",
     "components/onboarding/steps/RankedKeywordSuggestionDrawer.tsx",
     "components/onboarding/steps/step-add-keywords-contract.ts",
     "components/onboarding/steps/step-add-keywords-defaults.ts",
@@ -961,6 +993,9 @@
     "components/overview/data-source-status.ts",
     "components/overview/DataSourcePanel.tsx",
     "components/overview/DataSourceStatusBadge.tsx",
+    "components/overview/FirstCheckIllustration.tsx",
+    "components/overview/FirstCheckIntro.tsx",
+    "components/overview/FloatingIntroStack.tsx",
     "components/overview/getting-started.ts",
     "components/overview/GhostKpiRow.tsx",
     "components/overview/HighlightLists.tsx",
@@ -986,7 +1021,9 @@
     "components/overview/OverviewToolbar.tsx",
     "components/overview/PositionDistributionCard.tsx",
     "components/overview/PositionTrendCard.tsx",
+    "components/overview/PositionTrendTooltip.tsx",
     "components/overview/ProjectDashboardMessages.tsx",
+    "components/project-runs/AiRunResults.tsx",
     "components/project-runs/project-runs-actions.ts",
     "components/project-runs/project-runs-presentation.ts",
     "components/project-runs/project-runs-status-menu.ts",
@@ -1000,6 +1037,7 @@
     "components/project-runs/ProjectRunsTabs.tsx",
     "components/project-runs/ProjectRunsTimelineTabs.tsx",
     "components/project-runs/run-status-copy.ts",
+    "components/project-runs/RunCost.tsx",
     "components/project-runs/RunStatusChip.tsx",
     "components/project-runs/RunStatusLegend.tsx",
     "components/project-runs/RunTimelineSection.tsx",
@@ -1010,12 +1048,14 @@
     "components/rank-check/FirstCheckRunModal.tsx",
     "components/rank-runs/budget-notices-model.ts",
     "components/rank-runs/BudgetNotices.tsx",
+    "components/rank-runs/deferral-reason-copy.tsx",
     "components/rank-runs/notice-dismissals.ts",
     "components/rank-runs/PlannedSection.tsx",
     "components/rank-runs/preflight-contracts.ts",
     "components/rank-runs/preflight-presentation.ts",
     "components/rank-runs/PreflightBlockNotice.tsx",
     "components/rank-runs/PreflightDialog.tsx",
+    "components/rank-runs/PreflightFooter.tsx",
     "components/rank-runs/PreflightOptionGroups.tsx",
     "components/rank-runs/PreflightOverlapNotice.tsx",
     "components/rank-runs/rank-run-copy.ts",
@@ -1044,6 +1084,7 @@
     "components/research/RecentResearchSearches.tsx",
     "components/research/research-diagnostics.tsx",
     "components/research/research-money.ts",
+    "components/research/research-payment-estimates.ts",
     "components/research/research-relative-time.ts",
     "components/research/research-results-columns.tsx",
     "components/research/research-results-model.tsx",
@@ -1060,6 +1101,7 @@
     "components/research/ResearchIntentChip.tsx",
     "components/research/ResearchKeywordCell.tsx",
     "components/research/ResearchLoadingSkeletons.tsx",
+    "components/research/ResearchPaymentReview.tsx",
     "components/research/ResearchPricingPopover.tsx",
     "components/research/ResearchResults.tsx",
     "components/research/ResearchResultsTable.tsx",
@@ -1072,8 +1114,11 @@
     "components/research/ResearchTrackingDrawer.tsx",
     "components/research/ResearchUnavailableMetric.tsx",
     "components/research/ResearchWorkspace.tsx",
+    "components/research/ResearchWorkspaceOutcome.tsx",
     "components/research/useRecentSearches.ts",
     "components/research/useResearchEstimate.ts",
+    "components/research/useResearchPaymentReview.ts",
+    "components/research/useResearchRequestInput.ts",
     "components/research/useResearchRuns.ts",
     "components/research/useResearchSavedKeywords.tsx",
     "components/research/useResearchWorkspaceCopy.ts",
@@ -1089,6 +1134,7 @@
     "components/schedules/MarketLabel.tsx",
     "components/schedules/schedule-editor-field-options.ts",
     "components/schedules/schedule-members-table-columns.tsx",
+    "components/schedules/ScheduleDetailsSummary.tsx",
     "components/schedules/ScheduleEditor.tsx",
     "components/schedules/ScheduleEditorFieldPrimitives.tsx",
     "components/schedules/ScheduleEditorFields.tsx",
@@ -1101,6 +1147,8 @@
     "components/schedules/SchedulePageLoading.tsx",
     "components/schedules/schedules-table-columns.tsx",
     "components/schedules/SchedulesList.tsx",
+    "components/schedules/UnscheduledKeywordsNotice.tsx",
+    "components/schedules/useScheduleMemberRemoval.ts",
     "components/schedules/useScheduleNameLabels.ts",
     "components/search-insights/drawers/drawer-model.ts",
     "components/search-insights/drawers/drawer-story-fixtures.ts",
@@ -1122,6 +1170,7 @@
     "components/search-insights/search-insights-import-progress.ts",
     "components/search-insights/search-insights-pages-columns.tsx",
     "components/search-insights/search-insights-property-match.ts",
+    "components/search-insights/search-insights-refresh-policy.ts",
     "components/search-insights/search-insights-return-path.ts",
     "components/search-insights/search-insights-row-test-fixtures.ts",
     "components/search-insights/search-insights-rows-model.ts",
@@ -1241,7 +1290,6 @@
     "components/settings/team/TeamSettingsContent.tsx",
     "components/settings/team/TeamSettingsLoading.tsx",
     "components/settings/team/useTeamActionError.ts",
-    "components/settings/tracking/CronRunPreview.tsx",
     "components/settings/tracking/MatchScopeCard.tsx",
     "components/settings/tracking/MeasurementConfigurationLoading.tsx",
     "components/settings/tracking/ReviewedDefaultsPanel.tsx",
@@ -1251,7 +1299,6 @@
     "components/settings/tracking/tracking-settings-layout.ts",
     "components/settings/tracking/TrackingCheckFields.tsx",
     "components/settings/tracking/TrackingDefaultsCard.tsx",
-    "components/settings/tracking/TrackingScheduleFields.tsx",
     "components/settings/tracking/TrackingSettingsContent.tsx",
     "components/settings/tracking/TrackingSettingsLoading.tsx",
     "components/settings/tracking/TrackingSettingsSection.tsx",
@@ -1260,6 +1307,7 @@
     "components/settings/tracking/use-reviewed-defaults.ts",
     "components/settings/usage/BudgetEditModal.tsx",
     "components/settings/usage/PlanCard.tsx",
+    "components/settings/usage/ProviderBudgetLists.tsx",
     "components/settings/usage/ProviderBudgetRow.tsx",
     "components/settings/usage/ProviderUsageCard.tsx",
     "components/settings/usage/UsageCard.tsx",
@@ -1274,10 +1322,7 @@
     "components/shell/AppRealtimeProvider.tsx",
     "components/shell/AppThemeRoot.tsx",
     "components/shell/cloud-backup-action-error.ts",
-    "components/shell/cloud-beta.ts",
     "components/shell/CloudBackupModal.tsx",
-    "components/shell/CloudBetaBanner.tsx",
-    "components/shell/CloudBetaCoverageModal.tsx",
     "components/shell/command-keyboard.ts",
     "components/shell/command-palette-copy.ts",
     "components/shell/command-palette-groups.ts",
@@ -1303,6 +1348,7 @@
     "components/shell/OperationsTrayModel.ts",
     "components/shell/OperationsTrayPillModel.ts",
     "components/shell/PageContent.tsx",
+    "components/shell/PlanStatusBadge.tsx",
     "components/shell/ProjectWriteModeNotices.tsx",
     "components/shell/ProjectWriteModeProvider.tsx",
     "components/shell/set-theme.ts",
@@ -1436,10 +1482,13 @@
     "components/ui/primitives/dialog.tsx",
     "components/ui/primitives/menu.tsx",
     "components/ui/primitives/popover.tsx",
+    "components/ui/primitives/toggle-group.tsx",
     "components/ui/primitives/tooltip.tsx",
     "components/ui/provider-logo-url.ts",
+    "components/ui/ProviderAccessActions.tsx",
     "components/ui/ProviderAccessEmptyState.tsx",
     "components/ui/ProviderAccessGate.tsx",
+    "components/ui/ProviderAccessScopeProvider.tsx",
     "components/ui/ProviderLogo.tsx",
     "components/ui/quiet-chip-styles.ts",
     "components/ui/RowActionsMenu.tsx",
@@ -1469,13 +1518,16 @@
     "components/ui/toast-presentation.tsx",
     "components/ui/Toast.tsx",
     "components/ui/ToastItem.tsx",
+    "components/ui/toggle-control-styles.ts",
+    "components/ui/ToggleGroup.tsx",
     "components/ui/toolbar-control-styles.ts",
     "components/ui/ToolbarSearch.tsx",
     "components/ui/tooltip-context.tsx",
     "components/ui/Tooltip.tsx",
     "components/ui/useLiveNow.ts",
     "components/ui/ZonedTime.tsx",
-    "components/usagekit/provider-project-chain.tsx"
+    "components/usagekit/provider-project-chain.tsx",
+    "components/usagekit/usage-table-format.ts"
   ],
   "locales": {
     "en": [
@@ -2332,6 +2384,191 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "account.security.connectedApps.alsoRevoke",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.cancel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.confirmDescription",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "name",
+            1
+          ]
+        ],
+        "key": "account.security.connectedApps.confirmTitle",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "account.security.connectedApps.connected",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "account.security.connectedApps.createdTokens",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.dynamic",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.error",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.issuedAccess",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "account.security.connectedApps.lastUsed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.manageTokens",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.neverUsed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.noScopes",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.revoke",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "name",
+            1
+          ]
+        ],
+        "key": "account.security.connectedApps.revokeApp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.revoking",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.scopes.admin",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.scopes.email",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.scopes.identity",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "scope",
+            1
+          ]
+        ],
+        "key": "account.security.connectedApps.scopes.other",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.scopes.profile",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.scopes.read",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.scopes.renew",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.scopes.tokens",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.scopes.write",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.scopeSeparator",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.connectedApps.unlinkedTokens",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "account.security.personalTokens.cancel",
         "tags": []
@@ -2752,11 +2989,6 @@
       },
       {
         "arguments": [],
-        "key": "account.security.twoFactor.continueToMail",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "account.security.twoFactor.currentAuthenticatorCode",
         "tags": []
       },
@@ -2873,6 +3105,11 @@
       {
         "arguments": [],
         "key": "account.security.twoFactor.replaced",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "account.security.twoFactor.returnToAdmin",
         "tags": []
       },
       {
@@ -3556,6 +3793,26 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "auth.oauthConsent.accessLevel.full",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "auth.oauthConsent.accessLevel.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "auth.oauthConsent.accessLevel.read",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "auth.oauthConsent.accessLevel.readWrite",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "hours",
@@ -3588,6 +3845,11 @@
           ]
         ],
         "key": "auth.oauthConsent.allowNamed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "auth.oauthConsent.apiTokens.allow",
         "tags": []
       },
       {
@@ -3698,6 +3960,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "auth.oauthConsent.paidOperations",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "time",
@@ -3719,7 +3986,19 @@
       },
       {
         "arguments": [],
+        "key": "auth.oauthConsent.revokeLocation",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "auth.oauthConsent.scopes.credentials",
+        "tags": [
+          "strong"
+        ]
+      },
+      {
+        "arguments": [],
+        "key": "auth.oauthConsent.scopes.credentialsReviewed",
         "tags": [
           "strong"
         ]
@@ -3815,20 +4094,23 @@
         "tags": []
       },
       {
-        "arguments": [
-          [
-            "days",
-            1
-          ]
-        ],
+        "arguments": [],
         "key": "auth.oauthConsent.technical.apiLifetime",
-        "tags": [
-          "strong"
-        ]
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "auth.oauthConsent.technical.apiLifetimeReviewed",
+        "tags": []
       },
       {
         "arguments": [],
         "key": "auth.oauthConsent.technical.clientId",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "auth.oauthConsent.technical.insecureRedirect",
         "tags": []
       },
       {
@@ -4033,6 +4315,11 @@
       },
       {
         "arguments": [],
+        "key": "auth.twoFactor.expired",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "auth.twoFactor.invalid",
         "tags": []
       },
@@ -4049,6 +4336,11 @@
       {
         "arguments": [],
         "key": "auth.twoFactor.placeholderTotp",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "auth.twoFactor.signingIn",
         "tags": []
       },
       {
@@ -5424,11 +5716,6 @@
       },
       {
         "arguments": [],
-        "key": "instanceAdmin.administration.mailer.form.code",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "instanceAdmin.administration.mailer.form.credentialsSaved",
         "tags": []
       },
@@ -5554,22 +5841,17 @@
       },
       {
         "arguments": [],
-        "key": "instanceAdmin.administration.mailer.form.stepUpFailed",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "instanceAdmin.administration.mailer.form.title",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "instanceAdmin.administration.mailer.form.unavailable",
+        "key": "instanceAdmin.administration.mailer.form.twoFactorRequired",
         "tags": []
       },
       {
         "arguments": [],
-        "key": "instanceAdmin.administration.mailer.form.validationCode",
+        "key": "instanceAdmin.administration.mailer.form.unavailable",
         "tags": []
       },
       {
@@ -5675,6 +5957,11 @@
       {
         "arguments": [],
         "key": "instanceAdmin.announcements.errors.not_found",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.announcements.errors.two_factor_required",
         "tags": []
       },
       {
@@ -5930,6 +6217,66 @@
       {
         "arguments": [],
         "key": "instanceAdmin.controls.sendTestNotification",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dangerousActions.actions.addAccount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dangerousActions.actions.changeAccountStatus",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dangerousActions.actions.changeAnnouncements",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dangerousActions.actions.changeCredentials",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dangerousActions.actions.changeMail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dangerousActions.actions.changeSettings",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dangerousActions.actions.importUsage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dangerousActions.actions.repairUsage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dangerousActions.actions.selectAccount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.dangerousActions.enable",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "action",
+            1
+          ]
+        ],
+        "key": "instanceAdmin.dangerousActions.notice",
         "tags": []
       },
       {
@@ -7146,6 +7493,11 @@
       {
         "arguments": [],
         "key": "instanceAdmin.recovery.errors.rate_limited",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "instanceAdmin.recovery.errors.two_factor_required",
         "tags": []
       },
       {
@@ -8399,10 +8751,6 @@
           [
             "checks",
             6
-          ],
-          [
-            "frequency",
-            1
           ]
         ],
         "key": "onboarding.firstCheck.queue.completed",
@@ -8413,10 +8761,6 @@
           [
             "checks",
             6
-          ],
-          [
-            "frequency",
-            1
           ]
         ],
         "key": "onboarding.firstCheck.queue.completedWithFailures",
@@ -8427,10 +8771,6 @@
           [
             "checks",
             6
-          ],
-          [
-            "frequency",
-            1
           ]
         ],
         "key": "onboarding.firstCheck.queue.initial",
@@ -10432,6 +10772,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAiResearch.catalogRefreshing",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAiResearch.catalogUnavailable",
         "tags": []
       },
@@ -10852,6 +11197,11 @@
       {
         "arguments": [],
         "key": "projectAiResearch.showUnavailableModels",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAiResearch.sourceRetry",
         "tags": []
       },
       {
@@ -13760,6 +14110,11 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.detail.actionCode",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.detail.actor",
         "tags": []
       },
@@ -14058,6 +14413,121 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.aiPromptArchive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiPromptCreate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiPromptPause",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiPromptResume",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiPromptUpdate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiRunCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiRunConsentRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiRunLaunched",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiRunRetried",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiScheduleArchive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiScheduleConsentRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiScheduleCreate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiScheduleDisable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiScheduleEnable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiScheduleUpdate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiSuggestionsAccepted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiSuggestionsConsentRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiSuggestionsGenerated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiTopicArchive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiTopicCreate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiTopicPause",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiTopicResume",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.aiTopicUpdate",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.alertRuleAvailabilityChanged",
         "tags": []
       },
@@ -14068,7 +14538,22 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.alertRuleDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.alertRuleUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.alertsMarkedRead",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.alertSnoozed",
         "tags": []
       },
       {
@@ -14094,6 +14579,41 @@
       {
         "arguments": [],
         "key": "projectAudit.presentation.event.budgetUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.businessAssigned",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.businessLocationArchived",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.businessLocationCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.businessLocationRestored",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.businessLocationRevised",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.businessUnassigned",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.cachedDataDeleted",
         "tags": []
       },
       {
@@ -14143,12 +14663,72 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.competitorAliasesUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.competitorDetailsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.competitorManuallyAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.competitorMarketsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.competitorRemoved",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.competitorRenamed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.competitorSetupConfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.competitorSetupSkipped",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.competitorSuggestionConfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.competitorSuggestionDismissed",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.competitorUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.creationDenied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.dataCacheSettingsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.deletionDenied",
         "tags": []
       },
       {
@@ -14173,7 +14753,27 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.entityMatchConfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.entityMatchRejected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.entityRematched",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.experimentalModulesUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.firstRankCheckQueued",
         "tags": []
       },
       {
@@ -14183,7 +14783,32 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.inviteAccepted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.inviteResent",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.inviteRevoked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordDeviceAdded",
         "tags": []
       },
       {
@@ -14193,12 +14818,157 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.keywordFrequencyUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.keywordImported",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.keywordsAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordSaved",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.keywordScheduleUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordsDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordsJsonExported",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordsSpreadsheetExported",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordTagsAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordTagsRemoved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordTagsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordTargetReset",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordTargetsCleared",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordTargetsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.keywordVariantsAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.localMeasurementCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.localMeasurementClaimed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.localMeasurementCollected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.localMeasurementLaunched",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.localMeasurementReconciled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.localMeasurementTargetCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.localMonitorArchived",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.localMonitorCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.localMonitorQueued",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.localMonitorScheduled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.localMonitorUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.managementDenied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.matchingScopeSet",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.measurementDefinitionCaptured",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.measurementDefinitionConfigured",
         "tags": []
       },
       {
@@ -14213,7 +14983,42 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.memberRoleChanged",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.meteringHistoryClosed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationAdvanced",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationBegan",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.migrationCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationCompleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationFailed",
         "tags": []
       },
       {
@@ -14223,7 +15028,32 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.migrationHoldCompletedRelease",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.migrationHoldEnabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationHoldExpired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationHoldFailedRelease",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationHoldReleased",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationHoldStaleRelease",
         "tags": []
       },
       {
@@ -14233,7 +15063,27 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.migrationSessionCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.migrationTokenCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationTokenRegenerated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationTokenRevoked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.migrationTokenUsed",
         "tags": []
       },
       {
@@ -14248,7 +15098,27 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.pricingFeedbackSubmitted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectCheckRequested",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.projectDefaultsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectDefaultViewUpdated",
         "tags": []
       },
       {
@@ -14268,7 +15138,82 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.projectMarketAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectMarketCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectMarketPaused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectMarketRemoved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectMarketRestored",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectMarketResumed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectMarketsReconciled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectMarketUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectPresentationUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectTransferRolledBack",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectTransferStarted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.projectWebsiteUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.providerAllocationUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.providerConnected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.providerCostUpdated",
         "tags": []
       },
       {
@@ -14278,7 +15223,46 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.providerRateUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.providerSettingsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.providerSourceChanged",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ],
+          [
+            "source",
+            1
+          ]
+        ],
+        "key": "projectAudit.presentation.event.providerSourceChangedDetail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.providerSourceHosted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.providerSourceOwn",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.providerStoredKeyDeleted",
         "tags": []
       },
       {
@@ -14288,7 +15272,112 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.providerTestFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.providerUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckCompleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckDeferred",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.rankCheckFrequencyUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckItemCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckItemReclaimed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckRecovered",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckRequested",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckRunCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckRunDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckRunLaunched",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckRunning",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckRunRetried",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckRunStartedNow",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckStaleFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankCheckStarted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.rankSnapshotExtended",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.readDenied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.sampleDataInstalled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.savedKeywordRemoved",
         "tags": []
       },
       {
@@ -14299,6 +15388,11 @@
       {
         "arguments": [],
         "key": "projectAudit.presentation.event.savedViewDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.savedViewUpdated",
         "tags": []
       },
       {
@@ -14322,12 +15416,67 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.searchDataSyncPaused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.searchDataSyncResumed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.searchDataSyncRetried",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.searchDataSyncUpdated",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.searchInsightsSyncStarted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.signalNoteAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.signalNoteRemoved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.signalRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.signedIn",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.sitemapMonitorDisabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.sitemapMonitorEnabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.slackConnectionCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.slackConnectionUpdated",
         "tags": []
       },
       {
@@ -14351,12 +15500,12 @@
         "tags": []
       },
       {
-        "arguments": [
-          [
-            "action",
-            1
-          ]
-        ],
+        "arguments": [],
+        "key": "projectAudit.presentation.event.trafficSynced",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.unknown",
         "tags": []
       },
@@ -14367,7 +15516,32 @@
       },
       {
         "arguments": [],
+        "key": "projectAudit.presentation.event.updateDenied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.usageDisplayUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectAudit.presentation.event.webhookCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.webhookDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.webhookUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectAudit.presentation.event.weeklyDigestSent",
         "tags": []
       },
       {
@@ -14839,8 +16013,8 @@
       {
         "arguments": [
           [
-            "hours",
-            2
+            "duration",
+            1
           ]
         ],
         "key": "projectBacklinks.workspace.recent.cached",
@@ -14854,8 +16028,8 @@
       {
         "arguments": [
           [
-            "hours",
-            2
+            "duration",
+            1
           ]
         ],
         "key": "projectBacklinks.workspace.snapshot.cached",
@@ -16821,6 +17995,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectDashboard.dashboard.providerCapacityUnavailableDetail",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "keyword",
@@ -18409,6 +19588,21 @@
       },
       {
         "arguments": [],
+        "key": "projectDashboard.noData.firstCheckIntro.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.noData.firstCheckIntro.dismiss",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDashboard.noData.firstCheckIntro.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectDashboard.noData.manageProvider",
         "tags": []
       },
@@ -18643,6 +19837,66 @@
       {
         "arguments": [],
         "key": "projectDashboard.positionTrend.title",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "position",
+            2
+          ]
+        ],
+        "key": "projectDashboard.positionTrend.tooltipAverage",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "keyword",
+            1
+          ],
+          [
+            "position",
+            2
+          ]
+        ],
+        "key": "projectDashboard.positionTrend.tooltipKeyword",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "device",
+            1
+          ],
+          [
+            "hasMarket",
+            5
+          ],
+          [
+            "keyword",
+            1
+          ],
+          [
+            "market",
+            1
+          ],
+          [
+            "position",
+            2
+          ]
+        ],
+        "key": "projectDashboard.positionTrend.tooltipKeywordQualified",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectDashboard.positionTrend.tooltipMore",
         "tags": []
       },
       {
@@ -19344,8 +20598,8 @@
       {
         "arguments": [
           [
-            "hours",
-            2
+            "duration",
+            1
           ]
         ],
         "key": "projectDomainOverview.workspace.ui.cacheAvailable",
@@ -19398,16 +20652,6 @@
       },
       {
         "arguments": [],
-        "key": "projectDomainOverview.workspace.ui.columnTopKeyword",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectDomainOverview.workspace.ui.columnTrafficChange",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectDomainOverview.workspace.ui.columnVolume",
         "tags": []
       },
@@ -19452,6 +20696,16 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.exportSummary",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.exportSummaryAria",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "relative",
@@ -19489,6 +20743,11 @@
           ]
         ],
         "key": "projectDomainOverview.workspace.ui.fetchedRows",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.freeCached",
         "tags": []
       },
       {
@@ -19662,6 +20921,11 @@
       },
       {
         "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.loadKeywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectDomainOverview.workspace.ui.loadMonthlyHistory",
         "tags": []
       },
@@ -19683,6 +20947,11 @@
           ]
         ],
         "key": "projectDomainOverview.workspace.ui.loadNextPages",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.loadPages",
         "tags": []
       },
       {
@@ -19723,6 +20992,51 @@
           ]
         ],
         "key": "projectDomainOverview.workspace.ui.minutesAgo",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.moduleFailureReasons.cost_limit_exceeded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.moduleFailureReasons.operation_access_denied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.moduleFailureReasons.payment_admission",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.moduleFailureReasons.provider_connection_changed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.moduleFailureReasons.provider_error",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.moduleFailureReasons.quote_changed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.moduleFailureReasons.rate_limited",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.moduleFailureReasons.unexpected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectDomainOverview.workspace.ui.moduleFailureReasons.usage_persistence",
         "tags": []
       },
       {
@@ -19932,6 +21246,16 @@
       {
         "arguments": [
           [
+            "duration",
+            1
+          ]
+        ],
+        "key": "projectDomainOverview.workspace.ui.rowsLoadHint",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
             "count",
             6
           ]
@@ -20011,11 +21335,6 @@
       {
         "arguments": [],
         "key": "projectDomainOverview.workspace.ui.topPages",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "projectDomainOverview.workspace.ui.trafficChangeTooltip",
         "tags": []
       },
       {
@@ -20618,6 +21937,26 @@
       {
         "arguments": [],
         "key": "projectInstall.agents.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.agents.grok-bot.caveat",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.agents.grok-bot.hint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.agents.grok-bot.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectInstall.agents.grok-bot.note",
         "tags": []
       },
       {
@@ -22104,6 +23443,11 @@
       },
       {
         "arguments": [],
+        "key": "projectIntegrations.provider.manageKey",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectIntegrations.provider.neverSynced",
         "tags": []
       },
@@ -22145,6 +23489,11 @@
       {
         "arguments": [],
         "key": "projectIntegrations.provider.reconnect",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectIntegrations.provider.removeKey",
         "tags": []
       },
       {
@@ -22588,6 +23937,11 @@
       },
       {
         "arguments": [],
+        "key": "projectMarkets.alreadyTrackedShort",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectMarkets.archive",
         "tags": []
       },
@@ -22718,6 +24072,157 @@
       {
         "arguments": [],
         "key": "projectMarkets.devices",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectMarkets.deviceTracking.added",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ],
+          [
+            "device",
+            1
+          ]
+        ],
+        "key": "projectMarkets.deviceTracking.confirm",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.costNotice",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.device",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.errors.ambiguous_keywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.errors.market_unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.errors.schedule_unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.errors.selection_changed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.errors.selection_too_large",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.keywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.manualNotice",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.noAvailableKeywords",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.review",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.scheduledNotice",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "checks",
+            6
+          ],
+          [
+            "device",
+            1
+          ]
+        ],
+        "key": "projectMarkets.deviceTracking.scope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.selectAll",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ],
+          [
+            "total",
+            2
+          ]
+        ],
+        "key": "projectMarkets.deviceTracking.selectedCount",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.selectionLimit",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "archived",
+            2
+          ],
+          [
+            "existing",
+            2
+          ]
+        ],
+        "key": "projectMarkets.deviceTracking.skipped",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.deviceTracking.title",
         "tags": []
       },
       {
@@ -22912,6 +24417,11 @@
       },
       {
         "arguments": [],
+        "key": "projectMarkets.openMarket",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectMarkets.pasteEmpty",
         "tags": []
       },
@@ -22987,6 +24497,11 @@
       },
       {
         "arguments": [],
+        "key": "projectMarkets.pauseTracking",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectMarkets.pickMarketToCopy",
         "tags": []
       },
@@ -23058,6 +24573,11 @@
       {
         "arguments": [],
         "key": "projectMarkets.resumePausedHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.resumeTracking",
         "tags": []
       },
       {
@@ -23190,6 +24710,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectMarkets.trackedTargets",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectMarkets.trackFirst",
         "tags": []
@@ -23200,6 +24730,20 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "market",
+            1
+          ],
+          [
+            "status",
+            1
+          ]
+        ],
+        "key": "projectMarkets.trackingStatusFor",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectMarkets.updateFailed",
         "tags": []
@@ -23207,6 +24751,11 @@
       {
         "arguments": [],
         "key": "projectMarkets.updateMarketFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectMarkets.viewMarkets",
         "tags": []
       },
       {
@@ -24691,11 +26240,6 @@
       },
       {
         "arguments": [],
-        "key": "projectRankTracker.deletion.noSchedules",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectRankTracker.deletion.refresh",
         "tags": []
       },
@@ -25760,6 +27304,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.firstCheck.providerCapacityUnavailable",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "depth",
@@ -26149,6 +27698,11 @@
           ]
         ],
         "key": "projectRankTracker.keywordDetail.header.provider",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.header.providerNotRecorded",
         "tags": []
       },
       {
@@ -26951,6 +28505,21 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "position",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.quality.bestSummary",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.quality.checked",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.quality.comparisonNotRequested",
         "tags": []
@@ -26988,6 +28557,16 @@
       {
         "arguments": [
           [
+            "position",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.quality.historicalBestSummary",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
             "count",
             2
           ]
@@ -27013,6 +28592,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.quality.lastRecordedAttempt",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.quality.measurementDetails",
         "tags": []
       },
       {
@@ -27555,12 +29139,32 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.noAttempts",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.noObservations",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.recordedHistory.noPair",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.noPositionsDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.recordedHistory.noQualifiedPoints",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.noRecordsDescription",
         "tags": []
       },
       {
@@ -27744,6 +29348,21 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.scopeDevices.desktop",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.scopeDevices.mobile",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.recordedHistory.scopeTechnicalDetails",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.recordedHistory.selectObservation",
         "tags": []
       },
@@ -27877,6 +29496,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.compareAction",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.comparedWithYou",
         "tags": []
       },
@@ -27898,6 +29522,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.competitor",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.competitorCheck",
         "tags": []
       },
       {
@@ -28070,7 +29699,27 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.extension.lastCharge",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.extension.legacy",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "time",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.extension.notSent",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.extension.notSentExpired",
         "tags": []
       },
       {
@@ -28118,6 +29767,16 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.extension.refresh",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.extension.refreshHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.extension.retry",
         "tags": []
       },
       {
@@ -28445,6 +30104,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "depth",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.partialCompetitors",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.pickerClosest",
         "tags": []
@@ -28528,6 +30197,20 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "count",
+            2
+          ],
+          [
+            "depth",
+            2
+          ]
+        ],
+        "key": "projectRankTracker.keywordDetail.results.savedResults",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.selected",
         "tags": []
@@ -28560,6 +30243,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.results.snapshots",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.results.stopComparing",
         "tags": []
       },
       {
@@ -28808,6 +30496,21 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordDetail.traffic.sync.scope",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.traffic.sync.sourceActive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.traffic.sync.sourceInactive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordDetail.traffic.sync.sources",
         "tags": []
       },
       {
@@ -31758,6 +33461,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "position",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.keywordImport.management.grid.quality.bestRetainedShort",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRankTracker.keywordImport.management.grid.quality.capturedExpectedUrl",
         "tags": []
@@ -31881,6 +33594,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.grid.quality.freshnessUnknownHelp",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "expected",
@@ -31963,6 +33681,16 @@
           ]
         ],
         "key": "projectRankTracker.keywordImport.management.grid.quality.lastKnownRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "position",
+            1
+          ]
+        ],
+        "key": "projectRankTracker.keywordImport.management.grid.quality.lastKnownShort",
         "tags": []
       },
       {
@@ -32112,6 +33840,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordImport.management.grid.quality.retainedRankingUrl",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.grid.quality.retainedUrlShort",
         "tags": []
       },
       {
@@ -32732,6 +34465,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.runConfirmation.providerCapacityUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordImport.management.runConfirmation.providerRateLimited",
         "tags": []
       },
@@ -33090,7 +34828,17 @@
       },
       {
         "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.research",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRankTracker.keywordImport.management.saved.researchFallback",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.researchOneAtATime",
         "tags": []
       },
       {
@@ -33155,6 +34903,11 @@
       {
         "arguments": [],
         "key": "projectRankTracker.keywordImport.management.saved.tableAria",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRankTracker.keywordImport.management.saved.toolbar",
         "tags": []
       },
       {
@@ -35901,8 +37654,8 @@
       {
         "arguments": [
           [
-            "hours",
-            2
+            "duration",
+            1
           ]
         ],
         "key": "projectResearch.recent.freeFor",
@@ -36566,6 +38319,181 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.aiResults.answer",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.back",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.citations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.empty",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.measurement",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.measurements.aio_not_present",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.measurements.answer_present",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.measurements.failed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.measurements.partial",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.measurements.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.measurements.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.model",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.next",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.observed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiResults.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.blocked.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.blocked.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.cancelled.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.cancelled.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.completed.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.completed.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.cost_limit_exceeded.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.cost_limit_exceeded.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.failed.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.failed.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.partial.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.partial.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.planned.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.planned.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.running.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.running.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.skipped.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.skipped.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.status_unavailable.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.aiStatuses.status_unavailable.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.content.activeDescription",
         "tags": []
       },
@@ -36697,6 +38625,11 @@
       {
         "arguments": [],
         "key": "projectRuns.filters.active",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.filters.aiTracking",
         "tags": []
       },
       {
@@ -37069,6 +39002,206 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.budget_exhausted.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.budget_exhausted.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.budget_missing.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.budget_missing.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.credentials_unavailable.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.credentials_unavailable.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.credits_exhausted.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.credits_exhausted.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.dispatcher_disabled.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.dispatcher_disabled.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.keyword_archived.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.keyword_archived.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.market_inactive.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.market_inactive.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.migration_hold.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.migration_hold.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.no_provider.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.no_provider.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.openIntegrations",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.primary_provider_not_dataforseo.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.primary_provider_not_dataforseo.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.project_ineligible.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.project_ineligible.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.project_read_only.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.project_read_only.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.queued_dataforseo_disabled.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.queued_dataforseo_disabled.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.queued_submission_disabled.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.queued_submission_disabled.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.quote_unavailable.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.quote_unavailable.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.rate_limited.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.rate_limited.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.reviewBudget",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.schedule_ineligible.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.schedule_ineligible.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.unknown.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.unknown.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.usage_unconfirmed.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.deferral.usage_unconfirmed.label",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.rankRuns.duration",
         "tags": []
       },
@@ -37148,6 +39281,11 @@
       {
         "arguments": [],
         "key": "projectRuns.rankRuns.facts.cost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.facts.deferredBeforeProvider",
         "tags": []
       },
       {
@@ -38051,6 +40189,11 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.rankRuns.targetPresentation.providerCapacityUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.rankRuns.targetPresentation.providerRateLimited",
         "tags": []
       },
@@ -38067,6 +40210,11 @@
       {
         "arguments": [],
         "key": "projectRuns.rankRuns.targetPresentation.providerUnknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.rankRuns.targetPresentation.scheduleChanged",
         "tags": []
       },
       {
@@ -38615,6 +40763,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectRuns.schedules.drawer.schedule",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "count",
@@ -38760,6 +40913,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectRuns.schedules.editor.marketDevice",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "count",
@@ -38786,6 +40944,16 @@
           ]
         ],
         "key": "projectRuns.schedules.editor.memberRange",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.editor.memberRemoved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.editor.memberRemoveFailed",
         "tags": []
       },
       {
@@ -38857,6 +41025,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectRuns.schedules.editor.nameHelp",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "runs",
@@ -38907,7 +41080,17 @@
       },
       {
         "arguments": [],
+        "key": "projectRuns.schedules.editor.removeMember",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectRuns.schedules.editor.save",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.editor.saveConflict",
         "tags": []
       },
       {
@@ -38918,6 +41101,31 @@
       {
         "arguments": [],
         "key": "projectRuns.schedules.editor.saveFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.editor.saveForbidden",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.editor.saveInvalid",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.editor.saveNotFound",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.editor.saveReadOnly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.editor.saveSessionExpired",
         "tags": []
       },
       {
@@ -39279,6 +41487,34 @@
       {
         "arguments": [
           [
+            "day",
+            1
+          ],
+          [
+            "timezone",
+            1
+          ]
+        ],
+        "key": "projectRuns.schedules.nextRun.distributed",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "day",
+            1
+          ],
+          [
+            "timezone",
+            1
+          ]
+        ],
+        "key": "projectRuns.schedules.nextRun.distributedInterval",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
             "time",
             1
           ]
@@ -39309,6 +41545,21 @@
       {
         "arguments": [],
         "key": "projectRuns.schedules.perRun",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "minutes",
+            2
+          ]
+        ],
+        "key": "projectRuns.schedules.planning.delay",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.planning.delayUnknown",
         "tags": []
       },
       {
@@ -39359,6 +41610,51 @@
       {
         "arguments": [],
         "key": "projectRuns.schedules.status",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.summary.addToSchedule",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.summary.defaultHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.summary.makeDefault",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.summary.nextPending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.summary.nextRun",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.summary.perMonth",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.schedules.summary.title",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectRuns.schedules.summary.unscheduledCount",
         "tags": []
       },
       {
@@ -39457,6 +41753,21 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "cost",
+            1
+          ]
+        ],
+        "key": "projectRuns.table.actualCost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.table.aiTrackingRun",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectRuns.table.connectProvider",
         "tags": []
@@ -39464,6 +41775,11 @@
       {
         "arguments": [],
         "key": "projectRuns.table.cost",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectRuns.table.costUnknown",
         "tags": []
       },
       {
@@ -39493,6 +41809,16 @@
           ]
         ],
         "key": "projectRuns.table.keywordCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "cost",
+            1
+          ]
+        ],
+        "key": "projectRuns.table.knownCost",
         "tags": []
       },
       {
@@ -39592,6 +41918,30 @@
       {
         "arguments": [],
         "key": "projectRuns.table.reviewUsage",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            2
+          ]
+        ],
+        "key": "projectRuns.table.sampleCount",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "completed",
+            2
+          ],
+          [
+            "total",
+            2
+          ]
+        ],
+        "key": "projectRuns.table.sampleProgress",
         "tags": []
       },
       {
@@ -41126,6 +43476,11 @@
       },
       {
         "arguments": [],
+        "key": "projectSearchInsights.copy.sessionsConnectDismiss",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSearchInsights.copy.sessionsConnectTitle",
         "tags": []
       },
@@ -42139,6 +44494,121 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiPromptArchive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiPromptCreate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiPromptPause",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiPromptResume",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiPromptUpdate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiRunCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiRunConsentRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiRunLaunched",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiRunRetried",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiScheduleArchive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiScheduleConsentRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiScheduleCreate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiScheduleDisable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiScheduleEnable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiScheduleUpdate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiSuggestionsAccepted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiSuggestionsConsentRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiSuggestionsGenerated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiTopicArchive",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiTopicCreate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiTopicPause",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiTopicResume",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.aiTopicUpdate",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.alertRuleAvailabilityChanged",
         "tags": []
       },
@@ -42149,7 +44619,22 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.alertRuleDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.alertRuleUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.alertsMarkedRead",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.alertSnoozed",
         "tags": []
       },
       {
@@ -42175,6 +44660,41 @@
       {
         "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.budgetUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.businessAssigned",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.businessLocationArchived",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.businessLocationCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.businessLocationRestored",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.businessLocationRevised",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.businessUnassigned",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.cachedDataDeleted",
         "tags": []
       },
       {
@@ -42224,12 +44744,72 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.competitorAliasesUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.competitorDetailsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.competitorManuallyAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.competitorMarketsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.competitorRemoved",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.competitorRenamed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.competitorSetupConfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.competitorSetupSkipped",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.competitorSuggestionConfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.competitorSuggestionDismissed",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.competitorUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.creationDenied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.dataCacheSettingsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.deletionDenied",
         "tags": []
       },
       {
@@ -42254,7 +44834,27 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.entityMatchConfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.entityMatchRejected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.entityRematched",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.experimentalModulesUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.firstRankCheckQueued",
         "tags": []
       },
       {
@@ -42264,7 +44864,32 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.inviteAccepted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.inviteResent",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.inviteRevoked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordDeviceAdded",
         "tags": []
       },
       {
@@ -42274,12 +44899,157 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordFrequencyUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.keywordImported",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordsAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordSaved",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.keywordScheduleUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordsDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordsJsonExported",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordsSpreadsheetExported",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordTagsAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordTagsRemoved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordTagsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordTargetReset",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordTargetsCleared",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordTargetsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.keywordVariantsAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.localMeasurementCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.localMeasurementClaimed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.localMeasurementCollected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.localMeasurementLaunched",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.localMeasurementReconciled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.localMeasurementTargetCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.localMonitorArchived",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.localMonitorCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.localMonitorQueued",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.localMonitorScheduled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.localMonitorUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.managementDenied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.matchingScopeSet",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.measurementDefinitionCaptured",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.measurementDefinitionConfigured",
         "tags": []
       },
       {
@@ -42294,7 +45064,42 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.memberRoleChanged",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.meteringHistoryClosed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationAdvanced",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationBegan",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.migrationCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationCompleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationFailed",
         "tags": []
       },
       {
@@ -42304,7 +45109,32 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationHoldCompletedRelease",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.migrationHoldEnabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationHoldExpired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationHoldFailedRelease",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationHoldReleased",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationHoldStaleRelease",
         "tags": []
       },
       {
@@ -42314,7 +45144,27 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationSessionCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.migrationTokenCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationTokenRegenerated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationTokenRevoked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.migrationTokenUsed",
         "tags": []
       },
       {
@@ -42329,7 +45179,27 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.pricingFeedbackSubmitted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectCheckRequested",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.projectDefaultsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectDefaultViewUpdated",
         "tags": []
       },
       {
@@ -42349,7 +45219,82 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectMarketAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectMarketCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectMarketPaused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectMarketRemoved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectMarketRestored",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectMarketResumed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectMarketsReconciled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectMarketUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectPresentationUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectTransferRolledBack",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectTransferStarted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.projectWebsiteUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerAllocationUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.providerConnected",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerCostUpdated",
         "tags": []
       },
       {
@@ -42359,7 +45304,46 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerRateUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.providerSettingsUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerSourceChanged",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ],
+          [
+            "source",
+            1
+          ]
+        ],
+        "key": "projectSettingsAdvanced.audit.event.providerSourceChangedDetail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerSourceHosted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerSourceOwn",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerStoredKeyDeleted",
         "tags": []
       },
       {
@@ -42369,7 +45353,112 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerTestFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.providerUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckCompleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckDeferred",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.rankCheckFrequencyUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckItemCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckItemReclaimed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckRecovered",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckRequested",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckRunCancelled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckRunDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckRunLaunched",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckRunning",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckRunRetried",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckRunStartedNow",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckStaleFailed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankCheckStarted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.rankSnapshotExtended",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.readDenied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.sampleDataInstalled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.savedKeywordRemoved",
         "tags": []
       },
       {
@@ -42380,6 +45469,11 @@
       {
         "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.savedViewDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.savedViewUpdated",
         "tags": []
       },
       {
@@ -42403,12 +45497,67 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.searchDataSyncPaused",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.searchDataSyncResumed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.searchDataSyncRetried",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.searchDataSyncUpdated",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.searchInsightsSyncStarted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.signalNoteAdded",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.signalNoteRemoved",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.signalRecorded",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.signedIn",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.sitemapMonitorDisabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.sitemapMonitorEnabled",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.slackConnectionCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.slackConnectionUpdated",
         "tags": []
       },
       {
@@ -42432,12 +45581,12 @@
         "tags": []
       },
       {
-        "arguments": [
-          [
-            "action",
-            1
-          ]
-        ],
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.trafficSynced",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.unknown",
         "tags": []
       },
@@ -42448,7 +45597,32 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.updateDenied",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.usageDisplayUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsAdvanced.audit.event.webhookCreated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.webhookDeleted",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.webhookUpdated",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsAdvanced.audit.event.weeklyDigestSent",
         "tags": []
       },
       {
@@ -43688,6 +46862,16 @@
       {
         "arguments": [],
         "key": "projectSettingsGeneral.dataCache.unknownKeyword",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "projectSettingsGeneral.dataCache.weeks",
         "tags": []
       },
       {
@@ -46363,6 +49547,26 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsTracking.checkDefaults.fullResults",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "depth",
+            2
+          ]
+        ],
+        "key": "projectSettingsTracking.checkDefaults.fullResultsDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.checkDefaults.fullTop20Description",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsTracking.checkDefaults.location",
         "tags": []
       },
@@ -46408,6 +49612,21 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsTracking.checkDefaults.positionOnly",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "domain",
+            1
+          ]
+        ],
+        "key": "projectSettingsTracking.checkDefaults.positionOnlyDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsTracking.checkDefaults.previewAnchorsTooClose",
         "tags": []
       },
@@ -46439,6 +49658,11 @@
       {
         "arguments": [],
         "key": "projectSettingsTracking.checkDefaults.readOnly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.checkDefaults.resultsCollection",
         "tags": []
       },
       {
@@ -46478,21 +49702,6 @@
       },
       {
         "arguments": [],
-        "key": "projectSettingsTracking.checkDefaults.stopOnMatch",
-        "tags": []
-      },
-      {
-        "arguments": [
-          [
-            "domain",
-            1
-          ]
-        ],
-        "key": "projectSettingsTracking.checkDefaults.stopOnMatchDescription",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectSettingsTracking.checkDefaults.timezone",
         "tags": []
       },
@@ -46509,6 +49718,11 @@
       {
         "arguments": [],
         "key": "projectSettingsTracking.checkDefaults.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.checkDefaults.visibilityDepthWarning",
         "tags": []
       },
       {
@@ -46724,6 +49938,16 @@
       {
         "arguments": [],
         "key": "projectSettingsTracking.measurementPolicy.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.schedules.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsTracking.schedules.manage",
         "tags": []
       },
       {
@@ -47353,6 +50577,11 @@
         "tags": []
       },
       {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDetails",
+        "tags": []
+      },
+      {
         "arguments": [
           [
             "source",
@@ -47384,12 +50613,57 @@
       },
       {
         "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.availabilityReasons.balance_mismatch",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.availabilityReasons.balance_stale",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.availabilityReasons.balance_unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.availabilityReasons.budget_precision",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.availabilityReasons.owner_only",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.availabilityReasons.usage_unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.balanceAsOf",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsUsage.provider.budgetDialog.balanceIncompatible",
         "tags": []
       },
       {
         "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.balanceShared",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "projectSettingsUsage.provider.budgetDialog.balanceUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.balanceWarning",
         "tags": []
       },
       {
@@ -47538,6 +50812,16 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "projectSettingsUsage.provider.budgetDialog.providerAccount",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "projectSettingsUsage.provider.budgetDialog.providerColumn",
         "tags": []
@@ -47550,6 +50834,11 @@
       {
         "arguments": [],
         "key": "projectSettingsUsage.provider.budgetDialog.refreshing",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.budgetDialog.refreshingProviderBalance",
         "tags": []
       },
       {
@@ -47696,11 +50985,6 @@
       },
       {
         "arguments": [],
-        "key": "projectSettingsUsage.provider.budgetUsed",
-        "tags": []
-      },
-      {
-        "arguments": [],
         "key": "projectSettingsUsage.provider.connectionSettings",
         "tags": []
       },
@@ -47712,6 +50996,31 @@
       {
         "arguments": [],
         "key": "projectSettingsUsage.provider.editBudget",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.noProviders",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.ownKeysDescription",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.ownKeysTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.projectBudget",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "projectSettingsUsage.provider.providerUnavailable",
         "tags": []
       },
       {
@@ -48946,6 +52255,176 @@
       {
         "arguments": [],
         "key": "setup.verify.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.addCredits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.blocked",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.byok",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "provider",
+            1
+          ]
+        ],
+        "key": "shared.actionPayment.byokRoute",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "duration",
+            1
+          ]
+        ],
+        "key": "shared.actionPayment.cacheWindow",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.cancel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.changeCache",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.confirm",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.description",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.expired",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.forecast",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.forecastRisk",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "date",
+            1
+          ]
+        ],
+        "key": "shared.actionPayment.freeUntil",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.insufficientCredits",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.loading",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ]
+        ],
+        "key": "shared.actionPayment.maximum",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.originalCharge",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.payer",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.pending",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.platform",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.refreshEstimate",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.refreshPrice",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.requestUnconfirmed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.reviewPrice",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.title",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.total",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.actionPayment.unknown",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ]
+        ],
+        "key": "shared.actionPayment.wallet",
         "tags": []
       },
       {
@@ -50401,6 +53880,26 @@
       {
         "arguments": [],
         "key": "shared.controls.confirmation.removeIntegrationToastMessage",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.controls.confirmation.removeProviderKeyBody",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.controls.confirmation.removeProviderKeyDangerLabel",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.controls.confirmation.removeProviderKeyTitle",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.controls.confirmation.removeProviderKeyToastMessage",
         "tags": []
       },
       {
@@ -51936,6 +55435,46 @@
       {
         "arguments": [],
         "key": "shared.dashboardLayout.widgetUnavailable",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shared.durationUnits.days",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shared.durationUnits.hours",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shared.durationUnits.minutes",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shared.durationUnits.weeks",
         "tags": []
       },
       {
@@ -54730,6 +58269,16 @@
       },
       {
         "arguments": [],
+        "key": "shared.measurementSettings.blocks.payment_already_executed",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.measurementSettings.blocks.payment_unavailable",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.measurementSettings.blocks.preview_expired",
         "tags": []
       },
@@ -56338,6 +59887,11 @@
       },
       {
         "arguments": [],
+        "key": "shared.providerAccess.askAdmin",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.providerAccess.connect",
         "tags": []
       },
@@ -56487,6 +60041,20 @@
         "tags": []
       },
       {
+        "arguments": [
+          [
+            "count",
+            6
+          ],
+          [
+            "time",
+            1
+          ]
+        ],
+        "key": "shared.rankPreflight.futureScheduledCheck",
+        "tags": []
+      },
+      {
         "arguments": [],
         "key": "shared.rankPreflight.keywordsArchived",
         "tags": []
@@ -56524,6 +60092,11 @@
       {
         "arguments": [],
         "key": "shared.rankPreflight.measurementPolicyUnsupported",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.rankPreflight.nextScheduledCheck",
         "tags": []
       },
       {
@@ -56587,6 +60160,11 @@
           ]
         ],
         "key": "shared.rankPreflight.overlapMore",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.rankPreflight.paymentUnavailable",
         "tags": []
       },
       {
@@ -57212,12 +60790,32 @@
       },
       {
         "arguments": [],
+        "key": "shared.usageViews.budget.noLimit",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.usageViews.budget.noReset",
         "tags": []
       },
       {
         "arguments": [],
         "key": "shared.usageViews.budget.ok",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "amount",
+            1
+          ]
+        ],
+        "key": "shared.usageViews.budget.overBy",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.perMonth",
         "tags": []
       },
       {
@@ -57237,7 +60835,22 @@
       },
       {
         "arguments": [],
+        "key": "shared.usageViews.budget.reservedHint",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.reservedInfo",
+        "tags": []
+      },
+      {
+        "arguments": [],
         "key": "shared.usageViews.budget.resets",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.usageViews.budget.setLimit",
         "tags": []
       },
       {
@@ -57938,146 +61551,6 @@
       {
         "arguments": [],
         "key": "shell.backup.title",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaBanner.backupLoadError",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaBanner.coverage",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaBanner.detail",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaBanner.dismiss",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaBanner.exportData",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaBanner.lead",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaBanner.loading",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.close",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.covered",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.coveredItems.export",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.coveredItems.history",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.coveredItems.providerOwnership",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.coveredItems.scheduled",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.end.detail",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.end.title",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.exportData",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.notYet",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.notYetItems.migration",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.notYetItems.restore",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.notYetItems.support",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.notYetItems.uptime",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.responsibilities.ours.detail",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.responsibilities.ours.title",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.responsibilities.title",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.responsibilities.yours.detail",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.responsibilities.yours.title",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.subtitle",
-        "tags": []
-      },
-      {
-        "arguments": [],
-        "key": "shell.betaCoverage.title",
         "tags": []
       },
       {
@@ -59177,6 +62650,36 @@
       {
         "arguments": [],
         "key": "shell.operations.viewAll",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.planStatus.pro",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shell.planStatus.trial",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "days",
+            6
+          ]
+        ],
+        "key": "shell.planStatus.trialDays",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "days",
+            6
+          ]
+        ],
+        "key": "shell.planStatus.trialDaysShort",
         "tags": []
       },
       {

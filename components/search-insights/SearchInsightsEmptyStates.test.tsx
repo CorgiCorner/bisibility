@@ -153,18 +153,31 @@ describe("SearchInsightsNoDataState", () => {
     expect(screen.getByRole("button", { name: "Refresh stored insights" })).toBeInTheDocument();
   });
 
-  it("does not schedule refreshes while the import is queued", () => {
+  it("auto-refreshes a queued import at 90s and a running import at 45s", () => {
     vi.useFakeTimers();
-    renderNoData({ pausedReason: null, state: "queued" });
+    try {
+      const queued = renderNoData({ pausedReason: null, state: "queued" });
+      expect(
+        screen
+          .getByRole("button", { name: "Refresh stored insights" })
+          .closest("[data-auto-refresh]"),
+      ).toHaveAttribute("data-auto-refresh", "active");
+      act(() => vi.advanceTimersByTime(45_000));
+      expect(routerMock.refresh).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(45_000));
+      expect(routerMock.refresh).toHaveBeenCalledTimes(1);
+      queued.unmount();
+      routerMock.refresh.mockClear();
 
-    expect(
-      screen
-        .getByRole("button", { name: "Refresh stored insights" })
-        .closest("[data-auto-refresh]"),
-    ).toHaveAttribute("data-auto-refresh", "inactive");
-    expect(vi.getTimerCount()).toBe(0);
-    act(() => vi.advanceTimersByTime(90_000));
-    expect(routerMock.refresh).not.toHaveBeenCalled();
+      const running = renderNoData({ pausedReason: null, state: "running" });
+      act(() => vi.advanceTimersByTime(44_999));
+      expect(routerMock.refresh).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(1));
+      expect(routerMock.refresh).toHaveBeenCalledTimes(1);
+      running.unmount();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("offers no refresh control for a state that waits on the customer", () => {

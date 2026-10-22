@@ -8,7 +8,7 @@ import {
 } from "./filters";
 
 const PROJECT_RUNS_CURSOR_VERSION = 1;
-const PROJECT_RUN_KIND_TIE_BREAK_ORDER: readonly ProjectRunKind[] = ["gsc_import", "rank_check"];
+const PROJECT_RUN_KIND_TIE_BREAK_ORDER: readonly ProjectRunKind[] = ["ai", "gsc", "rank"];
 
 export const projectRunsSortTupleSchema = z
   .object({
@@ -27,7 +27,7 @@ export type ProjectRunsTimelineSortTuple = z.infer<typeof projectRunsTimelineSor
 export const projectRunsPlannedSortTupleSchema = z
   .object({
     id: z.string().min(1),
-    kind: z.literal("rank_check"),
+    kind: z.literal("rank"),
     plannedFor: z.iso.datetime(),
   })
   .strict();
@@ -88,9 +88,10 @@ export class ProjectRunsCursorError extends Error {
 
 function parseCursor(value: string): ProjectRunsCursor {
   try {
-    return projectRunsCursorSchema.parse(
-      JSON.parse(Buffer.from(value, "base64url").toString("utf8")),
-    );
+    const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+    if (parsed?.sort?.kind === "rank_check") parsed.sort.kind = "rank";
+    if (parsed?.sort?.kind === "gsc_import") parsed.sort.kind = "gsc";
+    return projectRunsCursorSchema.parse(parsed);
   } catch {
     throw new ProjectRunsCursorError();
   }

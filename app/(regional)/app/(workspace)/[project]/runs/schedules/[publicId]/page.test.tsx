@@ -24,6 +24,9 @@ vi.mock("@/lib/queries/rank-check-runs", () => ({
   getCheckSchedule: mocks.getSchedule,
   listCheckSchedules: mocks.listSchedules,
 }));
+vi.mock("@/lib/queries/check-schedule-list", () => ({
+  listCheckScheduleRows: mocks.listSchedules,
+}));
 vi.mock("@/lib/queries/check-schedule-members", () => ({
   listScheduleMemberCandidates: mocks.listCandidates,
 }));
@@ -103,16 +106,14 @@ describe("SchedulePage", () => {
 
     expect(screen.getByRole("heading", { name: "Daily 06:00" })).toBeVisible();
     expect(screen.getByRole("link", { name: "Schedules" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("link", { name: "All schedules" })).toHaveAttribute(
-      "href",
-      "/app/prj_1/runs/schedules",
-    );
+    expect(screen.queryByRole("link", { name: "All schedules" })).toBeNull();
     expect(screen.getByText("Daily, 06:00")).toBeVisible();
     expect(screen.getByRole("button", { name: "Copy schedule ID" })).toBeVisible();
     expect(screen.getByRole("region", { name: "Schedule editor" })).toHaveTextContent(
       "Save schedule",
     );
     expect(mocks.getSchedule).toHaveBeenCalledWith("project_1", "sch_1");
+    expect(screen.queryByText("Default suggestion")).toBeNull();
   });
 
   it("shows Manual with a compact, copyable schedule ID", async () => {

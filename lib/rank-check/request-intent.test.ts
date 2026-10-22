@@ -185,6 +185,12 @@ function context() {
       source: "api",
       surface: "programmatic",
     },
+    req: new Request(
+      "https://example.com/api/v1/keywords/kw_abcdefghijklmnopqrstuvwx/rank-checks",
+      {
+        method: "POST",
+      },
+    ),
   } as never;
 }
 

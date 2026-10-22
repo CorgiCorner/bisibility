@@ -123,7 +123,7 @@
         "marketInactive": "Rynek nieaktywny",
         "marketInactiveDescription": "Rynek tego słowa kluczowego jest wstrzymany, więc sprawdzenie zatrzymano, zanim wygenerowało koszt.",
         "noProvider": "Brak działającego dostawcy",
-        "noProviderDescription": "Połącz dostawcę lub połącz go ponownie, aby uruchomić ten przebieg.",
+        "noProviderDescription": "Sprawdź wybrane źródło danych w Integracjach, aby uruchomić ten przebieg.",
         "providerUnavailable": "Dostawca niedostępny",
         "providerUnavailableDescription": "Dostawca jest teraz nieosiągalny. Przebieg ruszy sam, gdy połączenie wróci.",
         "targetPaused": "Cel wstrzymany – ruszy, gdy go wznowisz",
@@ -155,11 +155,92 @@
         "skippedBeforeStart": "{count, plural, one {# pominięty przed startem} few {# pominięte przed startem} many {# pominiętych przed startem} other {# pominiętego przed startem}}",
         "skippedOrBlocked": "Pominięte lub zablokowane: {count}"
       },
+      "deferral": {
+        "budget_exhausted": {
+          "detail": "Budżet został osiągnięty, zanim wyceniono to sprawdzenie.",
+          "label": "Budżet osiągnięty"
+        },
+        "budget_missing": {
+          "detail": "Dla tego projektu nie skonfigurowano budżetu miesięcznego.",
+          "label": "Brak budżetu"
+        },
+        "credentials_unavailable": {
+          "detail": "Dane logowania dostawcy dla tego sprawdzenia są niedostępne.",
+          "label": "Dane logowania niedostępne"
+        },
+        "credits_exhausted": {
+          "detail": "Saldo płatności zostało wyczerpane, zanim to sprawdzenie zostało uruchomione.",
+          "label": "Kredyty wyczerpane"
+        },
+        "dispatcher_disabled": {
+          "detail": "Dyspozytor sprawdzeń pozycji jest wyłączony w tej instalacji.",
+          "label": "Dyspozytor jest wyłączony"
+        },
+        "keyword_archived": {
+          "detail": "Słowo kluczowe zostało zarchiwizowane, zanim to sprawdzenie mogło się rozpocząć.",
+          "label": "Słowo kluczowe zarchiwizowane"
+        },
+        "market_inactive": {
+          "detail": "Rynek tego słowa kluczowego nie jest już aktywny.",
+          "label": "Rynek nieaktywny"
+        },
+        "migration_hold": {
+          "detail": "Sprawdzenia są wstrzymane, gdy ten projekt jest w trakcie wstrzymania migracji.",
+          "label": "Wstrzymanie migracji"
+        },
+        "no_provider": {
+          "detail": "Dla tego sprawdzenia nie było dostępnego dostawcy.",
+          "label": "Brak dostawcy"
+        },
+        "openIntegrations": "Otwórz integracje",
+        "primary_provider_not_dataforseo": {
+          "detail": "Zaplanowane sprawdzenia w kolejce działają tylko wtedy, gdy DataForSEO jest dostawcą głównym.",
+          "label": "Sprawdzenia w kolejce wymagają DataForSEO"
+        },
+        "project_ineligible": {
+          "detail": "Ten projekt nie kwalifikuje się do zaplanowanych sprawdzeń pozycji.",
+          "label": "Projekt nie może uruchamiać sprawdzeń"
+        },
+        "project_read_only": {
+          "detail": "Ten projekt jest tylko do odczytu, więc sprawdzenie zostało odłożone.",
+          "label": "Projekt tylko do odczytu"
+        },
+        "queued_dataforseo_disabled": {
+          "detail": "Zaplanowane sprawdzenia DataForSEO są wyłączone w tej instalacji.",
+          "label": "Zaplanowane sprawdzenia są wyłączone"
+        },
+        "queued_submission_disabled": {
+          "detail": "Wysyłka kolejkowanych sprawdzeń pozycji jest wyłączona w bieżącym trybie harmonogramu.",
+          "label": "Wysyłka jest wyłączona"
+        },
+        "quote_unavailable": {
+          "detail": "Cena dostawcy była niedostępna. Ten cel zostanie ponowiony przy następnym przebiegu.",
+          "label": "Cena niedostępna"
+        },
+        "rate_limited": {
+          "detail": "Limit częstotliwości dostawcy odłożył to sprawdzenie do następnego przebiegu.",
+          "label": "Limit częstotliwości"
+        },
+        "reviewBudget": "Sprawdź budżet",
+        "schedule_ineligible": {
+          "detail": "Ten harmonogram słowa kluczowego nie pozwala już na automatyczne sprawdzenie.",
+          "label": "Harmonogram nie jest automatyczny"
+        },
+        "unknown": {
+          "detail": "To sprawdzenie zostało odłożone i zostanie ponowione przy następnym przebiegu.",
+          "label": "Odłożone"
+        },
+        "usage_unconfirmed": {
+          "detail": "Użycie dostawcy nie jest w pełni potwierdzone, więc to sprawdzenie zostało odłożone.",
+          "label": "Użycie niepotwierdzone"
+        }
+      },
       "facts": {
         "actual": "rzeczywisty",
         "blockedSince": "Zablokowano od",
         "chosenAtLaunch": "wybrane przy starcie",
         "cost": "Koszt",
+        "deferredBeforeProvider": "odłożone, zanim wybrano dostawcę",
         "elapsed": "Upłynęło",
         "estimated": "Szacowany koszt",
         "estimate": "szacunek",
@@ -244,7 +325,9 @@
         "providerUnknown": "Dostawca nie mógł ukończyć tego sprawdzenia.",
         "skippedBeforeStart": "Pominięto przed startem",
         "sendUnconfirmed": "Wynik niepotwierdzony; bez ponowienia, aby uniknąć podwójnego zużycia.",
-        "stoppedAfterStart": "Zatrzymano po rozpoczęciu"
+        "stoppedAfterStart": "Zatrzymano po rozpoczęciu",
+        "providerCapacityUnavailable": "Sprawdzanie pozycji u tego dostawcy jest tymczasowo niedostępne. Nie naliczono opłat. Spróbuj później lub podłącz własne klucze dostawcy.",
+        "scheduleChanged": "Harmonogram się zmienił. Anulowano przed rozpoczęciem."
       },
       "operations": "Operacje",
       "usageNotRecorded": "Brak danych",

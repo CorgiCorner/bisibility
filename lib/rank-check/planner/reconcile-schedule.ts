@@ -3,8 +3,9 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { plannedOccurrenceForKey } from "./occurrence";
+import { cancelObsoleteScheduleItems } from "./reconcile-scheduled-items";
 
-type ReconcileDatabase = Pick<Prisma.TransactionClient, "checkSchedule" | "rankCheckRun">;
+type ReconcileDatabase = Prisma.TransactionClient;
 
 function occurrenceKey(spec: Prisma.JsonValue) {
   if (typeof spec !== "object" || spec === null || Array.isArray(spec)) return null;
@@ -15,8 +16,9 @@ function occurrenceKey(spec: Prisma.JsonValue) {
 export async function reconcilePlannedRunsForSchedule(
   scheduleId: string,
   database: ReconcileDatabase = prisma,
-  options: { deleting?: boolean } = {},
+  options: { deleting?: boolean; invalidateMaterialized?: boolean } = {},
 ) {
+  await cancelObsoleteScheduleItems(database, scheduleId, options);
   const schedule = await database.checkSchedule.findUnique({
     select: {
       _count: { select: { keywords: true } },

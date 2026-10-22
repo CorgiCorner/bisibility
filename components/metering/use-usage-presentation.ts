@@ -22,7 +22,14 @@ type ViewMessages = {
   cost: CostSummaryCardLabels;
   table: UsageTableLabels;
   exceptions: ExceptionsListLabels;
-  budget: BudgetCardLabels;
+  budget: BudgetCardLabels & {
+    noLimit: string;
+    setLimit: string;
+    perMonth: string;
+    overBy: string;
+    reservedHint: string;
+    reservedInfo: string;
+  };
   overview: UsageOverviewCardLabels;
   measurement: MeasurementCardLabels;
   dimensions: Record<string, string>;
@@ -74,6 +81,7 @@ export function useUsagePresentation(options: UsagePresentationOptions = {}) {
       .join(" · ");
   return {
     options: presentationOptions,
+    budgetFigure: numbers.budgetFigure,
     summary: labels.summary,
     cost: labels.cost,
     table: labels.table,

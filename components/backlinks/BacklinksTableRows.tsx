@@ -27,6 +27,7 @@ export type BacklinksTableDataRow = DataTableRowBase & {
   run?: { count: number; domain: string; signature: string };
   source: string;
   sourceDomain: string;
+  sourceUrl?: string;
   spam?: number;
   status: BacklinksRow["status"];
   target: string;
@@ -66,6 +67,7 @@ function linkRow(row: BacklinksRow, id: string, summary: boolean): BacklinksTabl
     lostAt: row.lostAt,
     source: pathFromUrl(row.sourceUrl),
     sourceDomain: row.sourceDomain,
+    sourceUrl: row.sourceUrl,
     spam: summary ? row.spamScore : undefined,
     status: row.status,
     target: pathFromUrl(row.targetUrl),

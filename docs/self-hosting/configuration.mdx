@@ -49,6 +49,7 @@ hand.
 
 | Variable | Purpose |
 | - | - |
+| `ADMIN_REQUIRE_TWO_FACTOR` | Dangerous instance-admin actions require enabled two-factor authentication by default. Self-host operators can set `false` to opt out; this weakens protection for credentials, account access and data changes. Cloud always enforces the gate. No per-action authenticator code is requested. |
 | `DEMO_FIXED_OTP` | Set to `1` to enable the throwaway [demo login](/quickstart#demo-login) on local installs. |
 | `DEMO_INSTANCE_INSECURE_AUTH_ACK` | Required acknowledgement when `DEMO_FIXED_OTP=1` runs in the production Docker image. Never set it for real users or data. |
 | `READ_ONLY_DEMO` | Set to `1` only on a separate, sanitized demo installation. Enables one-click access to one existing viewer account, locks account changes, and disables email delivery. Never combine with fixed-OTP flags. |
@@ -148,8 +149,8 @@ hand.
 | `BISIBILITY_API_KEY_RATE_LIMIT_PER_MINUTE` | Per-key API limit. Defaults to `600`. |
 | `BISIBILITY_PAT_RATE_LIMIT_PER_MINUTE` | Per-personal-token API limit. Defaults to `120`. |
 | `BISIBILITY_API_ANON_RATE_LIMIT_PER_MINUTE` | Anonymous discovery limit. Defaults to `60`. |
-| `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted beta limits. |
-| `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted beta limits. |
+| `BISIBILITY_MAX_KEYWORDS_PER_PROJECT` | Optional per-project keyword cap. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted Cloud limits. |
+| `BISIBILITY_MAX_PROJECTS_PER_USER` | Optional cap on projects one user may own through the app or API. Unset or `0` means unlimited. See [Deployment options](/deployment-options) for current hosted Cloud limits. |
 | `BISIBILITY_CLIENT_IP_HEADER` | Header your proxy sets with the real client address. Unset means no header is trusted and the anonymous API limit uses one shared bucket. See [Trusted client IP](/self-hosting/security#trusted-client-ip). |
 | `BISIBILITY_CLIENT_IP_XFF_DEPTH` | Only for `x-forwarded-for`: how many trailing entries your own proxies append. Defaults to `1`. |
 | `BISIBILITY_PROVIDER_RATE_LIMIT_*` | Per-provider outbound rate limit overrides. See `.env.example` for provider-specific names. |

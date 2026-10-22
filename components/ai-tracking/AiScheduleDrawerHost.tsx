@@ -69,15 +69,27 @@ export function AiScheduleDrawerHost({
       onClose={onClose}
       pending={pending}
       onSaveMetadata={(metadata) => save("PATCH", metadata)}
-      onPreview={async (configurations) =>
-        actionValue(await previewAiTrackingAction(projectId, { promptIds, configurations }))
+      onPreview={async (configurations, payment) =>
+        actionValue(
+          await previewAiTrackingAction(projectId, { promptIds, configurations, ...payment }),
+        )
       }
       onLaunch={async (preview, metadata) => {
         if (!metadata) return;
-        await save(
-          schedule ? "PATCH" : "POST",
-          buildAiSchedulePayload(metadata, preview, promptIds),
-        );
+        const payload = buildAiSchedulePayload(metadata, preview, promptIds);
+        await save(schedule ? "PATCH" : "POST", {
+          ...payload,
+          configuration: {
+            ...payload.configuration,
+            acceptedPayment: preview.payment
+              ? { quoteToken: preview.payment.quoteToken }
+              : undefined,
+            requirePayment: true,
+            paymentScope: "recurring",
+            ...(schedule ? { paymentScheduleId: schedule.id } : {}),
+            paymentRecurrence: { cron: metadata.cron, timezone: metadata.timezone },
+          },
+        });
       }}
     />
   );

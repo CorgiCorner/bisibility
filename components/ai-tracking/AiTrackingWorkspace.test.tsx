@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import tracking from "@/messages/core/en/project-ai-tracking.json";
 import shared from "@/messages/core/en/shared.json";
@@ -41,7 +42,7 @@ describe("tracking approval and evidence UI", () => {
     );
     expect(launch).not.toHaveBeenCalled();
   });
-  it("keeps a preview spend-free and requires explicit consent without clearing the estimate", async () => {
+  it("keeps a preview spend-free and binds approval to the displayed forecast without clearing it", async () => {
     const user = userEvent.setup();
     const preview = vi.fn(trackingFixtureActions.preview);
     const launch = vi.fn().mockResolvedValue(trackingWorkspaceFixture);
@@ -51,22 +52,21 @@ describe("tracking approval and evidence UI", () => {
     await user.click(
       within(dialog).getByRole("button", { name: "Preview configuration and cost" }),
     );
-    const approve = await within(dialog).findByRole("button", { name: "Approve and queue run" });
-    expect(approve).toBeDisabled();
-    expect(within(dialog).getByText("Advisory estimate · $0.0120")).toBeVisible();
+    const approve = await within(dialog).findByRole("button", {
+      name: "Run checks · ≈ $0.012",
+    });
     expect(launch).not.toHaveBeenCalled();
     expect(preview).toHaveBeenCalledTimes(1);
-    await user.click(
-      within(dialog).getByRole("checkbox", {
-        name: "I approve this run and the provider actual cost",
-      }),
-    );
-    expect(approve).toBeEnabled();
-    expect(within(dialog).getByText("Advisory estimate · $0.0120")).toBeVisible();
+    await waitFor(() => expect(approve).toBeEnabled());
+    expect(within(dialog).getByText("Forecast: ≈ $0.012")).toBeVisible();
+    expect(launch).not.toHaveBeenCalled();
     await user.click(approve);
     expect(launch).toHaveBeenCalledWith(
       ["aip_neutral", "aip_branded", "aip_comparison"],
-      expect.objectContaining({ credentialVersion: "fixture_credential" }),
+      expect.objectContaining({
+        credentialVersion: "fixture_credential",
+        payment: expect.objectContaining({ quoteToken: "accepted-quote-1" }),
+      }),
     );
   });
   it("shows unknown actual model, retained text, citations and receipt provenance", async () => {
@@ -85,20 +85,42 @@ describe("tracking approval and evidence UI", () => {
     expect(within(dialog).getAllByText("Unknown").length).toBeGreaterThan(0);
   });
   it.each([
-    { costUsd: null, costState: "unknown", display: "Unknown · unknown" },
-    { costUsd: "0.0000", costState: "confirmed", display: "$0.0000 · confirmed" },
-    { costUsd: "0.0032", costState: "derived", display: "$0.0032 · derived" },
+    { costUsd: null, costState: "unknown", value: null, display: "Charge not confirmed" },
+    { costUsd: "0.0000", costState: "confirmed", value: "0.0000", display: "$0.00" },
+    { costUsd: "0.0032", costState: "derived", value: null, display: "Charge not confirmed" },
   ] as const)("keeps actual receipt USD and provenance distinct: $costState", (receipt) => {
+    const quote = paymentQuote({
+      charge: { value: "0.004", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+    });
+    const originalPayment = {
+      actionId: "original",
+      quoteId: quote.id,
+      option: quote.option,
+      state: receipt.value === null ? ("unknown" as const) : ("settled" as const),
+      charge: {
+        ...quote.charge,
+        value: receipt.value,
+        certainty: receipt.value === null ? ("unknown" as const) : ("measured" as const),
+      },
+    };
     render(
       <FeatureMessagesProvider locale="en" messages={{ ...shared, ...tracking }} timeZone="UTC">
         <TrackingEvidenceDrawer
-          sample={{ ...trackingSampleFixtures[2], ...receipt }}
+          sample={{
+            ...trackingSampleFixtures[2],
+            costUsd: receipt.costUsd,
+            costState: receipt.costState,
+            originalPayment,
+          }}
           onClose={vi.fn()}
         />
       </FeatureMessagesProvider>,
     );
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText(receipt.display)).toBeVisible();
+    const cost = within(dialog).getByText("Cost").nextElementSibling;
+    expect(cost).toHaveTextContent("Original lookup:");
+    expect(cost).toHaveTextContent(receipt.display);
+    expect(cost).toHaveTextContent(`· ${receipt.costState}`);
     expect(within(dialog).getByText("Actual model").nextElementSibling).toHaveTextContent(
       "Unknown",
     );
@@ -186,12 +208,9 @@ describe("tracking approval and evidence UI", () => {
     await user.click(
       within(dialog).getByRole("button", { name: "Preview configuration and cost" }),
     );
-    await user.click(
-      await within(dialog).findByRole("checkbox", {
-        name: "I approve this run and the provider actual cost",
-      }),
-    );
-    await user.click(within(dialog).getByRole("button", { name: "Approve and queue run" }));
+    const approve = await within(dialog).findByRole("button", { name: /^Run checks/ });
+    await waitFor(() => expect(approve).toBeEnabled());
+    await user.click(approve);
     expect(launch).toHaveBeenCalledOnce();
     await waitFor(() =>
       expect(screen.getByRole("tab", { name: "Run history" })).toHaveAttribute(

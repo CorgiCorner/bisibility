@@ -3,9 +3,13 @@
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { useFormatter, useTranslations } from "next-intl";
+import { KeywordCellHelp } from "./KeywordCellHelp";
 import { keywordRankView } from "./keyword-rank-quality-view";
 
-export function KeywordRankValue({ row }: Readonly<{ row: KeywordRow }>) {
+export function KeywordRankValue({
+  row,
+  compact = false,
+}: Readonly<{ row: KeywordRow; compact?: boolean }>) {
   const t = useTranslations("projectRankTracker.keywordImport.management.grid.quality");
   const format = useFormatter();
   const view = keywordRankView(row);
@@ -57,6 +61,37 @@ export function KeywordRankValue({ row }: Readonly<{ row: KeywordRow }>) {
       : view.reason
         ? t("qualificationUnknown")
         : t(`freshness.${view.freshness}`);
+  if (compact) {
+    const shortHistory = last
+      ? t(view.isGroup ? "bestRetainedShort" : "lastKnownShort", {
+          position: format.number(last.position),
+        })
+      : null;
+    const explanation = view.reason
+      ? detail
+      : view.freshness === "unknown"
+        ? t("freshnessUnknownHelp")
+        : detail;
+    return (
+      <div className="grid min-w-0 gap-0.5 text-right leading-tight">
+        <KeywordCellHelp
+          label={value}
+          description={explanation}
+          className="font-sans tabular-nums text-[13.5px] font-semibold text-fg text-right"
+        >
+          {view.evidence === "unknown" && view.currentPosition === null ? "-" : value}
+        </KeywordCellHelp>
+        {shortHistory && history ? (
+          <KeywordCellHelp
+            description={history}
+            className="font-sans tabular-nums text-[10.5px] text-fg-muted text-right"
+          >
+            {shortHistory}
+          </KeywordCellHelp>
+        ) : null}
+      </div>
+    );
+  }
   return (
     <div className="grid min-w-0 max-w-full gap-0.5 overflow-hidden text-right leading-tight">
       <Tooltip content={value}>

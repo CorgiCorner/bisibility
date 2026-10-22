@@ -26,7 +26,11 @@ export function locationSearchPaths(input: {
             required: true,
             schema: { maxLength: 120, minLength: 2, type: "string" },
           },
-          { in: "query", name: "country", schema: { maxLength: 120, type: "string" } },
+          {
+            in: "query",
+            name: "country",
+            schema: { minLength: 1, maxLength: 120, type: "string" },
+          },
           {
             in: "query",
             name: "limit",

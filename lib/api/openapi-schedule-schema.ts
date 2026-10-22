@@ -10,7 +10,7 @@ export const jitterMinutesContractSchema = {
 
 export const scheduleTimezoneContractSchema = {
   description:
-    "IANA time zone that anchors monthly and custom cron wall-clock schedules. Daily and weekly use a stable keyword-specific interval phase that timezone does not move.",
+    "IANA time zone for the selected cadence. Schedules without a fixed time use stable keyword slots within each occurrence.",
   type: "string",
 } as const;
 
@@ -42,7 +42,7 @@ export const keywordScheduleResourceContractSchema = {
     next_check_at: { format: "date-time", type: ["string", "null"] },
     source: {
       description:
-        "Whether these schedule values come from the keyword's own row or from the project defaults.",
+        "The keyword's actual project-schedule membership. Unassigned or archived membership reports manual and no next check; disabled membership reports paused. keyword remains the compatibility source value; project_default is retained in the enum for older clients.",
       enum: ["keyword", "project_default"],
       type: "string",
       ...openEnum("ScheduleSource"),

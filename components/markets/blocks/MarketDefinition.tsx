@@ -118,7 +118,13 @@ function languageOption(language: MarketDefinitionLanguage) {
 function languageGroups(
   messages: MarketDefinitionMessages,
   languages: ReturnType<MarketDefinitionLocationSource["languagesFor"]>,
+  tracked: (language: MarketDefinitionLanguage) => boolean,
+  trackedLabel: string,
 ): MenuSelectOptionGroup[] {
+  const option = (language: MarketDefinitionLanguage) => ({
+    ...languageOption(language),
+    secondary: tracked(language) ? trackedLabel : undefined,
+  });
   const suggestedCodes = new Set(languages.suggested.map((language) => language.code));
   const others = languages.all.filter((language) => !suggestedCodes.has(language.code));
   return [
@@ -126,12 +132,12 @@ function languageGroups(
       hideHeading: others.length === 0,
       id: "suggested",
       label: messages.suggested,
-      options: languages.suggested.map(languageOption),
+      options: languages.suggested.map(option),
     },
     {
       id: "all",
       label: messages.allLanguages,
-      options: others.map(languageOption),
+      options: others.map(option),
       searchOnly: true,
     },
   ].filter((group) => group.options.length > 0);
@@ -190,7 +196,20 @@ export function MarketDefinition({
         {country ? (
           <MenuSelect
             ariaLabel={resolvedMessages.language}
-            groups={languageGroups(resolvedMessages, languages)}
+            groups={languageGroups(
+              resolvedMessages,
+              languages,
+              (language) => {
+                const selected = marketDefinitionSelection({
+                  ...value,
+                  languageCode: language.code,
+                });
+                return registry.some(
+                  (row) => row.status === "active" && row.canonicalKey === selected?.canonicalKey,
+                );
+              },
+              t("alreadyTrackedShort"),
+            )}
             onChange={(languageCode) => change({ languageCode })}
             searchable
             searchPlaceholder={resolvedMessages.searchAllLanguages}
@@ -210,6 +229,11 @@ export function MarketDefinition({
             messages={resolvedMessages}
             onChange={(location) => change({ location })}
             source={source}
+            trackedLocationKeys={registry
+              .filter((row) => row.status === "active")
+              .map((row) => row.canonicalKey)}
+            languageCode={value.languageCode}
+            trackedLabel={t("alreadyTrackedShort")}
             value={value.location}
           />
         ) : (

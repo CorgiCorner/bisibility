@@ -65,9 +65,9 @@
         "archived": "Programación de monitorización de prompts archivada. Las ejecuciones y los resultados anteriores se conservan.",
         "archivedReadOnlyHint": "Las programaciones de monitorización de prompts archivadas se conservan como historial y no se pueden editar ni restaurar.",
         "emptyNext": "Añade prompts para empezar",
-        "kindAi": "Monitorización de prompts",
+        "kindAi": "Seguimiento de IA",
         "kindRank": "Comprobaciones de posición",
-        "newSchedule": "Nueva programación de monitorización de prompts",
+        "newSchedule": "Nueva programación de seguimiento de IA",
         "nextPending": "Pendiente",
         "prompts": "{count, plural, one {# prompt} other {# prompts}}",
         "readOnly": "Solo lectura",
@@ -78,7 +78,7 @@
       },
       "archiveDialog": {
         "body": "Las ejecuciones futuras se detendrán. Las que ya han empezado podrán terminar y los resultados anteriores seguirán disponibles.",
-        "defaultNotice": "Esta es la programación predeterminada. Las palabras clave nuevas usarán comprobaciones manuales hasta que elijas otra.",
+        "defaultNotice": "Las palabras clave nuevas siguen en modo manual hasta que las añadas a un horario.",
         "manualChecks": "Comprobaciones manuales",
         "moveKeywords": "Mover {count, plural, one {# palabra clave} other {# palabras clave}} a",
         "title": "¿Archivar «{name}»?"
@@ -132,7 +132,8 @@
         "selected": "{count, plural, one {# seleccionada} other {# seleccionadas}}",
         "selectAll": "Seleccionar las {count, number} coincidencias",
         "submitFailed": "No se han podido añadir las palabras clave a esta programación. Inténtalo de nuevo.",
-        "toSchedule": "a {name}"
+        "toSchedule": "a {name}",
+        "schedule": "Programación"
       },
       "editor": {
         "always": "Siempre {label}",
@@ -141,16 +142,16 @@
         "cronTooLong": "Las expresiones cron no pueden superar los {maximum, number} caracteres.",
         "customCron": "Cron personalizado",
         "customPreview": "Programación cron personalizada.",
-        "defaultEnabled": "Actívalo para usar esta programación con las palabras clave nuevas. Las que ya existen mantienen su programación.",
-        "defaultExisting": "Predeterminada para las palabras clave nuevas",
-        "defaultExistingDescription": "Las palabras clave nuevas usarán esta programación salvo que elijas otra.",
-        "defaultReplacement": "Sustituye a {name} para las palabras clave nuevas. Las que ya existen mantienen su programación.",
+        "defaultEnabled": "Sugiere esta programación al programar palabras clave. Solo se añaden cuando las eliges.",
+        "defaultExisting": "Sugerencia predeterminada",
+        "defaultExistingDescription": "Se sugiere al elegir una programación. Ninguna palabra se añade automáticamente.",
+        "defaultReplacement": "Sustituye a {name} como programación sugerida. Las asignaciones actuales no cambian.",
         "depth": "Profundidad",
         "everyWeekday": "Todos los días laborables a las 06:00.",
         "invalidCron": "Introduce una expresión cron válida de cinco campos.",
         "invalidTime": "Introduce una hora en formato HH:mm.",
         "invalidTimeZone": "Introduce una zona horaria válida.",
-        "invalidTimeStep": "Introduce una hora en intervalos de 30 minutos.",
+        "invalidTimeStep": "Introduce una hora que termine en :00 o :30.",
         "jitterExact": "Ninguna: empezar a la hora exacta",
         "jitterFifteen": "Hasta 15 minutos",
         "jitterSixty": "Hasta 60 minutos",
@@ -170,9 +171,9 @@
         "noFixedTime": "Sin hora fija",
         "projectDefault": "Predeterminado del proyecto ({label})",
         "projectDefaultPlain": "Predeterminado del proyecto",
-        "overrideHelp": "«Predeterminado del proyecto» sigue los ajustes del proyecto; «Siempre» fija el valor en esta programación.",
+        "overrideHelp": "Usa la configuración del proyecto o elige un valor para esta programación.",
         "save": "Guardar programación",
-        "saveFailed": "No se ha podido guardar la programación.",
+        "saveFailed": "No se pudo guardar. Tus cambios siguen aquí. Inténtalo de nuevo.",
         "saved": "Programación guardada.",
         "saving": "Guardando…",
         "schedule": "Programación",
@@ -180,10 +181,21 @@
         "scheduleNameTooLong": "Los nombres de programación no pueden superar los {maximum, number} caracteres.",
         "startWindow": "Ventana de inicio",
         "startWindowHelp": "Reparte el inicio para que las programaciones que coinciden a la misma hora no lleguen al proveedor a la vez.",
-        "thirtyMinuteSteps": "Intervalos de 30 minutos",
+        "thirtyMinuteSteps": "Usa :00 o :30, por ejemplo, 09:00 o 09:30.",
         "time24": "Hora, formato de 24 h",
         "topDepth": "Top {depth, number}",
-        "useAsDefault": "Usar como predeterminada para las palabras clave nuevas"
+        "useAsDefault": "Usar como sugerencia predeterminada",
+        "nameHelp": "Es solo un nombre. Cambia Frecuencia abajo para ajustar cuándo se ejecutan las comprobaciones.",
+        "saveSessionExpired": "Tu sesión ha caducado. Inicia sesión y vuelve a guardar.",
+        "saveForbidden": "Ya no tienes permiso para editar esta programación.",
+        "saveNotFound": "Esta programación ya no está disponible. Vuelve a la lista.",
+        "saveConflict": "La programación ha cambiado. Recárgala antes de volver a guardar.",
+        "saveReadOnly": "Este proyecto es de solo lectura. Podrás guardar cuando se restablezca la edición.",
+        "saveInvalid": "Revisa la configuración de la programación antes de volver a guardar.",
+        "marketDevice": "Mercado × dispositivo",
+        "removeMember": "Quitar de la programación",
+        "memberRemoved": "Se quitó de la programación. La palabra clave sigue disponible para comprobaciones manuales.",
+        "memberRemoveFailed": "No se pudo quitar la palabra clave de esta programación. Inténtalo de nuevo."
       },
       "empty": {
         "archivedDescription": "Aquí aparecerán las programaciones archivadas. Sus ejecuciones y resultados anteriores se conservan.",
@@ -206,7 +218,7 @@
       "list": {
         "actions": "Acciones",
         "blocked": "Próxima ejecución bloqueada: límite mensual",
-        "defaultHint": "Las palabras clave nuevas se añaden a esta programación salvo que elijas otra.",
+        "defaultHint": "Se sugiere al elegir una programación. Ninguna palabra se añade automáticamente.",
         "memberMeta": "{markets, plural, one {# mercado} other {# mercados}} x {devices, plural, one {# dispositivo} other {# dispositivos}}",
         "members": "{keywords, plural, one {# palabra clave} other {# palabras clave}} = {targets, plural, one {# comprobación por ejecución} other {# comprobaciones por ejecución}}",
         "noAssignedKeywords": "No hay palabras clave asignadas",
@@ -231,7 +243,23 @@
       "nextRun": {
         "at": "{day} {time}",
         "today": "hoy {time}",
-        "tomorrow": "mañana {time}"
+        "tomorrow": "mañana {time}",
+        "distributed": "{day}, repartidas durante el día ({timezone})",
+        "distributedInterval": "Desde {day}, repartidas durante el intervalo ({timezone})"
+      },
+      "summary": {
+        "title": "Resumen de programación",
+        "nextRun": "Próxima ejecución",
+        "perMonth": "Estimación mensual",
+        "nextPending": "Planificación en curso",
+        "makeDefault": "Establecer por defecto",
+        "defaultHint": "La programación predeterminada es una sugerencia al elegir. Las palabras nuevas siguen sin programación hasta que las asignes.",
+        "unscheduledCount": "{count, plural, one {# palabra clave no tiene programación.} other {# palabras clave no tienen programación.}}",
+        "addToSchedule": "Añadir a una programación"
+      },
+      "planning": {
+        "delay": "Las ejecuciones planificadas suelen aparecer en Runs en {minutes, number} minutos. Las comprobaciones se realizan a la hora programada.",
+        "delayUnknown": "Las ejecuciones planificadas pueden tardar un poco en aparecer en Runs. Las comprobaciones se realizan a la hora programada."
       }
     }
   }

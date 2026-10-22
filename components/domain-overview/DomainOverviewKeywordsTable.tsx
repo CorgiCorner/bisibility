@@ -8,7 +8,7 @@ import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { DomainOverviewRankingLink } from "./DomainOverviewRankingLink";
 import { type KeywordSort, keywordValue } from "./domain-overview-keyword-table-model";
 import { keywordTableGrid } from "./domain-overview-keyword-table-styles";
@@ -16,7 +16,6 @@ import type { SaveDomainKeywords } from "./domain-overview-keyword-tracking";
 import {
   formatDomainCount,
   formatDomainEstimate,
-  formatDomainEstimatedCost,
   formatDomainEstimateExact,
 } from "./domain-overview-metrics";
 import { downloadDomainOverviewKeywords } from "./domain-overview-table-export";
@@ -29,7 +28,7 @@ import {
 import { useDomainKeywordSelection } from "./useDomainKeywordSelection";
 
 const header =
-  "font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted";
+  "min-w-0 overflow-hidden truncate font-sans tabular-nums text-[10px] font-medium uppercase tracking-[0.08em] text-fg-muted";
 function delta(value: number | null, locale: string) {
   if (value == null) return { label: "-", tone: "text-fg-muted" };
   if (value === 0) return { label: formatDomainCount(0, locale), tone: "text-fg-muted" };
@@ -39,7 +38,8 @@ function delta(value: number | null, locale: string) {
   };
 }
 export function DomainOverviewKeywordsTable({
-  estimateCents,
+  price,
+  loadMoreBlocked,
   fetchedCount,
   hasMore,
   loadMoreError = false,
@@ -50,6 +50,8 @@ export function DomainOverviewKeywordsTable({
   readOnly = false,
 }: Readonly<{
   estimateCents?: number | null;
+  price?: ReactNode;
+  loadMoreBlocked?: boolean;
   fetchedCount?: number;
   hasMore?: boolean;
   loadMoreError?: boolean;
@@ -62,6 +64,7 @@ export function DomainOverviewKeywordsTable({
   const [sort, setSort] = useState<KeywordSort>("estimatedTraffic");
   const [direction, setDirection] = useState<SortDirection>("desc");
   const locale = useLocale();
+  const paymentT = useTranslations("shared.actionPayment");
   const t = useTranslations("projectDomainOverview.workspace.ui");
   const currency = new Intl.NumberFormat(locale, {
     currency: "USD",
@@ -162,7 +165,7 @@ export function DomainOverviewKeywordsTable({
             >
               {t("columnVolume")}
             </SortableColumnHeader>
-            <span className="inline-flex items-center justify-end gap-1">
+            <span className="inline-flex min-w-0 max-w-full items-center justify-end gap-1 overflow-hidden">
               <SortableColumnHeader
                 active={sort === "difficulty"}
                 align="right"
@@ -187,7 +190,7 @@ export function DomainOverviewKeywordsTable({
             </SortableColumnHeader>
             <span className={header}>{t("columnIntent")}</span>
             <span className={header}>{t("columnRankingUrl")}</span>
-            <span className="inline-flex items-center justify-end gap-1 text-right">
+            <span className="inline-flex min-w-0 max-w-full items-center justify-end gap-1 overflow-hidden text-right">
               <SortableColumnHeader
                 active={sort === "rankAbsoluteDelta"}
                 align="right"
@@ -264,17 +267,13 @@ export function DomainOverviewKeywordsTable({
           <Button
             loading={loadingMore}
             onClick={onLoadMore}
-            disabled={estimateCents == null}
+            disabled={loadMoreBlocked}
             size="sm"
             startIcon={<Plus weight="regular" size={13} />}
             variant="secondary"
           >
             {t("loadNextKeywords", { count: remaining == null ? 100 : Math.min(100, remaining) })}
-            {estimateCents == null ? null : (
-              <span className="ml-1 font-sans tabular-nums">
-                {formatDomainEstimatedCost(estimateCents, locale, t)}
-              </span>
-            )}
+            {price ?? paymentT("reviewPrice")}
           </Button>
           {loadMoreError ? (
             <span className="text-[12px] text-red-text">{t("nextKeywordsFailed")}</span>

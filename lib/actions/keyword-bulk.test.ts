@@ -33,6 +33,7 @@ vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 describe("bulk target URL actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.prisma.$queryRaw.mockResolvedValue([]);
     mocks.requireSession.mockResolvedValue({ user: { id: "user_1" } });
     mocks.prisma.user.findUnique.mockResolvedValue({
       memberships: [{ projectId: "project_1", role: "admin" }],

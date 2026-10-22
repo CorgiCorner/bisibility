@@ -14,6 +14,7 @@ import {
 } from "@/lib/schemas/keyword";
 import { resolveSerpLanguage } from "@/lib/serp/language-catalog";
 import { z } from "zod";
+import { paymentBodyFields } from "./action-payment";
 
 const idSchema = z.string().trim().min(1).max(160);
 const tagSchema = z.string().trim().min(1).max(48);
@@ -99,6 +100,7 @@ export const webhookPatchSchema = z
   });
 
 export const keywordCreateItemSchema = z.object({
+  frequency: rankCheckFrequencySchema.optional(),
   city: serpCitySchema,
   country: serpMarketNameSchema.optional(),
   device: deviceSchema.optional(),
@@ -165,7 +167,9 @@ export const keywordBulkSchema = z
   });
 
 export const runRankCheckSchema = z.object({
-  max_cost_cents: z.number().int().positive().optional(),
+  ...paymentBodyFields,
+  estimate_only: z.boolean().optional(),
+  max_cost_cents: z.number().int().nonnegative().optional(),
   provider_id: z.string().trim().min(1).max(80).optional(),
 });
 

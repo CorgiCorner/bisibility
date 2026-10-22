@@ -117,6 +117,39 @@
     "trackedMarkets": "Tracked markets",
     "updateFailed": "Market status could not be updated.",
     "updateMarketFailed": "Market could not be updated.",
-    "visibility": "Visibility"
+    "visibility": "Visibility",
+    "openMarket": "Open market",
+    "viewMarkets": "View markets",
+    "alreadyTrackedShort": "Already tracked",
+    "deviceTracking": {
+      "title": "Add device tracking",
+      "description": "Add missing device variants to this market.",
+      "device": "Device to add",
+      "manualNotice": "Free to add. Checks won’t run yet.",
+      "scheduledNotice": "Free to add. Checks follow the selected schedule.",
+      "costNotice": "Adding is free. Checks use credits or your provider account.",
+      "scope": "{device} tracking for {checks, plural, one {# keyword} other {# keywords}}.",
+      "skipped": "Skipped: {existing, number} tracked, {archived, number} archived.",
+      "review": "Review changes",
+      "confirm": "Add {device} tracking ({count, number})",
+      "added": "Added tracking for {count, number} keywords.",
+      "failed": "Could not confirm the change. Review again before retrying.",
+      "errors": {
+        "market_unavailable": "This market is paused, archived or no longer available. Open Markets to review it.",
+        "selection_too_large": "For larger markets, use Add keywords to add the device in smaller batches.",
+        "selection_changed": "The keywords or schedule changed. Review the current scope again.",
+        "schedule_unavailable": "This schedule is paused, archived or no longer available. Choose another schedule or Manual.",
+        "ambiguous_keywords": "Matching keywords use different tracking settings. Use Add keywords to add this device for them individually."
+      },
+      "keywords": "Keywords",
+      "selectedCount": "{count, number} of {total, number}",
+      "selectAll": "Select all",
+      "noAvailableKeywords": "No keywords available for this device.",
+      "selectionLimit": "Select up to 500 keywords."
+    },
+    "trackedTargets": "{count, plural, one {# target} other {# targets}}",
+    "pauseTracking": "Pause tracking",
+    "resumeTracking": "Resume tracking",
+    "trackingStatusFor": "{market}: {status}"
   }
 }

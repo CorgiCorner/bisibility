@@ -10,7 +10,7 @@ export type AgentInstall = {
   caveat?: true;
   command: (mcpUrl: string) => string;
   icon: "cube" | "dots-three" | "monitor" | "terminal";
-  id: "claude-code" | "chatgpt" | "codex" | "cursor" | "claude-desktop" | "other";
+  id: "claude-code" | "chatgpt" | "grok-bot" | "codex" | "cursor" | "claude-desktop" | "other";
 };
 
 export const AGENTS = [
@@ -35,6 +35,12 @@ export const AGENTS = [
     command: (mcpUrl) => mcpUrl,
     icon: "dots-three",
     id: "chatgpt",
+  },
+  {
+    caveat: true,
+    command: (mcpUrl) => `Add the bisibility MCP server: ${mcpUrl}`,
+    icon: "dots-three",
+    id: "grok-bot",
   },
   {
     caveat: true,

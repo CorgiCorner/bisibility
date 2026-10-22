@@ -37,12 +37,12 @@
         "done": "To stało się w chwili dodania pierwszych słów kluczowych. Każde słowo kluczowe ma własny rynek i urządzenie – zmienisz je w wierszu słowa kluczowego w monitorze pozycji."
       },
       "connect_source": {
-        "active": "Search Console nic nie kosztuje i wymaga dwóch kliknięć. Dostawca SERP dodaje sprawdzanie pozycji na żywo przy użyciu Twojego własnego klucza.",
-        "done": "To stało się w chwili połączenia źródła danych. Przez nie przechodzą sprawdzenia pozycji, a dostawca rozlicza się z Tobą bezpośrednio. Zarządzaj tym źródłem lub wymień je w integracjach."
+        "active": "Search Console dostarcza bezpłatne dane o ruchu. Do sprawdzania aktualnych pozycji wybierz źródło danych rankingowych.",
+        "done": "Źródło danych rankingowych jest skonfigurowane. Jego ustawienia i użycie sprawdzisz w Integracjach."
       },
       "first_check": {
         "active": "Uruchom pierwsze sprawdzenie, aby zebrać pozycje śledzonych słów kluczowych. Ustawienia sprawdzeń znajdziesz w ustawieniach monitorowania projektu.",
-        "done": "To stało się po zakończeniu pierwszego sprawdzenia: każde objęte nim słowo kluczowe ma teraz pozycję i adres URL w wynikach, a od tego momentu buduje się historia. Sprawdzenia działają według domyślnego harmonogramu projektu – każde słowo kluczowe może go zastąpić własnym. Jedno i drugie znajdziesz w monitorze pozycji."
+        "done": "Pierwsze zakończone sprawdzenie zapisało pozycje i adresy wyników dla wybranych słów. Nowe słowa pozostają ręczne, dopóki nie dodasz ich do harmonogramu w Uruchomienia → Harmonogramy."
       }
     },
     "competitors": {

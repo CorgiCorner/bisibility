@@ -37,7 +37,7 @@ describe("keyword data after starting a run", () => {
       await act(async () =>
         fireEvent.click(screen.getByRole("button", { name: "Run check (Top 100)" })),
       );
-      await act(async () => fireEvent.click(screen.getByRole("button", { name: "Start run" })));
+      await act(async () => fireEvent.click(screen.getByRole("button", { name: /^Start run/ })));
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
       expect(routerMock.refresh).toHaveBeenCalledOnce();
       await act(async () => vi.advanceTimersByTimeAsync(2_000));

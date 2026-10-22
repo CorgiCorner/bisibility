@@ -1,4 +1,5 @@
 "use server";
+import { paymentFailure } from "@/lib/action-payment/session";
 import type { TrackingGenerationActionResult } from "@/lib/ai-tracking/projections/generation-result";
 import {
   generateModelSuggestions,
@@ -17,6 +18,17 @@ async function publicResult<T>(run: () => Promise<T>): Promise<TrackingGeneratio
   try {
     return { ok: true, value: await run() };
   } catch (error) {
+    const payment = paymentFailure(error);
+    if (payment)
+      return {
+        ok: false,
+        error: {
+          code: "conflict",
+          status: 409,
+          message: "Review the current payment quote before starting.",
+          reason: payment.reason,
+        },
+      };
     const budget = budgetFailureResult(error);
     if (budget)
       return {
@@ -39,6 +51,7 @@ async function publicResult<T>(run: () => Promise<T>): Promise<TrackingGeneratio
           ...failure,
           reason: error.reason,
           ...(typeof error.generationId === "string" ? { generationId: error.generationId } : {}),
+          ...(error.payment ? { payment: error.payment } : {}),
         },
       };
     }
@@ -86,7 +99,7 @@ export async function generateAiTrackingSuggestionsAction(
     const project = await trackingScope(actor, projectId, true);
     const result = await generateModelSuggestions(
       { projectId: project.id, actorId: actor.id, origin: { source: "app" } },
-      input,
+      { ...(input as object), requirePayment: true },
       idempotencyKey,
     );
     await auditTrackingGeneration(actor, project, result.generationId);

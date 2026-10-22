@@ -1,5 +1,8 @@
 "use client";
 
+import { downloadAuditEntries } from "@/components/audit/audit-export";
+import type { PresentedAuditEntry } from "@/components/audit/audit-presentation";
+import { OperationPill } from "@/components/audit/OperationPill";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { IdChip } from "@/components/ui/IdChip";
 import { Sheet } from "@/components/ui/Sheet";
@@ -7,9 +10,6 @@ import type { AuditDiff, AuditEntry } from "@/lib/queries/audit";
 import { DownloadSimpleIcon as DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { downloadAuditEntries } from "./audit-export";
-import type { PresentedAuditEntry } from "./audit-presentation";
-import { OperationPill } from "./OperationPill";
 
 export type AuditDetailSheetProps = {
   entry: PresentedAuditEntry | null;
@@ -181,6 +181,7 @@ export function AuditDetailSheet({ entry, exportEntry, onClose }: Readonly<Audit
           </div>
         ) : null}
         <div className="flex flex-col gap-2 rounded-control border border-border px-[15px] py-[13px] text-[11.5px]">
+          {entry.action ? <MetadataRow label={t("actionCode")} value={entry.action} /> : null}
           <MetadataRow copyable label="event_id" value={entry.metadata.event_id} />
           <MetadataRow copyable label="correlation_id" value={entry.metadata.correlation_id} />
           <MetadataRow label="app_version" value={entry.metadata.app_version} />

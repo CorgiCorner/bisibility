@@ -17,6 +17,7 @@ export type SnapshotDefinitionBinding = Readonly<{
   keywordId: string;
   rankCheckId: string;
   connectionId: string;
+  credentialSource?: "own" | "hosted";
   originalBindingId: string | null;
   originalObservedAt: string | null;
   originProof: "definition_binding" | "legacy_retained_context";
@@ -40,6 +41,7 @@ export async function captureSnapshotDefinition(
     rankCheckId: string;
     context: SerpSnapshotContinuation;
     state: SnapshotExtensionState;
+    credentialSource?: "own" | "hosted";
   },
 ) {
   await assertDefinitionActor(tx, input.actorId, input.projectId, "update");
@@ -92,6 +94,7 @@ export async function captureSnapshotDefinition(
     keywordId: input.keywordId,
     rankCheckId: input.rankCheckId,
     connectionId: input.context.connectionId,
+    ...(input.credentialSource ? { credentialSource: input.credentialSource } : {}),
     originalBindingId,
     originalObservedAt,
     originProof: originalBindingId ? "definition_binding" : "legacy_retained_context",

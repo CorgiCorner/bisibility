@@ -194,7 +194,6 @@ export function PersonalDashboardSurface({
   return (
     <fieldset
       aria-label={t("title")}
-      tabIndex={-1}
       className="m-0 flex min-w-0 flex-col gap-4.5 border-0 p-0"
       onKeyDown={(event) => {
         if (canCancelDashboardEditor(event, editing, pending, state.status)) {

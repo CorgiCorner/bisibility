@@ -14,6 +14,11 @@ const emptyToAbsent = (value: unknown) => (value === "" ? undefined : value);
 // Catalog/connection lookups already require these project-scoped public IDs. Validate the
 // syntax at the REST boundary too, while retaining empty optional IDs as default selection.
 export const trackingPreviewSchema = z.object({
+  actorId: z.string().optional(),
+  entrySource: z.enum(["app", "api", "mcp", "worker", "cli", "sdk"]).optional(),
+  paymentScope: z.enum(["manual", "recurring"]).optional(),
+  paymentScheduleId: publicId("ais").optional(),
+  paymentRecurrence: z.object({ cron: z.string(), timezone: z.string() }).optional(),
   promptIds: z.array(publicId("aip").min(1)).min(1).max(100),
   configurations: z.array(sourceConfigurationSchema).min(1).max(20),
   credentialConnectionId: z.preprocess(emptyToAbsent, publicId("conn").optional()),

@@ -37,7 +37,7 @@ const fixture = vi.hoisted(() => {
           locationId: "location_active",
           archivedAt: null,
           schedule: null,
-          checkSchedule: null,
+          checkSchedule: { enabled: true, archivedAt: null, frequency: "daily" },
         },
       ]),
     },

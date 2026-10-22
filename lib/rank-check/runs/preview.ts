@@ -2,15 +2,19 @@ import { prisma } from "@/lib/db/prisma";
 import { launchPolicyBlock } from "@/lib/measurement-definitions/host-launch-policy";
 import { readHostPolicySnapshot } from "@/lib/measurement-definitions/host-policy-snapshot";
 import { budgetDenialReason } from "@/lib/metering/budget-denial";
+import { connectionFunding, type ProjectFunding } from "@/lib/metering/project-funding-budgets";
 import { surfaceOf } from "@/lib/provider-usage/surface";
 import { assertBudgetAvailable, isBudgetExhaustedError } from "@/lib/rank-check/budget";
-import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
+import type { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { activeMarketLocationIds, unrunnableKeywordReason } from "@/lib/rank-check/runnable";
 import { appPath } from "@/lib/routing/app-path";
 import { resolveSerpStopOnMatch, type SerpDepth } from "@/lib/serp/constants";
 import { ACTIVE_RUN_STATUSES } from "./contract";
+import { hostedReservationCustomerCents } from "./customer-charge";
 import { requireRankCheckRunProject } from "./launch-types";
 import { quoteRunRows } from "./native-quotes";
+import { prepareRankPayment } from "./payment";
+import { loadRankPaymentSources, rankPaymentOptions } from "./payment-sources";
 import { allocationBudget } from "./preview-budget";
 import { findRankCheckRunOverlaps } from "./preview-overlaps";
 import { previewSourceHash } from "./preview-source-hash";
@@ -46,6 +50,7 @@ async function estimateTargets(
     costCents: estimate.costCents,
     depths: estimate.targets.map(({ depth }) => depth),
     native: estimate.native,
+    targets: estimate.targets,
     perTargetCents:
       known.length === estimate.targets.length && unique.size === 1 ? (known[0] ?? null) : null,
     unknownCostTargets: estimate.targets.length - known.length,
@@ -57,17 +62,28 @@ function remainingAfterCents(state: { capCents: number; reservedCents?: number; 
   return Math.max(0, state.capCents - state.spentCents - (state.reservedCents ?? 0) - (costCents ?? 0));
 }
 
-async function previewProjectBudget(projectId: string, costCents: number | null) {
+async function previewProjectBudget(
+  projectId: string,
+  costCents: number | null,
+  funding: ProjectFunding,
+  estimatedCustomerCents?: number,
+) {
+  const compared =
+    funding === "platform" && estimatedCustomerCents !== undefined
+      ? estimatedCustomerCents
+      : costCents;
   try {
     const state = await assertBudgetAvailable(projectId, new Date(), {
       estimatedCostCents: costCents,
+      ...(estimatedCustomerCents !== undefined ? { estimatedCustomerCents } : {}),
+      funding,
     });
     return {
       blocked: false,
       capCents: state.capCents,
       mode: "legacy" as const,
       reason: null,
-      remainingAfterCents: remainingAfterCents(state, costCents),
+      remainingAfterCents: remainingAfterCents(state, compared),
       spentCents: state.spentCents,
     };
   } catch (error) {
@@ -77,7 +93,7 @@ async function previewProjectBudget(projectId: string, costCents: number | null)
       capCents: error.budget.capCents,
       mode: "legacy" as const,
       reason: budgetDenialReason(error) ?? ("budget_exhausted" as const),
-      remainingAfterCents: remainingAfterCents(error.budget, costCents),
+      remainingAfterCents: remainingAfterCents(error.budget, compared),
       spentCents: error.budget.spentCents,
     };
   }
@@ -104,7 +120,7 @@ export async function previewRankCheckRun(
       select: { ...runSelectionKeywordSelect, publicId: true },
       where: { id: { in: resolved.keywordIds }, projectId: input.project.id },
     }),
-    loadSerpProviderChain(input.project.id, input.providerId),
+    loadRankPaymentSources(input.project.id, input.providerId, input.paymentOptionId),
     // A manual launch runs alongside another run over the same scope and reports it instead.
     trigger === "manual"
       ? null
@@ -160,7 +176,13 @@ export async function previewRankCheckRun(
         input.depth,
         connections[0],
       )
-    : { costCents: null, depths: [], perTargetCents: null, unknownCostTargets: 0 };
+    : {
+        costCents: null,
+        depths: [],
+        perTargetCents: null,
+        targets: [],
+        unknownCostTargets: 0,
+      };
   let budget: RankCheckRunPreview["budget"];
   if (duplicate) {
     budget = {
@@ -182,6 +204,16 @@ export async function previewRankCheckRun(
     };
   } else {
     if (!connections[0].id) throw new Error("Provider connection not found.");
+    const funding = connectionFunding(connections[0].credentialSource);
+    const estimatedCustomerCents =
+      funding === "platform"
+        ? await hostedReservationCustomerCents({
+            connection: connections[0],
+            projectId: input.project.id,
+            source: input.origin.source,
+            targets: estimate.targets,
+          })
+        : undefined;
     const allocation = await allocationBudget(
       input.project.id,
       connections[0].provider,
@@ -189,8 +221,14 @@ export async function previewRankCheckRun(
       estimate.costCents,
       estimate.depths,
       surfaceOf(input.origin.source),
+      estimatedCustomerCents,
     );
-    const projectBudget = await previewProjectBudget(input.project.id, estimate.costCents);
+    const projectBudget = await previewProjectBudget(
+      input.project.id,
+      estimate.costCents,
+      funding,
+      estimatedCustomerCents,
+    );
     budget = {
       ...allocation,
       ...(projectBudget.blocked ? { blocked: true, reason: projectBudget.reason } : {}),
@@ -211,23 +249,37 @@ export async function previewRankCheckRun(
     estimate.depths,
   );
   if (policyBlock && connections[0]) budget = { ...budget, blocked: true, reason: policyBlock };
+  const sourceHash = previewSourceHash({
+    domain: project.domain,
+    stopOnMatch: resolveSerpStopOnMatch(project.defaults?.serpStopOnMatch),
+    rows: executableRows,
+    depths: estimate.depths,
+    provider: connections[0] ?? null,
+    measurementPolicy,
+  });
+  const payment =
+    connections[0] && "targets" in estimate
+      ? await prepareRankPayment({
+          actorId: input.actorId,
+          projectId: input.project.id,
+          source: input.origin.source,
+          sourceHash,
+          selectionHash: resolved.selectionHash,
+          connection: connections[0],
+          targets: estimate.targets,
+        })
+      : null;
   const signed = createPreviewToken({
     depth: input.depth ?? null,
     estimateCents: estimate.costCents ?? -1,
     projectId: input.project.id,
     providerId: input.providerId ?? null,
     selectionHash: resolved.selectionHash,
-    sourceHash: previewSourceHash({
-      domain: project.domain,
-      stopOnMatch: resolveSerpStopOnMatch(project.defaults?.serpStopOnMatch),
-      rows: executableRows,
-      depths: estimate.depths,
-      provider: connections[0] ?? null,
-      measurementPolicy,
-    }),
+    sourceHash,
     trigger,
   });
   return {
+    ...(payment ? { payment: payment.quote, paymentOptions: rankPaymentOptions(connections) } : {}),
     budget,
     measurementPolicy: {
       state: measurementPolicy.state,
@@ -253,8 +305,8 @@ export async function previewRankCheckRun(
   };
 }
 
-export {
-  type RankCheckRunExclusionReason,
-  type RankCheckRunPreview,
-  type RankCheckRunPreviewInput,
+export type {
+  RankCheckRunExclusionReason,
+  RankCheckRunPreview,
+  RankCheckRunPreviewInput,
 } from "./preview-types";

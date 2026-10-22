@@ -57,7 +57,7 @@ export function serializeRankTrackerQuery(
       params.set(param, String(value));
     }
   }
-  if (state.sort.field !== "position" || present.has("sort")) params.set("sort", state.sort.field);
+  if (state.sort.field !== "keyword" || present.has("sort")) params.set("sort", state.sort.field);
   if (state.sort.direction !== "asc" || present.has("direction")) {
     params.set("dir", state.sort.direction);
   }

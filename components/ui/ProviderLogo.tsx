@@ -15,7 +15,7 @@ export type ProviderLogoProps = {
   alt: string;
   domain?: string | null;
   fallbackIcon: ProviderIconName;
-  size?: "default" | "sm";
+  size?: "default" | "sm" | "xs";
   tint: string;
 };
 
@@ -49,9 +49,11 @@ export function ProviderLogo({
     <span
       aria-label={alt}
       className={
-        size === "sm"
-          ? "grid h-[38px] w-[38px] shrink-0 place-items-center rounded-control bg-bg-elev"
-          : "grid h-[46px] w-[46px] shrink-0 place-items-center rounded-control bg-bg-sunken"
+        size === "xs"
+          ? "grid h-5 w-5 shrink-0 place-items-center rounded-control bg-bg-elev"
+          : size === "sm"
+            ? "grid h-[38px] w-[38px] shrink-0 place-items-center rounded-control bg-bg-elev"
+            : "grid h-[46px] w-[46px] shrink-0 place-items-center rounded-control bg-bg-sunken"
       }
       role="img"
       style={{ color: tint }}
@@ -61,19 +63,25 @@ export function ProviderLogo({
         <img
           alt=""
           className={
-            size === "sm"
-              ? "h-6 w-6 rounded-control bg-white object-contain"
-              : "h-8 w-8 rounded-control bg-white object-contain"
+            size === "xs"
+              ? "h-4 w-4 rounded-control bg-white object-contain"
+              : size === "sm"
+                ? "h-6 w-6 rounded-control bg-white object-contain"
+                : "h-8 w-8 rounded-control bg-white object-contain"
           }
           decoding="async"
-          height={size === "sm" ? 24 : 32}
+          height={size === "xs" ? 16 : size === "sm" ? 24 : 32}
           onError={() => setFailed(true)}
           referrerPolicy="no-referrer"
           src={src}
-          width={size === "sm" ? 24 : 32}
+          width={size === "xs" ? 16 : size === "sm" ? 24 : 32}
         />
       ) : (
-        <FallbackIcon aria-hidden size={size === "sm" ? 19 : 23} weight="regular" />
+        <FallbackIcon
+          aria-hidden
+          size={size === "xs" ? 16 : size === "sm" ? 19 : 23}
+          weight="regular"
+        />
       )}
     </span>
   );

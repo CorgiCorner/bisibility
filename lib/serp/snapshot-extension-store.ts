@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { assertProjectWritable } from "@/lib/deployment/project-write-mode";
@@ -8,7 +9,12 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { assertDefinitionActor } from "@/lib/measurement-definitions/access";
 import { captureSnapshotDefinition } from "@/lib/measurement-definitions/snapshot-binding";
 import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
-import { SNAPSHOT_EXTENSION_LEASE_MS, type SnapshotExtensionState } from "./snapshot-extension";
+import {
+  SNAPSHOT_EXTENSION_LEASE_MS,
+  SNAPSHOT_EXTENSION_WINDOW_MS,
+  type SnapshotExtensionState,
+} from "./snapshot-extension";
+import { snapshotExtensionWasNotSent } from "./snapshot-extension-proof";
 import {
   readSnapshotContinuation,
   readSnapshotExtension,
@@ -20,6 +26,7 @@ export async function claimSnapshotExtension(input: {
   checkId: string;
   nextStart: number;
   projectId: string;
+  payment?: ActionPaymentReceipt;
 }) {
   return prisma.$transaction(async (tx) => {
     await lockProjectForProviderMutation(tx, input.projectId);
@@ -49,8 +56,16 @@ export async function claimSnapshotExtension(input: {
     if (!Array.isArray((check.raw as Prisma.JsonObject | null)?.organic_results))
       return { ok: false as const, reason: "legacy" as const };
     const eligibility = snapshotExtensionView(check.provider, check.raw);
-    if (eligibility.reason !== "available")
-      return { ok: false as const, reason: eligibility.reason };
+    if (eligibility.reason !== "available") {
+      const unsent =
+        eligibility.reason === "failed" &&
+        (await snapshotExtensionWasNotSent(tx, input.projectId, check).catch(() => false));
+      if (!unsent) return { ok: false as const, reason: eligibility.reason };
+      const captured = readSnapshotContinuation(check.raw);
+      const age = captured ? Date.now() - Date.parse(captured.capturedAt) : Infinity;
+      if (age < 0 || age >= SNAPSHOT_EXTENSION_WINDOW_MS)
+        return { ok: false as const, reason: "expired" as const };
+    }
     const context = readSnapshotContinuation(check.raw);
     const state = context && readSnapshotExtension(check.raw, context);
     if (!context || !state || state.nextStart !== input.nextStart)
@@ -61,16 +76,17 @@ export async function claimSnapshotExtension(input: {
         projectId: input.projectId,
         provider: "serpapi",
         kind: "serp",
-        credentialSource: "own",
+        credentialSource: { in: ["own", "hosted"] },
         status: "connected",
         enabled: true,
       },
-      select: { id: true },
+      select: { id: true, credentialSource: true },
     });
     if (!connection) return { ok: false as const, reason: "disconnected" as const };
     const requestId = randomUUID();
     const claimed: SnapshotExtensionState = {
       ...state,
+      ...(input.payment ? { payment: input.payment } : {}),
       state: "running",
       requestId,
       leaseUntil: new Date(Date.now() + SNAPSHOT_EXTENSION_LEASE_MS).toISOString(),
@@ -89,6 +105,7 @@ export async function claimSnapshotExtension(input: {
       rankCheckId: check.id,
       context,
       state: claimed,
+      credentialSource: connection.credentialSource === "hosted" ? "hosted" : "own",
     });
     await writeAudit(
       {
@@ -116,9 +133,23 @@ export async function finishSnapshotExtension(input: {
   claim: SnapshotExtensionClaim;
   state: SnapshotExtensionState;
 }) {
-  const { claim, state } = input;
+  const { claim } = input;
   return prisma.$transaction(async (tx) => {
     await lockProjectForProviderMutation(tx, input.projectId);
+    let state = input.state;
+    if (state.state === "failed") {
+      const current = await tx.rankCheck.findFirst({
+        where: { id: claim.check.id, keyword: { projectId: input.projectId }, status: "completed" },
+        select: { id: true, keywordId: true, provider: true, raw: true },
+      });
+      if (
+        current &&
+        (await snapshotExtensionWasNotSent(tx, input.projectId, current, claim.requestId).catch(
+          () => false,
+        ))
+      )
+        state = { ...state, state: "retryable" };
+    }
     const saved = await tx.rankCheck.updateMany({
       where: {
         id: claim.check.id,
@@ -149,5 +180,6 @@ export async function finishSnapshotExtension(input: {
       },
       tx,
     );
+    return { state: state.state };
   });
 }

@@ -3,9 +3,14 @@ import "server-only";
 import { getOAuthClientScopePolicy, getOAuthConsentClient } from "@/lib/queries/oauth-consent";
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
-import { oauthConsentScopes, readOnlyOAuthScopes } from "./oauth-consent-copy";
+import {
+  grantedOAuthConsentScopes,
+  oauthConsentScopes,
+  readOnlyOAuthScopes,
+} from "./oauth-consent-copy";
 import {
   IOS_OAUTH_CLIENT_SCOPES,
+  isDynamicallyRegisteredOAuthClient,
   isFirstPartyApiOAuthClient,
   isFirstPartyApiOAuthScope,
 } from "./oauth-policy";
@@ -60,13 +65,15 @@ export function oauthConsentGuard(): BetterAuthPlugin {
               clientId,
               query.get("redirect_uri") ?? undefined,
             );
-            const requested =
-              typeof context.body.scope === "string"
-                ? context.body.scope
-                : (query.get("scope") ?? "");
-            // Narrow accepted scopes only; the provider still verifies the original signed query.
-            const accepted = oauthConsentScopes(client, requested.split(/\s+/).filter(Boolean));
-            context.body.scope = (await allowedOAuthTokenScopes(clientId, accepted)).join(" ");
+            // Ceiling is the signed authorization request, never the posted scope list.
+            const signed = (query.get("scope") ?? "").split(/\s+/).filter(Boolean);
+            const accepted = oauthConsentScopes(client, signed);
+            const ceiling = await allowedOAuthTokenScopes(clientId, accepted);
+            // Dynamically registered clients use the access-level choice. Static reviewed
+            // clients keep the signed scopes. Either way the result stays inside the ceiling.
+            const dynamic = isDynamicallyRegisteredOAuthClient(clientId);
+            const granted = grantedOAuthConsentScopes(ceiling, context.body, dynamic);
+            context.body.scope = granted.join(" ");
           }),
         },
       ],

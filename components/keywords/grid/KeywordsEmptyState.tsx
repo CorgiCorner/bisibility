@@ -70,7 +70,7 @@ export function KeywordsEmptyState({
     cronExpression: costContext?.cronExpression ?? null,
     depth: costContext?.depth ?? DEFAULT_SERP_DEPTH,
     deviceCount: costContext?.deviceCount ?? 1,
-    frequency: costContext?.rawFrequency ?? "daily",
+    frequency: costContext?.rawFrequency ?? "manual",
     locationCount: costContext?.locationCount ?? 1,
     overrideCents: costContext?.costPerCheckCents ?? null,
     providerId: costContext?.providerId ?? null,

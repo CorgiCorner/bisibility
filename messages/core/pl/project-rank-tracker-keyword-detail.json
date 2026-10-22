@@ -38,6 +38,7 @@
         "positionValue": "poz. {position, number}",
         "noRankingUrl": "Brak adresu URL w wynikach",
         "provider": "przez {provider}",
+        "providerNotRecorded": "Brak zapisanego dostawcy",
         "notCheckedYet": "Jeszcze nie sprawdzono",
         "minutesAgo": "{count, plural, one {# min temu} few {# min temu} many {# min temu} other {# min temu}}",
         "hoursAgo": "{count, number} h temu",
@@ -91,7 +92,7 @@
         "chooseDepth": "Wybierz głębokość sprawdzenia",
         "depthMenu": "Głębokość sprawdzenia",
         "changeDefault": "Zmień domyślną",
-        "connectProvider": "Połącz dostawcę",
+        "connectProvider": "Wybierz źródło danych",
         "shallowVisibility": "Płytkie sprawdzenie może pominąć pozycje poniżej wybranej głębokości.",
         "refreshData": "Odśwież dane",
         "refreshingData": "Odświeżanie...",
@@ -129,14 +130,14 @@
         "notRankedBody": "Poza śledzoną głębokością w ostatnim sprawdzeniu.",
         "firstTitle": "Brak danych o pozycjach",
         "firstBody": "Pierwsze sprawdzenie nie zostało jeszcze wykonane.",
-        "firstBodyNoProvider": "Pierwsze sprawdzenie nie zostało jeszcze wykonane. Połącz dostawcę SERP, aby je uruchomić.",
+        "firstBodyNoProvider": "Pierwsze sprawdzenie jeszcze się nie odbyło. Wybierz źródło danych, aby je uruchomić.",
         "noData": "Brak danych",
         "outsideTop": "poza Top {depth}",
         "refresh": "Odśwież",
         "retryCheck": "Ponów sprawdzenie",
         "checkTop": "Sprawdź Top {depth}",
         "runFirstCheck": "Uruchom pierwsze sprawdzenie",
-        "connectSerpProvider": "Połącz dostawcę SERP",
+        "connectSerpProvider": "Wybierz źródło danych",
         "history": "Historia pozycji",
         "coverageUnknownTitle": "Nieznany zakres wyników",
         "coverageUnknownBody": "Odpowiedź dostawcy nie pozwala ustalić, czy słowo kluczowe mieści się w śledzonym zakresie."
@@ -174,7 +175,8 @@
         "completeTitle": "Sprawdzenie zakończone",
         "failedTitle": "Sprawdzenie nie powiodło się",
         "couldNotStart": "Nie udało się uruchomić sprawdzenia pozycji.",
-        "viewRuns": "Zobacz uruchomienia"
+        "viewRuns": "Zobacz uruchomienia",
+        "providerCapacityUnavailable": "Sprawdzanie pozycji u tego dostawcy jest tymczasowo niedostępne. Nie naliczono opłat. Spróbuj później lub podłącz własne klucze dostawcy."
       },
       "traffic": {
         "noData": "Brak danych",
@@ -216,7 +218,10 @@
           "reconnect": "Źródło analityczne wymaga ponownego połączenia w Integracjach.",
           "rateLimited": "Osiągnięto limit zapytań dostawcy danych analitycznych. Spróbuj ponownie później.",
           "unavailable": "Brak podłączonego źródła, z którego można pobrać dane analityczne. Sprawdź Integracje.",
-          "integrations": "Zarządzaj integracjami"
+          "integrations": "Zarządzaj integracjami",
+          "sources": "Źródła analityki",
+          "sourceActive": "Aktywne połączenie",
+          "sourceInactive": "Brak aktywnego połączenia"
         }
       },
       "position": {
@@ -334,7 +339,7 @@
         "competitor": "Konkurent",
         "gapPositions": "Pozycje {start, number}–{end, number}",
         "notRetrieved": "nie pobrano {count, number} poz.",
-        "gapStopped": "Sprawdzenie zatrzymało się na Twoim wyniku, więc tych pozycji nigdy nie pobrano ani nie naliczono. Dla tego sprawdzenia są nieznane, a nie puste.",
+        "gapStopped": "Pobieranie zakończono po znalezieniu Twojej domeny. Pozostałe pozycje nie mają zapisanych wyników; nie oznacza to, że były puste.",
         "gapUnknown": "Tych pozycji nie pobrano dla tego sprawdzenia. Są nieznane, a nie puste.",
         "site": "Witryna",
         "notInSaved": "Brak w zapisanych wynikach",
@@ -433,15 +438,25 @@
           "expired": "Minęło 15 minut na rozszerzenie. Uruchom nowy check przyciskiem powyżej, aby pobrać aktualne wyniki.",
           "complete": "Brak kolejnych stron lub snapshot osiągnął już top 100.",
           "running": "Rozszerzenie jest już pobierane. Odśwież dane, aby zobaczyć wynik.",
-          "failed": "Nie udało się potwierdzić rozszerzenia. Wcześniejsze wyniki są bezpieczne. Odśwież dane, aby sprawdzić stan, lub uruchom nowy check.",
+          "failed": "Nie udało się potwierdzić rozszerzenia. Nie zostanie wysłane ponownie automatycznie. Wcześniejsze wyniki zostają. Odświeżenie odczytuje tylko zapisany stan.",
           "disconnected": "Połącz ponownie integrację SerpApi tego snapshotu, aby go rozszerzyć.",
           "unavailable": "Snapshot się zmienił. Odśwież dane przed kontynuowaniem.",
           "addedTitle": "Wyniki dodane po checku",
           "page": "Pozycje {start, number} do {end, number} · pobrano {time}",
           "added": "Dodano: {count, number} · pominięte duplikaty: {duplicates, number}",
           "emptyPage": "Ta strona nie zwróciła nowych unikalnych wyników.",
-          "refresh": "Odśwież snapshot"
-        }
+          "refresh": "Odśwież snapshot",
+          "refreshHint": "Odczytaj zapisane wyniki i stan rozszerzenia bez kolejnego zapytania do dostawcy.",
+          "retry": "Ponów rozszerzenie",
+          "notSent": "Rozszerzenie nie zostało wysłane. Możesz spróbować ponownie do {time}.",
+          "notSentExpired": "Rozszerzenie nie zostało wysłane. Okno rozszerzania minęło. Uruchom nowe sprawdzenie, aby pobrać wyniki.",
+          "lastCharge": "Ostatnie rozszerzenie"
+        },
+        "competitorCheck": "Sprawdzenie konkurentów",
+        "compareAction": "Porównaj",
+        "stopComparing": "Zakończ porównanie",
+        "savedResults": "Zapisane wyniki: {count, number} · zakres Top {depth, number}",
+        "partialCompetitors": "Niepełny snapshot. Brakujący konkurenci nadal mogą być w Top {depth, number}."
       },
       "comparison": {
         "entered": "Wejście",
@@ -552,7 +567,11 @@
         "unknownScope": "Zachowany zakres niedostępny",
         "revision": "Wersja celu: {value}",
         "chartAria": "Oś czasu zachowanych pozycji",
-        "noQualifiedPoints": "Brak kwalifikowanych pozycji w wczytanym zakresie",
+        "noQualifiedPoints": "Brak pozycji do wyświetlenia",
+        "noPositionsDescription": "W tym okresie nie ma potwierdzonych pozycji.",
+        "noObservations": "Brak obserwacji w tym okresie",
+        "noAttempts": "Brak prób sprawdzenia w tym okresie",
+        "noRecordsDescription": "Uruchom sprawdzenie lub wybierz inny zakres dat.",
         "openObservation": "Otwórz zachowaną obserwację {id}",
         "point": "Pozycja {position}, {date}",
         "chartLoaded": "Wczytano {loaded} z {total} obserwacji; {gaps} luk; {boundaries} granic metodologii",
@@ -572,7 +591,7 @@
         "expectedUrl": "Zachowany oczekiwany adres: {value}",
         "rankingUrl": "Zachowany adres wyniku: {value}",
         "openSnapshot": "Otwórz zachowane sprawdzenie",
-        "attemptCountMeaning": "Raportowana liczba prób dostawcy jest metadanymi sprawdzenia, a nie pełnym rejestrem płatnych wywołań.",
+        "attemptCountMeaning": "Zapisana liczba prób u dostawcy dla tego sprawdzenia. Może różnić się od liczby płatnych zapytań.",
         "urlHistoryTitle": "Zachowane adresy wyników",
         "urlHistoryMeaning": "Oczekiwany adres i adres wyniku należą do konkretnego sprawdzenia, bez zastępowania dzisiejszym edytowanym celem.",
         "loadedCount": "Wczytano {loaded} z {total} rekordów",
@@ -683,11 +702,16 @@
           "map_listing": "Wynik w Mapach",
           "listing": "Wizytówka firmy"
         },
-        "otherResultKind": "Inny typ wyniku (kod: {value})"
+        "otherResultKind": "Inny typ wyniku (kod: {value})",
+        "scopeTechnicalDetails": "Szczegóły techniczne",
+        "scopeDevices": {
+          "desktop": "Komputer",
+          "mobile": "Telefon"
+        }
       },
       "quality": {
         "currentUnknown": "Bieżąca pozycja nieznana",
-        "currentScopeUnavailable": "Bieżąca definicja nie jest potwierdzona",
+        "currentScopeUnavailable": "Bieżące ustawienia monitorowania są niedostępne",
         "currentDefinition": "Bieżąca definicja pomiaru",
         "lastKnown": "Ostatnia znana pozycja #{position, number}",
         "bestCurrentDefinition": "Najlepsza pozycja #{position, number} dla bieżącej definicji",
@@ -706,7 +730,11 @@
         "lastKnownUrl": "Ostatni znany URL",
         "reportUnavailable": "Raport niedostępny",
         "reportCapacity": "Ta historia przekracza limit raportu. Wróć do listy fraz, aby obejrzeć bieżące dane.",
-        "reportChanged": "Dane zmieniły się podczas wczytywania raportu. Odśwież zapisane dane, aby otworzyć nowy snapshot."
+        "reportChanged": "Dane zmieniły się podczas wczytywania raportu. Odśwież zapisane dane, aby otworzyć nowy snapshot.",
+        "measurementDetails": "Szczegóły pomiaru",
+        "bestSummary": "Najlepsza zapisana: #{position, number}",
+        "historicalBestSummary": "Poprzednia najlepsza #{position, number}",
+        "checked": "Sprawdzono"
       },
       "providerComparison": {
         "title": "Porównanie dostawców",
@@ -717,7 +745,7 @@
         "retry": "Ponów",
         "loading": "Wczytywanie porównania…",
         "depth": "Top 20",
-        "needsProviders": "Aby porównać wyniki, połącz DataForSEO i SerpApi.",
+        "needsProviders": "Skonfiguruj DataForSEO i SerpApi, aby porównać wyniki.",
         "connections": "Połączenia dostawców",
         "refresh": "Odśwież wynik",
         "preview": "Sprawdź koszt",

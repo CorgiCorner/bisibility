@@ -1,3 +1,4 @@
+import { rankCheckPaymentReceipt } from "@/lib/rank-check/runs/payment-receipt";
 import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
@@ -53,6 +54,7 @@ export async function readRetainedHistorySnapshotFor(
         ({ observation }) => observation?.id === input.checkId,
       );
       if (!record?.observation) throw new RankReportSelectionError();
+      const payment = await rankCheckPaymentReceipt(scope.project.id, input.checkId, tx);
       const featureFacts: SavedFeatureFact[] = ["local_pack", "ai_overview"].map((feature) => {
         const sourceItemIds = record.items
           .filter((item) => item.resultKind === feature)
@@ -67,6 +69,7 @@ export async function readRetainedHistorySnapshotFor(
         };
       });
       return {
+        ...(payment ? { payment } : {}),
         asOf: asOf.toISOString(),
         projectId: scope.project.publicId,
         observation: record.observation,

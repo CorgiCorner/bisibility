@@ -1,4 +1,5 @@
 import { aiTrackingSchemas } from "@/lib/mcp/tracking-contract";
+import { paymentRequestFields } from "./openapi-action-payment";
 import { apiCredentialSecurity } from "./openapi-pat";
 import { problemResponse } from "./openapi-problem";
 import { appOwnedTrackingParameters } from "./openapi-tracking-parameters";
@@ -37,6 +38,8 @@ const summaries: Record<keyof typeof aiTrackingPolicies, string> = {
 
 const json = (schema: object) => ({ "application/json": { schema } });
 const problem = (description: string) => problemResponse(description);
+/** Run operations whose planner rejects a missing Idempotency-Key (the router maps the header). */
+const keyedRunOperations = new Set(["createAiTrackingRun", "retryAiTrackingRun"]);
 
 function withComponentReferences(value: unknown, operationId: string): unknown {
   if (Array.isArray(value)) return value.map((item) => withComponentReferences(item, operationId));
@@ -92,6 +95,11 @@ export function aiTrackingPaths() {
       string,
       unknown
     >;
+    if (operationId === "aiTrackingSuggestionsGenerate")
+      Object.assign(properties, {
+        accepted_payment: paymentRequestFields.accepted_payment,
+        require_payment: paymentRequestFields.require_payment,
+      });
     const parameters: object[] = owned ? [...owned] : [];
     for (const [field, schema] of Object.entries(properties)) {
       if (operation.path.includes(`{${field}}`)) {
@@ -104,18 +112,23 @@ export function aiTrackingPaths() {
     if (!mutation) {
       parameters.push(...queryParameters(properties, input.required ?? []));
     } else {
-      parameters.push({
-        in: "header",
-        name: "Idempotency-Key",
-        required:
-          operationId === "createAiTrackingRun" || operationId === "aiTrackingSuggestionsGenerate",
-        schema: {
-          type: "string",
-          maxLength: 200,
-          ...(operationId === "createAiTrackingRun" ? { minLength: 1 } : {}),
-          ...(operationId === "aiTrackingSuggestionsGenerate" ? { format: "uuid" } : {}),
-        },
-      });
+      parameters.push(
+        runOwned && !keyedRunOperations.has(operationId) && operationId !== "previewAiTrackingRun"
+          ? { $ref: "#/components/parameters/IdempotencyKey" }
+          : {
+              in: "header",
+              name: "Idempotency-Key",
+              required:
+                keyedRunOperations.has(operationId) ||
+                operationId === "aiTrackingSuggestionsGenerate",
+              schema: {
+                type: "string",
+                maxLength: 200,
+                ...(keyedRunOperations.has(operationId) ? { minLength: 1 } : {}),
+                ...(operationId === "aiTrackingSuggestionsGenerate" ? { format: "uuid" } : {}),
+              },
+            },
+      );
     }
     const success = {
       description:
@@ -139,9 +152,12 @@ export function aiTrackingPaths() {
     paths[operation.path][operation.method.toLowerCase()] = {
       operationId,
       summary: summaries[operationId],
+      ...(operationId === "cancelAiTrackingRun" || operationId === "suggestAiTrackingPrompts"
+        ? { description: "No request body fields are used. An optional JSON body is ignored." }
+        : {}),
       parameters,
       security: apiCredentialSecurity,
-      ...(mutation && operation.method !== "DELETE"
+      ...(mutation && operation.method !== "DELETE" && (!runOwned || runOwned.body)
         ? {
             requestBody: {
               required: true,

@@ -213,6 +213,18 @@ describe("launchSingleRankCheckRun", () => {
     );
   });
 
+  it.each([25, 0, null])(
+    "zero cap refuses fresh checks even with estimate %s before creating work",
+    async (cost) => {
+      mocks.estimatedCost.mockReturnValue(cost);
+      await expect(launchSingleRankCheckRun({ ...input, maxCostCents: 0 })).rejects.toMatchObject({
+        code: "cost_limit_exceeded",
+      });
+      expect(mocks.tx.rankCheckRun.create).not.toHaveBeenCalled();
+      expect(mocks.tx.rankCheckRunItem.createMany).not.toHaveBeenCalled();
+    },
+  );
+
   it("refuses a launch whose estimate exceeds maxCostCents", async () => {
     mocks.estimatedCost.mockReturnValue(12);
 

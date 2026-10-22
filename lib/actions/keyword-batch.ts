@@ -3,8 +3,10 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { restoreKeyword } from "@/lib/keywords/archive";
 import { ProjectMarketLimitExceededError } from "@/lib/markets/limits";
 import { ensureKeywordProjectMarketsWithinLimit } from "@/lib/markets/registry";
+import { lockProjectForProviderMutation } from "@/lib/provider-allocations/project-lock";
 import { seedKeywordDispatchStates } from "@/lib/rank-check/dispatcher-state";
-import { type StoredSchedule, scheduleForKeyword } from "./_schedule";
+import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
+import { normalizeSchedule, type StoredSchedule, scheduleForKeyword } from "./_schedule";
 import { makePublicId } from "./_shared";
 
 export type KeywordBatchRow = {
@@ -84,10 +86,15 @@ async function attachSchedules(
   rowsByKey: ReadonlyMap<string, KeywordBatchRow>,
 ) {
   const data = created.flatMap((keyword) => {
-    const schedule = rowsByKey.get(
-      keywordTupleKey(keyword.text, keyword.locationId, keyword.device),
-    )?.schedule;
-    return schedule ? [{ ...scheduleForKeyword(schedule, keyword.id), keywordId: keyword.id }] : [];
+    const schedule =
+      rowsByKey.get(keywordTupleKey(keyword.text, keyword.locationId, keyword.device))?.schedule ??
+      normalizeSchedule({
+        frequency: "manual",
+        cronExpression: null,
+        jitterMinutes: 0,
+        timezone: "UTC",
+      });
+    return [{ ...scheduleForKeyword(schedule, keyword.id), keywordId: keyword.id }];
   });
   if (data.length > 0) {
     await client.keywordSchedule.createMany({ data, skipDuplicates: true });
@@ -139,6 +146,7 @@ export async function createKeywordBatchSet(
   if (rows.length === 0) return { accepted: [], created: [], restored: [] };
   const rowsByKey = uniqueRows(rows);
   const canonicalRows = [...rowsByKey.values()];
+  await lockProjectForProviderMutation(client, projectId);
   const limit = await lockKeywordCapacity(client, projectId);
   const marketResult = await ensureKeywordProjectMarketsWithinLimit(
     projectId,
@@ -170,6 +178,21 @@ export async function createKeywordBatchSet(
   );
   await Promise.all(archived.map((keyword) => restoreKeyword(keyword.id, client)));
   const restored = archived.map((keyword) => ({ ...keyword, archivedAt: null }));
+  // CREATE re-add is a fresh choice; an old recurring membership is never resumed implicitly.
+  if (restored.length > 0)
+    await setKeywordCadence(
+      client as Prisma.TransactionClient,
+      projectId,
+      restored.map(({ id }) => id),
+      normalizeSchedule({
+        frequency: "manual",
+        cronExpression: null,
+        jitterMinutes: 0,
+        timezone: "UTC",
+      }),
+      null,
+    );
+
   const existingKeys = new Set(
     existing.map((keyword) => keywordTupleKey(keyword.text, keyword.locationId, keyword.device)),
   );

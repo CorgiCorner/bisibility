@@ -1,4 +1,5 @@
-import { renderWithInstanceAdminMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { DangerousActionAccessProvider } from "@/components/admin/DangerousActionGate";
+import { renderWithInstanceAdminMessages as renderMessages } from "@/i18n/test-support/render-with-feature-messages";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -99,3 +100,9 @@ describe("announcement management", () => {
     expect(await screen.findByText("No announcements yet.")).toBeInTheDocument();
   });
 });
+
+function render(ui: Parameters<typeof renderMessages>[0]) {
+  return renderMessages(
+    <DangerousActionAccessProvider allowed>{ui}</DangerousActionAccessProvider>,
+  );
+}

@@ -96,8 +96,8 @@ const domainMethods = createDataForSeoDomainMethods({
 
 async function fetchDataForSeoRank(input: SerpRankInput) {
   const credentials = input.credentials ?? {};
-  const stopOnMatch = resolveSerpStopOnMatch(input.stopOnMatch);
   const payload = dataForSeoRankTask(input);
+  const stopOnMatch = resolveSerpStopOnMatch(input.stopOnMatch);
   const native = dataForSeoRankRequest(input);
   const sentScope = dataForSeoSentScope(payload, input.location);
   const data = await requestEnvelope(
@@ -175,6 +175,7 @@ async function fetchDataForSeoRank(input: SerpRankInput) {
 }
 
 export const dataForSeoProvider: SerpProvider = {
+  payment: { unit: { kind: "currency", code: "USD" }, basis: "provider_cost" },
   id: "dataforseo",
   label: "DataForSEO",
 

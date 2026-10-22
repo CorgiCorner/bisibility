@@ -6,11 +6,6 @@
   },
   {
     "kinds": ["no-capture"],
-    "operation": "addCompetitor",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
     "operation": "aiTrackingSuggestionsGenerate",
     "status": "none"
   },
@@ -22,26 +17,6 @@
   {
     "kinds": ["no-capture"],
     "operation": "analyzeAiVisibility",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "archiveAiTrackingPrompt",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "archiveAiTrackingSchedule",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "archiveAiTrackingTopic",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "cancelAiTrackingRun",
     "status": "none"
   },
   {
@@ -63,21 +38,6 @@
   },
   {
     "kinds": ["no-capture"],
-    "operation": "createAiTrackingPrompt",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "createAiTrackingSchedule",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "createAiTrackingTopic",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
     "operation": "createCloudImportSession",
     "status": "none"
   },
@@ -85,11 +45,6 @@
     "kinds": ["no-success-capture"],
     "operation": "createPersonalAccessToken",
     "status": "2xx"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "createProject",
-    "status": "none"
   },
   {
     "kinds": ["no-capture"],
@@ -202,11 +157,6 @@
   },
   {
     "kinds": ["no-capture"],
-    "operation": "getAiResearchCatalog",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
     "operation": "getCloudImportCompatibility",
     "status": "none"
   },
@@ -221,19 +171,6 @@
     "status": "none"
   },
   {
-    "details": [
-      "undeclared-property /email",
-      "undeclared-property /email_verification",
-      "undeclared-property /project_id",
-      "undeclared-property /slack_available",
-      "undeclared-property /webhook_available"
-    ],
-    "kinds": ["undeclared-property"],
-    "operation": "getNotificationPreferences",
-    "sources": ["lib/api/app-surface-more.test.ts"],
-    "status": "200"
-  },
-  {
     "kinds": ["no-capture"],
     "operation": "getProjectContext",
     "status": "none"
@@ -246,40 +183,6 @@
     "status": "200"
   },
   {
-    "details": [
-      "missing-required /data/cached_until",
-      "missing-required /data/country_code",
-      "missing-required /data/data_state",
-      "missing-required /data/fetched_row_count",
-      "missing-required /data/history",
-      "missing-required /data/history/*/metrics",
-      "missing-required /data/history/*/year",
-      "missing-required /data/history_unavailable",
-      "missing-required /data/include_clickstream",
-      "missing-required /data/include_subdomains",
-      "missing-required /data/keywords",
-      "missing-required /data/language_code",
-      "missing-required /data/location_code",
-      "missing-required /data/mode",
-      "missing-required /data/overview",
-      "missing-required /data/pages",
-      "missing-required /data/partial",
-      "missing-required /data/previous_fetched_at",
-      "missing-required /data/previous_overview",
-      "missing-required /data/previous_source_snapshot_at",
-      "missing-required /data/request_key",
-      "missing-required /data/result_limit",
-      "missing-required /data/rows",
-      "missing-required /data/rows/*/already_saved",
-      "missing-required /data/rows/*/already_tracked",
-      "... 32 more"
-    ],
-    "kinds": ["missing-required", "type-mismatch"],
-    "operation": "getStoredResearchReport",
-    "sources": ["lib/api/research-reports.test.ts"],
-    "status": "200"
-  },
-  {
     "kinds": ["no-capture"],
     "operation": "importCloudExport",
     "status": "none"
@@ -287,21 +190,6 @@
   {
     "kinds": ["no-capture"],
     "operation": "listAgentReports",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "listAiTrackingRuns",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "listAiTrackingSchedules",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "listAiTrackingTopics",
     "status": "none"
   },
   {
@@ -340,21 +228,11 @@
     "status": "none"
   },
   {
-    "kinds": ["no-capture"],
-    "operation": "listProviderBudgets",
-    "status": "none"
-  },
-  {
     "details": ["undeclared-property /data/*/logo_domain", "undeclared-property /data/*/meta"],
     "kinds": ["undeclared-property"],
     "operation": "listProviders",
     "sources": ["lib/api/provider-list.test.ts", "lib/api/router.test.ts"],
     "status": "200"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "listRankedKeywordSuggestions",
-    "status": "none"
   },
   {
     "details": [
@@ -425,11 +303,6 @@
     "status": "none"
   },
   {
-    "kinds": ["no-capture"],
-    "operation": "removeProjectCompetitor",
-    "status": "none"
-  },
-  {
     "details": [
       "missing-required /expires_at",
       "missing-required /invite_link",
@@ -439,11 +312,6 @@
     "operation": "resendTeamInvite",
     "sources": ["lib/api/router-team-rbac.test.ts"],
     "status": "200"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "retryAiTrackingRun",
-    "status": "none"
   },
   {
     "kinds": ["no-capture"],
@@ -479,47 +347,7 @@
   },
   {
     "kinds": ["no-capture"],
-    "operation": "searchLocations",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "suggestAiTrackingPrompts",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "syncProjectTraffic",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
     "operation": "testProviderConnection",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "updateAiTrackingPrompt",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "updateAiTrackingSchedule",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "updateAiTrackingTopic",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "updateMe",
-    "status": "none"
-  },
-  {
-    "kinds": ["no-capture"],
-    "operation": "updateNotificationPreferences",
     "status": "none"
   },
   {

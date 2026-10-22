@@ -9,14 +9,9 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { HistoricalOverviewRow } from "@/lib/providers/types";
 import { ChartLineUpIcon as ChartLineUp } from "@phosphor-icons/react/dist/csr/ChartLineUp";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useDomainOverviewCacheDuration } from "./DomainOverviewCacheProvider";
-import {
-  formatDomainEstimatedCost,
-  type HistoryMetric,
-  historyDateKey,
-  historyMetricValue,
-} from "./domain-overview-metrics";
+import { type HistoryMetric, historyDateKey, historyMetricValue } from "./domain-overview-metrics";
 
 type Range = "12m" | "3m" | "6m";
 
@@ -36,7 +31,8 @@ function formatValue(value: number, metric: HistoryMetric, locale: string) {
 }
 
 export function DomainOverviewPerformanceChart({
-  estimateCents,
+  price,
+  blocked,
   failed,
   history,
   loading,
@@ -44,6 +40,8 @@ export function DomainOverviewPerformanceChart({
   readOnly = false,
 }: Readonly<{
   estimateCents?: number | null;
+  price?: ReactNode;
+  blocked?: boolean;
   failed?: boolean;
   history: HistoricalOverviewRow[] | null;
   loading: boolean;
@@ -52,6 +50,7 @@ export function DomainOverviewPerformanceChart({
 }>) {
   const dateDisplay = useDateDisplay();
   const cacheDuration = useDomainOverviewCacheDuration();
+  const paymentT = useTranslations("shared.actionPayment");
   const t = useTranslations("projectDomainOverview.workspace.ui");
   const [metric, setMetric] = useState<HistoryMetric>("traffic");
   const [range, setRange] = useState<Range>("12m");
@@ -141,11 +140,15 @@ export function DomainOverviewPerformanceChart({
                   : t("historyCacheHint", { duration: cacheDuration })}
             </span>
             {!readOnly && onLoad ? (
-              <Button loading={loading} onClick={onLoad} size="sm" variant="secondary">
+              <Button
+                disabled={blocked}
+                loading={loading}
+                onClick={onLoad}
+                size="sm"
+                variant="secondary"
+              >
                 {t("loadHistory")}
-                {estimateCents == null
-                  ? null
-                  : ` ${formatDomainEstimatedCost(estimateCents, dateDisplay.locale, t)}`}
+                {price ?? paymentT("reviewPrice")}
               </Button>
             ) : null}
           </div>

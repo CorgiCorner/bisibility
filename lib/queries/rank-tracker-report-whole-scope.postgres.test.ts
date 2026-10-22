@@ -243,6 +243,23 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
       ).toMatchObject({ position: 2 });
     });
     it("separates paused execution from paused market/archived membership without deleting retained checks", async () => {
+      const previous = await fixture.db.keyword.findUniqueOrThrow({
+        where: { id: fixture.keyword.id },
+        select: { checkScheduleId: true },
+      });
+      const pausedSchedule = await fixture.db.checkSchedule.create({
+        data: {
+          projectId: fixture.project.id,
+          publicId: makePublicId("sch"),
+          name: "Paused fixture",
+          frequency: "daily",
+          enabled: false,
+        },
+      });
+      await fixture.db.keyword.update({
+        where: { id: fixture.keyword.id },
+        data: { checkScheduleId: pausedSchedule.id },
+      });
       await fixture.db.keywordSchedule.create({
         data: { frequency: "paused", keywordId: fixture.keyword.id, timezone: "UTC" },
       });
@@ -255,7 +272,9 @@ describe.skipIf(!process.env.PROVIDER_UI_TEST_DATABASE_URL)(
         expect(retained.matchedTargetCount).toBe(103);
         expect(excluded.matchedTargetCount).toBe(102);
       } finally {
+        await fixture.db.keyword.update({ where: { id: fixture.keyword.id }, data: previous });
         await fixture.db.keywordSchedule.delete({ where: { keywordId: fixture.keyword.id } });
+        await fixture.db.checkSchedule.delete({ where: { id: pausedSchedule.id } });
       }
       const archiveId = extraIds[1];
       if (!archiveId) throw new Error("Missing archived target fixture");

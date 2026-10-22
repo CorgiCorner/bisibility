@@ -126,7 +126,7 @@ function keywordPageResult(
   totalCount: number | null,
   costCents = 7,
   consumedCount = rows.length,
-): Extract<KeywordPageOutcome, { ok: true }> {
+): Extract<KeywordPageOutcome, { ok: true; data: unknown }> {
   return {
     cached: false,
     costCents,
@@ -141,7 +141,7 @@ function pagePageResult(
   totalCount: number,
   costCents = 4,
   consumedCount = rows.length,
-): Extract<PageOutcome, { ok: true }> {
+): Extract<PageOutcome, { ok: true; data: unknown }> {
   return {
     cached: false,
     costCents,
@@ -395,4 +395,26 @@ describe("useDomainOverviewTablePages", () => {
 
     expect(actions.loadKeywordsPageAction).toHaveBeenCalledTimes(1);
   });
+});
+
+it("keeps independent unresolved payment fences for both table modules", async () => {
+  const actions = setupActions();
+  actions.loadKeywordsPageAction.mockResolvedValue({
+    ok: false,
+    reason: "payment_already_executed",
+    costCents: 0,
+  } as never);
+  actions.loadPagesPageAction.mockResolvedValue({
+    ok: false,
+    reason: "payment_already_executed",
+    costCents: 0,
+  } as never);
+  const { result } = renderPagesHook(buildReport("example.com"), actions);
+  await act(async () => result.current.api.loadMore("keywords"));
+  await act(async () => result.current.api.loadMore("pages"));
+  expect(result.current.api.tableBlocked).toEqual(["keywords", "pages"]);
+  await act(async () => result.current.api.loadMore("keywords"));
+  await act(async () => result.current.api.loadMore("pages"));
+  expect(actions.loadKeywordsPageAction).toHaveBeenCalledOnce();
+  expect(actions.loadPagesPageAction).toHaveBeenCalledOnce();
 });

@@ -4,6 +4,7 @@ import type {
   RankTrackerListQueryInput,
   RankTrackerListResult,
 } from "@/lib/keywords/rank-tracker-query-types";
+import { keywordViewDevices } from "@/lib/keywords/view-devices";
 import { getQueryActor } from "./_auth";
 import {
   RankTrackerReportConfigurationError,
@@ -26,6 +27,7 @@ export async function getRankTrackerKeywordList(
   const page = pageCount === 0 ? 1 : Math.min(selected.query.page, pageCount);
   return {
     evaluation: selected.evaluation,
+    viewDevices: keywordViewDevices(selected.rows),
     facets: selected.facets,
     locations: selected.locations,
     matchedTargetCount: selected.selectedKeywordIds.length,

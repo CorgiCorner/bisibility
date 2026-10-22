@@ -7,11 +7,13 @@ import {
 } from "@/lib/actions/two-factor";
 import { authClient } from "@/lib/auth/client";
 import { loginErrorReturnTo } from "@/lib/auth/return-to";
+import { validateSecurityReturnTo } from "@/lib/auth/security-return-to";
 import { notifyAuthenticatedSessionEnd } from "@/lib/auth/session-end";
 import type { TwoFactorManagementInput } from "@/lib/auth/two-factor-management-schema";
 import { cn } from "@/lib/ui/cn";
 import { DeviceMobileIcon as DeviceMobile } from "@phosphor-icons/react/dist/csr/DeviceMobile";
 import { ShieldCheckIcon as ShieldCheck } from "@phosphor-icons/react/dist/csr/ShieldCheck";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -28,7 +30,6 @@ type SetupData = { enrollmentId: string; qrDataUrl: string | null; secret: strin
 type SecurityFactorsProps = {
   hasPasswordCredential: boolean;
   initiallyEnabled: boolean;
-  onEnrolled?: () => void;
   returnTo?: string;
 };
 function managementCopy(mode: Mode, t: ReturnType<typeof useTranslations>) {
@@ -58,8 +59,7 @@ function managementCopy(mode: Mode, t: ReturnType<typeof useTranslations>) {
 export function SecurityFactors({
   hasPasswordCredential,
   initiallyEnabled,
-  onEnrolled,
-  returnTo = "/app/account/security",
+  returnTo,
 }: Readonly<SecurityFactorsProps>) {
   const router = useRouter();
   const t = useTranslations("account.security.twoFactor");
@@ -130,7 +130,13 @@ export function SecurityFactors({
     try {
       await authClient.signOut();
       notifyAuthenticatedSessionEnd();
-      router.replace(loginErrorReturnTo(returnTo));
+      router.replace(
+        loginErrorReturnTo(
+          returnTo
+            ? `/app/account/security?returnTo=${encodeURIComponent(validateSecurityReturnTo(returnTo) ?? "/app/account/security")}`
+            : "/app/account/security",
+        ),
+      );
       router.refresh();
     } catch {
       setMessage(t("signOutError"));
@@ -156,7 +162,7 @@ export function SecurityFactors({
       setSetup(null);
       setMode(null);
       setMessage(result.value.replaced ? t("replaced") : t("enabled"));
-      if (!onEnrolled) router.refresh();
+      router.refresh();
     } catch {
       setMessage(t("verifyError"));
     } finally {
@@ -233,19 +239,15 @@ export function SecurityFactors({
             secret={setup.secret}
           />
         ) : null}
-        {onEnrolled && backupCodes.length > 0 ? (
-          <button
-            className={accentButtonClass}
-            onClick={() => {
-              onEnrolled();
-              router.refresh();
-            }}
-            type="button"
-          >
-            {t("continueToMail")}
-          </button>
-        ) : null}
         <BackupCodes codes={backupCodes} />
+        {enabled && validateSecurityReturnTo(returnTo) ? (
+          <Link
+            className={accentButtonClass}
+            href={validateSecurityReturnTo(returnTo) ?? "/app/account/security"}
+          >
+            {t("returnToAdmin")}
+          </Link>
+        ) : null}
         {reauthRequired ? (
           <button
             className={accentButtonClass}

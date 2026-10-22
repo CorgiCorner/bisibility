@@ -1,10 +1,12 @@
 import "server-only";
-
+import { ActionPaymentError } from "@/lib/action-payment/token";
 import { ApplicationFailure } from "@temporalio/common";
 import { prisma } from "../db/prisma";
 import { ProjectReadOnlyError } from "../deployment/project-write-mode";
 import { isOperationAccessDeniedError } from "../operations/access-error";
 import { ProjectDomainRequiredError } from "../projects/tracked-domain";
+import { ProviderCallError } from "../providers/call-error";
+import { preflightDeploymentRankExecution } from "../providers/execution-extension";
 import { DeploymentAdmissionExhaustedError } from "../providers/execution-extension-errors";
 import { ProviderRateLimitedError } from "../providers/rate-limit";
 import { ProviderUsagePersistenceError } from "../providers/usage";
@@ -145,10 +147,11 @@ export async function runRankCheckActivity(
   // and API runs, must pass this shared gate before a provider call regardless of their source.
   await guardPaidCall(input);
   if (!input.rankCheckId) throw new Error("Rank check must be prepared before paid I/O.");
-  const definitionPermit = await claimPaidCall(input.rankCheckId, input.inline === true);
   const attribution = await resolveRankCheckAttribution(input, prisma);
   let outcome: Awaited<ReturnType<typeof runKeywordCheckWithFallback>>;
   try {
+    await preflightDeploymentRankExecution({ ...input, rankCheckId: input.rankCheckId });
+    const definitionPermit = await claimPaidCall(input.rankCheckId, input.inline === true);
     outcome = await runKeywordCheckWithFallback({
       definitionPermit,
       credential: attribution.credential,
@@ -160,6 +163,23 @@ export async function runRankCheckActivity(
       trigger: attribution.trigger,
     });
   } catch (error) {
+    if (error instanceof ActionPaymentError)
+      throw ApplicationFailure.create({
+        message: "Accepted payment changed. Review a new run before trying again.",
+        type: error.reason,
+        nonRetryable: true,
+      });
+    if (error instanceof ProviderCallError && error.code === "provider_capacity_unavailable") {
+      await prisma.rankCheck.updateMany({
+        where: { id: input.rankCheckId, status: "running" },
+        data: { errorCode: error.code },
+      });
+      throw ApplicationFailure.create({
+        message: error.message,
+        nonRetryable: true,
+        type: error.code,
+      });
+    }
     if (error instanceof RankCheckClosedBeforePersistenceError) {
       throw ApplicationFailure.create({
         message: error.message,
@@ -237,7 +257,7 @@ export async function runRankCheckActivity(
         });
       }
       const { dominantCode } = error;
-      if (dominantCode === "provider_billing" || dominantCode === "provider_auth" || dominantCode === "provider_account_restricted") {
+      if (dominantCode === "provider_capacity_unavailable" || dominantCode === "provider_billing" || dominantCode === "provider_auth" || dominantCode === "provider_account_restricted") {
         throw ApplicationFailure.create({
           message: error.message, nonRetryable: true,
           type: dominantCode,

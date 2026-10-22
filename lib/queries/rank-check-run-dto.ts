@@ -1,13 +1,14 @@
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { nativeEstimateFromSelection } from "@/lib/cost-estimate/native-usage";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import type { RankCheckOperation, RunStatus } from "@/lib/rank-check/runs/contract";
+import type { RankCheckOperation } from "@/lib/rank-check/runs/contract";
 import { rankCheckProviderPresentation } from "@/lib/rank-check/runs/provider-presentation";
 import {
   pendingRunItems,
   runStartFacts,
   startedRunItemWhere,
 } from "@/lib/rank-check/runs/start-facts";
+import { normalizeTerminalRunState } from "@/lib/rank-check/runs/terminal-state";
 
 export const rankCheckRunSelect = {
   _count: {
@@ -110,13 +111,12 @@ export function rankCheckRunDto(
     keywordCount: row.keywordCount,
     kind: "rank_check",
     ...runStartFacts(row),
-    outcome: row.outcome as RankCheckOperation["outcome"],
+    ...normalizeTerminalRunState(row),
     parentRunId: parentRunPublicId,
     plannedFor: iso(row.plannedFor),
     ...rankCheckProviderPresentation(row.selectionSpec),
     selectionKind: row.selectionKind as RankCheckOperation["selectionKind"],
     startedAt: iso(row.startedAt),
-    status: row.status as RunStatus,
     targetCount: row.targetCount,
     trigger: row.trigger as RankCheckOperation["trigger"],
   };

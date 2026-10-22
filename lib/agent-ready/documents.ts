@@ -105,7 +105,13 @@ export function createRobotsTxt(origin: string) {
 
   const blocks = robotAgents.map((agent) => [`User-agent: ${agent}`, ...policy].join("\n"));
 
-  return [...blocks, `Sitemap: ${absoluteUrl(origin, "/sitemap.xml")}`].join("\n\n");
+  return [
+    ...blocks,
+    [
+      `Sitemap: ${absoluteUrl(origin, "/sitemap.xml")}`,
+      `Sitemap: ${absoluteUrl(origin, "/docs/sitemap.xml")}`,
+    ].join("\n"),
+  ].join("\n\n");
 }
 
 export function createSitemapEntries(origin: string): MetadataRoute.Sitemap {

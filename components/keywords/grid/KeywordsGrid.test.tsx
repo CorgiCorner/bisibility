@@ -101,14 +101,14 @@ describe("KeywordsGrid pending state", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /add keyword/i })).toBeInTheDocument();
-    expect(screen.getByRole("columnheader", { name: /device/i })).toBeInTheDocument();
+    // Devices are shown inline in the keyword cell, never as a separate column.
+    expect(screen.queryByRole("columnheader", { name: /device/i })).not.toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: /schedule/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sort Position descending" }));
     expect(routerMock.push).toHaveBeenCalledWith(expect.stringMatching(/dir=desc.*page=1/));
-    expect(screen.getByRole("columnheader", { name: /Position/ })).toHaveAttribute(
-      "aria-sort",
-      "ascending",
-    );
+    const position = screen.getByRole("columnheader", { name: "Pos" });
+    expect(position).toHaveAttribute("title", "Position");
+    expect(position).toHaveAttribute("aria-sort", "ascending");
     expect(await screen.findByText(keywordRows[0].keyword)).toBeInTheDocument();
     expect(
       await screen.findAllByText("Recorded time unavailable", {}, { timeout: 10_000 }),

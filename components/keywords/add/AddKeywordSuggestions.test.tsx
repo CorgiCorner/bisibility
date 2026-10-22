@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
 import { ProjectRankTrackerMessages } from "@/components/rank-tracker/ProjectRankTrackerMessages";
 import { ProjectWriteModeProvider } from "@/components/shell/ProjectWriteModeProvider";
@@ -38,10 +39,25 @@ vi.mock("@/lib/actions/ranked-keywords", () => ({ fetchRankedKeywordSuggestions:
 vi.mock("@/lib/actions/keyword", () => ({ addKeywordsMatrix: mocks.add }));
 vi.mock("@/lib/actions/project-market-create", () => ({ createProjectMarket: vi.fn() }));
 vi.mock("@/lib/actions/project-markets", () => ({ addProjectMarkets: vi.fn() }));
+vi.mock("@/lib/actions/action-payment", () => ({
+  assessActionPaymentsAction: async () => ({ allowed: true, reason: null, charges: [] }),
+}));
 
 const projectId = `prj_${"b".repeat(24)}`;
 const connection = { id: `conn_${"a".repeat(24)}`, label: "DataForSEO", provider: "dataforseo" };
 const sources = { domain: "example.com", searchConsole: true, rankedConnections: [connection] };
+const usd = { kind: "currency", code: "USD" } as const;
+const rankedQuote = paymentQuote({
+  charge: { value: "0.02", unit: usd, certainty: "estimate" },
+  option: {
+    id: "route-dataforseo",
+    providerId: "dataforseo",
+    providerLabel: "DataForSEO",
+    connectionId: connection.id,
+    fundingSource: "byok",
+    payableUnit: usd,
+  },
+});
 const projectMarkets = {
   markets: [
     {
@@ -66,7 +82,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.sources.mockResolvedValue(sources);
   mocks.gsc.mockResolvedValue({ queries: ["existing draft", "new suggestion"] });
-  mocks.ranked.mockResolvedValue({
+  const rankedPage = {
     cached: false,
     connections: [connection],
     costCents: 2,
@@ -82,7 +98,17 @@ beforeEach(() => {
         position: 2,
       },
     ],
-  });
+  };
+  mocks.ranked.mockImplementation(async (input: { estimateOnly?: boolean }) =>
+    input.estimateOnly
+      ? {
+          ...rankedPage,
+          estimate: true,
+          payment: rankedQuote,
+          paymentOptions: [rankedQuote.option],
+        }
+      : rankedPage,
+  );
   mocks.add.mockResolvedValue({ created: 2, keywords: [] });
 });
 
@@ -134,6 +160,14 @@ function renderPolishKeywordImport(children: ReactNode) {
   );
 }
 
+/** Price previews may quote DataForSEO, but no paid lookup may run without an accepted quote. */
+function expectOnlyRankedEstimates() {
+  for (const [input] of mocks.ranked.mock.calls) {
+    expect(input).toMatchObject({ estimateOnly: true, requirePayment: true });
+    expect(input).not.toHaveProperty("acceptedPayment");
+  }
+}
+
 describe("Add keyword suggestions", () => {
   it("loads sources only on demand, then reviews suggestions in Manual without changing tracking settings", async () => {
     renderDrawer();
@@ -144,7 +178,7 @@ describe("Add keyword suggestions", () => {
     const choose = await screen.findByRole("button", { name: "Choose queries" });
     expect(mocks.sources).toHaveBeenCalledWith({ projectId });
     expect(mocks.gsc).not.toHaveBeenCalled();
-    expect(mocks.ranked).not.toHaveBeenCalled();
+    expectOnlyRankedEstimates();
     expect(screen.queryByRole("button", { name: "Add keywords" })).not.toBeInTheDocument();
     const form = document.querySelector("#add-keyword-form");
     if (!form) throw new Error("Missing keyword form");
@@ -179,17 +213,28 @@ describe("Add keyword suggestions", () => {
     const append = vi.fn();
     renderProject(<SuggestionsHarness onAppendQueries={append} />);
     fireEvent.click(screen.getByRole("button", { name: "Suggestions" }));
-    const choose = await screen.findByRole("button", {
-      name: "Choose keywords (about $0.02/page)",
-    });
-    expect(mocks.ranked).not.toHaveBeenCalled();
+    const choose = await screen.findByRole("button", { name: /^Choose keywords/ });
+    await waitFor(() => expect(choose).toHaveTextContent("$0.02"));
+    expectOnlyRankedEstimates();
     fireEvent.click(choose);
+    const start = await screen.findByRole("button", { name: "Start" });
+    expectOnlyRankedEstimates();
+    fireEvent.click(start);
     fireEvent.click(await screen.findByRole("button", { name: "Use 1 keyword" }));
-    expect(mocks.ranked).toHaveBeenCalledExactlyOnceWith({
-      connectionId: connection.id,
-      offset: 0,
-      projectId,
-    });
+    const paid = mocks.ranked.mock.calls.filter(([input]) => !input.estimateOnly);
+    expect(paid).toEqual([
+      [
+        {
+          acceptedPayment: { quoteToken: rankedQuote.quoteToken },
+          connectionId: connection.id,
+          estimateOnly: false,
+          offset: 0,
+          paymentOptionId: rankedQuote.option.id,
+          projectId,
+          requirePayment: true,
+        },
+      ],
+    ]);
     expect(append).toHaveBeenCalledWith(["tracked in another market"]);
     expect(mocks.add).not.toHaveBeenCalled();
   });
@@ -236,8 +281,7 @@ describe("Add keyword suggestions", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Suggestions" }));
     expect(await screen.findByRole("button", { name: "Choose queries" })).toBeDisabled();
-    expect(
-      screen.getByRole("button", { name: "Choose keywords (about $0.02/page)" }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Choose keywords" })).toBeDisabled();
+    expect(mocks.ranked).not.toHaveBeenCalled();
   });
 });

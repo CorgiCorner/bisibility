@@ -52,3 +52,8 @@ export function resolveEffectiveSerpDepth(input: {
 export function resolveSerpStopOnMatch(value: boolean | null | undefined) {
   return value ?? DEFAULT_SERP_STOP_ON_MATCH;
 }
+
+/** Top20 always requests its full search depth; other depths retain the project preference. */
+export function resolveEffectiveSerpStopOnMatch(value: boolean | null | undefined, depth: number) {
+  return depth === 20 ? false : resolveSerpStopOnMatch(value);
+}

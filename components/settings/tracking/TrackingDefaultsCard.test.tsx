@@ -4,7 +4,6 @@ import {
   renderWithFeatureMessages,
   trackingSettingsFeatureTestMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
-import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import type { DefaultsData } from "@/lib/settings/options";
 import { reviewedDefaultsPreview } from "@/lib/settings/reviewed-defaults.test-fixture";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
@@ -35,12 +34,6 @@ const defaults: DefaultsData = {
   targetUrlCount: 12,
 };
 
-const readyPreview: CronPreviewResult = {
-  message: "ready",
-  runs: ["2026-08-10T04:00:00.000Z", "2026-08-11T04:00:00.000Z", "2026-08-12T04:00:00.000Z"],
-  status: "ready",
-  timezone: "Europe/Warsaw",
-};
 const polishTrackingMessages = {
   ...trackingSettingsFeatureTestMessages,
   projectSettingsTracking: {
@@ -56,24 +49,18 @@ const polishTrackingMessages = {
   },
 };
 
-function renderCard(
-  overrides: Partial<DefaultsData> = {},
-  initialCronPreview: CronPreviewResult = readyPreview,
-) {
+function renderCard(overrides: Partial<DefaultsData> = {}) {
   const updateDefaults = vi.fn(async () => ({ kind: "saved" }));
-  const previewCron = vi.fn(async () => readyPreview);
   render(
     <TrackingDefaultsCard
       canEdit
       defaults={{ ...defaults, ...overrides }}
-      initialCronPreview={initialCronPreview}
       previewDefaults={reviewedDefaultsPreview}
-      previewCron={previewCron}
       projectId="prj_1"
       updateDefaults={updateDefaults}
     />,
   );
-  return { previewCron, updateDefaults };
+  return { updateDefaults };
 }
 
 describe("TrackingDefaultsCard", () => {
@@ -81,202 +68,23 @@ describe("TrackingDefaultsCard", () => {
     vi.spyOn(Intl, "supportedValuesOf").mockReturnValue(["Europe/Warsaw", "UTC"]);
   });
 
-  it("shows the stored timezone for Monthly but hides the cron expression", () => {
-    renderCard();
+  it.each(["daily", "monthly", "custom_cron"] as const)(
+    "does not offer schedule controls for %s defaults",
+    (frequency) => {
+      renderCard({ schedule: { ...defaults.schedule, frequency, cron_expression: "0 6 * * *" } });
+      expect(screen.queryByRole("button", { name: "Frequency" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Timezone" })).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Cron expression")).not.toBeInTheDocument();
+      expect(screen.queryByText("Next three cron anchors")).not.toBeInTheDocument();
+    },
+  );
 
-    expect(screen.getByRole("button", { name: "Timezone" })).toHaveTextContent("Europe/Warsaw");
-    expect(screen.queryByLabelText("Cron expression")).not.toBeInTheDocument();
-  });
-
-  it("renders the timezone menu, current timezone, and helper copy for a daily fixture", () => {
-    renderCard({
-      schedule: { ...defaults.schedule, frequency: "daily" },
-    });
-
-    expect(screen.getByRole("button", { name: "Timezone" })).toHaveTextContent("Europe/Warsaw");
-    expect(
-      screen.getByText("Anchors all check schedules to the selected local clock."),
-    ).toBeInTheDocument();
-    expect(screen.queryByLabelText("Cron expression")).not.toBeInTheDocument();
-  });
-
-  it("marks the card dirty and submits the selected timezone when the menu changes", async () => {
-    const { updateDefaults } = renderCard({
-      schedule: { ...defaults.schedule, frequency: "daily" },
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "Timezone" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /UTC/ }));
-
-    expect(screen.getByRole("button", { name: "Review changes" })).not.toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "Review changes" }));
-
-    expect(updateDefaults).not.toHaveBeenCalled();
-    fireEvent.click(await screen.findByRole("checkbox", { name: /reviewed these exact/i }));
-    fireEvent.click(screen.getByRole("button", { name: "Confirm reviewed save" }));
-    await waitFor(() => expect(updateDefaults).toHaveBeenCalledTimes(1));
-    expect(updateDefaults).toHaveBeenCalledWith(
-      expect.objectContaining({ timezone: "UTC" }),
-      expect.objectContaining({ confirmed: true }),
-    );
-  });
-
-  it("surfaces an invalid stored timezone before save and does not submit it", async () => {
-    const { updateDefaults } = renderCard({
-      schedule: { ...defaults.schedule, timezone: "Etc/GMT+5" },
-    });
-
-    const timezone = screen.getByRole("button", { name: "Timezone" });
-    expect(screen.getByRole("alert")).toHaveTextContent("Select a valid time zone.");
-    expect(timezone).toHaveAttribute("aria-invalid", "true");
-    expect(timezone).toHaveAttribute(
-      "aria-describedby",
-      "tracking-timezone-help tracking-timezone-error",
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Frequency" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Daily" }));
-    fireEvent.click(screen.getByRole("button", { name: "Review changes" }));
-
-    expect(await screen.findByText("Select a valid time zone.")).toBeInTheDocument();
-    expect(updateDefaults).not.toHaveBeenCalled();
-  });
-
-  it("localizes the stored timezone validation without changing the rejected value", () => {
-    renderWithFeatureMessages(
-      <TrackingDefaultsCard
-        canEdit
-        defaults={{ ...defaults, schedule: { ...defaults.schedule, timezone: "Etc/GMT+5" } }}
-        initialCronPreview={readyPreview}
-        previewDefaults={reviewedDefaultsPreview}
-        previewCron={vi.fn(async () => readyPreview)}
-        projectId="prj_1"
-        updateDefaults={vi.fn(async () => ({}))}
-      />,
-      { locale: "pl", messages: polishTrackingMessages },
-    );
-
-    expect(screen.getByRole("alert")).toHaveTextContent("Wybierz prawidłową strefę czasową.");
-    expect(screen.getByRole("button", { name: "Timezone" })).toHaveTextContent("Etc/GMT+5");
-  });
-
-  it("labels Custom cron times as anchors before deterministic dispatcher jitter", () => {
-    renderCard({
-      schedule: {
-        ...defaults.schedule,
-        cron_expression: "0 6 * * *",
-        frequency: "custom_cron",
-      },
-    });
-
-    expect(screen.getByLabelText("Cron expression")).toHaveValue("0 6 * * *");
-    expect(screen.getByText("Aug 10, 06:00")).toBeInTheDocument();
-    expect(screen.getByText("Aug 11, 06:00")).toBeInTheDocument();
-    expect(screen.getByText("Aug 12, 06:00")).toBeInTheDocument();
-    expect(screen.getByText("Next three cron anchors")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Each keyword is scheduled at or after an anchor using deterministic jitter.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.queryByText("Next three runs")).not.toBeInTheDocument();
-    expect(screen.queryByText(/cost\/check/i)).not.toBeInTheDocument();
-  });
-
-  it("keeps the ready cron preview inside the cron field before timezone", () => {
-    renderCard({
-      schedule: {
-        ...defaults.schedule,
-        cron_expression: "0 6 * * *",
-        frequency: "custom_cron",
-      },
-    });
-
-    const cronInput = screen.getByLabelText("Cron expression");
-    const preview = screen.getByText("Next three cron anchors");
-    const timezone = screen.getByRole("button", { name: "Timezone" });
-    const cronField = cronInput.closest("[data-settings-field-width]");
-    const timezoneField = timezone.closest("[data-settings-field-width]");
-
-    expect(cronField).not.toBeNull();
-    expect(timezoneField).not.toBeNull();
-    expect(cronField).not.toBe(timezoneField);
-    expect(cronField).toContainElement(preview);
-    expect(timezoneField).not.toContainElement(preview);
-    expect(cronField?.compareDocumentPosition(timezoneField as Node)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
-  });
-
-  it("keeps an invalid cron preview inside the cron field", () => {
-    const invalidPreview: CronPreviewResult = {
-      message: "invalid_expression",
-      runs: [],
-      status: "invalid",
-      timezone: null,
-    };
-    renderCard(
-      {
-        schedule: {
-          ...defaults.schedule,
-          cron_expression: "invalid",
-          frequency: "custom_cron",
-        },
-      },
-      invalidPreview,
-    );
-
-    const cronField = screen
-      .getByLabelText("Cron expression")
-      .closest("[data-settings-field-width]");
-    const invalidMessage = screen.getByText("Cron expression could not be parsed.");
-    const timezoneField = screen
-      .getByRole("button", { name: "Timezone" })
-      .closest("[data-settings-field-width]");
-
-    expect(cronField).toContainElement(invalidMessage);
-    expect(timezoneField).not.toContainElement(invalidMessage);
-  });
-
-  it("formats the structured cron response in the supplied locale for initial and refreshed previews", async () => {
-    const previewCron = vi.fn(async () => ({
-      message: "invalid_expression" as const,
-      runs: [],
-      status: "invalid" as const,
-      timezone: null,
-    }));
-    renderWithFeatureMessages(
-      <TrackingDefaultsCard
-        canEdit
-        defaults={{
-          ...defaults,
-          schedule: {
-            ...defaults.schedule,
-            cron_expression: "0 6 * * *",
-            frequency: "custom_cron",
-          },
-        }}
-        initialCronPreview={readyPreview}
-        previewDefaults={reviewedDefaultsPreview}
-        previewCron={previewCron}
-        projectId="prj_1"
-        updateDefaults={vi.fn(async () => ({}))}
-      />,
-      { locale: "pl", messages: polishTrackingMessages, timeZone: "Europe/Warsaw" },
-    );
-
-    expect(screen.getByText("Następne kotwice cron")).toBeInTheDocument();
-    expect(screen.getByText("Każde słowo kluczowe jest planowane po kotwicy.")).toBeInTheDocument();
-    expect(screen.queryByText("2026-08-10T04:00:00.000Z")).not.toBeInTheDocument();
-
-    fireEvent.blur(screen.getByLabelText("Cron expression"));
-
-    await waitFor(() => expect(previewCron).toHaveBeenCalledTimes(1));
-    expect(await screen.findByText("Nie można odczytać wyrażenia cron.")).toBeInTheDocument();
-  });
-
-  it("warns when depth is lowered and submits through the injected audited action", async () => {
-    const { updateDefaults } = renderCard();
+  it.each([
+    { ...defaults.schedule, frequency: "monthly" as const },
+    { ...defaults.schedule, frequency: "custom_cron" as const, cron_expression: "15 7 * * 1" },
+    { ...defaults.schedule, frequency: "manual" as const },
+  ])("saves check depth while preserving stored cadence $frequency", async (schedule) => {
+    const { updateDefaults } = renderCard({ schedule });
 
     fireEvent.click(screen.getByRole("button", { name: "Default SERP depth" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Top 20" }));
@@ -289,13 +97,58 @@ describe("TrackingDefaultsCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Confirm reviewed save" }));
     await waitFor(() => expect(updateDefaults).toHaveBeenCalledTimes(1));
     expect(updateDefaults).toHaveBeenCalledWith(
-      expect.objectContaining({ projectId: "prj_1", serpDepth: 20, timezone: "Europe/Warsaw" }),
+      expect.objectContaining({
+        projectId: "prj_1",
+        serpDepth: 20,
+        timezone: "Europe/Warsaw",
+        frequency: schedule.frequency,
+        cronExpression: schedule.cron_expression,
+        jitterMinutes: schedule.jitter_minutes,
+      }),
       expect.objectContaining({ confirmed: true }),
     );
   });
 
-  it("shows Top-10 guidance on hover without an inline warning", async () => {
+  it.each([
+    [true, "Full search results", false, /may use more credits or provider requests/i],
+    [false, "My position", true, /competitor results may be incomplete/i],
+  ] as const)(
+    "reviews collection mode without launching a check (%s)",
+    async (initial, label, expected, help) => {
+      const { updateDefaults } = renderCard({ serpStopOnMatch: initial });
+      expect(screen.queryByRole("switch", { name: /first domain match/i })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Results to collect" }));
+      fireEvent.click(screen.getByRole("menuitem", { name: label }));
+      expect(screen.getByText(help)).toBeVisible();
+      expect(updateDefaults).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole("button", { name: "Review changes" }));
+      fireEvent.click(await screen.findByRole("checkbox", { name: /reviewed these exact/i }));
+      fireEvent.click(screen.getByRole("button", { name: "Confirm reviewed save" }));
+      await waitFor(() =>
+        expect(updateDefaults).toHaveBeenCalledWith(
+          expect.objectContaining({ serpStopOnMatch: expected }),
+          expect.objectContaining({ confirmed: true }),
+        ),
+      );
+    },
+  );
+
+  it("always displays full collection at Top 20 despite a retained early-stop preference", () => {
+    renderCard({ serpDepth: 20, serpStopOnMatch: true });
+    expect(screen.getByRole("button", { name: "Results to collect" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Results to collect" })).toHaveTextContent(
+      "Full search results",
+    );
+    expect(
+      screen.getByText(/Collects the requested Top 20 even when your site is found early/),
+    ).toBeVisible();
+  });
+
+  it("shows Top-10 Visibility guidance inline and on hover", async () => {
     renderCard({ serpDepth: 10 });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Checks below Top 20 do not update Visibility.",
+    );
 
     expect(screen.getByRole("button", { name: "Default SERP depth" })).toHaveAccessibleDescription(
       "Top 10 checks do not update Visibility. Affected keywords still count toward its coverage total.",
@@ -312,17 +165,15 @@ describe("TrackingDefaultsCard", () => {
       <TrackingDefaultsCard
         canEdit={false}
         defaults={defaults}
-        initialCronPreview={readyPreview}
         previewDefaults={reviewedDefaultsPreview}
-        previewCron={vi.fn(async () => readyPreview)}
         projectId="prj_1"
         updateDefaults={vi.fn(async () => ({}))}
       />,
     );
 
     expect(screen.getByText("Read-only")).toBeInTheDocument();
-    expect(screen.getByText("Monthly")).toBeInTheDocument();
-    expect(screen.getByText("Europe/Warsaw")).toBeInTheDocument();
+    expect(screen.queryByText("Monthly")).not.toBeInTheDocument();
+    expect(screen.queryByText("Europe/Warsaw")).not.toBeInTheDocument();
     expect(screen.getByText("Top 100")).toBeInTheDocument();
     expect(screen.getByText("Desktop")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Review changes" })).not.toBeInTheDocument();
@@ -334,9 +185,7 @@ describe("TrackingDefaultsCard", () => {
       <TrackingDefaultsCard
         canEdit={false}
         defaults={defaults}
-        initialCronPreview={readyPreview}
         previewDefaults={reviewedDefaultsPreview}
-        previewCron={vi.fn(async () => readyPreview)}
         projectId="prj_1"
         updateDefaults={vi.fn(async () => ({}))}
       />,

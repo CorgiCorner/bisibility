@@ -32,6 +32,7 @@ const mocks = vi.hoisted(() => {
       connection: {
         costPerCheckCents: null;
         credentialsEncrypted: string;
+        credentialSource: string;
         id: string;
       };
       connectionId: string;
@@ -67,6 +68,7 @@ const mocks = vi.hoisted(() => {
         connection: {
           costPerCheckCents: null,
           credentialsEncrypted: "encrypted",
+          credentialSource: "own",
           id: "connection_1",
         },
         connectionId: "connection_1",
@@ -406,6 +408,15 @@ describe("queued result persistence", () => {
       });
     },
   );
+
+  it("never retrieves with a retained own key when hosted recovery evidence is absent", async () => {
+    const task = mocks.makeTask("hosted-retained", "ready", null);
+    task.batch.connection.credentialSource = "hosted";
+    mocks.tasks.splice(0, mocks.tasks.length, task);
+    await persistReadyQueuedRankCheckTasks("batch_1");
+    expect(mocks.resolveCredentials).not.toHaveBeenCalled();
+    expect(mocks.fetchResult).not.toHaveBeenCalled();
+  });
 
   it("denies movement comparison when the original result has no scope/time proof", async () => {
     mocks.tasks.splice(1);

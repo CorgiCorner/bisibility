@@ -55,7 +55,7 @@ export const descriptions: Record<string, string> = {
   getCapabilities: "List public API capabilities exposed for agent workflows.",
   getHealth: "Read composite API, database, migration, worker, and Temporal diagnostics.",
   getKeyword: "Get one keyword and its latest rank position by keyword id.",
-  get_keyword_metrics: `Write scope is required. Paid metrics lookup on the project's own DataForSEO account, ${metricsCost}. Batches contain up to 700 keywords and cache each keyword for 12 hours, shared with the API and future UI. Clickstream-refined volumes double provider cost. When cost matters, call with estimate_only first, then use max_cost_cents as a best-effort guard.`,
+  get_keyword_metrics: `Write scope is required. Paid metrics lookup on the project's own DataForSEO account, ${metricsCost}. Batches contain up to 700 keywords and cache each keyword for 12 hours, shared with the API and future UI. Clickstream-refined volumes double provider cost. When cost matters, call with estimate_only first, then use max_cost_cents as a best-effort guard. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before paid work.`,
   getMe: "Get the authenticated user and their project memberships (personal-token auth only).",
   getProject: "Get one project by project id.",
   getRankHistory: "List historical rank checks for a keyword.",
@@ -65,12 +65,12 @@ export const descriptions: Record<string, string> = {
   listProjects:
     "List projects. Project keys see the single scoped project; personal tokens see every project the user is a member of.",
   listRankChecks: "List historical rank checks for a keyword.",
-  listRankedKeywordSuggestions: `Paid provider lookup on the project's own DataForSEO account, ${rankedKeywordCost}. Results are cached for 12 hours and shared with the UI and API. already_tracked marks keywords the project tracks.`,
-  research_keywords: `Write scope is required. Paid keyword research on the project's own DataForSEO account, ${researchCost}. Send one seed per call. Results are cached for 12 hours and shared with the API and future UI. Clickstream-refined volumes double provider cost. already_tracked marks keywords the project tracks. When cost matters, call with estimate_only first, then use max_cost_cents as a best-effort guard.`,
+  listRankedKeywordSuggestions: `Paid provider lookup on the project's own DataForSEO account, ${rankedKeywordCost}. Results are cached for 12 hours and shared with the UI and API. already_tracked marks keywords the project tracks. 0 = cached result only; a miss returns cost_limit_exceeded with estimated_cost_cents before paid work.`,
+  research_keywords: `Write scope is required. Paid keyword research on the project's own DataForSEO account, ${researchCost}. Send one seed per call. Results are cached for 12 hours and shared with the API and future UI. Clickstream-refined volumes double provider cost. already_tracked marks keywords the project tracks. When cost matters, call with estimate_only first, then use max_cost_cents as a best-effort guard. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before paid work.`,
   listSitemapMonitors:
     "List the project sitemap monitor with its enabled state and latest snapshot summary.",
   listSearchPerformanceQueryStats:
-    "Fetch live query statistics from one of the project's own connected search-performance accounts. Provider rate limits and reauthorization rules apply.",
+    "Fetch live query statistics from one of the project's own connected search-performance accounts. Optional country and device filters limit the rows, and dimensions group by query plus any of page, country, and device. Page further results with offset; next_offset is set when the result is truncated. Rows aggregate every country and device only when no country or device filter or dimension is requested. Provider rate limits and reauthorization rules apply.",
   listTrafficSnapshots:
     "List stored page traffic snapshots collected from the project's own connected analytics accounts, filtered by date range and optional page paths.",
   listWebhooks: "List webhook endpoints for a project.",

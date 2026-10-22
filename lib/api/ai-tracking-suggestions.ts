@@ -1,11 +1,13 @@
+import { paymentFailure } from "@/lib/action-payment/session";
+import { paymentResource } from "./action-payment";
 import "server-only";
 import {
   generateModelSuggestions,
   previewModelSuggestions,
 } from "@/lib/ai-tracking/suggestions/generation";
 import {
-  modelSuggestionsGenerateInputSchema,
   modelSuggestionsPreviewInputSchema,
+  parseModelSuggestionsGenerateInput,
   SuggestionGenerationError,
 } from "@/lib/ai-tracking/suggestions/generation-schema";
 import type { Actor } from "@/lib/auth/authorize";
@@ -29,22 +31,35 @@ export async function handleAiTrackingSuggestionGeneration(
   try {
     if (member === "preview") {
       const input = modelSuggestionsPreviewInputSchema.parse(body);
-      return dataResponse(trackingSnakeizeKeys(await previewModelSuggestions(context, input)), {
-        headers: ctx.headers,
-      });
+      const preview = await previewModelSuggestions(context, input);
+      return dataResponse(
+        { ...(trackingSnakeizeKeys(preview) as object), ...paymentResource(preview) },
+        {
+          headers: ctx.headers,
+        },
+      );
     }
     const key = ctx.req.headers.get("Idempotency-Key");
     if (!key || !z.uuid().safeParse(key).success)
       return errorResponse("bad_request", "A stable UUID Idempotency-Key is required.", 400, {
         headers: ctx.headers,
       });
-    const input = modelSuggestionsGenerateInputSchema.parse(body);
+    const input = parseModelSuggestionsGenerateInput(body);
     const result = await generateModelSuggestions(context, input, key);
     await auditTrackingGeneration(actor, project, result.generationId);
-    return dataResponse(trackingSnakeizeKeys(result), {
-      headers: ctx.headers,
-    });
+    return dataResponse(
+      { ...(trackingSnakeizeKeys(result) as object), ...paymentResource(result) },
+      {
+        headers: ctx.headers,
+      },
+    );
   } catch (error) {
+    const payment = paymentFailure(error);
+    if (payment)
+      return errorResponse("conflict", "Review the current payment quote before starting.", 409, {
+        headers: ctx.headers,
+        details: { reason: payment.reason },
+      });
     if (error instanceof SuggestionGenerationError)
       return errorResponse(
         error.status === 409 ? "conflict" : "validation_failed",
@@ -54,6 +69,7 @@ export async function handleAiTrackingSuggestionGeneration(
           headers: ctx.headers,
           details: {
             reason: error.reason,
+            ...(error.payment ? { payment: trackingSnakeizeKeys(error.payment) } : {}),
             ...(error.generationId && /^asg_[a-z][a-z0-9]{23}$/.test(error.generationId)
               ? { generation_id: error.generationId }
               : {}),

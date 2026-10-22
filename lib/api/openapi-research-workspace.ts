@@ -1,4 +1,5 @@
 import { researchWorkspaceSchemas } from "@/lib/mcp/research-workspace-contract";
+import { paymentRequestFields } from "./openapi-action-payment";
 import { BYOK_REQUIRED_RESPONSE } from "./openapi-operations";
 import { apiCredentialSecurity } from "./openapi-pat";
 import { problemResponse } from "./openapi-problem";
@@ -52,6 +53,7 @@ export function researchWorkspacePaths() {
       (name) => !["project_id", "report_id", "idempotency_key"].includes(name),
     );
     const paid = ["analyzeAiVisibility", "compareAiPrompts"].includes(operationId);
+    if (paid) Object.assign(properties, paymentRequestFields);
     const responses = {
       [operationId === "createAgentReport" ? "201" : "200"]: {
         content: json(
@@ -86,7 +88,7 @@ export function researchWorkspacePaths() {
       summary: titles[operationId],
       description: paid
         ? operationId === "compareAiPrompts"
-          ? "Default hard_cap requires max_cost_cents and preserves original mini/nano512 availability. Explicit own-BYOK provider_actual_cost requires non_guaranteed_estimate_v1 acknowledgement and a separate advisory limit; partial estimate covers tokens and base only, excludes variable tools/loops/role overhead, and has no guaranteed maximum. Execution requires the forecast credential identity and stable UUID. Actual single-task provider receipts settle the charge; pending or unknown cost prevents another paid attempt until reconciled. estimate_only makes no paid request."
+          ? "Default hard_cap requires max_cost_cents and preserves original mini/nano512 availability. 0 = cached result only; a miss returns cost_limit_exceeded with estimated_cost_cents before paid work. If extended-option pricing requires provider metadata, cache-only access returns pricing_unavailable without refreshing it. Explicit own-BYOK provider_actual_cost requires non_guaranteed_estimate_v1 acknowledgement and a separate advisory limit; partial estimate covers tokens and base only, excludes variable tools/loops/role overhead, and has no guaranteed maximum. Execution requires the forecast credential identity and stable UUID. Actual single-task provider receipts settle the charge; pending or unknown cost prevents another paid attempt until reconciled. estimate_only makes no paid request."
           : "Requires an explicit cost cap. estimate_only makes no paid request. Observed AI datasets and synthetic prompt tests remain distinct."
         : operationId === "createAgentReport"
           ? "Save external analysis. Producer kinds site_audit, ai_visibility and prompt_explorer are reserved. Access follows existing project membership and token scopes."

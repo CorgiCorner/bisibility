@@ -3,6 +3,11 @@ title: "Keyword metrics"
 description: "Hydrate nullable DataForSEO Labs metrics for up to 700 keywords with per-keyword caching."
 ---
 
+`max_cost_cents=0` returns cached metrics only, for free. If any requested keyword
+is missing from cache, the request returns `cost_limit_exceeded` with
+`estimated_cost_cents` before provider calls, holds or attempts.
+
+
 ## Get keyword metrics
 
 ```http
@@ -23,6 +28,7 @@ POST is used only to accommodate up to 700 keyword strings in the request body.
 The operation has GET-like semantics, mutates no bisibility resource, and does
 not require an Idempotency-Key. It is a paid BYO-key DataForSEO Labs lookup on
 cache misses. Endpoints that can spend provider budget require write scope.
+The MCP tool is `get_keyword_metrics`. See [Paid MCP tools](/agents/paid-tools).
 
 Each normalized keyword has its own 12-hour cache entry. A request reads cached
 metrics first and sends only misses to the provider. The envelope reports

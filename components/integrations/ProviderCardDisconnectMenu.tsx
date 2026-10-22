@@ -3,7 +3,7 @@
 import type { Notice } from "@/components/integrations/ConnectDrawerSchema";
 import { ProviderDisconnectAction } from "@/components/integrations/ProviderDisconnectAction";
 import { DeveloperActionsMenu } from "@/components/settings/developers/DeveloperActionsMenu";
-import type { ProviderActionHandlers } from "@/lib/integrations/types";
+import type { DisconnectProviderInput, ProviderActionHandlers } from "@/lib/integrations/types";
 import { useTranslations } from "next-intl";
 
 type ProviderId = Parameters<ProviderActionHandlers["testProviderConnection"]>[0]["providerId"];
@@ -19,6 +19,7 @@ export function ProviderCardDisconnectMenu({
   providerName,
   readOnly,
   testPending,
+  keyRemoval,
 }: Readonly<{
   disconnectProvider?: ProviderActionHandlers["disconnectProvider"];
   hasTest: boolean;
@@ -30,6 +31,7 @@ export function ProviderCardDisconnectMenu({
   providerName: string;
   readOnly: boolean;
   testPending: boolean;
+  keyRemoval?: DisconnectProviderInput["expectedConnection"] | null;
 }>) {
   const t = useTranslations("projectIntegrations.provider");
 
@@ -40,6 +42,7 @@ export function ProviderCardDisconnectMenu({
       onNotice={onNotice}
       projectId={projectId}
       providerId={providerId}
+      keyRemoval={keyRemoval}
       renderTrigger={({ disabled, onOpen }) => (
         <DeveloperActionsMenu
           ariaLabel={t("actions", { provider: providerName })}
@@ -53,7 +56,12 @@ export function ProviderCardDisconnectMenu({
                   },
                 ]
               : []),
-            { danger: true, disabled, label: t("disconnect"), onSelect: onOpen },
+            {
+              danger: true,
+              disabled,
+              label: t(keyRemoval === undefined ? "disconnect" : "removeKey"),
+              onSelect: onOpen,
+            },
           ]}
         />
       )}

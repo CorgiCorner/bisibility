@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import { stubBlobDownload } from "@/tests/blob-download";
 import { routerMock, setNavigationState } from "@/tests/next-navigation";
@@ -27,6 +28,7 @@ vi.mock("@/components/keywords/import/ImportCsvWizard", () => ({
   ImportCsvWizard: () => null,
 }));
 const preview = {
+  payment: paymentQuote(),
   budget: {
     blocked: false,
     capCents: 5_000,
@@ -38,7 +40,7 @@ const preview = {
   estimate: { costCents: 2, perTargetCents: 2, unknownCostTargets: 0 },
   excluded: [],
   executable: 1,
-  expiresAt: "2026-09-03T12:00:00.000Z",
+  expiresAt: "2099-09-03T12:00:00.000Z",
   keywordCount: 1,
   matched: 1,
   overlapRunCount: 0,
@@ -205,7 +207,7 @@ describe("KeywordsGrid actions", () => {
       spec: { kind: "single", keywordId: rows[0].id, v: 1 },
       trigger: "manual",
     });
-    fireEvent.click(screen.getByRole("button", { name: "Start run" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Start run/ }));
     await waitFor(() => expect(routerMock.refresh).toHaveBeenCalledOnce());
     expect(mocks.launchRankCheckRunAction).toHaveBeenCalledWith(
       expect.objectContaining({ previewToken: "preview-grid-token" }),
@@ -248,7 +250,7 @@ describe("KeywordsGrid actions", () => {
     await screen.findByRole("dialog", {
       name: new RegExp(`Check ${row.keyword} in United States`),
     });
-    fireEvent.click(screen.getByRole("button", { name: "Start run" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Start run/ }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Sample projects do not run real checks.",

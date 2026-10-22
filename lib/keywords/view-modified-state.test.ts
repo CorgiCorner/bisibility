@@ -56,7 +56,11 @@ describe("saved keyword view modified state", () => {
       ),
     ).toBe(true);
     expect(
-      keywordViewModified({ ...saved, sort: { field: "keyword", direction: "asc" } }, saved, false),
+      keywordViewModified(
+        { ...saved, sort: { field: "position", direction: "asc" } },
+        saved,
+        false,
+      ),
     ).toBe(true);
   });
 });

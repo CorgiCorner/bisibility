@@ -1,3 +1,5 @@
+import type { AcceptedActionPayment } from "@/lib/action-payment/contract";
+import type { AiPaymentConsent } from "@/lib/ai-research/payment";
 import type { MeterOperationReference } from "@/lib/metering/operation-reference";
 export const PROMPT_CATEGORIES = ["neutral", "branded", "comparative"] as const;
 export type PromptCategory = (typeof PROMPT_CATEGORIES)[number];
@@ -57,6 +59,7 @@ export interface SourceConfiguration {
   parameters: { [key: string]: JsonValue };
 }
 export interface SamplePlan {
+  paymentConsent?: AiPaymentConsent;
   version: 1;
   projectId: string;
   actorId: string;
@@ -130,6 +133,12 @@ export interface TrackingLimits {
 }
 export const DEFAULT_TRACKING_LIMITS: TrackingLimits = { activePrompts: 100, topics: 30 };
 export interface PlanTrackingRunInput {
+  paymentConsent?: AiPaymentConsent;
+  acceptedPayment?: AcceptedActionPayment;
+  requirePayment?: boolean;
+  paymentScope?: "manual" | "recurring";
+  paymentScheduleId?: string;
+  paymentRecurrence?: { cron: string; timezone: string };
   actorId: string;
   actorCredential?: TrackingActorCredential;
   idempotencyKey: string;

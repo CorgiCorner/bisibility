@@ -383,6 +383,128 @@ describe("gsc analytics provider", () => {
     });
   });
 
+  it("sends country and device filters with the offset to the source", async () => {
+    await gscAnalyticsProvider.fetchQueryStats(
+      { apiKey: "refresh_token", login: "sc-domain:example.com" },
+      {
+        country: "usa",
+        device: "mobile",
+        dimensions: ["query", "page"],
+        endDate: "2026-07-03",
+        limit: 10,
+        offset: 20,
+        startDate: "2026-07-01",
+      },
+    );
+
+    const queryCall = vi
+      .mocked(fetch)
+      .mock.calls.find(([url]) => String(url).includes("/searchAnalytics/query"));
+    expect(JSON.parse(String(queryCall?.[1]?.body))).toEqual({
+      dimensionFilterGroups: [
+        {
+          filters: [
+            { dimension: "country", expression: "usa", operator: "equals" },
+            { dimension: "device", expression: "MOBILE", operator: "equals" },
+          ],
+        },
+      ],
+      dimensions: ["query", "page"],
+      endDate: "2026-07-03",
+      rowLimit: 10,
+      startDate: "2026-07-01",
+      startRow: 20,
+    });
+  });
+
+  it("maps query-stat keys by the dimension order sent to the source", async () => {
+    const cases = [
+      {
+        absent: ["page", "country"],
+        dimensions: ["device", "query"] as const,
+        keys: ["seo api", "DESKTOP"],
+        row: {
+          clicks: 3,
+          ctr: 0.1,
+          device: "desktop",
+          impressions: 40,
+          position: 4,
+          query: "seo api",
+        },
+        sent: ["query", "device"],
+      },
+      {
+        absent: ["page", "device"],
+        dimensions: ["country", "query"] as const,
+        keys: ["seo api", "GBR"],
+        row: {
+          clicks: 3,
+          country: "gbr",
+          ctr: 0.1,
+          impressions: 40,
+          position: 4,
+          query: "seo api",
+        },
+        sent: ["query", "country"],
+      },
+      {
+        absent: [],
+        dimensions: ["device", "country", "page", "query"] as const,
+        keys: ["seo api", "https://example.com/docs", "USA", "TABLET"],
+        row: {
+          clicks: 3,
+          country: "usa",
+          ctr: 0.1,
+          device: "tablet",
+          impressions: 40,
+          page: "https://example.com/docs",
+          position: 4,
+          query: "seo api",
+        },
+        sent: ["query", "page", "country", "device"],
+      },
+    ];
+
+    for (const example of cases) {
+      const fetchMock = vi.fn(async (url: string | URL | Request, _init?: RequestInit) => {
+        const target = String(url);
+        if (target.includes("oauth2.googleapis.com/token")) return Response.json(tokenResponse);
+        if (target.includes("/searchAnalytics/query")) {
+          return Response.json({
+            rows: [
+              {
+                clicks: 3,
+                ctr: 0.1,
+                impressions: 40,
+                keys: example.keys,
+                position: 4,
+              },
+            ],
+          });
+        }
+        return new Response("not found", { status: 404 });
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const rows = await gscAnalyticsProvider.fetchQueryStats(
+        { apiKey: "refresh_token", login: "sc-domain:example.com" },
+        {
+          dimensions: [...example.dimensions],
+          endDate: "2026-07-03",
+          limit: 10,
+          startDate: "2026-07-01",
+        },
+      );
+
+      expect(rows).toEqual([example.row]);
+      for (const field of example.absent) expect(rows[0]).not.toHaveProperty(field);
+      const queryCall = fetchMock.mock.calls.find(([url]) =>
+        String(url).includes("/searchAnalytics/query"),
+      );
+      expect(JSON.parse(String(queryCall?.[1]?.body)).dimensions).toEqual(example.sent);
+    }
+  });
+
   it("applies inclusive metric ranges after normalizing query stats", async () => {
     const rows = [
       { clicks: 2, impressions: 20, position: 3, query: "lower-boundary" },

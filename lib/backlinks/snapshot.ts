@@ -1,4 +1,5 @@
 import "server-only";
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import {
@@ -9,6 +10,7 @@ import type { BacklinkRowMode, BacklinkTargetScope } from "@/lib/providers/types
 import { completedAppendSummary } from "./append-evidence";
 import { backlinksCachedUntil } from "./cache";
 import { BacklinksSnapshotExpiredError } from "./errors";
+import { retainedBacklinksPayment } from "./payment-history";
 import { unknownBacklinksSnapshotId } from "./source-filter";
 import { snapshotProvider } from "./stored";
 
@@ -91,6 +93,7 @@ function rowData(row: BacklinksRow) {
 }
 
 export async function persistBacklinksSnapshot(input: {
+  payment?: ActionPaymentReceipt;
   costCents: number;
   fetchedAt: Date;
   history: BacklinksHistoryMonth[];
@@ -118,6 +121,9 @@ export async function persistBacklinksSnapshot(input: {
         projectId: input.projectId,
         rows: { create: input.rows.map(rowData) },
         summary: {
+          ...(input.payment
+            ? { _payment: retainedBacklinksPayment(input.payment, input.provider) }
+            : {}),
           ...input.summary,
           _mode: input.mode,
           _provider: input.provider,
@@ -160,13 +166,24 @@ export function findCurrentBacklinksSnapshot(input: {
 }
 
 export async function appendBacklinksRows(input: {
+  payment?: ActionPaymentReceipt;
   costCents: number;
   rows: BacklinksRow[];
   snapshot: SnapshotRecord;
   claim: { token: string; summary: Prisma.InputJsonObject };
   totalRowsAvailable: number;
 }) {
-  const summary = completedAppendSummary(input.snapshot);
+  const summary = {
+    ...completedAppendSummary(input.snapshot),
+    ...(input.payment
+      ? {
+          _appendPayment: retainedBacklinksPayment(
+            input.payment,
+            snapshotProvider(input.snapshot.summary),
+          ),
+        }
+      : {}),
+  };
   return prisma.$transaction(async (tx) => {
     const updated = await tx.backlinkSnapshot.updateMany({
       where: {

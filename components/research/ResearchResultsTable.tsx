@@ -9,13 +9,14 @@ import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/data-table/DataTable";
 import { sortedDataTableRows } from "@/components/ui/data-table/data-table-sorting";
 import type { DataTableSort } from "@/components/ui/data-table/data-table-types";
-import { formatEstimateCents } from "@/lib/cost-estimate/project-estimate";
+import type { ActionPaymentQuote } from "@/lib/action-payment/contract";
+import { formatPaymentAmount } from "@/lib/action-payment/format";
 import type { GroupedResearchRow } from "@/lib/keyword-research/grouping";
 import { BookmarkSimpleIcon as BookmarkSimple } from "@phosphor-icons/react/dist/csr/BookmarkSimple";
 import { FunnelIcon as Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
 import { PlusIcon as Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { XIcon as X } from "@phosphor-icons/react/dist/csr/X";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useMemo, useState } from "react";
 import { researchResultsColumns } from "./research-results-columns";
 import {
@@ -28,7 +29,12 @@ import {
 } from "./research-results-table-state";
 import { ResearchExportMenu } from "./research-results-view";
 
-export type ResearchDeeperOffer = { cached: boolean; costCents: number | null; nextLimit: number };
+export type ResearchDeeperOffer = {
+  cached: boolean;
+  costCents: number | null;
+  payment?: ActionPaymentQuote;
+  nextLimit: number;
+};
 
 type ResearchResultsTableProps = {
   activeKeyword: string | null;
@@ -78,6 +84,7 @@ export function ResearchResultsTable({
   trackingMarketCount = 1,
   metricsAvailable = true,
 }: Readonly<ResearchResultsTableProps>) {
+  const locale = useLocale();
   const t = useTranslations("projectResearch.results");
   const columnsT = useTranslations("projectResearch.columns");
   const format = useFormatter();
@@ -256,8 +263,8 @@ export function ResearchResultsTable({
       {deeper && onDeeper ? (
         <p className="m-0 border-t border-border px-4 py-3 text-[12px] text-fg-muted">
           {t.rich("deeper", {
-            cached: deeper.cached ? "true" : "false",
-            cost: deeper.costCents == null ? "none" : formatEstimateCents(deeper.costCents),
+            cached: deeper.payment?.cache.state === "hit" ? "true" : "false",
+            cost: deeper.payment ? formatPaymentAmount(deeper.payment.charge, locale) : "none",
             count: fetchedCount,
             limit: deeper.nextLimit,
             run: (chunks) => (

@@ -4,6 +4,7 @@ import RankCheckRunPage from "./page";
 const mocks = vi.hoisted(() => ({
   getRankCheckRun: vi.fn(),
   listRankCheckRunItems: vi.fn(),
+  sharedDeferral: vi.fn(),
   requireReadableProject: vi.fn(),
   resolveProjectAccess: vi.fn(),
   runPage: vi.fn(() => null),
@@ -16,6 +17,9 @@ vi.mock("@/lib/deployment/project-write-mode", () => ({ isProjectReadOnly: () =>
 vi.mock("@/lib/queries/_auth", () => ({
   requireReadableProject: mocks.requireReadableProject,
   resolveProjectAccess: mocks.resolveProjectAccess,
+}));
+vi.mock("@/lib/queries/rank-check-run-deferral", () => ({
+  sharedRankCheckRunDeferralCode: mocks.sharedDeferral,
 }));
 vi.mock("@/lib/queries/rank-check-runs", () => ({
   getRankCheckRun: mocks.getRankCheckRun,
@@ -34,6 +38,7 @@ describe("RankCheckRunPage", () => {
       project: { id: "project_1", writeMode: "active" },
     });
     mocks.getRankCheckRun.mockResolvedValue({ id: runId });
+    mocks.sharedDeferral.mockResolvedValue(null);
     mocks.listRankCheckRunItems.mockResolvedValue({ data: [{ id: "item_1" }], nextCursor: "next" });
   });
 

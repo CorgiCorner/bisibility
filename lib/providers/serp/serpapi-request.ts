@@ -2,6 +2,7 @@ import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
 } from "@/lib/metering/admission-errors";
+import { ProviderCallError } from "@/lib/providers/call-error";
 import { ProviderCostLimitError } from "@/lib/providers/cost-limit";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import type { ProviderCredentials, SerpRankInput } from "@/lib/providers/types";
@@ -38,12 +39,21 @@ export function serpApiRankRequest(input: SerpRankInput): ProviderRequest {
   return { method: "GET", url: url.toString() };
 }
 
-export class SerpApiError extends Error {
+export class SerpApiError extends ProviderCallError {
   constructor(
     message: string,
     readonly retryable = false,
   ) {
-    super(message);
+    super(
+      message,
+      null,
+      /run out of searches|(?:plan|search|monthly)(?:[ -]search)?[ -]limit|(?:exceeded|reached).*(?:searches|quota)|insufficient (?:funds|credits)|payment required/i.test(
+        message,
+      )
+        ? "provider_billing"
+        : "provider_transient",
+    );
+    if (this.code === "provider_billing") this.retryable = false;
     this.name = "SerpApiError";
   }
 }
@@ -116,7 +126,9 @@ function readResponse(
     const retryable = response.status === 429 || response.status >= 500;
     const message = safeErrorMessage(data, `SerpApi request failed with HTTP ${response.status}.`);
 
-    throw new SerpApiError(redactedMessage(message, creds), retryable && canRetry);
+    const error = new SerpApiError(redactedMessage(message, creds), retryable && canRetry);
+    if (response.status === 402) throw new SerpApiError("SerpApi payment required.");
+    throw error;
   }
 
   if (data && typeof data.error === "string" && data.error.trim()) {

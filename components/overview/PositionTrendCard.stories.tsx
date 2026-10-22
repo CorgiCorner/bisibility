@@ -36,7 +36,16 @@ export const Empty: Story = {
 
 export const FirstCheck: Story = {
   args: {
-    data: [{ comparisonKey: "synthetic-series", dateKey: "2026-06-28", label: null, value: 3 }],
+    data: [
+      {
+        comparisonKey: "synthetic-series",
+        dateKey: "2026-06-28",
+        label: null,
+        rankedKeywordCount: 0,
+        rankedKeywords: [],
+        value: 3,
+      },
+    ],
   },
 };
 
@@ -80,6 +89,8 @@ export const HistoryAcrossDepths: Story = {
           ? null
           : new Date(Date.now() - (3 - index) * 86400000).toISOString().slice(0, 10),
       comparisonKey: index < 2 ? "v2:20" : "v2:50",
+      rankedKeywordCount: 0,
+      rankedKeywords: [],
       value,
     })),
   },

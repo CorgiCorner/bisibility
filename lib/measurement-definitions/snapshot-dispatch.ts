@@ -24,6 +24,7 @@ import {
 
 export type SnapshotDefinitionSession = Readonly<{
   binding: SnapshotDefinitionBinding;
+  preflight: (tx: DefinitionTransaction) => Promise<void>;
   beforeFence: PaidFenceHook;
   beforeReserve: NativeRequestGuard;
 }>;
@@ -34,7 +35,7 @@ export function assertSnapshotDefinitionSession(session: SnapshotDefinitionSessi
 /** Only a freshly committed server-side snapshot lease can construct this continuation transport principal. */
 export function snapshotDefinitionSession(
   binding: SnapshotDefinitionBinding,
-  credentialVersion: string,
+  credentialVersion: string | null,
 ) {
   assertCapturedSnapshotBinding(binding);
   const lockBusiness = async (tx: DefinitionTransaction) => {
@@ -64,8 +65,7 @@ export function snapshotDefinitionSession(
     const state = context && readSnapshotExtension(check.raw, context);
     const age = Date.now() - Date.parse(binding.context.capturedAt);
     if (
-      !project ||
-      project.writeMode !== "active" ||
+      project?.writeMode !== "active" ||
       project.isSample ||
       !context ||
       !state ||
@@ -96,22 +96,28 @@ export function snapshotDefinitionSession(
       connection.provider !== "serpapi" ||
       !connection.enabled ||
       connection.status !== "connected" ||
-      connection.credentialSource !== "own" ||
-      ownCredentialVersion("serpapi", binding.connectionId, connection.credentialsEncrypted) !==
-        credentialVersion
+      connection.credentialSource !== (binding.credentialSource ?? "own") ||
+      ((binding.credentialSource ?? "own") === "own" &&
+        (!credentialVersion ||
+          ownCredentialVersion("serpapi", binding.connectionId, connection.credentialsEncrypted) !==
+            credentialVersion))
     )
       throw new DefinitionUnavailableError();
     await assertOperationAccessInTransaction(tx, binding.projectId);
   };
   const session: SnapshotDefinitionSession = {
     binding,
+    async preflight(tx) {
+      await lockBusiness(tx);
+      await assertLease(tx);
+    },
     beforeReserve: {
       lockBusiness: (tx) => lockBusiness(tx),
       async assertRequest(tx, operationId, request) {
         assertSnapshotNativeRequest(binding, request);
         await assertLease(tx);
         await tx.$executeRaw`INSERT INTO measurement_snapshot_request_attempts ("requestId","operationId","requestFingerprint")
-          VALUES (${binding.id},${operationId},${snapshotNativeFingerprint(request!)})`;
+          VALUES (${binding.id},${operationId},${snapshotNativeFingerprint(request)})`;
       },
     },
     beforeFence: {
@@ -140,7 +146,7 @@ export function snapshotDefinitionSession(
 export function assertSnapshotNativeRequest(
   binding: SnapshotDefinitionBinding,
   request?: ProviderRequest,
-) {
+): asserts request is ProviderRequest {
   if (
     !request ||
     Object.keys(request.headers ?? {}).some((name) =>
@@ -188,7 +194,8 @@ function assertSnapshotReferences(
     references.length !== 1 ||
     references.some(
       (ref) =>
-        ref.operation.fundingSource !== "byok" ||
+        ref.operation.fundingSource !==
+          (binding.credentialSource === "hosted" ? "platform" : "byok") ||
         ref.operation.provider !== "serpapi" ||
         ref.context.projectId !== binding.projectId ||
         ref.context.connectionId !== binding.connectionId ||

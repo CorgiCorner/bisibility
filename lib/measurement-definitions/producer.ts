@@ -8,6 +8,7 @@ import {
   currentHeadMatches,
   definitionFingerprint,
   frozenRequest,
+  retainedRequestMatchesSource,
   sameDefinitionBytes,
   targetHeadMatches,
 } from "./canonical";
@@ -86,7 +87,7 @@ async function assertExecutionPrincipal(
 function assertExecutionIntent(execution: VerifiedDefinitionExecution, source: DefinitionSource) {
   if (execution.kind !== "scheduler") return;
   const assigned = source.policy.checkSchedule;
-  const intent = assigned ?? source.policy.keywordSchedule ?? source.policy.defaults;
+  const intent = assigned;
   if (
     !intent ||
     !isScheduledFrequency(intent.frequency) ||
@@ -142,9 +143,11 @@ export async function captureDefinitionBeforeIo(
   if (retained) {
     if (
       !sameDefinitionBytes(retained.owner, input.owner) ||
-      !sameDefinitionBytes(
+      !retainedRequestMatchesSource(
+        retained.source,
         retained.request,
-        frozenRequest(retained.source, input.providerId, input.requestedDepth),
+        input.providerId,
+        input.requestedDepth,
       )
     )
       throw new DefinitionConflictError();

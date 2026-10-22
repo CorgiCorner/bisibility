@@ -23,6 +23,8 @@ vi.mock("@/lib/provider-rates/connection-context", () => ({
   loadProviderRateContext: vi.fn(async () => ({ entries: [], manualAmountCents: null })),
 }));
 vi.mock("./cache", () => ({
+  readRankedKeywordsCache: vi.fn(async () => undefined),
+  rankedKeywordsCacheTtlSeconds: () => 43200,
   rankedKeywordsCacheKey: () => "rk:key",
   withRankedKeywordsCache: mocks.withCache,
 }));

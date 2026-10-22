@@ -16,7 +16,7 @@ function notice(mode: "prompt" | "visibility", reason?: "no_source") {
 describe("module-specific catalog guidance", () => {
   it("offers connection setup instead of claiming available provider presets without credentials", () => {
     notice("visibility", "no_source");
-    expect(screen.getByRole("alert")).toHaveTextContent("Connect DataForSEO");
+    expect(screen.getByRole("alert")).toHaveTextContent("Choose a DataForSEO source");
     expect(screen.getByRole("alert")).not.toHaveTextContent("mini/nano");
     expect(screen.getByRole("link", { name: "Open Integrations" })).toHaveAttribute(
       "href",

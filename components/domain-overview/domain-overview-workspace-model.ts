@@ -1,3 +1,4 @@
+import type { ActionPaymentOption, ActionPaymentQuote } from "@/lib/action-payment/contract";
 import type {
   AnalyzeDomainOverviewAction,
   LoadDomainHistoryAction,
@@ -28,6 +29,8 @@ export type DomainOverviewPageContext = {
 };
 
 export type DomainOverviewEstimateView = {
+  payment?: ActionPaymentQuote;
+  paymentOptions?: ActionPaymentOption[];
   cached: boolean;
   costCents: number | null;
   freshCostCents: number | null;
@@ -96,6 +99,8 @@ export function estimateView(outcome: DomainOverviewOutcome | null): DomainOverv
   if (!outcome?.ok || !("estimate" in outcome)) return EMPTY_DOMAIN_OVERVIEW_ESTIMATE;
   return {
     cached: outcome.cached,
+    payment: outcome.payment,
+    paymentOptions: outcome.paymentOptions,
     costCents: outcome.estimatedCostCents,
     freshCostCents: outcome.freshEstimatedCostCents,
     historyCostCents: outcome.historyEstimatedCostCents,

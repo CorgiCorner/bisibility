@@ -72,7 +72,7 @@ describe("one-time comparison workflow", () => {
     expect(actions.load).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Open comparison" }));
     expect(
-      await screen.findByText("Connect both DataForSEO and SerpApi to compare results."),
+      await screen.findByText("Set up DataForSEO and SerpApi to compare results."),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Review cost" })).not.toBeInTheDocument();
     expect(actions.preview).not.toHaveBeenCalled();

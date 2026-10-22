@@ -2,22 +2,17 @@
 import type {
   AllocationNativeObservation,
   AllocationProps,
-  AllocationRowIdentity,
 } from "@/components/usagekit/provider-allocation-policy";
+import {
+  allocationIdentity,
+  type NativeAllocationRow,
+  type NativeAvailabilityReason,
+  nativeAllocationAvailability,
+} from "@/lib/provider-ui/native-allocation-evidence";
 import type { ProviderAllocationRow } from "@usagekit/views";
 import { useRef, useState } from "react";
-export function allocationIdentity(row: AllocationRowIdentity | null) {
-  return row
-    ? JSON.stringify([
-        row.id,
-        row.connectionId,
-        row.fundingSource,
-        row.surface,
-        row.unit,
-        row.revision,
-      ])
-    : "absent";
-}
+
+export { allocationIdentity } from "@/lib/provider-ui/native-allocation-evidence";
 /** Refreshes only run in event handlers. Every result is tied to its full evidence identity. */
 export function useAllocationObservation({
   evidence,
@@ -41,17 +36,23 @@ export function useAllocationObservation({
     row: ProviderAllocationRow | null;
     native: AllocationNativeObservation | null;
   } | null>(null);
+  const [rejected, setRejected] = useState<{
+    key: string;
+    reason: NativeAvailabilityReason;
+  } | null>(null);
+  const rejectedReason = rejected?.key === key ? rejected.reason : null;
   const observed = probe?.key === key && probe.request === current.current.request ? probe : null;
   const refresh = async () => {
     if ((!onRefreshBalance && !onRefreshNative) || !evidence || !editable || observed?.pending)
       return;
+    setRejected(null);
     const request = ++current.current.request;
     const finish = beginRefresh();
     setProbe({ key, request, pending: true, failed: false, row: null, native: null });
     try {
       const answer = onRefreshNative
         ? await onRefreshNative(evidence)
-        : await onRefreshBalance!(evidence);
+        : await onRefreshBalance?.(evidence);
       if (current.current.request !== request || current.current.key !== key) return;
       const native = onRefreshNative ? (answer as AllocationNativeObservation | null) : null;
       const row = onRefreshNative ? null : (answer as ProviderAllocationRow | null);
@@ -71,10 +72,31 @@ export function useAllocationObservation({
       finish();
     }
   };
+  const initial = (evidence as NativeAllocationRow | null)?.nativeObservation;
+  const native = observed ? observed.native : (initial ?? null);
+  const nativeAvailable =
+    onRefreshNative && evidence ? nativeAllocationAvailability(evidence, native) : null;
+  const legacy =
+    !observed && !initial && !(evidence as NativeAllocationRow | null)?.availabilityReason;
   return {
     observed,
+    native,
     refresh,
-    availability: onRefreshNative ? evidence : observed ? observed.row : evidence,
+    invalidateNative: (reason: NativeAvailabilityReason) => setRejected({ key, reason }),
+    availabilityReason:
+      rejectedReason ??
+      (nativeAvailable?.outcome === "unavailable" ? nativeAvailable.reason : undefined),
+    availability: rejectedReason
+      ? null
+      : onRefreshNative
+        ? nativeAvailable?.outcome === "ready"
+          ? nativeAvailable.row
+          : legacy
+            ? evidence
+            : null
+        : observed
+          ? observed.row
+          : evidence,
   };
 }
 

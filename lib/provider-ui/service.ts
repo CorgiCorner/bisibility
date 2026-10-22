@@ -11,12 +11,18 @@ import type {
 } from "@usagekit/views";
 import { retainCommand, retainedCommand } from "./journal";
 import { mutateProviderUi } from "./mutate";
+import { loadNativeAllocationRows } from "./native-allocation-read";
 import { readProviderUi } from "./read";
 import { providerUiCommandSchema, providerUiQuerySchema } from "./schema";
 import { connectionRevision, loadProviderUiState } from "./state";
 import { loadProviderUiRates } from "./state-rates";
 
 type Scope = { actor: Actor; projectPublicId: string };
+const readTransaction = {
+  isolationLevel: "RepeatableRead" as const,
+  maxWait: 5_000,
+  timeout: 15_000,
+};
 const unavailable = (commandId: string): ProviderActionResult => ({
   commandId,
   outcome: "unavailable",
@@ -39,8 +45,9 @@ export function createProviderUiService(database: Pick<PrismaClient, "$transacti
         const result = await retryTransientDatabaseRead(() =>
           database.$transaction(
             async (tx) =>
-              (await loadProviderUiState(tx, scope.actor, scope.projectPublicId, "read")).binding,
-            { isolationLevel: "RepeatableRead" },
+              (await loadProviderUiState(tx, scope.actor, scope.projectPublicId, "binding"))
+                .binding,
+            readTransaction,
           ),
         );
         if (!result.ok) throw new Error("Provider binding read unavailable.");
@@ -54,14 +61,16 @@ export function createProviderUiService(database: Pick<PrismaClient, "$transacti
       const parsed = providerUiQuerySchema.safeParse(raw);
       if (!parsed.success) return { outcome: "invalid", field: "query", reason: "invalid_query" };
       try {
-        return await database.$transaction(
-          async (tx) => {
-            const state = await loadProviderUiState(tx, scope.actor, scope.projectPublicId, "read");
-            await loadProviderUiRates(tx, state, parsed.data);
-            return readProviderUi(state, parsed.data);
-          },
-          { isolationLevel: "RepeatableRead" },
-        );
+        const state = await database.$transaction(async (tx) => {
+          const state = await loadProviderUiState(tx, scope.actor, scope.projectPublicId, "read", {
+            financialEvidence: parsed.data.kind === "allocations",
+          });
+          await loadProviderUiRates(tx, state, parsed.data);
+          return state;
+        }, readTransaction);
+        if (parsed.data.kind === "allocations")
+          await loadNativeAllocationRows(state, parsed.data.connectionIds);
+        return readProviderUi(state, parsed.data);
       } catch (error) {
         return error instanceof AuthorizationError
           ? { outcome: "forbidden" }

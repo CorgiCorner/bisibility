@@ -48,6 +48,34 @@ function Table({
 }
 
 describe("DataTableHeader", () => {
+  it("names columns without including their resize control values", () => {
+    render(<Table />);
+    expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Score" })).toBeInTheDocument();
+    expect(screen.getByRole("separator", { name: "Resize Score column" })).toHaveAttribute(
+      "aria-valuenow",
+      "100",
+    );
+  });
+
+  it("keeps visible translated labels when headers have help text or custom content", () => {
+    render(
+      <DataTable
+        ariaLabel="Helpful columns"
+        columns={[
+          { accessorKey: "name", header: "Sessions", meta: { title: "Long help about sessions" } },
+          { accessorKey: "score", id: "raw-score", header: () => <span>Translated score</span> },
+        ]}
+        id="helpful-headers"
+        onSortingChange={vi.fn()}
+        rows={[{ id: "a", name: "Alpha", score: 2 }]}
+        sorting={null}
+      />,
+    );
+    expect(screen.getByRole("columnheader", { name: "Sessions" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Translated score" })).toBeInTheDocument();
+  });
+
   it("layers an opaque table surface below the transparent sticky header", () => {
     render(<Table />);
     const headerGroup = screen.getAllByRole("rowgroup")[0];

@@ -22,6 +22,8 @@ export type DeploymentExecutionInput = {
   /** Persisted identity of a live rank check, verified by private admission. */
   rankCheckId?: string;
   keywordId?: string;
+  /** Trusted continuation principal, checked against its durable binding and current lease. */
+  snapshotRequestId?: string;
 };
 
 export type DeploymentRankReservationInput = {
@@ -42,6 +44,7 @@ export type DeploymentRankReservation = { prices: Record<string, string> };
 export type DeploymentReservationClient = Prisma.TransactionClient;
 
 export type DeploymentExecution = {
+  classifyFailure?(error: unknown): Promise<unknown>;
   credentials: ProviderCredentials;
   readonly started: boolean;
   readonly costCents: number | null;

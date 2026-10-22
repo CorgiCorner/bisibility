@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { DateFormatProvider } from "@/components/dates/DateFormatProvider";
 import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { projectRunRankCheckPath, projectRunsPath } from "@/lib/routing/project-runs-path";
@@ -145,6 +146,13 @@ describe("RunsTable", () => {
             ...historyRun,
             blockedReason: "budget_exhausted",
             costCents: 192,
+            payment: {
+              actionId: "run-1",
+              quoteId: "quote-1",
+              option: paymentQuote().option,
+              state: "settled",
+              charge: { value: "6", certainty: "measured", unit: paymentQuote().charge.unit },
+            },
             estimatedCostCents: 0,
             status: "blocked",
           },
@@ -152,12 +160,13 @@ describe("RunsTable", () => {
       />,
     );
 
-    expect(screen.getByText("$1.92")).toBeInTheDocument();
-    expect(screen.getByText("actual")).toBeInTheDocument();
+    expect(screen.getByText("6 tokens")).toBeInTheDocument();
+    expect(screen.getByText("On your Example provider key")).toBeInTheDocument();
+    expect(screen.queryByText("$1.92")).toBeNull();
     expect(screen.queryByText("estimate")).toBeNull();
   });
 
-  it("shows an estimate for an unlaunched blocked run", () => {
+  it("does not invent a payer charge from a legacy run estimate", () => {
     render(
       <RunsTable
         emptyActionHref="/app/prj_1/runs/schedules"
@@ -176,12 +185,11 @@ describe("RunsTable", () => {
       />,
     );
 
-    expect(screen.getByText("$1.92")).toBeInTheDocument();
-    expect(screen.getByText("estimate")).toBeInTheDocument();
-    expect(screen.queryByText("actual")).toBeNull();
+    expect(screen.getByText("Payment details unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("$1.92")).toBeNull();
   });
 
-  it("shows planned quota operations instead of plan dollars for a quota provider", () => {
+  it("does not relabel a legacy provider estimate as a customer charge", () => {
     render(
       <RunsTable
         emptyActionHref="/app/prj_1/runs/schedules"
@@ -201,8 +209,8 @@ describe("RunsTable", () => {
       />,
     );
 
-    expect(screen.getByText("12 operations")).toBeInTheDocument();
-    expect(screen.getByText("estimate")).toBeInTheDocument();
+    expect(screen.getByText("Payment details unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("12 operations")).toBeNull();
     expect(screen.queryByText(/\$/)).not.toBeInTheDocument();
   });
 
@@ -299,7 +307,7 @@ describe("RunsTable", () => {
     expect(screen.getByText("Daily 06:00")).toBeInTheDocument();
     expect(screen.getByText("Skipped by Anna Kowalska · never sent")).toBeInTheDocument();
     expect(screen.getByText("0 / 24 targets")).toBeInTheDocument();
-    expect(screen.getByText("$0.00")).toBeInTheDocument();
+    expect(screen.queryByText("$0.00")).toBeNull();
     expect(screen.getByText("nothing billed")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Scheduled" })).toHaveAttribute(
       "href",

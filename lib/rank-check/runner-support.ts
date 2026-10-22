@@ -1,11 +1,11 @@
-import type { RankCheckConnectionInput } from "./runner-input";
+import type { RankCheckConnectionInput } from "@/lib/rank-check/runner-input";
 
 import "server-only";
 
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { resolveProviderCredentials } from "@/lib/providers/credentials";
 import type { SerpRankResult } from "@/lib/providers/types";
-import { type RankCheckScheduleInput } from "./schedule";
+import type { RankCheckScheduleInput } from "@/lib/rank-check/schedule";
 
 export const PROVIDER_NOT_CONNECTED_MESSAGE = "Connect a SERP provider before running rank checks.";
 
@@ -26,6 +26,8 @@ export function fallbackSchedule(): RankCheckScheduleInput {
 }
 
 export function credentialsFromConnection(connection: RankCheckConnectionInput) {
+  if (connection.credentialSource === "hosted")
+    throw new Error("Hosted rank checks require deployment execution credentials.");
   if (connection.credentials) {
     return connection.credentials;
   }

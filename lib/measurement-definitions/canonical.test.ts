@@ -156,6 +156,32 @@ describe("persisted measurement definition proof", () => {
     source.policy.defaults!.serpStopOnMatch = true;
     expect(frozenRequest(source, "synthetic").findTargetsIn).toBeNull();
   });
+  it.each(["project", "override", "schedule"] as const)(
+    "freezes Top20 without early stopping from %s depth",
+    (origin) => {
+      const source = definitionSourceFixture();
+      source.policy.config!.adapters[0].nativeFindTargetsIn = "with_subdomains_on_match";
+      if (origin === "project") source.policy.defaults!.serpDepth = 20;
+      if (origin === "schedule")
+        source.policy.keywordSchedule = {
+          id: "schedule",
+          frequency: "daily",
+          cronExpression: null,
+          timezone: "UTC",
+          jitterMinutes: 0,
+          serpDepth: 20,
+        };
+      const request = frozenRequest(source, "synthetic", origin === "override" ? 20 : undefined);
+      expect(request).toMatchObject({ depth: 20, stopOnMatch: false, findTargetsIn: null });
+      expect(source.policy.defaults!.serpStopOnMatch).toBe(true);
+    },
+  );
+  it.each([10, 50, 100] as const)("retains configured early stopping at Top%i", (depth) => {
+    const source = definitionSourceFixture();
+    expect(frozenRequest(source, "synthetic", depth).stopOnMatch).toBe(true);
+    source.policy.defaults!.serpStopOnMatch = false;
+    expect(frozenRequest(source, "synthetic", depth).stopOnMatch).toBe(false);
+  });
   it("rejects a retired generated workspace host using the actual tracked-domain authority", () => {
     const source = definitionSourceFixture();
     source.target.domain = "workspace-aabbccdd.bisibility.cloud";

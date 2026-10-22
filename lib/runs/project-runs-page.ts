@@ -1,3 +1,4 @@
+import { AI_TERMINAL_STATES } from "./ai-run-state";
 import {
   compareProjectRunsPlannedSortTuples,
   compareProjectRunsSortTuples,
@@ -33,7 +34,12 @@ export function matchesProjectRunsStatus(run: ProjectRun, status: ProjectRunsSta
     ].includes(run.lifecycle);
   }
   if (status === "finished") {
-    return run.kind === "rank_check"
+    if (run.kind === "ai")
+      return (
+        (AI_TERMINAL_STATES as readonly string[]).includes(run.lifecycle) ||
+        Boolean(run.timestamps.finishedAt)
+      );
+    return run.kind === "rank"
       ? (RANK_FINISHED_STATUSES as readonly string[]).includes(run.lifecycle)
       : (GSC_FINISHED_STATES as readonly string[]).includes(run.lifecycle);
   }
@@ -41,8 +47,9 @@ export function matchesProjectRunsStatus(run: ProjectRun, status: ProjectRunsSta
 }
 
 export function matchesProjectRunsQuery(run: ProjectRun, query: ProjectRunsQuery) {
-  if (query.source === "rank_checks" && run.kind !== "rank_check") return false;
-  if (query.source === "search_console" && run.kind !== "gsc_import") return false;
+  if (query.source === "ai_tracking" && run.kind !== "ai") return false;
+  if (query.source === "rank_checks" && run.kind !== "rank") return false;
+  if (query.source === "search_console" && run.kind !== "gsc") return false;
   if (query.view === "planned")
     return isPlannedProjectRun(run) && matchesProjectRunsStatus(run, query.status);
   return matchesProjectRunsStatus(run, query.status);

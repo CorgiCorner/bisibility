@@ -10,7 +10,7 @@
         "analyzing": "Analyzing",
         "analyze": "Analyze",
         "cached": "{action} free, cached",
-        "priced": "{action} ~{cost}",
+        "priced": "{action} {cost}",
         "removeTarget": "Remove {target}",
         "targetLabel": "Backlinks target",
         "targetPlaceholder": "Enter a domain or URL",
@@ -30,7 +30,7 @@
       "idle": {
         "aria": "Backlinks introduction",
         "bullets": {
-          "price": "Runs on your own DataForSEO key, price shown before every run",
+          "price": "Price shown before each run.",
           "cache": "Snapshots cached for 24 hours - reopening and re-slicing is free",
           "diff": "Every refresh diffs against the last snapshot: new and lost links flagged"
         },
@@ -133,7 +133,7 @@
         "exactPage": "Exact page",
         "wholeSite": "Whole site, subdomains {included, select, true {included} other {excluded}}",
         "snapshot": "- snapshot",
-        "cached": "cached, free for {hours, number}h",
+        "cached": "cached, free for {duration}",
         "refresh": "Refresh now",
         "refreshEstimate": "~{amount}",
         "refreshEstimateUnderCent": "~{sign}< {amount}",
@@ -185,7 +185,7 @@
         "csv": "Export CSV"
       },
       "recent": {
-        "cached": "cached, free for {hours, number}h",
+        "cached": "cached, free for {duration}",
         "expired": "cache expired"
       },
       "pricing": {

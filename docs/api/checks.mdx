@@ -3,6 +3,11 @@ title: "Checks"
 description: "Run an immediate rank check for one keyword."
 ---
 
+`max_cost_cents=0` is cache-only. Fresh rank checks have no result cache, so zero
+always returns `cost_limit_exceeded` before creating a run, hold, attempt or provider
+request, including when the monetary estimate is zero or unknown.
+
+
 Use checks when you need a fresh position for one keyword immediately.
 
 Each keyword already belongs to one location-language market and one device.
@@ -36,6 +41,7 @@ Use a specific connected provider:
 If `provider_id` is omitted, the primary connected SERP provider for the project
 is used. An optional `max_cost_cents` integer refuses the launch with a
 `cost_limit_exceeded` problem when its preflight cost estimate exceeds it.
+The MCP tool is `run_rank_check`. See [Paid MCP tools](/agents/paid-tools).
 
 Response status is `201` when the check completes during the request.
 

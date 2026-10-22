@@ -57,13 +57,15 @@ export function TwoFactorChallengeForm({
   const router = useRouter();
   const destination = returnToOrDefault(returnTo);
   const [message, setMessage] = useState<string | null>(null);
+  const [expired, setExpired] = useState(false);
+  const [navigating, setNavigating] = useState(false);
   const form = useForm<ChallengeValues>({
     defaultValues: { method: "totp", code: "" },
     mode: "onSubmit",
     resolver: zodResolver(challengeSchema),
   });
   const method = form.watch("method");
-  const submitting = form.formState.isSubmitting;
+  const submitting = form.formState.isSubmitting || navigating;
   const validationMessage =
     method === "totp"
       ? t("validation.totp")
@@ -77,6 +79,7 @@ export function TwoFactorChallengeForm({
   }
 
   async function verify(values: ChallengeValues) {
+    if (expired || navigating) return;
     setMessage(null);
     const response =
       values.method === "totp"
@@ -84,12 +87,15 @@ export function TwoFactorChallengeForm({
         : await authClient.twoFactor.verifyBackupCode({ code: values.code });
 
     if (response.error) {
-      setMessage(t("invalid"));
+      const challengeExpired = response.error.code === "INVALID_TWO_FACTOR_COOKIE";
+      setExpired(challengeExpired);
+      setMessage(t(challengeExpired ? "expired" : "invalid"));
       form.setValue("code", "", { shouldDirty: true });
       form.setFocus("code");
       return;
     }
 
+    setNavigating(true);
     router.replace(destination);
     router.refresh();
   }
@@ -106,8 +112,8 @@ export function TwoFactorChallengeForm({
   }
 
   return (
-    <div className="w-full max-w-[380px]">
-      <span className="grid h-[46px] w-[46px] place-items-center rounded-card bg-accent-soft text-accent-solid">
+    <div aria-busy={submitting} className="w-full max-w-[380px]">
+      <span className="grid h-[46px] w-[46px] place-items-center rounded-card border border-border bg-bg-elev text-fg">
         <ShieldCheck aria-hidden size={23} weight="regular" />
       </span>
       <h1 className="mt-4.5 mb-0 text-[25px] font-semibold tracking-[-0.7px] text-fg">
@@ -119,7 +125,7 @@ export function TwoFactorChallengeForm({
         <legend className="sr-only">{t("method")}</legend>
         <Button
           aria-pressed={method === "totp"}
-          disabled={submitting}
+          disabled={submitting || expired}
           onClick={() => selectMethod("totp")}
           startIcon={<ShieldCheck aria-hidden size={16} weight="regular" />}
           style={methodButtonStyle}
@@ -130,7 +136,7 @@ export function TwoFactorChallengeForm({
         </Button>
         <Button
           aria-pressed={method === "backup"}
-          disabled={submitting}
+          disabled={submitting || expired}
           onClick={() => selectMethod("backup")}
           startIcon={<Key aria-hidden size={16} weight="regular" />}
           style={methodButtonStyle}
@@ -150,6 +156,7 @@ export function TwoFactorChallengeForm({
         </label>
         <input
           autoComplete={method === "totp" ? "one-time-code" : "off"}
+          disabled={expired || submitting}
           className={cn(
             "mt-[7px] box-border w-full rounded-control border border-border-control bg-transparent px-[13px] py-3 text-[14.5px] font-medium tabular-nums text-fg outline-none focus:border-accent",
             form.formState.errors.code && "border-red focus:border-red",
@@ -172,7 +179,7 @@ export function TwoFactorChallengeForm({
         ) : null}
 
         <Button
-          disabled={submitting}
+          disabled={submitting || expired}
           endIcon={
             submitting ? (
               <CircleNotch aria-hidden className="bv-spin" size={16} weight="regular" />
@@ -192,7 +199,7 @@ export function TwoFactorChallengeForm({
           type="button"
           variant="primary"
         >
-          {submitting ? t("verifying") : t("verify")}
+          {navigating ? t("signingIn") : submitting ? t("verifying") : t("verify")}
         </Button>
       </div>
 

@@ -49,7 +49,13 @@ const base: ScheduleEditorProps = {
   connectedProviders: [{ label: "SerpApi", value: "serpapi" }],
   defaultScheduleName: "Daily 06:00",
   members: [
-    { name: "headless cms", publicId: "kw_story_1", targetCount: 2 },
+    {
+      name: "headless cms",
+      publicId: "kw_story_1",
+      targetCount: 2,
+      market: "Spain",
+      device: "Desktop",
+    },
     { name: "contentful alternative", publicId: "kw_story_2", targetCount: 2 },
     { name: "cms pricing", publicId: "kw_story_5", targetCount: 2 },
     { name: "best headless cms", publicId: "kw_story_6", targetCount: 2 },

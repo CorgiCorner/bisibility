@@ -1,3 +1,9 @@
+import type {
+  ActionPaymentOption,
+  ActionPaymentQuote,
+  ActionPaymentReceipt,
+} from "@/lib/action-payment/contract";
+import type { ActionPaymentInput } from "@/lib/action-payment/session";
 import type { ProviderLookupFailure } from "@/lib/provider-lookups/paid-call";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type { BacklinkFlag, BacklinkRowMode, BacklinkTargetScope } from "@/lib/providers/types";
@@ -9,7 +15,7 @@ export type BacklinksServiceContext = {
   projectId: string;
 };
 
-export type AnalyzeBacklinksOptions = {
+export type AnalyzeBacklinksOptions = ActionPaymentInput & {
   estimateOnly?: boolean;
   fresh?: boolean;
   includeSubdomains?: boolean;
@@ -21,7 +27,7 @@ export type AnalyzeBacklinksOptions = {
   targetScope?: BacklinkTargetScope;
 };
 
-export type LoadMoreBacklinkRowsOptions = {
+export type LoadMoreBacklinkRowsOptions = ActionPaymentInput & {
   estimateOnly?: boolean;
   maxCostCents?: number;
   snapshotRef?: string;
@@ -70,6 +76,9 @@ export type BacklinksRow = {
 };
 
 export type BacklinksSnapshot = {
+  originalPayment?: ActionPaymentReceipt;
+  appendPayment?: ActionPaymentReceipt;
+  payment?: ActionPaymentReceipt;
   /** Opaque reference required when extending this exact row revision. */
   snapshotRef?: string;
   cached: boolean;
@@ -94,6 +103,8 @@ export type BacklinksSnapshot = {
  * mistake it for an empty backlink profile.
  */
 export type BacklinksEstimate = {
+  payment?: ActionPaymentQuote;
+  paymentOptions?: ActionPaymentOption[];
   cached: boolean;
   /** Expiry of the unexpired snapshot the paid call would reuse; null without one. */
   cachedUntil: string | null;
@@ -114,6 +125,7 @@ export type BacklinksHistoryFailure = {
 
 /** Failed current request evidence, never a successful or reusable report snapshot. */
 export type BacklinksFailedSummary = {
+  payment?: ActionPaymentReceipt;
   costCents: null;
   knownSummaryCostCents: number;
   historyFailure: BacklinksHistoryFailure;

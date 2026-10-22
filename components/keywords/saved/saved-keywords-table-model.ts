@@ -24,6 +24,17 @@ export function savedKeywordResearchHref(
   return `${appPath(projectRef, "keyword-research")}?${params.toString()}`;
 }
 
+/** Research seeded by the saved keyword text, not the search that originally found it. */
+export function savedKeywordResearchHrefForKeyword(
+  projectRef: string,
+  row: Pick<SavedKeywordRow, "location" | "text">,
+) {
+  const params = new URLSearchParams();
+  params.set("seed", row.text);
+  params.set("location", row.location);
+  return `${appPath(projectRef, "keyword-research")}?${params.toString()}`;
+}
+
 export function savedKeywordLocation(location: string): LocationFieldValue | null {
   if (!location.includes("/")) return countryValueForCode(location);
   const [countryCode = "", regionName = null, cityName = null] = location.split("/");

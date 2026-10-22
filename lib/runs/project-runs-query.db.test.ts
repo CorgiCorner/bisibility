@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  aiFindMany: vi.fn(),
+  aiCount: vi.fn(),
   gscCount: vi.fn(),
   gscFindMany: vi.fn(),
   projectFindUnique: vi.fn(),
@@ -12,6 +14,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
+    aiTrackingRun: { findMany: mocks.aiFindMany, count: mocks.aiCount },
     project: { findUnique: mocks.projectFindUnique },
     rankCheckRun: { count: mocks.rankCount, findMany: mocks.rankFindMany },
     searchAnalyticsImport: { count: mocks.gscCount, findMany: mocks.gscFindMany },
@@ -21,6 +24,7 @@ vi.mock("@/lib/search-insights/sync/operation-snapshot", () => ({
   readActiveSearchImportSnapshot: mocks.readActiveSearchImportSnapshot,
 }));
 
+import { encodeProjectRunsCursor } from "./cursor";
 import { listProjectRuns } from "./project-runs-query";
 
 const project = {
@@ -94,6 +98,8 @@ function activeSnapshot(overrides: Record<string, unknown> = {}) {
 describe("project runs database query", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mocks.aiFindMany.mockResolvedValue([]);
+    mocks.aiCount.mockResolvedValue(0);
     mocks.rankFindMany.mockResolvedValue([]);
     mocks.rankCount.mockResolvedValue(0);
     mocks.rankFindMany.mockResolvedValueOnce([rankRow()]).mockResolvedValueOnce([
@@ -114,6 +120,22 @@ describe("project runs database query", () => {
     mocks.readActiveSearchImportSnapshot.mockResolvedValue(activeSnapshot());
   });
 
+  it("retains equal-time rows from later sources after an AI cursor", async () => {
+    const query = { limit: 20, source: "all", status: "all", view: "runs" } as const;
+    const at = "2026-09-06T12:00:00.000Z";
+    const cursor = encodeProjectRunsCursor({
+      filters: { source: query.source, status: query.status, view: query.view },
+      sort: { kind: "ai", id: "air_abcdefghijklmnopqrstuvwx", sortAt: at },
+    });
+    await listProjectRuns(project, { ...query, cursor });
+    expect(mocks.rankFindMany.mock.calls[0]?.[0]?.where).toMatchObject({
+      AND: [expect.anything(), { launchedAt: { lte: new Date(at) } }],
+    });
+    expect(JSON.stringify(mocks.gscFindMany.mock.calls[0]?.[0]?.where)).toContain(
+      '"createdAt":"2026-09-06T12:00:00.000Z"',
+    );
+  });
+
   it("returns durable current and completed imports without admitting GA4 or a snapshot cap", async () => {
     const result = await listProjectRuns(project, {
       cursor: null,
@@ -123,7 +145,7 @@ describe("project runs database query", () => {
       view: "runs",
     });
 
-    expect(result.counts).toEqual({ rankChecks: 2, searchConsole: 2, total: 4 });
+    expect(result.counts).toEqual({ aiTracking: 0, rankChecks: 2, searchConsole: 2, total: 4 });
     expect(result.runs.map((run) => run.id)).toEqual([
       runId,
       "import_current",
@@ -131,11 +153,11 @@ describe("project runs database query", () => {
       "rcr_b00000000000000000000000",
     ]);
     expect(result.runs.find((run) => run.id === "import_current")).toMatchObject({
-      kind: "gsc_import",
+      kind: "gsc",
       progress: { completed: 28, total: 488, unit: "days" },
     });
     expect(result.runs.find((run) => run.id === "import_completed")).toMatchObject({
-      kind: "gsc_import",
+      kind: "gsc",
       progress: { completed: null, total: null, unit: "days" },
     });
     expect(result.runs.map((run) => run.id)).not.toContain("import_ga4");
@@ -183,11 +205,11 @@ describe("project runs database query", () => {
     });
 
     expect(active).toMatchObject({
-      counts: { rankChecks: 0, searchConsole: 0, total: 0 },
+      counts: { aiTracking: 0, rankChecks: 0, searchConsole: 0, total: 0 },
       runs: [],
     });
     expect(attention).toMatchObject({
-      counts: { rankChecks: 0, searchConsole: 1, total: 1 },
+      counts: { aiTracking: 0, rankChecks: 0, searchConsole: 1, total: 1 },
       runs: [
         expect.objectContaining({
           attention: expect.objectContaining({ kind: "worker_unavailable" }),
@@ -298,7 +320,7 @@ describe("project runs database query", () => {
         status,
         view: "runs",
       });
-      expect(result.counts).toEqual({ rankChecks: 1, searchConsole: 0, total: 1 });
+      expect(result.counts).toEqual({ aiTracking: 0, rankChecks: 1, searchConsole: 0, total: 1 });
       expect(result.runs.map((run) => run.id)).toEqual([upcoming.publicId]);
       const rowWhere = mocks.rankFindMany.mock.calls[2]?.[0]?.where;
       expect(rowWhere).toEqual(mocks.rankCount.mock.calls[2]?.[0]?.where);
@@ -407,4 +429,49 @@ describe("project runs database query", () => {
     }
     expect(mocks.readActiveSearchImportSnapshot).toHaveBeenCalledTimes(2);
   });
+});
+
+describe("legacy terminal cancellation", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mocks.aiFindMany.mockResolvedValue([]);
+    mocks.aiCount.mockResolvedValue(0);
+    mocks.rankFindMany.mockResolvedValue([]);
+    mocks.rankCount.mockResolvedValue(0);
+    mocks.gscFindMany.mockResolvedValue([]);
+    mocks.gscCount.mockResolvedValue(0);
+    mocks.readActiveSearchImportSnapshot.mockResolvedValue(null);
+  });
+  it.each([
+    ["all", "all"],
+    ["rank_checks", "all"],
+    ["all", "cancelled"],
+    ["rank_checks", "cancelled"],
+  ] as const)(
+    "loads legacy cancellation in %s/%s history without changing scope or cost",
+    async (source, status) => {
+      mocks.rankFindMany.mockResolvedValueOnce([
+        rankRow({ outcome: "cancelled", trigger: "scheduled", costCents: 7 }),
+      ]);
+      mocks.rankCount.mockResolvedValueOnce(1);
+      const result = await listProjectRuns(project, {
+        cursor: null,
+        limit: 20,
+        source,
+        status,
+        view: "runs",
+      });
+      expect(result.runs).toHaveLength(1);
+      expect(result.runs[0]).toMatchObject({
+        id: runId,
+        lifecycle: "cancelled",
+        details: { status: "cancelled", outcome: null, costCents: 7 },
+        scope: { keywordCount: 2 },
+      });
+      if (status === "cancelled")
+        expect(JSON.stringify(mocks.rankFindMany.mock.calls[0][0].where)).toContain(
+          '"outcome":"cancelled"',
+        );
+    },
+  );
 });

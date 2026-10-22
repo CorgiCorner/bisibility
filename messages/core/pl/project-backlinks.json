@@ -10,7 +10,7 @@
         "analyzing": "Analizowanie",
         "analyze": "Analizuj",
         "cached": "{action} – bezpłatnie ze zrzutu",
-        "priced": "{action} ~{cost}",
+        "priced": "{action} {cost}",
         "removeTarget": "Usuń cel {target}",
         "targetLabel": "Cel analizy linków",
         "targetPlaceholder": "Podaj domenę lub adres URL",
@@ -30,7 +30,7 @@
       "idle": {
         "aria": "Wprowadzenie do linków zwrotnych",
         "bullets": {
-          "price": "Działa na Twoim własnym kluczu DataForSEO, cenę widzisz przed każdym uruchomieniem",
+          "price": "Cena przed każdym uruchomieniem.",
           "cache": "Zrzuty przechowywane w pamięci podręcznej przez 24 godziny – ponowne otwieranie i filtrowanie jest bezpłatne",
           "diff": "Każde odświeżenie porównuje dane z poprzednim zrzutem: nowe i utracone linki są oznaczane"
         },
@@ -133,7 +133,7 @@
         "exactPage": "Konkretna strona",
         "wholeSite": "Cała witryna, subdomeny {included, select, true {uwzględnione} other {pominięte}}",
         "snapshot": "– zrzut",
-        "cached": "w pamięci podręcznej, bezpłatnie przez {hours, number} godz.",
+        "cached": "w pamięci podręcznej, bezpłatnie przez {duration}",
         "refresh": "Odśwież teraz",
         "refreshEstimate": "~{amount}",
         "refreshEstimateUnderCent": "~{sign}< {amount}",
@@ -185,7 +185,7 @@
         "csv": "Eksportuj CSV"
       },
       "recent": {
-        "cached": "w pamięci podręcznej, bezpłatnie przez {hours, number} godz.",
+        "cached": "w pamięci podręcznej, bezpłatnie przez {duration}",
         "expired": "pamięć podręczna wygasła"
       },
       "pricing": {

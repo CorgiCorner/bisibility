@@ -1,12 +1,12 @@
-import { Avatar } from "@/components/ui/Avatar";
+import { AuditActorAvatar } from "@/components/audit/AuditActorAvatar";
+import type { PresentedAuditEntry } from "@/components/audit/audit-presentation";
+import { OperationPill } from "@/components/audit/OperationPill";
 import type { DataTableColumn } from "@/components/ui/data-table/data-table-types";
 import { IdChip } from "@/components/ui/IdChip";
 import { StatusPill } from "@/components/ui/StatusPill";
 import type { AuditStatus } from "@/lib/queries/audit";
 import { CaretRightIcon as CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import type { useTranslations } from "next-intl";
-import type { PresentedAuditEntry } from "./audit-presentation";
-import { OperationPill } from "./OperationPill";
 
 type AuditColumnsTranslations = ReturnType<typeof useTranslations<"projectAudit.columns">>;
 
@@ -45,11 +45,10 @@ function ActorEventCell({
 }>) {
   return (
     <span className="flex h-full min-w-0 items-center gap-2.5 py-1">
-      <Avatar
-        alt=""
+      <AuditActorAvatar
+        actor={row.actor}
         className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-control bg-bg-sunken text-[9.5px] font-semibold text-fg-muted"
-        initials={row.actor.initials}
-        src={row.actor.avatarUrl}
+        systemLabel={row.actor.name}
       />
       <span className="min-w-0">
         <button
@@ -64,7 +63,7 @@ function ActorEventCell({
           {row.eventName}
         </button>
         <span className="mt-0.5 block truncate text-[10px] leading-[1.2] text-fg-muted">
-          {row.actor.email} / {row.source.channel.toUpperCase()}
+          {row.actor.email || row.actor.name} / {row.source.channel.toUpperCase()}
         </span>
       </span>
     </span>

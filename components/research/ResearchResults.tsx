@@ -1,7 +1,9 @@
 "use client";
 
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import type { StoredResultFreshness } from "@/components/demo-research/StoredResultFreshness";
 import type { TrackingConfigurationValue } from "@/components/keywords/add/TrackingConfigurationFields";
+import type { ActionPaymentQuote, ActionPaymentReceipt } from "@/lib/action-payment/contract";
 import { type GroupedResearchRow, groupResearchRows } from "@/lib/keyword-research/grouping";
 import type {
   KeywordResearchSource,
@@ -22,14 +24,13 @@ import { ResearchFiltersDrawer } from "./ResearchFiltersDrawer";
 import { ResearchResultsTable } from "./ResearchResultsTable";
 import { ResearchTextFilter } from "./ResearchTextFilter";
 import { DiagnosticsBanner, skipNote, warningLabel } from "./research-diagnostics";
-import { deeperResearchCostCents } from "./research-results-model";
 import { rowsForResearchScope } from "./research-scope-capability";
 import type { ResearchAddDraft, ResearchSaveDraft } from "./research-workspace-model";
 
 type ResearchResultsProps = {
   costContext?: ProjectCostContext;
   defaultTracking?: TrackingConfigurationValue;
-  deeperEstimate?: { cached: boolean; costCents: number };
+  deeperEstimate?: { cached: boolean; costCents: number; payment?: ActionPaymentQuote };
   onAdd?: (draft: ResearchAddDraft) => void;
   onDeeper?: () => void;
   onRemoveSaved?: (draft: ResearchSaveDraft) => void;
@@ -39,7 +40,9 @@ type ResearchResultsProps = {
   readOnly?: boolean;
   requestedLimit: number;
   result: Pick<KeywordResearchSuccess, "cached" | "fetchedAt" | "rows" | "sources"> &
-    Partial<Pick<KeywordResearchSuccess, "connections">>;
+    Partial<Pick<KeywordResearchSuccess, "connections" | "payment">> & {
+      originalPayment?: ActionPaymentReceipt;
+    };
   seed: string;
   storedFreshness?: StoredResultFreshness;
   trackingMarketCount?: number;
@@ -124,11 +127,8 @@ export function ResearchResults({
     !readOnly && result.rows.length === requestedLimit && requestedLimit < 500
       ? {
           cached: deeperEstimate?.cached ?? false,
-          costCents: deeperResearchCostCents(
-            { connections: result.connections ?? [], sources: result.sources },
-            nextLimit,
-            deeperEstimate,
-          ),
+          costCents: null,
+          payment: deeperEstimate?.payment,
           nextLimit,
         }
       : null;
@@ -143,6 +143,10 @@ export function ResearchResults({
 
   return (
     <section className="grid gap-3">
+      {!readOnly ? <PaymentChargeLine payment={result.payment} /> : null}
+      {result.originalPayment ? (
+        <PaymentChargeLine original payment={result.originalPayment} />
+      ) : null}
       {warnings.length > 0 && !isDismissed("warning") ? (
         <DiagnosticsBanner
           dismissLabel={t("dismiss")}

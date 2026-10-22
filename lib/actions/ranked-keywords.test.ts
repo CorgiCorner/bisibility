@@ -54,8 +54,31 @@ describe("fetchRankedKeywordSuggestions action", () => {
       offset: 100,
       origin: APP_REQUEST_ORIGIN,
       projectId: "project_1",
+      requirePayment: true,
+      estimateOnly: undefined,
+      paymentOptionId: undefined,
+      acceptedPayment: undefined,
     });
     expect(mocks.fetch.mock.calls[0]?.[0].origin).toEqual(APP_REQUEST_ORIGIN);
+  });
+
+  it("passes the accepted price to execution and makes estimates non-executing", async () => {
+    mocks.fetch.mockResolvedValue({ ok: false, reason: "no_source" });
+    await fetchRankedKeywordSuggestions({ projectId: "prj_1", estimateOnly: true });
+    expect(mocks.fetch.mock.calls.at(-1)?.[0]).toMatchObject({
+      estimateOnly: true,
+      requirePayment: false,
+    });
+    await fetchRankedKeywordSuggestions({
+      projectId: "prj_1",
+      paymentOptionId: "route",
+      acceptedPayment: { quoteToken: "price" },
+    });
+    expect(mocks.fetch.mock.calls.at(-1)?.[0]).toMatchObject({
+      requirePayment: true,
+      paymentOptionId: "route",
+      acceptedPayment: { quoteToken: "price" },
+    });
   });
 
   it("rejects non-page-aligned offsets", async () => {

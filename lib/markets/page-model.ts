@@ -1,7 +1,11 @@
+import type { MarketDeviceCandidate } from "./device-targets-input";
+
 export type MarketStatus = "active" | "paused" | "removed";
 
 export type MarketsPageRow = {
   activeKeywordCount: number;
+  trackedDevices?: ("desktop" | "mobile")[];
+  deviceCandidates?: MarketDeviceCandidate[];
   canonicalKey: string;
   countryCode: string;
   currentVisibility: number | null;
@@ -9,6 +13,7 @@ export type MarketsPageRow = {
   futureKeywordDevices: ("desktop" | "mobile")[];
   id: string;
   keywordCount: number;
+  distinctKeywordCount?: number;
   languageLabel: string;
   locationId: string;
   monthlyCostCents: number | null;
@@ -37,7 +42,13 @@ export function sortMarkets(
   key: MarketsSortKey = "name",
 ): MarketsPageRow[] {
   return [...rows].sort((left, right) => {
-    const compared = compareValue(left[key], right[key]);
+    const compared =
+      key === "keywordCount"
+        ? compareValue(
+            left.distinctKeywordCount ?? left.keywordCount,
+            right.distinctKeywordCount ?? right.keywordCount,
+          )
+        : compareValue(left[key], right[key]);
     return compared || left.id.localeCompare(right.id, "en");
   });
 }

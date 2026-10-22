@@ -178,7 +178,7 @@ it("preserves a hard spending ceiling and conceals every redacted amount", () =>
     },
   ];
   const view = render(<AdminMeteringView data={data} />);
-  expect(screen.getByText("Hard limit: 120 Units")).toBeInTheDocument();
+  expect(screen.getByText("Hard limit:", { exact: false })).toHaveTextContent("120 Units");
   view.rerender(
     <AdminMeteringView
       data={{ ...data, budgets: [{ ...(data.budgets[0] as typeof seed), redacted: true }] }}

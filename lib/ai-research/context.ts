@@ -10,9 +10,17 @@ export async function requireAiSource(projectId: string) {
     where: { id: projectId },
     select: {
       id: true,
+      ownerId: true,
       lookupCacheTtlSeconds: true,
       providerConnections: {
-        select: { id: true, provider: true, credentialsEncrypted: true, credentialSource: true },
+        select: {
+          id: true,
+          publicId: true,
+          updatedAt: true,
+          provider: true,
+          credentialsEncrypted: true,
+          credentialSource: true,
+        },
         where: { ...providerChainWhere("serp"), provider: AI_RESEARCH_PROVIDER_ID },
         take: 1,
       },

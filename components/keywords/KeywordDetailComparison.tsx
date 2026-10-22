@@ -7,7 +7,8 @@ import { useFormatter, useTranslations } from "next-intl";
 export function KeywordDetailComparison({
   quality,
   timeZone,
-}: Readonly<{ quality: KeywordDetailQuality; timeZone: string }>) {
+  showBaseline = true,
+}: Readonly<{ quality: KeywordDetailQuality; timeZone: string; showBaseline?: boolean }>) {
   const t = useTranslations("projectRankTracker.keywordDetail.quality");
   const format = useFormatter();
   const history = useTranslations("projectRankTracker.keywordDetail.recordedHistory");
@@ -37,10 +38,20 @@ export function KeywordDetailComparison({
   return (
     <div
       data-testid="keyword-detail-quality-comparison"
-      className="flex flex-wrap gap-x-2 gap-y-0.5"
+      className="flex flex-wrap gap-x-2 gap-y-0.5 font-sans text-[12px] font-normal leading-5 tracking-normal"
     >
-      <span>{label}</span>
-      {q.comparison === "comparable" && q.baseline ? (
+      <span
+        className={
+          movement !== null && movement > 0
+            ? "font-medium text-green-text"
+            : movement !== null && movement < 0
+              ? "font-medium text-red-text"
+              : "font-medium text-fg-muted"
+        }
+      >
+        {label}
+      </span>
+      {showBaseline && q.comparison === "comparable" && q.baseline ? (
         <span>
           {t("baseline")}{" "}
           {q.baseline.evidence === "positive" && q.baseline.position !== null

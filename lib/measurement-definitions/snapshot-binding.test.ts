@@ -1,3 +1,4 @@
+import type { PaidFenceReference } from "@/lib/metering/paid-attempt-types";
 import { ownCredentialVersion } from "@/lib/provider-usage/credential-version";
 import { serpRankLocation } from "@/lib/serp/location";
 import { beforeEach, expect, it, vi } from "vitest";
@@ -73,6 +74,57 @@ function fixture() {
   };
   return { original, context, state, raw, writes, tx, input };
 }
+it("binds a hosted continuation to platform funding and refuses a later switch to an own key", async () => {
+  const f = fixture();
+  vi.mocked(f.tx.providerConnection.findUnique).mockResolvedValue({
+    projectId: f.input.projectId,
+    provider: "serpapi",
+    enabled: true,
+    status: "connected",
+    credentialSource: "hosted",
+    credentialsEncrypted: null,
+  } as never);
+  const binding = await captureSnapshotDefinition(f.tx, { ...f.input, credentialSource: "hosted" });
+  const session = snapshotDefinitionSession(binding, null);
+  await session.preflight(f.tx);
+  await session.beforeReserve.assertRequest(
+    f.tx,
+    "native-operation",
+    nativeRequestFixture(f.original, 20),
+  );
+  const reference = {
+    operation: {
+      fundingSource: "platform",
+      provider: "serpapi",
+      operationId: "native-operation",
+      scope: { namespace: "test", principal: "owner" },
+    },
+    lease: { leaseId: "lease" },
+    context: {
+      projectId: f.input.projectId,
+      connectionId: f.context.connectionId,
+      rankCheckId: f.input.rankCheckId,
+      keywordId: f.input.keywordId,
+      correlationId: f.input.rankCheckId,
+    },
+  } as PaidFenceReference;
+  await expect(
+    session.beforeFence.lockBusiness(f.tx, [
+      { ...reference, operation: { ...reference.operation, fundingSource: "byok" } },
+    ]),
+  ).rejects.toThrow();
+  f.raw.mockImplementation(async () => [{ id: "native-operation" }] as never);
+  await expect(session.beforeFence.assertDispatch(f.tx, [reference])).resolves.toBeUndefined();
+  vi.mocked(f.tx.providerConnection.findUnique).mockResolvedValue({
+    projectId: f.input.projectId,
+    provider: "serpapi",
+    enabled: true,
+    status: "connected",
+    credentialSource: "own",
+    credentialsEncrypted: "other-key",
+  } as never);
+  await expect(session.preflight(f.tx)).rejects.toThrow();
+});
 it("continuation keeps original completed semantics/time, distinct new offset/depth and no current-head recapture", async () => {
   const f = fixture();
   const binding = await captureSnapshotDefinition(f.tx, f.input);

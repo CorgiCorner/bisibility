@@ -4,9 +4,11 @@ import {
 } from "@/components/project-runs/ProjectRunsFeatureBoundary";
 import { ProjectRunsTabs } from "@/components/project-runs/ProjectRunsTabs";
 import { ArchivedScheduleDetails } from "@/components/schedules/ArchivedScheduleDetails";
+import { ScheduleDetailsSummary } from "@/components/schedules/ScheduleDetailsSummary";
 import { ScheduleEditor } from "@/components/schedules/ScheduleEditor";
 import { newEditorSchedule } from "@/components/schedules/ScheduleEditorModel";
 import { ScheduleObjectFrame } from "@/components/schedules/ScheduleObjectFrame";
+import { UnscheduledKeywordsNotice } from "@/components/schedules/UnscheduledKeywordsNotice";
 import { IdChip } from "@/components/ui/IdChip";
 import { createIntlTranslator } from "@/i18n/translator.server";
 import { ApiNotFoundError } from "@/lib/api/errors";
@@ -14,8 +16,9 @@ import { getProjectRole } from "@/lib/auth/authorize";
 import { canProjectAction } from "@/lib/auth/capabilities";
 import { providerLabel } from "@/lib/checks/attempts";
 import { requireReadableProject, resolveProjectAccess } from "@/lib/queries/_auth";
+import { listCheckScheduleRows } from "@/lib/queries/check-schedule-list";
 import { listScheduleMemberCandidates } from "@/lib/queries/check-schedule-members";
-import { getCheckSchedule, listCheckSchedules } from "@/lib/queries/rank-check-runs";
+import { getCheckSchedule } from "@/lib/queries/rank-check-runs";
 import { scheduleRunHistory } from "@/lib/queries/schedule-run-history";
 import {
   getRequestProjectDefaults,
@@ -23,13 +26,14 @@ import {
 } from "@/lib/queries/workspace-request-data";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { scheduleCadenceLabel } from "@/lib/schedules/cadence-label";
+import { schedulePlanningMinutes } from "@/lib/schedules/planning-visibility";
 import { resolveSerpDepth } from "@/lib/serp/constants";
 import { notFound } from "next/navigation";
 
 type SchedulePageProps = {
   params: Promise<{ project: string; publicId: string }>;
   referenceIso?: string;
-  searchParams?: Promise<{ cursor?: string }>;
+  searchParams?: Promise<{ cursor?: string; saved?: string }>;
 };
 
 export default async function SchedulePage({
@@ -38,18 +42,19 @@ export default async function SchedulePage({
   referenceIso = new Date().toISOString(),
 }: Readonly<SchedulePageProps>) {
   const { project, publicId: scheduleId } = await params;
+  const query = await searchParams;
   const { projectId, publicId: projectPublicId } = await resolveProjectAccess(project);
   const readable = await requireReadableProject(projectPublicId);
   const isNew = scheduleId === "new";
   let defaults: Awaited<ReturnType<typeof getRequestProjectDefaults>>;
-  let schedules: Awaited<ReturnType<typeof listCheckSchedules>>;
+  let schedules: Awaited<ReturnType<typeof listCheckScheduleRows>>;
   let schedule: Awaited<ReturnType<typeof getCheckSchedule>> | null;
   let candidates: Awaited<ReturnType<typeof listScheduleMemberCandidates>>;
   let serpProviderChain: Awaited<ReturnType<typeof getRequestSerpProviderChain>>;
   try {
     [defaults, schedules, schedule, candidates, serpProviderChain] = await Promise.all([
       getRequestProjectDefaults(projectId),
-      listCheckSchedules(projectId),
+      listCheckScheduleRows(projectId),
       isNew ? Promise.resolve(null) : getCheckSchedule(projectId, scheduleId),
       listScheduleMemberCandidates(projectPublicId),
       getRequestSerpProviderChain(projectId),
@@ -64,6 +69,7 @@ export default async function SchedulePage({
   }));
   if (!isNew && !schedule) notFound();
   const editorSchedule = schedule ?? newEditorSchedule;
+  const summarySchedule = schedules.find((row) => row.publicId === scheduleId);
   const canEdit = canProjectAction(
     getProjectRole(readable.actor, projectId),
     isNew ? "create" : "update",
@@ -71,7 +77,7 @@ export default async function SchedulePage({
   );
   if (isNew && !canEdit) notFound();
   const history = schedule?.archivedAt
-    ? await scheduleRunHistory(projectId, scheduleId, (await searchParams)?.cursor)
+    ? await scheduleRunHistory(projectId, scheduleId, query?.cursor)
     : null;
   const runtime = await loadProjectRunsMessages();
   const t = createIntlTranslator(runtime.locale, runtime.messages, runtime);
@@ -133,16 +139,21 @@ export default async function SchedulePage({
         }
         breadcrumbLabel={t("projectRuns.schedules.breadcrumb")}
         navigation={<ProjectRunsTabs active="schedules" projectRef={projectPublicId} />}
-        breadcrumb={{
-          href: `${projectSchedulesPath(projectPublicId)}${schedule?.archivedAt ? "?status=archived" : ""}`,
-          label: schedule?.archivedAt
-            ? t("projectRuns.schedules.archivedSchedules")
-            : t("projectRuns.schedules.allSchedules"),
-        }}
+        breadcrumb={
+          isNew || schedule?.archivedAt
+            ? {
+                href: `${projectSchedulesPath(projectPublicId)}${schedule?.archivedAt ? "?status=archived" : ""}`,
+                label: schedule?.archivedAt
+                  ? t("projectRuns.schedules.archivedSchedules")
+                  : t("projectRuns.schedules.allSchedules"),
+              }
+            : undefined
+        }
         subtitle={
           schedule ? (
             <span className="inline-flex flex-wrap items-center gap-2">
               <span>{cadence}</span>
+              <span>{editorSchedule.timezone ?? defaults?.timezone ?? "UTC"}</span>
               <IdChip
                 copyLabel={t("projectRuns.schedules.copyScheduleId")}
                 size="xs"
@@ -175,21 +186,45 @@ export default async function SchedulePage({
             schedule={editorSchedule}
           />
         ) : (
-          <ScheduleEditor
-            canEdit={canEdit}
-            candidates={candidates}
-            connectedProviders={connectedProviders}
-            defaultScheduleName={schedules.find((item) => item.isDefault)?.name ?? null}
-            isNew={isNew}
-            projectId={projectPublicId}
-            projectDefaults={{
-              provider: connectedProviders[0] ?? null,
-              serpDepth: resolveSerpDepth(defaults?.serpDepth ?? undefined),
-            }}
-            projectTimezone={defaults?.timezone ?? "UTC"}
-            referenceIso={referenceIso}
-            schedule={editorSchedule}
-          />
+          <div className="grid min-w-0 gap-4">
+            {!isNew && summarySchedule ? (
+              <ScheduleDetailsSummary
+                canEdit={canEdit}
+                canManage={canProjectAction(
+                  getProjectRole(readable.actor, projectId),
+                  "manage",
+                  "check_schedule",
+                )}
+                projectId={projectPublicId}
+                schedule={summarySchedule}
+                schedules={schedules}
+              />
+            ) : null}
+            <UnscheduledKeywordsNotice
+              canEdit={canEdit}
+              candidates={candidates}
+              schedules={schedules}
+              projectId={projectPublicId}
+            />
+            <ScheduleEditor
+              canEdit={canEdit}
+              candidates={candidates}
+              connectedProviders={connectedProviders}
+              defaultScheduleName={schedules.find((item) => item.isDefault)?.name ?? null}
+              isNew={isNew}
+              initialSaveConfirmed={!isNew && query?.saved === "1"}
+              planningMinutes={schedulePlanningMinutes()}
+              projectId={projectPublicId}
+              projectDefaults={{
+                provider: connectedProviders[0] ?? null,
+                serpDepth: resolveSerpDepth(defaults?.serpDepth ?? undefined),
+              }}
+              projectTimezone={defaults?.timezone ?? "UTC"}
+              referenceIso={referenceIso}
+              schedule={editorSchedule}
+              showDefaultControl={isNew}
+            />
+          </div>
         )}
       </ScheduleObjectFrame>
     </ProjectRunsFeatureBoundary>

@@ -16,7 +16,7 @@ const expressions: Record<RankTrackerSortField, Prisma.Sql> = {
   impressions: Prisma.sql`(d.traffic->>'impressions')::int`,
   ctr: Prisma.sql`(d.traffic->>'ctr')::float`,
   lastChecked: Prisma.sql`d."lastCheckAt"`,
-  frequency: Prisma.sql`COALESCE(ks.frequency::text, pd.frequency::text, 'manual')`,
+  frequency: Prisma.sql`CASE WHEN cs.id IS NULL OR cs."archivedAt" IS NOT NULL THEN 'manual' WHEN NOT cs.enabled THEN 'paused' ELSE cs.frequency::text END`,
   location: Prisma.sql`lower(l."displayName")`,
   targetRanking: Prisma.sql`lower(concat_ws(' ', k."targetUrl", d."rankingUrl"))`,
   tags: Prisma.sql`array_to_string(d.tags, ' ')`,

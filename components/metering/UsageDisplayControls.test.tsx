@@ -6,15 +6,15 @@ import {
 } from "@/lib/project-usage-display/schema";
 import en from "@/messages/core/en/project-settings-usage.json";
 import sharedEn from "@/messages/core/en/shared.json";
+import { routerMock } from "@/tests/next-navigation";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { UsageDisplayControls } from "./UsageDisplayControls";
 import { UsageDisplaySettingsProvider } from "./UsageDisplaySettingsProvider";
 import { useUsagePresentation } from "./use-usage-presentation";
 
-const mocks = vi.hoisted(() => ({ save: vi.fn(), refresh: vi.fn() }));
+const mocks = vi.hoisted(() => ({ save: vi.fn() }));
 vi.mock("@/lib/actions/project-usage-display", () => ({ updateProjectUsageDisplay: mocks.save }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 const initial: ProjectUsageDisplaySettings = {
   projectId: `prj_${"a".repeat(24)}`,
   revision: 0,
@@ -79,7 +79,7 @@ it("saves shared project options and applies one server response to all three su
   view.unmount();
   render(controls(persisted));
   expect(screen.getByLabelText("Usage")).toHaveTextContent("7.4071cents");
-  expect(mocks.refresh).toHaveBeenCalledTimes(2);
+  expect(routerMock.refresh).toHaveBeenCalledTimes(2);
 });
 
 it("does not import old browser options and disables project viewer writes", () => {
@@ -143,7 +143,7 @@ it("ignores a response for another project", async () => {
   fireEvent.click(screen.getByRole("menuitem", { name: "Cents" }));
   await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
   expect(screen.getByLabelText("Usage")).toHaveTextContent("$0.07");
-  expect(mocks.refresh).not.toHaveBeenCalled();
+  expect(routerMock.refresh).not.toHaveBeenCalled();
 });
 
 it("a project switch cannot inherit an in-flight write from the previous project", async () => {
@@ -214,5 +214,5 @@ it("restores edit permission from fresh server props after an earlier forbidden 
   fireEvent.click(screen.getByRole("button", { name: "Amounts" }));
   fireEvent.click(screen.getByRole("menuitem", { name: "Cents" }));
   await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2));
-  expect(mocks.refresh).toHaveBeenCalled();
+  expect(routerMock.refresh).toHaveBeenCalled();
 });

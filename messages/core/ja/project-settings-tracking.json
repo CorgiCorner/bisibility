@@ -35,8 +35,6 @@
       "serpDepth": "SERP の既定の取得深度",
       "serpDepthHelp": "1回のチェックが各検索結果ページをどこまで読み取るかを指定します。",
       "serpDepthWarning": "次回のチェックから、{depth, number}位より下のキーワードは順位ではなく未検出として記録されます。その欠落は履歴に残ります。",
-      "stopOnMatch": "最初にドメインが一致した時点でチェックを停止",
-      "stopOnMatchDescription": "オンにすると {domain} が最初に出現した時点で読み取りを停止し、最良の順位を記録します。オフにすると設定した取得深度まですべて読み取ります。",
       "projectDomain": "プロジェクトのドメイン",
       "frequencyDaily": "毎日",
       "frequencyWeekly": "毎週",
@@ -46,7 +44,14 @@
       "frequencyCustomCron": "カスタム cron",
       "deviceDesktop": "デスクトップ",
       "deviceMobile": "モバイル",
-      "depthOption": "上位{depth, number}位"
+      "depthOption": "上位{depth, number}位",
+      "resultsCollection": "取得する結果",
+      "positionOnly": "自分の順位",
+      "fullResults": "検索結果全体",
+      "positionOnlyDescription": "{domain} が見つかると取得を停止します。競合の結果は一部のみになる場合があります。",
+      "fullResultsDescription": "競合の比較用に上位 {depth, number} 位までの結果を取得します。クレジットやプロバイダーへのリクエストが増える場合があります。",
+      "visibilityDepthWarning": "取得範囲が上位20位未満のチェックでは Visibility は更新されません。",
+      "fullTop20Description": "サイトが早く見つかっても、リクエストした上位20位まで取得します。クレジットやプロバイダーへのリクエストが増える場合があります。"
     },
     "matchScope": {
       "title": "一致範囲",
@@ -154,6 +159,10 @@
         "invalid": "0 以上の期間を小数点以下3桁以内で入力するか空欄にしてください。",
         "error": "保存できませんでした。再読み込みして再試行してください。"
       }
+    },
+    "schedules": {
+      "description": "新しいキーワードにはスケジュールがありません。自動チェックするには、スケジュールに追加してください。",
+      "manage": "スケジュールを管理"
     }
   }
 }

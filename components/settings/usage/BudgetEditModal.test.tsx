@@ -213,16 +213,33 @@ describe("BudgetEditModal", () => {
   );
 
   it("requires an explicit balance refresh and never turns unknown scoped evidence into zero", async () => {
-    host.balance.mockResolvedValue({
+    host.balance.mockImplementation(async (_project, _connection, identity) => ({
       ...connections[1],
       availableAtProvider: { status: "available", amount: 12.34, unit: "usd" },
-    });
+      nativeObservation: {
+        identity,
+        value: { text: "12.34", unit: "USD", certainty: "measured" },
+        observedAt: new Date(Date.now() - 60_000).toISOString(),
+        expiresAt: new Date(Date.now() + 14 * 60_000).toISOString(),
+      },
+    }));
     dialog(vi.fn(), [connections[1]]);
     await screen.findByLabelText(surfaceLabel(dialogCopy.appBudgetField, "DataForSEO"));
     expect(host.balance).not.toHaveBeenCalled();
     fireEvent.click(screen.getAllByRole("button", { name: "Refresh provider balance" })[0]);
-    await waitFor(() => expect(host.balance).toHaveBeenCalledWith("prj_story", "conn_data"));
-    await screen.findAllByText(/Scoped usage and reservations/);
+    await waitFor(() =>
+      expect(host.balance).toHaveBeenCalledWith("prj_story", "conn_data", {
+        connectionId: "conn_data",
+        fundingSource: "byok",
+        id: "conn_data:byok:app",
+        revision: "row-1",
+        surface: "app",
+        unit: "cents",
+      }),
+    );
+    // Unknown scoped usage keeps the native balance as evidence only, never a zero-usage proposal.
+    await screen.findByText("Current usage is unavailable. Refresh to try again.");
+    expect(screen.getByRole("button", { name: "Use provider balance" })).toBeDisabled();
     expect(screen.getByText(/\$12\.34/)).toBeInTheDocument();
     expect(input("app")).toHaveValue("");
     expect(host.execute).not.toHaveBeenCalled();
@@ -326,11 +343,11 @@ it("localizes exact unit and money figures in Polish allocation rows", async () 
   expect(within(modal).getAllByText(`${copy.perMonth} (USD)`)).toHaveLength(2);
   expect(within(modal).getAllByText(`${copy.perMonth} (Credits)`)).toHaveLength(4);
   expect(within(modal).getAllByText("9 007 199 254 740 993 wyszukiwań")).toHaveLength(2);
-  expect(within(modal).getAllByText("9 007 199 254 741,00 $")).toHaveLength(2);
+  expect(within(modal).getAllByText("9 007 199 254 741,00 USD")).toHaveLength(2);
   expect(within(modal).getAllByText("900 719 925 474 099,5 Credits")).toHaveLength(4);
   expect(
     within(modal)
-      .getAllByText("17,42 $")
+      .getAllByText("17,42 USD")
       .filter((node) => node.previousElementSibling?.textContent === copy.used),
   ).toHaveLength(2);
   expect(

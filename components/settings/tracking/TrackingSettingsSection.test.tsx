@@ -47,7 +47,7 @@ const defaults: DefaultsData = {
 };
 
 describe("TrackingSettingsSection", () => {
-  it("wires the audited defaults action and the authorized B1 preview", async () => {
+  it("wires the audited defaults action without reading a schedule preview", async () => {
     const preview = { message: "Ready", runs: ["one", "two", "three"], status: "ready" };
     mocks.previewProjectCronRuns.mockResolvedValue(preview);
     render(
@@ -59,15 +59,9 @@ describe("TrackingSettingsSection", () => {
       }),
     );
 
-    expect(mocks.previewProjectCronRuns).toHaveBeenCalledWith({
-      cronExpression: "0 6 * * *",
-      projectId: "prj_1",
-      timezone: "Europe/Warsaw",
-    });
+    expect(mocks.previewProjectCronRuns).not.toHaveBeenCalled();
     expect(mocks.contentProps).toEqual(
       expect.objectContaining({
-        initialCronPreview: preview,
-        previewCron: mocks.previewProjectCronRuns,
         updateDefaults: mocks.updateDefaultRankCheckSettings,
       }),
     );

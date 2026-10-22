@@ -15,6 +15,7 @@ import {
   usageSettingsFeatureTestMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { ProviderCommand } from "@usagekit/views";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -47,6 +48,9 @@ let revision = "snapshot-1";
 let readOnlyRows = false;
 let unknownLimit = false;
 let nativeScopedAvailability = false;
+let nativeMeasured = false;
+let nativeCached = false;
+let privateUsage = false;
 const onSaved = vi.fn();
 beforeEach(() => {
   vi.clearAllMocks();
@@ -55,6 +59,9 @@ beforeEach(() => {
   readOnlyRows = false;
   unknownLimit = false;
   nativeScopedAvailability = false;
+  nativeMeasured = false;
+  nativeCached = false;
+  privateUsage = false;
   host.binding.mockResolvedValue(providerUiBinding());
   host.read.mockImplementation(async (_project, query) => {
     if (failRead && query.kind === "allocations") throw new Error("private diagnostic");
@@ -76,6 +83,18 @@ beforeEach(() => {
                       availabilityBasis: "after_reservations" as const,
                     }
                   : {}),
+                ...(nativeMeasured && row.fundingSource === "byok"
+                  ? {
+                      used: { text: "200", unit: row.unit, certainty: "measured" as const },
+                      reserved: { text: "100", unit: row.unit, certainty: "measured" as const },
+                      ...(nativeCached
+                        ? { nativeObservation: nativeProof({ ...row, revision }) }
+                        : {}),
+                    }
+                  : {}),
+                ...(privateUsage && row.fundingSource === "byok"
+                  ? { availabilityReason: "owner_only" }
+                  : {}),
                 ...(unknownLimit ? { unlimited: false, limit: "unavailable" as const } : {}),
               })),
               state: "ok",
@@ -87,14 +106,19 @@ beforeEach(() => {
             ? {
                 kind: "connections",
                 state: "ok",
-                connections: nativeScopedAvailability
-                  ? [
-                      {
-                        ...providerUiConnection(),
-                        freshness: { ...providerUiConnection().freshness, stale: false },
-                      },
-                    ]
-                  : [],
+                connections:
+                  nativeScopedAvailability || nativeMeasured
+                    ? [
+                        {
+                          ...providerUiConnection(),
+                          revision,
+                          freshness: {
+                            ...providerUiConnection().freshness,
+                            stale: !nativeScopedAvailability,
+                          },
+                        },
+                      ]
+                    : [],
                 providers: [],
                 revision,
                 asOf: null,
@@ -141,7 +165,7 @@ describe("shared allocation panel integration", () => {
     mount();
     fireEvent.change(await appField(), { target: { value: "17.42" } });
     failRead = true;
-    fireEvent.click(screen.getByRole("button", { name: "Reload allocations" }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
     await screen.findByText("Provider settings could not be confirmed.");
     expect(await appField()).toHaveValue("17.42");
     expect(await appField()).toBeDisabled();
@@ -173,9 +197,24 @@ describe("shared allocation panel integration", () => {
     await appField();
     const refresh = screen.getAllByRole("button", { name: "Refresh provider balance" });
     expect(refresh).toHaveLength(2);
+    for (const button of refresh) {
+      expect(button).toHaveTextContent("Refresh");
+      expect(button.querySelector("svg")).not.toBeNull();
+    }
     expect(host.native).not.toHaveBeenCalled();
     fireEvent.click(refresh[0]);
-    await waitFor(() => expect(host.native).toHaveBeenCalledWith("prj_step2", "conn_data"));
+    await waitFor(() =>
+      expect(host.native).toHaveBeenCalledWith(
+        "prj_step2",
+        "conn_data",
+        expect.objectContaining({
+          id: "conn_data:byok:app",
+          revision: "snapshot-1",
+          surface: "app",
+          unit: "cents",
+        }),
+      ),
+    );
     expect(await appField()).toHaveValue("");
     expect(host.execute).not.toHaveBeenCalled();
     const credits = screen.getByRole("region", { name: "DataForSEO: Credits, App & schedules" });
@@ -230,7 +269,7 @@ describe("allocation adapter lifecycle", () => {
     mount();
     fireEvent.change(await appField(), { target: { value: "17.42" } });
     revision = "snapshot-2";
-    fireEvent.click(screen.getByRole("button", { name: "Reload allocations" }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
     await waitFor(() =>
       expect(
         screen.getByLabelText(surfaceLabel(dialogCopy.appBudgetField, "DataForSEO")),
@@ -304,21 +343,26 @@ it("fences dismissal and duplicate submits until an atomic save finishes", async
 
 it("shows the native observation timestamp and units without changing the budget", async () => {
   const checkedAt = "2026-10-11T08:15:00.000Z";
-  host.native.mockResolvedValue({
-    availableAtProvider: { status: "available", amount: 1234, unit: "searches", checkedAt },
-  });
+  host.native.mockImplementation(async (_project, _connection, identity) => ({
+    nativeObservation: {
+      identity,
+      value: { text: "12.34", unit: "USD", certainty: "measured" },
+      observedAt: checkedAt,
+      expiresAt: "2026-10-11T08:30:00.000Z",
+    },
+  }));
   mount();
   fireEvent.change(await appField(), { target: { value: "17.42" } });
   fireEvent.click(screen.getAllByRole("button", { name: "Refresh provider balance" })[0]);
-  await screen.findByText("1234");
+  await screen.findByText("$12.34");
   expect(document.querySelector(`time[datetime="${checkedAt}"]`)).toHaveTextContent(
     new Intl.DateTimeFormat("en", {
-      dateStyle: "medium",
       timeStyle: "short",
       timeZone: "UTC",
     }).format(new Date(checkedAt)),
   );
-  expect(screen.getByText("Native provider balance")).toBeInTheDocument();
+  expect(screen.queryByText("Native provider balance")).toBeNull();
+  expect(document.querySelector("[data-native-balance] .text-2xl")).toBeNull();
   expect(await appField()).toHaveValue("17.42");
   expect(host.execute).not.toHaveBeenCalled();
 });
@@ -333,4 +377,104 @@ it("uses current measured own-key capacity as a draft suggestion without a nativ
   expect(input).toHaveValue("15.34");
   expect(host.native).not.toHaveBeenCalled();
   expect(host.execute).not.toHaveBeenCalled();
+});
+
+function nativeProof(identity: {
+  id: string;
+  connectionId: string;
+  revision: string;
+  fundingSource: string;
+  surface: string;
+  unit: string;
+}) {
+  return {
+    identity: {
+      id: identity.id,
+      connectionId: identity.connectionId,
+      revision: identity.revision,
+      fundingSource: identity.fundingSource,
+      surface: identity.surface,
+      unit: identity.unit,
+    },
+    value: { text: "12.34", unit: "USD", certainty: "measured" },
+    observedAt: new Date(Date.now() - 60_000).toISOString(),
+    expiresAt: new Date(Date.now() + 14 * 60_000).toISOString(),
+  };
+}
+it.each(["refresh", "cached"])(
+  "uses %s native balance despite the provider model's placeholder freshness",
+  async (mode) => {
+    nativeMeasured = true;
+    nativeCached = mode === "cached";
+    host.native.mockImplementation(async (_project, _connection, identity) => ({
+      nativeObservation: nativeProof(identity),
+    }));
+    mount();
+    const field = await appField();
+    const useBalance = screen.getByRole("button", { name: "Use provider balance" });
+    if (mode === "refresh") {
+      expect(useBalance).toBeDisabled();
+      fireEvent.click(screen.getAllByRole("button", { name: "Refresh provider balance" })[0]);
+      await waitFor(() => expect(useBalance).toBeEnabled());
+    } else expect(useBalance).toBeEnabled();
+    expect(field).toHaveValue("");
+    fireEvent.click(useBalance);
+    expect(field).toHaveValue("14.34");
+    expect(host.execute).not.toHaveBeenCalled();
+    expect(host.native).toHaveBeenCalledTimes(mode === "refresh" ? 1 : 0);
+  },
+);
+it("explains private owner usage without offering a probe to an editable non-owner", async () => {
+  privateUsage = true;
+  mount();
+  const field = await appField();
+  expect(field).not.toHaveAttribute("readonly");
+  expect(screen.getAllByText("Only the project owner can see usage for this key.")).toHaveLength(2);
+  expect(screen.queryByRole("button", { name: "Refresh provider balance" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Use provider balance" })).toBeDisabled();
+  expect(host.native).not.toHaveBeenCalled();
+});
+
+it("places the only Save beside Cancel in the dialog footer and keeps its owned form", async () => {
+  mount();
+  const field = await appField();
+  const save = screen.getByRole("button", { name: "Save" });
+  const cancel = screen.getByRole("button", { name: "Cancel" });
+  expect(save.closest("footer")).not.toBeNull();
+  expect(save.closest("footer")).toBe(cancel.closest("footer"));
+  expect(screen.getAllByRole("button", { name: "Save" })).toHaveLength(1);
+  expect(save).toBeDisabled();
+  fireEvent.change(field, { target: { value: "0" } });
+  expect((save as HTMLButtonElement).form).toBe(field.closest("form"));
+  fireEvent.click(save);
+  await screen.findByText(dialogCopy.positiveBudget);
+  expect(host.execute).not.toHaveBeenCalled();
+  expect(field).toHaveFocus();
+  host.execute.mockImplementation(async (_project, command: ProviderCommand) => ({
+    outcome: "success",
+    commandId: command.commandId,
+    revision: "snapshot-2",
+  }));
+  fireEvent.change(field, { target: { value: "17.42" } });
+  fireEvent.click(save);
+  await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+  expect(host.execute).toHaveBeenCalledTimes(1);
+});
+
+it("activates the portaled Save by keyboard through the same owned form exactly once", async () => {
+  const user = userEvent.setup();
+  host.execute.mockImplementation(async (_project, command: ProviderCommand) => ({
+    outcome: "success",
+    commandId: command.commandId,
+    revision: "snapshot-2",
+  }));
+  mount();
+  const field = await appField();
+  fireEvent.change(field, { target: { value: "17.42" } });
+  const save = screen.getByRole("button", { name: "Save" });
+  save.focus();
+  await user.keyboard("{Enter}");
+  await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+  expect(host.execute).toHaveBeenCalledTimes(1);
+  expect(screen.getAllByRole("button", { name: "Save" })).toHaveLength(1);
 });

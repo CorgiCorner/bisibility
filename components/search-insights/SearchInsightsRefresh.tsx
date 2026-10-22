@@ -12,7 +12,10 @@ function documentIsHidden() {
   return document.hidden || document.visibilityState !== "visible";
 }
 
-export function SearchInsightsRefresh({ active }: Readonly<{ active: boolean }>) {
+export function SearchInsightsRefresh({
+  active,
+  intervalMs = POLL_MS,
+}: Readonly<{ active: boolean; intervalMs?: number }>) {
   const t = useTranslations("projectSearchInsights.copy");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -36,7 +39,7 @@ export function SearchInsightsRefresh({ active }: Readonly<{ active: boolean }>)
           if (documentIsHidden()) return;
           refresh();
           schedule();
-        }, POLL_MS);
+        }, intervalMs);
       };
       const visible = () => {
         if (!documentIsHidden()) {
@@ -55,7 +58,7 @@ export function SearchInsightsRefresh({ active }: Readonly<{ active: boolean }>)
         timer.current = null;
       };
     },
-    [active, refresh],
+    [active, intervalMs, refresh],
   );
   return (
     <span data-auto-refresh={active ? "active" : "inactive"} ref={hostRef}>

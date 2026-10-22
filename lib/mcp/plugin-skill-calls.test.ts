@@ -137,11 +137,17 @@ describe("plugin skill MCP example calls", () => {
     expect(() => validateDocuments(documents)).not.toThrow();
   });
 
+  it("accepts an explicit cache-only backlink cap", () => {
+    expect(() =>
+      validateCall({ ...backlink, arguments: { ...backlink.arguments, max_cost_cents: 0 } }),
+    ).not.toThrow();
+  });
+
   it.each([
     {
-      name: "zero backlink cap",
-      call: { ...backlink, arguments: { ...backlink.arguments, max_cost_cents: 0 } },
-      message: "analyze_backlinks: data/max_cost_cents must be > 0",
+      name: "negative backlink cap",
+      call: { ...backlink, arguments: { ...backlink.arguments, max_cost_cents: -1 } },
+      message: "analyze_backlinks: data/max_cost_cents must be >= 0",
     },
     {
       name: "invented argument",

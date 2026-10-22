@@ -19,6 +19,7 @@ export type DialogSurfaceProps = {
   open: boolean;
   onClose: (event: Event, reason: DialogCloseReason) => void;
   children: ReactNode;
+  decoration?: ReactNode;
   side?: "left" | "right" | "bottom";
   contentProps?: ComponentProps<"div">;
   backdropProps?: ComponentProps<"div">;
@@ -32,6 +33,7 @@ export function DialogSurface({
   open,
   onClose,
   children,
+  decoration,
   side,
   contentProps = {},
   backdropProps = {},
@@ -52,6 +54,11 @@ export function DialogSurface({
           data-slot="dialog-overlay"
           className={cn(styles.backdrop, backdropProps.className)}
         />
+        {open && decoration ? (
+          <div aria-hidden inert className={styles.decoration}>
+            {decoration}
+          </div>
+        ) : null}
         <DialogContent
           {...contentProps}
           ref={compositionRef}

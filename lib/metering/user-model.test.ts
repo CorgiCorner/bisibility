@@ -1,6 +1,11 @@
-import type { BudgetStatus } from "@usagekit/core";
+import type { BudgetStatus, Operation } from "@usagekit/core";
 import { headerStatusFromBudgets } from "@usagekit/views";
 import { describe, expect, it } from "vitest";
+import {
+  projectBudgetId,
+  projectFundingBudgetId,
+  projectFundingTag,
+} from "./project-funding-budgets";
 import { projectBudgetFiguresKnown, projectBudgetRow } from "./user-model";
 
 const budget: BudgetStatus = {
@@ -142,4 +147,47 @@ it("attaches separate authorized labels without changing figures or exposing red
       display,
     ),
   ).toBeNull();
+});
+
+describe("project funding limits", () => {
+  const ownStatus = (tag = projectFundingTag("byok", "g")): BudgetStatus => ({
+    ...unusedProjectBudget,
+    budget: {
+      ...unusedProjectBudget.budget,
+      id: projectFundingBudgetId("byok", "g"),
+      scope: { kind: "tag", namespace: "n", tag },
+    },
+    used: { value: 20000n, scale: 4, unit: "budget_cents" },
+  });
+  const operation = (fundingSource: "byok" | "platform", budgetId: string) =>
+    ({
+      scope: { namespace: "n", principal: "owner", group: "g", connection: "c" },
+      fundingSource,
+      budgetEpochs: [
+        { budgetId, budgetVersion: 1, epoch: "private-epoch", startsAt: "", endsAt: null },
+      ],
+    }) as unknown as Operation;
+
+  it("projects a split project limit as a project-wide row", () => {
+    expect(projectBudgetRow(ownStatus(), "conn_public", true)).toMatchObject({
+      id: "project:any:budget_cents",
+      kind: "group",
+      used: { text: "2" },
+    });
+  });
+
+  it("rejects a funding budget id on another tag", () => {
+    expect(projectBudgetRow(ownStatus(projectFundingTag("platform", "g")), null, true)).toBeNull();
+  });
+
+  it("proves opening usage from the same source's work on the group cap", () => {
+    const group = projectBudgetId("g");
+    expect(projectBudgetFiguresKnown(ownStatus(), [operation("byok", group)], "owner", true)).toBe(
+      true,
+    );
+    // Credits work on the shared cap never counts toward the your-key limit.
+    expect(
+      projectBudgetFiguresKnown(ownStatus(), [operation("platform", group)], "owner", true),
+    ).toBe(false);
+  });
 });

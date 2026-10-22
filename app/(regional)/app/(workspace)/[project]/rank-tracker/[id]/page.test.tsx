@@ -273,11 +273,8 @@ describe("KeywordDetailPage", () => {
         syncTrafficAction: mocks.syncTraffic,
       }),
     );
-    const comparison = screen
-      .getByRole("heading", { name: "Compare providers" })
-      .closest("section");
-    expect(pending.nextElementSibling).toBe(comparison);
-    expect(comparison?.nextElementSibling).toBe(traffic);
+    expect(screen.queryByRole("heading", { name: "Compare providers" })).not.toBeInTheDocument();
+    expect(pending.nextElementSibling).toBe(traffic);
     expect(mocks.getKeywordDetail).toHaveBeenCalledWith("prj_1", "kw_pending");
     expect(mocks.loadRankTrackerCostContext).toHaveBeenCalledWith("prj_1");
     expect(mocks.requireReadableProject).toHaveBeenCalledWith("prj_1");
@@ -314,12 +311,10 @@ describe("KeywordDetailPage", () => {
     const history = screen.getByTestId("ranking-history");
     const retrieved = screen.getByTestId("retrieved-results-card");
     expect(header.nextElementSibling).toBe(chart);
-    expect(chart.nextElementSibling).toBe(retrieved);
-    const comparison = screen
-      .getByRole("heading", { name: "Compare providers" })
-      .closest("section");
-    expect(retrieved.nextElementSibling).toBe(comparison);
-    expect(comparison?.nextElementSibling).toBe(traffic);
+    const snapshots = chart.nextElementSibling;
+    expect(snapshots).toContainElement(retrieved);
+    expect(snapshots?.nextElementSibling).toBe(traffic);
+    expect(screen.queryByRole("heading", { name: "Compare providers" })).not.toBeInTheDocument();
     expect(mocks.trafficProps).toHaveBeenLastCalledWith(
       expect.objectContaining({ canSync: true, syncTrafficAction: mocks.syncTraffic }),
     );
@@ -357,14 +352,11 @@ describe("KeywordDetailPage", () => {
         checkIds: ["check_saved_0"],
         projectId: "project_1",
       });
-      const oneCheck = screen.getByRole("radio", { name: "One check" });
-      const compare = screen.getByRole("radio", { name: "Compare two" });
-      expect(oneCheck).toBeChecked();
+      const compare = screen.getByRole("button", { name: "Compare" });
       expect(compare).toBeEnabled();
-      expect(compare).not.toBeChecked();
+      expect(screen.queryByRole("button", { name: "Stop comparing" })).not.toBeInTheDocument();
       await userEvent.click(compare);
-      expect(compare).toBeChecked();
-      expect(oneCheck).not.toBeChecked();
+      expect(screen.getByRole("button", { name: "Stop comparing" })).toBeVisible();
       expect(await screen.findByText(/These checks used different providers/)).toBeInTheDocument();
       await waitFor(() =>
         expect(mocks.loadRetrievedResults).toHaveBeenCalledWith({

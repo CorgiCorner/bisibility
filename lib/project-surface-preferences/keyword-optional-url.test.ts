@@ -40,7 +40,7 @@ describe("real optional URL parser feeding personal keyword view precedence", ()
     expect(parsed.issues).toEqual([]);
     expect(result).toMatchObject({
       missingScope: [],
-      state: { grouped: false, savedViewId: null },
+      state: { grouped: false, savedViewId: null, sort: { direction: "asc", field: "keyword" } },
       status: "ready",
     });
   });
@@ -53,11 +53,18 @@ describe("real optional URL parser feeding personal keyword view precedence", ()
         grouped: true,
         pageSize: 100,
         search: "service",
+        sort: { direction: "desc", field: "change" },
         lens: { device: "mobile", locationId: "krakow" },
         filters: { tags: ["Service"], wrongUrl: true },
       },
       status: "ready",
     });
+  });
+
+  it("lets explicit keyword A–Z override the saved-v2 sorting", () => {
+    const { result } = resolve({ sort: "keyword", dir: "asc" }, true);
+    expect(result.state.sort).toEqual({ direction: "asc", field: "keyword" });
+    expect(result.state.search).toBe("service");
   });
 
   it("lets explicit empty and false clear retained constraints without mutating parsed state", () => {

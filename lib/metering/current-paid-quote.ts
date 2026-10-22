@@ -7,6 +7,7 @@ import {
   paidAttemptContextSchema as historicalContext,
   preparePaidAttempt as prepareHistorical,
 } from "./paid-quote";
+import { projectFundingTag } from "./project-funding-budgets";
 
 export { platformAllocationTag } from "./paid-quote";
 
@@ -47,6 +48,16 @@ const contextSchema = historicalContext.extend({
 
 /** Keep checksum-covered historical migration inputs immutable as live admission evolves. */
 export function preparePaidAttempt(input: PaidAttemptInput): ReserveInput {
+  const result = prepareCurrentAttempt(input);
+  // Tags are attribution, not reserve semantics, so earlier reservations still replay.
+  if (!result.scope.group) throw new Error("Paid attempt requires a project");
+  const tag = projectFundingTag(result.fundingSource, result.scope.group);
+  return {
+    ...result,
+    scope: { ...result.scope, tags: [...new Set([...(result.scope.tags ?? []), tag])] },
+  };
+}
+function prepareCurrentAttempt(input: PaidAttemptInput): ReserveInput {
   const {
     feature,
     requestPricing,

@@ -39,6 +39,7 @@ describe("Local list shared quality projection", () => {
     const query = {
       ...structuredClone(defaultRankTrackerQueryState),
       filters: { ...defaultRankTrackerQueryState.filters, position: ["top3" as const] },
+      sort: { direction: "asc" as const, field: "position" as const },
     };
     const flat = filterRankTrackerLocalRows(f.organic, f.report, query, f.policy);
     const grouped = filterRankTrackerLocalRows(

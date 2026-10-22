@@ -53,12 +53,9 @@ it("shows an authoritative reservation without presenting it as a lower bound", 
     name: "Budget usage, including reservations. Open Usage for details.",
   });
   const columns = within(table).getAllByRole("columnheader");
-  expect(columns.map((column) => column.textContent)).toEqual([
-    "Budget",
-    "Used",
-    "Reserved",
-    "Limit",
-  ]);
+  ["Budget", "Used", "Reserved", "Remaining", "Limit"].forEach((label, index) => {
+    expect(columns[index]).toHaveAccessibleName(label);
+  });
   for (const column of columns) expect(column).toHaveAttribute("scope", "col");
   const project = within(table).getByRole("row", { name: /Project/ });
   expect(within(project).getByRole("rowheader")).toHaveAttribute("scope", "row");
@@ -66,8 +63,9 @@ it("shows an authoritative reservation without presenting it as a lower bound", 
     within(project)
       .getAllByRole("cell")
       .map((cell) => cell.textContent),
-  ).toEqual(["$0.00", "$0.10", "$1.00"]);
-  expect(table.querySelector("button,input,select,[role='checkbox']")).toBeNull();
+  ).toEqual(["$0.00", "≈ $0.10", "≈ $0.90", "$1.00 / month"]);
+  expect(table.querySelector("input,select,[role='checkbox']")).toBeNull();
+  expect(within(table).queryByRole("button", { name: "Set limit" })).toBeNull();
   expect(tooltip).not.toHaveTextContent("≥");
 });
 it("recognizes a real unlimited budget with the mapper's reservation semantics", () => {

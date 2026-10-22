@@ -33,7 +33,7 @@ describe("DomainOverviewWorkspace", () => {
     { providerStatus: "no_provider", withScope: false },
     { providerStatus: "needs_reauth", withScope: false },
   ] as const)(
-    "shows a provider action above and below the form for $providerStatus; scope available: $withScope",
+    "shows one source explanation and action for $providerStatus; scope available: $withScope",
     ({ providerStatus, withScope }) => {
       render(
         <SessionSpendProvider>
@@ -53,22 +53,22 @@ describe("DomainOverviewWorkspace", () => {
         </SessionSpendProvider>,
       );
       const reconnect = providerStatus === "needs_reauth";
-      expect(screen.getAllByRole("link")).toHaveLength(2);
+      expect(screen.getAllByRole("link")).toHaveLength(1);
       const emptyPanel = screen.getByRole("region", {
-        name: reconnect ? "Reconnect to load new results" : "Connect a provider to get started",
+        name: reconnect ? "Reconnect the selected data source" : "Choose a data source",
       });
       expect(within(emptyPanel).getAllByRole("link")).toHaveLength(1);
       expect(
         within(emptyPanel).getByRole("link", {
-          name: reconnect ? "Reconnect provider" : "Connect provider",
+          name: reconnect ? "Reconnect provider" : "Choose a data source",
         }),
       ).toHaveAttribute("href", "/app/prj_1/integrations");
       expect(
         screen.getAllByRole("link", {
-          name: reconnect ? "Reconnect provider" : "Open Integrations",
+          name: reconnect ? "Reconnect provider" : "Choose a data source",
         })[0],
       ).toHaveAttribute("href", "/app/prj_1/integrations");
-      expect(screen.getAllByText("Supported providers: Fixture provider.")).toHaveLength(2);
+      expect(screen.getAllByText("Supported providers: Fixture provider.")).toHaveLength(1);
       expect(screen.getByRole("textbox", { name: "Domain or subdomain" })).toBeDisabled();
       expect(screen.queryByText("Connect DataForSEO to analyze domains")).not.toBeInTheDocument();
     },
@@ -143,7 +143,11 @@ describe("DomainOverviewWorkspace", () => {
     fireEvent.click(analyzeButton);
     await waitFor(() => expect(analyzeAction).toHaveBeenCalledTimes(1));
     expect(analyzeAction).toHaveBeenCalledWith(
-      expect.objectContaining({ estimateOnly: false, maxCostCents: 4, target: "example.com" }),
+      expect.objectContaining({
+        estimateOnly: false,
+        acceptedPayment: { quoteToken: "fixture-consent" },
+        target: "example.com",
+      }),
     );
     await waitFor(() =>
       expect(window.location.pathname + window.location.search).toBe(
@@ -202,10 +206,10 @@ describe("DomainOverviewWorkspace", () => {
       </SessionSpendProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /refresh now.*\$0\.06/i }));
+    fireEvent.click(screen.getByRole("button", { name: /refresh now.*review price/i }));
     await waitFor(() => expect(analyzeAction).toHaveBeenCalledTimes(1));
     expect(analyzeAction).toHaveBeenCalledWith(
-      expect.objectContaining({ fresh: true, maxCostCents: 6 }),
+      expect.objectContaining({ fresh: true, acceptedPayment: { quoteToken: "fixture-consent" } }),
     );
   });
 
@@ -234,10 +238,10 @@ describe("DomainOverviewWorkspace", () => {
       </SessionSpendProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /refresh now.*\$0\.06/i }));
+    fireEvent.click(screen.getByRole("button", { name: /refresh now.*review price/i }));
     await waitFor(() => expect(analyzeAction).toHaveBeenCalledTimes(1));
     expect(screen.getByRole("button", { name: /refresh now/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /analyze domain/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /analyze domain/i })).toBeInTheDocument();
   });
 
   it("loads the next explicitly priced keyword page and appends it to the fetched rows", async () => {
@@ -275,7 +279,11 @@ describe("DomainOverviewWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: /load next 100 keywords/i }));
     await waitFor(() => expect(loadKeywordsPageAction).toHaveBeenCalledOnce());
     expect(loadKeywordsPageAction).toHaveBeenCalledWith(
-      expect.objectContaining({ limit: 100, maxCostCents: 2, offset: 100 }),
+      expect.objectContaining({
+        limit: 100,
+        acceptedPayment: { quoteToken: "fixture-consent" },
+        offset: 100,
+      }),
     );
     expect(await screen.findByText("loaded keyword")).toBeInTheDocument();
     expect(screen.getAllByTestId("domain-keyword-row")).toHaveLength(101);
@@ -322,3 +330,24 @@ describe("DomainOverviewWorkspace", () => {
     );
   });
 });
+
+// Consent lifecycle is covered by the real useActionPaymentReview and workspace payment tests.
+// These fixtures isolate existing report/cache/scope behavior after accepted consent.
+vi.mock("@/components/action-payment/useActionPaymentReview", () => ({
+  useActionPaymentReview: () => ({
+    draft: null,
+    close: vi.fn(),
+    confirm: vi.fn(),
+    selectOption: vi.fn(),
+    request: (action: (input: unknown) => Promise<unknown>, input: Record<string, unknown>) =>
+      action({
+        ...input,
+        estimateOnly: false,
+        requirePayment: true,
+        acceptedPayment: { quoteToken: "fixture-consent" },
+      }),
+  }),
+}));
+vi.mock("@/components/action-payment/ActionPaymentPrice", () => ({
+  ActionPaymentPrice: () => <span>Review price</span>,
+}));

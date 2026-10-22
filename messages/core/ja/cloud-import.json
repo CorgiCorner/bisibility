@@ -2,8 +2,8 @@
   "cloudImport": {
     "metadata": {
       "cloudDescription": "セルフホストインスタンスがこのホスト型プロジェクトにデータを送信することを許可する、1回限りの移行トークンを作成します。",
-      "cloudLayoutDescription": "ホスト型ベータ: プロジェクトのセットアップとインポートに絞ったタスクです。",
-      "cloudLayoutTitle": "ホスト型ベータ",
+      "cloudLayoutDescription": "Cloud：プロジェクトの設定とインポート。",
+      "cloudLayoutTitle": "Cloud",
       "cloudTitle": "インスタンスからのインポート",
       "instanceDescription": "別の bisibility インスタンスがこのプロジェクトにデータを送信することを許可する、1回限りの移行トークンを作成します。",
       "instanceTitle": "別のインスタンスからインポート"
@@ -23,7 +23,7 @@
       "selfHost": "セルフホストインスタンス"
     },
     "topBar": {
-      "beta": "ベータ",
+      "beta": "Cloud",
       "fallbackWorkspace": "プロジェクト",
       "setupProgress": "セットアップ / {current, number}/{total, number}"
     },

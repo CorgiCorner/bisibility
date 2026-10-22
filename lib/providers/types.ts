@@ -170,6 +170,10 @@ export type KeywordResearchInput = {
 };
 
 export type SerpProvider = {
+  payment?: import("@/lib/action-payment/provider-descriptor").ProviderPaymentDescriptor;
+  paymentFor?(
+    feature: string,
+  ): import("@/lib/action-payment/provider-descriptor").ProviderPaymentDescriptor | null;
   id: string;
   label: string;
   testConnection(creds: ProviderCredentials): Promise<ProviderTestResult>;

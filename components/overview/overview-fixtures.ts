@@ -168,8 +168,22 @@ export const overviewFixture = {
   },
   trackedKeywordCount: 248,
   trend: [
-    { comparisonKey: "synthetic-series", dateKey: "2026-06-18", label: "2026-06-18", value: 8 },
-    { comparisonKey: "synthetic-series", dateKey: "2026-06-28", label: "2026-06-28", value: 7 },
+    {
+      comparisonKey: "synthetic-series",
+      dateKey: "2026-06-18",
+      label: "2026-06-18",
+      rankedKeywordCount: 0,
+      rankedKeywords: [],
+      value: 8,
+    },
+    {
+      comparisonKey: "synthetic-series",
+      dateKey: "2026-06-28",
+      label: "2026-06-28",
+      rankedKeywordCount: 0,
+      rankedKeywords: [],
+      value: 7,
+    },
   ],
   trendTakeaway: {
     days: 30,

@@ -20,7 +20,7 @@ export function KeywordConnectedSchedules({
   const t = useTranslations("projectRankTracker.keywordDetail.header");
   return (
     <div className="flex flex-wrap items-start justify-between gap-4 border-t border-border pt-3">
-      <div className="grid gap-1.5">
+      <div className="grid justify-items-start gap-1.5 text-left">
         <span className="text-[10px] font-semibold uppercase tracking-wide text-fg-muted">
           {t("connectedSchedule")}
         </span>
@@ -34,7 +34,7 @@ export function KeywordConnectedSchedules({
         </div>
       </div>
       {targets && targets.length > 1 ? (
-        <div className="grid gap-1.5">
+        <div className="grid justify-items-start gap-1.5 text-left">
           <span className="text-[10px] font-semibold uppercase tracking-wide text-fg-muted">
             {t("schedulesAllTargets")}
           </span>

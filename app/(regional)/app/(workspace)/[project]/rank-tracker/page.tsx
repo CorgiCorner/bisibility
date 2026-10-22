@@ -16,7 +16,7 @@ import {
 } from "@/lib/actions/keyword-bulk";
 import { importTopQueries } from "@/lib/actions/keyword-suggest";
 import { getFirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
-import { queueFirstChecks, runCheckNow } from "@/lib/actions/rankCheck";
+import { runCheckNow } from "@/lib/actions/rankCheck";
 import { deleteSavedView } from "@/lib/actions/saved-views";
 import { createKeywordSavedView } from "@/lib/actions/saved-views-typed";
 import { getProjectRole } from "@/lib/auth/authorize";
@@ -254,9 +254,9 @@ export default async function KeywordsPage({
               projectId={readable.project.publicId}
               projectMarkets={projectMarkets}
               searchConsoleConnected={searchConsoleConnected}
-              queueFirstChecksAction={queueFirstChecks}
               runCheckNowAction={runCheckNow}
               rows={list.mode === "grouped-server" ? list.groups : list.rows}
+              viewDevices={list.viewDevices}
               savedViews={savedViews}
               tagSuggestions={tagSuggestions}
               facets={list.facets}

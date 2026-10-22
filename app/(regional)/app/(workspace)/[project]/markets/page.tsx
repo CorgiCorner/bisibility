@@ -4,6 +4,10 @@ import { PageContent } from "@/components/shell/PageContent";
 import { addKeywords } from "@/lib/actions/keyword";
 import { createProjectMarket } from "@/lib/actions/project-market-create";
 import {
+  addProjectMarketDeviceTargets,
+  previewProjectMarketDeviceTargets,
+} from "@/lib/actions/project-market-devices";
+import {
   removeProjectMarketFromProject,
   restoreProjectMarketFromProject,
   setProjectMarketEnabled,
@@ -48,6 +52,10 @@ export default async function MarketsPage({ params, searchParams }: Readonly<Mar
           canRestore={canRestore}
           canRunChecks={writable && canProjectAction(role, "update", "keyword")}
           createMarketAction={createProjectMarket}
+          marketDeviceActions={{
+            preview: previewProjectMarketDeviceTargets,
+            add: addProjectMarketDeviceTargets,
+          }}
           markets={markets}
           onArchive={removeProjectMarketFromProject}
           onRestore={restoreProjectMarketFromProject}

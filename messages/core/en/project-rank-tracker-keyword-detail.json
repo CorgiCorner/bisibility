@@ -38,6 +38,7 @@
         "positionValue": "#{position, number}",
         "noRankingUrl": "No ranking URL yet",
         "provider": "via {provider}",
+        "providerNotRecorded": "Provider not recorded",
         "notCheckedYet": "Not checked yet",
         "minutesAgo": "{count, plural, one {# min ago} other {# min ago}}",
         "hoursAgo": "{count, number}h ago",
@@ -91,7 +92,7 @@
         "chooseDepth": "Choose check depth",
         "depthMenu": "Check depth",
         "changeDefault": "Change default",
-        "connectProvider": "Connect a provider",
+        "connectProvider": "Choose a data source",
         "shallowVisibility": "A shallow check can miss rankings beyond the selected depth.",
         "refreshData": "Refresh data",
         "refreshingData": "Refreshing...",
@@ -129,14 +130,14 @@
         "notRankedBody": "Outside the tracked depth on the last check.",
         "firstTitle": "No ranking data yet",
         "firstBody": "First check has not run yet.",
-        "firstBodyNoProvider": "First check has not run yet. Connect a SERP provider to run it.",
+        "firstBodyNoProvider": "The first check has not run yet. Choose a data source to run it.",
         "noData": "No data",
         "outsideTop": "outside top {depth}",
         "refresh": "Refresh",
         "retryCheck": "Retry check",
         "checkTop": "Check top {depth}",
         "runFirstCheck": "Run first check",
-        "connectSerpProvider": "Connect a SERP provider",
+        "connectSerpProvider": "Choose a data source",
         "history": "Position history",
         "coverageUnknownTitle": "Coverage unknown",
         "coverageUnknownBody": "The provider response does not establish whether this keyword is within the tracked depth."
@@ -174,7 +175,8 @@
         "completeTitle": "Check complete",
         "failedTitle": "Check failed",
         "couldNotStart": "The rank check could not be started.",
-        "viewRuns": "View runs"
+        "viewRuns": "View runs",
+        "providerCapacityUnavailable": "Checks are temporarily unavailable for this provider. You were not charged. Try again later, or connect your own provider keys."
       },
       "traffic": {
         "noData": "No data",
@@ -216,7 +218,10 @@
           "reconnect": "An analytics source needs to be reconnected in Integrations.",
           "rateLimited": "The analytics provider’s request limit was reached. Try again later.",
           "unavailable": "No connected source was available to fetch analytics. Check Integrations.",
-          "integrations": "Manage integrations"
+          "integrations": "Manage integrations",
+          "sources": "Analytics sources",
+          "sourceActive": "Active connection",
+          "sourceInactive": "No active connection"
         }
       },
       "position": {
@@ -334,7 +339,7 @@
         "competitor": "Competitor",
         "gapPositions": "Positions {start, number}-{end, number}",
         "notRetrieved": "{count, number} not retrieved",
-        "gapStopped": "The check stopped at your result, so these positions were never requested and never billed. They are unknown for this check, not empty.",
+        "gapStopped": "Stopped after finding your domain. The remaining positions have no saved results; this does not mean they were empty.",
         "gapUnknown": "These positions were not retrieved for this check. They are unknown, not empty.",
         "site": "Site",
         "notInSaved": "Not in saved results",
@@ -433,15 +438,25 @@
           "expired": "The 15-minute extension window has closed. Use Run check above to collect fresh results.",
           "complete": "No more pages are available, or this snapshot has reached the top 100.",
           "running": "An extension is already being fetched. Refresh data to see its result.",
-          "failed": "The extension could not be confirmed. Earlier results are safe. Refresh data to check its status or use Run check for fresh results.",
+          "failed": "The extension could not be confirmed. It will not be sent again automatically. Earlier results are kept. Refresh snapshot only reloads saved status.",
           "disconnected": "Reconnect this snapshot’s SerpApi integration before extending it.",
           "unavailable": "This snapshot changed. Refresh data before continuing.",
           "addedTitle": "Results added after the check",
           "page": "Positions {start, number} to {end, number} · fetched {time}",
           "added": "{count, number} added · {duplicates, number} duplicates skipped",
           "emptyPage": "This page returned no new unique results.",
-          "refresh": "Refresh snapshot"
-        }
+          "refresh": "Refresh snapshot",
+          "refreshHint": "Reload saved results and extension status without sending another provider request.",
+          "retry": "Try extension again",
+          "notSent": "This extension was not sent. You can try again until {time}.",
+          "notSentExpired": "This extension was not sent. The extension window has closed. Run a fresh check for new results.",
+          "lastCharge": "Last extension"
+        },
+        "competitorCheck": "Competitor check",
+        "compareAction": "Compare",
+        "stopComparing": "Stop comparing",
+        "savedResults": "{count, number} results saved · requested Top {depth, number}",
+        "partialCompetitors": "Partial snapshot. Missing competitors may still rank in the Top {depth, number}."
       },
       "comparison": {
         "entered": "Entered",
@@ -552,7 +567,11 @@
         "unknownScope": "Captured scope unavailable",
         "revision": "Target revision: {value}",
         "chartAria": "Recorded position timeline",
-        "noQualifiedPoints": "No qualified position points in this loaded window",
+        "noQualifiedPoints": "No positions to display",
+        "noPositionsDescription": "No confirmed positions are available for this period.",
+        "noObservations": "No observations in this period",
+        "noAttempts": "No check attempts in this period",
+        "noRecordsDescription": "Run a check or choose another date range.",
         "openObservation": "Open saved observation {id}",
         "point": "Position {position}, {date}",
         "chartLoaded": "{loaded} of {total} observations loaded; {gaps} gaps; {boundaries} methodology boundaries",
@@ -572,7 +591,7 @@
         "expectedUrl": "Recorded expected URL: {value}",
         "rankingUrl": "Recorded ranking URL: {value}",
         "openSnapshot": "Open saved check",
-        "attemptCountMeaning": "Reported provider attempt count is saved check metadata, not a complete paid-call ledger.",
+        "attemptCountMeaning": "Saved provider attempts for this check. This count may differ from the number of billed requests.",
         "urlHistoryTitle": "Recorded ranking URLs",
         "urlHistoryMeaning": "Each expected and ranking URL belongs to its saved check, without a fallback to today’s edited target.",
         "loadedCount": "{loaded} of {total} records loaded",
@@ -683,11 +702,16 @@
           "map_listing": "Map result",
           "listing": "Business listing"
         },
-        "otherResultKind": "Other result type (code: {value})"
+        "otherResultKind": "Other result type (code: {value})",
+        "scopeTechnicalDetails": "Technical details",
+        "scopeDevices": {
+          "desktop": "Desktop",
+          "mobile": "Mobile"
+        }
       },
       "quality": {
         "currentUnknown": "Current rank unknown",
-        "currentScopeUnavailable": "Current definition is unverified",
+        "currentScopeUnavailable": "Current tracking settings unavailable",
         "currentDefinition": "Current measurement definition",
         "lastKnown": "Last known #{position, number}",
         "bestCurrentDefinition": "Best #{position, number} for the current definition",
@@ -706,7 +730,11 @@
         "lastKnownUrl": "Last known URL",
         "reportUnavailable": "Report unavailable",
         "reportCapacity": "This history exceeds the report limit. Return to the keyword list to view current data.",
-        "reportChanged": "The data changed while the report was loading. Refresh stored data to open a new snapshot."
+        "reportChanged": "The data changed while the report was loading. Refresh stored data to open a new snapshot.",
+        "measurementDetails": "Measurement details",
+        "bestSummary": "Best recorded: #{position, number}",
+        "historicalBestSummary": "Previous best #{position, number}",
+        "checked": "Checked"
       },
       "providerComparison": {
         "title": "Compare providers",
@@ -717,7 +745,7 @@
         "retry": "Retry",
         "loading": "Loading comparison…",
         "depth": "Top 20",
-        "needsProviders": "Connect both DataForSEO and SerpApi to compare results.",
+        "needsProviders": "Set up DataForSEO and SerpApi to compare results.",
         "connections": "Provider connections",
         "refresh": "Refresh result",
         "preview": "Review cost",

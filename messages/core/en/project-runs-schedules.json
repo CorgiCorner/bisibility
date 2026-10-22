@@ -65,9 +65,9 @@
         "archived": "Prompt monitoring schedule archived. Past runs and results are preserved.",
         "archivedReadOnlyHint": "Archived prompt monitoring schedules are kept for history and cannot be edited or restored.",
         "emptyNext": "Add prompts to start",
-        "kindAi": "Prompt monitoring",
+        "kindAi": "AI tracking",
         "kindRank": "Rank checks",
-        "newSchedule": "New prompt monitoring schedule",
+        "newSchedule": "New AI tracking schedule",
         "nextPending": "Pending",
         "prompts": "{count, plural, one {# prompt} other {# prompts}}",
         "readOnly": "Read-only",
@@ -78,7 +78,7 @@
       },
       "archiveDialog": {
         "body": "Future runs will stop. Runs already launched can finish, and past results remain available.",
-        "defaultNotice": "This is the default schedule. New keywords will use manual checks until you choose another default.",
+        "defaultNotice": "New keywords stay manual until assigned to a schedule.",
         "manualChecks": "Manual checks",
         "moveKeywords": "Move {count, plural, one {# keyword} other {# keywords}} to",
         "title": "Archive “{name}”?"
@@ -132,7 +132,8 @@
         "selected": "{count, plural, one {# selected} other {# selected}}",
         "selectAll": "Select all {count, number} matching",
         "submitFailed": "Could not add keywords to this schedule. Try again.",
-        "toSchedule": "to {name}"
+        "toSchedule": "to {name}",
+        "schedule": "Schedule"
       },
       "editor": {
         "always": "Always {label}",
@@ -141,16 +142,16 @@
         "cronTooLong": "Cron expressions are {maximum, number} characters or fewer.",
         "customCron": "Custom cron",
         "customPreview": "Custom cron schedule.",
-        "defaultEnabled": "Enable to use this schedule for new keywords. Existing keywords keep their schedules.",
-        "defaultExisting": "Default for new keywords",
-        "defaultExistingDescription": "New keywords use this schedule unless you choose another.",
-        "defaultReplacement": "Replaces {name} for new keywords. Existing keywords keep their schedules.",
+        "defaultEnabled": "Suggest this schedule when scheduling keywords. Keywords are added only when you choose them.",
+        "defaultExisting": "Default suggestion",
+        "defaultExistingDescription": "Suggested when you choose a schedule. No keywords join automatically.",
+        "defaultReplacement": "Replaces {name} as the suggested schedule. Existing assignments stay unchanged.",
         "depth": "Depth",
         "everyWeekday": "Every weekday at 06:00.",
         "invalidCron": "Enter a valid five-field cron expression.",
         "invalidTime": "Enter a time in HH:mm format.",
         "invalidTimeZone": "Enter a valid time zone.",
-        "invalidTimeStep": "Enter a time in 30-minute steps.",
+        "invalidTimeStep": "Enter a time ending in :00 or :30.",
         "jitterExact": "None - start exactly on time",
         "jitterFifteen": "Up to 15 minutes",
         "jitterSixty": "Up to 60 minutes",
@@ -170,9 +171,9 @@
         "noFixedTime": "No fixed time",
         "projectDefault": "Project default ({label})",
         "projectDefaultPlain": "Project default",
-        "overrideHelp": "Project default follows the project settings. Always pins this schedule.",
+        "overrideHelp": "Follow project settings, or choose a value for this schedule.",
         "save": "Save schedule",
-        "saveFailed": "Could not save the schedule.",
+        "saveFailed": "Could not save. Your changes are still here. Try again.",
         "saved": "Schedule saved.",
         "saving": "Saving...",
         "schedule": "Schedule",
@@ -180,10 +181,21 @@
         "scheduleNameTooLong": "Schedule names are {maximum, number} characters or fewer.",
         "startWindow": "Start window",
         "startWindowHelp": "Spreads the start so schedules firing at the same time do not hit the provider at once.",
-        "thirtyMinuteSteps": "30-minute steps",
+        "thirtyMinuteSteps": "Use :00 or :30, e.g. 09:00 or 09:30.",
         "time24": "Time, 24-hour",
         "topDepth": "Top {depth, number}",
-        "useAsDefault": "Use as default for new keywords"
+        "useAsDefault": "Use as default suggestion",
+        "nameHelp": "Name only. Change Frequency below to change when checks run.",
+        "saveSessionExpired": "Your session expired. Sign in again, then retry saving.",
+        "saveForbidden": "You no longer have permission to edit this schedule.",
+        "saveNotFound": "This schedule is no longer available. Return to the schedule list.",
+        "saveConflict": "The schedule changed. Reload it before saving again.",
+        "saveReadOnly": "This project is read-only. You can save after editing is restored.",
+        "saveInvalid": "Check the schedule settings before saving again.",
+        "marketDevice": "Market × device",
+        "removeMember": "Remove from schedule",
+        "memberRemoved": "Removed from schedule. The keyword is available for manual checks.",
+        "memberRemoveFailed": "Could not remove the keyword from this schedule. Try again."
       },
       "empty": {
         "archivedDescription": "Archived schedules will appear here. Their past runs and results are preserved.",
@@ -206,7 +218,7 @@
       "list": {
         "actions": "Actions",
         "blocked": "Next run blocked - monthly limit",
-        "defaultHint": "New keywords join this schedule unless you pick another one.",
+        "defaultHint": "Suggested when choosing a schedule. Keywords never join automatically.",
         "memberMeta": "{markets, plural, one {# market} other {# markets}} x {devices, plural, one {# device} other {# devices}}",
         "members": "{keywords, plural, one {# keyword} other {# keywords}} = {targets, plural, one {# check a run} other {# checks a run}}",
         "noAssignedKeywords": "No assigned keywords",
@@ -231,7 +243,23 @@
       "nextRun": {
         "at": "{day} {time}",
         "today": "today {time}",
-        "tomorrow": "tomorrow {time}"
+        "tomorrow": "tomorrow {time}",
+        "distributed": "{day}, spread over the day ({timezone})",
+        "distributedInterval": "From {day}, spread across the interval ({timezone})"
+      },
+      "summary": {
+        "title": "Schedule summary",
+        "nextRun": "Next run",
+        "perMonth": "Estimated per month",
+        "nextPending": "Being planned",
+        "makeDefault": "Make default",
+        "defaultHint": "The default is a suggestion when you choose a schedule. New keywords stay unscheduled until you assign them.",
+        "unscheduledCount": "{count, plural, one {# keyword has no schedule.} other {# keywords have no schedule.}}",
+        "addToSchedule": "Add to schedule"
+      },
+      "planning": {
+        "delay": "Planned runs usually appear in Runs within {minutes, number} minutes. Checks run at their scheduled times.",
+        "delayUnknown": "Planned runs may take a short time to appear in Runs. Checks run at their scheduled times."
       }
     }
   }

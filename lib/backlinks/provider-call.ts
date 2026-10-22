@@ -1,4 +1,5 @@
 import "server-only";
+import type { PaidCallPayment } from "@/lib/action-payment/paid-call";
 import { backlinksRates } from "@/lib/cost-estimate/provider-rates";
 import { ProjectReadOnlyError } from "@/lib/deployment/project-write-mode";
 import { isOperationAccessDeniedError } from "@/lib/operations/access-error";
@@ -21,57 +22,14 @@ import type {
   BacklinkTargetInput,
   BacklinkTargetScope,
 } from "@/lib/providers/types";
-import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
 import { isBudgetExhaustedError } from "@/lib/rank-check/budget";
 import type { BacklinksSource } from "./context";
-import type { BacklinksHistoryFailure, BacklinksHistoryMonth, BacklinksSummary } from "./types";
+import type { BacklinksPayment } from "./payment";
+import type { BacklinksHistoryMonth } from "./types";
 
-/** Server-only error: its cause is never projected into the failed evidence DTO. */
-export class BacklinksHistoryEvidenceError extends Error {
-  readonly historyFailure: BacklinksHistoryFailure;
-  readonly summary: BacklinksSummary;
+export { BacklinksHistoryEvidenceError } from "./history-evidence";
 
-  constructor(
-    error: unknown,
-    summary: BacklinksSummary,
-    readonly knownSummaryCostCents: number,
-  ) {
-    super("Backlinks history failed; summary evidence is available.", { cause: error });
-    this.name = "BacklinksHistoryEvidenceError";
-    const phases: readonly string[] = [
-      "admission",
-      "request",
-      "response_body",
-      "measurement",
-      "settlement",
-      "unknown",
-    ];
-    this.historyFailure =
-      error instanceof ProviderUsagePersistenceError
-        ? {
-            code: "provider_usage_unconfirmed",
-            phase: phases.includes(error.phase) ? error.phase : "unknown",
-          }
-        : {
-            code: error instanceof ProviderCallError ? "provider_transient" : "unexpected_error",
-            phase: null,
-          };
-    this.summary = {
-      backlinksTotal: summary.backlinksTotal,
-      brokenBacklinks: summary.brokenBacklinks,
-      brokenPages: summary.brokenPages,
-      dofollowPct: summary.dofollowPct,
-      domainRank: summary.domainRank,
-      lostBacklinks: summary.lostBacklinks,
-      lostReferringDomains: summary.lostReferringDomains,
-      newBacklinks: summary.newBacklinks,
-      newReferringDomains: summary.newReferringDomains,
-      referringDomainsTotal: summary.referringDomainsTotal,
-      referringPages: summary.referringPages,
-      spamScore: summary.spamScore,
-    };
-  }
-}
+import { BacklinksHistoryEvidenceError } from "./history-evidence";
 
 function rateEstimate(input: {
   itemCount: number;
@@ -140,6 +98,7 @@ function paidCallInput(input: {
 }
 
 export async function fetchBacklinksAnalysis(input: {
+  payment?: BacklinksPayment;
   maxCostCents?: number;
   includeSubdomains: boolean;
   mode: BacklinkRowMode;
@@ -165,6 +124,7 @@ export async function fetchBacklinksAnalysis(input: {
   const common = paidCallInput({ ...input, costLimit: requestCostLimit(input.maxCostCents) });
   const summary = await paidProviderCall({
     ...common,
+    payment: input.payment?.child("summary"),
     call: (credentials, usage) =>
       input.source.provider.fetchBacklinksSummary(credentials, {
         ...target,
@@ -179,6 +139,7 @@ export async function fetchBacklinksAnalysis(input: {
     input.scope === "site"
       ? await paidProviderCall({
           ...common,
+          payment: input.payment?.child("history"),
           call: (credentials, usage) =>
             input.source.provider.fetchBacklinksHistory(credentials, {
               ...target,
@@ -219,6 +180,7 @@ export async function fetchBacklinksAnalysis(input: {
       : { costCents: 0, rows: [] };
   const rows = await paidProviderCall({
     ...common,
+    payment: input.payment?.child("rows"),
     call: (credentials, usage) =>
       input.source.provider.fetchBacklinksRows(credentials, {
         ...target,
@@ -249,6 +211,7 @@ export async function fetchBacklinksAnalysis(input: {
 }
 
 export async function fetchMoreBacklinksRows(input: {
+  payment?: PaidCallPayment;
   maxCostCents?: number;
   correlationId?: string;
   onProviderCall?: () => void;
@@ -271,6 +234,7 @@ export async function fetchMoreBacklinksRows(input: {
       costLimit:
         input.maxCostCents === undefined ? undefined : requestCostLimit(input.maxCostCents),
     }),
+    payment: input.payment,
     correlationId: input.correlationId,
     onNotDispatched: input.onNotDispatched,
     call: (credentials, usage) => {
@@ -290,7 +254,7 @@ export async function fetchMoreBacklinksRows(input: {
 }
 
 export function assertBacklinksMaxCost(estimatedCostCents: number, maxCostCents?: number) {
-  if (maxCostCents !== undefined && estimatedCostCents > maxCostCents) {
+  if (maxCostCents === 0 || (maxCostCents !== undefined && estimatedCostCents > maxCostCents)) {
     throw new ProviderLookupSignal({
       estimatedCostCents,
       ok: false,

@@ -65,12 +65,8 @@ describe("OverviewDashboardView", () => {
       "es-ES" as AppLocale,
     );
 
-    expect(screen.getByText("Aún no hay rankings")).toBeVisible();
-    expect(screen.getByText("Añade palabras clave para comenzar el seguimiento.")).toBeVisible();
-    expect(screen.getByRole("link", { name: "Añadir palabras clave" })).toHaveAttribute(
-      "href",
-      "/app/prj_abc123/rank-tracker?add=1",
-    );
+    expect(screen.queryByText("Aún no hay rankings")).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Run your first check" })).not.toBeInTheDocument();
     expect(screen.queryByText("Welcome to Acme")).not.toBeInTheDocument();
   });
 
@@ -198,7 +194,7 @@ describe("OverviewDashboardView", () => {
       />,
     );
 
-    expect(screen.getByText("No rankings yet")).toBeVisible();
+    expect(screen.queryByText("No rankings yet")).not.toBeInTheDocument();
     expect(screen.queryByText(/Welcome to/)).not.toBeInTheDocument();
   });
 
@@ -330,7 +326,7 @@ describe("OverviewDashboardView", () => {
     );
 
     expect(screen.getByText("This is a sample project")).toBeVisible();
-    expect(screen.getByText("No rankings yet")).toBeVisible();
+    expect(screen.queryByText("No rankings yet")).not.toBeInTheDocument();
     expect(screen.queryByText(/Welcome to/)).not.toBeInTheDocument();
     expect(screen.queryByText(overviewFixture.kpis[0].value)).not.toBeInTheDocument();
   });

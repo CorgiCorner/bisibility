@@ -2,8 +2,8 @@
   "cloudImport": {
     "metadata": {
       "cloudDescription": "Crea un token de migración de un solo uso que autoriza a una instancia autoalojada a enviar sus datos a este proyecto alojado.",
-      "cloudLayoutDescription": "La beta alojada: tareas de configuración e importación centradas en tu proyecto.",
-      "cloudLayoutTitle": "Beta alojada",
+      "cloudLayoutDescription": "Cloud: configuración e importación para tu proyecto.",
+      "cloudLayoutTitle": "Cloud",
       "cloudTitle": "Importación de instancia",
       "instanceDescription": "Crea un token de migración de un solo uso que autoriza a otra instancia de bisibility a enviar sus datos a este proyecto.",
       "instanceTitle": "Importar desde otra instancia"
@@ -23,7 +23,7 @@
       "selfHost": "instancia autoalojada"
     },
     "topBar": {
-      "beta": "Beta",
+      "beta": "Cloud",
       "fallbackWorkspace": "Proyecto",
       "setupProgress": "Configuración / {current, number} de {total, number}"
     },

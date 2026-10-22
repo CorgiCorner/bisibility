@@ -229,7 +229,6 @@ describe("backlinks router", () => {
     ["row mode", "mode", "?target=example.com&mode=dedupe"],
     ["estimate boolean", "estimate_only", "?target=example.com&estimate_only=1"],
     ["fresh boolean", "fresh", "?target=example.com&fresh=1"],
-    ["zero max cost", "max_cost_cents", "?target=example.com&max_cost_cents=0"],
     ["fractional max cost", "max_cost_cents", "?target=example.com&max_cost_cents=1.5"],
   ])("returns a 400 problem for invalid %s", async (_case, field, search) => {
     const response = await route("GET", `/projects/${projectPublicId}/backlinks${search}`);

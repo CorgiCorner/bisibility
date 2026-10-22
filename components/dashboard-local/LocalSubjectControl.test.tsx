@@ -1,15 +1,17 @@
+import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LocalSubjectControl } from "./LocalSubjectControl";
 import { localStoryContext, localStoryPreference } from "./test-fixtures";
 
-const mocks = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn(), save: vi.fn() }));
+const mocks = vi.hoisted(() => ({ save: vi.fn() }));
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mocks.replace, refresh: mocks.refresh }),
-  usePathname: () => "/app/prj_example/dashboard",
-  useSearchParams: () => new URLSearchParams("tag=kept&dashboardView=local"),
-}));
+beforeEach(() => {
+  setNavigationState({
+    pathname: "/app/prj_example/dashboard",
+    searchParams: new URLSearchParams("tag=kept&dashboardView=local"),
+  });
+});
 vi.mock("@/lib/project-surface-preferences/dashboard-actions", () => ({
   saveDashboardLocalSelection: mocks.save,
 }));
@@ -43,7 +45,7 @@ describe("explicit Local display controls", () => {
   it("changes only the URL and preserves filters, with no automatic persistence", () => {
     render(<LocalSubjectControl local={localStoryContext} preference={localStoryPreference} />);
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "" } });
-    const url = new URL(mocks.replace.mock.calls[0][0], "https://example.test");
+    const url = new URL(routerMock.replace.mock.calls[0][0], "https://example.test");
     expect(url.searchParams.get("tag")).toBe("kept");
     expect(url.searchParams.has("dashboardLocalSubject")).toBe(true);
     expect(url.searchParams.get("dashboardLocalSubject")).toBe("");
@@ -59,7 +61,7 @@ describe("explicit Local display controls", () => {
         selection: localStoryContext.selection,
       }),
     );
-    expect(mocks.refresh).toHaveBeenCalledOnce();
+    expect(routerMock.refresh).toHaveBeenCalledOnce();
   });
   it("a stale CAS response stays a conflict and never silently retries", async () => {
     mocks.save.mockResolvedValue({ ok: false, error: { status: 409 } });
@@ -67,7 +69,7 @@ describe("explicit Local display controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "remember" }));
     expect(await screen.findByText("conflict")).toBeVisible();
     expect(mocks.save).toHaveBeenCalledOnce();
-    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
   });
   it("missing Local requires selection and never defaults to the only available choice", () => {
     render(

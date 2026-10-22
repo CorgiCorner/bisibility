@@ -1,5 +1,5 @@
 import { BudgetExhaustedError } from "@/lib/metering/admission-errors";
-import { persistQueuedSubmissionResult } from "./queued-submit-persist";
+import { persistQueuedSubmissionResult } from "@/lib/rank-check/queued-submit-persist";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -25,14 +25,18 @@ import {
   type DataForSeoQueuedSubmissionResult,
   prepareDataForSeoQueuedTasks,
 } from "@/lib/providers/serp/dataforseo-queued";
-import { queuedRankCheckConfig } from "./queued-config";
-import { deferQueuedRankCheckBatch } from "./queued-lifecycle";
-import { queuedRankCheckModeAuthorization } from "./queued-mode";
-import { claimQueuedSubmission } from "./queued-submit-claim";
-import { submissionTasks } from "./queued-submit-tasks";
-import { markAmbiguous, markDefiniteFailure } from "./queued-submit-transitions";
-import { beginQueuedTaskUsageJournal, type QueuedTaskUsageJournal } from "./queued-usage-journal";
-import { rankCheckSchedulerMode } from "./scheduler-mode";
+import { queuedRankCheckConfig } from "@/lib/rank-check/queued-config";
+import { deferQueuedRankCheckBatch } from "@/lib/rank-check/queued-lifecycle";
+import { queuedRankCheckModeAuthorization } from "@/lib/rank-check/queued-mode";
+import { claimQueuedSubmission } from "@/lib/rank-check/queued-submit-claim";
+import { submissionTasks } from "@/lib/rank-check/queued-submit-tasks";
+import { markAmbiguous, markDefiniteFailure } from "@/lib/rank-check/queued-submit-transitions";
+import {
+  beginQueuedTaskUsageJournal,
+  type QueuedTaskUsageJournal,
+} from "@/lib/rank-check/queued-usage-journal";
+import { rankCheckSchedulerMode } from "@/lib/rank-check/scheduler-mode";
+import { queuedRankPaymentSessions } from "./runs/payment-queued";
 
 const TERMINAL_STATES = new Set(["completed", "deferred", "failed"]);
 
@@ -101,7 +105,10 @@ async function submitBatch(batchId: string) {
   if (!connection) {
     return markDefiniteFailure(batchId, "DataForSEO connection was removed before submission.");
   }
-  const definitions = await queuedWorkerSessions(claimed.batch);
+  const definitions = await queuedRankPaymentSessions(
+    claimed.batch,
+    await queuedWorkerSessions(claimed.batch),
+  );
   const definitionFence = queuedDefinitionFence(definitions);
   let execution: QueuedDeploymentExecution | null;
   try {
@@ -112,6 +119,8 @@ async function submitBatch(batchId: string) {
             new Map([...definitions].map(([id, session]) => [id, session.beforeReserve])),
           )
         : null;
+    if (connection.credentialSource === "hosted" && !execution)
+      throw new Error("Queued hosted execution is unavailable.");
   } catch (error) {
     if (error instanceof DeploymentAdmissionExhaustedError) {
       const progress = await deferQueuedRankCheckBatch(batchId, admissionDeferral(error));

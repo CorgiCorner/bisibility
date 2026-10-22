@@ -1,18 +1,22 @@
 "use client";
+import { PaymentQuoteSummary } from "@/components/action-payment/PaymentQuoteSummary";
+import { usePaymentQuoteExpiry } from "@/components/action-payment/usePaymentQuoteExpiry";
 import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
-import type { SourceConfiguration } from "@/lib/ai-tracking/contract";
+import { formatPaymentAmount } from "@/lib/action-payment/format";
 import { trackingConfigurationForm } from "@/lib/ai-tracking/projections/forms";
 import type { TrackingPreview } from "@/lib/ai-tracking/projections/workspace";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 import type { TrackingRunDrawerProps } from "./TrackingRunDrawer.types";
+import { TrackingSavedConfiguration } from "./TrackingSavedConfiguration";
 import { TrackingSourceControls } from "./TrackingSourceControls";
+import { trackingEngines, trackingRunConfigurations } from "./tracking-run-configuration";
 
 export type { TrackingPreview } from "@/lib/ai-tracking/projections/workspace";
 export function TrackingRunDrawer({
@@ -28,6 +32,8 @@ export function TrackingRunDrawer({
   mutationError,
   onSaveMetadata,
 }: Readonly<TrackingRunDrawerProps>) {
+  const locale = useLocale();
+  const paymentT = useTranslations("shared.actionPayment");
   const t = useTranslations("projectAiTracking");
   const [previewPending, startPreview] = useTransition();
   const [replaceConfiguration, setReplaceConfiguration] = useState(false);
@@ -55,13 +61,11 @@ export function TrackingRunDrawer({
     },
   });
   const source = watch("source");
-  const consent = watch("consent");
-  const engines =
-    source === "google_aio"
-      ? ["google"]
-      : source === "consumer_scrape"
-        ? ["chat_gpt", "gemini"]
-        : ["chat_gpt"];
+  const [launchUnconfirmed, setLaunchUnconfirmed] = useState(false);
+  const expired = usePaymentQuoteExpiry(
+    preview?.payment ? Date.parse(preview.payment.expiresAt) : Infinity,
+  );
+  const engines = trackingEngines(source);
   function invalidatePreview() {
     version.current++;
     setPreview(null);
@@ -89,32 +93,15 @@ export function TrackingRunDrawer({
     startPreview(async () => {
       setError(null);
       try {
-        const engine = engines.includes(values.engine)
-          ? values.engine
-          : (engines[0] as SourceConfiguration["engine"]);
-        const endpoint =
-          source === "google_aio"
-            ? "serp/google/organic/task_post"
-            : `ai_optimization/${engine}/${source === "model_api" ? "llm_responses" : "llm_scraper"}/task_post`;
-        const nextPreview = await onPreview([
-          {
-            provider: "dataforseo",
-            source: values.source,
-            engine: engine as SourceConfiguration["engine"],
-            endpoint,
-            model: source === "model_api" ? values.model : null,
-            parameters:
-              source === "model_api"
-                ? {
-                    max_output_tokens: 1024,
-                    web_search: false,
-                    cost_policy: "provider_actual_cost",
-                    actual_cost_acknowledgement: "non_guaranteed_estimate_v1",
-                    estimated_cost_limit_cents: 100,
-                  }
-                : { language_code: values.locale, location_name: values.location },
-          },
-        ]);
+        const nextPreview = await onPreview(trackingRunConfigurations(values), {
+          paymentScope: scheduleMode ? "recurring" : "manual",
+          ...(scheduleMode
+            ? {
+                paymentRecurrence: { cron: values.cron, timezone: values.timezone },
+                ...(schedule ? { paymentScheduleId: schedule.id } : {}),
+              }
+            : {}),
+        });
         if (version.current === requestedVersion) setPreview(nextPreview);
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : t("previewUnavailable"));
@@ -174,27 +161,13 @@ export function TrackingRunDrawer({
             />
           </div>
         )}
-        {schedule && !reviewing && (
-          <div className="rounded-card border border-border p-4 text-xs leading-5">
-            <p>{t("savedConfigurationReview", { count: schedule.promptIds?.length ?? count })}</p>
-            {schedule.configurations?.map((configuration, index) => (
-              <p key={index} className="mt-2">
-                {configuration.source} · {configuration.engine} ·{" "}
-                {configuration.model ?? t("unknown")} ·{" "}
-                {String(configuration.parameters.language_code ?? t("unknown"))} ·{" "}
-                {String(configuration.parameters.location_name ?? t("unknown"))}
-              </p>
-            ))}
-            <Button
-              className="mt-3"
-              size="sm"
-              variant="secondary"
-              onClick={() => setReplaceConfiguration(true)}
-            >
-              {t("reviewReplacementConfiguration")}
-            </Button>
-          </div>
-        )}
+        {schedule && !reviewing ? (
+          <TrackingSavedConfiguration
+            schedule={schedule}
+            count={count}
+            onReview={() => setReplaceConfiguration(true)}
+          />
+        ) : null}
         {reviewing && (
           <>
             {schedule && (
@@ -223,7 +196,7 @@ export function TrackingRunDrawer({
           type="submit"
           variant="secondary"
           loading={busy}
-          disabled={reviewing && count === 0}
+          disabled={launchUnconfirmed || (reviewing && count === 0)}
         >
           {reviewing ? t("previewConfigurationAndCost") : t("saveSchedule")}
         </Button>
@@ -232,31 +205,34 @@ export function TrackingRunDrawer({
             {error || mutationError}
           </p>
         )}
+        {launchUnconfirmed && !busy ? (
+          <p role="status" className="text-xs text-fg-muted">
+            {paymentT("requestUnconfirmed")}
+          </p>
+        ) : null}
         {preview && (
           <div className="rounded-card border border-border p-4">
-            <p className="text-sm font-semibold">
-              {t("advisoryEstimate", { cost: (preview.estimatedCostCents / 100).toFixed(4) })}
-            </p>
-            <p className="mt-2 text-xs text-fg-muted">
-              {t("budgetAndCredentialsAreCheckedAgainBeforeLaunch")}
-            </p>
-            <Controller
-              name="consent"
-              control={control}
-              render={({ field }) => (
-                <Checkbox
-                  name={field.name}
-                  checked={field.value}
-                  onChange={(event) => field.onChange(event.target.checked)}
-                  label={t("iApproveThisRunAndTheProviderActual")}
-                  containerClassName="mt-4"
-                />
-              )}
-            />
+            <PaymentQuoteSummary quote={preview.payment} label={paymentT("forecast")} />
+            <p className="mt-2 text-xs text-fg-muted">{paymentT("forecastRisk")}</p>
+            {expired ? (
+              <p role="alert" className="text-xs text-warning">
+                {paymentT("expired")}
+              </p>
+            ) : null}
             <Button
               className="mt-4"
-              disabled={busy || ((scheduleMode ? watch("enabled") : true) && !consent)}
+              disabled={
+                busy ||
+                launchUnconfirmed ||
+                !preview.payment ||
+                (!expired && !preview.payment.availability.allowed)
+              }
               onClick={async () => {
+                if (expired) {
+                  await handleSubmit(submit)();
+                  return;
+                }
+                setLaunchUnconfirmed(true);
                 try {
                   await onLaunch(
                     preview,
@@ -266,16 +242,35 @@ export function TrackingRunDrawer({
                           cron: watch("cron"),
                           timezone: watch("timezone"),
                           enabled: watch("enabled"),
-                          consent: watch("consent"),
+                          consent: true,
                         }
                       : undefined,
                   );
                 } catch (cause) {
                   setError(cause instanceof Error ? cause.message : t("runFailed"));
+                  if (
+                    cause instanceof Error &&
+                    "reason" in cause &&
+                    [
+                      "payment_quote_changed",
+                      "payment_quote_expired",
+                      "payment_quote_required",
+                    ].includes(String(cause.reason))
+                  ) {
+                    setLaunchUnconfirmed(false);
+                    setPreview(null);
+                  }
                 }
               }}
             >
-              {scheduleMode ? t("saveSchedule") : t("approveAndQueueRun")}
+              {expired
+                ? paymentT("refreshPrice")
+                : scheduleMode
+                  ? t("saveSchedule")
+                  : t("approveAndQueueRun")}
+              {!expired && preview.payment
+                ? ` · ${formatPaymentAmount(preview.payment.charge, locale)}`
+                : ""}
             </Button>
           </div>
         )}

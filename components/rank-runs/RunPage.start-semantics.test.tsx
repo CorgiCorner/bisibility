@@ -1,5 +1,6 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RunPage } from "./RunPage";
 import { runPageFixture } from "./RunPageFixtures";
@@ -35,20 +36,42 @@ const queuedRun = {
   trigger: "scheduled" as const,
 } satisfies RunPageData;
 
+function runHeader() {
+  return within(screen.getByRole("heading", { level: 1 }).closest("section") as HTMLElement);
+}
+
 describe("run starts at the first target, not schedule materialization", () => {
   afterEach(() => vi.useRealTimers());
 
-  it("shows a distributed target as queued, with zero starts, a first-check time and estimated cost", () => {
+  it("shows a distributed target as queued, with zero starts, a first-check time and pending charge", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-04T10:00:00.000Z"));
+    const quote = paymentQuote();
     render(
-      <RunPage {...runPageFixture} run={queuedRun} canMutate projectRef="prj_example" items={[]} />,
+      <RunPage
+        {...runPageFixture}
+        run={{
+          ...queuedRun,
+          payment: {
+            actionId: queuedRun.id,
+            quoteId: quote.id,
+            option: quote.option,
+            state: "pending",
+            charge: { ...quote.charge, certainty: "unknown", value: null },
+          },
+        }}
+        canMutate
+        projectRef="prj_example"
+        items={[]}
+      />,
     );
     expect(screen.getByText("0 of 1 selected targets started")).toBeVisible();
     expect(screen.getByText("First check in")).toBeVisible();
     expect(screen.getByText("4h")).toBeVisible();
     expect(screen.getByText("spread across the day")).toBeVisible();
-    expect(screen.getByText("Estimated cost")).toBeVisible();
+    expect(runHeader().getByText("Cost")).toBeVisible();
+    expect(screen.getByText("On your Example provider key · Charge pending")).toBeVisible();
+    expect(screen.queryByText("$0.01")).toBeNull();
     expect(screen.queryByText("Elapsed")).toBeNull();
     expect(screen.queryByRole("radio", { name: "Running" })).toBeNull();
     expect(screen.getByRole("button", { name: "Cancel run" })).toBeEnabled();
@@ -76,7 +99,7 @@ describe("run starts at the first target, not schedule materialization", () => {
     expect(screen.getByText("1 of 2 selected targets started")).toBeVisible();
     expect(screen.getByText("Elapsed")).toBeVisible();
     expect(screen.getByText("1 min 0 s")).toBeVisible();
-    expect(screen.getByText("Spent so far")).toBeVisible();
+    expect(runHeader().getByText("Cost")).toBeVisible();
   });
 
   it("does not add pre-start waiting to a completed single-check duration", () => {

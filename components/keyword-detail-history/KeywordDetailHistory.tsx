@@ -1,6 +1,5 @@
 "use client";
 
-import { positionHistoryContentInsets } from "@/components/keywords/position-history-layout";
 import { LocalizedMeasurementHelp } from "@/components/measurement-help/LocalizedMeasurementHelp";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -68,7 +67,7 @@ function HistoryWorkspace({ history, keyword, timeZone }: Readonly<Props>) {
   return (
     <div className="grid min-w-0 grid-cols-1 gap-4">
       <Card className="min-w-0 rounded-card" size="lg">
-        <div style={positionHistoryContentInsets}>
+        <div>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <SectionTitle>{t("title")}</SectionTitle>

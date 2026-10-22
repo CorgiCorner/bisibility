@@ -17,7 +17,8 @@
       "runStatus": "Status przebiegu",
       "searchConsole": "Search Console",
       "source": "Źródło:",
-      "status": "Status:"
+      "status": "Status:",
+      "aiTracking": "AI Tracking"
     },
     "content": {
       "activeDescription": "Sprawdź historię przebiegów lub wybierz inny status, aby znaleźć zakończone przebiegi.",
@@ -25,7 +26,7 @@
       "clearFilters": "Wyczyść filtry",
       "filteredDescription": "Zmień lub wyczyść filtry, aby zobaczyć inne przebiegi.",
       "filteredTitle": "Brak pasujących przebiegów",
-      "historyDescription": "Sprawdzenia pozycji i importy historii z Search Console pojawią się tutaj.",
+      "historyDescription": "Tutaj pojawią się sprawdzenia pozycji, uruchomienia śledzenia AI i importy Search Console.",
       "historyTitle": "Brak przebiegów",
       "loadError": "Nie udało się wczytać przebiegów",
       "manageSchedules": "Zarządzaj harmonogramami",
@@ -85,7 +86,13 @@
       "noActiveKeywords": "Brak aktywnych fraz",
       "reviewBlocker": "Sprawdź przyczynę blokady",
       "targetProgress": "{completed, number} / {total, number} {total, plural, one {cel} few {cele} many {celów} other {celu}}",
-      "dayProgress": "{completed, number} / {total, number} {total, plural, one {dzień z ostatecznymi danymi} few {dni z ostatecznymi danymi} many {dni z ostatecznymi danymi} other {dnia z ostatecznymi danymi}}"
+      "dayProgress": "{completed, number} / {total, number} {total, plural, one {dzień z ostatecznymi danymi} few {dni z ostatecznymi danymi} many {dni z ostatecznymi danymi} other {dnia z ostatecznymi danymi}}",
+      "aiTrackingRun": "Pomiar widoczności AI",
+      "sampleCount": "Próbki: {count, number}",
+      "sampleProgress": "{completed, number} / {total, number} próbek",
+      "costUnknown": "Koszt niepotwierdzony",
+      "knownCost": "Potwierdzony koszt {cost} + niepotwierdzony",
+      "actualCost": "Koszt {cost}"
     },
     "actions": {
       "actionsFor": "Akcje – {title}",
@@ -123,6 +130,67 @@
       "attention": "Wymaga uwagi",
       "pastScheduled": "Po zaplanowanym terminie",
       "pastScheduledDays": "Nie uruchomiono · {count, plural, one {# dzień po terminie} few {# dni po terminie} many {# dni po terminie} other {# dnia po terminie}}"
+    },
+    "aiStatuses": {
+      "planned": {
+        "label": "Zaplanowane",
+        "description": "Pomiar AI czeka na rozpoczęcie."
+      },
+      "running": {
+        "label": "W toku",
+        "description": "Przetwarzanie próbek pomiaru AI."
+      },
+      "completed": {
+        "label": "Zakończone",
+        "description": "Pomiar AI został zakończony."
+      },
+      "partial": {
+        "label": "Częściowe",
+        "description": "Tylko część pomiaru AI zakończyła się powodzeniem."
+      },
+      "blocked": {
+        "label": "Zablokowane",
+        "description": "Pomiar AI nie mógł być kontynuowany."
+      },
+      "failed": {
+        "label": "Nieudane",
+        "description": "Pomiar AI zakończył się błędem."
+      },
+      "cancelled": {
+        "label": "Anulowane",
+        "description": "Pomiar AI został anulowany."
+      },
+      "skipped": {
+        "label": "Pominięte",
+        "description": "Pomiar AI został pominięty. Sprawdź przyczynę."
+      },
+      "cost_limit_exceeded": {
+        "label": "Przekroczono limit kosztu",
+        "description": "Pomiar AI pominięto z powodu przekroczenia limitu kosztu."
+      },
+      "status_unavailable": {
+        "label": "Stan niedostępny",
+        "description": "Nie udało się ustalić stanu pomiaru AI."
+      }
+    },
+    "aiResults": {
+      "title": "Wyniki pomiaru AI",
+      "back": "Wróć do wykonań",
+      "next": "Kolejne próbki",
+      "empty": "Dla tego wykonania nie zapisano próbek.",
+      "answer": "Zapisana odpowiedź",
+      "citations": "Cytowane strony",
+      "observed": "Czas obserwacji",
+      "model": "Model",
+      "measurement": "Pomiar",
+      "measurements": {
+        "answer_present": "Odpowiedź dostępna",
+        "aio_not_present": "Brak przeglądu AI",
+        "partial": "Częściowy wynik",
+        "unavailable": "Niedostępny",
+        "failed": "Błąd",
+        "unknown": "Nieznany"
+      }
     }
   }
 }

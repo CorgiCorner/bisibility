@@ -37,6 +37,16 @@ function entry(avatarUrl: string | null): AuditEntry {
 }
 
 describe("RecentAuditCard", () => {
+  it("shows a system icon instead of user initials", () => {
+    const system = {
+      ...entry(null),
+      actor: { ...entry(null).actor, id: "system", initials: "U", name: null, email: "" },
+    };
+    render(<RecentAuditCard entries={[system]} projectId="prj_abcdefghijklmnopqrstuvwx" />);
+    expect(screen.getByRole("img", { name: "System" })).toBeVisible();
+    expect(screen.queryByText("U")).not.toBeInTheDocument();
+  });
+
   it("preloads then renders the actor image as a decorative 34px avatar", () => {
     render(
       <RecentAuditCard
@@ -158,9 +168,9 @@ describe("RecentAuditCard", () => {
     expect(screen.getByText("5 września 2026, 08:01:07")).toBeInTheDocument();
   });
 
-  it("uses the stable action-code fallback instead of a generated English event name", () => {
+  it("uses a friendly fallback for an unknown action", () => {
     const messages = structuredClone(advancedSettingsFeatureTestMessages);
-    messages.projectSettingsAdvanced.audit.event.unknown = "Zarejestrowane działanie: {action}";
+    messages.projectSettingsAdvanced.audit.event.unknown = "Inna aktywność";
     const futureEntry = {
       ...entry(null),
       action: "future.audit.action",
@@ -172,7 +182,8 @@ describe("RecentAuditCard", () => {
       { locale: "pl", messages },
     );
 
-    expect(screen.getByText("Zarejestrowane działanie: future.audit.action")).toBeInTheDocument();
+    expect(screen.getByText("Inna aktywność")).toBeInTheDocument();
+    expect(screen.queryByText("future.audit.action")).not.toBeInTheDocument();
     expect(screen.queryByText("Future owned event")).not.toBeInTheDocument();
   });
 });

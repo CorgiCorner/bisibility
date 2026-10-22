@@ -50,6 +50,22 @@ before starting the upgrade; see
 [Backup and restore](/self-hosting/backup-restore). Migrations are forward-only;
 an image rollback does not reverse Prisma migrations.
 
+### Rank request compiler upgrade
+
+Migration `20261021194000_measurement_request_compiler_v2` adds support for a
+versioned rank-check request. New Top 20 checks collect the full requested
+depth instead of stopping at the first domain match. Existing requests retain
+their original collection policy, provider evidence and accounting identity.
+
+Use a coordinated maintenance window when crossing this migration. Apply it
+before starting new code, then replace both web and worker processes with the
+same release before reopening traffic. Stop old processes and prevent their
+automatic restart; older readers cannot parse the new request version.
+
+After a new-version request has been created, do not roll back to an older
+reader. A rollback build must retain both request readers. The migration does
+not rewrite historical requests or authorize another provider submission.
+
 ### Accounting migration
 
 When upgrading from the legacy usage ledger to Meter accounting, rehearse the

@@ -128,7 +128,7 @@ export function PlanCard({
       {deployment === "self-host" ? (
         <SelfHostedPlan />
       ) : (
-        <div className="space-y-5" data-pricing-state={answered ? "answered" : "hosted-beta"}>
+        <div className="space-y-5" data-pricing-state={answered ? "answered" : "cloud"}>
           <HostedPlanSummary />
           {answered ? (
             <p className="m-0 border-t border-border pt-4 text-[13px] font-medium text-green-text">

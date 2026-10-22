@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { downloadTrackingEvidence } from "@/lib/ai-tracking/exports/browser";
 import type {
   TrackingSampleRow,
@@ -161,6 +162,9 @@ export const trackingFixtureActions: TrackingWorkspaceActions = {
   generation: generationFixtureActions,
   save: async () => trackingWorkspaceFixture,
   preview: async (_promptIds, configurations) => ({
+    payment: paymentQuote({
+      charge: { value: "0.012", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+    }),
     configurations,
     credentialConnectionId: "fixture_connection",
     credentialVersion: "fixture_credential",

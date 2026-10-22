@@ -5,7 +5,7 @@ import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotic
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import type { ProviderActionHandlers } from "@/lib/integrations/types";
+import type { DisconnectProviderInput, ProviderActionHandlers } from "@/lib/integrations/types";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import { type Notice, providerActionErrorNotice } from "./ConnectDrawerSchema";
@@ -17,6 +17,7 @@ type ProviderDisconnectActionProps = {
   onNotice: (notice: Notice | null) => void;
   projectId: string;
   providerId: Parameters<ProviderActionHandlers["testProviderConnection"]>[0]["providerId"];
+  keyRemoval?: DisconnectProviderInput["expectedConnection"] | null;
 };
 
 export function ProviderDisconnectAction({
@@ -26,6 +27,7 @@ export function ProviderDisconnectAction({
   projectId,
   providerId,
   renderTrigger,
+  keyRemoval,
 }: Readonly<ProviderDisconnectActionProps>) {
   const t = useTranslations("projectIntegrations.provider");
   const drawerT = useTranslations("projectIntegrations.drawer");
@@ -35,11 +37,15 @@ export function ProviderDisconnectAction({
   const { readOnly } = useProjectWriteMode();
 
   async function disconnect() {
-    if (readOnly || !disconnectProvider) return;
+    if (readOnly || !disconnectProvider || keyRemoval === null) return;
 
     setBusy(true);
     try {
-      await disconnectProvider({ projectId, providerId });
+      await disconnectProvider({
+        projectId,
+        providerId,
+        ...(keyRemoval ? { expectedConnection: keyRemoval } : {}),
+      });
       setFailureNotice(null);
       onNotice(null);
       setOpen(false);
@@ -61,7 +67,7 @@ export function ProviderDisconnectAction({
   }
 
   function openConfirmation() {
-    if (readOnly) return;
+    if (readOnly || keyRemoval === null) return;
     setFailureNotice(null);
     onNotice(null);
     setOpen(true);
@@ -70,7 +76,7 @@ export function ProviderDisconnectAction({
   return (
     <>
       {renderTrigger ? (
-        renderTrigger({ disabled: readOnly, onOpen: openConfirmation })
+        renderTrigger({ disabled: readOnly || keyRemoval === null, onOpen: openConfirmation })
       ) : (
         <ProjectReadOnlyTooltip className="inline-flex">
           <Button
@@ -90,8 +96,9 @@ export function ProviderDisconnectAction({
       )}
       <ConfirmModal
         busy={busy}
+        confirmationDisabled={readOnly || keyRemoval === null || !disconnectProvider}
         failureDetail={failureNotice ? <ActionNotice notice={failureNotice} /> : undefined}
-        kind="removeIntegration"
+        kind={keyRemoval === undefined ? "removeIntegration" : "removeProviderKey"}
         onClose={() => {
           setOpen(false);
           onNotice(failureNotice);

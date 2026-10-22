@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const readStatus = vi.hoisted(() => vi.fn());
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/metering/project-budget-read", () => ({ projectBudgetStatus: readStatus }));
+vi.mock("@/lib/metering/rank-check-budget-read", () => ({ rankCheckBudgetStatus: readStatus }));
 
 import { projectRunBudgetAmounts } from "./budget-presentation";
 

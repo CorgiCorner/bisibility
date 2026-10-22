@@ -5,12 +5,11 @@ import {
   TrackingSettingsLoading,
   TrackingSettingsRouteLoading,
 } from "@/components/settings/tracking/TrackingSettingsLoading";
-import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import type { DefaultsData } from "@/lib/settings/options";
 import { reviewedDefaultsPreview } from "@/lib/settings/reviewed-defaults.test-fixture";
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactNode } from "react";
-import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 const projectId = "prj_7Kd2Qf9m";
 const locationFixture = [
@@ -41,12 +40,6 @@ const locationFixture = [
     region_name: null,
   },
 ];
-const readyPreview: CronPreviewResult = {
-  message: "ready",
-  runs: ["2026-08-10T04:00:00.000Z", "2026-08-11T04:00:00.000Z", "2026-08-12T04:00:00.000Z"],
-  status: "ready",
-  timezone: "Europe/Warsaw",
-};
 const defaults: DefaultsData = {
   city: null,
   costPerCheck: 0.0155,
@@ -117,8 +110,6 @@ const args = {
   canEdit: true,
   defaults,
   domain: "example.com",
-  initialCronPreview: { message: null, runs: [], status: "idle", timezone: null },
-  previewCron: fn(async () => readyPreview),
   previewDefaults: fn(reviewedDefaultsPreview),
   projectId,
   updateDefaults: fn(async (values) => ({ ...values, kind: "saved" })),
@@ -133,37 +124,6 @@ function renderContent(storyArgs: Story["args"]) {
 }
 
 export const Settled: Story = { args, render: renderContent };
-
-export const FrequencyOpenCustom: Story = {
-  args: {
-    ...args,
-    defaults: {
-      ...defaults,
-      searchSync: {
-        firstDataDate: "2026-05-12T00:00:00.000Z",
-        firstDataDateLabel: "May 12, 2026",
-        lastQuotaPausedAt: "Aug 27, 2026",
-        newestFinalizedDate: "2026-08-29T00:00:00.000Z",
-        pace: "gentle",
-        plannedRemaining: 1240,
-        requestsToday: 32,
-        retentionMonths: 12,
-      },
-      schedule: { ...defaults.schedule, cron_expression: "0 6 * * 1-5", frequency: "custom_cron" },
-    },
-    initialCronPreview: readyPreview,
-  },
-  name: "STATE · frequency open, custom chosen",
-  play: async ({ canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByRole("button", { name: "Frequency" }));
-    await waitFor(() =>
-      expect(
-        within(canvasElement.ownerDocument.body).getByRole("menu", { name: "Frequency" }),
-      ).toBeVisible(),
-    );
-  },
-  render: renderContent,
-};
 
 export const LocationOpenTypedPol: Story = {
   args,

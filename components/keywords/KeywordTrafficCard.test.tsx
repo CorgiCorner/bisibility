@@ -43,6 +43,53 @@ describe("KeywordTrafficCard", () => {
     expect(route).toContain("<KeywordManagementMessagesBoundary");
   });
 
+  it("uses the same connected-state badges in the source list and report headers", () => {
+    const { container } = render(
+      <KeywordTrafficCard
+        projectRef="prj_1"
+        traffic={{
+          connectedProviders: ["gsc"],
+          hasAnalyticsConnection: true,
+          hasSearchConsoleConnection: true,
+          query,
+          pages: [page],
+        }}
+      />,
+    );
+    expect(
+      screen
+        .getByRole("listitem", { name: "Google Search Console, Active connection" })
+        .querySelector("[data-analytics-provider]"),
+    ).not.toHaveClass("grayscale");
+    expect(
+      screen
+        .getByRole("listitem", { name: "Google Analytics 4, No active connection" })
+        .querySelector("[data-analytics-provider]"),
+    ).toHaveClass("grayscale");
+    expect(
+      screen
+        .getByRole("listitem", { name: "Plausible, No active connection" })
+        .querySelector("[data-analytics-provider]"),
+    ).toHaveClass("grayscale");
+    expect(
+      screen
+        .getByRole("listitem", { name: "Google Search Console, Active connection" })
+        .querySelector("[role=img]"),
+    ).toHaveAttribute("aria-label", "Google Search Console");
+    const gsc = container.querySelectorAll('[data-analytics-provider="gsc"]');
+    expect(gsc).toHaveLength(2);
+    for (const badge of gsc) {
+      expect(badge).toHaveAttribute("data-connected", "true");
+      expect(badge).toHaveClass("border-green/40");
+    }
+    const ga4 = container.querySelectorAll('[data-analytics-provider="ga4"]');
+    expect(ga4).toHaveLength(2);
+    for (const badge of ga4) {
+      expect(badge).toHaveAttribute("data-connected", "false");
+      expect(badge).toHaveClass("grayscale", "border-border");
+    }
+  });
+
   it("keeps Search Console-only data separate from landing page performance", () => {
     const { rerender } = render(
       <KeywordTrafficCard
@@ -91,7 +138,7 @@ describe("KeywordTrafficCard", () => {
 
     expect(screen.getByText("Search performance")).toBeInTheDocument();
     expect(screen.getByText("Trailing 28 days")).toBeInTheDocument();
-    expect(screen.getByText("Search Console")).toBeInTheDocument();
+    expect(screen.getAllByText("Google Search Console")).toHaveLength(2);
     expect(
       screen.getByText(
         "Connect Search Console to see clicks, impressions and CTR for this keyword.",
@@ -156,7 +203,7 @@ describe("KeywordTrafficCard", () => {
     );
     expect(screen.getByText("Landing page performance")).toBeInTheDocument();
     expect(screen.getByText("Pageviews")).toBeInTheDocument();
-    expect(screen.getByText("Plausible")).toBeInTheDocument();
+    expect(screen.getAllByText("Plausible").length).toBeGreaterThan(0);
   });
 
   it("shows a connected page source and explains the missing landing URL", () => {

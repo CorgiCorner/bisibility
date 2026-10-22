@@ -346,7 +346,7 @@
             "bestMeasuredPosition": "Najlepsza zmierzona #{position}",
             "knownAbsent": "Brak w zmierzonym zakresie",
             "unsupported": "Nieobsługiwany wynik",
-            "notObserved": "Jeszcze nie zaobserwowano",
+            "notObserved": "Brak wyniku",
             "currentUnknown": "Bieżąca pozycja nieznana",
             "dateUnknown": "data niedostępna",
             "lastKnownObserved": "Ostatnia znana #{position} · odczyt {date}",
@@ -354,7 +354,7 @@
             "lastKnownUndated": "Ostatnia znana #{position} · data niedostępna",
             "bestRetainedPosition": "Najlepsza zachowana #{position} · data niedostępna",
             "groupQuality": "{ranked} z pozycją / {expected} celów; {unknown} nieznanych",
-            "currentScopeUnavailable": "Bieżąca definicja niedostępna",
+            "currentScopeUnavailable": "Bieżące ustawienia monitorowania są niedostępne",
             "freshness": {
               "fresh": "Aktualne",
               "stale": "Nieaktualne",
@@ -390,15 +390,19 @@
             "retainedHistoryHelp": "Zachowane porównywalne obserwacje opisują historię, bez potwierdzania bieżącej definicji.",
             "retainedHistory": "Zachowana historia pozycji dla {keyword}",
             "groupRankingUrls": "{count} zachowanych adresów wyników",
-            "retainedRankingUrl": "Zachowany adres wyniku; bieżąca kwalifikacja niedostępna",
+            "retainedRankingUrl": "Ostatni znany URL. Bieżący wynik niedostępny.",
             "lastKnownStored": "Ostatnia znana #{position} · zachowana data {date}",
-            "qualificationUnknown": "Kwalifikacja niedostępna",
-            "historyQualificationUnknown": "Kwalifikacja zachowanej historii niedostępna",
+            "qualificationUnknown": "Bieżący wynik niedostępny",
+            "historyQualificationUnknown": "Wcześniejsze wyniki niezweryfikowane",
             "currentSince": "Bieżący zakres od {date}",
             "baselineWindow": "Punkt bazowy od {from} do przed {to}",
             "capturedExpectedUrl": "Oczekiwany URL zapisany z tym pomiarem",
             "expectedUrlProvenanceUnknown": "Pochodzenie oczekiwanego URL jest niedostępne",
-            "measuredCount": "Zmierzone: {measured} z {expected}"
+            "measuredCount": "Zmierzone: {measured} z {expected}",
+            "lastKnownShort": "Ostatnia znana #{position}",
+            "bestRetainedShort": "Najlepsza zapisana #{position}",
+            "retainedUrlShort": "Ostatni znany",
+            "freshnessUnknownHelp": "Nie możemy potwierdzić aktualności tego wyniku."
           }
         },
         "runChecks": {
@@ -455,7 +459,8 @@
           "runningBody": "{count, plural, one {Sprawdzenie jest w toku.} few {# sprawdzenia są w toku.} many {# sprawdzeń jest w toku.} other {# sprawdzenia jest w toku.}} Możesz zamknąć to okno – wyniki pojawią się na tej stronie.",
           "successBody": "{count, plural, one {Zakończono # sprawdzenie pozycji.} few {Zakończono # sprawdzenia pozycji.} many {Zakończono # sprawdzeń pozycji.} other {Zakończono # sprawdzenia pozycji.}}",
           "checksNeedAttention": "{count, plural, one {# sprawdzenie wymaga reakcji.} few {# sprawdzenia wymagają reakcji.} many {# sprawdzeń wymaga reakcji.} other {# sprawdzenia wymaga reakcji.}}",
-          "viewRuns": "Zobacz uruchomienia"
+          "viewRuns": "Zobacz uruchomienia",
+          "providerCapacityUnavailable": "Sprawdzanie pozycji u tego dostawcy jest tymczasowo niedostępne. Nie naliczono opłat. Spróbuj później lub podłącz własne klucze dostawcy."
         },
         "schedule": {
           "title": "Ustaw harmonogram dla {count, plural, one {# słowa kluczowego / # celu} few {# słów kluczowych / # celów} many {# słów kluczowych / # celów} other {# słowa kluczowego / # celu}}",
@@ -818,7 +823,10 @@
           "source": "Źródło",
           "saved": "Zapisano",
           "volumeTrend": "Miesięczny trend wolumenu dla: {keyword}",
+          "research": "Analizuj",
           "researchFallback": "Analiza słów kluczowych",
+          "researchOneAtATime": "Analizuj jedno słowo kluczowe naraz.",
+          "toolbar": "Działania dla zaznaczonych słów kluczowych",
           "relative": {
             "daysAgo": "{count, number} dni temu",
             "hoursAgo": "{count, number} godz. temu",

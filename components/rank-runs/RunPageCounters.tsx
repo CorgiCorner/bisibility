@@ -1,4 +1,5 @@
 import { useLocale, useTranslations } from "next-intl";
+import { deferralDetail } from "./deferral-reason-copy";
 import type { RunPageSummary } from "./RunPageModel";
 import type { RunPageData } from "./RunPageTypes";
 
@@ -76,7 +77,7 @@ export function RunPageCounters({ onShowSkipped, run, summary }: Readonly<RunPag
           </p>
           <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-[18px] sm:grid-cols-4">
             {summary.counters.map((counter) => (
-              <div key={counter.label}>
+              <div key={counter.kind}>
                 <span className="block text-[10.5px] font-semibold uppercase tracking-[0.05em] text-fg-muted">
                   {counter.label}
                 </span>
@@ -86,6 +87,11 @@ export function RunPageCounters({ onShowSkipped, run, summary }: Readonly<RunPag
                 <span className="mt-[5px] block truncate text-[10px] leading-[1.5] text-fg-muted">
                   {counter.note}
                 </span>
+                {counter.kind === "deferred" && run.sharedDeferralCode ? (
+                  <span className="mt-1 block text-[10px] leading-[1.45] text-fg-muted">
+                    {deferralDetail(run.sharedDeferralCode, t)}
+                  </span>
+                ) : null}
               </div>
             ))}
           </div>

@@ -97,6 +97,7 @@ describe("researchKeywordsAction", () => {
     });
     expect(mocks.research).toHaveBeenCalledWith({
       actorId: "user_1",
+      requirePayment: false,
       connectionId,
       estimateOnly: true,
       fresh: false,

@@ -91,7 +91,7 @@ describe("serpApiProvider", () => {
         ),
       ),
     );
-    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20 }));
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 10 }));
     expect(result.billingUnits).toBe(0);
   });
 
@@ -201,6 +201,57 @@ describe("serpApiProvider", () => {
     }
   });
 
+  it("collects both Top20 pages despite a first-position match and records the effective policy", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse(
+          searchResponse([
+            { link: "https://example.com/", position: 1 },
+            { link: "https://first.test/", position: 9 },
+          ]),
+        ),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(
+          searchResponse([
+            { link: "https://second.test/", position: 1 },
+            { link: "https://last.test/", position: 10 },
+          ]),
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: false }));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject({
+      position: 1,
+      billingUnits: 2,
+      observation: { completeness: "complete", requestPolicy: { depth: 20, stopOnMatch: false } },
+    });
+    expect(result.raw?.organic_results?.map((row) => row.rank)).toEqual([1, 9, 11, 20]);
+  });
+  it("does not invent twenty rows or complete-prefix proof when Google ends sooner", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse(
+        searchResponse(
+          [
+            { link: "https://example.com/", position: 1 },
+            { link: "https://other.test/", position: 9 },
+          ],
+          { serpapi_pagination: {} },
+        ),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: false }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result.raw?.organic_results).toHaveLength(2);
+    expect(result.observation?.requestPolicy).toMatchObject({
+      depth: 20,
+      stopOnMatch: false,
+      evidence: { completeThrough: { organic_result: null } },
+    });
+  });
   it("stops after the first page when the tracked domain is found", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse(
@@ -271,6 +322,7 @@ describe("serpApiProvider", () => {
     const result = await serpApiProvider.fetchRank(
       rankInput({
         depth: 20,
+        stopOnMatch: false,
         location: serpRankLocation({
           gl: "pl",
           hl: "pl",
@@ -282,7 +334,7 @@ describe("serpApiProvider", () => {
     );
 
     expect(result).toMatchObject({
-      billingUnits: 1,
+      billingUnits: 2,
       costCents: 0,
       position: 3,
       rankingUrl: "https://www.example.com/page",
@@ -304,7 +356,7 @@ describe("serpApiProvider", () => {
         serp_features: ["answer box", "related questions"],
       },
     });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     const requestedUrl = String(fetchMock.mock.calls[0][0]);
     expect(requestedUrl).toContain("https://serpapi.com/search.json");
     expect(requestedUrl).toContain("engine=google");
@@ -841,7 +893,7 @@ describe("SerpApi observation capture", () => {
     expect(result.observation?.executedAt).toBe(result.checkedAt);
   });
 
-  it("marks a client-side match break as truncated", async () => {
+  it("preserves a retained legacy Top20 early-stop boolean and marks its match break as truncated", async () => {
     vi.stubGlobal(
       "fetch",
       vi
@@ -911,7 +963,7 @@ describe("SerpApi observation completeness", () => {
         ),
     );
 
-    const result = await serpApiProvider.fetchRank(rankInput({ depth: 20, stopOnMatch: true }));
+    const result = await serpApiProvider.fetchRank(rankInput({ depth: 50, stopOnMatch: true }));
 
     expect(result.observation?.completeness).toBe("truncated_by_stop_on_match");
   });

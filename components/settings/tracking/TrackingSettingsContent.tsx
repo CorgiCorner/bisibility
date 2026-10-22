@@ -1,11 +1,9 @@
 import { MatchScopeCard } from "@/components/settings/tracking/MatchScopeCard";
 import {
-  type PreviewTrackingCron,
   TrackingDefaultsCard,
   type UpdateTrackingDefaults,
 } from "@/components/settings/tracking/TrackingDefaultsCard";
 import { trackingCardGeometryClassNames } from "@/components/settings/tracking/tracking-settings-layout";
-import type { CronPreviewResult } from "@/lib/actions/settings-cron-preview";
 import type { DefaultsData } from "@/lib/settings/options";
 import type { PreviewDefaults } from "./use-reviewed-defaults";
 
@@ -13,8 +11,6 @@ type TrackingSettingsContentProps = {
   canEdit: boolean;
   defaults: DefaultsData;
   domain: string | null;
-  initialCronPreview: CronPreviewResult;
-  previewCron: PreviewTrackingCron;
   previewDefaults: PreviewDefaults;
   projectId: string;
   updateDefaults: UpdateTrackingDefaults;
@@ -24,8 +20,6 @@ export function TrackingSettingsContent({
   canEdit,
   defaults,
   domain,
-  initialCronPreview,
-  previewCron,
   previewDefaults,
   projectId,
   updateDefaults,
@@ -37,8 +31,6 @@ export function TrackingSettingsContent({
           canEdit={canEdit}
           defaults={defaults}
           domain={domain}
-          initialCronPreview={initialCronPreview}
-          previewCron={previewCron}
           previewDefaults={previewDefaults}
           projectId={projectId}
           updateDefaults={updateDefaults}

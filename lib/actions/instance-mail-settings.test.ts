@@ -1,12 +1,11 @@
-import { TwoFactorManagementError } from "@/lib/auth/two-factor-management-error";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   clearInstanceMailConfig: vi.fn(),
-  confirmEnabledTwoFactorCode: vi.fn(),
+  consume: vi.fn(),
+  findUser: vi.fn(),
   deploymentMode: vi.fn(() => "self-host" as "cloud" | "self-host"),
   getInstanceAdminSession: vi.fn(),
-  getTwoFactorSecurityContext: vi.fn(),
   readInstanceMailStatus: vi.fn(),
   saveInstanceMailConfig: vi.fn(),
 }));
@@ -15,12 +14,8 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth/instance-admin", () => ({
   getInstanceAdminSession: mocks.getInstanceAdminSession,
 }));
-vi.mock("@/lib/auth/two-factor-management-context", () => ({
-  getTwoFactorSecurityContext: mocks.getTwoFactorSecurityContext,
-}));
-vi.mock("@/lib/auth/two-factor-step-up", () => ({
-  confirmEnabledTwoFactorCode: mocks.confirmEnabledTwoFactorCode,
-}));
+vi.mock("@/lib/db/prisma", () => ({ prisma: { user: { findUnique: mocks.findUser } } }));
+vi.mock("@/lib/api/ratelimit", () => ({ consume: mocks.consume }));
 vi.mock("@/lib/deployment/deployment", () => ({
   deploymentMode: mocks.deploymentMode,
 }));
@@ -34,7 +29,6 @@ vi.mock("@/lib/email/instance-mail-store", () => ({
 import { clearInstanceMailSettings, saveInstanceMailSettings } from "./instance-mail-settings";
 
 const form = {
-  code: "123456",
   provider: "resend",
   replaceCredentials: true,
   resendApiKey: "re_test_key",
@@ -53,7 +47,7 @@ describe("instance mail settings actions", () => {
     vi.clearAllMocks();
     mocks.deploymentMode.mockReturnValue("self-host");
     mocks.getInstanceAdminSession.mockResolvedValue({ user: { id: "user_1" } });
-    mocks.getTwoFactorSecurityContext.mockResolvedValue({
+    mocks.findUser.mockResolvedValue({
       actorId: "user_1",
       twoFactorEnabled: true,
     });
@@ -62,7 +56,8 @@ describe("instance mail settings actions", () => {
       provider: null,
       sender: "",
     });
-    mocks.confirmEnabledTwoFactorCode.mockResolvedValue("grant_1");
+    mocks.consume.mockResolvedValue({ success: true });
+    vi.stubEnv("ADMIN_REQUIRE_TWO_FACTOR", "true");
     mocks.saveInstanceMailConfig.mockResolvedValue(undefined);
     mocks.clearInstanceMailConfig.mockResolvedValue(undefined);
   });
@@ -72,22 +67,19 @@ describe("instance mail settings actions", () => {
     await expect(saveInstanceMailSettings(form)).resolves.toEqual({ status: "forbidden" });
 
     mocks.deploymentMode.mockReturnValue("self-host");
-    mocks.getTwoFactorSecurityContext.mockResolvedValue({
+    mocks.findUser.mockResolvedValue({
       actorId: "user_1",
       twoFactorEnabled: false,
     });
-    await expect(saveInstanceMailSettings(form)).resolves.toEqual({ status: "forbidden" });
-    expect(mocks.confirmEnabledTwoFactorCode).not.toHaveBeenCalled();
+    await expect(saveInstanceMailSettings(form)).resolves.toEqual({
+      status: "two_factor_required",
+    });
     expect(mocks.saveInstanceMailConfig).not.toHaveBeenCalled();
   });
 
-  it("saves only after the authenticator code is confirmed", async () => {
+  it("saves without a per-action code when 2FA is enabled", async () => {
     await expect(saveInstanceMailSettings(form)).resolves.toEqual({ status: "saved" });
 
-    expect(mocks.confirmEnabledTwoFactorCode).toHaveBeenCalledWith(
-      expect.objectContaining({ actorId: "user_1" }),
-      "123456",
-    );
     expect(mocks.saveInstanceMailConfig).toHaveBeenCalledWith({
       actorId: "user_1",
       credentials: { resendApiKey: "re_test_key" },
@@ -96,17 +88,29 @@ describe("instance mail settings actions", () => {
     });
   });
 
-  it("does not write when the authenticator code is rejected", async () => {
-    mocks.confirmEnabledTwoFactorCode.mockRejectedValue(
-      new TwoFactorManagementError("step_up_failed", "Verification failed."),
-    );
-
-    await expect(saveInstanceMailSettings(form)).resolves.toEqual({ status: "step_up_failed" });
+  it("retains the action rate limit", async () => {
+    mocks.consume.mockResolvedValue({ success: false });
+    expect(await saveInstanceMailSettings(form)).toEqual({ status: "rate_limited" });
     expect(mocks.saveInstanceMailConfig).not.toHaveBeenCalled();
+    expect(mocks.consume).toHaveBeenCalledWith(
+      expect.objectContaining({ limit: 5, windowSeconds: 300 }),
+    );
   });
 
-  it("clears stored settings after the same confirmation", async () => {
-    await expect(clearInstanceMailSettings({ code: "123456" })).resolves.toEqual({
+  it("allows self-host opt-out without an enrolled factor", async () => {
+    vi.stubEnv("ADMIN_REQUIRE_TWO_FACTOR", "false");
+    mocks.findUser.mockResolvedValue({ twoFactorEnabled: false });
+    expect(await saveInstanceMailSettings(form)).toEqual({ status: "saved" });
+  });
+
+  it("refuses clearing without enabled 2FA", async () => {
+    mocks.findUser.mockResolvedValue({ twoFactorEnabled: false });
+    expect(await clearInstanceMailSettings()).toEqual({ status: "two_factor_required" });
+    expect(mocks.clearInstanceMailConfig).not.toHaveBeenCalled();
+  });
+
+  it("clears stored settings without a code", async () => {
+    await expect(clearInstanceMailSettings()).resolves.toEqual({
       status: "cleared",
     });
     expect(mocks.clearInstanceMailConfig).toHaveBeenCalledWith("user_1");

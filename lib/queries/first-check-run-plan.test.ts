@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   budgetStatus: vi.fn(),
-  budgetCap: vi.fn().mockResolvedValue(5_000),
   chain: vi.fn(),
   defaults: vi.fn(),
   keywordCount: vi.fn(),
@@ -17,10 +16,11 @@ vi.mock("@/lib/db/prisma", () => ({
     keyword: { count: mocks.keywordCount, findMany: mocks.keywordFindMany },
     projectDefaults: { findUnique: mocks.defaults },
     projectMarket: mocks.projectMarket,
+    providerConnection: { findFirst: vi.fn().mockResolvedValue(null) },
   },
 }));
 vi.mock("@/lib/metering/project-budget-read", () => ({
-  projectBudgetCapCents: mocks.budgetCap,
+  projectBudgetCapCents: vi.fn(),
   projectBudgetStatus: mocks.budgetStatus,
 }));
 vi.mock("@/lib/metering/usage-read", () => ({ monthlySpendCents: mocks.monthlySpend }));
@@ -28,6 +28,7 @@ vi.mock("@/lib/rank-check/provider-chain-loader", () => ({
   loadSerpProviderChain: mocks.chain,
 }));
 
+import { prisma } from "@/lib/db/prisma";
 import { buildFirstCheckRunPlan } from "./first-check-run-plan";
 
 function readyKeyword(id: string, overrides: Record<string, unknown> = {}) {
@@ -52,7 +53,6 @@ function readyKeyword(id: string, overrides: Record<string, unknown> = {}) {
 describe("first-check run plan", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.budgetCap.mockResolvedValue(5_000);
     mocks.budgetStatus.mockResolvedValue({
       budget: { limit: { value: 5000n, scale: 0, unit: "budget_cents" } },
       reserved: { value: 0n, scale: 0, unit: "budget_cents" },
@@ -115,6 +115,42 @@ describe("first-check run plan", () => {
       unknownTargets: 1,
     });
     expect(plan.firstTargetEstimate).toMatchObject({ quantity: null, unknownTargets: 1 });
+  });
+
+  it("keeps combined monthly spend for an unsplit project and the funding budget once split", async () => {
+    mocks.chain.mockResolvedValue([{ costPerCheckCents: null, provider: "serpapi" }]);
+    mocks.keywordFindMany.mockResolvedValue([]);
+    mocks.budgetStatus.mockResolvedValue({
+      budget: { limit: { value: 500n, scale: 0, unit: "budget_cents" } },
+      used: { value: 30n, scale: 0, unit: "budget_cents" },
+      reserved: { value: 0n, scale: 0, unit: "budget_cents" },
+      uncertain: false,
+    });
+
+    expect((await buildFirstCheckRunPlan("prj_1")).budget).toEqual({
+      capCents: 500,
+      spentCents: 120,
+    });
+
+    vi.mocked(prisma.providerConnection.findFirst).mockResolvedValueOnce({
+      credentialSource: "own",
+      id: "connection_1",
+      provider: "dataforseo",
+      rates: [],
+    } as never);
+    mocks.budgetStatus.mockResolvedValue({
+      budget: {
+        id: "own-project:prj_1:monthly",
+        limit: { value: 100n, scale: 0, unit: "budget_cents" },
+      },
+      used: { value: 30n, scale: 0, unit: "budget_cents" },
+      reserved: { value: 10n, scale: 0, unit: "budget_cents" },
+      uncertain: false,
+    });
+
+    const split = await buildFirstCheckRunPlan("prj_1");
+    expect(split.budget).toEqual({ capCents: 100, spentCents: 30 });
+    expect(split.budgetExhausted).toBe(false);
   });
 });
 

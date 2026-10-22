@@ -175,6 +175,7 @@ export const TrayOpen: Story = {
 
 const importRun: ProjectRunsApiResponse["runs"][number] = {
   attention: null,
+  cost: { actualCents: null, estimatedCents: null, state: "unknown" as const },
   capabilities: { cancel: false, pause: true, resume: false, retry: false, viewDetails: true },
   details: {
     pausedReason: null,
@@ -184,19 +185,22 @@ const importRun: ProjectRunsApiResponse["runs"][number] = {
   },
   href: "/app/prj_story/search-console",
   id: "import_story",
-  kind: "gsc_import",
+  kind: "gsc",
   lifecycle: "running",
   progress: { completed: 56, total: 488, unit: "days" },
   project: { name: "Example", publicId: "prj_story" },
-  scope: { description: "sc-domain:example.com", kind: "gsc_import" },
+  scope: { description: "sc-domain:example.com", kind: "gsc" },
   timestamps: {
+    startedAt: "2026-09-06T09:10:00.000Z",
+    finishedAt: null,
+    plannedFor: null,
     createdAt: "2026-09-06T09:00:00.000Z",
     lastProbeAt: null,
     lastSyncFinishedAt: null,
     lastSyncStartedAt: "2026-09-06T09:10:00.000Z",
     syncStartedAt: "2026-09-06T09:10:00.000Z",
   },
-  title: { kind: "gsc_import" },
+  title: { kind: "gsc" },
 };
 const noop = async () => undefined;
 
@@ -209,7 +213,7 @@ export const RunsPage: Story = {
         canMutate
         operations={[]}
         page={{
-          counts: { rankChecks: 0, searchConsole: 1, total: 1 },
+          counts: { aiTracking: 0, rankChecks: 0, searchConsole: 1, total: 1 },
           nextCursor: null,
           runs: [importRun],
         }}

@@ -300,7 +300,9 @@ describe("backlinks load-more service", () => {
         _appendPage: { costCents: 1, totalCount: 1685, rows: [row] },
       },
     });
-    await expect(run()).resolves.toMatchObject({
+    await expect(
+      run(APP_REQUEST_ORIGIN, backlinksSnapshotReference(snapshot), { maxCostCents: 0 }),
+    ).resolves.toMatchObject({
       ok: true,
       cached: true,
       costCents: 0,

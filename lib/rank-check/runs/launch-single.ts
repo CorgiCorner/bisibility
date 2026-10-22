@@ -15,6 +15,10 @@ import {
 import { previewRankCheckRun } from "./preview";
 
 type LaunchSingleRankCheckRunInput = {
+  paymentOptionId?: string;
+  acceptedPayment?: import("@/lib/action-payment/contract").AcceptedActionPayment;
+  requirePayment?: boolean;
+  idempotencyKey?: string;
   actorId: string | null;
   depth?: SerpDepth;
   keywordId: `kw_${string}`;
@@ -30,6 +34,8 @@ export async function launchSingleRankCheckRun(
 ): Promise<LaunchRankCheckRunResult> {
   const spec = { kind: "single" as const, keywordId: input.keywordId, v: 1 as const };
   const preview = await previewRankCheckRun({
+    actorId: input.actorId,
+    paymentOptionId: input.paymentOptionId,
     depth: input.depth,
     origin: input.origin,
     project: input.project,
@@ -38,14 +44,22 @@ export async function launchSingleRankCheckRun(
     trigger: input.trigger,
   });
   if (
-    input.maxCostCents !== undefined &&
-    typeof preview.estimate.costCents === "number" &&
-    preview.estimate.costCents > input.maxCostCents
+    input.maxCostCents === 0 ||
+    (input.maxCostCents !== undefined &&
+      typeof preview.estimate.costCents === "number" &&
+      preview.estimate.costCents > input.maxCostCents)
   ) {
-    throw new LaunchRankCheckRunError("cost_limit_exceeded", preview.estimate.costCents);
+    throw new LaunchRankCheckRunError(
+      "cost_limit_exceeded",
+      preview.estimate.costCents ?? undefined,
+    );
   }
   const launched = await launchRankCheckRun({
     actorId: input.actorId,
+    paymentOptionId: input.paymentOptionId,
+    acceptedPayment: input.acceptedPayment,
+    requirePayment: input.requirePayment,
+    idempotencyKey: input.idempotencyKey,
     depth: input.depth,
     origin: input.origin,
     previewToken: preview.previewToken,

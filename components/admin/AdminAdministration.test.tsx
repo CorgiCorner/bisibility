@@ -1,17 +1,17 @@
+import { DangerousActionAccessProvider } from "@/components/admin/DangerousActionGate";
 import {
   instanceAdminFeatureTestMessages,
   renderWithInstanceAdminMessages as render,
   renderWithFeatureMessages,
 } from "@/i18n/test-support/render-with-feature-messages";
+import { setNavigationState } from "@/tests/next-navigation";
 import { screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/admin/AdminAccountLookup", () => ({
   AdminAccountLookup: () => <section aria-label="Account lookup" />,
 }));
-vi.mock("@/components/account/SecurityFactors", () => ({
-  SecurityFactors: () => <button type="button">Enable authenticator</button>,
-}));
+beforeEach(() => setNavigationState({ pathname: "/app/admin/administration" }));
 vi.mock("@/lib/actions/instance-mail-settings", () => ({
   clearInstanceMailSettings: vi.fn(),
   saveInstanceMailSettings: vi.fn(),
@@ -201,9 +201,12 @@ describe("AdminAdministration", () => {
     );
 
     expect(
-      screen.getByText(/Settings already saved keep sending if it is turned off/),
+      screen.getByText("Enable two-factor authentication to change mail settings."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Enable authenticator" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Enable two-factor authentication" })).toHaveAttribute(
+      "href",
+      "/app/account/security?returnTo=%2Fapp%2Fadmin%2Fadministration",
+    );
     expect(
       screen.queryByRole("link", { name: "Configure email delivery" }),
     ).not.toBeInTheDocument();
@@ -214,7 +217,7 @@ describe("AdminAdministration", () => {
     expect(screen.queryByRole("heading", { name: "Outbound mail" })).not.toBeInTheDocument();
   });
 
-  it("explains that saved mail keeps sending after two-factor authentication is turned off", () => {
+  it("keeps saved mail mutation controls gated after two-factor authentication is turned off", () => {
     render(
       <AdminAdministration
         data={{ ...data, mailerConfigured: true }}
@@ -231,7 +234,7 @@ describe("AdminAdministration", () => {
     );
 
     expect(
-      screen.getByText(/Two-factor authentication is required to save or change mail settings/),
+      screen.getByText("Enable two-factor authentication to change mail settings."),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("heading", { name: "Email provider not configured" }),
@@ -241,18 +244,20 @@ describe("AdminAdministration", () => {
 
   it("shows a write-only mail form for an admin with two-factor authentication", () => {
     render(
-      <AdminAdministration
-        data={data}
-        mailSettings={{
-          credentialsConfigured: true,
-          envOverridesSaved: true,
-          hasPasswordCredential: true,
-          provider: "resend",
-          sender: "Mail <ops@example.com>",
-          twoFactorEnabled: true,
-        }}
-        showMailerWarning
-      />,
+      <DangerousActionAccessProvider allowed>
+        <AdminAdministration
+          data={data}
+          mailSettings={{
+            credentialsConfigured: true,
+            envOverridesSaved: true,
+            hasPasswordCredential: true,
+            provider: "resend",
+            sender: "Mail <ops@example.com>",
+            twoFactorEnabled: true,
+          }}
+          showMailerWarning
+        />
+      </DangerousActionAccessProvider>,
     );
 
     expect(screen.getByRole("heading", { name: "Outbound mail" })).toBeInTheDocument();

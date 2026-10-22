@@ -32,8 +32,10 @@ import {
 } from "@/lib/auth/runtime-config";
 import { resolveAuthSecret, resolveAuthSecrets } from "@/lib/auth/secret";
 import { prepareSessionCreation } from "@/lib/auth/session-creation";
+import { authCookiePrefix } from "@/lib/auth/session-hint";
 import { recordSignInAudit } from "@/lib/auth/sign-in-audit";
 import { enforceGoogleSignupCapacity } from "@/lib/auth/signin-capacity";
+import { reviewLoginPlugin } from "@/lib/auth/test-auth-extension";
 import { twoFactorRouteGuard } from "@/lib/auth/two-factor-route-guard";
 import { prepareUserCreation } from "@/lib/auth/user-creation";
 import { handleCreatedUser } from "@/lib/auth/welcome-signup";
@@ -157,6 +159,7 @@ const authAuditPlugin = {
 
 export const auth = betterAuth({
   advanced: {
+    cookiePrefix: authCookiePrefix(),
     ipAddress: AUTH_IP_ADDRESS_OPTIONS,
   },
   appName: "bisibility",
@@ -304,6 +307,7 @@ export const auth = betterAuth({
     authAuditPlugin,
     emailOtpTwoFactorPlugin,
     loginCodeGuardPlugin({ fixedOtpEnabled: FIXED_OTP_ENABLED }),
+    reviewLoginPlugin(),
     socialOAuthTwoFactorPlugin,
     nextCookies(),
   ],

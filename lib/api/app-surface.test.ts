@@ -214,6 +214,7 @@ describe("public API app surface routes", () => {
     mocks.queries.readNotificationPreferencesFor.mockResolvedValue({
       alertEmail: true,
       alertInApp: true,
+      alertPush: true,
       alertSlack: false,
       alertWebhook: false,
       checkEmail: false,
@@ -225,6 +226,7 @@ describe("public API app surface routes", () => {
       inviteEmail: true,
       inviteInApp: true,
       projectId: ids.project,
+      reportEmail: true,
       slackAvailable: false,
       webhookAvailable: false,
     });

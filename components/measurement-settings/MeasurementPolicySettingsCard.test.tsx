@@ -3,8 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 import { MeasurementPolicySettingsCard } from "./MeasurementPolicySettingsCard";
 
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
-const refresh = vi.hoisted(() => vi.fn());
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 const snapshot = { state: "unconfigured" as const, policyEpoch: "0", config: null };
 describe("explicit measurement policy settings", () => {
   it("does not configure on read and saves blank values as unknown only after user intent", async () => {

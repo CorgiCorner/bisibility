@@ -19,11 +19,25 @@ function escapedRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+const QUERY_DIMENSION_ORDER = ["query", "page", "country", "device"] as const;
+
 export function gscQueryDimensions(input: AnalyticsQueryStatsInput) {
-  return input.pagePath ? ["query", "page"] : ["query"];
+  const requested = input.dimensions?.length
+    ? input.dimensions
+    : input.pagePath
+      ? ["query", "page"]
+      : ["query"];
+  const selected = new Set<string>(requested);
+  if (input.pagePath) selected.add("page");
+  return QUERY_DIMENSION_ORDER.filter((dimension) => selected.has(dimension));
 }
 
-export function gscDimensionFilterGroups(input: AnalyticsQueryStatsInput) {
+type QueryFilterInput = Pick<
+  AnalyticsQueryStatsInput,
+  "country" | "device" | "endDate" | "pagePath" | "query" | "queryMatch" | "startDate"
+>;
+
+export function gscDimensionFilterGroups(input: QueryFilterInput) {
   const filters: Array<{ dimension: string; expression: string; operator: string }> = [];
   if (input.query) {
     filters.push({
@@ -39,6 +53,21 @@ export function gscDimensionFilterGroups(input: AnalyticsQueryStatsInput) {
       dimension: "page",
       expression: isPrefix ? `^https?://[^/]+${escapedRegex(value)}` : value,
       operator: isPrefix ? "includingRegex" : "contains",
+    });
+  }
+  if (input.country) {
+    filters.push({
+      dimension: "country",
+      expression: input.country.toLowerCase(),
+      operator: "equals",
+    });
+  }
+  // Search Analytics matches the device dimension with an uppercase token.
+  if (input.device) {
+    filters.push({
+      dimension: "device",
+      expression: input.device.toUpperCase(),
+      operator: "equals",
     });
   }
   return filters.length > 0 ? { dimensionFilterGroups: [{ filters }] } : {};
@@ -72,6 +101,7 @@ export async function fetchGscQueryStats<Row>(
       credentials,
       dimensions,
       rowLimit: input.limit ?? 1,
+      ...(input.offset === undefined ? {} : { startRow: input.offset }),
     });
   }
 
@@ -82,7 +112,7 @@ export async function fetchGscQueryStats<Row>(
       credentials,
       dimensions,
       rowLimit: GSC_QUERY_STATS_PAGE_SIZE,
-      startRow: rows.length,
+      startRow: (input.offset ?? 0) + rows.length,
     });
     rows.push(...page);
     if (page.length < GSC_QUERY_STATS_PAGE_SIZE) break;

@@ -18,6 +18,7 @@ import {
   type GooglePropertyFailure,
   googlePropertyFailureMessage,
 } from "@/lib/integrations/google-property-failure";
+import { defaultGoogleProperty } from "@/lib/integrations/google-property-grouping";
 import type { GoogleOAuthSetup } from "@/lib/integrations/types";
 import { googleInstallUrl } from "@/lib/providers/analytics/google-install-url";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
@@ -60,7 +61,11 @@ export function SearchInsightsOauthReturn({
   const t = useTranslations("projectSearchInsights.copy");
   const isGa4 = setup.provider === "ga4";
   const [property, setProperty] = useState(
-    setup.preferredProperty ?? setup.properties[0]?.value ?? "",
+    defaultGoogleProperty({
+      options: setup.properties,
+      preferred: setup.preferredProperty,
+      projectDomain: setup.projectDomain ?? "",
+    }),
   );
   const [propertyError, setPropertyError] = useState<string | null>(null);
   const [selectionError, setSelectionError] = useState<string | null>(null);

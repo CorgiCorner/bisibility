@@ -3,6 +3,7 @@
 import { writeAudit } from "@/lib/auth/audit";
 import { prisma } from "@/lib/db/prisma";
 import { requireTrackedDomain } from "@/lib/projects/tracked-domain";
+import { setKeywordCadence } from "@/lib/rank-check/schedules/keyword-cadence";
 import { type AddKeywordsMatrixInput, addKeywordsMatrixSchema } from "@/lib/schemas/keyword";
 import { countryCodeForMarketName, normalizeCanonicalLocationKey } from "@/lib/serp/location";
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
@@ -104,7 +105,16 @@ export async function addKeywordsMatrix(input: unknown) {
       return key ? promotedSavedKeywordPairs([keyword], key) : [];
     });
     const created: CreatedKeyword[] = persisted.created;
-    if (assigned) await linkCheckSchedule(tx, project.id, assigned, created);
+    const assignmentRows = [...created, ...persisted.restored];
+    if (assigned) await linkCheckSchedule(tx, project.id, assigned, assignmentRows);
+    else if (schedule)
+      await setKeywordCadence(
+        tx,
+        project.id,
+        assignmentRows.map(({ id }) => id),
+        schedule,
+        actor.id,
+      );
     const skippedDuplicates = rows.length - created.length;
     const [keywordCountRow] = await tx.$queryRaw<Array<{ count: number }>>`
       SELECT COUNT(DISTINCT lower(btrim("text")))::int AS "count"

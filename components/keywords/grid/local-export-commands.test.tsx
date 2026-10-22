@@ -10,8 +10,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useRankTrackerCommands } from "./useRankTrackerCommands";
 
-const mocks = vi.hoisted(() => ({ replace: vi.fn(), onExport: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: mocks.replace }) }));
+const mocks = vi.hoisted(() => ({ onExport: vi.fn() }));
 const messages = coreMessages;
 function Probe({ supported }: { supported: boolean }) {
   const marker = useRankTrackerCommands({

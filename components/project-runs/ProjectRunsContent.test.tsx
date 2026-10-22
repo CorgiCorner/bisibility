@@ -11,6 +11,7 @@ const skipAction = vi.fn(async () => undefined);
 
 const importRun: ProjectRunsApiResponse["runs"][number] = {
   attention: null,
+  cost: { actualCents: null, estimatedCents: null, state: "unknown" as const },
   capabilities: { cancel: false, pause: true, resume: false, retry: false, viewDetails: true },
   details: {
     pausedReason: null,
@@ -20,23 +21,27 @@ const importRun: ProjectRunsApiResponse["runs"][number] = {
   },
   href: `/app/${projectRef}/search-console?property=sc-domain%3Aexample.com`,
   id: "import_1",
-  kind: "gsc_import",
+  kind: "gsc",
   lifecycle: "running",
   progress: { completed: null, total: null, unit: "days" },
   project: { name: "Example", publicId: projectRef },
-  scope: { description: "sc-domain:example.com", kind: "gsc_import" },
+  scope: { description: "sc-domain:example.com", kind: "gsc" },
   timestamps: {
+    startedAt: "2026-09-06T09:10:00.000Z",
+    finishedAt: null,
+    plannedFor: null,
     createdAt: "2026-09-06T09:00:00.000Z",
     lastProbeAt: null,
     lastSyncFinishedAt: null,
     lastSyncStartedAt: "2026-09-06T09:10:00.000Z",
     syncStartedAt: "2026-09-06T09:10:00.000Z",
   },
-  title: { kind: "gsc_import" },
+  title: { kind: "gsc" },
 };
 
 const plannedRankRun: ProjectRunsApiResponse["runs"][number] = {
   attention: null,
+  cost: { actualCents: null, estimatedCents: null, state: "unknown" as const },
   capabilities: { cancel: false, pause: false, resume: false, retry: false, viewDetails: true },
   details: {
     costCents: null,
@@ -47,11 +52,11 @@ const plannedRankRun: ProjectRunsApiResponse["runs"][number] = {
   },
   href: `/app/${projectRef}/runs/rank-checks/rcr_abcdefghijklmnopqrstuvwx`,
   id: "rcr_abcdefghijklmnopqrstuvwx",
-  kind: "rank_check",
+  kind: "rank",
   lifecycle: "planned",
   progress: { completed: 0, total: 10, unit: "targets" },
   project: { name: "Example", publicId: projectRef },
-  scope: { description: null, keywordCount: 10, kind: "rank_check" },
+  scope: { description: null, keywordCount: 10, kind: "rank" },
   timestamps: {
     createdAt: "2026-09-06T09:00:00.000Z",
     finishedAt: null,
@@ -59,7 +64,7 @@ const plannedRankRun: ProjectRunsApiResponse["runs"][number] = {
     plannedFor: "2026-09-07T09:00:00.000Z",
     startedAt: null,
   },
-  title: { kind: "rank_check", trigger: "scheduled" },
+  title: { kind: "rank", trigger: "scheduled" },
 };
 
 function renderContent(overrides: Partial<React.ComponentProps<typeof ProjectRunsContent>> = {}) {
@@ -67,7 +72,11 @@ function renderContent(overrides: Partial<React.ComponentProps<typeof ProjectRun
     <ProjectRunsContent
       canMutate
       operations={[]}
-      page={{ counts: { rankChecks: 0, searchConsole: 0, total: 0 }, nextCursor: null, runs: [] }}
+      page={{
+        counts: { aiTracking: 0, rankChecks: 0, searchConsole: 0, total: 0 },
+        nextCursor: null,
+        runs: [],
+      }}
       projectRef={projectRef}
       query={{ cursor: null, limit: 20, source: "all", status: "all", view: "runs" }}
       runNowAction={runNowAction}
@@ -79,6 +88,61 @@ function renderContent(overrides: Partial<React.ComponentProps<typeof ProjectRun
 
 describe("ProjectRunsContent", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("explains planned listing delay for an enabled rank schedule with keywords", () => {
+    renderContent({
+      schedulePlanningMinutes: 15,
+      hasEnabledKeywordSchedule: true,
+      query: { cursor: null, limit: 20, source: "rank_checks", status: "all", view: "planned" },
+    });
+    expect(
+      screen.getByText(
+        "Planned runs usually appear in Runs within 15 minutes. Checks run at their scheduled times.",
+      ),
+    ).toBeVisible();
+  });
+
+  it.each([
+    { hasEnabledKeywordSchedule: false, source: "all" as const, view: "planned" as const },
+    {
+      hasEnabledKeywordSchedule: true,
+      source: "search_console" as const,
+      view: "planned" as const,
+    },
+  ])(
+    "omits rank-planning delay without relevant enabled schedules: %j",
+    ({ hasEnabledKeywordSchedule, source, view }) => {
+      renderContent({
+        hasEnabledKeywordSchedule,
+        schedulePlanningMinutes: 15,
+        query: { cursor: null, limit: 20, source, status: "all", view },
+      });
+      expect(screen.queryByText(/Planned runs usually appear/)).toBeNull();
+    },
+  );
+
+  it("explains the listing delay in the default empty All timeline", () => {
+    renderContent({
+      hasEnabledKeywordSchedule: true,
+      schedulePlanningMinutes: 15,
+      query: { cursor: null, limit: 20, source: "all", status: "all", view: "timeline" },
+    });
+    expect(screen.getByText(/Planned runs usually appear/)).toBeVisible();
+  });
+  it.each([
+    { section: "active" as const, status: "all" as const },
+    { section: "all" as const, status: "attention" as const },
+  ])(
+    "does not explain schedule refresh in a filtered empty timeline: %j",
+    ({ section, status }) => {
+      renderContent({
+        hasEnabledKeywordSchedule: true,
+        schedulePlanningMinutes: 15,
+        query: { cursor: null, limit: 20, source: "all", status, view: "timeline", section },
+      });
+      expect(screen.queryByText(/Planned runs usually appear/)).toBeNull();
+    },
+  );
 
   it("keeps schedules discoverable from the Upcoming Search Console empty state", () => {
     renderContent({
@@ -137,7 +201,7 @@ describe("ProjectRunsContent", () => {
     renderContent({
       query: { cursor: "old-page", limit: 20, source: "all", status: "all", view: "planned" },
       page: {
-        counts: { rankChecks: 0, searchConsole: 0, total: 0 },
+        counts: { aiTracking: 0, rankChecks: 0, searchConsole: 0, total: 0 },
         nextCursor: "next-page",
         runs: [],
       },
@@ -193,7 +257,7 @@ describe("ProjectRunsContent", () => {
         },
       ],
       page: {
-        counts: { rankChecks: 0, searchConsole: 1, total: 1 },
+        counts: { aiTracking: 0, rankChecks: 0, searchConsole: 1, total: 1 },
         nextCursor: null,
         runs: [
           {
@@ -233,7 +297,7 @@ describe("ProjectRunsContent", () => {
         },
       ],
       page: {
-        counts: { rankChecks: 0, searchConsole: 1, total: 1 },
+        counts: { aiTracking: 0, rankChecks: 0, searchConsole: 1, total: 1 },
         nextCursor: null,
         runs: [importRun],
       },
@@ -248,7 +312,7 @@ describe("ProjectRunsContent", () => {
   it("keeps a Run now action out of the clickable row navigation", () => {
     renderContent({
       page: {
-        counts: { rankChecks: 1, searchConsole: 0, total: 1 },
+        counts: { aiTracking: 0, rankChecks: 1, searchConsole: 0, total: 1 },
         nextCursor: null,
         runs: [plannedRankRun],
       },
@@ -265,7 +329,7 @@ describe("ProjectRunsContent", () => {
   it("skips a planned run from the menu and refreshes without navigating", async () => {
     renderContent({
       page: {
-        counts: { rankChecks: 1, searchConsole: 0, total: 1 },
+        counts: { aiTracking: 0, rankChecks: 1, searchConsole: 0, total: 1 },
         nextCursor: null,
         runs: [plannedRankRun],
       },
@@ -283,7 +347,7 @@ describe("ProjectRunsContent", () => {
     renderContent({
       canMutate: false,
       page: {
-        counts: { rankChecks: 1, searchConsole: 0, total: 1 },
+        counts: { aiTracking: 0, rankChecks: 1, searchConsole: 0, total: 1 },
         nextCursor: null,
         runs: [plannedRankRun],
       },
@@ -302,14 +366,20 @@ describe("ProjectRunsContent", () => {
     expect(screen.getByRole("link", { name: "Schedules" })).toBeVisible();
     expect(screen.queryByRole("radiogroup", { name: "Runs view" })).not.toBeInTheDocument();
     expect(
-      screen.getByText("Rank checks and Search Console history imports will appear here."),
+      screen.getByText(
+        "Rank checks, AI tracking runs and Search Console imports will appear here.",
+      ),
     ).toBeInTheDocument();
 
     rerender(
       <ProjectRunsContent
         canMutate
         operations={[]}
-        page={{ counts: { rankChecks: 0, searchConsole: 0, total: 0 }, nextCursor: null, runs: [] }}
+        page={{
+          counts: { aiTracking: 0, rankChecks: 0, searchConsole: 0, total: 0 },
+          nextCursor: null,
+          runs: [],
+        }}
         projectRef={projectRef}
         query={{ cursor: null, limit: 20, source: "all", status: "active", view: "runs" }}
         runNowAction={runNowAction}
@@ -336,7 +406,7 @@ describe("run history deletion", () => {
     },
   } as ProjectRunsApiResponse["runs"][number];
   const page = {
-    counts: { rankChecks: 1, searchConsole: 0, total: 1 },
+    counts: { aiTracking: 0, rankChecks: 1, searchConsole: 0, total: 1 },
     nextCursor: null,
     runs: [completedRun],
   };

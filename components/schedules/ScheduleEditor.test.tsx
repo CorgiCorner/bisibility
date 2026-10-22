@@ -1,7 +1,7 @@
 import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import { projectSchedulesPath } from "@/lib/routing/project-schedules-path";
 import { routerMock } from "@/tests/next-navigation";
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -49,6 +49,48 @@ function renderEditor(
 }
 
 describe("ScheduleEditor", () => {
+  it.each(["weekly", "monthly"])(
+    "only offers calendar day selection after a time is set for %s",
+    (frequency) => {
+      renderEditor(projectDefaults, { schedule: { ...schedule, frequency, timeOfDay: null } });
+      expect(screen.queryByRole("button", { name: "Day of week" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Day of month" })).toBeNull();
+      expect(
+        screen.getByText("No fixed time - checks are spread across the interval."),
+      ).toBeVisible();
+      fireEvent.change(screen.getByLabelText("Time, 24-hour"), { target: { value: "06:00" } });
+      expect(
+        screen.getByRole("button", {
+          name: frequency === "weekly" ? "Day of week" : "Day of month",
+        }),
+      ).toBeVisible();
+    },
+  );
+  it("keeps dirty edits when the full-page summary updates the default", () => {
+    const props = {
+      connectedProviders,
+      projectId: "prj_story",
+      projectDefaults,
+      projectTimezone: "Europe/Madrid",
+      showDefaultControl: false,
+    };
+    const { rerender } = render(<ScheduleEditor {...props} schedule={schedule} />);
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "My unsaved name" } });
+    rerender(<ScheduleEditor {...props} schedule={{ ...schedule, isDefault: true }} />);
+    expect(screen.getByLabelText("Name")).toHaveValue("My unsaved name");
+    expect(screen.getByRole("button", { name: "Save schedule" })).toBeEnabled();
+    expect(screen.queryByRole("switch", { name: /default suggestion/i })).toBeNull();
+    expect(screen.queryByText("Default suggestion")).toBeNull();
+  });
+  it("disables saving a pristine schedule and enables it only after an edit", () => {
+    renderEditor();
+    const save = screen.getByRole("button", { name: "Save schedule" });
+    expect(save).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Updated schedule" } });
+    expect(save).toBeEnabled();
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: schedule.name } });
+    expect(save).toBeDisabled();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -109,6 +151,7 @@ describe("ScheduleEditor", () => {
     );
     expect(screen.getByLabelText("Time, 24-hour")).toHaveValue("");
     expect(screen.getByText("No fixed time - checks are spread across the day.")).toBeVisible();
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Distributed daily" } });
     await user.click(screen.getByRole("button", { name: "Save schedule" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
@@ -139,13 +182,13 @@ describe("ScheduleEditor", () => {
   it("implements default toggle names the schedule losing the flag", () => {
     renderEditor();
 
-    expect(screen.getByText(/Replaces Daily 06:00 for new keywords/)).toBeVisible();
+    expect(screen.getByText(/Replaces Daily 06:00 as the suggested schedule/)).toBeVisible();
   });
 
   it("lets users undo choosing a default before saving", async () => {
     const user = userEvent.setup();
     renderEditor();
-    const toggle = screen.getByRole("switch", { name: /default for new keywords/i });
+    const toggle = screen.getByRole("switch", { name: /default suggestion/i });
     await user.click(toggle);
     expect(toggle).toBeChecked();
     expect(toggle).toBeEnabled();
@@ -166,9 +209,9 @@ describe("ScheduleEditor", () => {
     );
 
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
-    expect(screen.getByText("Default for new keywords")).toBeVisible();
+    expect(screen.getByText("Default suggestion")).toBeVisible();
     expect(
-      screen.getByText("New keywords use this schedule unless you choose another."),
+      screen.getByText("Suggested when you choose a schedule. No keywords join automatically."),
     ).toBeVisible();
   });
 
@@ -180,7 +223,10 @@ describe("ScheduleEditor", () => {
     await user.type(screen.getByLabelText("Time, 24-hour"), "06:15");
     await user.click(screen.getByRole("button", { name: "Save schedule" }));
 
-    expect(await screen.findByText("Enter a time in 30-minute steps.")).toBeVisible();
+    expect(await screen.findByText("Enter a time ending in :00 or :30.")).toBeVisible();
+    expect(screen.getByLabelText("Time, 24-hour")).toHaveAccessibleErrorMessage(
+      "Enter a time ending in :00 or :30.",
+    );
   });
 
   it("renders localized maximum-length validation for editable schedule fields", async () => {
@@ -279,8 +325,25 @@ describe("ScheduleEditor", () => {
       "/api/check-schedules/sch_created/keywords",
     ]);
     expect(routerMock.replace).toHaveBeenCalledWith(
-      projectSchedulesPath("prj_story", "sch_created"),
+      `${projectSchedulesPath("prj_story", "sch_created")}?saved=1`,
     );
+  });
+
+  it("preserves the creation acknowledgment after navigation and does not promise plans for a paused schedule", () => {
+    render(
+      <ScheduleEditor
+        connectedProviders={connectedProviders}
+        defaultScheduleName="Daily"
+        initialSaveConfirmed
+        planningMinutes={15}
+        projectId="prj_story"
+        projectDefaults={projectDefaults}
+        projectTimezone="UTC"
+        schedule={{ ...schedule, enabled: false }}
+      />,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("Schedule saved.");
+    expect(screen.queryByText(/Planned runs usually appear/)).toBeNull();
   });
 
   it("shows the first schedule as the default and saves that default", async () => {
@@ -306,7 +369,7 @@ describe("ScheduleEditor", () => {
     expect(screen.getByText("0 keywords")).toBeVisible();
     expect(screen.getByText(/No keywords assigned.*will not plan new checks/)).toBeVisible();
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
-    expect(screen.getByText("Default for new keywords")).toBeVisible();
+    expect(screen.getByText("Default suggestion")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Save schedule" }));
 

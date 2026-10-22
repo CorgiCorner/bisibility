@@ -44,6 +44,7 @@ type TemporaryDeviceColumn = {
 };
 
 const temporaryRelations = [
+  "check_schedules",
   "keywords",
   "keyword_tags",
   "keyword_traffic_snapshots",
@@ -96,10 +97,14 @@ async function createTemporarySchema(client: Client) {
       id text PRIMARY KEY, "canonicalKey" text NOT NULL, "displayName" text NOT NULL,
       hl text NOT NULL, kind text NOT NULL, "languageLabel" text
     ) ON COMMIT DROP;
+    CREATE TEMP TABLE check_schedules (
+      id text PRIMARY KEY, "archivedAt" timestamptz, enabled boolean NOT NULL, frequency text
+    ) ON COMMIT DROP;
     CREATE TEMP TABLE keywords (
       id text PRIMARY KEY, "publicId" text NOT NULL, "projectId" text NOT NULL,
       text text NOT NULL, "locationId" text NOT NULL, device pg_temp."Device" NOT NULL,
-      "createdAt" timestamptz NOT NULL, "archivedAt" timestamptz, "targetUrl" text, topic text, intent text
+      "checkScheduleId" text, "createdAt" timestamptz NOT NULL, "archivedAt" timestamptz,
+      "targetUrl" text, topic text, intent text
     ) ON COMMIT DROP;
     CREATE TEMP TABLE project_markets (
       "projectId" text NOT NULL, "locationId" text NOT NULL, status text NOT NULL

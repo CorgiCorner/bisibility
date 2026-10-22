@@ -25,7 +25,7 @@ export async function AchievementHeader() {
             aria-label={`${t("title")}: ${t("days", { count: view.current })}`}
             className="inline-flex h-8 items-center gap-1.5 rounded-control border border-border px-2 text-[12px] text-fg-muted no-underline hover:bg-bg-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           >
-            <FireIcon aria-hidden size={14} />
+            <FireIcon weight="regular" aria-hidden size={14} />
             <span className="tabular-nums">{view.current}</span>
           </Link>
         ) : null}

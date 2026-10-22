@@ -37,12 +37,12 @@
         "done": "This happened when you added your first keywords. Each keyword carries its own market and device - edit them on the keyword's row in Rank Tracker."
       },
       "connect_source": {
-        "active": "Search Console is free and takes two clicks. A SERP provider adds live position checks with your own key.",
-        "done": "This happened when you connected a data source. Rank checks run through it, and the provider bills you directly. Manage or swap it in Integrations."
+        "active": "Search Console adds free traffic data. Choose a ranking data source for live position checks.",
+        "done": "Your ranking data source is set up. Review its source and usage settings in Integrations."
       },
       "first_check": {
         "active": "Run the first check to collect positions for the tracked keywords. Check settings live in the project's tracking settings.",
-        "done": "This happened when your first check completed: every keyword it covered now has a position and a ranking URL, and history builds from here. Checks follow the project's default schedule - any keyword can override it with its own. Both live in Rank Tracker."
+        "done": "Your first completed check saved positions and ranking URLs for its targets. New keywords stay manual until assigned to a schedule in Runs → Schedules."
       }
     },
     "competitors": {
@@ -108,7 +108,10 @@
         "title": "Star bisibility on GitHub",
         "description": "Free and open source - a star helps."
       },
-      "team": { "title": "Invite teammates", "description": "Invite teammates and assign roles." }
+      "team": {
+        "title": "Invite teammates",
+        "description": "Invite teammates and assign roles."
+      }
     },
     "video": {
       "aria": "Video walkthrough",

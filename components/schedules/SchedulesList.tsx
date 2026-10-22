@@ -84,7 +84,17 @@ export function SchedulesList({
         ...schedule,
         scheduleKind: "rank" as const,
         id: `rank:${schedule.publicId}`,
-        nextRunLabel: nextRunLabel(schedule.nextRunAt, schedule.timezone, locale, t),
+        nextRunLabel: nextRunLabel(
+          schedule.nextRunAt,
+          schedule.timezone,
+          locale,
+          t,
+          schedule.timeOfDay === null && ["daily", "weekly", "monthly"].includes(schedule.frequency)
+            ? schedule.frequency === "daily"
+              ? "day"
+              : "interval"
+            : false,
+        ),
       })),
       ...(ai?.rows ?? []).map((schedule) => ({
         ...schedule,

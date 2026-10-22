@@ -2,13 +2,9 @@ import "server-only";
 
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import { prisma } from "@/lib/db/prisma";
-import { projectBudgetStatus } from "@/lib/metering/project-budget-read";
-import { formatQuantity } from "@usagekit/core";
+import { rankCheckBudgetAmounts } from "@/lib/metering/rank-check-budget-read";
 import { requireReadableProject } from "./_auth";
-import {
-  getRequestMonthlySpendCents,
-  getRequestPrimarySerpProvider,
-} from "./workspace-request-data";
+import { getRequestPrimarySerpProvider } from "./workspace-request-data";
 
 export type CheckHealth = Awaited<ReturnType<typeof getCheckHealth>>;
 
@@ -86,15 +82,12 @@ export async function getCheckHealth(projectId: string, options: { now?: Date } 
   const now = options.now ?? new Date();
   const since = new Date(now.getTime() - DAY_MS);
   const { project } = await requireReadableProject(projectId);
-  const budgetStatus = await projectBudgetStatus(project.id, now);
-  const capCents = budgetStatus?.budget.limit
-    ? Number(formatQuantity(budgetStatus.budget.limit))
-    : 0;
-  const [spentCents, stats, provider] = await Promise.all([
-    getRequestMonthlySpendCents(project.id, now),
+  const [reading, stats, provider] = await Promise.all([
+    rankCheckBudgetAmounts(project.id, now),
     loadCheckHealthStats(project.id, since),
     getRequestPrimarySerpProvider(project.id),
   ]);
+  const { capCents, reservedCents, spentCents } = reading;
   const configuredCost =
     provider?.costPerCheckCents == null ? null : Number(provider.costPerCheckCents);
   const providerRate: CostRateInfo = {
@@ -108,22 +101,15 @@ export async function getCheckHealth(projectId: string, options: { now?: Date } 
   return {
     budget: {
       capCents,
-      reason: !budgetStatus
+      reason: !reading.present
         ? ("budget_missing" as const)
-        : budgetStatus.uncertain
+        : reading.uncertain
           ? ("usage_reconciliation_required" as const)
           : undefined,
       exhausted:
-        !budgetStatus ||
-        budgetStatus.uncertain ||
-        (budgetStatus.budget.limit !== null &&
-          spentCents +
-            Number(
-              formatQuantity(
-                budgetStatus.reserved ?? { unit: "budget_cents", value: 0n, scale: 0 },
-              ),
-            ) >=
-            capCents),
+        !reading.present ||
+        reading.uncertain ||
+        (reading.limited && spentCents + reservedCents >= capCents),
       spentCents,
     },
     currentFailures: {

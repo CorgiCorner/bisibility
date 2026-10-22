@@ -6,6 +6,12 @@ export function aiProviderDomain(domain: string) {
 }
 
 const common = {
+  payment_option_id: z.string().min(1).max(120).optional(),
+  accepted_payment: z
+    .object({ quote_token: z.string().min(1).max(12000) })
+    .strict()
+    .optional(),
+  require_payment: z.boolean().optional(),
   brand: z.string().trim().min(1).max(120),
   domain: z
     .string()

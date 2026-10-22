@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => {
   let publicIdSequence = 0;
   return {
     keywordStore,
+    setKeywordCadence: vi.fn(),
     makePublicId: vi.fn((prefix: string) => {
       const suffix = `a${publicIdSequence.toString(36).padStart(23, "0")}`;
       publicIdSequence += 1;
@@ -113,6 +114,11 @@ const mocks = vi.hoisted(() => {
   };
 });
 
+vi.mock("@/lib/metering/spending-limit-store", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/metering/spending-limit-store")>()),
+  // Connect initialises missing funding budgets; this router suite has no budget rows.
+  readSpendingBudgets: async () => [],
+}));
 vi.mock("./router", async (importOriginal) =>
   (await import("./response-capture.test-support")).captureRouter(await importOriginal()),
 );
@@ -123,6 +129,10 @@ vi.mock("@/lib/actions/_shared", () => ({
 
 vi.mock("@/lib/auth/audit", () => ({
   writeAudit: vi.fn((input, client = mocks.prisma) => client.auditLog.create({ data: input })),
+}));
+
+vi.mock("@/lib/rank-check/schedules/keyword-cadence", () => ({
+  setKeywordCadence: mocks.setKeywordCadence,
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -310,6 +320,21 @@ describe("public API router", () => {
             row.device === key.device,
         ) ?? null,
       );
+    });
+    mocks.setKeywordCadence.mockImplementation(async (_tx, _project, ids, cadence) => {
+      for (const id of ids) {
+        const row = mocks.keywordStore.get(id);
+        if (row)
+          row.checkSchedule =
+            cadence.frequency === "manual"
+              ? null
+              : {
+                  ...cadence,
+                  enabled: cadence.frequency !== "paused",
+                  timeOfDay: null,
+                  publicId: "sch_a00000000000000000000000",
+                };
+      }
     });
     mocks.prisma.keywordSchedule.createMany.mockImplementation(({ data }) => {
       for (const schedule of data) {
@@ -528,7 +553,7 @@ describe("public API router", () => {
     );
   });
 
-  it("returns keyword-specific next times for inherited project schedules", async () => {
+  it("keeps unassigned keywords manual despite project defaults", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-28T12:00:00.000Z"));
     const defaults = {
@@ -560,7 +585,12 @@ describe("public API router", () => {
 
     expect(response.status).toBe(200);
     expect(nextTimes).toHaveLength(2);
-    expect(nextTimes[0]).not.toBe(nextTimes[1]);
+    expect(nextTimes).toEqual([null, null]);
+    expect(
+      body.data.every(
+        (row: { schedule: { frequency: string } }) => row.schedule.frequency === "manual",
+      ),
+    ).toBe(true);
   });
 
   it("rejects invalid keyword topic filters", async () => {
@@ -1067,23 +1097,21 @@ describe("public API router", () => {
 
     expect(patchResponse.status).toBe(200);
     expect(bulkResponse.status).toBe(200);
-    expect(mocks.prisma.keywordSchedule.upsert).toHaveBeenNthCalledWith(
+    expect(mocks.setKeywordCadence).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining({
-        create: expect.objectContaining({
-          cronExpression: "0 7 * * *",
-          jitterMinutes: 0,
-        }),
-      }),
+      mocks.prisma,
+      "project_1",
+      [existing.id],
+      expect.objectContaining({ cronExpression: "0 7 * * *", jitterMinutes: 0 }),
+      null,
     );
-    expect(mocks.prisma.keywordSchedule.upsert).toHaveBeenNthCalledWith(
+    expect(mocks.setKeywordCadence).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({
-        create: expect.objectContaining({
-          cronExpression: "30 8 * * 1",
-          jitterMinutes: 0,
-        }),
-      }),
+      mocks.prisma,
+      "project_1",
+      [existing.id],
+      expect.objectContaining({ cronExpression: "30 8 * * 1", jitterMinutes: 0 }),
+      null,
     );
   });
 

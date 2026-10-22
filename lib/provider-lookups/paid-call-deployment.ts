@@ -1,6 +1,7 @@
 import "server-only";
-
 import { randomUUID } from "node:crypto";
+import type { PaidCallPayment } from "@/lib/action-payment/paid-call";
+import { ActionPaymentError } from "@/lib/action-payment/token";
 import {
   BudgetExhaustedError,
   ProviderAllocationExhaustedError,
@@ -15,6 +16,7 @@ import { consumeProviderLimit } from "@/lib/providers/rate-limit";
 import { DataForSeoUnsupportedLocationError } from "@/lib/providers/serp/dataforseo";
 import type { ProviderCredentials } from "@/lib/providers/types";
 import { ProviderUsagePersistenceError } from "@/lib/providers/usage";
+import { markProviderFailurePhase } from "./failure-phase";
 import { ProviderLookupSignal } from "./lookup-failure";
 
 /** Admission accepts only exact fixed-point values representable by its columns. */
@@ -48,22 +50,41 @@ export async function runDeploymentPaidCall<T extends { costCents: number }>(inp
   provider: string;
   maxCostCents?: number;
   costLimit?: RequestCostLimit;
+  payment?: PaidCallPayment;
 }): Promise<T> {
-  const operationKey = randomUUID();
-  const execution = await startDeploymentExecution({
-    attribution: input.attribution,
-    connectionId: input.connectionId,
-    credential: input.credential,
-    estimatedCostCents: deploymentEstimate(input.estimatedCostCents, 4),
-    estimatedQuantity: deploymentEstimate(input.estimatedQuantity, 6),
-    operationKey,
-    provider: input.provider,
-    maxCostCents: input.maxCostCents,
-    costLimit: input.costLimit,
-  });
+  const operationKey = input.payment?.operationKey ?? randomUUID();
+  const execution = await (async () => {
+    try {
+      return await startDeploymentExecution({
+        attribution: input.attribution,
+        connectionId: input.connectionId,
+        credential: input.credential,
+        estimatedCostCents: deploymentEstimate(input.estimatedCostCents, 4),
+        estimatedQuantity: deploymentEstimate(input.estimatedQuantity, 6),
+        operationKey,
+        provider: input.provider,
+        maxCostCents: input.maxCostCents,
+        costLimit: input.payment?.costLimit ?? input.costLimit,
+        beforeReserve: input.payment?.guard,
+      }).catch((error: unknown) => {
+        if (
+          input.payment &&
+          error &&
+          typeof error === "object" &&
+          "code" in error &&
+          error.code === "operation_already_prepared"
+        )
+          throw new ActionPaymentError("payment_already_executed");
+        throw error;
+      });
+    } catch (error) {
+      throw markProviderFailurePhase(error, "before_dispatch");
+    }
+  })();
   if (execution == null) {
     throw new ProviderUsagePersistenceError({
       cause: new Error("Deployment execution unavailable."),
+      phase: "admission",
     });
   }
   try {
@@ -76,7 +97,8 @@ export async function runDeploymentPaidCall<T extends { costCents: number }>(inp
     let result: T;
     try {
       result = await input.call(execution.credentials, input.attribution);
-    } catch (error) {
+    } catch (caughtError) {
+      let error = caughtError;
       if (
         !execution.started &&
         (error instanceof BudgetExhaustedError ||
@@ -85,6 +107,7 @@ export async function runDeploymentPaidCall<T extends { costCents: number }>(inp
       )
         input.onNotDispatched?.();
       if (error instanceof ProviderUsagePersistenceError) throw error;
+      error = execution.classifyFailure ? await execution.classifyFailure(error) : error;
       const measured = execution.costCents;
       if (execution.started && measured === null)
         throw new ProviderUsagePersistenceError({ cause: error });
@@ -108,6 +131,10 @@ export async function runDeploymentPaidCall<T extends { costCents: number }>(inp
     }
     return { ...result, costCents: execution.costCents };
   } finally {
-    await execution.finish();
+    try {
+      await execution.finish();
+    } finally {
+      if (input.payment) await input.payment.record({ operationKey });
+    }
   }
 }

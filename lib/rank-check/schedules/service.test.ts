@@ -261,7 +261,9 @@ describe("check schedule service", () => {
       { keywordIds: ["keyword_1", "keyword_2"] },
       mocks.tx,
     );
-    expect(mocks.reconcile).toHaveBeenCalledWith("schedule_1", mocks.tx);
+    expect(mocks.reconcile).toHaveBeenCalledWith("schedule_1", mocks.tx, {
+      invalidateMaterialized: true,
+    });
     expect(mocks.tx.$executeRaw.mock.invocationCallOrder.at(-1)).toBeLessThan(
       mocks.refresh.mock.invocationCallOrder[0],
     );
@@ -335,6 +337,8 @@ describe("check schedule service", () => {
       timeOfDay: "06:00",
     });
 
-    expect(mocks.reconcile).toHaveBeenCalledWith("schedule_1", mocks.tx);
+    expect(mocks.reconcile).toHaveBeenCalledWith("schedule_1", mocks.tx, {
+      invalidateMaterialized: true,
+    });
   });
 });

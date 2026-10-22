@@ -9,7 +9,7 @@ import { type ResearchState, ResearchStatePanel } from "./ResearchStatePanel";
 const expected: Array<[ResearchState, RegExp]> = [
   ["idle", /research starts with a seed/i],
   ["loading", /research loading/i],
-  ["no_provider", /connect dataforseo to research keywords/i],
+  ["no_provider", /choose a data source/i],
   ["usage_reconciliation_required", /provider usage is not fully confirmed/i],
   ["budget_missing", /project spending budget is missing/i],
   ["budget_exhausted", /monthly provider budget reached/i],
@@ -40,7 +40,11 @@ describe("ResearchStatePanel", () => {
       messages: researchFeatureTestMessages,
     });
     expect(
-      state === "loading" ? screen.getByLabelText(label) : screen.getByText(label),
+      state === "loading"
+        ? screen.getByLabelText(label)
+        : state === "no_provider"
+          ? screen.getByRole("heading", { name: label })
+          : screen.getByText(label),
     ).toBeInTheDocument();
   });
 
@@ -110,11 +114,11 @@ describe("ResearchStatePanel", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("gives Connect and Reconnect DataForSEO the solid CTA with a trailing caret", () => {
+  it("gives source setup and reconnect the solid CTA with a trailing caret", () => {
     const { rerender } = render(<ResearchStatePanel projectRef="prj_1" state="no_provider" />, {
       messages: researchFeatureTestMessages,
     });
-    const connect = screen.getByRole("link", { name: "Connect DataForSEO" });
+    const connect = screen.getByRole("link", { name: "Choose a data source" });
     expect(connect).toHaveClass("bg-accent-solid", "rounded-control");
     expect(connect.querySelector("svg")).not.toBeNull();
     expect(

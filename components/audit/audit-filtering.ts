@@ -1,5 +1,5 @@
+import type { PresentedAuditEntry } from "@/components/audit/audit-presentation";
 import type { AuditDateRange, AuditEventType, AuditStatus } from "@/lib/queries/audit";
-import type { PresentedAuditEntry } from "./audit-presentation";
 
 export type { AuditDateRange };
 
@@ -21,6 +21,7 @@ export const defaultAuditFilters = {
 
 function searchableText(row: PresentedAuditEntry) {
   return [
+    row.action,
     row.actor.id,
     row.actor.name,
     row.actor.email,

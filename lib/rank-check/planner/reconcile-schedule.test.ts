@@ -4,6 +4,7 @@ import { reconcilePlannedRunsForSchedule } from "./reconcile-schedule";
 describe("planned schedule reconciliation", () => {
   it("removes empty future occurrences while preserving materialized work", async () => {
     const database = {
+      $queryRaw: vi.fn().mockResolvedValue([]),
       checkSchedule: {
         findUnique: vi.fn().mockResolvedValue({
           _count: { keywords: 0 },
@@ -42,6 +43,7 @@ describe("planned schedule reconciliation", () => {
 
   it("deletes only planned runs whose cadence anchor changed", async () => {
     const database = {
+      $queryRaw: vi.fn().mockResolvedValue([]),
       checkSchedule: {
         findUnique: vi.fn().mockResolvedValue({
           _count: { keywords: 1 },
@@ -99,6 +101,7 @@ describe("planned schedule reconciliation", () => {
 
   it("removes all remaining planned occurrences when a cadence is disabled", async () => {
     const database = {
+      $queryRaw: vi.fn().mockResolvedValue([]),
       checkSchedule: {
         findUnique: vi.fn().mockResolvedValue({
           _count: { keywords: 1 },
@@ -135,6 +138,7 @@ describe("planned schedule reconciliation", () => {
 
   it("removes all planned occurrences before deleting a schedule", async () => {
     const database = {
+      $queryRaw: vi.fn().mockResolvedValue([]),
       checkSchedule: {
         findUnique: vi.fn().mockResolvedValue({
           _count: { keywords: 1 },
@@ -190,6 +194,7 @@ describe("planned schedule reconciliation", () => {
 
   it("cleans an unmaterialized blocked run but preserves a blocked run with items", async () => {
     const database = {
+      $queryRaw: vi.fn().mockResolvedValue([]),
       checkSchedule: {
         findUnique: vi.fn().mockResolvedValue({
           _count: { keywords: 1 },

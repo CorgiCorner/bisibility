@@ -55,7 +55,9 @@ describe("schedule archive UI", () => {
       />,
     );
     expect(screen.getByText("Move 3 keywords to")).toBeInTheDocument();
-    expect(screen.getByText(/New keywords will use manual/)).toBeInTheDocument();
+    expect(
+      screen.getByText("New keywords stay manual until assigned to a schedule."),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Archive schedule" }));
     await waitFor(() =>
       expect(fetch).toHaveBeenCalledWith(

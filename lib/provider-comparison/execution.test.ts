@@ -132,7 +132,7 @@ describe("comparison worker execution remains separate from rank history", () =>
       Object.assign(row, data);
       return { count: 1 };
     });
-    mocks.connection.mockResolvedValue({ credentialsEncrypted: "fake" });
+    mocks.connection.mockResolvedValue({ credentialSource: "own", credentialsEncrypted: "fake" });
     mocks.access.mockResolvedValue(undefined);
     mocks.ownKey.mockResolvedValue(undefined);
     mocks.quote.mockImplementation(async () => snapshot);
@@ -159,6 +159,16 @@ describe("comparison worker execution remains separate from rank history", () =>
       };
     });
   });
+  it("refuses a captured own side if the live connection switched to credits with its key retained", async () => {
+    mocks.connection.mockResolvedValue({
+      credentialSource: "hosted",
+      credentialsEncrypted: "fake",
+    });
+    await executeComparisonSide(input);
+    expect(mocks.ownKey).not.toHaveBeenCalled();
+    expect(mocks.provider).not.toHaveBeenCalled();
+  });
+
   it("claims once before I/O, uses BYOK journal hooks and persists isolated result/cost", async () => {
     await executeComparisonSide(input);
     expect(row.status).toBe("completed");

@@ -199,3 +199,49 @@ describe("recent keyword research", () => {
     ).toBe(8 * 60 * 60 * 1000);
   });
 });
+
+describe("retained research payment", () => {
+  const option = {
+    id: "original-option",
+    connectionId: "conn_a00000000000000000000000",
+    providerId: "future",
+    providerLabel: "Future",
+    fundingSource: "platform" as const,
+    payableUnit: {
+      kind: "credits" as const,
+      key: "credits",
+      singular: "credit",
+      plural: "credits",
+    },
+  };
+  const paid = {
+    actionId: "paid-original",
+    quoteId: "original-quote",
+    option,
+    state: "settled" as const,
+    charge: { value: "13.25", unit: option.payableUnit, certainty: "measured" as const },
+  };
+  const free = {
+    ...paid,
+    actionId: "cached-read",
+    state: "free" as const,
+    charge: { ...paid.charge, value: "0", certainty: "free" as const },
+  };
+  it("cache reread keeps original receipt separately from its free action", () => {
+    const first = addRecentSearch([], { ...input, payment: paid });
+    const cached = addRecentSearch(first, { ...input, payment: free });
+    expect(cached[0]).toMatchObject({
+      payment: { actionId: "cached-read", charge: { value: "0" } },
+      originalPayment: { actionId: "paid-original", charge: { value: "13.25" } },
+    });
+    expect(parseRecentSearches(JSON.stringify(cached))[0].originalPayment).toEqual(paid);
+  });
+  it("strips unvalidated receipt metadata rather than trusting localStorage", () => {
+    const stored = addRecentSearch([], input);
+    expect(
+      parseRecentSearches(
+        JSON.stringify([{ ...stored[0], originalPayment: { ...paid, wallet: { secret: "no" } } }]),
+      )[0],
+    ).not.toHaveProperty("originalPayment");
+  });
+});

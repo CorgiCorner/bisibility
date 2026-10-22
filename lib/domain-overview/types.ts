@@ -1,3 +1,9 @@
+import type {
+  ActionPaymentOption,
+  ActionPaymentQuote,
+  ActionPaymentReceipt,
+} from "@/lib/action-payment/contract";
+import type { ActionPaymentInput } from "@/lib/action-payment/session";
 import type { ProviderLookupFailure } from "@/lib/provider-lookups/paid-call";
 import type { ProviderRequestOrigin } from "@/lib/provider-usage/surface";
 import type {
@@ -6,6 +12,7 @@ import type {
   RankedKeywordsPage,
   RelevantPagesResult,
 } from "@/lib/providers/types";
+import type { DomainOverviewFailureDetails } from "./failure-details";
 
 export type DomainOverviewScope = "root" | "subdomain";
 
@@ -21,38 +28,64 @@ export type DomainOverviewResearchScope = {
   locationCode: number;
 };
 
-export type AnalyzeDomainOverviewOptions = DomainOverviewResearchScope & {
-  estimateOnly?: boolean;
-  fresh?: boolean;
-  keywordLimit?: number;
-  maxCostCents?: number;
-  pageLimit?: number;
-  scopeOverride?: DomainOverviewScope;
-  target: string;
-};
+export type AnalyzeDomainOverviewOptions = DomainOverviewResearchScope &
+  ActionPaymentInput & {
+    estimateOnly?: boolean;
+    fresh?: boolean;
+    keywordLimit?: number;
+    maxCostCents?: number;
+    pageLimit?: number;
+    scopeOverride?: DomainOverviewScope;
+    target: string;
+  };
 
-export type LoadDomainModuleOptions = DomainOverviewResearchScope & {
-  fresh?: boolean;
-  limit: number;
-  maxCostCents?: number;
-  offset: number;
-  scopeOverride?: DomainOverviewScope;
-  target: string;
-};
+export type LoadDomainModuleOptions = DomainOverviewResearchScope &
+  ActionPaymentInput & {
+    estimateOnly?: boolean;
+    fresh?: boolean;
+    limit: number;
+    maxCostCents?: number;
+    offset: number;
+    scopeOverride?: DomainOverviewScope;
+    target: string;
+  };
 
-export type LoadDomainHistoryOptions = DomainOverviewResearchScope & {
-  fresh?: boolean;
-  maxCostCents?: number;
-  scopeOverride?: DomainOverviewScope;
-  target: string;
-};
+export type LoadDomainHistoryOptions = DomainOverviewResearchScope &
+  ActionPaymentInput & {
+    estimateOnly?: boolean;
+    fresh?: boolean;
+    maxCostCents?: number;
+    scopeOverride?: DomainOverviewScope;
+    target: string;
+  };
 
-export type DomainOverviewLookupFailure =
+export type DomainOverviewLookupFailure = (
   | (ProviderLookupFailure & { costCents: number })
-  | { costCents: number; ok: false; reason: "lookup_failed" | "snapshot_expired" };
+  | {
+      costCents: number;
+      ok: false;
+      reason: Exclude<DomainOverviewFailureDetails["reason"], ProviderLookupFailure["reason"]>;
+    }
+) & {
+  payment?: ActionPaymentReceipt;
+  phase?: DomainOverviewFailureDetails["phase"];
+  providerCode?: DomainOverviewFailureDetails["providerCode"];
+};
+
+export type DomainPaymentEstimate = {
+  ok: true;
+  estimate: true;
+  cached: boolean;
+  estimatedCostCents: number;
+  payment?: ActionPaymentQuote;
+  paymentOptions?: ActionPaymentOption[];
+};
+
+export type DomainModulePaymentOutcome<T> = DomainModuleOutcome<T> | DomainPaymentEstimate;
 
 export type DomainModuleOutcome<T> =
   | {
+      payment?: ActionPaymentReceipt;
       cached: boolean;
       costCents: number;
       data: T;
@@ -62,6 +95,8 @@ export type DomainModuleOutcome<T> =
   | DomainOverviewLookupFailure;
 
 export type DomainOverviewEstimate = {
+  payment?: ActionPaymentQuote;
+  paymentOptions?: ActionPaymentOption[];
   cached: boolean;
   estimate: true;
   estimatedCostCents: number;
@@ -79,6 +114,10 @@ export type DomainOverviewEstimate = {
 };
 
 export type DomainOverviewReport = {
+  originalPayment?: ActionPaymentReceipt;
+  appendPayment?: ActionPaymentReceipt;
+  historyPayment?: ActionPaymentReceipt;
+  payment?: ActionPaymentReceipt;
   cached: boolean;
   cachedUntil: string;
   costCents: number;
@@ -108,6 +147,7 @@ export type DomainOverviewOutcome =
 export type DomainHistoryOutcome = DomainModuleOutcome<HistoricalOverviewRow[]>;
 
 export type DomainRecentTarget = {
+  originalPayment?: ActionPaymentReceipt;
   cachedUntil: string;
   fetchedAt: string;
   languageCode: string;

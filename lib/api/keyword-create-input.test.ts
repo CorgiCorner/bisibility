@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { keywordCreateBodySchema, parseKeywordCreateBody } from "./keyword-create-input";
+import { scheduleFromCreate } from "./keyword-utils";
 import { keywordCreateItemSchema } from "./schemas";
 
 const item = { keyword: " keyword " };
@@ -53,4 +54,12 @@ describe("keyword create wire input", () => {
   ])("rejects invalid input %#", (value) => {
     expect(keywordCreateBodySchema.safeParse(value).success).toBe(false);
   });
+});
+
+it("refuses an incomplete explicit custom cadence before persistence", () => {
+  expect(() =>
+    scheduleFromCreate(
+      keywordCreateItemSchema.parse({ keyword: "cron", frequency: "custom_cron" }),
+    ),
+  ).toThrow("Custom cron schedules require a cron expression.");
 });

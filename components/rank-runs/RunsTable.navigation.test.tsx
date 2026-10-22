@@ -55,8 +55,8 @@ describe("RunsTable navigation", () => {
 
       expect(screen.getByText("First check in 7h")).toBeInTheDocument();
       expect(screen.getAllByText("Not started")).toHaveLength(2);
-      expect(screen.getAllByText("$1.92")).toHaveLength(2);
-      expect(screen.getAllByText("estimate")).toHaveLength(2);
+      expect(screen.getAllByText("Payment details unavailable")).toHaveLength(2);
+      expect(screen.queryByText("$1.92")).toBeNull();
       expect(screen.queryByText("actual")).toBeNull();
 
       act(() => vi.advanceTimersByTime(60 * 60 * 1_000));

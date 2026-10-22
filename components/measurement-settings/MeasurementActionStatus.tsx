@@ -25,6 +25,8 @@ const namedBlocks = new Set([
   "duplicate",
   "budget_blocked",
   "nothing_eligible",
+  "payment_already_executed",
+  "payment_unavailable",
   "cost_limit_exceeded",
   "sample_project",
   "rate_changed",

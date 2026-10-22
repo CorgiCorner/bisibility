@@ -1,5 +1,5 @@
 import "server-only";
-
+import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
 import { prisma } from "@/lib/db/prisma";
 import { demoResearchFreshUntil, isEditableDemoResearchProject } from "@/lib/demo/research-storage";
 import { Prisma } from "@/lib/generated/prisma/client";
@@ -19,7 +19,7 @@ import {
 export type KeywordResearchSnapshotInput = {
   fetchedAt: Date;
   freshUntil: Date;
-  outcome: Pick<KeywordResearchSuccess, "provider" | "rows" | "sources">;
+  outcome: Pick<KeywordResearchSuccess, "provider" | "rows" | "sources" | "payment">;
   projectId: string;
   request: CanonicalKeywordResearchRequest;
 };
@@ -41,8 +41,13 @@ function storedRows(rows: KeywordResearchRow[]) {
   }));
 }
 
-function storedSources(sources: KeywordResearchSourceDiagnostic[]) {
-  return sources.map((source) => ({
+function storedSources(
+  sources: KeywordResearchSourceDiagnostic[],
+  receipt: KeywordResearchSuccess["payment"],
+) {
+  const parsed = actionPaymentReceiptSchema.safeParse(receipt);
+  return sources.map((source, index) => ({
+    ...(index === 0 && parsed.success ? { _payment: parsed.data } : {}),
     cached: source.cached,
     costCents: source.costCents,
     ...(source.reason ? { reason: source.reason } : {}),
@@ -65,7 +70,7 @@ function snapshotData(input: KeywordResearchSnapshotInput) {
     resultLimit: input.request.resultLimit,
     rows: storedRows(input.outcome.rows) as Prisma.InputJsonValue,
     seed: input.request.seed,
-    sources: storedSources(input.outcome.sources) as Prisma.InputJsonValue,
+    sources: storedSources(input.outcome.sources, input.outcome.payment) as Prisma.InputJsonValue,
   };
 }
 
@@ -110,6 +115,7 @@ export async function maybePersistKeywordResearchSnapshot(input: {
   if (isKeywordResearchEstimate(input.outcome) || input.successfulFetchedAts.length === 0) {
     return null;
   }
+  if (input.outcome.cached) return null;
   const fetchedAt = new Date(input.outcome.fetchedAt);
   const freshUntil = demoResearchFreshUntil(input.successfulFetchedAts);
   if (!Number.isFinite(fetchedAt.getTime()) || !freshUntil) return null;

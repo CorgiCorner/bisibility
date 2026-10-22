@@ -2,8 +2,8 @@
   "cloudImport": {
     "metadata": {
       "cloudDescription": "Utwórz jednorazowy token migracji, który pozwala własnej instancji wysłać swoje dane do tego projektu hostowanego.",
-      "cloudLayoutDescription": "Hostowana beta: najważniejsze zadania konfiguracji i importu dla Twojego projektu.",
-      "cloudLayoutTitle": "Hostowana beta",
+      "cloudLayoutDescription": "Cloud: konfiguracja i import danych dla Twojego projektu.",
+      "cloudLayoutTitle": "Cloud",
       "cloudTitle": "Import z instancji",
       "instanceDescription": "Utwórz jednorazowy token migracji, który pozwala innej instancji bisibility wysłać swoje dane do tego projektu.",
       "instanceTitle": "Import z innej instancji"
@@ -23,7 +23,7 @@
       "selfHost": "własna instancja"
     },
     "topBar": {
-      "beta": "Beta",
+      "beta": "Cloud",
       "fallbackWorkspace": "Projekt",
       "setupProgress": "Konfiguracja / {current, number} z {total, number}"
     },

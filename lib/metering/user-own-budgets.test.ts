@@ -20,6 +20,7 @@ vi.mock("./own-budget-read", () => ({ readOwnConnectionBudgets: mocks.own }));
 vi.mock("@/lib/providers/execution-extension", () => ({
   readDeploymentMeteringAuthority: async () => ({ mode: "legacy", coverage: "none", windows: [] }),
 }));
+vi.mock("./project-budget-read", () => ({ projectFundingStatuses: async () => [] }));
 
 import { getProjectMeteringUsage } from "./user-data";
 
@@ -60,7 +61,7 @@ beforeEach(async () => {
     project: { id: "private-project", ownerId: "owner", name: "Synthetic project" },
   });
   mocks.connections.mockResolvedValue([
-    { id: connection, publicId: publicConnection, provider: "dataforseo" },
+    { id: connection, publicId: publicConnection, provider: "dataforseo", credentialSource: "own" },
   ]);
   const clock = createManualClock(now),
     store = createMemoryStore({ clock, budgets: [budget] });
@@ -104,6 +105,10 @@ describe("owner BYOK budget projection", () => {
     const applicable = vi.spyOn(meter, "applicableBudgets"),
       usage = vi.spyOn(meter, "usage");
     const data = await getProjectMeteringUsage("prj_public");
+    expect(data.connections).toMatchObject([
+      { connectionId: publicConnection, credentialSource: "own" },
+    ]);
+    expect(data.budgets[0]?.display?.connectionId).toBe(publicConnection);
     expect(data.budgets).toMatchObject([
       expect.objectContaining({
         id: `${publicConnection}:app:cents`,

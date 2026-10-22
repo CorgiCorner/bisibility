@@ -25,6 +25,12 @@
         "note": "ChatGPT の Plugins を開き、+、Add custom MCP server の順に選択します。MCP URL と OAuth を指定します。",
         "caveat": "アクセスはワークスペースのポリシーによって異なります。この bisibility 接続は読み取り専用アクセスを要求します。"
       },
+      "grok-bot": {
+        "label": "Grok Bot",
+        "hint": "アシスタント",
+        "note": "これを Grok Bot のチャットに貼り付け、カスタム MCP サーバーの追加を確認してから、接続カードでサインインしてください。bisibility の同意画面では、クライアントが Cursor と表示され、自動的に登録されたと示されることがあります。Grok Bot ではそれが想定どおりです。",
+        "caveat": "順位チェックや被リンク分析などの有料操作は書き込みツールで、プロジェクトの支払い元に課金されます。実行する前に、ボットに費用の確認を依頼してください。"
+      },
       "claude-desktop": {
         "label": "Claude（ウェブとデスクトップ）",
         "hint": "コネクター",

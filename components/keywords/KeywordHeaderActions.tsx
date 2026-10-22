@@ -1,13 +1,11 @@
 "use client";
 
-import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
 import { ProjectReadOnlyTooltip } from "@/components/shell/ProjectWriteModeNotices";
 import { useProjectWriteMode } from "@/components/shell/ProjectWriteModeProvider";
 import { Button } from "@/components/ui/Button";
 import { Menu } from "@/components/ui/Menu";
 import { menuSelectPaperStyle } from "@/components/ui/MenuSelect";
 import { MenuSelectOptionItem } from "@/components/ui/MenuSelectOptionItem";
-import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
 import type { CostRateInfo } from "@/lib/cost-estimate/project-estimate";
 import type { SerpDepth } from "@/lib/serp/constants";
 import { DotsThreeIcon as DotsThree } from "@phosphor-icons/react/dist/csr/DotsThree";
@@ -30,16 +28,6 @@ type KeywordHeaderActionsProps = {
   showCheck?: boolean;
 };
 
-function depthOptionLabel(
-  depth: SerpDepth,
-  providerRate: CostRateInfo | undefined,
-  t: ReturnType<typeof useTranslations<"projectRankTracker.keywordDetail.actions">>,
-  usage: ReturnType<typeof useNativeUsageFormat>,
-) {
-  const estimate = providerRate ? estimateRankUsage([depth], providerRate) : null;
-  return t("topWithCost", { cost: estimate ? ` · ${usage.format(estimate)}` : "", depth });
-}
-
 function runCheckActionLabel(
   pending: boolean,
   primaryLabel: string | ((depth: SerpDepth) => string),
@@ -58,13 +46,12 @@ export function KeywordHeaderActions({
   onRunCheck,
   onToggleEdit,
   primaryLabel,
-  providerRate,
   runPending,
   runActive = false,
   showCheck = true,
 }: Readonly<KeywordHeaderActionsProps>) {
   const t = useTranslations("projectRankTracker.keywordDetail.actions");
-  const usage = useNativeUsageFormat();
+  const runLabels = useTranslations("projectRankTracker.keywordImport.management.runChecks");
   const [actionsMenuAnchor, setActionsMenuAnchor] = useState<HTMLElement | null>(null);
   const [depthSelection, setDepthSelection] = useState(() => ({
     effectiveDepth,
@@ -89,18 +76,27 @@ export function KeywordHeaderActions({
                 : (runCheckActionLabel(runPending, resolvedPrimaryLabel, selectedDepth) ??
                   t("starting"))
             }
+            compactActionLabel={
+              runActive
+                ? t("checking")
+                : runPending
+                  ? t("starting")
+                  : typeof primaryLabel === "string"
+                    ? primaryLabel
+                    : runLabels("runCheck")
+            }
             caretAriaLabel={t("chooseDepth")}
             copy={{
               changeDefault: t("changeDefault"),
               depthMenu: t("depthMenu"),
-              optionLabel: (depth) => depthOptionLabel(depth, providerRate, t, usage),
+              optionLabel: (depth) => t("topWithCost", { cost: "", depth }),
               shallowVisibility: t("shallowVisibility"),
             }}
             currentDepth={selectedDepth}
             disabled={readOnly || runPending || runActive}
             onAction={() => onRunCheck(selectedDepth)}
             onDepthChange={(depth) => setDepthSelection({ effectiveDepth, selectedDepth: depth })}
-            optionLabel={(depth) => depthOptionLabel(depth, providerRate, t, usage)}
+            optionLabel={(depth) => t("topWithCost", { cost: "", depth })}
             spinning={runPending || runActive}
           />
         </ProjectReadOnlyTooltip>

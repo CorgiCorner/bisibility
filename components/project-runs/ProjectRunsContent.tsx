@@ -1,5 +1,6 @@
 "use client";
 
+import { SchedulePlanningNotice } from "@/components/schedules/SchedulePlanningNotice";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -33,6 +34,8 @@ type ProjectRunsContentProps = {
   runNowAction: ProjectRunAction;
   skipAction: ProjectRunAction;
   readAt?: string;
+  schedulePlanningMinutes?: number | null;
+  hasEnabledKeywordSchedule?: boolean;
 };
 
 type ProjectRunsLoadErrorProps = {
@@ -170,6 +173,8 @@ export function ProjectRunsContent({
   runNowAction,
   skipAction,
   readAt,
+  schedulePlanningMinutes = null,
+  hasEnabledKeywordSchedule = false,
 }: Readonly<ProjectRunsContentProps>) {
   const t = useTranslations("projectRuns.content");
   // The API schema validates this transport shape; R1's presentation type carries its stricter ID brands.
@@ -178,6 +183,15 @@ export function ProjectRunsContent({
     ? projectRunsPath(projectRef, { ...query, cursor: page.nextCursor })
     : null;
 
+  const showPlanningNotice =
+    hasEnabledKeywordSchedule &&
+    query.source !== "search_console" &&
+    (query.view === "planned" ||
+      (rows.length === 0 &&
+        query.status === "all" &&
+        (query.view === "runs" ||
+          (query.view === "timeline" && ["all", "upcoming"].includes(query.section ?? "all")))));
+
   return (
     <section
       className="grid min-w-0 gap-4"
@@ -185,6 +199,7 @@ export function ProjectRunsContent({
     >
       <ProjectRunsTabs active="runs" projectRef={projectRef} query={query} />
       <ProjectRunsTimelineTabs projectRef={projectRef} query={query} />
+      {showPlanningNotice ? <SchedulePlanningNotice minutes={schedulePlanningMinutes} /> : null}
       <Card className="min-w-0 overflow-hidden p-0" size="sm">
         <TableCardHeader
           titleId="runs-list-title"

@@ -17,6 +17,7 @@ import {
 import { denormalizedLocationLabel } from "@/lib/serp/location-label";
 import { resolveKeywordLocation } from "@/lib/serp/location-service";
 import { type ApiContext, forbidden, projectMatches } from "./context";
+import { assignCreatedKeywordCadences } from "./keyword-create-cadence";
 import { parseKeywordCreateBody } from "./keyword-create-input";
 import { scheduleFromCreate } from "./keyword-utils";
 import { legacyMarketLocationKey, legacyMarketLocationSelection } from "./legacy-market-input";
@@ -38,6 +39,12 @@ type KeywordCreateTransaction = Pick<
   | "$executeRaw"
   | "$queryRaw"
   | "auditLog"
+  | "checkSchedule"
+  | "project"
+  | "rankCheckRun"
+  | "rankCheckRunItem"
+  | "rankCheck"
+  | "queuedRankCheckTask"
   | "keyword"
   | "keywordTag"
   | "keywordSchedule"
@@ -200,6 +207,12 @@ export async function createKeywords(
         topic: item.topic ?? null,
         intent: item.intent ?? null,
       })),
+    );
+    await assignCreatedKeywordCadences(
+      tx as Prisma.TransactionClient,
+      ctx.auth.project.id,
+      persisted.accepted,
+      ctx.actorId ?? null,
     );
     const hydrated = await tx.keyword.findMany({
       include: keywordInclude,

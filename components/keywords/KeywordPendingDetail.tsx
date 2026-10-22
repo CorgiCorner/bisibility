@@ -1,8 +1,7 @@
 "use client";
 
-import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageFormat";
+import { useRunPreflight } from "@/components/rank-runs/useRunPreflight";
 import { AccentCtaLink } from "@/components/ui/AccentCtaLink";
-import { estimateRankUsage } from "@/lib/cost-estimate/native-usage";
 import type { KeywordDetailQuality } from "@/lib/keyword-detail/quality-model";
 import type { KeywordDetailRankState } from "@/lib/keyword-detail/state-model";
 import type { ProjectCostContext } from "@/lib/queries/cost-calculator";
@@ -16,14 +15,12 @@ import { useState } from "react";
 import type { KeywordDetailActions } from "./action-utils";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
 import { KeywordEditDrawer } from "./KeywordEditDrawer";
-import { KeywordFirstCheckModal } from "./KeywordFirstCheckModal";
 import { KeywordHeaderActions } from "./KeywordHeaderActions";
 import { emptyRankCopy } from "./KeywordPendingEmptyState";
 import { KeywordPendingModules } from "./KeywordPendingModules";
 import { exportHistoryCsv } from "./keyword-history-export";
-import { useFirstCheckFlow } from "./use-first-check-flow";
 import { useKeywordScheduleModal } from "./use-keyword-schedule-modal";
-import type { RankCheckPollAction } from "./use-rank-check-poll";
+import { type RankCheckPollAction, useRankCheckPoll } from "./use-rank-check-poll";
 
 type KeywordPendingDetailProps = KeywordDetailActions & {
   canUpdateKeyword: boolean;
@@ -42,19 +39,6 @@ type KeywordPendingDetailProps = KeywordDetailActions & {
   searchConsoleConnected?: boolean;
 };
 
-function checkCostLabel(
-  depth: SerpDepth,
-  costContext: ProjectCostContext | undefined,
-  usage: ReturnType<typeof useNativeUsageFormat>,
-) {
-  if (!costContext) return null;
-  const estimate = estimateRankUsage([depth], {
-    overrideCents: costContext.costPerCheckCents,
-    providerId: costContext.providerId,
-  });
-  return usage.format(estimate);
-}
-
 export function KeywordPendingDetail({
   canUpdateKeyword,
   costContext,
@@ -69,28 +53,25 @@ export function KeywordPendingDetail({
   projectRef,
   providerLabel,
   rankState,
-  runCheckNowAction,
   searchConsoleConnected = false,
   updateKeywordAction,
 }: Readonly<KeywordPendingDetailProps>) {
   const t = useTranslations("projectRankTracker.keywordDetail.actions");
-  const usage = useNativeUsageFormat();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
-  const {
-    closeCheckModal,
-    confirmRun,
-    confirming,
-    continueFromSuccess,
-    modal,
-    modalOpen,
-    openCheckModal,
-    tryAgain,
-  } = useFirstCheckFlow({
-    keywordId: keyword.id,
+  const [activeRun, setActiveRun] = useState<string | null>(null);
+  useRankCheckPoll({
+    rankCheckId: activeRun,
     pollAction,
-    refresh: () => router.refresh(),
-    runCheckNowAction,
+    onTerminal: () => {
+      setActiveRun(null);
+      router.refresh();
+    },
+  });
+  const preflight = useRunPreflight({
+    projectId,
+    providerId: costContext?.providerId,
+    onStarted: (run) => setActiveRun(run.publicId),
   });
   const checkState =
     keyword.checkState ??
@@ -123,10 +104,16 @@ export function KeywordPendingDetail({
     editing,
     effectiveDepth: defaultDepth,
     onExport: () => exportHistoryCsv(keyword),
-    onRunCheck: (depth: SerpDepth) => openCheckModal(depth),
+    onRunCheck: (depth: SerpDepth) =>
+      void preflight.request({
+        depth,
+        rows: [keyword],
+        spec: { kind: "single", keywordId: keyword.id as `kw_${string}`, v: 1 },
+      }),
     onToggleEdit: () => setEditing((value) => !value),
     providerRate,
-    runPending: false,
+    runPending: preflight.opening,
+    runActive: activeRun !== null,
   };
   const actions = canRunCheck ? (
     <KeywordHeaderActions {...sharedActions} />
@@ -165,25 +152,7 @@ export function KeywordPendingDetail({
       ) : null}
       {history ?? <KeywordPendingModules copy={copy} state={state} />}
       {scheduleModal}
-      {modal ? (
-        <KeywordFirstCheckModal
-          confirmError={modal.error}
-          confirming={confirming}
-          costLabel={checkCostLabel(modal.depth, costContext, usage)}
-          depth={modal.depth}
-          errorCode={modal.errorCode}
-          onClose={closeCheckModal}
-          onConfirm={() => void confirmRun()}
-          onContinue={continueFromSuccess}
-          onTryAgain={tryAgain}
-          open={modalOpen}
-          position={modal.position}
-          projectRef={projectRef}
-          rankCheckId={modal.rankCheckId}
-          requestedDepth={modal.requestedDepth}
-          step={modal.step}
-        />
-      ) : null}
+      {preflight.dialog}
     </>
   );
 }

@@ -3,6 +3,18 @@ import { describe, expect, it } from "vitest";
 import { ScheduleObjectFrame } from "./ScheduleObjectFrame";
 
 describe("ScheduleObjectFrame", () => {
+  it("omits the redundant breadcrumb when schedule navigation already provides the return path", () => {
+    render(
+      <ScheduleObjectFrame
+        bodyLabel="Schedule body"
+        breadcrumbLabel="Breadcrumb"
+        title="Daily"
+        navigation={<a href="/app/prj_1/runs/schedules">Schedules</a>}
+      />,
+    );
+    expect(screen.queryByRole("navigation", { name: "Breadcrumb" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Schedules" })).toBeVisible();
+  });
   it("renders a caret-left back link for list and editor entry points", () => {
     const { rerender } = render(
       <ScheduleObjectFrame

@@ -308,7 +308,6 @@
           "smtpPort": "Puerto",
           "smtpUsername": "Usuario",
           "smtpPassword": "Contraseña",
-          "code": "Código del autenticador",
           "save": "Guardar la configuración de correo",
           "saving": "Guardando...",
           "clear": "Borrar la configuración guardada",
@@ -317,14 +316,13 @@
           "cleared": "Se borró la configuración de correo guardada. Se aplican las variables de entorno.",
           "forbidden": "Esta acción no está disponible.",
           "invalid": "Revisa el formulario e inténtalo de nuevo.",
-          "stepUpFailed": "Ese código del autenticador no fue aceptado.",
           "rateLimited": "Demasiados intentos. Inténtalo más tarde.",
           "unavailable": "La configuración de correo no está disponible temporalmente.",
           "validationSender": "Introduce un remitente como Nombre '<'direccion@example.com'>' o una dirección sola.",
           "validationRequired": "Introduce un valor.",
-          "validationCode": "Introduce el código de 6 dígitos del autenticador.",
           "validationPort": "Introduce un puerto del 1 al 65535.",
-          "validationSesPair": "Introduce el ID de la clave de acceso y la clave secreta, o deja ambos vacíos."
+          "validationSesPair": "Introduce el ID de la clave de acceso y la clave secreta, o deja ambos vacíos.",
+          "twoFactorRequired": "La autenticación de dos factores debe estar activada."
         }
       }
     },
@@ -445,7 +443,8 @@
         "invalid": "Revisa los campos del aviso.",
         "not_found": "Este aviso ya no existe. Actualiza la página.",
         "conflict": "Otro administrador ha cambiado este aviso. Actualiza la página antes de guardarlo de nuevo.",
-        "unavailable": "No se pudo guardar el aviso. Inténtalo de nuevo."
+        "unavailable": "No se pudo guardar el aviso. Inténtalo de nuevo.",
+        "two_factor_required": "La autenticación de dos factores debe estar activada."
       }
     },
     "recovery": {
@@ -558,7 +557,8 @@
         "rate_limited": "Demasiadas acciones. Inténtalo en breve.",
         "unavailable": "La recuperación no está disponible temporalmente. Actualiza el estado antes de reintentar.",
         "case_changed": "El caso ha cambiado o ya no admite esta reparación. Actualiza y revísalo de nuevo.",
-        "invalid": "Selecciona un motivo y un plazo futuro."
+        "invalid": "Selecciona un motivo y un plazo futuro.",
+        "two_factor_required": "La autenticación de dos factores debe estar activada."
       },
       "commandStates": {
         "queued": "Recuperación en cola",
@@ -611,6 +611,21 @@
       "connectionBlocked": "La contabilidad pendiente bloquea el gasto de la conexión.",
       "lastResultActivityAt": "Último progreso del proceso de recuperación de resultados",
       "noSpendShort": "La recuperación comprueba las pruebas guardadas antes de actuar."
+    },
+    "dangerousActions": {
+      "notice": "Activa la autenticación de dos factores para {action}.",
+      "enable": "Activar la autenticación de dos factores",
+      "actions": {
+        "addAccount": "añadir una cuenta",
+        "changeMail": "cambiar la configuración del correo",
+        "changeCredentials": "cambiar las credenciales",
+        "selectAccount": "seleccionar una cuenta",
+        "changeSettings": "cambiar la configuración",
+        "changeAccountStatus": "cambiar el acceso a la cuenta",
+        "changeAnnouncements": "cambiar los anuncios",
+        "repairUsage": "reparar los registros de uso",
+        "importUsage": "importar registros de uso"
+      }
     }
   }
 }

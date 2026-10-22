@@ -1,3 +1,6 @@
+import { DateDisplayProvider } from "@/components/dates/DateFormatProvider";
+import { FeatureMessagesProvider } from "@/components/i18n/FeatureMessagesProvider";
+import { projectRankTrackerFeatureTestMessages } from "@/i18n/test-support/feature-test-messages";
 import type { Meta, StoryObj } from "@storybook/react";
 import { KeywordDetailHeaderChrome } from "./KeywordDetailHeaderChrome";
 import {
@@ -8,6 +11,19 @@ import {
 
 const meta = {
   component: KeywordDetailHeaderChrome,
+  decorators: [
+    (Story) => (
+      <FeatureMessagesProvider
+        locale="en"
+        messages={projectRankTrackerFeatureTestMessages}
+        timeZone="UTC"
+      >
+        <DateDisplayProvider>
+          <Story />
+        </DateDisplayProvider>
+      </FeatureMessagesProvider>
+    ),
+  ],
   title: "Keyword detail/Recorded header quality",
   args: {
     actions: null,

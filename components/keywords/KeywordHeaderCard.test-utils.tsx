@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import { SessionSpendProvider } from "@/components/cost-estimate/SessionSpendProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { renderWithProjectRankTrackerMessages as render } from "@/i18n/test-support/render-with-feature-messages";
@@ -128,10 +129,11 @@ const preview = {
     remainingAfterCents: 4_998,
     spentCents: 0,
   },
+  payment: paymentQuote(),
   estimate: { costCents: 2, perTargetCents: 2, unknownCostTargets: 0 },
   excluded: [],
   executable: 1,
-  expiresAt: "2026-09-03T12:00:00.000Z",
+  expiresAt: "2099-09-03T12:00:00.000Z",
   keywordCount: 1,
   matched: 1,
   overlapRunCount: 0,

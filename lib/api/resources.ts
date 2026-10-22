@@ -1,7 +1,12 @@
 import { whereExecutedChecks } from "@/lib/checks/status";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { resolveEffectiveSchedule } from "@/lib/keywords/effective-schedule";
+import {
+  createKeywordMembershipProjector,
+  keywordMembershipSchedule,
+} from "@/lib/keywords/schedule-membership";
 import { providerAllocationMetadata } from "@/lib/providers/allocation-metadata";
+import { keywordCheckScheduleSelect } from "@/lib/queries/keyword-row-types";
+import { providerFailurePresentation } from "@/lib/rank-check/failure-presentation";
 import { normalizedObservationCompleteness } from "@/lib/serp/rank-depth";
 import { tierFromScopes } from "./key-scope";
 import {
@@ -21,6 +26,7 @@ export {
 } from "./keyword-check-state";
 
 export const keywordInclude = {
+  checkSchedule: { select: keywordCheckScheduleSelect },
   locationRef: {
     select: { canonicalKey: true, languageCode: true, languageLabel: true },
   },
@@ -196,13 +202,14 @@ export function keywordResource(
   keyword: KeywordRecord,
   projectPublicId: string,
   latestSuccessful?: LatestSuccessfulCheckRecord | null,
+  projectSchedule = keywordMembershipSchedule,
 ) {
   const latest = keyword.rankChecks[0];
-  const defaults = keyword.project?.defaults ?? null;
-  const schedule = keyword.schedule ?? defaults;
-  const effective = schedule
-    ? resolveEffectiveSchedule(keyword.schedule, defaults, keyword.id)
-    : null;
+  const schedule = projectSchedule(
+    keyword.checkSchedule,
+    keyword.id,
+    keyword.project?.defaults?.timezone,
+  );
   return {
     country: keyword.location,
     created_at: keyword.createdAt.toISOString(),
@@ -224,9 +231,9 @@ export function keywordResource(
           cron_expression: schedule.cronExpression,
           frequency: schedule.frequency,
           jitter_minutes: schedule.jitterMinutes,
-          last_checked_at: iso(schedule.lastCheckedAt),
-          next_check_at: iso(effective?.nextCheckAt),
-          source: keyword.schedule ? "keyword" : "project_default",
+          last_checked_at: iso(keyword.schedule?.lastCheckedAt),
+          next_check_at: iso(schedule.nextCheckAt),
+          source: "keyword",
           timezone: schedule.timezone,
         }
       : null,
@@ -243,11 +250,11 @@ export async function keywordResources(
   projectPublicId: string,
 ) {
   const latestSuccessful = await loadLatestSuccessfulChecks(keywords.map((keyword) => keyword.id));
+  const projectSchedule = createKeywordMembershipProjector();
   return keywords.map((keyword) =>
-    keywordResource(keyword, projectPublicId, latestSuccessful.get(keyword.id)),
+    keywordResource(keyword, projectPublicId, latestSuccessful.get(keyword.id), projectSchedule),
   );
 }
-
 export type RankCheckAccountingOverride = {
   costCents: number | null;
   usageQuantity: number | null;
@@ -275,7 +282,8 @@ export function rankCheckResource(
     attempts: rankCheckAttempts(check.attempts),
     checked_at: check.checkedAt.toISOString(),
     cost_cents: accounting ? decimalNumber(accounting.costCents) : storedCost,
-    error: failed ? (check.error ?? "Rank check failed.") : null,
+    // biome-ignore format: keep the resource projection within the module line cap.
+    error: failed ? (check.errorCode === "provider_capacity_unavailable" ? providerFailurePresentation(check.errorCode).message : (check.error ?? "Rank check failed.")) : null,
     error_code: check.errorCode,
     id: requireApiPublicId(check.publicId, "check"),
     keyword_id: requireApiPublicId(check.keyword.publicId, "kw"),

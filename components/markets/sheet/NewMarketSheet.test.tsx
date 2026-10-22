@@ -3,7 +3,7 @@ import { DrawerBackButton } from "@/components/ui/DrawerBackButton";
 import type { SheetProps } from "@/components/ui/Sheet";
 import { renderWithProjectMarketsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
 import type { NewMarketCreateInput } from "@/lib/markets/create-input";
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NewMarketSheet } from "./NewMarketSheet";
@@ -16,6 +16,7 @@ vi.mock("@/components/ui/Sheet", async (importOriginal) => ({
     footer,
     heightVariant,
     open,
+    onClose,
     title,
     widthVariant,
   }: SheetProps) =>
@@ -30,6 +31,9 @@ vi.mock("@/components/ui/Sheet", async (importOriginal) => ({
           {backAction ? <DrawerBackButton {...backAction} /> : null}
           <h2>{title}</h2>
         </header>
+        <button type="button" onClick={onClose}>
+          Dismiss sheet
+        </button>
         {children}
         {footer}
       </section>
@@ -389,4 +393,102 @@ describe("NewMarketSheet", () => {
 
     expect(onCreated).toHaveBeenCalledWith(createResult);
   });
+});
+
+it("opens an existing market instead of presenting duplicate creation fields and counts", async () => {
+  const user = userEvent.setup();
+  const onCreate = vi.fn();
+  render(
+    <NewMarketSheet
+      open
+      projectId={projectId}
+      onClose={vi.fn()}
+      onCreate={onCreate}
+      registry={[{ canonicalKey: "ES", id: createResult.publicId, status: "active" }]}
+      schedules={[]}
+      sources={[]}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Complete definition" }));
+  expect(screen.queryByRole("button", { name: "Devices" })).toBeNull();
+  expect(screen.queryByRole("radio", { name: "Start empty" })).toBeNull();
+  expect(screen.queryByText(/prospective keyword/i)).toBeNull();
+  expect(screen.getByRole("link", { name: "Open market" })).toHaveAttribute(
+    "href",
+    `/app/${projectId}/m/${createResult.publicId}/rank-tracker`,
+  );
+  expect(onCreate).not.toHaveBeenCalled();
+});
+
+it("keeps duplicate-market close and fields guarded throughout explicit device confirmation", async () => {
+  const user = userEvent.setup();
+  const onClose = vi.fn();
+  let finish!: (answer: { outcome: "created"; created: number }) => void;
+  const actions = {
+    preview: vi.fn().mockResolvedValue({
+      outcome: "ready",
+      fingerprint: "a".repeat(64),
+      keywordCount: 1,
+      newCheckCount: 1,
+      existingCount: 0,
+      archivedCount: 0,
+      scheduleName: null,
+    }),
+    add: vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    ),
+  };
+  render(
+    <NewMarketSheet
+      open
+      projectId={projectId}
+      onClose={onClose}
+      onCreate={vi.fn()}
+      registry={[{ canonicalKey: "ES", id: createResult.publicId, status: "active" }]}
+      schedules={[]}
+      sources={[]}
+      deviceTracking={{ actions, activeMarketIds: [createResult.publicId] }}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Complete definition" }));
+  await user.click(screen.getByRole("button", { name: "Review changes" }));
+  await user.click(await screen.findByRole("button", { name: "Add Mobile tracking (1)" }));
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Dismiss sheet" }));
+  expect(onClose).not.toHaveBeenCalled();
+  finish({ outcome: "created", created: 1 });
+  await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+});
+
+it("marks tracked US English and opens its market without offering a second Mobile market", async () => {
+  const user = userEvent.setup();
+  const onCreate = vi.fn();
+  render(
+    <NewMarketSheet
+      open
+      projectId={projectId}
+      onClose={vi.fn()}
+      onCreate={onCreate}
+      registry={[{ canonicalKey: "US", id: createResult.publicId, status: "active" }]}
+      schedules={[]}
+      sources={[]}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Country" }));
+  await user.type(screen.getByRole("textbox", { name: "Search countries" }), "United States");
+  await user.click(screen.getByRole("menuitem", { name: "United States" }));
+  await user.click(screen.getByRole("button", { name: "Language" }));
+  const english = screen.getByRole("menuitem", { name: /English/ });
+  expect(english).toHaveTextContent("Already tracked");
+  await user.click(english);
+  expect(screen.getByRole("link", { name: "Open market" })).toHaveAttribute(
+    "href",
+    `/app/${projectId}/m/${createResult.publicId}/rank-tracker`,
+  );
+  expect(screen.queryByRole("button", { name: "Devices" })).toBeNull();
+  expect(screen.queryByText(/prospective keyword/i)).toBeNull();
+  expect(onCreate).not.toHaveBeenCalled();
 });

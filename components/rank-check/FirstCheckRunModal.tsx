@@ -3,7 +3,6 @@ import { useNativeUsageFormat } from "@/components/cost-estimate/useNativeUsageF
 import { displayProvider } from "@/components/onboarding/onboarding-form-utils";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { useSharedErrorMessages } from "@/i18n/useSharedErrorMessages";
 import type { FirstCheckRunPlan } from "@/lib/actions/rank-check-preview";
 import { hasMonthlyBudgetCap } from "@/lib/rank-check/budget-contract";
@@ -11,8 +10,6 @@ import { appPath, type ProjectRef } from "@/lib/routing/app-path";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-
-export type FirstCheckRunScope = "all" | "first";
 
 export type FirstCheckRunModalProps = {
   projectRef: ProjectRef;
@@ -22,8 +19,6 @@ export type FirstCheckRunModalProps = {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
-  runScope: FirstCheckRunScope;
-  onRunScopeChange: (scope: FirstCheckRunScope) => void;
   onConfirm: () => void;
   confirming: boolean;
   confirmError: string | null;
@@ -86,10 +81,7 @@ function guardNotices(
   return notices;
 }
 
-function FirstCheckRunPlanRows({
-  plan,
-  runScope,
-}: Readonly<{ plan: FirstCheckRunPlan; runScope: FirstCheckRunScope }>) {
+function FirstCheckRunPlanRows({ plan }: Readonly<{ plan: FirstCheckRunPlan }>) {
   const format = useFormatter();
   const t = useTranslations("shared.firstCheck");
   const rows: { label: string; value: string }[] = [
@@ -103,8 +95,8 @@ function FirstCheckRunPlanRows({
     { label: t("scope.frequency"), value: t(frequencyMessageKey[plan.scope.frequency]) },
   ];
   const usage = useNativeUsageFormat();
-  const nativeEstimate = runScope === "all" ? plan.nativeEstimate : plan.firstTargetEstimate;
-  const checkCount = runScope === "all" ? plan.readyCount : Math.min(1, plan.readyCount);
+  const nativeEstimate = plan.firstTargetEstimate;
+  const checkCount = Math.min(1, plan.readyCount);
   if (nativeEstimate) {
     rows.push({ label: usage.estimatedLabel, value: usage.format(nativeEstimate) });
   } else if (plan.estimatedCostPerCheckCents != null) {
@@ -145,21 +137,16 @@ function FirstCheckRunPlanRows({
 }
 
 function FirstCheckRunPlanBody({
-  onRunScopeChange,
   plan,
   projectRef,
-  runScope,
 }: Readonly<
-  Pick<FirstCheckRunModalProps, "onRunScopeChange" | "plan" | "projectRef" | "runScope"> & {
+  Pick<FirstCheckRunModalProps, "plan" | "projectRef"> & {
     plan: FirstCheckRunPlan;
   }
 >) {
   const t = useTranslations("shared.firstCheck");
   const errors = useSharedErrorMessages();
   const notices = guardNotices(plan, projectRef, t, errors);
-  // biome-ignore format: compact options list keeps this module under the project line cap.
-  const options = [{ label: t("scope.firstKeyword"), value: "first" }, { disabled: plan.readyCount <= 1, label: t("scope.allReady", { count: plan.readyCount }), value: "all" }] as const;
-
   return (
     <div className="grid gap-4.5">
       <p className="m-0 rounded-control border border-border bg-bg px-3.5 py-3 text-[12.5px] leading-5 text-fg-muted">
@@ -195,23 +182,8 @@ function FirstCheckRunPlanBody({
         >
           {t("scope.title")}
         </h3>
-        <FirstCheckRunPlanRows plan={plan} runScope={runScope} />
+        <FirstCheckRunPlanRows plan={plan} />
       </section>
-
-      <SegmentedControl
-        label={t("scope.runAriaLabel", { count: plan.readyCount })}
-        labelClassName="font-sans tabular-nums text-[10px] uppercase tracking-[0.5px] text-fg-muted"
-        name="first-check-run-scope"
-        onChange={onRunScopeChange}
-        options={options}
-        value={runScope}
-      />
-
-      {runScope === "all" && plan.readyCount > 1 ? (
-        <p className="m-0 text-[12px] leading-5 text-fg-muted">
-          {t("scope.queueDetail", { count: plan.readyCount - 1 })}
-        </p>
-      ) : null}
 
       {notices.length > 0 ? (
         <div className="grid gap-1.5" role="alert">
@@ -234,11 +206,9 @@ export function FirstCheckRunModal({
   onClose,
   onConfirm,
   onRetry,
-  onRunScopeChange,
   open,
   plan,
   projectRef,
-  runScope,
 }: Readonly<FirstCheckRunModalProps>) {
   const t = useTranslations("shared.firstCheck");
   const blocked =
@@ -290,12 +260,7 @@ export function FirstCheckRunModal({
         </div>
       ) : null}
       {!loading && !error && plan ? (
-        <FirstCheckRunPlanBody
-          onRunScopeChange={onRunScopeChange}
-          plan={plan}
-          projectRef={projectRef}
-          runScope={runScope}
-        />
+        <FirstCheckRunPlanBody plan={plan} projectRef={projectRef} />
       ) : null}
       {!loading && !error && !plan ? (
         <p className="m-0 text-[13px] text-fg-muted">{t("unavailable")}</p>

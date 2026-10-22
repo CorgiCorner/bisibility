@@ -120,6 +120,7 @@
       "organicSessions": "オーガニックセッション",
       "sessionsConnectTitle": "オーガニックセッション (GA4)",
       "sessionsConnectBody": "どのクエリとランディングページがエンゲージメントの高い訪問者を呼び込み、どれがコンバージョンにつながるかを確認できます。",
+      "sessionsConnectDismiss": "オーガニックセッションの案内を閉じる",
       "connect": "接続",
       "sessionsJoinTip": "ランディングページを軸に GA4 と結合しています。Search Console はクリック数を、GA4 はセッションを数えるため、両者が完全に一致することはなく、差が出るのは正常です。",
       "noSessionsMatch": "この URL に一致する GA4 のランディングページはありません",

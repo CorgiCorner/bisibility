@@ -4,6 +4,7 @@ import type {
   RankTrackerGroupedListResult,
   RankTrackerListQueryInput,
 } from "@/lib/keywords/rank-tracker-query-types";
+import { keywordViewDevices } from "@/lib/keywords/view-devices";
 import { getQueryActor } from "./_auth";
 import { groupRankTrackerReportRows } from "./rank-tracker-report-grouped";
 import {
@@ -34,6 +35,7 @@ export async function getRankTrackerGroupedList(
   const page = pageCount === 0 ? 1 : Math.min(selected.query.page, pageCount);
   return {
     evaluation: selected.evaluation,
+    viewDevices: keywordViewDevices(selected.rows),
     facets: selected.facets,
     groups: groups.slice((page - 1) * selected.query.pageSize, page * selected.query.pageSize),
     locations: selected.locations,

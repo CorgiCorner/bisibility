@@ -28,6 +28,7 @@ vi.mock("@/lib/metering/store/budgets", () => ({
 }));
 
 import { platformAllocationTag } from "@/lib/metering/paid-quote";
+import { projectFundingBudget } from "@/lib/metering/project-funding-budgets";
 import { meteringNamespace } from "@/lib/metering/runtime";
 import { ownAllocationTag } from "./credential-version";
 import { assertProviderAllocationAvailable } from "./enforcement";
@@ -132,6 +133,26 @@ test("credits and own-key budgets on one connection stay isolated", async () => 
   await expect(assertProviderAllocationAvailable(input, db as never)).rejects.toMatchObject({
     code: "provider_allocation_exhausted",
   });
+});
+test("a project Credits budget compares the customer charge when one is provided", async () => {
+  const namespace = meteringNamespace();
+  state.source = "hosted";
+  state.budgets = [projectFundingBudget(namespace, "p", "platform", "100", 1)];
+  await expect(
+    assertProviderAllocationAvailable(
+      { ...input, estimatedCostCents: 500, estimatedCustomerCents: 10 },
+      db as never,
+    ),
+  ).resolves.toMatchObject({ remaining: null });
+  await expect(
+    assertProviderAllocationAvailable(
+      { ...input, estimatedCostCents: 10, estimatedCustomerCents: 150 },
+      db as never,
+    ),
+  ).rejects.toMatchObject({ code: "budget_exhausted" });
+  await expect(
+    assertProviderAllocationAvailable({ ...input, estimatedCostCents: 150 }, db as never),
+  ).rejects.toMatchObject({ code: "budget_exhausted" });
 });
 test("outstanding Store reservations reduce available headroom", async () => {
   const namespace = meteringNamespace();

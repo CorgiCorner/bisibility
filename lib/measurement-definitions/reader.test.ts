@@ -7,7 +7,11 @@ vi.mock("@/lib/queries/rank-tracker-captured-metrics", () => ({
   loadCapturedRankTrackerMetrics: vi.fn(async () => new Map()),
 }));
 
-import { definitionHeadFixture, definitionSourceFixture } from "./fixtures";
+import {
+  assignedDefinitionSourceFixture,
+  definitionHeadFixture,
+  definitionSourceFixture,
+} from "./fixtures";
 import type { DefinitionTransaction } from "./model";
 import {
   readCurrentDefinitionsForVerifiedScope,
@@ -349,7 +353,7 @@ describe("paired definition snapshot reads", () => {
     expect(f.raw).not.toHaveBeenCalled();
   });
   it("recomputes calendar freshness at each date from one captured source", async () => {
-    const source = definitionSourceFixture();
+    const source = assignedDefinitionSourceFixture();
     if (!source.policy.defaults) throw new Error("Fixture defaults missing");
     source.policy.defaults.frequency = "daily";
     const f = fixture(source);

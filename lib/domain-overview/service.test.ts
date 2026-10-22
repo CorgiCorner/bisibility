@@ -483,6 +483,7 @@ describe("domain overview service", () => {
       costCents: 0,
       ok: false,
       reason: "cost_limit_exceeded",
+      phase: "before_dispatch",
     });
     expect(mocks.fetchKeywords).not.toHaveBeenCalled();
     expect(mocks.fetchPages).not.toHaveBeenCalled();
@@ -548,6 +549,7 @@ describe("domain overview service", () => {
       costCents: 0,
       ok: false,
       reason: "budget_exhausted",
+      phase: "before_dispatch",
     });
     expect(mocks.resolveSnapshot).not.toHaveBeenCalled();
     expect(mocks.loadModule).not.toHaveBeenCalled();
@@ -573,7 +575,12 @@ describe("domain overview service", () => {
       new ProviderLookupSignal({ ok: false, reason: "needs_reauth" }),
     );
 
-    await expect(analyze()).resolves.toEqual({ costCents: 0, ok: false, reason: "needs_reauth" });
+    await expect(analyze()).resolves.toEqual({
+      costCents: 0,
+      ok: false,
+      reason: "needs_reauth",
+      phase: "before_dispatch",
+    });
     expect(mocks.loadModule).not.toHaveBeenCalled();
   });
 
@@ -696,5 +703,39 @@ describe("domain overview service", () => {
     expect(mocks.resolveSnapshot).toHaveBeenCalledWith(expect.objectContaining({ origin }));
     expect(mocks.fetchKeywords).toHaveBeenCalledWith(expect.objectContaining({ origin }));
     expect(mocks.fetchPages).toHaveBeenCalledWith(expect.objectContaining({ origin }));
+  });
+  it("persists a failed module cause with the successful sibling and replays it without provider work", async () => {
+    const failure = {
+      costCents: 0,
+      ok: false,
+      reason: "operation_access_denied",
+      phase: "before_dispatch",
+    } as const;
+    mocks.loadModule.mockResolvedValueOnce(failure).mockResolvedValueOnce({
+      ok: true,
+      cached: false,
+      costCents: 3,
+      data: pageResult,
+      fetchedAt: "2026-08-11T12:00:00.000Z",
+    });
+    expect(await analyze()).toMatchObject({ ok: true, state: "partial", keywords: failure });
+    const storedFailure = { reason: failure.reason, phase: failure.phase };
+    expect(mocks.persistModules).toHaveBeenCalledWith(
+      expect.objectContaining({ keywords: storedFailure, pages: pageResult }),
+    );
+    mocks.resolveSnapshot.mockResolvedValueOnce({
+      cached: true,
+      costCents: 0,
+      data: snapshotData(),
+      durable: true,
+      modules: { keywords: storedFailure, pages: pageResult },
+    });
+    mocks.loadModule.mockClear();
+    expect(await analyze()).toMatchObject({
+      ok: true,
+      keywords: failure,
+      pages: { ok: true, cached: true, costCents: 0 },
+    });
+    expect(mocks.loadModule).not.toHaveBeenCalled();
   });
 });

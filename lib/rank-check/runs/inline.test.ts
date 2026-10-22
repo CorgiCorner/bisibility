@@ -250,7 +250,9 @@ describe("runInlineRankCheck", () => {
     });
     // The item was cancelled, so the run has no pending work left and must not stay queued.
     expect(mocks.prisma.rankCheckRun.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: "completed" }) }),
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "cancelled", outcome: null }),
+      }),
     );
   });
 

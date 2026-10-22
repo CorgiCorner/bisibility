@@ -1,3 +1,5 @@
+import { actionPaymentOptionSchema, actionPaymentQuoteSchema } from "@/lib/action-payment/schema";
+import { aiAcceptedPaymentSchema } from "@/lib/ai-research/payment-input";
 import { isPublicIdOfType } from "@/lib/db/public-id-resources";
 import { z } from "zod";
 import { generationCanonicalJson } from "./generation-json";
@@ -64,6 +66,12 @@ export const modelSuggestionsPreviewInputSchema = z
   .strict();
 export const suggestionGenerationPreviewSchema = z
   .object({
+    payment: actionPaymentQuoteSchema.optional(),
+    paymentOptions: z.array(actionPaymentOptionSchema).optional(),
+    paymentConsent: z
+      .object({ version: z.literal(1), encoded: z.string(), signature: z.string() })
+      .strict()
+      .optional(),
     version: z.literal(1),
     configuration: suggestionGenerationConfigurationSchema,
     inputSnapshot: suggestionGenerationSnapshotSchema,
@@ -81,6 +89,8 @@ export const suggestionGenerationPreviewSchema = z
   .strict();
 export const modelSuggestionsGenerateInputSchema = z
   .object({
+    acceptedPayment: aiAcceptedPaymentSchema.optional(),
+    requirePayment: z.boolean().optional(),
     preview: suggestionGenerationPreviewSchema,
     consent: z.literal(true),
   })
@@ -104,6 +114,8 @@ export type SuggestionGenerationDraft = {
   accepted: false;
 };
 export type SuggestionGenerationResult = {
+  payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
+  originalPayment?: import("@/lib/action-payment/contract").ActionPaymentReceipt;
   generationId: string;
   drafts: SuggestionGenerationDraft[];
   costUsd: string | null;
@@ -118,7 +130,27 @@ export class SuggestionGenerationError extends Error {
     readonly reason: string,
     message: string,
     readonly generationId?: string,
+    readonly payment?: import("@/lib/action-payment/contract").ActionPaymentReceipt,
   ) {
     super(message);
   }
+}
+
+/** Browser preview display fields are not execution authority. The server reconstructs them. */
+export function parseModelSuggestionsGenerateInput(raw: unknown) {
+  if (
+    !raw ||
+    typeof raw !== "object" ||
+    !("preview" in raw) ||
+    !raw.preview ||
+    typeof raw.preview !== "object"
+  )
+    return modelSuggestionsGenerateInputSchema.parse(raw);
+  const {
+    payment: _quote,
+    paymentOptions: _options,
+    paymentConsent: _untrusted,
+    ...preview
+  } = raw.preview as Record<string, unknown>;
+  return modelSuggestionsGenerateInputSchema.parse({ ...raw, preview });
 }

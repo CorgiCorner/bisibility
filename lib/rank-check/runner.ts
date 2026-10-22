@@ -115,6 +115,8 @@ async function runCheckScoped(original: RunCheckInput): Promise<RankCheckRunResu
     allocation?.kind === "billable"
       ? createProviderRequestJournal(prisma, {
           attribution: providerUsage,
+          logicalOperationKey: input.payment?.operationKey,
+          costLimit: input.payment?.costLimit,
           beforeFence: input.definitionFence,
           beforeReserve: input.definitionBeforeReserve,
           connectionId: input.connection.id,
@@ -154,7 +156,8 @@ async function runCheckScoped(original: RunCheckInput): Promise<RankCheckRunResu
       tag: providerUsage?.tag,
       credentials: journal ? { ...credentials, usageObserver: journal.observer } : credentials,
     });
-  } catch (error) {
+  } catch (caughtError) {
+    let error = caughtError;
     if (
       error instanceof DeploymentAdmissionExhaustedError ||
       error instanceof BudgetExhaustedError ||
@@ -162,6 +165,7 @@ async function runCheckScoped(original: RunCheckInput): Promise<RankCheckRunResu
     )
       throw error;
     if (error instanceof ProviderUsagePersistenceError) throw error;
+    error = execution?.classifyFailure ? await execution.classifyFailure(error) : error;
     if (execution && (!execution.started || execution.costCents === null)) {
       throw new ProviderUsagePersistenceError({ cause: error });
     }
@@ -179,7 +183,16 @@ async function runCheckScoped(original: RunCheckInput): Promise<RankCheckRunResu
       { cause: error },
     );
   } finally {
-    await execution?.finish();
+    try {
+      await execution?.finish();
+    } finally {
+      if (input.payment)
+        await input.payment.record(
+          execution
+            ? { operationKey: input.payment.operationKey }
+            : { attemptIds: journal?.attemptIds ?? [] },
+        );
+    }
   }
 
   const checkedAt = input.now ?? rank.checkedAt;

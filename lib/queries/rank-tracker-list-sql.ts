@@ -34,8 +34,7 @@ export function buildRankTrackerListSql(
       SELECT k.*, l."canonicalKey", l."displayName", l.kind::text AS "locationKind",
         row_number() OVER (ORDER BY k."createdAt" DESC, k.id DESC) AS "sourceOrdinal", d.*
       FROM "keywords" k JOIN "locations" l ON l.id = k."locationId"
-      LEFT JOIN "keyword_schedules" ks ON ks."keywordId" = k.id
-      LEFT JOIN "project_defaults" pd ON pd."projectId" = k."projectId"
+      LEFT JOIN "check_schedules" cs ON cs.id = k."checkScheduleId"
       CROSS JOIN LATERAL (${derivedKeywordColumns}) d
       WHERE k."projectId" = ${projectId}
     ), project_locations AS (
@@ -49,8 +48,7 @@ export function buildRankTrackerListSql(
     ), matched AS MATERIALIZED (
       SELECT k.* FROM lens_keywords k
       JOIN "locations" l ON l."canonicalKey" = k."canonicalKey"
-      LEFT JOIN "keyword_schedules" ks ON ks."keywordId" = k.id
-      LEFT JOIN "project_defaults" pd ON pd."projectId" = k."projectId"
+      LEFT JOIN "check_schedules" cs ON cs.id = k."checkScheduleId"
       CROSS JOIN LATERAL (SELECT k.position, k."positionBaseline", k."rankingUrl", k."lastCheckStatus",
         k."lastCheckAt", k."latestAttemptId", k."rankingPages", k.tags, k.volume, k.difficulty, k."serpFeatures", k.traffic) d
       WHERE ${content}
@@ -58,8 +56,7 @@ export function buildRankTrackerListSql(
       SELECT ${options.publicIds ? Prisma.sql`k."publicId"` : Prisma.sql`k.id`} AS id, k."createdAt",
         row_number() OVER (ORDER BY ${order}) AS ordinal
       FROM matched k JOIN "locations" l ON l."canonicalKey" = k."canonicalKey"
-      LEFT JOIN "keyword_schedules" ks ON ks."keywordId" = k.id
-      LEFT JOIN "project_defaults" pd ON pd."projectId" = k."projectId"
+      LEFT JOIN "check_schedules" cs ON cs.id = k."checkScheduleId"
       CROSS JOIN LATERAL (SELECT k.position, k."positionBaseline", k."rankingUrl", k."lastCheckStatus",
         k."lastCheckAt", k."latestAttemptId", k."rankingPages", k.tags, k.volume, k.difficulty, k."serpFeatures", k.traffic) d
       ${candidateCursor}

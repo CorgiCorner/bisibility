@@ -42,3 +42,15 @@ describe("Project readiness OpenAPI schema", () => {
     expect(projectSchemas.Project.required).not.toContain("readiness");
   });
 });
+
+describe("Project defaults cadence compatibility", () => {
+  it("marks ignored cadence fields deprecated without removing accepted values", () => {
+    for (const schema of [projectSchemas.ProjectDefaults, projectSchemas.ProjectDefaultsPatch]) {
+      expect(schema.properties.frequency.deprecated).toBe(true);
+      expect(schema.properties.frequency.enum).toContain("daily");
+      expect(schema.properties.cron_expression.deprecated).toBe(true);
+      expect(schema.properties.jitter_minutes.deprecated).toBe(true);
+      expect(schema.properties.timezone.deprecated).toBe(true);
+    }
+  });
+});

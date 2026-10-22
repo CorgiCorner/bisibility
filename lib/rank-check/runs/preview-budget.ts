@@ -19,6 +19,7 @@ export async function allocationBudget(
   costCents: number | null,
   depths: SerpDepth[],
   surface: ProviderRequestSurface,
+  estimatedCustomerCents?: number,
 ): Promise<AllocationPreviewBudget> {
   try {
     await assertProviderAllocationAvailable(
@@ -26,6 +27,7 @@ export async function allocationBudget(
         catalog: PROVIDER_CATALOG,
         connectionId,
         estimatedCostCents: costCents ?? 0,
+        ...(estimatedCustomerCents !== undefined ? { estimatedCustomerCents } : {}),
         estimatedUsageQuantity: depths.reduce((sum, depth) => sum + pagesPerCheck(depth), 0),
 
         projectId,

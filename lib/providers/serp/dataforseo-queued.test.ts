@@ -94,6 +94,21 @@ describe("DataForSEO queued tasks", () => {
     });
   });
 
+  it("omits native early stopping for a queued Top20 task", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(createdEnvelope(1)), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await submitDataForSeoQueuedTasks({
+      credentials: { login: "login", password: "password" },
+      priority: "normal",
+      tasks: [{ ...tasks(1)[0], depth: 20, stopOnMatch: false }],
+    });
+    const body = JSON.parse(String((fetchMock.mock.calls[0] as [string, RequestInit])[1].body));
+    expect(body[0]).toMatchObject({ depth: 20 });
+    expect(body[0]).not.toHaveProperty("stop_crawl_on_match");
+    expect(body[0]).not.toHaveProperty("find_targets_in");
+  });
   it("rejects oversized requests before making a paid call", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

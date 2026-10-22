@@ -346,7 +346,7 @@
             "bestMeasuredPosition": "Mejor medida #{position}",
             "knownAbsent": "No encontrado en el alcance medido",
             "unsupported": "Resultado no compatible",
-            "notObserved": "Aún sin observar",
+            "notObserved": "Aún sin resultados",
             "currentUnknown": "Posición actual desconocida",
             "dateUnknown": "fecha no disponible",
             "lastKnownObserved": "Última conocida #{position} · observada {date}",
@@ -354,7 +354,7 @@
             "lastKnownUndated": "Última conocida #{position} · fecha no disponible",
             "bestRetainedPosition": "Mejor conservada #{position} · fecha no disponible",
             "groupQuality": "{ranked} con posición / {expected} objetivos; {unknown} desconocidos",
-            "currentScopeUnavailable": "Definición actual no disponible",
+            "currentScopeUnavailable": "La configuración de seguimiento actual no está disponible",
             "freshness": {
               "fresh": "Reciente",
               "stale": "Desactualizado",
@@ -390,15 +390,19 @@
             "retainedHistoryHelp": "Las observaciones comparables conservadas describen el historial, sin demostrar la definición actual.",
             "retainedHistory": "Historial de posiciones conservado de {keyword}",
             "groupRankingUrls": "{count} URL de resultados conservadas",
-            "retainedRankingUrl": "URL de resultado conservada; calificación actual no disponible",
+            "retainedRankingUrl": "Última URL conocida. Resultado actual no disponible.",
             "lastKnownStored": "Última conocida #{position} · fecha guardada {date}",
-            "qualificationUnknown": "Calificación no disponible",
-            "historyQualificationUnknown": "Calificación del historial guardado no disponible",
+            "qualificationUnknown": "Resultado actual no disponible",
+            "historyQualificationUnknown": "Resultados anteriores sin verificar",
             "currentSince": "Ventana actual desde {date}",
             "baselineWindow": "Referencia desde {from} hasta antes de {to}",
             "capturedExpectedUrl": "URL esperada guardada con esta medición",
             "expectedUrlProvenanceUnknown": "Procedencia de la URL esperada no disponible",
-            "measuredCount": "Medidas: {measured} de {expected}"
+            "measuredCount": "Medidas: {measured} de {expected}",
+            "lastKnownShort": "Última conocida #{position}",
+            "bestRetainedShort": "Mejor guardada #{position}",
+            "retainedUrlShort": "Última conocida",
+            "freshnessUnknownHelp": "No podemos confirmar la actualidad de este resultado."
           }
         },
         "runChecks": {
@@ -455,7 +459,8 @@
           "runningBody": "{count, plural, one {La comprobación está en curso.} other {Hay # comprobaciones en curso.}} Puedes cerrar esta ventana: los resultados aparecerán en esta página.",
           "successBody": "{count, plural, one {Se ha completado # comprobación de posiciones.} other {Se han completado # comprobaciones de posiciones.}}",
           "checksNeedAttention": "{count, plural, one {# comprobación necesita tu atención.} other {# comprobaciones necesitan tu atención.}}",
-          "viewRuns": "Ver ejecuciones"
+          "viewRuns": "Ver ejecuciones",
+          "providerCapacityUnavailable": "Las comprobaciones no están disponibles temporalmente para este proveedor. No se te ha cobrado. Inténtalo más tarde o conecta tus propias claves del proveedor."
         },
         "schedule": {
           "title": "Definir la programación de {count, plural, one {# palabra clave / # objetivo} other {# palabras clave / # objetivos}}",
@@ -818,7 +823,10 @@
           "source": "Fuente",
           "saved": "Guardada",
           "volumeTrend": "Tendencia de volumen mensual de {keyword}",
+          "research": "Investigar",
           "researchFallback": "Investigación",
+          "researchOneAtATime": "Investiga una palabra clave a la vez.",
+          "toolbar": "Acciones para las palabras clave seleccionadas",
           "relative": {
             "daysAgo": "Hace {count, number} d",
             "hoursAgo": "Hace {count, number} h",

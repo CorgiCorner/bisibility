@@ -1,5 +1,4 @@
 import "server-only";
-
 import { ApiNotFoundError } from "@/lib/api/errors";
 import { decodeCursor, encodeCursor } from "@/lib/api/pagination";
 import { parseRankRunListQuery } from "@/lib/api/rank-run-list-query";
@@ -9,6 +8,7 @@ import { getRequestMonthlySpendCents } from "@/lib/queries/workspace-request-dat
 import { loadSerpProviderChain } from "@/lib/rank-check/provider-chain-loader";
 import { activeMarketLocationIds, runnableKeywordWhere } from "@/lib/rank-check/runnable";
 import { RUN_STATUSES } from "@/lib/rank-check/runs/contract";
+import { rankRunPaymentReceipt } from "@/lib/rank-check/runs/payment-receipt";
 import { runUsage } from "@/lib/rank-check/runs/usage";
 import { scheduledRunProjection, scheduleProviderId } from "./check-schedule-list";
 import { ledgerActualCostCents, rankCheckRunLedgerActuals } from "./rank-check-run-accounting";
@@ -31,7 +31,8 @@ async function rankCheckRunReadModel(
   skippedBy: RankCheckRunActor | null = null,
   budget: { capCents: number; spentCents: number } | null = null,
 ) {
-  const dto = { ...rankCheckRunDto(row, budget), skippedBy };
+  const payment = await rankRunPaymentReceipt(row);
+  const dto = { ...rankCheckRunDto(row, budget), skippedBy, ...(payment ? { payment } : {}) };
   const needsScheduleProjection =
     row.status === "planned" ||
     (row.status === "blocked" && row.launchedAt === null) ||

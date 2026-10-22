@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   transaction: vi.fn(),
+  native: vi.fn(),
+  read: vi.fn(),
   load: vi.fn(),
   mutate: vi.fn(),
   retained: vi.fn(),
@@ -18,7 +20,10 @@ vi.mock("@/lib/provider-ui/journal", () => ({
   retainedCommand: mocks.retained,
   retainCommand: mocks.retain,
 }));
-vi.mock("@/lib/provider-ui/read", () => ({ readProviderUi: vi.fn() }));
+vi.mock("@/lib/provider-ui/read", () => ({ readProviderUi: mocks.read }));
+vi.mock("@/lib/provider-ui/native-allocation-read", () => ({
+  loadNativeAllocationRows: mocks.native,
+}));
 vi.mock("@/lib/provider-ui/state-rates", () => ({ loadProviderUiRates: vi.fn() }));
 
 import { createProviderUiService } from "./service";
@@ -54,7 +59,7 @@ describe("provider binding read availability", () => {
       tx,
       scope.actor,
       scope.projectPublicId,
-      "read",
+      "binding",
     );
     expect(mocks.mutate).not.toHaveBeenCalled();
     expect(mocks.retain).not.toHaveBeenCalled();
@@ -104,4 +109,30 @@ describe("provider binding read availability", () => {
     expect(mocks.transaction).toHaveBeenCalledOnce();
     expect(mocks.mutate).not.toHaveBeenCalled();
   });
+});
+
+it("closes the consistent database snapshot before reading cached native availability", async () => {
+  let transactionOpen = false;
+  mocks.transaction.mockImplementation(async (run) => {
+    transactionOpen = true;
+    try {
+      return await run(tx);
+    } finally {
+      transactionOpen = false;
+    }
+  });
+  mocks.native.mockImplementation(async () => {
+    expect(transactionOpen).toBe(false);
+  });
+  mocks.read.mockReturnValue({ outcome: "ok", value: { kind: "allocations" } });
+  const query = { kind: "allocations", connectionIds: ["conn_a00000000000000000000000"] };
+  await expect(service().read(scope, query)).resolves.toMatchObject({ outcome: "ok" });
+  expect(mocks.native).toHaveBeenCalledWith(state, query.connectionIds);
+  expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Function), {
+    isolationLevel: "RepeatableRead",
+    maxWait: 5_000,
+    timeout: 15_000,
+  });
+  expect(mocks.mutate).not.toHaveBeenCalled();
+  expect(mocks.retain).not.toHaveBeenCalled();
 });

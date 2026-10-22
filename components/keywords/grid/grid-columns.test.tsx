@@ -239,7 +239,6 @@ describe("keywordColumns", () => {
     expect(sizing).toMatchObject({
       clicks: { minSize: 96, size: 96 },
       ctr: { minSize: 92, size: 92 },
-      device: { minSize: 84, size: 84 },
       impressions: { minSize: 96, size: 96 },
       intent: { minSize: 132, size: 132 },
       keyword: { minSize: 160, size: 300 },

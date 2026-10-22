@@ -1,15 +1,17 @@
 "use client";
 
+import { PaymentQuoteSummary } from "@/components/action-payment/PaymentQuoteSummary";
+import { usePaymentQuoteExpiry } from "@/components/action-payment/usePaymentQuoteExpiry";
 import { useSharedErrorMessages } from "@/components/i18n/useSharedErrorMessages";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { zodResolver } from "@/lib/forms/zod-resolver";
-import type { RankCheckRunPreview } from "@/lib/rank-check/runs/preview";
 import { appPath } from "@/lib/routing/app-path";
 import { presentBudgetDenial } from "@/lib/ui/action-error";
 import { useTranslations } from "next-intl";
 import { useId, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { PreflightFooter } from "./PreflightFooter";
 import {
   type PreflightDialogProps,
   type PreflightFormInput,
@@ -19,13 +21,14 @@ import {
 export type { PreflightDialogProps } from "./preflight-contracts";
 
 import { PreflightBlockNotice } from "./PreflightBlockNotice";
-import { PreflightOptionGroups } from "./PreflightOptionGroups";
+import { PreflightOptionGroups, PreflightScopeSummary } from "./PreflightOptionGroups";
 import { PreflightOverlapNotice } from "./PreflightOverlapNotice";
 import {
   blockCodeFor,
   decisionLine,
   idempotencyKey,
   isNotStarted,
+  launchFailureNotice,
   type PreflightBlockCode,
 } from "./preflight-presentation";
 
@@ -52,11 +55,15 @@ export function PreflightDialog({
 }: Readonly<PreflightDialogProps>) {
   const errors = useSharedErrorMessages();
   const t = useTranslations("shared.rankPreflight");
+  const paymentT = useTranslations("shared.actionPayment");
+  const [selection] = useState(() => structuredClone(spec));
   const formId = useId();
   const form = useForm<PreflightFormInput>({
     defaultValues: {
       depth: initialDepth,
-      providerId: initialProviderId ?? providers[0]?.id,
+      providerId:
+        initialPreview.payment?.option.providerId ?? initialProviderId ?? providers[0]?.id,
+      paymentOptionId: initialPreview.payment?.option.id,
     },
     resolver: zodResolver(preflightFormSchema),
   });
@@ -65,6 +72,7 @@ export function PreflightDialog({
   const validEstimate = useRef(true);
   const launchKey = useRef<string | null>(null);
   const launchUnknown = useRef(false);
+  const mismatchResigned = useRef(false);
   const [previewValid, setPreviewValid] = useState(true);
   const [unconfirmed, setUnconfirmed] = useState(false);
   const [actionBlock, setActionBlock] = useState<PreflightBlockCode | null>(null);
@@ -73,23 +81,35 @@ export function PreflightDialog({
   const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const payment = preview.payment;
+  const expired = usePaymentQuoteExpiry(
+    Math.min(Date.parse(preview.expiresAt), payment ? Date.parse(payment.expiresAt) : Infinity),
+  );
   const blockCode = blockCodeFor(preview, actionBlock);
   const currentScope = typeof scope === "function" ? scope(preview) : scope;
   const disabled =
-    Boolean(blockCode) || !previewValid || refreshing || submitting || preview.targetCount === 0;
+    !payment?.availability.allowed ||
+    (expired && !unconfirmed) ||
+    Boolean(blockCode) ||
+    !previewValid ||
+    refreshing ||
+    submitting ||
+    preview.targetCount === 0;
 
   async function refreshPreview(next: Partial<PreflightFormInput>, notice: string | null = null) {
     if (launchUnknown.current) return;
+    if (notice === null) mismatchResigned.current = false;
     validEstimate.current = false;
     setPreviewValid(false);
     const input = preflightFormSchema.parse({ ...form.getValues(), ...next });
+    form.setValue("paymentOptionId", input.paymentOptionId);
     form.setValue("depth", input.depth, { shouldValidate: true });
     form.setValue("providerId", input.providerId, { shouldValidate: true });
     const request = ++requestNumber.current;
     setPreviewError(notice);
     setRefreshing(true);
     try {
-      const nextPreview = await previewAction({ ...input, projectId, spec });
+      const nextPreview = await previewAction({ ...input, projectId, spec: selection });
       if (request === requestNumber.current) {
         setActionBlock(null);
         setPreview(nextPreview);
@@ -104,7 +124,14 @@ export function PreflightDialog({
   }
 
   async function start(input: PreflightFormInput) {
-    if (launching.current || !validEstimate.current || disabled) return;
+    if (
+      launching.current ||
+      !validEstimate.current ||
+      disabled ||
+      !payment ||
+      (!launchUnknown.current && Date.parse(payment.expiresAt) <= Date.now())
+    )
+      return;
     launching.current = true;
     launchKey.current ??= idempotencyKey();
     setSubmitting(true);
@@ -112,31 +139,31 @@ export function PreflightDialog({
     try {
       const result = await launchAction({
         ...input,
+        acceptedPayment: { quoteToken: payment.quoteToken },
+        paymentOptionId: payment.option.id,
+        providerId: payment.option.providerId,
         idempotencyKey: launchKey.current,
         previewToken: preview.previewToken,
         projectId,
-        spec,
+        spec: selection,
       });
       launchUnknown.current = false;
       setUnconfirmed(false);
       if (isNotStarted(result)) {
         launchKey.current = null;
-        if (result.code === "preview_expired" || result.code === "preview_mismatch") {
-          // Re-sign the current estimate so the next start can succeed without reopening.
+        const notice = launchFailureNotice(result.code, mismatchResigned.current);
+        if (notice.kind === "resign") {
           await refreshPreview({}, t("previewChanged"));
+          mismatchResigned.current = notice.mismatch;
           return;
         }
-        if (
-          result.code === "measurement_policy_unconfigured" ||
-          result.code === "measurement_policy_unsupported" ||
-          result.code === "no_provider" ||
-          result.code === "budget_exhausted" ||
-          result.code === "budget_missing" ||
-          result.code === "usage_reconciliation_required"
-        ) {
-          setActionBlock(result.code);
+        mismatchResigned.current = false;
+        if (notice.kind === "payment") {
+          setPreviewError(t("paymentUnavailable"));
+          return;
         }
-        setPreviewError(result.code === "sample_project" ? t("sampleProject") : t("couldNotStart"));
+        if (notice.kind === "block") setActionBlock(notice.code);
+        setPreviewError(notice.kind === "sample" ? t("sampleProject") : t("couldNotStart"));
         return;
       }
       if ("outcome" in result) {
@@ -166,29 +193,21 @@ export function PreflightDialog({
   const selectedDepth = form.watch("depth") ?? initialDepth;
   const selectedProvider = form.watch("providerId");
   const footer = (
-    <div className="flex w-full flex-wrap items-center justify-between gap-2.5">
-      <p className="m-0 min-w-0 text-[11.5px] tabular-nums text-fg-muted">
-        {decisionLine(
-          preview,
-          presentBudgetDenial(preview.budget.reason, errors, t("budgetBlocked")),
-          leftAfterLabel,
-        )}
-      </p>
-      <div className="flex items-center gap-2">
-        <Button disabled={submitting} onClick={onClose} type="button" variant="secondary">
-          {t("cancel")}
-        </Button>
-        <Button
-          disabled={disabled}
-          form={formId}
-          loading={submitting}
-          loadingLabel={t("starting")}
-          type="submit"
-        >
-          {currentScope.startLabel}
-        </Button>
-      </div>
-    </div>
+    <PreflightFooter
+      decision={decisionLine(
+        preview,
+        presentBudgetDenial(preview.budget.reason, errors, t("budgetBlocked")),
+        leftAfterLabel,
+      )}
+      disabled={disabled}
+      expired={expired && !unconfirmed}
+      formId={formId}
+      label={currentScope.startLabel}
+      onClose={onClose}
+      onRefresh={() => void refreshPreview({})}
+      payment={payment}
+      submitting={submitting || refreshing}
+    />
   );
 
   return (
@@ -230,24 +249,29 @@ export function PreflightDialog({
           />
         ) : null}
 
-        <section
-          className="rounded-card border border-border px-4 py-[13px]"
-          aria-label={t("runScope")}
-        >
-          <p className="m-0 text-[13.5px] font-semibold tabular-nums text-fg">
-            {currentScope.equation}
-          </p>
-          <p className="m-0 mt-1 text-[11.5px] leading-[1.55] text-fg-muted">
-            {currentScope.description}
-          </p>
-        </section>
+        <PreflightScopeSummary scope={currentScope} />
 
+        <PaymentQuoteSummary
+          quote={refreshing ? undefined : payment}
+          options={preview.paymentOptions}
+          disabled={refreshing || submitting || unconfirmed}
+          onOptionChange={(option) =>
+            void refreshPreview({ providerId: option.providerId, paymentOptionId: option.id })
+          }
+        />
+        {expired ? (
+          <p role="alert" className="m-0 text-xs text-warning">
+            {paymentT("expired")}
+          </p>
+        ) : null}
         <PreflightOptionGroups
           disabled={refreshing || submitting || unconfirmed}
           onDepthChange={(depth) => refreshPreview({ depth })}
-          onProviderChange={(providerId) => refreshPreview({ providerId })}
+          onProviderChange={(providerId) =>
+            refreshPreview({ providerId, paymentOptionId: undefined })
+          }
           providerFallbackNote={providerFallbackNote}
-          providers={providers}
+          providers={preview.paymentOptions?.length ? [] : providers}
           selectedDepth={selectedDepth}
           selectedProvider={selectedProvider}
         />

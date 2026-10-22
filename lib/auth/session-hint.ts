@@ -1,5 +1,15 @@
 const SESSION_HINT_MAX_AGE = 60 * 60 * 24 * 30;
 
+// Other apps on localhost share cookies across ports. Keep this app's development login separate.
+export function authCookiePrefix(environment = process.env.NODE_ENV) {
+  return environment === "development" ? "bisibility-local" : "better-auth";
+}
+
+export function authSessionCookieNames() {
+  const prefix = authCookiePrefix();
+  return [`${prefix}.session_token`, `__Secure-${prefix}.session_token`];
+}
+
 /**
  * Non-httpOnly session-presence mirror used only to avoid navigation paint flashes.
  */

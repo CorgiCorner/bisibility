@@ -126,6 +126,11 @@ const routeCases = [
     title: "Runs",
   },
   {
+    path: appPath("prj_1", "runs", "ai", "air_test"),
+    pattern: appPath("[project]", "runs", "ai", "[runId]"),
+    title: "Runs",
+  },
+  {
     path: appPath("prj_1", "runs", "rank-checks", "rcr_test"),
     pattern: appPath("[project]", "runs", "rank-checks", "[id]"),
     title: "Run",

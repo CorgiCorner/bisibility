@@ -29,7 +29,7 @@ import {
 } from "@/lib/providers/analytics/google-stored-property";
 import { projectSearchSyncSchema } from "@/lib/schemas/project";
 import {
-  providerConnectionRefSchema,
+  disconnectProviderSchema,
   testProviderConnectionSchema,
   updateProviderCostSchema,
   updateProviderRateSchema,
@@ -205,7 +205,7 @@ export async function updateProviderRate(input: unknown) {
 }
 
 export async function disconnectProvider(input: unknown) {
-  const data = parseActionInput(providerConnectionRefSchema, input);
+  const data = parseActionInput(disconnectProviderSchema, input);
   const result = await disconnectProviderConnection(data, await providerScope(data.projectId));
   revalidateProviderViews();
 

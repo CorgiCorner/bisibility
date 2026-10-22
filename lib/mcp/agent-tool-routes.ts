@@ -24,6 +24,33 @@ function query(input: ToolArgs, keys: string[]) {
   return params.size ? `?${params}` : "";
 }
 
+function searchPerformanceQuery(input: ToolArgs) {
+  const params = new URLSearchParams();
+  for (const key of [
+    "start_date",
+    "end_date",
+    "connection_id",
+    "query",
+    "limit",
+    "query_match",
+    "page_path",
+    "page_path_match",
+    "clicks_min",
+    "impressions_min",
+    "position_max",
+    "country",
+    "device",
+    "offset",
+  ]) {
+    const value = input[key];
+    if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+  }
+  if (Array.isArray(input.dimensions)) {
+    params.set("dimensions", input.dimensions.join(","));
+  }
+  return params.size ? `?${params}` : "";
+}
+
 function trafficSnapshotQuery(input: ToolArgs) {
   const params = new URLSearchParams();
   for (const key of ["start_date", "end_date", "limit", "offset"]) {
@@ -79,7 +106,7 @@ export function dispatchAgentToolRoute(name: string, input: ToolArgs): AgentRest
   if (name === "listSearchPerformanceQueryStats")
     return call(
       input,
-      `${project(input, "analytics/query-stats")}${query(input, ["start_date", "end_date", "connection_id", "query", "limit", "query_match", "page_path", "page_path_match", "clicks_min", "impressions_min", "position_max"])}`,
+      `${project(input, "analytics/query-stats")}${searchPerformanceQuery(input)}`,
       "GET",
     );
   if (name === "syncProjectTraffic") return call(input, project(input, "analytics/sync"), "POST");

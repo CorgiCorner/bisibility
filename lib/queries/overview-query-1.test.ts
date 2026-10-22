@@ -215,7 +215,8 @@ describe("overview query", () => {
       trackedKeywordCount: 5,
     });
     expect(result.toolbar).not.toHaveProperty("refresh");
-    expect(result.nextCheckAt).toBeInstanceOf(Date);
+    expect(result.nextCheckAt).toBeNull();
+    expect(result.dataSource.nextCheckAt).toBeNull();
     expect(result.kpis).toEqual([
       {
         delta: { kind: "averageComparison", value: 0 },

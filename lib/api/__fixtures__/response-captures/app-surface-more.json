@@ -24,6 +24,7 @@
         "invite_email": true,
         "invite_in_app": true,
         "project_id": "prj_a00000000000000000000000",
+        "report_email": true,
         "slack_available": false,
         "webhook_available": false
       },

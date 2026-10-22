@@ -1,3 +1,4 @@
+import { providerErrorCodeFromError } from "@/lib/providers/call-error";
 import { DeploymentAdmissionExhaustedError } from "@/lib/providers/execution-extension-errors";
 import { ProviderUsagePersistenceError, readObservedResponse } from "@/lib/providers/usage";
 import { providerUsageFailureDetails } from "@/lib/providers/usage-failure-details";
@@ -304,5 +305,29 @@ describe("bounded search receipts", () => {
     await vi.advanceTimersByTimeAsync(600);
     await result;
     expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("account exhaustion", () => {
+  it.each([
+    [200, "Your account has run out of searches."],
+    [429, "Your account has run out of searches. Try again later."],
+    [403, "You have reached your plan limit."],
+    [402, "Payment required"],
+  ])("classifies HTTP %s billing refusals without retries", async (status, message) => {
+    const journal = observer();
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(async () => new Response(JSON.stringify({ error: message }), { status }));
+    vi.stubGlobal("fetch", fetchMock);
+    const error = await serpApiProvider
+      .fetchRank({
+        ...input,
+        credentials: { ...input.credentials, usageObserver: journal },
+      })
+      .catch((error) => error);
+    expect(providerErrorCodeFromError(error)).toBe("provider_billing");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(journal.rows[0]).toMatchObject({ costCents: 0, quantity: 0 });
   });
 });

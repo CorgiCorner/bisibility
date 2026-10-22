@@ -1,4 +1,10 @@
 "use client";
+import { BudgetRemaining } from "@/components/metering/BudgetRemaining";
+import {
+  BudgetHeading,
+  BudgetValue,
+  type BudgetValueKind,
+} from "@/components/metering/BudgetValue";
 import { useUsagePresentation } from "@/components/metering/use-usage-presentation";
 import { IdChip } from "@/components/ui/IdChip";
 import {
@@ -11,7 +17,6 @@ import {
 } from "@/components/usagekit/primitives/table";
 import { UsageStatus } from "@/components/usagekit/usage-motion";
 import type { MeteringAdminData } from "@/lib/metering/admin-types";
-import type { Figure, Limit } from "@usagekit/views";
 import { useTranslations } from "next-intl";
 
 export function AdminBudgetTable({
@@ -25,26 +30,24 @@ export function AdminBudgetTable({
 }) {
   const p = useUsagePresentation();
   const t = useTranslations("instanceAdmin.metering");
-  function amount(value: Figure | Limit) {
-    if (value === "unavailable") return p.budget.unavailable;
-    if (value === "unlimited") return p.budget.unlimited;
-    if (value.certainty === "unknown") return p.budget.unknown;
-    return [p.figure(value), p.unit(value.unit)].filter(Boolean).join(" ");
-  }
   return (
     <div className="min-w-0 overflow-hidden rounded-card border border-border">
       <Table
         aria-label={t("budgetsHeading")}
         tabIndex={0}
         aria-busy={busy || undefined}
-        className="focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid"
+        className="min-w-[64rem] table-fixed focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-solid"
       >
         <TableHeader className="bg-bg-sunken">
           <TableRow>
             <TableHead className="px-4 text-xs">{t("scope")}</TableHead>
-            {[p.budget.used, p.budget.reserved, p.budget.remaining, p.budget.limit].map((label) => (
-              <TableHead key={label} className="px-4 text-right text-xs">
-                {label}
+            {(["used", "reserved", "remaining", "limit"] as BudgetValueKind[]).map((kind) => (
+              <TableHead
+                key={kind}
+                aria-label={p.budget[kind]}
+                className="w-32 px-4 text-right text-xs"
+              >
+                <BudgetHeading kind={kind} />
               </TableHead>
             ))}
             <TableHead className="px-4 text-xs">{t("status")}</TableHead>
@@ -85,19 +88,32 @@ export function AdminBudgetTable({
                         .join(" · ")}
                     </p>
                   </TableCell>
-                  {[row.used, row.reserved, row.remaining, row.limit].map((value, i) => (
-                    <TableCell key={i} className="px-4 py-3 text-right tabular-nums">
-                      {row.redacted ? p.budget.unavailable : amount(value)}
-                      {i === 3 &&
-                        row.boundary.onExceed === "allow" &&
-                        row.boundary.hardLimit &&
-                        !row.redacted && (
-                          <p className="mt-1 text-xs text-fg-muted">
-                            {p.budget.hardLimit}: {amount(row.boundary.hardLimit)}
-                          </p>
+                  {(["used", "reserved", "remaining", "limit"] as BudgetValueKind[]).map(
+                    (kind, i) => (
+                      <TableCell key={i} className="px-4 py-3 text-right tabular-nums">
+                        {row.redacted ? (
+                          p.budget.unavailable
+                        ) : (
+                          <BudgetValue
+                            value={row.level === "unavailable" ? "unavailable" : row[kind]}
+                            kind={kind}
+                            level={row.level}
+                            monthly={row.window === "calendar_month"}
+                          />
                         )}
-                    </TableCell>
-                  ))}
+                        {kind === "remaining" && <BudgetRemaining row={row} />}
+                        {i === 3 &&
+                          row.boundary.onExceed === "allow" &&
+                          row.boundary.hardLimit &&
+                          !row.redacted && (
+                            <p className="mt-1 text-xs text-fg-muted">
+                              {p.budget.hardLimit}:{" "}
+                              <BudgetValue kind="limit" value={row.boundary.hardLimit} />
+                            </p>
+                          )}
+                      </TableCell>
+                    ),
+                  )}
                   <TableCell className="px-4 py-3">
                     <UsageStatus tone={tone}>
                       {row.level === "unavailable" ? p.budget.unavailable : p.budget[row.level]}

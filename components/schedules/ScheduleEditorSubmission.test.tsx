@@ -1,9 +1,10 @@
 import { renderWithProjectRunsMessages as render } from "@/i18n/test-support/render-with-feature-messages";
+import { updateCheckScheduleSchema } from "@/lib/schemas/check-schedule";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ScheduleEditor } from "./ScheduleEditor";
-import { scheduleEditorDefaults } from "./ScheduleEditorModel";
+import { type ScheduleEditorSchedule, scheduleEditorDefaults } from "./ScheduleEditorModel";
 
 const schedule = {
   cronExpression: null,
@@ -23,7 +24,7 @@ const schedule = {
 const connectedProviders = [{ label: "SerpApi", value: "serpapi" }];
 const projectDefaults = { provider: connectedProviders[0], serpDepth: 20 } as const;
 
-function renderEditor(value = schedule) {
+function renderEditor(value: ScheduleEditorSchedule = schedule) {
   return render(
     <ScheduleEditor
       connectedProviders={connectedProviders}
@@ -53,6 +54,17 @@ describe("ScheduleEditor submission", () => {
     vi.unstubAllGlobals();
   });
 
+  it("retains visible save confirmation until the next unsaved edit", async () => {
+    const user = userEvent.setup();
+    mockScheduleUpdate();
+    renderEditor();
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Saved daily" } });
+    await user.click(screen.getByRole("button", { name: "Save schedule" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Schedule saved.");
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Unsaved next edit" } });
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
   it("keeps a restored schedule nondefault when the project has no default", async () => {
     const fetchMock = mockScheduleUpdate();
     render(
@@ -65,9 +77,8 @@ describe("ScheduleEditor submission", () => {
         schedule={{ ...schedule, enabled: false }}
       />,
     );
-    expect(
-      screen.getByRole("switch", { name: /^Use as default for new keywords/ }),
-    ).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: /^Use as default suggestion/ })).not.toBeChecked();
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Restored daily" } });
     fireEvent.click(screen.getByRole("button", { name: "Save schedule" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(fetchMock).toHaveBeenCalledWith("/api/check-schedules/sch_story", expect.any(Object));
@@ -87,6 +98,91 @@ describe("ScheduleEditor submission", () => {
     expect(savedPayload(fetchMock)).toMatchObject({ name: "Weekly · Fri 08:00", serpDepth: null });
   });
 
+  it.each(["weekly", "monthly"])(
+    "can rename and restore a %s schedule without changing its cadence",
+    async (frequency) => {
+      const user = userEvent.setup();
+      const fetchMock = mockScheduleUpdate();
+      const projectId = `prj_${"a".repeat(24)}`;
+      const scheduleId = `sch_${"b".repeat(24)}`;
+      render(
+        <ScheduleEditor
+          connectedProviders={connectedProviders}
+          projectDefaults={projectDefaults}
+          projectId={projectId}
+          projectTimezone="UTC"
+          schedule={{
+            ...schedule,
+            frequency,
+            publicId: scheduleId,
+            name: "Daily",
+            timeOfDay: null,
+          }}
+        />,
+      );
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Weekly" } });
+      await user.click(screen.getByRole("button", { name: "Save schedule" }));
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+      const input = savedPayload(fetchMock);
+      expect(updateCheckScheduleSchema.safeParse({ ...input, scheduleId }).success).toBe(true);
+      expect(input).toMatchObject({
+        name: "Weekly",
+        frequency,
+        timeOfDay: null,
+        cronExpression: null,
+      });
+      expect(screen.getByLabelText("Name")).toHaveAccessibleDescription(
+        "Name only. Change Frequency below to change when checks run.",
+      );
+    },
+  );
+
+  it.each([
+    [401, "Your session expired. Sign in again, then retry saving."],
+    [403, "You no longer have permission to edit this schedule."],
+    [404, "This schedule is no longer available. Return to the schedule list."],
+    [409, "The schedule changed. Reload it before saving again."],
+    [423, "This project is read-only. You can save after editing is restored."],
+    [400, "Check the schedule settings before saving again."],
+    [500, "Could not save. Your changes are still here. Try again."],
+  ])(
+    "preserves edits and explains HTTP %s without leaking server details",
+    async (status, message) => {
+      const user = userEvent.setup();
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ detail: "unexpected server details" }), { status }),
+        );
+      vi.stubGlobal("fetch", fetchMock);
+      renderEditor();
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Weekly" } });
+      await user.click(screen.getByRole("button", { name: "Save schedule" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(message);
+      expect(screen.queryByRole("status")).toBeNull();
+      expect(screen.getByLabelText("Name")).toHaveValue("Weekly");
+      expect(screen.queryByText("unexpected server details")).not.toBeInTheDocument();
+    },
+  );
+
+  it("retries only on request and keeps the edited name after a failed save", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("unavailable", { status: 503 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: { publicId: "sch_story" } })));
+    vi.stubGlobal("fetch", fetchMock);
+    renderEditor();
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Weekly" } });
+    await user.click(screen.getByRole("button", { name: "Save schedule" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Your changes are still here.");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: "Save schedule" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).name).toBe("Weekly");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("preserves a custom name when frequency or time changes", async () => {
     const user = userEvent.setup();
     renderEditor();
@@ -98,7 +194,7 @@ describe("ScheduleEditor submission", () => {
   it("saves project-default provider and depth values as follow-default", async () => {
     const user = userEvent.setup();
     const fetchMock = mockScheduleUpdate();
-    renderEditor();
+    renderEditor({ ...schedule, providerPolicy: "serpapi", serpDepth: 20 });
 
     await user.click(screen.getByRole("button", { name: "Provider" }));
     await user.click(screen.getByRole("menuitem", { name: "Project default (SerpApi)" }));

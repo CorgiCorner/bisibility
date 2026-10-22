@@ -38,6 +38,7 @@
         "positionValue": "{position, number}位",
         "noRankingUrl": "順位取得 URL はまだありません",
         "provider": "{provider} 経由",
+        "providerNotRecorded": "プロバイダーの記録がありません",
         "notCheckedYet": "未チェック",
         "minutesAgo": "{count, plural, other {#分前}}",
         "hoursAgo": "{count, number}時間前",
@@ -91,7 +92,7 @@
         "chooseDepth": "チェックの取得深度を選択",
         "depthMenu": "取得深度",
         "changeDefault": "既定値を変更",
-        "connectProvider": "プロバイダーを接続",
+        "connectProvider": "データソースを選択",
         "shallowVisibility": "浅いチェックでは、選択した取得深度より下の順位を取りこぼす場合があります。",
         "refreshData": "データを更新",
         "refreshingData": "更新中...",
@@ -129,14 +130,14 @@
         "notRankedBody": "前回のチェックでは追跡している取得深度の圏外でした。",
         "firstTitle": "順位データはまだありません",
         "firstBody": "最初のチェックはまだ実行されていません。",
-        "firstBodyNoProvider": "最初のチェックはまだ実行されていません。実行するには SERP プロバイダーを接続してください。",
+        "firstBodyNoProvider": "最初のチェックはまだ実行されていません。実行するにはデータソースを選択してください。",
         "noData": "データなし",
         "outsideTop": "上位{depth}位圏外",
         "refresh": "更新",
         "retryCheck": "チェックを再試行",
         "checkTop": "上位{depth}位をチェック",
         "runFirstCheck": "最初のチェックを実行",
-        "connectSerpProvider": "SERP プロバイダーを接続",
+        "connectSerpProvider": "データソースを選択",
         "history": "順位履歴",
         "coverageUnknownTitle": "取得範囲が不明",
         "coverageUnknownBody": "プロバイダーの応答では、このキーワードが追跡範囲内にあるか確認できません。"
@@ -174,7 +175,8 @@
         "completeTitle": "チェック完了",
         "failedTitle": "チェック失敗",
         "couldNotStart": "順位チェックを開始できませんでした。",
-        "viewRuns": "実行を表示"
+        "viewRuns": "実行を表示",
+        "providerCapacityUnavailable": "このプロバイダーでのチェックは一時的に利用できません。料金は請求されていません。しばらくしてから再試行するか、ご自身のプロバイダーキーを接続してください。"
       },
       "traffic": {
         "noData": "データなし",
@@ -216,7 +218,10 @@
           "reconnect": "連携で分析ソースを再接続する必要があります。",
           "rateLimited": "分析プロバイダーのリクエスト上限に達しました。しばらくしてから再試行してください。",
           "unavailable": "分析データを取得できる接続済みソースがありません。連携を確認してください。",
-          "integrations": "連携を管理"
+          "integrations": "連携を管理",
+          "sources": "分析データのソース",
+          "sourceActive": "有効な接続",
+          "sourceInactive": "有効な接続なし"
         }
       },
       "position": {
@@ -334,7 +339,7 @@
         "competitor": "競合ドメイン",
         "gapPositions": "{start, number}〜{end, number}位",
         "notRetrieved": "{count, number}件が未取得",
-        "gapStopped": "チェックは自サイトの結果で停止したため、これらの順位はリクエストも課金もされていません。空ではなく、このチェックでは不明という扱いです。",
+        "gapStopped": "ドメインが見つかったため取得を停止しました。残りの順位の結果は保存されていませんが、結果がなかったことを意味するわけではありません。",
         "gapUnknown": "これらの順位はこのチェックで取得されませんでした。空ではなく不明という扱いです。",
         "site": "サイト",
         "notInSaved": "保存済みの結果になし",
@@ -433,15 +438,25 @@
           "expired": "15分の拡張期限を過ぎました。上のボタンから新しいチェックを実行してください。",
           "complete": "次のページがないか、上位100位に到達しています。",
           "running": "追加結果を取得中です。データを更新して結果を確認してください。",
-          "failed": "拡張を確認できませんでした。以前の結果は保持されています。データを更新して状態を確認するか、新しいチェックを実行してください。",
+          "failed": "拡張を確認できませんでした。自動では再送信されません。以前の結果は残ります。更新では保存済みの状態のみを読み込みます。",
           "disconnected": "拡張するには、このスナップショットのSerpApi連携を再接続してください。",
           "unavailable": "このスナップショットは変更されました。続行する前にデータを更新してください。",
           "addedTitle": "チェック後に追加された結果",
           "page": "順位{start, number}から{end, number} · 取得日時{time}",
           "added": "{count, number}件追加 · 重複{duplicates, number}件を除外",
           "emptyPage": "このページには新しい一意の結果がありませんでした。",
-          "refresh": "スナップショットを更新"
-        }
+          "refresh": "スナップショットを更新",
+          "refreshHint": "プロバイダーに再送信せず、保存済みの結果と拡張状態を読み込みます。",
+          "retry": "拡張を再試行",
+          "notSent": "この拡張は送信されませんでした。{time} まで再試行できます。",
+          "notSentExpired": "この拡張は送信されませんでした。拡張できる時間は終了しました。新しい結果を取得するには新たにチェックしてください。",
+          "lastCharge": "前回の拡張"
+        },
+        "competitorCheck": "競合のチェック",
+        "compareAction": "比較",
+        "stopComparing": "比較を終了",
+        "savedResults": "保存した結果: {count, number} 件 · リクエスト: 上位 {depth, number} 位",
+        "partialCompetitors": "一部の結果のみ保存されています。表示されていない競合が上位 {depth, number} 位に入っている可能性があります。"
       },
       "comparison": {
         "entered": "新規参入",
@@ -552,7 +567,11 @@
         "unknownScope": "保存済み範囲は不明",
         "revision": "対象のリビジョン: {value}",
         "chartAria": "保存済み順位の時系列",
-        "noQualifiedPoints": "読み込んだ期間に適格な順位データはありません",
+        "noQualifiedPoints": "表示できる順位がありません",
+        "noPositionsDescription": "この期間には確認済みの順位がありません。",
+        "noObservations": "この期間に観測はありません",
+        "noAttempts": "この期間にチェックの試行はありません",
+        "noRecordsDescription": "チェックを実行するか、別の期間を選択してください。",
         "openObservation": "保存済み観測 {id} を開く",
         "point": "順位 {position}、{date}",
         "chartLoaded": "観測 {loaded} / {total} 件、欠損 {gaps}、方法の境界 {boundaries}",
@@ -572,7 +591,7 @@
         "expectedUrl": "保存済み期待 URL: {value}",
         "rankingUrl": "保存済み結果 URL: {value}",
         "openSnapshot": "保存済みチェックを開く",
-        "attemptCountMeaning": "報告されたプロバイダー試行数はチェックの保存データであり、有料呼び出しの完全な台帳ではありません。",
+        "attemptCountMeaning": "このチェックに保存されたプロバイダーの試行数です。請求対象のリクエスト数と異なる場合があります。",
         "urlHistoryTitle": "保存済み結果 URL",
         "urlHistoryMeaning": "期待 URL と結果 URL は各保存済みチェックのもので、現在編集された対象 URL で補完しません。",
         "loadedCount": "レコード {loaded} / {total} 件を読み込み済み",
@@ -683,11 +702,16 @@
           "map_listing": "地図の検索結果",
           "listing": "ビジネス情報"
         },
-        "otherResultKind": "その他の結果タイプ（コード: {value}）"
+        "otherResultKind": "その他の結果タイプ（コード: {value}）",
+        "scopeTechnicalDetails": "技術的な詳細",
+        "scopeDevices": {
+          "desktop": "デスクトップ",
+          "mobile": "モバイル"
+        }
       },
       "quality": {
         "currentUnknown": "現在の順位は不明",
-        "currentScopeUnavailable": "現在の定義を確認できません",
+        "currentScopeUnavailable": "現在のトラッキング設定を取得できません",
         "currentDefinition": "現在の測定定義",
         "lastKnown": "最後に確認された順位 #{position, number}",
         "bestCurrentDefinition": "現在の定義における最高順位 #{position, number}",
@@ -706,7 +730,11 @@
         "lastKnownUrl": "最後に確認された URL",
         "reportUnavailable": "レポートを表示できません",
         "reportCapacity": "この履歴はレポートの上限を超えています。現在のデータを表示するには、キーワード一覧に戻ってください。",
-        "reportChanged": "読み込み中にデータが変更されました。保存済みデータを更新して、新しいスナップショットを開いてください。"
+        "reportChanged": "読み込み中にデータが変更されました。保存済みデータを更新して、新しいスナップショットを開いてください。",
+        "measurementDetails": "測定の詳細",
+        "bestSummary": "記録上の最高: #{position, number}",
+        "historicalBestSummary": "以前の最高 #{position, number}",
+        "checked": "確認日時"
       },
       "providerComparison": {
         "title": "プロバイダーを比較",
@@ -717,7 +745,7 @@
         "retry": "再試行",
         "loading": "比較を読み込み中…",
         "depth": "上位20件",
-        "needsProviders": "結果を比較するにはDataForSEOとSerpApiを接続してください。",
+        "needsProviders": "結果を比較するには、DataForSEO と SerpApi を設定してください。",
         "connections": "プロバイダー接続",
         "refresh": "結果を更新",
         "preview": "費用を確認",

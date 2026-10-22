@@ -1,3 +1,9 @@
+import { assertAiPaymentDefinition } from "@/lib/ai-research/payment";
+import {
+  suggestionPaymentDefinition,
+  suggestionPaymentQuote,
+  suggestionPaymentResult,
+} from "./payment";
 import "server-only";
 import type { AiResearchContext } from "@/lib/ai-research/service";
 import { reauthorizeTrackingActor } from "@/lib/ai-tracking/admission/actor";
@@ -14,7 +20,7 @@ import { z } from "zod";
 import { failSuggestionGeneration } from "./generation-failure";
 import { nativeGenerationReceipt } from "./generation-receipt";
 import {
-  modelSuggestionsGenerateInputSchema,
+  parseModelSuggestionsGenerateInput,
   SuggestionGenerationError,
   type SuggestionGenerationResult,
 } from "./generation-schema";
@@ -23,14 +29,25 @@ import { extractGenerationResult, parseGenerationResult } from "./model-payload"
 import { prepareSuggestionPreview } from "./preview";
 
 export async function previewModelSuggestions(context: AiResearchContext, input: unknown) {
-  return (await prepareSuggestionPreview(context, input)).preview;
+  const prepared = await prepareSuggestionPreview(context, input);
+  const payment = context.actorId ? suggestionPaymentQuote(context, prepared) : null;
+  return {
+    ...prepared.preview,
+    ...(payment ? { payment: payment.payment, paymentOptions: payment.paymentOptions } : {}),
+  };
 }
 export async function generateModelSuggestions(
   context: AiResearchContext,
   rawInput: unknown,
   idempotencyKey: string,
 ): Promise<SuggestionGenerationResult> {
-  const { preview } = modelSuggestionsGenerateInputSchema.parse(rawInput);
+  const parsedInput = parseModelSuggestionsGenerateInput(rawInput);
+  const {
+    payment: _quote,
+    paymentOptions: _options,
+    paymentConsent: _untrustedConsent,
+    ...preview
+  } = parsedInput.preview;
   z.uuid().parse(idempotencyKey);
   if (!context.actorId) throw new Error("Generation requires its original authorized actor.");
   await reauthorizeTrackingActor(context.projectId, {
@@ -56,7 +73,14 @@ export async function generateModelSuggestions(
         existing.publicId,
       );
     if (existing.state === "completed" && existing.result)
-      return existing.result as unknown as SuggestionGenerationResult;
+      return {
+        ...(existing.result as unknown as SuggestionGenerationResult),
+        ...suggestionPaymentResult(
+          existing.preview as unknown as import("./generation-schema").SuggestionGenerationPreview,
+          existing.receipt as unknown as { amountUsd: string | null; state: string },
+          true,
+        ),
+      };
     throw new SuggestionGenerationError(
       409,
       "usage_reconciliation_required",
@@ -97,8 +121,14 @@ export async function generateModelSuggestions(
         "stale_preview",
         "The model, reviewed snapshot, pricing, credential or budget changed. Review a new forecast before generation.",
       );
+  const quoted =
+    context.actorId && (parsedInput.requirePayment || parsedInput.acceptedPayment)
+      ? suggestionPaymentQuote(context, prepared)
+      : null;
+  const paymentConsent = quoted?.accept(parsedInput.acceptedPayment, parsedInput.requirePayment);
   const started = await startSuggestionGeneration(context.projectId, {
     ...identity,
+    preview: { ...preview, ...(paymentConsent ? { paymentConsent } : {}) },
     idempotencyKey,
     requestHash,
   });
@@ -109,6 +139,17 @@ export async function generateModelSuggestions(
       "This generation is already reserved; no second provider submission is allowed.",
     );
   const row = started.row;
+  const retainedPreview =
+    row.preview as unknown as import("./generation-schema").SuggestionGenerationPreview;
+  assertAiPaymentDefinition(retainedPreview.paymentConsent, {
+    projectId: context.projectId,
+    actorId: context.actorId,
+    feature: "ai_tracking",
+    scope: "manual",
+    definition: suggestionPaymentDefinition(retainedPreview),
+    executionId: row.id,
+  });
+  prepared.preview = retainedPreview;
   if (!(await claimSuggestionGeneration(context.projectId, row.id, row.attemptId)))
     throw new SuggestionGenerationError(
       409,
@@ -155,6 +196,7 @@ export async function generateModelSuggestions(
       throw new Error("Generation native cost remains unknown.");
     const parsed = parseGenerationResult(response.result);
     const result: SuggestionGenerationResult = {
+      ...suggestionPaymentResult(retainedPreview, state.receipt),
       generationId: row.publicId,
       drafts: parsed.drafts,
       costUsd: state.receipt.amountUsd,
@@ -174,6 +216,13 @@ export async function generateModelSuggestions(
     if (!retained) throw new Error("Generation result lost its durable dispatch claim.");
     return result;
   } catch (error) {
-    return failSuggestionGeneration(context, row, state, evidence, error);
+    return failSuggestionGeneration(
+      context,
+      row,
+      state,
+      evidence,
+      error,
+      retainedPreview.paymentConsent,
+    );
   }
 }

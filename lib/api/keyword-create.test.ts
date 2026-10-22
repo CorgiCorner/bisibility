@@ -19,6 +19,7 @@ const fixtures = vi.hoisted(() => {
   };
   const mocks = {
     createKeywordBatchSet: vi.fn(),
+    setKeywordCadence: vi.fn(),
     defaultMarket: vi.fn(),
     resolveKeywordLocation: vi.fn(),
     transaction: vi.fn(),
@@ -41,6 +42,9 @@ const fixtures = vi.hoisted(() => {
 const { calls, keyword, mocks, tx } = fixtures;
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/rank-check/schedules/keyword-cadence", () => ({
+  setKeywordCadence: fixtures.mocks.setKeywordCadence,
+}));
 vi.mock("@/lib/actions/_shared", () => ({
   parseActionInput: (_schema: unknown, input: unknown) => input,
 }));
@@ -122,12 +126,41 @@ describe("REST keyword creation transaction", () => {
         return callback(tx);
       },
     );
-    mocks.createKeywordBatchSet.mockResolvedValue({
-      accepted: [{ created: true, keyword, row: {} }],
+    mocks.createKeywordBatchSet.mockImplementation(async (_tx, _projectId, rows) => ({
+      accepted: [{ created: true, keyword, row: rows[0] }],
       created: [keyword],
-    });
+    }));
   });
 
+  it.each([undefined, "daily", "manual"])(
+    "assigns cadence only when create explicitly supplies %s",
+    async (frequency) => {
+      await createKeywords(
+        context({ keyword: "atomic keyword", frequency }),
+        "prj_a00000000000000000000000",
+      );
+      if (!frequency) expect(mocks.setKeywordCadence).not.toHaveBeenCalled();
+      else
+        expect(mocks.setKeywordCadence).toHaveBeenCalledWith(
+          tx,
+          "project_1",
+          ["keyword_1"],
+          expect.objectContaining({ frequency }),
+          null,
+        );
+    },
+  );
+  it("does not change a skipped existing keyword's membership", async () => {
+    mocks.createKeywordBatchSet.mockResolvedValueOnce({
+      accepted: [{ created: false, restored: false, keyword, row: {} }],
+      created: [],
+    });
+    await createKeywords(
+      context({ keyword: "atomic keyword", frequency: "daily" }),
+      "prj_a00000000000000000000000",
+    );
+    expect(mocks.setKeywordCadence).not.toHaveBeenCalled();
+  });
   it("resolves locations before opening its explicitly budgeted transaction", async () => {
     const response = await createKeywords(context(), "prj_a00000000000000000000000");
 

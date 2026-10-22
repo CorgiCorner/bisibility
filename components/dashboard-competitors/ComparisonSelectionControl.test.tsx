@@ -5,14 +5,13 @@ import {
 } from "@/lib/dashboard-competitors/fixture";
 import type { DashboardComparisonContext } from "@/lib/dashboard-competitors/model";
 import type { DashboardSurfacePreference } from "@/lib/project-surface-preferences/dashboard-model";
+import { routerMock, setNavigationState } from "@/tests/next-navigation";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vitest";
 import { ComparisonSelectionControl } from "./ComparisonSelectionControl";
 
 const mocks = vi.hoisted(() => ({
-  replace: vi.fn(),
-  refresh: vi.fn(),
   save: vi.fn(),
   read: vi.fn(),
 }));
@@ -20,11 +19,12 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: Record<string, string>) =>
     values ? `${key}:${JSON.stringify(values)}` : key,
 }));
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: mocks.replace, refresh: mocks.refresh }),
-  usePathname: () => "/app/project/dashboard",
-  useSearchParams: () => new URLSearchParams("range=90d&tag=core&dashboardView=competitors"),
-}));
+beforeEach(() => {
+  setNavigationState({
+    pathname: "/app/project/dashboard",
+    searchParams: new URLSearchParams("range=90d&tag=core&dashboardView=competitors"),
+  });
+});
 vi.mock("@/lib/project-surface-preferences/dashboard-actions", () => ({
   saveDashboardComparisonSelection: mocks.save,
   readDashboardPreference: mocks.read,
@@ -67,7 +67,7 @@ it("mounts with owned controls without a write and clears only explicit URL sele
   expect(mocks.read).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "selection" }));
   fireEvent.click(await screen.findByRole("menuitem", { name: "choose" }));
-  const url = new URL(mocks.replace.mock.calls[0][0], "https://example.test");
+  const url = new URL(routerMock.replace.mock.calls[0][0], "https://example.test");
   expect(url.searchParams.get("dashboardCompetitorView")).toBe("");
   expect(url.searchParams.get("range")).toBe("90d");
   expect(url.searchParams.get("tag")).toBe("core");
@@ -83,7 +83,7 @@ it("selects exact revision/device/market explicitly instead of a first-match def
   expect(screen.queryByRole("button", { name: "remember" })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "selection" }));
   fireEvent.click(await screen.findByRole("menuitem", { name: /Krakow mobile/ }));
-  const url = new URL(mocks.replace.mock.calls[0][0], "https://example.test");
+  const url = new URL(routerMock.replace.mock.calls[0][0], "https://example.test");
   expect(JSON.parse(url.searchParams.get("dashboardCompetitorView") ?? "null")).toEqual(
     comparisonSelection,
   );
@@ -101,7 +101,7 @@ it("saves only the project/reference/CAS and never changes default or passes act
       selection: comparisonSelection,
     }),
   );
-  expect(mocks.refresh).toHaveBeenCalledOnce();
+  expect(routerMock.refresh).toHaveBeenCalledOnce();
 });
 it("reloads a newer compatible CAS only on explicit review and requires a separate user save", async () => {
   mocks.save.mockResolvedValueOnce({ ok: false, error: { status: 409 } });
@@ -113,7 +113,7 @@ it("reloads a newer compatible CAS only on explicit review and requires a separa
   fireEvent.click(reload);
   await screen.findByText('reviewRevision:{"revision":"9"}');
   expect(mocks.save).toHaveBeenCalledOnce();
-  expect(mocks.refresh).not.toHaveBeenCalled();
+  expect(routerMock.refresh).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "remember" }));
   await waitFor(() => expect(mocks.save.mock.calls[1][0].expectedRevision).toBe(9));
 });
@@ -139,7 +139,7 @@ it.each(["foreign", "same", "unsupported"])(
     fireEvent.click(reload);
     await screen.findByText("reloadUnavailable");
     expect(mocks.save).toHaveBeenCalledOnce();
-    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(routerMock.refresh).not.toHaveBeenCalled();
   },
 );
 
@@ -175,7 +175,7 @@ it.each(["missing", "unavailable"] as const)(
     expect(screen.queryByRole("button", { name: "clear" })).not.toBeInTheDocument();
     expect(mocks.save).not.toHaveBeenCalled();
     expect(mocks.read).not.toHaveBeenCalled();
-    expect(mocks.replace).not.toHaveBeenCalled();
+    expect(routerMock.replace).not.toHaveBeenCalled();
     expect(
       screen.getByText(state === "missing" ? "emptyDescription" : "state.unavailable"),
     ).toBeInTheDocument();

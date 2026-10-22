@@ -43,7 +43,7 @@ describe("serialized model suggestion action failures", () => {
     );
     expect(mocks.generate).toHaveBeenCalledWith(
       { projectId: "internal-project", actorId: "trusted-user", origin: { source: "app" } },
-      { actorId: "forged" },
+      { actorId: "forged", requirePayment: true },
       "key",
     );
     const transported = JSON.parse(JSON.stringify(result));

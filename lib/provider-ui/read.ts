@@ -44,9 +44,9 @@ export function readProviderUi(state: ProviderUiState, query: ProviderQuery): Pr
       break;
     }
     case "allocations": {
-      const rows = allocationRows(state).filter((row) =>
-        query.connectionIds.includes(row.connectionId),
-      );
+      const rows = (
+        state.nativeAllocationRows?.length ? state.nativeAllocationRows : allocationRows(state)
+      ).filter((row) => query.connectionIds.includes(row.connectionId));
       value = { ...base, kind: "allocations", rows, state: rows.length ? "ok" : "empty" };
       break;
     }

@@ -4,7 +4,6 @@ import { aggregateMarketGridRows, groupRow } from "@/lib/keywords/market-grid-mo
 import type { KeywordRow } from "@/lib/queries/keywords";
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { DeviceCell } from "./grid-columns";
 import { rankPoint, rankQualityRow } from "./keyword-rank-quality.test-fixture";
 import {
   MarketDifficultyCell,
@@ -28,20 +27,18 @@ describe("market grid cells", () => {
       <>
         <MarketKeywordCell projectRef="prj_test" row={parent} />
         <MarketPositionCell row={{ ...parent, hasRankData: true, position: 2 }} />
-        <DeviceCell row={parent} />
       </>,
     );
     const label = `${count} active ${count === 1 ? "target" : "targets"}`;
     expect(screen.getByText(`1 market / ${label}`)).toBeInTheDocument();
-    expect(screen.getByText("Current position unknown")).toBeInTheDocument();
-    expect(screen.getByText(`${count} ${count === 1 ? "target" : "targets"}`)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Current position unknown" })).toBeInTheDocument();
   });
 
   it("uses feature-owned labels for check state and unavailable market metrics", () => {
     const { rerender } = render(
       <MarketPositionCell row={{ ...row, checkState: "running", hasRankData: false }} />,
     );
-    expect(screen.getByText("Current position unknown")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Current position unknown" })).toBeInTheDocument();
 
     rerender(<MarketVolumeCell row={{ ...row, volumeKnown: false }} />);
     expect(
@@ -96,7 +93,7 @@ it("discloses unknown coverage instead of declaring an out-of-depth absence", ()
       }}
     />,
   );
-  expect(screen.getByText("Current position unknown")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Current position unknown" })).toBeInTheDocument();
   expect(screen.queryByText("Not found in top 100")).not.toBeInTheDocument();
 });
 
@@ -122,6 +119,6 @@ it("retains incomplete coverage when an unranked group contains an unknown targe
   const aggregate = aggregateMarketGridRows(targets)[0];
   const parent = groupRow(aggregate, aggregate.children);
   render(<MarketPositionCell row={parent} />);
-  expect(screen.getByText("Current position unknown")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Current position unknown" })).toBeInTheDocument();
   expect(screen.queryByText("Not found in top 100")).not.toBeInTheDocument();
 });

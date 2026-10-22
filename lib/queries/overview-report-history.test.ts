@@ -9,18 +9,23 @@ function keyword(
   position: number | null,
   at: string,
   completeThrough: number | null = 100,
+  details: { device?: string; market?: string; text?: string } = {},
 ): Keyword {
   const time = new Date(at);
   return {
     id,
     publicId: id,
     projectId: "project-a",
-    text: `Synthetic ${id}`,
-    device: "desktop",
+    text: details.text ?? `Synthetic ${id}`,
+    device: details.device ?? "desktop",
     createdAt: new Date("2026-01-01"),
     schedule: null,
     _count: { rankChecks: 1 },
-    locationRef: { displayName: "City A", languageCode: "en", languageLabel: "English" },
+    locationRef: {
+      displayName: details.market ?? "City A",
+      languageCode: "en",
+      languageLabel: "English",
+    },
     rankChecks: [
       recordedFixture(position, {
         id: `check-${id}`,
@@ -116,12 +121,83 @@ describe("overview calendar history and contributions", () => {
     expect(history.undatedChecks).toBe(1);
     expect(history.days.every(({ report }) => report.value === null)).toBe(true);
   });
+  it("lists only ranked keywords, best position first, and keeps the same average", () => {
+    const history = buildOverviewReportHistory(
+      [
+        keyword("early", 4, "2026-10-12T10:00:00Z"),
+        keyword("late", 1, "2026-10-12T10:00:00Z"),
+        keyword("gone", null, "2026-10-12T10:00:00Z"),
+      ],
+      new Map(),
+      options,
+    );
+    const populated = history.days.filter((day) => day.rankedKeywords.length > 0);
+    expect(populated).toHaveLength(1);
+    expect(populated[0]).toMatchObject({
+      id: "2026-10-12",
+      averageRankedPosition: 2.5,
+      rankedKeywordCount: 2,
+      rankedKeywords: [
+        { device: "desktop", keyword: "Synthetic late", market: "City A", position: 1 },
+        { device: "desktop", keyword: "Synthetic early", market: "City A", position: 4 },
+      ],
+    });
+  });
+  it("keeps the five best ranked keywords and the full count", () => {
+    const rows = [6, 1, 4, 2, 5, 3].map((position) =>
+      keyword(`p${position}`, position, "2026-10-12T10:00:00Z"),
+    );
+    rows.push(keyword("gone", null, "2026-10-12T10:00:00Z"));
+    const history = buildOverviewReportHistory(rows, new Map(), options);
+    const populated = history.days.filter((day) => day.rankedKeywordCount > 0);
+    expect(populated).toHaveLength(1);
+    expect(populated[0]).toMatchObject({
+      rankedKeywordCount: 6,
+      rankedKeywords: [1, 2, 3, 4, 5].map((position) => ({
+        keyword: `Synthetic p${position}`,
+        position,
+      })),
+    });
+  });
+  it("keeps device and market when the same keyword text is tracked twice", () => {
+    const history = buildOverviewReportHistory(
+      [
+        keyword("desk", 2, "2026-10-12T10:00:00Z", 100, {
+          market: "United States",
+          text: "flowtools directory",
+        }),
+        keyword("phone", 1, "2026-10-12T10:00:00Z", 100, {
+          device: "mobile",
+          market: "Poland",
+          text: "flowtools directory",
+        }),
+      ],
+      new Map(),
+      options,
+    );
+    const populated = history.days.filter((day) => day.rankedKeywordCount > 0);
+    expect(populated).toHaveLength(1);
+    expect(populated[0]?.rankedKeywords).toEqual([
+      {
+        device: "mobile",
+        keyword: "flowtools directory",
+        market: "Poland",
+        position: 1,
+      },
+      {
+        device: "desktop",
+        keyword: "flowtools directory",
+        market: "United States",
+        position: 2,
+      },
+    ]);
+  });
   it("preserves all-zero weights as a null metric with no fabricated contribution", () => {
     const rows = [keyword("a", 1, "2026-10-12T10:00:00Z")];
-    const report = buildOverviewReportHistory(rows, new Map([["a", 0]]), options).days.at(
-      -1,
-    )!.report;
-    expect(report.value).toBeNull();
-    expect(overviewContributors(rows, report)[0].value).toBeNull();
+    const day = buildOverviewReportHistory(rows, new Map([["a", 0]]), options).days.at(-1);
+    expect(day).toBeDefined();
+    if (!day) throw new Error("expected the latest history day");
+    expect(day.report.value).toBeNull();
+    expect(overviewContributors(rows, day.report)[0].value).toBeNull();
   });
 });

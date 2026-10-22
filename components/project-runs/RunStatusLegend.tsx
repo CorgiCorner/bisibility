@@ -40,7 +40,11 @@ export function RunStatusLegend({ groups, label }: Readonly<RunStatusLegendProps
           {groups.map((group) => (
             <section className="grid gap-2" key={group.source}>
               <h3 className="m-0 text-[11px] font-semibold text-fg-muted">
-                {group.source === "rank_checks" ? t("rankChecks") : t("searchConsole")}
+                {group.source === "rank_checks"
+                  ? t("rankChecks")
+                  : group.source === "ai_tracking"
+                    ? t("aiTracking")
+                    : t("searchConsole")}
               </h3>
               <dl className="m-0 grid gap-2">
                 {group.entries.map((entry) => (

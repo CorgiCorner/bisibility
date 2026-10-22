@@ -10,6 +10,7 @@ export const TRIAGE_STATUSES = [
 export type TriageStatus = (typeof TRIAGE_STATUSES)[number];
 export type RecoveryAction = "recover_proof" | "restore_result" | "resume_queued_run";
 export type RecoveryUiError =
+  | "two_factor_required"
   | "forbidden"
   | "rate_limited"
   | "unavailable"

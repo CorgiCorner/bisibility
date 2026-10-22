@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   adminSession: vi.fn(),
+  mailView: vi.fn(),
+  dangerousAllowed: vi.fn(),
   emailConfigured: vi.fn(),
   firstRun: vi.fn(),
   firstRunAdministratorPending: vi.fn(),
@@ -13,6 +15,27 @@ const mocks = vi.hoisted(() => ({
   resolveRegionalDocumentLocale: vi.fn(async () => ({ locale: "en", timeZone: "UTC" })),
 }));
 
+vi.mock("@/lib/email/instance-mail-store", () => ({
+  refreshInstanceMailRuntime: vi.fn(),
+  loadInstanceMailSettingsView: mocks.mailView,
+}));
+vi.mock("@/lib/auth/admin-dangerous-action", () => ({
+  adminDangerousActionAllowed: mocks.dangerousAllowed,
+}));
+vi.mock("@/components/admin/DangerousActionGate", () => ({
+  DangerousActionAccessProvider: ({
+    children,
+    allowed,
+  }: {
+    children: ReactNode;
+    allowed: boolean;
+  }) => <section data-dangerous-allowed={allowed}>{children}</section>,
+  DangerousActionGate: ({ returnTo }: { returnTo: string }) => (
+    <a href={`/app/account/security?returnTo=${encodeURIComponent(returnTo)}`}>
+      Enable two-factor authentication
+    </a>
+  ),
+}));
 vi.mock("@/components/ui/BrandLockup", () => ({
   BrandLockup: () => <span data-testid="brand-lockup">bisibility</span>,
 }));
@@ -139,5 +162,14 @@ describe("administrator setup page", () => {
     expect(markup).toContain("Open the admin panel");
     expect(markup).not.toContain("reassign administration");
     expect(redirect).not.toHaveBeenCalled();
+  });
+  it("uses the shared gate and an app return destination for mail setup", async () => {
+    mocks.adminSession.mockResolvedValue({ user: { id: "admin" } });
+    mocks.emailConfigured.mockReturnValue(false);
+    mocks.mailView.mockResolvedValue({ twoFactorEnabled: false });
+    mocks.dangerousAllowed.mockResolvedValue(false);
+    const markup = renderToStaticMarkup(await SetupPage());
+    expect(markup).toContain('data-dangerous-allowed="false"');
+    expect(markup).toContain("/app/account/security?returnTo=%2Fapp%2Fadmin%2Fadministration");
   });
 });

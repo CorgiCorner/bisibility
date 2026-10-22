@@ -1,9 +1,14 @@
 "use server";
 
+import {
+  AdminActionRateLimitError,
+  consumeAdminActionBudget,
+} from "@/lib/auth/admin-action-budget";
+import {
+  AdminTwoFactorRequiredError,
+  requireAdminTwoFactorForDangerousAction,
+} from "@/lib/auth/admin-dangerous-action";
 import { getInstanceAdminSession } from "@/lib/auth/instance-admin";
-import { getTwoFactorSecurityContext } from "@/lib/auth/two-factor-management-context";
-import { TwoFactorManagementError } from "@/lib/auth/two-factor-management-error";
-import { confirmEnabledTwoFactorCode } from "@/lib/auth/two-factor-step-up";
 import { deploymentMode } from "@/lib/deployment/deployment";
 import { instanceMailFormSchema } from "@/lib/email/instance-mail-schema";
 import {
@@ -22,29 +27,16 @@ export type InstanceMailSettingsResult = {
     | "invalid"
     | "rate_limited"
     | "saved"
-    | "step_up_failed"
+    | "two_factor_required"
     | "unavailable";
 };
-
-const clearSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .regex(/^\d{6}$/),
-});
-
-function stepUpStatus(error: TwoFactorManagementError): InstanceMailSettingsResult["status"] {
-  if (error.code === "rate_limited" || error.code === "step_up_locked") return "rate_limited";
-  if (error.code === "step_up_failed") return "step_up_failed";
-  return "unavailable";
-}
 
 async function authorizedMailActor() {
   const session = await getInstanceAdminSession();
   if (!session || deploymentMode() === "cloud") return null;
-  const context = await getTwoFactorSecurityContext(session);
-  if (!context.twoFactorEnabled) return null;
-  return context;
+  await requireAdminTwoFactorForDangerousAction(session, "change_mail_settings");
+  await consumeAdminActionBudget(session.user.id);
+  return { actorId: session.user.id };
 }
 
 function credentialsFrom(
@@ -80,7 +72,6 @@ export async function saveInstanceMailSettings(
       senderRequired: existing.sender.length === 0,
     }).safeParse(input);
     if (!parsed.success) return { status: "invalid" };
-    await confirmEnabledTwoFactorCode(actor, parsed.data.code);
     const sender = parsed.data.sender || existing.sender;
     await saveInstanceMailConfig({
       actorId: actor.actorId,
@@ -94,25 +85,22 @@ export async function saveInstanceMailSettings(
     return { status: "saved" };
   } catch (error) {
     if (error instanceof InstanceMailSettingsError) return { status: "invalid" };
-    if (error instanceof TwoFactorManagementError) return { status: stepUpStatus(error) };
+    if (error instanceof AdminTwoFactorRequiredError) return { status: error.code };
+    if (error instanceof AdminActionRateLimitError) return { status: "rate_limited" };
     console.error("[email] Saving instance mail settings failed.");
     return { status: "unavailable" };
   }
 }
 
-export async function clearInstanceMailSettings(
-  input: unknown,
-): Promise<InstanceMailSettingsResult> {
+export async function clearInstanceMailSettings(): Promise<InstanceMailSettingsResult> {
   try {
     const actor = await authorizedMailActor();
     if (!actor) return { status: "forbidden" };
-    const parsed = clearSchema.safeParse(input);
-    if (!parsed.success) return { status: "invalid" };
-    await confirmEnabledTwoFactorCode(actor, parsed.data.code);
     await clearInstanceMailConfig(actor.actorId);
     return { status: "cleared" };
   } catch (error) {
-    if (error instanceof TwoFactorManagementError) return { status: stepUpStatus(error) };
+    if (error instanceof AdminTwoFactorRequiredError) return { status: error.code };
+    if (error instanceof AdminActionRateLimitError) return { status: "rate_limited" };
     console.error("[email] Clearing instance mail settings failed.");
     return { status: "unavailable" };
   }

@@ -20,6 +20,7 @@ type ConfirmMessageKey =
   | "deleteWebhookEndpoint"
   | "reactivateAccount"
   | "removeIntegration"
+  | "removeProviderKey"
   | "removeSampleData"
   | "removeSearchConsoleConnection"
   | "removeTeamMember"
@@ -126,6 +127,13 @@ export const CONFIRM: Record<ConfirmMessageKey, ConfirmConfig> = {
     dangerLabelKey: "removeIntegrationDangerLabel",
     titleKey: "removeIntegrationTitle",
     toastMessageKey: "removeIntegrationToastMessage",
+  },
+  removeProviderKey: {
+    icon: Key,
+    bodyKey: "removeProviderKeyBody",
+    dangerLabelKey: "removeProviderKeyDangerLabel",
+    titleKey: "removeProviderKeyTitle",
+    toastMessageKey: "removeProviderKeyToastMessage",
   },
   removeSampleData: {
     icon: Trash,

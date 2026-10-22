@@ -89,6 +89,7 @@ beforeEach(async () => {
       email: `${owner}@example.com`,
       publicId: makePublicId("usr"),
       isInstanceAdmin: true,
+      twoFactorEnabled: true,
     },
   });
   await db.project.create({

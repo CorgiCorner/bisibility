@@ -53,6 +53,19 @@ function assertMinimalHtml(html: string) {
   expect(html.match(/<a\s+href="[^"]*">/g)?.length ?? 0).toBe(html.match(/<\/a>/g)?.length ?? 0);
 }
 
+function assertBrandedHtml(html: string) {
+  expect(html).toContain("/bisibility-icon-400.png");
+  expect(html).toContain("padding-right:12px");
+  expect(html).toContain('height="24"');
+  expect(html).not.toContain("background:");
+  const content = html
+    .split("</table>")[1]
+    ?.replace("</body></html>", "")
+    .replace('<p style="margin:0 0 14px">', "<p>");
+  expect(content).toBeTruthy();
+  assertMinimalHtml(content ?? "");
+}
+
 function assertNoSelfHosting(text: string, html: string) {
   for (const body of [text, html]) {
     expect(body).not.toContain("self-host");
@@ -94,6 +107,7 @@ describe("welcome email variant A (onboarding completed)", () => {
   const alertsUrl = `${origin}/app/${projectRef}/alerts`;
   const integrationsUrl = `${origin}/app/${projectRef}/integrations`;
   const apiDocsUrl = "https://bisibility.com/docs/api/quickstart";
+  const pricingUrl = "https://bisibility.com/pricing";
 
   const completedInput = {
     email: "owner@example.com",
@@ -117,7 +131,7 @@ describe("welcome email variant A (onboarding completed)", () => {
     `- Search Console and GA4 (in Integrations), to see impressions and clicks next to rankings ${integrationsUrl}`,
     `- API and webhooks, if you want the data in your own tools ${apiDocsUrl}`,
     "",
-    "The beta is free. When paid plans arrive, nothing happens automatically - you will hear from me first.",
+    "Nothing is charged unless you add a card yourself. Plans and credits are explained at https://bisibility.com/pricing.",
     "",
     "If anything is confusing or broken, just reply. I read everything.",
     "",
@@ -143,9 +157,9 @@ describe("welcome email variant A (onboarding completed)", () => {
     );
   });
 
-  it("has the three hrefs in order with bare URL anchor labels", () => {
+  it("has the four hrefs in order with bare URL anchor labels", () => {
     const hrefs = [...message.html.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
-    expect(hrefs).toEqual([alertsUrl, integrationsUrl, apiDocsUrl]);
+    expect(hrefs).toEqual([alertsUrl, integrationsUrl, apiDocsUrl, pricingUrl]);
     expect(message.html).toContain(`>${alertsUrl}</a>`);
     expect(message.html).toContain(`>${integrationsUrl}</a>`);
     expect(message.html).toContain(`>${apiDocsUrl}</a>`);
@@ -155,7 +169,7 @@ describe("welcome email variant A (onboarding completed)", () => {
     const rootLinked = welcomeEmail({ ...completedInput, projectRef: null });
 
     const hrefs = [...rootLinked.html.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
-    expect(hrefs).toEqual([appUrl, appUrl, apiDocsUrl]);
+    expect(hrefs).toEqual([appUrl, appUrl, apiDocsUrl, pricingUrl]);
     expect(rootLinked.text).toContain(`without checking in ${appUrl}`);
     expect(rootLinked.text).toContain(`next to rankings ${appUrl}`);
   });
@@ -163,7 +177,7 @@ describe("welcome email variant A (onboarding completed)", () => {
   it("has no self-hosting, P.S., step query, shell markup, or em dash", () => {
     assertNoSelfHostOrPS(message.text, message.html);
     assertNoStep(message.text, message.html);
-    assertMinimalHtml(message.html);
+    assertBrandedHtml(message.html);
     assertNoEmDash(message.text, message.html);
   });
 });
@@ -186,9 +200,9 @@ describe("welcome email variant B (onboarding incomplete)", () => {
     "",
     "If the provider step held you up, you can connect your own provider account and pay them directly.",
     "",
-    "Prefer to skip that step? Credits are coming soon to bisibility Cloud. You will be able to top up in the app and use supported features without connecting your own provider account.",
+    "Prefer to skip that step? Use credits on bisibility Cloud instead: top up in the app and use supported features without connecting your own provider account.",
     "",
-    "If it broke or was confusing, reply and tell me where. That is what the beta is for.",
+    "If it broke or was confusing, reply and tell me where.",
     "",
     "Ada",
     "founder, bisibility",
@@ -202,7 +216,7 @@ describe("welcome email variant B (onboarding incomplete)", () => {
   it("presents BYOK and upcoming Cloud Credits consistently in text and HTML", () => {
     for (const body of [message.text, message.html]) {
       expect(body).toContain("connect your own provider account and pay them directly");
-      expect(body).toContain("Credits are coming soon to bisibility Cloud");
+      expect(body).toContain("Use credits on bisibility Cloud instead");
       expect(body).toContain("top up in the app");
       expect(body).toContain("supported features without connecting your own provider account");
       expect(body).not.toContain("nothing goes through");
@@ -221,7 +235,7 @@ describe("welcome email variant B (onboarding incomplete)", () => {
 
   it("has no self-hosting, shell markup, or em dash", () => {
     assertNoSelfHosting(message.text, message.html);
-    assertMinimalHtml(message.html);
+    assertBrandedHtml(message.html);
     assertNoEmDash(message.text, message.html);
   });
 });
@@ -231,9 +245,7 @@ describe("welcome email founder-null fallback", () => {
   const incomplete = welcomeEmail({ ...nullBase, name: "Owner Example", variant: "incomplete" });
   const followup = welcomeFollowupEmail({ ...nullBase, name: "owner", unsubscribeUrl });
 
-  it("variant A uses neutral forms for 'you will hear from me first' and 'I read everything'", () => {
-    expect(completed.text).toContain("you will hear from the team first");
-    expect(completed.text).not.toContain("hear from me first");
+  it("variant A uses a neutral form for 'I read everything'", () => {
     expect(completed.text).toContain("Every reply is read.");
     expect(completed.text).not.toContain("I read everything");
   });
@@ -241,7 +253,7 @@ describe("welcome email founder-null fallback", () => {
   it("variant B keeps neutral reply wording when no founder is configured", () => {
     expect(incomplete.text).toContain("reply and let the team know where");
     expect(incomplete.text).not.toContain("tell me where");
-    expect(incomplete.text).toContain("Credits are coming soon to bisibility Cloud");
+    expect(incomplete.text).toContain("Use credits on bisibility Cloud instead");
   });
 
   it("uses the generic bisibility team signature and has no null leaks", () => {
@@ -260,8 +272,8 @@ describe("welcome email founder-null fallback", () => {
   });
 
   it("renders minimal HTML for both variants and the follow-up", () => {
-    assertMinimalHtml(completed.html);
-    assertMinimalHtml(incomplete.html);
+    assertBrandedHtml(completed.html);
+    assertBrandedHtml(incomplete.html);
     assertMinimalHtml(followup.html);
   });
 });

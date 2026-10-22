@@ -9,13 +9,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/usagekit/primitives/table";
-import type { UsageTone } from "@/components/usagekit/usage-motion";
 import { UsageSpinner, UsageStatus, usageMotion } from "@/components/usagekit/usage-motion";
-import type { Certainty, Meter, UsageQuery } from "@usagekit/core";
+import type { Meter, UsageQuery } from "@usagekit/core";
 import { serialize, useMeterBinding, useUsageView } from "@usagekit/react";
-import type { Amount, Figure, UsageView } from "@usagekit/views";
+import type { Figure, UsageView } from "@usagekit/views";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { certaintyTone, usageTableFigure as figure } from "./usage-table-format";
 
 export const usageTableLabels = {
   title: "Usage detail",
@@ -40,28 +40,14 @@ export const usageTableLabels = {
 };
 export type UsageTableLabels = typeof usageTableLabels;
 
-const certaintyTone: Record<Certainty, UsageTone> = {
-  measured: "positive",
-  estimated: "neutral",
-  unknown: "unknown",
-};
 const frame = "rounded-xl border min-w-0 overflow-hidden border-border";
 const head = "h-10 px-4 text-xs font-medium text-fg-muted";
 const cell = "px-4 py-3";
 
-function figure(
-  value: Figure | Amount,
-  labels: UsageTableLabels,
-  props: Pick<UsageTableProps, "formatFigure" | "formatUnit">,
-): string {
-  if (value === "unavailable") return labels.unavailable;
-  if (value.certainty === "unknown") return labels.unknown;
-  return `${props.formatFigure?.(value) ?? value.text} ${props.formatUnit?.(value.unit) ?? (["customer_cents", "cents"].includes(value.unit) ? labels.cents : value.unit)}`;
-}
-
 export type UsageTableProps = {
   view: UsageView | null;
   labels?: Partial<UsageTableLabels>;
+  hideMeasured?: boolean;
   /** Column headings per dimension; the dimension name is the default. */
   dimensionLabels?: Partial<Record<string, string>>;
   unitLabels?: Partial<Record<string, string>>;
@@ -82,6 +68,7 @@ export type UsageTableProps = {
 export function UsageTable({
   view,
   labels: custom,
+  hideMeasured = false,
   dimensionLabels = {},
   unitLabels = {},
   onNextPage,
@@ -190,9 +177,11 @@ export function UsageTable({
                     {figure(row.cost, labels, { formatFigure, formatUnit })}
                   </TableCell>
                   <TableCell className={cell}>
-                    <UsageStatus tone={certaintyTone[row.certainty]}>
-                      {labels[row.certainty]}
-                    </UsageStatus>
+                    {(!hideMeasured || row.certainty !== "measured") && (
+                      <UsageStatus tone={certaintyTone[row.certainty]}>
+                        {labels[row.certainty]}
+                      </UsageStatus>
+                    )}
                   </TableCell>
                   <TableCell
                     className={`${cell} text-right tabular-nums ${row.unknownOperations === "0" ? "text-fg-muted" : "font-medium"}`}
@@ -233,6 +222,7 @@ export function UsageTable({
 /** Reads the view with useUsageView inside a MeterProvider and pages with the cursor. */
 export function UsageTablePanel({
   labels,
+  hideMeasured,
   dimensionLabels,
   unitLabels,
   formatFigure,
@@ -293,6 +283,7 @@ export function UsageTablePanel({
       view={result.data ?? retained}
       busy={retained !== null}
       labels={labels}
+      hideMeasured={hideMeasured}
       dimensionLabels={dimensionLabels}
       unitLabels={unitLabels}
       formatFigure={formatFigure}

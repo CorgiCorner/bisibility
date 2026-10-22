@@ -1,3 +1,5 @@
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
+import type { DeferralReasonCode } from "@/lib/rank-check/deferral-reason";
 import type { ItemStatus, RankCheckOperation } from "@/lib/rank-check/runs/contract";
 
 export type RunPageData = RankCheckOperation & {
@@ -7,10 +9,13 @@ export type RunPageData = RankCheckOperation & {
   parentRunPublicId: string | null;
   requestedBy: { name: string | null } | null;
   selectionSpec: unknown;
+  sharedDeferralCode?: DeferralReasonCode | null;
   skippedBy: { name: string } | null;
 };
 
 export type RunPageItem = {
+  deferralCode?: DeferralReasonCode | null;
+  payment?: ActionPaymentReceipt;
   actualCostCents: number | null;
   blockedReason: string | null;
   estimatedCostCents: number | null;

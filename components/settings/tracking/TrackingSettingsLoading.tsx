@@ -35,7 +35,7 @@ export function TrackingSettingsLoading() {
           <SettingsLoadingBar className="h-8 w-16" />
         </div>
         <div className="mt-5 space-y-4">
-          {Array.from({ length: 4 }, (_, index) => (
+          {Array.from({ length: 3 }, (_, index) => (
             <div className="space-y-2" key={index}>
               <SettingsLoadingBar className="h-2.5 w-24" />
               <SettingsLoadingBar

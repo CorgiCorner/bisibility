@@ -1,4 +1,5 @@
 "use client";
+import { PaymentChargeLine } from "@/components/action-payment/PaymentChargeLine";
 import { AppDrawer } from "@/components/ui/AppDrawer";
 import { PillBadge } from "@/components/ui/Pill";
 import { trackingSourceLabel } from "@/lib/ai-tracking/projections/trends";
@@ -43,7 +44,7 @@ export function TrackingEvidenceDrawer({
             <dd className="break-all">{evidence?.observedAt ?? t("notObserved")}</dd>
             <dt className="text-fg-muted">{t("cost")}</dt>
             <dd>
-              {sample.costUsd === null ? t("unknown") : `$${sample.costUsd}`} · {sample.costState}
+              <PaymentChargeLine original payment={sample.originalPayment} /> · {sample.costState}
             </dd>
           </dl>
           <section className="rounded-card border border-border bg-bg-sunken p-4">

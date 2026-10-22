@@ -8,7 +8,14 @@ export type TrackingRunDrawerProps = {
   open: boolean;
   count: number;
   onClose: () => void;
-  onPreview: (configurations: SourceConfiguration[]) => Promise<TrackingPreview>;
+  onPreview: (
+    configurations: SourceConfiguration[],
+    payment?: {
+      paymentScope: "manual" | "recurring";
+      paymentRecurrence?: { cron: string; timezone: string };
+      paymentScheduleId?: string;
+    },
+  ) => Promise<TrackingPreview>;
   onLaunch: (
     preview: TrackingPreview,
     schedule?: { name: string; cron: string; timezone: string; enabled: boolean; consent: boolean },

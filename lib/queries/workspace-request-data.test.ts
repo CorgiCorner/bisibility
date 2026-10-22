@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   cacheEntries: new Map<unknown, Map<string, unknown>>(),
   prisma: {
-    keyword: { groupBy: vi.fn() },
+    keyword: { groupBy: vi.fn(), findMany: vi.fn() },
     projectDefaults: { findUnique: vi.fn() },
     providerConnection: { findFirst: vi.fn(), findMany: vi.fn() },
     $queryRaw: vi.fn(),
@@ -29,6 +29,7 @@ vi.mock("react", () => ({
 }));
 
 import {
+  getRequestKeywordCadences,
   getRequestKeywordDimensions,
   getRequestMonthlySpendCents,
   getRequestPrimarySerpProvider,
@@ -41,6 +42,7 @@ describe("workspace request data", () => {
     vi.clearAllMocks();
     mocks.cacheEntries.clear();
     mocks.prisma.keyword.groupBy.mockResolvedValue([]);
+    mocks.prisma.keyword.findMany.mockResolvedValue([]);
     mocks.prisma.projectDefaults.findUnique.mockResolvedValue(null);
     mocks.prisma.providerConnection.findFirst.mockResolvedValue(null);
     mocks.prisma.providerConnection.findMany.mockResolvedValue([]);
@@ -96,6 +98,18 @@ describe("workspace request data", () => {
     });
     expect(mocks.prisma.projectDefaults.findUnique).toHaveBeenCalledWith({
       where: { projectId: "project_1" },
+    });
+  });
+
+  it("caches active membership cadence without falling through project defaults", async () => {
+    await Promise.all([
+      getRequestKeywordCadences("project_1"),
+      getRequestKeywordCadences("project_1"),
+    ]);
+    expect(mocks.prisma.keyword.findMany).toHaveBeenCalledOnce();
+    expect(mocks.prisma.keyword.findMany).toHaveBeenCalledWith({
+      where: { projectId: "project_1", archivedAt: null },
+      select: { checkSchedule: { select: { frequency: true, enabled: true, archivedAt: true } } },
     });
   });
 

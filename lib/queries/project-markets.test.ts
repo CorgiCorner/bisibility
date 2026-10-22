@@ -21,10 +21,11 @@ describe("project markets query", () => {
     expect(view.markets).toEqual([
       expect.objectContaining({
         activeKeywordCount: 2,
+        trackedDevices: ["desktop", "mobile"],
         currentVisibility: 50,
         id: "pmkt_abcdefghijklmnopqrstuvwx",
         keywordCount: 3,
-        monthlyCostCents: 515,
+        monthlyCostCents: 0,
         status: "active",
         topThreeCount: 1,
       }),
@@ -53,6 +54,22 @@ describe("project markets query", () => {
     );
   });
 
+  it("counts one keyword with two devices as two targets", async () => {
+    const query = mocks.prisma.project.findUnique;
+    const data = await query();
+    const active = data.keywords.filter(
+      (keyword: { archivedAt: Date | null; locationId: string; text: string }) =>
+        keyword.archivedAt === null && keyword.locationId === activeMarket.locationId,
+    );
+    active[1].text = active[0].text;
+    const view = await getProjectMarkets("prj_abcdefghijklmnopqrstuvwx", options);
+    expect(view.markets[0]).toMatchObject({
+      distinctKeywordCount: 1,
+      activeKeywordCount: 2,
+      trackedDevices: ["desktop", "mobile"],
+    });
+  });
+
   it("lists the registry by selection key without reading the Location table", async () => {
     const view = await getProjectMarkets("prj_abcdefghijklmnopqrstuvwx", options);
 
@@ -71,7 +88,7 @@ describe("project markets query", () => {
     expect(mocks.prisma.location.findMany).not.toHaveBeenCalled();
   });
 
-  it("sums each active market keyword's effective schedule cost", async () => {
+  it("ignores legacy project cadence and prices only live named membership", async () => {
     mocks.monthlyTrackingCostCents.mockImplementation(
       (count: number, context: { rawFrequency: string }) =>
         context.rawFrequency === "daily"
@@ -100,7 +117,14 @@ describe("project markets query", () => {
           device: "mobile",
           locationId: "location_malaga",
           rankChecks: [],
-          schedule: { cronExpression: null, frequency: "weekly", serpDepth: 50 },
+          checkSchedule: {
+            enabled: true,
+            archivedAt: null,
+            cronExpression: null,
+            frequency: "weekly",
+            serpDepth: 50,
+          },
+          schedule: { cronExpression: null, frequency: "daily", serpDepth: 50 },
           text: "weekly keyword",
           id: second.id,
           publicId: second.publicId,
@@ -108,19 +132,24 @@ describe("project markets query", () => {
         },
       ],
       markets: [activeMarket],
-      providerConnections: [],
+      providerConnections: [
+        {
+          provider: "dataforseo",
+          enabled: true,
+          kind: "serp",
+          status: "connected",
+          priority: 0,
+          credentialSource: "own",
+          rates: [],
+        },
+      ],
     });
 
     const view = await getProjectMarkets("prj_abcdefghijklmnopqrstuvwx", options);
 
-    expect(view.markets[0]?.monthlyCostCents).toBe(120);
-    expect(mocks.monthlyTrackingCostCents).toHaveBeenNthCalledWith(
-      1,
-      1,
-      expect.objectContaining({ rawFrequency: "daily" }),
-    );
-    expect(mocks.monthlyTrackingCostCents).toHaveBeenNthCalledWith(
-      2,
+    expect(view.markets[0]?.monthlyCostCents).toBe(20);
+    expect(mocks.monthlyTrackingCostCents).toHaveBeenCalledOnce();
+    expect(mocks.monthlyTrackingCostCents).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ rawFrequency: "weekly" }),
     );
@@ -142,7 +171,7 @@ describe("project markets query", () => {
     expect(mocks.listArchivedProjectMarkets).toHaveBeenCalledWith("project_1");
   });
 
-  it("prices restored markets from their keyword schedule overrides", async () => {
+  it("prices only live named membership for restored markets", async () => {
     mocks.monthlyTrackingCostCents.mockImplementation(
       (count: number, context: { rawFrequency: string }) =>
         context.rawFrequency === "daily"
@@ -151,16 +180,59 @@ describe("project markets query", () => {
             ? count * 20
             : 0,
     );
+    const base = await mocks.prisma.project.findUnique();
+    mocks.prisma.project.findUnique.mockResolvedValue({
+      ...base,
+      providerConnections: [
+        {
+          provider: "dataforseo",
+          enabled: true,
+          kind: "serp",
+          status: "connected",
+          priority: 0,
+          credentialSource: "own",
+          rates: [],
+        },
+      ],
+    });
     mocks.prisma.keyword.findMany.mockResolvedValue([
       { locationId: "location_malaga", schedule: null },
       {
         locationId: "location_malaga",
-        schedule: { cronExpression: null, frequency: "weekly", serpDepth: 50 },
+        checkSchedule: {
+          enabled: true,
+          archivedAt: null,
+          cronExpression: null,
+          frequency: "weekly",
+          serpDepth: 50,
+        },
+        schedule: { cronExpression: null, frequency: "daily", serpDepth: 50 },
       },
     ]);
 
     const view = await getArchivedProjectMarkets("prj_abcdefghijklmnopqrstuvwx");
 
-    expect(view.markets[0]?.monthlyCostCents).toBe(120);
+    expect(view.markets[0]?.monthlyCostCents).toBe(20);
+  });
+  it("projects canonical active device choices from existing rows including occupied archived variants", async () => {
+    const data = await mocks.prisma.project.findUnique();
+    data.keywords[1].text = "  ONE  ";
+    data.keywords[1].archivedAt = new Date("2026-10-01T00:00:00Z");
+    data.keywords.push({
+      ...data.keywords[0],
+      publicId: `kw_${"z".repeat(24)}`,
+      text: " one ",
+      device: "desktop",
+    });
+    mocks.prisma.project.findUnique.mockClear();
+    const view = await getProjectMarkets("prj_abcdefghijklmnopqrstuvwx", options);
+    expect(view.markets[0]).toMatchObject({
+      distinctKeywordCount: 1,
+      deviceCandidates: [
+        { id: first.publicId, keyword: "one", existingDevices: ["desktop", "mobile"] },
+      ],
+    });
+    expect(mocks.prisma.project.findUnique).toHaveBeenCalledOnce();
+    expect(mocks.prisma.keyword.findMany).not.toHaveBeenCalled();
   });
 });

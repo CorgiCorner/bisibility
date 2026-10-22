@@ -49,6 +49,7 @@ describe("BacklinksSnapshotMeta", () => {
         { locale: "pl", messages },
       );
 
+      expect(screen.getByText("cached, free for 22 hours")).toBeInTheDocument();
       expect(screen.getByText("2 godziny temu", { exact: false })).toBeInTheDocument();
       expect(screen.queryByText("2h ago", { exact: false })).toBeNull();
     } finally {
@@ -56,32 +57,16 @@ describe("BacklinksSnapshotMeta", () => {
     }
   });
 
-  it.each([
-    [125, "~1,25 USD"],
-    [0.5, "~< 0,01 USD"],
-    [0.1, "~< 0,01 USD"],
-    [0.49, "~< 0,01 USD"],
-    [-50, "~-0,50 USD"],
-    [-0.5, "~-< 0,01 USD"],
-    [-0.1, "~-< 0,01 USD"],
-  ])("localizes the refresh estimate for %s cents", (estimateCents, expected) => {
-    const messages = structuredClone(backlinksFeatureTestMessages);
-    const snapshot = messages.projectBacklinks.workspace.snapshot;
-    snapshot.refresh = "Odswiez";
-    snapshot.refreshEstimate = "~{amount}";
-    snapshot.refreshEstimateUnderCent = "~{sign}< {amount}";
-
-    renderWithFeatureMessages(
+  it("renders the authoritative supplied unit instead of scalar cents", () => {
+    render(
       <BacklinksSnapshotMeta
-        estimateCents={estimateCents}
+        estimateCents={125}
+        refreshPrice={<span>8 searches</span>}
         onRefresh={() => undefined}
         snapshot={backlinksSnapshotFixture}
       />,
-      { locale: "pl", messages },
     );
-
-    const refresh = screen.getByRole("button", { name: /Odswiez/ });
-    expect(refresh).toHaveTextContent(expected);
-    expect(refresh).not.toHaveTextContent("$");
+    expect(screen.getByRole("button", { name: /Refresh now/ })).toHaveTextContent("8 searches");
+    expect(screen.queryByText(/1.25/)).not.toBeInTheDocument();
   });
 });

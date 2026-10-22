@@ -44,9 +44,11 @@ const rows = [
     }),
   ),
 ];
-const groups = groupBacklinksByDomain(rows, now);
-
-function RowsHarness({ slice = "one_per_domain" }: Readonly<{ slice?: BacklinksSlice }>) {
+function RowsHarness({
+  slice = "one_per_domain",
+  sourceRows = rows,
+}: Readonly<{ slice?: BacklinksSlice; sourceRows?: readonly BacklinksRow[] }>) {
+  const grouped = groupBacklinksByDomain(sourceRows, now);
   const [expandedDomains, setExpandedDomains] = useState<ReadonlySet<string>>(() => new Set());
   const [expandedRuns, setExpandedRuns] = useState<ReadonlyMap<string, ReadonlySet<string>>>(
     () => new Map(),
@@ -74,10 +76,10 @@ function RowsHarness({ slice = "one_per_domain" }: Readonly<{ slice?: BacklinksS
       <BacklinksRows
         expandedDomains={expandedDomains}
         expandedRuns={expandedRuns}
-        groups={groups}
+        groups={grouped}
         onRunExpand={expandRun}
         onToggle={toggleDomain}
-        rows={rows}
+        rows={sourceRows}
         slice={slice}
       />
     </DateFormatProvider>
@@ -90,7 +92,8 @@ describe("BacklinksRows", () => {
 
     expect(screen.getByRole("table", { name: "Backlinks" })).toHaveAttribute("data-layout", "auto");
     fireEvent.click(screen.getByRole("button", { name: "Expand footer.example.com" }));
-    expect(screen.getByText("34 more pages carry the same footer link")).toBeInTheDocument();
+    const collapsed = screen.getByText("34 more pages carry the same footer link");
+    expect(collapsed.closest("a")).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Show all" }));
     expect(screen.queryByText("34 more pages carry the same footer link")).not.toBeInTheDocument();
@@ -102,5 +105,48 @@ describe("BacklinksRows", () => {
 
     expect(screen.queryByRole("button", { name: /Expand/ })).not.toBeInTheDocument();
     expect(screen.getByText("/discussions/example-page")).toBeInTheDocument();
+  });
+
+  it("opens an http source in a new tab and leaves other rows as text", () => {
+    const sourceRows = [
+      fixtureRow({
+        sourceDomain: "notes.example.com",
+        sourceUrl: "https://notes.example.com/a",
+      }),
+      fixtureRow({
+        sourceDomain: "files.example.com",
+        sourceUrl: "ftp://files.example.com/notes",
+      }),
+      fixtureRow({
+        anchor: "First group page",
+        sourceDomain: "group.example.com",
+        sourceUrl: "https://group.example.com/one",
+      }),
+      fixtureRow({
+        anchor: "Second group page",
+        sourceDomain: "group.example.com",
+        sourceUrl: "https://group.example.com/two",
+      }),
+    ];
+    const { unmount } = render(<RowsHarness slice="all_links" sourceRows={sourceRows} />);
+    const link = screen.getByRole("link", { name: "https://notes.example.com/a" });
+    expect(link).toHaveAttribute("href", "https://notes.example.com/a");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer nofollow");
+    expect(link).toHaveTextContent("/a");
+    expect(screen.getByText("/notes").closest("a")).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "ftp://files.example.com/notes" }),
+    ).not.toBeInTheDocument();
+    unmount();
+
+    render(<RowsHarness sourceRows={sourceRows} />);
+    expect(screen.getByRole("button", { name: "Expand group.example.com" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /group\.example\.com/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Expand notes.example.com" }));
+    const groupedLink = screen.getByRole("link", { name: "https://notes.example.com/a" });
+    fireEvent.click(groupedLink);
+    expect(screen.getByRole("button", { name: "Collapse notes.example.com" })).toBeInTheDocument();
+    expect(groupedLink).toBeInTheDocument();
   });
 });

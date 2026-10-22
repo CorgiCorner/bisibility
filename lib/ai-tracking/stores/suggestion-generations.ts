@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { bindAiPaymentExecution } from "@/lib/ai-research/payment";
 import { boundedRaw, boundedUtf8, payloadHash } from "@/lib/ai-tracking/identity";
 import { suggestionGenerationPreviewSchema } from "@/lib/ai-tracking/suggestions/generation-schema";
 import { makePublicId } from "@/lib/db/public-id-resources";
@@ -25,7 +26,15 @@ export function suggestionGenerationRequestHash(
   >,
 ) {
   return payloadHash({
-    preview: input.preview,
+    preview: (() => {
+      const {
+        payment: _payment,
+        paymentOptions: _options,
+        paymentConsent: _consent,
+        ...identity
+      } = input.preview;
+      return identity;
+    })(),
     actorId: input.actorId,
     actorCredential: input.actorCredential ?? null,
     entrySource: input.entrySource,
@@ -71,8 +80,11 @@ export function startSuggestionGeneration(
         await tx.competitor.findFirst({ where: { projectId, publicId: competitor.id } }),
         "Reviewed competitor",
       );
+    const id = randomUUID();
+    const paymentConsent = bindAiPaymentExecution(preview.paymentConsent, id);
     const row = await tx.aiTrackingSuggestionGeneration.create({
       data: {
+        id,
         projectId,
         publicId: makePublicId("asg"),
         actorId: input.actorId,
@@ -80,7 +92,7 @@ export function startSuggestionGeneration(
         entrySource: input.entrySource,
         idempotencyKey: input.idempotencyKey,
         requestHash: input.requestHash,
-        preview: jsonInput(preview),
+        preview: jsonInput({ ...preview, ...(paymentConsent ? { paymentConsent } : {}) }),
         credentialConnectionId: connection.id,
         requestedModel: preview.configuration.model,
         attemptId: randomUUID(),

@@ -1,11 +1,11 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { meteringNamespace } from "@/lib/metering/runtime";
-import { putSpendingBudget } from "@/lib/metering/spending-limit-store";
+import { putSpendingBudget, readSpendingBudgets } from "@/lib/metering/spending-limit-store";
 import { fundingSpendingBudgets } from "@/lib/metering/spending-limits";
 import type { ProviderCatalogEntry, ProviderTestResult } from "@/lib/providers/types";
 import { initialProviderAllocation } from "./initial-allocation";
 
-/** Called once for a newly created connection in its creation transaction. */
+/** Initializes missing funding budgets in the caller transaction, preserving existing limits. */
 export async function initializeConnectionBudgets(
   tx: Prisma.TransactionClient,
   connection: { id: string; provider: string },
@@ -13,7 +13,7 @@ export async function initializeConnectionBudgets(
   verification?: ProviderTestResult,
   funding: "byok" | "platform" = "byok",
 ) {
-  if (provider.allocation.kind !== "billable") return;
+  if (provider.allocation.kind !== "billable") return 0;
   const initial = initialProviderAllocation(provider, verification);
   const budgets = fundingSpendingBudgets(
     meteringNamespace(),
@@ -29,5 +29,8 @@ export async function initializeConnectionBudgets(
     funding,
     1,
   );
-  for (const budget of budgets) await putSpendingBudget(tx, budget);
+  const existing = await readSpendingBudgets(tx, meteringNamespace(), [budgets[0].scope]);
+  const missing = budgets.filter((budget) => !existing.some((current) => current.id === budget.id));
+  for (const budget of missing) await putSpendingBudget(tx, budget);
+  return missing.length;
 }

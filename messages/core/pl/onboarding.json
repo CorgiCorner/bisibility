@@ -30,7 +30,7 @@
       "description": {
         "completed": "Pierwsze wyniki są gotowe.",
         "manual": "Wszystko gotowe. Uruchom pierwsze sprawdzenie, kiedy zechcesz – nic nie ruszy, dopóki tego nie zrobisz.",
-        "noProvider": "Prawie gotowe. Wszystko jest skonfigurowane – połącz dostawcę danych, gdy zechcesz uruchamiać sprawdzenia.",
+        "noProvider": "Słowa kluczowe są gotowe. Wybierz źródło danych, gdy zechcesz uruchomić sprawdzanie.",
         "paused": "Wszystko gotowe. Sprawdzenia są wstrzymane, dopóki nie wznowisz harmonogramu.",
         "scheduled": "Harmonogram: {frequency}. Możesz też uruchomić teraz przykładowe sprawdzenie."
       },
@@ -45,7 +45,7 @@
         "statusUnavailable": "Nie udało się odświeżyć statusu sprawdzenia. Ponawiamy automatycznie. Możesz otworzyć aplikację, zanim to się zakończy.",
         "timezone": "Nie udało się zapisać strefy czasowej. Spróbuj ponownie.",
         "unavailableKeyword": "To słowo kluczowe nie jest już dostępne. Wróć, aby wybrać inne.",
-        "waitingForProvider": "Połącz dostawcę SERP, zanim uruchomisz sprawdzenia."
+        "waitingForProvider": "Wybierz źródło danych przed uruchomieniem sprawdzania."
       },
       "footer": {
         "hint": "Opcjonalnie: sprawdź teraz 1 słowo kluczowe. Harmonogram pozostanie bez zmian.",
@@ -66,10 +66,10 @@
       "matrix": "1 słowo kluczowe · {markets, plural, one {# rynek} few {# rynki} many {# rynków} other {# rynku}} · {devices} · {checks, plural, one {# sprawdzenie} few {# sprawdzenia} many {# sprawdzeń} other {# sprawdzenia}}",
       "notConnected": "Nie połączono",
       "queue": {
-        "completed": "Przykładowe {checks, plural, one {sprawdzenie zostało ukończone} few {sprawdzenia zostały ukończone} many {sprawdzenia zostały ukończone} other {sprawdzenia zostały ukończone}}. Od teraz każde słowo kluczowe działa zgodnie z harmonogramem: {frequency}.",
-        "completedWithFailures": "Przykładowe {checks, plural, one {sprawdzenie zakończyło się problemem} few {sprawdzenia zakończyły się problemem} many {sprawdzenia zakończyły się problemem} other {sprawdzenia zakończyły się problemem}}. Poniżej możesz ponowić nieudane {checks, plural, one {sprawdzenie} few {sprawdzenia} many {sprawdzenia} other {sprawdzenia}}. Każde słowo kluczowe nadal działa zgodnie z harmonogramem: {frequency}.",
-        "initial": "{checks, plural, one {# sprawdzenie wykona się teraz raz, aby pokazać, jak to działa.} few {# sprawdzenia wykonają się teraz raz, aby pokazać, jak to działa.} many {# sprawdzeń wykona się teraz raz, aby pokazać, jak to działa.} other {# sprawdzenia wykona się teraz raz, aby pokazać, jak to działa.}} Wszystko inne działa zgodnie z harmonogramem: {frequency}.",
-        "manual": "Podgląd ręczny możesz uruchomić teraz. Zaplanowane sprawdzenia pozostają wstrzymane.",
+        "completed": "{checks, plural, one {Przykładowe sprawdzenie zakończone.} other {Przykładowe sprawdzenia zakończone.}} Dodaj słowa do harmonogramu, aby sprawdzać je automatycznie.",
+        "completedWithFailures": "{checks, plural, one {Przykładowe sprawdzenie zakończyło się z błędem.} other {Przykładowe sprawdzenia zakończyły się z błędem.}} Możesz ponowić {checks, plural, one {nieudane sprawdzenie} other {nieudane sprawdzenia}} poniżej.",
+        "initial": "{checks, plural, one {# sprawdzenie uruchomi się teraz jednorazowo.} other {# sprawdzeń uruchomi się teraz jednorazowo.}} Nic innego nie uruchomi się automatycznie.",
+        "manual": "Sprawdzenia uruchamiają się tylko na Twoje polecenie.",
         "queued": "Przykładowe sprawdzenia czekają w kolejce. Możesz otworzyć pulpit, zanim worker je uruchomi.",
         "running": "Przykładowe sprawdzenia są w toku. Możesz otworzyć pulpit, zanim się zakończą.",
         "sample": "Projekty przykładowe zachowują swoją syntetyczną historię pozycji."
@@ -88,7 +88,7 @@
           "client": "Nie udało się uruchomić przykładowego sprawdzenia. Spróbuj ponownie.",
           "deferred": "To sprawdzenie zostało odroczone.",
           "failed": "Nie udało się wykonać tego sprawdzenia. Spróbuj ponownie za chwilę.",
-          "noProvider": "Połącz dostawcę SERP, zanim uruchomisz sprawdzenia.",
+          "noProvider": "Wybierz źródło danych przed uruchomieniem sprawdzania.",
           "projectReadOnly": "Ten projekt jest teraz tylko do odczytu.",
           "rateLimited": "Osiągnięto limit zapytań u dostawcy. Spróbuj ponownie za chwilę.",
           "sampleProject": "Projekty przykładowe nie wykonują prawdziwych sprawdzeń.",
@@ -321,7 +321,7 @@
           "idle": "Nie połączono",
           "tested": "Zweryfikowano"
         },
-        "tooltip": "Google nie ma oficjalnego API pozycji, więc sprawdzenia przechodzą przez dostawcę SERP. bisibility korzysta z Twojego własnego konta u dostawcy, a płacisz mu bezpośrednio, za każde sprawdzenie. Możesz to pominąć i połączyć dostawcę później w Integracjach – słowa kluczowe dodasz już teraz, ale sprawdzenia pozostaną wstrzymane, dopóki nie połączysz dostawcy."
+        "tooltip": "Aktualne pozycje pochodzą od obsługiwanego dostawcy danych. W Integracjach wybierzesz sposób korzystania z niego. Możesz najpierw dodać słowa kluczowe, a źródło wybrać później."
       },
       "credentials": {
         "connected": "Połączono z dostawcą {provider}",

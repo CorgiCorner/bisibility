@@ -9,12 +9,7 @@ import { FirstCheckErrors } from "./FirstCheckErrors";
 import { FirstCheckPolicyNotice } from "./FirstCheckPolicyNotice";
 import { FirstCheckQueueMessage } from "./FirstCheckQueueMessage";
 import { FirstCheckResults } from "./FirstCheckResults";
-import {
-  isPausedFrequency,
-  localizedFrequency,
-  selectedDevices,
-  selectedMarkets,
-} from "./first-check-selection";
+import { localizedFrequency, selectedDevices, selectedMarkets } from "./first-check-selection";
 import { InlineProviderSetup } from "./InlineProviderSetup";
 import type { StepFirstCheckProps } from "./StepFirstCheck.types";
 import { StepFirstCheckCompletion } from "./StepFirstCheckCompletion";
@@ -37,7 +32,6 @@ export function StepFirstCheck({
   nextCheckAt,
   onBack,
   onProviderConnected,
-  onTimezoneChange,
   project,
   providerConnected,
   providerDefaultValues,
@@ -52,7 +46,6 @@ export function StepFirstCheck({
   const navigationProjectId = project?.publicId ?? projectId;
   const sampleProject = Boolean(project?.isSample);
   const providerReady = !sampleProject && (providerConnected ?? Boolean(flowState?.providerId));
-  const paused = isPausedFrequency(defaults?.frequency);
   const markets = selectedMarkets(defaults),
     devices = selectedDevices(defaults);
   const sampleCount = keywordCount > 0 ? markets.length * devices.length : 0;
@@ -73,8 +66,7 @@ export function StepFirstCheck({
   const [providerExpanded, setProviderExpanded] = useState(false);
   const providerToggleRef = useRef<HTMLButtonElement>(null);
   const providerCloseFocusRef = useRef<"run" | "trigger">("trigger");
-  const [timezone, setTimezone] = useState(defaults?.timezone ?? "UTC");
-  const [timezoneError, setTimezoneError] = useState<string | null>(null);
+  const timezone = defaults?.timezone ?? "UTC";
   const { onSubmit, submitError, submitting } = useFirstCheckSubmit({
     completeOnboardingAction,
     marketKeys: markets.map((market) => market.canonicalKey),
@@ -100,27 +92,22 @@ export function StepFirstCheck({
   const providerLabel = providerReady
     ? displayProvider(providerId ?? flowState?.providerId)
     : t("notConnected");
-  const frequency = defaults?.frequency ?? "daily";
+  const frequency = "manual";
   const frequencyLabel = localizedFrequency(t, frequency);
   const hasFailedSampleChecks = state.rows.some((row) => row.status === "failed");
   const queueMessage = sampleProject
     ? t("queue.sample")
     : !providerReady
       ? null
-      : paused
-        ? t("queue.manual")
-        : state.status === "running"
-          ? t("queue.running")
-          : state.status === "queued"
-            ? t("queue.queued")
-            : state.status === "completed"
-              ? hasFailedSampleChecks
-                ? t("queue.completedWithFailures", {
-                    checks: state.rows.length,
-                    frequency: frequencyLabel,
-                  })
-                : t("queue.completed", { checks: state.rows.length, frequency: frequencyLabel })
-              : t("queue.initial", { checks: sampleCount, frequency: frequencyLabel });
+      : state.status === "running"
+        ? t("queue.running")
+        : state.status === "queued"
+          ? t("queue.queued")
+          : state.status === "completed"
+            ? hasFailedSampleChecks
+              ? t("queue.completedWithFailures", { checks: state.rows.length })
+              : t("queue.completed", { checks: state.rows.length })
+            : t("queue.initial", { checks: sampleCount });
   function openProvider() {
     providerCloseFocusRef.current = "trigger";
     setProviderExpanded(true);
@@ -143,17 +130,6 @@ export function StepFirstCheck({
       limit: sampleCount || undefined,
       projectId,
     });
-  }
-  async function changeTimezone(value: string) {
-    const previous = timezone;
-    setTimezone(value);
-    setTimezoneError(null);
-    try {
-      await onTimezoneChange?.(value);
-    } catch {
-      setTimezone((current) => (current === value ? previous : current));
-      setTimezoneError(t("errors.timezone"));
-    }
   }
   const backAction = onBack ? (
     <Button
@@ -182,22 +158,15 @@ export function StepFirstCheck({
       ? t("description.completed")
       : !providerReady
         ? t("description.noProvider")
-        : defaults?.frequency === "manual"
-          ? t("description.manual")
-          : defaults?.frequency === "paused"
-            ? t("description.paused")
-            : t("description.scheduled", { frequency: frequencyLabel });
+        : t("description.manual");
   return (
     <form id={onboardingFormId} onSubmit={onSubmit}>
       <h2 className="m-0 text-lg font-semibold tracking-[-0.4px]">{t("title")}</h2>
       <div className="mt-1 text-[13px] text-fg-muted">{reviewDescription}</div>
       <StepFirstCheckReview
         devices={devices}
-        frequency={defaults?.frequency}
-        frequencyLabel={frequencyLabel}
         keywordCount={keywordCount}
         markets={markets}
-        onTimezoneChange={(value) => void changeTimezone(value)}
         providerLabel={providerLabel}
         providerAction={
           !providerReady ? (
@@ -215,7 +184,6 @@ export function StepFirstCheck({
           ) : undefined
         }
         providerReady={providerReady}
-        timezone={timezone}
       />
       <FirstCheckErrors
         keywordError={
@@ -223,7 +191,7 @@ export function StepFirstCheck({
         }
         onRetryKeyword={retryKeyword}
         submitError={submitError}
-        timezoneError={timezoneError}
+        timezoneError={null}
       />
       {!providerReady ? (
         <InlineProviderSetup
@@ -246,7 +214,7 @@ export function StepFirstCheck({
       <FirstCheckPolicyNotice projectId={navigationProjectId ?? null} state={state} />
       {state.status === "completed" && !hasFailedSampleChecks && navigationProjectId ? (
         <StepFirstCheckCompletion
-          frequency={defaults?.frequency}
+          frequency="manual"
           frequencyLabel={frequencyLabel}
           keywordCount={keywordCount}
           nextCheckAt={nextCheckAt}

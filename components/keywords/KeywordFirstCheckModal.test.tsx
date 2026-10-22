@@ -353,3 +353,21 @@ it("shows shared missing-budget guidance for a blocked first check", () => {
     "Ask the project owner to configure a monthly budget",
   );
 });
+
+it("shows the capacity message without own-account funding advice", () => {
+  render(
+    <KeywordFirstCheckModal
+      {...baseProps}
+      confirmError={null}
+      confirming={false}
+      costLabel={null}
+      depth={20}
+      errorCode="provider_capacity_unavailable"
+      open
+      step="failed"
+    />,
+  );
+  expect(screen.getByText(/You were not charged/)).toBeInTheDocument();
+  expect(screen.queryByText(/Add funds/)).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Open integrations" })).toBeInTheDocument();
+});

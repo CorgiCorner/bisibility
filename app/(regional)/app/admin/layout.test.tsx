@@ -12,6 +12,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/components/admin/AdminShell", () => ({
   AdminShell: ({ children }: { children: ReactNode }) => <div data-admin-shell>{children}</div>,
 }));
+vi.mock("@/lib/auth/admin-dangerous-action", () => ({
+  adminDangerousActionAllowed: vi.fn(async () => true),
+}));
 vi.mock("@/lib/auth/instance-admin", () => ({
   requireInstanceAdmin: mocks.requireAdmin,
 }));

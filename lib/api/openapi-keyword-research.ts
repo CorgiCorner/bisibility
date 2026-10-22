@@ -18,6 +18,9 @@ function withUnprocessable(operation: object) {
     responses: {
       ...responses,
       "422": problemResponse("Unsupported provider location or provider reauthorization required"),
+      "409": problemResponse(
+        "Payment quote expired or changed; review a new quote before retrying",
+      ),
     },
   };
 }
@@ -36,6 +39,7 @@ export function keywordResearchPaths(input: {
               "getKeywordMetrics",
               input.ref("KeywordMetricsResponse"),
               input.ref("KeywordMetricsRequest"),
+              [{ $ref: "#/components/parameters/IdempotencyKey" }],
             ),
           ),
         ),
@@ -50,6 +54,25 @@ export function keywordResearchPaths(input: {
             input.ref("KeywordResearchResponse"),
             undefined,
             [
+              {
+                in: "query",
+                name: "require_payment",
+                schema: { type: "boolean" },
+                description: "Require accepted consent before a fresh paid request.",
+              },
+              {
+                in: "query",
+                name: "payment_option_id",
+                schema: { type: "string", minLength: 1, maxLength: 120 },
+                description: "Concrete server-selected payment option from an estimate.",
+              },
+              {
+                in: "query",
+                name: "payment_quote_token",
+                schema: { type: "string", minLength: 1, maxLength: 12000 },
+                description:
+                  "Accept this exact server payment quote. Changed or expired consent returns409; it never authorizes a different payer.",
+              },
               {
                 in: "query",
                 name: "seed",
@@ -95,10 +118,11 @@ export function keywordResearchPaths(input: {
                 schema: { default: false, type: "boolean" },
               },
               {
-                description: "Best-effort maximum provider cost for this request, in cents.",
+                description:
+                  "Best-effort maximum provider cost for this request, in cents. 0 = cached result only; a cache miss returns cost_limit_exceeded with estimated_cost_cents before paid work.",
                 in: "query",
                 name: "max_cost_cents",
-                schema: { minimum: 1, type: "integer", ...usdCents },
+                schema: { minimum: 0, type: "integer", ...usdCents },
               },
             ],
           ),

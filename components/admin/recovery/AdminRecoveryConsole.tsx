@@ -145,7 +145,7 @@ function RecoveryConsole({ initial }: { initial: RecoveryPage }) {
           disabled={busy}
           onClick={() => load({ ...filters, cursor: undefined })}
         >
-          <ArrowClockwiseIcon aria-hidden />
+          <ArrowClockwiseIcon weight="regular" aria-hidden />
           {t("refresh")}
         </Button>
       </div>

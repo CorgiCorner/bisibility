@@ -184,7 +184,9 @@
       "analyticsDescription": "自社データの補完のための {provider} 接続です。",
       "localDescription": "[seq:5,15,15,4] を追加すると、キーワードに返す順位を指定できます。",
       "trafficNoSource": "完了したアナリティクスソースはありません。プロバイダーの認証情報とワーカーのログを確認してください。",
-      "trafficUpdated": "キーワード{keywords, number}件とページ{pages, number}件のスナップショットを更新しました。"
+      "trafficUpdated": "キーワード{keywords, number}件とページ{pages, number}件のスナップショットを更新しました。",
+      "manageKey": "キーを管理",
+      "removeKey": "キーを削除"
     },
     "meta": {
       "labels": {

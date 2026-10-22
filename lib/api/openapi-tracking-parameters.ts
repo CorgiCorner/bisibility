@@ -55,4 +55,7 @@ export const appOwnedTrackingParameters = {
   getAiTrackingHistory: [projectId, ...page],
   getAiTrackingTrends: [projectId, ...zodQuery(trackingTrendsQuerySchema)],
   listAiTrackingPrompts: [projectId, ...page],
+  listAiTrackingTopics: [projectId, ...page],
+  listAiTrackingSchedules: [projectId, ...page],
+  listAiTrackingRuns: [projectId, ...page],
 } as const satisfies Record<string, readonly object[]>;

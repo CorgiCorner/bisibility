@@ -7,6 +7,7 @@ import { AccentCtaLink } from "@/components/ui/AccentCtaLink";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ModuleMark } from "@/components/ui/ModuleMark";
+import { ProviderAccessActions } from "@/components/ui/ProviderAccessActions";
 import { appPath } from "@/lib/routing/app-path";
 import { docsLinkProps } from "@/lib/site/site";
 import { ArrowsClockwiseIcon as ArrowsClockwise } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
@@ -68,9 +69,15 @@ function NoProviderState({ projectRef }: Readonly<{ projectRef: string }>) {
   return (
     <EmptyState
       action={
-        <AccentCtaLink href={appPath(projectRef, "integrations")}>
-          {t("connectAction")}
-        </AccentCtaLink>
+        <ProviderAccessActions
+          href={appPath(projectRef, "integrations")}
+          providers={["DataForSEO"]}
+          surface="keywords"
+        >
+          <AccentCtaLink href={appPath(projectRef, "integrations")}>
+            {t("connectAction")}
+          </AccentCtaLink>
+        </ProviderAccessActions>
       }
       description={t("connectDescription")}
       mark={<ModuleMark bordered icon={Binoculars} />}

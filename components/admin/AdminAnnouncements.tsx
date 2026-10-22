@@ -1,6 +1,6 @@
 "use client";
-
 import { AnnouncementEditor } from "@/components/admin/AnnouncementEditor";
+import { DangerousActionGate } from "@/components/admin/DangerousActionGate";
 import { InstanceAnnouncementBanner } from "@/components/shell/InstanceAnnouncementBanner";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -86,16 +86,18 @@ export function AdminAnnouncements({
           <SectionTitle>{t("heading")}</SectionTitle>
           <p className="mt-1 text-sm text-fg-muted">{t("description")}</p>
         </div>
-        <Button
-          size="sm"
-          disabled={busy}
-          onClick={() => {
-            setError(null);
-            setEditor({ announcement: null });
-          }}
-        >
-          {t("create")}
-        </Button>
+        <DangerousActionGate action="changeAnnouncements">
+          <Button
+            size="sm"
+            disabled={busy}
+            onClick={() => {
+              setError(null);
+              setEditor({ announcement: null });
+            }}
+          >
+            {t("create")}
+          </Button>
+        </DangerousActionGate>
       </div>
       <p className="text-xs text-fg-muted">{t("refreshHelp")}</p>
       {announcements.length === 0 ? <p className="text-sm text-fg-muted">{t("empty")}</p> : null}
@@ -106,45 +108,47 @@ export function AdminAnnouncements({
             defaultLinkLabel={t("learnMore")}
             live={false}
           />
-          <div className="flex flex-wrap items-center justify-between gap-2 p-3">
-            <Switch
-              checked={announcement.enabled}
-              disabled={busy}
-              aria-label={t("visibilityLabel", { title: announcement.title })}
-              label={announcement.enabled ? t("on") : t("off")}
-              onChange={(event) =>
-                mutate({
-                  kind: "toggle",
-                  identity: { id: announcement.id, revision: announcement.revision },
-                  enabled: event.currentTarget.checked,
-                })
-              }
-            />
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
+          <DangerousActionGate action="changeAnnouncements">
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3">
+              <Switch
+                checked={announcement.enabled}
                 disabled={busy}
-                onClick={() => {
-                  setError(null);
-                  setEditor({ announcement });
-                }}
-              >
-                {t("edit")}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={busy}
-                onClick={() => {
-                  setError(null);
-                  setDeleting(announcement);
-                }}
-              >
-                {t("delete")}
-              </Button>
+                aria-label={t("visibilityLabel", { title: announcement.title })}
+                label={announcement.enabled ? t("on") : t("off")}
+                onChange={(event) =>
+                  mutate({
+                    kind: "toggle",
+                    identity: { id: announcement.id, revision: announcement.revision },
+                    enabled: event.currentTarget.checked,
+                  })
+                }
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => {
+                    setError(null);
+                    setEditor({ announcement });
+                  }}
+                >
+                  {t("edit")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => {
+                    setError(null);
+                    setDeleting(announcement);
+                  }}
+                >
+                  {t("delete")}
+                </Button>
+              </div>
             </div>
-          </div>
+          </DangerousActionGate>
         </div>
       ))}
       {notice ? (

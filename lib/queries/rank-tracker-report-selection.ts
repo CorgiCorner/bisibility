@@ -1,3 +1,4 @@
+import { createKeywordMembershipProjector } from "@/lib/keywords/schedule-membership";
 import { REPORT_READ_TRANSACTION } from "@/lib/rank-reports/read-transaction";
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
@@ -102,6 +103,7 @@ async function readRankTrackerReportSelection(
   const targets = await loadRetainedRankReportTargets(tx, scope, policy, limits, metadata, false);
   const resolutions = resolveCurrentRankTrackerTargets(targets, policy, project.id);
   const resolved = new Map(resolutions.map((target) => [target.id, target]));
+  const projectSchedule = createKeywordMembershipProjector(asOf);
   const rows = candidates.rows.map((candidate) => {
     const value = metadata.get(candidate.publicId);
     const metrics = value?.metrics ?? {
@@ -115,6 +117,7 @@ async function readRankTrackerReportSelection(
       { defaults: candidates.defaults, domain: trackedProjectDomain(project.domain) ?? "" },
       metrics,
       value?.traffic,
+      projectSchedule,
     );
     const resolution = resolved.get(candidate.publicId);
     if (!resolution) throw new Error("Authorized rank tracker target is missing its resolution.");

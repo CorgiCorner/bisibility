@@ -17,7 +17,8 @@
       "runStatus": "実行ステータス",
       "searchConsole": "Search Console",
       "source": "ソース:",
-      "status": "ステータス:"
+      "status": "ステータス:",
+      "aiTracking": "AIトラッキング"
     },
     "content": {
       "activeDescription": "実行履歴を確認するか、別のステータスを選択して完了した処理を探してください。",
@@ -25,7 +26,7 @@
       "clearFilters": "フィルターをクリア",
       "filteredDescription": "他の実行を表示するには、フィルターを変更またはクリアしてください。",
       "filteredTitle": "一致する実行はありません",
-      "historyDescription": "順位チェックと Search Console の履歴インポートがここに表示されます。",
+      "historyDescription": "順位チェック、AIトラッキング、Search Consoleのインポートがここに表示されます。",
       "historyTitle": "実行はまだありません",
       "loadError": "実行を読み込めませんでした",
       "manageSchedules": "スケジュールを管理",
@@ -85,7 +86,13 @@
       "noActiveKeywords": "有効なキーワードがありません",
       "reviewBlocker": "ブロックの原因を確認",
       "targetProgress": "{completed, number} / {total, number} {total, plural, one {対象} other {対象}}",
-      "dayProgress": "{completed, number} / {total, number} {total, plural, one {確定日数} other {確定日数}}"
+      "dayProgress": "{completed, number} / {total, number} {total, plural, one {確定日数} other {確定日数}}",
+      "aiTrackingRun": "AI可視性の計測",
+      "sampleCount": "サンプル: {count, number}",
+      "sampleProgress": "{completed, number} / {total, number} サンプル",
+      "costUnknown": "コスト未確認",
+      "knownCost": "確認済みコスト {cost} + 未確認",
+      "actualCost": "コスト {cost}"
     },
     "actions": {
       "actionsFor": "{title}の操作",
@@ -123,6 +130,67 @@
       "attention": "要確認",
       "pastScheduled": "予定時刻を経過",
       "pastScheduledDays": "未開始 · {count, plural, one {予定から#日経過} other {予定から#日経過}}"
+    },
+    "aiStatuses": {
+      "planned": {
+        "label": "予定",
+        "description": "AI計測は開始待ちです。"
+      },
+      "running": {
+        "label": "実行中",
+        "description": "AI計測のサンプルを処理しています。"
+      },
+      "completed": {
+        "label": "完了",
+        "description": "AI計測が完了しました。"
+      },
+      "partial": {
+        "label": "一部完了",
+        "description": "AI計測の一部のみが正常に完了しました。"
+      },
+      "blocked": {
+        "label": "ブロック",
+        "description": "AI計測を続行できませんでした。"
+      },
+      "failed": {
+        "label": "失敗",
+        "description": "AI計測に失敗しました。"
+      },
+      "cancelled": {
+        "label": "キャンセル",
+        "description": "AI計測はキャンセルされました。"
+      },
+      "skipped": {
+        "label": "スキップ",
+        "description": "AI計測はスキップされました。理由を確認してください。"
+      },
+      "cost_limit_exceeded": {
+        "label": "コスト上限超過",
+        "description": "コスト上限を超えたためAI計測はスキップされました。"
+      },
+      "status_unavailable": {
+        "label": "状態不明",
+        "description": "AI計測の状態を確認できませんでした。"
+      }
+    },
+    "aiResults": {
+      "title": "AI計測結果",
+      "back": "実行一覧に戻る",
+      "next": "次のサンプル",
+      "empty": "この実行には保存されたサンプルがありません。",
+      "answer": "保存された回答",
+      "citations": "引用ページ",
+      "observed": "観測日時",
+      "model": "モデル",
+      "measurement": "計測",
+      "measurements": {
+        "answer_present": "回答あり",
+        "aio_not_present": "AI による概要なし",
+        "partial": "一部の結果",
+        "unavailable": "利用不可",
+        "failed": "失敗",
+        "unknown": "不明"
+      }
     }
   }
 }

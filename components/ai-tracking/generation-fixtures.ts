@@ -1,3 +1,4 @@
+import { paymentQuote } from "@/components/action-payment/payment-test-fixture";
 import type { TrackingWorkspaceActions } from "@/lib/ai-tracking/projections/workspace-actions";
 import { generationCanonicalJson } from "@/lib/ai-tracking/suggestions/generation-json";
 import type {
@@ -28,6 +29,9 @@ export const generationFixtureActions: NonNullable<TrackingWorkspaceActions["gen
       inputSnapshot: input.inputSnapshot,
       snapshotHash: hash,
       estimatedCostCents: 2.3,
+      payment: paymentQuote({
+        charge: { value: "0.023", certainty: "estimate", unit: { kind: "currency", code: "USD" } },
+      }),
       estimateKind: "forecast",
       isGuaranteedMaximum: false,
       credentialConnectionId: "conn_abcdefghijklmnopqrstuvwx",

@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   analyzeBacklinks,
   BacklinksSnapshotExpiredError,
@@ -11,6 +10,12 @@ import { isBacklinksFailedSummary } from "@/lib/backlinks/types";
 import { READINESS_REASON } from "@/lib/projects/readiness";
 import type { ProviderLookupFailure } from "@/lib/provider-lookups/paid-call";
 import { z } from "zod";
+import {
+  actionPaymentInputFromWire,
+  paymentBodyFields,
+  paymentFailureResponse,
+  paymentResource,
+} from "./action-payment";
 import { backlinksFailureResponse } from "./backlinks-failure-response";
 import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
@@ -31,10 +36,13 @@ const resultLimitSchema = z.coerce
   .pipe(z.union([z.literal(100), z.literal(300), z.literal(500), z.literal(1000)]));
 
 export const analyzeQuerySchema = z.object({
+  payment_option_id: paymentBodyFields.payment_option_id,
+  payment_quote_token: z.string().min(1).max(12000).optional(),
+  require_payment: falseParam.optional(),
   estimate_only: falseParam,
   fresh: falseParam,
   include_subdomains: trueParam,
-  max_cost_cents: z.coerce.number().int().positive().optional(),
+  max_cost_cents: z.coerce.number().int().nonnegative().optional(),
   mode: z.enum(["as_is", "one_per_domain"]).default("as_is"),
   result_limit: resultLimitSchema.default(100),
   target: z.string().trim().min(1),
@@ -42,6 +50,7 @@ export const analyzeQuerySchema = z.object({
 });
 
 export const rowsBodySchema = z.object({
+  ...paymentBodyFields,
   estimate_only: z.boolean().optional(),
   max_cost_cents: z.number().int().min(0).optional(),
   snapshot_ref: z.string().min(1).max(32768).optional(),
@@ -53,6 +62,9 @@ export const rowsBodySchema = z.object({
 
 function analyzeQuery(ctx: ApiContext) {
   return analyzeQuerySchema.parse({
+    payment_option_id: ctx.url.searchParams.get("payment_option_id") ?? undefined,
+    payment_quote_token: ctx.url.searchParams.get("payment_quote_token") ?? undefined,
+    require_payment: ctx.url.searchParams.get("require_payment") ?? undefined,
     estimate_only: ctx.url.searchParams.get("estimate_only") ?? undefined,
     fresh: ctx.url.searchParams.get("fresh") ?? undefined,
     include_subdomains: ctx.url.searchParams.get("include_subdomains") ?? undefined,
@@ -75,7 +87,17 @@ function retryHeaders(ctx: ApiContext, resetAt: number | undefined, fallbackMs: 
 }
 
 function lookupError(ctx: ApiContext, outcome: ProviderLookupFailure) {
+  return paymentFailureResponse(lookupErrorBase(ctx, outcome), outcome);
+}
+function lookupErrorBase(ctx: ApiContext, outcome: ProviderLookupFailure) {
   const common = { headers: ctx.headers, instance: ctx.instance };
+  if (outcome.reason.startsWith("payment_"))
+    return errorResponse(
+      "conflict",
+      "Review a current payment quote before running this action.",
+      409,
+      { ...common, problemDetails: { reason: outcome.reason } },
+    );
   if (outcome.reason === "no_source") {
     return errorResponse(
       "not_found",
@@ -133,7 +155,10 @@ function lookupError(ctx: ApiContext, outcome: ProviderLookupFailure) {
 
 function successResponse(ctx: ApiContext, snapshot: BacklinksEstimate | BacklinksSnapshot) {
   const { ok: _ok, ...data } = snapshot;
-  return dataResponse(snakeizeKeys(data), { headers: ctx.headers });
+  return dataResponse(
+    { ...(snakeizeKeys(data) as object), ...paymentResource(snapshot) },
+    { headers: ctx.headers },
+  );
 }
 
 function outcomeResponse(ctx: ApiContext, outcome: BacklinksOutcome) {
@@ -165,6 +190,12 @@ export async function getBacklinks(ctx: ApiContext, projectId: string) {
     const outcome = await analyzeBacklinks(
       { actorId: ctx.actorId, origin: providerOrigin(ctx.origin), projectId: ctx.auth.project.id },
       {
+        ...actionPaymentInputFromWire({
+          ...input,
+          accepted_payment: input.payment_quote_token
+            ? { quote_token: input.payment_quote_token }
+            : undefined,
+        }),
         estimateOnly: input.estimate_only,
         fresh: input.fresh,
         includeSubdomains: input.include_subdomains,
@@ -189,6 +220,7 @@ export async function postBacklinkRows(ctx: ApiContext, projectId: string) {
     const outcome = await loadMoreBacklinkRows(
       { actorId: ctx.actorId, origin: providerOrigin(ctx.origin), projectId: ctx.auth.project.id },
       {
+        ...actionPaymentInputFromWire(input),
         ...(input.estimate_only === undefined ? {} : { estimateOnly: input.estimate_only }),
         ...(input.max_cost_cents === undefined ? {} : { maxCostCents: input.max_cost_cents }),
         includeSubdomains: input.include_subdomains,

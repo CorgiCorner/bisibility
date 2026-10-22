@@ -91,6 +91,8 @@ export type ScheduleEditorSchedule = {
 };
 
 export type ScheduleEditorMember = {
+  device?: string;
+  market?: string;
   name: string;
   pending?: boolean;
   publicId: string;
@@ -118,9 +120,12 @@ export type ScheduleEditorProps = {
   candidates?: readonly ScheduleEditorCandidate[];
   defaultScheduleName?: string | null;
   isNew?: boolean;
+  initialSaveConfirmed?: boolean;
+  planningMinutes?: number | null;
   members?: readonly ScheduleEditorMember[];
   memberSummary?: string;
   embedded?: boolean;
+  showDefaultControl?: boolean;
   onCancel?: () => void;
   onSaved?: (schedule: {
     publicId: string;

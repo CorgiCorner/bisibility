@@ -9,8 +9,11 @@ import {
 import { requireApiPublicId } from "@/lib/api/public-id";
 import { AuthorizationError } from "@/lib/auth/authorize";
 import { setProviderConnectionAllocation } from "@/lib/provider-allocations/service";
+import type { AllocationNativeObservation } from "@/lib/provider-ui/native-allocation-evidence";
+import { refreshBoundNativeAllocation } from "@/lib/provider-ui/native-allocation-refresh";
 import { PROVIDER_CATALOG } from "@/lib/providers/registry";
 import { loadProjectProviderSpend } from "@/lib/queries/provider-spend";
+import type { ProviderSpendConnection } from "@/lib/queries/provider-spend-types";
 import {
   budgetInputToCents,
   type ProviderAllocationInput,
@@ -85,20 +88,31 @@ export async function updateProviderConnectionAllocationAction(
 export async function refreshProviderConnectionBudgetAction(
   projectPublicId: string,
   connectionId: string,
-) {
+  expectedIdentity?: unknown,
+): Promise<ProviderSpendConnection & { nativeObservation?: AllocationNativeObservation }> {
   requireApiPublicId(connectionId, "conn");
   const actor = await getActionActor();
   const project = await requireProjectScope(actor, "manage", projectPublicId, {
     type: "provider_connection",
   });
   if (project.ownerId !== actor.id) throw new AuthorizationError("forbidden");
-  const spend = await loadProjectProviderSpend({
-    catalog: PROVIDER_CATALOG,
-    now: new Date(),
-    projectId: project.id,
-    refreshConnectionPublicId: connectionId,
-  });
-  const connection = spend.connections.find((item) => item.connectionId === connectionId);
-  if (!connection) throw new Error("Provider connection not found.");
-  return connection;
+  const probe = async () => {
+    const spend = await loadProjectProviderSpend({
+      catalog: PROVIDER_CATALOG,
+      now: new Date(),
+      projectId: project.id,
+      refreshConnectionPublicId: connectionId,
+    });
+    const connection = spend.connections.find((item) => item.connectionId === connectionId);
+    if (!connection) throw new Error("Provider connection not found.");
+    return connection;
+  };
+  return expectedIdentity === undefined
+    ? probe()
+    : refreshBoundNativeAllocation(
+        { actor, projectPublicId },
+        connectionId,
+        expectedIdentity,
+        probe,
+      );
 }

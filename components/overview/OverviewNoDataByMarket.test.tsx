@@ -48,7 +48,6 @@ describe("OverviewNoData market rollup", () => {
           overview={overview}
           projectId="prj_1"
           projectRef="prj_1"
-          queueFirstChecksAction={vi.fn()}
           runningCheckCount={0}
           runCheckNowAction={vi.fn()}
         />

@@ -1,5 +1,4 @@
 import "server-only";
-
 import { fetchKeywordMetrics, researchKeywords } from "@/lib/keyword-research/service";
 import {
   isKeywordResearchEstimate,
@@ -8,6 +7,13 @@ import {
 import { READINESS_REASON } from "@/lib/projects/readiness";
 import type { KeywordMetrics } from "@/lib/providers/types";
 import { z } from "zod";
+import {
+  actionPaymentInputFromWire,
+  paymentAdmissionResponse,
+  paymentBodyFields,
+  paymentFailureResponse,
+  paymentResource,
+} from "./action-payment";
 import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
 import { requireApiPublicId } from "./public-id";
@@ -20,6 +26,9 @@ const booleanParam = z
   .transform((value) => value === "true")
   .default(false);
 export const researchQuerySchema = z.object({
+  requirePayment: booleanParam.optional(),
+  paymentOptionId: z.string().min(1).max(120).optional(),
+  paymentQuoteToken: z.string().min(1).max(12000).optional(),
   connectionId: z
     .string()
     .trim()
@@ -29,17 +38,18 @@ export const researchQuerySchema = z.object({
   fresh: booleanParam,
   includeClickstream: booleanParam,
   mode: z.enum(["auto", "related", "suggestions", "ideas"]).default("auto"),
-  maxCostCents: z.coerce.number().int().positive().optional(),
+  maxCostCents: z.coerce.number().int().nonnegative().optional(),
   resultLimit: z.coerce.number().pipe(z.union([z.literal(100), z.literal(300), z.literal(500)])),
   seed: z.string().trim().min(1).max(80),
 });
 export const metricsBodySchema = z.object({
+  ...paymentBodyFields,
   connection_id: z.string().trim().min(1).max(120).optional(),
   estimate_only: z.boolean().default(false),
   fresh: z.boolean().default(false),
   include_clickstream: z.boolean().default(false),
   keywords: z.array(z.string().trim().min(1).max(80)).min(1).max(700),
-  max_cost_cents: z.number().int().positive().optional(),
+  max_cost_cents: z.number().int().nonnegative().optional(),
 });
 
 function query(ctx: ApiContext) {
@@ -47,6 +57,9 @@ function query(ctx: ApiContext) {
   // A malformed ID keeps its invalid_public_id error; the schema pattern then always passes.
   if (connectionId) requireApiPublicId(connectionId, "conn");
   const input = researchQuerySchema.parse({
+    requirePayment: ctx.url.searchParams.get("require_payment") ?? undefined,
+    paymentOptionId: ctx.url.searchParams.get("payment_option_id") ?? undefined,
+    paymentQuoteToken: ctx.url.searchParams.get("payment_quote_token") ?? undefined,
     connectionId: ctx.url.searchParams.get("connection_id") ?? undefined,
     estimateOnly: ctx.url.searchParams.get("estimate_only") ?? undefined,
     fresh: ctx.url.searchParams.get("fresh") ?? undefined,
@@ -58,6 +71,7 @@ function query(ctx: ApiContext) {
   });
   return {
     ...input,
+    acceptedPayment: input.paymentQuoteToken ? { quoteToken: input.paymentQuoteToken } : undefined,
     connectionId: input.connectionId ? requireApiPublicId(input.connectionId, "conn") : undefined,
   };
 }
@@ -70,6 +84,26 @@ function connectionResources(connections: Array<{ id: string; label: string; pro
 }
 
 function lookupError(ctx: ApiContext, outcome: ProviderLookupFailure) {
+  return paymentFailureResponse(
+    paymentAdmissionResponse(ctx, outcome) ?? lookupErrorBase(ctx, outcome),
+    outcome,
+  );
+}
+function lookupErrorBase(ctx: ApiContext, outcome: ProviderLookupFailure) {
+  if (outcome.reason === "provider_error")
+    return errorResponse(
+      "provider_unavailable",
+      "The provider request failed. Review its retained payment status before retrying.",
+      502,
+      { headers: ctx.headers, instance: ctx.instance, problemDetails: paymentResource(outcome) },
+    );
+  if (outcome.reason.startsWith("payment_"))
+    return errorResponse(
+      "conflict",
+      "Review a current payment quote before running this action.",
+      409,
+      { headers: ctx.headers, instance: ctx.instance, problemDetails: { reason: outcome.reason } },
+    );
   if (outcome.reason === "no_source") {
     return errorResponse(
       "not_found",
@@ -173,6 +207,7 @@ export async function getKeywordResearch(ctx: ApiContext, projectId: string) {
     return resourceResponse(
       {
         cached: result.cached,
+        ...paymentResource(result),
         connections: connectionResources(result.connections),
         cost_cents: result.costCents,
         estimate: true,
@@ -189,6 +224,7 @@ export async function getKeywordResearch(ctx: ApiContext, projectId: string) {
   return resourceResponse(
     {
       cached: result.cached,
+      ...paymentResource(result),
       connections: connectionResources(result.connections),
       cost_cents: result.costCents,
       fetched_at: result.fetchedAt,
@@ -221,6 +257,7 @@ export async function postKeywordMetrics(ctx: ApiContext, projectId: string) {
     ? requireApiPublicId(input.connection_id, "conn")
     : undefined;
   const result = await fetchKeywordMetrics({
+    ...actionPaymentInputFromWire(input),
     actorId: ctx.actorId,
     connectionId,
     estimateOnly: input.estimate_only,
@@ -235,6 +272,7 @@ export async function postKeywordMetrics(ctx: ApiContext, projectId: string) {
   return resourceResponse(
     {
       cached_count: result.cachedCount,
+      ...paymentResource(result),
       connections: connectionResources(result.connections),
       cost_cents: result.costCents,
       ...(result.estimate === undefined ? {} : { estimate: result.estimate }),

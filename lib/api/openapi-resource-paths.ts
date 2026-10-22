@@ -28,7 +28,7 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
         undefined,
         ruleParameters,
       ),
-      patch: alertRuleMutation(
+      patch: resourceMutation(
         bearer(
           "Update an alert rule",
           "updateAlertRule",
@@ -52,7 +52,7 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
         undefined,
         pageParameters,
       ),
-      post: alertRuleMutation(
+      post: resourceMutation(
         bearer("Create an alert rule", "createAlertRule", ref("AlertRule"), ref("AlertRuleInput"), [
           { $ref: "#/components/parameters/IdempotencyKey" },
         ]),
@@ -84,10 +84,24 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
         undefined,
         pageParameters,
       ),
-      post: bearer("Add a competitor", "addCompetitor", ref("Competitor"), ref("CompetitorCreate")),
+      post: resourceMutation(
+        bearer("Add a competitor", "addCompetitor", ref("Competitor"), ref("CompetitorCreate"), [
+          { $ref: "#/components/parameters/IdempotencyKey" },
+        ]),
+        true,
+      ),
     },
     "/projects/{project_id}/competitors/{competitor_id}": {
-      delete: bearer("Remove a competitor", "removeProjectCompetitor", ref("Competitor")),
+      delete: bearer(
+        "Remove a competitor",
+        "removeProjectCompetitor",
+        ref("CompetitorDeleteResult"),
+        undefined,
+        [
+          { in: "path", name: "competitor_id", required: true, schema: publicIdSchema("cmp") },
+          { $ref: "#/components/parameters/IdempotencyKey" },
+        ],
+      ),
     },
     "/projects/{project_id}/migration-tokens": {
       get: bearer("List migration tokens", "listMigrationTokens", list(ref("MigrationToken"))),
@@ -109,8 +123,9 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
       patch: bearer(
         "Update notification preferences",
         "updateNotificationPreferences",
-        ref("NotificationPreferences"),
-        ref("NotificationPreferences"),
+        ref("NotificationPreferencesUpdated"),
+        ref("NotificationPreferencesPatch"),
+        [{ $ref: "#/components/parameters/IdempotencyKey" }],
       ),
     },
     "/projects/{project_id}/provider-budgets": {
@@ -188,7 +203,7 @@ export function resourcePaths(input: { bearer: Bearer; list: List; ref: Ref }) {
   };
 }
 
-function alertRuleMutation(operation: object, created = false) {
+function resourceMutation(operation: object, created = false) {
   const raw = operation as { requestBody: object; responses: Record<string, object> };
   const { "200": success, ...errors } = raw.responses;
   return {

@@ -21,10 +21,14 @@ const completeProvider = {
 const connection = {
   credentialsEncrypted: "encrypted",
   id: "connection_1",
+  publicId: "conn_a00000000000000000000000",
+  credentialSource: "own" as const,
+  updatedAt: new Date(),
   provider: "dataforseo",
 };
 const project = {
   id: "project_1",
+  ownerId: "owner",
   providerConnections: [connection],
   publicId: "prj_1",
 };
@@ -41,10 +45,18 @@ describe("domain overview context", () => {
     expect(mocks.project.findFirst).toHaveBeenCalledWith({
       select: {
         id: true,
+        ownerId: true,
         lookupCacheTtlSeconds: true,
         providerConnections: {
           orderBy: [{ priority: "asc" }, { provider: "asc" }],
-          select: { credentialsEncrypted: true, id: true, provider: true },
+          select: {
+            credentialsEncrypted: true,
+            id: true,
+            publicId: true,
+            provider: true,
+            credentialSource: true,
+            updatedAt: true,
+          },
           where: { enabled: true, kind: "serp", status: "connected" },
         },
         publicId: true,

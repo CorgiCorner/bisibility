@@ -1,3 +1,6 @@
+import { paymentReceiptWireSchema, paymentResponseFields } from "./openapi-action-payment";
+import { openEnum, sdkName } from "./openapi-sdk-schema";
+
 const text = { type: "string" };
 const date = { type: "string", format: "date-time" };
 const number = { type: "number" };
@@ -57,6 +60,7 @@ const aiOutcome = {
       {
         ok: { const: true },
         estimate: { const: true },
+        ...paymentResponseFields,
         estimated_cost_cents: number,
         estimate_kind: { type: "string", enum: ["forecast", "admission_bound"] },
         is_guaranteed_maximum: flag,
@@ -93,6 +97,8 @@ const aiOutcome = {
       {
         ok: { const: true },
         estimate: { const: false },
+        ...paymentResponseFields,
+        original_payment: paymentReceiptWireSchema,
         cached: flag,
         report_id: text,
         cost_cents: number,
@@ -103,65 +109,81 @@ const aiOutcome = {
     ),
   ],
 };
-const namedChoice = object({ code: text, name: text });
-const aiCatalog = object({
-  models: array(
-    object({
-      id: text,
-      provider: { const: "chat_gpt" },
-      label: text,
-      reasoning: flag,
-      web_search: flag,
-      min_output_tokens: number,
-      max_output_tokens: number,
-      price_available: {
-        ...flag,
-        description:
-          "Fresh official token unit prices are available. This does not imply a complete request/search cost ceiling.",
-      },
-      admission_enabled: {
-        ...flag,
-        description:
-          "The model ID is enabled by the current billing policy. Known prices alone do not enable additional model IDs.",
-      },
-      actual_cost_enabled: {
-        ...flag,
-        description:
-          "Fresh token and base forecast available for explicit own-BYOK actual-cost mode, without a guaranteed maximum.",
-      },
+const namedChoice = {
+  ...object({ code: text, name: text }),
+  ...sdkName("AiResearchCatalogChoice"),
+};
+const aiCatalog = {
+  ...object({
+    models: array({
+      ...object({
+        id: text,
+        provider: { const: "chat_gpt" },
+        label: text,
+        reasoning: flag,
+        web_search: flag,
+        min_output_tokens: number,
+        max_output_tokens: number,
+        price_available: {
+          ...flag,
+          description:
+            "Fresh official token unit prices are available. This does not imply a complete request/search cost ceiling.",
+        },
+        admission_enabled: {
+          ...flag,
+          description:
+            "The model ID is enabled by the current billing policy. Known prices alone do not enable additional model IDs.",
+        },
+        actual_cost_enabled: {
+          ...flag,
+          description:
+            "Fresh token and base forecast available for explicit own-BYOK actual-cost mode, without a guaranteed maximum.",
+        },
+      }),
+      ...sdkName("AiResearchCatalogModel"),
     }),
-  ),
-  visibility_markets: array(
-    object({
-      platform: { type: "string", enum: ["chat_gpt", "google"] },
-      location_code: number,
-      country_name: text,
-      languages: array(namedChoice),
+    visibility_markets: array({
+      ...object({
+        platform: {
+          type: "string",
+          enum: ["chat_gpt", "google"],
+          ...openEnum("AiResearchVisibilityPlatform"),
+        },
+        location_code: number,
+        country_name: text,
+        languages: array(namedChoice),
+      }),
+      ...sdkName("AiResearchVisibilityMarket"),
     }),
-  ),
-  response_countries: {
-    ...array(namedChoice),
-    description:
-      "Bundled ISO country names for optional search hints, not observed dataset coverage.",
-  },
-  response_languages: {
-    ...array(namedChoice),
-    description: "Local language names for answer instructions, not native provider filters.",
-  },
-  limits: object({ max_models: { const: 2 }, max_output_tokens: { const: 4096 } }),
-  fetched_at: date,
-  actual_cost_available: {
-    ...flag,
-    description:
-      "The project currently uses own provider credentials. This is rechecked authoritatively before paid execution.",
-  },
-});
+    response_countries: {
+      ...array(namedChoice),
+      description:
+        "Bundled ISO country names for optional search hints, not observed dataset coverage.",
+    },
+    response_languages: {
+      ...array(namedChoice),
+      description: "Local language names for answer instructions, not native provider filters.",
+    },
+    limits: {
+      ...object({ max_models: { const: 2 }, max_output_tokens: { const: 4096 } }),
+      ...sdkName("AiResearchCatalogLimits"),
+    },
+    fetched_at: date,
+    actual_cost_available: {
+      ...flag,
+      description:
+        "The project currently uses own provider credentials. This is rechecked authoritatively before paid execution.",
+    },
+  }),
+  ...sdkName("AiResearchCatalog"),
+};
 
 export function researchWorkspaceResponse(operationId: string) {
   if (operationId === "listAgentReports")
     return object({ data: array(reportSummary), meta: object({ next_cursor: nullableText }) });
   let data: object;
-  if (operationId === "getAiResearchCatalog") data = aiCatalog;
+  if (operationId === "getAiResearchCatalog")
+    return { ...object({ data: aiCatalog }), ...sdkName("AiResearchCatalogResponse") };
   else if (operationId.endsWith("ProjectContext")) data = context;
   else if (["analyzeAiVisibility", "compareAiPrompts"].includes(operationId)) data = aiOutcome;
   else data = report;

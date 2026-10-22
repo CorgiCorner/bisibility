@@ -35,8 +35,6 @@
       "serpDepth": "Profundidad de SERP predeterminada",
       "serpDepthHelp": "Hasta dónde lee una comprobación en cada página de resultados.",
       "serpDepthWarning": "A partir de la siguiente comprobación, las palabras clave que posicionen por debajo de {depth, number} dejarán de registrar su posición y constarán como no encontradas. Ese hueco permanece en el histórico.",
-      "stopOnMatch": "Detener las comprobaciones en la primera coincidencia del dominio",
-      "stopOnMatchDescription": "Si está activado, deja de leer en cuanto aparece {domain} y registra la mejor posición. Si está desactivado, lee toda la profundidad configurada.",
       "projectDomain": "el dominio del proyecto",
       "frequencyDaily": "Diaria",
       "frequencyWeekly": "Semanal",
@@ -46,7 +44,14 @@
       "frequencyCustomCron": "Cron personalizado",
       "deviceDesktop": "Escritorio",
       "deviceMobile": "Móvil",
-      "depthOption": "Top {depth, number}"
+      "depthOption": "Top {depth, number}",
+      "resultsCollection": "Resultados que recopilar",
+      "positionOnly": "Mi posición",
+      "fullResults": "Resultados de búsqueda completos",
+      "positionOnlyDescription": "Deja de recopilar al encontrar {domain}. Los resultados de competidores pueden estar incompletos.",
+      "fullResultsDescription": "Recopila resultados hasta el Top {depth, number} para comparar competidores. Puede consumir más créditos o solicitudes al proveedor.",
+      "visibilityDepthWarning": "Las comprobaciones con una profundidad inferior al Top 20 no actualizan Visibility.",
+      "fullTop20Description": "Recopila el Top 20 solicitado aunque encuentre tu sitio antes. Puede consumir más créditos o solicitudes al proveedor."
     },
     "matchScope": {
       "title": "Ámbito de coincidencia",
@@ -154,6 +159,10 @@
         "invalid": "Introduce un tiempo no negativo con hasta tres decimales o deja el campo vacío.",
         "error": "No se pudo guardar la política. Actualiza e inténtalo de nuevo."
       }
+    },
+    "schedules": {
+      "description": "Las palabras clave nuevas no tienen horario. Añádelas a uno para realizar comprobaciones automáticas.",
+      "manage": "Gestionar horarios"
     }
   }
 }

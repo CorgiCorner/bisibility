@@ -56,6 +56,7 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
     <section id="meter-usage" className="min-w-0 space-y-4">
       {summaries.map(({ source, hasMeasurements }) => (
         <UsageSummaryCards
+          hideMeasured
           key={source}
           view={summary}
           variant={hasMeasurements ? "card" : "plain"}
@@ -68,6 +69,7 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
       ))}
       {!data.summary.funding.length && (
         <UsageSummaryCards
+          hideMeasured
           view={data.summary}
           labels={p.summary}
           measurementLabels={p.measurement}
@@ -78,6 +80,7 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
 
       {data.summary.funding.some((row) => row.fundingSource === "byok") && (
         <CostSummaryCard
+          hideMeasured
           view={data.summary}
           labels={p.cost}
           measurementLabels={p.measurement}
@@ -127,6 +130,7 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
           <div key={fundingSource} className="space-y-2">
             <h4 className="text-xs font-medium">{p.cost[fundingSource]}</h4>
             <UsageTable
+              hideMeasured
               view={view}
               labels={{ ...p.table, title: p.cost[fundingSource] }}
               dimensionLabels={p.dimensions}
@@ -143,7 +147,13 @@ export function UsageSummary({ data }: { data: ProjectUsageViews }) {
           </div>
         ))}
         {!detail.rows.length && (
-          <UsageTable view={detail} labels={p.table} formatFigure={p.figure} formatUnit={p.unit} />
+          <UsageTable
+            hideMeasured
+            view={detail}
+            labels={p.table}
+            formatFigure={p.figure}
+            formatUnit={p.unit}
+          />
         )}
         {(page > 0 || detail.nextCursor) && (
           <div className="flex justify-end gap-2">

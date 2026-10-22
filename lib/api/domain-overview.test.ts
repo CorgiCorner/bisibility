@@ -469,4 +469,85 @@ describe("Domain Overview REST handlers", () => {
       data: { cached: true, fetched_at: null, data: [] },
     });
   });
+  it.each([
+    [postDomainOverviewAnalyze, "analyze", mocks.analyze, {}],
+    [postDomainOverviewHistory, "history", mocks.history, {}],
+    [postDomainOverviewKeywords, "keywords", mocks.keywords, { limit: 100, offset: 100 }],
+    [postDomainOverviewPages, "pages", mocks.pages, { limit: 100, offset: 100 }],
+  ])(
+    "forwards signed payment consent without inventing a client USD cap for %s",
+    async (handler, name, service, page) => {
+      const { max_cost_cents: _cap, ...scope } = commonBody;
+      const response = await handler(
+        context(name, {
+          ...scope,
+          ...page,
+          payment_option_id: "option-a",
+          accepted_payment: { quote_token: "signed-consent" },
+          require_payment: true,
+        }),
+        "prj_1",
+      );
+      if (!response) throw new Error("Missing response");
+      expect(response.status).toBe(200);
+      expect(service).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          paymentOptionId: "option-a",
+          acceptedPayment: { quoteToken: "signed-consent" },
+          requirePayment: true,
+          maxCostCents: undefined,
+        }),
+      );
+    },
+  );
+  it("preserves an attempted operation receipt and rate-limit headers on failure", async () => {
+    const payment = {
+      actionId: "actual",
+      quoteId: "quote",
+      state: "unknown",
+      charge: { value: null, unit: { kind: "currency", code: "USD" }, certainty: "unknown" },
+    };
+    mocks.analyze.mockResolvedValue({ ok: false, reason: "provider_error", costCents: 0, payment });
+    const response = await postDomainOverviewAnalyze(context("analyze", commonBody), "prj_1");
+    expect(response.status).toBe(422);
+    expect(response.headers.get("RateLimit-Remaining")).toBe("99");
+    expect(await response.json()).toMatchObject({
+      details: { payment: { action_id: "actual", state: "unknown", charge: { value: null } } },
+    });
+  });
+  it.each([
+    ["insufficient_credits", 402],
+    ["wallet_budget_exhausted", 429],
+  ])("retains charge evidence with typed %s refusal", async (reason, status) => {
+    mocks.analyze.mockResolvedValue({
+      ok: false,
+      reason,
+      costCents: 0,
+      payment: {
+        actionId: "original-charge",
+        quoteId: "quote",
+        state: "unknown",
+        charge: { value: null, unit: { kind: "currency", code: "USD" }, certainty: "unknown" },
+      },
+    });
+    const response = await postDomainOverviewAnalyze(context("analyze", commonBody), "prj_1");
+    expect(response.status).toBe(status);
+    expect(await response.json()).toMatchObject({
+      details: { payment: { action_id: "original-charge", state: "unknown" } },
+    });
+  });
+  it("projects the shared payment discriminator for executed receipts", async () => {
+    const payment = {
+      actionId: "actual",
+      quoteId: "quote",
+      state: "settled",
+      charge: { value: "0.02", unit: { kind: "currency", code: "USD" }, certainty: "measured" },
+    };
+    mocks.analyze.mockResolvedValue({ ok: true, payment });
+    const response = await postDomainOverviewAnalyze(context("analyze", commonBody), "prj_1");
+    expect(await response.json()).toMatchObject({
+      data: { payment: { kind: "receipt", action_id: "actual" } },
+    });
+  });
 });

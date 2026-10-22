@@ -67,7 +67,7 @@ describe("header budget currency", () => {
   it("shows all money in dollars with two visible decimal places", () => {
     expect(headerBudgetFigure(figure("7.4071"), "en")).toBe("$0.07");
     expect(headerBudgetFigure(figure("5000"), "en")).toBe("$50.00");
-    expect(headerBudgetFigure(figure("0.0001"), "en")).toBe("$0.00");
+    expect(headerBudgetFigure(figure("0.0001"), "en")).toBe("< $0.01");
   });
   it("supports explicitly requested display precision", () => {
     expect(headerBudgetFigure(figure("7.4071"), "en", { moneyFractionDigits: 4 })).toBe("$0.0741");

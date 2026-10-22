@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   analyzeDomainOverview,
   loadDomainKeywordsPage,
@@ -11,77 +10,44 @@ import {
   UnsupportedDomainOverviewTargetError,
 } from "@/lib/domain-overview/target";
 import type {
-  DomainModuleOutcome,
+  DomainModulePaymentOutcome,
   DomainOverviewLookupFailure,
   DomainOverviewOutcome,
 } from "@/lib/domain-overview/types";
 import { READINESS_REASON } from "@/lib/projects/readiness";
-import { z } from "zod";
+import { surfaceOf } from "@/lib/provider-usage/surface";
+import type { z } from "zod";
+import {
+  actionPaymentInputFromWire,
+  paymentFailureResponse,
+  paymentResource,
+} from "./action-payment";
 import { budgetExhaustedResponse } from "./budget-exhausted";
 import type { ApiContext } from "./context";
+import {
+  analyzeBodySchema,
+  historyBodySchema,
+  keywordPageBodySchema,
+  relevantPageBodySchema,
+} from "./domain-overview-input";
 import { providerOrigin } from "./request-origin";
 import { dataResponse, errorResponse } from "./responses";
 import { retryHeaders } from "./retry-headers";
 import { readJsonBody, scopedProject, snakeizeKeys } from "./surface";
 
-const commonFields = {
-  fresh: z.boolean().default(false),
-  language_code: z.string().trim().min(2).max(12),
-  location_code: z.number().int().positive(),
-  scope_override: z.enum(["root", "subdomain"]).optional(),
-  target: z.string().trim().min(1).max(253),
-};
-
-export const analyzeBodySchema = z
-  .object({
-    ...commonFields,
-    estimate_only: z.boolean().default(false),
-    keyword_limit: z.number().int().min(1).max(100).default(100),
-    max_cost_cents: z.number().int().nonnegative().optional(),
-    page_limit: z.number().int().min(1).max(1_000).default(100),
-  })
-  .strict()
-  .superRefine((input, ctx) => {
-    if (!input.estimate_only && input.max_cost_cents === undefined) {
-      ctx.addIssue({
-        code: "custom",
-        message: "max_cost_cents is required unless estimate_only is true",
-        path: ["max_cost_cents"],
-      });
-    }
-  });
-
-export const historyBodySchema = z
-  .object({
-    ...commonFields,
-    max_cost_cents: z.number().int().nonnegative(),
-  })
-  .strict();
-
-const pageFields = {
-  ...commonFields,
-  max_cost_cents: z.number().int().nonnegative(),
-  offset: z.number().int().nonnegative(),
-};
-
-export const keywordPageBodySchema = z
-  .object({
-    ...pageFields,
-    limit: z.number().int().min(1).max(100),
-  })
-  .strict();
-
-export const relevantPageBodySchema = z
-  .object({
-    ...pageFields,
-    limit: z.number().int().min(1).max(1_000),
-  })
-  .strict();
+export {
+  analyzeBodySchema,
+  historyBodySchema,
+  keywordPageBodySchema,
+  relevantPageBodySchema,
+} from "./domain-overview-input";
 
 function failureDetails(outcome: DomainOverviewLookupFailure) {
   return {
     cost_cents: outcome.costCents,
     reason: outcome.reason,
+    ...(outcome.phase ? { phase: outcome.phase } : {}),
+    ...(outcome.providerCode ? { provider_code: outcome.providerCode } : {}),
     ...(outcome.reason === "in_progress" || outcome.reason === "rate_limited"
       ? { reset_at: outcome.resetAt ?? null }
       : {}),
@@ -89,6 +55,34 @@ function failureDetails(outcome: DomainOverviewLookupFailure) {
 }
 
 function lookupError(ctx: ApiContext, outcome: DomainOverviewLookupFailure) {
+  return paymentFailureResponse(lookupErrorBase(ctx, outcome), outcome);
+}
+function lookupErrorBase(ctx: ApiContext, outcome: DomainOverviewLookupFailure) {
+  if (outcome.reason === "wallet_budget_exhausted")
+    return budgetExhaustedResponse(ctx, {
+      scope: "wallet",
+      surface: surfaceOf(providerOrigin(ctx.origin).source),
+    });
+  if (outcome.reason === "own_credentials_required")
+    return errorResponse("byok_required", "This action requires your own provider key.", 422, {
+      headers: ctx.headers,
+      instance: ctx.instance,
+      details: failureDetails(outcome),
+    });
+  if (outcome.reason === "insufficient_credits")
+    return errorResponse(
+      "credits_exhausted",
+      "Available credits do not cover the remaining work. Review retained payment before retrying.",
+      402,
+      { headers: ctx.headers, instance: ctx.instance, details: failureDetails(outcome) },
+    );
+  if (outcome.reason.startsWith("payment_"))
+    return errorResponse(
+      "conflict",
+      "Review a current payment quote before running this action.",
+      409,
+      { headers: ctx.headers, instance: ctx.instance, problemDetails: { reason: outcome.reason } },
+    );
   const common = {
     details: failureDetails(outcome),
     headers: ctx.headers,
@@ -160,16 +154,22 @@ function lookupError(ctx: ApiContext, outcome: DomainOverviewLookupFailure) {
   );
 }
 
-function successResponse<T extends { ok: true }>(ctx: ApiContext, outcome: T) {
+function successResponse<T extends { ok: true } & Parameters<typeof paymentResource>[0]>(
+  ctx: ApiContext,
+  outcome: T,
+) {
   const { ok: _ok, ...data } = outcome;
-  return dataResponse(snakeizeKeys(data), { headers: ctx.headers });
+  return dataResponse(
+    { ...(snakeizeKeys(data) as object), ...paymentResource(outcome) },
+    { headers: ctx.headers },
+  );
 }
 
 function outcomeResponse(ctx: ApiContext, outcome: DomainOverviewOutcome) {
   return outcome.ok ? successResponse(ctx, outcome) : lookupError(ctx, outcome);
 }
 
-function moduleResponse<T>(ctx: ApiContext, outcome: DomainModuleOutcome<T>) {
+function moduleResponse<T>(ctx: ApiContext, outcome: DomainModulePaymentOutcome<T>) {
   return outcome.ok ? successResponse(ctx, outcome) : lookupError(ctx, outcome);
 }
 
@@ -215,6 +215,7 @@ export async function postDomainOverviewAnalyze(ctx: ApiContext, projectId: stri
     return outcomeResponse(
       ctx,
       await analyzeDomainOverview(serviceContext(ctx), {
+        ...actionPaymentInputFromWire(input),
         estimateOnly: input.estimate_only,
         fresh: input.fresh,
         keywordLimit: input.keyword_limit,
@@ -240,6 +241,8 @@ export async function postDomainOverviewHistory(ctx: ApiContext, projectId: stri
   return moduleResponse(
     ctx,
     await loadDomainOverviewHistory(serviceContext(ctx), {
+      ...actionPaymentInputFromWire(input),
+      estimateOnly: input.estimate_only,
       fresh: input.fresh,
       languageCode: input.language_code,
       locationCode: input.location_code,
@@ -265,6 +268,8 @@ async function domainOverviewPageInput<T extends typeof keywordPageBodySchema>(
 
 function pageOptions(input: z.infer<typeof relevantPageBodySchema>) {
   return {
+    ...actionPaymentInputFromWire(input),
+    estimateOnly: input.estimate_only,
     fresh: input.fresh,
     languageCode: input.language_code,
     limit: input.limit,

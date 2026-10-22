@@ -1,9 +1,6 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
-import {
-  runOutcomeSchema,
-  runStatusSchema,
-  runTriggerSchema,
-} from "@/lib/rank-check/runs/contract";
+import { type runStatusSchema, runTriggerSchema } from "@/lib/rank-check/runs/contract";
+import { normalizeTerminalRunState } from "@/lib/rank-check/runs/terminal-state";
 import { asProjectRef, searchConsolePath } from "@/lib/routing/app-path";
 import { projectRunRankCheckPath } from "@/lib/routing/project-runs-path";
 import type { ActiveSearchImportSnapshot } from "@/lib/search-insights/sync/operation-snapshot";
@@ -84,29 +81,34 @@ export function rankProjectRun(
   row: RankRunRow,
   project: ProjectRunsPresentationProject,
 ): ProjectRunRankCheck {
-  const status = runStatusSchema.parse(row.status);
+  const { status, outcome } = normalizeTerminalRunState(row);
   const trigger = runTriggerSchema.parse(row.trigger);
   return {
     attention: rankAttention(row, status),
+    cost: {
+      actualCents: row.costCents,
+      estimatedCents: row.estimatedCostCents,
+      state: row.costCents === null ? "unknown" : "confirmed",
+    },
     capabilities: { cancel: false, pause: false, resume: false, retry: false, viewDetails: true },
     details: {
       costCents: row.costCents,
       estimatedCostCents: row.estimatedCostCents,
-      outcome: runOutcomeSchema.nullable().parse(row.outcome),
+      outcome,
       status,
       trigger,
       blockedReason: row.blockedReason,
     },
     href: projectRunRankCheckPath(asProjectRef(project.publicId), row.publicId),
     id: row.publicId as ProjectRunRankCheck["id"],
-    kind: "rank_check",
+    kind: "rank",
     lifecycle: status as ProjectRunLifecycle,
     progress: { completed: row.completedCount, total: row.totalCount, unit: "targets" },
     project: {
       name: project.name,
       publicId: project.publicId as ProjectRunRankCheck["project"]["publicId"],
     },
-    scope: { description: null, keywordCount: row.keywordCount, kind: "rank_check" },
+    scope: { description: null, keywordCount: row.keywordCount, kind: "rank" },
     timestamps: {
       createdAt: row.createdAt.toISOString(),
       finishedAt: iso(row.finishedAt),
@@ -114,7 +116,7 @@ export function rankProjectRun(
       plannedFor: iso(row.plannedFor),
       startedAt: iso(row.startedAt),
     },
-    title: { kind: "rank_check", trigger },
+    title: { kind: "rank", trigger },
   };
 }
 
@@ -166,6 +168,7 @@ export function gscProjectRun(
   const snapshotState = snapshot ? gscActiveSnapshotRunState(snapshot) : null;
   return {
     attention: snapshotState?.attention ?? gscAttention(record.state, record.pausedReason),
+    cost: { actualCents: null, estimatedCents: null, state: "not_applicable" },
     capabilities: snapshot
       ? { cancel: false, ...snapshot.capabilities, viewDetails: true }
       : { cancel: false, pause: false, resume: false, retry: false, viewDetails: true },
@@ -177,7 +180,7 @@ export function gscProjectRun(
     },
     href: gscHref(project.publicId, record.property),
     id: record.id,
-    kind: "gsc_import",
+    kind: "gsc",
     lifecycle: snapshotState?.lifecycle ?? gscLifecycle(record.state, record.pausedReason),
     progress: snapshot
       ? { completed: snapshot.progress.done, total: snapshot.progress.total, unit: "days" }
@@ -186,14 +189,17 @@ export function gscProjectRun(
       name: project.name,
       publicId: project.publicId as ProjectRunGscImport["project"]["publicId"],
     },
-    scope: { description: record.property, kind: "gsc_import" },
+    scope: { description: record.property, kind: "gsc" },
     timestamps: {
       createdAt: record.timestamps.createdAt.toISOString(),
+      startedAt: iso(record.timestamps.syncStartedAt ?? record.timestamps.lastSyncStartedAt),
+      finishedAt: iso(record.timestamps.lastSyncFinishedAt),
+      plannedFor: null,
       lastProbeAt: iso(record.timestamps.lastProbeAt),
       lastSyncFinishedAt: iso(record.timestamps.lastSyncFinishedAt),
       lastSyncStartedAt: iso(record.timestamps.lastSyncStartedAt),
       syncStartedAt: iso(record.timestamps.syncStartedAt),
     },
-    title: { kind: "gsc_import" },
+    title: { kind: "gsc" },
   };
 }

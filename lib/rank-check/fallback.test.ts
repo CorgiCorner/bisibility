@@ -81,7 +81,12 @@ const mocks = vi.hoisted(() => ({
     $transaction: vi.fn(),
     auditLog: { create: vi.fn() },
     billingAccess: { findUnique: vi.fn() },
-    keyword: { count: vi.fn(), findUnique: vi.fn(), groupBy: vi.fn() },
+    keyword: {
+      count: vi.fn(),
+      findUnique: vi.fn(),
+      groupBy: vi.fn(),
+      findMany: vi.fn(async () => []),
+    },
     keywordSchedule: { update: vi.fn() },
     observationItem: { createMany: vi.fn() },
     observationRun: { create: vi.fn().mockResolvedValue({ id: "obs_1" }) },
@@ -1260,7 +1265,7 @@ describe("runKeywordCheckWithFallback", () => {
         expect.objectContaining({
           completedCheckCount: 2,
           depth: expectedDepth,
-          stopOnMatch: expectedStopOnMatch,
+          stopOnMatch: expectedDepth === 20 ? false : expectedStopOnMatch,
         }),
       );
       expect(mocks.prisma.rankCheck.updateMany).toHaveBeenCalledWith({

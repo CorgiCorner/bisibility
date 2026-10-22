@@ -153,3 +153,42 @@ describe("updateProjectBudgetAction", () => {
     expect(mocks.prisma.project.update).not.toHaveBeenCalled();
   });
 });
+
+describe("updateProjectBudgetAction funding limits", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.prisma.$transaction.mockImplementation((body) => body(mocks.prisma));
+    mocks.setBudget.mockResolvedValue({ capCents: null });
+    mocks.prisma.project.findFirst.mockResolvedValue({
+      id: "project_1",
+      ownerId: "user_1",
+      publicId: "prj_a00000000000000000000000",
+      writeMode: "active",
+      writeModeChangedAt: null,
+      writeModeChangedById: null,
+    });
+  });
+
+  it("defaults to your keys and passes an explicit Credits source", async () => {
+    mockActor("owner");
+    const projectId = "prj_a00000000000000000000000";
+    await updateProjectBudgetAction({ capCents: 7_500, projectId });
+    expect(mocks.setBudget).toHaveBeenLastCalledWith(
+      mocks.prisma,
+      expect.objectContaining({ capCents: 7_500, funding: "byok" }),
+    );
+    await updateProjectBudgetAction({ capCents: null, funding: "platform", projectId });
+    expect(mocks.setBudget).toHaveBeenLastCalledWith(
+      mocks.prisma,
+      expect.objectContaining({ capCents: null, funding: "platform" }),
+    );
+  });
+
+  it("never removes the your-key limit", async () => {
+    mockActor("owner");
+    await expect(
+      updateProjectBudgetAction({ capCents: null, projectId: "prj_a00000000000000000000000" }),
+    ).rejects.toThrow();
+    expect(mocks.setBudget).not.toHaveBeenCalled();
+  });
+});

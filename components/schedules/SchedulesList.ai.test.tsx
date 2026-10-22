@@ -81,7 +81,7 @@ describe("SchedulesList with AI schedules", () => {
     renderList();
     expect(screen.getByRole("heading", { name: "3 schedules" })).toBeVisible();
     const aiRow = screen.getByRole("row", { name: /Weekly prompts/ });
-    expect(within(aiRow).getByText("Prompt monitoring")).toBeVisible();
+    expect(within(aiRow).getByText("AI tracking")).toBeVisible();
     expect(within(aiRow).getByText("3 prompts")).toBeVisible();
     expect(within(aiRow).getByText("Custom - 0 9 * * 1")).toBeVisible();
     expect(within(aiRow).getByText("Asia/Tokyo")).toBeVisible();
@@ -134,7 +134,7 @@ describe("SchedulesList with AI schedules", () => {
     expect(routerMock.push).toHaveBeenLastCalledWith("/app/prj_story/runs/schedules?ai=ais_weekly");
     fireEvent.click(screen.getByRole("row", { name: /Daily 06:00/ }));
     expect(routerMock.push).toHaveBeenLastCalledWith("/app/prj_story/runs/schedules/sch_daily");
-    expect(screen.getByRole("link", { name: "New prompt monitoring schedule" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "New AI tracking schedule" })).toHaveAttribute(
       "href",
       "/app/prj_story/runs/schedules?ai=new",
     );
@@ -204,7 +204,7 @@ describe("SchedulesList with AI schedules", () => {
     expect(screen.queryByRole("button", { name: /Weekly prompts/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Resume Paused prompts" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Weekly prompts" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "New prompt monitoring schedule" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "New AI tracking schedule" })).toBeNull();
     expect(screen.getByRole("button", { name: "Pause Daily 06:00" })).toBeVisible();
     unmount();
 
@@ -219,7 +219,7 @@ describe("SchedulesList with AI schedules", () => {
     renderList({ ai: undefined });
     expect(screen.getByRole("heading", { name: "1 schedule" })).toBeVisible();
     expect(screen.queryByText("Rank checks")).toBeNull();
-    expect(screen.queryByRole("link", { name: "New prompt monitoring schedule" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "New AI tracking schedule" })).toBeNull();
   });
 
   it("shows AI next runs in the schedule time zone, pending, disabled and empty states", () => {

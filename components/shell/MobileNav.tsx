@@ -1,5 +1,6 @@
 "use client";
 
+import type { PlanStatus } from "@/components/shell/plan-status";
 import type { ShellUser } from "@/components/shell/SidebarFooter";
 import { SidebarFooter } from "@/components/shell/SidebarFooter";
 import { SidebarNav } from "@/components/shell/SidebarNav";
@@ -18,6 +19,7 @@ export type MobileNavProps = {
   canSetDefault?: boolean;
   defaultOpen?: boolean;
   enabledExperimentalModules?: readonly ExperimentalModuleKey[];
+  planStatus?: PlanStatus | null;
   projectRef: string;
   setupCompleted?: boolean;
   setupDoneCount?: number;
@@ -37,6 +39,7 @@ export function MobileNav({
   canSetDefault,
   defaultOpen = false,
   enabledExperimentalModules = [],
+  planStatus = null,
   projectRef,
   setupCompleted = false,
   setupDoneCount = 0,
@@ -104,6 +107,8 @@ export function MobileNav({
           </div>
           <SidebarFooter
             onNavigate={close}
+            planStatus={planStatus}
+            projectRef={projectRef}
             showBrand
             showHostedLinks={showHostedLinks}
             user={user}

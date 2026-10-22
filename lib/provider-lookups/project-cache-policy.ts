@@ -1,8 +1,9 @@
 import "server-only";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { ttlOptions } from "@/lib/project-data-cache/schema";
 
 const scope = new AsyncLocalStorage<number | null>();
-export const projectCacheTtlOptions = [3600, 21600, 43200, 86400, 259200, 604800] as const;
+export const projectCacheTtlOptions = ttlOptions;
 
 export function withProjectCachePolicy<T>(ttl: number | null | undefined, run: () => T): T {
   return scope.run(ttl ?? null, run);

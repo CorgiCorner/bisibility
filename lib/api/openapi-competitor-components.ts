@@ -12,10 +12,15 @@ export const competitorSchemas = {
     required: ["id", "domain"],
     type: "object",
   },
+  CompetitorDeleteResult: {
+    properties: { removed: { const: true, type: "boolean" } },
+    required: ["removed"],
+    type: "object",
+  },
   CompetitorCreate: {
     properties: {
-      domain: { type: "string" },
-      label: { type: "string" },
+      domain: { minLength: 1, type: "string" },
+      label: { maxLength: 80, type: "string" },
     },
     required: ["domain"],
     type: "object",

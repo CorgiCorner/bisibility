@@ -17,7 +17,8 @@
       "runStatus": "Estado de la ejecución",
       "searchConsole": "Search Console",
       "source": "Fuente:",
-      "status": "Estado:"
+      "status": "Estado:",
+      "aiTracking": "AI Tracking"
     },
     "content": {
       "activeDescription": "Revisa el historial de ejecuciones o elige otro estado para encontrar el trabajo ya terminado.",
@@ -25,7 +26,7 @@
       "clearFilters": "Quitar los filtros",
       "filteredDescription": "Cambia o quita los filtros para ver otras ejecuciones.",
       "filteredTitle": "No hay ninguna ejecución que coincida",
-      "historyDescription": "Aquí aparecerán las comprobaciones de posiciones y las importaciones del histórico de Search Console.",
+      "historyDescription": "Aquí aparecerán las comprobaciones de posición, el seguimiento de IA y las importaciones de Search Console.",
       "historyTitle": "Todavía no hay ejecuciones",
       "loadError": "No se han podido cargar las ejecuciones",
       "manageSchedules": "Gestionar programaciones",
@@ -85,7 +86,13 @@
       "noActiveKeywords": "Sin palabras clave activas",
       "reviewBlocker": "Revisa el motivo del bloqueo",
       "targetProgress": "{completed, number} / {total, number} {total, plural, one {objetivo} other {objetivos}}",
-      "dayProgress": "{completed, number} / {total, number} {total, plural, one {día consolidado} other {días consolidados}}"
+      "dayProgress": "{completed, number} / {total, number} {total, plural, one {día consolidado} other {días consolidados}}",
+      "aiTrackingRun": "Medición de visibilidad en IA",
+      "sampleCount": "Muestras: {count, number}",
+      "sampleProgress": "{completed, number} / {total, number} muestras",
+      "costUnknown": "Coste sin confirmar",
+      "knownCost": "Coste conocido {cost} + sin confirmar",
+      "actualCost": "Coste {cost}"
     },
     "actions": {
       "actionsFor": "Acciones para {title}",
@@ -123,6 +130,67 @@
       "attention": "Requiere atención",
       "pastScheduled": "Fecha prevista superada",
       "pastScheduledDays": "Sin iniciar · {count, plural, one {# día desde la fecha prevista} other {# días desde la fecha prevista}}"
+    },
+    "aiStatuses": {
+      "planned": {
+        "label": "Programado",
+        "description": "La medición de IA espera para comenzar."
+      },
+      "running": {
+        "label": "En curso",
+        "description": "Se están procesando las muestras de IA."
+      },
+      "completed": {
+        "label": "Completado",
+        "description": "La medición de IA ha terminado."
+      },
+      "partial": {
+        "label": "Parcial",
+        "description": "Solo parte de la medición de IA se completó correctamente."
+      },
+      "blocked": {
+        "label": "Bloqueado",
+        "description": "La medición de IA no pudo continuar."
+      },
+      "failed": {
+        "label": "Fallido",
+        "description": "La medición de IA ha fallado."
+      },
+      "cancelled": {
+        "label": "Cancelado",
+        "description": "La medición de IA se canceló."
+      },
+      "skipped": {
+        "label": "Omitido",
+        "description": "Se omitió la medición de IA. Revisa el motivo."
+      },
+      "cost_limit_exceeded": {
+        "label": "Límite de coste superado",
+        "description": "Se omitió la medición de IA por superar el límite de coste."
+      },
+      "status_unavailable": {
+        "label": "Estado no disponible",
+        "description": "No se pudo determinar el estado de la medición de IA."
+      }
+    },
+    "aiResults": {
+      "title": "Resultados de seguimiento de IA",
+      "back": "Volver a ejecuciones",
+      "next": "Más muestras",
+      "empty": "No se guardaron muestras para esta ejecución.",
+      "answer": "Respuesta guardada",
+      "citations": "Páginas citadas",
+      "observed": "Fecha de observación",
+      "model": "Modelo",
+      "measurement": "Medición",
+      "measurements": {
+        "answer_present": "Respuesta disponible",
+        "aio_not_present": "Sin resumen de IA",
+        "partial": "Resultado parcial",
+        "unavailable": "No disponible",
+        "failed": "Error",
+        "unknown": "Desconocido"
+      }
     }
   }
 }

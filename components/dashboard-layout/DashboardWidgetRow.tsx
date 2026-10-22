@@ -84,7 +84,7 @@ export function DashboardWidgetRow({
           if (target >= 0 && target < count) onMove(target, "handle");
         }}
       >
-        <DotsSixVerticalIcon aria-hidden size={18} />
+        <DotsSixVerticalIcon weight="regular" aria-hidden size={18} />
       </Button>
       <span
         aria-hidden
@@ -109,7 +109,7 @@ export function DashboardWidgetRow({
               aria-label={t("widgetUnavailable")}
               className="inline-flex shrink-0 text-fg-muted"
             >
-              <WarningCircleIcon aria-hidden size={16} />
+              <WarningCircleIcon weight="regular" aria-hidden size={16} />
             </span>
           ) : null}
           <DashboardViewHelp
@@ -150,9 +150,9 @@ export function DashboardWidgetRow({
             onClick={() => onMove(index + (direction === "up" ? -1 : 1), direction)}
           >
             {direction === "up" ? (
-              <CaretUpIcon aria-hidden size={16} />
+              <CaretUpIcon weight="regular" aria-hidden size={16} />
             ) : (
-              <CaretDownIcon aria-hidden size={16} />
+              <CaretDownIcon weight="regular" aria-hidden size={16} />
             )}
           </Button>
         ))}

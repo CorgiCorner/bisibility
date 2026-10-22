@@ -2,15 +2,18 @@
 
 import { AppDrawer } from "@/components/ui/AppDrawer";
 import { Button } from "@/components/ui/Button";
-import { MenuSelect } from "@/components/ui/MenuSelect";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import { ToolbarSearch } from "@/components/ui/ToolbarSearch";
 import { zodResolver } from "@/lib/forms/zod-resolver";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import {
+  ScheduleAssignmentDestination,
+  type ScheduleAssignmentOption,
+} from "./ScheduleAssignmentDestination";
 import { ScheduleKeywordCandidateRow } from "./ScheduleKeywordCandidateRow";
+import { ScheduleKeywordFilters } from "./ScheduleKeywordFilters";
 export type ScheduleKeywordCandidate = {
   assigned?: boolean;
   checks: number;
@@ -33,15 +36,13 @@ export type AddKeywordsDrawerProps = {
   projectId: string;
   scheduleId: string;
   scheduleName: string;
+  schedules?: readonly ScheduleAssignmentOption[];
 };
-const assignScheduleKeywordsSchema = z
-  .object({
-    keywordIds: z.array(z.string().min(1)).min(1).max(500),
-    projectId: z.string().min(1),
-    scheduleId: z.string().min(1),
-  })
+const selectedKeywordsSchema = z
+  .object({ keywordIds: z.array(z.string().min(1)).min(1).max(500) })
   .strict();
-type AssignScheduleKeywordsForm = z.infer<typeof assignScheduleKeywordsSchema>;
+type SelectedKeywordsForm = z.infer<typeof selectedKeywordsSchema>;
+type AssignScheduleKeywordsForm = SelectedKeywordsForm & { projectId: string; scheduleId: string };
 type Scope = "all" | "selected";
 async function assignScheduleKeywords(input: AssignScheduleKeywordsForm) {
   const response = await fetch(`/api/check-schedules/${input.scheduleId}/keywords`, {
@@ -50,9 +51,6 @@ async function assignScheduleKeywords(input: AssignScheduleKeywordsForm) {
     method: "POST",
   });
   if (!response.ok) throw new Error("schedule_add_keywords_failed");
-}
-function options(values: readonly string[], allLabel: string) {
-  return [{ label: allLabel, value: "all" }, ...values.map((value) => ({ label: value, value }))];
 }
 function filterCandidates(
   candidates: readonly ScheduleKeywordCandidate[],
@@ -79,8 +77,12 @@ export function AddKeywordsDrawer({
   projectId,
   scheduleId,
   scheduleName,
+  schedules,
 }: Readonly<AddKeywordsDrawerProps>) {
   const t = useTranslations("projectRuns.schedules");
+  const [selectedScheduleId, setSelectedScheduleId] = useState(scheduleId);
+  const destination = schedules?.find((schedule) => schedule.publicId === selectedScheduleId);
+  const destinationId = schedules ? (destination?.publicId ?? "") : scheduleId;
   const [device, setDevice] = useState(initialFilters?.device ?? "all");
   const [market, setMarket] = useState(initialFilters?.market ?? "all");
   const [scope, setScope] = useState<Scope>("all");
@@ -88,9 +90,9 @@ export function AddKeywordsDrawer({
   const [selectedIds, setSelectedIds] = useState<string[]>([...initialSelectedKeywordIds]);
   const [tag, setTag] = useState(initialFilters?.tag ?? "all");
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const form = useForm<AssignScheduleKeywordsForm>({
-    defaultValues: { keywordIds: [...initialSelectedKeywordIds], projectId, scheduleId },
-    resolver: zodResolver(assignScheduleKeywordsSchema),
+  const form = useForm<SelectedKeywordsForm>({
+    defaultValues: { keywordIds: [...initialSelectedKeywordIds] },
+    resolver: zodResolver(selectedKeywordsSchema),
   });
   const tags = [...new Set(candidates.flatMap((candidate) => candidate.tags))].sort();
   const markets = [...new Set(candidates.map((candidate) => candidate.market))].sort();
@@ -116,7 +118,7 @@ export function AddKeywordsDrawer({
     setScope("all");
     setSelectedIds([]);
     setSubmitError(null);
-    form.reset({ keywordIds: [], projectId, scheduleId });
+    form.reset({ keywordIds: [] });
     onClose();
   }
 
@@ -133,12 +135,13 @@ export function AddKeywordsDrawer({
     updateSelected(allMatchesSelected ? [] : selectableMatches.map((candidate) => candidate.id));
   }
 
-  async function submit(values: AssignScheduleKeywordsForm) {
+  async function submit(values: SelectedKeywordsForm) {
     setSubmitError(null);
     try {
       if (onSelect) onSelect(values.keywordIds);
       else {
-        await assignKeywordsAction(values);
+        if (!destinationId) return;
+        await assignKeywordsAction({ ...values, projectId, scheduleId: destinationId });
         onAssigned?.();
       }
       close();
@@ -160,7 +163,7 @@ export function AddKeywordsDrawer({
               {t("cancel")}
             </Button>
             <Button
-              disabled={selectedIds.length === 0}
+              disabled={selectedIds.length === 0 || (!onSelect && !destinationId)}
               form="schedule-add-keywords-form"
               loading={form.formState.isSubmitting}
               loadingLabel={t("drawer.adding")}
@@ -178,9 +181,11 @@ export function AddKeywordsDrawer({
       title={
         <span className="block">
           <span className="block">{t("drawer.addKeywords")}</span>
-          <span className="mt-1 block text-[12px] font-normal text-fg-muted">
-            {t("drawer.toSchedule", { name: scheduleName })}
-          </span>
+          {!schedules || destination ? (
+            <span className="mt-1 block text-[12px] font-normal text-fg-muted">
+              {t("drawer.toSchedule", { name: destination?.name ?? scheduleName })}
+            </span>
+          ) : null}
         </span>
       }
     >
@@ -192,56 +197,28 @@ export function AddKeywordsDrawer({
           void form.handleSubmit(submit)(event);
         }}
       >
-        <div className="flex flex-col gap-2.5 border-b border-border pb-3.5">
-          <ToolbarSearch
-            id="schedule-keyword-search"
-            label={t("searchKeywords")}
-            onChange={setSearch}
-            placeholder={t("searchKeywords")}
-            value={search}
-            variant="outlined"
+        {schedules ? (
+          <ScheduleAssignmentDestination
+            disabled={form.formState.isSubmitting}
+            onChange={setSelectedScheduleId}
+            schedules={schedules}
+            value={destinationId}
           />
-          <div className="flex flex-wrap gap-1.5">
-            <MenuSelect
-              ariaLabel={t("tag")}
-              compact
-              onChange={setTag}
-              options={options(tags, t("allTags"))}
-              selectedContent={(option) =>
-                option?.value === "all" ? t("tag") : `${t("tag")}: ${option?.label}`
-              }
-              triggerClassName="min-h-7 rounded-full px-2.5 text-[11.5px] font-semibold"
-              value={tag}
-            />
-            <MenuSelect
-              ariaLabel={t("market")}
-              compact
-              onChange={setMarket}
-              options={options(markets, t("allMarkets"))}
-              selectedContent={(option) =>
-                option?.value === "all" ? t("market") : `${t("market")}: ${option?.label}`
-              }
-              triggerClassName="min-h-7 rounded-full px-2.5 text-[11.5px] font-semibold"
-              value={market}
-            />
-            <MenuSelect
-              ariaLabel={t("device")}
-              compact
-              onChange={setDevice}
-              options={options(devices, t("allDevices"))}
-              selectedContent={(option) =>
-                option?.value === "all" ? t("device") : `${t("device")}: ${option?.label}`
-              }
-              triggerClassName="min-h-7 rounded-full px-2.5 text-[11.5px] font-semibold"
-              value={device}
-            />
-          </div>
-          {activeFilters ? (
-            <p className="m-0 text-[11.5px] leading-5 text-fg-muted">
-              {t("drawer.matches", { count: matchingCandidates.length })}
-            </p>
-          ) : null}
-        </div>
+        ) : null}
+        <ScheduleKeywordFilters
+          device={device}
+          market={market}
+          tag={tag}
+          search={search}
+          devices={devices}
+          markets={markets}
+          tags={tags}
+          matchingCount={matchingCandidates.length}
+          onDeviceChange={setDevice}
+          onMarketChange={setMarket}
+          onTagChange={setTag}
+          onSearchChange={setSearch}
+        />
         {activeFilters || selectedIds.length > 0 ? (
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2.5">
             <div className="flex items-center gap-1.5">

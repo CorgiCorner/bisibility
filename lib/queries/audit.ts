@@ -5,25 +5,28 @@ import { type Actor, AuthorizationError, authorize, getProjectRole } from "@/lib
 import { initials as avatarInitials } from "@/lib/avatar/initials";
 import { prisma } from "@/lib/db/prisma";
 import { parsePublicId } from "@/lib/db/public-id";
+import { getQueryActor } from "@/lib/queries/_auth";
+import type { AuditDiff } from "@/lib/queries/audit-diff";
+import { auditEventDetailsFor, type ProviderSourceChange } from "@/lib/queries/audit-event-details";
+import {
+  publicAuditTargetIdOrNull,
+  redactAuditIds,
+  requiredPublicId,
+} from "@/lib/queries/audit-public-values";
+import type { RankCheckRunSkip } from "@/lib/queries/audit-rank-check-run-skip";
 import { trackedProjectDomain } from "@/lib/schemas/project";
-import { getQueryActor } from "./_auth";
-import { type AuditDiff, diffFor } from "./audit-diff";
-import { publicAuditTargetIdOrNull, redactAuditIds, requiredPublicId } from "./audit-public-values";
-import { type RankCheckRunSkip, rankCheckRunSkipFor } from "./audit-rank-check-run-skip";
 
-export type { AuditDiff } from "./audit-diff";
+export type { AuditDiff } from "@/lib/queries/audit-diff";
 export type AuditOperation = "CREATE" | "DELETE" | "EXPORT" | "IMPORT" | "LOGIN" | "UPDATE";
 export type AuditStatus = "failed" | "success";
 export type AuditEventType = "auth" | "data" | "export" | "import" | "permissions" | "system";
 export type AuditDateRange = "7d" | "30d" | "90d" | "all";
 export type AuditEntry = {
-  /** Stable stored action code used by scoped UI presentation and exports. */
   action?: string;
-  /** Safe structured values used only for the localized skipped-occurrence presentation. */
   rankCheckRunSkip?: RankCheckRunSkip;
+  providerSourceChange?: ProviderSourceChange;
   id: string;
   timestamp: string;
-  /** Legacy fixture fields are ignored by the production presentation adapter. */
   eventName?: string;
   timestampLabel?: string;
   eventType: AuditEventType;
@@ -170,7 +173,6 @@ function channelFor(userAgent: string | null): AuditEntry["source"]["channel"] {
 function mapAuditRow(row: AuditRow): AuditEntry {
   const name = row.actor?.name?.trim() || row.actor?.email || null;
   const email = row.actor?.email ?? "";
-  const redactedAfter = redactAuditIds(row.after);
   return {
     action: row.action,
     actor: {
@@ -180,7 +182,7 @@ function mapAuditRow(row: AuditRow): AuditEntry {
       initials: avatarInitials(name ?? "", email),
       name,
     },
-    diff: diffFor(redactAuditIds(row.before), redactedAfter),
+    ...auditEventDetailsFor(row.action, row.before, row.after),
     eventType: eventTypeFor(row.action),
     id: requiredPublicId(row.publicId, "Audit log", "audit"),
     metadata: {
@@ -195,7 +197,6 @@ function mapAuditRow(row: AuditRow): AuditEntry {
       name: publicAuditTargetIdOrNull(row.targetId, row.targetType),
       type: resourceTypeFor(row.targetType),
     },
-    rankCheckRunSkip: rankCheckRunSkipFor(row.action, redactedAfter),
     source: { channel: channelFor(row.userAgent), ip: row.sourceIpMasked?.trim() || null },
     status: statusFor(row.status),
     statusReason: row.statusReason ?? undefined,

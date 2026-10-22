@@ -22,19 +22,30 @@ import { noInput, type OperationInput, rawInput, zodInput } from "./operation-in
  */
 
 /** Fields the run handlers merge into the body from the Idempotency-Key header and the caller. */
-const runServerKeys = ["actorCredential", "actorId", "entrySource", "idempotencyKey", "origin"];
+const runServerKeys = [
+  "actorCredential",
+  "actorId",
+  "entrySource",
+  "idempotencyKey",
+  "origin",
+  "paymentConsent",
+];
 const scheduleServerKeys = runServerKeys.map((key) => `configuration.${key}`);
 
 export const aiTrackingOperationInputs = {
   acceptAiTrackingSuggestions: { body: zodInput(trackingAcceptanceSchema) },
-  aiTrackingSuggestionsGenerate: { body: zodInput(modelSuggestionsGenerateInputSchema) },
+  aiTrackingSuggestionsGenerate: {
+    body: zodInput(modelSuggestionsGenerateInputSchema, {
+      serverKeys: ["preview.paymentConsent", "preview.payment", "preview.paymentOptions"],
+    }),
+  },
   aiTrackingSuggestionsPreview: { body: zodInput(modelSuggestionsPreviewInputSchema) },
   analyzeAiVisibility: { body: zodInput(visibilitySchema, { keys: "wire" }) },
   archiveAiTrackingPrompt: noInput,
   archiveAiTrackingSchedule: noInput,
   archiveAiTrackingTopic: noInput,
   // The body is read and merged, but the cancel operation validates none of it.
-  cancelAiTrackingRun: { body: rawInput() },
+  cancelAiTrackingRun: noInput,
   compareAiPrompts: { body: zodInput(promptSchema, { keys: "wire" }) },
   createAgentReport: { body: zodInput(externalAgentReportSchema, { keys: "wire" }) },
   createAiTrackingPrompt: { body: zodInput(trackingPromptForm) },
@@ -63,12 +74,14 @@ export const aiTrackingOperationInputs = {
   listAiTrackingSamples: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
   listAiTrackingSchedules: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
   listAiTrackingTopics: { query: zodInput(trackingPageSchema, { keys: "wire" }) },
-  previewAiTrackingRun: { body: zodInput(trackingPreviewSchema) },
+  previewAiTrackingRun: {
+    body: zodInput(trackingPreviewSchema, { serverKeys: ["actorId", "entrySource"] }),
+  },
   retryAiTrackingRun: {
     body: zodInput(planTrackingRunSchema, { alsoReads: ["consent"], serverKeys: runServerKeys }),
   },
   // The body is read and camelized, but nothing in it is used.
-  suggestAiTrackingPrompts: { body: rawInput() },
+  suggestAiTrackingPrompts: noInput,
   // Built at the call site in `mutateTrackingCatalog` (ai-tracking-service.ts).
   updateAiTrackingPrompt: { body: zodInput(trackingPromptForm.partial()) },
   updateAiTrackingSchedule: {

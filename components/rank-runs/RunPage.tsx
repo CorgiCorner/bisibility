@@ -56,6 +56,7 @@ export function RunPage({
   const dateDisplay = useDateDisplay();
   const locale = useLocale();
   const t = useTranslations("projectRuns.rankRuns");
+  const paymentT = useTranslations("shared.actionPayment");
   const statusT = useTranslations("shared.controls.status");
   const { operations } = useAppRealtime();
   const [run, setRun] = useState(initialRun);
@@ -79,7 +80,7 @@ export function RunPage({
   const summary = runSummary(
     currentRun,
     { now },
-    createRunPageSummaryLabels({ currentRun, dateDisplay, locale, now, statusT, t }),
+    createRunPageSummaryLabels({ currentRun, dateDisplay, locale, now, statusT, t, paymentT }),
   );
   const scopedProject = asProjectRef(projectRef);
 
@@ -100,10 +101,10 @@ export function RunPage({
         if (!response.ok) throw new Error("Run refresh failed.");
         const refreshed = runFromResponse(await response.json());
         if (!refreshed) throw new Error("Run refresh payload was invalid.");
-        setRun(refreshed);
+        setRun({ ...refreshed, sharedDeferralCode: run.sharedDeferralCode });
       })
       .catch(() => setError(t("runsRefreshFailed")));
-  }, [hasRealtimeRun, projectRef, run.id, t]);
+  }, [hasRealtimeRun, projectRef, run.id, run.sharedDeferralCode, t]);
 
   async function mutate(mutation: RunMutation) {
     setBusy(mutation);
@@ -118,7 +119,7 @@ export function RunPage({
       const payload: unknown = await response.json();
       if (!response.ok) throw new Error("The run could not be updated.");
       const nextRun = runFromResponse(payload);
-      if (nextRun) setRun(nextRun);
+      if (nextRun) setRun({ ...nextRun, sharedDeferralCode: run.sharedDeferralCode });
       const retryId = nextRunId(payload);
       if (retryId) window.location.assign(appPath(scopedProject, "rank-tracker", "runs", retryId));
       setDialogOpen(false);

@@ -1,9 +1,13 @@
+import type { ActionPaymentReceipt } from "@/lib/action-payment/contract";
+import { actionPaymentReceiptSchema } from "@/lib/action-payment/schema";
 import { researchScopeForLocationKey } from "@/lib/research/scope";
 
 const MAX_RECENT_SEARCHES = 8;
 const LEGACY_SCOPE_LABEL_PROPERTY = ["mar", "ket"].join("");
 
 export type RecentKeywordResearch = {
+  payment?: ActionPaymentReceipt;
+  originalPayment?: ActionPaymentReceipt;
   cachedUntil: string;
   connectionId?: string;
   createdAt: string;
@@ -44,7 +48,14 @@ function parseRecentSearch(value: unknown): RecentKeywordResearch | null {
         ? scopeLabelForLocation(legacyScopeLabel, row.locationKey)
         : null;
   const { [LEGACY_SCOPE_LABEL_PROPERTY]: _legacyScopeLabel, ...normalized } = row;
-  const search = { ...normalized, scopeLabel };
+  const search: Record<string, unknown> = { ...normalized, scopeLabel };
+  for (const key of ["payment", "originalPayment"] as const) {
+    if (key in search && search[key] !== undefined) {
+      const payment = actionPaymentReceiptSchema.safeParse(search[key]);
+      if (payment.success) search[key] = payment.data;
+      else delete search[key];
+    }
+  }
   return isRecentSearch(search) ? search : null;
 }
 
@@ -92,9 +103,16 @@ export function addRecentSearch(
       ),
   );
   const createdAt = now.toISOString();
+  const original = current.find((item) => !withoutDuplicate.includes(item));
+  const prior =
+    original?.originalPayment ??
+    (original?.payment?.state !== "free" ? original?.payment : undefined);
+  const originalPayment =
+    next.payment?.state === "free" ? prior : (next.payment ?? next.originalPayment);
   return [
     {
       ...next,
+      ...(originalPayment ? { originalPayment } : {}),
       createdAt,
       scopeLabel,
     },
