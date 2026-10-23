@@ -549,6 +549,7 @@
     "components/integrations/ConnectDrawerScopes.tsx",
     "components/integrations/ConnectedGoogleAccountFooter.tsx",
     "components/integrations/Ga4PropertyManualEntry.tsx",
+    "components/integrations/IntegrationCategories.tsx",
     "components/integrations/IntegrationCategory.tsx",
     "components/integrations/IntegrationsByoNote.tsx",
     "components/integrations/IntegrationsPageLoading.tsx",
@@ -1145,6 +1146,7 @@
     "components/schedules/ScheduleLifecycleActions.tsx",
     "components/schedules/ScheduleObjectFrame.tsx",
     "components/schedules/SchedulePageLoading.tsx",
+    "components/schedules/SchedulerUpgradeBanner.tsx",
     "components/schedules/schedules-table-columns.tsx",
     "components/schedules/SchedulesList.tsx",
     "components/schedules/UnscheduledKeywordsNotice.tsx",
@@ -60656,6 +60658,31 @@
           ]
         ],
         "key": "shared.scheduleName.weekly",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.schedulerUpgrade.detail",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.schedulerUpgrade.review",
+        "tags": []
+      },
+      {
+        "arguments": [],
+        "key": "shared.schedulerUpgrade.schedules",
+        "tags": []
+      },
+      {
+        "arguments": [
+          [
+            "count",
+            6
+          ]
+        ],
+        "key": "shared.schedulerUpgrade.title",
         "tags": []
       },
       {

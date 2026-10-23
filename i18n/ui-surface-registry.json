@@ -5978,6 +5978,11 @@
     },
     {
       "kind": "render",
+      "path": "components/integrations/IntegrationCategories.tsx",
+      "status": "migrated"
+    },
+    {
+      "kind": "render",
       "path": "components/integrations/IntegrationCategory.tsx",
       "status": "migrated"
     },
@@ -9220,6 +9225,11 @@
       "kind": "render",
       "path": "components/schedules/ScheduleRowActions.tsx",
       "status": "pending"
+    },
+    {
+      "kind": "render",
+      "path": "components/schedules/SchedulerUpgradeBanner.tsx",
+      "status": "migrated"
     },
     {
       "kind": "render",

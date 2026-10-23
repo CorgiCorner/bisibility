@@ -43,7 +43,8 @@ describe("rank-check dispatcher schedule bootstrap", () => {
     vi.unstubAllEnvs();
   });
 
-  it("is disabled by default and creates no work", async () => {
+  it("is disabled during cutover and creates no work", async () => {
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
     const client = clientMock();
 
     expect(isRankCheckDispatcherEnabled()).toBe(false);
@@ -139,7 +140,7 @@ describe("rank-check dispatcher schedule bootstrap", () => {
     await expect(ensureRankCheckDispatcherSchedule(client)).resolves.toMatchObject({
       status: "exists",
     });
-    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
     await expect(ensureRankCheckDispatcherSchedule(client)).resolves.toMatchObject({
       status: "disabled",
     });

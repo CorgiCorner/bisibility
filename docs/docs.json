@@ -469,6 +469,7 @@
             "group": "Operate",
             "pages": [
               "self-hosting/temporal",
+              "self-hosting/scheduler-upgrade",
               "self-hosting/operations",
               "self-hosting/historical-accounting",
               "self-hosting/upgrades",

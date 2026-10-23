@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   type BootstrapScheduleClient,
   calendarSpec,
@@ -9,6 +8,7 @@ import {
   isFalseyFlag,
   isTruthyFlag,
 } from "@/lib/temporal/bootstrap";
+import { scheduledMaintenanceEnabled as isScheduledMaintenanceEnabled } from "../rank-check/scheduled-maintenance";
 
 export const AUDIT_PURGE_SCHEDULE_ID = "maintenance-audit-purge";
 export const RANK_CHECK_RAW_PURGE_SCHEDULE_ID = "maintenance-rank-check-raw-purge";
@@ -50,16 +50,7 @@ const DEFAULT_WEEKLY_DIGEST = { dayOfWeek: "MONDAY" as const, hour: 6, minute: 1
 const DEFAULT_SITEMAP_SYNC = { hour: 4, minute: 45 };
 const DEFAULT_PRESENCE_SYNC = { hour: 3, minute: 45 };
 
-/**
- * Maintenance defaults to the reconciler gate but can be overridden independently.
- */
-export function isScheduledMaintenanceEnabled() {
-  const raw = process.env.SCHEDULED_MAINTENANCE_ENABLED?.trim();
-  if (raw === undefined || raw.length === 0) {
-    return !isFalseyFlag(process.env.RANK_CHECK_RECONCILER_ENABLED);
-  }
-  return isTruthyFlag(raw);
-}
+export { scheduledMaintenanceEnabled as isScheduledMaintenanceEnabled } from "../rank-check/scheduled-maintenance";
 
 export function isSitemapSyncEnabled() {
   return isTruthyFlag(process.env.SITEMAP_SYNC_ENABLED);

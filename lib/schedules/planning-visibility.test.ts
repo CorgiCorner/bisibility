@@ -34,8 +34,13 @@ describe("schedule planning visibility policy", () => {
     vi.stubEnv("RANK_CHECK_PLANNER_INTERVAL", "1h30m");
     expect(schedulePlanningMinutes()).toBeNull();
   });
-  it.each(["legacy", "cutover"])("does not promise the dispatcher interval in %s mode", (mode) => {
-    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", mode);
+  it("shows the dispatcher interval after upgrading retired legacy configuration", () => {
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
+    vi.stubEnv("RANK_CHECK_PLANNER_INTERVAL", "30 minutes");
+    expect(schedulePlanningMinutes()).toBe(30);
+  });
+  it("does not promise the dispatcher interval during cutover", () => {
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
     expect(schedulePlanningMinutes()).toBeNull();
   });
 });

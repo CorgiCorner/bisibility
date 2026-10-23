@@ -37,7 +37,7 @@ export function MarketTrackingStatus({
         onClick={(event) => setAnchor(event.currentTarget)}
       >
         <StatusChip label={label} tone={active ? "positive" : "neutral"} />
-        <CaretDownIcon aria-hidden size={12} />
+        <CaretDownIcon weight="regular" aria-hidden size={12} />
       </Button>
       <Menu
         id={menuId}

@@ -25,6 +25,11 @@ export async function register() {
     const { warnDeprecatedInspectionDailyBudget } = await import(
       "./lib/deployment/deprecated-inspection-budget"
     );
+    const { rankCheckSchedulerMode, warnRetiredRankSchedulerConfiguration } = await import(
+      "./lib/rank-check/scheduler-mode"
+    );
+    rankCheckSchedulerMode();
+    warnRetiredRankSchedulerConfiguration();
     assertCanonicalHostedMcpOrigin();
     warnDeprecatedInspectionDailyBudget();
     if (errorSinkDsn) {

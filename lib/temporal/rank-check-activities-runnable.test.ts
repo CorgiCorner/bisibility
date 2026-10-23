@@ -33,10 +33,7 @@ vi.mock("../rank-check/fallback", async () => {
   return { ...actual, runKeywordCheckWithFallback: mocks.runKeywordCheckWithFallback };
 });
 /** Every automatic source, paired with the scheduler mode that admits it. */
-const AUTOMATIC = [
-  ["legacy", "legacy"],
-  ["dispatcher", "dispatcher"],
-] as const;
+const AUTOMATIC = [["dispatcher", "dispatcher"]] as const;
 
 const ACTIVE_LOCATION = "location_active";
 
@@ -59,7 +56,7 @@ describe("runRankCheckActivity runnable gate", () => {
     definitionActivityContextFixture();
     mocks.prisma.$queryRaw.mockImplementation(definitionClaimQueryFixture());
     mocks.prisma.$transaction.mockImplementation((callback) => callback(mocks.prisma));
-    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
+    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
     mocks.prisma.$executeRaw.mockResolvedValue(1);
     mocks.prisma.keyword.findUnique.mockResolvedValue(keywordRow());
     mocks.prisma.projectMarket.findMany.mockResolvedValue([{ locationId: ACTIVE_LOCATION }]);
@@ -148,7 +145,7 @@ describe("runRankCheckActivity runnable gate", () => {
   });
 
   it("reads the active market registry for the keyword's own project", async () => {
-    await runRankCheckActivity(checkInput("legacy"));
+    await runRankCheckActivity(checkInput("dispatcher"));
 
     expect(mocks.prisma.keyword.findUnique).toHaveBeenCalledWith({
       select: { archivedAt: true, locationId: true, projectId: true },
@@ -183,7 +180,7 @@ describe("runRankCheckActivity runnable gate", () => {
   it("does not rename a missing keyword into an unrunnable refusal", async () => {
     mocks.prisma.keyword.findUnique.mockResolvedValue(null);
 
-    await expect(runRankCheckActivity(checkInput("legacy"))).resolves.toMatchObject({
+    await expect(runRankCheckActivity(checkInput("dispatcher"))).resolves.toMatchObject({
       rankCheckId: "rank_running_1",
     });
 

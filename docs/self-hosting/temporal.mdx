@@ -101,20 +101,14 @@ npm run temporal:worker
 
 `SCHEDULER_DRIVER` selects the execution backend.
 `RANK_CHECK_SCHEDULER_MODE` selects the automatic scheduler owner. The settings
-are independent. `legacy` is the D1 default and creates per-keyword Temporal
-Schedules from stored intent. `cutover` pauses both owners and dispatcher
-claims. It blocks late automatic work before lifecycle or provider cost, while
-allowing bounded state repair. `dispatcher` retires legacy scheduling and owns
-all automatic work. Manual checks remain available in every mode.
-
-Deploy the same explicit mode to app and worker. App-first `cutover` stops new
-legacy intent before worker synchronization. App-first `dispatcher` leaves the
-worker in `cutover`, preventing claims during version skew. The deprecated
-boolean fallback is D1-only until the production cutover is proven.
+are independent. `dispatcher` is the default and plans named Schedules into runs
+and bounded dispatch items. `cutover` pauses automatic starts while allowing state
+repair and already-paid collection. Manual checks remain available in both modes.
+The legacy engine is retired. The worker [upgrades existing schedules automatically](/self-hosting/scheduler-upgrade); old variables warn instead of blocking startup.
+Stop old workers before starting the new version.
 
 The worker owns Temporal maintenance schedules. Set
-`SCHEDULED_MAINTENANCE_ENABLED` explicitly instead of relying on reconciler
-defaults. It controls eight schedules: audit and raw-payload purges, queued
+`SCHEDULED_MAINTENANCE_ENABLED` explicitly; otherwise the historical reconciler opt-out is preserved, defaulting to enabled when neither is set. It controls eight schedules: audit and raw-payload purges, queued
 ledger retention, session and verification purge, stale-check and stale-import
 cleanup, migration-hold release, and weekly digest. Sitemap and presence sync
 remain separate opt-ins. Their complete worker configuration is

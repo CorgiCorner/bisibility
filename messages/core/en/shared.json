@@ -2074,6 +2074,12 @@
       "connectAction": "Choose a data source",
       "askAdmin": "Ask a project admin to choose a data source before checks can start."
     },
+    "schedulerUpgrade": {
+      "title": "{count, plural, one {# keyword needs schedule review} few {# keywords need schedule review} many {# keywords need schedule review} other {# keywords need schedule review}}",
+      "detail": "Automatic checks are paused for these keywords. Choose a schedule for them in Schedules. Other keywords continue as configured.",
+      "review": "Show affected keywords",
+      "schedules": "Open Schedules"
+    },
     "durationUnits": {
       "minutes": "{count, plural, one {# minute} other {# minutes}}",
       "hours": "{count, plural, one {# hour} other {# hours}}",

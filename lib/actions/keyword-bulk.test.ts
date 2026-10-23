@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   authorize: vi.fn(),
   prisma: {
     $transaction: vi.fn(),
-    $queryRaw: vi.fn(),
+    $queryRaw: vi.fn(async () => []),
     checkSchedule: { findUnique: vi.fn() },
     keyword: { deleteMany: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
     project: { findFirst: vi.fn() },

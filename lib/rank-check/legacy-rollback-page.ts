@@ -2,7 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
-import type { SyncRankCheckScheduleInput } from "./temporal-schedule";
+import type { SyncRankCheckScheduleInput } from "./legacy-schedule-builder";
 
 type RollbackRow = {
   cronExpression: string | null;

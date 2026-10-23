@@ -3,11 +3,11 @@ import {
   automaticProviderExecutionAllowed,
   dispatcherClaimsAllowed,
   dispatcherStateHealingAllowed,
-  legacySchedulingAllowed,
   manualRankChecksAllowed,
   parseRankCheckSchedulerMode,
   plannerOwnsAutomaticChecks,
   rankCheckSchedulerMode,
+  warnRetiredRankSchedulerConfiguration,
 } from "./scheduler-mode";
 
 describe("rank-check scheduler mode", () => {
@@ -16,12 +16,11 @@ describe("rank-check scheduler mode", () => {
   });
 
   it.each([
-    [{}, "legacy"],
-    [{ RANK_CHECK_SCHEDULER_MODE: "" }, "legacy"],
-    [{ RANK_CHECK_SCHEDULER_MODE: "legacy" }, "legacy"],
+    [{}, "dispatcher"],
+    [{ RANK_CHECK_SCHEDULER_MODE: "" }, "dispatcher"],
     [{ RANK_CHECK_SCHEDULER_MODE: "cutover" }, "cutover"],
     [{ RANK_CHECK_SCHEDULER_MODE: "dispatcher" }, "dispatcher"],
-  ] as const)("parses the explicit mode matrix", (env, expected) => {
+  ] as const)("parses the D2 mode matrix", (env, expected) => {
     expect(parseRankCheckSchedulerMode(env)).toBe(expected);
   });
 
@@ -34,61 +33,46 @@ describe("rank-check scheduler mode", () => {
     },
   );
 
-  it.each([
-    [{}, "legacy"],
-    [{ RANK_CHECK_DISPATCHER_ENABLED: "0" }, "legacy"],
-    [{ RANK_CHECK_RECONCILER_ENABLED: "true" }, "legacy"],
-    [{ RANK_CHECK_DISPATCHER_ENABLED: "false", RANK_CHECK_RECONCILER_ENABLED: "false" }, "cutover"],
-    [
-      { RANK_CHECK_DISPATCHER_ENABLED: "true", RANK_CHECK_RECONCILER_ENABLED: "false" },
-      "dispatcher",
-    ],
-  ] as const)("maps the deprecated boolean fallback", (env, expected) => {
-    expect(parseRankCheckSchedulerMode(env)).toBe(expected);
+  it("normalizes the removed legacy engine without blocking app startup", () => {
+    expect(parseRankCheckSchedulerMode({ RANK_CHECK_SCHEDULER_MODE: "legacy" })).toBe("dispatcher");
   });
 
-  it("rejects both deprecated schedulers active", () => {
-    expect(() =>
-      parseRankCheckSchedulerMode({
-        RANK_CHECK_DISPATCHER_ENABLED: "1",
-        RANK_CHECK_RECONCILER_ENABLED: "1",
-      }),
-    ).toThrow("unsafe");
-  });
+  it.each(["RANK_CHECK_DISPATCHER_ENABLED", "RANK_CHECK_RECONCILER_ENABLED"])(
+    "ignores retired ownership switches and preserves an explicit cutover: %s",
+    (key) => {
+      expect(parseRankCheckSchedulerMode({ [key]: "false" })).toBe("dispatcher");
+      expect(
+        parseRankCheckSchedulerMode({ [key]: "true", RANK_CHECK_SCHEDULER_MODE: "cutover" }),
+      ).toBe("cutover");
+    },
+  );
 
-  it.each([
-    ["RANK_CHECK_DISPATCHER_ENABLED", "enabled"],
-    ["RANK_CHECK_RECONCILER_ENABLED", "disabled"],
-  ])("rejects malformed deprecated boolean %s", (key, value) => {
-    expect(() => parseRankCheckSchedulerMode({ [key]: value })).toThrow(key);
-  });
-
-  it("uses an explicitly present new mode as the sole source of truth", () => {
-    expect(
-      parseRankCheckSchedulerMode({
-        RANK_CHECK_DISPATCHER_ENABLED: "1",
-        RANK_CHECK_RECONCILER_ENABLED: "1",
-        RANK_CHECK_SCHEDULER_MODE: "cutover",
-      }),
-    ).toBe("cutover");
+  it("warns about obsolete configuration without printing arbitrary environment values", () => {
+    const warn = vi.fn();
+    warnRetiredRankSchedulerConfiguration(
+      { RANK_CHECK_SCHEDULER_MODE: "legacy", RANK_CHECK_RECONCILER_ENABLED: "false" },
+      warn,
+    );
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("automatically"));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("SCHEDULED_MAINTENANCE_ENABLED=0"));
+    warn.mockClear();
+    warnRetiredRankSchedulerConfiguration({}, warn);
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it("exposes non-overlapping named predicates", () => {
-    expect(legacySchedulingAllowed("legacy")).toBe(true);
     expect(dispatcherClaimsAllowed("legacy")).toBe(false);
     expect(plannerOwnsAutomaticChecks("legacy")).toBe(false);
     expect(dispatcherStateHealingAllowed("legacy")).toBe(false);
-    expect(automaticProviderExecutionAllowed("legacy", "legacy")).toBe(true);
+    expect(automaticProviderExecutionAllowed("legacy", "legacy")).toBe(false);
     expect(automaticProviderExecutionAllowed("legacy", "dispatcher")).toBe(false);
 
-    expect(legacySchedulingAllowed("cutover")).toBe(false);
     expect(dispatcherClaimsAllowed("cutover")).toBe(false);
     expect(plannerOwnsAutomaticChecks("cutover")).toBe(false);
     expect(dispatcherStateHealingAllowed("cutover")).toBe(true);
     expect(automaticProviderExecutionAllowed("cutover", "legacy")).toBe(false);
     expect(automaticProviderExecutionAllowed("cutover", "dispatcher")).toBe(false);
 
-    expect(legacySchedulingAllowed("dispatcher")).toBe(false);
     expect(dispatcherClaimsAllowed("dispatcher")).toBe(true);
     expect(plannerOwnsAutomaticChecks("dispatcher")).toBe(true);
     expect(dispatcherStateHealingAllowed("dispatcher")).toBe(true);

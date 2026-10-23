@@ -122,9 +122,9 @@ hand.
 
 | Variable | Purpose |
 | - | - |
-| `RANK_CHECK_SCHEDULER_MODE` | Exclusive automatic scheduler owner: `legacy` (default) runs the reconciler and per-keyword Schedules, `cutover` pauses both owners while allowing state healing, and `dispatcher` runs only the due-work dispatcher. Empty means `legacy`; any other non-empty value fails closed. Set the same value on the app and worker. |
-| `RANK_CHECK_RECONCILER_ENABLED`, `RANK_CHECK_DISPATCHER_ENABLED` | Deprecated D1 compatibility fallback used only when `RANK_CHECK_SCHEDULER_MODE` is absent. Both active is rejected. Both false selects `cutover`; dispatcher true plus reconciler false selects `dispatcher`; other default/false combinations select `legacy`. |
-| `RANK_CHECK_RECONCILER_INTERVAL`, `RANK_CHECK_DISPATCHER_INTERVAL`, `RANK_CHECK_PLANNER_INTERVAL`, `STALE_CHECKS_INTERVAL` | Worker-owned legacy reconciliation, dispatcher polling, planner planning, and stale-check tuning. |
+| `RANK_CHECK_SCHEDULER_MODE` | `dispatcher` is the default (also when empty) and runs the named-schedule planner and due-work dispatcher. `cutover` stops automatic starts while allowing state healing and already-paid collection. `legacy` is rejected; follow [scheduler upgrade](/self-hosting/scheduler-upgrade). Set the same value on app and worker. |
+| `RANK_CHECK_RECONCILER_ENABLED`, `RANK_CHECK_DISPATCHER_ENABLED` | Retired. Remove configured values from app and worker; startup rejects them, even with an explicit scheduler mode. |
+| `RANK_CHECK_DISPATCHER_INTERVAL`, `RANK_CHECK_PLANNER_INTERVAL`, `STALE_CHECKS_INTERVAL` | Dispatcher polling, planner planning and stale-check intervals remain configurable. |
 | `RANK_CHECK_DISPATCHER_MAX_KEYWORDS_PER_PROJECT_PER_PASS` | Maximum due keywords one project may claim in one dispatcher pass. Defaults to `25`; valid values are integers from `1` through `100`. Invalid values fail the claim before database work. |
 | `DATAFORSEO_QUEUED_RANK_CHECKS_ENABLED` | Independent DataForSEO Standard queue route. It is OFF by default and can submit only in `dispatcher` mode. In `cutover`, already-submitted work may finish result retrieval, but no new paid submission is allowed. Manual checks remain available in every mode. |
 | `DATAFORSEO_QUEUE_PRIORITY` | `high` (default for an enabled queued path) or `normal`. High uses provider priority `2`. Invalid values fail the queued gate closed. |

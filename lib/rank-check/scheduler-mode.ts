@@ -1,6 +1,7 @@
 import "server-only";
 import "@/lib/deployment/runtime-env.generated";
 
+// Legacy remains a historical diagnostic/payload value; configuration cannot activate it.
 export const RANK_CHECK_SCHEDULER_MODES = ["legacy", "cutover", "dispatcher"] as const;
 
 export type RankCheckSchedulerMode = (typeof RANK_CHECK_SCHEDULER_MODES)[number];
@@ -8,56 +9,37 @@ export type AutomaticRankCheckSource = "dispatcher" | "legacy";
 
 type SchedulerEnvironment = Record<string, string | undefined>;
 
-function legacyBoolean(
-  env: SchedulerEnvironment,
-  key: "RANK_CHECK_DISPATCHER_ENABLED" | "RANK_CHECK_RECONCILER_ENABLED",
-  defaultValue: boolean,
-) {
-  const raw =
-    key === "RANK_CHECK_DISPATCHER_ENABLED"
-      ? env.RANK_CHECK_DISPATCHER_ENABLED
-      : env.RANK_CHECK_RECONCILER_ENABLED;
-  if (raw === undefined || raw === "") return defaultValue;
-  const normalized = raw.trim().toLowerCase();
-  if (["1", "true", "yes", "on"].includes(normalized)) return true;
-  if (["0", "false", "no", "off"].includes(normalized)) return false;
-  throw new Error(`${key} must be a recognized boolean when the deprecated fallback is used.`);
-}
-
-function deprecatedSchedulerMode(env: SchedulerEnvironment): RankCheckSchedulerMode {
-  const dispatcher = legacyBoolean(env, "RANK_CHECK_DISPATCHER_ENABLED", false);
-  const reconciler = legacyBoolean(env, "RANK_CHECK_RECONCILER_ENABLED", true);
-  if (dispatcher && reconciler) {
-    throw new Error(
-      "The deprecated rank-check scheduler flags select both schedulers; this state is unsafe.",
-    );
-  }
-  if (dispatcher) return "dispatcher";
-  return reconciler ? "legacy" : "cutover";
-}
-
 export function parseRankCheckSchedulerMode(
   env: SchedulerEnvironment = process.env as SchedulerEnvironment,
 ): RankCheckSchedulerMode {
-  if (env.RANK_CHECK_SCHEDULER_MODE !== undefined) {
-    const value = env.RANK_CHECK_SCHEDULER_MODE;
-    if (value === "") return "legacy";
-    if ((RANK_CHECK_SCHEDULER_MODES as readonly string[]).includes(value)) {
-      return value as RankCheckSchedulerMode;
-    }
-    throw new Error(
-      `RANK_CHECK_SCHEDULER_MODE must be exactly one of ${RANK_CHECK_SCHEDULER_MODES.join(", ")}.`,
-    );
-  }
-  return deprecatedSchedulerMode(env);
+  const value = env.RANK_CHECK_SCHEDULER_MODE;
+  if (value === undefined || value === "" || value === "dispatcher" || value === "legacy")
+    return "dispatcher";
+  if (value === "cutover") return "cutover";
+  throw new Error("RANK_CHECK_SCHEDULER_MODE must be exactly dispatcher or cutover.");
+}
+
+export function warnRetiredRankSchedulerConfiguration(
+  env: SchedulerEnvironment = process.env as SchedulerEnvironment,
+  warn: (message: string) => void = console.warn,
+) {
+  const retired: string[] = (
+    [
+      ["RANK_CHECK_RECONCILER_ENABLED", env.RANK_CHECK_RECONCILER_ENABLED],
+      ["RANK_CHECK_DISPATCHER_ENABLED", env.RANK_CHECK_DISPATCHER_ENABLED],
+    ] as const
+  )
+    .filter(([, raw]) => raw !== undefined && raw !== "")
+    .map(([key]) => key);
+  if (env.RANK_CHECK_SCHEDULER_MODE === "legacy") retired.push("RANK_CHECK_SCHEDULER_MODE=legacy");
+  if (!retired.length) return;
+  warn(
+    `Retired rank scheduler configuration: ${retired.join(", ")}. The worker upgrades scheduling automatically; named Schedules are authoritative. Stop old workers before starting this version. Remove retired settings when convenient. To retain the old maintenance opt-out, set SCHEDULED_MAINTENANCE_ENABLED=0. Guide: https://bisibility.com/docs/self-hosting/scheduler-upgrade`,
+  );
 }
 
 export function rankCheckSchedulerMode() {
   return parseRankCheckSchedulerMode();
-}
-
-export function legacySchedulingAllowed(mode = rankCheckSchedulerMode()) {
-  return mode === "legacy";
 }
 
 export function dispatcherClaimsAllowed(mode = rankCheckSchedulerMode()) {
@@ -80,5 +62,5 @@ export function automaticProviderExecutionAllowed(
   mode: RankCheckSchedulerMode,
   source: AutomaticRankCheckSource,
 ) {
-  return source === "legacy" ? mode === "legacy" : mode === "dispatcher";
+  return source === "dispatcher" && mode === "dispatcher";
 }

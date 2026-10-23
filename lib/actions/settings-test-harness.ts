@@ -86,9 +86,11 @@ function mockProject() {
     writeMode: "active",
     isSample: false,
   });
-  settingsActionMocks.prisma.$queryRaw.mockImplementation(async (strings) =>
-    String(strings).includes("memberships") ? [{ role: "member" }] : [{ id: "user_1" }],
-  );
+  settingsActionMocks.prisma.$queryRaw.mockImplementation(async (query) => {
+    const sql = "text" in query ? query.text : String(query);
+    if (sql.includes('AS "keywordId"')) return [];
+    return sql.includes("memberships") ? [{ role: "member" }] : [{ id: "user_1" }];
+  });
   settingsActionMocks.prisma.$executeRaw.mockResolvedValue(0);
   settingsActionMocks.prisma.project.findFirst.mockResolvedValue({
     id: "project_1",

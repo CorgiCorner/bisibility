@@ -28,7 +28,6 @@ it("reconciles rank-check runs every five minutes", async () => {
 
 it("creates the runs reconciler in dispatcher mode when maintenance is disabled", async () => {
   vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "dispatcher");
-  vi.stubEnv("RANK_CHECK_RECONCILER_ENABLED", "0");
   vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "0");
   const client = { create: vi.fn() };
 
@@ -46,9 +45,9 @@ it("creates the runs reconciler in dispatcher mode when maintenance is disabled"
   });
 });
 
-it("keeps the legacy maintenance fallback when the maintenance flag is unset", async () => {
-  vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
-  vi.stubEnv("RANK_CHECK_RECONCILER_ENABLED", "1");
+it("keeps run reconciliation available during cutover despite the retired optional-maintenance opt-out", async () => {
+  vi.stubEnv("RANK_CHECK_RECONCILER_ENABLED", "false");
+  vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
   vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "");
   const client = { create: vi.fn() };
 
@@ -58,14 +57,13 @@ it("keeps the legacy maintenance fallback when the maintenance flag is unset", a
   });
   expect(rankCheckRunsScheduleDecision()).toEqual({
     enabled: true,
-    reason: "RANK_CHECK_RECONCILER_ENABLED controls legacy maintenance fallback",
+    reason: "SCHEDULED_MAINTENANCE_ENABLED controls maintenance during cutover",
   });
 });
 
-it("keeps the runs reconciler disabled by the legacy fallback when maintenance is unset", async () => {
-  vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
-  vi.stubEnv("RANK_CHECK_RECONCILER_ENABLED", "0");
-  vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "");
+it("can disable run maintenance during cutover", async () => {
+  vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
+  vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "0");
   const client = { create: vi.fn() };
 
   await expect(ensureRankCheckRunsSchedule(client)).resolves.toEqual({
@@ -76,11 +74,8 @@ it("keeps the runs reconciler disabled by the legacy fallback when maintenance i
 });
 
 it("fails startup when the worker disables run maintenance", () => {
-  vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
-  vi.stubEnv("RANK_CHECK_RECONCILER_ENABLED", "0");
-  vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "");
+  vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
+  vi.stubEnv("SCHEDULED_MAINTENANCE_ENABLED", "0");
 
-  expect(() => assertRankCheckRunsScheduleEnabled()).toThrow(
-    "SCHEDULED_MAINTENANCE_ENABLED and RANK_CHECK_RECONCILER_ENABLED",
-  );
+  expect(() => assertRankCheckRunsScheduleEnabled()).toThrow("SCHEDULED_MAINTENANCE_ENABLED");
 });

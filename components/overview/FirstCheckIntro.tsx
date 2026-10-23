@@ -71,7 +71,7 @@ export function FirstCheckIntro({
                 size="small"
                 type="button"
               >
-                <XIcon aria-hidden size={15} />
+                <XIcon weight="regular" aria-hidden size={15} />
               </IconButton>
             </section>
           ),

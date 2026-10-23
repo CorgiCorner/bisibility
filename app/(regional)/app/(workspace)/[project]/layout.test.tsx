@@ -12,6 +12,9 @@ const mocks = vi.hoisted(() => ({
   decorateSource: vi.fn(async (children: ReactNode) => children),
 }));
 
+vi.mock("@/lib/queries/scheduler-upgrade", () => ({
+  listSchedulerUpgradeIssues: vi.fn(async () => []),
+}));
 vi.mock("@/lib/queries/_auth", () => ({
   resolveProjectAccess: mocks.resolveProjectAccess,
   getQueryActor: mocks.getQueryActor,

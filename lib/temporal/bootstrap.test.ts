@@ -6,12 +6,25 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   deleteRetiredJobProcessorSchedule,
-  ensureReconcilerSchedule,
   ensureSingletonSchedule,
-  isReconcilerEnabled,
+  RECONCILE_WORKFLOW_TYPE,
   RECONCILER_SCHEDULE_ID,
   RETIRED_JOB_PROCESSOR_SCHEDULE_ID,
 } from "./bootstrap";
+
+function ensureTestSchedule(client?: Parameters<typeof ensureSingletonSchedule>[1]) {
+  return ensureSingletonSchedule(
+    {
+      enabled: true,
+      memo: { kind: "rank-check-reconciler" },
+      note: "Rank check schedule reconciler",
+      scheduleId: RECONCILER_SCHEDULE_ID,
+      spec: { intervals: [{ every: "2 minutes" }] },
+      workflowType: RECONCILE_WORKFLOW_TYPE,
+    },
+    client,
+  );
+}
 
 function clientMock() {
   return { create: vi.fn() };
@@ -113,7 +126,7 @@ describe("deleteRetiredJobProcessorSchedule", () => {
   });
 });
 
-describe("ensureReconcilerSchedule", () => {
+describe("ensureTestSchedule", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -122,22 +135,10 @@ describe("ensureReconcilerSchedule", () => {
     vi.unstubAllEnvs();
   });
 
-  it("is gated off when the canonical scheduler mode disables legacy scheduling", async () => {
-    vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "cutover");
-    const client = clientMock();
-
-    expect(isReconcilerEnabled()).toBe(false);
-    await expect(ensureReconcilerSchedule(client)).resolves.toEqual({
-      scheduleId: RECONCILER_SCHEDULE_ID,
-      status: "disabled",
-    });
-    expect(client.create).not.toHaveBeenCalled();
-  });
-
   it("creates the singleton schedule by default", async () => {
     const client = clientMock();
 
-    await expect(ensureReconcilerSchedule(client)).resolves.toEqual({
+    await expect(ensureTestSchedule(client)).resolves.toEqual({
       scheduleId: RECONCILER_SCHEDULE_ID,
       status: "created",
     });
@@ -156,7 +157,7 @@ describe("ensureReconcilerSchedule", () => {
   it("defaults the catch-up window to one hour", async () => {
     const client = clientMock();
 
-    await ensureReconcilerSchedule(client);
+    await ensureTestSchedule(client);
 
     expect(client.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -169,7 +170,7 @@ describe("ensureReconcilerSchedule", () => {
     vi.stubEnv("TEMPORAL_SCHEDULE_CATCHUP_WINDOW", "30 minutes");
     const client = clientMock();
 
-    await ensureReconcilerSchedule(client);
+    await ensureTestSchedule(client);
 
     expect(client.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -178,22 +179,11 @@ describe("ensureReconcilerSchedule", () => {
     );
   });
 
-  it("honors a custom interval override", async () => {
-    vi.stubEnv("RANK_CHECK_RECONCILER_INTERVAL", "30 seconds");
-    const client = clientMock();
-
-    await ensureReconcilerSchedule(client);
-
-    expect(client.create).toHaveBeenCalledWith(
-      expect.objectContaining({ spec: { intervals: [{ every: "30 seconds" }] } }),
-    );
-  });
-
   it("treats an already-running schedule as existing", async () => {
     const client = clientMock();
     client.create.mockRejectedValue(new ScheduleAlreadyRunning("exists", RECONCILER_SCHEDULE_ID));
 
-    await expect(ensureReconcilerSchedule(client)).resolves.toEqual({
+    await expect(ensureTestSchedule(client)).resolves.toEqual({
       scheduleId: RECONCILER_SCHEDULE_ID,
       status: "exists",
     });
@@ -204,7 +194,7 @@ describe("ensureReconcilerSchedule", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
     client.create.mockRejectedValue(new Error("Temporal unavailable"));
 
-    await expect(ensureReconcilerSchedule(client)).resolves.toEqual({
+    await expect(ensureTestSchedule(client)).resolves.toEqual({
       scheduleId: RECONCILER_SCHEDULE_ID,
       status: "failed",
     });
@@ -225,7 +215,7 @@ describe("ensureSingletonSchedule catch-up convergence", () => {
   it("updates the catch-up window when an existing schedule drifts", async () => {
     const client = runningClientMock(MINUTE_MS);
 
-    await expect(ensureReconcilerSchedule(client)).resolves.toEqual({
+    await expect(ensureTestSchedule(client)).resolves.toEqual({
       scheduleId: RECONCILER_SCHEDULE_ID,
       status: "updated",
     });
@@ -242,7 +232,7 @@ describe("ensureSingletonSchedule catch-up convergence", () => {
   it("leaves an already-converged schedule untouched", async () => {
     const client = runningClientMock(HOUR_MS);
 
-    await expect(ensureReconcilerSchedule(client)).resolves.toEqual({
+    await expect(ensureTestSchedule(client)).resolves.toEqual({
       scheduleId: RECONCILER_SCHEDULE_ID,
       status: "exists",
     });
@@ -253,7 +243,7 @@ describe("ensureSingletonSchedule catch-up convergence", () => {
     vi.stubEnv("TEMPORAL_SCHEDULE_CATCHUP_WINDOW", "30 minutes");
     const client = runningClientMock(HOUR_MS);
 
-    await expect(ensureReconcilerSchedule(client)).resolves.toEqual({
+    await expect(ensureTestSchedule(client)).resolves.toEqual({
       scheduleId: RECONCILER_SCHEDULE_ID,
       status: "updated",
     });
@@ -268,7 +258,7 @@ describe("ensureSingletonSchedule catch-up convergence", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
     client.handle.update.mockRejectedValue(new Error("Temporal unavailable"));
 
-    await expect(ensureReconcilerSchedule(client)).resolves.toEqual({
+    await expect(ensureTestSchedule(client)).resolves.toEqual({
       scheduleId: RECONCILER_SCHEDULE_ID,
       status: "failed",
     });
@@ -280,7 +270,7 @@ describe("ensureSingletonSchedule catch-up convergence", () => {
     const client = clientMock();
     client.create.mockRejectedValue(new ScheduleAlreadyRunning("exists", RECONCILER_SCHEDULE_ID));
 
-    await expect(ensureReconcilerSchedule(client)).resolves.toEqual({
+    await expect(ensureTestSchedule(client)).resolves.toEqual({
       scheduleId: RECONCILER_SCHEDULE_ID,
       status: "exists",
     });

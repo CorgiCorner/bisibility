@@ -2074,6 +2074,12 @@
       "connectAction": "Elige una fuente de datos",
       "askAdmin": "Pide a un administrador del proyecto que elija una fuente de datos antes de iniciar las comprobaciones."
     },
+    "schedulerUpgrade": {
+      "title": "{count, plural, one {# palabra clave necesita revisar su programación} few {# palabras clave necesitan revisar su programación} many {# palabras clave necesitan revisar su programación} other {# palabras clave necesitan revisar su programación}}",
+      "detail": "Las comprobaciones automáticas de estas palabras clave están pausadas. Asígnales una programación en Programaciones. Las demás siguen su configuración.",
+      "review": "Mostrar palabras clave afectadas",
+      "schedules": "Abrir programaciones"
+    },
     "durationUnits": {
       "minutes": "{count, plural, one {# minuto} other {# minutos}}",
       "hours": "{count, plural, one {# hora} other {# horas}}",

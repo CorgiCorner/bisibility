@@ -4,10 +4,10 @@ description: "How bisibility app, REST API, and client package versions relate, 
 ---
 
 The application version, the REST API contract, and the SDK, CLI, and MCP
-packages version independently. Do not treat an app release such as `0.39.0`
+packages version independently. Do not treat an app release such as `0.40.0`
 as the TypeScript, Python, Go, CLI, or MCP version.
 
-This source tree identifies its application package as `0.39.0` in root
+This source tree identifies its application package as `0.40.0` in root
 `package.json`. That value identifies the application code, rather than a promise
 that a hosted instance or a client package already runs that release. Check the
 instance's reported application version and the installed client's own version
@@ -67,7 +67,7 @@ says otherwise.
 
 | Component | Distribution | Docs-tested version | API contract | Runtime | Test artifact | Last verified | Support |
 | - | - | - | - | - | - | - | - |
-| Application | bisibility | `0.39.0` | `v1` | Node 22 | `package.json` | 2026-10-23 | pre-1.0 source package |
+| Application | bisibility | `0.40.0` | `v1` | Node 22 | `package.json` | 2026-10-23 | pre-1.0 source package |
 | REST API | `/api/v1` | `v1` | `v1` | HTTP | `docs/openapi.snapshot.json` | 2026-09-12 | current contract |
 | TypeScript SDK | `@bisibility/sdk` | `0.14.1` | `v1` | Node 18+ | `examples/ts/package.json` | 2026-10-07 | independently versioned |
 | Python SDK | `bisibility` | `0.11.1` | `v1` | Python 3.10+ | `examples/python/requirements.txt` | 2026-10-07 | independently versioned; package metadata may mark it Alpha |

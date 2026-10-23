@@ -21,6 +21,7 @@ COPY prisma.config.ts ./prisma.config.ts
 COPY prisma ./prisma
 RUN npm run db:download-rds-ca && npx prisma generate && npm prune --omit=dev
 
+COPY scripts/self-host/upgrade-rank-scheduler.ts ./scripts/self-host/upgrade-rank-scheduler.ts
 COPY lib ./lib
 COPY i18n ./i18n
 COPY messages/core ./messages/core
@@ -49,6 +50,7 @@ ENV APP_VERSION=${APP_VERSION} \
 COPY --from=worker-build /app/package.json ./package.json
 COPY --from=worker-build /app/node_modules ./node_modules
 COPY --from=worker-build /app/prisma ./prisma
+COPY --from=worker-build /app/scripts/self-host/upgrade-rank-scheduler.ts ./scripts/self-host/upgrade-rank-scheduler.ts
 COPY --from=worker-build /app/lib ./lib
 COPY --from=worker-build /app/i18n ./i18n
 COPY --from=worker-build /app/messages/core ./messages/core

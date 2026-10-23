@@ -254,6 +254,7 @@ export function AllocationRow({
                   onClick={() => void refresh()}
                 >
                   <ArrowClockwiseIcon
+                    weight="regular"
                     aria-hidden
                     size={14}
                     className={

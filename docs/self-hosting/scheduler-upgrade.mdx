@@ -1,0 +1,127 @@
+---
+title: "Upgrade the rank scheduler"
+description: "Replace legacy per-keyword Temporal schedules with the named-schedule planner and dispatcher."
+---
+
+The new release removes the legacy reconciler. The worker upgrades scheduling
+at startup; no migration command or temporary service is required.
+
+## Upgrade on Docker, Railway or another host
+
+1. Stop every old worker instance, including replicas. Avoid a rolling worker
+   update: an old worker can still execute the removed scheduler.
+2. Update the app, then update and start the worker on the same release. Keep
+   their database and Temporal namespace configuration.
+3. Check **Schedules** and the worker logs for the next scheduled run.
+
+The app remains available with old scheduler variables. `legacy` now selects the
+new scheduler; retired boolean switches produce a warning instead of a startup
+error. You can remove them later. Keep `RANK_CHECK_SCHEDULER_MODE=cutover` only
+when you intentionally want automatic checks stopped.
+
+The worker pauses the old reconciler and recognized per-keyword Temporal schedules
+belonging to this database, restores missing named-schedule assignments, and starts
+the planner and dispatcher. Existing named Schedules are authoritative, including
+disabled schedules. Their configuration and existing assignments are never overwritten.
+
+For unassigned keywords, an exact enabled match is reused. When none exists, a
+non-default schedule is created with the saved legacy frequency, timezone, jitter
+and cron, including any keyword-specific SERP depth. Multiple matches or invalid legacy settings leave only those keywords
+without automatic checks. Project managers see a warning at the top of project
+pages, a list of affected keywords, and a link to **Schedules**. Choose the intended
+schedule there. Manual and paused keywords remain manual or paused. Inactive
+projects, deactivated owners and archived keywords keep their saved intent too.
+
+Startup can be repeated safely. Old schedules and ranking history are retained.
+Unrecognized Temporal schedules are left untouched and reported in worker logs;
+they do not block the upgrade. New workers reject automatic provider execution
+from legacy workflows. AI schedules and manual checks are unchanged.
+
+### Maintenance opt-out
+
+If `SCHEDULED_MAINTENANCE_ENABLED` is unset, the old
+`RANK_CHECK_RECONCILER_ENABLED=false` opt-out still keeps optional maintenance off.
+Set `SCHEDULED_MAINTENANCE_ENABLED=0` before removing that old variable, or `1` to
+explicitly enable maintenance. Run reconciliation required by the new rank
+scheduler stays enabled independently.
+
+## Optional offline diagnostics
+
+The commands below are for investigation or a controlled offline upgrade. They
+are not required for the normal update above. Run them from the new worker image
+or a checkout with this installation's database and Temporal connectivity.
+The offline apply command requires all app and worker processes stopped;
+`--workers-stopped` is your acknowledgement, not a remote stop command.
+
+```bash
+npm run scheduler:upgrade -- --dry-run
+npm run scheduler:upgrade -- --apply --workers-stopped
+```
+
+Unlike automatic startup, this conservative offline command requires exact
+ownership review and resolution of legacy-versus-named conflicts before activation.
+If it reports running workflows, drain them using the new worker in `cutover`,
+stop it, then retry. It does not edit configuration, restart services or call a provider.
+
+## Resolve missing assignments and conflicts
+
+The preview includes `conflictDetails`: keyword and project IDs, the reason,
+legacy settings, and selected named-schedule settings. Inactive projects,
+deactivated owners and archived keywords are included so reactivation preserves intent.
+
+For missing membership, preview and apply the optional repair from the same new
+worker container or configured checkout:
+
+```bash
+npm run scheduler:upgrade -- --dry-run --repair-assignments
+npm run scheduler:upgrade -- --apply --workers-stopped --repair-assignments
+npm run scheduler:upgrade -- --dry-run
+```
+
+The repair assigns only keywords with no schedule and exactly one enabled matching
+schedule in their project. Frequency, timezone, jitter, cron and derived time must
+match. By default it creates no schedules. It never changes an existing assignment or converts
+manual/paused intent into automatic checks. It does not activate the new scheduler.
+`no_match` and `multiple_matches` remain unresolved and appear with candidate IDs/names.
+
+An offline operator can resolve these without reactivating a project or account.
+For `no_match`, add `--create-missing-schedules` to the repair preview and apply:
+the preview lists new schedules; apply creates enabled, non-default schedules with
+the exact legacy settings and assigns only the previously unassigned keywords.
+For `multiple_matches`, add `--select-match=keyword-public-id:schedule-public-id`
+to both commands (repeat per keyword). The chosen schedule must match the legacy
+settings exactly; a mismatching choice is rejected. Neither option rewrites an
+existing keyword assignment or an existing named schedule.
+
+To resolve those, start the new app in `cutover` mode with retired flags removed.
+Open the reported project's **Schedules**, create a schedule matching the reported
+legacy settings when needed, and assign the keyword to the intended schedule.
+For interval schedules, leave the explicit time unset to preserve interval phasing.
+For an existing conflicting assignment, choose the intended schedule or edit its
+settings after reviewing the reported difference. Stop the app and rerun the preview.
+
+## Unknown Temporal schedules
+
+```bash
+npm run scheduler:upgrade -- --list-unknown
+```
+
+Each entry contains a reason, paused state and copyable `describe`, `pause` and
+`delete` Temporal CLI commands. Set `TEMPORAL_ADDRESS` and `TEMPORAL_NAMESPACE` to
+this installation; configure the CLI's matching TLS/authentication profile first.
+Inspect the schedule memo, workflow and search attributes against your database
+or retained records before acting. Never delete a schedule belonging to another installation.
+
+For a confirmed deleted keyword (`keyword_missing`), use its emitted pause command,
+then preview/apply with the explicit acknowledgement:
+
+```bash
+npm run scheduler:upgrade -- --dry-run --accept-paused-unknown
+npm run scheduler:upgrade -- --apply --workers-stopped --accept-paused-unknown
+```
+
+That acknowledgement accepts only already-paused schedules whose legacy ownership
+shape is exact and whose keyword is absent. Project mismatches and ambiguous
+ownership remain blocked. Alternatively, after confirming ownership, use the emitted
+delete command to remove the obsolete schedule, then preview again. Deleting a
+Temporal schedule does not delete recorded rank results or workflow histories.

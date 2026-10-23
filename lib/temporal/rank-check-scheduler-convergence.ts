@@ -5,7 +5,7 @@ import { RANK_CHECK_DISPATCHER_SCHEDULE_ID } from "../rank-check/dispatcher-cons
 import { type RankCheckSchedulerMode, rankCheckSchedulerMode } from "../rank-check/scheduler-mode";
 import {
   type BootstrapScheduleClient,
-  ensureReconcilerSchedule,
+  RECONCILE_WORKFLOW_TYPE,
   RECONCILER_SCHEDULE_ID,
 } from "./bootstrap";
 import { ensureRankCheckDispatcherSchedule } from "./rank-check-dispatcher-bootstrap";
@@ -43,6 +43,19 @@ async function retireSingleton(
   try {
     const handle = client.getHandle(scheduleId);
     const description = await handle.describe();
+    const expectedWorkflow =
+      scheduleId === RECONCILER_SCHEDULE_ID
+        ? RECONCILE_WORKFLOW_TYPE
+        : scheduleId === RANK_CHECK_DISPATCHER_SCHEDULE_ID
+          ? "dispatchDueRankChecksWorkflow"
+          : "planRankCheckRunsWorkflow";
+    if (
+      description.action.type !== "startWorkflow" ||
+      description.action.workflowType !== expectedWorkflow ||
+      description.action.workflowId !== scheduleId
+    ) {
+      throw new Error(`Conflicting singleton ${scheduleId}.`);
+    }
     if (description.state.paused) return "already_paused";
     await handle.pause("Retired by rank-check scheduler mode convergence");
     return "paused";
@@ -52,6 +65,10 @@ async function retireSingleton(
   }
 }
 
+export async function retireLegacyRankCheckReconciler(client: RankCheckSchedulerConvergenceClient) {
+  return retireSingleton(client, RECONCILER_SCHEDULE_ID);
+}
+
 function assertSelectedSchedule(status: string, scheduleId: string) {
   if (status === "created" || status === "exists" || status === "updated") return status;
   throw new Error(`Failed to ensure selected rank-check singleton ${scheduleId}: ${status}.`);
@@ -59,21 +76,12 @@ function assertSelectedSchedule(status: string, scheduleId: string) {
 
 export async function convergeRankCheckSchedulerSingletons(
   injectedClient?: RankCheckSchedulerConvergenceClient,
+  mode: RankCheckSchedulerMode = rankCheckSchedulerMode(),
 ): Promise<RankCheckSingletonConvergenceResult> {
-  const mode = rankCheckSchedulerMode();
+  if (mode === "legacy") throw new Error("Legacy scheduler convergence is no longer supported.");
   const client =
     injectedClient ??
     ((await getSchedulerTemporalClient()).schedule as RankCheckSchedulerConvergenceClient);
-
-  if (mode === "legacy") {
-    const dispatcher = await retireSingleton(client, RANK_CHECK_DISPATCHER_SCHEDULE_ID);
-    const planner = await retireSingleton(client, RANK_CHECK_PLANNER_SCHEDULE_ID);
-    const reconciler = assertSelectedSchedule(
-      (await ensureReconcilerSchedule(client)).status,
-      RECONCILER_SCHEDULE_ID,
-    );
-    return { dispatcher, mode, planner, reconciler };
-  }
 
   const reconciler = await retireSingleton(client, RECONCILER_SCHEDULE_ID);
   if (mode === "cutover") {
@@ -83,11 +91,11 @@ export async function convergeRankCheckSchedulerSingletons(
   }
 
   const dispatcher = assertSelectedSchedule(
-    (await ensureRankCheckDispatcherSchedule(client)).status,
+    (await ensureRankCheckDispatcherSchedule(client, mode)).status,
     RANK_CHECK_DISPATCHER_SCHEDULE_ID,
   );
   const planner = assertSelectedSchedule(
-    (await ensureRankCheckPlannerSchedule(client)).status,
+    (await ensureRankCheckPlannerSchedule(client, mode)).status,
     RANK_CHECK_PLANNER_SCHEDULE_ID,
   );
   return { dispatcher, mode, planner, reconciler };

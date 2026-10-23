@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.40.0] - 2026-10-23
+
+### Changed
+
+- **Breaking:** Rank schedules upgrade automatically. Stop old workers before updating; resolve any flagged keywords in Schedules.
+
+- Retired scheduler settings no longer block startup; existing maintenance opt-outs stay in effect.
+
 ## [0.39.0] - 2026-10-23
 
 ### Added

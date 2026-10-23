@@ -2,9 +2,11 @@ import { WorkspaceShell } from "@/app/(regional)/app/(workspace)/workspace-shell
 import { RankTrackerSearchDraftProvider } from "@/components/keywords/RankTrackerSearchDraft";
 import { MarketContextProvider } from "@/components/markets/MarketContextProvider";
 import { UsageDisplaySettingsProvider } from "@/components/metering/UsageDisplaySettingsProvider";
+import { SchedulerUpgradeBanner } from "@/components/schedules/SchedulerUpgradeBanner";
 import { renderProjectDataSourceExtension } from "@/components/settings/AccountDataSourceExtension";
 import { readProjectUsageDisplaySettings } from "@/lib/project-usage-display/store";
 import { getQueryActor, resolveProjectAccess } from "@/lib/queries/_auth";
+import { listSchedulerUpgradeIssues } from "@/lib/queries/scheduler-upgrade";
 import type { ReactNode } from "react";
 
 type ProjectLayoutProps = {
@@ -26,16 +28,20 @@ export default async function ProjectLayout({
 }: Readonly<ProjectLayoutProps>) {
   const { project } = await params;
   const access = await resolveProjectAccess(project);
-  const usageDisplay = await readProjectUsageDisplaySettings(
-    access.publicId,
-    await getQueryActor(),
-  );
+  const actor = await getQueryActor();
+  const [usageDisplay, upgradeIssues] = await Promise.all([
+    readProjectUsageDisplaySettings(access.publicId, actor),
+    listSchedulerUpgradeIssues(access.publicId),
+  ]);
   const content = await renderProjectDataSourceExtension(
     <WorkspaceShell
       activeProjectId={access.projectId}
       context={context}
       projectRef={access.publicId}
     >
+      {upgradeIssues.length > 0 ? (
+        <SchedulerUpgradeBanner issues={upgradeIssues} projectId={access.publicId} />
+      ) : null}
       {children}
     </WorkspaceShell>,
     access.publicId,

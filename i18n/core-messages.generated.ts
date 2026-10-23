@@ -11623,6 +11623,12 @@ export type CoreMessages = {
       readonly noFixedTime: "No fixed time";
       readonly weekly: "Weekly · {weekday} {time}";
     };
+    readonly schedulerUpgrade: {
+      readonly detail: "Automatic checks are paused for these keywords. Choose a schedule for them in Schedules. Other keywords continue as configured.";
+      readonly review: "Show affected keywords";
+      readonly schedules: "Open Schedules";
+      readonly title: "{count, plural, one {# keyword needs schedule review} few {# keywords need schedule review} many {# keywords need schedule review} other {# keywords need schedule review}}";
+    };
     readonly setupVideo: {
       readonly fallback: "Your browser does not support video.";
       readonly open: "Open the video";

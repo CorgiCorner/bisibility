@@ -155,16 +155,14 @@ describe("dispatcher state maintenance", () => {
     ).toBe(true);
   });
 
-  it("is a complete no-op while disabled", async () => {
+  it("heals dispatcher state with a retained legacy configuration", async () => {
     vi.stubEnv("RANK_CHECK_SCHEDULER_MODE", "legacy");
-
-    await expect(seedKeywordDispatchStates(["keyword_1"], { now })).resolves.toBe(0);
-    await expect(refreshKeywordDispatchStates({ keywordIds: ["keyword_1"], now })).resolves.toBe(0);
-    await expect(backfillKeywordDispatchStates({ cursor: null, now })).resolves.toEqual({
-      cursor: null,
-      done: true,
-      seeded: 0,
-    });
-    expect(mocks.transaction).not.toHaveBeenCalled();
+    mocks.queryRaw.mockResolvedValue([]);
+    await expect(seedKeywordDispatchStates(["keyword_1"], { now })).resolves.toBeDefined();
+    await expect(
+      refreshKeywordDispatchStates({ keywordIds: ["keyword_1"], now }),
+    ).resolves.toBeDefined();
+    await expect(backfillKeywordDispatchStates({ cursor: null, now })).resolves.toBeDefined();
+    expect(mocks.transaction).toHaveBeenCalled();
   });
 });

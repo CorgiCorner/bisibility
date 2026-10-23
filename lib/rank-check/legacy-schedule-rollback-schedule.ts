@@ -2,7 +2,7 @@ import type { Client } from "@temporalio/client";
 import {
   buildRankCheckScheduleOptions,
   type SyncRankCheckScheduleInput,
-} from "./temporal-schedule";
+} from "./legacy-schedule-builder";
 import { classifyRankCheckSchedule } from "./temporal-schedule-ownership";
 
 function named(error: unknown, name: string) {

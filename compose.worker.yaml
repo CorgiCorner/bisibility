@@ -15,7 +15,7 @@ services:
       <<: *temporal-env
 
   worker:
-    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.39.0}
+    image: ${BISIBILITY_WORKER_IMAGE:-docker.io/corgicorner/bisibility-worker:0.40.0}
     pull_policy: ${BISIBILITY_PULL_POLICY:-missing}
     restart: unless-stopped
     environment:
@@ -94,8 +94,7 @@ services:
       RANK_CHECK_RAW_PURGE_CRON: ${RANK_CHECK_RAW_PURGE_CRON:-}
       RANK_CHECK_RAW_RETENTION_DAYS: ${RANK_CHECK_RAW_RETENTION_DAYS:-}
       RANK_CHECK_RECONCILER_ENABLED: ${RANK_CHECK_RECONCILER_ENABLED:-}
-      RANK_CHECK_RECONCILER_INTERVAL: ${RANK_CHECK_RECONCILER_INTERVAL:-}
-      RANK_CHECK_SCHEDULER_MODE: ${RANK_CHECK_SCHEDULER_MODE:-}
+      RANK_CHECK_SCHEDULER_MODE: ${RANK_CHECK_SCHEDULER_MODE:-dispatcher}
       REDIS_TLS_CA_B64: ${REDIS_TLS_CA_B64:-}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
